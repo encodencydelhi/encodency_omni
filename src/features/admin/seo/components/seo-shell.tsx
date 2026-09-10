@@ -55,19 +55,19 @@ export function SeoShell({
           <p className="text-[10px] text-[#71809D]">{description}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex h-8 items-center gap-2 rounded border border-[#DDE4ED] bg-white px-2.5 text-[9px] font-semibold text-[#38444D] shadow-sm hover:bg-[#FAFBFC]">
-            <CalendarDays className="size-3.5 text-[#182A58]" />
+          <button className="flex h-9 items-center gap-2.5 rounded border border-[#DDE4ED] bg-white px-3 text-[11px] font-semibold text-[#38444D] shadow-sm hover:bg-[#FAFBFC]">
+            <CalendarDays className="size-4 text-[#182A58]" />
             <span className="text-left">
               <span className="block leading-tight">Last 30 days</span>
-              <span className="block text-[7px] font-normal text-[#71809D]">
+              <span className="block mt-0.5 text-[9px] font-normal text-[#71809D]">
                 Mar 15, 2025 – Apr 14, 2025
               </span>
             </span>
-            <ChevronDown className="size-3" />
+            <ChevronDown className="size-3.5" />
           </button>
           {action ?? (
-            <button className="flex h-8 items-center gap-1.5 rounded border border-[#DDE4ED] bg-white px-3 text-[9.5px] font-semibold text-[#172044] shadow-sm hover:bg-[#FAFBFC]">
-              <Download className="size-3.5" />
+            <button className="flex h-9 items-center gap-2 rounded border border-[#DDE4ED] bg-white px-3.5 text-[11px] font-semibold text-[#172044] shadow-sm hover:bg-[#FAFBFC]">
+              <Download className="size-4" />
               Export Report
             </button>
           )}
