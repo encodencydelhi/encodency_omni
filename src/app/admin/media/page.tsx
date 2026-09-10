@@ -130,14 +130,14 @@ export default function MediaLibrary() {
             {[
               ["Project","Moksha Sewa"],["File Type","All Types"],["Channel","All Channels"],["Campaign","All Campaigns"],["Tags","All Tags"],["Uploaded By","All Users"],["Date Range","Any Date"]
             ].map(([label,value])=>(
-              <div key={label} className="mt-2 first:mt-0"><label className="block text-[8px] text-[#647088] mb-1">{label}</label><div className="flex h-[28px] items-center justify-between rounded-[5px] border border-[#dfe5ed] bg-white px-2 text-[8.5px] text-[#39455e]"><span>{value}</span>{label==="Date Range"?<CalendarDays size={12}/>:<ChevronDown size={11}/>}</div></div>
+              <div key={label} className="mt-2 first:mt-0"><label className="block text-[9px] text-[#647088] mb-1">{label}</label><div className="flex h-[28px] items-center justify-between rounded-[5px] border border-[#dfe5ed] bg-white px-2 text-[9px] text-[#39455e]"><span>{value}</span>{label==="Date Range"?<CalendarDays size={12}/>:<ChevronDown size={11}/>}</div></div>
             ))}
             <label className="mt-2 flex h-[31px] items-center gap-[6px] rounded-[6px] border border-[#dfe5ed] px-2 text-[#8b95a7]"><Search size={13}/><input placeholder="Search files by name..." /></label>
           </section>
 
           <section>
-            <div className="mb-[7px] flex items-center justify-between"><h3 className="m-0 text-xs font-[750]">Popular Tags</h3><button className="border-0 bg-transparent text-[#dd2932] text-[8px] font-bold flex items-center gap-1">View all <ArrowUpRight size={9}/></button></div>
-            <div className="flex flex-wrap gap-[5px]">{tags.map(tag=><span className="bg-[#eef3f9] rounded-[9px] px-2 py-[5px] text-[8px] text-[#33415d]" key={tag}>{tag}</span>)}</div>
+            <div className="mb-[7px] flex items-center justify-between"><h3 className="m-0 text-xs font-[750]">Popular Tags</h3><button className="border-0 bg-transparent text-[#dd2932] text-[9px] font-bold flex items-center gap-1">View all <ArrowUpRight size={9}/></button></div>
+            <div className="flex flex-wrap gap-[5px]">{tags.map(tag=><span className="bg-[#eef3f9] rounded-[9px] px-2 py-[5px] text-[9px] text-[#33415d]" key={tag}>{tag}</span>)}</div>
           </section>
         </aside>
       </div>
