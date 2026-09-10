@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Check, ChevronDown, Link2, Send, Sparkles, Hash, Smile, Move, ThumbsUp, MessageSquare, Share2, MoreHorizontal, Info, ChevronRight, ChevronLeft, Plus, Globe } from "lucide-react";
 import { ChannelLogo } from "../../shared/channel-logo";
 
@@ -51,9 +52,9 @@ export function ContentStudioPage() {
         <div className="space-y-5">
           <div className="flex items-center gap-6 border-b">
             <button className="border-b-2 border-[#e20611] pb-2 text-[13px] font-bold text-[#e20611]">Create</button>
-            <button className="border-b-2 border-transparent pb-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground">AI Assistant</button>
-            <button className="border-b-2 border-transparent pb-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground">Templates</button>
-            <button className="border-b-2 border-transparent pb-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground">Saved Drafts</button>
+            <Link href="/admin/content/ai-assistant" className="border-b-2 border-transparent pb-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground">AI Assistant</Link>
+            <Link href="/admin/content/templates" className="border-b-2 border-transparent pb-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground">Templates</Link>
+            <Link href="/admin/content/drafts" className="border-b-2 border-transparent pb-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground">Saved Drafts</Link>
           </div>
 
           <section>
