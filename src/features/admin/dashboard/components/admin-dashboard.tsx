@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils/cn";
 
 const topStats = [
   {
-    label: "Projects",
+    label: "Clients",
     value: "4",
     trend: "33%",
     note: "+1 new this month",
@@ -441,7 +441,7 @@ function ChannelOverview({
               </i>
             </span>
             <b className="text-right text-[#078359]">
-                ↑ {Math.abs(ch.trend).toFixed(0)}%
+              ↑ {Math.abs(ch.trend).toFixed(0)}%
             </b>
           </div>
         ))}

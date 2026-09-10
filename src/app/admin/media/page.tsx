@@ -2,9 +2,8 @@
 import React from "react";
 import {
   Search, ChevronDown, ChevronLeft, ChevronRight, Upload, Grid3X3,
-  List, SlidersHorizontal, Image as ImageIcon, Video, FileText,
-  Palette, Boxes, MoreVertical, Play, File, FileImage, FileVideo,
-  FileType2, Folder, RotateCcw, CalendarDays, Tag, Users, X,
+  List, Image as ImageIcon, Video, FileText,
+  Palette, Boxes, MoreVertical, Play, FileType2, Folder, CalendarDays,
   ArrowDownUp, ArrowUpRight
 } from "lucide-react";
 
@@ -30,7 +29,7 @@ export default function MediaLibrary() {
     { name:"press-release.docx", meta:"420 KB • Mar 18, 2025", type:"doc", src:"https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&fm=jpg&q=85&w=900" },
   ];
 
-  const tabs = [
+  const tabs: [string, string, string, React.ComponentType<{size?: number}>][] = [
     ["All Files","248","all",Boxes],
     ["Images","186","image",ImageIcon],
     ["Videos","32","video",Video],
@@ -63,8 +62,8 @@ export default function MediaLibrary() {
 
       <div className="flex h-[53px] items-center gap-[9px] rounded-t-[7px] border border-[#e4e8ef] bg-white px-[10px] max-[820px]:overflow-x-auto">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          {tabs.map(([label,count,key,Icon],i)=>(
-            <button className={`flex h-[38px] items-center gap-[7px] whitespace-nowrap rounded-[6px] border border-[#e2e7ee] bg-white px-3 text-[10px] font-[650] text-[#34415b] ${i===0?"border-0 border-b-2 border-[#e2252f] rounded-none text-[#df252e] [&_svg]:text-[#e2252f]":""}`} key={label}>
+          {tabs.map(([label,count,tabKey,Icon],i)=>(
+            <button className={`flex h-[38px] items-center gap-[7px] whitespace-nowrap rounded-[6px] border border-[#e2e7ee] bg-white px-3 text-[10px] font-[650] text-[#34415b] ${i===0?"border-0 border-b-2 border-[#e2252f] rounded-none text-[#df252e] [&_svg]:text-[#e2252f]":""}`} key={tabKey}>
               <Icon size={15}/><span>{label}</span><span className="bg-[#eef2f8] text-[#394761] rounded-[10px] px-[7px] py-[3px] text-[9px]">{count}</span>
             </button>
           ))}
@@ -84,7 +83,7 @@ export default function MediaLibrary() {
               <div className="flex flex-col items-center gap-[5px]"><Upload className="text-[#e5222d]" size={29}/><b className="text-[11px]">Upload Files</b><span className="text-[9px] text-[#718098] leading-[1.45]">Drag & drop files here<br/>or click to browse</span><small className="text-[9px] text-[#758198] mt-1">Supports: JPG, PNG, MP4, PDF etc.</small></div>
             </div>
 
-            {files.slice(0,17).map((file,i)=>(
+            {files.slice(0,17).map((file)=>(
               <article className="relative min-w-0 overflow-hidden rounded-[6px] border border-[#e0e5ec] bg-white shadow-[0_1px_3px_rgba(20,35,60,.025)]" key={file.name}>
                 <div className="relative h-[130px] overflow-hidden bg-[#e8edf2]">
                   <span className="absolute left-[7px] top-[7px] z-[4] h-[14px] w-[14px] rounded-[3px] border border-[#d4dbe5] bg-white/90"></span>
@@ -97,15 +96,15 @@ export default function MediaLibrary() {
                       onError={(e) => { e.currentTarget.style.opacity = "0"; }}
                     />
                     {file.overlay && <span className="absolute left-3 top-[11px] z-[2] text-[16px] font-[850] leading-[.96] tracking-[.2px] text-white drop-shadow-[0_2px_7px_rgba(0,0,0,.42)]">{file.overlay.split("\\n").map((line,idx)=><React.Fragment key={idx}>{idx>0 && <br/>}{line}</React.Fragment>)}</span>}
-                    {file.logo && <span className="absolute bottom-3 left-0 right-0 z-[2] text-center text-[13px] font-[850] tracking-[.6px] text-[#16445d] drop-shadow-[0_1px_1px_rgba(255,255,255,.8)]">MOKSHA SEWA<small className="mt-0.5 block text-[6px] tracking-[1px]">DIGNITY FOR EVERY LIFE</small></span>}
+                    {file.logo && <span className="absolute bottom-3 left-0 right-0 z-[2] text-center text-[13px] font-[850] tracking-[.6px] text-[#16445d] drop-shadow-[0_1px_1px_rgba(255,255,255,.8)]">MOKSHA SEWA<small className="mt-0.5 block text-[9px] tracking-[1px]">DIGNITY FOR EVERY LIFE</small></span>}
                     {file.type==="pdf" && <span className="absolute left-1/2 top-1/2 z-[2] -translate-x-1/2 -translate-y-1/2 rounded-[4px] bg-white px-[9px] py-3 text-[17px] font-[850] text-[#e12630] shadow-[0_3px_10px_rgba(20,30,45,.12)]">PDF</span>}
                     {file.type==="doc" && <span className="absolute left-1/2 top-1/2 z-[2] -translate-x-1/2 -translate-y-1/2 rounded-[4px] bg-white px-[9px] py-3 text-[17px] font-[850] text-[#1e6cc4] shadow-[0_3px_10px_rgba(20,30,45,.12)]">DOC</span>}
-                    {file.type==="video" && <><span className="absolute left-1/2 top-1/2 z-[3] grid h-7 w-[39px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[7px] bg-black/75 text-white"><Play size={15} fill="currentColor"/></span><span className="absolute bottom-[6px] left-[6px] z-[3] rounded-[3px] bg-black/80 px-[5px] py-[3px] text-[8px] text-white">{file.duration}</span></>}
+                    {file.type==="video" && <><span className="absolute left-1/2 top-1/2 z-[3] grid h-7 w-[39px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[7px] bg-black/75 text-white"><Play size={15} fill="currentColor"/></span><span className="absolute bottom-[6px] left-[6px] z-[3] rounded-[3px] bg-black/80 px-[5px] py-[3px] text-[9px] text-white">{file.duration}</span></>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 flex-row">
                   <span className="grid h-[17px] w-[17px] shrink-0 place-items-center rounded-[3px] bg-[#e7f3ff] text-[#2a85d9]">{file.type==="video"?<Video size={11}/>:file.type==="pdf"?<FileText size={11}/>:file.type==="doc"?<FileType2 size={11}/>:<ImageIcon size={11}/>}</span>
-                  <div className="min-w-0 flex-1"><b className="block text-[8.5px] text-[#34405a] whitespace-nowrap overflow-hidden text-ellipsis">{file.name}</b><small className="block text-[7.5px] text-[#8791a3] mt-0.5">{file.meta}</small></div>
+                  <div className="min-w-0 flex-1"><b className="block text-[9px] text-[#34405a] whitespace-nowrap overflow-hidden text-ellipsis">{file.name}</b><small className="block text-[9px] text-[#8791a3] mt-0.5">{file.meta}</small></div>
                   <button className="border-0 bg-transparent text-[#68748a] p-0 shrink-0"><MoreVertical size={13}/></button>
                 </div>
               </article>
@@ -127,7 +126,7 @@ export default function MediaLibrary() {
           </section>
 
           <section className="border-b border-[#eef1f5] pb-[11px] last:border-0">
-            <div className="mb-[7px] flex items-center justify-between"><h3 className="m-0 text-xs font-[750]">Filters</h3><button className="border-0 bg-transparent text-[#dd2932] text-[8px] font-bold">Reset</button></div>
+            <div className="mb-[7px] flex items-center justify-between"><h3 className="m-0 text-xs font-[750]">Filters</h3><button className="border-0 bg-transparent text-[#dd2932] text-[9px] font-bold">Reset</button></div>
             {[
               ["Project","Moksha Sewa"],["File Type","All Types"],["Channel","All Channels"],["Campaign","All Campaigns"],["Tags","All Tags"],["Uploaded By","All Users"],["Date Range","Any Date"]
             ].map(([label,value])=>(

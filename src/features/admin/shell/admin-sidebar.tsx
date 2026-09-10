@@ -47,8 +47,8 @@ export function AdminSidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex bg-[#151d2e] transition-[width,transform] duration-200 lg:translate-x-0",
-          "border-r border-[#1E2A3D] shadow-[1px_0_12px_rgb(2_6_23/0.35)]",
+          "fixed inset-y-0 left-0 z-50 flex bg-[#283647] transition-[width,transform] duration-200 lg:translate-x-0",
+          "border-r border-[#3A4B5E] shadow-[1px_0_12px_rgb(2_6_23/0.35)]",
           isSidebarCollapsed ? "w-[64px]" : "w-[236px]",
           isMobileNavOpen ? "translate-x-0" : "-translate-x-full",
         )}
@@ -57,7 +57,7 @@ export function AdminSidebar() {
           {/* Brand */}
           <div
             className={cn(
-              "flex h-[72px] shrink-0 items-center justify-center border-b border-[#1E2A3D] bg-white",
+              "flex h-[72px] shrink-0 items-center justify-center border-b border-[#3A4B5E] bg-white",
               isSidebarCollapsed ? "px-0" : "px-3",
             )}
           >
@@ -89,17 +89,17 @@ export function AdminSidebar() {
 
           {/* Navigation */}
           <nav
-            className="scrollbar-thin scrollbar-dark min-h-0 flex-1 overflow-y-auto px-2 py-3"
+            className="scrollbar-thin scrollbar-dark min-h-0 flex-1 overflow-y-auto py-3"
             aria-label="Admin navigation"
           >
             {adminNavigation.map((section, index) => (
               <div key={section.label} className={cn(index > 0 && "mt-3.5")}>
                 {!isSidebarCollapsed ? (
-                  <p className="mb-1 px-2.5 text-[8.5px] font-bold uppercase tracking-[0.14em] text-[#5A6B85]">
+                  <p className="mb-1 px-4 text-[8.5px] font-bold uppercase tracking-[0.14em] text-[#5A6B85]">
                     {section.label}
                   </p>
                 ) : (
-                  index > 0 && <div className="mx-3 mb-2.5 border-t border-[#1E2A3D]" />
+                  index > 0 && <div className="mx-3 mb-2.5 border-t border-[#3A4B5E]" />
                 )}
                 <div className="space-y-px">
                   {section.items.map((item) => {
@@ -114,14 +114,14 @@ export function AdminSidebar() {
                         onClick={() => setMobileNavOpen(false)}
                         className={cn(
                           "group relative flex h-[31px] items-center gap-2.5 rounded-md text-[11.5px] transition-colors",
-                          isSidebarCollapsed ? "justify-center px-0" : "px-2.5",
+                          isSidebarCollapsed ? "justify-center mx-2 px-0" : "mx-2 px-2.5",
                           active
-                            ? "bg-[#1B2740] font-semibold text-white"
+                            ? "bg-[#1A2634] font-semibold text-white"
                             : "font-medium text-[#98A6BE] hover:bg-white/[0.055] hover:text-[#E6EBF3]",
                         )}
                       >
                         {active && (
-                          <span className="absolute left-0 top-1/2 h-[16px] w-[2.5px] -translate-y-1/2 rounded-r-full bg-[#EB0711]" />
+                          <span className="absolute -left-2 top-1/2 h-[16px] w-[3px] -translate-y-1/2 rounded-r-full bg-[#EB0711]" />
                         )}
                         {brandLabels.has(item.label) ? (
                           <ChannelLogo
@@ -149,7 +149,7 @@ export function AdminSidebar() {
 
           {/* Support */}
           {!isSidebarCollapsed ? (
-            <button className="mx-2.5 mb-2 flex shrink-0 items-center gap-2.5 rounded-lg border border-[#1E2A3D] bg-white/[0.035] px-2.5 py-2 text-left transition-colors hover:border-[#2A3850] hover:bg-white/[0.07]">
+            <button className="mx-2.5 mb-2 flex shrink-0 items-center gap-2.5 rounded-lg border border-[#3A4B5E] bg-white/[0.035] px-2.5 py-2 text-left transition-colors hover:border-[#4B5E73] hover:bg-white/[0.07]">
               <span className="grid size-7 shrink-0 place-items-center rounded-md bg-[#EB0711]/15">
                 <Headphones className="size-3.5 text-[#F26D74]" />
               </span>
@@ -174,7 +174,7 @@ export function AdminSidebar() {
             onClick={toggleSidebar}
             aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             className={cn(
-              "hidden h-9 shrink-0 items-center gap-2 border-t border-[#1E2A3D] text-[10px] font-semibold text-[#6B7A94] transition-colors hover:bg-white/[0.055] hover:text-[#E6EBF3] lg:flex",
+              "hidden h-9 shrink-0 items-center gap-2 border-t border-[#3A4B5E] text-[10px] font-semibold text-[#6B7A94] transition-colors hover:bg-white/[0.055] hover:text-[#E6EBF3] lg:flex",
               isSidebarCollapsed ? "justify-center px-0" : "px-4",
             )}
           >
