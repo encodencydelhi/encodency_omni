@@ -1,0 +1,2 @@
+import type { ReactNode } from "react";
+export function AdminPageTitle({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: ReactNode }) { return <header className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[8px] font-semibold text-[#75829D]">{eyebrow}</p><h1 className="mt-0.5 text-[21px] font-bold tracking-tight text-[#101A3D]">{title}</h1><p className="mt-0.5 text-[9px] text-[#687797]">{description}</p></div>{action}</header>; }

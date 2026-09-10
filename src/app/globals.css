@@ -1,0 +1,245 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ==========================================================================
+   EnCodency omniPlatform — Design Tokens
+   --------------------------------------------------------------------------
+   Direction: premium, minimal, calm, trustworthy B2B SaaS control panel.
+   Rules:
+     - No pure black (#000) and no black-heavy surfaces.
+     - Warm off-white ground, white elevated surfaces.
+     - Muted teal primary, soft sage secondary, deep blue-grey text.
+     - Status colours stay desaturated; they inform, they do not alarm.
+   Every value below is a token. Components must not invent raw colours.
+   ========================================================================== */
+
+:root {
+  /* --- Surfaces ------------------------------------------------------- */
+  --background: #fbfaf8; /* warm off-white app ground */
+  --foreground: #1e2a38; /* deep blue-grey — replaces black */
+  --card: #ffffff;
+  --card-foreground: #1e2a38;
+  --popover: #ffffff;
+  --popover-foreground: #1e2a38;
+
+  /* Secondary ground used for sidebars, table headers, inset panels */
+  --surface-sunken: #f5f3f0;
+
+  /* --- Brand ---------------------------------------------------------- */
+  /* EnCodency red, taken from the corporate mark. Used as an accent on a
+     warm neutral ground — never as a large surface outside the auth screen. */
+  --primary: #e20611; /* sampled from public/brand/encodency-logo.jpg */
+  --primary-foreground: #ffffff;
+  --primary-hover: #c3050f;
+  --primary-subtle: #fdecec; /* tinted background for selected/active */
+
+  /* The brand gradient, reserved for the sign-in panel and the mark. */
+  --brand-gradient-from: #e20611;
+  --brand-gradient-via: #cc050f;
+  --brand-gradient-to: #ab040c;
+  /* Slightly tighter ramp for the primary call to action. */
+  --brand-cta-from: #e20611;
+  --brand-cta-to: #c3050f;
+
+  --secondary: #f2efec; /* warm neutral */
+  --secondary-foreground: #4a5560;
+
+  /* --- Neutrals ------------------------------------------------------- */
+  --muted: #f3f1ef;
+  --muted-foreground: #667585; /* cool grey */
+  --accent: #f5f2f0; /* hover wash */
+  --accent-foreground: #1e2a38;
+
+  --border: #ece9e6; /* warm hairline, matching the sign-in card */
+  --border-strong: #ddd8d3;
+  --input: #e3ddd8;
+  --ring: #dc1820;
+
+  /* --- Status (subtle: readable text on a low-saturation ground) ------ */
+  --success: #2f7a55;
+  --success-subtle: #e9f3ed;
+  --warning: #8f6420;
+  --warning-subtle: #f9f1e2;
+  --danger: #b3261e;
+  --danger-subtle: #f8ebe9;
+  --destructive: #b3261e;
+  --destructive-foreground: #fdf6f5;
+  --info: #2c5f86;
+  --info-subtle: #e9f0f6;
+  --neutral: #5d6b75;
+  --neutral-subtle: #eff1f2;
+  /* One extra hue, so the dashboard's metric tiles stay distinguishable
+     without introducing a full second palette. */
+  --violet: #6d5aa8;
+  --violet-subtle: #efecf8;
+
+  /* --- Sidebar -------------------------------------------------------- */
+  --sidebar: #f8f6f4;
+  --sidebar-foreground: #3a4653;
+  --sidebar-border: #ece9e6;
+  --sidebar-accent: #f1ede9;
+  --sidebar-accent-foreground: #1e2a38;
+
+  /* --- Charts (muted, harmonious, distinguishable) -------------------- */
+  --chart-1: #e20611; /* brand */
+  --chart-2: #4f7ca3;
+  --chart-3: #2a6f6b;
+  --chart-4: #b58a3e;
+  --chart-5: #7a6f93;
+
+  /* --- Radius --------------------------------------------------------- */
+  --radius: 0.5rem; /* 8px base — restrained, not pill-shaped */
+
+  /* --- Elevation (soft, low-contrast; never a "random shadow") -------- */
+  --shadow-xs: 0 1px 2px 0 rgb(30 42 50 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(30 42 50 / 0.06), 0 1px 2px -1px rgb(30 42 50 / 0.04);
+  --shadow-md: 0 4px 12px -2px rgb(30 42 50 / 0.08), 0 2px 4px -2px rgb(30 42 50 / 0.04);
+  --shadow-lg: 0 12px 32px -8px rgb(30 42 50 / 0.14);
+
+  /* --- Layout --------------------------------------------------------- */
+  --sidebar-width: 16rem; /* 256px */
+  --sidebar-width-collapsed: 4rem; /* 64px */
+  --topbar-height: 3.5rem; /* 56px */
+  --content-max-width: 90rem; /* 1440px */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-surface-sunken: var(--surface-sunken);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-brand-from: var(--brand-gradient-from);
+  --color-brand-via: var(--brand-gradient-via);
+  --color-brand-to: var(--brand-gradient-to);
+  --color-brand-cta-from: var(--brand-cta-from);
+  --color-brand-cta-to: var(--brand-cta-to);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+  --color-neutral: var(--neutral);
+  --color-neutral-subtle: var(--neutral-subtle);
+  --color-violet: var(--violet);
+  --color-violet-subtle: var(--violet-subtle);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
+
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono",
+    Menlo, Consolas, monospace;
+
+  /* Type scale — tight, information-dense, no giant display numbers */
+  --text-2xs: 0.6875rem; /* 11px — table meta, timestamps */
+  --text-2xs--line-height: 1rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "cv11", "ss01";
+    font-variant-numeric: tabular-nums;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* A single, consistent focus treatment across the whole product. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Numeric columns and metrics must align vertically. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * Chrome and Safari paint autofilled inputs with their own blue background,
+   * which overrides ours. The inset shadow trick repaints the field, and the
+   * long transition keeps it from flashing back.
+   */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--foreground);
+    -webkit-box-shadow: 0 0 0 60rem var(--card) inset;
+    box-shadow: 0 0 0 60rem var(--card) inset;
+    caret-color: var(--foreground);
+    transition: background-color 100000s ease-in-out 0s;
+  }
+}
+
+@layer utilities {
+  /* Consistent page gutter used by every route's shell. */
+  .page-gutter {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 1280px) {
+    .page-gutter {
+      padding-inline: 2rem;
+    }
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+}
