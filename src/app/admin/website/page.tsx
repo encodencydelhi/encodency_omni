@@ -1,1 +1,5 @@
-import { ChannelModulePage } from "@/features/admin/channels/channel-module-page"; export default function Page(){return <ChannelModulePage moduleKey="website"/>}
+import { WebsiteChannelPage } from "@/features/admin/channels/components/website-channel-page";
+
+export default function Page() {
+  return <WebsiteChannelPage />;
+}

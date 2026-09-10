@@ -1,1 +1,5 @@
-import { ChannelModulePage } from "@/features/admin/channels/channel-module-page"; export default function Page(){return <ChannelModulePage moduleKey="meta"/>}
+import { MetaChannelPage } from "@/features/admin/channels/components/meta-channel-page";
+
+export default function Page() {
+  return <MetaChannelPage />;
+}

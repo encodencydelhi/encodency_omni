@@ -238,8 +238,41 @@
     }
   }
 
+  /*
+   * `scrollbar-width: thin` alone still leaves a wide track with stepper
+   * arrows on Windows, so the WebKit pseudo-elements do the real work.
+   */
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: var(--border-strong) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track,
+  .scrollbar-thin::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 9999px;
+  }
+  /* Removes the up/down stepper buttons at each end of the track. */
+  .scrollbar-thin::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /* Same geometry, tuned for dark surfaces like the admin sidebar. */
+  .scrollbar-dark {
+    scrollbar-color: #33415580 transparent;
+  }
+  .scrollbar-dark::-webkit-scrollbar-thumb {
+    background: #33415580;
+  }
+  .scrollbar-dark:hover::-webkit-scrollbar-thumb {
+    background: #475569;
   }
 }

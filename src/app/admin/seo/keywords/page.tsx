@@ -1,1 +1,5 @@
-import { SeoPage } from "@/features/admin/seo/seo-page"; export default function Page(){return <SeoPage view="keywords"/>}
+import { SeoKeywordsPage } from "@/features/admin/seo/components/seo-keywords-page";
+
+export default function Page() {
+  return <SeoKeywordsPage />;
+}

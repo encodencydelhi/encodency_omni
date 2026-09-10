@@ -1,1 +1,5 @@
-import { SeoPage } from "@/features/admin/seo/seo-page"; export default function Page(){return <SeoPage/>}
+import { SeoOverviewPage } from "@/features/admin/seo/components/seo-overview-page";
+
+export default function Page() {
+  return <SeoOverviewPage />;
+}

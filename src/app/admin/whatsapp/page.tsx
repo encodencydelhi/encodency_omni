@@ -1,1 +1,5 @@
-import { ChannelModulePage } from "@/features/admin/channels/channel-module-page"; export default function Page(){return <ChannelModulePage moduleKey="whatsapp"/>}
+import { WhatsappChannelPage } from "@/features/admin/channels/components/whatsapp-channel-page";
+
+export default function Page() {
+  return <WhatsappChannelPage />;
+}

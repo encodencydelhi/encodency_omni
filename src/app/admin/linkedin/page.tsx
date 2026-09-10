@@ -1,1 +1,5 @@
-import { ChannelModulePage } from "@/features/admin/channels/channel-module-page"; export default function Page(){return <ChannelModulePage moduleKey="linkedin"/>}
+import { LinkedInChannelPage } from "@/features/admin/channels/components/linkedin-channel-page";
+
+export default function Page() {
+  return <LinkedInChannelPage />;
+}

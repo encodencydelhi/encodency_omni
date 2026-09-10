@@ -1,1 +1,5 @@
-import { ChannelModulePage } from "@/features/admin/channels/channel-module-page"; export default function Page(){return <ChannelModulePage moduleKey="google-business"/>}
+import { GoogleBusinessPage } from "@/features/admin/channels/components/google-business-page";
+
+export default function Page() {
+  return <GoogleBusinessPage />;
+}
