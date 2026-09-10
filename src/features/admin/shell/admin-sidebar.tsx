@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
-import { ChevronLeft, Headphones, X } from "lucide-react";
+import { ChevronRight, ChevronsLeft, Headphones, X } from "lucide-react";
 import { adminNavigation } from "@/config/admin-navigation";
 import { cn } from "@/lib/utils/cn";
 import { useAdminContext } from "./admin-context";
@@ -18,6 +18,18 @@ const brandLabels = new Set([
   "WhatsApp",
   "YouTube",
 ]);
+
+const iconColors: Record<string, string> = {
+  "Dashboard": "text-[#38BDF8]",
+  "Clients": "text-[#3B82F6]",
+  "Content Studio": "text-[#A78BFA]",
+  "Calendar": "text-[#F472B6]",
+  "Campaigns": "text-[#FB923C]",
+  "Media Library": "text-[#2DD4BF]",
+  "SEO Overview": "text-[#7DD3FC]",
+  "Site Audit": "text-[#CBD5E1]",
+  "Pages": "text-[#BAE6FD]",
+};
 function useActiveHref(pathname: string) {
   return useMemo(() => {
     const hrefs = adminNavigation.flatMap((section) =>
@@ -47,22 +59,25 @@ export function AdminSidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex bg-[#283647] transition-[width,transform] duration-200 lg:translate-x-0",
-          "border-r border-[#3A4B5E] shadow-[1px_0_12px_rgb(2_6_23/0.35)]",
-          isSidebarCollapsed ? "w-[64px]" : "w-[236px]",
+          "fixed inset-y-0 left-0 z-50 flex bg-[#0B1121] transition-[width,transform] duration-200 lg:translate-x-0",
+          "border-r border-[#1E293B] shadow-[1px_0_12px_rgb(0_0_0/0.5)]",
+          isSidebarCollapsed ? "w-[64px]" : "w-[220px]",
           isMobileNavOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex min-w-0 flex-1 flex-col">
+        {/* Glow effect in the background */}
+        <div className="absolute top-0 left-0 right-0 h-[200px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent pointer-events-none" />
+
+        <div className="flex min-w-0 flex-1 flex-col relative z-10">
           {/* Brand */}
           <div
             className={cn(
-              "flex h-[72px] shrink-0 items-center justify-center border-b border-[#3A4B5E] bg-white",
+              "flex h-[80px] shrink-0 items-center justify-center border-b border-white/5",
               isSidebarCollapsed ? "px-0" : "px-3",
             )}
           >
             {isSidebarCollapsed ? (
-              <span className="grid size-8 place-items-center rounded-md bg-[#F1F5F9] text-[15px] font-bold text-[#0F172A]">
+              <span className="grid size-8 place-items-center rounded-md bg-[#1E293B] text-[15px] font-bold text-white shadow-[0_0_10px_rgba(59,130,246,0.3)]">
                 e
               </span>
             ) : (
@@ -70,16 +85,16 @@ export function AdminSidebar() {
                 <Image
                   src={logo}
                   alt="Namo Gange Trust"
-                  width={120}
-                  height={49}
+                  width={140}
+                  height={56}
                   priority
                   sizes="160px"
-                  className="h-[58px] w-auto min-w-0 max-w-full shrink object-contain"
+                  className="h-[60px] w-auto min-w-0 max-w-full shrink object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]"
                 />
                 <button
                   onClick={() => setMobileNavOpen(false)}
                   aria-label="Close navigation"
-                  className="ml-2 grid size-7 shrink-0 place-items-center rounded-md text-[#64748B] transition-colors hover:bg-[#F1F5F9] hover:text-[#0F172A] lg:hidden"
+                  className="ml-2 grid size-7 shrink-0 place-items-center rounded-md text-[#64748B] transition-colors hover:bg-[#1E293B] hover:text-white lg:hidden"
                 >
                   <X className="size-4" />
                 </button>
@@ -88,20 +103,24 @@ export function AdminSidebar() {
           </div>
 
           {/* Navigation */}
+          {/* Navigation */}
           <nav
-            className="scrollbar-thin scrollbar-dark min-h-0 flex-1 overflow-y-auto py-3"
+            className="scrollbar-thin scrollbar-dark min-h-0 flex-1 overflow-y-auto px-3 py-4"
             aria-label="Admin navigation"
           >
             {adminNavigation.map((section, index) => (
-              <div key={section.label} className={cn(index > 0 && "mt-3.5")}>
+              <div key={section.label} className={cn(index > 0 && "mt-5")}>
                 {!isSidebarCollapsed ? (
-                  <p className="mb-1 px-4 text-[8.5px] font-bold uppercase tracking-[0.14em] text-[#5A6B85]">
-                    {section.label}
-                  </p>
+                  <div className="flex items-center gap-3 px-2 mb-3">
+                    <p className="text-[9.5px] font-bold uppercase tracking-widest text-[#7E8DA6]">
+                      {section.label}
+                    </p>
+                    <div className="h-[1px] w-8 bg-[#1E293B]" />
+                  </div>
                 ) : (
-                  index > 0 && <div className="mx-3 mb-2.5 border-t border-[#3A4B5E]" />
+                  index > 0 && <div className="mx-3 mb-3 border-t border-[#1E293B]" />
                 )}
-                <div className="space-y-px">
+                <div className="space-y-1.5">
                   {section.items.map((item) => {
                     const active = item.href === activeHref;
                     const Icon = item.icon;
@@ -113,32 +132,34 @@ export function AdminSidebar() {
                         title={isSidebarCollapsed ? item.label : undefined}
                         onClick={() => setMobileNavOpen(false)}
                         className={cn(
-                          "group relative flex h-[31px] items-center gap-2.5 rounded-md text-[11.5px] transition-colors",
-                          isSidebarCollapsed ? "justify-center mx-2 px-0" : "mx-2 px-2.5",
+                          "group flex h-[36px] items-center gap-3 rounded-xl border text-[12px] transition-all duration-200",
+                          isSidebarCollapsed ? "justify-center px-0" : "px-3",
                           active
-                            ? "bg-[#1A2634] font-semibold text-white"
-                            : "font-medium text-[#98A6BE] hover:bg-white/[0.055] hover:text-[#E6EBF3]",
+                            ? "border-[#2563EB]/50 bg-[#1E3A8A]/30 text-white shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                            : "border-[#1E293B] bg-[#131C2F] font-medium text-[#E2E8F0] hover:border-[#334155] hover:bg-[#1E293B]",
                         )}
                       >
-                        {active && (
-                          <span className="absolute -left-2 top-1/2 h-[16px] w-[3px] -translate-y-1/2 rounded-r-full bg-[#EB0711]" />
-                        )}
                         {brandLabels.has(item.label) ? (
                           <ChannelLogo
                             channel={item.label}
-                            className="size-[16px] shrink-0 rounded-[4px] shadow-[0_1px_2px_rgb(2_6_23/0.4)]"
+                            className="size-[18px] shrink-0 rounded-[4px]"
                           />
                         ) : (
                           <Icon
                             className={cn(
-                              "size-[15px] shrink-0 transition-colors",
+                              "size-[16px] shrink-0 transition-colors",
                               active
-                                ? "text-[#EB0711]"
-                                : "text-[#6B7A94] group-hover:text-[#98A6BE]",
+                                ? "text-[#38BDF8]"
+                                : iconColors[item.label] || "text-[#94A3B8]",
                             )}
                           />
                         )}
-                        {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
+                        {!isSidebarCollapsed && (
+                          <>
+                            <span className="truncate">{item.label}</span>
+                            <ChevronRight className="size-3.5 ml-auto text-[#475569] group-hover:text-[#94A3B8] transition-colors" />
+                          </>
+                        )}
                       </Link>
                     );
                   })}
@@ -149,23 +170,24 @@ export function AdminSidebar() {
 
           {/* Support */}
           {!isSidebarCollapsed ? (
-            <button className="mx-2.5 mb-2 flex shrink-0 items-center gap-2.5 rounded-lg border border-[#3A4B5E] bg-white/[0.035] px-2.5 py-2 text-left transition-colors hover:border-[#4B5E73] hover:bg-white/[0.07]">
-              <span className="grid size-7 shrink-0 place-items-center rounded-md bg-[#EB0711]/15">
-                <Headphones className="size-3.5 text-[#F26D74]" />
+            <button className="mx-3 mb-3 mt-1 flex h-[46px] shrink-0 items-center gap-3 rounded-xl border border-[#D946EF]/30 bg-[#D946EF]/10 px-3 text-left transition-all hover:border-[#D946EF]/60 shadow-[0_0_15px_rgba(217,70,239,0.1)] group">
+              <span className="grid size-8 shrink-0 place-items-center">
+                <Headphones className="size-4 text-[#D946EF]" />
               </span>
-              <span className="min-w-0">
-                <b className="block truncate text-[10.5px] font-bold leading-4 text-[#E6EBF3]">
+              <span className="min-w-0 flex-1">
+                <b className="block truncate text-[11.5px] font-bold leading-tight text-white">
                   Help &amp; Support
                 </b>
-                <small className="block truncate text-[8.5px] leading-3 text-[#6B7A94]">
+                <small className="block truncate text-[9px] leading-tight text-[#94A3B8] mt-0.5">
                   Need help? Contact us.
                 </small>
               </span>
+              <ChevronRight className="size-3.5 text-[#D946EF]/50 group-hover:text-[#D946EF] transition-colors" />
             </button>
           ) : (
-            <div className="mb-2 flex shrink-0 justify-center" title="Help & Support">
-              <span className="grid size-8 place-items-center rounded-md bg-[#EB0711]/15">
-                <Headphones className="size-4 text-[#F26D74]" />
+            <div className="mb-3 flex shrink-0 justify-center" title="Help & Support">
+              <span className="grid size-[36px] place-items-center rounded-xl border border-[#D946EF]/30 bg-[#D946EF]/10 shadow-[0_0_15px_rgba(217,70,239,0.1)]">
+                <Headphones className="size-4 text-[#D946EF]" />
               </span>
             </div>
           )}
@@ -174,13 +196,13 @@ export function AdminSidebar() {
             onClick={toggleSidebar}
             aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             className={cn(
-              "hidden h-9 shrink-0 items-center gap-2 border-t border-[#3A4B5E] text-[10px] font-semibold text-[#6B7A94] transition-colors hover:bg-white/[0.055] hover:text-[#E6EBF3] lg:flex",
-              isSidebarCollapsed ? "justify-center px-0" : "px-4",
+              "hidden h-12 shrink-0 items-center gap-3 border-t border-[#1E293B] text-[11.5px] font-medium text-[#94A3B8] transition-colors hover:bg-white/[0.02] hover:text-white lg:flex",
+              isSidebarCollapsed ? "justify-center px-0" : "px-5",
             )}
           >
-            <ChevronLeft
+            <ChevronsLeft
               className={cn(
-                "size-3.5 transition-transform duration-200",
+                "size-4 transition-transform duration-200",
                 isSidebarCollapsed && "rotate-180",
               )}
             />
