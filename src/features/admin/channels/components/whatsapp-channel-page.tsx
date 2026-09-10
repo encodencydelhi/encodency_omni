@@ -30,6 +30,7 @@ import {
   Mail,
   Edit3,
   UsersRound,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -138,16 +139,29 @@ export function WhatsappChannelPage() {
             <p className="text-[10px] text-[#71809D]">Manage your WhatsApp Business, campaigns, templates and customer conversations.</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 border-r border-[#E8EDF3] pr-3">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 border-r border-[#E8EDF3] pr-3 mr-1">
             <div className="text-right">
-              <p className="text-[9px] font-bold text-[#38444D]">WhatsApp Business API</p>
-              <p className="flex items-center justify-end gap-1 text-[8px] text-[#71809D]"><i className="size-1.5 rounded-full bg-[#25D366]" /> Connected<span className="ml-1 opacity-60">Last sync: 5 minutes ago</span></p>
+              <p className="text-[10px] font-bold text-[#38444D]">WhatsApp Business API</p>
+              <p className="flex items-center justify-end gap-1 text-[9px] text-[#71809D]"><i className="size-1.5 rounded-full bg-[#25D366]" /> Connected<span className="ml-1 opacity-60">Last sync: 5 mins ago</span></p>
             </div>
           </div>
-          <button className="flex h-8 items-center gap-1.5 rounded border border-[#DDE4ED] bg-white px-2.5 text-[9px] font-semibold text-[#38444D] shadow-sm hover:bg-[#FAFBFC]"><Send className="size-3" /> Send Test</button>
-          <button className="flex h-8 items-center rounded border border-[#DDE4ED] bg-white px-2.5 text-[9px] font-semibold text-[#38444D] shadow-sm hover:bg-[#FAFBFC]">Manage Integration</button>
-          <button className="flex h-8 items-center gap-2 rounded border border-[#DDE4ED] bg-white px-2.5 text-[9px] font-semibold text-[#38444D] shadow-sm hover:bg-[#FAFBFC]"><CalendarDays className="size-3.5 text-[#182A58]" /><div className="text-left"><span className="block leading-tight">Last 30 days</span><span className="block text-[7px] font-normal text-[#71809D]">Mar 15, 2025 – Apr 14, 2025</span></div><ChevronDown className="size-3" /></button>
+          <button className="flex h-9 items-center gap-1.5 rounded border border-[#DDE4ED] bg-white px-3 text-[11px] font-semibold text-[#38444D] shadow-sm hover:bg-[#FAFBFC]">
+            <Send className="size-3.5" /> 
+            Send Test
+          </button>
+          <button className="flex h-9 items-center gap-2.5 rounded border border-[#DDE4ED] bg-white px-3 text-[11px] font-semibold text-[#38444D] shadow-sm hover:bg-[#FAFBFC]">
+            <CalendarDays className="size-4 text-[#182A58]" />
+            <div className="text-left">
+              <span className="block leading-tight">Last 30 days</span>
+              <span className="block mt-0.5 text-[9px] font-normal text-[#71809D]">Mar 15, 2025 – Apr 14, 2025</span>
+            </div>
+            <ChevronDown className="size-3.5" />
+          </button>
+          <button className="flex h-9 items-center gap-2 rounded border border-[#DDE4ED] bg-white px-3.5 text-[11px] font-semibold text-[#172044] shadow-sm hover:bg-[#FAFBFC]">
+            <Download className="size-4" />
+            Export Report
+          </button>
         </div>
       </div>
 
