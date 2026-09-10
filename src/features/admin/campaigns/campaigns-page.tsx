@@ -326,7 +326,18 @@ export function CampaignsPage() {
                     <td className="px-2.5"><strong className="text-[9px] text-[#26334d]">{c.spend}</strong></td>
                     <td className="px-2.5"><strong className="block text-[9px] text-[#26334d]">{c.conversions}</strong>{c.conversionGrowth&&<em className="text-[9px] font-bold not-italic text-[#13a16b]">↑ {c.conversionGrowth}</em>}</td>
                     <td className="px-2.5">
-                      <div className={`grid h-9 w-9 place-items-center rounded-full border-[3px] text-[9px] font-[750] text-[#27354d] ${c.scoreTone==="yellow"?"border-[#efbd25]":c.scoreTone==="red"?"border-[#ed3742]":c.scoreTone==="empty"?"border-[#dfe5ed] text-[#8b95a6]":"border-[#21b47b]"}`}>{c.score}</div>
+                      <div className="relative grid h-9 w-9 place-items-center text-[9px] font-[750] text-[#27354d]">
+                        <svg className="h-9 w-9 -rotate-90" viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="14" fill="none" stroke="#edf1f5" strokeWidth="3.5" />
+                          {c.score !== "—" && <circle cx="18" cy="18" r="14" fill="none"
+                            stroke={c.scoreTone==="yellow"?"#efbd25":c.scoreTone==="red"?"#ed3742":"#21b47b"}
+                            strokeWidth="3.5"
+                            strokeLinecap="round"
+                            strokeDasharray={`${(Number(c.score)/100)*87.96} 87.96`}
+                          />}
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-[750]">{c.score}</span>
+                      </div>
                     </td>
                     <td className="px-2.5 leading-[1.35]"><b className="block text-[9px] font-medium">{c.updated[0]}</b><small className="text-[9px] text-[#8b95a6]">{c.updated[1]}</small></td>
                     <td className="px-2.5">
@@ -369,7 +380,18 @@ export function CampaignsPage() {
                 <div className="grid min-h-8 grid-cols-[22px_1fr_32px] items-center gap-2 border-b border-[#f0f2f5] py-1.5 last:border-0" key={name}>
                   <span className="grid h-[21px] w-[21px] place-items-center rounded-full bg-[#f0f3f7] text-[9px] font-[750] text-[#5d6a80]">{i+1}</span>
                   <div className="min-w-0"><b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#35415a]">{name}</b><small className="text-[9px] text-[#8993a5]">{meta}</small></div>
-                  <div className={`grid h-[30px] w-[30px] place-items-center rounded-full border-2 text-[9px] font-bold ${tone==="yellow"?"border-[#efbd25]":tone==="red"?"border-[#ed3742]":"border-[#21b47b]"}`}>{score}</div>
+                  <div className="relative grid h-[30px] w-[30px] place-items-center text-[9px] font-bold">
+                    <svg className="h-[30px] w-[30px] -rotate-90" viewBox="0 0 30 30">
+                      <circle cx="15" cy="15" r="12" fill="none" stroke="#edf1f5" strokeWidth="3" />
+                      <circle cx="15" cy="15" r="12" fill="none"
+                        stroke={tone==="yellow"?"#efbd25":tone==="red"?"#ed3742":"#21b47b"}
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeDasharray={`${(Number(score)/100)*75.4} 75.4`}
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-[#27354d]">{score}</span>
+                  </div>
                 </div>
               ))}
             </div>
