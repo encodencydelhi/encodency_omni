@@ -142,7 +142,7 @@ export const tenantRoutes: MockRoutes = {
     };
   },
 
-  "GET /companies/:id/Clients": ({ params, query }) =>
+  "GET /companies/:id/projects": ({ params, query }) =>
     queryCollection(getCompanyClients(params.id ?? ""), query, projectQueryConfig),
 
   "GET /companies/:id/users": ({ params, query }) =>
@@ -214,5 +214,5 @@ export const tenantRoutes: MockRoutes = {
     return { ...user, status };
   },
 
-  "GET /Clients": ({ query }) => queryCollection(Clients, query, projectQueryConfig),
+  "GET /projects": ({ query }) => queryCollection(Clients, query, projectQueryConfig),
 };

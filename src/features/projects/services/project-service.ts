@@ -9,7 +9,7 @@ export const Clientservice = {
   list(params: ProjectListParams, signal?: AbortSignal) {
     return apiClient.request<PaginatedResponse<Project>>({
       method: "GET",
-      path: "/Clients",
+      path: "/projects",
       query: toListQuery(params),
       signal,
     });

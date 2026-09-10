@@ -8,7 +8,7 @@ import { adminNavigation } from "@/config/admin-navigation";
 import { cn } from "@/lib/utils/cn";
 import { useAdminContext } from "./admin-context";
 import { ChannelLogo } from "../shared/channel-logo";
-
+import logo from "@/assets/namogange.webp"
 const brandLabels = new Set(["Meta & Instagram", "LinkedIn", "Google Business", "WhatsApp", "YouTube"]);
 
 export function AdminSidebar() {
@@ -22,12 +22,12 @@ export function AdminSidebar() {
         isSidebarCollapsed ? "w-[72px]" : "w-[236px]", isMobileNavOpen ? "translate-x-0" : "-translate-x-full",
       )}>
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="relative flex h-[64px] shrink-0 items-center overflow-hidden bg-[#ED0013]">
+          <div className="relative flex h-[48px] shrink-0 items-center overflow-hidden bg-[#ED0013]">
             {isSidebarCollapsed ? (
               <div className="grid w-full place-items-center text-xl font-bold text-white">e</div>
             ) : (
-              <div className="relative h-full min-w-0 flex-1">
-                <Image src="/encodency-logo.jpg" alt="EnCodency Pvt. Ltd. — Raise the Bar" fill priority sizes="236px" className="object-contain object-center p-2" />
+              <div className="relative h-full w-full p-2">
+                <Image src={logo} alt="Namo Gange Trust" fill priority sizes="236px" className="object-contain object-center bg-[]" />
               </div>
             )}
             <button className="absolute right-1 top-1 grid size-7 place-items-center rounded-md text-white/80 hover:bg-white/15 lg:hidden" onClick={() => setMobileNavOpen(false)} aria-label="Close navigation"><X className="size-4" /></button>

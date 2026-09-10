@@ -55,7 +55,7 @@ export const companyService = {
   listClients(id: string, params: ListParams, signal?: AbortSignal) {
     return apiClient.request<PaginatedResponse<Project>>({
       method: "GET",
-      path: `/companies/${id}/Clients`,
+      path: `/companies/${id}/projects`,
       query: toListQuery(params),
       signal,
     });

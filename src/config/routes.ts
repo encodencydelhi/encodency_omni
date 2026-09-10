@@ -20,7 +20,7 @@ export const ROUTES = {
     companies: "/super-admin/companies",
     company: (id: string) => `/super-admin/companies/${id}`,
     users: "/super-admin/users",
-    Clients: "/super-admin/Clients",
+    Clients: "/super-admin/projects",
     team: "/super-admin/team",
 
     plans: "/super-admin/plans",

@@ -20,10 +20,16 @@ function SidebarBrand({ isCollapsed, onNavigate }: { isCollapsed: boolean; onNav
       aria-label={`${APP.name} ${APP.panelName}`}
       className={cn(
         "flex shrink-0 items-center bg-primary",
-        isCollapsed ? "justify-center py-3" : "px-4 py-3",
+        isCollapsed ? "justify-center py-3" : "px-2 py-2",
       )}
     >
-      {isCollapsed ? <BrandGlyph size="sm" className="bg-transparent" /> : <EnCodencyLogo height={54} priority />}
+      {isCollapsed ? (
+        <BrandGlyph size="sm" className="bg-transparent" />
+      ) : (
+        <div className="relative h-[44px] w-full">
+          <EnCodencyLogo fill priority />
+        </div>
+      )}
     </Link>
   );
 }

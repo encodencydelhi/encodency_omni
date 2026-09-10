@@ -28,10 +28,23 @@ interface LogoProps {
   height?: number;
   className?: string;
   priority?: boolean;
+  /** Fill the parent container instead of using fixed dimensions */
+  fill?: boolean;
 }
 
 /** The full lockup, red block included. Use on light surfaces. */
-export function EnCodencyLogo({ height = 44, className, priority = false }: LogoProps) {
+export function EnCodencyLogo({ height = 44, className, priority = false, fill = false }: LogoProps) {
+  if (fill) {
+    return (
+      <Image
+        src={BRAND_ASSETS.logo}
+        alt={`${APP.vendor} Pvt. Ltd. — Raise the Bar`}
+        fill
+        priority={priority}
+        className={cn("select-none object-cover", className)}
+      />
+    );
+  }
   return (
     <Image
       src={BRAND_ASSETS.logo}

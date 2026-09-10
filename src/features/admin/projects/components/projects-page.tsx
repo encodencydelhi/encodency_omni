@@ -138,7 +138,7 @@ export function ClientsPage() {
                         {project.logoText}
                       </span>
                       <div className="min-w-0">
-                        <Link href={`/admin/Clients/${project.id}`} className="font-bold text-foreground hover:underline truncate block text-[12px]">
+                        <Link href={`/admin/projects/${project.id}`} className="font-bold text-foreground hover:underline truncate block text-[12px]">
                           {project.name}
                         </Link>
                         <p className="w-[140px] truncate text-[9.5px] text-muted-foreground mt-0.5" title={project.description}>
@@ -202,7 +202,7 @@ export function ClientsPage() {
                   </td>
                   <td className="px-2 py-1.5">
                     <div className="flex items-center gap-1">
-                      <Link href={`/admin/Clients/${project.id}`} className="rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
+                      <Link href={`/admin/projects/${project.id}`} className="rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
                         Open
                       </Link>
                       <button className="grid size-6 place-items-center rounded-md border transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
