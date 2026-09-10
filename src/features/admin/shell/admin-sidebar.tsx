@@ -23,9 +23,9 @@ export function AdminSidebar() {
       )}>
         <div className="flex min-w-0 flex-1 flex-col">
           {!isSidebarCollapsed && (
-            <div className="mt-[14px] mb-2 border-b border-gray-200">
-              <div className="relative mx-4 flex h-[70px] items-center justify-center overflow-hidden">
-                <div className="relative z-[2] h-[45px] w-full px-2">
+            <div className="mt-2 mb-2 border-b-2 border-gray-400">
+              <div className="relative mx-4 flex h-[80px] items-center justify-center overflow-hidden">
+                <div className="relative z-[2] h-[55px] w-full px-2">
                   <Image src={logo} alt="Namo Gange Trust" fill priority sizes="200px" className="object-contain object-center" />
                 </div>
               </div>
@@ -50,9 +50,9 @@ export function AdminSidebar() {
                     const Icon = item.icon;
                     return <Link key={item.href} href={item.href} title={isSidebarCollapsed ? item.label : undefined} onClick={() => setMobileNavOpen(false)} className={cn(
                       "group flex h-8 items-center gap-2.5 rounded-md px-2 text-[12px] font-medium transition-colors",
-                      active ? "bg-gray-200 text-gray-900" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                      active ? "bg-gray-800 text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
                       isSidebarCollapsed && "justify-center px-0",
-                    )}>{brandLabels.has(item.label) ? <ChannelLogo channel={item.label} className="size-[17px]" /> : <Icon className={cn("size-[15px] shrink-0", active ? "text-gray-900" : "text-gray-400 group-hover:text-gray-600")} />}{!isSidebarCollapsed && <span className="truncate">{item.label}</span>}</Link>;
+                    )}>{brandLabels.has(item.label) ? <ChannelLogo channel={item.label} className="size-[17px]" /> : <Icon className={cn("size-[15px] shrink-0", active ? "text-white" : "text-gray-400 group-hover:text-gray-600")} />}{!isSidebarCollapsed && <span className="truncate">{item.label}</span>}</Link>;
                   })}
                 </div>
               </div>
