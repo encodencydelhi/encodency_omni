@@ -50,11 +50,13 @@ export function ContentStudioPage() {
 
         {/* Column 1: Create Post */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 border-b">
-            <button className="border-b-2 border-[#e20611] pb-2 text-[13px] font-bold text-[#e20611]">Create</button>
-            <Link href="/admin/content/ai-assistant" className="border-b-2 border-transparent pb-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground">AI Assistant</Link>
-            <Link href="/admin/content/templates" className="border-b-2 border-transparent pb-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground">Templates</Link>
-            <Link href="/admin/content/drafts" className="border-b-2 border-transparent pb-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground">Saved Drafts</Link>
+          <div className="bg-white rounded-xl border shadow-sm p-3">
+            <h2 className="text-[13px] font-bold text-foreground mb-2">Create Post</h2>
+            <div className="flex items-center gap-2 border-b mb-3">
+            <button className="border-b-2 border-[#e20611] pb-2 px-4 text-[13px] font-bold text-[#e20611]">Create</button>
+            <Link href="/admin/content/ai-assistant" className="border-b-2 border-transparent pb-2 px-4 text-[13px] font-semibold text-muted-foreground hover:text-foreground">AI Assistant</Link>
+            <Link href="/admin/content/templates" className="border-b-2 border-transparent pb-2 px-4 text-[13px] font-semibold text-muted-foreground hover:text-foreground">Templates</Link>
+            <Link href="/admin/content/drafts" className="border-b-2 border-transparent pb-2 px-4 text-[13px] font-semibold text-muted-foreground hover:text-foreground">Saved Drafts</Link>
           </div>
 
           <section>
@@ -175,7 +177,7 @@ export function ContentStudioPage() {
               </div>
             </div>
           </section>
-
+          </div>
         </div>
 
         {/* Column 2: Select Channels */}

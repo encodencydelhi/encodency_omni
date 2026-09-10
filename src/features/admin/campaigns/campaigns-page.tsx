@@ -362,7 +362,7 @@ export function CampaignsPage() {
 
         {/* Bottom panels */}
         <section className="mt-2.5 grid grid-cols-1 gap-[9px] md:grid-cols-2 xl:grid-cols-[1.1fr_1.25fr_.92fr_1fr]">
-          <article className="h-[260px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
+          <article className="h-[200px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
             <SectionHeader title="Campaign Performance Overview"/>
             <div className="flex justify-end gap-3.5 px-3 pb-0.5 text-[9px] text-[#657189]">
               <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-full bg-[#e4252e]"/>Leads</span>
@@ -373,7 +373,7 @@ export function CampaignsPage() {
             <PerformanceChart/>
           </article>
 
-          <article className="h-[260px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
+          <article className="h-[200px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
             <SectionHeader title="Top Performing Campaigns"/>
             <div className="px-3 pt-1">
               {topCampaigns.map(([name,meta,score,tone],i)=>(
@@ -397,7 +397,7 @@ export function CampaignsPage() {
             </div>
           </article>
 
-          <article className="h-[260px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
+          <article className="h-[200px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
             <SectionHeader title="Channel Contribution"/>
             <div className="flex h-[142px] items-center justify-center gap-[15px]">
               <div className="relative h-[118px] w-[118px] shrink-0">
@@ -478,7 +478,7 @@ export function CampaignsPage() {
             </div>
           </article>
 
-          <article className="h-[260px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
+          <article className="h-[200px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
             <SectionHeader title="Upcoming Campaign Milestones"/>
             <div className="px-3">
               {milestones.map(([title,meta,tone])=>(

@@ -495,36 +495,44 @@ export default function ContentCalendar() {
               </div>
 
               <div className="grid grid-cols-2 gap-2 px-[10px]">
-                <div className="flex h-[65px] flex-col justify-between rounded-[6px] bg-[#fff0f1] p-[9px]">
-                  <Pencil className="h-5 w-5 text-[#e12630]" />
-                  <b className="text-[8px]">Create Post</b>
-                  <span className="text-[9px] text-[#69758b]">
-                    Design and schedule content
-                  </span>
+                <div className="flex items-center gap-2 rounded-[6px] bg-[#fff0f1] p-[9px]">
+                  <Pencil className="h-5 w-5 shrink-0 text-[#e12630]" />
+                  <div className="min-w-0">
+                    <b className="block text-[8px]">Create Post</b>
+                    <span className="block text-[9px] text-[#69758b]">
+                      Design and schedule content
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex h-[65px] flex-col justify-between rounded-[6px] bg-[#eaf3ff] p-[9px]">
-                  <Megaphone className="h-5 w-5 text-[#287fd7]" />
-                  <b className="text-[8px]">Plan Campaign</b>
-                  <span className="text-[9px] text-[#69758b]">
-                    Create a multi-channel campaign
-                  </span>
+                <div className="flex items-center gap-2 rounded-[6px] bg-[#eaf3ff] p-[9px]">
+                  <Megaphone className="h-5 w-5 shrink-0 text-[#287fd7]" />
+                  <div className="min-w-0">
+                    <b className="block text-[8px]">Plan Campaign</b>
+                    <span className="block text-[9px] text-[#69758b]">
+                      Create a multi-channel campaign
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex h-[65px] flex-col justify-between rounded-[6px] bg-[#e7f8f1] p-[9px]">
-                  <ImageIcon className="h-5 w-5 text-[#19a26e]" />
-                  <b className="text-[8px]">Upload Media</b>
-                  <span className="text-[9px] text-[#69758b]">
-                    Add images, videos or files
-                  </span>
+                <div className="flex items-center gap-2 rounded-[6px] bg-[#e7f8f1] p-[9px]">
+                  <ImageIcon className="h-5 w-5 shrink-0 text-[#19a26e]" />
+                  <div className="min-w-0">
+                    <b className="block text-[8px]">Upload Media</b>
+                    <span className="block text-[9px] text-[#69758b]">
+                      Add images, videos or files
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex h-[65px] flex-col justify-between rounded-[6px] bg-[#f0eaff] p-[9px]">
-                  <BarChart3 className="h-5 w-5 text-[#8055d2]" />
-                  <b className="text-[8px]">View Reports</b>
-                  <span className="text-[9px] text-[#69758b]">
-                    See content performance
-                  </span>
+                <div className="flex items-center gap-2 rounded-[6px] bg-[#f0eaff] p-[9px]">
+                  <BarChart3 className="h-5 w-5 shrink-0 text-[#8055d2]" />
+                  <div className="min-w-0">
+                    <b className="block text-[8px]">View Reports</b>
+                    <span className="block text-[9px] text-[#69758b]">
+                      See content performance
+                    </span>
+                  </div>
                 </div>
               </div>
             </article>
@@ -575,7 +583,7 @@ export default function ContentCalendar() {
 
           {/* Filters */}
           <section className="rounded-[7px] border border-[#e4e8ef] bg-white p-[10px]">
-            <h3 className="m-0 flex justify-between text-[13px]">
+            <h3 className="m-0 flex justify-between text-[13px] font-bold">
               Filters
               <button className="border-0 bg-transparent text-[8px] font-[700] text-[#e2262f]">
                 Reset
