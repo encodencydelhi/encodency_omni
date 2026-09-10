@@ -140,7 +140,7 @@ export function SeoOverviewPage() {
       </div>
 
       {/* Row 2 */}
-      <div className="grid h-[240px] grid-cols-[1.8fr_1fr_.7fr] gap-2">
+      <div className="grid h-[320px] grid-cols-[1.8fr_1fr_.7fr] gap-2">
         <Box title="Performance Trend" action={
           <button className="flex h-6 items-center gap-1 rounded border border-[#E4E8ED] bg-[#FAFBFC] px-1.5 text-[8.5px] font-semibold text-[#52617D]">Last 30 days <ChevronDown className="size-2.5" /></button>
         }>
@@ -219,7 +219,7 @@ export function SeoOverviewPage() {
       </div>
 
       {/* Row 3 */}
-      <div className="grid h-[210px] grid-cols-[1.2fr_1fr_1.4fr_1fr] gap-2">
+      <div className="grid h-[228px] grid-cols-[1.2fr_1fr_1.4fr_1fr] gap-2">
         <Box title="Site Audit Summary" action={<button className="flex h-6 items-center rounded border border-[#DDE4ED] px-2 text-[8.5px] font-bold text-[#172044]">View All Issues →</button>}>
           <div className="flex h-full items-center px-2">
             <div className="relative size-[110px] shrink-0">
@@ -254,7 +254,8 @@ export function SeoOverviewPage() {
             <button className="rounded px-2 py-0.5 text-[#71809D] font-semibold">Mobile</button>
           </div>
         }>
-          <div className="flex h-full items-center px-4">
+          <div className="flex h-full flex-col">
+          <div className="flex min-h-0 flex-1 items-center px-4">
             <div className="relative size-[90px] shrink-0">
               <svg className="w-full h-full" viewBox="0 0 36 36">
                 <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#E2E8F0" strokeWidth="3.5" />
@@ -273,7 +274,8 @@ export function SeoOverviewPage() {
               <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">CLS</span><span className="font-bold text-[#10B981]">0.05</span></div>
             </div>
           </div>
-          <div className="px-4 pb-3"><button className="w-full rounded border border-[#DDE4ED] py-1 text-[9px] font-bold text-[#172044]">View Page Speed Report →</button></div>
+          <div className="shrink-0 px-4 pb-3"><button className="w-full rounded border border-[#DDE4ED] py-1 text-[9px] font-bold text-[#172044]">View Page Speed Report →</button></div>
+          </div>
         </Box>
 
         <Box title="Backlinks Overview" action={<span className="text-[#EB0711] cursor-pointer">View All →</span>}>
@@ -324,7 +326,7 @@ export function SeoOverviewPage() {
       </div>
 
       {/* Row 4 */}
-      <div className="grid h-[240px] grid-cols-[1.5fr_1.5fr_1fr] gap-2">
+      <div className="grid h-[266px] grid-cols-[1.5fr_1.5fr_1fr] gap-2">
         <Box title="Recent SEO Issues" action={<span className="text-[#EB0711] cursor-pointer">View All →</span>}>
           <div className="px-3 py-1">
             <div className="grid grid-cols-[1.2fr_.6fr_.6fr_.4fr] py-1.5 text-[8.5px] font-bold text-[#71809D]">
