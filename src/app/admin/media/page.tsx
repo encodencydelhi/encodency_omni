@@ -81,7 +81,7 @@ export default function MediaLibrary() {
         <main className="flex min-h-0 min-w-0 flex-col rounded-b-[7px] border border-t-0 border-[#e4e8ef] bg-white px-[10px] pb-2 pt-[10px]">
           <div className="grid min-h-0 flex-1 grid-cols-4 content-start gap-[10px] overflow-y-auto [grid-auto-rows:min-content] max-[1200px]:grid-cols-3 max-[820px]:grid-cols-2 max-[480px]:gap-[7px]">
             <div className="relative min-w-0 overflow-hidden rounded-[6px] border border-dashed border-[#e0e5ec] bg-white shadow-[0_1px_3px_rgba(20,35,60,.025)] flex min-h-[180px] items-center justify-center text-center">
-              <div className="flex flex-col items-center gap-[5px]"><Upload className="text-[#e5222d]" size={29}/><b className="text-[11px]">Upload Files</b><span className="text-[9px] text-[#718098] leading-[1.45]">Drag & drop files here<br/>or click to browse</span><small className="text-[8px] text-[#758198] mt-1">Supports: JPG, PNG, MP4, PDF etc.</small></div>
+              <div className="flex flex-col items-center gap-[5px]"><Upload className="text-[#e5222d]" size={29}/><b className="text-[11px]">Upload Files</b><span className="text-[9px] text-[#718098] leading-[1.45]">Drag & drop files here<br/>or click to browse</span><small className="text-[9px] text-[#758198] mt-1">Supports: JPG, PNG, MP4, PDF etc.</small></div>
             </div>
 
             {files.slice(0,17).map((file,i)=>(
@@ -103,10 +103,10 @@ export default function MediaLibrary() {
                     {file.type==="video" && <><span className="absolute left-1/2 top-1/2 z-[3] grid h-7 w-[39px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[7px] bg-black/75 text-white"><Play size={15} fill="currentColor"/></span><span className="absolute bottom-[6px] left-[6px] z-[3] rounded-[3px] bg-black/80 px-[5px] py-[3px] text-[8px] text-white">{file.duration}</span></>}
                   </div>
                 </div>
-                <div className="flex flex-col gap-0.5 p-2.5">
-                  <span className="grid h-[17px] w-[17px] place-items-center rounded-[3px] bg-[#e7f3ff] text-[#2a85d9]">{file.type==="video"?<Video size={11}/>:file.type==="pdf"?<FileText size={11}/>:file.type==="doc"?<FileType2 size={11}/>:<ImageIcon size={11}/>}</span>
-                  <div className="min-w-0"><b className="block text-[8.5px] text-[#34405a] whitespace-nowrap overflow-hidden text-ellipsis">{file.name}</b><small className="block text-[7.5px] text-[#8791a3] mt-0.5">{file.meta}</small></div>
-                  <button className="border-0 bg-transparent text-[#68748a] p-0"><MoreVertical size={13}/></button>
+                <div className="flex items-center gap-2 p-2.5 flex-row">
+                  <span className="grid h-[17px] w-[17px] shrink-0 place-items-center rounded-[3px] bg-[#e7f3ff] text-[#2a85d9]">{file.type==="video"?<Video size={11}/>:file.type==="pdf"?<FileText size={11}/>:file.type==="doc"?<FileType2 size={11}/>:<ImageIcon size={11}/>}</span>
+                  <div className="min-w-0 flex-1"><b className="block text-[8.5px] text-[#34405a] whitespace-nowrap overflow-hidden text-ellipsis">{file.name}</b><small className="block text-[7.5px] text-[#8791a3] mt-0.5">{file.meta}</small></div>
+                  <button className="border-0 bg-transparent text-[#68748a] p-0 shrink-0"><MoreVertical size={13}/></button>
                 </div>
               </article>
             ))}

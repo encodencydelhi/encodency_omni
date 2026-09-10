@@ -49,7 +49,7 @@ export function AdminSidebar() {
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex bg-[#151d2e] transition-[width,transform] duration-200 lg:translate-x-0",
           "border-r border-[#1E2A3D] shadow-[1px_0_12px_rgb(2_6_23/0.35)]",
-          isSidebarCollapsed ? "w-[64px]" : "w-[220px]",
+          isSidebarCollapsed ? "w-[64px]" : "w-[236px]",
           isMobileNavOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >

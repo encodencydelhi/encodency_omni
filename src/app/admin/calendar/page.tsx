@@ -350,7 +350,7 @@ export default function ContentCalendar() {
                         {cell.d}
                       </span>
 
-                      {list.map(([name, time, type], eventIndex) => (
+                      {list.slice(0, 1).map(([name, time, type], eventIndex) => (
                         <div
                           key={eventIndex}
                           className={`mb-[4px] grid h-[29px] min-w-0 grid-cols-[17px_minmax(0,1fr)_10px] items-center gap-1 rounded-[6px] px-[5px] py-1 text-[#263754] max-[560px]:h-[27px] max-[560px]:grid-cols-[16px_minmax(0,1fr)_7px] max-[560px]:gap-[2px] max-[560px]:p-[3px] ${
@@ -364,11 +364,11 @@ export default function ContentCalendar() {
                           <ChannelIcon type={type} size={12} />
 
                           <div className="min-w-0">
-                            <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[7.5px] leading-[1.1] max-[560px]:text-[6.5px]">
+                            <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[7.5px] leading-[1.1] max-[560px]:text-[9px]">
                               {name}
                             </b>
 
-                            <small className="mt-[2px] block overflow-hidden text-ellipsis whitespace-nowrap text-[6.5px] text-[#637089] max-[560px]:text-[5.8px]">
+                            <small className="mt-[2px] block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#637089] max-[560px]:text-[9px]">
                               {time}
                             </small>
                           </div>
@@ -443,7 +443,7 @@ export default function ContentCalendar() {
                                 {title}
                               </b>
 
-                              <small className="mt-[2px] block overflow-hidden text-ellipsis whitespace-nowrap text-[6.5px] text-[#8a94a5]">
+                              <small className="mt-[2px] block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#8a94a5]">
                                 {description}
                               </small>
                             </div>
@@ -498,7 +498,7 @@ export default function ContentCalendar() {
                 <div className="flex h-[65px] flex-col justify-between rounded-[6px] bg-[#fff0f1] p-[9px]">
                   <Pencil className="h-5 w-5 text-[#e12630]" />
                   <b className="text-[8px]">Create Post</b>
-                  <span className="text-[6.5px] text-[#69758b]">
+                  <span className="text-[9px] text-[#69758b]">
                     Design and schedule content
                   </span>
                 </div>
@@ -506,7 +506,7 @@ export default function ContentCalendar() {
                 <div className="flex h-[65px] flex-col justify-between rounded-[6px] bg-[#eaf3ff] p-[9px]">
                   <Megaphone className="h-5 w-5 text-[#287fd7]" />
                   <b className="text-[8px]">Plan Campaign</b>
-                  <span className="text-[6.5px] text-[#69758b]">
+                  <span className="text-[9px] text-[#69758b]">
                     Create a multi-channel campaign
                   </span>
                 </div>
@@ -514,7 +514,7 @@ export default function ContentCalendar() {
                 <div className="flex h-[65px] flex-col justify-between rounded-[6px] bg-[#e7f8f1] p-[9px]">
                   <ImageIcon className="h-5 w-5 text-[#19a26e]" />
                   <b className="text-[8px]">Upload Media</b>
-                  <span className="text-[6.5px] text-[#69758b]">
+                  <span className="text-[9px] text-[#69758b]">
                     Add images, videos or files
                   </span>
                 </div>
@@ -522,7 +522,7 @@ export default function ContentCalendar() {
                 <div className="flex h-[65px] flex-col justify-between rounded-[6px] bg-[#f0eaff] p-[9px]">
                   <BarChart3 className="h-5 w-5 text-[#8055d2]" />
                   <b className="text-[8px]">View Reports</b>
-                  <span className="text-[6.5px] text-[#69758b]">
+                  <span className="text-[9px] text-[#69758b]">
                     See content performance
                   </span>
                 </div>
