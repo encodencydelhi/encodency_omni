@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import {
   Megaphone, Play, CalendarDays, CheckCircle2, Users, Database,
   Search, SlidersHorizontal, ArrowDownUp, Plus, MoreVertical,
@@ -18,6 +19,7 @@ const stats = [
 
 const campaigns = [
   {
+    id: "moksha-awareness",
     title: "Clean Ganga Awareness", desc: "A cleaner Ganga for a healthier India",
     project: "Moksha Sewa", channels: [FacebookIcon, InstagramIcon, LinkedinIcon], extra: "+2",
     status: "Active", statusTone: "active", dates: ["Mar 15, 2025", "Apr 30, 2025"],
@@ -25,6 +27,7 @@ const campaigns = [
     score: "78", scoreTone: "green", updated: ["2 hours ago", "by Ankit Verma"]
   },
   {
+    id: "volunteer-drive",
     title: "Volunteer Drive", desc: "Be the change. Join the movement.",
     project: "Namo Gange Trust", channels: [InstagramIcon, WhatsappIcon, YoutubeIcon], extra: "+1",
     status: "Scheduled", statusTone: "scheduled", dates: ["Apr 20, 2025", "May 10, 2025"],
@@ -32,6 +35,7 @@ const campaigns = [
     score: "65", scoreTone: "yellow", updated: ["5 hours ago", "by Priya Sharma"]
   },
   {
+    id: "community-impact",
     title: "Save Rivers Save Lives", desc: "Healthy rivers. Brighter tomorrow.",
     project: "Ganga Clean Drive", channels: [FacebookIcon, InstagramIcon, GoogleBusinessIcon, YoutubeIcon], extra: "",
     status: "Active", statusTone: "active", dates: ["Mar 1, 2025", "Apr 25, 2025"],
@@ -39,6 +43,7 @@ const campaigns = [
     score: "82", scoreTone: "green", updated: ["1 day ago", "by Neha Verma"]
   },
   {
+    id: "donate-for-change",
     title: "Earth Day Sustainability", desc: "Small actions. A cleaner tomorrow.",
     project: "Bharat Organic", channels: [LinkedinIcon, InstagramIcon, GoogleBusinessIcon], extra: "+1",
     status: "Completed", statusTone: "completed", dates: ["Apr 1, 2025", "Apr 22, 2025"],
@@ -46,6 +51,7 @@ const campaigns = [
     score: "88", scoreTone: "green", updated: ["2 days ago", "by Rohan Mehta"]
   },
   {
+    id: "donation-for-change",
     title: "Donation for Change", desc: "Support a Cleaner, Greener India.",
     project: "Namo Gange Trust", channels: [WhatsappIcon, FacebookIcon, YoutubeIcon], extra: "",
     status: "Draft", statusTone: "draft", dates: ["Apr 25, 2025", "May 15, 2025"],
@@ -121,7 +127,10 @@ function WhatsappIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="12" fill="#25D366"/>
-      <path fill="#fff" d="M17.5 14.3c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.2c-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.2-.4-2.3-1.5-.8-.7-1.3-1.6-1.5-1.9-.2-.3 0-.5.2-.6l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.7-1.7-.9-2.3-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.1s.9 2.3 1 2.4c.1.2 1.8 2.8 4.4 3.9 2.6 1.1 2.6.7 3.1.7.5-.1 1.8-.8 2.1-1.5.2-.7.2-1.3.2-1.4 0-.1-.2-.2-.4-.3Z"/>
+      <path
+        fill="#fff"
+        d="M12 3.5A8.5 8.5 0 0 0 4.07 15.8L3.2 20.5l4.84-1.27A8.5 8.5 0 1 0 12 3.5Zm4.96 12.07c-.12.34-.7 1.02-1.18 1.17-.33.1-.76.08-2.15-.42-1.82-.66-3.17-2.44-3.27-2.56-.11-.12-1.65-2.2-1.65-4.19 0-1.99 1.05-2.97 1.42-3.36.3-.3.7-.38 1-.38h.06c.19 0 .35.02.51.02.38 0 .5.1.66.4.23.42.78 1.75.85 1.88.07.14.14.3.04.47-.08.18-.13.3-.26.46-.12.15-.27.36-.38.49-.13.14-.27.3-.12.57.15.27.68 1.1 1.46 1.77.98.86 1.8 1.11 2.08 1.25.3.15.47.13.64-.08.2-.24.85-.97 1.08-1.31.23-.35.46-.29.79-.17.33.12 2.03 1 2.39 1.22.35.23.58.28.76.28.18 0 .42-.04.68-.2.24-.14 1.47-.86 1.68-1.62.2-.77.2-1.42.14-1.55Z"
+      />
     </svg>
   );
 }
@@ -233,6 +242,8 @@ function CampaignThumb({ index }: { index: number }) {
 }
 
 export function CampaignsPage() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen w-full overflow-auto bg-[#f6f8fb] font-sans text-[#13203e]">
       <div className="mx-auto w-full max-w-[1500px]">
@@ -297,13 +308,17 @@ export function CampaignsPage() {
               </thead>
               <tbody>
                 {campaigns.map((c,i)=>(
-                  <tr key={c.title} className="h-[49px] border-b border-[#edf0f4] text-[9px] text-[#44516a]">
-                    <td className="px-2.5"><input className="h-[13px] w-[13px] accent-[#e5222b]" type="checkbox"/></td>
-                    <td className="px-2.5">
+                  <tr
+                    key={c.id}
+                    className="h-[49px] cursor-pointer border-b border-[#edf0f4] text-[9px] text-[#44516a] transition-colors hover:bg-[#f9fafc]"
+                    onClick={() => router.push(`/admin/campaigns/${c.id}`)}
+                  >
+                    <td className="px-2.5" onClick={(event) => event.stopPropagation()}><input className="h-[13px] w-[13px] accent-[#e5222b]" type="checkbox"/></td>
+                    <td className="px-2.5" onClick={(event) => event.stopPropagation()}>
                       <div className="flex min-w-0 items-center gap-[9px]">
                         <CampaignThumb index={i}/>
                         <div className="min-w-0">
-                          <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#26334d]">{c.title}</b>
+                          <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#26334d] hover:text-[#e62c36]">{c.title}</b>
                           <small className="mt-0.5 block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#8a94a6]">{c.desc}</small>
                         </div>
                       </div>
@@ -340,8 +355,17 @@ export function CampaignsPage() {
                       </div>
                     </td>
                     <td className="px-2.5 leading-[1.35]"><b className="block text-[9px] font-medium">{c.updated[0]}</b><small className="text-[9px] text-[#8b95a6]">{c.updated[1]}</small></td>
-                    <td className="px-2.5">
-                      <div className="flex items-center gap-1.5"><button className="h-[29px] rounded-[6px] border border-[#e1e6ed] bg-white px-[13px] text-[9px] font-semibold text-[#35415a] hover:bg-[#f7f9fc]">Open</button><button className="grid h-[29px] w-[29px] place-items-center rounded-[6px] border border-[#e1e6ed] bg-white text-[#6d7890]"><MoreVertical size={13}/></button></div>
+                    <td className="px-2.5" onClick={(event) => event.stopPropagation()}>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          className="h-[29px] rounded-[6px] border border-[#e1e6ed] bg-white px-[13px] text-[9px] font-semibold text-[#35415a] hover:bg-[#f7f9fc]"
+                          onClick={() => router.push(`/admin/campaigns/${c.id}`)}
+                        >
+                          Open
+                        </button>
+                        <button type="button" className="grid h-[29px] w-[29px] place-items-center rounded-[6px] border border-[#e1e6ed] bg-white text-[#6d7890]"><MoreVertical size={13}/></button>
+                      </div>
                     </td>
                   </tr>
                 ))}
