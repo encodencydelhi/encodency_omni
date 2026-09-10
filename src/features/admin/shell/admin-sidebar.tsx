@@ -36,10 +36,6 @@ export function AdminSidebar() {
               <div className="grid h-10 w-10 place-items-center rounded-xl border border-gray-200 bg-white text-xl font-bold text-[#071f3c] shadow-sm">e</div>
             </div>
           )}
-          {!isSidebarCollapsed && <button className="mx-3 mt-3 flex h-12 items-center gap-2.5 rounded-lg border border-gray-200 bg-white px-3 text-left shadow-sm">
-            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gray-100 text-gray-700"><Building2 className="size-4" /></span>
-            <span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-bold text-gray-900">Namo Gange Trust</span><span className="block text-[9px] text-gray-500">Organization</span></span><ChevronDown className="size-3.5 text-gray-500" />
-          </button>}
           <nav className="scrollbar-thin flex-1 overflow-y-auto px-3 py-3" aria-label="Admin navigation">
             {adminNavigation.map((section) => (
               <div key={section.label} className="mb-3">
