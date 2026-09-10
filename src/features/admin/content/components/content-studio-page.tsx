@@ -19,14 +19,14 @@ export function ContentStudioPage() {
   const [caption, setCaption] = useState("Small actions create a cleaner tomorrow.\n\nLet's work together for a healthier, greener and cleaner India.\n\n#CleanGanga #HealthyIndia #Sustainability #MokshaSewa");
 
   return (
-    <div className="space-y-5 max-w-[1400px] mx-auto pb-10">
+    <div className="space-y-2 max-w-[1400px] mx-auto pb-10">
       {/* Header */}
-      <header className="flex items-start justify-between gap-4">
+      <header className="flex items-start justify-between gap-2">
         <div>
           <h1 className="text-[26px] font-bold tracking-tight text-foreground">Content Studio</h1>
           <p className="mt-0.5 text-[13px] text-muted-foreground">Create, customize and publish content across all your channels.</p>
         </div>
-        <div className="flex items-center gap-4 lg:gap-6">
+        <div className="flex items-center gap-2 lg:gap-4">
           <p className="text-[12px] font-medium italic text-muted-foreground hidden xl:block">"One idea. Multiple platforms.<br />Greater impact."</p>
           <div className="relative hidden xl:block w-[180px] h-[44px] bg-red-50 rounded-xl overflow-hidden mr-2">
             <div className="absolute right-2 top-1/2 -translate-y-1/2 size-8 rounded-full bg-red-200/50" />
@@ -46,11 +46,11 @@ export function ContentStudioPage() {
       </header>
 
       {/* Main Content Grid */}
-      <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr_1.2fr] items-start">
+      <div className="grid gap-2 lg:grid-cols-[1.6fr_1fr_1.2fr] items-start">
 
         {/* Column 1: Create Post */}
-        <div className="space-y-5">
-          <div className="flex items-center gap-6 border-b">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 border-b">
             <button className="border-b-2 border-[#e20611] pb-2 text-[13px] font-bold text-[#e20611]">Create</button>
             <Link href="/admin/content/ai-assistant" className="border-b-2 border-transparent pb-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground">AI Assistant</Link>
             <Link href="/admin/content/templates" className="border-b-2 border-transparent pb-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground">Templates</Link>
@@ -58,8 +58,8 @@ export function ContentStudioPage() {
           </div>
 
           <section>
-            <h2 className="text-[13px] font-bold text-foreground mb-2.5">1. Select Project & Campaign</h2>
-            <div className="grid grid-cols-2 gap-3">
+            <h2 className="text-[13px] font-bold text-foreground mb-2">1. Select Project & Campaign</h2>
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-[11px] text-muted-foreground mb-1 block">Project</label>
                 <div className="flex h-9 w-full items-center justify-between rounded-md border bg-white px-2.5 shadow-sm cursor-pointer hover:border-gray-300">
@@ -88,7 +88,7 @@ export function ContentStudioPage() {
           </section>
 
           <section>
-            <h2 className="text-[13px] font-bold text-foreground mb-2.5">2. Content</h2>
+            <h2 className="text-[13px] font-bold text-foreground mb-2">2. Content</h2>
             <div>
               <label className="text-[11px] font-bold text-foreground mb-1 flex items-center gap-1">
                 Post Caption <span className="text-[#e20611]">*</span>
@@ -105,7 +105,7 @@ export function ContentStudioPage() {
                   <span className="text-[11px] font-medium text-muted-foreground">{caption.length}/3000</span>
                 </div>
               </div>
-              <div className="mt-2.5 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap gap-2">
                 <button className="flex h-7 items-center gap-1.5 rounded-md border bg-white px-2.5 text-[11px] font-bold text-foreground shadow-sm hover:bg-accent">
                   <Hash className="size-3" /> Hashtags
                 </button>
@@ -126,9 +126,9 @@ export function ContentStudioPage() {
           </section>
 
           <section>
-            <h2 className="text-[13px] font-bold text-foreground mb-2.5">3. Media</h2>
+            <h2 className="text-[13px] font-bold text-foreground mb-2">3. Media</h2>
             <div className="flex items-center justify-between border-b">
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
                 <button className="border-b-2 border-[#e20611] pb-2 text-[12px] font-bold text-[#e20611]">Images (3)</button>
                 <button className="border-b-2 border-transparent pb-2 text-[12px] font-semibold text-muted-foreground hover:text-foreground">Videos</button>
                 <button className="border-b-2 border-transparent pb-2 text-[12px] font-semibold text-muted-foreground hover:text-foreground">Links</button>
@@ -137,7 +137,7 @@ export function ContentStudioPage() {
                 <Move className="size-3" /> Reorder
               </button>
             </div>
-            <div className="mt-3 grid grid-cols-4 gap-2.5">
+            <div className="mt-2 grid grid-cols-4 gap-2">
                <div className="aspect-[4/3] rounded-md overflow-hidden border relative group bg-gray-100">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
                   <p className="absolute bottom-2 left-2 text-white font-bold text-[10px] leading-tight z-20">CLEANER<br/>RIVERS<br/>BRIGHTER<br/>TOMORROW</p>
@@ -157,8 +157,8 @@ export function ContentStudioPage() {
           </section>
 
           <section>
-            <h2 className="text-[13px] font-bold text-foreground mb-2.5">4. Link & Call to Action</h2>
-            <div className="grid grid-cols-2 gap-3">
+            <h2 className="text-[13px] font-bold text-foreground mb-2">4. Link & Call to Action</h2>
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-[11px] text-muted-foreground mb-1 block">Link (Optional)</label>
                 <div className="flex h-9 w-full items-center gap-2 rounded-md border bg-white px-2.5 shadow-sm focus-within:border-[#e20611] focus-within:ring-1 focus-within:ring-[#e20611]">
@@ -179,9 +179,9 @@ export function ContentStudioPage() {
         </div>
 
         {/* Column 2: Select Channels */}
-        <div className="bg-white rounded-xl border shadow-sm p-4 space-y-5">
+        <div className="bg-white rounded-xl border shadow-sm p-3 space-y-2">
           <section>
-            <h2 className="text-[13px] font-bold text-foreground mb-2.5">5. Select Channels</h2>
+            <h2 className="text-[13px] font-bold text-foreground mb-2">5. Select Channels</h2>
             <div className="flex items-center justify-between mb-2">
               <label className="text-[11px] text-muted-foreground">Publish to</label>
               <label className="flex items-center gap-1.5 text-[11px] font-bold text-foreground cursor-pointer">
@@ -192,8 +192,8 @@ export function ContentStudioPage() {
             <div className="space-y-0.5">
               {channels.map((c) => (
                 <div key={c.id} className="flex items-center justify-between py-1.5 px-1 rounded hover:bg-gray-50">
-                  <div className="flex items-center gap-2.5">
-                    <CustomCheckbox checked={c.checked} />
+                    <div className="flex items-center gap-2">
+                      <CustomCheckbox checked={c.checked} />
                     <ChannelLogo channel={c.name as any} className="size-5" />
                     <span className="text-[12px] font-bold text-foreground">{c.name}</span>
                   </div>
@@ -204,8 +204,8 @@ export function ContentStudioPage() {
           </section>
 
           <section>
-            <h2 className="text-[13px] font-bold text-foreground mb-2.5">6. Schedule</h2>
-            <div className="space-y-2.5">
+            <h2 className="text-[13px] font-bold text-foreground mb-2">6. Schedule</h2>
+            <div className="space-y-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <div className="size-3.5 rounded-full border-4 border-[#e20611] bg-white ring-1 ring-[#e20611]/20" />
                 <span className="text-[12px] font-bold text-foreground">Publish Now</span>
@@ -220,7 +220,7 @@ export function ContentStudioPage() {
               </label>
             </div>
 
-            <div className="mt-4 rounded-md bg-blue-50 border border-blue-100 p-2.5 flex items-center justify-between">
+            <div className="mt-2 rounded-md bg-blue-50 border border-blue-100 p-2 flex items-center justify-between">
               <div className="flex gap-2">
                 <Info className="size-3.5 text-blue-600 mt-0.5" />
                 <div>
@@ -232,8 +232,8 @@ export function ContentStudioPage() {
             </div>
           </section>
 
-          <section className="pt-3 border-t">
-            <div className="flex items-center justify-between mb-3 cursor-pointer">
+          <section className="pt-2 border-t">
+            <div className="flex items-center justify-between mb-2 cursor-pointer">
               <h2 className="text-[12px] font-bold text-foreground flex items-center gap-1.5">
                 <span className="size-4 rounded-full border border-gray-300 flex items-center justify-center text-[8px]">⚙</span>
                 Advanced Options
@@ -241,7 +241,7 @@ export function ContentStudioPage() {
               <ChevronDown className="size-3.5 text-muted-foreground" />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Check className="size-3 text-muted-foreground" />
@@ -275,20 +275,20 @@ export function ContentStudioPage() {
         </div>
 
         {/* Column 3: Post Preview & Checklist */}
-        <div className="space-y-5">
-          <div className="bg-white rounded-xl border shadow-sm p-4">
-            <h2 className="text-[13px] font-bold text-foreground mb-3">Post Preview</h2>
+        <div className="space-y-2">
+          <div className="bg-white rounded-xl border shadow-sm p-3">
+            <h2 className="text-[13px] font-bold text-foreground mb-2">Post Preview</h2>
 
-            <div className="flex items-center gap-4 border-b mb-3 overflow-x-auto scrollbar-none pb-1">
+            <div className="flex items-center gap-2 border-b mb-2 overflow-x-auto scrollbar-none pb-1">
               <button className="border-b-2 border-[#e20611] pb-1.5 text-[12px] font-bold text-[#e20611] whitespace-nowrap">Facebook</button>
               <button className="border-b-2 border-transparent pb-1.5 text-[12px] font-semibold text-muted-foreground hover:text-foreground whitespace-nowrap">Instagram</button>
               <button className="border-b-2 border-transparent pb-1.5 text-[12px] font-semibold text-muted-foreground hover:text-foreground whitespace-nowrap">LinkedIn</button>
               <button className="border-b-2 border-transparent pb-1.5 text-[12px] font-semibold text-muted-foreground hover:text-foreground whitespace-nowrap flex items-center gap-1">G. Business <ChevronRight className="size-3" /></button>
             </div>
 
-            <div className="rounded-md border shadow-sm overflow-hidden bg-white mb-2">
-              <div className="p-3">
-                <div className="flex items-center justify-between mb-2.5">
+            <div className="rounded-md border shadow-sm overflow-hidden bg-white mb-1">
+              <div className="p-2">
+                <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <div className="size-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
                       <span className="text-[12px]">🌿</span>
@@ -303,7 +303,7 @@ export function ContentStudioPage() {
                   <MoreHorizontal className="size-4 text-gray-500" />
                 </div>
 
-                <div className="text-[12px] text-gray-900 whitespace-pre-wrap leading-relaxed mb-2.5">
+                <div className="text-[12px] text-gray-900 whitespace-pre-wrap leading-relaxed mb-1.5">
                   Small actions create a cleaner tomorrow.<br /><br />
                   Let's work together for a healthier, greener and cleaner India.<br /><br />
                   <span className="text-blue-600">#CleanGanga #HealthyIndia #Sustainability #MokshaSewa</span>
@@ -350,42 +350,42 @@ export function ContentStudioPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border shadow-sm p-4">
-            <div className="flex items-center justify-between mb-2">
+          <div className="bg-white rounded-xl border shadow-sm p-3">
+            <div className="flex items-center justify-between mb-1">
               <h2 className="text-[13px] font-bold text-foreground">Content Checklist</h2>
               <span className="text-[11px] font-bold text-muted-foreground">4/5</span>
             </div>
 
-            <div className="h-1 w-full bg-gray-100 rounded-full mb-3 overflow-hidden">
+            <div className="h-1 w-full bg-gray-100 rounded-full mb-2 overflow-hidden">
               <div className="h-full bg-emerald-500 w-4/5 rounded-full" />
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2.5">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
                 <div className="size-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center">
                   <Check className="size-2.5" />
                 </div>
                 <span className="text-[11px] font-bold text-foreground">Project selected</span>
               </div>
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <div className="size-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center">
                   <Check className="size-2.5" />
                 </div>
                 <span className="text-[11px] font-bold text-foreground">Caption added</span>
               </div>
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <div className="size-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center">
                   <Check className="size-2.5" />
                 </div>
                 <span className="text-[11px] font-bold text-foreground">Media added</span>
               </div>
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <div className="size-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center">
                   <Check className="size-2.5" />
                 </div>
                 <span className="text-[11px] font-bold text-foreground">At least one channel selected</span>
               </div>
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <div className="size-3.5 rounded-full border-2 border-gray-300" />
                 <span className="text-[11px] font-bold text-muted-foreground">Schedule or publish</span>
               </div>

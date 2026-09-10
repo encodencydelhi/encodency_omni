@@ -135,8 +135,8 @@ export function AdminSidebar() {
                           "group flex h-[36px] items-center gap-3 rounded-xl border text-[12px] transition-all duration-200",
                           isSidebarCollapsed ? "justify-center px-0" : "px-3",
                           active
-                            ? "border-[#2563EB]/50 bg-[#1E3A8A]/30 text-white shadow-[0_0_15px_rgba(59,130,246,0.2)]"
-                            : "border-[#1E293B] bg-[#131C2F] font-medium text-[#E2E8F0] hover:border-[#334155] hover:bg-[#1E293B]",
+                            ? "border-[#2563EB]/40 bg-[#1E3A8A]/50 text-white shadow-[0_0_20px_rgba(59,130,246,0.25)]"
+                            : "border-transparent bg-transparent font-medium text-[#E2E8F0] hover:border-[#334155] hover:bg-[#1E293B]",
                         )}
                       >
                         {brandLabels.has(item.label) ? (
@@ -157,7 +157,7 @@ export function AdminSidebar() {
                         {!isSidebarCollapsed && (
                           <>
                             <span className="truncate">{item.label}</span>
-                            <ChevronRight className="size-3.5 ml-auto text-[#475569] group-hover:text-[#94A3B8] transition-colors" />
+                            {active && <ChevronRight className="size-3.5 ml-auto text-white/70" />}
                           </>
                         )}
                       </Link>
