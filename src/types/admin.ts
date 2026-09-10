@@ -49,7 +49,7 @@ export interface AdminProjectRecord extends Project {
   owner: string;
 }
 
-export type MetricKey = "Clients" | "leads" | "campaigns" | "reach" | "visits" | "seo";
+export type MetricKey = "projects" | "leads" | "campaigns" | "visits" | "reach" | "seo" | "conversion" | "gmb";
 
 export interface DashboardMetric {
   key: MetricKey;
@@ -74,33 +74,34 @@ export interface TrendPoint {
   label: string;
   leads: number;
   visits: number;
+  reach: number;
+  conversions: number;
 }
-
-export type ChannelStatus = "healthy" | "attention" | "disconnected";
 
 export interface ChannelSummary {
   id: string;
   name: string;
-  shortName: string;
-  metric: string;
-  metricLabel: string;
-  change: number;
-  status: ChannelStatus;
-  color: string;
+  reach: string;
+  engagement: string;
+  leads: number;
+  status: "Connected" | "Disconnected" | "Error";
+  trend: number;
 }
 
 export interface RecentLead {
   id: string;
   name: string;
   source: string;
-  campaign: string;
+  project: string;
   stage: "New" | "Contacted" | "Qualified" | "Proposal";
+  assignedTo: string;
   receivedAt: string;
 }
 
 export interface ScheduledContent {
   id: string;
   title: string;
+  project: string;
   channel: string;
   scheduledFor: string;
   status: "scheduled" | "draft";
@@ -114,11 +115,28 @@ export interface ActivityItem {
   kind: "publish" | "lead" | "seo" | "campaign";
 }
 
-export interface IntegrationHealth {
-  connected: number;
-  total: number;
-  synced: number;
-  attention: number;
+export interface SeoSnapshot {
+  trackedKeywords: string;
+  keywordsTrend: number;
+  clicks: string;
+  clicksTrend: number;
+  impressions: string;
+  impressionsTrend: number;
+  avgPosition: number;
+  positionTrend: number;
+  issues: { type: "critical" | "warning"; message: string }[];
+}
+
+export interface GmbSnapshot {
+  rating: number;
+  reviews: number;
+  ratingTrend: number;
+  calls: string;
+  callsTrend: number;
+  websiteClicks: string;
+  clicksTrend: number;
+  directions: string;
+  directionsTrend: number;
 }
 
 export interface AdminDashboardSnapshot {
@@ -130,7 +148,8 @@ export interface AdminDashboardSnapshot {
   recentLeads: RecentLead[];
   scheduledContent: ScheduledContent[];
   activity: ActivityItem[];
-  integrationHealth: IntegrationHealth;
+  seoSnapshot: SeoSnapshot;
+  gmbSnapshot: GmbSnapshot;
   updatedAt: string;
 }
 

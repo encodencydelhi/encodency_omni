@@ -11,8 +11,8 @@ export interface AdminNavSection { label: string; items: AdminNavItem[]; }
 export const adminNavigation: AdminNavSection[] = [
   { label: "Overview", items: [{ label: "Dashboard", href: "/admin", icon: Gauge }] },
   {
-    label: "Projects", items: [
-      { label: "Projects", href: "/admin/projects", icon: FolderKanban },
+    label: "Clients", items: [
+      { label: "Clients", href: "/admin/projects", icon: FolderKanban },
     ]
   },
   {
