@@ -29,7 +29,7 @@ const campaigns = [
   {
     id: "volunteer-drive",
     title: "Volunteer Drive", desc: "Be the change. Join the movement.",
-    project: "Namo Gange Trust", channels: [InstagramIcon, WhatsappIcon, YoutubeIcon], extra: "+1",
+    project: "Namo Gange Trust", channels: [InstagramIcon, YoutubeIcon], extra: "+1",
     status: "Scheduled", statusTone: "scheduled", dates: ["Apr 20, 2025", "May 10, 2025"],
     leads: "186", leadGrowth: "12%", spend: "₹8,600", conversions: "28", conversionGrowth: "8%",
     score: "65", scoreTone: "yellow", updated: ["5 hours ago", "by Priya Sharma"]
@@ -53,7 +53,7 @@ const campaigns = [
   {
     id: "donation-for-change",
     title: "Donation for Change", desc: "Support a Cleaner, Greener India.",
-    project: "Namo Gange Trust", channels: [WhatsappIcon, FacebookIcon, YoutubeIcon], extra: "",
+    project: "Namo Gange Trust", channels: [FacebookIcon, YoutubeIcon], extra: "",
     status: "Draft", statusTone: "draft", dates: ["Apr 25, 2025", "May 15, 2025"],
     leads: "—", leadGrowth: "", spend: "—", conversions: "—", conversionGrowth: "",
     score: "—", scoreTone: "empty", updated: ["3 days ago", "by Ankit Verma"]
