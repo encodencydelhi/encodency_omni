@@ -247,8 +247,8 @@
     scrollbar-color: var(--border-strong) transparent;
   }
   .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
   }
   .scrollbar-thin::-webkit-scrollbar-track,
   .scrollbar-thin::-webkit-scrollbar-corner {

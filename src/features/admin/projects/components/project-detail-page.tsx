@@ -334,7 +334,7 @@ function OverviewView() {
               ["RK","Rahul Kumar","Volunteer Coordinator","rahul@mokshasewa.org","+91 98991 22334"],
               ["SN","Sneha Nair","Communications Lead","sneha@mokshasewa.org","+91 98118 77665"],
             ].map(r=><div key={r[0]} className="grid grid-cols-[34px_1fr_1fr_1.2fr] items-center border-b border-[#eef1f5] px-2 py-2 last:border-0">
-              <Avatar text={r[0]}/><b className="text-[9px]">{r[1]}</b><span className="text-[9px] text-[#7d8799]">{r[2]}</span><div className="flex flex-col"><span className="text-[9px] text-[#5e35d6]">{r[3]}</span><span className="text-[9px] text-[#7d8799]">{r[4]}</span></div>
+              <Avatar text={r[0]!}/><b className="text-[9px]">{r[1]}</b><span className="text-[9px] text-[#7d8799]">{r[2]}</span><div className="flex flex-col"><span className="text-[9px] text-[#5e35d6]">{r[3]}</span><span className="text-[9px] text-[#7d8799]">{r[4]}</span></div>
             </div>)}
           </div>
         </Panel>
@@ -397,7 +397,7 @@ function ActivityView() {
                 <div className="text-right text-[9px] text-[#8a94a6]"><b className="block text-[#6c7890]">{r[0]}</b>{r[1]}</div>
                 <span className={`grid h-8 w-8 place-items-center rounded-full ${toneColors[tone] || toneColors.gray}`}><Icon size={15}/></span>
                 <div><b className="block text-[9px] text-[#34415d]">{r[2]}</b><small className="text-[9px] text-[#8b95a6]">{r[3]}</small></div>
-                <div className="flex items-center gap-2"><Avatar text={r[5]}/><div><b className="block text-[9px]">{r[4]}</b><small className="text-[9px] text-[#8b95a6]">{r[4]==="Manish Sirohi"?"Workspace Admin":"Social Media Manager"}</small></div></div>
+                <div className="flex items-center gap-2"><Avatar text={r[5]!}/><div><b className="block text-[9px]">{r[4]}</b><small className="text-[9px] text-[#8b95a6]">{r[4]==="Manish Sirohi"?"Workspace Admin":"Social Media Manager"}</small></div></div>
                 <span className="justify-self-start rounded-full bg-[#f0edff] px-2 py-1 text-[9px] font-semibold text-[#5d39d2]">{r[6]}</span>
                 <button><MoreVertical size={13} className="text-[#8993a5]"/></button>
               </div>
@@ -412,7 +412,7 @@ function ActivityView() {
               ["Follow up on website content updates","Due Jan 18, 2025","Medium","NG"],
               ["Discuss new service page requirements","Due Jan 20, 2025","Low","MS"],
               ["Client feedback on audit recommendations","Due Jan 22, 2025","Low","AS"],
-            ].map(x=><div key={x[0]} className="flex items-start gap-2 border-b border-[#eef1f5] py-2 last:border-0"><span className="mt-0.5 h-4 w-4 rounded border border-[#cdd6e3]"/><div className="min-w-0 flex-1"><b className="block text-[9px]">{x[0]}</b><small className="text-[9px] text-[#8b95a6]">{x[1]}</small></div><span className="rounded-full bg-[#fff0f4] px-2 py-1 text-[9px] font-semibold text-[#ef557d]">{x[2]}</span><Avatar text={x[3]}/></div>)}
+            ].map(x=><div key={x[0]} className="flex items-start gap-2 border-b border-[#eef1f5] py-2 last:border-0"><span className="mt-0.5 h-4 w-4 rounded border border-[#cdd6e3]"/><div className="min-w-0 flex-1"><b className="block text-[9px]">{x[0]}</b><small className="text-[9px] text-[#8b95a6]">{x[1]}</small></div><span className="rounded-full bg-[#fff0f4] px-2 py-1 text-[9px] font-semibold text-[#ef557d]">{x[2]}</span><Avatar text={x[3]!}/></div>)}
           </Panel>
           <Panel title="Client Notes" action="+ Add Note">
             <Note initials="MS" name="Manish Sirohi" time="Jan 15, 2025, 10:30 AM">Client is very happy with the recent campaign performance. Planning to expand to LinkedIn content next month.</Note>
@@ -439,7 +439,7 @@ function TeamView() {
           <table className="w-full min-w-[950px] border-collapse text-[9px]">
             <thead><tr className="bg-[#f7f9fc] text-left text-[#64728b]">{["#","Name","Designation","Email","Phone","Role","Modules","Permissions","Status","Last Activity","Actions"].map(x=><th key={x} className="border-y border-[#e8edf3] px-2 py-2 font-semibold">{x}</th>)}</tr></thead>
             <tbody>{teamMembers.map((r,i)=><tr key={r[0]} className="border-b border-[#eef1f5]">
-              <td className="px-2 py-2 text-[#8190a5]">{i+1}</td><td className="px-2 py-2"><div className="flex items-center gap-2"><Avatar text={r[9]}/><b>{r[0]}</b></div></td><td className="px-2 text-[#7c8799]">{r[1]}</td><td className="px-2 text-[#5d36d6]">{r[2]}</td><td className="px-2 text-[#7c8799]">{r[3]}</td><td className="px-2"><Badge text={r[4]} tone={({"Client Owner":"pink","Workspace Admin":"purple","Content Approver":"blue","Campaign Manager":"green","Social Media Manager":"orange","Content Creator":"mint","SEO Manager":"blue","Support & CRM":"purple"} as Record<string,string>)[r[4]]||"blue"}/></td><td className="px-2"><Badge text={r[5]} tone="blue"/></td><td className="px-2"><Badge text={r[6]} tone="purple"/></td><td className="px-2"><Badge text={r[7]} tone={r[7]==="Away"?"orange":"green"} dot/></td><td className="px-2 text-[#7c8799]">{r[8]}</td><td className="px-2 text-right"><MoreVertical size={13}/></td>
+              <td className="px-2 py-2 text-[#8190a5]">{i+1}</td><td className="px-2 py-2"><div className="flex items-center gap-2"><Avatar text={r[9]!}/><b>{r[0]}</b></div></td><td className="px-2 text-[#7c8799]">{r[1]}</td><td className="px-2 text-[#5d36d6]">{r[2]}</td><td className="px-2 text-[#7c8799]">{r[3]}</td><td className="px-2"><Badge text={r[4]} tone={({"Client Owner":"pink","Workspace Admin":"purple","Content Approver":"blue","Campaign Manager":"green","Social Media Manager":"orange","Content Creator":"mint","SEO Manager":"blue","Support & CRM":"purple"} as Record<string,string>)[r[4]]||"blue"}/></td><td className="px-2"><Badge text={r[5]} tone="blue"/></td><td className="px-2"><Badge text={r[6]} tone="purple"/></td><td className="px-2"><Badge text={r[7]} tone={r[7]==="Away"?"orange":"green"} dot/></td><td className="px-2 text-[#7c8799]">{r[8]}</td><td className="px-2 text-right"><MoreVertical size={13}/></td>
             </tr>)}</tbody>
           </table>
         </div>
@@ -513,7 +513,7 @@ function ChannelsView() {
               <td className="px-2"><span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${r[9]==="reauth"?"bg-[#e52f42]":"bg-[#15ad77]"}`}/>{r[4]}</td>
               <td className="px-2"><b className="block font-medium">{r[5]}</b><small className="text-[9px] text-[#8993a5]">{i%2?"Page Insights":"Audience, Messages"}</small></td>
               <td className="px-2">{r[6]}</td>
-              <td className="px-2"><div className="flex items-center gap-1.5"><Avatar text={r[7].split(" ").map((x:string)=>x[0]).join("").slice(0,2)}/>{r[7]}</div></td>
+              <td className="px-2"><div className="flex items-center gap-1.5"><Avatar text={r[7]!.split(" ").map((x:string)=>x[0]).join("").slice(0,2)}/>{r[7]}</div></td>
               <td className="px-2"><div className="flex gap-1.5"><button className="rounded border border-[#dfe5ed] px-3 py-1.5 text-[9px] font-semibold">Manage</button><button className="rounded border border-[#dfe5ed] bg-[#f2f5ff] px-3 py-1.5 text-[9px] font-semibold text-[#5332d7]">{r[9]==="reauth"?"Reconnect":"Sync Now"}</button><MoreVertical size={13}/></div></td>
             </tr>})}</tbody>
           </table>
@@ -588,7 +588,7 @@ function Note({ initials, name, time, children }: { initials: string; name: stri
 }
 
 function LogPanel({ title, rows }: { title: string; rows: string[] }) {
-  return <Panel title={title} action="View All"><div className="overflow-hidden rounded border border-[#eef1f5]">{rows.map((x,i)=><div key={x} className="grid grid-cols-[110px_40px_1fr_1fr] items-center border-b border-[#eef1f5] px-2 py-1.5 text-[9px] last:border-0"><span>Jan {16-i}, 11:24 AM</span><Avatar text={["PS","NG","RV","MS","AS"][i]}/><b>{x}</b><span className="text-[#7f899d]">{i%2?"SEO score: 86":"Instagram post"}</span></div>)}</div></Panel>;
+  return <Panel title={title} action="View All"><div className="overflow-hidden rounded border border-[#eef1f5]">{rows.map((x,i)=><div key={x} className="grid grid-cols-[110px_40px_1fr_1fr] items-center border-b border-[#eef1f5] px-2 py-1.5 text-[9px] last:border-0"><span>Jan {16-i}, 11:24 AM</span><Avatar text={["PS","NG","RV","MS","AS"][i]!}/><b>{x}</b><span className="text-[#7f899d]">{i%2?"SEO score: 86":"Instagram post"}</span></div>)}</div></Panel>;
 }
 
 function ModuleGrid() {
