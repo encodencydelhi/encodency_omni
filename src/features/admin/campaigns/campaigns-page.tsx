@@ -1,13 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Megaphone, Play, CalendarDays, CheckCircle2, Users, Database,
   Search, SlidersHorizontal, ArrowDownUp, Plus, MoreVertical,
   ArrowUpRight, Copy, Link2, BarChart3, ChevronDown,
-  ChevronLeft, ChevronRight, Target, Leaf, HandHeart, Heart
+  ChevronLeft, ChevronRight, Target
 } from "lucide-react";
+import { ChannelLogo } from "@/features/admin/shared/channel-logo";
 const stats = [
   { icon: Megaphone, title: "Total Campaigns", value: "24", trend: "33%", note: "+6 new this month", tone: "red" },
   { icon: Play, title: "Active Campaigns", value: "8", trend: "14%", note: "33% of total", tone: "green" },
@@ -21,7 +23,8 @@ const campaigns = [
   {
     id: "moksha-awareness",
     title: "Clean Ganga Awareness", desc: "A cleaner Ganga for a healthier India",
-    project: "Moksha Sewa", channels: [FacebookIcon, InstagramIcon, LinkedinIcon], extra: "+2",
+    project: "Moksha Sewa", channels: ["Facebook", "Instagram", "LinkedIn"], extra: "+2",
+    image: "/campaigns/clean-river.jpg",
     status: "Active", statusTone: "active", dates: ["Mar 15, 2025", "Apr 30, 2025"],
     leads: "248", leadGrowth: "24%", spend: "₹12,400", conversions: "42", conversionGrowth: "18%",
     score: "78", scoreTone: "green", updated: ["2 hours ago", "by Ankit Verma"]
@@ -29,7 +32,8 @@ const campaigns = [
   {
     id: "volunteer-drive",
     title: "Volunteer Drive", desc: "Be the change. Join the movement.",
-    project: "Namo Gange Trust", channels: [InstagramIcon, YoutubeIcon], extra: "+1",
+    project: "Namo Gange Trust", channels: ["Instagram", "YouTube"], extra: "+1",
+    image: "/campaigns/river-cleanup.jpg",
     status: "Scheduled", statusTone: "scheduled", dates: ["Apr 20, 2025", "May 10, 2025"],
     leads: "186", leadGrowth: "12%", spend: "₹8,600", conversions: "28", conversionGrowth: "8%",
     score: "65", scoreTone: "yellow", updated: ["5 hours ago", "by Priya Sharma"]
@@ -37,7 +41,8 @@ const campaigns = [
   {
     id: "community-impact",
     title: "Save Rivers Save Lives", desc: "Healthy rivers. Brighter tomorrow.",
-    project: "Ganga Clean Drive", channels: [FacebookIcon, InstagramIcon, GoogleBusinessIcon, YoutubeIcon], extra: "",
+    project: "Ganga Clean Drive", channels: ["Facebook", "Instagram", "Google Business", "YouTube"], extra: "",
+    image: "/campaigns/save-rivers/banner.png",
     status: "Active", statusTone: "active", dates: ["Mar 1, 2025", "Apr 25, 2025"],
     leads: "320", leadGrowth: "36%", spend: "₹15,200", conversions: "56", conversionGrowth: "28%",
     score: "82", scoreTone: "green", updated: ["1 day ago", "by Neha Verma"]
@@ -45,7 +50,8 @@ const campaigns = [
   {
     id: "donate-for-change",
     title: "Earth Day Sustainability", desc: "Small actions. A cleaner tomorrow.",
-    project: "Bharat Organic", channels: [LinkedinIcon, InstagramIcon, GoogleBusinessIcon], extra: "+1",
+    project: "Bharat Organic", channels: ["LinkedIn", "Instagram", "Google Business"], extra: "+1",
+    image: "/campaigns/tree-planting.jpg",
     status: "Completed", statusTone: "completed", dates: ["Apr 1, 2025", "Apr 22, 2025"],
     leads: "275", leadGrowth: "48%", spend: "₹6,800", conversions: "62", conversionGrowth: "42%",
     score: "88", scoreTone: "green", updated: ["2 days ago", "by Rohan Mehta"]
@@ -53,7 +59,8 @@ const campaigns = [
   {
     id: "donation-for-change",
     title: "Donation for Change", desc: "Support a Cleaner, Greener India.",
-    project: "Namo Gange Trust", channels: [FacebookIcon, YoutubeIcon], extra: "",
+    project: "Namo Gange Trust", channels: ["Facebook", "YouTube"], extra: "",
+    image: "/campaigns/water-conservation.jpg",
     status: "Draft", statusTone: "draft", dates: ["Apr 25, 2025", "May 15, 2025"],
     leads: "—", leadGrowth: "", spend: "—", conversions: "—", conversionGrowth: "",
     score: "—", scoreTone: "empty", updated: ["3 days ago", "by Ankit Verma"]
@@ -84,81 +91,8 @@ const channelNames = [
   ["YouTube", 6, "bg-[#e3262e]"],
 ] as const;
 
-function FacebookIcon({ size = 22 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path fill="#1877F2" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.099 4.388 23.094 10.125 24v-8.438H7.078v-3.49h3.047V9.413c0-3.022 1.792-4.693 4.533-4.693 1.313 0 2.686.235 2.686.235v2.969H15.83c-1.491 0-1.956.927-1.956 1.878v2.27h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.099 24 12.073Z"/>
-      <path fill="#fff" d="M16.671 15.562l.532-3.49h-3.328V9.803c0-.953.465-1.879 1.956-1.879h1.514V4.955s-1.373-.235-2.686-.235c-2.741 0-4.533 1.671-4.533 4.693v2.659H7.078v3.49h3.047V24a12.1 12.1 0 003.75 0v-8.438h2.796Z"/>
-    </svg>
-  );
-}
-
-function InstagramIcon({ size = 22 }) {
-  const id = React.useId();
-  const gradientId = `instagram-gradient-${id.replace(/:/g, "")}`;
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <defs>
-        <linearGradient id={gradientId} x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#F58529"/>
-          <stop offset="35%" stopColor="#DD2A7B"/>
-          <stop offset="70%" stopColor="#8134AF"/>
-          <stop offset="100%" stopColor="#515BD4"/>
-        </linearGradient>
-      </defs>
-      <rect width="24" height="24" rx="6" fill={`url(#${gradientId})`}/>
-      <rect x="5.5" y="5.5" width="13" height="13" rx="4" fill="none" stroke="#fff" strokeWidth="2"/>
-      <circle cx="12" cy="12" r="3" fill="none" stroke="#fff" strokeWidth="2"/>
-      <circle cx="17.5" cy="6.5" r="1.15" fill="#fff"/>
-    </svg>
-  );
-}
-
-function LinkedinIcon({ size = 22 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <rect width="24" height="24" rx="4" fill="#0A66C2"/>
-      <path fill="#fff" d="M6.5 9H9v9H6.5V9ZM7.75 5.5A1.5 1.5 0 119.25 7 1.5 1.5 0 017.75 5.5ZM11 9h2.4v1.2h.1c.33-.63 1.14-1.3 2.35-1.3 2.5 0 2.95 1.64 2.95 3.77V18h-2.5v-4.4c0-1.05-.02-2.4-1.46-2.4-1.46 0-1.68 1.14-1.68 2.32V18H11V9Z"/>
-    </svg>
-  );
-}
-
-export function WhatsappIcon({ size = 22 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="12" fill="#25D366"/>
-      <path
-        fill="#fff"
-        d="M12 3.5A8.5 8.5 0 0 0 4.07 15.8L3.2 20.5l4.84-1.27A8.5 8.5 0 1 0 12 3.5Zm4.96 12.07c-.12.34-.7 1.02-1.18 1.17-.33.1-.76.08-2.15-.42-1.82-.66-3.17-2.44-3.27-2.56-.11-.12-1.65-2.2-1.65-4.19 0-1.99 1.05-2.97 1.42-3.36.3-.3.7-.38 1-.38h.06c.19 0 .35.02.51.02.38 0 .5.1.66.4.23.42.78 1.75.85 1.88.07.14.14.3.04.47-.08.18-.13.3-.26.46-.12.15-.27.36-.38.49-.13.14-.27.3-.12.57.15.27.68 1.1 1.46 1.77.98.86 1.8 1.11 2.08 1.25.3.15.47.13.64-.08.2-.24.85-.97 1.08-1.31.23-.35.46-.29.79-.17.33.12 2.03 1 2.39 1.22.35.23.58.28.76.28.18 0 .42-.04.68-.2.24-.14 1.47-.86 1.68-1.62.2-.77.2-1.42.14-1.55Z"
-      />
-    </svg>
-  );
-}
-
-function YoutubeIcon({ size = 22 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <rect width="24" height="24" rx="5" fill="#FF0000"/>
-      <path fill="#fff" d="M10 8.5L16 12L10 15.5V8.5Z"/>
-    </svg>
-  );
-}
-
-function GoogleBusinessIcon({ size = 22 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <rect width="24" height="24" rx="5" fill="#fff" stroke="#E5E7EB"/>
-      <path fill="#4285F4" d="M12 5a7 7 0 106.9 8h-6.9v3h3.9A4 4 0 1112 8a3.8 3.8 0 012.7 1.1l2.2-2.2A7 7 0 0012 5Z"/>
-    </svg>
-  );
-}
-
-function ChannelIcon({ Icon: IconComponent, size = 22 }: { Icon: React.ComponentType<{ size?: number }>; size?: number }) {
-  return (
-    <span className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center">
-      <IconComponent size={size} />
-    </span>
-  );
+function ChannelIcon({ channel, size = 18 }: { channel: string; size?: number }) {
+  return <ChannelLogo channel={channel} className={`h-[${size}px] w-[${size}px]`} />;
 }
 
 function SectionHeader({ title, action = "View all" }: { title: string; action?: string }) {
@@ -223,26 +157,53 @@ function PerformanceChart() {
   );
 }
 
-function CampaignThumb({ index }: { index: number }) {
-  const themes = [
-    "bg-gradient-to-br from-[#1a6da0] to-[#5ab3d9]",   // Clean Ganga - water blue
-    "bg-gradient-to-br from-[#c87a3a] to-[#e8b87a]",   // Volunteer Drive - warm orange
-    "bg-gradient-to-br from-[#2d7a4f] to-[#6aba85]",   // Save Rivers - nature green
-    "bg-gradient-to-br from-[#4a7a3c] to-[#8fc072]",   // Earth Day - earth green
-    "bg-gradient-to-br from-[#9e3a3a] to-[#d98a8a]",   // Donation - warm red
-  ];
+function CampaignThumb({ image, title }: { image?: string; title: string }) {
+  if (image) {
+    return (
+      <div className="relative h-9 w-[45px] shrink-0 overflow-hidden rounded-[5px]">
+        <Image src={image} alt={title} fill className="object-cover" />
+      </div>
+    );
+  }
   return (
-    <div className={`grid h-9 w-[45px] shrink-0 place-items-center overflow-hidden rounded-[5px] text-white ${themes[index] || themes[0]}`}>
-      {index === 0 ? <span className="text-[9px] font-extrabold leading-[1.05]">CLEAN<br/>GANGA</span> :
-       index === 1 ? <HandHeart size={19}/> :
-       index === 2 ? <span className="text-[9px] font-extrabold leading-[1.05]">RIVERS<br/>LIVES</span> :
-       index === 3 ? <Leaf size={19}/> : <Heart size={18}/>}
+    <div className="grid h-9 w-[45px] shrink-0 place-items-center overflow-hidden rounded-[5px] bg-gradient-to-br from-[#1a6da0] to-[#5ab3d9] text-white">
+      <span className="text-[9px] font-extrabold leading-[1.05]">CLEAN<br/>GANGA</span>
     </div>
   );
 }
 
+const tabs = [
+  { label: "All Campaigns", count: 24, filter: "all" },
+  { label: "Active", count: 8, filter: "active" },
+  { label: "Scheduled", count: 6, filter: "scheduled" },
+  { label: "Completed", count: 7, filter: "completed" },
+  { label: "Draft", count: 2, filter: "draft" },
+  { label: "Archived", count: 1, filter: "archived" },
+] as const;
+
+type TabFilter = typeof tabs[number]["filter"];
+
 export function CampaignsPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredCampaigns = useMemo(() => {
+    let result = campaigns;
+    if (activeTab !== "all") {
+      result = result.filter((c) => c.statusTone === activeTab);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.title.toLowerCase().includes(q) ||
+          c.desc.toLowerCase().includes(q) ||
+          c.project.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [activeTab, searchQuery]);
 
   return (
     <div className="min-h-screen w-full overflow-auto bg-[#f6f8fb] font-sans text-[#13203e]">
@@ -275,14 +236,28 @@ export function CampaignsPage() {
 
         {/* Tabs / toolbar */}
         <section className="flex min-h-[42px] items-center gap-5 rounded-t-[7px] border border-[#e5e9ef] bg-white px-3.5 lg:gap-7">
-          {["All Campaigns (24)","Active (8)","Scheduled (6)","Completed (7)","Draft (2)","Archived (1)"].map((tab,i) => (
-            <button key={tab} className={`relative h-[42px] shrink-0 border-0 bg-transparent px-0 text-[10px] text-[#5f6c83] ${i===0 ? "font-[750] text-[#19233e] after:absolute after:bottom-0 after:left-[-6px] after:right-[-6px] after:h-0.5 after:bg-[#e62c36]" : ""}`}>
-              {tab}
+          {tabs.map((tab) => (
+            <button
+              key={tab.filter}
+              onClick={() => setActiveTab(tab.filter)}
+              className={`relative h-[42px] shrink-0 border-0 bg-transparent px-0 text-[10px] transition-colors ${
+                activeTab === tab.filter
+                  ? "font-[750] text-[#19233e] after:absolute after:bottom-0 after:left-[-6px] after:right-[-6px] after:h-0.5 after:bg-[#e62c36]"
+                  : "text-[#5f6c83] hover:text-[#29354e]"
+              }`}
+            >
+              {tab.label} ({tab.count})
             </button>
           ))}
           <div className="ml-auto hidden shrink-0 items-center gap-2 lg:flex">
             <label className="flex h-[29px] w-[198px] items-center gap-1.5 rounded-[6px] border border-[#e0e5ec] bg-[#fbfcfe] px-2.5 text-[#8791a4]">
-              <Search size={13}/><input className="w-full border-0 bg-transparent text-[9px] text-[#27334e] outline-none" placeholder="Search campaigns..." />
+              <Search size={13}/>
+              <input
+                className="w-full border-0 bg-transparent text-[9px] text-[#27334e] outline-none"
+                placeholder="Search campaigns..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </label>
             <button className="flex h-[29px] items-center gap-1.5 rounded-[6px] border border-[#dfe4eb] bg-white px-2.5 text-[9px] font-semibold text-[#29354e]"><SlidersHorizontal size={12}/>Filter</button>
             <button className="flex h-[29px] items-center gap-1.5 rounded-[6px] border border-[#dfe4eb] bg-white px-2.5 text-[9px] font-semibold text-[#29354e]"><ArrowDownUp size={12}/>Sort<ChevronDown size={10}/></button>
@@ -307,7 +282,14 @@ export function CampaignsPage() {
                 </tr>
               </thead>
               <tbody>
-                {campaigns.map((c,i)=>(
+                {filteredCampaigns.length === 0 ? (
+                  <tr>
+                    <td colSpan={12} className="px-2.5 py-8 text-center text-[10px] text-[#8a94a6]">
+                      No campaigns found matching your criteria.
+                    </td>
+                  </tr>
+                ) : (
+                filteredCampaigns.map((c,i)=>(
                   <tr
                     key={c.id}
                     className="h-[49px] cursor-pointer border-b border-[#edf0f4] text-[9px] text-[#44516a] transition-colors hover:bg-[#f9fafc]"
@@ -316,7 +298,7 @@ export function CampaignsPage() {
                     <td className="px-2.5" onClick={(event) => event.stopPropagation()}><input className="h-[13px] w-[13px] accent-[#e5222b]" type="checkbox"/></td>
                     <td className="px-2.5" onClick={(event) => event.stopPropagation()}>
                       <div className="flex min-w-0 items-center gap-[9px]">
-                        <CampaignThumb index={i}/>
+                        <CampaignThumb image={c.image} title={c.title}/>
                         <div className="min-w-0">
                           <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#26334d] hover:text-[#e62c36]">{c.title}</b>
                           <small className="mt-0.5 block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#8a94a6]">{c.desc}</small>
@@ -326,7 +308,8 @@ export function CampaignsPage() {
                     <td className="px-2.5 font-semibold text-[#556178]">{c.project}</td>
                     <td className="px-2.5">
                       <div className="flex items-center gap-[5px]">
-                        {c.channels.map((Icon,j)=><ChannelIcon key={j} Icon={Icon}/>)}{c.extra&&<span className="text-[9px] font-semibold text-[#647088]">{c.extra}</span>}
+                        {c.channels.map((ch,j)=><ChannelIcon key={j} channel={ch}/>)}
+                        {c.extra&&<span className="text-[9px] font-semibold text-[#647088]">{c.extra}</span>}
                       </div>
                     </td>
                     <td className="px-2.5">
@@ -368,12 +351,13 @@ export function CampaignsPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                ))
+                )}
               </tbody>
             </table>
           </div>
           <div className="flex h-8 items-center justify-between px-3.5 text-[9px] text-[#69758b]">
-            <span>Showing 1 to 5 of 24 campaigns</span>
+            <span>Showing {filteredCampaigns.length} of {filteredCampaigns.length} campaigns</span>
             <div className="hidden items-center gap-1 sm:flex">
               <button className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e1e6ed] bg-white"><ChevronLeft size={11}/></button>
               {[2,3,4].map(n=><button key={n} className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e1e6ed] bg-white text-[9px]">{n}</button>)}
