@@ -272,14 +272,10 @@ function ClientHeader({ activeTab, setActiveTab }: { activeTab: string; setActiv
       </div>
 
       <section className="rounded-[8px] border border-[#e1e7ef] bg-white px-3.5 py-3 shadow-[0_1px_4px_rgba(20,35,65,.02)]">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-          <div className="flex min-w-0 flex-1 items-center gap-4">
-            <div className="grid h-[88px] w-[124px] shrink-0 place-items-center rounded-md border border-[#e1e5eb] bg-white text-center shadow-sm">
-              <div>
-                <div className="text-[32px] leading-none">🪷</div>
-                <b className="mt-1 block text-[13px] font-extrabold text-[#1b2039]">MOKSHA SEWA</b>
-                <small className="text-[9px] text-[#777f8e]">Dignity for Every Life</small>
-              </div>
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
+          <div className="flex min-w-0 flex-1 items-start gap-4">
+            <div className="flex h-[88px] w-[124px] shrink-0 items-center justify-center rounded-md border border-[#e1e5eb] bg-white p-2 shadow-sm">
+              <img src="/brand/moksha-sewa-logo.png" alt="Moksha Sewa Logo" className="max-h-full max-w-full object-contain" />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -301,10 +297,8 @@ function ClientHeader({ activeTab, setActiveTab }: { activeTab: string; setActiv
             <button className="grid h-9 w-9 place-items-center rounded-md border border-[#dce3ed] bg-white"><MoreVertical size={15}/></button>
           </div>
 
-          <div className="relative hidden h-[123px] w-[335px] shrink-0 overflow-hidden rounded-lg bg-gradient-to-r from-[#eef2f4] to-[#e0e8e2] lg:block">
-            <div className="absolute left-6 top-5 max-w-[145px] text-[16px] font-serif font-bold leading-[1.05] text-[#1c2949]">" Dignity<br/>Compassion<br/>Support Always "</div>
-            <div className="absolute bottom-5 left-6 text-[11px] font-bold tracking-wide text-[#24314e]">MOKSHA SEWA</div>
-            <div className="absolute right-[-15px] top-[-25px] text-[100px] opacity-70">🌸</div>
+          <div className="hidden h-[123px] w-[335px] shrink-0 overflow-hidden rounded-lg lg:block">
+            <img src="/dignity.png" alt="Moksha Sewa" className="h-full w-full object-cover" />
           </div>
 
         </div>
@@ -325,7 +319,7 @@ function OverviewView() {
   return (
     <>
       <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-6">{overviewStats.map((x,i)=><StatCard item={x} key={i}/>)}</div>
-      <div className="mt-2.5 grid grid-cols-1 items-stretch gap-2.5 xl:grid-cols-[1.45fr_1fr_.8fr]">
+      <div className="mt-2.5 grid grid-cols-1 gap-2.5 xl:grid-cols-[1.45fr_1fr_.8fr]">
         <Panel title="About Moksha Sewa" action="Edit">
           <p className="text-[10px] leading-[1.5] text-[#6c7890]">Moksha Sewa works towards providing dignified funeral services for the underprivileged and communities. Our mission is to serve humanity with compassion, respect and dignity. We organize cremation services, support families in need, and create awareness about the importance of dignified end-of-life care. Through volunteers and donations, we strive to ensure that every individual receives a respectful farewell, regardless of their socio-economic background.</p>
           <div className="mt-3 grid grid-cols-4 gap-2">
@@ -344,7 +338,7 @@ function OverviewView() {
             </div>)}
           </div>
         </Panel>
-        <Panel title="Marketing Goals" action="Edit">
+        <Panel title="Marketing Goals" action="Edit" className="max-h-[240px] overflow-y-auto">
           <Goal Icon={Heart} title="Increase Donations" desc="Drive consistent monthly donations"/>
           <Goal Icon={UsersRound} title="Build Awareness" desc="Reach more people about our mission"/>
           <Goal Icon={UserPlus} title="Recruit Volunteers" desc="Grow our volunteer community"/>
@@ -358,7 +352,7 @@ function OverviewView() {
         <Panel title="Recent Activity" action="View All"><RecentActivity/></Panel>
         <Panel title="Brand Snapshot" action="Edit">
           <div className="flex gap-3">
-            <div className="grid h-[128px] w-[120px] shrink-0 place-items-center rounded border border-[#e7ebf1] bg-white text-center"><div><div className="text-[38px]">🪷</div><b className="text-[11px]">MOKSHA SEWA</b><small className="block text-[9px]">Dignity for Every Life</small></div></div>
+            <div className="flex h-[128px] w-[120px] shrink-0 items-center justify-center rounded border border-[#e7ebf1] bg-white p-2"><img src="/brand/moksha-sewa-logo.png" alt="Moksha Sewa" className="max-h-full max-w-full object-contain" /></div>
             <div className="min-w-0 text-[9px] text-[#6e7890]">
               <b className="text-[9px] text-[#394561]">Primary Color</b><div className="mt-1 flex items-center gap-2"><span className="h-5 w-5 rounded bg-[#2e7d32]"/><span>#2E7D32</span></div>
               <b className="mt-3 block text-[9px] text-[#394561]">Brand Tone</b><p className="mt-1">Compassionate, Trustworthy,<br/>Human-Centric</p>
@@ -573,7 +567,16 @@ function Goal({ Icon, title, desc }: { Icon: LucideIcon | IconType; title: strin
 }
 
 function ChannelMiniList() {
-  return <div>{([["Meta & Instagram",FaInstagram,"@mokshasewa"],["LinkedIn",FaLinkedin,"Moksha Sewa"],["Google Business",FaGoogle,"Moksha Sewa (Delhi)"],["WhatsApp",FaWhatsapp,"+91 98765 43210"],["YouTube",FaYoutube,"@MokshaSewa"],["Website",Globe2,"https://mokshasewa.org"],["Google Search Console",BarChart3,"Connected"]] as [string, LucideIcon | IconType, string][]).map(([n,I,a])=><div key={n} className="grid h-8 grid-cols-[25px_1fr_1fr_16px] items-center gap-2 border-b border-[#eef1f5] text-[9px] last:border-0"><I className="text-[#347fdc]" size={15}/><b>{n}</b><span className="truncate text-[#7f899d]">{a}</span><MoreVertical size={12}/></div>)}</div>;
+  const channels: [string, LucideIcon | IconType, string, string][] = [
+    ["Meta & Instagram", FaInstagram, "@mokshasewa", "#E1306C"],
+    ["LinkedIn", FaLinkedin, "Moksha Sewa", "#0A66C2"],
+    ["Google Business", FaGoogle, "Moksha Sewa (Delhi)", "#4285F4"],
+    ["WhatsApp", FaWhatsapp, "+91 98765 43210", "#25D366"],
+    ["YouTube", FaYoutube, "@MokshaSewa", "#FF0000"],
+    ["Website", Globe2, "https://mokshasewa.org", "#60708d"],
+    ["Google Search Console", BarChart3, "Connected", "#4285F4"],
+  ];
+  return <div>{channels.map(([n, I, a, color]) => <div key={n} className="grid h-8 grid-cols-[25px_1fr_1fr_16px] items-center gap-2 border-b border-[#eef1f5] text-[9px] last:border-0"><I className="shrink-0" style={{ color }} size={15}/><b>{n}</b><span className="truncate text-[#7f899d]">{a}</span><MoreVertical size={16}/></div>)}</div>;
 }
 
 function RecentActivity() {
@@ -643,7 +646,7 @@ function QuoteBox({ text }: { text: string }) {
 function BrandGuidelines() {
   return <Panel title="Brand Guidelines" action="Edit">
     <div className="grid grid-cols-[120px_1fr] gap-3">
-      <div className="grid h-[105px] place-items-center rounded border border-[#e7ebf1]"><div className="text-center"><div className="text-[32px]">🪷</div><b className="text-[10px]">MOKSHA SEWA</b><small className="block text-[9px]">Dignity for Every Life</small></div></div>
+      <div className="grid h-[105px] place-items-center rounded border border-[#e7ebf1] p-2"><img src="/brand/moksha-sewa-logo.png" alt="Moksha Sewa" className="max-h-full max-w-full object-contain" /></div>
       <div className="text-[9px] text-[#67738b]"><b>Brand Colors</b><div className="mt-2 flex gap-2"><span className="h-5 w-5 rounded bg-[#7b3f98]"/><span className="h-5 w-5 rounded bg-[#f57373]"/><span className="h-5 w-5 rounded bg-[#2e7d32]"/><span className="h-5 w-5 rounded bg-[#f8f9fa] border"/></div><b className="mt-3 block">Brand Tone</b><div className="mt-1 flex flex-wrap gap-1"><Badge text="Compassionate" tone="purple"/><Badge text="Trustworthy" tone="blue"/><Badge text="Human-Centric" tone="green"/></div></div>
     </div>
     <div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded bg-[#f7f2ff] p-2 text-center text-[9px] font-bold">“Support a Dignified Goodbye”<button className="mt-2 block mx-auto rounded bg-[#6030d8] px-3 py-1.5 text-white">Donate Now →</button></div><div><b className="text-[9px]">Uploaded Assets</b><p className="text-[9px] text-[#798499]">MokshaSewa_Logo.png<br/>Brand_Guidelines.pdf<br/>Banner_Image.jpg</p></div></div>
