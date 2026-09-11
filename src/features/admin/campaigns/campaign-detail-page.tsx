@@ -209,9 +209,11 @@ function SoftIcon({
 function StatusPill({
   children,
   tone = "green",
+  fixed = false,
 }: {
   children: React.ReactNode;
   tone?: "green" | "blue" | "red" | "orange" | "gray" | "purple";
+  fixed?: boolean;
 }) {
   const map = {
     green: "bg-[#e9fbf2] text-[#0da765]",
@@ -222,7 +224,7 @@ function StatusPill({
     purple: "bg-[#f4efff] text-[#7642d7]",
   };
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-[3px] text-[10px] font-semibold leading-none ${map[tone]}`}>
+    <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[9px] font-semibold ${map[tone]} ${fixed ? "min-w-[72px]" : ""}`}>
       {children}
     </span>
   );
@@ -489,7 +491,7 @@ function TabButton({ tab }: { tab: Tab }) {
   return null;
 }
 
-function RightRail() {
+function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { showPerformanceScore?: boolean; activeTab?: string }) {
   return (
     <aside className="space-y-2.5">
       <Card className="overflow-hidden">
@@ -507,14 +509,91 @@ function RightRail() {
               <div className="flex justify-between gap-2"><span>Type</span><b className="text-[#4d5c76]">Awareness</b></div>
               <div className="flex justify-between gap-2"><span>Start Date</span><b className="text-[#4d5c76]">Mar 15, 2025</b></div>
               <div className="flex justify-between gap-2"><span>End Date</span><b className="text-[#4d5c76]">Apr 30, 2025</b></div>
-              <div className="flex justify-between gap-2"><span>Total Budget</span><b className="text-[#4d5c76]">₹50,000</b></div>
-              <div className="flex justify-between gap-2"><span>Spent</span><b className="text-[#4d5c76]">₹48,250 (96%)</b></div>
+              {activeTab === "Budget" ? (
+                <>
+                  <div className="flex justify-between gap-2"><span>Total</span><b className="text-[#4d5c76]">₹48,250</b></div>
+                  <div className="flex justify-between gap-2"><span>Spent</span><b className="text-[#4d5c76]">₹42,830 (88.7%)</b></div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between gap-2"><span>Total Budget</span><b className="text-[#4d5c76]">₹50,000</b></div>
+                  <div className="flex justify-between gap-2"><span>Spent</span><b className="text-[#4d5c76]">₹48,250 (96%)</b></div>
+                </>
+              )}
               <div className="flex justify-between gap-2"><span>Owner</span><b className="text-[#4d5c76]">Manish Sirohi</b></div>
             </div>
           </div>
         </div>
       </Card>
 
+      {activeTab === "Overview" && (
+      <Card title="Budget Utilization" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View Details</button>}>
+        <div className="p-3">
+          <div className="flex items-center justify-between">
+            <div className="text-[16px] font-extrabold text-[#1b2a50]">₹48,250 <span className="text-[10px] font-medium text-[#8490a4]">/ ₹50,000</span></div>
+            <b className="text-[13px] text-[#26375d]">96%</b>
+          </div>
+          <div className="mt-2 h-[7px] rounded-full bg-[#e8eef4]"><div className="h-full w-[96%] rounded-full bg-[#17ae70]" /></div>
+          <div className="mt-2 flex justify-between text-[9px] text-[#718099]"><span>₹48,250 Spent</span><span>₹1,750 Remaining</span></div>
+          <div className="mt-2 rounded-[7px] bg-[#effbf5] px-2 py-1.5 text-[9px] text-[#25935f]">You are 8% under budget. Great pacing!</div>
+        </div>
+      </Card>
+      )}
+
+      {activeTab === "Budget" && (
+      <>
+      <Card title="Budget Utilization" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View Details</button>}>
+        <div className="p-3">
+          <div className="flex items-center justify-between">
+            <div className="text-[16px] font-extrabold text-[#1b2a50]">₹42,830 <span className="text-[10px] font-medium text-[#8490a4]">/ ₹48,250</span></div>
+            <b className="text-[13px] text-[#26375d]">88%</b>
+          </div>
+          <div className="mt-2 h-[7px] rounded-full bg-[#e8eef4]"><div className="h-full w-[88%] rounded-full bg-[#17ae70]" /></div>
+          <div className="mt-2 flex justify-between text-[9px] text-[#718099]"><span>● ₹42,830 Spent</span><span>● ₹5,420 Remaining</span></div>
+        </div>
+      </Card>
+
+      <Card title="Alerts & Notifications" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View All</button>}>
+        <div className="divide-y divide-[#edf1f5]">
+          {[
+            { icon: AlertCircle, title: "Approaching budget limit", note: "88% of budget spent", tag: "Watch", tagColor: "bg-[#fef3e6] text-[#d97706]" },
+            { icon: TrendingDown, title: "YouTube underperforming", note: "24% below planned spend", tag: "Review", tagColor: "bg-[#fef3e6] text-[#d97706]" },
+            { icon: CheckCircle2, title: "Good pacing", note: "Daily spend 22% below plan", tag: "Good", tagColor: "bg-[#e9fbf3] text-[#17a96b]" },
+          ].map((item) => (
+            <div key={item.title} className="flex items-start gap-2 px-3 py-2.5">
+              <item.icon size={15} className="mt-0.5 text-[#6b7890]" />
+              <div className="min-w-0 flex-1">
+                <div className="text-[9.5px] font-semibold text-[#334464]">{item.title}</div>
+                <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{item.note}</div>
+              </div>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-semibold ${item.tagColor}`}>{item.tag}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card title="Optimization Suggestions" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View All</button>}>
+        <div className="divide-y divide-[#edf1f5]">
+          {[
+            { title: "Reallocate budget to Meta", note: "+24% better cost per lead", btn: "Apply", btnColor: "bg-[#1979e9] text-white" },
+            { title: "Increase budget for Website", note: "High conversion rate (5.2%)", btn: "Consider", btnColor: "bg-[#f0f4ff] text-[#1d77e7] border border-[#d0daf0]" },
+            { title: "Pause low-performing YouTube ad", note: "Save ₹1,200 in remaining period", btn: "Review", btnColor: "bg-[#f0f4ff] text-[#1d77e7] border border-[#d0daf0]" },
+          ].map((item) => (
+            <div key={item.title} className="flex items-start gap-2 px-3 py-2.5">
+              <Sparkles size={14} className="mt-0.5 shrink-0 text-[#f59e0b]" />
+              <div className="min-w-0 flex-1">
+                <div className="text-[9.5px] font-semibold text-[#334464]">{item.title}</div>
+                <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{item.note}</div>
+              </div>
+              <button className={`shrink-0 rounded-[5px] px-2 py-1 text-[8px] font-semibold ${item.btnColor}`}>{item.btn}</button>
+            </div>
+          ))}
+        </div>
+      </Card>
+      </>
+      )}
+
+      {showPerformanceScore && (
       <Card title="Performance Score">
         <div className="flex items-center gap-3 p-3">
           <div className="relative h-[72px] w-[72px] shrink-0 rounded-full" style={{background:"conic-gradient(#16aa67 0 82%, #e8edf3 82% 100%)"}}>
@@ -531,28 +610,20 @@ function RightRail() {
           </div>
         </div>
       </Card>
+      )}
 
-      <Card title="Budget Utilization" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View Details</button>}>
-        <div className="p-3">
-          <div className="flex items-center justify-between">
-            <div className="text-[16px] font-extrabold text-[#1b2a50]">₹48,250 <span className="text-[10px] font-medium text-[#8490a4]">/ ₹50,000</span></div>
-            <b className="text-[13px] text-[#26375d]">96%</b>
-          </div>
-          <div className="mt-2 h-[7px] rounded-full bg-[#e8eef4]"><div className="h-full w-[96%] rounded-full bg-[#17ae70]" /></div>
-          <div className="mt-2 flex justify-between text-[9px] text-[#718099]"><span>₹48,250 Spent</span><span>₹1,750 Remaining</span></div>
-          <div className="mt-2 rounded-[7px] bg-[#effbf5] px-2 py-1.5 text-[9px] text-[#25935f]">You are 8% under budget. Great pacing!</div>
-        </div>
-      </Card>
-
+      {(activeTab === "Performance" || activeTab === "Overview") && (
       <Card title="Quick Notes & Alerts" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View All →</button>}>
         <div className="divide-y divide-[#edf1f5]">
           <AlertRow icon={AlertCircle} title="CTR dropping on LinkedIn" note="-18% vs last week" tone="red" tag="High" />
           <AlertRow icon={Info} title="YouTube not connected" note="Connect to track complete performance" tone="orange" tag="Medium" />
           <AlertRow icon={Info} title="Budget pacing ahead of schedule" note="You used 96% of budget" tone="blue" tag="Medium" />
-          <AlertRow icon={CheckCircle2} title="Campaign performance on track" note="Reach and leads are above expected" tone="green" tag="Good" />
+          <AlertRow icon={CheckCircle2} title="No major issues" note="Campaign running smoothly" tone="green" tag="Good" />
         </div>
       </Card>
+      )}
 
+      {activeTab === "Performance" && (
       <Card title="Optimization Recommendations" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View All →</button>}>
         <div className="divide-y divide-[#edf1f5]">
           <Recommendation title="Increase budget on high-performing Meta & Instagram" detail="20% more conversions" />
@@ -560,6 +631,170 @@ function RightRail() {
           <Recommendation title="Focus targeting on top 5 states" detail="UP, Delhi, Maharashtra, Karnataka, Bihar" />
         </div>
       </Card>
+      )}
+
+      {activeTab === "Content & Schedule" && (
+      <>
+      <Card title="Publishing Rules" action={<button className="text-[10px] font-semibold text-[#1d77e7]">Edit</button>}>
+        <div className="divide-y divide-[#edf1f5]">
+          {[
+            { icon: Clock3, label: "Posting Window", value: "08:00 AM – 08:00 PM (IST)" },
+            { icon: CalendarDays, label: "Max Posts Per Day", value: "3 per channel" },
+            { icon: Users, label: "Audience Focus", value: "India (Urban & Semi-Urban)" },
+            { icon: Copy, label: "Mandatory Hashtags", value: "#CleanRivers #MokshaSewa" },
+            { icon: CheckCircle2, label: "Content Approval", value: "Required before publishing" },
+            { icon: FileText, label: "Language", value: "English & Hindi" },
+          ].map((rule) => (
+            <div key={rule.label} className="flex items-start gap-2 px-3 py-2">
+              <rule.icon size={14} className="mt-0.5 text-[#6b7890]" />
+              <div className="min-w-0 flex-1">
+                <div className="text-[9px] font-semibold text-[#334464]">{rule.label}</div>
+                <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{rule.value}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card title="Content Checklist">
+        <div className="p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[9px] text-[#718099]">Progress</span>
+            <span className="text-[10px] font-bold text-[#334464]">6/8</span>
+          </div>
+          <div className="mb-3 h-[5px] overflow-hidden rounded-full bg-[#edf1f6]">
+            <div className="h-full w-[75%] rounded-full bg-[#17ae70]" />
+          </div>
+          <div className="space-y-2">
+            {[
+              { text: "Campaign key visuals created", done: true },
+              { text: "Channel-specific captions", done: true },
+              { text: "Hashtags & UTM links added", done: true },
+              { text: "Alt text for accessibility", done: true },
+              { text: "Approved by client", done: true },
+              { text: "Scheduled in calendar", done: true },
+              { text: "Community response plan", done: false },
+              { text: "Performance tracking setup", done: false },
+            ].map((item) => (
+              <div key={item.text} className="flex items-center gap-2">
+                <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${item.done ? "bg-[#17ae70] text-white" : "border border-[#d1d9e6] bg-white"}`}>
+                  {item.done && <Check size={10} />}
+                </span>
+                <span className={`text-[9px] ${item.done ? "text-[#475674]" : "text-[#8792a6]"}`}>{item.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+      </>
+      )}
+
+      {(activeTab === "Leads" || activeTab === "Audience") && (
+      <>
+      <Card title="Target Audience Definition" action={<button className="text-[10px] font-semibold text-[#1d77e7]">Edit</button>}>
+        <div className="p-3 space-y-2.5">
+          {[
+            { icon: MapPin, label: "Location", value: "India (Urban & Semi-Urban)" },
+            { icon: Users, label: "Age Group", value: "18–65 years" },
+            { icon: Users, label: "Gender", value: "All genders" },
+            { icon: Heart, label: "Interests", value: "Environment, Sustainability, Rivers, Clean Water, Climate Action" },
+            { icon: MessageCircle, label: "Languages", value: "English, Hindi + Regional" },
+            { icon: Target, label: "Audience Size", value: "~2.4M (Estimated)" },
+          ].map((item) => (
+            <div key={item.label} className="flex items-start gap-2">
+              <item.icon size={14} className="mt-0.5 shrink-0 text-[#6b7890]" />
+              <div className="min-w-0 flex-1">
+                <div className="text-[9px] font-semibold text-[#334464]">{item.label}</div>
+                <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{item.value}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card title="Best Performing Segment">
+        <div className="p-3">
+          <div className="rounded-[7px] border border-[#e6ebf2] bg-[#f8fafc] p-2.5">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#e9fbf3]">
+                <Target size={14} className="text-[#17a96b]" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] font-bold text-[#1b2a50]">18–34, Environment Enthusiasts</div>
+                <div className="text-[8.5px] text-[#8792a6]">Highest engagement rate (4.8%)</div>
+                <div className="text-[8.5px] font-semibold text-[#17a96b]">2.3x higher than average</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+      </>
+      )}
+
+      {activeTab === "Activity Log" && (
+      <>
+      <Card title="Latest Updates" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View All</button>}>
+        <div className="divide-y divide-[#edf1f5]">
+          {[
+            { text: "Content published on Instagram", time: "2 hours ago" },
+            { text: "Budget updated to ₹48,250", time: "5 hours ago" },
+            { text: "New team member added", time: "1 day ago" },
+            { text: "Post scheduled on LinkedIn", time: "2 days ago" },
+            { text: "Audience synced (1,260 contacts)", time: "2 days ago" },
+          ].map((item) => (
+            <div key={item.text} className="flex items-start gap-2 px-3 py-2.5">
+              <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-[#17a96b]" />
+              <div className="min-w-0 flex-1">
+                <div className="text-[9.5px] font-semibold text-[#334464]">{item.text}</div>
+                <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{item.time}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card title="Collaborators (6)" action={<button className="text-[10px] font-semibold text-[#1d77e7]">Manage</button>}>
+        <div className="divide-y divide-[#edf1f5]">
+          {[
+            { initials: "MS", name: "Manish Sirohi", role: "Campaign Owner", access: "Owner", color: "bg-[#111827]" },
+            { initials: "AV", name: "Anjali Verma", role: "Finance Manager", access: "Editor", color: "bg-[#e9f4ff] text-[#2878e8]" },
+            { initials: "RM", name: "Rohan Mehta", role: "Project Manager", access: "Editor", color: "bg-[#e9fbf3] text-[#17a96b]" },
+            { initials: "SI", name: "Sneha Iyer", role: "Content Writer", access: "Editor", color: "bg-[#f3e8ff] text-[#8b5cf6]" },
+            { initials: "NS", name: "Neha Sharma", role: "Social Media Lead", access: "Editor", color: "bg-[#fef3e6] text-[#f59e0b]" },
+            { initials: "VS", name: "Vikram Singh", role: "Analyst", access: "Viewer", color: "bg-[#e0f2fe] text-[#0ea5e9]" },
+          ].map((user) => (
+            <div key={user.name} className="flex items-center gap-2 px-3 py-2">
+              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white ${user.color}`}>{user.initials}</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[9.5px] font-semibold text-[#334464]">{user.name}</div>
+                <div className="text-[8.5px] text-[#8792a6]">{user.role}</div>
+              </div>
+              <StatusPill tone={user.access === "Owner" ? "green" : user.access === "Viewer" ? "green" : "gray"}>{user.access}</StatusPill>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card title="Alerts & Reminders (3)" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View All</button>}>
+        <div className="divide-y divide-[#edf1f5]">
+          {[
+            { icon: AlertCircle, title: "Content approval pending", note: "Aarti currently reviewing", time: "4h ago", color: "text-[#ef4444]" },
+            { icon: Info, title: "Budget at 96%", note: "Campaign spending is on track", time: "5h ago", color: "text-[#f59e0b]" },
+            { icon: CalendarDays, title: "Scheduled post tomorrow", note: "River Facts Series #3", time: "1d ago", color: "text-[#2878e8]" },
+          ].map((item) => (
+            <div key={item.title} className="flex items-start gap-2 px-3 py-2.5">
+              <item.icon size={15} className={`mt-0.5 shrink-0 ${item.color}`} />
+              <div className="min-w-0 flex-1">
+                <div className="text-[9.5px] font-semibold text-[#334464]">{item.title}</div>
+                <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{item.note}</div>
+              </div>
+              <span className="shrink-0 text-[8px] text-[#8792a6]">{item.time}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+      </>
+      )}
     </aside>
   );
 }
@@ -606,13 +841,12 @@ function Recommendation({ title, detail }: { title: string; detail: string }) {
 function OverviewTab() {
   return (
     <div className="space-y-2.5">
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
         <MetricCard icon={Users} tone="blue" label="Total Reach" value="86.5K" change="24%" sub="+16.8K vs last month" />
         <MetricCard icon={Eye} tone="purple" label="Impressions" value="142K" change="18%" sub="+21.4K vs last month" />
         <MetricCard icon={User} tone="green" label="Leads" value="248" change="36%" sub="+66 vs last month" />
         <MetricCard icon={Target} tone="green" label="Conversions" value="42" change="28%" sub="+9 vs last month" />
         <MetricCard icon={BarChart3} tone="orange" label="Total Spend" value="₹48,250" change="8%" down sub="8% under budget" />
-        <MetricCard icon={Activity} tone="green" label="Performance Score" value="82" change="12%" sub="Good performance" />
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1fr_1.5fr]">
@@ -894,7 +1128,7 @@ function ContentScheduleTab() {
       <Card title="Publication Calendar" action={<div className="flex items-center gap-1"><button className="icon-btn"><ChevronLeft size={13}/></button><b className="px-2 text-[11px] text-[#35466a]">April 2025</b><button className="icon-btn"><ChevronRight size={13}/></button><button className="ml-2 rounded-[5px] border border-[#dfe6ef] px-2 py-1 text-[9px] font-semibold text-[#2278e8]">Today</button></div>}>
         <div className="p-3">
           <div className="mb-2 flex justify-end gap-3 text-[9px] text-[#718099]"><Legend color="#16a96c" label="Published" /><Legend color="#2878e8" label="Scheduled" /><Legend color="#f59e0b" label="In Review" /><Legend color="#ef4444" label="Needs Changes" /><Legend color="#94a3b8" label="Draft" /></div>
-          <div className="grid grid-cols-7 overflow-hidden rounded-[7px] border border-[#e5eaf1]">
+          <div className="grid grid-cols-14 overflow-hidden rounded-[7px] border border-[#e5eaf1]">
             {["Mon 14","Tue 15","Wed 16","Thu 17","Fri 18","Sat 19","Sun 20","Mon 21","Tue 22","Wed 23","Thu 24","Fri 25","Sat 26","Sun 27"].map((day,i)=>(
               <div key={day} className={`min-h-[56px] border-r border-b border-[#edf1f5] p-2 ${i===2 ? "bg-[#f2f7ff]" : ""}`}>
                 <div className={`text-[9px] font-semibold ${i===2 ? "text-[#1f79e9]" : "text-[#64738b]"}`}>{day}</div>
@@ -1238,7 +1472,7 @@ function BudgetTab() {
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1.2fr_1fr]">
         <Card title="Spend Over Time" action={<Select label="Last 30 days" />}>
-          <div className="h-[225px] p-3">
+          <div className="max-h-[225px] overflow-y-auto p-3">
             <div className="mb-2 flex gap-4 text-[9px]"><Legend color="#2878e8" label="Daily Spend"/><Legend color="#2f72dc" label="Cumulative Spend"/><Legend color="#a9b4c4" label="Planned Spend"/></div>
             <MultiLineChart labels={["Mar 15","Mar 22","Mar 29","Apr 05","Apr 12","Apr 19","Apr 26"]} series={[
               {name:"Daily Spend",color:"#a6c7ef",values:[6,12,10,16,13,18,20]},
@@ -1330,12 +1564,12 @@ function ActivityLogTab() {
               ["3 days ago","Apr 25, 2025","04:33 PM","Editing updates rejected","Copy update for Google Business post","Anjali Verma","Rejected","google"],
               ["3 days ago","Apr 25, 2025","11:11 AM","Content created","Blog draft: “How Citizen Action Can Revive Rivers”","Sneha Iyer","Created","website"],
             ].map(([ago,date,time,title,desc,user,status,platform],i)=>(
-              <div key={title} className="flex gap-2.5 px-3 py-2.5">
+              <div key={title} className="flex items-start gap-2.5 px-3 py-2.5">
                 <div className="relative pt-0.5"><span className={`flex h-7 w-7 items-center justify-center rounded-full ${i===0?"bg-[#e8fff4]":i===6?"bg-[#fff0f1]":"bg-[#eef5ff]"}`}>{i===0?<Send size={14} className="text-[#16aa6b]"/>:i===2?<CheckCircle2 size={14} className="text-[#f59e0b]"/>:i===6?<AlertCircle size={14} className="text-[#ef4444]"/>:<Activity size={14} className="text-[#2878e8]" />}</span></div>
                 <div className="w-[85px] shrink-0"><b className="block text-[9px] text-[#617089]">{ago}</b><span className="text-[8px] text-[#8b96a8]">{date}</span><span className="block text-[8px] text-[#8b96a8]">{time}</span></div>
                 <div className="min-w-0 flex-1"><b className="block text-[10px] text-[#2e4163]">{title}</b><span className="block truncate text-[8.5px] text-[#8490a3]">{desc}</span></div>
                 <div className="hidden w-[110px] items-center gap-1.5 md:flex"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#162038] text-[8px] font-bold text-white">{user?.[0]}</span><span className="truncate text-[8.5px] font-semibold text-[#5f6d84]">{user}</span></div>
-                <StatusPill tone={status==="Rejected"?"red":status==="Updated"?"blue":status==="Approved"?"green":status==="Published"?"green":status==="Scheduled"?"blue":"gray"}>{status}</StatusPill>
+                <StatusPill fixed tone={status==="Rejected"?"red":status==="Updated"?"blue":status==="Approved"?"green":status==="Published"?"green":status==="Scheduled"?"blue":"gray"}>{status}</StatusPill>
               </div>
             ))}
           </div>
@@ -1491,7 +1725,7 @@ function CampaignPage({ id }: { id?: string }) {
 
         <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[minmax(0,1fr)_250px]">
           <main className="min-w-0 overflow-hidden">{content}</main>
-          <div className="hidden xl:block"><RightRail /></div>
+          <div className="hidden xl:block"><RightRail showPerformanceScore={activeTab === "Performance"} activeTab={activeTab} /></div>
         </div>
       </div>
     </div>
