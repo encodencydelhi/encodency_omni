@@ -1,3 +1,3 @@
-import { ContentStudioPage } from "@/features/admin/content/components/content-studio-page";
+import ContentStudio from "@/features/admin/content/components/content-studio-page";
 
-export default function AdminContentPage() { return <ContentStudioPage />; }
+export default function AdminContentPage() { return <ContentStudio />; }
