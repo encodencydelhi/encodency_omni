@@ -1,4 +1,6 @@
+"use client";
 
+import { useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,10 +21,29 @@ import {
   FaYoutube,
   FaWhatsapp,
 } from "react-icons/fa";
+import { PostDetailModal } from "@/features/admin/shared/post-detail-modal";
 
 type EventType = "fb" | "ig" | "li" | "yt" | "wa" | "gmb" | "link";
 
-type CalendarEvent = [string, string, EventType];
+type CalendarEvent = {
+  name: string;
+  time: string;
+  type: EventType;
+  creator: string;
+  approver: string;
+  description: string;
+  image: string;
+  status: "Scheduled" | "Draft" | "Published" | "Pending";
+  campaign: string;
+  hashtags?: string[];
+  location?: string;
+  priority?: "Low" | "Medium" | "High" | "Urgent";
+  contentType?: string;
+  notes?: string;
+  engagement?: { likes: number; comments: number; shares: number };
+  reach?: string;
+  scheduledDate?: string;
+};
 
 type CalendarCell = {
   d: number;
@@ -30,49 +51,164 @@ type CalendarCell = {
   selected?: boolean;
 };
 
+const creators = ["Priya Sharma", "Rahul Verma", "Anita Desai", "Vikram Singh", "Neha Gupta"];
+const approvers = ["Amit Patel", "Sunita Reddy", "Deepak Nair"];
+const descriptions: Record<string, string> = {
+  "fb": "Engaging Facebook post to reach our community and drive awareness.",
+  "ig": "Visual-first Instagram content designed for maximum engagement and shares.",
+  "li": "Professional LinkedIn content targeting industry leaders and stakeholders.",
+  "yt": "Video content for YouTube to educate and inspire our audience.",
+  "wa": "Direct WhatsApp message to keep our volunteer network informed.",
+  "gmb": "Google My Business post to boost local visibility and foot traffic.",
+  "link": "Long-form article or blog post for in-depth storytelling.",
+};
+const campaigns = ["Moksha Sewa", "Clean Ganga 2025", "Volunteer Drive", "Earth Day", "River Restoration"];
+
+const hashtagSets: string[][] = [
+  ["#CleanGanga", "#RiverConservation", "#India"],
+  ["#Volunteer", "#MokshaSewa", "#Community"],
+  ["#SocialMedia", "#DigitalMarketing", "#Impact"],
+  ["#Sustainability", "#Environment", "#GoGreen"],
+  ["#HealthForAll", "#Wellness", "#PublicHealth"],
+];
+
+const locations = ["New Delhi, India", "Varanasi, UP", "Rishikesh, Uttarakhand", "Haridwar, UP", "Mumbai, Maharashtra"];
+const contentTypes = ["Image Post", "Video", "Carousel", "Story", "Reel", "Short", "Article", "Poll"];
+const priorities: ("Low" | "Medium" | "High" | "Urgent")[] = ["Low", "Medium", "High", "Urgent"];
+
+function ev(name: string, time: string, type: EventType, idx: number): CalendarEvent {
+  return {
+    name,
+    time,
+    type,
+    creator: creators[idx % creators.length]!,
+    approver: approvers[idx % approvers.length]!,
+    description: descriptions[type] || "General content for our channels.",
+    image: "https://images.unsplash.com/photo-1500534623283-312aade485b7?w=1080&h=1350&fit=crop",
+    status: idx % 4 === 0 ? "Draft" : idx % 5 === 0 ? "Pending" : "Scheduled",
+    campaign: campaigns[idx % campaigns.length]!,
+    hashtags: hashtagSets[idx % hashtagSets.length],
+    location: locations[idx % locations.length],
+    priority: priorities[idx % priorities.length],
+    contentType: contentTypes[idx % contentTypes.length],
+    notes: `Review and approve before ${time}. Ensure brand guidelines are followed.`,
+    engagement: { likes: Math.floor(Math.random() * 500) + 100, comments: Math.floor(Math.random() * 50) + 10, shares: Math.floor(Math.random() * 30) + 5 },
+    reach: `${(Math.random() * 10 + 2).toFixed(1)}K`,
+    scheduledDate: `Sep ${1 + (idx % 30)}, 2026`,
+  };
+}
+
 const events: Record<number, CalendarEvent[]> = {
   1: [
-    ["World Health Day Post", "10:00 AM", "fb"],
-    ["Story: Behind the Scenes", "04:00 PM", "ig"],
+    ev("World Health Day Post", "10:00 AM", "fb", 0),
+    ev("Story: Behind the Scenes", "04:00 PM", "ig", 1),
+    ev("LinkedIn Article", "06:30 PM", "li", 2),
   ],
   2: [
-    ["Article: Clean Ganga", "11:00 AM", "li"],
-    ["Video: River Cleanup", "06:00 PM", "yt"],
+    ev("Article: Clean Ganga", "11:00 AM", "li", 3),
+    ev("Video: River Cleanup", "06:00 PM", "yt", 4),
+    ev("WhatsApp Broadcast", "07:30 PM", "wa", 5),
   ],
   3: [
-    ["GMB Post", "10:30 AM", "gmb"],
-    ["Campaign: Volunteer", "02:00 PM", "wa"],
+    ev("GMB Post", "10:30 AM", "gmb", 6),
+    ev("Campaign: Volunteer", "02:00 PM", "wa", 7),
+    ev("Reel: Team Work", "05:00 PM", "ig", 8),
+    ev("YouTube Short", "07:00 PM", "yt", 9),
   ],
-  4: [["Team Meeting Post", "11:00 AM", "li"]],
-  6: [["Environment Day Post", "10:00 AM", "ig"]],
-  7: [["Case Study Post", "12:00 PM", "li"]],
-  8: [["Shorts: Ganga Facts", "05:00 PM", "yt"]],
+  4: [
+    ev("Team Meeting Post", "11:00 AM", "li", 10),
+    ev("Story: Office Tour", "02:30 PM", "ig", 11),
+  ],
+  6: [
+    ev("Environment Day Post", "10:00 AM", "ig", 12),
+    ev("Blog: Green Initiative", "01:00 PM", "link", 13),
+  ],
+  7: [
+    ev("Case Study Post", "12:00 PM", "li", 14),
+    ev("FB Live Q&A", "04:00 PM", "fb", 15),
+    ev("Story: Recap", "06:00 PM", "ig", 16),
+  ],
+  8: [
+    ev("Shorts: Ganga Facts", "05:00 PM", "yt", 17),
+    ev("Carousel: Tips", "11:00 AM", "ig", 18),
+  ],
   9: [
-    ["Volunteer Drive", "11:00 AM", "fb"],
-    ["Broadcast: Event", "04:00 PM", "wa"],
+    ev("Volunteer Drive", "11:00 AM", "fb", 19),
+    ev("Broadcast: Event", "04:00 PM", "wa", 20),
+    ev("Reel: Volunteers", "06:30 PM", "ig", 21),
   ],
-  10: [["Story Series (3)", "09:00 AM", "ig"]],
-  11: [["GMB Update", "01:00 PM", "gmb"]],
+  10: [
+    ev("Story Series (3)", "09:00 AM", "ig", 22),
+    ev("LinkedIn Poll", "12:00 PM", "li", 23),
+  ],
+  11: [
+    ev("GMB Update", "01:00 PM", "gmb", 24),
+    ev("FB Event Promo", "03:00 PM", "fb", 25),
+    ev("YouTube Teaser", "05:30 PM", "yt", 26),
+  ],
   14: [
-    ["Clean Ganga Drive", "09:00 AM", "fb"],
-    ["Instagram Reels", "06:00 PM", "ig"],
+    ev("Clean Ganga Drive", "09:00 AM", "fb", 27),
+    ev("Instagram Reels", "06:00 PM", "ig", 28),
+    ev("WhatsApp Alert", "07:00 PM", "wa", 29),
   ],
-  15: [["Thought Leadership", "11:00 AM", "li"]],
-  16: [["Documentary Clip", "05:00 PM", "yt"]],
-  17: [["Reminder: Event", "10:00 AM", "wa"]],
-  18: [["Blog: Impact Story", "03:00 PM", "link"]],
-  20: [["GMB Photos", "12:00 PM", "gmb"]],
-  21: [["Earth Day Post", "11:00 AM", "ig"]],
+  15: [
+    ev("Thought Leadership", "11:00 AM", "li", 30),
+    ev("Story: Behind Scenes", "02:00 PM", "ig", 31),
+  ],
+  16: [
+    ev("Documentary Clip", "05:00 PM", "yt", 32),
+    ev("LinkedIn Post", "10:00 AM", "li", 33),
+    ev("FB Share", "03:30 PM", "fb", 34),
+  ],
+  17: [
+    ev("Reminder: Event", "10:00 AM", "wa", 35),
+    ev("IG Countdown", "01:00 PM", "ig", 36),
+  ],
+  18: [
+    ev("Blog: Impact Story", "03:00 PM", "link", 37),
+    ev("Reel: Impact", "06:00 PM", "ig", 38),
+  ],
+  20: [
+    ev("GMB Photos", "12:00 PM", "gmb", 39),
+    ev("FB Album", "02:00 PM", "fb", 40),
+  ],
+  21: [
+    ev("Earth Day Post", "11:00 AM", "ig", 41),
+    ev("LI Article", "02:00 PM", "li", 42),
+    ev("YT Documentary", "05:00 PM", "yt", 43),
+  ],
   22: [
-    ["Awareness Post", "10:00 AM", "fb"],
-    ["Poll: Sustainability", "04:00 PM", "li"],
+    ev("Awareness Post", "10:00 AM", "fb", 44),
+    ev("Poll: Sustainability", "04:00 PM", "li", 45),
+    ev("Story: Quiz", "06:00 PM", "ig", 46),
   ],
-  23: [["Campaign: Donate", "12:00 PM", "wa"]],
-  24: [["Short: Before/After", "03:00 PM", "yt"]],
-  25: [["GMB Offer", "11:00 AM", "gmb"]],
-  28: [["Monthly Update", "11:00 AM", "li"]],
-  29: [["Story: Team", "03:00 PM", "ig"]],
-  30: [["Closing Post", "06:00 PM", "fb"]],
+  23: [
+    ev("Campaign: Donate", "12:00 PM", "wa", 47),
+    ev("FB Fundraiser", "02:00 PM", "fb", 48),
+  ],
+  24: [
+    ev("Short: Before/After", "03:00 PM", "yt", 49),
+    ev("Reel: Transformation", "05:00 PM", "ig", 50),
+  ],
+  25: [
+    ev("GMB Offer", "11:00 AM", "gmb", 51),
+    ev("WhatsApp Promo", "01:00 PM", "wa", 52),
+    ev("FB Ad", "03:00 PM", "fb", 53),
+  ],
+  28: [
+    ev("Monthly Update", "11:00 AM", "li", 54),
+    ev("Story: Recap", "02:00 PM", "ig", 55),
+    ev("YouTube Summary", "05:00 PM", "yt", 56),
+  ],
+  29: [
+    ev("Story: Team", "03:00 PM", "ig", 57),
+    ev("LinkedIn Post", "11:00 AM", "li", 58),
+  ],
+  30: [
+    ev("Closing Post", "06:00 PM", "fb", 59),
+    ev("Story: Thank You", "08:00 PM", "ig", 60),
+    ev("WhatsApp Message", "09:00 PM", "wa", 61),
+  ],
 };
 
 const weeks: CalendarCell[][] = [
@@ -215,6 +351,8 @@ function ChannelIcon({
 }
 
 export default function ContentCalendar() {
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+
   return (
     <div className="box-border h-screen w-full overflow-hidden bg-[#f7f9fc] font-[Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif] text-[#13203e] max-[1200px]:h-auto max-[1200px]:min-h-screen max-[1200px]:overflow-auto max-[820px]:p-[10px]">
       {/* Header */}
@@ -329,7 +467,7 @@ export default function ContentCalendar() {
                     <div
                       key={cellIndex}
                       className={[
-                        "relative min-w-0 overflow-hidden border-b border-r border-[#e8ecf2] p-[7px_7px_4px] last:border-r-0 max-[560px]:p-[5px_3px]",
+                        "relative min-w-0 overflow-hidden border-b border-r border-[#e8ecf2] p-[5px_5px_3px] last:border-r-0 max-[560px]:p-[4px_2px]",
                         weekIndex === weeks.length - 1
                           ? "border-b-0"
                           : "",
@@ -340,7 +478,7 @@ export default function ContentCalendar() {
                       ].join(" ")}
                     >
                       <span
-                        className={`mb-[5px] block text-[9px] ${
+                        className={`mb-[3px] block text-[9px] ${
                           cell.out
                             ? "text-[#8792a5]"
                             : "text-[#172440]"
@@ -349,32 +487,35 @@ export default function ContentCalendar() {
                         {cell.d}
                       </span>
 
-                      {list.slice(0, 1).map(([name, time, type], eventIndex) => (
-                        <div
-                          key={eventIndex}
-                          className={`mb-[4px] grid h-[29px] min-w-0 grid-cols-[17px_minmax(0,1fr)_10px] items-center gap-1 rounded-[6px] px-[5px] py-1 text-[#263754] max-[560px]:h-[27px] max-[560px]:grid-cols-[16px_minmax(0,1fr)_7px] max-[560px]:gap-[2px] max-[560px]:p-[3px] ${
-                            eventIndex % 3 === 2
-                              ? "bg-[#fff0f2]"
-                              : eventIndex % 4 === 3
-                                ? "bg-[#eaf8f3]"
-                                : "bg-[#edf5ff]"
-                          }`}
-                        >
-                          <ChannelIcon type={type} size={12} />
+                      <div className="scrollbar-thin flex max-h-[calc(100%-18px)] flex-col gap-[3px] overflow-y-auto">
+                        {list.map((evt, eventIndex) => (
+                          <div
+                            key={eventIndex}
+                            onClick={() => setSelectedEvent(evt)}
+                            className={`grid min-w-0 shrink-0 cursor-pointer grid-cols-[14px_minmax(0,1fr)_8px] items-center gap-[8px] rounded-[4px] px-[4px] py-[2px] text-[#263754] transition-opacity hover:opacity-80 max-[560px]:grid-cols-[13px_minmax(0,1fr)_6px] max-[560px]:gap-[6px] max-[560px]:p-[2px] ${
+                              eventIndex % 3 === 2
+                                ? "bg-[#fff0f2]"
+                                : eventIndex % 4 === 3
+                                  ? "bg-[#eaf8f3]"
+                                  : "bg-[#edf5ff]"
+                            }`}
+                          >
+                            <ChannelIcon type={evt.type} size={10} />
 
-                          <div className="min-w-0">
-                            <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[7.5px] leading-[1.1] max-[560px]:text-[9px]">
-                              {name}
-                            </b>
+                            <div className="min-w-0">
+                              <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[7px] leading-[1.1] max-[560px]:text-[8px]">
+                                {evt.name}
+                              </b>
 
-                            <small className="mt-[2px] block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#637089] max-[560px]:text-[9px]">
-                              {time}
-                            </small>
+                              <small className="block overflow-hidden text-ellipsis whitespace-nowrap text-[7px] text-[#637089] leading-[1.1] max-[560px]:text-[7px]">
+                                {evt.time}
+                              </small>
+                            </div>
+
+                            <span className="text-[8px] text-[#59677e]">⋮</span>
                           </div>
-
-                          <span className="text-[#59677e]">⋮</span>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   );
                 })}
@@ -666,6 +807,14 @@ export default function ContentCalendar() {
           </section>
         </aside>
       </div>
+
+      {/* Post Detail Modal */}
+      {selectedEvent && (
+        <PostDetailModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
+      )}
     </div>
   );
 }
