@@ -10,7 +10,6 @@ import {
   CalendarDays,
   FileText,
   ExternalLink,
-  Link2,
   MapPin,
   AlertTriangle,
   MessageSquare,
@@ -18,8 +17,6 @@ import {
   Eye,
   Heart,
   Hash,
-  Users,
-  TrendingUp,
   StickyNote,
 } from "lucide-react";
 import {

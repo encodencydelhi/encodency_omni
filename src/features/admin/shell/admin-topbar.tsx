@@ -50,7 +50,7 @@ export function AdminTopbar() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 rounded-xl">
             <DropdownMenuLabel className="text-[11px] font-medium text-[#A1A1AA]">Create new</DropdownMenuLabel>
-            {["Create post", "Add lead", "Create campaign", "Add project", "Run SEO audit"].map((item) => (
+            {["Create post", "Add lead", "Create campaign", "Add Client", "Run SEO audit"].map((item) => (
               <DropdownMenuItem key={item} className="text-[13px] rounded-lg cursor-pointer">{item}</DropdownMenuItem>
             ))}
           </DropdownMenuContent>

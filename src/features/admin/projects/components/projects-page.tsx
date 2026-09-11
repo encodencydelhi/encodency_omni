@@ -110,10 +110,10 @@ export function ClientsPage() {
               Sort
               <ChevronDown className="size-3.5 text-muted-foreground" />
             </button>
-            <button className="flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-[11px] font-semibold text-primary-foreground hover:bg-primary-hover shadow-sm transition-colors">
+            <Link href="/admin/projects/new" className="flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-[11px] font-semibold text-primary-foreground hover:bg-primary-hover shadow-sm transition-colors">
               <Plus className="size-3.5" />
-              Add Project
-            </button>
+              Add Client
+            </Link>
           </div>
         </div>
 
@@ -239,7 +239,7 @@ export function ClientsPage() {
 
       {/* Quick Actions */}
       <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-        <Quick icon={Plus} title="Create a New Project" text="Add a new brand or initiative to start managing your marketing." action="Add Project" color="red" />
+        <Quick icon={Plus} title="Create a New Client" text="Add a new brand or initiative to start managing your marketing." action="Add Client" color="red" />
         <Quick icon={Link2} title="Connect Channels" text="Connect your social media, website and other channels." action="Manage Integrations" color="blue" />
         <Quick icon={Megaphone} title="Plan a Campaign" text="Create and launch a campaign across multiple channels." action="Create Campaign" color="red" />
         <Quick icon={BarChart3} title="Track Performance" text="See how your Clients are performing with detailed analytics." action="View Analytics" color="green" />
