@@ -1028,7 +1028,7 @@ const aiTypes = [
 
 function AIAssistantTab() {
   const [selected, setSelected] = useState("Social Post");
-  const [tone, setTone] = useState("Positive");
+  const [tone] = useState("Positive");
 
   return (
     <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,1.2fr)_310px] gap-2.5">
@@ -1576,7 +1576,7 @@ function SavedDraftsTab() {
           </div>
         ) : (
           <div className="mt-2 grid grid-cols-4 gap-2.5">
-            {drafts.map(([title, channel, campaign, date, src]) => (
+            {drafts.map(([title, channel, _campaign, date, src]) => (
               <div
                 key={title}
                 className="overflow-hidden rounded-lg border border-[#e0e7f0]"
@@ -1991,7 +1991,7 @@ function ApprovalsTab() {
 }
 
 function TopActions({
-  activeTab,
+  activeTab: _activeTab,
 }: {
   activeTab: Tab;
 }) {
@@ -2064,7 +2064,6 @@ export default function ContentStudio() {
 
   return (
     <div className="w-full min-w-0 bg-gradient-to-br from-[#f0f4ff] via-[#f7f9fc] to-[#fef4f5] text-[#243758]">
-      {/* Layout intentionally excluded: sidebar, global topbar and footer belong to the parent app. */}
       <TopActions activeTab={activeTab} />
 
       <div className="rounded-xl border border-[#e0e7f0] bg-white px-2.5 shadow-sm shadow-black/[0.03]">
