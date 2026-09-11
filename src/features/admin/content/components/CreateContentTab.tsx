@@ -63,7 +63,7 @@ export function CreateContentTab() {
   };
 
   return (
-    <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_300px_320px]">
+    <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_320px_320px]">
       {/* ─── LEFT: Editor ─── */}
       <div className="space-y-2.5 min-w-0">
         {/* Post Type — compact segmented control */}
@@ -297,11 +297,11 @@ export function CreateContentTab() {
       {/* ─── CENTER: Platform Settings ─── */}
       <div className="space-y-2.5 xl:sticky xl:top-4">
         <Card>
-          <div className="flex items-center gap-1.5 border-b border-[#EDF1F5] pb-2 mb-2">
+          <div className="mb-2 flex items-center gap-1.5 border-b border-[#EDF1F5] pb-2">
             <span className="text-[11px] font-bold text-[#7A87A0]">Configure</span>
-            <div className="flex flex-1 gap-0.5">
+            <div className="ml-auto flex gap-0.5">
               {channels.map((p) => (
-                <button key={p} onClick={() => setPreviewPlatform(p)} className={cn("flex flex-1 items-center justify-center gap-1 rounded-md py-1 text-[10px] font-semibold transition", previewPlatform === p ? "bg-[#F0F6FF] text-[#1769DF] ring-1 ring-[#1769DF]" : "text-[#687797] hover:bg-slate-50")}>
+                <button key={p} onClick={() => setPreviewPlatform(p)} className={cn("flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[9.5px] font-semibold transition", previewPlatform === p ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#7A87A0] hover:bg-slate-50")}>
                   <PlatformBadge platform={p} size="sm" />
                   {PLATFORM_META[p].short}
                 </button>
@@ -310,14 +310,21 @@ export function CreateContentTab() {
           </div>
 
           {previewPlatform && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {previewPlatform === "instagram" && (
                 <>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2">
                     {["Post", "Reel", "Story"].map((t) => {
                       const selected = igPlacements.includes(t);
                       return (
-                        <button key={t} onClick={() => setIgPlacements((prev) => selected ? prev.filter((x) => x !== t) : [...prev, t])} className={cn("flex items-center gap-0.5 rounded-md border px-2 py-1 text-[10.5px] font-semibold transition", selected ? "border-[#1769DF] bg-[#F0F6FF] text-[#1769DF]" : "border-[#E2E8F0] text-[#687797] hover:border-[#CBD5E1]")}>
+                        <button
+                          key={t}
+                          onClick={() => setIgPlacements([t])}
+                          className={cn(
+                            "flex items-center gap-0.5 rounded-md border px-2 py-1 text-[10.5px] font-semibold transition",
+                            selected ? "border-[#1769DF] bg-[#F0F6FF] text-[#1769DF]" : "border-[#E2E8F0] text-[#687797] hover:border-[#CBD5E1]"
+                          )}
+                        >
                           {selected && <Check className="size-2.5" />}
                           {t}
                         </button>
@@ -332,7 +339,7 @@ export function CreateContentTab() {
                       </button>
                     ))}
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2.5">
                     <SelectField label="Location" value={igLocation} onChange={setIgLocation} options={["Varanasi, UP", "Mumbai, MH", "Delhi, NCR", "Bangalore, KA", "Hyderabad, TS"]} />
                     <SelectField label="Tag people" value={igTagPeople} onChange={setIgTagPeople} options={["", "MokshaSewa Foundation", "Clean India Mission", "NGO Partner India", "Self"]} placeholder="Select accounts to tag" />
                     <SelectField label="Product tags" value={igProductTags} onChange={setIgProductTags} options={["", "Eco Bottle", "Bamboo Kit", "Reusable Bag", "Solar Lamp"]} placeholder="Select products" />
@@ -343,7 +350,7 @@ export function CreateContentTab() {
               )}
 
               {previewPlatform === "facebook" && (
-                <div className="space-y-1.5">
+                <div className="space-y-2.5">
                   <SelectField label="Placement" value="Feed" options={["Feed", "Stories", "Reels", "Right Column"]} />
                   <SelectField label="Audience" value="Public" options={["Public", "Friends", "Custom"]} />
                   <SelectField label="CTA Button" value="Learn More" options={["Learn More", "Sign Up", "Shop Now", "Contact Us"]} />
@@ -352,7 +359,7 @@ export function CreateContentTab() {
               )}
 
               {previewPlatform === "linkedin" && (
-                <div className="space-y-1.5">
+                <div className="space-y-2.5">
                   <SelectField label="Post Type" value="Image Post" options={["Image Post", "Video Post", "Article", "Poll"]} />
                   <SelectField label="Company Page" value="Moksha Sewa Foundation" />
                   <TextField label="Headline" value={headline} onChange={setHeadline} />
@@ -362,7 +369,7 @@ export function CreateContentTab() {
               )}
 
               {previewPlatform === "google-business" && (
-                <div className="space-y-1.5">
+                <div className="space-y-2.5">
                   <SelectField label="Post Type" value="Update" options={["Update", "Event", "Offer", "Product"]} />
                   <TextField label="Title" value="" placeholder="Post title" onChange={() => {}} />
                   <SelectField label="CTA" value="Learn More" options={["Learn More", "Sign Up", "Call Now", "Order Online"]} />
@@ -370,7 +377,7 @@ export function CreateContentTab() {
               )}
 
               {previewPlatform === "whatsapp" && (
-                <div className="space-y-1.5">
+                <div className="space-y-2.5">
                   <SelectField label="Message Type" value="Template" options={["Template", "Media", "Text"]} />
                   <SelectField label="Template" value="Clean Ganga Alert" />
                   <SelectField label="Language" value="English" options={["English", "Hindi", "Bilingual"]} />
@@ -380,7 +387,7 @@ export function CreateContentTab() {
               )}
 
               {previewPlatform === "youtube" && (
-                <div className="space-y-1.5">
+                <div className="space-y-2.5">
                   <SelectField label="Content Type" value={postType === "reel" ? "Short" : "Video"} options={["Video", "Short", "Live"]} />
                   <TextField label="Title" value="" placeholder="Video title" onChange={() => {}} />
                   <TextField label="Tags" value="" placeholder="Add tags" onChange={() => {}} />
@@ -390,7 +397,7 @@ export function CreateContentTab() {
               )}
 
               {previewPlatform === "website" && (
-                <div className="space-y-1.5">
+                <div className="space-y-2.5">
                   <SelectField label="Content Type" value="Blog" options={["Blog", "Landing Page", "Product Page", "News"]} />
                   <TextField label="Title" value="" placeholder="Blog title" onChange={() => {}} />
                   <TextField label="Slug" value="" placeholder="blog-slug" onChange={() => {}} />
