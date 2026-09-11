@@ -77,7 +77,7 @@ export default function IndiaMap({ data }: { data: StateData[] }) {
 
   const dataMap = new Map(data.map((d) => [d.name.toLowerCase(), d]));
 
-  const handleMouseMove = (evt: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = (evt: React.MouseEvent<SVGPathElement>) => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       setTooltipPos({

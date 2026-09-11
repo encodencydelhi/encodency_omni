@@ -91,7 +91,7 @@ const tabs = [
   "Team & Permissions",
   "Channels & Integrations",
   "Activity",
-];
+] as const;
 
 type StatRow = [IconComp, string, string, string, string, string];
 
@@ -627,8 +627,8 @@ function ContactMini({ initials, name, role }: { initials: string; name: string;
   return <div className="flex gap-2 border-b border-[#eef1f5] py-1.5 last:border-0"><Avatar text={initials}/><div><b className="block text-[9px]">{name}</b><small className="text-[9px] text-[#8993a5]">{role}</small><small className="mt-1 block text-[9px] text-[#5d36d6]">+91 98102 34567</small></div></div>;
 }
 
-function InfoRows({ rows }: { rows: [string, string][] }) {
-  return <div>{rows.map(([a,b])=><div key={a} className="grid grid-cols-[42%_58%] gap-2 border-b border-[#f0f2f6] py-1.5 last:border-0"><span className="text-[9px] text-[#778399]">{a}</span><b className={`text-[9px] font-medium ${String(b).includes("●") ? "text-[#18a978]" : "text-[#45516b]"}`}>{b}</b></div>)}</div>;
+function InfoRows({ rows }: { rows: ReadonlyArray<readonly [string, string]> }) {
+  return <div>{rows.map(([a, b]) => <div key={a} className="grid grid-cols-[42%_58%] gap-2 border-b border-[#f0f2f6] py-1.5 last:border-0"><span className="text-[9px] text-[#778399]">{a}</span><b className={`text-[9px] font-medium ${String(b).includes("●") ? "text-[#18a978]" : "text-[#45516b]"}`}>{b}</b></div>)}</div>;
 }
 
 function CheckList({ items }: { items: string[] }) {
@@ -653,7 +653,7 @@ function BrandGuidelines() {
   </Panel>;
 }
 
-function App({ projectId }: { projectId?: string } = {}) {
+function App({ projectId: _projectId }: { projectId?: string } = {}) {
   const [activeTab, setActiveTab] = useState("Overview");
 
   const content = {
@@ -666,10 +666,10 @@ function App({ projectId }: { projectId?: string } = {}) {
 
   return (
     <div className="bg-[#f4f7fb] font-sans text-[#26324d]">
-      {/* <Sidebar />
-      <Topbar /> */}
-      <main className="">
-        <div className="">
+      <Sidebar />
+      <Topbar />
+      <main className="lg:pl-[234px] pt-[55px]">
+        <div className="px-3 pb-4 pt-3">
           <ClientHeader activeTab={activeTab} setActiveTab={setActiveTab}/>
           <div className="mt-2.5 space-y-2.5">{content}</div>
         </div>

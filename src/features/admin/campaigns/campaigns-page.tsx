@@ -289,7 +289,7 @@ export function CampaignsPage() {
                     </td>
                   </tr>
                 ) : (
-                filteredCampaigns.map((c,i)=>(
+                filteredCampaigns.map((c)=>(
                   <tr
                     key={c.id}
                     className="h-[49px] cursor-pointer border-b border-[#edf0f4] text-[9px] text-[#44516a] transition-colors hover:bg-[#f9fafc]"

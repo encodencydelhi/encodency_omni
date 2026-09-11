@@ -8,18 +8,15 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   BarChart3,
-  Bell,
   CalendarDays,
   Check,
   CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  CircleAlert,
   Clock3,
   Copy,
   Download,
-  Edit3,
   Eye,
   FileText,
   Filter,
@@ -27,19 +24,14 @@ import {
   Heart,
   Info,
   Link2,
-  List,
   MapPin,
-  Menu,
   MessageCircle,
   MoreHorizontal,
   Pause,
   Pencil,
   Phone,
-  Play,
-  Plus,
   Search,
   Send,
-  Settings2,
   Sparkles,
   Target,
   TrendingDown,
@@ -291,36 +283,6 @@ function MetricCard({
   );
 }
 
-function MiniLine({
-  values,
-  stroke = "#2d78e8",
-  fill = false,
-  height = 60,
-}: {
-  values: number[];
-  stroke?: string;
-  fill?: boolean;
-  height?: number;
-}) {
-  const w = 300;
-  const max = Math.max(...values);
-  const min = Math.min(...values);
-  const points = values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * w;
-      const y = 7 + ((max - v) / Math.max(1, max - min)) * (height - 14);
-      return `${x},${y}`;
-    })
-    .join(" ");
-  const area = `0,${height} ${points} ${w},${height}`;
-  return (
-    <svg viewBox={`0 0 ${w} ${height}`} className="h-full w-full">
-      {fill && <polygon points={area} fill={stroke} opacity="0.08" />}
-      <polyline points={points} fill="none" stroke={stroke} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function MultiLineChart({
   series,
   labels,
@@ -453,7 +415,13 @@ function TopHeader() {
 
       <div className="tabs-scroll mt-1 flex flex-nowrap items-end gap-1 overflow-x-auto border-b border-[#dfe6ef] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tabs.map((tab) => (
-          <TabButton key={tab} tab={tab} />
+          <button
+            key={tab}
+            type="button"
+            className="whitespace-nowrap px-1.5 py-1 text-[10px] font-semibold text-[#738098]"
+          >
+            {tab}
+          </button>
         ))}
       </div>
     </>
@@ -483,12 +451,6 @@ function InfoChip({
       </div>
     </div>
   );
-}
-
-function TabButton({ tab }: { tab: Tab }) {
-  const [activeTab, setActiveTab] = useState<Tab>("Overview");
-  // This component is replaced by CampaignPage's inline tab rendering.
-  return null;
 }
 
 function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { showPerformanceScore?: boolean; activeTab?: string }) {
@@ -1009,7 +971,7 @@ function PerformanceTab() {
               { n: "4,208", label: "Website Clicks", pct: "4.9%", color: "#5a8fe0", topW: 100, bottomW: 72 },
               { n: "248", label: "Leads Generated", pct: "0.29%", color: "#40c287", topW: 72, bottomW: 46 },
               { n: "42", label: "Conversions", pct: "0.05%", color: "#f0b322", topW: 46, bottomW: 27 },
-            ].map((item, idx) => {
+            ].map((item) => {
               const leftInset = ((100 - item.bottomW) / 2);
               const rightInset = 100 - leftInset;
               const topLeft = ((100 - item.topW) / 2);
@@ -1157,12 +1119,12 @@ function ContentScheduleTab() {
           <div className="space-y-3 p-3">
             {[
               ["instagram",12,6,18],["linkedin",8,4,12],["google",5,2,7],["youtube",6,2,8],["facebook",4,2,6],["website",2,0,2]
-            ].map(([platform,queued,published,total])=>(
-              <div key={platform} className="grid grid-cols-[18px_1fr_44px_62px] items-center gap-2">
+            ].map(([platform,queued,published,total]) => (
+              <div key={String(platform)} className="grid grid-cols-[18px_1fr_44px_62px] items-center gap-2">
                 <BrandIcon platform={platform as keyof typeof platformMeta} size={16}/>
                 <div className="text-[9.5px] font-semibold text-[#3c4d6d]">{platformMeta[platform as keyof typeof platformMeta].label}</div>
                 <div className="text-[8.5px] text-[#77859a]">{queued} queued</div>
-                <div className="h-[6px] rounded-full bg-[#edf1f5]"><div className="h-full rounded-full bg-[#4b91e8]" style={{width:`${Math.min(100,(published as number)/(total as number)*100)}%`}}/></div>
+                <div className="h-[6px] rounded-full bg-[#edf1f5]"><div className="h-full rounded-full bg-[#4b91e8]" style={{width:`${Math.min(100, (Number(published) / Number(total)) * 100)}%`}}/></div>
               </div>
             ))}
           </div>
@@ -1563,7 +1525,7 @@ function ActivityLogTab() {
               ["2 days ago","Apr 26, 2025","09:05 AM","Audience synced","Synced 1,260 new contacts from Meta Ads","System","Synced","facebook"],
               ["3 days ago","Apr 25, 2025","04:33 PM","Editing updates rejected","Copy update for Google Business post","Anjali Verma","Rejected","google"],
               ["3 days ago","Apr 25, 2025","11:11 AM","Content created","Blog draft: “How Citizen Action Can Revive Rivers”","Sneha Iyer","Created","website"],
-            ].map(([ago,date,time,title,desc,user,status,platform],i)=>(
+            ].map(([ago,date,time,title,desc,user,status],i)=>(
               <div key={title} className="flex items-start gap-2.5 px-3 py-2.5">
                 <div className="relative pt-0.5"><span className={`flex h-7 w-7 items-center justify-center rounded-full ${i===0?"bg-[#e8fff4]":i===6?"bg-[#fff0f1]":"bg-[#eef5ff]"}`}>{i===0?<Send size={14} className="text-[#16aa6b]"/>:i===2?<CheckCircle2 size={14} className="text-[#f59e0b]"/>:i===6?<AlertCircle size={14} className="text-[#ef4444]"/>:<Activity size={14} className="text-[#2878e8]" />}</span></div>
                 <div className="w-[85px] shrink-0"><b className="block text-[9px] text-[#617089]">{ago}</b><span className="text-[8px] text-[#8b96a8]">{date}</span><span className="block text-[8px] text-[#8b96a8]">{time}</span></div>
@@ -1675,7 +1637,7 @@ function ActivityRows() {
   </div>;
 }
 
-function CampaignPage({ id }: { id?: string }) {
+function CampaignPage({}: { id?: string }) {
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
 
   const content = useMemo(() => {
