@@ -123,7 +123,7 @@ function LinkedinIcon({ size = 22 }) {
   );
 }
 
-function WhatsappIcon({ size = 22 }) {
+export function WhatsappIcon({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="12" fill="#25D366"/>
@@ -286,7 +286,7 @@ export function CampaignsPage() {
             </label>
             <button className="flex h-[29px] items-center gap-1.5 rounded-[6px] border border-[#dfe4eb] bg-white px-2.5 text-[9px] font-semibold text-[#29354e]"><SlidersHorizontal size={12}/>Filter</button>
             <button className="flex h-[29px] items-center gap-1.5 rounded-[6px] border border-[#dfe4eb] bg-white px-2.5 text-[9px] font-semibold text-[#29354e]"><ArrowDownUp size={12}/>Sort<ChevronDown size={10}/></button>
-            <button className="flex h-[29px] items-center gap-1.5 rounded-[6px] border border-[#e51e28] bg-[#e51e28] px-3.5 text-[9px] font-semibold text-white"><Plus size={13}/>Create Campaign</button>
+            <button onClick={() => router.push("/admin/campaigns/new")} className="flex h-[29px] items-center gap-1.5 rounded-[6px] border border-[#e51e28] bg-[#e51e28] px-3.5 text-[9px] font-semibold text-white"><Plus size={13}/>Create Campaign</button>
           </div>
         </section>
 
