@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   ComposableMap,
   Geographies,
@@ -73,21 +73,36 @@ export default function IndiaMap({ data }: { data: StateData[] }) {
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [hoveredState, setHoveredState] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const dataMap = new Map(data.map((d) => [d.name.toLowerCase(), d]));
 
+  const handleMouseMove = (evt: React.MouseEvent<HTMLDivElement>) => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setTooltipPos({
+        x: evt.clientX - rect.left + 12,
+        y: evt.clientY - rect.top - 10,
+      });
+    }
+  };
+
   return (
-    <div className="relative h-[180px] w-full">
+    <div ref={containerRef} className="relative h-[180px] w-full">
       {tooltipData && (
         <div
-          className="pointer-events-none absolute z-10 rounded-md border border-[#e2e8f0] bg-white px-2.5 py-1.5 shadow-md"
-          style={{ left: tooltipPos.x + 10, top: tooltipPos.y - 40 }}
+          className="pointer-events-none absolute z-50 rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 shadow-lg"
+          style={{ left: tooltipPos.x, top: tooltipPos.y }}
         >
-          <div className="mb-0.5 text-[10px] font-bold text-[#1e293b]">{tooltipData.name}</div>
+          <div className="mb-1 text-[11px] font-bold text-[#1e293b]">{tooltipData.name}</div>
           {tooltipData.value && (
-            <div className="text-[9px] font-semibold text-[#475569]">
-              {tooltipData.value} ({tooltipData.pct}%)
+            <div className="flex items-center gap-2 text-[10px]">
+              <span className="font-semibold text-[#475569]">{tooltipData.value}</span>
+              <span className="rounded-full bg-[#eef2ff] px-1.5 py-0.5 text-[9px] font-bold text-[#4f46e5]">{tooltipData.pct}%</span>
             </div>
+          )}
+          {!tooltipData.value && (
+            <div className="text-[9px] text-[#94a3b8]">No data available</div>
           )}
         </div>
       )}
@@ -97,7 +112,7 @@ export default function IndiaMap({ data }: { data: StateData[] }) {
           scale: 1200,
           center: [82.5, 22],
         }}
-        className="h-full w-full [&_.rsm Geography]:transition-colors [&_.rsm-geography]:cursor-pointer"
+        className="h-full w-full [&_.rsm-geography]:transition-colors [&_.rsm-geography]:cursor-pointer"
       >
         <Geographies geography={GEO_URL}>
           {({ geographies }) =>
@@ -128,9 +143,7 @@ export default function IndiaMap({ data }: { data: StateData[] }) {
                       setTooltipData({ name: stateName });
                     }
                   }}
-                  onMouseMove={(evt) => {
-                    setTooltipPos({ x: evt.clientX, y: evt.clientY });
-                  }}
+                  onMouseMove={handleMouseMove}
                   onMouseLeave={() => {
                     setHoveredState(null);
                     setTooltipData(null);

@@ -397,12 +397,12 @@ function BarList({
   return (
     <div className="space-y-2">
       {rows.map((r) => (
-        <div key={r.label} className="grid grid-cols-[1fr_88px_40px] items-center gap-2">
-          <span className="truncate text-[10px] font-medium text-[#475674]">{r.label}</span>
-          <div className="h-[7px] overflow-hidden rounded-full bg-[#edf1f6]">
+        <div key={r.label} className="flex items-center gap-2">
+          <span className="w-[30px] shrink-0 truncate text-[10px] font-medium text-[#475674]">{r.label.slice(0, 2)}</span>
+          <div className="h-[7px] min-w-0 flex-1 overflow-hidden rounded-full bg-[#edf1f6]">
             <div className="h-full rounded-full bg-[#4b90ea]" style={{ width: `${(r.pct / m) * 100}%` }} />
           </div>
-          <span className="text-right text-[10px] font-semibold text-[#6b7890]">{r.value}</span>
+          <span className="w-[50px] shrink-0 text-right text-[10px] font-semibold text-[#6b7890]">{r.value}</span>
         </div>
       ))}
     </div>
