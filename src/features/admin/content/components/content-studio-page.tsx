@@ -5,9 +5,6 @@ import {
   Activity,
   AlarmClock,
   AlignLeft,
-  ArrowDownUp,
-  ArrowLeft,
-  ArrowRight,
   BarChart3,
   Bell,
   Bookmark,
@@ -19,17 +16,12 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  CircleHelp,
   Clock3,
   Copy,
   Download,
   Edit3,
   ExternalLink,
-  Eye,
-  FileImage,
   FileText,
-  Filter,
-  Flame,
   Globe2,
   Grid2X2,
   Heart,
@@ -52,11 +44,9 @@ import {
   Sparkles,
   Tag,
   ThumbsUp,
-  Trash2,
   UploadCloud,
   Users,
   Video,
-  Wand2,
   X,
   Zap,
 } from "lucide-react";
@@ -260,24 +250,24 @@ function ChannelStrip({
 }) {
   const items: Array<Platform | "All Platforms" | "All Channels"> = all
     ? [
-        "All Platforms",
-        "Instagram",
-        "Facebook",
-        "LinkedIn",
-        "Google Business",
-        "WhatsApp",
-        "YouTube",
-        "Website",
-      ]
+      "All Platforms",
+      "Instagram",
+      "Facebook",
+      "LinkedIn",
+      "Google Business",
+      "WhatsApp",
+      "YouTube",
+      "Website",
+    ]
     : [
-        "Facebook",
-        "Instagram",
-        "LinkedIn",
-        "Google Business",
-        "WhatsApp",
-        "YouTube",
-        "Website",
-      ];
+      "Facebook",
+      "Instagram",
+      "LinkedIn",
+      "Google Business",
+      "WhatsApp",
+      "YouTube",
+      "Website",
+    ];
 
   return (
     <div className="flex items-center gap-1 overflow-x-auto border-b border-[#edf1f6] pb-2.5">
@@ -386,17 +376,17 @@ const postTypes: Array<{
   subtitle: string;
   icon: React.ReactNode;
 }> = [
-  { name: "Image", subtitle: "Single photo post", icon: <ImageIcon /> },
-  { name: "Video", subtitle: "Standard video post", icon: <Video /> },
-  {
-    name: "Short / Reel",
-    subtitle: "Short vertical video",
-    icon: <Play />,
-  },
-  { name: "Carousel", subtitle: "Multiple images", icon: <Grid2X2 /> },
-  { name: "Story", subtitle: "24h disappearing", icon: <Camera /> },
-  { name: "Blog / Article", subtitle: "Link post with preview", icon: <FileText /> },
-];
+    { name: "Image", subtitle: "Single photo post", icon: <ImageIcon /> },
+    { name: "Video", subtitle: "Standard video post", icon: <Video /> },
+    {
+      name: "Short / Reel",
+      subtitle: "Short vertical video",
+      icon: <Play />,
+    },
+    { name: "Carousel", subtitle: "Multiple images", icon: <Grid2X2 /> },
+    { name: "Story", subtitle: "24h disappearing", icon: <Camera /> },
+    { name: "Blog / Article", subtitle: "Link post with preview", icon: <FileText /> },
+  ];
 
 function PostTypeSelector({
   selected,
@@ -1134,7 +1124,7 @@ function AIAssistantTab() {
                 <img
                   src={
                     [imageUrls.river, imageUrls.nature, imageUrls.water, imageUrls.people, imageUrls.lake][
-                      i % 5
+                    i % 5
                     ]
                   }
                   alt=""
@@ -1316,22 +1306,22 @@ function TemplatesTab() {
             ["Recruitment", 4, Users],
             ["Custom Templates", 8, Settings2],
           ].map(([x, count, Icon]) => {
-            const LucideIcon = Icon as React.FC<{className?: string}>;
+            const LucideIcon = Icon as React.FC<{ className?: string }>;
             return (
-            <button
-              key={x as string}
-              onClick={() => setCategory(x as string)}
-              className={cn(
-                "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-all duration-200",
-                category === x ? "bg-gradient-to-r from-[#eef6ff] to-[#f0f8ff] text-[#1769df] shadow-sm shadow-[#1769df]/10" : "text-[#556884] hover:bg-[#f7f9fc]"
-              )}
-            >
-              <LucideIcon className="h-3.5 w-3.5" />
-              <span className="flex-1 text-[9.5px] font-medium">{x as string}</span>
-              <span className="rounded bg-[#f0f3f7] px-1.5 py-0.5 text-[8px] text-[#73829a]">
-                {count as number}
-              </span>
-            </button>
+              <button
+                key={x as string}
+                onClick={() => setCategory(x as string)}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-all duration-200",
+                  category === x ? "bg-gradient-to-r from-[#eef6ff] to-[#f0f8ff] text-[#1769df] shadow-sm shadow-[#1769df]/10" : "text-[#556884] hover:bg-[#f7f9fc]"
+                )}
+              >
+                <LucideIcon className="h-3.5 w-3.5" />
+                <span className="flex-1 text-[9.5px] font-medium">{x as string}</span>
+                <span className="rounded bg-[#f0f3f7] px-1.5 py-0.5 text-[8px] text-[#73829a]">
+                  {count as number}
+                </span>
+              </button>
             );
           })}
         </div>
@@ -1859,19 +1849,19 @@ function ApprovalsTab() {
             ["3", "Changes Requested", "bg-[#ffe9eb] text-[#e72d3d]", FileText],
             ["5", "Scheduled", "bg-[#eef5ff] text-[#1769df]", CalendarDays],
           ].map(([n, label, color, Icon]) => {
-            const LucideIcon = Icon as React.FC<{className?: string}>;
+            const LucideIcon = Icon as React.FC<{ className?: string }>;
             return (
-            <div key={label as string} className="rounded-lg border border-[#e0e7f0] p-2.5">
-              <div className="flex items-center gap-2">
-                <span className={cn("flex h-7 w-7 items-center justify-center rounded-full", color as string)}>
-                  <LucideIcon className="h-3.5 w-3.5" />
-                </span>
-                <div>
-                  <div className="text-[15px] font-semibold text-[#243758]">{n as string}</div>
-                  <div className="text-[8.5px] text-[#75849c]">{label as string}</div>
+              <div key={label as string} className="rounded-lg border border-[#e0e7f0] p-2.5">
+                <div className="flex items-center gap-2">
+                  <span className={cn("flex h-7 w-7 items-center justify-center rounded-full", color as string)}>
+                    <LucideIcon className="h-3.5 w-3.5" />
+                  </span>
+                  <div>
+                    <div className="text-[15px] font-semibold text-[#243758]">{n as string}</div>
+                    <div className="text-[8.5px] text-[#75849c]">{label as string}</div>
+                  </div>
                 </div>
               </div>
-            </div>
             );
           })}
         </div>
