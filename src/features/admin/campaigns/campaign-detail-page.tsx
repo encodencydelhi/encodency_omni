@@ -409,20 +409,8 @@ function TopHeader() {
         </div>
 
         <div className="hidden min-w-[200px] max-w-[240px] self-center lg:block">
-          <img src="/campaignBanner.png" alt="Campaign Banner" className="h-[80px] w-full rounded-[8px] object-cover" />
+          <img src="/campaignBanner.png" alt="Campaign Banner" className="h-[80px] w-full rounded-[8px] object-cover shadow-sm" />
         </div>
-      </div>
-
-      <div className="tabs-scroll mt-1 flex flex-nowrap items-end gap-1 overflow-x-auto border-b border-[#dfe6ef] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            className="whitespace-nowrap px-1.5 py-1 text-[10px] font-semibold text-[#738098]"
-          >
-            {tab}
-          </button>
-        ))}
       </div>
     </>
   );
