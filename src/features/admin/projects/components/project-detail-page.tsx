@@ -2,11 +2,11 @@
 
 import { useState, type ReactNode } from "react";
 import {
-  Menu, Search, ChevronDown, ChevronRight, MoreVertical, Plus,
-  Pencil, MapPin, BookOpen, Link2, Bell, Home, Users, Archive,
-  FileText, CalendarDays, Megaphone, Image as ImageIcon,
-  MessageCircle, Globe2, BarChart3,
-  Settings, Target, UserRound, UserPlus, Shield, Mail,
+  Search, ChevronDown, ChevronRight, MoreVertical, Plus,
+  Pencil, MapPin, BookOpen, Link2,
+  FileText, CalendarDays, Megaphone,
+  Globe2, BarChart3,
+  Settings, UserRound, UserPlus, Shield, Mail,
   Clock3, CheckCircle2, AlertTriangle, Heart,
   RefreshCw, Building2,
   Megaphone as CampaignIcon,
@@ -19,71 +19,6 @@ import {
 import type { IconType } from "react-icons";
 
 type IconComp = LucideIcon | IconType;
-
-const navGroups: {
-  label: string;
-  items: [string, IconComp, boolean?][];
-}[] = [
-  {
-    label: "CLIENTS",
-    items: [
-      ["Clients", Users, true],
-      ["Client Requests", FileText],
-      ["Archived", Archive],
-    ],
-  },
-  {
-    label: "MARKETING",
-    items: [
-      ["Content Studio", FileText],
-      ["Calendar", CalendarDays],
-      ["Campaigns", Megaphone],
-      ["Media Library", ImageIcon],
-    ],
-  },
-  {
-    label: "CHANNELS",
-    items: [
-      ["Meta & Instagram", FaInstagram],
-      ["LinkedIn", FaLinkedin],
-      ["Google Business", FaGoogle],
-      ["YouTube", FaYoutube],
-      ["WhatsApp", MessageCircle],
-    ],
-  },
-  {
-    label: "SEO",
-    items: [
-      ["SEO Overview", Search],
-      ["Keyword Tracking", Link2],
-      ["Backlinks", Link2],
-      ["Site Audit", FileCheck2],
-      ["Competitors", Target],
-    ],
-  },
-  {
-    label: "CRM",
-    items: [
-      ["Leads", UserPlus],
-      ["Contacts", UsersRound],
-      ["Pipeline", Workflow],
-    ],
-  },
-  {
-    label: "ANALYTICS",
-    items: [
-      ["Reports", BarChart3],
-      ["Goals", Target],
-    ],
-  },
-  {
-    label: "TEAM",
-    items: [
-      ["Team Members", UsersRound],
-      ["Roles & Permissions", Shield],
-    ],
-  },
-];
 
 const tabs = [
   "Overview",
@@ -196,71 +131,6 @@ function StatCard({ item }: { item: [LucideIcon | IconType, string, string, stri
         <div className="mt-1 text-[9px] text-[#8994a8]">{note}</div>
       </div>
     </div>
-  );
-}
-
-function Sidebar() {
-  return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[234px] flex-col bg-[#081627] text-white lg:flex">
-      <div className="flex h-[58px] items-center border-b border-white/10 px-4">
-        <div className="mr-2 grid h-9 w-9 place-items-center rounded-full text-[31px] font-black italic text-[#7c39ff]">e</div>
-        <div className="leading-none">
-          <div className="text-[17px] font-extrabold tracking-[-.7px]">en<span className="text-white">Codency</span> <small className="text-[9px] font-semibold">Pvt. Ltd.</small></div>
-          <div className="mt-1 text-[9px] text-[#9ca9bd]">Grow Digitally, Smarter.</div>
-        </div>
-      </div>
-
-      <nav className="min-h-0 flex-1 overflow-hidden px-3 py-2.5">
-        <div className="mb-2 flex h-8 items-center gap-3 rounded-md px-3 text-[11px] text-[#dce4f0]">
-          <Home size={15}/><span>Dashboard</span>
-        </div>
-        {navGroups.map((navGroup) => (
-          <div key={navGroup.label} className="mb-2">
-            <div className="mb-1 px-2 text-[9px] font-medium tracking-wide text-[#8190a7]">{navGroup.label}</div>
-            {navGroup.items.map(([label, Icon, active]) => (
-              <div key={label} className={`mb-0.5 flex h-[29px] items-center gap-3 rounded-md px-3 text-[10px] ${active ? "bg-gradient-to-r from-[#5c20e8] to-[#4621cf] font-semibold text-white shadow-[0_2px_8px_rgba(91,34,225,.35)]" : "text-[#d7dfeb] hover:bg-white/5"}`}>
-                <Icon size={15} />
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
-        ))}
-      </nav>
-
-      <div className="m-3 rounded-lg border border-[#7239e7]/60 bg-gradient-to-r from-[#2a165d] to-[#341a76] px-3 py-2.5">
-        <div className="flex items-center gap-2 text-[10px] font-semibold"><HeadsetIcon/><span>Need Help?</span></div>
-        <div className="mt-1 text-[9px] text-[#c5bce8]">Chat with our support team</div>
-      </div>
-    </aside>
-  );
-}
-
-function HeadsetIcon() {
-  return <span className="grid h-5 w-5 place-items-center rounded-full bg-[#793cff]"><MessageCircle size={11}/></span>;
-}
-
-function Topbar() {
-  return (
-    <header className="fixed left-0 right-0 top-0 z-30 flex h-[55px] items-center border-b border-[#e3e8f0] bg-white lg:left-[234px]">
-      <button className="mx-3 grid h-8 w-8 place-items-center text-[#2e3b5b] lg:hidden"><Menu size={19}/></button>
-      <button className="mx-2 hidden text-[#34405e] lg:block"><Menu size={20}/></button>
-      <div className="mx-2 h-7 w-px bg-[#e6eaf1]"/>
-      <div className="flex h-8 max-w-[580px] flex-1 items-center rounded-md border border-[#e3e8f0] bg-[#f8faff] px-3 text-[#8390a7]">
-        <Search size={15}/><input className="ml-2 min-w-0 flex-1 bg-transparent text-[10px] outline-none" placeholder="Search clients, campaigns, content, or anything..." />
-        <kbd className="hidden rounded border border-[#e0e5ef] bg-white px-2 py-0.5 text-[9px] md:block">Ctrl + K</kbd>
-      </div>
-      <div className="ml-auto flex items-center gap-3 px-3">
-        <span className="hidden text-[10px] text-[#69768e] xl:block">Project</span>
-        <button className="hidden h-9 items-center gap-8 rounded-md border border-[#dfe5ee] bg-white px-3 text-[10px] font-semibold text-[#26324e] sm:flex">Moksha Sewa<ChevronDown size={13}/></button>
-        <button className="flex h-9 items-center gap-1 rounded-full bg-[#e51d2a] px-3 text-[10px] font-bold text-white"><Plus size={13}/>Create<ChevronDown size={12}/></button>
-        <div className="relative"><Bell size={19} className="text-[#293550]"/><span className="absolute -right-1 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-[#e51d2a] px-1 text-[9px] font-bold text-white">3</span></div>
-        <div className="hidden items-center gap-2 md:flex">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-[#101c30] text-[10px] font-bold text-white">MS</span>
-          <div className="leading-tight"><b className="block text-[10px] text-[#26324e]">Manish Sirohi</b><small className="text-[9px] text-[#8a95a9]">Workspace Admin</small></div>
-          <ChevronDown size={13} className="text-[#53617a]"/>
-        </div>
-      </div>
-    </header>
   );
 }
 
@@ -666,14 +536,10 @@ function App({ projectId: _projectId }: { projectId?: string } = {}) {
 
   return (
     <div className="bg-[#f4f7fb] font-sans text-[#26324d]">
-      <Sidebar />
-      <Topbar />
-      <main className="lg:pl-[234px] pt-[55px]">
-        <div className="px-3 pb-4 pt-3">
-          <ClientHeader activeTab={activeTab} setActiveTab={setActiveTab}/>
-          <div className="mt-2.5 space-y-2.5">{content}</div>
-        </div>
-      </main>
+      <div className="">
+        <ClientHeader activeTab={activeTab} setActiveTab={setActiveTab}/>
+        <div className="mt-2.5 space-y-2.5">{content}</div>
+      </div>
     </div>
   );
 }
