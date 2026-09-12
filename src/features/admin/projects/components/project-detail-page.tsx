@@ -141,7 +141,7 @@ function ClientHeader({ activeTab, setActiveTab }: { activeTab: string; setActiv
         <span>Clients</span><ChevronRight className="mx-1 inline" size={10}/><b className="text-[#233050]">Moksha Sewa</b>
       </div>
 
-      <section className="rounded-[8px] border border-[#e1e7ef] bg-white px-3.5 py-3 shadow-[0_1px_4px_rgba(20,35,65,.02)]">
+      <section className="">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
           <div className="flex min-w-0 flex-1 items-start gap-4">
             <div className="flex h-[88px] w-[124px] shrink-0 items-center justify-center rounded-md border border-[#e1e5eb] bg-white p-2 shadow-sm">
@@ -154,9 +154,8 @@ function ClientHeader({ activeTab, setActiveTab }: { activeTab: string; setActiv
               </div>
               <p className="mt-1 text-[11px] text-[#66748d]">End-to-end support for dignified funeral services.</p>
               <div className="mt-5 flex flex-wrap gap-x-7 gap-y-2 text-[9px] text-[#65728b]">
-                <span className="flex items-center gap-2"><IconBadge Icon={Building2} tone="purple" size={12}/><span>NGO / Social Impact</span></span>
-                <span className="flex items-center gap-2"><IconBadge Icon={MapPin} tone="blue" size={12}/><span>New Delhi, India</span></span>
-                <span className="flex items-center gap-2"><IconBadge Icon={BookOpen} tone="purple" size={12}/><span>Delhi NCR</span></span>
+                <span className="flex items-center gap-2"><IconBadge Icon={Building2} tone="purple" size={18}/><span>NGO / Social Impact</span></span>
+                <span className="flex items-center gap-2"><IconBadge Icon={MapPin} tone="blue" size={18}/><span>New Delhi, India</span></span>
                 <span className="flex items-center gap-2"><IconBadge Icon={Link2} tone="purple" size={12}/><span className="font-semibold text-[#5c35d9]">https://mokshasewa.org</span></span>
               </div>
             </div>
@@ -209,11 +208,11 @@ function OverviewView() {
           </div>
         </Panel>
         <Panel title="Marketing Goals" action="Edit" className="max-h-[240px] overflow-y-auto">
-          <Goal Icon={Heart} title="Increase Donations" desc="Drive consistent monthly donations"/>
-          <Goal Icon={UsersRound} title="Build Awareness" desc="Reach more people about our mission"/>
-          <Goal Icon={UserPlus} title="Recruit Volunteers" desc="Grow our volunteer community"/>
-          <Goal Icon={BarChart3} title="Increase Website Traffic" desc="Improve organic and direct traffic"/>
-          <Goal Icon={MapPin} title="Improve Local Visibility" desc="Rank higher in Delhi NCR for relevant searches"/>
+          <Goal Icon={Heart} title="Increase Donations" desc="Drive consistent monthly donations" tone="rose"/>
+          <Goal Icon={UsersRound} title="Build Awareness" desc="Reach more people about our mission" tone="purple"/>
+          <Goal Icon={UserPlus} title="Recruit Volunteers" desc="Grow our volunteer community" tone="blue"/>
+          <Goal Icon={BarChart3} title="Increase Website Traffic" desc="Improve organic and direct traffic" tone="green"/>
+          <Goal Icon={MapPin} title="Improve Local Visibility" desc="Rank higher in Delhi NCR for relevant searches" tone="orange"/>
         </Panel>
       </div>
 
@@ -224,12 +223,20 @@ function OverviewView() {
           <div className="flex gap-3">
             <div className="flex h-[128px] w-[120px] shrink-0 items-center justify-center rounded border border-[#e7ebf1] bg-white p-2"><img src="/brand/moksha-sewa-logo.png" alt="Moksha Sewa" className="max-h-full max-w-full object-contain" /></div>
             <div className="min-w-0 text-[9px] text-[#6e7890]">
-              <b className="text-[9px] text-[#394561]">Primary Color</b><div className="mt-1 flex items-center gap-2"><span className="h-5 w-5 rounded bg-[#2e7d32]"/><span>#2E7D32</span></div>
+              <div className="flex gap-4">
+                <div><b className="text-[9px] text-[#394561]">Primary Color</b><div className="mt-1 flex items-center gap-2"><span className="h-5 w-5 rounded bg-[#2e7d32]"/><span>#2E7D32</span></div></div>
+                <div><b className="text-[9px] text-[#394561]">Secondary Color</b><div className="mt-1 flex items-center gap-2"><span className="h-5 w-5 rounded border border-[#e1e5eb] bg-[#f8f1e7]"/><span>#F8F1E7</span></div></div>
+              </div>
               <b className="mt-3 block text-[9px] text-[#394561]">Brand Tone</b><p className="mt-1">Compassionate, Trustworthy,<br/>Human-Centric</p>
               <b className="mt-3 block text-[9px] text-[#394561]">Call to Action</b><p className="mt-1">Donate. Volunteer. Spread Awareness.</p>
             </div>
           </div>
-          <div className="mt-2 rounded-md bg-[#e8f8ef] p-3 text-[10px] italic text-[#2f4b3a]">“ A respectful farewell<br/>is every human's right. ”</div>
+          <div className="mt-2 flex items-center gap-4 rounded-md border border-[#d5e8da] bg-[#f1faf4] px-5 py-4">
+            <span className="text-[40px] leading-none text-[#4caf50]">"</span>
+            <p className="m-0 text-[11px] font-medium italic leading-relaxed text-[#2f5a3a]">A respectful farewell<br/>is every human's right.</p>
+            <div className="mx-1 h-[2px] w-10 shrink-0 rounded bg-[#4caf50]"/>
+            <svg className="h-[50px] w-[50px] shrink-0 text-[#81c784] opacity-50" viewBox="0 0 24 24" fill="currentColor"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg>
+          </div>
         </Panel>
       </div>
     </>
@@ -432,8 +439,8 @@ function Badge({ text, tone="blue", dot=false }: { text: string; tone?: string; 
   return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-semibold ${map[tone]}`}>{dot&&<i className="h-1.5 w-1.5 rounded-full bg-current"/>}{text}</span>;
 }
 
-function Goal({ Icon, title, desc }: { Icon: LucideIcon | IconType; title: string; desc: string }) {
-  return <div className="mb-3 flex items-center gap-3 last:mb-0"><IconBadge Icon={Icon} tone="purple" size={16}/><div><b className="block text-[9px] text-[#38435e]">{title}</b><small className="text-[9px] text-[#8993a5]">{desc}</small></div></div>;
+function Goal({ Icon, title, desc, tone = "purple" }: { Icon: LucideIcon | IconType; title: string; desc: string; tone?: string }) {
+  return <div className="mb-3 flex items-center gap-3 last:mb-0"><IconBadge Icon={Icon} tone={tone} size={16}/><div><b className="block text-[9px] text-[#38435e]">{title}</b><small className="text-[9px] text-[#8993a5]">{desc}</small></div></div>;
 }
 
 function ChannelMiniList() {
@@ -450,7 +457,14 @@ function ChannelMiniList() {
 }
 
 function RecentActivity() {
-  return <div>{([["Posted on Instagram","Every life matters. ❤️ #MokshaSewa","3 hours ago",FaInstagram],["New Lead Received","Donation inquiry from Rakesh Mehta","6 hours ago",UsersRound],["SEO Audit Completed","Site health score improved to 86","1 day ago",BarChart3],["Replied to Google Review","Thanked user for their kind words","2 days ago",FaGoogle],["Campaign Published","Dignity for Every Life campaign is live","3 days ago",CampaignIcon]] as [string, string, string, LucideIcon | IconType][]).map(([a,b,c,I])=><div key={a} className="flex items-center gap-2 border-b border-[#eef1f5] py-2 last:border-0"><span className="grid h-7 w-7 place-items-center rounded-full bg-[#f1edff] text-[#6937dc]"><I size={13}/></span><div className="min-w-0 flex-1"><b className="block text-[9px]">{a}</b><small className="block truncate text-[9px] text-[#8993a5]">{b}</small></div><small className="text-[9px] text-[#8993a5]">{c}</small></div>)}</div>;
+  const activities = [
+    { title: "Posted on Instagram", desc: "Every life matters. ❤️ #MokshaSewa", time: "3 hours ago", Icon: FaInstagram, bg: "bg-[#fce4f0]", color: "text-[#e1306c]" },
+    { title: "New Lead Received", desc: "Donation inquiry from Rakesh Mehta", time: "6 hours ago", Icon: UsersRound, bg: "bg-[#edf5ff]", color: "text-[#3485df]" },
+    { title: "SEO Audit Completed", desc: "Site health score improved to 86", time: "1 day ago", Icon: BarChart3, bg: "bg-[#e8faf2]", color: "text-[#19a978]" },
+    { title: "Replied to Google Review", desc: "Thanked user for their kind words", time: "2 days ago", Icon: FaGoogle, bg: "bg-[#e8f5e9]", color: "text-[#34a853]" },
+    { title: "Campaign Published", desc: "Dignity for Every Life campaign is live", time: "3 days ago", Icon: CampaignIcon, bg: "bg-[#fff5e7]", color: "text-[#ef9b21]" },
+  ];
+  return <div>{activities.map((a) => <div key={a.title} className="flex items-center gap-2 border-b border-[#eef1f5] py-2 last:border-0"><span className={`grid h-7 w-7 place-items-center rounded-full ${a.bg} ${a.color}`}><a.Icon size={13}/></span><div className="min-w-0 flex-1"><b className="block text-[9px]">{a.title}</b><small className="block truncate text-[9px] text-[#8993a5]">{a.desc}</small></div><small className="text-[9px] text-[#8993a5]">{a.time}</small></div>)}</div>;
 }
 
 function Note({ initials, name, time, children }: { initials: string; name: string; time: string; children: ReactNode }) {
