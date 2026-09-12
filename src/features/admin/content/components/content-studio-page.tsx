@@ -38,6 +38,7 @@ import {
   FaYoutube,
 } from "react-icons/fa6";
 import { cn } from "@/lib/utils/cn";
+import RichTextEditor from "@/components/layout/rich-text-editor";
 
 /* ---------------------------------- types ---------------------------------- */
 
@@ -334,15 +335,15 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
           </div>
 
           {subTab === "Caption" && (
-            <div className="overflow-hidden rounded-lg border border-[#dce4ef] focus-within:border-[#1769DF]">
-              <textarea
+            <div>
+              <RichTextEditor
                 value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                rows={4}
-                className="w-full resize-none p-2.5 text-[12.5px] leading-5.5 text-slate-700 outline-none"
+                onChange={(val) => setCaption(val)}
+                placeholder="Write your caption here..."
+                minHeight="100px"
               />
-              <div className="flex items-center justify-between border-t border-slate-100 bg-[#f8fafc] px-2.5 py-1.5 text-[11px] text-slate-500">
-                <span>{caption.length} / 2,200</span>
+              <div className="flex items-center justify-between border-t border-slate-100 bg-[#f8fafc] px-2.5 py-1.5 text-[11px] text-slate-500 rounded-b-lg">
+                <span>{caption.replace(/<[^>]*>/g, "").length} / 2,200</span>
                 <span className="flex items-center gap-1">
                   <button className="flex items-center gap-1 rounded px-1.5 py-0.5 font-semibold text-[#1769DF] hover:bg-blue-50"><Sparkles className="size-3" /> AI improve</button>
                   <button className="rounded px-1.5 py-0.5 font-semibold hover:bg-slate-100">Shorten</button>

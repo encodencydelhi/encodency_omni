@@ -12,8 +12,8 @@ import {
   SelectInput,
   StepHeader,
   TextInput,
-  TextareaField,
 } from "../ui";
+import RichTextEditor from "@/components/layout/rich-text-editor";
 
 const CLIENT_TYPES = ["NGO / Non-Profit", "Business / Corporate", "Startup", "Agency", "Government", "Education"] as const;
 const INDUSTRIES = ["Social Impact / NGO", "Healthcare", "Education", "Retail / E-commerce", "Travel & Tourism", "Technology"] as const;
@@ -63,7 +63,7 @@ export function BasicStep({
           hint="Briefly describe your client's business or mission."
           className="md:col-span-2"
         >
-          <TextareaField value={draft.shortDescription} onChange={(v) => set("shortDescription", v)} rows={2} />
+          <RichTextEditor value={draft.shortDescription} onChange={(v) => set("shortDescription", v as any)} placeholder="Describe your client's business or mission..." minHeight="80px" />
         </Field>
 
         <Field label="Primary Website URL" required hint="Enter the main website URL (including https://)." className="md:col-span-2 lg:col-span-1">

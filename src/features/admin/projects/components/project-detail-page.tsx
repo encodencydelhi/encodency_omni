@@ -120,7 +120,7 @@ function IconBadge({ Icon, tone = "purple", size = 18 }: {
 function StatCard({ item }: { item: [LucideIcon | IconType, string, string, string, string, string] }) {
   const [Icon, label, value, trend, note, tone] = item;
   return (
-    <div className="flex min-w-0 items-center gap-3 rounded-[8px] border border-[#e2e8f1] bg-white px-3.5 py-3 shadow-[0_1px_3px_rgba(20,35,65,.03)]">
+    <div className="flex min-w-0 items-start gap-3 rounded-[8px] border border-[#e2e8f1] bg-white px-3.5 py-3 shadow-[0_1px_3px_rgba(20,35,65,.03)]">
       <IconBadge Icon={Icon} tone={tone} />
       <div className="min-w-0">
         <div className="truncate text-[10px] font-medium text-[#66738c]">{label}</div>

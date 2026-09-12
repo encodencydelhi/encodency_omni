@@ -264,7 +264,7 @@ function MetricCard({
   down?: boolean;
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-2 rounded-[10px] border border-[#e7edf5] bg-white px-2.5 py-2">
+    <div className="flex min-w-0 items-start gap-2 rounded-[10px] border border-[#e7edf5] bg-white px-2.5 py-2">
       <SoftIcon icon={icon} tone={tone} size={32} />
       <div className="min-w-0">
         <div className="text-[9px] font-medium text-[#74819a]">{label}</div>
@@ -389,7 +389,7 @@ function TopHeader() {
         </div>
       </div>
 
-      <div className="relative flex min-h-[112px] items-start gap-3 overflow-hidden pt-3">
+      <div className="relative flex min-h-[112px] items-start gap-3 overflow-hidden">
         <img src={campaignImage} alt="" className="h-[102px] w-[126px] rounded-[8px] object-cover shadow-sm" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -442,7 +442,7 @@ function InfoChip({
   tone?: keyof typeof iconTone;
 }) {
   return (
-    <div className="flex min-w-[125px] items-center gap-2 rounded-[8px] border border-[#e8edf4] bg-white/90 px-2 py-1.5">
+    <div className="flex min-w-[125px] items-start gap-2 rounded-[8px] border border-[#e8edf4] bg-white/90 px-2 py-1.5">
       <SoftIcon icon={Icon} tone={tone} size={29} />
       <div className="min-w-0">
         <div className="text-[8.5px] font-medium text-[#8792a6]">{label}</div>

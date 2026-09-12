@@ -1,16 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Filter, MoreVertical, Edit2, BarChart2, Megaphone, Image as ImageIcon, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter, MoreVertical, Edit2, BarChart2, Megaphone, Image as ImageIcon, ChevronDown, Send, Clock, Calendar as CalendarIcon } from "lucide-react";
 import { ChannelLogo } from "../shared/channel-logo";
 import { useCalendarContent } from "../shared/use-admin-workspace";
 import { cn } from "@/lib/utils/cn";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import RichTextEditor from "@/components/layout/rich-text-editor";
 
 const days = Array.from({ length: 35 }, (_, index) => index - 1);
 
 export function ContentCalendarPage() {
   const { data = [] } = useCalendarContent();
   const [view, setView] = useState<"Month" | "Week" | "List">("Month");
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<{ title: string; channel: string; caption: string; time: string; date: string } | null>(null);
+  const [caption, setCaption] = useState("A glimpse of our team in action!<br/>Together for a cleaner, healthier Ganga.<br/>#Sustainability #Environment #GoGreen");
+
+  const openEditModal = (post: { title: string; channel: string; caption: string; time: string; date: string }) => {
+    setSelectedPost(post);
+    setCaption(post.caption);
+    setEditModalOpen(true);
+  };
 
   return (
     <div className="space-y-3 max-w-[1500px] mx-auto pb-6">
@@ -151,30 +162,30 @@ export function ContentCalendarPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y text-[12px]">
-                       <tr>
-                         <td className="py-2.5 text-gray-600 whitespace-nowrap">10:00 AM</td>
-                         <td className="py-2.5">
-                            <div className="flex items-center gap-2">
-                               <ChannelLogo channel="Google Business" className="size-5 shrink-0" />
-                               <div>
-                                 <p className="font-bold text-gray-900 text-[11px]">World Health Day Post</p>
-                                 <p className="text-[10px] text-gray-500">Healthier Communities...</p>
-                               </div>
-                            </div>
-                         </td>
-                         <td className="py-2.5"><ChannelLogo channel="Facebook" className="size-4" /></td>
-                         <td className="py-2.5 text-gray-600 text-[11px]">Moksha Sewa</td>
-                         <td className="py-2.5"><span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Scheduled</span></td>
-                         <td className="py-2.5 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                               <button className="text-[10px] font-bold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">Edit</button>
-                               <button className="border rounded p-1 hover:bg-gray-50 text-gray-500"><MoreVertical className="size-3.5" /></button>
-                            </div>
-                         </td>
-                       </tr>
-                       <tr>
-                         <td className="py-2.5 text-gray-600 whitespace-nowrap">12:00 PM</td>
-                         <td className="py-2.5">
+                        <tr>
+                          <td className="py-2.5 text-gray-600 whitespace-nowrap">10:00 AM</td>
+                          <td className="py-2.5">
+                             <div className="flex items-center gap-2">
+                                <ChannelLogo channel="Google Business" className="size-5 shrink-0" />
+                                <div>
+                                  <p className="font-bold text-gray-900 text-[11px]">World Health Day Post</p>
+                                  <p className="text-[10px] text-gray-500">Healthier Communities...</p>
+                                </div>
+                             </div>
+                          </td>
+                          <td className="py-2.5"><ChannelLogo channel="Facebook" className="size-4" /></td>
+                          <td className="py-2.5 text-gray-600 text-[11px]">Moksha Sewa</td>
+                          <td className="py-2.5"><span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Scheduled</span></td>
+                          <td className="py-2.5 text-right">
+                             <div className="flex items-center justify-end gap-1">
+                                <button onClick={() => openEditModal({ title: "World Health Day Post", channel: "Facebook", caption: "Healthier Communities start with healthier choices. 🌿\n\nAt Moksha Sewa, we believe in serving with compassion and dignity.\n\n#WorldHealthDay #MokshaSewa #Community", time: "10:00 AM", date: "Sep 12, 2026" })} className="text-[10px] font-bold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">Edit</button>
+                                <button className="border rounded p-1 hover:bg-gray-50 text-gray-500"><MoreVertical className="size-3.5" /></button>
+                             </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-2.5 text-gray-600 whitespace-nowrap">12:00 PM</td>
+                          <td className="py-2.5">
                             <div className="flex items-center gap-2">
                                <div className="size-5 rounded bg-red-100 flex items-center justify-center shrink-0 text-red-600"><span className="text-[10px] font-bold">T</span></div>
                                <div>
@@ -182,20 +193,20 @@ export function ContentCalendarPage() {
                                  <p className="text-[10px] text-gray-500">Planning for April...</p>
                                </div>
                             </div>
-                         </td>
-                         <td className="py-2.5"><ChannelLogo channel="LinkedIn" className="size-4" /></td>
-                         <td className="py-2.5 text-gray-600 text-[11px]">Moksha Sewa</td>
-                         <td className="py-2.5"><span className="text-[9px] font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded">Draft</span></td>
-                         <td className="py-2.5 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                               <button className="text-[10px] font-bold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">Edit</button>
-                               <button className="border rounded p-1 hover:bg-gray-50 text-gray-500"><MoreVertical className="size-3.5" /></button>
-                            </div>
-                         </td>
-                       </tr>
-                       <tr>
-                         <td className="py-2.5 text-gray-600 whitespace-nowrap">04:00 PM</td>
-                         <td className="py-2.5">
+                          </td>
+                          <td className="py-2.5"><ChannelLogo channel="LinkedIn" className="size-4" /></td>
+                          <td className="py-2.5 text-gray-600 text-[11px]">Moksha Sewa</td>
+                          <td className="py-2.5"><span className="text-[9px] font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded">Draft</span></td>
+                          <td className="py-2.5 text-right">
+                             <div className="flex items-center justify-end gap-1">
+                                <button onClick={() => openEditModal({ title: "Team Meeting Post", channel: "LinkedIn", caption: "Great minds think alike — and our team proves it every day. 🤝\n\nPlanning, strategizing, and building something meaningful together.\n\n#TeamWork #MokshaSewa #TogetherWeCan", time: "12:00 PM", date: "Sep 12, 2026" })} className="text-[10px] font-bold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">Edit</button>
+                                <button className="border rounded p-1 hover:bg-gray-50 text-gray-500"><MoreVertical className="size-3.5" /></button>
+                             </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-2.5 text-gray-600 whitespace-nowrap">04:00 PM</td>
+                          <td className="py-2.5">
                             <div className="flex items-center gap-2">
                                <div className="size-5 rounded bg-red-100 flex items-center justify-center shrink-0 text-red-600"><span className="text-[10px] font-bold">B</span></div>
                                <div>
@@ -203,17 +214,17 @@ export function ContentCalendarPage() {
                                  <p className="text-[10px] text-gray-500">Our team in action</p>
                                </div>
                             </div>
-                         </td>
-                         <td className="py-2.5"><ChannelLogo channel="Instagram" className="size-4" /></td>
-                         <td className="py-2.5 text-gray-600 text-[11px]">Moksha Sewa</td>
-                         <td className="py-2.5"><span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Scheduled</span></td>
-                         <td className="py-2.5 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                               <button className="text-[10px] font-bold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">Edit</button>
-                               <button className="border rounded p-1 hover:bg-gray-50 text-gray-500"><MoreVertical className="size-3.5" /></button>
-                            </div>
-                         </td>
-                       </tr>
+                          </td>
+                          <td className="py-2.5"><ChannelLogo channel="Instagram" className="size-4" /></td>
+                          <td className="py-2.5 text-gray-600 text-[11px]">Moksha Sewa</td>
+                          <td className="py-2.5"><span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Scheduled</span></td>
+                          <td className="py-2.5 text-right">
+                             <div className="flex items-center justify-end gap-1">
+                                <button onClick={() => openEditModal({ title: "Behind the Scenes Story", channel: "Instagram", caption: "A glimpse of our team in action!<br/>Together for a cleaner, healthier Ganga.<br/>#Sustainability #Environment #GoGreen", time: "04:00 PM", date: "Sep 12, 2026" })} className="text-[10px] font-bold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">Edit</button>
+                                <button className="border rounded p-1 hover:bg-gray-50 text-gray-500"><MoreVertical className="size-3.5" /></button>
+                             </div>
+                          </td>
+                        </tr>
                     </tbody>
                   </table>
                 </div>

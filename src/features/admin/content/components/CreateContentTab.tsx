@@ -17,6 +17,7 @@ import {
 import { MOCK_MEDIA, MOCK_CLIENTS, MOCK_CAMPAIGNS } from "../mocks/content.mock";
 import { ContentPreviewPanel } from "./ContentPreview";
 import { ContentChecklist } from "./ContentChecklist";
+import RichTextEditor from "@/components/layout/rich-text-editor";
 
 type PostType = ContentType;
 
@@ -101,10 +102,15 @@ export function CreateContentTab() {
           </div>
 
           {contentTab === "Caption" && (
-            <div className="rounded-lg border border-[#D9E1EC] focus-within:border-[#1769DF]">
-              <textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={4} className="w-full resize-none p-2.5 text-[12px] leading-[1.6] text-[#24365A] outline-none" />
-              <div className="flex items-center justify-between border-t border-slate-100 bg-[#F8FAFD] px-2.5 py-1 text-[10.5px] text-[#7A87A0]">
-                <span>{caption.length} / 2,200</span>
+            <div>
+              <RichTextEditor
+                value={caption}
+                onChange={(val) => setCaption(val)}
+                placeholder="Write your caption here..."
+                minHeight="100px"
+              />
+              <div className="flex items-center justify-between border-t border-slate-100 bg-[#F8FAFD] px-2.5 py-1 text-[10.5px] text-[#7A87A0] rounded-b-lg">
+                <span>{caption.replace(/<[^>]*>/g, "").length} / 2,200</span>
                 <div className="flex items-center gap-0.5">
                   {AI_ACTIONS.slice(0, 4).map((a) => (
                     <button key={a} className="rounded px-1.5 py-0.5 font-semibold text-[#1769DF] hover:bg-blue-50">{a}</button>
@@ -143,7 +149,15 @@ export function CreateContentTab() {
           )}
 
           {contentTab === "First Comment" && (
-            <TextareaField label="First Comment" value={firstComment} rows={2} onChange={setFirstComment} />
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold text-[#374766]">First Comment</label>
+              <RichTextEditor
+                value={firstComment}
+                onChange={(val) => setFirstComment(val)}
+                placeholder="Write your first comment..."
+                minHeight="80px"
+              />
+            </div>
           )}
 
           {contentTab === "Platform Overrides" && (

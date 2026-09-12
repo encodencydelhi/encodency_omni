@@ -12,8 +12,8 @@ import {
   SelectInput,
   StepHeader,
   TagField,
-  TextareaField,
 } from "../ui";
+import RichTextEditor from "@/components/layout/rich-text-editor";
 
 const FOCUS_AREAS = ["Awareness", "Donations", "Volunteers", "Website Traffic", "Local Visibility", "Fundraising"] as const;
 
@@ -132,10 +132,10 @@ export function MarketingStep({
           </div>
         </Field>
         <Field label="Brand Communication Notes" hint="Any specific tone, style or messaging guidelines.">
-          <TextareaField value={draft.toneNotes} onChange={(v) => set("toneNotes", v)} rows={3} />
+          <RichTextEditor value={draft.toneNotes} onChange={(v) => set("toneNotes", v as any)} placeholder="E.g., Keep tone compassionate, authentic and hopeful..." minHeight="80px" />
         </Field>
         <Field label="Prohibited Content Notes" hint="List any content types to avoid.">
-          <TextareaField value={draft.prohibitedNotes} onChange={(v) => set("prohibitedNotes", v)} rows={3} />
+          <RichTextEditor value={draft.prohibitedNotes} onChange={(v) => set("prohibitedNotes", v as any)} placeholder="E.g., Avoid political content, sensitive debates..." minHeight="80px" />
         </Field>
       </div>
     </>
