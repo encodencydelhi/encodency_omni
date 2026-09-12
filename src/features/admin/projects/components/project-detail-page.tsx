@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import {
   Search, ChevronDown, ChevronRight, MoreVertical, Plus,
-  Pencil, MapPin, BookOpen, Link2,
+  Pencil, MapPin, Link2,
   FileText, CalendarDays, Megaphone,
   Globe2, BarChart3,
   Settings, UserRound, UserPlus, Shield, Mail,

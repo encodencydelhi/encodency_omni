@@ -1,27 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Filter, MoreVertical, Edit2, BarChart2, Megaphone, Image as ImageIcon, ChevronDown, Send, Clock, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter, MoreVertical, Edit2, BarChart2, Megaphone, Image as ImageIcon, ChevronDown } from "lucide-react";
 import { ChannelLogo } from "../shared/channel-logo";
 import { useCalendarContent } from "../shared/use-admin-workspace";
 import { cn } from "@/lib/utils/cn";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import RichTextEditor from "@/components/layout/rich-text-editor";
 
 const days = Array.from({ length: 35 }, (_, index) => index - 1);
 
 export function ContentCalendarPage() {
   const { data = [] } = useCalendarContent();
   const [view, setView] = useState<"Month" | "Week" | "List">("Month");
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<{ title: string; channel: string; caption: string; time: string; date: string } | null>(null);
-  const [caption, setCaption] = useState("A glimpse of our team in action!<br/>Together for a cleaner, healthier Ganga.<br/>#Sustainability #Environment #GoGreen");
-
-  const openEditModal = (post: { title: string; channel: string; caption: string; time: string; date: string }) => {
-    setSelectedPost(post);
-    setCaption(post.caption);
-    setEditModalOpen(true);
-  };
 
   return (
     <div className="space-y-3 max-w-[1500px] mx-auto pb-6">
@@ -178,7 +167,7 @@ export function ContentCalendarPage() {
                           <td className="py-2.5"><span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Scheduled</span></td>
                           <td className="py-2.5 text-right">
                              <div className="flex items-center justify-end gap-1">
-                                <button onClick={() => openEditModal({ title: "World Health Day Post", channel: "Facebook", caption: "Healthier Communities start with healthier choices. 🌿\n\nAt Moksha Sewa, we believe in serving with compassion and dignity.\n\n#WorldHealthDay #MokshaSewa #Community", time: "10:00 AM", date: "Sep 12, 2026" })} className="text-[10px] font-bold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">Edit</button>
+                                <button className="text-[10px] font-bold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">Edit</button>
                                 <button className="border rounded p-1 hover:bg-gray-50 text-gray-500"><MoreVertical className="size-3.5" /></button>
                              </div>
                           </td>
@@ -199,7 +188,7 @@ export function ContentCalendarPage() {
                           <td className="py-2.5"><span className="text-[9px] font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded">Draft</span></td>
                           <td className="py-2.5 text-right">
                              <div className="flex items-center justify-end gap-1">
-                                <button onClick={() => openEditModal({ title: "Team Meeting Post", channel: "LinkedIn", caption: "Great minds think alike — and our team proves it every day. 🤝\n\nPlanning, strategizing, and building something meaningful together.\n\n#TeamWork #MokshaSewa #TogetherWeCan", time: "12:00 PM", date: "Sep 12, 2026" })} className="text-[10px] font-bold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">Edit</button>
+                                <button className="text-[10px] font-bold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">Edit</button>
                                 <button className="border rounded p-1 hover:bg-gray-50 text-gray-500"><MoreVertical className="size-3.5" /></button>
                              </div>
                           </td>
@@ -220,7 +209,7 @@ export function ContentCalendarPage() {
                           <td className="py-2.5"><span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Scheduled</span></td>
                           <td className="py-2.5 text-right">
                              <div className="flex items-center justify-end gap-1">
-                                <button onClick={() => openEditModal({ title: "Behind the Scenes Story", channel: "Instagram", caption: "A glimpse of our team in action!<br/>Together for a cleaner, healthier Ganga.<br/>#Sustainability #Environment #GoGreen", time: "04:00 PM", date: "Sep 12, 2026" })} className="text-[10px] font-bold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">Edit</button>
+                                <button className="text-[10px] font-bold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">Edit</button>
                                 <button className="border rounded p-1 hover:bg-gray-50 text-gray-500"><MoreVertical className="size-3.5" /></button>
                              </div>
                           </td>

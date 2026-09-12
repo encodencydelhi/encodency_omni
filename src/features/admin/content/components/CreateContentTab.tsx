@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
-import { SelectField, TextField, TextareaField, Toggle } from "./ui-fields";
+import { SelectField, TextField, Toggle } from "./ui-fields";
 import { PlatformBadge } from "./ui-platform";
 import type { Platform, ContentType, MediaRatio } from "../types/content.types";
 import {
