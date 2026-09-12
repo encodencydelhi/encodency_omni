@@ -2,6 +2,7 @@
 
 import { Building2, Flag, Heart, Leaf, Megaphone, Target, UserRound, Users } from "lucide-react";
 import type { CampaignDraft } from "../draft";
+import RichTextEditor from "@/components/layout/rich-text-editor";
 import { Field, Section, SelectInput, TagField, Textarea, TextInput } from "../ui";
 
 type Setter = <K extends keyof CampaignDraft>(key: K, value: CampaignDraft[K]) => void;
@@ -65,7 +66,12 @@ export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }
 
       <div className="mt-3 space-y-3">
         <Field label="Short Description" required>
-          <Textarea value={draft.description} onChange={(v) => set("description", v)} rows={4} />
+          <RichTextEditor
+            value={draft.description}
+            onChange={(v) => set("description", v as any)}
+            placeholder="Describe your campaign..."
+            minHeight="100px"
+          />
         </Field>
 
         <Field label="Internal Notes">
