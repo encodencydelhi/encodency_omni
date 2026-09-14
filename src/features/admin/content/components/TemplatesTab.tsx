@@ -22,7 +22,7 @@ export function TemplatesTab() {
         </div>
       </Card>
 
-      <Card title={`Templates · ${filtered.length}`} action={<label className="flex h-8 w-48 items-center gap-1.5 rounded-lg border border-[#D9E1EC] px-2.5 text-[11.5px] text-[#7A87A0]"><Search className="size-3.5" /><input placeholder="Search..." className="w-full bg-transparent outline-none" /></label>}>
+      <Card title={`Templates · ${filtered.length}`} action={<label className="flex h-8 w-48 items-center gap-1.5 rounded-lg border border-[#D9E1EC] px-2.5 text-[11.5px] text-[#7A87A0]"><Search className="size-3.5" /><input placeholder="Search..." spellCheck={true} className="w-full bg-transparent outline-none" /></label>}>
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 2xl:grid-cols-4">
           {filtered.map((t, i) => (
             <button key={t.id} onClick={() => setSelected(i)} className={cn("overflow-hidden rounded-lg border bg-white text-left transition", selected === i ? "border-[#1769DF] shadow-md ring-1 ring-blue-100" : "border-[#E2E8F0] hover:shadow-md")}>

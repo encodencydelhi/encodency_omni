@@ -503,7 +503,7 @@ function AIAssistantTab() {
     <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
       <Card title="Describe your idea" subtitle="AI drafts caption, hashtags and creative">
         <label className="mb-1 block text-[12px] font-bold text-[#33445F]">Topic / prompt *</label>
-        <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} className="w-full resize-none rounded-lg border border-[#dce4ef] p-2.5 text-[12.5px] leading-5 outline-none focus:border-[#7C3AED]" />
+        <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} spellCheck className="w-full resize-none rounded-lg border border-[#dce4ef] p-2.5 text-[12.5px] leading-5 outline-none focus:border-[#7C3AED]" />
         <div className="mt-2 grid grid-cols-3 gap-1.5">
           <SelectField label="Audience" value="General public" />
           <SelectField label="Tone" value="Positive" />
@@ -593,7 +593,7 @@ function TemplatesTab() {
         action={
           <label className="flex h-9 w-52 items-center gap-2 rounded-lg border border-[#dce4ef] px-2.5 text-[12px] text-slate-500">
             <Search className="size-3.5" />
-            <input placeholder="Search templates…" className="w-full bg-transparent outline-none placeholder:text-slate-400" />
+            <input placeholder="Search templates…" spellCheck={true} className="w-full bg-transparent outline-none placeholder:text-slate-400" />
           </label>
         }
       >
@@ -652,7 +652,7 @@ function DraftsTab() {
           <div className="flex items-center gap-1.5">
             <label className="hidden h-9 w-52 items-center gap-2 rounded-lg border border-[#dce4ef] px-2.5 text-[12px] text-slate-500 md:flex">
               <Search className="size-3.5" />
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search drafts…" className="w-full bg-transparent outline-none" />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search drafts…" spellCheck={true} className="w-full bg-transparent outline-none" />
             </label>
             <div className="flex rounded-lg border border-[#dce4ef] p-0.5">
               <button onClick={() => setView("list")} className={cn("rounded p-1.5", view === "list" ? "bg-[#F0F6FF] text-[#1769DF]" : "text-slate-400")} aria-label="List view"><List className="size-3.5" /></button>

@@ -37,7 +37,7 @@ export function AIAssistantTab() {
         </div>
         <div className="mt-3">
           <label className="mb-1 block text-[11.5px] font-bold text-[#33445F]">Topic / prompt *</label>
-          <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} className="w-full resize-none rounded-lg border border-[#D9E1EC] p-2.5 text-[12px] leading-5 outline-none focus:border-[#7C3AED]" />
+          <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} spellCheck className="w-full resize-none rounded-lg border border-[#D9E1EC] p-2.5 text-[12px] leading-5 outline-none focus:border-[#7C3AED]" />
         </div>
         <div className="mt-2 grid grid-cols-3 gap-1.5">
           <SelectField label="Audience" value="General Public" />

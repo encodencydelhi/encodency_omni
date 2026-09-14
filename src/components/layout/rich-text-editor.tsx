@@ -1,7 +1,23 @@
 "use client";
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
-import { Bold, Italic, Underline, Strikethrough, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Link2, Unlink, Undo, Redo, RemoveFormatting } from "lucide-react";
+import dynamic from "next/dynamic";
+import {
+  Bold, Italic, Underline, Strikethrough, List, ListOrdered,
+  AlignLeft, AlignCenter, AlignRight, Link2, Unlink, Undo, Redo,
+  RemoveFormatting, Smile, SpellCheck
+} from "lucide-react";
+import type { EmojiClickData } from "emoji-picker-react";
+import {
+  applySpellMarksToHtml,
+  cleanSpellMarks
+} from "@/lib/spellcheck/spellcheck";
+
+// Dynamic import of EmojiPicker to avoid any SSR evaluation
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
+  ssr: false,
+  loading: () => <div className="p-4 text-center text-xs text-gray-400">Loading emojis...</div>,
+});
 
 interface RichTextEditorProps {
   value?: string;
@@ -9,14 +25,42 @@ interface RichTextEditorProps {
   placeholder?: string;
   className?: string;
   minHeight?: string;
+  spellCheck?: boolean;
 }
 
-export default function RichTextEditor({ value = "", onChange, placeholder = "Start writing...", className = "", minHeight = "150px" }: RichTextEditorProps) {
+export default function RichTextEditor({
+  value = "",
+  onChange,
+  placeholder = "Start writing...",
+  className = "",
+  minHeight = "150px",
+  spellCheck = true,
+}: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const savedRangeRef = useRef<Range | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const [activeStates, setActiveStates] = useState<Record<string, boolean>>({});
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [spellCheckEnabled, setSpellCheckEnabled] = useState(true);
+
+  // Apply Gmail-style wavy red underlines to errors inside editor
+  const applyVisualUnderlines = useCallback(() => {
+    if (!editorRef.current || !spellCheckEnabled || !spellCheck) return;
+    const currentHtml = editorRef.current.innerHTML;
+    const markedHtml = applySpellMarksToHtml(currentHtml);
+    if (markedHtml !== currentHtml) {
+      editorRef.current.innerHTML = markedHtml;
+    }
+  }, [spellCheckEnabled, spellCheck]);
 
   const checkActiveStates = useCallback(() => {
-    const commands = ["bold", "italic", "underline", "strikeThrough", "insertUnorderedList", "insertOrderedList", "justifyLeft", "justifyCenter", "justifyRight"];
+    const commands = [
+      "bold", "italic", "underline", "strikeThrough",
+      "insertUnorderedList", "insertOrderedList",
+      "justifyLeft", "justifyCenter", "justifyRight"
+    ];
     const newStates: Record<string, boolean> = {};
     commands.forEach((cmd) => {
       try {
@@ -28,6 +72,37 @@ export default function RichTextEditor({ value = "", onChange, placeholder = "St
     setActiveStates(newStates);
   }, []);
 
+  const saveCurrentSelection = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && editorRef.current?.contains(sel.anchorNode)) {
+      savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+    }
+  };
+
+  const restoreSelection = () => {
+    if (!savedRangeRef.current) return;
+    const sel = window.getSelection();
+    if (sel) {
+      sel.removeAllRanges();
+      sel.addRange(savedRangeRef.current);
+    }
+  };
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
@@ -35,6 +110,7 @@ export default function RichTextEditor({ value = "", onChange, placeholder = "St
     const handleSelectionChange = () => {
       if (editor.contains(document.activeElement) || editor === document.activeElement) {
         checkActiveStates();
+        saveCurrentSelection();
       }
     };
 
@@ -50,10 +126,14 @@ export default function RichTextEditor({ value = "", onChange, placeholder = "St
   }, [checkActiveStates]);
 
   useEffect(() => {
-    if (editorRef.current && value !== undefined && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
+    if (editorRef.current && value !== undefined) {
+      const cleanVal = cleanSpellMarks(value);
+      const editorClean = cleanSpellMarks(editorRef.current.innerHTML);
+      if (cleanVal !== editorClean) {
+        editorRef.current.innerHTML = spellCheckEnabled ? applySpellMarksToHtml(cleanVal) : cleanVal;
+      }
     }
-  }, []);
+  }, [value, spellCheckEnabled]);
 
   const formatText = (command: string, val?: string) => {
     document.execCommand(command, false, val);
@@ -72,13 +152,55 @@ export default function RichTextEditor({ value = "", onChange, placeholder = "St
   };
 
   const handleChange = () => {
-    if (onChange && editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+    if (editorRef.current) {
+      const currentHtml = editorRef.current.innerHTML;
+      const cleanHtml = cleanSpellMarks(currentHtml);
+      onChange?.(cleanHtml);
+
+      // Debounce applying visual red wavy underlines so typing remains fast & smooth
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => {
+        applyVisualUnderlines();
+      }, 700);
     }
   };
 
-  const ToolBtn = ({ onClick, children, title, command }: { onClick: () => void; children: React.ReactNode; title: string; command?: string }) => {
-    const isActive = command ? activeStates[command] : false;
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    editorRef.current?.focus();
+    restoreSelection();
+
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && editorRef.current?.contains(sel.anchorNode)) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      const textNode = document.createTextNode(emojiData.emoji);
+      range.insertNode(textNode);
+      range.setStartAfter(textNode);
+      range.setEndAfter(textNode);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      savedRangeRef.current = range.cloneRange();
+    } else {
+      document.execCommand("insertText", false, emojiData.emoji);
+    }
+
+    handleChange();
+  };
+
+  const ToolBtn = ({
+    onClick,
+    children,
+    title,
+    command,
+    active
+  }: {
+    onClick: () => void;
+    children: React.ReactNode;
+    title: string;
+    command?: string;
+    active?: boolean;
+  }) => {
+    const isActive = active !== undefined ? active : (command ? activeStates[command] : false);
     return (
       <button
         type="button"
@@ -99,9 +221,14 @@ export default function RichTextEditor({ value = "", onChange, placeholder = "St
   const Divider = () => <div className="mx-1 h-5 w-px bg-gray-200" />;
 
   return (
-    <div className={`rounded-lg border border-gray-200 bg-white ${className}`}>
+    <div className={`relative rounded-lg border border-gray-200 bg-white ${className}`}>
+      {/* Editor Toolbar */}
       <div className="flex flex-wrap items-center gap-1 border-b border-gray-100 bg-gray-50/50 px-2 py-1.5">
-        <select defaultValue="p" onChange={(e) => formatText("formatBlock", e.target.value)} className="h-7 rounded-md border border-gray-200 bg-white px-1.5 text-[11px] text-gray-600 outline-none">
+        <select
+          defaultValue="p"
+          onChange={(e) => formatText("formatBlock", e.target.value)}
+          className="h-7 rounded-md border border-gray-200 bg-white px-1.5 text-[11px] text-gray-600 outline-none"
+        >
           <option value="p">Paragraph</option>
           <option value="h1">Heading 1</option>
           <option value="h2">Heading 2</option>
@@ -123,14 +250,65 @@ export default function RichTextEditor({ value = "", onChange, placeholder = "St
         <ToolBtn onClick={addLink} title="Add Link"><Link2 size={14} /></ToolBtn>
         <ToolBtn onClick={() => formatText("unlink")} title="Remove Link"><Unlink size={14} /></ToolBtn>
         <Divider />
+
+        {/* Emoji Picker Button */}
+        <div className="relative" ref={emojiPickerRef}>
+          <ToolBtn
+            onClick={() => {
+              saveCurrentSelection();
+              setShowEmojiPicker(!showEmojiPicker);
+            }}
+            title="Emoji Picker"
+            active={showEmojiPicker}
+          >
+            <Smile size={14} className={showEmojiPicker ? "text-amber-500" : ""} />
+          </ToolBtn>
+
+          {showEmojiPicker && (
+            <div className="absolute left-0 top-full z-50 mt-1 shadow-2xl rounded-xl border border-gray-200 bg-white overflow-hidden">
+              <EmojiPicker
+                onEmojiClick={handleEmojiClick}
+                autoFocusSearch={false}
+                searchPlaceHolder="Search emoji..."
+                width={320}
+                height={380}
+                previewConfig={{ showPreview: false }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Spell Check Toggle */}
+        <ToolBtn
+          onClick={() => {
+            const next = !spellCheckEnabled;
+            setSpellCheckEnabled(next);
+            if (next) {
+              applyVisualUnderlines();
+            } else if (editorRef.current) {
+              editorRef.current.innerHTML = cleanSpellMarks(editorRef.current.innerHTML);
+            }
+          }}
+          title={spellCheckEnabled ? "Spell Checker: Active" : "Spell Checker: Disabled"}
+          active={spellCheckEnabled}
+        >
+          <SpellCheck size={14} className={spellCheckEnabled ? "text-emerald-600" : "text-gray-400"} />
+        </ToolBtn>
+
+        <Divider />
         <ToolBtn onClick={() => formatText("undo")} title="Undo"><Undo size={14} /></ToolBtn>
         <ToolBtn onClick={() => formatText("redo")} title="Redo"><Redo size={14} /></ToolBtn>
         <ToolBtn onClick={() => formatText("removeFormat")} title="Clear Formatting"><RemoveFormatting size={14} /></ToolBtn>
       </div>
+
+      {/* Editor Content Area */}
       <div
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
+        spellCheck={false}
+        autoCorrect="off"
+        autoCapitalize="off"
         onInput={handleChange}
         onClick={checkActiveStates}
         data-placeholder={placeholder}

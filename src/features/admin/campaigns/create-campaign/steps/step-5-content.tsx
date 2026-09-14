@@ -21,6 +21,7 @@ import {
 import type { CampaignDraft } from "../draft";
 import { ChannelLogo } from "../../../shared/channel-logo";
 import { Field, SelectInput, TagField, Textarea, TextInput } from "../ui";
+import { SpellCheckedInput } from "@/components/ui/spellchecked-input";
 import { cn } from "@/lib/utils/cn";
 
 type Setter = <K extends keyof CampaignDraft>(key: K, value: CampaignDraft[K]) => void;
@@ -180,17 +181,15 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
                 </button>
               ) : (
                 <div className="rounded-md border border-[#7C3AED] bg-[#F5F3FF] p-1.5">
-                  <input
-                    type="text"
+                  <SpellCheckedInput
                     value={newRatio}
-                    onChange={(e) => setNewRatio(e.target.value)}
+                    onChangeValue={(val) => setNewRatio(val)}
                     placeholder="Ratio"
                     className="mb-1 w-full rounded bg-white px-1.5 py-1 text-center text-[8px] font-semibold text-[#526385] outline-none ring-1 ring-[#C4B5FD] placeholder:text-[#9CA3AF]"
                   />
-                  <input
-                    type="text"
+                  <SpellCheckedInput
                     value={newLabel}
-                    onChange={(e) => setNewLabel(e.target.value)}
+                    onChangeValue={(val) => setNewLabel(val)}
                     placeholder="Label"
                     className="mb-1 w-full rounded bg-white px-1.5 py-1 text-center text-[7px] text-[#8791A4] outline-none ring-1 ring-[#C4B5FD] placeholder:text-[#9CA3AF]"
                   />

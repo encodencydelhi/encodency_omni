@@ -53,7 +53,7 @@ function AiAssistant({ prompt, setPrompt }: { prompt: string; setPrompt: (v: str
     <section className="rounded-xl border bg-white p-5 shadow-sm">
       <div className="mb-5 flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-rose-50 text-[#e20611]"><Sparkles className="size-5" /></span><div><h2 className="text-[16px] font-bold">AI Content Assistant</h2><p className="text-[12px] text-muted-foreground">Turn a simple idea into platform-ready content.</p></div></div>
       <label className="mb-2 block text-[12px] font-bold">What would you like to create?</label>
-      <textarea value={prompt} onChange={e => setPrompt(e.target.value)} rows={7} placeholder="Example: Create an inspiring Instagram post for our Clean Ganga volunteer drive..." className="w-full resize-none rounded-lg border p-3 text-[13px] outline-none focus:border-[#e20611] focus:ring-1 focus:ring-[#e20611]" />
+      <textarea value={prompt} onChange={e => setPrompt(e.target.value)} rows={7} placeholder="Example: Create an inspiring Instagram post for our Clean Ganga volunteer drive..." spellCheck className="w-full resize-none rounded-lg border p-3 text-[13px] outline-none focus:border-[#e20611] focus:ring-1 focus:ring-[#e20611]" />
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">{["Social post", "Caption ideas", "Hashtags", "Rewrite text"].map(x => <button key={x} onClick={() => setPrompt(x)} className="rounded-lg border px-3 py-2 text-[11px] font-semibold hover:bg-gray-50">{x}</button>)}</div>
       <button className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#e20611] text-[13px] font-bold text-white"><Sparkles className="size-4" />Generate Content</button>
     </section>

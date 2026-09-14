@@ -56,10 +56,19 @@ export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }
       >
         <div className="grid gap-x-4 gap-y-3 md:grid-cols-2">
           <Field label="Campaign Name" required>
-            <TextInput value={draft.name} onChange={(v) => set("name", v)} max={100} placeholder="e.g. Save Rivers, Save Lives 2025" />
+            <TextInput
+              name="name"
+              id="campaign-name"
+              value={draft.name}
+              onChange={(v) => set("name", v)}
+              max={100}
+              spellCheck
+              enableEmojiPicker
+              placeholder="e.g. Save Rivers, Save Lives 2025"
+            />
           </Field>
           <Field label="Campaign ID" hint="Auto-generated unique identifier">
-            <TextInput value={draft.campaignId} disabled />
+            <TextInput name="campaignId" id="campaign-id" value={draft.campaignId} disabled />
           </Field>
         </div>
 
@@ -70,6 +79,7 @@ export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }
               onChange={(v) => set("description", v as any)}
               placeholder="Describe your campaign in detail..."
               minHeight="100px"
+              spellCheck
             />
           </Field>
         </div>

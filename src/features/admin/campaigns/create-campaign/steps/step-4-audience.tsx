@@ -7,11 +7,13 @@ import {
   Check,
   ChevronDown,
   FileText,
+  Globe,
   Heart,
   Info,
   Languages,
   MapPin,
   RefreshCw,
+  Target,
   Tag,
   Upload,
   Users,
@@ -60,17 +62,24 @@ export function StepAudience({ draft, set }: { draft: CampaignDraft; set: Setter
 
       <div className="border-b border-[#E7EDF5] p-3.5">
         <Field label="Audience Type" required hint="Define how you want to build your audience.">
-          <div className="grid grid-cols-5 gap-1.5">
-            {["Custom Audience", "Saved Audience", "Lookalike Audience", "Retargeting", "Broad Audience"].map((type) => (
+          <div className="grid grid-cols-2 gap-1.5 md:grid-cols-5">
+            {[
+              { type: "Custom Audience", icon: Users },
+              { type: "Saved Audience", icon: FileText },
+              { type: "Lookalike Audience", icon: Target },
+              { type: "Retargeting", icon: RefreshCw },
+              { type: "Broad Audience", icon: Globe },
+            ].map(({ type, icon: Icon }) => (
               <button
                 key={type}
                 onClick={() => set("audienceType", type)}
                 className={cn(
-                  "h-[38px] rounded-lg border px-2 text-[10px] font-semibold",
+                  "flex h-[42px] items-center justify-center gap-1.5 rounded-lg border px-2 text-[11px] font-bold leading-tight",
                   draft.audienceType === type ? "border-[#155EEF] bg-[#EFF6FF] text-[#155EEF]" : "border-[#DDE6F1] bg-white text-[#435371]",
                 )}
               >
-                {type}
+                <Icon className="size-3.5 shrink-0" />
+                <span className="text-center">{type}</span>
               </button>
             ))}
           </div>

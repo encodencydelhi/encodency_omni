@@ -98,7 +98,8 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
                 <input
                   value={rule.name}
                   onChange={(e) => updateRule(rule.id, { name: e.target.value })}
-                  className="min-w-0 flex-1 text-[12px] font-bold text-[#111827] outline-none"
+                  spellCheck={true}
+                  className="min-w-0 flex-1 text-[12px] font-semibold text-[#111827] outline-none"
                 />
                 <button
                   type="button"
@@ -175,6 +176,7 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
                 <input
                   value={test.name}
                   onChange={(e) => updateTest(test.id, { name: e.target.value })}
+                  spellCheck={true}
                   className="min-w-0 flex-1 text-[12px] font-bold text-[#111827] outline-none"
                 />
                 <button

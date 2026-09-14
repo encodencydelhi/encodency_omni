@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Search, Pencil, Copy, MoreHorizontal, List, Grid2X2, Megaphone, FileText } from "lucide-react";
+import { Search, Pencil, Copy, MoreHorizontal, List, Grid2X2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
 import { PlatformBadge } from "./ui-platform";
@@ -68,7 +68,13 @@ export function DraftsTab() {
             <div className="flex items-center gap-1.5">
               <label className="hidden h-8 w-48 items-center gap-1.5 rounded-lg border border-[#D9E1EC] px-2.5 text-[11.5px] text-[#7A87A0] md:flex">
                 <Search className="size-3.5" />
-                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search drafts..." className="w-full bg-transparent outline-none" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search drafts..."
+                  spellCheck={true}
+                  className="w-full bg-transparent outline-none"
+                />
               </label>
               <div className="flex rounded-lg border border-[#D9E1EC] p-0.5">
                 <button onClick={() => setView("list")} className={cn("rounded p-1.5", view === "list" ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#94A3B8]")}><List className="size-3.5" /></button>

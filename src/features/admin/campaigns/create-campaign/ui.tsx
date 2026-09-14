@@ -1,9 +1,16 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useState } from "react";
-import { Check, ChevronDown, Flag, Plus, X } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import dynamic from "next/dynamic";
+import { Check, ChevronDown, Flag, Plus, Smile, X } from "lucide-react";
+import type { EmojiClickData } from "emoji-picker-react";
 import { cn } from "@/lib/utils/cn";
+import { SpellCheckedInput, SpellCheckedTextarea } from "@/components/ui/spellchecked-input";
+
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
+  ssr: false,
+  loading: () => <div className="p-4 text-center text-xs text-gray-400">Loading emojis...</div>,
+});
 
 export const RED = "#E11D28";
 
@@ -126,6 +133,10 @@ export function TextInput({
   placeholder,
   disabled,
   max,
+  name,
+  id,
+  spellCheck = true,
+  enableEmojiPicker = false,
 }: {
   value: string;
   onChange?: (v: string) => void;
@@ -135,17 +146,62 @@ export function TextInput({
   disabled?: boolean;
   /** When set, a live character counter sits inside the field. */
   max?: number;
+  name?: string;
+  id?: string;
+  spellCheck?: boolean;
+  enableEmojiPicker?: boolean;
 }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showEmojiPicker]);
+
+  const insertEmoji = (emoji: string) => {
+    const input = inputRef.current;
+    if (!input) {
+      onChange?.(`${value}${emoji}`);
+      return;
+    }
+
+    const start = input.selectionStart ?? value.length;
+    const end = input.selectionEnd ?? value.length;
+    const next = `${value.slice(0, start)}${emoji}${value.slice(end)}`;
+
+    onChange?.(max ? next.slice(0, max) : next);
+    setShowEmojiPicker(false);
+
+    requestAnimationFrame(() => {
+      input.focus();
+      const nextCursor = start + emoji.length;
+      input.setSelectionRange(nextCursor, nextCursor);
+    });
+  };
+
   return (
-    <span className={cn(control, max && "h-[46px] items-start pt-2", disabled && "bg-[#F8FAFC] text-[#8791A4]")}>
+    <div className={cn(control, max && "h-[46px] items-start pt-2", disabled && "bg-[#F8FAFC] text-[#8791A4]", "relative")}>
       {Icon && <Icon className={cn("size-3.5 shrink-0 text-[#9CA3AF]", max && "mt-0.5")} />}
       {prefix && <span className="shrink-0 text-[#6B7280]">{prefix}</span>}
       <span className="relative flex min-w-0 flex-1 flex-col">
-        <input
+        <SpellCheckedInput
+          name={name}
+          id={id}
           value={value}
-          onChange={(event) => onChange?.(max ? event.target.value.slice(0, max) : event.target.value)}
+          onChangeValue={(val) => onChange?.(max ? val.slice(0, max) : val)}
           placeholder={placeholder}
           disabled={disabled}
+          spellCheckEnabled={spellCheck}
           className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-[#9CA3AF] disabled:cursor-default"
         />
         {max && (
@@ -154,7 +210,33 @@ export function TextInput({
           </small>
         )}
       </span>
-    </span>
+
+      {enableEmojiPicker && (
+        <div ref={pickerRef} className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowEmojiPicker((prev) => !prev)}
+            className="grid h-6 w-6 place-items-center rounded-md text-[#7A87A0] transition hover:bg-slate-100 hover:text-[#1769DF]"
+            aria-label="Insert emoji"
+          >
+            <Smile className="size-3.5" />
+          </button>
+
+          {showEmojiPicker && (
+            <div className="absolute right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-xl">
+              <EmojiPicker
+                onEmojiClick={(emojiData: EmojiClickData) => insertEmoji(emojiData.emoji)}
+                autoFocusSearch={false}
+                searchPlaceHolder="Search emoji..."
+                width={280}
+                height={320}
+                previewConfig={{ showPreview: false }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -165,6 +247,8 @@ export function SelectInput({
   icon: Icon,
   iconClass,
   tone,
+  name,
+  id,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -172,6 +256,8 @@ export function SelectInput({
   icon?: typeof Flag;
   iconClass?: string;
   tone?: "danger" | "success";
+  name?: string;
+  id?: string;
 }) {
   return (
     <span
@@ -185,6 +271,8 @@ export function SelectInput({
       {tone === "success" && <i className="size-1.5 shrink-0 rounded-full bg-[#0AA673]" />}
       {Icon && <Icon className={cn("size-3.5 shrink-0 text-[#9CA3AF]", iconClass)} />}
       <select
+        name={name}
+        id={id}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className={cn(
@@ -210,6 +298,9 @@ export function Textarea({
   max = 500,
   placeholder,
   icon: Icon,
+  name,
+  id,
+  spellCheck = true,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -217,17 +308,23 @@ export function Textarea({
   max?: number;
   placeholder?: string;
   icon?: typeof Flag;
+  name?: string;
+  id?: string;
+  spellCheck?: boolean;
 }) {
   return (
     <div className="relative rounded-lg border border-[#E2E5EE] bg-white transition-colors focus-within:border-[#E11D28] focus-within:ring-2 focus-within:ring-[#E11D28]/12">
       {Icon && <Icon className="absolute left-2.5 top-2.5 size-3.5 text-[#9CA3AF]" />}
-      <textarea
+      <SpellCheckedTextarea
+        name={name}
+        id={id}
         value={value}
-        onChange={(event) => onChange(event.target.value.slice(0, max))}
+        onChangeValue={(val) => onChange?.(max ? val.slice(0, max) : val)}
         rows={rows}
         placeholder={placeholder}
+        spellCheckEnabled={spellCheck}
         className={cn(
-          "w-full resize-none rounded-lg bg-transparent px-3 py-2 pb-5 text-[11.5px] leading-[17px] outline-none placeholder:text-[#9CA3AF]",
+          "w-full resize-none bg-transparent px-3 py-2 pb-5 text-[11.5px] leading-[17px] outline-none placeholder:text-[#9CA3AF]",
           Icon && "pl-8",
         )}
       />
@@ -302,6 +399,7 @@ export function TagField({
           }}
           onBlur={commit}
           placeholder={addLabel ?? (safeTags.length ? "" : placeholder)}
+          spellCheck
           className="min-w-0 flex-1 bg-transparent text-[11px] outline-none placeholder:text-[#9CA3AF]"
         />
       </span>

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { AlarmClock, Check, FileText, CalendarDays, MessageCircle, Megaphone } from "lucide-react";
+import { AlarmClock, Check, FileText, CalendarDays, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
 import { StatusBadge } from "./ui-badge";
@@ -141,7 +141,11 @@ export function ApprovalsTab() {
           </div>
           <div className="mt-2.5 flex items-center gap-2">
             <MessageCircle className="size-3.5 text-[#7A87A0]" />
-            <input placeholder="Add comment..." className="h-7 flex-1 rounded border border-[#E2E8F0] px-2 text-[10.5px] outline-none focus:border-[#1769DF]" />
+            <input
+              placeholder="Add comment..."
+              spellCheck={true}
+              className="h-7 flex-1 rounded border border-[#E2E8F0] px-2 text-[10.5px] outline-none focus:border-[#1769DF]"
+            />
           </div>
         </Card>
       </div>

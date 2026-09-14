@@ -2,6 +2,7 @@
 import type { ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { SpellCheckedInput, SpellCheckedTextarea } from "@/components/ui/spellchecked-input";
 
 export function StepTitle({ step, title, hint }: { step: string; title: string; hint?: string }) {
   return (
@@ -38,20 +39,41 @@ export function SelectField({ label, value, options, placeholder, required, onCh
   );
 }
 
-export function TextField({ label, value, placeholder, onChange }: { label: string; value?: string; placeholder?: string; onChange?: (v: string) => void }) {
+export function TextField({ label, value = "", placeholder, name, id, onChange, spellCheck = true }: { label: string; value?: string; placeholder?: string; name?: string; id?: string; onChange?: (v: string) => void; spellCheck?: boolean }) {
   return (
-    <label className="min-w-0 flex-1">
+    <label className="min-w-0 flex-1 block">
       <span className="mb-1 block text-[11.5px] font-semibold text-[#4B5B76]">{label}</span>
-      <input value={value} onChange={e => onChange?.(e.target.value)} placeholder={placeholder} className="h-9 w-full rounded-lg border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] text-[#24365A] outline-none transition hover:border-[#1769DF] focus:border-[#1769DF]" />
+      <div className="h-9 w-full rounded-lg border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] text-[#24365A] transition hover:border-[#1769DF] focus-within:border-[#1769DF] flex items-center">
+        <SpellCheckedInput
+          name={name}
+          id={id}
+          value={value}
+          onChangeValue={onChange}
+          placeholder={placeholder}
+          spellCheckEnabled={spellCheck}
+          className="w-full bg-transparent outline-none"
+        />
+      </div>
     </label>
   );
 }
 
-export function TextareaField({ label, value, rows = 3, placeholder, onChange }: { label: string; value?: string; rows?: number; placeholder?: string; onChange?: (v: string) => void }) {
+export function TextareaField({ label, value = "", rows = 3, placeholder, name, id, onChange, spellCheck = true }: { label: string; value?: string; rows?: number; placeholder?: string; name?: string; id?: string; onChange?: (v: string) => void; spellCheck?: boolean }) {
   return (
     <label className="block">
       <span className="mb-1 block text-[11.5px] font-semibold text-[#4B5B76]">{label}</span>
-      <textarea value={value} onChange={e => onChange?.(e.target.value)} rows={rows} placeholder={placeholder} className="w-full resize-none rounded-lg border border-[#D9E1EC] bg-white p-2.5 text-[12.5px] leading-5 text-[#24365A] outline-none transition hover:border-[#1769DF] focus:border-[#1769DF]" />
+      <div className="w-full rounded-lg border border-[#D9E1EC] bg-white p-2.5 text-[12.5px] leading-5 text-[#24365A] transition hover:border-[#1769DF] focus-within:border-[#1769DF]">
+        <SpellCheckedTextarea
+          name={name}
+          id={id}
+          value={value}
+          onChangeValue={onChange}
+          rows={rows}
+          placeholder={placeholder}
+          spellCheckEnabled={spellCheck}
+          className="w-full bg-transparent outline-none"
+        />
+      </div>
     </label>
   );
 }

@@ -334,3 +334,22 @@
   font-weight: 600;
   margin: 0.5rem 0;
 }
+
+/* Gmail / Google Docs style spell check wavy red underline */
+.spell-typo-gmail,
+.spell-typo-underline,
+mark[data-spell-typo] {
+  background: transparent !important;
+  text-decoration: underline wavy #ea4335 !important;
+  text-decoration-color: #ea4335 !important;
+  text-underline-offset: 3.5px !important;
+  text-decoration-thickness: 1.5px !important;
+  cursor: text;
+  border-radius: 2px !important;
+}
+
+.spell-typo-gmail:hover,
+mark[data-spell-typo]:hover {
+  background-color: rgba(234, 67, 53, 0.1) !important;
+}
+

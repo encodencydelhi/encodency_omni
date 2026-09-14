@@ -15,7 +15,7 @@ import {
   ALL_PLATFORMS, PLATFORM_META, PLATFORM_CONTENT_TYPES,
   MOCK_CONNECTIONS,
 } from "../config/platform-config";
-import { MOCK_MEDIA, MOCK_CLIENTS, MOCK_CAMPAIGNS } from "../mocks/content.mock";
+import { MOCK_MEDIA, MOCK_CLIENTS } from "../mocks/content.mock";
 import { ContentPreviewPanel } from "./ContentPreview";
 import { ContentChecklist } from "./ContentChecklist";
 import { MasterContentEditor } from "./MasterContentEditor";
