@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Search, Pencil, Copy, MoreHorizontal, List, Grid2X2 } from "lucide-react";
+import { Search, Pencil, Copy, MoreHorizontal, List, Grid2X2, Megaphone, FileText } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
 import { PlatformBadge } from "./ui-platform";
