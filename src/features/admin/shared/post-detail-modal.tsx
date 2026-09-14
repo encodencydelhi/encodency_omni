@@ -358,34 +358,6 @@ const platformPreviews: Record<EventType, React.ComponentType<{ event: PostDetai
   link: WebsitePreview,
 };
 
-function parseDateToInputFormat(dateStr?: string): string {
-  if (!dateStr) {
-    return new Date().toISOString().split("T")[0];
-  }
-  const parsed = new Date(dateStr);
-  if (!isNaN(parsed.getTime())) {
-    const y = parsed.getFullYear();
-    const m = String(parsed.getMonth() + 1).padStart(2, "0");
-    const d = String(parsed.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-  return new Date().toISOString().split("T")[0];
-}
-
-function parseTimeToInputFormat(timeStr?: string): string {
-  if (!timeStr) return "10:00";
-  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
-  if (match) {
-    let hour = parseInt(match[1], 10);
-    const min = match[2];
-    const ampm = match[3]?.toUpperCase();
-    if (ampm === "PM" && hour < 12) hour += 12;
-    if (ampm === "AM" && hour === 12) hour = 0;
-    return `${String(hour).padStart(2, "0")}:${min}`;
-  }
-  return "10:00";
-}
-
 export function PostDetailModal({
   event,
   onClose,
@@ -395,8 +367,6 @@ export function PostDetailModal({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isRescheduling, setIsRescheduling] = useState(false);
-  const [rescheduleDate, setRescheduleDate] = useState(() => parseDateToInputFormat(event.scheduledDate));
-  const [rescheduleTime, setRescheduleTime] = useState(() => parseTimeToInputFormat(event.time));
   const [rescheduleSuccess, setRescheduleSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: event.name,
@@ -435,46 +405,6 @@ export function PostDetailModal({
       campaign: event.campaign,
     });
     setIsEditing(false);
-  };
-
-  const handleConfirmReschedule = () => {
-    let formattedDate = rescheduleDate;
-    if (rescheduleDate && rescheduleDate.includes("-")) {
-      const [y, m, d] = rescheduleDate.split("-");
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      const monthName = months[parseInt(m, 10) - 1] || m;
-      formattedDate = `${monthName} ${parseInt(d, 10)}, ${y}`;
-    }
-    let formattedTime = rescheduleTime;
-    if (rescheduleTime && rescheduleTime.includes(":")) {
-      const [h, min] = rescheduleTime.split(":");
-      const hour = parseInt(h, 10);
-      const ampm = hour >= 12 ? "PM" : "AM";
-      const h12 = hour % 12 || 12;
-      formattedTime = `${String(h12).padStart(2, "0")}:${min} ${ampm}`;
-    }
-    setFormData((prev) => ({
-      ...prev,
-      scheduledDate: formattedDate,
-      time: formattedTime,
-    }));
-    setIsRescheduling(false);
-    const successMsg = `Post rescheduled to ${formattedDate} at ${formattedTime}!`;
-    setRescheduleSuccess(successMsg);
-    setTimeout(() => setRescheduleSuccess(null), 4000);
-  };
-
-  const setQuickDate = (daysFromNow: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() + daysFromNow);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    setRescheduleDate(`${y}-${m}-${day}`);
-  };
-
-  const setQuickTime = (timeStr: string) => {
-    setRescheduleTime(timeStr);
   };
 
   const PreviewComponent = platformPreviews[event.type];
