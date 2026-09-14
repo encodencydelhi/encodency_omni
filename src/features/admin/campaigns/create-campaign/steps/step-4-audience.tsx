@@ -74,8 +74,8 @@ export function StepAudience({ draft, set }: { draft: CampaignDraft; set: Setter
                 key={type}
                 onClick={() => set("audienceType", type)}
                 className={cn(
-                  "flex h-[42px] items-center justify-center gap-1.5 rounded-lg border px-2 text-[11px] font-bold leading-tight",
-                  draft.audienceType === type ? "border-[#155EEF] bg-[#EFF6FF] text-[#155EEF]" : "border-[#DDE6F1] bg-white text-[#435371]",
+                  "flex h-[42px] items-center justify-center gap-1.5 rounded-lg border px-2 text-[12px] font-semibold leading-tight",
+                  draft.audienceType === type ? "border-[#155EEF] bg-[#EFF6FF] text-[#155EEF]" : "border-[#DDE6F1] bg-white text-[#374151]",
                 )}
               >
                 <Icon className="size-3.5 shrink-0" />
@@ -89,13 +89,13 @@ export function StepAudience({ draft, set }: { draft: CampaignDraft; set: Setter
       <div className="grid gap-x-4 gap-y-3 border-b border-[#E7EDF5] p-3.5 xl:grid-cols-[1.05fr_.95fr_1fr]">
         <Field label="Age Range" required>
           <div className="px-1 pt-1">
-            <div className="mb-2 flex justify-end text-[11px] font-semibold text-[#687797]">{draft.ageMin} - {draft.ageMax} years</div>
+            <div className="mb-2 flex justify-end text-[12px] font-semibold text-[#4B5563]">{draft.ageMin} - {draft.ageMax} years</div>
             <span className="relative block h-1.5 rounded-full bg-[#E7EDF5]">
               <i className="absolute inset-y-0 left-[22%] right-[34%] rounded-full bg-[#155EEF]" />
               <i className="absolute left-[22%] top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#155EEF] shadow" />
               <i className="absolute right-[34%] top-1/2 size-4 translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#155EEF] shadow" />
             </span>
-            <div className="mt-3 flex justify-between text-[10px] font-medium text-[#687797]">
+            <div className="mt-3 flex justify-between text-[11px] font-medium text-[#6B7280]">
               {AGE_TICKS.map((tick) => <span key={tick}>{tick}</span>)}
             </div>
           </div>
@@ -113,8 +113,8 @@ export function StepAudience({ draft, set }: { draft: CampaignDraft; set: Setter
                 key={label}
                 onClick={() => set("gender", label)}
                 className={cn(
-                  "h-[56px] rounded-lg border text-center text-[11px] font-semibold",
-                  draft.gender === label ? "border-[#155EEF] bg-[#EFF6FF] text-[#155EEF]" : "border-[#DDE6F1] bg-white text-[#435371]",
+                  "h-[56px] rounded-lg border text-center text-[12px] font-semibold",
+                  draft.gender === label ? "border-[#155EEF] bg-[#EFF6FF] text-[#155EEF]" : "border-[#DDE6F1] bg-white text-[#374151]",
                 )}
               >
                 <span className="block text-[18px] leading-5">{icon}</span>
@@ -341,7 +341,7 @@ function CheckRows({ rows }: { rows: string[] }) {
   return (
     <div className="space-y-1.5">
       {rows.map((row) => (
-        <label key={row} className="flex items-center gap-2 text-[10.5px] font-medium text-[#34415F]">
+        <label key={row} className="flex items-center gap-2 text-[12px] font-semibold text-[#1F2937]">
           <span className="grid size-4 place-items-center rounded bg-[#155EEF] text-white">
             <Check className="size-3" />
           </span>
@@ -355,8 +355,8 @@ function CheckRows({ rows }: { rows: string[] }) {
 function MiniSelect({ label, value }: { label: string; value: string }) {
   return (
     <label className="mb-2 block">
-      <span className="mb-1 block text-[10px] font-semibold text-[#34415F]">{label}</span>
-      <span className="flex h-8 items-center rounded-lg border border-[#DDE6F1] px-2 text-[10.5px] font-semibold text-[#34415F]">
+      <span className="mb-1 block text-[12px] font-semibold text-[#1F2937]">{label}</span>
+      <span className="flex h-9 items-center rounded-lg border border-[#DDE6F1] px-2.5 text-[12px] font-semibold text-[#34415F]">
         {value}
         <ChevronDown className="ml-auto size-3.5 text-[#687797]" />
       </span>

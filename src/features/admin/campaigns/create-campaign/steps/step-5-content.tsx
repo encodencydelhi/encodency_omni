@@ -350,8 +350,8 @@ function SectionTitle({ icon: Icon, title, caption }: { icon: typeof ImageIcon; 
     <div className="flex items-center gap-2">
       <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#EAF2FF] text-[#155EEF]"><Icon className="size-4" /></span>
       <span>
-        <b className="block text-[12px] font-bold text-[#132044]">{title}</b>
-        {caption && <small className="block text-[9.5px] text-[#687797]">{caption}</small>}
+        <b className="block text-[12px] font-bold text-[#111827]">{title}</b>
+        {caption && <small className="block text-[10.5px] text-[#64748B]">{caption}</small>}
       </span>
     </div>
   );
@@ -360,14 +360,14 @@ function SectionTitle({ icon: Icon, title, caption }: { icon: typeof ImageIcon; 
 function PostPreview() {
   return (
     <div>
-      <b className="mb-2 block text-[11.5px] text-[#132044]">Preview</b>
+      <b className="mb-2 block text-[12px] font-semibold text-[#111827]">Preview</b>
       <div className="overflow-hidden rounded-lg border border-[#DDE6F1] bg-white">
         <div className="flex items-center gap-2 px-2 py-1.5">
           <span className="relative size-6 overflow-hidden rounded-full"><Image src="/campaigns/save-rivers/square.png" alt="" fill sizes="40px" className="object-cover" /></span>
-          <span><b className="block text-[9px] text-[#132044]">moksha.sewa</b><small className="text-[8px] text-[#687797]">India</small></span>
+          <span><b className="block text-[9.5px] font-bold text-[#111827]">moksha.sewa</b><small className="text-[8.5px] text-[#64748B]">India</small></span>
         </div>
         <span className="relative block aspect-square"><Image src="/campaigns/save-rivers/square.png" alt="" fill sizes="220px" className="object-cover" /></span>
-        <div className="flex gap-2 px-2 py-1.5 text-[#132044]"><ThumbsUp className="size-3.5" /><MessageCircle className="size-3.5" /></div>
+        <div className="flex gap-2 px-2 py-1.5 text-[#111827]"><ThumbsUp className="size-3.5" /><MessageCircle className="size-3.5" /></div>
       </div>
     </div>
   );
@@ -379,8 +379,8 @@ function BottomCard({ icon: Icon, title, caption, children }: { icon: typeof Ima
       <div className="mb-2 flex items-start gap-2">
         <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#EAF2FF] text-[#155EEF]"><Icon className="size-4" /></span>
         <span>
-          <b className="block text-[12px] font-bold text-[#132044]">{title}</b>
-          {caption && <small className="block text-[9px] leading-3 text-[#687797]">{caption}</small>}
+          <b className="block text-[12px] font-bold text-[#111827]">{title}</b>
+          {caption && <small className="block text-[10px] leading-3 text-[#64748B]">{caption}</small>}
         </span>
       </div>
       {children}

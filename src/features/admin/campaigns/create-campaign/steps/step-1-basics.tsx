@@ -110,8 +110,8 @@ export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }
                     {mode === "Organic" ? <Leaf className="size-4.5" /> : mode === "Paid" ? <Megaphone className="size-4.5" /> : <Target className="size-4.5" />}
                   </span>
                   <span className="flex flex-1 flex-col">
-                    <b className="text-[11.5px] font-bold text-[#111827]">{mode}</b>
-                    <small className="text-[10px] leading-[14px] text-[#8791A4]">
+                    <b className="text-[12.5px] font-bold text-[#111827]">{mode}</b>
+                    <small className="text-[11px] leading-[15px] text-[#6B7280]">
                       {mode === "Organic" ? "Free reach through content" : mode === "Paid" ? "Paid advertising campaigns" : "Organic + Paid combined"}
                     </small>
                   </span>
@@ -152,7 +152,7 @@ export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }
                     </span>
                   )}
                   <Icon className={cn("size-4 shrink-0", active ? "text-[#E11D28]" : "text-[#9CA3AF]")} />
-                  <span className="min-w-0 truncate text-[10.5px] font-semibold text-[#374151]">{obj}</span>
+                  <span className="min-w-0 truncate text-[11.5px] font-semibold text-[#1F2937]">{obj}</span>
                 </button>
               );
             })}

@@ -94,8 +94,8 @@ export function StepTracking({ draft, set }: { draft: CampaignDraft; set: Setter
                   {key.includes("Pixel") ? "📱" : key.includes("Google") ? "📊" : key.includes("LinkedIn") ? "💼" : key.includes("Website") ? "🌐" : "🔗"}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <b className="block text-[11.5px] font-bold text-[#111827]">{key}</b>
-                  <small className="block text-[9.5px] leading-[13px] text-[#8791A4]">{desc}</small>
+                  <b className="block text-[12.5px] font-bold text-[#111827]">{key}</b>
+                  <small className="block text-[10.5px] leading-[14px] text-[#64748B]">{desc}</small>
                 </div>
                 <button
                   type="button"
@@ -128,8 +128,8 @@ export function StepTracking({ draft, set }: { draft: CampaignDraft; set: Setter
                   <Icon className="size-3.5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <b className="block text-[11px] font-bold text-[#111827]">{key}</b>
-                  <small className="block text-[9.5px] leading-[13px] text-[#8791A4]">{desc}</small>
+                  <b className="block text-[12px] font-bold text-[#111827]">{key}</b>
+                  <small className="block text-[10px] leading-[14px] text-[#64748B]">{desc}</small>
                 </div>
                 {active && (
                   <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#155EEF]">

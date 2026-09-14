@@ -78,8 +78,8 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
                 <span className={cn("grid size-8 place-items-center rounded-lg", `bg-${tone === "red" ? "[#FFEAEC] text-[#E11D28]" : tone === "green" ? "[#E4F8F0] text-[#0AA673]" : tone === "purple" ? "[#F2EAFF] text-[#7C3AED]" : tone === "amber" ? "[#FFF3DC] text-[#D97706]" : "[#E8F2FF] text-[#1975E7]"}`)}>
                   <Icon className="size-4" />
                 </span>
-                <b className="mt-1.5 block text-[11px] font-bold leading-4 text-[#081438]">{title}</b>
-                <small className="mt-0.5 block text-[9px] leading-[12px] text-[#405277]">{caption}</small>
+                <b className="mt-1.5 block text-[12px] font-bold leading-4 text-[#081438]">{title}</b>
+                <small className="mt-0.5 block text-[10px] leading-[12px] text-[#405277]">{caption}</small>
               </button>
             );
           })}
@@ -89,28 +89,28 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
       <StepSection letter="B" title="Campaign KPIs" caption="Set specific performance targets for your campaign.">
         <div className="grid gap-2 md:grid-cols-4">
           <Field label="Target Reach" required>
-            <TextInput value={draft.targetReach} onChange={(v) => set("targetReach", v)} icon={Users} placeholder="e.g. 120,000" />
+            <TextInput value={draft.targetReach} onChange={(v) => set("targetReach", v)} icon={Users} placeholder="e.g. 120,000" spellCheck={false} />
           </Field>
           <Field label="Target Impressions" required>
-            <TextInput value={draft.targetImpressions} onChange={(v) => set("targetImpressions", v)} icon={BarChart3} placeholder="e.g. 350,000" />
+            <TextInput value={draft.targetImpressions} onChange={(v) => set("targetImpressions", v)} icon={BarChart3} placeholder="e.g. 350,000" spellCheck={false} />
           </Field>
           <Field label="Target Clicks" required>
-            <TextInput value={draft.targetClicks} onChange={(v) => set("targetClicks", v)} icon={MousePointerClick} placeholder="e.g. 6,000" />
+            <TextInput value={draft.targetClicks} onChange={(v) => set("targetClicks", v)} icon={MousePointerClick} placeholder="e.g. 6,000" spellCheck={false} />
           </Field>
           <Field label="Target Engagements" required>
-            <TextInput value={draft.targetEngagements} onChange={(v) => set("targetEngagements", v)} icon={HandHeart} placeholder="e.g. 25,000" />
+            <TextInput value={draft.targetEngagements} onChange={(v) => set("targetEngagements", v)} icon={HandHeart} placeholder="e.g. 25,000" spellCheck={false} />
           </Field>
           <Field label="Target Leads" required>
-            <TextInput value={draft.targetLeads} onChange={(v) => set("targetLeads", v)} icon={Users} placeholder="e.g. 500" />
+            <TextInput value={draft.targetLeads} onChange={(v) => set("targetLeads", v)} icon={Users} placeholder="e.g. 500" spellCheck={false} />
           </Field>
           <Field label="Target Conversions" required>
-            <TextInput value={draft.targetConversions} onChange={(v) => set("targetConversions", v)} icon={Target} placeholder="e.g. 150" />
+            <TextInput value={draft.targetConversions} onChange={(v) => set("targetConversions", v)} icon={Target} placeholder="e.g. 150" spellCheck={false} />
           </Field>
           <Field label="Target Revenue (INR)" optional>
-            <TextInput value={draft.targetRevenue} onChange={(v) => set("targetRevenue", v)} prefix="₹" placeholder="e.g. 5,00,000" />
+            <TextInput value={draft.targetRevenue} onChange={(v) => set("targetRevenue", v)} prefix="₹" placeholder="e.g. 5,00,000" spellCheck={false} />
           </Field>
           <Field label="Target ROAS" optional>
-            <TextInput value={draft.targetRoas} onChange={(v) => set("targetRoas", v)} icon={TrendingUp} placeholder="e.g. 2.5" />
+            <TextInput value={draft.targetRoas} onChange={(v) => set("targetRoas", v)} icon={TrendingUp} placeholder="e.g. 2.5" spellCheck={false} />
           </Field>
         </div>
       </StepSection>
@@ -129,26 +129,31 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
             />
           </Field>
         </div>
-        <div className="mt-3 grid gap-2 md:grid-cols-4 xl:grid-cols-7">
+        <div
+          className={cn(
+            "mt-3 grid gap-2.5 sm:grid-cols-2 md:grid-cols-3",
+            draft.budgetType === "Monthly" ? "lg:grid-cols-6" : "lg:grid-cols-5"
+          )}
+        >
           <Field label="Total Budget (INR)" required>
-            <TextInput value={draft.totalBudget} onChange={(v) => set("totalBudget", v)} prefix="₹" />
+            <TextInput value={draft.totalBudget} onChange={(v) => set("totalBudget", v)} prefix="₹" spellCheck={false} />
           </Field>
           <Field label="Daily Budget (INR)" required>
-            <TextInput value={draft.dailyBudget} onChange={(v) => set("dailyBudget", v)} prefix="₹" />
+            <TextInput value={draft.dailyBudget} onChange={(v) => set("dailyBudget", v)} prefix="₹" spellCheck={false} />
           </Field>
           {draft.budgetType === "Monthly" && (
             <Field label="Monthly Budget (INR)">
-              <TextInput value={draft.monthlyBudget} onChange={(v) => set("monthlyBudget", v)} prefix="₹" />
+              <TextInput value={draft.monthlyBudget} onChange={(v) => set("monthlyBudget", v)} prefix="₹" spellCheck={false} />
             </Field>
           )}
           <Field label="Start Date" required>
-            <TextInput icon={CalendarDays} value={draft.startDate} onChange={(v) => set("startDate", v)} />
+            <TextInput icon={CalendarDays} value={draft.startDate} onChange={(v) => set("startDate", v)} spellCheck={false} />
           </Field>
           <Field label="End Date" required>
-            <TextInput icon={CalendarDays} value={draft.endDate} onChange={(v) => set("endDate", v)} />
+            <TextInput icon={CalendarDays} value={draft.endDate} onChange={(v) => set("endDate", v)} spellCheck={false} />
           </Field>
           <Field label="Duration">
-            <TextInput icon={Clock} value={draft.campaignDuration} disabled />
+            <TextInput icon={Clock} value={draft.campaignDuration} disabled spellCheck={false} />
           </Field>
         </div>
       </StepSection>
@@ -172,16 +177,16 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
             />
           </Field>
           <Field label="Cost Cap (INR)" optional>
-            <TextInput value={draft.costCap} onChange={(v) => set("costCap", v)} prefix="₹" placeholder="Max cost per result" />
+            <TextInput value={draft.costCap} onChange={(v) => set("costCap", v)} prefix="₹" placeholder="Max cost per result" spellCheck={false} />
           </Field>
           <Field label="Target CPA (INR)" required>
-            <TextInput value={draft.targetCpa} onChange={(v) => set("targetCpa", v)} prefix="₹" />
+            <TextInput value={draft.targetCpa} onChange={(v) => set("targetCpa", v)} prefix="₹" spellCheck={false} />
           </Field>
           <Field label="Target CPL (INR)" required>
-            <TextInput value={draft.targetCpl} onChange={(v) => set("targetCpl", v)} prefix="₹" />
+            <TextInput value={draft.targetCpl} onChange={(v) => set("targetCpl", v)} prefix="₹" spellCheck={false} />
           </Field>
           <Field label="Frequency Cap" required hint="Max impressions per user">
-            <TextInput value={draft.frequencyCap} onChange={(v) => set("frequencyCap", v)} placeholder="e.g. 3 per day" />
+            <TextInput value={draft.frequencyCap} onChange={(v) => set("frequencyCap", v)} placeholder="e.g. 3 per day" spellCheck={false} />
           </Field>
         </div>
 
@@ -237,7 +242,7 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
             <div key={channel} className="grid grid-cols-[140px_minmax(80px,1fr)_38px_82px] items-center gap-2">
               <span className="flex min-w-0 items-center gap-2">
                 <ChannelLogo channel={CHANNEL_KEY[channel] ?? channel} className="size-5 shrink-0" />
-                <b className="truncate text-[11px] text-[#132044]">{channel}</b>
+                <b className="truncate text-[12px] font-semibold text-[#132044]">{channel}</b>
               </span>
               <Slider percent={percent} />
               <b className="text-right text-[11px] text-[#132044]">{percent}%</b>

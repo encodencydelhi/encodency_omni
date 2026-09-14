@@ -61,12 +61,12 @@ function Card({
 
 function Row({ icon: Icon, label, value }: { icon?: typeof Flag; label: string; value: ReactNode }) {
   return (
-    <div className="mb-1.5 last:mb-0">
-      <small className="flex items-center gap-1 text-[9.5px] text-[#8791A4]">
-        {Icon && <Icon className="size-3 shrink-0" />}
+    <div className="mb-2 last:mb-0">
+      <small className="flex items-center gap-1 text-[11px] font-semibold text-[#64748B]">
+        {Icon && <Icon className="size-3.5 shrink-0" />}
         {label}
       </small>
-      <div className="text-[11.5px] font-semibold leading-[15px] text-[#27334E]">{value}</div>
+      <div className="text-[12.5px] font-semibold leading-[17px] text-[#111827]">{value}</div>
     </div>
   );
 }

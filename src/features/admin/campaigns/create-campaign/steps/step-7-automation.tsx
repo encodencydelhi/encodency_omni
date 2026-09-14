@@ -115,12 +115,12 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
 
               <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr]">
                 <div className="rounded-lg border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
-                  <span className="mb-2 block text-[10px] font-bold uppercase tracking-wide text-[#8791A4]">WHEN</span>
+                  <span className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-[#475569]">WHEN</span>
                   <div className="space-y-2">
                     <select
                       value={rule.condition}
                       onChange={(e) => updateRule(rule.id, { condition: e.target.value })}
-                      className="flex h-8 w-full items-center appearance-none rounded-lg border border-[#DDE6F1] bg-white px-2.5 py-1.5 text-[10.5px] font-semibold text-[#374151] outline-none"
+                      className="flex h-9 w-full items-center appearance-none rounded-lg border border-[#DDE6F1] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[#1F2937] outline-none"
                     >
                       {CONDITIONS.map((c) => <option key={c}>{c}</option>)}
                     </select>
@@ -137,12 +137,12 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
                 </div>
 
                 <div className="rounded-lg border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
-                  <span className="mb-2 block text-[10px] font-bold uppercase tracking-wide text-[#8791A4]">THEN</span>
+                  <span className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-[#475569]">THEN</span>
                   <div className="space-y-2">
                     <select
                       value={rule.action}
                       onChange={(e) => updateRule(rule.id, { action: e.target.value })}
-                      className="flex h-8 w-full items-center appearance-none rounded-lg border border-[#DDE6F1] bg-white px-2.5 py-1.5 text-[10.5px] font-semibold text-[#374151] outline-none"
+                      className="flex h-9 w-full items-center appearance-none rounded-lg border border-[#DDE6F1] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[#1F2937] outline-none"
                     >
                       {ACTIONS.map((a) => <option key={a}>{a}</option>)}
                     </select>
