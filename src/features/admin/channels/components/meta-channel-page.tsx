@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import {
   Area,
@@ -108,12 +109,12 @@ const metaCampaigns = [
 ];
 
 const quickActions = [
-  { label: "Create Post", icon: PenLine, color: "rose" },
-  { label: "Schedule Reel", icon: Video, color: "purple" },
-  { label: "Launch Campaign", icon: Rocket, color: "blue" },
-  { label: "Sync Accounts", icon: RefreshCcw, color: "green" },
-  { label: "View Leads", icon: UsersRound, color: "amber" },
-  { label: "Open Calendar", icon: CalendarPlus, color: "slate" },
+  { label: "Create Post", icon: PenLine, color: "rose", href: "#" },
+  { label: "Schedule Reel", icon: Video, color: "purple", href: "#" },
+  { label: "Launch Campaign", icon: Rocket, color: "blue", href: "/admin/meta/ads/create" },
+  { label: "Sync Accounts", icon: RefreshCcw, color: "green", href: "#" },
+  { label: "View Leads", icon: UsersRound, color: "amber", href: "/admin/meta/ads/leads" },
+  { label: "Open Calendar", icon: CalendarPlus, color: "slate", href: "/admin/calendar" },
 ] as const;
 
 const gender = [
@@ -175,7 +176,7 @@ export function MetaChannelPage() {
 
 function Header() {
   return (
-    <div className="grid min-h-[52px] grid-cols-[1fr_auto] items-center gap-4 lg:grid-cols-[minmax(0,1fr)_220px_185px]">
+    <div className="flex min-h-[52px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="self-center">
         <h1 className="flex items-center gap-2 text-[20px] font-bold leading-6 tracking-[-0.025em] text-[#111B43]">
           Meta &amp; Instagram
@@ -186,14 +187,14 @@ function Header() {
           Manage your Facebook and Instagram presence, create content, run campaigns and track performance.
         </p>
       </div>
-      <div className="contents">
-        <blockquote className="hidden justify-self-end text-center text-[10px] font-medium leading-[14px] text-[#21335F] lg:block">
-          &ldquo;Social media turns purpose
-          <br />
-          into people&apos;s action.&rdquo;
-          <footer className="mt-0.5 text-[9px] font-normal text-[#7B88A4]">— EnCodency</footer>
-        </blockquote>
-        <button className="flex h-11 w-full items-center gap-2 rounded-xl border border-[#D7E0EB] bg-white px-3 shadow-[0_1px_4px_rgb(31_50_81/0.08)]">
+      <div className="flex shrink-0 items-center gap-3">
+        <Link
+          href="/admin/meta/ads"
+          className="flex h-10 items-center gap-2 rounded-xl bg-[#1769DF] px-4 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#1259BD]"
+        >
+          <span className="text-left"><span className="block">Open Meta Ads Manager</span><span className="block text-[8px] font-medium text-blue-100">Paid ads across Facebook &amp; Instagram</span></span>
+        </Link>
+        <button className="flex h-10 w-[185px] items-center gap-2 rounded-xl border border-[#D7E0EB] bg-white px-3 shadow-[0_1px_4px_rgb(31_50_81/0.08)]">
           <CalendarDays className="size-3.5 shrink-0 text-[#19315E]" />
           <span className="text-left leading-none">
             <b className="block text-[9.5px] leading-4 text-[#172044]">Last 30 days</b>
@@ -574,12 +575,14 @@ const actionSkin: Record<string, string> = {
   slate: "border-[#DFE6F0] bg-[#F8FAFD] text-[#43567A] hover:bg-[#EDF1F7]",
 };
 
+
 function QuickActions() {
   return (
     <Box title="Quick Actions">
       <div className="grid min-h-0 flex-1 grid-cols-2 content-between gap-2 p-2">
-        {quickActions.map(({ label, icon: Icon, color }) => (
-          <button
+        {quickActions.map(({ label, icon: Icon, color, href }) => (
+          <Link
+            href={href}
             key={label}
             className={cn(
               "flex h-[44px] items-center gap-1.5 rounded-md border px-1.5 text-left text-[8.5px] font-semibold leading-3 transition-colors",
@@ -590,7 +593,7 @@ function QuickActions() {
               <Icon className="size-3.5" />
             </span>
             {label}
-          </button>
+          </Link>
         ))}
       </div>
     </Box>
