@@ -91,44 +91,51 @@ function Header() {
 
 function Stepper({ current, onSelect }: { current: number; onSelect: (next: number) => void }) {
   return (
-    <nav className="scrollbar-thin overflow-x-auto pb-0.5" aria-label="Campaign setup progress">
-      <ol className="flex min-w-[1100px] items-center gap-1">
+    <nav className="scrollbar-thin overflow-x-auto pb-1.5" aria-label="Campaign setup progress">
+      <ol className="flex min-w-max items-center">
         {CAMPAIGN_STEPS.map((step, index) => {
           const done = step.id < current;
           const active = step.id === current;
           return (
-            <li key={step.id} className="flex min-w-0 flex-1 items-start gap-1">
+            <li key={step.id} className="flex shrink-0 items-center">
               <button
                 onClick={() => onSelect(step.id)}
                 aria-current={active ? "step" : undefined}
-                className="flex min-w-0 flex-1 items-start gap-1 text-left"
+                className="flex shrink-0 items-center gap-2 text-left transition-opacity hover:opacity-90"
               >
                 <span
                   className={cn(
-                    "grid size-[24px] shrink-0 place-items-center rounded-full text-[10px] font-bold transition-colors",
+                    "grid size-[26px] shrink-0 place-items-center rounded-full text-[10.5px] font-bold transition-all",
                     done && "bg-[#E11D28] text-white",
-                    active && "bg-[#E11D28] text-white ring-4 ring-[#E11D28]/12",
-                    !done && !active && "border border-[#DFE4EB] bg-white text-[#9CA3AF]",
+                    active && "bg-[#E11D28] text-white ring-4 ring-[#E11D28]/15",
+                    !done && !active && "border border-[#DFE4EB] bg-white text-[#6B7280]",
                   )}
                 >
-                  {done ? <Check className="size-3" /> : step.id}
+                  {done ? <Check className="size-3.5 stroke-[2.5]" /> : step.id}
                 </span>
-                <span className="min-w-0">
+                <span className="shrink-0">
                   <b
                     className={cn(
-                      "block text-[9.5px] font-bold leading-[11px]",
-                      done || active ? "text-[#27334E]" : "text-[#9CA3AF]",
+                      "block whitespace-nowrap text-[11px] font-semibold leading-[14px]",
+                      done || active ? "text-[#111827]" : "text-[#374151]",
                     )}
                   >
                     {step.title}
                   </b>
-                  <small className="block truncate text-[8px] leading-3 text-[#A3ADBF]">{step.caption}</small>
+                  <small
+                    className={cn(
+                      "block whitespace-nowrap text-[10px] font-medium leading-[14px]",
+                      done || active ? "text-[#4B5563]" : "text-[#526077]",
+                    )}
+                  >
+                    {step.caption}
+                  </small>
                 </span>
               </button>
               {index < CAMPAIGN_STEPS.length - 1 && (
                 <i
                   className={cn(
-                    "ml-0.5 mt-[11px] hidden h-[2px] w-4 shrink-0 rounded-full sm:block",
+                    "mx-3 hidden h-[2px] w-6 shrink-0 rounded-full sm:block",
                     step.id < current - 1 && "bg-[#22C55E]",
                     (step.id === current - 1 || (current === 1 && step.id === 1)) && "bg-[#E11D28]",
                     step.id >= current && !(current === 1 && step.id === 1) && "bg-[#E2E8F0]",

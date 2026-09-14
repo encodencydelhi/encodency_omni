@@ -5,7 +5,9 @@ import IndiaMap from "./components/india-map";
 import {
   Activity,
   AlertCircle,
+  ArrowDown,
   ArrowDownRight,
+  ArrowUp,
   ArrowUpRight,
   BarChart3,
   CalendarDays,
@@ -163,8 +165,8 @@ function BrandIcon({
   }
   return (
     <span
-      className="inline-flex items-center justify-center rounded-[5px] font-bold"
-      style={{ color: c, width: size, height: size, fontSize: Math.max(9, size * 0.65) }}
+      className="inline-flex items-center justify-center rounded-[5px] font-semibold"
+      style={{ color: c, width: size, height: size, fontSize: Math.max(11, size * 0.65) }}
     >
       W
     </span>
@@ -216,7 +218,7 @@ function StatusPill({
     purple: "bg-[#f4efff] text-[#7642d7]",
   };
   return (
-    <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[9px] font-semibold ${map[tone]} ${fixed ? "min-w-[72px]" : ""}`}>
+    <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${map[tone]} ${fixed ? "min-w-[72px]" : ""}`}>
       {children}
     </span>
   );
@@ -237,7 +239,7 @@ function Card({
     <section className={`overflow-hidden rounded-[10px] border border-[#e5ebf3] bg-white ${className}`}>
       {title && (
         <div className="flex items-center justify-between border-b border-[#edf1f6] px-3 py-2">
-          <h3 className="text-[12px] font-bold text-[#12234a]">{title}</h3>
+          <h3 className="text-[12px] font-semibold text-[#12234a]">{title}</h3>
           {action}
         </div>
       )}
@@ -267,17 +269,17 @@ function MetricCard({
     <div className="flex min-w-0 items-start gap-2 rounded-[10px] border border-[#e7edf5] bg-white px-2.5 py-2">
       <SoftIcon icon={icon} tone={tone} size={32} />
       <div className="min-w-0">
-        <div className="text-[9px] font-medium text-[#74819a]">{label}</div>
+        <div className="text-[11px] font-medium text-[#74819a]">{label}</div>
         <div className="mt-0.5 flex items-baseline gap-1.5">
-          <span className="text-[15px] font-extrabold tracking-[-0.02em] text-[#142653]">{value}</span>
+          <span className="text-[15px] font-semibold tracking-[-0.02em] text-[#142653]">{value}</span>
           {change && (
-            <span className={`text-[9px] font-bold ${down ? "text-[#ef4444]" : "text-[#16a66b]"}`}>
-              {down ? <ArrowDownRight className="mr-0.5 inline" size={10} /> : <ArrowUpRight className="mr-0.5 inline" size={10} />}
+            <span className={`inline-flex items-center text-[11px] font-semibold ${down ? "text-[#ef4444]" : "text-[#16a66b]"}`}>
+              {down ? <ArrowDown className="mr-0.5" size={11} /> : <ArrowUp className="mr-0.5" size={11} />}
               {change}
             </span>
           )}
         </div>
-        {sub && <div className="mt-0.5 text-[9px] text-[#8792a7]">{sub}</div>}
+        {sub && <div className="mt-0.5 text-[11px] text-[#8792a7]">{sub}</div>}
       </div>
     </div>
   );
@@ -314,7 +316,7 @@ function MultiLineChart({
           return <polyline key={s.name} points={pts} fill="none" stroke={s.color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />;
         })}
       </svg>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between text-[9px] text-[#8994a7]">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between text-[11px] text-[#8994a7]">
         {labels.map((x) => <span key={x}>{x}</span>)}
       </div>
     </div>
@@ -341,8 +343,8 @@ function Donut({
   return (
     <div className="relative h-[118px] w-[118px] shrink-0 rounded-full" style={{ background: `conic-gradient(${stops.join(", ")})` }}>
       <div className="absolute inset-[17px] flex flex-col items-center justify-center rounded-full bg-white">
-        <span className="text-[17px] font-extrabold text-[#172754]">{center}</span>
-        {centerSub && <span className="text-[9px] text-[#7b879b]">{centerSub}</span>}
+        <span className="text-[17px] font-semibold text-[#172754]">{center}</span>
+        {centerSub && <span className="text-[11px] text-[#7b879b]">{centerSub}</span>}
       </div>
     </div>
   );
@@ -360,11 +362,11 @@ function BarList({
     <div className="space-y-2">
       {rows.map((r) => (
         <div key={r.label} className="flex items-center gap-2">
-          <span className="w-[30px] shrink-0 truncate text-[10px] font-medium text-[#475674]">{r.label.slice(0, 2)}</span>
+          <span className="w-[30px] shrink-0 truncate text-[11px] font-medium text-[#475674]">{r.label.slice(0, 2)}</span>
           <div className="h-[7px] min-w-0 flex-1 overflow-hidden rounded-full bg-[#edf1f6]">
             <div className="h-full rounded-full bg-[#4b90ea]" style={{ width: `${(r.pct / m) * 100}%` }} />
           </div>
-          <span className="w-[50px] shrink-0 text-right text-[10px] font-semibold text-[#6b7890]">{r.value}</span>
+          <span className="w-[54px] shrink-0 text-right text-[11px] font-semibold text-[#6b7890]">{r.value}</span>
         </div>
       ))}
     </div>
@@ -375,7 +377,7 @@ function TopHeader() {
   return (
     <>
       <div className="flex items-center justify-between gap-3 border-b border-[#edf1f5] pb-2.5">
-        <div className="flex min-w-0 items-center gap-2 text-[9px] text-[#7d899d]">
+        <div className="flex min-w-0 items-center gap-2 text-[11px] text-[#7d899d]">
           <span>Dashboard</span><ChevronRight size={11} />
           <span>Campaigns</span><ChevronRight size={11} />
           <span className="font-semibold text-[#263a61]">Save Rivers, Save Lives 2025</span>
@@ -393,10 +395,10 @@ function TopHeader() {
         <img src={campaignImage} alt="" className="h-[102px] w-[126px] rounded-[8px] object-cover shadow-sm" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-[23px] font-extrabold tracking-[-0.03em] text-[#0f204b]">Save Rivers, Save Lives 2025</h1>
+            <h1 className="text-[22px] font-semibold tracking-[-0.03em] text-[#0f204b]">Save Rivers, Save Lives 2025</h1>
             <StatusPill tone="green"><span className="mr-1 h-1.5 w-1.5 rounded-full bg-[#16b86d]" />Active</StatusPill>
           </div>
-          <p className="mt-1 max-w-[620px] text-[11px] leading-[1.35] text-[#7a879b]">
+          <p className="mt-1 max-w-[620px] text-[11.5px] leading-[1.4] text-[#7a879b]">
             A nationwide awareness campaign to promote river conservation, inspire community action and drive support for a cleaner, healthier India.
           </p>
 
@@ -433,9 +435,9 @@ function InfoChip({
     <div className="flex min-w-[125px] items-start gap-2 rounded-[8px] border border-[#e8edf4] bg-white/90 px-2 py-1.5">
       <SoftIcon icon={Icon} tone={tone} size={29} />
       <div className="min-w-0">
-        <div className="text-[8.5px] font-medium text-[#8792a6]">{label}</div>
-        <div className="truncate text-[9.5px] font-bold text-[#26375d]">{value}</div>
-        {note && <div className="text-[8px] text-[#8b96a9]">{note}</div>}
+        <div className="text-[11px] font-medium text-[#8792a6]">{label}</div>
+        <div className="truncate text-[11.5px] font-semibold text-[#26375d]">{value}</div>
+        {note && <div className="text-[11px] text-[#8b96a9]">{note}</div>}
       </div>
     </div>
   );
@@ -446,64 +448,64 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
     <aside className="space-y-2.5">
       <Card className="overflow-hidden">
         <div className="flex items-center justify-between px-3 py-2">
-          <h3 className="text-[12px] font-bold text-[#13244d]">Campaign Summary</h3>
-          <button className="text-[10px] font-semibold text-[#1f76e7]">Edit</button>
+          <h3 className="text-[12px] font-semibold text-[#13244d]">Campaign Summary</h3>
+          <button className="text-[11px] font-semibold text-[#1f76e7]">Edit</button>
         </div>
         <div className="flex gap-2.5 px-3 pb-3">
           <img src={campaignImage} className="h-[86px] w-[73px] rounded-[6px] object-cover" alt="" />
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-bold leading-[1.15] text-[#182951]">Save Rivers,<br />Save Lives 2025</div>
+            <div className="text-[11.5px] font-semibold leading-[1.2] text-[#182951]">Save Rivers,<br />Save Lives 2025</div>
             <StatusPill tone="green">● Active</StatusPill>
-            <div className="mt-2 space-y-1 text-[9px] text-[#748197]">
-              <div className="flex justify-between gap-2"><span>Project</span><b className="text-[#4d5c76]">Moksha Sewa</b></div>
-              <div className="flex justify-between gap-2"><span>Type</span><b className="text-[#4d5c76]">Awareness</b></div>
-              <div className="flex justify-between gap-2"><span>Start Date</span><b className="text-[#4d5c76]">Mar 15, 2025</b></div>
-              <div className="flex justify-between gap-2"><span>End Date</span><b className="text-[#4d5c76]">Apr 30, 2025</b></div>
+            <div className="mt-2 space-y-1 text-[11px] text-[#748197]">
+              <div className="flex justify-between gap-2"><span>Project</span><b className="text-[#4d5c76] font-semibold">Moksha Sewa</b></div>
+              <div className="flex justify-between gap-2"><span>Type</span><b className="text-[#4d5c76] font-semibold">Awareness</b></div>
+              <div className="flex justify-between gap-2"><span>Start Date</span><b className="text-[#4d5c76] font-semibold">Mar 15, 2025</b></div>
+              <div className="flex justify-between gap-2"><span>End Date</span><b className="text-[#4d5c76] font-semibold">Apr 30, 2025</b></div>
               {activeTab === "Budget" ? (
                 <>
-                  <div className="flex justify-between gap-2"><span>Total</span><b className="text-[#4d5c76]">₹48,250</b></div>
-                  <div className="flex justify-between gap-2"><span>Spent</span><b className="text-[#4d5c76]">₹42,830 (88.7%)</b></div>
+                  <div className="flex justify-between gap-2"><span>Total</span><b className="text-[#4d5c76] font-semibold">₹48,250</b></div>
+                  <div className="flex justify-between gap-2"><span>Spent</span><b className="text-[#4d5c76] font-semibold">₹42,830 (88.7%)</b></div>
                 </>
               ) : (
                 <>
-                  <div className="flex justify-between gap-2"><span>Total Budget</span><b className="text-[#4d5c76]">₹50,000</b></div>
-                  <div className="flex justify-between gap-2"><span>Spent</span><b className="text-[#4d5c76]">₹48,250 (96%)</b></div>
+                  <div className="flex justify-between gap-2"><span>Total Budget</span><b className="text-[#4d5c76] font-semibold">₹50,000</b></div>
+                  <div className="flex justify-between gap-2"><span>Spent</span><b className="text-[#4d5c76] font-semibold">₹48,250 (96%)</b></div>
                 </>
               )}
-              <div className="flex justify-between gap-2"><span>Owner</span><b className="text-[#4d5c76]">Manish Sirohi</b></div>
+              <div className="flex justify-between gap-2"><span>Owner</span><b className="text-[#4d5c76] font-semibold">Manish Sirohi</b></div>
             </div>
           </div>
         </div>
       </Card>
 
       {activeTab === "Overview" && (
-      <Card title="Budget Utilization" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View Details</button>}>
+      <Card title="Budget Utilization" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View Details</button>}>
         <div className="p-3">
           <div className="flex items-center justify-between">
-            <div className="text-[16px] font-extrabold text-[#1b2a50]">₹48,250 <span className="text-[10px] font-medium text-[#8490a4]">/ ₹50,000</span></div>
-            <b className="text-[13px] text-[#26375d]">96%</b>
+            <div className="text-[16px] font-semibold text-[#1b2a50]">₹48,250 <span className="text-[11px] font-medium text-[#8490a4]">/ ₹50,000</span></div>
+            <b className="text-[13px] font-semibold text-[#26375d]">96%</b>
           </div>
           <div className="mt-2 h-[7px] rounded-full bg-[#e8eef4]"><div className="h-full w-[96%] rounded-full bg-[#17ae70]" /></div>
-          <div className="mt-2 flex justify-between text-[9px] text-[#718099]"><span>₹48,250 Spent</span><span>₹1,750 Remaining</span></div>
-          <div className="mt-2 rounded-[7px] bg-[#effbf5] px-2 py-1.5 text-[9px] text-[#25935f]">You are 8% under budget. Great pacing!</div>
+          <div className="mt-2 flex justify-between text-[11px] text-[#718099]"><span>₹48,250 Spent</span><span>₹1,750 Remaining</span></div>
+          <div className="mt-2 rounded-[7px] bg-[#effbf5] px-2 py-1.5 text-[11px] text-[#25935f]">You are 8% under budget. Great pacing!</div>
         </div>
       </Card>
       )}
 
       {activeTab === "Budget" && (
       <>
-      <Card title="Budget Utilization" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View Details</button>}>
+      <Card title="Budget Utilization" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View Details</button>}>
         <div className="p-3">
           <div className="flex items-center justify-between">
-            <div className="text-[16px] font-extrabold text-[#1b2a50]">₹42,830 <span className="text-[10px] font-medium text-[#8490a4]">/ ₹48,250</span></div>
-            <b className="text-[13px] text-[#26375d]">88%</b>
+            <div className="text-[16px] font-semibold text-[#1b2a50]">₹42,830 <span className="text-[11px] font-medium text-[#8490a4]">/ ₹48,250</span></div>
+            <b className="text-[13px] font-semibold text-[#26375d]">88%</b>
           </div>
           <div className="mt-2 h-[7px] rounded-full bg-[#e8eef4]"><div className="h-full w-[88%] rounded-full bg-[#17ae70]" /></div>
-          <div className="mt-2 flex justify-between text-[9px] text-[#718099]"><span>● ₹42,830 Spent</span><span>● ₹5,420 Remaining</span></div>
+          <div className="mt-2 flex justify-between text-[11px] text-[#718099]"><span>● ₹42,830 Spent</span><span>● ₹5,420 Remaining</span></div>
         </div>
       </Card>
 
-      <Card title="Alerts & Notifications" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View All</button>}>
+      <Card title="Alerts & Notifications" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
         <div className="divide-y divide-[#edf1f5]">
           {[
             { icon: AlertCircle, title: "Approaching budget limit", note: "88% of budget spent", tag: "Watch", tagColor: "bg-[#fef3e6] text-[#d97706]" },
@@ -513,16 +515,16 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
             <div key={item.title} className="flex items-start gap-2 px-3 py-2.5">
               <item.icon size={15} className="mt-0.5 text-[#6b7890]" />
               <div className="min-w-0 flex-1">
-                <div className="text-[9.5px] font-semibold text-[#334464]">{item.title}</div>
-                <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{item.note}</div>
+                <div className="text-[11.5px] font-semibold text-[#334464]">{item.title}</div>
+                <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.note}</div>
               </div>
-              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-semibold ${item.tagColor}`}>{item.tag}</span>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${item.tagColor}`}>{item.tag}</span>
             </div>
           ))}
         </div>
       </Card>
 
-      <Card title="Optimization Suggestions" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View All</button>}>
+      <Card title="Optimization Suggestions" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
         <div className="divide-y divide-[#edf1f5]">
           {[
             { title: "Reallocate budget to Meta", note: "+24% better cost per lead", btn: "Apply", btnColor: "bg-[#1979e9] text-white" },
@@ -532,10 +534,10 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
             <div key={item.title} className="flex items-start gap-2 px-3 py-2.5">
               <Sparkles size={14} className="mt-0.5 shrink-0 text-[#f59e0b]" />
               <div className="min-w-0 flex-1">
-                <div className="text-[9.5px] font-semibold text-[#334464]">{item.title}</div>
-                <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{item.note}</div>
+                <div className="text-[11.5px] font-semibold text-[#334464]">{item.title}</div>
+                <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.note}</div>
               </div>
-              <button className={`shrink-0 rounded-[5px] px-2 py-1 text-[8px] font-semibold ${item.btnColor}`}>{item.btn}</button>
+              <button className={`shrink-0 rounded-[5px] px-2 py-1 text-[11px] font-semibold ${item.btnColor}`}>{item.btn}</button>
             </div>
           ))}
         </div>
@@ -548,22 +550,22 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
         <div className="flex items-center gap-3 p-3">
           <div className="relative h-[72px] w-[72px] shrink-0 rounded-full" style={{background:"conic-gradient(#16aa67 0 82%, #e8edf3 82% 100%)"}}>
             <div className="absolute inset-[7px] flex flex-col items-center justify-center rounded-full bg-white">
-              <b className="text-[16px] text-[#26375b]">82</b><span className="text-[8px] text-[#8994a8]">/100</span>
+              <b className="text-[16px] font-semibold text-[#26375b]">82</b><span className="text-[11px] text-[#8994a8]">/100</span>
             </div>
           </div>
           <div>
             <div className="flex items-center gap-1">
-              <span className="text-[12px] font-bold text-[#17a96b]">↑ 12%</span>
+              <span className="text-[12px] font-semibold text-[#17a96b]">↑ 12%</span>
             </div>
-            <div className="mt-0.5 text-[9px] text-[#8290a4]">vs last period</div>
-            <div className="mt-1.5 rounded-[5px] bg-[#edfbf3] px-2 py-1 text-[9px] font-semibold text-[#17a96b]">Great Performance</div>
+            <div className="mt-0.5 text-[11px] text-[#8290a4]">vs last period</div>
+            <div className="mt-1.5 rounded-[5px] bg-[#edfbf3] px-2 py-1 text-[11px] font-semibold text-[#17a96b]">Great Performance</div>
           </div>
         </div>
       </Card>
       )}
 
       {(activeTab === "Performance" || activeTab === "Overview") && (
-      <Card title="Quick Notes & Alerts" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View All →</button>}>
+      <Card title="Quick Notes & Alerts" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All →</button>}>
         <div className="divide-y divide-[#edf1f5]">
           <AlertRow icon={AlertCircle} title="CTR dropping on LinkedIn" note="-18% vs last week" tone="red" tag="High" />
           <AlertRow icon={Info} title="YouTube not connected" note="Connect to track complete performance" tone="orange" tag="Medium" />
@@ -574,7 +576,7 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
       )}
 
       {activeTab === "Performance" && (
-      <Card title="Optimization Recommendations" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View All →</button>}>
+      <Card title="Optimization Recommendations" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All →</button>}>
         <div className="divide-y divide-[#edf1f5]">
           <Recommendation title="Increase budget on high-performing Meta & Instagram" detail="20% more conversions" />
           <Recommendation title="Create more short-form video content" detail="Similar creatives show 2.3× higher CTR" />
@@ -585,7 +587,7 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
 
       {activeTab === "Content & Schedule" && (
       <>
-      <Card title="Publishing Rules" action={<button className="text-[10px] font-semibold text-[#1d77e7]">Edit</button>}>
+      <Card title="Publishing Rules" action={<button className="text-[11px] font-semibold text-[#1d77e7]">Edit</button>}>
         <div className="divide-y divide-[#edf1f5]">
           {[
             { icon: Clock3, label: "Posting Window", value: "08:00 AM – 08:00 PM (IST)" },
@@ -598,8 +600,8 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
             <div key={rule.label} className="flex items-start gap-2 px-3 py-2">
               <rule.icon size={14} className="mt-0.5 text-[#6b7890]" />
               <div className="min-w-0 flex-1">
-                <div className="text-[9px] font-semibold text-[#334464]">{rule.label}</div>
-                <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{rule.value}</div>
+                <div className="text-[11px] font-semibold text-[#334464]">{rule.label}</div>
+                <div className="mt-0.5 text-[11px] text-[#8792a6]">{rule.value}</div>
               </div>
             </div>
           ))}
@@ -609,8 +611,8 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
       <Card title="Content Checklist">
         <div className="p-3">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[9px] text-[#718099]">Progress</span>
-            <span className="text-[10px] font-bold text-[#334464]">6/8</span>
+            <span className="text-[11px] text-[#718099]">Progress</span>
+            <span className="text-[11px] font-semibold text-[#334464]">6/8</span>
           </div>
           <div className="mb-3 h-[5px] overflow-hidden rounded-full bg-[#edf1f6]">
             <div className="h-full w-[75%] rounded-full bg-[#17ae70]" />
@@ -630,7 +632,7 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
                 <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${item.done ? "bg-[#17ae70] text-white" : "border border-[#d1d9e6] bg-white"}`}>
                   {item.done && <Check size={10} />}
                 </span>
-                <span className={`text-[9px] ${item.done ? "text-[#475674]" : "text-[#8792a6]"}`}>{item.text}</span>
+                <span className={`text-[11px] ${item.done ? "text-[#475674]" : "text-[#8792a6]"}`}>{item.text}</span>
               </div>
             ))}
           </div>
@@ -641,7 +643,7 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
 
       {(activeTab === "Leads" || activeTab === "Audience") && (
       <>
-      <Card title="Target Audience Definition" action={<button className="text-[10px] font-semibold text-[#1d77e7]">Edit</button>}>
+      <Card title="Target Audience Definition" action={<button className="text-[11px] font-semibold text-[#1d77e7]">Edit</button>}>
         <div className="p-3 space-y-2.5">
           {[
             { icon: MapPin, label: "Location", value: "India (Urban & Semi-Urban)" },
@@ -654,8 +656,8 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
             <div key={item.label} className="flex items-start gap-2">
               <item.icon size={14} className="mt-0.5 shrink-0 text-[#6b7890]" />
               <div className="min-w-0 flex-1">
-                <div className="text-[9px] font-semibold text-[#334464]">{item.label}</div>
-                <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{item.value}</div>
+                <div className="text-[11px] font-semibold text-[#334464]">{item.label}</div>
+                <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.value}</div>
               </div>
             </div>
           ))}
@@ -670,9 +672,9 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
                 <Target size={14} className="text-[#17a96b]" />
               </span>
               <div className="min-w-0 flex-1">
-                <div className="text-[10px] font-bold text-[#1b2a50]">18–34, Environment Enthusiasts</div>
-                <div className="text-[8.5px] text-[#8792a6]">Highest engagement rate (4.8%)</div>
-                <div className="text-[8.5px] font-semibold text-[#17a96b]">2.3x higher than average</div>
+                <div className="text-[11.5px] font-semibold text-[#1b2a50]">18–34, Environment Enthusiasts</div>
+                <div className="text-[11px] text-[#8792a6]">Highest engagement rate (4.8%)</div>
+                <div className="text-[11px] font-semibold text-[#17a96b]">2.3x higher than average</div>
               </div>
             </div>
           </div>
@@ -683,7 +685,7 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
 
       {activeTab === "Activity Log" && (
       <>
-      <Card title="Latest Updates" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View All</button>}>
+      <Card title="Latest Updates" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
         <div className="divide-y divide-[#edf1f5]">
           {[
             { text: "Content published on Instagram", time: "2 hours ago" },
@@ -695,15 +697,15 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
             <div key={item.text} className="flex items-start gap-2 px-3 py-2.5">
               <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-[#17a96b]" />
               <div className="min-w-0 flex-1">
-                <div className="text-[9.5px] font-semibold text-[#334464]">{item.text}</div>
-                <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{item.time}</div>
+                <div className="text-[11.5px] font-semibold text-[#334464]">{item.text}</div>
+                <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.time}</div>
               </div>
             </div>
           ))}
         </div>
       </Card>
 
-      <Card title="Collaborators (6)" action={<button className="text-[10px] font-semibold text-[#1d77e7]">Manage</button>}>
+      <Card title="Collaborators (6)" action={<button className="text-[11px] font-semibold text-[#1d77e7]">Manage</button>}>
         <div className="divide-y divide-[#edf1f5]">
           {[
             { initials: "MS", name: "Manish Sirohi", role: "Campaign Owner", access: "Owner", color: "bg-[#111827]" },
@@ -714,10 +716,10 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
             { initials: "VS", name: "Vikram Singh", role: "Analyst", access: "Viewer", color: "bg-[#e0f2fe] text-[#0ea5e9]" },
           ].map((user) => (
             <div key={user.name} className="flex items-center gap-2 px-3 py-2">
-              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white ${user.color}`}>{user.initials}</span>
+              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ${user.color}`}>{user.initials}</span>
               <div className="min-w-0 flex-1">
-                <div className="text-[9.5px] font-semibold text-[#334464]">{user.name}</div>
-                <div className="text-[8.5px] text-[#8792a6]">{user.role}</div>
+                <div className="text-[11.5px] font-semibold text-[#334464]">{user.name}</div>
+                <div className="text-[11px] text-[#8792a6]">{user.role}</div>
               </div>
               <StatusPill tone={user.access === "Owner" ? "green" : user.access === "Viewer" ? "green" : "gray"}>{user.access}</StatusPill>
             </div>
@@ -725,7 +727,7 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
         </div>
       </Card>
 
-      <Card title="Alerts & Reminders (3)" action={<button className="text-[10px] font-semibold text-[#1d77e7]">View All</button>}>
+      <Card title="Alerts & Reminders (3)" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
         <div className="divide-y divide-[#edf1f5]">
           {[
             { icon: AlertCircle, title: "Content approval pending", note: "Aarti currently reviewing", time: "4h ago", color: "text-[#ef4444]" },
@@ -735,10 +737,10 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
             <div key={item.title} className="flex items-start gap-2 px-3 py-2.5">
               <item.icon size={15} className={`mt-0.5 shrink-0 ${item.color}`} />
               <div className="min-w-0 flex-1">
-                <div className="text-[9.5px] font-semibold text-[#334464]">{item.title}</div>
-                <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{item.note}</div>
+                <div className="text-[11.5px] font-semibold text-[#334464]">{item.title}</div>
+                <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.note}</div>
               </div>
-              <span className="shrink-0 text-[8px] text-[#8792a6]">{item.time}</span>
+              <span className="shrink-0 text-[11px] text-[#8792a6]">{item.time}</span>
             </div>
           ))}
         </div>
@@ -767,8 +769,8 @@ function AlertRow({
     <div className="flex items-start gap-2 px-3 py-2.5">
       <Icon size={15} className={text} />
       <div className="min-w-0 flex-1">
-        <div className="text-[9.5px] font-semibold text-[#334464]">{title}</div>
-        <div className="mt-0.5 text-[8.5px] text-[#8a95a8]">{note}</div>
+        <div className="text-[11.5px] font-semibold text-[#334464]">{title}</div>
+        <div className="mt-0.5 text-[11px] text-[#8a95a8]">{note}</div>
       </div>
       <StatusPill tone={tone === "green" ? "green" : tone === "red" ? "red" : "orange"}>{tag}</StatusPill>
     </div>
@@ -780,10 +782,10 @@ function Recommendation({ title, detail }: { title: string; detail: string }) {
     <div className="flex items-start gap-2 px-3 py-2.5">
       <SoftIcon icon={Sparkles} tone="orange" size={26} />
       <div className="min-w-0 flex-1">
-        <div className="text-[9.5px] font-semibold leading-[1.25] text-[#334464]">{title}</div>
-        <div className="mt-0.5 text-[8.5px] text-[#8792a6]">{detail}</div>
+        <div className="text-[11.5px] font-semibold leading-[1.25] text-[#334464]">{title}</div>
+        <div className="mt-0.5 text-[11px] text-[#8792a6]">{detail}</div>
       </div>
-      <button className="rounded-[5px] bg-[#1978e9] px-2 py-1 text-[9px] font-semibold text-white">Apply</button>
+      <button className="rounded-[5px] bg-[#1978e9] px-2 py-1 text-[11px] font-semibold text-white">Apply</button>
     </div>
   );
 }
@@ -802,7 +804,7 @@ function OverviewTab() {
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1fr_1.5fr]">
         <Card title="Campaign Performance Overview" action={<Select label="Last 30 days" />}>
           <div className="h-[164px] p-3">
-            <div className="mb-1 flex gap-4 text-[9px] text-[#687790]">
+            <div className="mb-1 flex gap-4 text-[11px] text-[#687790]">
               <Legend color="#2878e8" label="Reach" /><Legend color="#19a86b" label="Leads" /><Legend color="#7c3aed" label="Conversions" /><Legend color="#ef476f" label="Spend (₹)" />
             </div>
             <MultiLineChart
@@ -817,13 +819,13 @@ function OverviewTab() {
           </div>
         </Card>
 
-        <Card title="Channel Performance" action={<button className="text-[10px] font-semibold text-[#1c78e7]">View Detailed Report →</button>}>
+        <Card title="Channel Performance" action={<button className="text-[11px] font-semibold text-[#1c78e7]">View Detailed Report →</button>}>
           <ChannelTable />
         </Card>
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1.02fr_1.02fr_1.2fr]">
-        <Card title="Campaign Objective & Target" action={<button className="text-[10px] font-semibold text-[#1d77e7]">Edit</button>}>
+        <Card title="Campaign Objective & Target" action={<button className="text-[11px] font-semibold text-[#1d77e7]">Edit</button>}>
           <div className="space-y-2 p-3">
             <InfoLine icon={MessageCircle} label="Objective" value="Raise awareness about river conservation and encourage community action" />
             <InfoLine icon={Users} label="Target Audience" value="Environmentally conscious individuals (18–45)" />
@@ -834,7 +836,7 @@ function OverviewTab() {
           </div>
         </Card>
 
-        <Card title="Top Performing Creatives" action={<button className="text-[10px] font-semibold text-[#e23b55]">View All →</button>}>
+        <Card title="Top Performing Creatives" action={<button className="text-[11px] font-semibold text-[#e23b55]">View All →</button>}>
           <div className="grid grid-cols-3 gap-2 p-3">
             {[
               ["Clean Rivers Brighter...", "Image • Awareness", "12.4K", "2.8K", "5.2%"],
@@ -845,13 +847,13 @@ function OverviewTab() {
                 <div className="h-[73px] overflow-hidden bg-[#e8f2f7]">
                   <img src={campaignImage} alt="" className="h-full w-full object-cover" style={{ filter: i === 1 ? "saturate(.7)" : undefined }} />
                 </div>
-                <div className="p-2">
-                  <div className="truncate text-[9.5px] font-bold text-[#26375d]">{title}</div>
-                  <div className="mt-0.5 text-[8px] text-[#8b96a8]">{type}</div>
-                  <div className="mt-2 grid grid-cols-3 gap-1 text-[8px]">
-                    <div><b className="block text-[#314467]">{reach}</b><span className="text-[#8c97a8]">Reach</span></div>
-                    <div><b className="block text-[#314467]">{clicks}</b><span className="text-[#8c97a8]">Clicks</span></div>
-                    <div><b className="block text-[#314467]">{ctr}</b><span className="text-[#8c97a8]">CTR</span></div>
+                <div className="p-1.5">
+                  <div className="truncate text-[10.5px] font-semibold text-[#26375d]">{title}</div>
+                  <div className="mt-0.5 truncate text-[9.5px] text-[#8b96a8]">{type}</div>
+                  <div className="mt-1.5 grid grid-cols-3 gap-0.5 text-center">
+                    <div className="min-w-0"><span className="block text-[8px] font-semibold text-[#314467] leading-tight">{reach}</span><span className="block text-[7px] text-[#8c97a8] leading-tight">Reach</span></div>
+                    <div className="min-w-0"><span className="block text-[8px] font-semibold text-[#314467] leading-tight">{clicks}</span><span className="block text-[7px] text-[#8c97a8] leading-tight">Clicks</span></div>
+                    <div className="min-w-0"><span className="block text-[8px] font-semibold text-[#314467] leading-tight">{ctr}</span><span className="block text-[7px] text-[#8c97a8] leading-tight">CTR</span></div>
                   </div>
                 </div>
               </div>
@@ -859,7 +861,7 @@ function OverviewTab() {
           </div>
         </Card>
 
-        <Card title="Scheduled Content" action={<button className="text-[10px] font-semibold text-[#e23b55]">View All →</button>}>
+        <Card title="Scheduled Content" action={<button className="text-[11px] font-semibold text-[#e23b55]">View All →</button>}>
           <SimpleTable
             headers={["Date & Time", "Content", "Channel", "Status"]}
             rows={[
@@ -873,7 +875,7 @@ function OverviewTab() {
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1.15fr_1fr_1.1fr]">
-        <Card title="Leads Snapshot" action={<button className="text-[10px] font-semibold text-[#e23b55]">View All →</button>}>
+        <Card title="Leads Snapshot" action={<button className="text-[11px] font-semibold text-[#e23b55]">View All →</button>}>
           <SimpleTable
             headers={["Name", "Source", "Project", "Stage", "Date"]}
             rows={[
@@ -885,7 +887,7 @@ function OverviewTab() {
             ]}
           />
         </Card>
-        <Card title="Team & Ownership" action={<button className="text-[10px] font-semibold text-[#6b7890]">Edit</button>}>
+        <Card title="Team & Ownership" action={<button className="text-[11px] font-semibold text-[#6b7890]">Edit</button>}>
           <div className="divide-y divide-[#edf1f5]">
             {[
               ["MS", "Manish Sirohi", "Campaign Owner", "Owner"],
@@ -894,14 +896,14 @@ function OverviewTab() {
               ["RM", "Rohan Mehta", "Performance Analyst", "Viewer"],
             ].map(([initials, name, role, access]) => (
               <div key={name} className="flex items-center gap-2 px-3 py-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#111827] text-[9px] font-bold text-white">{initials}</span>
-                <div className="min-w-0 flex-1"><b className="block text-[9.5px] text-[#344565]">{name}</b><span className="text-[8.5px] text-[#8994a7]">{role}</span></div>
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#111827] text-[11px] font-semibold text-white">{initials}</span>
+                <div className="min-w-0 flex-1"><b className="block text-[11.5px] font-semibold text-[#344565]">{name}</b><span className="text-[11px] text-[#8994a7]">{role}</span></div>
                 <StatusPill tone={access === "Viewer" ? "green" : "gray"}>{access}</StatusPill>
               </div>
             ))}
           </div>
         </Card>
-        <Card title="Recent Activity" action={<button className="text-[10px] font-semibold text-[#e23b55]">View All →</button>}>
+        <Card title="Recent Activity" action={<button className="text-[11px] font-semibold text-[#e23b55]">View All →</button>}>
           <ActivityRows />
         </Card>
       </div>
@@ -931,7 +933,7 @@ function PerformanceTab() {
       <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[1.2fr_1fr]">
         <Card title="Performance Trend" action={<div className="flex gap-1.5"><Select label="Last 30 days" /><Select label="Daily" /></div>}>
           <div className="h-[190px] p-3">
-            <div className="mb-2 flex flex-wrap gap-4 text-[9px] text-[#66758e]">
+            <div className="mb-2 flex flex-wrap gap-4 text-[11px] text-[#66758e]">
               <Legend color="#2878e8" label="Reach" /><Legend color="#8b5cf6" label="Impressions" /><Legend color="#16a86b" label="Clicks" /><Legend color="#f59e0b" label="Leads" /><Legend color="#ef476f" label="Conversions" />
             </div>
             <MultiLineChart
@@ -974,20 +976,20 @@ function PerformanceTab() {
                         clipPath: `polygon(${topLeft}% 0, ${topRight}% 0, ${rightInset}% 100%, ${leftInset}% 100%)`,
                       }}
                     />
-                    <div className="relative z-10 flex h-full items-center justify-center text-[10px] font-bold text-white">
+                    <div className="relative z-10 flex h-full items-center justify-center text-[11px] font-semibold text-white">
                       {item.n}
                     </div>
                   </div>
-                  <div className="w-[100px] shrink-0">
-                    <b className="block text-[9px] text-[#304365]">{item.label}</b>
-                    <span className="text-[8.5px] text-[#8b96a8]">{item.pct}</span>
+                  <div className="w-[110px] shrink-0">
+                    <b className="block text-[11px] font-semibold text-[#304365]">{item.label}</b>
+                    <span className="text-[11px] text-[#8b96a8]">{item.pct}</span>
                   </div>
                 </div>
               );
             })}
           </div>
         </Card>
-        <Card title="Audience Geography (Top States)" action={<div className="flex rounded-[5px] bg-[#edf5ff] p-0.5"><button className="rounded bg-white px-2 py-1 text-[9px] font-semibold text-[#2277e8]">States</button><button className="px-2 py-1 text-[9px] text-[#7e8ba0]">Cities</button></div>}>
+        <Card title="Audience Geography (Top States)" action={<div className="flex rounded-[5px] bg-[#edf5ff] p-0.5"><button className="rounded bg-white px-2 py-1 text-[11px] font-semibold text-[#2277e8]">States</button><button className="px-2 py-1 text-[11px] text-[#7e8ba0]">Cities</button></div>}>
           <div className="grid grid-cols-[1fr_1.2fr] gap-3 p-3">
             <div className="flex items-center justify-center rounded-[8px] bg-[#f8fbff]">
               <IndiaMap data={[
@@ -1016,7 +1018,7 @@ function PerformanceTab() {
         <Card title="Device Split">
           <div className="flex items-center gap-4 p-3">
             <Donut segments={[{value:68.4,color:"#2878e8"},{value:24.1,color:"#8b5cf6"},{value:7.5,color:"#22a884"}]} center="142K" centerSub="Impressions" />
-            <div className="space-y-2 text-[10px]">
+            <div className="space-y-2 text-[11px]">
               <Legend color="#2878e8" label="Mobile" value="68.4%" />
               <Legend color="#8b5cf6" label="Desktop" value="24.1%" />
               <Legend color="#22a884" label="Tablet" value="7.5%" />
@@ -1026,7 +1028,7 @@ function PerformanceTab() {
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
-        <Card title="Top Performing Creatives" action={<button className="text-[10px] font-semibold text-[#e23b55]">View All →</button>}>
+        <Card title="Top Performing Creatives" action={<button className="text-[11px] font-semibold text-[#e23b55]">View All →</button>}>
           <SimpleTable
             headers={["#", "Creative", "Channel", "Reach", "CTR", "Leads", "Conversions", "CPA", "ROAS"]}
             rows={[
@@ -1075,13 +1077,13 @@ function ContentScheduleTab() {
         <MetricCard icon={CheckCircle2} tone="green" label="Approved" value="27" change="56%" sub="" />
       </div>
 
-      <Card title="Publication Calendar" action={<div className="flex items-center gap-1"><button className="icon-btn"><ChevronLeft size={13}/></button><b className="px-2 text-[11px] text-[#35466a]">April 2025</b><button className="icon-btn"><ChevronRight size={13}/></button><button className="ml-2 rounded-[5px] border border-[#dfe6ef] px-2 py-1 text-[9px] font-semibold text-[#2278e8]">Today</button></div>}>
+      <Card title="Publication Calendar" action={<div className="flex items-center gap-1"><button className="icon-btn"><ChevronLeft size={13}/></button><b className="px-2 text-[11px] font-semibold text-[#35466a]">April 2025</b><button className="icon-btn"><ChevronRight size={13}/></button><button className="ml-2 rounded-[5px] border border-[#dfe6ef] px-2 py-1 text-[11px] font-semibold text-[#2278e8]">Today</button></div>}>
         <div className="p-3">
-          <div className="mb-2 flex justify-end gap-3 text-[9px] text-[#718099]"><Legend color="#16a96c" label="Published" /><Legend color="#2878e8" label="Scheduled" /><Legend color="#f59e0b" label="In Review" /><Legend color="#ef4444" label="Needs Changes" /><Legend color="#94a3b8" label="Draft" /></div>
+          <div className="mb-2 flex justify-end gap-3 text-[11px] text-[#718099]"><Legend color="#16a96c" label="Published" /><Legend color="#2878e8" label="Scheduled" /><Legend color="#f59e0b" label="In Review" /><Legend color="#ef4444" label="Needs Changes" /><Legend color="#94a3b8" label="Draft" /></div>
           <div className="grid grid-cols-14 overflow-hidden rounded-[7px] border border-[#e5eaf1]">
             {["Mon 14","Tue 15","Wed 16","Thu 17","Fri 18","Sat 19","Sun 20","Mon 21","Tue 22","Wed 23","Thu 24","Fri 25","Sat 26","Sun 27"].map((day,i)=>(
               <div key={day} className={`min-h-[56px] border-r border-b border-[#edf1f5] p-2 ${i===2 ? "bg-[#f2f7ff]" : ""}`}>
-                <div className={`text-[9px] font-semibold ${i===2 ? "text-[#1f79e9]" : "text-[#64738b]"}`}>{day}</div>
+                <div className={`text-[11px] font-semibold ${i===2 ? "text-[#1f79e9]" : "text-[#64738b]"}`}>{day}</div>
                 <div className="mt-3 flex gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#16a96c]" /><span className="h-1.5 w-1.5 rounded-full bg-[#2878e8]" />{i%3===0&&<span className="h-1.5 w-1.5 rounded-full bg-[#f59e0b]" />}</div>
               </div>
             ))}
@@ -1090,28 +1092,28 @@ function ContentScheduleTab() {
       </Card>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1fr_1fr_.85fr]">
-        <Card title="Upcoming Scheduled Content" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View All</button>}>
+        <Card title="Upcoming Scheduled Content" action={<button className="text-[11px] font-semibold text-[#1e78e8]">View All</button>}>
           <div className="divide-y divide-[#edf1f5]">
             {content.map(([platform,title,date,status]) => (
               <div key={title} className="flex items-center gap-2 px-3 py-2.5">
                 <BrandIcon platform={platform} size={17} />
                 <img src={campaignImage} className="h-[38px] w-[48px] rounded-[5px] object-cover" alt="" />
-                <div className="min-w-0 flex-1"><div className="truncate text-[10px] font-semibold text-[#314365]">{title}</div><div className="mt-0.5 text-[8.5px] text-[#8994a7]">{date}</div></div>
+                <div className="min-w-0 flex-1"><div className="truncate text-[11px] font-semibold text-[#314365]">{title}</div><div className="mt-0.5 text-[11px] text-[#8994a7]">{date}</div></div>
                 <StatusPill tone={status==="In Review"?"orange":"blue"}>{status}</StatusPill>
               </div>
             ))}
           </div>
         </Card>
 
-        <Card title="Channel-wise Content Queue" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View All</button>}>
+        <Card title="Channel-wise Content Queue" action={<button className="text-[11px] font-semibold text-[#1e78e8]">View All</button>}>
           <div className="space-y-3 p-3">
             {[
               ["instagram",12,6,18],["linkedin",8,4,12],["google",5,2,7],["youtube",6,2,8],["facebook",4,2,6],["website",2,0,2]
             ].map(([platform,queued,published,total]) => (
-              <div key={String(platform)} className="grid grid-cols-[18px_1fr_44px_62px] items-center gap-2">
+              <div key={String(platform)} className="grid grid-cols-[18px_1fr_56px_62px] items-center gap-2">
                 <BrandIcon platform={platform as keyof typeof platformMeta} size={16}/>
-                <div className="text-[9.5px] font-semibold text-[#3c4d6d]">{platformMeta[platform as keyof typeof platformMeta].label}</div>
-                <div className="text-[8.5px] text-[#77859a]">{queued} queued</div>
+                <div className="text-[11px] font-semibold text-[#3c4d6d]">{platformMeta[platform as keyof typeof platformMeta].label}</div>
+                <div className="text-[11px] text-[#77859a]">{queued} queued</div>
                 <div className="h-[6px] rounded-full bg-[#edf1f5]"><div className="h-full rounded-full bg-[#4b91e8]" style={{width:`${Math.min(100, (Number(published) / Number(total)) * 100)}%`}}/></div>
               </div>
             ))}
@@ -1121,7 +1123,7 @@ function ContentScheduleTab() {
         <Card title="Content Pillars Distribution">
           <div className="flex items-center gap-3 p-3">
             <Donut segments={[{value:38,color:"#2878e8"},{value:22,color:"#19a86b"},{value:16,color:"#8b5cf6"},{value:12,color:"#f59e0b"},{value:8,color:"#ec4899"},{value:4,color:"#94a3b8"}]} center="48" centerSub="Posts"/>
-            <div className="space-y-1.5 text-[9px]">
+            <div className="space-y-1.5 text-[11px]">
               <Legend color="#2878e8" label="Environmental Awareness" value="38%" />
               <Legend color="#19a86b" label="Community Action" value="22%" />
               <Legend color="#8b5cf6" label="River Health & Biodiversity" value="16%" />
@@ -1136,7 +1138,7 @@ function ContentScheduleTab() {
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1fr_1fr_1fr]">
         <Card title="Content Schedule & Posting Cadence" action={<Select label="Last 14 days" />}>
           <div className="p-3">
-            <div className="mb-2 flex gap-3 text-[9px]"><Legend color="#2878e8" label="Posts Published" /><Legend color="#dbe9fb" label="Scheduled" /></div>
+            <div className="mb-2 flex gap-3 text-[11px]"><Legend color="#2878e8" label="Posts Published" /><Legend color="#dbe9fb" label="Scheduled" /></div>
             <div className="flex h-[120px] items-end gap-2 border-b border-l border-[#e6ebf2] px-2">
               {[2,3,4,5,7,3,2,4,3,5,3,4,2,6].map((n,i)=>(
                 <div key={i} className="flex h-full flex-1 items-end gap-0.5">
@@ -1145,11 +1147,11 @@ function ContentScheduleTab() {
                 </div>
               ))}
             </div>
-            <div className="mt-1 flex justify-between text-[8px] text-[#8994a7]"><span>Apr 12</span><span>Apr 18</span><span>Apr 25</span></div>
+            <div className="mt-1 flex justify-between text-[11px] text-[#8994a7]"><span>Apr 12</span><span>Apr 18</span><span>Apr 25</span></div>
           </div>
         </Card>
 
-        <Card title="Recent Content & Assets" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View All</button>}>
+        <Card title="Recent Content & Assets" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
           <div className="grid grid-cols-4 gap-2 p-3">
             {[
               ["RIVERS GIVE LIFE","Social Post","1080 × 1080"],
@@ -1159,13 +1161,13 @@ function ContentScheduleTab() {
             ].map(([t,type,size],i)=>(
               <div key={t} className="overflow-hidden rounded-[6px] border border-[#e6ebf2]">
                 <img src={campaignImage} className="h-[66px] w-full object-cover" alt="" style={{filter:`hue-rotate(${i*8}deg)`}}/>
-                <div className="p-1.5"><div className="line-clamp-2 text-[8.5px] font-bold text-[#324463]">{t}</div><div className="mt-1 text-[8px] text-[#8792a6]">{type}</div><div className="text-[8px] text-[#8792a6]">{size}</div></div>
+                <div className="p-1.5"><div className="line-clamp-2 text-[11.5px] font-semibold text-[#324463]">{t}</div><div className="mt-1 text-[11px] text-[#8792a6]">{type}</div><div className="text-[11px] text-[#8792a6]">{size}</div></div>
               </div>
             ))}
           </div>
         </Card>
 
-        <Card title="Approval Workflow" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View All</button>}>
+        <Card title="Approval Workflow" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
           <div className="p-3">
             {[
               ["Content Creation","Completed","Apr 14, 2025",true],
@@ -1177,7 +1179,7 @@ function ContentScheduleTab() {
               <div key={a as string} className="relative flex gap-2.5 pb-3">
                 {i<4 && <div className="absolute left-[6px] top-[13px] h-full w-px bg-[#dfe7f1]"/>}
                 <span className={`relative z-10 flex h-[13px] w-[13px] items-center justify-center rounded-full ${done ? "bg-[#17aa6d] text-white" : "border-2 border-[#aab6c8] bg-white"}`}>{done && <Check size={9}/>}</span>
-                <div><b className="block text-[9.5px] text-[#354667]">{a as string}</b><span className="text-[8.5px] text-[#8792a6]">{b as string} {c as string}</span></div>
+                <div><span className="block text-[11.5px] font-semibold text-[#354667]">{a as string}</span><span className="text-[11px] text-[#8792a6]">{b as string} {c as string}</span></div>
               </div>
             ))}
           </div>
@@ -1233,9 +1235,9 @@ function LeadsTab() {
                         clipPath: `polygon(${topLeft}% 0, ${topRight}% 0, ${rightInset}% 100%, ${leftInset}% 100%)`,
                       }}
                     />
-                    <span className="relative z-10 flex h-full items-center justify-center text-[10px] font-bold text-white">{item.label}</span>
+                    <span className="relative z-10 flex h-full items-center justify-center text-[11px] font-semibold text-white">{item.label}</span>
                   </div>
-                  <span className="w-[40px] shrink-0 text-[9px] font-bold text-[#18a86b]">↑ {item.change}</span>
+                  <span className="w-[40px] shrink-0 text-[11px] font-semibold text-[#18a86b]">↑ {item.change}</span>
                 </div>
               );
             })}
@@ -1245,7 +1247,7 @@ function LeadsTab() {
         <Card title="Leads by Source">
           <div className="flex items-center gap-3 p-3">
             <Donut segments={[{value:35,color:"#2878e8"},{value:23,color:"#ef476f"},{value:17,color:"#f59e0b"},{value:11,color:"#8b5cf6"},{value:7,color:"#ef4444"},{value:4,color:"#19a86b"},{value:3,color:"#94a3b8"}]} center="248" centerSub="Total Leads"/>
-            <div className="space-y-1.5 text-[9px]">
+            <div className="space-y-1.5 text-[11px]">
               {[
                 ["Meta & Instagram","89","35%","#2878e8"],["Google Business","56","23%","#ef476f"],["Website","42","17%","#f59e0b"],["LinkedIn","28","11%","#8b5cf6"],["YouTube","18","7%","#ef4444"],["WhatsApp","9","4%","#19a86b"],["Others","6","2%","#94a3b8"]
               ].map(([n,v,p,c])=><Legend key={n} color={c!} label={n!} value={`${v}  ${p}`}/>)}
@@ -1255,7 +1257,7 @@ function LeadsTab() {
 
         <Card title="Conversion Trend" action={<Select label="Last 30 days" />}>
           <div className="h-[165px] p-3">
-            <div className="mb-1 flex gap-3 text-[9px]"><Legend color="#2878e8" label="Leads"/><Legend color="#8b5cf6" label="Qualified"/><Legend color="#19a86b" label="Conversions"/></div>
+            <div className="mb-1 flex gap-3 text-[11px]"><Legend color="#2878e8" label="Leads"/><Legend color="#8b5cf6" label="Qualified"/><Legend color="#19a86b" label="Conversions"/></div>
             <MultiLineChart labels={["Mar 15","Mar 20","Mar 25","Mar 30","Apr 04","Apr 09","Apr 14","Apr 19","Apr 24","Apr 29"]} series={[
               {name:"Leads",color:"#2878e8",values:[12,16,18,21,25,27,31,30,37,42]},
               {name:"Qualified",color:"#8b5cf6",values:[6,8,10,12,14,16,18,19,22,25]},
@@ -1265,18 +1267,18 @@ function LeadsTab() {
         </Card>
       </div>
 
-      <Card title="Leads (248)" action={<div className="flex gap-1.5"><div className="flex h-[27px] w-[230px] items-center gap-2 rounded-[5px] border border-[#e2e8f0] px-2 text-[9px] text-[#8994a7]"><Search size={12}/>Search leads by name, email or phone...</div><button className="action-btn"><Filter size={12}/> Filter</button><button className="action-btn">Stage <ChevronDown size={11}/></button><button className="action-btn">Source <ChevronDown size={11}/></button><button className="action-btn">Owner <ChevronDown size={11}/></button><button className="action-btn">Last 30 days <ChevronDown size={11}/></button><button className="rounded-[5px] bg-[#1979e9] px-2.5 text-[9px] font-bold text-white">+ Add Lead</button></div>}>
+      <Card title="Leads (248)" action={<div className="flex gap-1.5"><div className="flex h-[27px] w-[230px] items-center gap-2 rounded-[5px] border border-[#e2e8f0] px-2 text-[11px] text-[#8994a7]"><Search size={12}/>Search leads by name, email or phone...</div><button className="action-btn"><Filter size={12}/> Filter</button><button className="action-btn">Stage <ChevronDown size={11}/></button><button className="action-btn">Source <ChevronDown size={11}/></button><button className="action-btn">Owner <ChevronDown size={11}/></button><button className="action-btn">Last 30 days <ChevronDown size={11}/></button><button className="rounded-[5px] bg-[#1979e9] px-2.5 text-[11px] font-semibold text-white">+ Add Lead</button></div>}>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[950px] border-collapse">
-            <thead><tr className="border-b border-[#e7ecf2] bg-[#fafbfd] text-left text-[9px] font-semibold text-[#78859a]">{[""," #","Lead Name","Source","Channel","Stage","Assigned Owner","Score","Last Activity","Date Added","Actions"].map((h,i)=><th key={i} className="px-2 py-2">{h}</th>)}</tr></thead>
+            <thead><tr className="border-b border-[#e7ecf2] bg-[#fafbfd] text-left text-[11px] font-semibold text-[#78859a]">{[""," #","Lead Name","Source","Channel","Stage","Assigned Owner","Score","Last Activity","Date Added","Actions"].map((h,i)=><th key={i} className="px-2 py-2">{h}</th>)}</tr></thead>
             <tbody>
               {leads.map((r,i)=>(
-                <tr key={r[0]} className="border-b border-[#edf1f5] text-[9px]">
+                <tr key={r[0]} className="border-b border-[#edf1f5] text-[11px]">
                   <td className="px-2 py-2"><input type="checkbox" className="h-3 w-3"/></td><td className="px-2 text-[#8a95a7]">{i+1}</td>
-                  <td className="px-2 font-semibold text-[#344565]"><span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#e6eef9] text-[8px] text-[#4c78b7]">{r[0][0]}</span>{r[0]}</td>
+                  <td className="px-2 font-semibold text-[#344565]"><span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#e6eef9] text-[11px] text-[#4c78b7]">{r[0][0]}</span>{r[0]}</td>
                   <td className="px-2 text-[#62718a]">{r[1]}</td><td className="px-2"><BrandIcon platform={r[2]} size={15}/></td>
                   <td className="px-2"><StatusPill tone={r[3]==="Converted"?"green":r[3]==="Qualified"?"green":r[3]==="Nurturing"?"orange":"blue"}>{r[3]}</StatusPill></td>
-                  <td className="px-2 text-[#62718a]">{r[4]}</td><td className="px-2"><span className="rounded-full bg-[#e7f9ee] px-2 py-1 font-bold text-[#1b9c62]">{r[5]}</span></td>
+                  <td className="px-2 text-[#62718a]">{r[4]}</td><td className="px-2"><span className="rounded-full bg-[#e7f9ee] px-2 py-1 font-semibold text-[#1b9c62]">{r[5]}</span></td>
                   <td className="max-w-[145px] px-2 text-[#7c889c]">{r[6]}</td><td className="px-2 text-[#7c889c]">{r[7]}</td>
                   <td className="px-2"><div className="flex gap-2 text-[#4c77ac]"><Phone size={12}/><MessageCircle size={12}/><MoreHorizontal size={12}/></div></td>
                 </tr>
@@ -1287,8 +1289,8 @@ function LeadsTab() {
       </Card>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1fr_1fr]">
-        <Card title="Follow-up Tasks (12)" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View All →</button>}><SimpleTable headers={["Task","Related Lead","Due Date","Status","Owner"]} rows={[["Call and share campaign brochure","Aarav Sharma","Apr 28, 2025","Overdue","MS"],["Send impact video","Priya Mehta","Apr 28, 2025","Today","AP"],["Follow up on donation interest","Rahul Joshi","Apr 29, 2025","Upcoming","PS"],["Schedule meeting","Sneha Iyer","Apr 29, 2025","Upcoming","MS"]]}/></Card>
-        <Card title="Recent Enquiries (5)" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View All →</button>}><SimpleTable headers={["Name","Message","Source","Time"]} rows={[["Rohan Kulkarni","How can I volunteer?","website","1 hour ago"],["Meera Bansal","Do you have river clean-up events?","instagram","3 hours ago"],["Siddharth Rao","I want to support this initiative.","linkedin","5 hours ago"],["Ananya Das","Can students participate?","youtube","8 hours ago"],["Kunal Verma","Please share details info.","google","1 day ago"]]}/></Card>
+        <Card title="Follow-up Tasks (12)" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All →</button>}><SimpleTable headers={["Task","Related Lead","Due Date","Status","Owner"]} rows={[["Call and share campaign brochure","Aarav Sharma","Apr 28, 2025","Overdue","MS"],["Send impact video","Priya Mehta","Apr 28, 2025","Today","AP"],["Follow up on donation interest","Rahul Joshi","Apr 29, 2025","Upcoming","PS"],["Schedule meeting","Sneha Iyer","Apr 29, 2025","Upcoming","MS"]]}/></Card>
+        <Card title="Recent Enquiries (5)" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All →</button>}><SimpleTable headers={["Name","Message","Source","Time"]} rows={[["Rohan Kulkarni","How can I volunteer?","website","1 hour ago"],["Meera Bansal","Do you have river clean-up events?","instagram","3 hours ago"],["Siddharth Rao","I want to support this initiative.","linkedin","5 hours ago"],["Ananya Das","Can students participate?","youtube","8 hours ago"],["Kunal Verma","Please share details info.","google","1 day ago"]]}/></Card>
       </div>
     </div>
   );
@@ -1306,24 +1308,24 @@ function AudienceTab() {
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-3">
-        <Card title="Audience by Age Group" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View Details</button>}>
+        <Card title="Audience by Age Group" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View Details</button>}>
           <div className="flex h-[165px] items-end justify-between gap-3 px-4 pb-4 pt-5">
             {[
               ["13–17",8],["18–24",18],["25–34",28],["35–44",22],["45–54",14],["55+",7]
             ].map(([label,v])=>(
               <div key={label as string} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
-                <span className="text-[9px] font-bold text-[#23365d]">{v}%</span>
+                <span className="text-[11px] font-semibold text-[#23365d]">{v}%</span>
                 <div className="w-full max-w-[36px] rounded-t-[4px] bg-[#6198e5]" style={{height:`${(v as number)*3.4}px`}}/>
-                <span className="text-[8.5px] text-[#78869b]">{label}</span>
+                <span className="text-[11px] text-[#78869b]">{label}</span>
               </div>
             ))}
           </div>
         </Card>
 
-        <Card title="Audience by Gender" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View Details</button>}>
+        <Card title="Audience by Gender" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View Details</button>}>
           <div className="flex h-[165px] items-center justify-center gap-5 p-3">
             <Donut segments={[{value:56,color:"#2878e8"},{value:42,color:"#8b5cf6"},{value:2,color:"#b8c0cb"}]} center="248K" centerSub="Total Audience"/>
-            <div className="space-y-3 text-[9px]">
+            <div className="space-y-3 text-[11px]">
               <Legend color="#2878e8" label="Male" value="56%  138,259"/>
               <Legend color="#8b5cf6" label="Female" value="42%  104,210"/>
               <Legend color="#b8c0cb" label="Non-binary / Other" value="2%  5,851"/>
@@ -1331,7 +1333,7 @@ function AudienceTab() {
           </div>
         </Card>
 
-        <Card title="Top Cities" action={<button className="text-[10px] font-semibold text-[#e23b55]">View All ›</button>}>
+        <Card title="Top Cities" action={<button className="text-[11.5px] font-semibold text-[#e23b55]">View All ›</button>}>
           <div className="p-3"><BarList rows={[
             {label:"Delhi",value:"12.4%  30,810",pct:12.4},{label:"Varanasi",value:"9.8%  24,330",pct:9.8},{label:"Lucknow",value:"7.6%  18,860",pct:7.6},{label:"Patna",value:"6.1%  15,150",pct:6.1},{label:"Bengaluru",value:"5.8%  14,380",pct:5.8},{label:"Other Cities",value:"58.3%  144,790",pct:58.3}
           ]} /></div>
@@ -1339,7 +1341,7 @@ function AudienceTab() {
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1fr_1fr_1fr]">
-        <Card title="Top Regions" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View Details</button>}>
+        <Card title="Top Regions" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View Details</button>}>
           <div className="grid grid-cols-[140px_1fr] items-center gap-2 p-3">
             <div className="rounded-[8px] bg-[#f8fbff] p-1">
               <IndiaMap data={[
@@ -1356,18 +1358,18 @@ function AudienceTab() {
             ]}/></div>
         </Card>
 
-        <Card title="Top Interests & Affinity Segments" action={<button className="text-[10px] font-semibold text-[#e23b55]">View All ›</button>}>
+        <Card title="Top Interests & Affinity Segments" action={<button className="text-[11.5px] font-semibold text-[#e23b55]">View All ›</button>}>
           <div className="space-y-2 p-3">
             {[
               ["Environment & Sustainability","32.6%","green"],["Clean Energy","28.4%","green"],["Wildlife & Nature","24.1%","green"],["Social Good","18.9%","purple"],["Travel & Outdoor","16.7%","blue"],["Health & Wellness","14.3%","red"]
-            ].map(([a,b,t])=><div key={a} className="flex items-center gap-2"><SoftIcon icon={t==="red"?Heart:t==="purple"?Heart:Sparkles} tone={t as keyof typeof iconTone} size={25}/><span className="flex-1 text-[9.5px] font-semibold text-[#3d4d6b]">{a}</span><b className="text-[9.5px] text-[#68778f]">{b}</b></div>)}
+            ].map(([a,b,t])=><div key={a} className="flex items-center gap-2"><SoftIcon icon={t==="red"?Heart:t==="purple"?Heart:Sparkles} tone={t as keyof typeof iconTone} size={25}/><span className="flex-1 text-[11px] font-semibold text-[#3d4d6b]">{a}</span><span className="text-[11px] font-semibold text-[#68778f]">{b}</span></div>)}
           </div>
         </Card>
 
-        <Card title="Audience Source Mix" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View Details</button>}>
+        <Card title="Audience Source Mix" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View Details</button>}>
           <div className="flex items-center gap-4 p-3">
             <Donut segments={[{value:41,color:"#2878e8"},{value:28,color:"#19a86b"},{value:15,color:"#8b5cf6"},{value:9,color:"#f59e0b"},{value:5,color:"#ef7f9d"},{value:2,color:"#94a3b8"}]} center="248K" centerSub="Total Audience"/>
-            <div className="space-y-2 text-[9px]">
+            <div className="space-y-2 text-[11px]">
               <Legend color="#2878e8" label="Organic Reach" value="41%"/><Legend color="#19a86b" label="Paid Ads" value="28%"/><Legend color="#8b5cf6" label="Social Engagement" value="15%"/><Legend color="#f59e0b" label="Website Visits" value="9%"/><Legend color="#ef7f9d" label="Partner Channels" value="5%"/><Legend color="#94a3b8" label="Other" value="2%"/>
             </div>
           </div>
@@ -1375,17 +1377,17 @@ function AudienceTab() {
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1.1fr_1.15fr_.9fr]">
-        <Card title="Lookalike & Remarketing Audiences" action={<button className="text-[10px] font-semibold text-[#e23b55]">View All ›</button>}>
+        <Card title="Lookalike & Remarketing Audiences" action={<button className="text-[11.5px] font-semibold text-[#e23b55]">View All ›</button>}>
           <div className="grid grid-cols-3 gap-2 p-3">
             {[
               ["Lookalike Audience","52,680","34%","19% Lookalike (Website Visitors)"],
               ["Remarketing Audience","41,360","18%","People who engaged (30 days)"],
               ["Video Viewers Audience","28,940","27%","75%+ video views (180 days)"]
-            ].map(([a,n,c,d])=><div key={a} className="rounded-[7px] border border-[#e7edf4] p-2.5"><SoftIcon icon={Users} tone="blue" size={28}/><div className="mt-2 text-[9px] font-semibold text-[#334465]">{a}</div><div className="mt-1 text-[16px] font-extrabold text-[#24365d]">{n}</div><div className="text-[9px] font-bold text-[#18a76a]">↑ {c}</div><div className="mt-1 text-[8px] text-[#8994a7]">{d}</div><button className="mt-2 w-full rounded-[5px] border border-[#dfe6ef] py-1 text-[8.5px] font-semibold text-[#4b6389]">View Audience</button></div>)}
+            ].map(([a,n,c,d])=><div key={a} className="rounded-[7px] border border-[#e7edf4] p-2.5"><SoftIcon icon={Users} tone="blue" size={28}/><div className="mt-2 text-[11px] font-semibold text-[#334465]">{a}</div><div className="mt-1 text-[16px] font-semibold text-[#24365d]">{n}</div><div className="text-[11px] font-semibold text-[#18a76a]">↑ {c}</div><div className="mt-1 text-[11px] text-[#8994a7]">{d}</div><button className="mt-2 w-full rounded-[5px] border border-[#dfe6ef] py-1 text-[11px] font-semibold text-[#4b6389]">View Audience</button></div>)}
           </div>
         </Card>
 
-        <Card title="Engagement by Segment" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View Details</button>}>
+        <Card title="Engagement by Segment" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View Details</button>}>
           <SimpleTable headers={["Segment","Audience Size","Engagement Rate"]} rows={[
             ["Environment Enthusiasts","82,430","4.8%"],
             ["Students & Young Professionals","54,210","3.6%"],
@@ -1395,7 +1397,7 @@ function AudienceTab() {
           ]}/>
         </Card>
 
-        <Card title="Recommendations" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View All</button>}>
+        <Card title="Recommendations" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
           <div className="divide-y divide-[#edf1f5]">
             <Recommendation title="Increase budget for 18–34 segment" detail="High engagement, strong conversion potential" />
             <Recommendation title="Create regional content for UP & Bihar" detail="High audience concentration" />
@@ -1423,7 +1425,7 @@ function BudgetTab() {
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1.2fr_1fr]">
         <Card title="Spend Over Time" action={<Select label="Last 30 days" />}>
           <div className="max-h-[225px] overflow-y-auto p-3">
-            <div className="mb-2 flex gap-4 text-[9px]"><Legend color="#2878e8" label="Daily Spend"/><Legend color="#2f72dc" label="Cumulative Spend"/><Legend color="#a9b4c4" label="Planned Spend"/></div>
+            <div className="mb-2 flex gap-4 text-[11px]"><Legend color="#2878e8" label="Daily Spend"/><Legend color="#2f72dc" label="Cumulative Spend"/><Legend color="#a9b4c4" label="Planned Spend"/></div>
             <MultiLineChart labels={["Mar 15","Mar 22","Mar 29","Apr 05","Apr 12","Apr 19","Apr 26"]} series={[
               {name:"Daily Spend",color:"#a6c7ef",values:[6,12,10,16,13,18,20]},
               {name:"Cumulative Spend",color:"#2878e8",values:[8,17,25,32,39,44,48]},
@@ -1443,7 +1445,7 @@ function BudgetTab() {
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1fr_1fr]">
-        <Card title="Budget by Objective / Phase" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View Details</button>}>
+        <Card title="Budget by Objective / Phase" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View Details</button>}>
           <SimpleTable headers={["Objective / Phase","Allocated","Spent","Remaining","Utilization"]} rows={[
             ["Awareness (Reach)","₹18,000","₹16,240","₹1,760","90%"],
             ["Engagement","₹12,000","₹10,680","₹1,320","89%"],
@@ -1452,7 +1454,7 @@ function BudgetTab() {
             ["Contingency","₹3,000","₹2,780","₹220","93%"],
           ]}/>
         </Card>
-        <Card title="Invoice / Payment Snapshot" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View All</button>}>
+        <Card title="Invoice / Payment Snapshot" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
           <SimpleTable headers={["Invoice #","Date","Amount","Status","Download"]} rows={[
             ["INV-2025-001","Mar 15, 2025","₹12,000","Paid","↓"],
             ["INV-2025-002","Mar 28, 2025","₹10,000","Paid","↓"],
@@ -1467,15 +1469,15 @@ function BudgetTab() {
         <Card title="Remaining Budget Forecast">
           <div className="flex items-center gap-4 p-3">
             <SoftIcon icon={CheckCircle2} tone="green" size={40}/>
-            <div className="flex-1"><div className="text-[10px] font-bold text-[#22935e]">You're on track</div><div className="mt-1 text-[9px] text-[#7f8ca0]">At current burn rate (₹1,720/day), your remaining budget of ₹5,420 will last for approximately <b>3 days</b> (Apr 29, 2025).</div></div>
-            <div className="text-right"><b className="block text-[13px] text-[#26375a]">₹1,720</b><span className="text-[8.5px] text-[#8a96a8]">Current daily burn</span></div>
-            <div className="text-right"><b className="block text-[13px] text-[#26375a]">3 days</b><span className="text-[8.5px] text-[#8a96a8]">Budget runway</span></div>
+            <div className="flex-1"><div className="text-[11.5px] font-semibold text-[#22935e]">You're on track</div><div className="mt-1 text-[11px] text-[#7f8ca0]">At current burn rate (₹1,720/day), your remaining budget of ₹5,420 will last for approximately <span className="font-semibold">3 days</span> (Apr 29, 2025).</div></div>
+            <div className="text-right"><span className="block text-[13px] font-semibold text-[#26375a]">₹1,720</span><span className="text-[11px] text-[#8a96a8]">Current daily burn</span></div>
+            <div className="text-right"><span className="block text-[13px] font-semibold text-[#26375a]">3 days</span><span className="text-[11px] text-[#8a96a8]">Budget runway</span></div>
           </div>
         </Card>
         <Card title="Pacing & Forecast">
           <div className="flex items-center gap-3 p-3">
             <div className="h-[100px] flex-1"><MultiLineChart labels={["Mar 15","Mar 22","Mar 29","Apr 05","Apr 12","Apr 19","Apr 26","Apr 30"]} series={[{name:"Actual",color:"#2878e8",values:[10,14,20,24,28,36,43,47]},{name:"Planned",color:"#aeb9c8",values:[9,15,22,29,35,42,48,50]},{name:"Forecast",color:"#19a86b",values:[10,14,20,24,28,36,43,49]}]} height={100}/></div>
-            <div className="w-[115px] rounded-[8px] bg-[#ecfbf4] p-2.5"><div className="text-[9px] text-[#718099]">Projected Total Spend</div><b className="mt-1 block text-[16px] text-[#1d8f5e]">₹47,100</b><span className="text-[9px] font-bold text-[#19a66a]">−2.4% vs. budget</span></div>
+            <div className="w-[115px] rounded-[8px] bg-[#ecfbf4] p-2.5"><div className="text-[11px] text-[#718099]">Projected Total Spend</div><span className="mt-1 block text-[16px] font-semibold text-[#1d8f5e]">₹47,100</span><span className="text-[11px] font-semibold text-[#19a66a]">−2.4% vs. budget</span></div>
           </div>
         </Card>
       </div>
@@ -1497,12 +1499,12 @@ function ActivityLogTab() {
 
       <div className="flex flex-wrap gap-1.5 rounded-[9px] border border-[#e5ebf3] bg-white p-2">
         <Select label="Mar 15, 2025 - Apr 30, 2025" /><Select label="All Activity Types"/><Select label="All Users"/><Select label="All Channels"/><Select label="All Statuses"/>
-        <div className="flex min-w-[230px] flex-1 items-center gap-2 rounded-[5px] border border-[#e1e7ef] px-2 text-[9px] text-[#8994a8]"><Search size={12}/>Search activities, comments or changes...</div>
-        <button className="rounded-[5px] bg-[#eff6ff] px-3 text-[9px] font-semibold text-[#2378e8]">Clear Filters</button>
+        <div className="flex min-w-[230px] flex-1 items-center gap-2 rounded-[5px] border border-[#e1e7ef] px-2 text-[11px] text-[#8994a8]"><Search size={12}/>Search activities, comments or changes...</div>
+        <button className="rounded-[5px] bg-[#eff6ff] px-3 text-[11px] font-semibold text-[#2378e8]">Clear Filters</button>
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1.35fr_.8fr]">
-        <Card title="Activity Timeline (364 activities)" action={<div className="flex rounded-[5px] bg-[#eef5ff] p-0.5"><button className="rounded bg-[#1d7be9] px-3 py-1 text-[9px] font-semibold text-white">☷ Timeline</button><button className="px-3 py-1 text-[9px] font-semibold text-[#687890]">☷ List</button></div>}>
+        <Card title="Activity Timeline (364 activities)" action={<div className="flex rounded-[5px] bg-[#eef5ff] p-0.5"><button className="rounded bg-[#1d7be9] px-3 py-1 text-[11px] font-semibold text-white">☷ Timeline</button><button className="px-3 py-1 text-[11px] font-semibold text-[#687890]">☷ List</button></div>}>
           <div className="divide-y divide-[#edf1f5]">
             {[
               ["2 hours ago","Apr 28, 2025","11:30 AM","Content published on Instagram","River Facts Series #3 · “Every Drop Counts”","Manish Sirohi","Published","instagram"],
@@ -1516,9 +1518,9 @@ function ActivityLogTab() {
             ].map(([ago,date,time,title,desc,user,status],i)=>(
               <div key={title} className="flex items-start gap-2.5 px-3 py-2.5">
                 <div className="relative pt-0.5"><span className={`flex h-7 w-7 items-center justify-center rounded-full ${i===0?"bg-[#e8fff4]":i===6?"bg-[#fff0f1]":"bg-[#eef5ff]"}`}>{i===0?<Send size={14} className="text-[#16aa6b]"/>:i===2?<CheckCircle2 size={14} className="text-[#f59e0b]"/>:i===6?<AlertCircle size={14} className="text-[#ef4444]"/>:<Activity size={14} className="text-[#2878e8]" />}</span></div>
-                <div className="w-[85px] shrink-0"><b className="block text-[9px] text-[#617089]">{ago}</b><span className="text-[8px] text-[#8b96a8]">{date}</span><span className="block text-[8px] text-[#8b96a8]">{time}</span></div>
-                <div className="min-w-0 flex-1"><b className="block text-[10px] text-[#2e4163]">{title}</b><span className="block truncate text-[8.5px] text-[#8490a3]">{desc}</span></div>
-                <div className="hidden w-[110px] items-center gap-1.5 md:flex"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#162038] text-[8px] font-bold text-white">{user?.[0]}</span><span className="truncate text-[8.5px] font-semibold text-[#5f6d84]">{user}</span></div>
+                <div className="w-[85px] shrink-0"><span className="block text-[11px] font-semibold text-[#617089]">{ago}</span><span className="text-[11px] text-[#8b96a8]">{date}</span><span className="block text-[11px] text-[#8b96a8]">{time}</span></div>
+                <div className="min-w-0 flex-1"><span className="block text-[11.5px] font-semibold text-[#2e4163]">{title}</span><span className="block truncate text-[11px] text-[#8490a3]">{desc}</span></div>
+                <div className="hidden w-[110px] items-center gap-1.5 md:flex"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#162038] text-[11px] font-semibold text-white">{user?.[0]}</span><span className="truncate text-[11px] font-semibold text-[#5f6d84]">{user}</span></div>
                 <StatusPill fixed tone={status==="Rejected"?"red":status==="Updated"?"blue":status==="Approved"?"green":status==="Published"?"green":status==="Scheduled"?"blue":"gray"}>{status}</StatusPill>
               </div>
             ))}
@@ -1526,7 +1528,7 @@ function ActivityLogTab() {
         </Card>
 
         <div className="space-y-2.5 overflow-x-auto">
-          <Card title="Approval History (24)" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View All</button>}>
+          <Card title="Approval History (24)" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
             <div className="overflow-x-auto">
               <SimpleTable headers={["","Item","By","Status"]} rows={[
                 ["✓","Creative approved","Rohan Mehta","Approved"],
@@ -1537,7 +1539,7 @@ function ActivityLogTab() {
               ]}/>
             </div>
           </Card>
-          <Card title="Recent Changes (96)" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View All</button>}>
+          <Card title="Recent Changes (96)" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
             <div className="overflow-x-auto">
               <SimpleTable headers={["Time","Item","Field","Old Value","New Value"]} rows={[
                 ["2h ago","Campaign","Status","Paused","Active"],
@@ -1548,7 +1550,7 @@ function ActivityLogTab() {
               ]}/>
             </div>
           </Card>
-          <Card title="System Events & Notifications (30)" action={<button className="text-[10px] font-semibold text-[#1e78e8]">View All</button>}>
+          <Card title="System Events & Notifications (30)" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
             <div className="overflow-x-auto">
               <ActivityRows />
             </div>
@@ -1571,14 +1573,14 @@ function ChannelTable({ detailed = false }: { detailed?: boolean }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
-        <thead><tr className="border-b border-[#e8edf3] bg-[#fafbfd] text-left text-[9px] text-[#78859a]">{headers.map(h=><th key={h} className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
+        <thead><tr className="border-b border-[#e8edf3] bg-[#fafbfd] text-left text-[11px] text-[#78859a]">{headers.map(h=><th key={h} className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
         <tbody>{rows.map((r)=>(
           <tr key={r[0]} className="border-b border-[#edf1f5]">
-            <td className="px-2 py-2"><div className="flex items-center gap-1.5"><BrandIcon platform={r[1]} size={15}/><span className="text-[9px] font-semibold text-[#40516e]">{r[0]}</span></div></td>
+            <td className="px-2 py-2"><div className="flex items-center gap-1.5"><BrandIcon platform={r[1]} size={15}/><span className="text-[11px] font-semibold text-[#40516e]">{r[0]}</span></div></td>
             {detailed ? <>
-              {r.slice(2).map((x,i)=><td key={i} className="px-2 text-[9px] text-[#687790]">{x}</td>)}
+              {r.slice(2).map((x,i)=><td key={i} className="px-2 text-[11px] text-[#687790]">{x}</td>)}
             </> : <>
-              <td className="px-2"><StatusPill tone="green">● Active</StatusPill></td><td className="px-2 text-[9px] text-[#687790]">{r[2]}</td><td className="px-2 text-[9px] text-[#687790]">{r[4]}</td><td className="px-2 text-[9px] text-[#687790]">{r[6]}</td><td className="px-2 text-[9px] text-[#687790]">{r[7]}</td><td className="px-2 text-[9px] text-[#687790]">{r[8]}</td>
+              <td className="px-2"><StatusPill tone="green">● Active</StatusPill></td><td className="px-2 text-[11px] text-[#687790]">{r[2]}</td><td className="px-2 text-[11px] text-[#687790]">{r[4]}</td><td className="px-2 text-[11px] text-[#687790]">{r[6]}</td><td className="px-2 text-[11px] text-[#687790]">{r[7]}</td><td className="px-2 text-[11px] text-[#687790]">{r[8]}</td>
             </>}
           </tr>
         ))}</tbody>
@@ -1588,26 +1590,26 @@ function ChannelTable({ detailed = false }: { detailed?: boolean }) {
 }
 
 function InfoLine({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
-  return <div className="grid grid-cols-[22px_92px_1fr] items-start gap-1.5"><Icon size={14} className="mt-0.5 text-[#2b80e8]"/><span className="text-[9px] font-semibold text-[#77859a]">{label}</span><span className="text-[9px] text-[#4d5e79]">{value}</span></div>;
+  return <div className="grid grid-cols-[22px_92px_1fr] items-start gap-1.5"><Icon size={14} className="mt-0.5 text-[#2b80e8]"/><span className="text-[11px] font-semibold text-[#77859a]">{label}</span><span className="text-[11px] text-[#4d5e79]">{value}</span></div>;
 }
 
 function Legend({ color, label, value }: { color: string; label: string; value?: string }) {
-  return <span className="inline-flex items-center gap-1"><i className="h-2 w-2 rounded-full" style={{background:color}}/><span>{label}</span>{value && <b className="ml-1 text-[#445572]">{value}</b>}</span>;
+  return <span className="inline-flex items-center gap-1"><i className="h-2 w-2 rounded-full" style={{background:color}}/><span>{label}</span>{value && <span className="ml-1 font-semibold text-[#445572]">{value}</span>}</span>;
 }
 
 function Select({ label }: { label: string }) {
-  return <button className="inline-flex h-[27px] items-center gap-1 rounded-[5px] border border-[#dfe6ef] bg-white px-2 text-[9px] font-medium text-[#66758d] whitespace-nowrap">{label}<ChevronDown size={11}/></button>;
+  return <button className="inline-flex h-[27px] items-center gap-1 rounded-[5px] border border-[#dfe6ef] bg-white px-2 text-[11px] font-medium text-[#66758d] whitespace-nowrap">{label}<ChevronDown size={11}/></button>;
 }
 
 function SimpleTable({ headers, rows }: { headers: string[]; rows: (string | readonly string[])[][] }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[420px] border-collapse">
-        <thead><tr className="border-b border-[#e7ecf2] bg-[#fafbfd] text-left text-[9px] text-[#7b879b]">{headers.map(h=><th key={h} className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
+        <thead><tr className="border-b border-[#e7ecf2] bg-[#fafbfd] text-left text-[11px] text-[#7b879b]">{headers.map(h=><th key={h} className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
         <tbody>{rows.map((row,i)=><tr key={i} className="border-b border-[#edf1f5] last:border-b-0">{row.map((cell,j)=>{
           const text = String(cell);
           const platform = ["instagram","facebook","linkedin","youtube","google","whatsapp","website"].includes(text) ? text as keyof typeof platformMeta : null;
-          return <td key={j} className="px-2 py-2 text-[9px] text-[#65748c] whitespace-pre-line">{platform ? <BrandIcon platform={platform} size={15}/> : text}</td>;
+          return <td key={j} className="px-2 py-2 text-[11px] text-[#65748c] whitespace-pre-line">{platform ? <BrandIcon platform={platform} size={15}/> : text}</td>;
         })}</tr>)}</tbody>
       </table>
     </div>
@@ -1621,7 +1623,7 @@ function ActivityRows() {
       ["New lead received from website","Apr 27, 2025, 02:40 PM"],
       ["Creative approved","Apr 26, 2025, 04:15 PM by Priya Sharma"],
       ["Budget updated","Apr 25, 2025, 11:30 AM by Manish Sirohi"],
-    ].map(([a,b],i)=><div key={a} className="flex items-start gap-2 px-3 py-2"><span className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full ${i===0?"bg-[#e9fbf3] text-[#18a96b]":"bg-[#edf5ff] text-[#2878e8]"}`}><Activity size={11}/></span><div><b className="block text-[9px] text-[#465675]">{a}</b><span className="text-[8px] text-[#8994a7]">{b}</span></div></div>)}
+    ].map(([a,b],i)=><div key={a} className="flex items-start gap-2 px-3 py-2"><span className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full ${i===0?"bg-[#e9fbf3] text-[#18a96b]":"bg-[#edf5ff] text-[#2878e8]"}`}><Activity size={11}/></span><div><span className="block text-[11px] font-semibold text-[#465675]">{a}</span><span className="text-[11px] text-[#8994a7]">{b}</span></div></div>)}
   </div>;
 }
 
@@ -1646,7 +1648,7 @@ function CampaignPage({}: { id?: string }) {
         .campaign-page { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
         .campaign-page * { box-sizing: border-box; }
         .campaign-page button { font-family: inherit; }
-        .action-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:30px; padding:0 11px; border:1px solid #dfe6ef; border-radius:6px; background:#fff; color:#273a5f; font-size:9px; font-weight:700; white-space:nowrap; box-shadow:0 1px 1px rgba(15,35,70,.02); }
+        .action-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; height:30px; padding:0 11px; border:1px solid #dfe6ef; border-radius:6px; background:#fff; color:#273a5f; font-size:11px; font-weight:600; white-space:nowrap; box-shadow:0 1px 1px rgba(15,35,70,.02); }
         .icon-btn { display:inline-flex; align-items:center; justify-content:center; width:25px; height:25px; border:1px solid #dfe6ef; border-radius:5px; background:#fff; color:#66758d; }
         .tabs-scroll { scrollbar-width: none; }
         .tabs-scroll::-webkit-scrollbar { display: none; }
@@ -1663,7 +1665,7 @@ function CampaignPage({}: { id?: string }) {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`relative whitespace-nowrap px-3 py-2 text-[12px] font-bold transition-colors ${
+              className={`relative whitespace-nowrap px-3 py-2 text-[12px] font-semibold transition-colors ${
                 activeTab === tab ? "text-[#1d2d55]" : "text-[#738098] hover:text-[#2b4169]"
               }`}
             >

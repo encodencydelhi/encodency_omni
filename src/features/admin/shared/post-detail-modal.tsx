@@ -358,6 +358,34 @@ const platformPreviews: Record<EventType, React.ComponentType<{ event: PostDetai
   link: WebsitePreview,
 };
 
+function parseDateToInputFormat(dateStr?: string): string {
+  if (!dateStr) {
+    return new Date().toISOString().split("T")[0];
+  }
+  const parsed = new Date(dateStr);
+  if (!isNaN(parsed.getTime())) {
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, "0");
+    const d = String(parsed.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  return new Date().toISOString().split("T")[0];
+}
+
+function parseTimeToInputFormat(timeStr?: string): string {
+  if (!timeStr) return "10:00";
+  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+  if (match) {
+    let hour = parseInt(match[1], 10);
+    const min = match[2];
+    const ampm = match[3]?.toUpperCase();
+    if (ampm === "PM" && hour < 12) hour += 12;
+    if (ampm === "AM" && hour === 12) hour = 0;
+    return `${String(hour).padStart(2, "0")}:${min}`;
+  }
+  return "10:00";
+}
+
 export function PostDetailModal({
   event,
   onClose,
@@ -366,12 +394,16 @@ export function PostDetailModal({
   onClose: () => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isRescheduling, setIsRescheduling] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState(() => parseDateToInputFormat(event.scheduledDate));
+  const [rescheduleTime, setRescheduleTime] = useState(() => parseTimeToInputFormat(event.time));
+  const [rescheduleSuccess, setRescheduleSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: event.name,
     description: event.description,
     caption: `A glimpse of our team in action!<br/>Together for a cleaner, healthier Ganga.<br/>${event.hashtags?.join(" ") || ""}`,
     contentType: event.contentType || "",
-    scheduledDate: event.scheduledDate || "Apr 25, 2025",
+    scheduledDate: event.scheduledDate || "Sep 14, 2026",
     time: event.time,
     location: event.location || "",
     hashtags: event.hashtags?.join(" ") || "",
@@ -394,7 +426,7 @@ export function PostDetailModal({
       description: event.description,
       caption: `A glimpse of our team in action!<br/>Together for a cleaner, healthier Ganga.<br/>${event.hashtags?.join(" ") || ""}`,
       contentType: event.contentType || "",
-      scheduledDate: event.scheduledDate || "Apr 25, 2025",
+      scheduledDate: event.scheduledDate || "Sep 14, 2026",
       time: event.time,
       location: event.location || "",
       hashtags: event.hashtags?.join(" ") || "",
@@ -405,8 +437,58 @@ export function PostDetailModal({
     setIsEditing(false);
   };
 
+  const handleConfirmReschedule = () => {
+    let formattedDate = rescheduleDate;
+    if (rescheduleDate && rescheduleDate.includes("-")) {
+      const [y, m, d] = rescheduleDate.split("-");
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const monthName = months[parseInt(m, 10) - 1] || m;
+      formattedDate = `${monthName} ${parseInt(d, 10)}, ${y}`;
+    }
+    let formattedTime = rescheduleTime;
+    if (rescheduleTime && rescheduleTime.includes(":")) {
+      const [h, min] = rescheduleTime.split(":");
+      const hour = parseInt(h, 10);
+      const ampm = hour >= 12 ? "PM" : "AM";
+      const h12 = hour % 12 || 12;
+      formattedTime = `${String(h12).padStart(2, "0")}:${min} ${ampm}`;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      scheduledDate: formattedDate,
+      time: formattedTime,
+    }));
+    setIsRescheduling(false);
+    const successMsg = `Post rescheduled to ${formattedDate} at ${formattedTime}!`;
+    setRescheduleSuccess(successMsg);
+    setTimeout(() => setRescheduleSuccess(null), 4000);
+  };
+
+  const setQuickDate = (daysFromNow: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + daysFromNow);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    setRescheduleDate(`${y}-${m}-${day}`);
+  };
+
+  const setQuickTime = (timeStr: string) => {
+    setRescheduleTime(timeStr);
+  };
+
   const PreviewComponent = platformPreviews[event.type];
   const platformColor = getPlatformColor(event.type);
+
+  // Computed event for preview with updated formData
+  const previewEvent: PostDetailData = {
+    ...event,
+    name: formData.name,
+    description: formData.description,
+    time: formData.time,
+    scheduledDate: formData.scheduledDate,
+    campaign: formData.campaign,
+  };
 
   return (
     <div
@@ -417,20 +499,84 @@ export function PostDetailModal({
         className="relative flex h-auto max-h-[90vh] w-full max-w-[55%] min-w-[500px] overflow-hidden rounded-[16px] bg-white shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] max-[900px]:max-w-[70%] max-[900px]:min-w-0 max-[900px]:flex-col max-[900px]:max-h-[95vh] max-[900px]:overflow-y-auto max-[600px]:max-w-[95%] max-[600px]:min-w-0 max-[480px]:rounded-[12px]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute right-[10px] top-[10px] z-50 grid h-[30px] w-[30px] place-items-center rounded-full bg-gradient-to-br from-[#ef2029] to-[#d91922] text-white shadow-lg shadow-red-200/50 transition-all hover:bg-[#d91922] hover:scale-110 hover:shadow-xl max-[480px]:right-[8px] max-[480px]:top-[8px] max-[480px]:h-[26px] max-[480px]:w-[26px]"
-        >
-          <X size={14} strokeWidth={2.2} />
-        </button>
+        {/* Top Actions: Reschedule / Edit / Save / Cancel / Close */}
+        <div className="absolute right-[10px] top-[10px] z-50 flex items-center gap-[6px] max-[480px]:right-[8px] max-[480px]:top-[8px]">
+          {!isEditing ? (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRescheduling((prev) => !prev);
+                }}
+                title={isRescheduling ? "Done Rescheduling" : "Reschedule Post Date & Time"}
+                aria-label="Reschedule"
+                className={`group grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full border shadow-md transition-all hover:scale-110 active:scale-95 max-[480px]:h-[26px] max-[480px]:w-[26px] ${
+                  isRescheduling
+                    ? "border-[#2563eb] bg-[#2563eb] text-white ring-2 ring-blue-300"
+                    : "border-[#dfe4ec] bg-white text-[#4b5563] hover:border-[#2563eb] hover:bg-[#eff6ff] hover:text-[#2563eb]"
+                }`}
+              >
+                <Clock size={14} strokeWidth={2.2} className={`transition-transform duration-200 ${isRescheduling ? "rotate-45" : "group-hover:rotate-45"}`} />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRescheduling(false);
+                  setIsEditing(true);
+                }}
+                title="Edit Post"
+                aria-label="Edit Post"
+                className="group grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full border border-[#dfe4ec] bg-white text-[#4b5563] shadow-md transition-all hover:border-[#ef2029] hover:bg-[#fff5f5] hover:text-[#ef2029] hover:scale-110 active:scale-95 max-[480px]:h-[26px] max-[480px]:w-[26px]"
+              >
+                <Pencil size={13} strokeWidth={2} className="transition-transform group-hover:rotate-12" />
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={handleSave}
+                title="Save Changes"
+                aria-label="Save Changes"
+                className="grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full bg-[#059669] text-white shadow-md transition-all hover:bg-[#047857] hover:scale-110 active:scale-95 max-[480px]:h-[26px] max-[480px]:w-[26px]"
+              >
+                <Save size={13} strokeWidth={2} />
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                title="Cancel Edit"
+                aria-label="Cancel Edit"
+                className="grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full border border-[#dfe4ec] bg-white text-[#6b7280] shadow-md transition-all hover:bg-[#f3f4f6] hover:scale-110 active:scale-95 max-[480px]:h-[26px] max-[480px]:w-[26px]"
+              >
+                <XCircle size={13} strokeWidth={2} />
+              </button>
+            </>
+          )}
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            title="Close"
+            className="grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full bg-gradient-to-br from-[#ef2029] to-[#d91922] text-white shadow-lg shadow-red-200/50 transition-all hover:bg-[#d91922] hover:scale-110 active:scale-95 hover:shadow-xl max-[480px]:h-[26px] max-[480px]:w-[26px]"
+          >
+            <X size={14} strokeWidth={2.2} />
+          </button>
+        </div>
+
+        {/* Reschedule Success Toast */}
+        {rescheduleSuccess && (
+          <div className="absolute left-1/2 top-[12px] z-[58] -translate-x-1/2 animate-in fade-in zoom-in-95 duration-200 flex items-center gap-2 rounded-full border border-[#86efac] bg-[#f0fdf4] px-4 py-2 text-[11px] font-bold text-[#15803d] shadow-lg">
+            <CheckCircle size={16} className="text-[#16a34a]" />
+            <span>{rescheduleSuccess}</span>
+          </div>
+        )}
 
         {/* Left — Platform Preview */}
         <div className="flex w-[45%] shrink-0 items-stretch justify-center overflow-y-auto bg-gradient-to-br from-[#fafbfc] via-[#f5f7fa] to-[#f0f2f5] px-[8px] py-[12px] max-[900px]:w-full max-[900px]:px-[16px] max-[900px]:py-[14px] max-[480px]:px-[10px] max-[480px]:py-[10px]">
           <div className="w-full max-w-[320px]">
-            <PreviewComponent event={event} />
+            <PreviewComponent event={previewEvent} />
           </div>
         </div>
 
@@ -440,8 +586,17 @@ export function PostDetailModal({
           <div className="mb-[14px] h-[3px] w-full rounded-full bg-gradient-to-r from-[#ef2029] via-[#f59e0b] to-[#8055d2]" />
 
           {/* Title */}
-          <h2 className="m-0 mb-[6px] pr-[30px] text-[16px] font-[750] leading-[1.2] text-[#1c2743] max-[480px]:text-[14px]">
-            {event.name}
+          <h2 className="m-0 mb-[6px] pr-[115px] text-[16px] font-[750] leading-[1.2] text-[#1c2743] max-[480px]:text-[14px]">
+            {isEditing ? (
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => updateField("name", e.target.value)}
+                className="w-full rounded-[6px] border border-[#dce3eb] bg-white px-[8px] py-[4px] text-[14px] font-[750] text-[#1c2743] outline-none focus:border-[#8055d2]"
+              />
+            ) : (
+              formData.name
+            )}
           </h2>
 
           {/* Platform / Status / Time / Priority */}
@@ -455,7 +610,7 @@ export function PostDetailModal({
             </span>
             <span className="flex h-[26px] items-center gap-[4px] rounded-full bg-[#f5f7fa] px-[10px] text-[10px] font-[500] text-[#66738a]">
               <Clock size={11} strokeWidth={1.8} />
-              {event.time}
+              {formData.time}
             </span>
             {event.priority && (
               <span className={`flex h-[26px] items-center gap-[4px] rounded-full px-[10px] text-[10px] font-[650] ${
@@ -481,7 +636,7 @@ export function PostDetailModal({
               />
             ) : (
               <p className="m-0 text-[11px] font-[450] leading-[1.5] text-[#52617a]">
-                {event.description}
+                {formData.description}
               </p>
             )}
           </div>
@@ -523,7 +678,7 @@ export function PostDetailModal({
                   className="w-full rounded-[6px] border border-[#dce3eb] bg-white px-[10px] py-[4px] text-[10px] font-[700] text-[#1c2743] outline-none focus:border-[#8055d2]"
                 />
               ) : (
-                <b className="block truncate text-[10px] font-[700] text-[#1c2743]">{event.campaign}</b>
+                <b className="block truncate text-[10px] font-[700] text-[#1c2743]">{formData.campaign}</b>
               )}
             </div>
           </div>
@@ -574,41 +729,128 @@ export function PostDetailModal({
                     className="w-full rounded-[6px] border border-[#dce3eb] bg-white px-[10px] py-[4px] text-[10px] text-[#52617a] outline-none focus:border-[#8055d2]"
                   />
                 ) : (
-                  <p className="m-0 text-[10px] font-[450] text-[#52617a]">{event.contentType}</p>
+                  <p className="m-0 text-[10px] font-[450] text-[#52617a]">{formData.contentType}</p>
                 )}
               </div>
             </div>
           )}
 
           {/* Post Date & Time */}
-          <div className="mb-[10px] flex items-center gap-[8px]">
-            <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full bg-[#edf2f8] text-[#29354f]">
-              <CalendarDays size={14} strokeWidth={1.8} />
-            </span>
-            <div className="flex-1">
-              <span className="block text-[10px] font-[700] text-[#29354f]">Post Date & Time</span>
-              {isEditing ? (
-                <div className="flex gap-[6px]">
-                  <input
-                    type="text"
-                    value={formData.scheduledDate}
-                    onChange={(e) => updateField("scheduledDate", e.target.value)}
-                    className="flex-1 rounded-[6px] border border-[#dce3eb] bg-white px-[10px] py-[4px] text-[10px] text-[#52617a] outline-none focus:border-[#8055d2]"
-                    placeholder="Date"
-                  />
-                  <input
-                    type="text"
-                    value={formData.time}
-                    onChange={(e) => updateField("time", e.target.value)}
-                    className="w-[80px] rounded-[6px] border border-[#dce3eb] bg-white px-[10px] py-[4px] text-[10px] text-[#52617a] outline-none focus:border-[#8055d2]"
-                    placeholder="Time"
-                  />
+          <div
+            className={`mb-[10px] rounded-[8px] transition-all ${
+              isRescheduling
+                ? "border border-[#93c5fd] bg-[#eff6ff] p-[10px] shadow-sm ring-2 ring-blue-100"
+                : "flex items-center gap-[8px] p-[2px]"
+            }`}
+          >
+            <div className="flex w-full items-start gap-[8px]">
+              <span
+                className={`grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full transition-colors ${
+                  isRescheduling ? "bg-[#2563eb] text-white" : "bg-[#edf2f8] text-[#29354f]"
+                }`}
+              >
+                <CalendarDays size={14} strokeWidth={1.8} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="mb-[3px] flex items-center justify-between">
+                  <span className="block text-[10px] font-[700] text-[#29354f]">
+                    Post Date & Time {isRescheduling && <span className="ml-1 text-[9px] font-semibold text-[#2563eb]">• Rescheduling</span>}
+                  </span>
+                  {!isEditing && !isRescheduling && (
+                    <button
+                      type="button"
+                      onClick={() => setIsRescheduling(true)}
+                      className="flex items-center gap-1 rounded-[4px] px-1.5 py-0.5 text-[9px] font-semibold text-[#2563eb] hover:bg-[#eff6ff]"
+                      title="Click to reschedule"
+                    >
+                      <Pencil size={9} />
+                      <span>Edit</span>
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <p className="m-0 text-[10px] font-[450] text-[#52617a]">
-                  {event.scheduledDate || "Apr 25, 2025"} <span className="text-[#c5cbd4]">|</span> {event.time}
-                </p>
-              )}
+
+                {isEditing || isRescheduling ? (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-[6px]">
+                      <input
+                        type="text"
+                        value={formData.scheduledDate}
+                        onChange={(e) => updateField("scheduledDate", e.target.value)}
+                        className="min-w-[120px] flex-1 rounded-[6px] border border-[#dce3eb] bg-white px-[8px] py-[4px] text-[11px] font-medium text-[#1e293b] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]"
+                        placeholder="e.g. Sep 14, 2026"
+                      />
+                      <input
+                        type="text"
+                        value={formData.time}
+                        onChange={(e) => updateField("time", e.target.value)}
+                        className="w-[90px] rounded-[6px] border border-[#dce3eb] bg-white px-[8px] py-[4px] text-[11px] font-medium text-[#1e293b] outline-none focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb]"
+                        placeholder="e.g. 10:00 AM"
+                      />
+
+                      {isRescheduling && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsRescheduling(false);
+                              setRescheduleSuccess(`Rescheduled to ${formData.scheduledDate} at ${formData.time}!`);
+                              setTimeout(() => setRescheduleSuccess(null), 3500);
+                            }}
+                            className="flex items-center gap-1 rounded-[5px] bg-[#2563eb] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm hover:bg-[#1d4ed8] active:scale-95"
+                          >
+                            <CheckCircle size={11} />
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsRescheduling(false)}
+                            className="rounded-[5px] border border-[#cbd5e1] bg-white px-2 py-1 text-[10px] font-semibold text-[#64748b] hover:bg-[#f8fafc]"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Quick presets */}
+                    {isRescheduling && (
+                      <div className="flex flex-wrap items-center gap-1 pt-1 border-t border-[#dbeafe]">
+                        <span className="text-[8.5px] font-bold text-[#64748b]">Quick Dates:</span>
+                        {[
+                          { label: "Today", days: 0 },
+                          { label: "Tomorrow", days: 1 },
+                          { label: "+3 Days", days: 3 },
+                          { label: "Next Week", days: 7 },
+                        ].map((preset) => (
+                          <button
+                            key={preset.label}
+                            type="button"
+                            onClick={() => {
+                              const d = new Date();
+                              d.setDate(d.getDate() + preset.days);
+                              const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                              const formatted = `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+                              updateField("scheduledDate", formatted);
+                            }}
+                            className="rounded bg-white border border-[#bfdbfe] px-1.5 py-0.5 text-[8.5px] font-semibold text-[#1d4ed8] hover:bg-[#dbeafe]"
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p
+                    onClick={() => setIsRescheduling(true)}
+                    className="m-0 cursor-pointer text-[10px] font-[500] text-[#52617a] hover:text-[#1d4ed8]"
+                  >
+                    <strong className="text-[#1c2743]">{formData.scheduledDate}</strong>{" "}
+                    <span className="text-[#c5cbd4]">|</span>{" "}
+                    <strong className="text-[#1c2743]">{formData.time}</strong>
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -753,46 +995,6 @@ export function PostDetailModal({
               <p className="m-0 text-[10px] font-[450] text-[#52617a]">1 Image (1080 × 1920)</p>
             </div>
           </div>
-
-          {/* Action Buttons */}
-          {isEditing ? (
-            <div className="flex gap-[8px]">
-              <button
-                type="button"
-                onClick={handleSave}
-                className="flex h-[34px] flex-1 items-center justify-center gap-[6px] rounded-[8px] bg-gradient-to-r from-[#078359] to-[#059669] px-[14px] text-[11px] font-[700] text-white shadow-md shadow-green-200/50 transition-all hover:shadow-lg hover:shadow-green-200/60 hover:scale-[1.02]"
-              >
-                <Save size={13} strokeWidth={1.9} />
-                Save Changes
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="flex h-[34px] flex-1 items-center justify-center gap-[6px] rounded-[8px] border border-[#dce3eb] bg-gradient-to-r from-white to-[#f8fafc] px-[14px] text-[11px] font-[650] text-[#29354f] transition-all hover:bg-[#f0f4f8] hover:scale-[1.02]"
-              >
-                <XCircle size={13} strokeWidth={1.9} />
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-[8px]">
-              <button
-                type="button"
-                onClick={() => setIsEditing(true)}
-                className="flex h-[34px] flex-1 items-center justify-center gap-[6px] rounded-[8px] bg-gradient-to-r from-[#ef2029] to-[#d91922] px-[14px] text-[11px] font-[700] text-white shadow-md shadow-red-200/50 transition-all hover:shadow-lg hover:shadow-red-200/60 hover:scale-[1.02]"
-              >
-                <Pencil size={13} strokeWidth={1.9} />
-                Edit Post
-              </button>
-              <button
-                type="button"
-                className="flex h-[34px] flex-1 items-center justify-center gap-[6px] rounded-[8px] border border-[#dce3eb] bg-gradient-to-r from-white to-[#f8fafc] px-[14px] text-[11px] font-[650] text-[#29354f] transition-all hover:bg-[#f0f4f8] hover:scale-[1.02]"
-              >
-                <Clock size={13} strokeWidth={1.9} />
-                Reschedule
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

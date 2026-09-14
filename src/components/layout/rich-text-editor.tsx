@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import {
   Bold, Italic, Underline, Strikethrough, List, ListOrdered,
@@ -38,11 +39,13 @@ export default function RichTextEditor({
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiPickerBtnRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const [activeStates, setActiveStates] = useState<Record<string, boolean>>({});
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [pickerPos, setPickerPos] = useState<{ top: number; left: number } | null>(null);
   const [spellCheckEnabled, setSpellCheckEnabled] = useState(true);
 
   // Apply Gmail-style wavy red underlines to errors inside editor
@@ -88,20 +91,65 @@ export default function RichTextEditor({
     }
   };
 
-  // Close emoji picker when clicking outside
+  const toggleEmojiPicker = () => {
+    if (!showEmojiPicker) {
+      saveCurrentSelection();
+      if (emojiPickerBtnRef.current) {
+        const rect = emojiPickerBtnRef.current.getBoundingClientRect();
+        const pickerHeight = 330;
+        const pickerWidth = 310;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const top =
+          spaceBelow >= pickerHeight + 10
+            ? rect.bottom + 6
+            : Math.max(10, rect.top - pickerHeight - 6);
+        const left = Math.max(10, Math.min(rect.left, window.innerWidth - pickerWidth - 16));
+        setPickerPos({ top, left });
+      }
+      setShowEmojiPicker(true);
+    } else {
+      setShowEmojiPicker(false);
+    }
+  };
+
+  // Close emoji picker when clicking outside or reposition on scroll
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(target)) {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(target) &&
+        emojiPickerBtnRef.current &&
+        !emojiPickerBtnRef.current.contains(target)
+      ) {
         setShowEmojiPicker(false);
       }
     };
 
+    const handleScrollOrResize = () => {
+      if (showEmojiPicker && emojiPickerBtnRef.current) {
+        const rect = emojiPickerBtnRef.current.getBoundingClientRect();
+        const pickerHeight = 330;
+        const pickerWidth = 310;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const top =
+          spaceBelow >= pickerHeight + 10
+            ? rect.bottom + 6
+            : Math.max(10, rect.top - pickerHeight - 6);
+        const left = Math.max(10, Math.min(rect.left, window.innerWidth - pickerWidth - 16));
+        setPickerPos({ top, left });
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
     };
-  }, []);
+  }, [showEmojiPicker]);
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -252,29 +300,36 @@ export default function RichTextEditor({
         <Divider />
 
         {/* Emoji Picker Button */}
-        <div className="relative" ref={emojiPickerRef}>
+        <div className="relative" ref={emojiPickerBtnRef}>
           <ToolBtn
-            onClick={() => {
-              saveCurrentSelection();
-              setShowEmojiPicker(!showEmojiPicker);
-            }}
+            onClick={toggleEmojiPicker}
             title="Emoji Picker"
             active={showEmojiPicker}
           >
             <Smile size={14} className={showEmojiPicker ? "text-amber-500" : ""} />
           </ToolBtn>
 
-          {showEmojiPicker && (
-            <div className="absolute left-0 top-full z-50 mt-1 shadow-2xl rounded-xl border border-gray-200 bg-white overflow-hidden">
+          {showEmojiPicker && pickerPos && typeof document !== "undefined" && createPortal(
+            <div
+              ref={emojiPickerRef}
+              style={{
+                position: "fixed",
+                top: `${pickerPos.top}px`,
+                left: `${pickerPos.left}px`,
+                zIndex: 999999,
+              }}
+              className="shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-xl border border-gray-200 bg-white overflow-hidden"
+            >
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
                 autoFocusSearch={false}
                 searchPlaceHolder="Search emoji..."
-                width={320}
-                height={380}
+                width={300}
+                height={330}
                 previewConfig={{ showPreview: false }}
               />
-            </div>
+            </div>,
+            document.body
           )}
         </div>
 
