@@ -155,17 +155,17 @@ export function MetaChannelPage() {
           <Stat key={stat.label} {...stat} />
         ))}
       </div>
-      <div className="grid items-start gap-2 [&>section]:h-[232px] xl:grid-cols-[1.5fr_1fr_.86fr]">
+      <div className="grid items-start gap-2 [&>section]:h-auto xl:grid-cols-[1.5fr_1fr_.86fr]">
         <PerformanceOverview />
         <ConnectedAccounts />
         <NeedsAttention />
       </div>
-      <div className="grid items-start gap-2 [&>section]:h-[236px] xl:grid-cols-[1.16fr_1.2fr_.64fr]">
+      <div className="grid items-start gap-2 [&>section]:h-auto xl:grid-cols-[1.16fr_1.2fr_.64fr]">
         <TopPosts />
         <CampaignPerformance />
         <QuickActions />
       </div>
-      <div className="grid items-start gap-2 [&>section]:h-[224px] xl:grid-cols-[1fr_1.1fr_.9fr]">
+      <div className="grid items-start gap-2 [&>section]:h-auto xl:grid-cols-[1fr_1.1fr_.9fr]">
         <AudienceInsights />
         <Conversations />
         <ScheduledContent />
@@ -192,13 +192,13 @@ function Header() {
           href="/admin/meta/ads"
           className="flex h-10 items-center gap-2 rounded-xl bg-[#1769DF] px-4 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#1259BD]"
         >
-          <span className="text-left"><span className="block">Open Meta Ads Manager</span><span className="block text-[8px] font-medium text-blue-100">Paid ads across Facebook &amp; Instagram</span></span>
+          <span className="text-left"><span className="block">Open Meta Ads Manager</span><span className="block text-[12px] font-medium text-blue-100">Paid ads across Facebook &amp; Instagram</span></span>
         </Link>
         <button className="flex h-10 w-[185px] items-center gap-2 rounded-xl border border-[#D7E0EB] bg-white px-3 shadow-[0_1px_4px_rgb(31_50_81/0.08)]">
           <CalendarDays className="size-3.5 shrink-0 text-[#19315E]" />
           <span className="text-left leading-none">
-            <b className="block text-[9.5px] leading-4 text-[#172044]">Last 30 days</b>
-            <small className="block whitespace-nowrap text-[7.5px] leading-3 text-[#75829D]">
+            <b className="block text-[12px] leading-4 text-[#172044]">Last 30 days</b>
+            <small className="block whitespace-nowrap text-[12px] leading-3 text-[#75829D]">
               Mar 15, 2025 – Apr 14, 2025
             </small>
           </span>
@@ -242,12 +242,12 @@ function Stat({
           <Icon className="size-[15px]" />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-[9px] font-semibold leading-3 text-[#52617D]">{label}</p>
+          <p className="truncate text-[12px] font-semibold leading-3 text-[#52617D]">{label}</p>
           <div className="flex items-baseline gap-1">
             <b className="text-[19px] leading-[22px] tracking-[-0.02em] text-[#142044]">{value}</b>
-            <span className="whitespace-nowrap text-[8px] font-semibold text-[#05A36D]">↑ {trend}</span>
+            <span className="whitespace-nowrap text-[12px] font-semibold text-[#05A36D]">↑ {trend}</span>
           </div>
-          <p className="mt-0.5 truncate text-[7.5px] leading-3 text-[#7C89A2]">{note}</p>
+          <p className="mt-0.5 truncate text-[12px] leading-3 text-[#7C89A2]">{note}</p>
         </div>
       </div>
     </div>
@@ -273,29 +273,29 @@ function Box({
     <section className="flex flex-col overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-sm">
       <header
         className={cn(
-          "flex shrink-0 items-center justify-between gap-2 border-b border-[#E8EDF3] px-2.5",
-          subtitle ? "h-[38px]" : "h-8",
+          "flex shrink-0 items-center justify-between gap-2 border-b border-[#E8EDF3] px-2.5 py-2",
+          subtitle ? "min-h-[38px]" : "h-8",
         )}
       >
         <div className="min-w-0">
           <h2 className="flex items-center gap-1.5 text-[12px] font-semibold leading-4 text-[#172044]">
             {title}
             {badge && (
-              <i className="grid size-[15px] place-items-center rounded-full bg-[#EB0711] text-[8px] font-semibold not-italic text-white">
+              <i className="grid size-[15px] place-items-center rounded-full bg-[#EB0711] text-[12px] font-semibold not-italic text-white">
                 {badge}
               </i>
             )}
           </h2>
-          {subtitle && <p className="truncate text-[8px] leading-3 text-[#7C89A2]">{subtitle}</p>}
+          {subtitle && <p className="text-[12px] leading-3 text-[#7C89A2]">{subtitle}</p>}
         </div>
         {filter && (
-          <button className="flex h-[22px] shrink-0 items-center gap-1 rounded-sm border border-[#DDE4ED] px-1.5 text-[8px] font-semibold text-[#425273]">
+          <button className="flex h-[22px] shrink-0 items-center gap-1 rounded-sm border border-[#DDE4ED] px-1.5 text-[12px] font-semibold text-[#425273]">
             {filter}
             <ChevronDown className="size-2.5" />
           </button>
         )}
         {action && (
-          <button className="shrink-0 whitespace-nowrap text-[9px] font-semibold text-[#EB0711]">{action} →</button>
+          <button className="shrink-0 whitespace-nowrap text-[12px] font-semibold text-[#EB0711]">{action} →</button>
         )}
       </header>
       {children}
@@ -317,7 +317,7 @@ function PerformanceOverview() {
       filter="Last 30 days"
     >
       <div className="flex min-h-0 flex-1 flex-col px-2 pb-1">
-        <div className="flex h-6 shrink-0 flex-wrap items-center gap-x-2.5 text-[8px] text-[#52617D]">
+        <div className="flex h-6 shrink-0 flex-wrap items-center gap-x-2.5 text-[12px] text-[#52617D]">
           {legend.map(([label, color]) => (
             <span key={label} className="flex items-center gap-1">
               <i className="size-1.5 rounded-full" style={{ background: color }} />
@@ -339,9 +339,9 @@ function PerformanceOverview() {
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="#E8EDF3" vertical />
-              <XAxis dataKey="d" tick={{ fontSize: 8, fill: "#71809D" }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="d" tick={{ fontSize: 12, fill: "#71809D" }} axisLine={false} tickLine={false} />
               <YAxis
-                tick={{ fontSize: 8, fill: "#71809D" }}
+                tick={{ fontSize: 12, fill: "#71809D" }}
                 axisLine={false}
                 tickLine={false}
                 width={42}
@@ -350,7 +350,7 @@ function PerformanceOverview() {
                 tickFormatter={(value: number) => (value ? `${value / 1000}K` : "0")}
               />
               <Tooltip
-                contentStyle={{ fontSize: 9, borderRadius: 6, border: "1px solid #DDE4ED", padding: "4px 8px" }}
+                contentStyle={{ fontSize: 12, borderRadius: 6, border: "1px solid #DDE4ED", padding: "4px 8px" }}
                 formatter={(value) => Number(value).toLocaleString("en-IN")}
               />
               <Area
@@ -414,9 +414,9 @@ function ConnectedAccounts() {
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[10px] font-semibold leading-4 text-[#172044]">{account.name}</p>
-                <p className="truncate text-[8px] leading-3 text-[#7C89A2]">{account.type}</p>
+                <p className="truncate text-[12px] leading-3 text-[#7C89A2]">{account.type}</p>
               </div>
-              <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-[#E5F7EF] px-1.5 py-0.5 text-[8px] font-semibold text-[#078359]">
+              <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-[#E5F7EF] px-1.5 py-0.5 text-[12px] font-semibold text-[#078359]">
                 <BadgeCheck className="size-2.5" />
                 Connected
               </span>
@@ -428,7 +428,7 @@ function ConnectedAccounts() {
               {account.metrics.map(([value, label]) => (
                 <span key={label} className="min-w-0">
                   <b className="block text-[10px] leading-4 text-[#172044]">{value}</b>
-                  <small className="block truncate text-[7px] leading-3 text-[#7C89A2]">{label}</small>
+                  <small className="block truncate text-[12px] leading-3 text-[#7C89A2]">{label}</small>
                 </span>
               ))}
             </div>
@@ -454,8 +454,8 @@ function NeedsAttention() {
               <Icon className="size-3" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[9px] font-semibold leading-4 text-[#1B2647]">{title}</p>
-              <p className="truncate text-[8px] leading-3 text-[#7A87A0]">{detail}</p>
+              <p className="truncate text-[12px] font-semibold leading-4 text-[#1B2647]">{title}</p>
+              <p className="truncate text-[12px] leading-3 text-[#7A87A0]">{detail}</p>
             </div>
           </div>
         ))}
@@ -470,7 +470,7 @@ function TopPosts() {
   return (
     <Box title="Top Performing Posts / Reels" action="View all">
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2">
-        <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[8px] text-[#7A87A0]", postCols)}>
+        <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[12px] text-[#7A87A0]", postCols)}>
           <span>Content</span>
           <span>Platform</span>
           <span>Type</span>
@@ -483,7 +483,7 @@ function TopPosts() {
           <div
             key={post.title}
             className={cn(
-              "grid items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[8.5px] text-[#3B4A6B]",
+              "grid items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[12px] text-[#3B4A6B]",
               postCols,
             )}
           >
@@ -497,7 +497,7 @@ function TopPosts() {
               />
               <span className="min-w-0">
                 <b className="block truncate text-[#172044]">{post.title}</b>
-                <small className="block truncate text-[7px] text-[#8A97AF]">{post.excerpt}</small>
+                <small className="block truncate text-[12px] text-[#8A97AF]">{post.excerpt}</small>
               </span>
             </span>
             <ChannelLogo channel={post.platform} className="size-[15px]" />
@@ -505,7 +505,7 @@ function TopPosts() {
             <b className="text-[#172044]">{post.reach}</b>
             <span>{post.engagement}</span>
             <span>{post.clicks}</span>
-            <span className="text-[8px] text-[#71809D]">{post.published}</span>
+            <span className="text-[12px] text-[#71809D]">{post.published}</span>
           </div>
         ))}
       </div>
@@ -519,7 +519,7 @@ function CampaignPerformance() {
   return (
     <Box title="Campaign Performance" action="View all">
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2">
-        <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[8px] text-[#7A87A0]", campaignCols)}>
+        <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[12px] text-[#7A87A0]", campaignCols)}>
           <span>Campaign</span>
           <span>Objective</span>
           <span>Spend</span>
@@ -532,7 +532,7 @@ function CampaignPerformance() {
           <div
             key={campaign.name}
             className={cn(
-              "grid items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[8.5px] text-[#3B4A6B]",
+              "grid items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[12px] text-[#3B4A6B]",
               campaignCols,
             )}
           >
@@ -553,7 +553,7 @@ function CampaignPerformance() {
             <span>{campaign.cpl}</span>
             <i
               className={cn(
-                "w-fit rounded px-1 py-0.5 text-[7.5px] font-semibold not-italic",
+                "w-fit rounded px-1 py-0.5 text-[12px] font-semibold not-italic",
                 campaign.status === "Active" ? "bg-[#E5F7EF] text-[#078359]" : "bg-[#EAF2FF] text-[#286CB7]",
               )}
             >
@@ -585,7 +585,7 @@ function QuickActions() {
             href={href}
             key={label}
             className={cn(
-              "flex h-[44px] items-center gap-1.5 rounded-sm border px-1.5 text-left text-[8.5px] font-semibold leading-3 transition-colors",
+              "flex h-[44px] items-center gap-1.5 rounded-sm border px-1.5 text-left text-[12px] font-semibold leading-3 transition-colors",
               actionSkin[color],
             )}
           >
@@ -627,7 +627,7 @@ function AudienceInsights() {
             <div className="absolute inset-0 grid place-items-center text-center">
               <span>
                 <b className="block text-[18px] leading-5 tracking-[-0.02em] text-[#172044]">24.6K</b>
-                <small className="text-[8.5px] text-[#71809D]">Total Followers</small>
+                <small className="text-[12px] text-[#71809D]">Total Followers</small>
               </span>
             </div>
           </div>
@@ -672,7 +672,7 @@ function Conversations() {
   return (
     <Box title="Recent Comments & Messages" action="View all">
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2">
-        <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[8px] text-[#7A87A0]", conversationCols)}>
+        <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[12px] text-[#7A87A0]", conversationCols)}>
           <span>User</span>
           <span>Platform</span>
           <span>Message</span>
@@ -683,14 +683,14 @@ function Conversations() {
           <div
             key={item.user}
             className={cn(
-              "grid items-center gap-1 border-t border-[#EDF1F5] py-[7px] text-[8.5px] text-[#3B4A6B]",
+              "grid items-center gap-1 border-t border-[#EDF1F5] py-[7px] text-[12px] text-[#3B4A6B]",
               conversationCols,
             )}
           >
             <span className="flex min-w-0 items-center gap-1.5">
               <i
                 className={cn(
-                  "grid size-4 shrink-0 place-items-center rounded-full text-[7px] font-semibold not-italic",
+                  "grid size-4 shrink-0 place-items-center rounded-full text-[12px] font-semibold not-italic",
                   [
                     "bg-[#FFECF1] text-[#D8285F]",
                     "bg-[#E7F0FF] text-[#3478DB]",
@@ -706,10 +706,10 @@ function Conversations() {
             </span>
             <ChannelLogo channel={item.platform} className="size-[15px]" />
             <span className="truncate">{item.message}</span>
-            <span className="truncate text-[8px] text-[#71809D]">{item.time}</span>
+            <span className="truncate text-[12px] text-[#71809D]">{item.time}</span>
             <i
               className={cn(
-                "w-fit rounded px-1 py-0.5 text-[7.5px] font-semibold not-italic",
+                "w-fit rounded px-1 py-0.5 text-[12px] font-semibold not-italic",
                 item.type === "Comment" ? "bg-[#E5F7EF] text-[#078359]" : "bg-[#EAF2FF] text-[#286CB7]",
               )}
             >
@@ -728,7 +728,7 @@ function ScheduledContent() {
   return (
     <Box title="Scheduled Content" action="View all">
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2">
-        <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[8px] text-[#7A87A0]", scheduledCols)}>
+        <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[12px] text-[#7A87A0]", scheduledCols)}>
           <span>Content</span>
           <span>Platform</span>
           <span>Type</span>
@@ -738,7 +738,7 @@ function ScheduledContent() {
           <div
             key={item.title}
             className={cn(
-              "grid items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[8.5px] text-[#3B4A6B]",
+              "grid items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[12px] text-[#3B4A6B]",
               scheduledCols,
             )}
           >
@@ -754,7 +754,7 @@ function ScheduledContent() {
             </span>
             <ChannelLogo channel={item.platform} className="size-[15px]" />
             <span>{item.type}</span>
-            <span className="text-[8px] leading-3 text-[#62718E]">
+            <span className="text-[12px] leading-3 text-[#62718E]">
               {item.date}
               <br />
               {item.time}

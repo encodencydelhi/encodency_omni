@@ -358,7 +358,7 @@ export default function ContentCalendar() {
       {/* Header */}
       <header className="grid h-[96px] grid-cols-[minmax(0,1fr)_555px] items-start gap-[18px] max-[1200px]:grid-cols-[minmax(0,1fr)_420px] max-[820px]:h-auto max-[820px]:grid-cols-1">
         <div>
-          <div className="mb-[5px] mt-[2px] flex items-center gap-2 text-[10px] text-[#66738a]">
+          <div className="mb-[5px] mt-[2px] flex items-center gap-2 text-[11px] text-[#66738a]">
             <span>Dashboard</span>
             <ChevronRight size={10} />
             <b className="text-[#1c2743]">Calendar</b>
@@ -381,7 +381,7 @@ export default function ContentCalendar() {
             A stronger tomorrow.
           </b>
 
-          <span className="mt-[5px] block text-[9px] text-[#728098]">
+          <span className="mt-[5px] block text-[11px] text-[#728098]">
             Plan ahead. Stay visible. Grow your impact.
           </span>
 
@@ -413,7 +413,7 @@ export default function ContentCalendar() {
                 <ChevronRight size={14} />
               </button>
 
-              <button className="h-[31px] rounded-[6px] border border-[#dfe5ec] bg-white px-3 text-[9px] font-[650] text-[#29354f] max-[560px]:px-2">
+              <button className="h-[31px] rounded-[6px] border border-[#dfe5ec] bg-white px-3 text-[11px] font-[650] text-[#29354f] max-[560px]:px-2">
                 Today
               </button>
             </div>
@@ -426,19 +426,19 @@ export default function ContentCalendar() {
             </div>
 
             <div className="flex justify-end">
-              <button className="h-[31px] w-[61px] rounded-l-[6px] border border-[#e51f29] bg-[#e51f29] text-[9px] font-[650] text-white max-[560px]:w-[48px] max-[560px]:text-[8px]">
+              <button className="h-[31px] w-[61px] rounded-l-[6px] border border-[#e51f29] bg-[#e51f29] text-[11px] font-[650] text-white max-[560px]:w-[48px] max-[560px]:text-[11px]">
                 Month
               </button>
 
-              <button className="h-[31px] w-[61px] border-y border-[#dfe5ec] bg-white text-[9px] font-[650] text-[#29354f] max-[560px]:w-[48px] max-[560px]:text-[8px]">
+              <button className="h-[31px] w-[61px] border-y border-[#dfe5ec] bg-white text-[11px] font-[650] text-[#29354f] max-[560px]:w-[48px] max-[560px]:text-[11px]">
                 Week
               </button>
 
-              <button className="h-[31px] w-[61px] rounded-r-[6px] border border-[#dfe5ec] bg-white text-[9px] font-[650] text-[#29354f] max-[560px]:w-[48px] max-[560px]:text-[8px]">
+              <button className="h-[31px] w-[61px] rounded-r-[6px] border border-[#dfe5ec] bg-white text-[11px] font-[650] text-[#29354f] max-[560px]:w-[48px] max-[560px]:text-[11px]">
                 List
               </button>
 
-              <button className="ml-[10px] flex h-[31px] items-center justify-center gap-[6px] rounded-[6px] border border-[#dfe5ec] bg-white px-[11px] text-[9px] font-[650] text-[#29354f] max-[560px]:ml-[5px] max-[560px]:px-[7px]">
+              <button className="ml-[10px] flex h-[31px] items-center justify-center gap-[6px] rounded-[6px] border border-[#dfe5ec] bg-white px-[11px] text-[11px] font-[650] text-[#29354f] max-[560px]:ml-[5px] max-[560px]:px-[7px]">
                 <SlidersHorizontal size={12} />
                 Filters
               </button>
@@ -451,7 +451,7 @@ export default function ContentCalendar() {
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
                 <div
                   key={day}
-                  className="grid place-items-center border-b border-r border-[#e8ecf2] bg-[#f8fafc] text-[9px] font-[700] text-[#24304b] last:border-r-0"
+                  className="grid place-items-center border-b border-r border-[#e8ecf2] bg-[#f8fafc] text-[11px] font-[700] text-[#24304b] last:border-r-0"
                 >
                   {day}
                 </div>
@@ -478,7 +478,7 @@ export default function ContentCalendar() {
                       ].join(" ")}
                     >
                       <span
-                        className={`mb-[3px] block text-[9px] ${
+                        className={`mb-[3px] block text-[11px] ${
                           cell.out
                             ? "text-[#8792a5]"
                             : "text-[#172440]"
@@ -503,16 +503,16 @@ export default function ContentCalendar() {
                             <ChannelIcon type={evt.type} size={10} />
 
                             <div className="min-w-0">
-                              <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[7px] leading-[1.1] max-[560px]:text-[8px]">
+                              <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] leading-[1.3] max-[560px]:text-[11px]">
                                 {evt.name}
                               </b>
 
-                              <small className="block overflow-hidden text-ellipsis whitespace-nowrap text-[7px] text-[#637089] leading-[1.1] max-[560px]:text-[7px]">
+                              <small className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[#637089] leading-[1.3] max-[560px]:text-[11px]">
                                 {evt.time}
                               </small>
                             </div>
 
-                            <span className="text-[8px] text-[#59677e]">⋮</span>
+                            <span className="text-[11px] text-[#59677e]">⋮</span>
                           </div>
                         ))}
                       </div>
@@ -530,12 +530,12 @@ export default function ContentCalendar() {
               <div className="flex h-[38px] items-start justify-between px-3 py-[9px]">
                 <h2 className="m-0 text-[12px] font-[760]">
                   Today&apos;s Schedule{" "}
-                  <span className="rounded-[10px] bg-[#eef1f6] px-[7px] py-[3px] text-[8px]">
+                  <span className="rounded-[10px] bg-[#eef1f6] px-[7px] py-[3px] text-[11px]">
                     3
                   </span>
                 </h2>
 
-                <button className="border-0 bg-transparent text-[8px] font-[700] text-[#e2262f]">
+                <button className="border-0 bg-transparent text-[11px] font-[700] text-[#e2262f]">
                   View all →
                 </button>
               </div>
@@ -543,22 +543,22 @@ export default function ContentCalendar() {
               <table className="w-full min-w-[650px] table-fixed border-collapse">
                 <thead>
                   <tr>
-                    <th className="h-[26px] w-[82px] bg-[#f7f9fc] px-3 text-left text-[7.5px] font-[650] text-[#66738a]">
+                    <th className="h-[26px] w-[82px] bg-[#f7f9fc] px-3 text-left text-[11px] font-[650] text-[#66738a]">
                       Time
                     </th>
-                    <th className="h-[26px] bg-[#f7f9fc] px-3 text-left text-[7.5px] font-[650] text-[#66738a]">
+                    <th className="h-[26px] bg-[#f7f9fc] px-3 text-left text-[11px] font-[650] text-[#66738a]">
                       Content
                     </th>
-                    <th className="h-[26px] w-[110px] bg-[#f7f9fc] px-3 text-left text-[7.5px] font-[650] text-[#66738a]">
+                    <th className="h-[26px] w-[110px] bg-[#f7f9fc] px-3 text-left text-[11px] font-[650] text-[#66738a]">
                       Channel
                     </th>
-                    <th className="h-[26px] w-[100px] bg-[#f7f9fc] px-3 text-left text-[7.5px] font-[650] text-[#66738a]">
+                    <th className="h-[26px] w-[100px] bg-[#f7f9fc] px-3 text-left text-[11px] font-[650] text-[#66738a]">
                       Project
                     </th>
-                    <th className="h-[26px] w-[68px] bg-[#f7f9fc] px-3 text-left text-[7.5px] font-[650] text-[#66738a]">
+                    <th className="h-[26px] w-[68px] bg-[#f7f9fc] px-3 text-left text-[11px] font-[650] text-[#66738a]">
                       Status
                     </th>
-                    <th className="h-[26px] w-[85px] bg-[#f7f9fc] px-3 text-left text-[7.5px] font-[650] text-[#66738a]">
+                    <th className="h-[26px] w-[85px] bg-[#f7f9fc] px-3 text-left text-[11px] font-[650] text-[#66738a]">
                       Actions
                     </th>
                   </tr>
@@ -568,7 +568,7 @@ export default function ContentCalendar() {
                   {todaySchedule.map(
                     ([time, title, description, type, status]) => (
                       <tr key={title}>
-                        <td className="h-[39px] border-t border-[#eef1f5] px-3 text-[8px] text-[#44516b]">
+                        <td className="h-[39px] border-t border-[#eef1f5] px-3 text-[11px] text-[#44516b]">
                           {time}
                         </td>
 
@@ -579,11 +579,11 @@ export default function ContentCalendar() {
                             </span>
 
                             <div className="min-w-0">
-                              <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[8px]">
+                              <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px]">
                                 {title}
                               </b>
 
-                              <small className="mt-[2px] block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#8a94a5]">
+                              <small className="mt-[2px] block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[#8a94a5]">
                                 {description}
                               </small>
                             </div>
@@ -594,13 +594,13 @@ export default function ContentCalendar() {
                           <ChannelIcon type={type} size={12} />
                         </td>
 
-                        <td className="border-t border-[#eef1f5] px-3 text-[8px] text-[#44516b]">
+                        <td className="border-t border-[#eef1f5] px-3 text-[11px] text-[#44516b]">
                           Moksha Sewa
                         </td>
 
                         <td className="border-t border-[#eef1f5] px-3">
                           <span
-                            className={`rounded-[7px] px-[7px] py-1 text-[7px] ${
+                            className={`rounded-[7px] px-[7px] py-1 text-[11px] ${
                               status === "Draft"
                                 ? "bg-[#eef1f5] text-[#65738a]"
                                 : "bg-[#e9f3ff] text-[#2874cc]"
@@ -612,7 +612,7 @@ export default function ContentCalendar() {
 
                         <td className="border-t border-[#eef1f5] px-3">
                           <div className="flex items-center gap-1">
-                            <button className="h-[24px] rounded-[5px] border border-[#e1e6ed] bg-white px-[7px] text-[7px]">
+                            <button className="h-[24px] rounded-[5px] border border-[#e1e6ed] bg-white px-[7px] text-[11px]">
                               Edit
                             </button>
 
@@ -638,8 +638,8 @@ export default function ContentCalendar() {
                 <div className="flex items-center gap-2 rounded-[6px] bg-[#fff0f1] p-[9px]">
                   <Pencil className="h-5 w-5 shrink-0 text-[#e12630]" />
                   <div className="min-w-0">
-                    <b className="block text-[8px]">Create Post</b>
-                    <span className="block text-[9px] text-[#69758b]">
+                    <b className="block text-[11px]">Create Post</b>
+                    <span className="block text-[11px] text-[#69758b]">
                       Design and schedule content
                     </span>
                   </div>
@@ -648,8 +648,8 @@ export default function ContentCalendar() {
                 <div className="flex items-center gap-2 rounded-[6px] bg-[#eaf3ff] p-[9px]">
                   <Megaphone className="h-5 w-5 shrink-0 text-[#287fd7]" />
                   <div className="min-w-0">
-                    <b className="block text-[8px]">Plan Campaign</b>
-                    <span className="block text-[9px] text-[#69758b]">
+                    <b className="block text-[11px]">Plan Campaign</b>
+                    <span className="block text-[11px] text-[#69758b]">
                       Create a multi-channel campaign
                     </span>
                   </div>
@@ -658,8 +658,8 @@ export default function ContentCalendar() {
                 <div className="flex items-center gap-2 rounded-[6px] bg-[#e7f8f1] p-[9px]">
                   <ImageIcon className="h-5 w-5 shrink-0 text-[#19a26e]" />
                   <div className="min-w-0">
-                    <b className="block text-[8px]">Upload Media</b>
-                    <span className="block text-[9px] text-[#69758b]">
+                    <b className="block text-[11px]">Upload Media</b>
+                    <span className="block text-[11px] text-[#69758b]">
                       Add images, videos or files
                     </span>
                   </div>
@@ -668,8 +668,8 @@ export default function ContentCalendar() {
                 <div className="flex items-center gap-2 rounded-[6px] bg-[#f0eaff] p-[9px]">
                   <BarChart3 className="h-5 w-5 shrink-0 text-[#8055d2]" />
                   <div className="min-w-0">
-                    <b className="block text-[8px]">View Reports</b>
-                    <span className="block text-[9px] text-[#69758b]">
+                    <b className="block text-[11px]">View Reports</b>
+                    <span className="block text-[11px] text-[#69758b]">
                       See content performance
                     </span>
                   </div>
@@ -692,7 +692,7 @@ export default function ContentCalendar() {
             </h3>
 
             <div className="mt-[7px]">
-              <div className="mb-1 grid grid-cols-7 text-center text-[7px] text-[#647087]">
+              <div className="mb-1 grid grid-cols-7 text-center text-[11px] text-[#647087]">
                 {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
                   <span key={day}>{day}</span>
                 ))}
@@ -706,7 +706,7 @@ export default function ContentCalendar() {
                 ].map((day, index) => (
                   <span
                     key={index}
-                    className={`grid h-[20px] place-items-center rounded-full text-[8px] ${
+                    className={`grid h-[20px] place-items-center rounded-full text-[11px] ${
                       index < 2 || index > 31
                         ? "text-[#a2aab8]"
                         : day === 14
@@ -725,7 +725,7 @@ export default function ContentCalendar() {
           <section className="rounded-[7px] border border-[#e4e8ef] bg-white p-[10px]">
             <h3 className="m-0 flex justify-between text-[13px] font-semibold">
               Filters
-              <button className="border-0 bg-transparent text-[8px] font-[700] text-[#e2262f]">
+              <button className="border-0 bg-transparent text-[11px] font-[700] text-[#e2262f]">
                 Reset
               </button>
             </h3>
@@ -737,18 +737,18 @@ export default function ContentCalendar() {
               ["Campaign", "All Campaigns"],
             ].map(([label, value]) => (
               <div className="mt-2" key={label}>
-                <label className="mb-1 block text-[8px] text-[#657189]">
+                <label className="mb-1 block text-[11px] text-[#657189]">
                   {label}
                 </label>
 
-                <div className="flex h-[28px] items-center justify-between rounded-[5px] border border-[#dfe5ec] px-2 text-[8px] text-[#39465f]">
+                <div className="flex h-[28px] items-center justify-between rounded-[5px] border border-[#dfe5ec] px-2 text-[11px] text-[#39465f]">
                   {value}
                   <ChevronDown size={11} />
                 </div>
               </div>
             ))}
 
-            <div className="mt-[10px] text-[10px] font-[750]">
+            <div className="mt-[10px] text-[11px] font-[750]">
               Content Status
             </div>
 
@@ -761,7 +761,7 @@ export default function ContentCalendar() {
               ].map(([label, count, dot]) => (
                 <div
                   key={label}
-                  className="flex h-[20px] items-center gap-2 text-[8px]"
+                  className="flex h-[20px] items-center gap-2 text-[11px]"
                 >
                   <i
                     className="block h-2 w-2 rounded-full"
@@ -781,7 +781,7 @@ export default function ContentCalendar() {
                 Upcoming (Next 7 Days)
               </h3>
 
-              <button className="border-0 bg-transparent text-[8px] font-[700] text-[#e2262f]">
+              <button className="border-0 bg-transparent text-[11px] font-[700] text-[#e2262f]">
                 View all →
               </button>
             </div>
@@ -794,11 +794,11 @@ export default function ContentCalendar() {
                 <ChannelIcon type={type} size={14} />
 
                 <div className="min-w-0">
-                  <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[8px]">
+                  <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px]">
                     {name}
                   </b>
 
-                  <small className="mt-[2px] block overflow-hidden text-ellipsis whitespace-nowrap text-[7px] text-[#7e899c]">
+                  <small className="mt-[2px] block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[#7e899c]">
                     {meta}
                   </small>
                 </div>

@@ -32,7 +32,7 @@ export function ClientsPage() {
 
         <div className="relative hidden h-[76px] overflow-hidden rounded-xl border bg-gradient-to-r from-white via-red-50/30 to-blue-50/50 px-4 py-3 lg:block">
           <p className="text-[13px] font-semibold text-foreground">Turn Ideas Into Impact</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Build. Publish. Engage. Grow.</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Build. Publish. Engage. Grow.</p>
 
           <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-end gap-1">
             <div className="flex items-end gap-0.5 mb-1.5">
@@ -41,7 +41,7 @@ export function ClientsPage() {
               <span className="h-10 w-2 rounded-t-sm bg-primary" />
             </div>
             <div className="ml-3 flex h-10 w-[100px] items-center justify-center rounded-lg border bg-white shadow-sm p-1.5 gap-1.5">
-              <span className="grid size-5 place-items-center rounded-full border border-red-200 text-primary bg-red-50 text-[10px]">
+              <span className="grid size-5 place-items-center rounded-full border border-red-200 text-primary bg-red-50 text-[11px]">
                 ◎
               </span>
               <div className="flex gap-0.5">
@@ -120,7 +120,7 @@ export function ClientsPage() {
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px] text-left">
-            <thead className="bg-muted/50 text-[10px] text-muted-foreground">
+            <thead className="bg-muted/50 text-[11px] text-muted-foreground">
               <tr>
                 <th className="w-8 pl-3 py-2"><input type="checkbox" className="rounded border-gray-300 size-3" /></th>
                 {["Project", "Website", "Status", "Connected Channels", "Leads (30d)", "Campaigns", "SEO Score", "Last Activity", "Actions"].map((h) => (
@@ -134,14 +134,14 @@ export function ClientsPage() {
                   <td className="pl-3 py-1.5"><input type="checkbox" className="rounded border-gray-300 size-3" /></td>
                   <td className="px-2 py-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-emerald-50 text-[10px] font-semibold border border-emerald-100" style={{ color: project.color || '#078359' }}>
+                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-emerald-50 text-[11px] font-semibold border border-emerald-100" style={{ color: project.color || '#078359' }}>
                         {project.logoText}
                       </span>
                       <div className="min-w-0">
                         <Link href={`/admin/projects/${project.id}`} className="font-semibold text-foreground hover:underline truncate block text-[12px]">
                           {project.name}
                         </Link>
-                        <p className="w-[140px] truncate text-[9.5px] text-muted-foreground mt-0.5" title={project.description}>
+                        <p className="w-[140px] truncate text-[11px] text-muted-foreground mt-0.5" title={project.description}>
                           {project.description}
                         </p>
                       </div>
@@ -155,7 +155,7 @@ export function ClientsPage() {
                   </td>
                   <td className="px-2 py-1.5">
                     <span className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
                       project.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                     )}>
                       <span className={cn("size-1 rounded-full", project.status === "active" ? "bg-emerald-500" : "bg-amber-500")} />
@@ -168,7 +168,7 @@ export function ClientsPage() {
                         <ChannelLogo key={channel} channel={channel} className="size-5 rounded-full border-2 border-white bg-white shadow-sm" />
                       ))}
                       {project.connectedChannels.length > 4 && (
-                        <span className="grid size-5 place-items-center rounded-full border-2 border-white bg-muted text-[8px] font-semibold text-muted-foreground shadow-sm relative z-10">
+                        <span className="grid size-5 place-items-center rounded-full border-2 border-white bg-muted text-[11px] font-semibold text-muted-foreground shadow-sm relative z-10">
                           +{project.connectedChannels.length - 4}
                         </span>
                       )}
@@ -177,7 +177,7 @@ export function ClientsPage() {
                   <td className="px-2 py-1.5">
                     <div className="flex items-center gap-1.5">
                       <strong className="text-[12px]">{project.leads}</strong>
-                      <p className={cn("text-[10px] font-semibold", index === 3 ? "text-red-600" : "text-emerald-600")}>
+                      <p className={cn("text-[11px] font-semibold", index === 3 ? "text-red-600" : "text-emerald-600")}>
                         {index === 3 ? "↓ 8%" : "↑ " + [24, 18, 12][index] + "%"}
                       </p>
                     </div>
@@ -185,7 +185,7 @@ export function ClientsPage() {
                   <td className="px-2 py-1.5">
                     <div className="flex flex-col gap-0">
                       <strong className="text-[12px]">{project.campaigns}</strong>
-                      <p className="w-fit rounded bg-emerald-50 px-1 py-[1px] text-[8.5px] font-medium text-emerald-700 flex items-center gap-0.5">
+                      <p className="w-fit rounded bg-emerald-50 px-1 py-[1px] text-[11px] font-medium text-emerald-700 flex items-center gap-0.5">
                         <span className="size-1 rounded-full bg-emerald-500" />
                         {index === 3 ? 0 : Math.max(2, project.campaigns - 3)} active
                       </p>
@@ -196,13 +196,13 @@ export function ClientsPage() {
                   </td>
                   <td className="px-2 py-1.5 text-[11px] text-muted-foreground">
                     <p className="font-medium text-foreground">{project.lastActivity || (index === 0 ? "2 hours ago" : index === 1 ? "5 hours ago" : index === 2 ? "1 day ago" : "3 days ago")}</p>
-                    <p className="text-[9px] truncate max-w-[130px]">
+                    <p className="text-[11px] truncate max-w-[130px]">
                       {["Post published on Instagram", "New lead from website form", "Campaign updated", "No recent activity"][index]}
                     </p>
                   </td>
                   <td className="px-2 py-1.5">
                     <div className="flex items-center gap-1">
-                      <Link href={`/admin/projects/${project.id}`} className="rounded-sm border px-2 py-1 text-[10px] font-semibold transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
+                      <Link href={`/admin/projects/${project.id}`} className="rounded-sm border px-2 py-1 text-[11px] font-semibold transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
                         Open
                       </Link>
                       <button className="grid size-6 place-items-center rounded-sm border transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
@@ -217,7 +217,7 @@ export function ClientsPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between border-t px-3 py-1.5 text-[10px] text-muted-foreground">
+        <div className="flex items-center justify-between border-t px-3 py-1.5 text-[11px] text-muted-foreground">
           <span>Showing 1 to {rows.length} of {rows.length} Clients</span>
           <div className="flex items-center gap-1">
             <button className="grid size-6 place-items-center rounded-sm border transition-colors hover:bg-accent disabled:opacity-50" disabled>
@@ -263,12 +263,12 @@ function Stat({ icon: Icon, label, value, trend, note, color }: { icon: any; lab
         <Icon className="size-3.5" />
       </span>
       <div>
-        <p className="text-[10px] font-semibold text-muted-foreground mb-0">{label}</p>
+        <p className="text-[11px] font-semibold text-muted-foreground mb-0">{label}</p>
         <div className="flex items-baseline gap-1.5">
           <p className="text-[18px] font-semibold text-foreground">{value}</p>
-          {trend && <span className="text-[10px] font-semibold text-emerald-600">{trend}</span>}
+          {trend && <span className="text-[11px] font-semibold text-emerald-600">{trend}</span>}
         </div>
-        <p className="mt-0.5 text-[9px] text-muted-foreground">{note}</p>
+        <p className="mt-0.5 text-[11px] text-muted-foreground">{note}</p>
       </div>
     </div>
   );
@@ -303,8 +303,8 @@ function Quick({ icon: Icon, title, text, action, color }: { icon: any; title: s
       </span>
       <div className="flex flex-col">
         <p className="text-[11px] font-semibold text-foreground">{title}</p>
-        <p className="mt-0.5 text-[9.5px] text-muted-foreground flex-1 leading-relaxed">{text}</p>
-        <button className="mt-2 w-fit rounded-sm border px-2 py-1 text-[9.5px] font-semibold shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground bg-white">
+        <p className="mt-0.5 text-[11px] text-muted-foreground flex-1 leading-relaxed">{text}</p>
+        <button className="mt-2 w-fit rounded-sm border px-2 py-1 text-[11px] font-semibold shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground bg-white">
           {action}
         </button>
       </div>
