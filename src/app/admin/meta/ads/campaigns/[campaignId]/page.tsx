@@ -8,15 +8,17 @@ import {
   Activity,
   AlertTriangle,
   Archive,
+  ArrowRight,
   BarChart3,
   Copy,
   Edit3,
+  Flame,
   Grid2X2,
-  Lightbulb,
   MousePointerClick,
   Pause,
   Plus,
   Radio,
+  Sparkles,
   Target,
   TrendingUp,
   UsersRound,
@@ -427,17 +429,90 @@ function OverviewTab({
         </Panel>
       </div>
 
-      <Panel title="Recommendations" icon={<Lightbulb className="size-4 text-[#f5b000]" />}>
-        <ul className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-          {buildRecommendations(campaign, sets, campaignAds).map((rec) => (
-            <li key={rec.title} className="rounded-xl border border-slate-200/60 bg-white/60 p-3.5 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
-              <p className="text-[12px] font-semibold text-slate-800">{rec.title}</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{rec.body}</p>
-              <Link href={rec.href} className="mt-2 inline-block text-[11px] font-medium text-blue-600 hover:underline">
-                {rec.action} &rarr;
-              </Link>
-            </li>
-          ))}
+      <Panel
+        title="AI Recommendations & Growth Actions"
+        icon={<Sparkles className="size-4 text-amber-500" />}
+        action={
+          <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-extrabold text-amber-800 shadow-2xs">
+            <Sparkles className="size-3 text-amber-600" />
+            Meta AI Optimized
+          </span>
+        }
+      >
+        <ul className="grid gap-3.5 md:grid-cols-2 xl:grid-cols-3">
+          {buildRecommendations(campaign, sets, campaignAds).map((rec) => {
+            const Icon = rec.icon;
+            return (
+              <li
+                key={rec.title}
+                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4.5 shadow-2xs transition-all duration-300 hover:-translate-y-1 hover:border-blue-400 hover:shadow-lg"
+              >
+                {/* Top accent gradient bar */}
+                <div
+                  className={cn(
+                    "absolute left-0 top-0 h-1 w-full bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+                    rec.gradient,
+                  )}
+                />
+
+                {/* Subtle corner aura */}
+                <div
+                  className={cn(
+                    "pointer-events-none absolute -right-8 -top-8 size-24 rounded-full opacity-10 blur-xl transition-opacity duration-300 group-hover:opacity-30",
+                    rec.cornerColor,
+                  )}
+                />
+
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-extrabold shadow-2xs",
+                        rec.tagStyle,
+                      )}
+                    >
+                      {rec.tag}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-500">
+                      {rec.impact}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex items-start gap-3">
+                    <span
+                      className={cn(
+                        "flex size-9 shrink-0 items-center justify-center rounded-xl shadow-xs transition-transform duration-300 group-hover:scale-105",
+                        rec.gradient,
+                      )}
+                    >
+                      <Icon className="size-4.5 text-white" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-extrabold text-slate-900 leading-tight">
+                        {rec.title}
+                      </h3>
+                      <p className="mt-1.5 text-xs font-medium leading-relaxed text-slate-600">
+                        {rec.body}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                  <Link
+                    href={rec.href}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-blue-600 shadow-2xs transition-all duration-200 group-hover:border-blue-300 group-hover:bg-blue-600 group-hover:text-white"
+                  >
+                    <span>{rec.action}</span>
+                    <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+                  </Link>
+                  <span className="text-[10.5px] font-bold text-emerald-700">
+                    {rec.metricHighlight}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </Panel>
     </div>
@@ -449,7 +524,19 @@ function buildRecommendations(
   sets: ReturnType<typeof adSetsOfCampaign>,
   campaignAds: ReturnType<typeof adsOfCampaign>,
 ) {
-  const recs: { title: string; body: string; action: string; href: string }[] = [];
+  const recs: {
+    title: string;
+    body: string;
+    action: string;
+    href: string;
+    tag: string;
+    impact: string;
+    icon: typeof UsersRound;
+    gradient: string;
+    cornerColor: string;
+    tagStyle: string;
+    metricHighlight: string;
+  }[] = [];
 
   const narrow = sets.find((s) => s.audienceSize[1] < 150000);
   if (narrow) {
@@ -458,6 +545,13 @@ function buildRecommendations(
       body: `${narrow.name} reaches at most ${num(narrow.audienceSize[1])} people. Broader ad sets exit the learning phase faster.`,
       action: "Edit ad set",
       href: `${ADS_ROOT}/adsets/${narrow.id}`,
+      tag: "Audience Tuning",
+      impact: "High Impact",
+      icon: UsersRound,
+      gradient: "bg-gradient-to-tr from-blue-600 to-indigo-600",
+      cornerColor: "bg-blue-500",
+      tagStyle: "bg-blue-50 text-blue-800 border border-blue-200",
+      metricHighlight: "Est. +24% Speed",
     });
   }
 
@@ -468,6 +562,13 @@ function buildRecommendations(
       body: `${weak.name} ranks below average on quality. Try a new hook in the first three seconds.`,
       action: "Open ad",
       href: `${ADS_ROOT}/ads/${weak.id}`,
+      tag: "Creative Fatigue",
+      impact: "Quality Boost",
+      icon: Flame,
+      gradient: "bg-gradient-to-tr from-rose-500 to-amber-500",
+      cornerColor: "bg-rose-500",
+      tagStyle: "bg-rose-50 text-rose-800 border border-rose-200",
+      metricHighlight: "Est. +15% CTR",
     });
   }
 
@@ -477,6 +578,13 @@ function buildRecommendations(
       body: "Running two ad sets lets Meta shift budget toward whichever audience converts cheaper.",
       action: "Add ad set",
       href: `${ADS_ROOT}/create?campaign=${campaign.id}&step=adset`,
+      tag: "A/B Testing",
+      impact: "Cost Reduction",
+      icon: Target,
+      gradient: "bg-gradient-to-tr from-emerald-600 to-teal-500",
+      cornerColor: "bg-emerald-500",
+      tagStyle: "bg-emerald-50 text-emerald-800 border border-emerald-200",
+      metricHighlight: "Est. -18% CPL",
     });
   }
 
@@ -485,6 +593,13 @@ function buildRecommendations(
     body: "Your best leads make a strong lookalike source. A 1% lookalike usually beats interest targeting on CPL.",
     action: "Create audience",
     href: `${ADS_ROOT}/audiences?tab=lookalike`,
+    tag: "AI Lookalike",
+    impact: "High ROI",
+    icon: Sparkles,
+    gradient: "bg-gradient-to-tr from-purple-600 to-pink-500",
+    cornerColor: "bg-purple-500",
+    tagStyle: "bg-purple-50 text-purple-800 border border-purple-200",
+    metricHighlight: "Est. 3.2x ROAS",
   });
 
   return recs.slice(0, 3);

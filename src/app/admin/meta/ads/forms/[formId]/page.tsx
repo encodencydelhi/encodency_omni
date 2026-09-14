@@ -27,6 +27,7 @@ import {
 import { dateTime, num, pct, relative } from "@/features/admin/meta-ads/format";
 import { InstantFormPreview } from "@/features/admin/meta-ads/components/previews";
 import {
+  Breadcrumb,
   btn,
   btnPrimary,
   card,
@@ -101,30 +102,26 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
       }
     >
       <DetailBar>
-        <nav aria-label="Breadcrumb" className="mb-2 flex flex-wrap items-center gap-1 text-[10px] text-[#64748b]">
-          <Link href={ADS_ROOT} className="font-medium hover:text-[#1877f2] hover:underline">
-            Meta Ads Manager
-          </Link>
-          <span aria-hidden="true">/</span>
-          <Link href={`${ADS_ROOT}/forms`} className="font-medium hover:text-[#1877f2] hover:underline">
-            Instant Forms
-          </Link>
-          <span aria-hidden="true">/</span>
-          <span className="font-semibold text-[#14213d]">{form.name}</span>
-        </nav>
+        <Breadcrumb
+          items={[
+            { label: "Meta Ads Manager", href: ADS_ROOT },
+            { label: "Instant Forms", href: `${ADS_ROOT}/forms` },
+            { label: form.name },
+          ]}
+        />
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-[280px] flex-1">
-            <h1 className="flex flex-wrap items-center gap-2 text-[20px] font-bold leading-tight">
+            <h1 className="flex flex-wrap items-center gap-2.5 text-[22px] font-extrabold leading-tight tracking-tight text-slate-900">
               {form.name}
               <StatusChip status={form.status} />
             </h1>
-            <p className="mt-1 text-[11px] text-[#64748b]">
+            <p className="mt-1 text-xs font-medium text-slate-600">
               {form.type} · {form.language} · {form.questions.length} questions · updated{" "}
               {relative(form.lastUpdated)}
             </p>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
             <Link href={`${ADS_ROOT}/create?form=${form.id}&step=form`} className={btn}>
               <Edit3 className="size-3.5" />
               Edit

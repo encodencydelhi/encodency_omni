@@ -250,38 +250,43 @@ function LeadsView() {
         />
       </section>
 
-      <section className={cn(card, "mb-3 p-3")}>
-        <h2 className="mb-2.5 text-xs font-bold">Pipeline</h2>
-        <ol className="flex flex-wrap items-stretch gap-1.5">
+      <section className={cn(card, "mb-3.5 p-4")}>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">Conversion Pipeline</h2>
+          <span className="text-[11px] font-semibold text-slate-500">
+            {leads.length} Active Leads
+          </span>
+        </div>
+        <ol className="flex flex-wrap items-stretch gap-2">
           {pipelineCounts.map(({ stage, count }, i) => {
             const terminal = TERMINAL.includes(stage);
             const active = values.stage === stage;
             return (
-              <li key={stage} className={cn("min-w-[128px] flex-1", terminal && "max-w-[150px]")}>
+              <li key={stage} className={cn("min-w-[130px] flex-1", terminal && "max-w-[160px]")}>
                 <button
                   type="button"
                   onClick={() => setFilter("stage", active ? DEFAULTS.stage : stage)}
                   aria-pressed={active}
                   className={cn(
-                    "flex h-full w-full flex-col justify-between rounded-md border px-2.5 py-2 text-left transition",
+                    "flex h-full w-full flex-col justify-between rounded-xl border p-3 text-left transition-all duration-200 hover:-translate-y-0.5 shadow-2xs",
                     active
-                      ? "border-[#1877f2] bg-[#eff6ff]"
-                      : "border-[#e8edf4] bg-[#fbfcfe] hover:border-[#bcd9ff]",
+                      ? "border-blue-500 bg-blue-50/80 shadow-xs ring-1 ring-blue-500/20"
+                      : "border-slate-200 bg-slate-50/60 hover:border-slate-300 hover:bg-slate-50",
                   )}
                 >
                   <span className="flex items-center gap-1.5">
                     {!terminal && (
-                      <span className="flex size-4 items-center justify-center rounded-full bg-[#e8eef5] text-[8px] font-bold text-[#475569]">
+                      <span className="flex size-4 items-center justify-center rounded-full bg-slate-200 text-[9px] font-black text-slate-700">
                         {i + 1}
                       </span>
                     )}
-                    <span className="text-[10px] font-semibold text-[#475569]">{stage}</span>
+                    <span className="text-[10.5px] font-bold text-slate-700">{stage}</span>
                   </span>
-                  <strong className="mt-1.5 text-[16px] leading-none">{count}</strong>
+                  <strong className="mt-2 text-lg font-black text-slate-900 leading-none">{count}</strong>
                   <Meter
                     value={leads.length ? (count / leads.length) * 100 : 0}
                     tone={LEAD_STAGE_TONE[stage] ?? "slate"}
-                    className="mt-1.5"
+                    className="mt-2"
                   />
                 </button>
               </li>
@@ -291,7 +296,7 @@ function LeadsView() {
       </section>
 
       <section className={cn(card, "overflow-hidden")}>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#dde5ee] px-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 bg-gradient-to-r from-slate-50/90 via-slate-50/40 to-white px-4">
           <LinkTabs
             tabs={TABS.map((t) => ({
               ...t,

@@ -8,6 +8,7 @@ import {
   MessageCircle,
   MoreHorizontal,
   Send,
+  Sparkles,
   ThumbsUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -31,86 +32,91 @@ export function AdPreview({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-lg border border-[#dde5ee] bg-white shadow-sm",
+        "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md transition-all duration-300 hover:shadow-xl",
         className,
       )}
     >
-      <div className="flex items-center gap-2 px-3 py-2.5">
+      <div className="flex items-center gap-2.5 border-b border-slate-100 px-3.5 py-3">
         <span
           className={cn(
-            "flex size-7 shrink-0 items-center justify-center rounded-full",
-            isInstagram ? "bg-[#fdf0ff]" : "bg-[#e8f1ff]",
+            "flex size-8 shrink-0 items-center justify-center rounded-xl shadow-2xs",
+            isInstagram
+              ? "bg-gradient-to-tr from-[#fdf497] via-[#fd5949] to-[#d6249f] text-white"
+              : "bg-[#1877f2] text-white",
           )}
         >
           {isInstagram ? (
-            <FaInstagram className="size-3.5 text-[#d946ef]" />
+            <FaInstagram className="size-4" />
           ) : (
-            <FaFacebookF className="size-3.5 text-[#1877f2]" />
+            <FaFacebookF className="size-4" />
           )}
         </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[11px] font-bold">{handle}</span>
-          <span className="block text-[9px] text-[#64748b]">Sponsored</span>
-        </span>
-        <MoreHorizontal className="size-4 text-[#94a3b8]" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <span className="block truncate text-xs font-bold text-slate-900">{handle}</span>
+          <span className="block text-[10px] font-semibold text-slate-500">Sponsored · Meta Feed</span>
+        </div>
+        <button type="button" aria-label="Ad options" className="text-slate-400 hover:text-slate-600">
+          <MoreHorizontal className="size-4.5" />
+        </button>
       </div>
 
-      <p className="px-3 pb-2 text-[11px] leading-relaxed text-[#14213d]">
+      <p className="px-3.5 py-2.5 text-xs font-medium leading-relaxed text-slate-800">
         {ad.primaryText}
       </p>
 
-      <div className="relative aspect-[4/5] w-full bg-[#f1f5f9]">
+      <div className="relative aspect-[4/5] w-full bg-slate-100 overflow-hidden">
         {creative ? (
           <Image
             src={creative.src}
             alt={creative.name}
             fill
             sizes="(max-width: 768px) 100vw, 360px"
-            className="object-cover"
+            className="object-cover transition-transform duration-500 hover:scale-105"
           />
         ) : (
-          <span className="flex size-full items-center justify-center text-[10px] text-[#94a3b8]">
+          <div className="flex size-full flex-col items-center justify-center gap-2 text-xs font-bold text-slate-400">
+            <Sparkles className="size-6 text-slate-300" />
             No creative attached
-          </span>
+          </div>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-2 border-t border-[#eef2f7] bg-[#f7f9fc] px-3 py-2">
-        <span className="min-w-0">
-          <span className="block text-[8px] uppercase tracking-wide text-[#94a3b8]">
+      <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/80 px-3.5 py-2.5">
+        <div className="min-w-0 flex-1">
+          <span className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-500">
             {ad.destination.split("—")[0]?.trim()}
           </span>
-          <strong className="block truncate text-[11px]">{ad.headline}</strong>
+          <strong className="block truncate text-xs font-extrabold text-slate-900">{ad.headline}</strong>
           {ad.description && (
-            <span className="block truncate text-[9px] text-[#64748b]">
+            <span className="block truncate text-[10px] font-medium text-slate-600">
               {ad.description}
             </span>
           )}
-        </span>
-        <span className="shrink-0 rounded-md bg-[#e4e6eb] px-2.5 py-1.5 text-[10px] font-bold text-[#14213d]">
+        </div>
+        <span className="shrink-0 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-1.5 text-xs font-extrabold text-white shadow-xs">
           {ad.cta}
         </span>
       </div>
 
-      <div className="flex items-center gap-4 border-t border-[#eef2f7] px-3 py-2 text-[#64748b]">
+      <div className="flex items-center gap-5 border-t border-slate-100 bg-white px-3.5 py-2.5 text-slate-600">
         {isInstagram ? (
           <>
-            <Heart className="size-4" aria-hidden="true" />
-            <MessageCircle className="size-4" aria-hidden="true" />
-            <Send className="size-4" aria-hidden="true" />
-            <Bookmark className="ml-auto size-4" aria-hidden="true" />
+            <Heart className="size-4.5 cursor-pointer hover:text-rose-500 transition-colors" />
+            <MessageCircle className="size-4.5 cursor-pointer hover:text-blue-500 transition-colors" />
+            <Send className="size-4.5 cursor-pointer hover:text-blue-500 transition-colors" />
+            <Bookmark className="ml-auto size-4.5 cursor-pointer hover:text-slate-900 transition-colors" />
           </>
         ) : (
           <>
-            <span className="flex items-center gap-1 text-[10px]">
-              <ThumbsUp className="size-3.5" aria-hidden="true" /> Like
-            </span>
-            <span className="flex items-center gap-1 text-[10px]">
-              <MessageCircle className="size-3.5" aria-hidden="true" /> Comment
-            </span>
-            <span className="flex items-center gap-1 text-[10px]">
-              <Send className="size-3.5" aria-hidden="true" /> Share
-            </span>
+            <button type="button" className="flex items-center gap-1.5 text-xs font-bold hover:text-blue-600 transition-colors">
+              <ThumbsUp className="size-4" /> Like
+            </button>
+            <button type="button" className="flex items-center gap-1.5 text-xs font-bold hover:text-blue-600 transition-colors">
+              <MessageCircle className="size-4" /> Comment
+            </button>
+            <button type="button" className="flex items-center gap-1.5 text-xs font-bold hover:text-blue-600 transition-colors">
+              <Send className="size-4" /> Share
+            </button>
           </>
         )}
       </div>
@@ -129,56 +135,56 @@ export function InstantFormPreview({
   return (
     <div
       className={cn(
-        "mx-auto w-full max-w-[300px] overflow-hidden rounded-[20px] border-[6px] border-[#14213d] bg-white shadow-lg",
+        "mx-auto w-full max-w-[320px] overflow-hidden rounded-[28px] border-[8px] border-slate-900 bg-white shadow-2xl",
         className,
       )}
     >
-      <div className="bg-[#14213d] px-3 pb-2 pt-1 text-center">
-        <span className="mx-auto block h-1 w-10 rounded-full bg-white/40" aria-hidden="true" />
+      <div className="bg-slate-900 px-3 pb-2 pt-2 text-center">
+        <span className="mx-auto block h-1.5 w-12 rounded-full bg-slate-700" aria-hidden="true" />
       </div>
 
-      <div className="max-h-[420px] overflow-y-auto [scrollbar-width:thin]">
-        <div className="bg-[#f7f9fc] px-3 py-3">
-          <p className="text-[8px] font-semibold uppercase tracking-wide text-[#94a3b8]">
-            {form.language}
-          </p>
-          <h3 className="mt-1 text-[12px] font-bold leading-snug">{form.introHeadline}</h3>
-          <p className="mt-1 text-[10px] leading-relaxed text-[#64748b]">{form.introBody}</p>
+      <div className="max-h-[440px] overflow-y-auto [scrollbar-width:thin]">
+        <div className="bg-gradient-to-b from-slate-50 to-white px-4 py-4 border-b border-slate-100">
+          <span className="inline-block rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-600 shadow-2xs">
+            {form.language} · Instant Form
+          </span>
+          <h3 className="mt-2 text-sm font-extrabold text-slate-900 leading-snug">{form.introHeadline}</h3>
+          <p className="mt-1.5 text-xs font-medium leading-relaxed text-slate-600">{form.introBody}</p>
         </div>
 
-        <div className="space-y-2.5 px-3 py-3">
+        <div className="space-y-3 px-4 py-4">
           {form.questions.map((q) => (
             <label key={q.id} className="block">
-              <span className="block text-[9px] font-semibold text-[#475569]">
+              <span className="block text-xs font-bold text-slate-700">
                 {q.label}
-                {q.required && <span className="text-[#b42318]"> *</span>}
+                {q.required && <span className="text-rose-600 font-black"> *</span>}
               </span>
-              <span className="mt-1 flex h-7 items-center rounded-md border border-[#dde5ee] bg-[#fbfcfe] px-2 text-[9px] text-[#94a3b8]">
+              <span className="mt-1.5 flex h-8 items-center rounded-xl border border-slate-300 bg-slate-50/80 px-3 text-xs font-medium text-slate-400 shadow-2xs">
                 {q.type.startsWith("Prefilled") ? "Prefilled from Meta profile" : "Your answer"}
               </span>
             </label>
           ))}
         </div>
 
-        <div className="border-t border-[#eef2f7] px-3 py-3">
+        <div className="border-t border-slate-100 px-4 py-3.5 bg-slate-50/50">
           {form.privacyUrl ? (
-            <p className="text-[8px] leading-relaxed text-[#64748b]">
+            <p className="text-[10px] font-medium leading-relaxed text-slate-500">
               By clicking Submit you agree to our{" "}
-              <span className="font-semibold text-[#0671e9] underline">privacy policy</span>.
+              <span className="font-bold text-blue-600 underline">privacy policy</span>.
             </p>
           ) : (
-            <p className="rounded-md border border-[#fbcfcb] bg-[#fef3f2] p-2 text-[8px] font-semibold leading-relaxed text-[#b42318]">
-              No privacy policy URL set. Meta will not let this form go live.
+            <p className="rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-[10px] font-bold leading-relaxed text-rose-800">
+              No privacy policy URL set. Meta requires a privacy policy.
             </p>
           )}
-          <span className="mt-2 block rounded-md bg-[#1671f8] py-2 text-center text-[10px] font-bold text-white">
-            Submit
+          <span className="mt-3 block rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-center text-xs font-extrabold text-white shadow-md shadow-blue-500/20">
+            Submit Application
           </span>
         </div>
 
-        <div className="border-t border-[#eef2f7] bg-[#f7f9fc] px-3 py-3 text-center">
-          <p className="text-[10px] font-bold">{form.thankYouHeadline}</p>
-          <span className="mt-1.5 inline-block rounded-md border border-[#dde5ee] bg-white px-2.5 py-1 text-[9px] font-semibold">
+        <div className="border-t border-slate-100 bg-slate-100/60 px-4 py-3.5 text-center">
+          <p className="text-xs font-bold text-slate-800">{form.thankYouHeadline}</p>
+          <span className="mt-2 inline-block rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 shadow-2xs">
             {form.thankYouCta}
           </span>
         </div>

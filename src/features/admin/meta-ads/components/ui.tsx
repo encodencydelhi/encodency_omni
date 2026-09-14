@@ -38,16 +38,16 @@ import type { EntityStatus, Platform } from "../types";
 /* Tokens                                                              */
 /* ------------------------------------------------------------------ */
 
-export const BORDER = "border-slate-200/60";
+export const BORDER = "border-slate-200";
 
 export const btn =
-  "inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200/60 bg-white/80 px-3 py-1.5 text-[11px] font-medium text-slate-700 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-md hover:-translate-y-px hover:border-slate-300/60 disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300/90 bg-white px-3.5 py-1.5 text-[11.5px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-400 hover:shadow disabled:opacity-50";
 
 export const btnPrimary =
-  "inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 px-5 text-[11.5px] font-bold text-white shadow-[0_4px_14px_rgba(59,130,246,0.4)] ring-1 ring-white/20 transition-all duration-300 hover:from-blue-500 hover:to-indigo-400 hover:shadow-[0_6px_20px_rgba(59,130,246,0.6)] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
+  "inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 px-5 text-[11.5px] font-semibold text-white shadow-[0_4px_14px_rgba(37,99,235,0.35)] ring-1 ring-white/20 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
 
 export const card =
-  "rounded-2xl border border-white/60 bg-white/60 shadow-[0_8px_30px_rgba(0,0,0,0.04)] backdrop-blur-2xl backdrop-saturate-200 ring-1 ring-slate-900/5 transition-all duration-300";
+  "rounded-2xl border border-slate-200/90 bg-white shadow-[0_4px_20px_rgba(15,23,42,0.05),0_1px_3px_rgba(15,23,42,0.03)] transition-all duration-300 hover:border-slate-300 hover:shadow-[0_8px_30px_rgba(15,23,42,0.08)]";
 
 /* ------------------------------------------------------------------ */
 /* Status                                                              */
@@ -62,25 +62,27 @@ export function StatusChip({
 }) {
   const tone = STATUS_TONE[status];
   const t = TONE_CLASS[tone];
+  const isPulse = status === "active" || status === "learning" || status === "in_review";
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-semibold tracking-wide uppercase transition-colors shadow-sm backdrop-blur-md",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[9.5px] font-semibold tracking-wide uppercase transition-colors shadow-2xs",
         t.chip,
         className,
       )}
     >
-      <span className="relative flex size-1.5">
+      <span className="relative flex size-2 shrink-0 items-center justify-center">
+        {isPulse && (
+          <span
+            className={cn(
+              "absolute inline-flex size-full animate-ping rounded-full opacity-75",
+              t.dot,
+            )}
+          />
+        )}
         <span
           className={cn(
-            "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-            tone === "slate" && "hidden",
-            t.dot,
-          )}
-        />
-        <span
-          className={cn(
-            "relative inline-flex size-1.5 rounded-full",
+            "relative inline-flex size-2 rounded-full",
             t.dot,
           )}
         />
@@ -94,21 +96,34 @@ export function ToneChip({
   tone,
   children,
   className,
+  pulse,
 }: {
   tone: StatusTone;
   children: ReactNode;
   className?: string;
+  pulse?: boolean;
 }) {
   const t = TONE_CLASS[tone];
+  const isPulse = pulse ?? (tone === "green" || tone === "blue" || tone === "violet");
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-bold",
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[10.5px] font-semibold shadow-2xs",
         t.chip,
         className,
       )}
     >
-      <span className={cn("size-1.5 rounded-full", t.dot)} />
+      <span className="relative flex size-2 shrink-0 items-center justify-center">
+        {isPulse && (
+          <span
+            className={cn(
+              "absolute inline-flex size-full animate-ping rounded-full opacity-75",
+              t.dot,
+            )}
+          />
+        )}
+        <span className={cn("relative inline-flex size-2 rounded-full", t.dot)} />
+      </span>
       {children}
     </span>
   );
@@ -116,14 +131,25 @@ export function ToneChip({
 
 export function DeliveryCell({ status }: { status: EntityStatus }) {
   const tone = TONE_CLASS[STATUS_TONE[status]];
+  const isPulse = status === "active" || status === "learning" || status === "in_review";
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold",
+        "inline-flex items-center gap-2 whitespace-nowrap text-xs font-medium",
         tone.text,
       )}
     >
-      <span className={cn("size-2 rounded-full", tone.dot)} />
+      <span className="relative flex size-2 shrink-0 items-center justify-center">
+        {isPulse && (
+          <span
+            className={cn(
+              "absolute inline-flex size-full animate-ping rounded-full opacity-75",
+              tone.dot,
+            )}
+          />
+        )}
+        <span className={cn("relative inline-flex size-2 rounded-full", tone.dot)} />
+      </span>
       {DELIVERY_LABEL[status]}
     </span>
   );
@@ -196,16 +222,16 @@ export function Breadcrumb({
   items: { label: string; href?: string }[];
 }) {
   return (
-    <nav aria-label="Breadcrumb" className="mb-2 flex flex-wrap items-center gap-1 text-[10px] text-[#64748b]">
+    <nav aria-label="Breadcrumb" className="mb-2.5 flex flex-wrap items-center gap-1 text-[11px] text-slate-600">
       {items.map((item, i) => (
         <span key={`${item.label}-${i}`} className="flex items-center gap-1">
-          {i > 0 && <ChevronRight className="size-3 text-[#94a3b8]" aria-hidden="true" />}
+          {i > 0 && <ChevronRight className="size-3.5 text-slate-400" aria-hidden="true" />}
           {item.href ? (
-            <Link href={item.href} className="font-medium hover:text-[#1877f2] hover:underline">
+            <Link href={item.href} className="font-semibold text-slate-600 hover:text-blue-600 hover:underline">
               {item.label}
             </Link>
           ) : (
-            <span className="max-w-[320px] truncate font-semibold text-[#14213d]">
+            <span className="max-w-[320px] truncate font-semibold text-slate-900">
               {item.label}
             </span>
           )}
@@ -229,13 +255,13 @@ export function PageHeader({
   meta?: ReactNode;
 }) {
   return (
-    <header className="mb-3 flex flex-wrap items-start justify-between gap-3">
+    <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-[260px] flex-1">
         {eyebrow}
-        <h1 className="flex flex-wrap items-center gap-2 text-[20px] font-bold leading-tight tracking-tight">
+        <h1 className="flex flex-wrap items-center gap-2.5 text-[22px] font-semibold leading-tight tracking-tight text-slate-900">
           {title}
         </h1>
-        {subtitle && <p className="mt-0.5 text-[11px] text-[#64748b]">{subtitle}</p>}
+        {subtitle && <p className="mt-1 text-xs font-medium text-slate-600">{subtitle}</p>}
         {meta}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -259,15 +285,15 @@ export function Panel({
   bodyClassName?: string;
 }) {
   return (
-    <section className={cn(card, "overflow-hidden flex flex-col group hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]", className)}>
-      <div className="flex items-center justify-between gap-2 border-b border-white/40 bg-gradient-to-r from-white/40 to-transparent px-5 py-3.5">
-        <h2 className="flex min-w-0 items-center gap-2.5 text-[13px] font-medium text-slate-800">
-          <span className="flex size-6 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200/50">
+    <section className={cn(card, "overflow-hidden flex flex-col group hover:shadow-[0_12px_40px_rgba(15,23,42,0.1)]", className)}>
+      <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 bg-gradient-to-r from-slate-50/90 via-slate-50/40 to-white px-5 py-3.5">
+        <h2 className="flex min-w-0 items-center gap-2.5 text-[13.5px] font-semibold text-slate-900">
+          <span className="flex size-7 items-center justify-center rounded-lg bg-blue-50/80 text-blue-600 shadow-xs ring-1 ring-blue-500/20">
             {icon}
           </span>
           <span className="truncate">{title}</span>
         </h2>
-        {action}
+        {action && <div className="shrink-0 whitespace-nowrap">{action}</div>}
       </div>
       <div className={cn("p-4", bodyClassName)}>{children}</div>
     </section>
@@ -291,23 +317,27 @@ export function KpiCard({
 }) {
   const valueClass = tone ? TONE_CLASS[tone].text : "text-slate-900";
   return (
-    <div className={cn(card, "group relative overflow-hidden p-3.5 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5")}>
-      <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-500 to-indigo-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+    <div className={cn(card, "group relative overflow-hidden p-4 transition-all duration-300 hover:shadow-md hover:border-blue-300 hover:-translate-y-0.5")}>
+      <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-600 to-indigo-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       
       {/* Animated Shine Effect */}
-      <div className="pointer-events-none absolute -inset-full top-0 z-10 block h-[150%] w-1/2 -rotate-45 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 transition-all duration-700 ease-in-out group-hover:left-[150%] group-hover:opacity-100" />
+      <div className="pointer-events-none absolute -inset-full top-0 z-10 block h-[150%] w-1/2 -rotate-45 bg-gradient-to-r from-transparent via-blue-100/20 to-transparent opacity-0 transition-all duration-700 ease-in-out group-hover:left-[150%] group-hover:opacity-100" />
       
-      <div className="relative flex items-center justify-between gap-2 text-[11px] font-medium text-slate-500">
+      <div className="relative flex items-center justify-between gap-2 text-xs font-semibold text-slate-600">
         <span className="min-w-0 truncate">{label}</span>
         <div className="flex shrink-0 items-center gap-1.5">
           {hint && <InfoHint text={hint} />}
-          {Icon && <Icon className="size-3.5 text-blue-500/80 transition-colors duration-300 group-hover:text-blue-600" />}
+          {Icon && (
+            <div className="flex size-6 items-center justify-center rounded-md bg-blue-50 text-blue-600 ring-1 ring-blue-500/15 transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white">
+              <Icon className="size-3.5" />
+            </div>
+          )}
         </div>
       </div>
-      <div className={cn("relative mt-2 text-[20px] font-medium tracking-tight leading-none", valueClass)}>
+      <div className={cn("relative mt-2.5 text-[22px] font-semibold tracking-tight leading-none", valueClass)}>
         {value}
       </div>
-      {sub && <p className="relative mt-1 text-[10px] font-normal text-slate-400 truncate">{sub}</p>}
+      {sub && <p className="relative mt-1.5 text-[10.5px] font-medium text-slate-500 truncate">{sub}</p>}
     </div>
   );
 }
@@ -320,12 +350,12 @@ export function InfoHint({ text }: { text: string }) {
           <button
             type="button"
             aria-label={text}
-            className="flex size-3.5 shrink-0 items-center justify-center rounded-full border border-[#cbd5e1] text-[8px] font-bold text-[#64748b]"
+            className="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white text-[9px] font-medium text-slate-600 transition-colors hover:border-blue-400 hover:text-blue-600 shadow-2xs"
           >
             i
           </button>
         </TooltipTrigger>
-        <TooltipContent className="max-w-[240px] text-[10px]">{text}</TooltipContent>
+        <TooltipContent className="max-w-[240px] text-xs font-medium">{text}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
@@ -342,11 +372,11 @@ export function Field({
   href?: string;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-[#eef2f7] py-1.5 last:border-0">
-      <dt className="shrink-0 text-[10px] text-[#64748b]">{label}</dt>
-      <dd className="min-w-0 text-right text-[11px] font-semibold text-[#14213d]">
+    <div className="flex items-baseline justify-between gap-3 border-b border-slate-100 py-2 last:border-0">
+      <dt className="shrink-0 text-xs font-semibold text-slate-600">{label}</dt>
+      <dd className="min-w-0 text-right text-xs font-medium text-slate-900">
         {href ? (
-          <Link href={href} className="text-[#0671e9] hover:underline">
+          <Link href={href} className="text-blue-600 hover:text-blue-700 hover:underline">
             {value}
           </Link>
         ) : (
@@ -359,7 +389,7 @@ export function Field({
 
 export function Tag({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-md border border-[#dde5ee] bg-[#f7f9fc] px-2 py-0.5 text-[10px] font-medium text-[#334155]">
+    <span className="inline-flex items-center rounded-md border border-slate-300/80 bg-slate-100/90 px-2.5 py-0.5 text-[10.5px] font-medium text-slate-800 shadow-2xs">
       {children}
     </span>
   );
@@ -381,7 +411,7 @@ export function LinkTabs({
   return (
     <nav
       className={cn(
-        "flex flex-wrap gap-1 border-b border-[#dde5ee]",
+        "flex flex-wrap gap-1 border-b border-slate-200",
         className,
       )}
     >
@@ -393,18 +423,18 @@ export function LinkTabs({
             href={tab.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3.5 py-2.5 text-xs font-semibold transition",
+              "-mb-px flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-2.5 text-xs font-medium transition",
               active
-                ? "border-[#1877f2] text-[#1877f2]"
-                : "border-transparent text-[#475569] hover:text-[#14213d]",
+                ? "border-blue-600 text-blue-600 font-semibold"
+                : "border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300",
             )}
           >
             {tab.label}
             {tab.count !== undefined && (
               <span
                 className={cn(
-                  "rounded-full px-1.5 py-px text-[9px] font-bold",
-                  active ? "bg-[#e8f1ff] text-[#1877f2]" : "bg-[#eef2f7] text-[#64748b]",
+                  "rounded-full px-2 py-0.5 text-[9.5px] font-semibold",
+                  active ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700 border border-slate-200",
                 )}
               >
                 {tab.count}
@@ -423,7 +453,7 @@ export function LinkTabs({
 
 export function FilterBar({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-[#dde5ee] bg-white p-3">
+    <div className="flex flex-wrap items-center gap-2.5 border-b border-slate-200 bg-slate-50/70 p-3.5">
       {children}
     </div>
   );
@@ -450,7 +480,7 @@ export function FilterSelect({
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         className={cn(
           btn,
-          "w-full cursor-pointer appearance-none justify-start pr-8 text-left",
+          "w-full cursor-pointer appearance-none justify-start pr-8 text-left font-medium text-slate-800",
         )}
       >
         {options.map((option) => (
@@ -460,7 +490,7 @@ export function FilterSelect({
         ))}
       </select>
       <ChevronDown
-        className="pointer-events-none absolute right-2.5 top-1/2 size-3 -translate-y-1/2 text-[#64748b]"
+        className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-500"
         aria-hidden="true"
       />
     </label>
@@ -480,14 +510,14 @@ export function SearchInput({
 }) {
   return (
     <div className={cn("relative min-w-[220px] flex-1", className)}>
-      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#64748b]" aria-hidden="true" />
+      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
       <input
         type="search"
         value={value}
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="h-9 w-full rounded-md border border-[#d8e0ea] bg-[#fbfcfe] pl-10 pr-3 text-xs outline-none transition focus:border-[#1877f2] focus:bg-white focus:ring-2 focus:ring-[#1877f2]/10"
+        className="h-9 w-full rounded-xl border border-slate-300 bg-white pl-10 pr-3 text-xs font-medium text-slate-900 placeholder:text-slate-400 outline-none shadow-2xs transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20"
       />
     </div>
   );
@@ -500,10 +530,12 @@ export function SearchInput({
 export function TableShell({
   children,
   minWidth = 1200,
+  striped = true,
   className,
 }: {
   children: ReactNode;
   minWidth?: number;
+  striped?: boolean;
   className?: string;
 }) {
   return (
@@ -514,7 +546,10 @@ export function TableShell({
       )}
     >
       <table
-        className="w-full table-auto text-left text-[10px]"
+        className={cn(
+          "w-full table-auto text-left text-xs",
+          striped && "[&_tbody_tr:nth-child(even)]:bg-slate-50/80 [&_tbody_tr:nth-child(odd)]:bg-white",
+        )}
         style={{ minWidth }}
       >
         {children}
@@ -532,7 +567,7 @@ export function Th({
   return (
     <th
       className={cn(
-        "whitespace-nowrap bg-slate-50/50 px-4 py-3 font-medium text-slate-500",
+        "whitespace-nowrap bg-slate-100/90 border-b border-slate-200 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-700",
         numeric ? "text-right" : "text-left",
         className,
       )}
@@ -547,7 +582,7 @@ export function Tr({ children, className, ...props }: React.ComponentProps<"tr">
   return (
     <tr
       className={cn(
-        "group border-b border-slate-100 last:border-0 transition-colors duration-300 hover:bg-slate-50/80",
+        "group border-b border-slate-200/70 last:border-0 even:bg-slate-50/70 odd:bg-white transition-colors duration-150 hover:!bg-blue-50/60",
         className,
       )}
       {...props}
@@ -566,8 +601,8 @@ export function Td({
   return (
     <td
       className={cn(
-        "whitespace-nowrap px-4 py-3 align-middle transition-colors group-hover:text-slate-900",
-        numeric ? "text-right tabular-nums" : "text-left",
+        "whitespace-nowrap px-4 py-3.5 align-middle text-[11.5px] font-medium text-slate-700 group-hover:text-slate-900",
+        numeric ? "text-right tabular-nums font-semibold text-slate-800" : "text-left",
         className,
       )}
       {...props}
@@ -593,11 +628,11 @@ export function EntityLink({
       <Link
         href={href}
         title={name}
-        className="block truncate text-[11px] font-semibold text-[#0671e9] hover:underline"
+        className="block truncate text-[11.5px] font-semibold text-blue-600 hover:text-blue-800 hover:underline"
       >
         {name}
       </Link>
-      {sub && <div className="truncate text-[9px] text-[#64748b]">{sub}</div>}
+      {sub && <div className="truncate text-[10px] font-medium text-slate-500">{sub}</div>}
     </div>
   );
 }
@@ -614,7 +649,7 @@ export function RowMenu({
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={label}
-        className="flex size-7 items-center justify-center rounded-md border border-[#d8e0ea] text-[#64748b] transition hover:border-[#1877f2] hover:bg-[#eff6ff] hover:text-[#1877f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1877f2]/40"
+        className="flex size-7.5 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 shadow-2xs transition hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
       >
         <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
@@ -627,7 +662,7 @@ export function RowMenu({
                 <DropdownMenuItem key={item.label} asChild>
                   <Link
                     href={item.href}
-                    className={cn("text-xs", item.danger && "text-[#b42318]")}
+                    className={cn("text-xs font-semibold", item.danger && "text-rose-600")}
                   >
                     {item.label}
                   </Link>
@@ -636,7 +671,7 @@ export function RowMenu({
                 <DropdownMenuItem
                   key={item.label}
                   onSelect={item.onSelect}
-                  className={cn("text-xs", item.danger && "text-[#b42318]")}
+                  className={cn("text-xs font-semibold", item.danger && "text-rose-600")}
                 >
                   {item.label}
                 </DropdownMenuItem>
@@ -695,19 +730,19 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center p-6 text-center",
+        "flex flex-col items-center justify-center p-8 text-center",
         compact ? "min-h-[160px]" : "min-h-[280px]",
       )}
     >
-      <span className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-b from-white to-slate-50 shadow-sm ring-1 ring-slate-200/50">
-        <Icon className="size-6 text-blue-500" aria-hidden="true" />
+      <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-500/20">
+        <Icon className="size-6" aria-hidden="true" />
       </span>
-      <h3 className="text-[14px] font-semibold tracking-tight text-slate-800">{title}</h3>
-      <p className="mx-auto mt-2 max-w-[320px] text-[11px] leading-relaxed text-slate-500">
+      <h3 className="text-base font-semibold tracking-tight text-slate-900">{title}</h3>
+      <p className="mx-auto mt-1.5 max-w-[340px] text-xs font-medium leading-relaxed text-slate-600">
         {description}
       </p>
       {(action || secondary) && (
-        <div className="mt-1.5 flex flex-wrap justify-center gap-2">
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
           {action && <ActionButton action={action} variant="primary" />}
           {secondary && <ActionButton action={secondary} variant="secondary" />}
         </div>
@@ -744,28 +779,28 @@ export function Pagination({
   onNext: () => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#dde5ee] px-3 py-2.5 text-[10px] text-[#64748b]">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-slate-50/50 px-4 py-3 text-xs font-medium text-slate-600">
       <span>
-        Showing {from}–{to} of {total} {noun}
+        Showing <strong className="font-bold text-slate-900">{from}–{to}</strong> of <strong className="font-bold text-slate-900">{total}</strong> {noun}
       </span>
       {pageCount > 1 && (
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onPrevious}
             disabled={!canPrevious}
-            className={cn(btn, "h-7 px-2.5 disabled:cursor-not-allowed")}
+            className={cn(btn, "h-8 px-3 text-xs disabled:cursor-not-allowed")}
           >
             Previous
           </button>
-          <span className="px-1 font-semibold text-[#475569]">
+          <span className="px-1.5 text-xs font-semibold text-slate-900">
             Page {page} of {pageCount}
           </span>
           <button
             type="button"
             onClick={onNext}
             disabled={!canNext}
-            className={cn(btn, "h-7 px-2.5 disabled:cursor-not-allowed")}
+            className={cn(btn, "h-8 px-3 text-xs disabled:cursor-not-allowed")}
           >
             Next
           </button>
@@ -792,17 +827,17 @@ export function StateNotice({
   icon?: ComponentType<{ className?: string }>;
 }) {
   const palette = {
-    amber: "border-[#fae0a6] bg-[#fffaeb] text-[#b45309]",
-    red: "border-[#fbcfcb] bg-[#fef3f2] text-[#b42318]",
-    blue: "border-[#bcd9ff] bg-[#eff6ff] text-[#0b5ed7]",
+    amber: "border-amber-300 bg-amber-50 text-amber-900",
+    red: "border-rose-300 bg-rose-50 text-rose-900",
+    blue: "border-blue-300 bg-blue-50 text-blue-900",
   }[tone];
 
   return (
-    <div className={cn("flex flex-wrap items-start gap-3 rounded-lg border p-3", palette)}>
-      {Icon && <Icon className="mt-0.5 size-4 shrink-0" />}
+    <div className={cn("flex flex-wrap items-start gap-3.5 rounded-xl border p-3.5 shadow-2xs", palette)}>
+      {Icon && <Icon className="mt-0.5 size-4.5 shrink-0" />}
       <div className="min-w-[220px] flex-1">
-        <p className="text-xs font-bold">{title}</p>
-        <p className="mt-0.5 text-[11px] leading-relaxed opacity-90">{description}</p>
+        <p className="text-xs font-medium">{title}</p>
+        <p className="mt-0.5 text-xs font-medium leading-relaxed opacity-95">{description}</p>
       </div>
       <div className="flex gap-2">
         {secondary && (
@@ -836,11 +871,11 @@ export function NotFoundState({
 }) {
   return (
     <div className={cn(card, "mx-auto mt-8 max-w-[560px] p-8 text-center")}>
-      <h1 className="text-base font-bold text-[#14213d]">{title}</h1>
-      <p className="mx-auto mt-2 max-w-[420px] text-[11px] leading-relaxed text-[#64748b]">
+      <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
+      <p className="mx-auto mt-2 max-w-[420px] text-xs font-medium leading-relaxed text-slate-600">
         {description}
       </p>
-      <div className="mt-4 flex flex-wrap justify-center gap-2">
+      <div className="mt-5 flex flex-wrap justify-center gap-2.5">
         <Link href={backHref} className={btnPrimary}>
           {backLabel}
         </Link>
@@ -861,7 +896,7 @@ export function NotFoundState({
 export function SkeletonBar({ className }: { className?: string }) {
   return (
     <span
-      className={cn("block animate-pulse rounded bg-[#e8edf4]", className)}
+      className={cn("block animate-pulse rounded-lg bg-slate-200", className)}
       aria-hidden="true"
     />
   );
@@ -871,7 +906,7 @@ export function SkeletonKpis({ count = 8 }: { count?: number }) {
   return (
     <section className="grid grid-cols-2 gap-2 md:grid-cols-4 2xl:grid-cols-8">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className={cn(card, "h-[84px] p-3")}>
+        <div key={i} className={cn(card, "h-[88px] p-3.5")}>
           <SkeletonBar className="h-3 w-2/3" />
           <SkeletonBar className="mt-3 h-5 w-1/2" />
           <SkeletonBar className="mt-2 h-2 w-1/3" />
@@ -890,15 +925,15 @@ export function SkeletonTable({
 }) {
   return (
     <div className={cn(card, "overflow-hidden")}>
-      <div className="flex gap-3 border-b border-[#dde5ee] bg-[#f7f9fc] px-3 py-3">
+      <div className="flex gap-3 border-b border-slate-200 bg-slate-100/70 px-4 py-3">
         {Array.from({ length: columns }, (_, i) => (
-          <SkeletonBar key={i} className="h-3 flex-1" />
+          <SkeletonBar key={i} className="h-3.5 flex-1" />
         ))}
       </div>
       {Array.from({ length: rows }, (_, r) => (
-        <div key={r} className="flex gap-3 border-b border-[#e5eaf1] px-3 py-3 last:border-0">
+        <div key={r} className="flex gap-3 border-b border-slate-200/70 px-4 py-3.5 last:border-0">
           {Array.from({ length: columns }, (_, c) => (
-            <SkeletonBar key={c} className="h-3 flex-1" />
+            <SkeletonBar key={c} className="h-3.5 flex-1" />
           ))}
         </div>
       ))}
@@ -921,10 +956,10 @@ export function Meter({
 }) {
   return (
     <span
-      className={cn("block h-1.5 overflow-hidden rounded-full bg-[#edf1f5]", className)}
+      className={cn("block h-2 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200", className)}
     >
       <span
-        className={cn("block h-full rounded-full", TONE_CLASS[tone].dot)}
+        className={cn("block h-full rounded-full transition-all duration-500", TONE_CLASS[tone].dot)}
         style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
       />
     </span>
@@ -934,7 +969,7 @@ export function Meter({
 export function Avatar({ name }: { name: string }) {
   const initial = name === "Unassigned" ? "?" : name.charAt(0).toUpperCase();
   return (
-    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e8eef5] text-[9px] font-bold text-[#475569]">
+    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-800 ring-1 ring-slate-300">
       {initial}
     </span>
   );

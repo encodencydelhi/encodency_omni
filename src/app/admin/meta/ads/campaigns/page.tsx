@@ -132,21 +132,23 @@ function CampaignsView() {
   return (
     <AdsWorkspace>
       <section className={cn(card, "overflow-hidden")}>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#dde5ee] px-3 py-2.5">
-          <div className="flex items-center gap-2">
-            <Megaphone className="size-4 text-[#1877f2]" aria-hidden="true" />
-            <h2 className="text-sm font-bold">Campaigns</h2>
-            <span className="rounded-full bg-[#eef2f7] px-2 py-0.5 text-[10px] font-bold text-[#475569]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 bg-gradient-to-r from-slate-50/90 via-slate-50/40 to-white px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-2xs ring-1 ring-blue-500/20">
+              <Megaphone className="size-4" aria-hidden="true" />
+            </div>
+            <h2 className="text-sm font-extrabold text-slate-900">Campaigns</h2>
+            <span className="rounded-full bg-blue-100/80 px-2.5 py-0.5 text-[10.5px] font-black text-blue-700 ring-1 ring-blue-500/20">
               {rows.length}
             </span>
             {selected.length > 0 && (
-              <span className="text-[11px] font-semibold text-[#1877f2]">
+              <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-600 border border-blue-200">
                 {selected.length} selected
               </span>
             )}
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
             {selected.length > 0 ? (
               <>
                 <button type="button" onClick={() => bulk("Edit")} className={btn}>
@@ -266,7 +268,7 @@ function CampaignsView() {
         {showMoreFilters && (
           <div
             id="campaign-more-filters"
-            className="flex flex-wrap items-center gap-2 border-b border-[#dde5ee] bg-[#fbfcfe] p-3"
+            className="flex flex-wrap items-center gap-2.5 border-b border-slate-200/80 bg-slate-50/50 p-3.5"
           >
             <FilterSelect
               label="Ad account"

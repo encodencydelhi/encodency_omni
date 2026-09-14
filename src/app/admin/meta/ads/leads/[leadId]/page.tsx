@@ -38,6 +38,7 @@ import {
   time,
 } from "@/features/admin/meta-ads/format";
 import {
+  Breadcrumb,
   btn,
   btnPrimary,
   card,
@@ -134,33 +135,29 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
       }
     >
       <DetailBar>
-        <nav aria-label="Breadcrumb" className="mb-2 flex flex-wrap items-center gap-1 text-[10px] text-[#64748b]">
-          <Link href={ADS_ROOT} className="font-medium hover:text-[#1877f2] hover:underline">
-            Meta Ads Manager
-          </Link>
-          <span aria-hidden="true">/</span>
-          <Link href={`${ADS_ROOT}/leads`} className="font-medium hover:text-[#1877f2] hover:underline">
-            Leads Center
-          </Link>
-          <span aria-hidden="true">/</span>
-          <span className="font-semibold text-[#14213d]">{lead.name}</span>
-        </nav>
+        <Breadcrumb
+          items={[
+            { label: "Meta Ads Manager", href: ADS_ROOT },
+            { label: "Leads Center", href: `${ADS_ROOT}/leads` },
+            { label: lead.name },
+          ]}
+        />
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-[260px] flex-1">
-            <h1 className="flex flex-wrap items-center gap-2 text-[20px] font-bold leading-tight">
+            <h1 className="flex flex-wrap items-center gap-2.5 text-[22px] font-extrabold leading-tight tracking-tight text-slate-900">
               {lead.name}
               <ToneChip tone={LEAD_STAGE_TONE[lead.stage] ?? "slate"}>{lead.stage}</ToneChip>
             </h1>
-            <p className="mt-1 text-[11px] text-[#64748b]">
+            <p className="mt-1 text-xs font-medium text-slate-600">
               {lead.id} · {lead.city}
               {lead.company !== "—" && ` · ${lead.company}`} · submitted{" "}
               {dateTime(lead.submittedAt)}
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
-            <button type="button" onClick={() => toast.success(`Calling ${lead.phone}…`)} className={btn}>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={() => toast.success(`Calling ${lead.phone}…`)} className={btnPrimary}>
               <Phone className="size-3.5" />
               Call
             </button>
@@ -185,30 +182,27 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
               onClick={() => toast.success(`“${lead.name}” marked as converted`)}
               className={btn}
             >
-              <CheckCircle2 className="size-3.5" />
+              <CheckCircle2 className="size-3.5 text-emerald-600" />
               Mark Converted
             </button>
           </div>
         </div>
 
         {/* Pipeline progress */}
-        <ol className="mt-3 flex flex-wrap gap-1">
+        <ol className="mt-4 flex flex-wrap gap-2">
           {PIPELINE.map((stage, i) => {
             const done = !isTerminal && i <= stageIndex;
             return (
               <li key={stage} className="min-w-[110px] flex-1">
                 <div
                   className={cn(
-                    "rounded-md border px-2.5 py-1.5",
-                    done ? "border-[#b9e6ce] bg-[#eefaf3]" : "border-[#e8edf4] bg-[#fbfcfe]",
+                    "rounded-xl border p-2.5 text-center transition-all duration-200 shadow-2xs",
+                    done
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-800 font-bold"
+                      : "border-slate-200 bg-slate-50/70 text-slate-400 font-medium",
                   )}
                 >
-                  <span
-                    className={cn(
-                      "block text-[10px] font-bold",
-                      done ? "text-[#087a50]" : "text-[#94a3b8]",
-                    )}
-                  >
+                  <span className="block text-[11px] font-bold">
                     {stage}
                   </span>
                 </div>
@@ -217,8 +211,8 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
           })}
           {isTerminal && (
             <li className="min-w-[110px] flex-1">
-              <div className="rounded-md border border-[#fbcfcb] bg-[#fef3f2] px-2.5 py-1.5">
-                <span className="block text-[10px] font-bold text-[#b42318]">{lead.stage}</span>
+              <div className="rounded-xl border border-rose-300 bg-rose-50 p-2.5 text-center shadow-2xs">
+                <span className="block text-[11px] font-bold text-rose-800">{lead.stage}</span>
               </div>
             </li>
           )}

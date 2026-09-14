@@ -151,12 +151,12 @@ export const DELIVERY_LABEL: Record<EntityStatus, string> = {
 };
 
 export const TONE_CLASS: Record<StatusTone, { chip: string; dot: string; text: string }> = {
-  green: { chip: "border-[#b9e6ce] bg-[#eefaf3] text-[#087a50]", dot: "bg-[#12b76a]", text: "text-[#079455]" },
-  blue: { chip: "border-[#bcd9ff] bg-[#eff6ff] text-[#0b5ed7]", dot: "bg-[#1877f2]", text: "text-[#0b5ed7]" },
-  amber: { chip: "border-[#fae0a6] bg-[#fffaeb] text-[#b45309]", dot: "bg-[#f59e0b]", text: "text-[#b45309]" },
-  red: { chip: "border-[#fbcfcb] bg-[#fef3f2] text-[#b42318]", dot: "bg-[#ef4444]", text: "text-[#b42318]" },
-  slate: { chip: "border-[#dde5ee] bg-[#f4f6f9] text-[#475569]", dot: "bg-[#94a3b8]", text: "text-[#475569]" },
-  violet: { chip: "border-[#ddd0fb] bg-[#f7f3ff] text-[#6d28d9]", dot: "bg-[#8b5cf6]", text: "text-[#6d28d9]" },
+  green: { chip: "border-emerald-300 bg-emerald-50 text-emerald-800 font-semibold", dot: "bg-emerald-500", text: "text-emerald-700" },
+  blue: { chip: "border-blue-300 bg-blue-50 text-blue-800 font-semibold", dot: "bg-blue-600", text: "text-blue-700" },
+  amber: { chip: "border-amber-300 bg-amber-50 text-amber-900 font-semibold", dot: "bg-amber-500", text: "text-amber-800" },
+  red: { chip: "border-rose-300 bg-rose-50 text-rose-900 font-semibold", dot: "bg-rose-500", text: "text-rose-700" },
+  slate: { chip: "border-slate-300 bg-slate-100 text-slate-800 font-semibold", dot: "bg-slate-500", text: "text-slate-700" },
+  violet: { chip: "border-purple-300 bg-purple-50 text-purple-900 font-semibold", dot: "bg-purple-600", text: "text-purple-700" },
 };
 
 export const LEAD_STAGE_TONE: Record<string, StatusTone> = {

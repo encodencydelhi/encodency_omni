@@ -49,6 +49,7 @@ import {
 import { PerformanceTrend } from "@/features/admin/meta-ads/components/charts";
 import { AdPreview } from "@/features/admin/meta-ads/components/previews";
 import {
+  Breadcrumb,
   btn,
   btnPrimary,
   card,
@@ -139,42 +140,27 @@ function AdDetail({ adId }: { adId: string }) {
       }
     >
       <DetailBar>
-        <nav aria-label="Breadcrumb" className="mb-2 flex flex-wrap items-center gap-1 text-[10px] text-[#64748b]">
-          <Link href={ADS_ROOT} className="font-medium hover:text-[#1877f2] hover:underline">
-            Meta Ads Manager
-          </Link>
-          <span aria-hidden="true">/</span>
-          {campaign && (
-            <>
-              <Link href={`${ADS_ROOT}/campaigns/${campaign.id}`} className="font-medium hover:text-[#1877f2] hover:underline">
-                {campaign.name}
-              </Link>
-              <span aria-hidden="true">/</span>
-            </>
-          )}
-          {adSet && (
-            <>
-              <Link href={`${ADS_ROOT}/adsets/${adSet.id}`} className="font-medium hover:text-[#1877f2] hover:underline">
-                {adSet.name}
-              </Link>
-              <span aria-hidden="true">/</span>
-            </>
-          )}
-          <span className="font-semibold text-[#14213d]">{ad.name}</span>
-        </nav>
+        <Breadcrumb
+          items={[
+            { label: "Meta Ads Manager", href: ADS_ROOT },
+            ...(campaign ? [{ label: campaign.name, href: `${ADS_ROOT}/campaigns/${campaign.id}` }] : []),
+            ...(adSet ? [{ label: adSet.name, href: `${ADS_ROOT}/adsets/${adSet.id}` }] : []),
+            { label: ad.name },
+          ]}
+        />
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-[280px] flex-1">
-            <h1 className="flex flex-wrap items-center gap-2 text-[20px] font-bold leading-tight">
+            <h1 className="flex flex-wrap items-center gap-2.5 text-[22px] font-extrabold leading-tight tracking-tight text-slate-900">
               {ad.name}
               <StatusChip status={ad.status} />
             </h1>
-            <p className="mt-1 text-[11px] text-[#64748b]">
+            <p className="mt-1 text-xs font-medium text-slate-600">
               {ad.format} · {ad.destination} · edited {relative(ad.lastEdited)}
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
             <Link href={`${ADS_ROOT}/create?ad=${ad.id}&step=ad`} className={btn}>
               <Edit3 className="size-3.5" />
               Edit
@@ -236,7 +222,7 @@ function AdDetail({ adId }: { adId: string }) {
       <LinkTabs
         tabs={tabs}
         current={tab}
-        className="my-3 rounded-lg border border-[#dde5ee] bg-white px-2 shadow-[0_1px_4px_rgba(15,23,42,.04)]"
+        className="my-3 rounded-xl border border-slate-200 bg-white px-3 shadow-2xs"
       />
 
       {tab === "overview" && (

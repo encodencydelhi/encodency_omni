@@ -80,7 +80,7 @@ const steps: { id: Step; label: string; sub: string; icon: typeof Folder }[] = [
 
 const order: Step[] = ["campaign", "adset", "ad", "form", "review"];
 const input =
-  "h-9 w-full rounded-md border border-[#cfd9e6] bg-white px-3 text-xs text-[#17213c] outline-none transition focus:border-[#1671f8] focus:ring-2 focus:ring-[#1671f8]/10";
+  "h-9 w-full rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-sm px-3.5 text-[11.5px] font-medium text-slate-800 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_0_0_4px_rgba(59,130,246,0.08)] hover:border-slate-300";
 
 /**
  * Entry context. Management pages deep-link into the builder — "Add Ad Set"
@@ -144,19 +144,21 @@ function CreateAdsManagerInner() {
   const publish = () => router.push("/admin/meta/ads/publish?status=submitted");
 
   return (
-    <div className="ads-create-workspace flex h-dvh w-full flex-col overflow-hidden bg-[#f6f8fb] text-[#111c3b]">
-      <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-[#dce4ee] bg-white px-4">
-        <div className="flex shrink-0 items-center gap-2">
-          <FaMeta className="size-7 text-[#0866ff]" />
-          <FaInstagram className="size-5 text-[#d946ef]" />
+    <div className="ads-create-workspace flex h-dvh w-full flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 text-slate-800">
+      <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-white/60 bg-white/70 px-5 backdrop-blur-xl shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
+        <div className="flex shrink-0 items-center gap-3">
+          <div className="flex items-center gap-1.5 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 p-1.5 shadow-md shadow-blue-500/20">
+            <FaMeta className="size-5 text-white" />
+          </div>
+          <FaInstagram className="size-4.5 text-fuchsia-500" />
           <div>
-            <h1 className="text-sm font-bold">Meta Ads Manager</h1>
-            <p className="text-[9px] text-[#66758f]">
+            <h1 className="text-[13px] font-semibold tracking-tight text-slate-900">Meta Ads Manager</h1>
+            <p className="text-[9px] font-medium text-slate-500">
               Create paid campaigns across Facebook and Instagram.
             </p>
           </div>
         </div>
-        <nav className="flex min-w-0 flex-1 items-center justify-center gap-2">
+        <nav className="flex min-w-0 flex-1 items-center justify-center gap-1">
           {order.map((item, i) => {
             const complete = i < index;
             const active = i === index;
@@ -167,36 +169,38 @@ function CreateAdsManagerInner() {
                   ? "Instant Form"
                   : item === "review"
                     ? "Review & Publish"
-                    : "Campaign";
+                    : item === "ad"
+                      ? "Ad"
+                      : "Campaign";
             return (
-              <div key={item} className="flex items-center gap-2">
+              <div key={item} className="flex items-center gap-1">
                 <button
                   disabled={i > index}
                   onClick={() => setStep(item)}
-                  className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-1 py-4 text-[10px] font-bold ${active ? "border-[#1671f8] text-[#0769e8]" : complete ? "border-transparent text-[#111c3b]" : "border-transparent text-[#66758f]"}`}
+                  className={`group flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-[10.5px] font-semibold transition-all duration-300 ${active ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-200" : complete ? "text-slate-700 hover:bg-slate-50" : "text-slate-400 cursor-not-allowed"}`}
                 >
                   <span
-                    className={`flex size-5 items-center justify-center rounded-full text-[9px] ${complete ? "bg-[#10a85e] text-white" : active ? "bg-[#1671f8] text-white" : "bg-[#e9eef5] text-[#526078]"}`}
+                    className={`flex size-5.5 items-center justify-center rounded-full text-[9px] font-bold transition-all duration-300 ${complete ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm shadow-emerald-500/30" : active ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/30" : "bg-slate-100 text-slate-500"}`}
                   >
                     {complete ? <Check className="size-3" /> : i + 1}
                   </span>
                   {label}
                 </button>
                 {i < order.length - 1 && (
-                  <span className="h-px w-6 bg-[#dce4ee]" />
+                  <span className={`h-px w-5 transition-colors duration-300 ${complete ? "bg-emerald-300" : "bg-slate-200"}`} />
                 )}
               </div>
             );
           })}
         </nav>
         <div className="flex shrink-0 items-center gap-2">
-          <span className="flex items-center gap-1.5 rounded-md border border-[#cfe8df] bg-[#f2fbf7] px-3 py-2 text-[10px] font-bold text-[#087a50]">
+          <span className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[10px] font-semibold text-emerald-700 shadow-sm">
             <CheckCircle2 className="size-3.5" />
-            Meta Connected
+            Connected
           </span>
           <Link
             href={returnHref}
-            className="flex size-8 items-center justify-center rounded-md border border-[#d8e0ea] text-[#64748b] hover:bg-[#f8fafc]"
+            className="flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:bg-red-50 hover:border-red-200 hover:text-red-500"
             aria-label="Close campaign builder"
           >
             <X className="size-4" />
@@ -205,16 +209,16 @@ function CreateAdsManagerInner() {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside className="flex w-[248px] shrink-0 flex-col border-r border-[#dce4ee] bg-white p-4">
+        <aside className="flex w-[252px] shrink-0 flex-col border-r border-slate-200/60 bg-white/60 backdrop-blur-xl p-4">
           <div>
-            <h2 className="text-base font-bold">Create Campaign</h2>
-            <p className="mt-1 text-xs leading-relaxed text-[#66758f]">
+            <h2 className="text-[15px] font-semibold tracking-tight text-slate-900">Create Campaign</h2>
+            <p className="mt-1 text-[11px] font-medium leading-relaxed text-slate-500">
               Set up your campaign, ad set and ad
               <br />
               to start getting results.
             </p>
             {contextLabel && (
-              <p className="mt-2.5 rounded-md border border-[#cfe0fb] bg-[#eef5ff] px-2.5 py-1.5 text-[10px] font-semibold leading-relaxed text-[#0769e8]">
+              <p className="mt-2.5 rounded-xl border border-blue-200/60 bg-gradient-to-r from-blue-50 to-indigo-50 px-3 py-2 text-[10px] font-semibold leading-relaxed text-blue-700">
                 {contextLabel}
               </p>
             )}
@@ -229,13 +233,13 @@ function CreateAdsManagerInner() {
                   key={item.id}
                   disabled={i > index}
                   onClick={() => setStep(item.id)}
-                  className={`relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition ${active ? "bg-[#edf5ff]" : complete ? "hover:bg-[#f8fafc]" : "cursor-not-allowed opacity-75"}`}
+                  className={`relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-300 ${active ? "bg-gradient-to-r from-blue-50/80 to-indigo-50/60 shadow-sm ring-1 ring-blue-200/50" : complete ? "hover:bg-slate-50/80" : "cursor-not-allowed opacity-60"}`}
                 >
                   {active && (
-                    <span className="absolute inset-y-2 left-0 w-0.5 rounded bg-[#1671f8]" />
+                    <span className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-gradient-to-b from-blue-600 to-indigo-600" />
                   )}
                   <span
-                    className={`flex size-9 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#8fbcff] bg-white text-[#1671f8]" : complete ? "border-[#16a765] bg-[#16a765] text-white" : "border-[#d6dfeb] bg-white text-[#607089]"}`}
+                    className={`flex size-9 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${active ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25" : complete ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm shadow-emerald-500/20" : "bg-slate-100 text-slate-500"}`}
                   >
                     {complete ? (
                       <Check className="size-4" />
@@ -244,30 +248,32 @@ function CreateAdsManagerInner() {
                     )}
                   </span>
                   <span>
-                    <strong
-                      className={`block text-xs ${active ? "text-[#0769e8]" : "text-[#17213c]"}`}
+                    <span
+                      className={`block text-[11.5px] font-semibold ${active ? "text-blue-700" : "text-slate-800"}`}
                     >
                       {item.label}
-                    </strong>
-                    <small className="mt-0.5 block text-[10px] text-[#6b7891]">
+                    </span>
+                    <span className="mt-0.5 block text-[10px] font-medium text-slate-500">
                       {item.sub}
-                    </small>
+                    </span>
                   </span>
                 </button>
               );
             })}
           </nav>
-          <div className="mt-auto rounded-lg bg-[#f3f7fc] p-3">
-            <div className="flex gap-2">
-              <CircleHelp className="mt-0.5 size-4 text-[#1671f8]" />
+          <div className="mt-auto rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/80 p-3.5 ring-1 ring-blue-100/60">
+            <div className="flex gap-2.5">
+              <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                <CircleHelp className="size-4" />
+              </span>
               <div>
-                <p className="text-xs font-bold">Need help?</p>
-                <p className="mt-0.5 text-[10px] leading-relaxed text-[#66758f]">
+                <p className="text-[11px] font-semibold text-slate-800">Need help?</p>
+                <p className="mt-0.5 text-[10px] font-medium leading-relaxed text-slate-500">
                   Check out our guide or contact support.
                 </p>
                 <Link
                   href="/admin/meta/ads/help?from=create"
-                  className="mt-2 inline-block text-[10px] font-bold text-[#0769e8] hover:underline"
+                  className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-blue-600 hover:text-blue-700 hover:underline"
                 >
                   View Help Center →
                 </Link>
@@ -286,37 +292,37 @@ function CreateAdsManagerInner() {
 
         <aside
           key={step}
-          className="w-[330px] shrink-0 overflow-y-auto border-l border-[#dce4ee] bg-[#f8fafc] p-3 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]"
+          className="w-[330px] shrink-0 overflow-y-auto border-l border-slate-200/60 bg-gradient-to-b from-slate-50/80 to-blue-50/30 p-3.5 backdrop-blur-sm [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]"
         >
           <RightRail step={step} />
         </aside>
       </div>
 
-      <footer className="flex h-14 shrink-0 items-center justify-between border-t border-[#dce4ee] bg-white px-5">
+      <footer className="flex h-14 shrink-0 items-center justify-between border-t border-white/60 bg-white/70 px-5 backdrop-blur-xl shadow-[0_-1px_3px_rgba(15,23,42,0.03)]">
         <button
           onClick={back}
           disabled={index === 0}
-          className="flex h-9 items-center gap-2 rounded-md border border-[#cfd9e6] bg-white px-4 text-xs font-bold shadow-sm disabled:opacity-40"
+          className="flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[11px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow disabled:opacity-40"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-3.5" />
           Back
         </button>
-        <div className="flex gap-2">
+        <div className="flex gap-2.5">
           <button
             onClick={saveDraft}
-            className="flex h-9 items-center gap-2 rounded-md border border-[#cfd9e6] bg-white px-5 text-xs font-bold shadow-sm transition hover:bg-[#f8fafc]"
+            className="flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-[11px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow"
           >
             <Save className="size-3.5" />
             Save Draft
           </button>
           <button
             onClick={step === "review" ? publish : next}
-            className="flex h-9 items-center gap-2 rounded-md bg-[#126df3] px-5 text-xs font-bold text-white shadow-[0_3px_10px_rgba(18,109,243,.25)] hover:bg-[#075ed8]"
+            className="flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 px-5 text-[11px] font-semibold text-white shadow-[0_4px_14px_rgba(37,99,235,0.35)] ring-1 ring-white/20 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-0.5 active:translate-y-0"
           >
             {step === "review"
               ? "Publish Campaign"
               : `Next: ${order[index + 1] === "adset" ? "Ad Set" : order[index + 1] === "form" ? "Instant Form" : order[index + 1] === "review" ? "Review & Publish" : "Ad"}`}
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-3.5" />
           </button>
         </div>
       </footer>
@@ -334,9 +340,9 @@ export default function CreateAdsManager() {
 
 function Heading({ title, sub }: { title: string; sub: string }) {
   return (
-    <div className="mb-3">
-      <h1 className="text-[22px] font-bold leading-tight">{title}</h1>
-      <p className="mt-0.5 text-xs text-[#66758f]">{sub}</p>
+    <div className="mb-4">
+      <h1 className="text-xl font-semibold tracking-tight text-slate-900">{title}</h1>
+      <p className="mt-1 text-[11.5px] font-medium text-slate-500">{sub}</p>
     </div>
   );
 }
@@ -355,13 +361,13 @@ function Card({
 }) {
   return (
     <section
-      className={`rounded-lg border border-[#dce4ee] bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,.03)] ${className}`}
+      className={`rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur-sm p-4 shadow-[0_2px_12px_rgba(15,23,42,0.04)] transition-all duration-300 hover:shadow-[0_4px_20px_rgba(15,23,42,0.07)] hover:border-slate-300/70 ${className}`}
     >
-      <div className="mb-3 flex items-start gap-3">
-        <span className="mt-0.5 text-[#1671f8]">{icon}</span>
+      <div className="mb-3.5 flex items-start gap-3">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 ring-1 ring-blue-200/40">{icon}</span>
         <div>
-          <h2 className="text-sm font-bold">{title}</h2>
-          {sub && <p className="mt-0.5 text-[10px] text-[#66758f]">{sub}</p>}
+          <h2 className="text-[13px] font-semibold text-slate-900">{title}</h2>
+          {sub && <p className="mt-0.5 text-[10.5px] font-medium text-slate-500">{sub}</p>}
         </div>
       </div>
       {children}
@@ -371,7 +377,7 @@ function Card({
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-semibold text-[#26344f]">
+      <span className="mb-1.5 block text-[10.5px] font-semibold text-slate-600">
         {label}
       </span>
       {children}
@@ -379,7 +385,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 function Select({ children }: { children: ReactNode }) {
-  return <select className={input}>{children}</select>;
+  return <select className={`${input} cursor-pointer appearance-none`}>{children}</select>;
 }
 /**
  * A selectable option card. Backed by a native radio so the choice really
@@ -408,16 +414,16 @@ function Choice({
         defaultChecked={selected}
         className="sr-only"
       />
-      <span className="flex min-h-14 w-full items-center gap-3 rounded-md border border-[#d8e1ec] bg-white p-2.5 text-left transition group-has-[:checked]:border-[#1671f8] group-has-[:checked]:bg-[#f2f7ff] group-has-[:checked]:ring-1 group-has-[:checked]:ring-[#1671f8] group-has-[:focus-visible]:ring-2 group-has-[:focus-visible]:ring-[#1671f8]/40">
-        <span className="flex size-8 items-center justify-center rounded-full bg-[#f4f6f8] text-[#6b7891] group-has-[:checked]:bg-[#e4efff] group-has-[:checked]:text-[#1671f8]">
+      <span className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-slate-200/80 bg-white/80 p-3 text-left shadow-sm transition-all duration-300 group-has-[:checked]:border-blue-400 group-has-[:checked]:bg-gradient-to-r group-has-[:checked]:from-blue-50/80 group-has-[:checked]:to-indigo-50/60 group-has-[:checked]:ring-1 group-has-[:checked]:ring-blue-400/50 group-has-[:checked]:shadow-md group-has-[:checked]:shadow-blue-500/10 group-has-[:focus-visible]:ring-2 group-has-[:focus-visible]:ring-blue-500/40 hover:border-slate-300 hover:shadow">
+        <span className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition-all duration-300 group-has-[:checked]:bg-gradient-to-br group-has-[:checked]:from-blue-600 group-has-[:checked]:to-indigo-600 group-has-[:checked]:text-white group-has-[:checked]:shadow-sm group-has-[:checked]:shadow-blue-500/25">
           {icon}
         </span>
         <span className="min-w-0 flex-1">
-          <strong className="block text-xs">{title}</strong>
-          <small className="text-[10px] text-[#66758f]">{sub}</small>
+          <span className="block text-[11.5px] font-semibold text-slate-800">{title}</span>
+          <span className="text-[10px] font-medium text-slate-500">{sub}</span>
         </span>
         {badge && (
-          <span className="rounded-full bg-[#dceaff] px-2 py-0.5 text-[9px] font-bold text-[#126df3]">
+          <span className="rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 px-2.5 py-0.5 text-[9px] font-semibold text-blue-700 ring-1 ring-blue-200/50">
             {badge}
           </span>
         )}
@@ -483,13 +489,21 @@ function CampaignStep() {
         >
           <div className="grid grid-cols-2 gap-5">
             <div>
-              <p className="mb-2 text-[10px] font-semibold">Budget Strategy</p>
-              <div className="flex gap-5 text-xs">
-                <label>
-                  <input type="radio" defaultChecked /> Campaign Budget
+              <p className="mb-2.5 text-[10.5px] font-semibold text-slate-700">Budget Strategy</p>
+              <div className="flex gap-4 text-[11px]">
+                <label className="group flex cursor-pointer items-center gap-2">
+                  <input type="radio" name="budgetStrategy" defaultChecked className="sr-only" />
+                  <span className="flex size-4 items-center justify-center rounded-full border-2 border-slate-300 transition group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
+                    <span className="size-1.5 rounded-full bg-white opacity-0 transition group-has-[:checked]:opacity-100" />
+                  </span>
+                  <span className="font-medium text-slate-700">Campaign Budget</span>
                 </label>
-                <label>
-                  <input type="radio" /> Ad Set Budget
+                <label className="group flex cursor-pointer items-center gap-2">
+                  <input type="radio" name="budgetStrategy" className="sr-only" />
+                  <span className="flex size-4 items-center justify-center rounded-full border-2 border-slate-300 transition group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
+                    <span className="size-1.5 rounded-full bg-white opacity-0 transition group-has-[:checked]:opacity-100" />
+                  </span>
+                  <span className="font-medium text-slate-700">Ad Set Budget</span>
                 </label>
               </div>
               <Field label="Budget Type">
@@ -522,16 +536,16 @@ function CampaignStep() {
         >
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
-              <span className="rounded-full bg-[#dcf8e8] px-3 py-1 text-[10px] font-bold text-[#079455]">
+              <span className="rounded-full bg-gradient-to-r from-emerald-50 to-emerald-100 px-3 py-1.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200/60">
                 ◎ Optimize for Leads
               </span>
-              <span className="rounded-full bg-[#dcf8e8] px-3 py-1 text-[10px] font-bold text-[#079455]">
+              <span className="rounded-full bg-gradient-to-r from-emerald-50 to-emerald-100 px-3 py-1.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200/60">
                 High Intent
               </span>
             </div>
-            <span className="flex items-center gap-2 text-xs font-bold">
-              <span className="h-5 w-9 rounded-full bg-[#1671f8] p-0.5">
-                <span className="ml-auto block size-4 rounded-full bg-white" />
+            <span className="flex items-center gap-2 text-[11px] font-semibold text-slate-700">
+              <span className="relative h-5.5 w-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 p-0.5 shadow-inner">
+                <span className="ml-auto block size-4.5 rounded-full bg-white shadow-sm transition-all" />
               </span>
               On
             </span>
@@ -542,19 +556,16 @@ function CampaignStep() {
           sub="Declare if your ads are related to credit, employment, housing, or social issues."
           icon={<ShieldCheck className="size-5" />}
         >
-          <div className="flex justify-end gap-6 text-xs">
-            <label>
-              <input type="radio" defaultChecked /> None selected
-            </label>
-            <label>
-              <input type="radio" /> Housing
-            </label>
-            <label>
-              <input type="radio" /> Employment
-            </label>
-            <label>
-              <input type="radio" /> Credit
-            </label>
+          <div className="flex flex-wrap justify-end gap-3 text-[11px]">
+            {["None selected", "Housing", "Employment", "Credit", "Social Issues"].map((cat, i) => (
+              <label key={cat} className="group flex cursor-pointer items-center gap-2">
+                <input type="radio" name="specialAdCategory" defaultChecked={i === 0} className="sr-only" />
+                <span className="flex size-4 items-center justify-center rounded-full border-2 border-slate-300 transition group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
+                  <span className="size-1.5 rounded-full bg-white opacity-0 transition group-has-[:checked]:opacity-100" />
+                </span>
+                <span className="font-medium text-slate-700 transition group-has-[:checked]:text-blue-700">{cat}</span>
+              </label>
+            ))}
           </div>
         </Card>
         <Card
@@ -579,8 +590,8 @@ function CampaignStep() {
               />
             </Field>
           </div>
-          <label className="mt-3 flex items-center gap-2 text-xs font-semibold">
-            <input type="checkbox" /> Enable A/B test
+          <label className="mt-3 flex cursor-pointer items-center gap-2.5 text-[11px] font-medium text-slate-700">
+            <input type="checkbox" className="size-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30" /> Enable A/B test
           </label>
         </Card>
       </div>
@@ -767,16 +778,16 @@ function PlacementGroup({
   items: string[];
 }) {
   return (
-    <div className="rounded-md border border-[#d8e1ec] p-3">
-      <p className={`mb-2 flex items-center gap-2 text-xs font-bold ${color}`}>
+    <div className="rounded-xl border border-slate-200/70 bg-gradient-to-br from-white to-slate-50/50 p-3.5 transition-all duration-300 hover:shadow-sm">
+      <p className={`mb-2.5 flex items-center gap-2 text-[11.5px] font-semibold ${color}`}>
         {icon}
         {title}
       </p>
-      <div className="grid grid-cols-2 gap-2 text-[10px]">
+      <div className="grid grid-cols-2 gap-2.5 text-[10.5px]">
         {items.map((x) => (
-          <label key={x}>
-            <input type="checkbox" defaultChecked className="mr-1.5" />
-            {x}
+          <label key={x} className="group flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1 transition hover:bg-slate-50">
+            <input type="checkbox" defaultChecked className="size-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30" />
+            <span className="font-medium text-slate-700">{x}</span>
           </label>
         ))}
       </div>
@@ -816,24 +827,16 @@ function AdStep() {
                 </Select>
               </Field>
             </div>
-            <div className="mt-2 flex gap-4 text-[10px]">
-              <label>
-                <input type="radio" name="identityMode" className="mr-1" />
-                Facebook only
-              </label>
-              <label>
-                <input type="radio" name="identityMode" className="mr-1" />
-                Instagram only
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="identityMode"
-                  defaultChecked
-                  className="mr-1"
-                />
-                Use both identities
-              </label>
+            <div className="mt-3 flex gap-4 text-[10.5px]">
+              {["Facebook only", "Instagram only", "Use both identities"].map((mode, i) => (
+                <label key={mode} className="group flex cursor-pointer items-center gap-2">
+                  <input type="radio" name="identityMode" defaultChecked={i === 2} className="sr-only" />
+                  <span className="flex size-4 items-center justify-center rounded-full border-2 border-slate-300 transition group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
+                    <span className="size-1.5 rounded-full bg-white opacity-0 transition group-has-[:checked]:opacity-100" />
+                  </span>
+                  <span className="font-medium text-slate-700 transition group-has-[:checked]:text-blue-700">{mode}</span>
+                </label>
+              ))}
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <Choice
@@ -860,13 +863,13 @@ function AdStep() {
               <button
                 type="button"
                 onClick={() => toast.success("Opening the media uploader…")}
-                className="flex min-h-32 flex-col items-center justify-center rounded-md border border-dashed border-[#aac6eb] bg-[#f8fbff] text-xs transition hover:border-[#1671f8] hover:bg-[#f2f7ff]"
+                className="flex min-h-32 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-300/60 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 text-[11px] transition-all duration-300 hover:border-blue-400 hover:bg-blue-50/60 hover:shadow-sm"
               >
-                <span className="mb-2 flex size-9 items-center justify-center rounded-full bg-[#dceaff] text-[#1671f8]">
+                <span className="mb-2.5 flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 shadow-sm ring-1 ring-blue-200/50">
                   <Upload className="size-5" />
                 </span>
-                <strong>Add images or videos</strong>
-                <span className="mt-1 text-[10px] text-[#66758f]">
+                <span className="font-semibold text-slate-800">Add images or videos</span>
+                <span className="mt-1 text-[10px] font-medium text-slate-500">
                   Drag and drop, or choose files to upload.
                 </span>
               </button>
@@ -888,7 +891,7 @@ function AdStep() {
                         defaultChecked={i === 0}
                         className="sr-only"
                       />
-                      <span className="flex h-16 items-center justify-center rounded-md border border-[#d8e1ec] text-center text-[10px] font-semibold transition group-has-[:checked]:border-[#1671f8] group-has-[:checked]:bg-[#f2f7ff] group-has-[:checked]:text-[#0769e8] group-has-[:focus-visible]:ring-2 group-has-[:focus-visible]:ring-[#1671f8]/40">
+                      <span className="flex h-16 items-center justify-center rounded-xl border border-slate-200/80 text-center text-[10px] font-semibold shadow-sm transition-all duration-300 group-has-[:checked]:border-blue-400 group-has-[:checked]:bg-gradient-to-br group-has-[:checked]:from-blue-50 group-has-[:checked]:to-indigo-50 group-has-[:checked]:text-blue-700 group-has-[:checked]:ring-1 group-has-[:checked]:ring-blue-400/40 group-has-[:checked]:shadow-md group-has-[:checked]:shadow-blue-500/10 group-has-[:focus-visible]:ring-2 group-has-[:focus-visible]:ring-blue-500/40 hover:border-slate-300 hover:shadow">
                         {x}
                       </span>
                     </label>
@@ -897,7 +900,7 @@ function AdStep() {
                 <button
                   type="button"
                   onClick={() => toast.success("Opening the media uploader…")}
-                  className="mt-3 rounded-md bg-[#1671f8] px-4 py-2 text-[10px] font-bold text-white transition hover:bg-[#075ed8]"
+                  className="mt-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-[10.5px] font-semibold text-white shadow-md shadow-blue-500/25 ring-1 ring-white/20 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0"
                 >
                   Upload Media
                 </button>
@@ -975,13 +978,13 @@ function LiveAdPreview() {
             type="button"
             onClick={() => setSurface(x)}
             aria-pressed={surface === x}
-            className={`rounded px-1 py-1.5 text-[8px] font-semibold transition ${surface === x ? "bg-[#e8f1ff] text-[#0769e8]" : "bg-[#f2f4f7] hover:bg-[#e8ebef]"}`}
+            className={`rounded-xl px-1.5 py-2 text-[8.5px] font-semibold transition-all duration-300 ${surface === x ? "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 ring-1 ring-blue-200/60 shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200/70"}`}
           >
             {x}
           </button>
         ))}
       </div>
-      <div className="mx-auto max-w-[280px] overflow-hidden rounded-[24px] border-[5px] border-[#19202b] bg-white shadow-lg">
+      <div className="mx-auto max-w-[280px] overflow-hidden rounded-[24px] border-[5px] border-slate-800 bg-white shadow-xl shadow-slate-900/10">
         <div className="p-3 text-[10px]">
           <strong>Namo Gange Trust</strong>
           <p className="mt-2">
@@ -1003,7 +1006,7 @@ function LiveAdPreview() {
           <p className="text-[9px] text-[#66758f]">META INSTANT FORM</p>
           <div className="flex justify-between gap-2">
             <strong className="text-xs">Glow Brighter, Naturally</strong>
-            <span className="shrink-0 self-center rounded bg-[#e8ebef] px-2 py-1 text-[9px] font-bold">
+             <span className="shrink-0 self-center rounded-lg bg-gradient-to-r from-slate-100 to-slate-200 px-2.5 py-1.5 text-[9px] font-semibold text-slate-700">
               Learn More
             </span>
           </div>
@@ -1085,28 +1088,28 @@ function FormStep() {
             title="3. Questions"
             icon={<ClipboardCheck className="size-5" />}
           >
-            <div className="divide-y divide-[#e5eaf1]">
+            <div className="divide-y divide-slate-100">
               {questions.map((q, i) => (
                 <div
                   key={q}
-                  className="flex items-center gap-3 py-1.5 text-[10px]"
+                  className="flex items-center gap-3 rounded-lg py-2 text-[10.5px] transition hover:bg-slate-50/60"
                 >
-                  <span className="text-[#94a3b8]">⠿</span>
-                  <strong className="flex-1">{q}</strong>
-                  <span className="rounded bg-[#eef2f6] px-2 py-0.5 text-[#5d6b82]">
+                  <span className="cursor-grab text-slate-400">⠿</span>
+                  <span className="flex-1 font-medium text-slate-800">{q}</span>
+                  <span className="rounded-lg bg-gradient-to-r from-slate-100 to-slate-50 px-2.5 py-1 text-[9.5px] font-medium text-slate-600 ring-1 ring-slate-200/60">
                     {i < 3 ? "Standard field" : "Custom question"}
                   </span>
-                  <span className="w-16 text-[#66758f]">
+                  <span className={`w-16 text-[9.5px] font-medium ${i === 5 || i === 6 ? "text-slate-400" : "text-emerald-600"}`}>
                     {i === 5 || i === 6 ? "Optional" : "Required"}
                   </span>
-                  <span>•••</span>
+                  <span className="cursor-pointer text-slate-400 transition hover:text-slate-600">•••</span>
                 </div>
               ))}
             </div>
             <button
               type="button"
               onClick={() => toast.success("Question added to this form")}
-              className="mt-2 flex items-center gap-1 text-[10px] font-bold text-[#0769e8] hover:underline"
+              className="mt-3 flex items-center gap-1.5 text-[10.5px] font-semibold text-blue-600 transition hover:text-blue-700 hover:underline"
             >
               <Plus className="size-3" />
               Add Question
@@ -1201,27 +1204,25 @@ function ReviewStep() {
         icon={<FileText className="size-5" />}
       >
         <div className="flex items-center gap-6">
-          <div className="flex size-20 items-center justify-center rounded-full border-[8px] border-[#12a85c]">
-            <strong className="text-2xl">
-              92
-              <span className="block text-center text-xs text-[#66758f]">
-                /100
-              </span>
-            </strong>
+          <div className="flex size-20 items-center justify-center rounded-full border-[6px] border-emerald-500 bg-gradient-to-br from-emerald-50 to-emerald-100 shadow-lg shadow-emerald-500/15">
+            <span className="text-center">
+              <span className="block text-2xl font-semibold text-emerald-700">92</span>
+              <span className="block text-[10px] font-medium text-slate-500">/100</span>
+            </span>
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold">Almost ready to publish!</h3>
-            <p className="mt-1 text-xs text-[#66758f]">
+            <h3 className="text-lg font-semibold text-slate-900">Almost ready to publish!</h3>
+            <p className="mt-1 text-[11px] font-medium text-slate-500">
               Your campaign looks great. Fix the warnings below to get the best
               possible results.
             </p>
           </div>
-          <div className="rounded-lg bg-[#eafbf2] p-4 text-[#079455]">
-            <strong className="flex items-center gap-2">
+          <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 text-emerald-700 ring-1 ring-emerald-200/60">
+            <span className="flex items-center gap-2 font-semibold">
               <CheckCircle2 />
               Ready to Publish
-            </strong>
-            <p className="mt-1 text-[10px]">
+            </span>
+            <p className="mt-1 text-[10px] font-medium">
               No blocking issues. You can publish your campaign now.
             </p>
           </div>
@@ -1242,17 +1243,19 @@ function ReviewStep() {
           return (
             <div
               key={String(t)}
-              className="flex items-center gap-3 rounded-lg border border-[#dce4ee] bg-white p-3"
+              className="group flex items-center gap-3 rounded-xl border border-slate-200/70 bg-white/80 p-3.5 shadow-sm transition-all duration-300 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
             >
-              <Icon className="size-5 text-[#1671f8]" />
+              <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 ring-1 ring-blue-200/40 transition group-hover:shadow-sm">
+                <Icon className="size-4.5" />
+              </span>
               <div className="flex-1">
-                <strong className="text-xs">{String(t)}</strong>
-                <p className="text-[10px] text-[#66758f]">{String(s)}</p>
+                <span className="text-[11.5px] font-semibold text-slate-800">{String(t)}</span>
+                <p className="text-[10px] font-medium text-slate-500">{String(s)}</p>
               </div>
-              <span className="rounded-full bg-[#dcf8e8] px-2 py-1 text-[9px] font-bold text-[#079455]">
+              <span className="rounded-full bg-gradient-to-r from-emerald-50 to-emerald-100 px-2.5 py-1 text-[9px] font-semibold text-emerald-700 ring-1 ring-emerald-200/60">
                 Complete
               </span>
-              <ChevronRight className="size-4 text-[#66758f]" />
+              <ChevronRight className="size-4 text-slate-400 transition group-hover:text-blue-500 group-hover:translate-x-0.5" />
             </div>
           );
         })}
@@ -1448,7 +1451,7 @@ function RailCard({
 }) {
   return (
     <section
-      className={`rounded-lg border border-[#dce4ee] bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,.03)] ${className}`}
+      className={`rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm p-4 shadow-[0_2px_12px_rgba(15,23,42,0.04)] transition-all duration-300 hover:shadow-[0_4px_16px_rgba(15,23,42,0.07)] ${className}`}
     >
       {children}
     </section>

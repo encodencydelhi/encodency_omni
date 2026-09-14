@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useDeferredValue, useMemo, useState, type ReactNode } from "react";
 import { FaFacebookF, FaInstagram, FaMeta } from "react-icons/fa6";
 import {
   Activity,
@@ -61,17 +61,17 @@ function DateRangeControl() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className={cn(btn, "h-10")} aria-label="Change date range">
-        <CalendarDays className="size-3.5" />
+      <DropdownMenuTrigger className={cn(btn, "h-10 px-3.5 font-semibold text-slate-800")} aria-label="Change date range">
+        <CalendarDays className="size-3.5 text-blue-600" />
         {current}
-        <ChevronDown className="size-3" />
+        <ChevronDown className="size-3.5 text-slate-500" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[160px]">
         {DATE_RANGES.map((range) => (
           <DropdownMenuItem
             key={range}
             onSelect={() => choose(range)}
-            className={cn("text-xs", range === current && "font-bold text-[#1877f2]")}
+            className={cn("text-xs font-medium", range === current ? "font-bold text-blue-600 bg-blue-50/60" : "text-slate-700")}
           >
             {range}
           </DropdownMenuItem>
@@ -158,24 +158,25 @@ function useSearchHits(query: string): SearchHit[] {
 
 function GlobalSearch() {
   const [query, setQuery] = useState("");
-  const hits = useSearchHits(query);
+  const deferredQuery = useDeferredValue(query);
+  const hits = useSearchHits(deferredQuery);
   const open = query.trim().length >= 2;
 
   return (
     <div className="relative min-w-[200px] flex-1 md:max-w-[280px]">
-      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#64748b]" aria-hidden="true" />
+      <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
       <input
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search campaigns, ad sets, ads…"
         aria-label="Search Ads Manager"
-        className="h-10 w-full rounded-md border border-[#d8e0ea] bg-white pl-10 pr-3 text-xs outline-none transition focus:border-[#1877f2] focus:ring-2 focus:ring-[#1877f2]/10"
+        className="h-10 w-full rounded-xl border border-slate-300 bg-white pl-10 pr-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 outline-none shadow-2xs transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20"
       />
       {open && (
-        <div className="absolute left-0 right-0 top-11 z-40 overflow-hidden rounded-lg border border-[#dde5ee] bg-white shadow-lg">
+        <div className="absolute left-0 right-0 top-11 z-40 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
           {hits.length === 0 ? (
-            <p className="px-3 py-3 text-[11px] text-[#64748b]">
+            <p className="px-3.5 py-3 text-xs font-medium text-slate-600">
               No campaigns, ad sets, ads or forms match “{query}”.
             </p>
           ) : (
@@ -184,17 +185,17 @@ function GlobalSearch() {
                 key={`${hit.type}-${hit.href}`}
                 href={hit.href}
                 onClick={() => setQuery("")}
-                className="flex items-center gap-2 border-b border-[#eef2f7] px-3 py-2 last:border-0 hover:bg-[#f7f9fc]"
+                className="flex items-center gap-2.5 border-b border-slate-100 px-3.5 py-2.5 last:border-0 hover:bg-blue-50/50"
               >
-                <span className="shrink-0 rounded border border-[#dde5ee] bg-[#f7f9fc] px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-[#64748b]">
+                <span className="shrink-0 rounded-md border border-slate-300 bg-slate-100 px-1.5 py-0.5 text-[8.5px] font-bold uppercase tracking-wide text-slate-700">
                   {hit.type}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[11px] font-semibold text-[#14213d]">
+                  <span className="block truncate text-xs font-bold text-slate-900">
                     {hit.name}
                   </span>
                   {hit.context && (
-                    <span className="block truncate text-[9px] text-[#64748b]">{hit.context}</span>
+                    <span className="block truncate text-[10px] font-medium text-slate-500">{hit.context}</span>
                   )}
                 </span>
               </Link>
@@ -208,8 +209,7 @@ function GlobalSearch() {
 
 /**
  * A connected Meta asset, as a single readable line: "Ad Account · Namo Gange
- * Official". The previous three-line stack rendered at 7–9px, which was too
- * small to read at a glance.
+ * Official".
  */
 function AssetChip({
   label,
@@ -229,23 +229,23 @@ function AssetChip({
       href={href}
       title={`${label}: ${value}`}
       className={cn(
-        "flex h-8 min-w-0 items-center gap-2 rounded-xl border px-2.5 text-[10.5px] shadow-sm backdrop-blur-md transition-all duration-300",
+        "flex h-8.5 min-w-0 items-center gap-2 rounded-xl border px-3 text-xs font-medium shadow-2xs transition-all duration-200",
         warning
-          ? "border-amber-200/50 bg-amber-50/80 hover:bg-amber-100/80 hover:-translate-y-px"
-          : "border-slate-200/50 bg-white/60 hover:bg-white hover:shadow-md hover:-translate-y-px",
+          ? "border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 hover:border-amber-400"
+          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:shadow-sm",
       )}
     >
-      <span className="flex size-5 shrink-0 items-center justify-center rounded-lg bg-slate-100/80 shadow-sm ring-1 ring-slate-200/50">
+      <span className="flex size-5.5 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700 ring-1 ring-slate-200">
         {icon}
       </span>
-      <span className="hidden shrink-0 font-medium text-[#64748b] lg:inline">
-        {label}
+      <span className="hidden shrink-0 font-semibold text-slate-600 lg:inline">
+        {label}:
       </span>
-      <strong className="max-w-[150px] truncate font-semibold text-[#14213d]">
+      <strong className="max-w-[150px] truncate font-bold text-slate-900">
         {value}
       </strong>
       {warning && (
-        <span className="shrink-0 whitespace-nowrap rounded bg-[#fef0c7] px-1.5 py-0.5 text-[9px] font-bold text-[#b45309]">
+        <span className="shrink-0 whitespace-nowrap rounded-md bg-amber-200 px-1.5 py-0.5 text-[9.5px] font-bold text-amber-900">
           {warning}
         </span>
       )}
@@ -272,36 +272,34 @@ export function AdsWorkspace({
   const instagram = { needsReauth: true };
 
   return (
-    <div className="relative min-h-screen w-full font-sans text-slate-800 selection:bg-blue-100 selection:text-blue-900 overflow-hidden">
-      {/* Exquisite Animated Mesh Background */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]" />
-      <div className="pointer-events-none absolute left-0 right-0 top-0 -z-10 h-[500px] bg-gradient-to-b from-blue-50/50 to-transparent" />
-      <div className="pointer-events-none absolute -left-[10%] top-0 -z-10 h-[500px] w-[500px] rounded-full bg-blue-400/20 blur-[120px] mix-blend-multiply animate-pulse" />
-      <div className="pointer-events-none absolute -right-[10%] top-[10%] -z-10 h-[400px] w-[400px] rounded-full bg-violet-400/20 blur-[120px] mix-blend-multiply" />
-      <div className="pointer-events-none absolute left-[20%] top-[30%] -z-10 h-[600px] w-[600px] rounded-full bg-indigo-300/10 blur-[120px] mix-blend-multiply" />
+    <div className="relative min-h-screen w-full font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+      {/* Exquisite Subtle Background */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:32px_32px] opacity-40" />
       
       <div className="relative z-0">
         {/* Row 1 — identity, search and the primary actions. */}
-      <header className="mb-2.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2.5">
-        <Link href={ADS_ROOT} className="flex shrink-0 items-center gap-2.5">
-          <FaMeta className="size-8 shrink-0 text-[#0866ff]" aria-hidden="true" />
-          <FaInstagram className="size-6 shrink-0 text-[#d946ef]" aria-hidden="true" />
+      <header className="mb-3.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <Link href={ADS_ROOT} className="flex shrink-0 items-center gap-3 group">
+          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-2xs group-hover:border-blue-300 transition-colors">
+            <FaMeta className="size-7 shrink-0 text-[#0866ff]" aria-hidden="true" />
+            <FaInstagram className="size-5.5 shrink-0 text-[#d946ef]" aria-hidden="true" />
+          </div>
           <span className="min-w-0">
-            <span className="block text-[20px] font-bold leading-tight tracking-tight">
+            <span className="block text-[22px] font-black leading-tight tracking-tight text-slate-900">
               Meta Ads Manager
             </span>
-            <span className="mt-0.5 block text-[10px] text-[#64748b]">
+            <span className="mt-0.5 block text-xs font-semibold text-slate-600">
               Manage paid campaigns across Facebook and Instagram.
             </span>
           </span>
         </Link>
 
-        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2.5">
           <GlobalSearch />
           {showDateRange && <DateRangeControl />}
           {actions ?? (
-            <Link href={`${ADS_ROOT}/create`} className={cn(btnPrimary, "h-10")}>
-              <Plus className="size-3.5" />
+            <Link href={`${ADS_ROOT}/create`} className={cn(btnPrimary, "h-10 font-bold")}>
+              <Plus className="size-4" />
               Create Campaign
             </Link>
           )}
@@ -309,14 +307,14 @@ export function AdsWorkspace({
       </header>
 
       {/* Row 2 — which Meta assets this workspace is acting on. */}
-      <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
-        <span className="flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-[#cfe8df] bg-[#f2fbf7] px-2">
-          <CheckCircle2 className="size-3.5 fill-[#16a36a] text-white" aria-hidden="true" />
-          <span className="whitespace-nowrap text-[10px] font-bold text-[#087a50]">
+      <div className="mb-3.5 flex flex-wrap items-center gap-2">
+        <span className="flex h-8.5 shrink-0 items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-2.5 shadow-2xs">
+          <CheckCircle2 className="size-4 fill-emerald-600 text-white" aria-hidden="true" />
+          <span className="whitespace-nowrap text-xs font-extrabold text-emerald-800">
             Meta Connected
           </span>
         </span>
-        <span className="h-4 w-px shrink-0 bg-[#dde5ee]" aria-hidden="true" />
+        <span className="h-5 w-px shrink-0 bg-slate-300" aria-hidden="true" />
         <AssetChip
           label="Ad Account"
           value="Namo Gange Official"
@@ -338,12 +336,11 @@ export function AdsWorkspace({
         />
       </div>
 
-      {/* The fade on the right edge signals that the section list scrolls when
-          it does not fit; over the white card it is invisible when it fits. */}
-      <div className="relative mb-4">
+      {/* The fade on the right edge signals that the section list scrolls when it does not fit */}
+      <div className="relative mb-5">
         <nav
           aria-label="Ads Manager sections"
-          className="flex gap-1.5 overflow-x-auto rounded-xl border border-slate-200/60 bg-slate-100/50 p-1.5 shadow-inner [scrollbar-width:none] [&::-webkit-scrollbar]:hidden after:content-[''] after:w-12 after:shrink-0"
+          className="flex gap-1.5 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden after:content-[''] after:w-12 after:shrink-0"
         >
         {NAV.map(({ label, href, icon: Icon, exact }) => {
           const current = isCurrent(pathname, href, exact);
@@ -354,16 +351,16 @@ export function AdsWorkspace({
               href={href}
               aria-current={current ? "page" : undefined}
               className={cn(
-                "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-[11.5px] font-semibold transition-all duration-200",
+                "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition-all duration-200",
                 current
-                  ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200/50"
-                  : "text-slate-500 hover:bg-white/60 hover:text-slate-800",
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/25 ring-1 ring-blue-600"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
               )}
             >
-              <Icon className="size-3.5" aria-hidden="true" />
+              <Icon className={cn("size-3.5", current ? "text-white" : "text-slate-500")} aria-hidden="true" />
               {label}
               {badge !== null && (
-                <span className="rounded-full bg-[#fef3f2] px-1.5 py-px text-[9px] font-bold text-[#b42318]">
+                <span className={cn("rounded-full px-1.5 py-px text-[9.5px] font-black", current ? "bg-white text-rose-600" : "bg-rose-100 text-rose-700")}>
                   {badge}
                 </span>
               )}
@@ -373,7 +370,7 @@ export function AdsWorkspace({
         </nav>
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-px right-px w-10 rounded-r-xl bg-gradient-to-l from-white/80 to-transparent backdrop-blur-sm"
+          className="pointer-events-none absolute inset-y-px right-px w-12 rounded-r-2xl bg-gradient-to-l from-white to-transparent"
         />
       </div>
 
@@ -394,7 +391,7 @@ export function DetailBar({
   return (
     <div
       className={cn(
-        "mb-4 rounded-xl border border-slate-200/60 bg-white/80 p-4 shadow-sm backdrop-blur-xl",
+        "mb-4.5 rounded-2xl border border-slate-200 bg-white p-4.5 shadow-2xs",
         className,
       )}
     >

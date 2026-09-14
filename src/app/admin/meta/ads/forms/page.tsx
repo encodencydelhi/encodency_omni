@@ -124,7 +124,7 @@ function FormsView() {
       </section>
 
       <section className={cn(card, "overflow-hidden")}>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#dde5ee] px-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 bg-gradient-to-r from-slate-50/90 via-slate-50/40 to-white px-4 py-1">
           <LinkTabs
             tabs={TABS.map((t) => ({
               ...t,

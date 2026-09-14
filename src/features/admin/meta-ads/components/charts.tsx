@@ -31,14 +31,17 @@ export const SERIES = {
   clicks: "#0ea5e9",
 } as const;
 
-const axis = { fontSize: 9, fill: "#64748b" };
+const axis = { fontSize: 10, fill: "#475569", fontWeight: 600 };
 
 const tooltipStyle = {
-  borderRadius: 8,
-  border: "1px solid #dde5ee",
-  fontSize: 11,
-  padding: "6px 8px",
-  boxShadow: "0 4px 14px rgba(15,23,42,.08)",
+  borderRadius: 12,
+  border: "1px solid #cbd5e1",
+  backgroundColor: "#ffffff",
+  fontSize: 12,
+  fontWeight: 600,
+  color: "#0f172a",
+  padding: "8px 12px",
+  boxShadow: "0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08)",
 };
 
 export function ChartLegend({
@@ -47,11 +50,11 @@ export function ChartLegend({
   items: { label: string; color: string }[];
 }) {
   return (
-    <div className="mb-1 flex flex-wrap gap-3 text-[9px] text-[#64748b]">
+    <div className="mb-2 flex flex-wrap gap-3.5 text-xs font-bold text-slate-700">
       {items.map((item) => (
-        <span key={item.label} className="flex items-center gap-1">
+        <span key={item.label} className="flex items-center gap-1.5">
           <span
-            className="size-2 rounded-full"
+            className="size-2.5 rounded-full ring-2 ring-white shadow-2xs"
             style={{ background: item.color }}
             aria-hidden="true"
           />
@@ -80,7 +83,7 @@ export function PerformanceTrend({
         ]}
       />
       <div style={{ height }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={height}>
           <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
