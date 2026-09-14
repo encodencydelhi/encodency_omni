@@ -127,7 +127,7 @@ function PublishResult() {
           >
             <Icon className="size-6" aria-hidden="true" />
           </span>
-          <h1 className="mt-3 text-[22px] font-bold leading-tight">{meta.title}</h1>
+          <h1 className="mt-3 text-[22px] font-semibold leading-tight">{meta.title}</h1>
           <p className="mx-auto mt-2 max-w-[520px] text-[12px] leading-relaxed text-[#64748b]">
             {meta.body}
           </p>
@@ -213,7 +213,7 @@ function PublishResult() {
                   </span>
                   <Link
                     href={`${ADS_ROOT}/campaigns/${campaign.id}`}
-                    className="block truncate text-[12px] font-bold text-[#0671e9] hover:underline"
+                    className="block truncate text-[12px] font-semibold text-[#0671e9] hover:underline"
                   >
                     {campaign.name}
                   </Link>
@@ -236,7 +236,7 @@ function PublishResult() {
                     </span>
                     <Link
                       href={`${ADS_ROOT}/adsets/${s.id}`}
-                      className="block truncate text-[11px] font-bold text-[#0671e9] hover:underline"
+                      className="block truncate text-[11px] font-semibold text-[#0671e9] hover:underline"
                     >
                       {s.name}
                     </Link>
@@ -260,7 +260,7 @@ function PublishResult() {
                     </span>
                     <Link
                       href={`${ADS_ROOT}/ads/${a.id}`}
-                      className="block truncate text-[11px] font-bold text-[#0671e9] hover:underline"
+                      className="block truncate text-[11px] font-semibold text-[#0671e9] hover:underline"
                     >
                       {a.name}
                     </Link>
@@ -279,7 +279,7 @@ function PublishResult() {
                     </span>
                     <Link
                       href={`${ADS_ROOT}/forms/${form.id}`}
-                      className="block truncate text-[11px] font-bold text-[#0671e9] hover:underline"
+                      className="block truncate text-[11px] font-semibold text-[#0671e9] hover:underline"
                     >
                       {form.name}
                     </Link>
@@ -312,7 +312,7 @@ function PublishResult() {
               "Leads flow into the Leads Center as soon as people submit your instant form.",
             ].map((step, i) => (
               <li key={step} className="flex gap-2.5 text-[11px] leading-relaxed">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e8eef5] text-[9px] font-bold text-[#475569]">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e8eef5] text-[9px] font-semibold text-[#475569]">
                   {i + 1}
                 </span>
                 {step}
@@ -340,7 +340,7 @@ function PublishResult() {
               href={`${ADS_ROOT}/publish?status=${s}&campaign=${campaignId}`}
               className={cn(
                 "mx-1 hover:underline",
-                s === state ? "font-bold text-[#1877f2]" : "text-[#64748b]",
+                s === state ? "font-semibold text-[#1877f2]" : "text-[#64748b]",
               )}
             >
               {STATES[s].title}

@@ -214,7 +214,7 @@ function IssuesView() {
 
                   <div className="min-w-[260px] flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-[12px] font-bold">{issue.title}</h3>
+                      <h3 className="text-[12px] font-semibold">{issue.title}</h3>
                       <ToneChip tone={issue.resolved ? "green" : severity.tone}>
                         {issue.resolved ? "Resolved" : severity.label}
                       </ToneChip>

@@ -222,7 +222,7 @@ function Header() {
           <Store className="size-[22px]" />
         </span>
         <div>
-          <h1 className="text-[27px] font-bold leading-8 tracking-[-0.025em] text-[#111B43]">
+          <h1 className="text-[27px] font-semibold leading-8 tracking-[-0.025em] text-[#111B43]">
             Google Business
           </h1>
           <p className="mt-0.5 text-[12.5px] leading-4 text-[#687797]">
@@ -278,7 +278,7 @@ function Stat({
           <p className="truncate text-[9.5px] font-semibold leading-3 text-[#52617D]">{label}</p>
           <div className="flex items-baseline gap-1">
             <b className="text-[19px] leading-6 tracking-[-0.02em] text-[#142044]">{value}</b>
-            <span className="whitespace-nowrap text-[9px] font-bold text-[#0B9457]">↑ {trend}</span>
+            <span className="whitespace-nowrap text-[9px] font-semibold text-[#0B9457]">↑ {trend}</span>
           </div>
           <p className="mt-0.5 truncate text-[8.5px] leading-3 text-[#7C89A2]">{note}</p>
         </div>
@@ -316,7 +316,7 @@ function Card({
         )}
       >
         <div className="min-w-0">
-          <h2 className="text-[14px] font-bold leading-5 text-[#172044]">{title}</h2>
+          <h2 className="text-[14px] font-semibold leading-5 text-[#172044]">{title}</h2>
           {subtitle && <p className="truncate text-[9px] leading-3 text-[#7C89A2]">{subtitle}</p>}
         </div>
         {filter && (
@@ -528,7 +528,7 @@ function RecentReviews() {
           <div key={review.name} className="flex flex-1 items-center gap-2.5 px-3.5 py-2">
             <span
               className={cn(
-                "grid size-8 shrink-0 place-items-center rounded-full text-[10px] font-bold",
+                "grid size-8 shrink-0 place-items-center rounded-full text-[10px] font-semibold",
                 avatarTints[index],
               )}
             >
@@ -536,7 +536,7 @@ function RecentReviews() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-1.5">
-                <b className="truncate text-[11.5px] font-bold text-[#1A6BC4]">{review.name}</b>
+                <b className="truncate text-[11.5px] font-semibold text-[#1A6BC4]">{review.name}</b>
                 <span className="flex shrink-0 gap-px">
                   {Array.from({ length: 5 }, (_, i) => (
                     <Star key={i} className="size-2.5 fill-[#F5A524] text-[#F5A524]" />
@@ -703,7 +703,7 @@ function CustomerActions() {
             <p className="mt-1.5 truncate text-[9.5px] leading-4 text-[#6B7A96]">{label}</p>
             <p className="flex items-baseline gap-1">
               <b className="text-[18px] leading-6 text-[#142044]">{value}</b>
-              <span className="text-[9.5px] font-bold text-[#0B9457]">↑ {trend}</span>
+              <span className="text-[9.5px] font-semibold text-[#0B9457]">↑ {trend}</span>
             </p>
             <p className="truncate text-[8.5px] leading-3 text-[#8A97AF]">{note}</p>
           </div>

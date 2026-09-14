@@ -35,7 +35,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
           <LayoutGrid className="size-[18px] text-[#4F46E5]" />
         </span>
         <div className="min-w-0 flex-1">
-          <b className="block text-[14px] font-bold leading-5 text-[#111827]">Channels, Accounts &amp; Placements</b>
+          <b className="block text-[14px] font-semibold leading-5 text-[#111827]">Channels, Accounts &amp; Placements</b>
           <small className="block text-[10.5px] text-[#8791A4]">
             Select channels, connect accounts and choose specific placements for your campaign.
           </small>
@@ -79,9 +79,9 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
                   <ChannelLogo key={logo} channel={logo} className="size-7 rounded-lg" />
                 ))}
               </span>
-              <b className="min-w-0 flex-1 truncate text-[13px] font-bold text-[#111827]">{channel.name}</b>
+              <b className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#111827]">{channel.name}</b>
               {channel.connected && (
-                <i className="shrink-0 rounded-md bg-[#E4F8F0] px-1.5 py-0.5 text-[10px] font-bold not-italic text-[#0AA673]">
+                <i className="shrink-0 rounded-md bg-[#E4F8F0] px-1.5 py-0.5 text-[10px] font-semibold not-italic text-[#0AA673]">
                   Connected
                 </i>
               )}
@@ -160,7 +160,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
             <Settings className="size-3.5 text-[#4F46E5]" />
           </span>
           <div>
-            <b className="block text-[12px] font-bold text-[#111827]">Placement Compatibility &amp; Auto-Resize</b>
+            <b className="block text-[12px] font-semibold text-[#111827]">Placement Compatibility &amp; Auto-Resize</b>
             <small className="block text-[10px] text-[#8791A4]">We&apos;ll automatically optimize your media for each selected placement.</small>
           </div>
         </div>
@@ -171,7 +171,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
                 <Icon className="size-4 text-[#475569]" />
               </span>
               <div className="min-w-0">
-                <b className="block text-[10.5px] font-bold text-[#111827]">{title}</b>
+                <b className="block text-[10.5px] font-semibold text-[#111827]">{title}</b>
                 <small className="block text-[9.5px] leading-[13px] text-[#8791A4]">{text}</small>
               </div>
             </div>
@@ -182,7 +182,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
       <div className="mt-2.5 rounded-xl border border-[#CDECE1] bg-[#F7FDFA] p-3">
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <CircleCheck className="size-4 shrink-0 text-[#0AA673]" />
-          <b className="text-[12px] font-bold text-[#111827]">Selected Placements ({draft.placements.length})</b>
+          <b className="text-[12px] font-semibold text-[#111827]">Selected Placements ({draft.placements.length})</b>
           <small className="min-w-0 flex-1 text-[10px] text-[#8791A4]">These placements will be used for your campaign.</small>
           <button onClick={() => set("placements", [])} className="shrink-0 text-[10.5px] font-semibold text-[#2563EB]">Clear All</button>
         </div>

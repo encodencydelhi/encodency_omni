@@ -103,7 +103,7 @@ export function BusinessRail() {
             <Building2 className="size-7 text-[#4F46E5]" />
           </span>
         </div>
-        <b className="block text-center text-[15px] font-bold text-[#111827]">Why this step matters?</b>
+        <b className="block text-center text-[15px] font-semibold text-[#111827]">Why this step matters?</b>
         <p className="mx-auto mb-4 mt-1 text-center text-[11.5px] leading-[17px] text-[#6B7280]">
           A clear business profile helps us understand your client&apos;s purpose, audience and unique
           strengths. This information is used to create tailored marketing strategies, relevant content

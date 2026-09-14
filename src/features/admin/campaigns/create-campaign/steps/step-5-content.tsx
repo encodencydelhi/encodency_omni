@@ -211,7 +211,7 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
                     <Sparkles className="size-3" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <b className="block text-[10px] font-bold text-[#34415F]">{label}</b>
+                    <b className="block text-[10px] font-semibold text-[#34415F]">{label}</b>
                     <small className="block text-[8.5px] text-[#8791A4]">{desc}</small>
                   </div>
                   <button className="h-5 w-8 shrink-0 rounded-full bg-[#18B875] p-0.5">
@@ -350,7 +350,7 @@ function SectionTitle({ icon: Icon, title, caption }: { icon: typeof ImageIcon; 
     <div className="flex items-center gap-2">
       <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#EAF2FF] text-[#155EEF]"><Icon className="size-4" /></span>
       <span>
-        <b className="block text-[12px] font-bold text-[#111827]">{title}</b>
+        <b className="block text-[12px] font-semibold text-[#111827]">{title}</b>
         {caption && <small className="block text-[10.5px] text-[#64748B]">{caption}</small>}
       </span>
     </div>
@@ -364,7 +364,7 @@ function PostPreview() {
       <div className="overflow-hidden rounded-lg border border-[#DDE6F1] bg-white">
         <div className="flex items-center gap-2 px-2 py-1.5">
           <span className="relative size-6 overflow-hidden rounded-full"><Image src="/campaigns/save-rivers/square.png" alt="" fill sizes="40px" className="object-cover" /></span>
-          <span><b className="block text-[9.5px] font-bold text-[#111827]">moksha.sewa</b><small className="text-[8.5px] text-[#64748B]">India</small></span>
+          <span><b className="block text-[9.5px] font-semibold text-[#111827]">moksha.sewa</b><small className="text-[8.5px] text-[#64748B]">India</small></span>
         </div>
         <span className="relative block aspect-square"><Image src="/campaigns/save-rivers/square.png" alt="" fill sizes="220px" className="object-cover" /></span>
         <div className="flex gap-2 px-2 py-1.5 text-[#111827]"><ThumbsUp className="size-3.5" /><MessageCircle className="size-3.5" /></div>
@@ -379,7 +379,7 @@ function BottomCard({ icon: Icon, title, caption, children }: { icon: typeof Ima
       <div className="mb-2 flex items-start gap-2">
         <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#EAF2FF] text-[#155EEF]"><Icon className="size-4" /></span>
         <span>
-          <b className="block text-[12px] font-bold text-[#111827]">{title}</b>
+          <b className="block text-[12px] font-semibold text-[#111827]">{title}</b>
           {caption && <small className="block text-[10px] leading-3 text-[#64748B]">{caption}</small>}
         </span>
       </div>

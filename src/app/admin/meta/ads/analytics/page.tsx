@@ -242,13 +242,13 @@ function AnalyticsView() {
             <div className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-2xs ring-1 ring-blue-500/20">
               <BarChart3 className="size-4" aria-hidden="true" />
             </div>
-            <h2 className="text-sm font-extrabold text-slate-900">Ads Analytics</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Ads Analytics</h2>
             <span className="rounded-full bg-blue-100/80 px-2.5 py-0.5 text-[10.5px] font-black text-blue-700 ring-1 ring-blue-500/20">
               {scopedCampaigns.length} in scope
             </span>
           </div>
           <span className="text-xs font-semibold text-slate-500">
-            Compared with <strong className="text-slate-800 font-bold">{values.compare.toLowerCase()}</strong>
+            Compared with <strong className="text-slate-800 font-semibold">{values.compare.toLowerCase()}</strong>
           </span>
         </div>
 

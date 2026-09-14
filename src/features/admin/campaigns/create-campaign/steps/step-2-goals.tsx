@@ -78,7 +78,7 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
                 <span className={cn("grid size-8 place-items-center rounded-lg", `bg-${tone === "red" ? "[#FFEAEC] text-[#E11D28]" : tone === "green" ? "[#E4F8F0] text-[#0AA673]" : tone === "purple" ? "[#F2EAFF] text-[#7C3AED]" : tone === "amber" ? "[#FFF3DC] text-[#D97706]" : "[#E8F2FF] text-[#1975E7]"}`)}>
                   <Icon className="size-4" />
                 </span>
-                <b className="mt-1.5 block text-[12px] font-bold leading-4 text-[#081438]">{title}</b>
+                <b className="mt-1.5 block text-[12px] font-semibold leading-4 text-[#081438]">{title}</b>
                 <small className="mt-0.5 block text-[10px] leading-[12px] text-[#405277]">{caption}</small>
               </button>
             );
@@ -197,7 +197,7 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
-                <b className="text-[12px] font-bold text-[#1350BF]">Ad Scheduling / Dayparting</b>
+                <b className="text-[12px] font-semibold text-[#1350BF]">Ad Scheduling / Dayparting</b>
                 <button
                   type="button"
                   onClick={() => set("dayparting", !draft.dayparting)}
@@ -217,7 +217,7 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
               <Lightbulb className="size-5" />
             </span>
             <div className="min-w-0">
-              <b className="block text-[12px] font-bold text-[#1350BF]">AI Budget Recommendation</b>
+              <b className="block text-[12px] font-semibold text-[#1350BF]">AI Budget Recommendation</b>
               <small className="block text-[10px] leading-[14px] text-[#405277]">
                 Based on similar campaigns, we recommend allocating 50-60% to social platforms, 15-20% to search, and 10-15% to website/email channels.
               </small>
@@ -257,7 +257,7 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
               <ShieldCheck className="size-5" />
             </span>
             <div className="min-w-0 flex-1">
-              <b className="block text-[12px] font-bold text-[#1350BF]">Contingency Reserve</b>
+              <b className="block text-[12px] font-semibold text-[#1350BF]">Contingency Reserve</b>
               <small className="block text-[10px] leading-[13px] text-[#405277]">
                 Keep a reserve for mid-campaign adjustments and opportunities.
               </small>
@@ -270,7 +270,7 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
               />
               <i className="pr-3 not-italic text-[#34415F]">%</i>
             </span>
-            <span className="grid h-9 w-[108px] place-items-center rounded-lg bg-[#EAF0F8] text-[12px] font-bold text-[#132044]">
+            <span className="grid h-9 w-[108px] place-items-center rounded-lg bg-[#EAF0F8] text-[12px] font-semibold text-[#132044]">
               ₹ {format(reserve)}
             </span>
           </div>
@@ -320,7 +320,7 @@ function StepSection({
           {letter}
         </span>
         <div className="min-w-0 flex-1">
-          <b className="block text-[16px] font-bold leading-5 text-[#101A3D]">{title}</b>
+          <b className="block text-[16px] font-semibold leading-5 text-[#101A3D]">{title}</b>
           <small className="block text-[11px] leading-4 text-[#526385]">{caption}</small>
         </div>
         {action}

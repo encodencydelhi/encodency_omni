@@ -76,7 +76,7 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
                 <PlatformBadge platform={p} size="sm" />
                 <span className="flex-1 text-[11px] font-semibold text-[#33445F]">{meta.label}</span>
                 <span className={cn(
-                  "rounded px-1.5 py-0.5 text-[9px] font-bold",
+                  "rounded px-1.5 py-0.5 text-[9px] font-semibold",
                   sched.schedule === "now" ? "bg-emerald-50 text-emerald-600" :
                   sched.schedule === "later" ? "bg-blue-50 text-[#1769DF]" :
                   "bg-slate-100 text-slate-600"

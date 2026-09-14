@@ -134,7 +134,7 @@ export function CreateContentTab() {
             className="flex w-full items-center justify-between gap-2 border-b border-[#EDF1F5] px-3 py-2.5 text-left transition hover:bg-slate-50"
           >
             <div className="min-w-0">
-              <h3 className="truncate text-[13.5px] font-bold text-[#172044]">Channels & Content Types</h3>
+              <h3 className="truncate text-[13.5px] font-semibold text-[#172044]">Channels & Content Types</h3>
               <p className="mt-0.5 text-[11.5px] text-[#7A87A0]">Select platforms and their content types</p>
             </div>
             {channelsOpen ? <ChevronDown className="size-4 text-[#7A87A0]" /> : <ChevronRight className="size-4 text-[#7A87A0]" />}
@@ -164,8 +164,8 @@ export function CreateContentTab() {
                         <PlatformBadge platform={p} size="sm" />
                         <span className="flex-1 text-[11.5px] font-semibold text-[#33445F]">{meta.label}</span>
                         <span className="text-[9.5px] text-[#7A87A0]">{conn.account}</span>
-                        {conn.status === "connected" && <span className="rounded bg-emerald-50 px-1 py-0.5 text-[9px] font-bold text-emerald-600">Connected</span>}
-                        {conn.status === "disconnected" && <span className="rounded bg-red-50 px-1 py-0.5 text-[9px] font-bold text-red-500">Reconnect</span>}
+                        {conn.status === "connected" && <span className="rounded bg-emerald-50 px-1 py-0.5 text-[9px] font-semibold text-emerald-600">Connected</span>}
+                        {conn.status === "disconnected" && <span className="rounded bg-red-50 px-1 py-0.5 text-[9px] font-semibold text-red-500">Reconnect</span>}
                       </button>
                     </div>
                   );
@@ -189,7 +189,7 @@ export function CreateContentTab() {
         {/* Client selection */}
         <Card>
           <div className="mb-2.5 border-b border-[#EDF1F5] pb-2.5">
-            <span className="text-[12.5px] font-bold text-[#172044]">Post Details</span>
+            <span className="text-[12.5px] font-semibold text-[#172044]">Post Details</span>
             <p className="text-[10.5px] text-[#7A87A0]">Create a standalone post for the selected client.</p>
           </div>
 
@@ -214,7 +214,7 @@ export function CreateContentTab() {
             className="flex w-full items-center justify-between gap-2 border-b border-[#EDF1F5] px-3 py-2.5 text-left transition hover:bg-slate-50"
           >
             <div className="min-w-0">
-              <h3 className="truncate text-[13.5px] font-bold text-[#172044]">Media</h3>
+              <h3 className="truncate text-[13.5px] font-semibold text-[#172044]">Media</h3>
               <p className="mt-0.5 text-[11.5px] text-[#7A87A0]">JPG, PNG, GIF, MP4 up to 100MB</p>
             </div>
             {mediaOpen ? <ChevronDown className="size-4 text-[#7A87A0]" /> : <ChevronRight className="size-4 text-[#7A87A0]" />}
@@ -223,15 +223,15 @@ export function CreateContentTab() {
           {mediaOpen && (
             <div className="p-3">
               <div className="rounded-lg border-2 border-dashed border-[#B9CFF2] bg-[#F7FAFF] py-4 text-center transition hover:border-[#1769DF] hover:bg-[#F0F6FF]">
-                <p className="text-[12px] font-bold text-[#24365A]">Drag & drop files here, or click to browse</p>
-                <button className="mt-1.5 h-7 rounded-lg bg-[#1769DF] px-3 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#1259BD]">Upload from device</button>
+                <p className="text-[12px] font-semibold text-[#24365A]">Drag & drop files here, or click to browse</p>
+                <button className="mt-1.5 h-7 rounded-lg bg-[#1769DF] px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-[#1259BD]">Upload from device</button>
                 <p className="mt-1 text-[10px] text-[#7A87A0]">Recommended 1080 × 1350 (4:5) for Instagram</p>
               </div>
               <div className="mt-2 grid grid-cols-5 gap-1">
                 {MOCK_MEDIA.slice(0, 4).map((m, i) => (
                   <div key={m.id} className="relative overflow-hidden rounded-lg border border-[#E2E8F0]">
                     <img src={m.url} alt={m.alt} className="h-14 w-full object-cover" />
-                    <span className="absolute left-0.5 top-0.5 grid size-3.5 place-items-center rounded bg-[#172044]/80 text-[8px] font-bold text-white">{i + 1}</span>
+                    <span className="absolute left-0.5 top-0.5 grid size-3.5 place-items-center rounded bg-[#172044]/80 text-[8px] font-semibold text-white">{i + 1}</span>
                     <button className="absolute right-0.5 top-0.5 rounded bg-white/90 p-0.5"><MoreHorizontal className="size-2.5 text-slate-500" /></button>
                   </div>
                 ))}
@@ -301,8 +301,8 @@ export function CreateContentTab() {
         <Card>
           <SelectField label="Approver" value="Content Team" />
           <div className="mt-1.5 flex gap-1">
-            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-[#E2E8F0] text-[10.5px] font-bold text-[#687797] hover:bg-slate-50">Save Draft</button>
-            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-[#1769DF] text-[10.5px] font-bold text-white hover:bg-[#1259BD]">Send for Review</button>
+            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-[#E2E8F0] text-[10.5px] font-semibold text-[#687797] hover:bg-slate-50">Save Draft</button>
+            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-[#1769DF] text-[10.5px] font-semibold text-white hover:bg-[#1259BD]">Send for Review</button>
           </div>
         </Card>
       </div>
@@ -333,11 +333,11 @@ export function CreateContentTab() {
         />
 
         <div className="flex gap-1">
-          <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-[#E2E8F0] text-[10.5px] font-bold text-[#687797] hover:bg-slate-50">
+          <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-[#E2E8F0] text-[10.5px] font-semibold text-[#687797] hover:bg-slate-50">
             <Download className="size-3" /> Export
           </button>
           <button className={cn(
-            "flex h-8 flex-1 items-center justify-center gap-1 rounded-lg text-[10.5px] font-bold text-white shadow-sm transition",
+            "flex h-8 flex-1 items-center justify-center gap-1 rounded-lg text-[10.5px] font-semibold text-white shadow-sm transition",
             errorCount > 0 ? "bg-gray-400 cursor-not-allowed" : "bg-[#EB0711] hover:bg-[#D60811]"
           )}>
             <Send className="size-3" />

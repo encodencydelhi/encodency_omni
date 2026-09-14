@@ -119,7 +119,7 @@ function HelpCenter() {
           <span className="mx-auto flex size-12 items-center justify-center rounded-xl bg-blue-50/80 shadow-sm ring-1 ring-blue-100">
             <CircleHelp className="size-6 text-blue-600" aria-hidden="true" />
           </span>
-          <h1 className="mt-2.5 text-[22px] font-bold leading-tight">
+          <h1 className="mt-2.5 text-[22px] font-semibold leading-tight">
             Meta Ads Manager Help Center
           </h1>
           <p className="mx-auto mt-1.5 max-w-[520px] text-[12px] leading-relaxed text-[#64748b]">
@@ -146,7 +146,7 @@ function HelpCenter() {
       {searching ? (
         <section className={cn(card, "overflow-hidden")}>
           <div className="border-b border-[#dde5ee] px-3 py-2.5">
-            <h2 className="text-sm font-bold">
+            <h2 className="text-sm font-semibold">
               {results.length} result{results.length === 1 ? "" : "s"} for “{query}”
             </h2>
           </div>
@@ -166,8 +166,8 @@ function HelpCenter() {
                     className="block px-3 py-2.5 transition hover:bg-[#f7f9fc]"
                   >
                     <span className="flex flex-wrap items-center gap-2">
-                      <span className="text-[12px] font-bold text-[#0671e9]">{article.title}</span>
-                      <span className="rounded-md border border-slate-200/50 bg-slate-50/80 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-slate-500">
+                      <span className="text-[12px] font-semibold text-[#0671e9]">{article.title}</span>
+                      <span className="rounded-md border border-slate-200/50 bg-slate-50/80 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-slate-500">
                         {helpCategories.find((c) => c.id === article.category)?.title}
                       </span>
                     </span>
@@ -220,7 +220,7 @@ function HelpCenter() {
             )}
 
             <section>
-              <h2 className="mb-2 text-sm font-bold">Browse by category</h2>
+              <h2 className="mb-2 text-sm font-semibold">Browse by category</h2>
               <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                 {helpCategories.map((category) => {
                   const Icon = ICONS[category.icon] ?? CircleHelp;
@@ -240,7 +240,7 @@ function HelpCenter() {
                           <Icon className="size-4.5 text-blue-600" aria-hidden="true" />
                         </span>
                         <span className="min-w-0">
-                          <span className="block text-[12px] font-bold">{category.title}</span>
+                          <span className="block text-[12px] font-semibold">{category.title}</span>
                           <span className="mt-0.5 block text-[10px] leading-relaxed text-[#64748b]">
                             {category.description}
                           </span>

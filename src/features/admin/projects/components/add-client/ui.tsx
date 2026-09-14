@@ -47,7 +47,7 @@ export function StepHeader({
         </span>
         <div className="min-w-0">
           <p className="text-[11px] font-semibold text-[#6B7280]">Step {step} of 7</p>
-          <h2 className="text-[22px] font-bold leading-7 tracking-[-0.02em] text-[#111827]">
+          <h2 className="text-[22px] font-semibold leading-7 tracking-[-0.02em] text-[#111827]">
             {title}
           </h2>
           <p className="mt-0.5 text-[12px] leading-4 text-[#6B7280]">{description}</p>
@@ -56,7 +56,7 @@ export function StepHeader({
       <div className="flex max-w-[330px] shrink-0 items-start gap-2 rounded-xl bg-[#F5F3FF] px-3 py-2.5">
         <Lightbulb className="mt-px size-3.5 shrink-0 text-[#7C3AED]" />
         <p className="min-w-0">
-          <b className="block text-[11px] font-bold text-[#4C1D95]">Quick Tip</b>
+          <b className="block text-[11px] font-semibold text-[#4C1D95]">Quick Tip</b>
           <span className="block text-[10.5px] leading-[15px] text-[#6D5A9C]">{tip}</span>
         </p>
       </div>
@@ -342,14 +342,14 @@ export function NeedHelpCard() {
         {["#C7D2FE", "#DDD6FE", "#FBCFE8"].map((color, index) => (
           <span
             key={color}
-            className="grid size-8 place-items-center rounded-full border-2 border-white text-[11px] font-bold text-[#4338CA]"
+            className="grid size-8 place-items-center rounded-full border-2 border-white text-[11px] font-semibold text-[#4338CA]"
             style={{ background: color }}
           >
             {["A", "R", "S"][index]}
           </span>
         ))}
       </div>
-      <b className="block text-[14px] font-bold text-[#111827]">Need Help?</b>
+      <b className="block text-[14px] font-semibold text-[#111827]">Need Help?</b>
       <p className="mx-auto mt-1 max-w-[200px] text-[11px] leading-4 text-[#6B7280]">
         Our team is here to help you set up your client.
       </p>

@@ -37,7 +37,7 @@ function SummaryCard({
         <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#EEF2FF]">
           <Icon className="size-4 text-[#4F46E5]" />
         </span>
-        <b className="flex-1 text-[13px] font-bold text-[#111827]">{title}</b>
+        <b className="flex-1 text-[13px] font-semibold text-[#111827]">{title}</b>
         <button
           onClick={onEdit}
           className="flex items-center gap-1 text-[11px] font-semibold text-[#4F46E5] transition-opacity hover:opacity-75"
@@ -220,7 +220,7 @@ export function ReviewRail({ draft }: { draft: ClientDraft }) {
   return (
     <>
       <RailCard>
-        <b className="mb-3 block text-[13px] font-bold text-[#111827]">Setup Completeness</b>
+        <b className="mb-3 block text-[13px] font-semibold text-[#111827]">Setup Completeness</b>
         <div className="flex items-center gap-3">
           <div className="relative size-[86px] shrink-0">
             <svg viewBox="0 0 36 36" className="size-full -rotate-90">
@@ -236,12 +236,12 @@ export function ReviewRail({ draft }: { draft: ClientDraft }) {
                 strokeDasharray={`${(done / 7) * 100}, 100`}
               />
             </svg>
-            <span className="absolute inset-0 grid place-items-center text-[17px] font-bold text-[#111827]">
+            <span className="absolute inset-0 grid place-items-center text-[17px] font-semibold text-[#111827]">
               {Math.round((done / 7) * 100)}%
             </span>
           </div>
           <div className="min-w-0">
-            <b className="block text-[12.5px] font-bold text-[#059669]">
+            <b className="block text-[12.5px] font-semibold text-[#059669]">
               {done === 7 ? "All set!" : "Almost there"}
             </b>
             <p className="text-[11px] leading-4 text-[#6B7280]">
@@ -255,7 +255,7 @@ export function ReviewRail({ draft }: { draft: ClientDraft }) {
 
       <RailCard>
         <div className="mb-2.5 flex items-center justify-between gap-2">
-          <b className="text-[13px] font-bold text-[#111827]">Onboarding Checklist</b>
+          <b className="text-[13px] font-semibold text-[#111827]">Onboarding Checklist</b>
           <span className="text-[10.5px] text-[#6B7280]">{done} of 7 completed</span>
         </div>
         <ul className="space-y-1.5">
@@ -276,7 +276,7 @@ export function ReviewRail({ draft }: { draft: ClientDraft }) {
         <div className="mb-2.5 flex items-start gap-2">
           <Rocket className="mt-px size-4 shrink-0 text-[#4F46E5]" />
           <div>
-            <b className="block text-[13px] font-bold text-[#111827]">What happens after creation?</b>
+            <b className="block text-[13px] font-semibold text-[#111827]">What happens after creation?</b>
             <p className="text-[10.5px] leading-[15px] text-[#6B7280]">
               Your client will be ready, and you can start their digital journey. Here&apos;s what you can
               do next:
@@ -292,7 +292,7 @@ export function ReviewRail({ draft }: { draft: ClientDraft }) {
             { title: "Invite more team members", text: "Bring in your client's team to collaborate" },
           ].map((item, index) => (
             <li key={item.title} className="flex items-start gap-2.5">
-              <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#EEF2FF] text-[10px] font-bold text-[#4F46E5]">
+              <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#EEF2FF] text-[10px] font-semibold text-[#4F46E5]">
                 {index + 1}
               </span>
               <span className="min-w-0">

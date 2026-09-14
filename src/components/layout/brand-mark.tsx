@@ -96,7 +96,7 @@ export function BrandGlyph({
         className,
       )}
     >
-      <span className="font-bold">en</span>C<span className="sr-only">{APP.vendor}</span>
+      <span className="font-semibold">en</span>C<span className="sr-only">{APP.vendor}</span>
     </span>
   );
 }

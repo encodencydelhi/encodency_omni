@@ -103,7 +103,7 @@ export function PlanDistributionPanel({
             <ClipboardListIcon className="size-4" />
           </div>
           <div className="flex flex-col min-w-0">
-            <h3 className="text-[14px] font-bold text-slate-800 tracking-tight truncate">Plan Distribution</h3>
+            <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">Plan Distribution</h3>
             <p className="text-[12px] text-slate-500 font-medium truncate">Total active subscriptions: {distribution.activeTotal}</p>
           </div>
         </div>
@@ -152,7 +152,7 @@ export function LatestSignupsPanel({
           <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 text-blue-500 shrink-0">
             <Building2Icon className="size-4" />
           </div>
-          <h3 className="text-[14px] font-bold text-slate-800 tracking-tight truncate">Latest Signups</h3>
+          <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">Latest Signups</h3>
         </div>
         <Link href={ROUTES.superAdmin.companies} className="inline-flex shrink-0 items-center gap-1 text-[12px] font-semibold text-red-500 hover:text-red-600">
           View all <ArrowRightIcon className="size-3" />
@@ -166,7 +166,7 @@ export function LatestSignupsPanel({
             {signups.map((signup) => (
               <li key={signup.id} className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={cn("flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white", getAvatarColor(signup.name))}>
+                  <div className={cn("flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white", getAvatarColor(signup.name))}>
                     {signup.name.substring(0, 2).toUpperCase()}
                   </div>
                   <div className="flex flex-col gap-0.5 min-w-0">
@@ -174,7 +174,7 @@ export function LatestSignupsPanel({
                     <span className="text-xs text-slate-400 whitespace-nowrap">{signup.timeAgo}</span>
                   </div>
                 </div>
-                <span className={cn("shrink-0 inline-flex h-[24px] px-2.5 items-center justify-center rounded-full text-[10px] font-bold capitalize tracking-wide", TIER_BADGE[signup.tier])}>
+                <span className={cn("shrink-0 inline-flex h-[24px] px-2.5 items-center justify-center rounded-full text-[10px] font-semibold capitalize tracking-wide", TIER_BADGE[signup.tier])}>
                   {signup.tier}
                 </span>
               </li>
@@ -200,7 +200,7 @@ export function ApiUsagePanel({
           <div className="flex size-8 items-center justify-center rounded-full bg-purple-100 text-purple-500 shrink-0">
             <ActivityIcon className="size-4" />
           </div>
-          <h3 className="text-[14px] font-bold text-slate-800 tracking-tight truncate">API Usage Snapshot</h3>
+          <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">API Usage Snapshot</h3>
         </div>
         <select className="text-[11px] border border-slate-200 rounded-md px-1.5 py-1 bg-white text-slate-500 font-medium outline-none shrink-0 cursor-pointer">
           <option>Last 30 days</option>
@@ -213,12 +213,12 @@ export function ApiUsagePanel({
           <>
             <div className="flex flex-col mt-2 gap-4">
               <div className="flex flex-col">
-                <div className="text-[28px] font-extrabold text-slate-900 leading-none tracking-tight mb-1.5">
+                <div className="text-[28px] font-semibold text-slate-900 leading-none tracking-tight mb-1.5">
                   {usage.totalRequests.toLocaleString()}
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] text-slate-500 font-medium">API requests</span>
-                  <span className="text-[11px] font-bold text-[#10b981] flex items-center">
+                  <span className="text-[11px] font-semibold text-[#10b981] flex items-center">
                     ↑ {usage.requestDelta.changePercent}%
                   </span>
                 </div>
@@ -229,19 +229,19 @@ export function ApiUsagePanel({
                 ))}
               </div>
             </div>
-            
+
             <div className="mt-auto pt-4 border-t border-slate-100 grid grid-cols-3 gap-1">
               <div className="flex flex-col">
                 <span className="text-[11px] text-slate-400 font-medium mb-0.5 whitespace-nowrap">Success Rate</span>
-                <span className="text-base font-extrabold text-[#10b981]">{usage.successRate}%</span>
+                <span className="text-base font-semibold text-[#10b981]">{usage.successRate}%</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-[11px] text-slate-400 font-medium mb-0.5 whitespace-nowrap">Failed Req</span>
-                <span className="text-base font-extrabold text-red-500">{usage.failedRequests}</span>
+                <span className="text-base font-semibold text-red-500">{usage.failedRequests}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-[11px] text-slate-400 font-medium mb-0.5 whitespace-nowrap">Avg Resp</span>
-                <span className="text-base font-extrabold text-slate-800">{usage.avgResponseMs} ms</span>
+                <span className="text-base font-semibold text-slate-800">{usage.avgResponseMs} ms</span>
               </div>
             </div>
           </>
@@ -265,7 +265,7 @@ export function IntegrationStatusPanel({
           <div className="flex size-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-500 shrink-0">
             <SettingsIcon className="size-4" />
           </div>
-          <h3 className="text-[14px] font-bold text-slate-800 tracking-tight truncate">Integration Status</h3>
+          <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">Integration Status</h3>
         </div>
         <Link href={ROUTES.superAdmin.integrations} className="inline-flex shrink-0 items-center gap-1 text-[12px] font-semibold text-red-500 hover:text-red-600">
           View all <ArrowRightIcon className="size-3" />
@@ -283,7 +283,7 @@ export function IntegrationStatusPanel({
                     {IntegrationLogos[integration.name] ? (
                       IntegrationLogos[integration.name]
                     ) : (
-                      <div className="size-5 bg-slate-100 rounded flex items-center justify-center text-[10px] font-bold text-slate-600">
+                      <div className="size-5 bg-slate-100 rounded flex items-center justify-center text-[10px] font-semibold text-slate-600">
                         {integration.name[0]}
                       </div>
                     )}

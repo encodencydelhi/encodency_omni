@@ -348,7 +348,7 @@ function CustomTable({ rows }: { rows: Audience[] }) {
                   <button
                     type="button"
                     onClick={() => toast.success(`Re-syncing “${a.name}”…`)}
-                    className="flex items-center gap-1 text-[9px] font-bold text-[#0671e9] hover:underline"
+                    className="flex items-center gap-1 text-[9px] font-semibold text-[#0671e9] hover:underline"
                   >
                     <RefreshCw className="size-3" aria-hidden="true" />
                     Retry

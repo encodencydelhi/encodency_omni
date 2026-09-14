@@ -433,7 +433,7 @@ function OverviewTab({
         title="AI Recommendations & Growth Actions"
         icon={<Sparkles className="size-4 text-amber-500" />}
         action={
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-extrabold text-amber-800 shadow-2xs">
+          <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-semibold text-amber-800 shadow-2xs">
             <Sparkles className="size-3 text-amber-600" />
             Meta AI Optimized
           </span>
@@ -467,13 +467,13 @@ function OverviewTab({
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-extrabold shadow-2xs",
+                        "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold shadow-2xs",
                         rec.tagStyle,
                       )}
                     >
                       {rec.tag}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-500">
+                    <span className="text-[10px] font-semibold text-slate-500">
                       {rec.impact}
                     </span>
                   </div>
@@ -488,7 +488,7 @@ function OverviewTab({
                       <Icon className="size-4.5 text-white" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-extrabold text-slate-900 leading-tight">
+                      <h3 className="text-sm font-semibold text-slate-900 leading-tight">
                         {rec.title}
                       </h3>
                       <p className="mt-1.5 text-xs font-medium leading-relaxed text-slate-600">
@@ -501,12 +501,12 @@ function OverviewTab({
                 <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
                   <Link
                     href={rec.href}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-blue-600 shadow-2xs transition-all duration-200 group-hover:border-blue-300 group-hover:bg-blue-600 group-hover:text-white"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-blue-600 shadow-2xs transition-all duration-200 group-hover:border-blue-300 group-hover:bg-blue-600 group-hover:text-white"
                   >
                     <span>{rec.action}</span>
                     <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
                   </Link>
-                  <span className="text-[10.5px] font-bold text-emerald-700">
+                  <span className="text-[10.5px] font-semibold text-emerald-700">
                     {rec.metricHighlight}
                   </span>
                 </div>
@@ -948,7 +948,7 @@ function ActivityTab({ campaignName }: { campaignName: string }) {
   return (
     <section className={cn(card, "overflow-hidden")}>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#dde5ee] px-3 py-2.5">
-        <h2 className="text-sm font-bold">Activity ({rows.length})</h2>
+        <h2 className="text-sm font-semibold">Activity ({rows.length})</h2>
         <Link href={`${ADS_ROOT}/activity`} className={btn}>
           Open full audit log
         </Link>

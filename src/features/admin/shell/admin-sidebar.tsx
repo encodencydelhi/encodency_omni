@@ -77,7 +77,7 @@ export function AdminSidebar() {
             )}
           >
             {isSidebarCollapsed ? (
-              <span className="grid size-8 place-items-center rounded-md bg-[#1E293B] text-[15px] font-bold text-white shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+              <span className="grid size-8 place-items-center rounded-md bg-[#1E293B] text-[15px] font-semibold text-white shadow-[0_0_10px_rgba(59,130,246,0.3)]">
                 e
               </span>
             ) : (
@@ -112,7 +112,7 @@ export function AdminSidebar() {
               <div key={section.label} className={cn(index > 0 && "mt-5")}>
                 {!isSidebarCollapsed ? (
                   <div className="flex items-center gap-3 px-2 mb-3">
-                    <p className="text-[9.5px] font-bold uppercase tracking-widest text-[#7E8DA6]">
+                    <p className="text-[9.5px] font-semibold uppercase tracking-widest text-[#7E8DA6]">
                       {section.label}
                     </p>
                     <div className="h-[1px] w-8 bg-[#1E293B]" />
@@ -175,7 +175,7 @@ export function AdminSidebar() {
                 <Headphones className="size-4 text-[#D946EF]" />
               </span>
               <span className="min-w-0 flex-1">
-                <b className="block truncate text-[11.5px] font-bold leading-tight text-white">
+                <b className="block truncate text-[11.5px] font-semibold leading-tight text-white">
                   Help &amp; Support
                 </b>
                 <small className="block truncate text-[9px] leading-tight text-[#94A3B8] mt-0.5">

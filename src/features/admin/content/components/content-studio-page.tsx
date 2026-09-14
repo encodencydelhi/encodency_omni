@@ -117,7 +117,7 @@ function Card({ title, subtitle, action, children, className }: {
       {(title || action) && (
         <header className="flex items-center justify-between gap-2 border-b border-[#EDF1F5] px-4 py-3">
           <div className="min-w-0">
-            {title && <h3 className="truncate text-[13.5px] font-bold text-[#172044]">{title}</h3>}
+            {title && <h3 className="truncate text-[13.5px] font-semibold text-[#172044]">{title}</h3>}
             {subtitle && <p className="mt-0.5 text-[11.5px] text-[#7A87A0]">{subtitle}</p>}
           </div>
           {action}
@@ -131,11 +131,11 @@ function Card({ title, subtitle, action, children, className }: {
 function StepTitle({ step, title, hint }: { step: string; title: string; hint?: string }) {
   return (
     <div className="mb-2.5 flex items-center gap-2">
-      <span className="grid size-5 shrink-0 place-items-center rounded-md bg-[#F0F4FF] text-[10px] font-bold text-[#1769DF]">
+      <span className="grid size-5 shrink-0 place-items-center rounded-md bg-[#F0F4FF] text-[10px] font-semibold text-[#1769DF]">
         {step}
       </span>
       <div className="min-w-0">
-        <h4 className="text-[13px] font-bold leading-4 text-[#172044]">{title}</h4>
+        <h4 className="text-[13px] font-semibold leading-4 text-[#172044]">{title}</h4>
         {hint && <p className="text-[11px] text-[#7A87A0]">{hint}</p>}
       </div>
     </div>
@@ -191,7 +191,7 @@ function PhonePreview({ platform = "Instagram", status = "Scheduled" }: { platfo
       <div className="flex items-center justify-between bg-[#f8fafd] px-2.5 py-2">
         <div className="flex items-center gap-1.5">
           <PlatformBadge platform={platform} size="sm" />
-          <span className="text-[12px] font-bold text-[#16233F]">{platform}</span>
+          <span className="text-[12px] font-semibold text-[#16233F]">{platform}</span>
           <span className="rounded-full bg-emerald-50 px-1.5 py-px text-[10px] font-semibold text-emerald-700">{status}</span>
         </div>
         <MoreHorizontal className="size-3.5 text-slate-400" />
@@ -199,7 +199,7 @@ function PhonePreview({ platform = "Instagram", status = "Scheduled" }: { platfo
       <div className="flex items-center gap-2 px-2.5 py-2">
         <span className="grid size-8 place-items-center rounded-full bg-green-100 text-[14px]">🌿</span>
         <div>
-          <p className="text-[12px] font-bold text-[#16233F]">Moksha Sewa</p>
+          <p className="text-[12px] font-semibold text-[#16233F]">Moksha Sewa</p>
           <p className="text-[10.5px] text-slate-500">Sponsored · Varanasi</p>
         </div>
       </div>
@@ -222,7 +222,7 @@ function PhonePreview({ platform = "Instagram", status = "Scheduled" }: { platfo
           </div>
           <Bookmark className="size-4.5" />
         </div>
-        <p className="mt-1.5 text-[12px] font-bold text-[#16233F]">1,246 likes</p>
+        <p className="mt-1.5 text-[12px] font-semibold text-[#16233F]">1,246 likes</p>
         <p className="mt-0.5 text-[12px] leading-4.5 text-slate-600">
           <b className="text-[#16233F]">Moksha Sewa</b> Small actions create a cleaner tomorrow…{" "}
           <span className="text-slate-400">more</span>
@@ -303,7 +303,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
               <span className={cn("mx-auto mb-1 grid size-7 place-items-center rounded-lg", postType === t.id ? "bg-[#1769DF] text-white" : "bg-[#F1F5F9] text-[#64748B]")}>
                 {t.icon}
               </span>
-              <span className="block text-[11px] font-bold text-[#24365A]">{t.id}</span>
+              <span className="block text-[11px] font-semibold text-[#24365A]">{t.id}</span>
               <span className="block truncate text-[10px] text-slate-500">{t.desc}</span>
             </button>
           ))}
@@ -360,7 +360,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
                   <span key={h} className="rounded-full bg-[#F0F6FF] px-2.5 py-1 text-[11.5px] font-semibold text-[#1769DF]">{h}</span>
                 ))}
               </div>
-              <button className="mt-2 flex items-center gap-1 text-[11.5px] font-bold text-[#1769DF]"><Sparkles className="size-3" /> Generate more</button>
+              <button className="mt-2 flex items-center gap-1 text-[11.5px] font-semibold text-[#1769DF]"><Sparkles className="size-3" /> Generate more</button>
             </div>
           )}
 
@@ -373,7 +373,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
               ].map((v, i) => (
                 <div key={v} className="flex items-start justify-between gap-2 rounded-lg border border-[#e5ecf4] p-2.5">
                   <div className="min-w-0">
-                    <p className="text-[10.5px] font-bold uppercase tracking-wide text-[#1769DF]">Variation {i + 1}</p>
+                    <p className="text-[10.5px] font-semibold uppercase tracking-wide text-[#1769DF]">Variation {i + 1}</p>
                     <p className="mt-0.5 text-[12px] leading-4.5 text-slate-600">{v}</p>
                   </div>
                   <button className="flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"><Copy className="size-3" /> Copy</button>
@@ -394,15 +394,15 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
         <div className="mt-3">
           <StepTitle step="4" title="Media" hint="JPG, PNG, MP4 up to 100MB" />
           <div className="rounded-lg border-2 border-dashed border-[#b9cff2] bg-[#f7faff] p-4 text-center transition hover:border-[#1769DF] hover:bg-[#f0f6ff]">
-            <p className="text-[12.5px] font-bold text-[#24365A]">Drag & drop files here, or browse</p>
-            <button className="mt-2 h-8 rounded-lg bg-[#1769DF] px-4 text-[12px] font-bold text-white shadow-sm hover:bg-[#1259bd]">Upload from device</button>
+            <p className="text-[12.5px] font-semibold text-[#24365A]">Drag & drop files here, or browse</p>
+            <button className="mt-2 h-8 rounded-lg bg-[#1769DF] px-4 text-[12px] font-semibold text-white shadow-sm hover:bg-[#1259bd]">Upload from device</button>
             <p className="mt-1.5 text-[11px] text-slate-500">1080 × 1350 (4:5) recommended · 3 files selected</p>
           </div>
           <div className="mt-2 grid grid-cols-4 gap-1.5">
             {IMAGES.slice(0, 3).map((src, i) => (
               <div key={src} className="relative overflow-hidden rounded-lg border border-[#e2e8f0]">
                 <img src={src} alt="" className="h-20 w-full object-cover" />
-                <span className="absolute left-1.5 top-1.5 grid size-4 place-items-center rounded bg-[#16233F]/80 text-[9px] font-bold text-white">{i + 1}</span>
+                <span className="absolute left-1.5 top-1.5 grid size-4 place-items-center rounded bg-[#16233F]/80 text-[9px] font-semibold text-white">{i + 1}</span>
               </div>
             ))}
             <button className="grid h-20 place-items-center rounded-lg border border-dashed border-slate-300 text-slate-500 hover:bg-slate-50">
@@ -414,7 +414,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
 
       {/* Settings */}
       <Card title="Channels & schedule" subtitle="Where and when this goes live">
-        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">Publish to</p>
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Publish to</p>
         <div className="space-y-0.5">
           {PLATFORMS.map((p) => {
             const on = channels.includes(p);
@@ -429,7 +429,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
                 </span>
                 <PlatformBadge platform={p} size="sm" />
                 <span className="flex-1 text-[12px] font-semibold text-[#33445F]">{p}</span>
-                {on && <span className="text-[10.5px] font-bold text-emerald-600">Ready</span>}
+                {on && <span className="text-[10.5px] font-semibold text-emerald-600">Ready</span>}
               </button>
             );
           })}
@@ -437,7 +437,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
 
         <div className="my-2.5 h-px bg-slate-100" />
 
-        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">Schedule</p>
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Schedule</p>
         <div className="space-y-1">
           {["Publish now", "Schedule for later", "Save as draft"].map((s) => (
             <label key={s} className={cn("flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-[12px] font-medium transition", schedule === s ? "border-[#1769DF] bg-[#f2f7ff] text-[#16233F]" : "border-[#e5ecf4] text-slate-600 hover:bg-slate-50")}>
@@ -481,12 +481,12 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
       <div className="space-y-2.5 lg:sticky lg:top-4">
         <Card
           title="Live preview"
-          action={<span className="rounded-full bg-slate-100 px-2 py-px text-[10.5px] font-bold text-slate-600">{channels[0] ?? "Instagram"}</span>}
+          action={<span className="rounded-full bg-slate-100 px-2 py-px text-[10.5px] font-semibold text-slate-600">{channels[0] ?? "Instagram"}</span>}
         >
           <PhonePreview platform={(channels[0] as Platform) ?? "Instagram"} />
           <div className="mt-2 flex gap-1.5">
-            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border text-[11.5px] font-bold text-slate-600 hover:bg-slate-50"><Download className="size-3.5" /> Export</button>
-            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-[#16233F] text-[11.5px] font-bold text-white hover:bg-[#0f1830]"><Pencil className="size-3.5" /> Open editor</button>
+            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border text-[11.5px] font-semibold text-slate-600 hover:bg-slate-50"><Download className="size-3.5" /> Export</button>
+            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-[#16233F] text-[11.5px] font-semibold text-white hover:bg-[#0f1830]"><Pencil className="size-3.5" /> Open editor</button>
           </div>
         </Card>
         <Checklist />
@@ -502,14 +502,14 @@ function AIAssistantTab() {
   return (
     <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
       <Card title="Describe your idea" subtitle="AI drafts caption, hashtags and creative">
-        <label className="mb-1 block text-[12px] font-bold text-[#33445F]">Topic / prompt *</label>
+        <label className="mb-1 block text-[12px] font-semibold text-[#33445F]">Topic / prompt *</label>
         <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} spellCheck className="w-full resize-none rounded-lg border border-[#dce4ef] p-2.5 text-[12.5px] leading-5 outline-none focus:border-[#7C3AED]" />
         <div className="mt-2 grid grid-cols-3 gap-1.5">
           <SelectField label="Audience" value="General public" />
           <SelectField label="Tone" value="Positive" />
           <SelectField label="Language" value="English" />
         </div>
-        <p className="mb-1.5 mt-3 text-[12px] font-bold text-[#33445F]">Image style</p>
+        <p className="mb-1.5 mt-3 text-[12px] font-semibold text-[#33445F]">Image style</p>
         <div className="grid grid-cols-3 gap-1.5">
           {IMAGES.slice(0, 6).map((src, i) => (
             <button key={src + i} className={cn("overflow-hidden rounded-lg border text-left", i === 0 ? "border-[#7C3AED] ring-2 ring-violet-100" : "border-[#e5ecf4]")}>
@@ -518,7 +518,7 @@ function AIAssistantTab() {
             </button>
           ))}
         </div>
-        <button className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-[#7C3AED] text-[13px] font-bold text-white shadow-sm shadow-purple-200 transition hover:bg-[#6D28D9]">
+        <button className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-[#7C3AED] text-[13px] font-semibold text-white shadow-sm shadow-purple-200 transition hover:bg-[#6D28D9]">
           <Sparkles className="size-4" /> Generate content
         </button>
       </Card>
@@ -526,7 +526,7 @@ function AIAssistantTab() {
       <Card
         title="AI result"
         subtitle="Review, then send to editor"
-        action={<button className="text-[11.5px] font-bold text-[#1769DF]">Regenerate</button>}
+        action={<button className="text-[11.5px] font-semibold text-[#1769DF]">Regenerate</button>}
       >
         <div className="rounded-lg border border-[#e2e8f0] p-2.5 text-[12.5px] leading-5 text-slate-700">
           Small actions create a cleaner tomorrow.
@@ -537,8 +537,8 @@ function AIAssistantTab() {
         </div>
         <img src={IMAGES[4]} alt="" className="mt-2 aspect-video w-full rounded-lg object-cover" />
         <div className="mt-2 flex gap-1.5">
-          <button className="h-8 flex-1 rounded-lg border text-[12px] font-bold text-slate-600">Save draft</button>
-          <button className="h-8 flex-1 rounded-lg bg-[#1769DF] text-[12px] font-bold text-white">Use this post</button>
+          <button className="h-8 flex-1 rounded-lg border text-[12px] font-semibold text-slate-600">Save draft</button>
+          <button className="h-8 flex-1 rounded-lg bg-[#1769DF] text-[12px] font-semibold text-white">Use this post</button>
         </div>
       </Card>
 
@@ -605,7 +605,7 @@ function TemplatesTab() {
                 {t.pro && <span className="absolute right-1.5 top-1.5 rounded bg-amber-400 px-1.5 py-px text-[9px] font-black text-amber-950">PRO</span>}
               </div>
               <div className="p-2">
-                <p className="truncate text-[12px] font-bold text-[#24365A]">{t.title}</p>
+                <p className="truncate text-[12px] font-semibold text-[#24365A]">{t.title}</p>
                 <p className="text-[11px] text-slate-500">{t.cat}</p>
               </div>
             </button>
@@ -615,10 +615,10 @@ function TemplatesTab() {
 
       <Card title="Template preview" className="lg:sticky lg:top-4">
         <img src={active.img} alt="" className="aspect-[4/4.4] w-full rounded-lg object-cover" />
-        <p className="mt-2 text-[14px] font-bold text-[#16233F]">{active.title}</p>
+        <p className="mt-2 text-[14px] font-semibold text-[#16233F]">{active.title}</p>
         <p className="mt-0.5 text-[12px] leading-4.5 text-slate-500">Clean, impactful layout for awareness and community campaigns. Fully editable.</p>
-        <button className="mt-2 h-10 w-full rounded-lg bg-[#EB0711] text-[13px] font-bold text-white shadow-sm shadow-red-200 transition hover:bg-[#D60811]">Use this template</button>
-        <button className="mt-1.5 h-9 w-full rounded-lg border text-[12px] font-bold text-slate-600 hover:bg-slate-50">Customize in editor</button>
+        <button className="mt-2 h-10 w-full rounded-lg bg-[#EB0711] text-[13px] font-semibold text-white shadow-sm shadow-red-200 transition hover:bg-[#D60811]">Use this template</button>
+        <button className="mt-1.5 h-9 w-full rounded-lg border text-[12px] font-semibold text-slate-600 hover:bg-slate-50">Customize in editor</button>
         <dl className="mt-3 space-y-1.5 border-t border-slate-100 pt-2.5 text-[11.5px]">
           {[["Platform", "Instagram"], ["Size", "1080 × 1350 (4:5)"], ["Type", "Image · JPG / PNG"], ["Text", "Fully editable"]].map(([k, v]) => (
             <div key={k} className="flex justify-between"><dt className="text-slate-500">{k}</dt><dd className="font-semibold text-[#33445F]">{v}</dd></div>
@@ -667,14 +667,14 @@ function DraftsTab() {
               <div key={d.title} className="flex items-center gap-2.5 py-2.5 first:pt-0 last:pb-0">
                 <img src={d.img} alt="" className="h-11 w-14 shrink-0 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-bold text-[#24365A]">{d.title}</p>
+                  <p className="truncate text-[13px] font-semibold text-[#24365A]">{d.title}</p>
                   <p className="mt-px flex flex-wrap items-center gap-x-1.5 text-[11.5px] text-slate-500">
                     <span className="inline-flex items-center gap-1 font-semibold"><PlatformBadge platform={d.channel} size="sm" />{d.channel}</span>
                     <span>·</span><span className="truncate">{d.campaign}</span>
                   </p>
                   <p className="mt-px text-[11px] text-slate-400">{d.date}</p>
                 </div>
-                <span className="hidden rounded-full bg-slate-100 px-2 py-px text-[10.5px] font-bold text-slate-600 sm:block">Draft</span>
+                <span className="hidden rounded-full bg-slate-100 px-2 py-px text-[10.5px] font-semibold text-slate-600 sm:block">Draft</span>
                 <div className="flex shrink-0 gap-0.5">
                   <button className="rounded-md p-1.5 text-[#1769DF] hover:bg-blue-50" aria-label="Edit"><Pencil className="size-3.5" /></button>
                   <button className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100" aria-label="Duplicate"><Copy className="size-3.5" /></button>
@@ -689,7 +689,7 @@ function DraftsTab() {
               <div key={d.title} className="overflow-hidden rounded-lg border border-[#e2e8f0]">
                 <img src={d.img} alt="" className="aspect-video w-full object-cover" />
                 <div className="p-2">
-                  <p className="truncate text-[12.5px] font-bold text-[#24365A]">{d.title}</p>
+                  <p className="truncate text-[12.5px] font-semibold text-[#24365A]">{d.title}</p>
                   <p className="mt-0.5 text-[11px] text-slate-500">{d.channel} · {d.date}</p>
                 </div>
               </div>
@@ -706,7 +706,7 @@ function DraftsTab() {
               <div key={k} className="flex justify-between gap-2"><dt className="text-slate-500">{k}</dt><dd className="text-right font-semibold text-[#33445F]">{v}</dd></div>
             ))}
           </dl>
-          <button className="mt-3 h-9 w-full rounded-lg bg-[#16233F] text-[12.5px] font-bold text-white">Continue editing</button>
+          <button className="mt-3 h-9 w-full rounded-lg bg-[#16233F] text-[12.5px] font-semibold text-white">Continue editing</button>
         </Card>
       </div>
     </div>
@@ -732,15 +732,15 @@ function IdeasTab() {
       <Card
         title="Content ideas"
         subtitle="Curated prompts for your next post"
-        action={<button className="flex h-9 items-center gap-1.5 rounded-lg bg-violet-50 px-3 text-[12px] font-bold text-violet-700 ring-1 ring-violet-100 hover:bg-violet-100"><Sparkles className="size-3.5" /> Generate with AI</button>}
+        action={<button className="flex h-9 items-center gap-1.5 rounded-lg bg-violet-50 px-3 text-[12px] font-semibold text-violet-700 ring-1 ring-violet-100 hover:bg-violet-100"><Sparkles className="size-3.5" /> Generate with AI</button>}
       >
         <div className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-3">
           {IDEAS.map((idea, i) => (
             <button key={idea.title} onClick={() => setSelected(i)} className={cn("overflow-hidden rounded-lg border text-left transition", selected === i ? "border-[#1769DF] shadow-md ring-1 ring-blue-100" : "border-[#e2e8f0] hover:shadow-md")}>
               <img src={idea.img} alt="" className="aspect-[16/9] w-full object-cover" />
               <div className="p-2.5">
-                <span className="rounded bg-blue-50 px-1.5 py-px text-[10px] font-bold text-[#1769DF]">#{idea.tag}</span>
-                <p className="mt-1 text-[12.5px] font-bold text-[#24365A]">{idea.title}</p>
+                <span className="rounded bg-blue-50 px-1.5 py-px text-[10px] font-semibold text-[#1769DF]">#{idea.tag}</span>
+                <p className="mt-1 text-[12.5px] font-semibold text-[#24365A]">{idea.title}</p>
                 <p className="mt-px line-clamp-2 text-[11.5px] leading-4 text-slate-500">{idea.desc}</p>
               </div>
             </button>
@@ -749,10 +749,10 @@ function IdeasTab() {
       </Card>
       <Card title="Idea details" className="lg:sticky lg:top-4">
         <img src={active.img} alt="" className="aspect-video w-full rounded-lg object-cover" />
-        <p className="mt-2 text-[14px] font-bold text-[#16233F]">{active.title}</p>
+        <p className="mt-2 text-[14px] font-semibold text-[#16233F]">{active.title}</p>
         <p className="mt-0.5 text-[12px] leading-4.5 text-slate-500">{active.desc} Suggested for Instagram, Facebook and LinkedIn · best posted 9–11 AM.</p>
-        <button className="mt-2 h-10 w-full rounded-lg bg-[#EB0711] text-[13px] font-bold text-white transition hover:bg-[#D60811]">Use this idea</button>
-        <button className="mt-1.5 h-9 w-full rounded-lg border text-[12px] font-bold text-slate-600 hover:bg-slate-50">Customize with AI</button>
+        <button className="mt-2 h-10 w-full rounded-lg bg-[#EB0711] text-[13px] font-semibold text-white transition hover:bg-[#D60811]">Use this idea</button>
+        <button className="mt-1.5 h-9 w-full rounded-lg border text-[12px] font-semibold text-slate-600 hover:bg-slate-50">Customize with AI</button>
       </Card>
     </div>
   );
@@ -791,7 +791,7 @@ function ApprovalsTab() {
           action={
             <div className="flex gap-1">
               {["All", "Pending", "Approved", "Changes requested"].map((f) => (
-                <button key={f} onClick={() => setFilter(f)} className={cn("h-7 rounded-md border px-2.5 text-[11px] font-bold", filter === f ? "border-[#1769DF] bg-[#F0F6FF] text-[#1769DF]" : "border-[#e5ecf4] text-slate-500")}>{f}</button>
+                <button key={f} onClick={() => setFilter(f)} className={cn("h-7 rounded-md border px-2.5 text-[11px] font-semibold", filter === f ? "border-[#1769DF] bg-[#F0F6FF] text-[#1769DF]" : "border-[#e5ecf4] text-slate-500")}>{f}</button>
               ))}
             </div>
           }
@@ -801,18 +801,18 @@ function ApprovalsTab() {
               <div key={a.title} className="flex items-center gap-2.5 py-2.5 first:pt-0 last:pb-0">
                 <img src={a.img} alt="" className="h-10 w-14 shrink-0 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-bold text-[#24365A]">{a.title}</p>
+                  <p className="truncate text-[13px] font-semibold text-[#24365A]">{a.title}</p>
                   <p className="mt-px text-[11.5px] text-slate-500">{a.channel} · by {a.by} · {a.date}</p>
                 </div>
                 <span className={cn(
-                  "hidden rounded-full px-2 py-px text-[10.5px] font-bold sm:block",
+                  "hidden rounded-full px-2 py-px text-[10.5px] font-semibold sm:block",
                   a.status === "Approved" && "bg-emerald-50 text-emerald-700",
                   a.status === "Pending" && "bg-amber-50 text-amber-700",
                   a.status === "Changes requested" && "bg-red-50 text-red-600",
                 )}>
                   {a.status}
                 </span>
-                <button className="rounded-md border border-[#e2e8f0] px-2.5 py-1 text-[11.5px] font-bold text-[#1769DF] hover:bg-blue-50">Review</button>
+                <button className="rounded-md border border-[#e2e8f0] px-2.5 py-1 text-[11.5px] font-semibold text-[#1769DF] hover:bg-blue-50">Review</button>
               </div>
             ))}
           </div>
@@ -828,14 +828,14 @@ function ApprovalsTab() {
                 <span className={cn("absolute -left-[23px] top-0.5 grid size-3.5 place-items-center rounded-full", done ? "bg-emerald-500 text-white" : "bg-white ring-2 ring-slate-200")}>
                   {done ? <Check className="size-2" /> : null}
                 </span>
-                <p className="text-[12.5px] font-bold text-[#33445F]">{t as string}</p>
+                <p className="text-[12.5px] font-semibold text-[#33445F]">{t as string}</p>
                 <p className="text-[11px] text-slate-500">{s as string}</p>
               </div>
             ))}
           </div>
           <div className="mt-3 flex gap-1.5">
-            <button className="h-9 flex-1 rounded-lg bg-emerald-600 text-[12.5px] font-bold text-white hover:bg-emerald-700">Approve</button>
-            <button className="h-9 flex-1 rounded-lg border border-red-200 text-[12.5px] font-bold text-red-600 hover:bg-red-50">Request changes</button>
+            <button className="h-9 flex-1 rounded-lg bg-emerald-600 text-[12.5px] font-semibold text-white hover:bg-emerald-700">Approve</button>
+            <button className="h-9 flex-1 rounded-lg border border-red-200 text-[12.5px] font-semibold text-red-600 hover:bg-red-50">Request changes</button>
           </div>
         </Card>
       </div>
@@ -865,7 +865,7 @@ export default function ContentStudio() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-[20px] font-bold tracking-tight text-[#111B43]">Content Studio</h1>
+          <h1 className="text-[20px] font-semibold tracking-tight text-[#111B43]">Content Studio</h1>
           <p className="mt-0.5 text-[11.5px] text-[#687797]">Create, customize and publish content across all your channels.</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">

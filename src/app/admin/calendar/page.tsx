@@ -723,7 +723,7 @@ export default function ContentCalendar() {
 
           {/* Filters */}
           <section className="rounded-[7px] border border-[#e4e8ef] bg-white p-[10px]">
-            <h3 className="m-0 flex justify-between text-[13px] font-bold">
+            <h3 className="m-0 flex justify-between text-[13px] font-semibold">
               Filters
               <button className="border-0 bg-transparent text-[8px] font-[700] text-[#e2262f]">
                 Reset

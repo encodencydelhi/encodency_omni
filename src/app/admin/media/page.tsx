@@ -72,7 +72,7 @@ export default function MediaLibrary() {
           <button className="flex h-[38px] w-[39px] items-center justify-center gap-[7px] rounded-[6px] border border-[#e41f28] bg-[#e41f28] text-[#fff]"><Grid3X3 size={15}/></button>
           <button className="flex h-[38px] w-[39px] items-center justify-center gap-[7px] rounded-[6px] border border-[#e1e6ed] bg-white text-[#293650]"><List size={16}/></button>
           <button className="h-[38px] border border-[#e1e6ed] bg-white rounded-md flex items-center justify-center gap-[7px] text-[#293650] px-3 text-[10px] font-[650]"><ArrowDownUp size={12}/> Sort <ChevronDown size={12}/></button>
-          <button className="h-[38px] bg-[#e41f28] border border-[#e41f28] text-white rounded-md flex items-center justify-center gap-[7px] px-[18px] text-[10px] font-bold"><Upload size={15}/> Upload</button>
+          <button className="h-[38px] bg-[#e41f28] border border-[#e41f28] text-white rounded-md flex items-center justify-center gap-[7px] px-[18px] text-[10px] font-semibold"><Upload size={15}/> Upload</button>
         </div>
       </div>
 
@@ -126,7 +126,7 @@ export default function MediaLibrary() {
           </section>
 
           <section className="border-b border-[#eef1f5] pb-[11px] last:border-0">
-            <div className="mb-[7px] flex items-center justify-between"><h3 className="m-0 text-xs font-[750]">Filters</h3><button className="border-0 bg-transparent text-[#dd2932] text-[9px] font-bold">Reset</button></div>
+            <div className="mb-[7px] flex items-center justify-between"><h3 className="m-0 text-xs font-[750]">Filters</h3><button className="border-0 bg-transparent text-[#dd2932] text-[9px] font-semibold">Reset</button></div>
             {[
               ["Project","Moksha Sewa"],["File Type","All Types"],["Channel","All Channels"],["Campaign","All Campaigns"],["Tags","All Tags"],["Uploaded By","All Users"],["Date Range","Any Date"]
             ].map(([label,value])=>(
@@ -136,7 +136,7 @@ export default function MediaLibrary() {
           </section>
 
           <section>
-            <div className="mb-[7px] flex items-center justify-between"><h3 className="m-0 text-xs font-[750]">Popular Tags</h3><button className="border-0 bg-transparent text-[#dd2932] text-[9px] font-bold flex items-center gap-1">View all <ArrowUpRight size={9}/></button></div>
+            <div className="mb-[7px] flex items-center justify-between"><h3 className="m-0 text-xs font-[750]">Popular Tags</h3><button className="border-0 bg-transparent text-[#dd2932] text-[9px] font-semibold flex items-center gap-1">View all <ArrowUpRight size={9}/></button></div>
             <div className="flex flex-wrap gap-[5px]">{tags.map(tag=><span className="bg-[#eef3f9] rounded-[9px] px-2 py-[5px] text-[9px] text-[#33415d]" key={tag}>{tag}</span>)}</div>
           </section>
         </aside>

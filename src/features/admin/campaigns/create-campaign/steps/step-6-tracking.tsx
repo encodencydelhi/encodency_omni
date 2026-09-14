@@ -94,7 +94,7 @@ export function StepTracking({ draft, set }: { draft: CampaignDraft; set: Setter
                   {key.includes("Pixel") ? "📱" : key.includes("Google") ? "📊" : key.includes("LinkedIn") ? "💼" : key.includes("Website") ? "🌐" : "🔗"}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <b className="block text-[12.5px] font-bold text-[#111827]">{key}</b>
+                  <b className="block text-[12.5px] font-semibold text-[#111827]">{key}</b>
                   <small className="block text-[10.5px] leading-[14px] text-[#64748B]">{desc}</small>
                 </div>
                 <button
@@ -128,7 +128,7 @@ export function StepTracking({ draft, set }: { draft: CampaignDraft; set: Setter
                   <Icon className="size-3.5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <b className="block text-[12px] font-bold text-[#111827]">{key}</b>
+                  <b className="block text-[12px] font-semibold text-[#111827]">{key}</b>
                   <small className="block text-[10px] leading-[14px] text-[#64748B]">{desc}</small>
                 </div>
                 {active && (
@@ -152,7 +152,7 @@ export function StepTracking({ draft, set }: { draft: CampaignDraft; set: Setter
               <ShieldCheck className="size-5" />
             </span>
             <div className="min-w-0 flex-1">
-              <b className="block text-[12px] font-bold text-[#132044]">Tracking Health</b>
+              <b className="block text-[12px] font-semibold text-[#132044]">Tracking Health</b>
               <div className="mt-1 space-y-1">
                 {TRACKING_HEALTH.map(({ label, ok }) => (
                   <div key={label} className="flex items-center gap-1.5 text-[10px]">
@@ -187,7 +187,7 @@ function StepSection({
           {letter}
         </span>
         <div className="min-w-0 flex-1">
-          <b className="block text-[16px] font-bold leading-5 text-[#101A3D]">{title}</b>
+          <b className="block text-[16px] font-semibold leading-5 text-[#101A3D]">{title}</b>
           <small className="block text-[11px] leading-4 text-[#526385]">{caption}</small>
         </div>
       </div>

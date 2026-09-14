@@ -26,12 +26,12 @@ export function ClientsPage() {
             <ChevronRight className="mx-0.5 h-3 w-3" />
             <strong className="text-foreground font-semibold">Clients</strong>
           </div>
-          <h1 className="text-[22px] font-bold tracking-tight text-foreground">Clients</h1>
+          <h1 className="text-[22px] font-semibold tracking-tight text-foreground">Clients</h1>
           <p className="mt-0.5 text-[11px] text-muted-foreground">Manage all your brands and marketing Clients in one place.</p>
         </div>
 
         <div className="relative hidden h-[76px] overflow-hidden rounded-xl border bg-gradient-to-r from-white via-red-50/30 to-blue-50/50 px-4 py-3 lg:block">
-          <p className="text-[13px] font-bold text-foreground">Turn Ideas Into Impact</p>
+          <p className="text-[13px] font-semibold text-foreground">Turn Ideas Into Impact</p>
           <p className="text-[10px] text-muted-foreground mt-0.5">Build. Publish. Engage. Grow.</p>
 
           <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-end gap-1">
@@ -134,11 +134,11 @@ export function ClientsPage() {
                   <td className="pl-3 py-1.5"><input type="checkbox" className="rounded border-gray-300 size-3" /></td>
                   <td className="px-2 py-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-emerald-50 text-[10px] font-bold border border-emerald-100" style={{ color: project.color || '#078359' }}>
+                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-emerald-50 text-[10px] font-semibold border border-emerald-100" style={{ color: project.color || '#078359' }}>
                         {project.logoText}
                       </span>
                       <div className="min-w-0">
-                        <Link href={`/admin/projects/${project.id}`} className="font-bold text-foreground hover:underline truncate block text-[12px]">
+                        <Link href={`/admin/projects/${project.id}`} className="font-semibold text-foreground hover:underline truncate block text-[12px]">
                           {project.name}
                         </Link>
                         <p className="w-[140px] truncate text-[9.5px] text-muted-foreground mt-0.5" title={project.description}>
@@ -265,8 +265,8 @@ function Stat({ icon: Icon, label, value, trend, note, color }: { icon: any; lab
       <div>
         <p className="text-[10px] font-semibold text-muted-foreground mb-0">{label}</p>
         <div className="flex items-baseline gap-1.5">
-          <p className="text-[18px] font-bold text-foreground">{value}</p>
-          {trend && <span className="text-[10px] font-bold text-emerald-600">{trend}</span>}
+          <p className="text-[18px] font-semibold text-foreground">{value}</p>
+          {trend && <span className="text-[10px] font-semibold text-emerald-600">{trend}</span>}
         </div>
         <p className="mt-0.5 text-[9px] text-muted-foreground">{note}</p>
       </div>
@@ -278,7 +278,7 @@ function Score({ value }: { value: number }) {
   const color = value >= 75 ? "#08A875" : value >= 60 ? "#F0A000" : "#F04455";
   return (
     <span
-      className="grid size-9 place-items-center rounded-full text-[12px] font-bold shadow-sm"
+      className="grid size-9 place-items-center rounded-full text-[12px] font-semibold shadow-sm"
       style={{
         background: `radial-gradient(closest-side, white 76%, transparent 77% 99%), conic-gradient(${color} ${value}%, #E9EDF3 0)`,
         color: color
@@ -302,7 +302,7 @@ function Quick({ icon: Icon, title, text, action, color }: { icon: any; title: s
         <Icon className="size-3.5" />
       </span>
       <div className="flex flex-col">
-        <p className="text-[11px] font-bold text-foreground">{title}</p>
+        <p className="text-[11px] font-semibold text-foreground">{title}</p>
         <p className="mt-0.5 text-[9.5px] text-muted-foreground flex-1 leading-relaxed">{text}</p>
         <button className="mt-2 w-fit rounded-md border px-2 py-1 text-[9.5px] font-semibold shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground bg-white">
           {action}

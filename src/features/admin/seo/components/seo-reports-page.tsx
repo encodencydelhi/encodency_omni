@@ -122,11 +122,11 @@ export function SeoReportsPage() {
                 <span className={cn("grid size-7 place-items-center rounded-lg", tint[color])}>
                   <Icon className="size-3.5" />
                 </span>
-                <b className="mt-1.5 block truncate text-[9.5px] font-bold text-[#172044]">{name}</b>
+                <b className="mt-1.5 block truncate text-[9.5px] font-semibold text-[#172044]">{name}</b>
                 <p className="mt-0.5 line-clamp-2 text-[8px] leading-3 text-[#8A97AF]">{detail}</p>
                 <div className="mt-1.5 flex items-center justify-between">
                   <span className="text-[8px] text-[#9AA6BC]">{sections} sections</span>
-                  <button className="rounded border border-[#DDE4ED] bg-white px-1.5 py-0.5 text-[8px] font-bold text-[#EB0711]">
+                  <button className="rounded border border-[#DDE4ED] bg-white px-1.5 py-0.5 text-[8px] font-semibold text-[#EB0711]">
                     Use
                   </button>
                 </div>
@@ -178,7 +178,7 @@ export function SeoReportsPage() {
         }
       >
         <div className="px-3">
-          <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-bold text-[#71809D]", scheduleCols)}>
+          <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-semibold text-[#71809D]", scheduleCols)}>
             <span>Report</span>
             <span>Type</span>
             <span>Frequency</span>
@@ -227,7 +227,7 @@ export function SeoReportsPage() {
           }
         >
           <div className="px-3">
-            <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-bold text-[#71809D]", historyCols)}>
+            <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-semibold text-[#71809D]", historyCols)}>
               <span>Report</span>
               <span>Period</span>
               <span>Generated</span>
@@ -278,7 +278,7 @@ export function SeoReportsPage() {
                 key={row.email}
                 className="flex items-center gap-2 border-b border-[#EDF1F5] py-2 last:border-b-0"
               >
-                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#EAF2FF] text-[9px] font-bold text-[#1A6BC4]">
+                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#EAF2FF] text-[9px] font-semibold text-[#1A6BC4]">
                   {row.name
                     .split(" ")
                     .map((part) => part[0])

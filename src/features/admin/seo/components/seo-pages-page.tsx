@@ -230,7 +230,7 @@ export function SeoPagesPage() {
         }
       >
         <div className="px-3">
-          <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-bold text-[#71809D]", cols)}>
+          <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-semibold text-[#71809D]", cols)}>
             <span>Page</span>
             <span className="text-right">Clicks</span>
             <span className="text-right">Impressions</span>
@@ -280,7 +280,7 @@ export function SeoPagesPage() {
       <div className="grid items-start gap-2 [&>section]:h-[208px] xl:grid-cols-2">
         <Box title="Slowest Pages (Core Web Vitals)" action={<ViewAll />}>
           <div className="px-3">
-            <div className="grid grid-cols-[2fr_.6fr_.6fr_.6fr] gap-1.5 py-1.5 text-[8px] font-bold text-[#71809D]">
+            <div className="grid grid-cols-[2fr_.6fr_.6fr_.6fr] gap-1.5 py-1.5 text-[8px] font-semibold text-[#71809D]">
               <span>Page</span>
               <span className="text-right">LCP</span>
               <span className="text-right">CLS</span>

@@ -48,7 +48,7 @@ function Card({
         <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFEAEC]">
           <Icon className="size-3.5 text-[#E11D28]" />
         </span>
-        <b className="flex-1 text-[12.5px] font-bold text-[#101A3D]">{title}</b>
+        <b className="flex-1 text-[12.5px] font-semibold text-[#101A3D]">{title}</b>
         {onEdit && (
           <button onClick={onEdit} className="text-[10px] font-semibold text-[#1975E7]">
             Edit
@@ -173,7 +173,7 @@ export function StepReview({
             <span className="grid size-6 shrink-0 place-items-center rounded-md bg-[#E8F2FF]">
               <ImageIcon className="size-3.5 text-[#1975E7]" />
             </span>
-            <b className="flex-1 text-[11.5px] font-bold text-[#111827]">Campaign Preview</b>
+            <b className="flex-1 text-[11.5px] font-semibold text-[#111827]">Campaign Preview</b>
             <button className="text-[10px] font-semibold text-[#1975E7]">View All Creatives</button>
           </div>
           <span className="relative block h-[150px] overflow-hidden rounded-lg">
@@ -229,11 +229,11 @@ export function StepReview({
                 <b className="block text-[12px] text-[#132044]">Approval State</b>
                 <small className="block text-[10px] text-[#526385]">Campaign is approved and ready to launch.</small>
               </div>
-              <span className="rounded-full bg-[#DDF8EA] px-2 py-1 text-[9px] font-bold text-[#078359]">Approved</span>
+              <span className="rounded-full bg-[#DDF8EA] px-2 py-1 text-[9px] font-semibold text-[#078359]">Approved</span>
             </div>
             <div className="mt-2 flex items-center gap-1.5 text-[9.5px] text-[#526385]">
               <span>Approved by</span>
-              <span className="grid size-5 place-items-center rounded-full bg-[#111827] text-[8px] font-bold text-white">MS</span>
+              <span className="grid size-5 place-items-center rounded-full bg-[#111827] text-[8px] font-semibold text-white">MS</span>
               <b>Manish Sirohi</b>
             </div>
           </div>
@@ -247,7 +247,7 @@ export function StepReview({
               <Check className="size-4 text-white" />
             </span>
             <div>
-              <b className="block text-[11.5px] font-bold text-[#111827]">Launch Confirmation</b>
+              <b className="block text-[11.5px] font-semibold text-[#111827]">Launch Confirmation</b>
               <small className="block text-[9.5px] text-[#8791A4]">
                 Confirm the following items before launching your campaign.
               </small>

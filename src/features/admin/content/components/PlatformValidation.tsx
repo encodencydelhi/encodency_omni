@@ -32,9 +32,9 @@ export function PlatformValidationPanel({ validations, totalPlatforms }: Props) 
     <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)] overflow-hidden">
       <header className="px-3 py-2.5 border-b border-[#EDF1F5]">
         <div className="flex items-center justify-between">
-          <h3 className="text-[13.5px] font-bold text-[#172044]">Channel Status</h3>
+          <h3 className="text-[13.5px] font-semibold text-[#172044]">Channel Status</h3>
           <span className={cn(
-            "rounded-full px-2 py-0.5 text-[10px] font-bold",
+            "rounded-full px-2 py-0.5 text-[10px] font-semibold",
             allReady ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-700"
           )}>
             {readyCount}/{totalPlatforms} ready
@@ -52,7 +52,7 @@ export function PlatformValidationPanel({ validations, totalPlatforms }: Props) 
                 {LEVEL_ICON[v.level]}
                 <PlatformBadge platform={v.platform} size="sm" />
                 <span className="flex-1 text-[11px] font-semibold text-[#33445F]">{meta.label}</span>
-                <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-bold", LEVEL_STYLE[v.level])}>
+                <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-semibold", LEVEL_STYLE[v.level])}>
                   {v.level === "ready" ? "Ready" : v.level === "warning" ? "Warning" : "Error"}
                 </span>
               </div>

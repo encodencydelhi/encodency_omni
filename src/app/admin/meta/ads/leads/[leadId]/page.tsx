@@ -145,7 +145,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-[260px] flex-1">
-            <h1 className="flex flex-wrap items-center gap-2.5 text-[22px] font-extrabold leading-tight tracking-tight text-slate-900">
+            <h1 className="flex flex-wrap items-center gap-2.5 text-[22px] font-semibold leading-tight tracking-tight text-slate-900">
               {lead.name}
               <ToneChip tone={LEAD_STAGE_TONE[lead.stage] ?? "slate"}>{lead.stage}</ToneChip>
             </h1>
@@ -198,11 +198,11 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
                   className={cn(
                     "rounded-xl border p-2.5 text-center transition-all duration-200 shadow-2xs",
                     done
-                      ? "border-emerald-300 bg-emerald-50 text-emerald-800 font-bold"
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-800 font-semibold"
                       : "border-slate-200 bg-slate-50/70 text-slate-400 font-medium",
                   )}
                 >
-                  <span className="block text-[11px] font-bold">
+                  <span className="block text-[11px] font-semibold">
                     {stage}
                   </span>
                 </div>
@@ -212,7 +212,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
           {isTerminal && (
             <li className="min-w-[110px] flex-1">
               <div className="rounded-xl border border-rose-300 bg-rose-50 p-2.5 text-center shadow-2xs">
-                <span className="block text-[11px] font-bold text-rose-800">{lead.stage}</span>
+                <span className="block text-[11px] font-semibold text-rose-800">{lead.stage}</span>
               </div>
             </li>
           )}
@@ -490,7 +490,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
         <div className="space-y-3">
           <Panel title="Lead Score" icon={<Gauge className="size-4 text-[#1877f2]" />}>
             <div className="flex items-end justify-between gap-2">
-              <strong className="text-[28px] font-bold leading-none">{lead.score}</strong>
+              <strong className="text-[28px] font-semibold leading-none">{lead.score}</strong>
               <ToneChip tone={scoreTone(lead.score)}>{scoreLabel(lead.score)} quality</ToneChip>
             </div>
             <Meter value={lead.score} tone={scoreTone(lead.score)} className="mt-2" />
@@ -531,7 +531,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
           <Panel title="Response SLA" icon={<AlarmClock className="size-4 text-[#f59e0b]" />}>
             {slaUsed === null ? (
               <>
-                <p className="text-[11px] font-bold text-[#b42318]">Not contacted yet</p>
+                <p className="text-[11px] font-semibold text-[#b42318]">Not contacted yet</p>
                 <p className="mt-1 text-[10px] leading-relaxed text-[#64748b]">
                   Submitted {relative(lead.submittedAt)}. Leads contacted within 30 minutes convert
                   roughly three times more often.
@@ -539,7 +539,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
               </>
             ) : (
               <>
-                <p className="text-[11px] font-bold">
+                <p className="text-[11px] font-semibold">
                   First response in {slaUsed} min
                   <span className="ml-1.5 font-normal text-[#64748b]">
                     (target {slaTarget} min)

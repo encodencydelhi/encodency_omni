@@ -115,7 +115,7 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
 
               <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr]">
                 <div className="rounded-lg border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
-                  <span className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-[#475569]">WHEN</span>
+                  <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-[#475569]">WHEN</span>
                   <div className="space-y-2">
                     <select
                       value={rule.condition}
@@ -137,7 +137,7 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
                 </div>
 
                 <div className="rounded-lg border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
-                  <span className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-[#475569]">THEN</span>
+                  <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-[#475569]">THEN</span>
                   <div className="space-y-2">
                     <select
                       value={rule.action}
@@ -177,7 +177,7 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
                   value={test.name}
                   onChange={(e) => updateTest(test.id, { name: e.target.value })}
                   spellCheck={true}
-                  className="min-w-0 flex-1 text-[12px] font-bold text-[#111827] outline-none"
+                  className="min-w-0 flex-1 text-[12px] font-semibold text-[#111827] outline-none"
                 />
                 <button
                   type="button"
@@ -212,11 +212,11 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
 
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="rounded-lg border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
-                  <span className="mb-1 block text-[10px] font-bold text-[#155EEF]">Variant A (Control)</span>
+                  <span className="mb-1 block text-[10px] font-semibold text-[#155EEF]">Variant A (Control)</span>
                   <TextInput value={test.variantA} onChange={(v) => updateTest(test.id, { variantA: v })} placeholder="Describe variant A" />
                 </div>
                 <div className="rounded-lg border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
-                  <span className="mb-1 block text-[10px] font-bold text-[#7C3AED]">Variant B</span>
+                  <span className="mb-1 block text-[10px] font-semibold text-[#7C3AED]">Variant B</span>
                   <TextInput value={test.variantB} onChange={(v) => updateTest(test.id, { variantB: v })} placeholder="Describe variant B" />
                 </div>
               </div>

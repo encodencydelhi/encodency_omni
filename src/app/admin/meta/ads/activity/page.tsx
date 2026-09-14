@@ -102,7 +102,7 @@ function ActivityView() {
             <div className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-2xs ring-1 ring-blue-500/20">
               <Activity className="size-4" aria-hidden="true" />
             </div>
-            <h2 className="text-sm font-extrabold text-slate-900">Activity Log</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Activity Log</h2>
             <span className="rounded-full bg-blue-100/80 px-2.5 py-0.5 text-[10.5px] font-black text-blue-700 ring-1 ring-blue-500/20">
               {rows.length}
             </span>
@@ -171,7 +171,7 @@ function ActivityView() {
           <div>
             {grouped.map(([day, entries]) => (
               <div key={day}>
-                <h3 className="border-y border-[#e8edf4] bg-[#f7f9fc] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-[#64748b]">
+                <h3 className="border-y border-[#e8edf4] bg-[#f7f9fc] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#64748b]">
                   {date(day)}
                 </h3>
                 <TableShell minWidth={1120}>

@@ -50,7 +50,7 @@ export function ChartLegend({
   items: { label: string; color: string }[];
 }) {
   return (
-    <div className="mb-2 flex flex-wrap gap-3.5 text-xs font-bold text-slate-700">
+    <div className="mb-2 flex flex-wrap gap-3.5 text-xs font-semibold text-slate-700">
       {items.map((item) => (
         <span key={item.label} className="flex items-center gap-1.5">
           <span

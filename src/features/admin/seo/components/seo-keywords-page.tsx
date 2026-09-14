@@ -252,7 +252,7 @@ export function SeoKeywordsPage() {
           }
         >
           <div className="px-3">
-            <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-bold text-[#71809D]", cols)}>
+            <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-semibold text-[#71809D]", cols)}>
               <span>Keyword</span>
               <span className="text-right">Pos.</span>
               <span className="text-right">Change</span>

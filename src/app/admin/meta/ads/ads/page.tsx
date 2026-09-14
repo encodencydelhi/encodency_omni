@@ -112,10 +112,10 @@ function AdsView() {
       values.campaign === DEFAULTS.campaign
         ? adSets
         : adSets.filter(
-            (s) =>
-              s.campaignId === values.campaign ||
-              getCampaign(s.campaignId)?.name === values.campaign,
-          );
+          (s) =>
+            s.campaignId === values.campaign ||
+            getCampaign(s.campaignId)?.name === values.campaign,
+        );
     return [DEFAULTS.adset, ...scoped.map((s) => s.name)];
   }, [values.campaign]);
 
@@ -129,7 +129,7 @@ function AdsView() {
             <div className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-2xs ring-1 ring-blue-500/20">
               <FileImage className="size-4" aria-hidden="true" />
             </div>
-            <h2 className="text-sm font-extrabold text-slate-900">Ads</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Ads</h2>
             <span className="rounded-full bg-blue-100/80 px-2.5 py-0.5 text-[10.5px] font-black text-blue-700 ring-1 ring-blue-500/20">
               {rows.length}
             </span>

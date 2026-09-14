@@ -84,7 +84,7 @@ function Header() {
       </div>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-bold leading-9 tracking-[-0.025em] text-[#111827]">
+          <h1 className="text-[28px] font-semibold leading-9 tracking-[-0.025em] text-[#111827]">
             Add New Client
           </h1>
           <p className="mt-0.5 text-[12.5px] text-[#6B7280]">
@@ -129,7 +129,7 @@ function Stepper({ step, onSelect }: { step: number; onSelect: (next: number) =>
               >
                 <span
                   className={cn(
-                    "grid size-9 place-items-center rounded-full border-2 text-[13px] font-bold transition-colors",
+                    "grid size-9 place-items-center rounded-full border-2 text-[13px] font-semibold transition-colors",
                     done && "border-[#4F46E5] bg-[#4F46E5] text-white",
                     active && "border-[#4F46E5] bg-[#4F46E5] text-white ring-4 ring-[#4F46E5]/15",
                     !done && !active && "border-[#E2E8F0] bg-white text-[#9CA3AF]",
@@ -139,7 +139,7 @@ function Stepper({ step, onSelect }: { step: number; onSelect: (next: number) =>
                 </span>
                 <span
                   className={cn(
-                    "mt-2 block px-1 text-[11.5px] font-bold leading-4",
+                    "mt-2 block px-1 text-[11.5px] font-semibold leading-4",
                     done || active ? "text-[#4F46E5]" : "text-[#6B7280]",
                   )}
                 >

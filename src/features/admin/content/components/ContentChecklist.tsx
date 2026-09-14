@@ -10,8 +10,8 @@ export function ContentChecklist({ checks }: { checks: CheckItem[] }) {
   return (
     <Card>
       <div className="flex items-center gap-1.5 border-b border-[#EDF1F5] pb-2 mb-2">
-        <span className="text-[11px] font-bold text-[#7A87A0]">Checklist</span>
-        <span className="ml-auto rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-600">{done}/{checks.length}</span>
+        <span className="text-[11px] font-semibold text-[#7A87A0]">Checklist</span>
+        <span className="ml-auto rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-600">{done}/{checks.length}</span>
       </div>
       <div className="h-1 overflow-hidden rounded-full bg-[#EDF1F5]">
         <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all" style={{ width: `${(done / checks.length) * 100}%` }} />

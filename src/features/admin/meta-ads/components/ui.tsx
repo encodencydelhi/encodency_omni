@@ -781,7 +781,7 @@ export function Pagination({
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-slate-50/50 px-4 py-3 text-xs font-medium text-slate-600">
       <span>
-        Showing <strong className="font-bold text-slate-900">{from}–{to}</strong> of <strong className="font-bold text-slate-900">{total}</strong> {noun}
+        Showing <strong className="font-semibold text-slate-900">{from}–{to}</strong> of <strong className="font-semibold text-slate-900">{total}</strong> {noun}
       </span>
       {pageCount > 1 && (
         <div className="flex items-center gap-2">

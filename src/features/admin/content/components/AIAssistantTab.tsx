@@ -30,13 +30,13 @@ export function AIAssistantTab() {
           {AI_TYPES.map((t) => (
             <button key={t.id} onClick={() => setSelected(t.id)} className={cn("rounded-lg border p-2 text-left transition", selected === t.id ? "border-purple-300 bg-purple-50 shadow-sm" : "border-[#E2E8F0] hover:border-[#CBD5E1]")}>
               <span className={cn("mb-1 grid size-7 place-items-center rounded-lg", selected === t.id ? "bg-[#7C3AED] text-white" : "bg-[#F1F5F9] text-[#64748B]")}>{t.icon}</span>
-              <span className="block text-[10.5px] font-bold text-[#24365A]">{t.id}</span>
+              <span className="block text-[10.5px] font-semibold text-[#24365A]">{t.id}</span>
               <span className="block text-[9.5px] text-[#7A87A0]">{t.desc}</span>
             </button>
           ))}
         </div>
         <div className="mt-3">
-          <label className="mb-1 block text-[11.5px] font-bold text-[#33445F]">Topic / prompt *</label>
+          <label className="mb-1 block text-[11.5px] font-semibold text-[#33445F]">Topic / prompt *</label>
           <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} spellCheck className="w-full resize-none rounded-lg border border-[#D9E1EC] p-2.5 text-[12px] leading-5 outline-none focus:border-[#7C3AED]" />
         </div>
         <div className="mt-2 grid grid-cols-3 gap-1.5">
@@ -44,7 +44,7 @@ export function AIAssistantTab() {
           <SelectField label="Tone" value="Positive" />
           <SelectField label="Language" value="English" />
         </div>
-        <p className="mb-1 mt-3 text-[11.5px] font-bold text-[#33445F]">Image style</p>
+        <p className="mb-1 mt-3 text-[11.5px] font-semibold text-[#33445F]">Image style</p>
         <div className="grid grid-cols-3 gap-1.5">
           {[IMG.river, IMG.nature, IMG.water, IMG.people, IMG.lake, IMG.forest].map((src, i) => (
             <button key={i} className={cn("overflow-hidden rounded-lg border text-left", i === 0 ? "border-[#7C3AED] ring-2 ring-purple-100" : "border-[#E2E8F0]")}>
@@ -53,12 +53,12 @@ export function AIAssistantTab() {
             </button>
           ))}
         </div>
-        <button onClick={() => setGenerated(true)} className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-[#7C3AED] text-[12.5px] font-bold text-white shadow-sm transition hover:bg-[#6D28D9]">
+        <button onClick={() => setGenerated(true)} className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-[#7C3AED] text-[12.5px] font-semibold text-white shadow-sm transition hover:bg-[#6D28D9]">
           <Sparkles className="size-4" /> Generate content
         </button>
       </Card>
 
-      <Card title="AI result" subtitle="Review, then send to editor" action={<button className="text-[11px] font-bold text-[#1769DF]">Regenerate</button>}>
+      <Card title="AI result" subtitle="Review, then send to editor" action={<button className="text-[11px] font-semibold text-[#1769DF]">Regenerate</button>}>
         {generated ? (
           <>
             <div className="rounded-lg border border-[#E2E8F0] p-2.5 text-[12px] leading-5 text-[#33445F]">
@@ -73,8 +73,8 @@ export function AIAssistantTab() {
               ))}
             </div>
             <div className="mt-2 flex gap-1.5">
-              <button className="h-8 flex-1 rounded-lg border text-[11px] font-bold text-[#687797]">Save draft</button>
-              <button className="h-8 flex-1 rounded-lg bg-[#1769DF] text-[11px] font-bold text-white">Use this post</button>
+              <button className="h-8 flex-1 rounded-lg border text-[11px] font-semibold text-[#687797]">Save draft</button>
+              <button className="h-8 flex-1 rounded-lg bg-[#1769DF] text-[11px] font-semibold text-white">Use this post</button>
             </div>
           </>
         ) : (

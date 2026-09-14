@@ -56,7 +56,7 @@ export function UTMBuilder({
       title="Tracking"
       subtitle="UTM parameters for campaign tracking"
       action={
-        <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-1 text-[11px] font-bold text-[#1769DF]">
+        <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-1 text-[11px] font-semibold text-[#1769DF]">
           {expanded ? "Collapse" : "Expand"}
         </button>
       }
@@ -72,8 +72,8 @@ export function UTMBuilder({
           {/* Global UTM */}
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-[#33445F]">Global UTM</span>
-              <button onClick={generateAll} className="flex items-center gap-1 rounded-md bg-[#F0F6FF] px-2 py-1 text-[10px] font-bold text-[#1769DF] hover:bg-[#E0EDFF]">
+              <span className="text-[11px] font-semibold text-[#33445F]">Global UTM</span>
+              <button onClick={generateAll} className="flex items-center gap-1 rounded-md bg-[#F0F6FF] px-2 py-1 text-[10px] font-semibold text-[#1769DF] hover:bg-[#E0EDFF]">
                 <RefreshCw className="size-2.5" /> Auto Generate
               </button>
             </div>
@@ -87,7 +87,7 @@ export function UTMBuilder({
               <TextField label="Term" value={globalUtm.term} placeholder="optional" onChange={(v) => onGlobalUtmChange({ ...globalUtm, term: v })} />
             </div>
             <div className="mt-1.5 rounded-lg bg-[#F8FAFD] border border-[#E2E8F0] px-2.5 py-1.5">
-              <span className="text-[9.5px] font-bold text-[#7A87A0]">Preview: </span>
+              <span className="text-[9.5px] font-semibold text-[#7A87A0]">Preview: </span>
               <span className="text-[10px] font-mono text-[#33445F] break-all">
                 ?utm_source={globalUtm.source || "source"}&utm_medium={globalUtm.medium || "medium"}&utm_campaign={globalUtm.campaign || "campaign"}&utm_content={globalUtm.content || "content"}{globalUtm.term ? `&utm_term=${globalUtm.term}` : ""}
               </span>
@@ -96,7 +96,7 @@ export function UTMBuilder({
 
           {/* Per-platform UTMs */}
           <div className="space-y-1">
-            <span className="text-[11px] font-bold text-[#33445F]">Platform-Specific UTMs</span>
+            <span className="text-[11px] font-semibold text-[#33445F]">Platform-Specific UTMs</span>
             {platforms.map((p) => {
               const meta = PLATFORM_META[p];
               const utm = platformUtms[p] ?? generateAutoUtm(p);

@@ -49,7 +49,7 @@ export function ChannelsStep({
         <div className="flex items-start gap-2.5 rounded-xl border border-[#E0E7FF] bg-[#F8FAFF] px-3.5 py-3">
           <Shield className="mt-px size-4 shrink-0 text-[#4F46E5]" />
           <div className="min-w-0 flex-1">
-            <b className="block text-[12px] font-bold text-[#111827]">Your data stays secure</b>
+            <b className="block text-[12px] font-semibold text-[#111827]">Your data stays secure</b>
             <p className="text-[11px] leading-4 text-[#6B7280]">
               We never collect or store your passwords. All connections use official OAuth or authorized
               connectors from each platform.
@@ -62,7 +62,7 @@ export function ChannelsStep({
         </div>
 
         <div>
-          <b className="block text-[14px] font-bold text-[#111827]">Connect Your Channels</b>
+          <b className="block text-[14px] font-semibold text-[#111827]">Connect Your Channels</b>
           <p className="mb-3 text-[11.5px] text-[#6B7280]">
             Link the platforms your client uses. You can connect now or skip and add them later.
           </p>
@@ -76,7 +76,7 @@ export function ChannelsStep({
                   <div className="flex items-start gap-2">
                     <ChannelLogo channel={channel} className="size-8 shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <b className="block truncate text-[12px] font-bold text-[#111827]">{name}</b>
+                      <b className="block truncate text-[12px] font-semibold text-[#111827]">{name}</b>
                       <p className="text-[10.5px] leading-[15px] text-[#6B7280]">{caption}</p>
                     </div>
                     {isConnected && (
@@ -111,7 +111,7 @@ export function ChannelsStep({
             <div className="mb-2.5 flex items-start gap-2">
               <Send className="mt-px size-4 shrink-0 text-[#4F46E5]" />
               <div>
-                <b className="block text-[12px] font-bold text-[#111827]">Default Publishing Preferences</b>
+                <b className="block text-[12px] font-semibold text-[#111827]">Default Publishing Preferences</b>
                 <p className="text-[10.5px] text-[#6B7280]">
                   These settings will be used when publishing content across connected channels.
                 </p>
@@ -139,7 +139,7 @@ export function ChannelsStep({
             <div className="mb-2.5 flex items-start gap-2">
               <RefreshCw className="mt-px size-4 shrink-0 text-[#4F46E5]" />
               <div>
-                <b className="block text-[12px] font-bold text-[#111827]">Sync Preferences</b>
+                <b className="block text-[12px] font-semibold text-[#111827]">Sync Preferences</b>
                 <p className="text-[10.5px] text-[#6B7280]">
                   Control how often we sync data from your connected accounts.
                 </p>
@@ -177,7 +177,7 @@ export function ChannelsRail({ step }: { step: number }) {
           <span className="grid size-6 place-items-center rounded-md bg-[#EEF2FF]">
             <RefreshCw className="size-3.5 text-[#4F46E5]" />
           </span>
-          <b className="text-[13px] font-bold text-[#111827]">Your Progress</b>
+          <b className="text-[13px] font-semibold text-[#111827]">Your Progress</b>
         </div>
         <p className="text-[11px] text-[#6B7280]">{step} of 7 completed</p>
         <div className="mt-2 flex items-center gap-2">
@@ -194,7 +194,7 @@ export function ChannelsRail({ step }: { step: number }) {
             <Link2 className="size-7 text-[#4F46E5]" />
           </span>
         </div>
-        <b className="block text-center text-[15px] font-bold text-[#111827]">
+        <b className="block text-center text-[15px] font-semibold text-[#111827]">
           Integrations Bring Everything Together
         </b>
         <p className="mx-auto mb-4 mt-1 text-center text-[11.5px] leading-[17px] text-[#6B7280]">

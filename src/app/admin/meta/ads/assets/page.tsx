@@ -162,7 +162,7 @@ export default function AssetsPage() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <h3 className="truncate text-[12px] font-bold">{asset.name}</h3>
+                          <h3 className="truncate text-[12px] font-semibold">{asset.name}</h3>
                           <p className="truncate text-[10px] text-[#64748b]">{asset.handle}</p>
                         </div>
                         <ToneChip tone={STATUS_TONE[asset.status]}>{asset.status}</ToneChip>

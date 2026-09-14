@@ -176,7 +176,7 @@ export function SeoTechnicalPage() {
             {vitals.map((vital) => (
               <div key={vital.name} className="rounded-lg border border-[#E4EAF2] bg-[#FBFCFE] px-2.5 py-2">
                 <div className="flex items-center justify-between">
-                  <b className="text-[9.5px] font-bold text-[#172044]">{vital.name}</b>
+                  <b className="text-[9.5px] font-semibold text-[#172044]">{vital.name}</b>
                   <Pill tone={vital.status === "Good" ? "good" : "medium"}>{vital.status}</Pill>
                 </div>
                 <p className="truncate text-[8px] text-[#8A97AF]">{vital.label}</p>
@@ -227,7 +227,7 @@ export function SeoTechnicalPage() {
           }
         >
           <div className="px-3">
-            <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-bold text-[#71809D]", cols)}>
+            <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-semibold text-[#71809D]", cols)}>
               <span>Issue</span>
               <span>Category</span>
               <span>Severity</span>
@@ -264,7 +264,7 @@ export function SeoTechnicalPage() {
                   ) : (
                     <span
                       className={cn(
-                        "text-[9px] font-bold",
+                        "text-[9px] font-semibold",
                         row.trend < 0 ? "text-[#10B981]" : "text-[#EF4444]",
                       )}
                     >

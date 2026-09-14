@@ -7,9 +7,9 @@ import { SpellCheckedInput, SpellCheckedTextarea } from "@/components/ui/spellch
 export function StepTitle({ step, title, hint }: { step: string; title: string; hint?: string }) {
   return (
     <div className="mb-2.5 flex items-center gap-2">
-      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[#F0F4FF] text-[10px] font-bold text-[#1769DF]">{step}</span>
+      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[#F0F4FF] text-[10px] font-semibold text-[#1769DF]">{step}</span>
       <div className="min-w-0">
-        <h4 className="text-[13px] font-bold leading-4 text-[#172044]">{title}</h4>
+        <h4 className="text-[13px] font-semibold leading-4 text-[#172044]">{title}</h4>
         {hint && <p className="text-[11px] text-[#7A87A0]">{hint}</p>}
       </div>
     </div>
@@ -17,7 +17,7 @@ export function StepTitle({ step, title, hint }: { step: string; title: string; 
 }
 
 export function SectionLabel({ children }: { children: ReactNode }) {
-  return <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#7A87A0]">{children}</p>;
+  return <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#7A87A0]">{children}</p>;
 }
 
 export function SelectField({ label, value, options, placeholder, required, onChange }: { label: string; value?: string; options?: string[]; placeholder?: string; required?: boolean; onChange?: (v: string) => void }) {

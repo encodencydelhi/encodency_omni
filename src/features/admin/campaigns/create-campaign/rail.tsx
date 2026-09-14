@@ -37,7 +37,7 @@ export function CampaignRail({ draft, step }: { draft: CampaignDraft; step: numb
             <Lightbulb className="size-3.5 text-[#E0930B]" />
           </span>
           <div className="min-w-0 flex-1">
-            <b className="block text-[12px] font-bold text-[#111827]">
+            <b className="block text-[12px] font-semibold text-[#111827]">
               {step >= 6 ? "Quick Launch Tips" : "Quick Tips"}
             </b>
             <small className="block text-[9.5px] leading-[13px] text-[#8791A4]">{rail.tipsCaption}</small>
@@ -67,7 +67,7 @@ export function CampaignRail({ draft, step }: { draft: CampaignDraft; step: numb
             <CircleCheck className="size-3.5 text-[#E11D28]" />
           </span>
           <div className="min-w-0 flex-1">
-            <b className="block text-[12px] font-bold text-[#111827]">Readiness Checklist</b>
+            <b className="block text-[12px] font-semibold text-[#111827]">Readiness Checklist</b>
             {step === 4 && (
               <small className="block text-[9.5px] leading-[13px] text-[#8791A4]">
                 Complete all steps to launch your campaign.
@@ -88,7 +88,7 @@ export function CampaignRail({ draft, step }: { draft: CampaignDraft; step: numb
                 strokeDasharray={`${(done / total) * 100}, 100`}
               />
             </svg>
-            <span className="absolute inset-0 grid place-items-center text-[9px] font-bold text-[#27334E]">
+            <span className="absolute inset-0 grid place-items-center text-[9px] font-semibold text-[#27334E]">
               {done}/{total}
             </span>
           </span>
@@ -113,7 +113,7 @@ export function CampaignRail({ draft, step }: { draft: CampaignDraft; step: numb
             <BarChart3 className="size-3.5 text-[#1975E7]" />
           </span>
           <div>
-            <b className="block text-[12px] font-bold text-[#111827]">Performance Estimate</b>
+            <b className="block text-[12px] font-semibold text-[#111827]">Performance Estimate</b>
             <small className="block text-[9.5px] leading-[13px] text-[#8791A4]">
               {step <= 2
                 ? "Based on your current goals and budget."
@@ -171,7 +171,7 @@ function SummaryCard({ draft, step }: { draft: CampaignDraft; step: number }) {
   return (
     <RailCard>
       <div className="mb-2.5 flex items-center justify-between">
-        <b className="text-[13px] font-bold text-[#111827]">Campaign Summary</b>
+        <b className="text-[13px] font-semibold text-[#111827]">Campaign Summary</b>
         <button className="text-[10px] font-semibold text-[#1975E7]">Edit</button>
       </div>
       <div className="flex gap-2.5">
@@ -193,11 +193,11 @@ function SummaryCard({ draft, step }: { draft: CampaignDraft; step: number }) {
                 className="absolute left-1/2 top-[-1px] h-[14px] w-auto max-w-none -translate-x-1/2 object-contain"
               />
             </span>
-            <small className="text-[7px] font-bold text-[#27334E]">Moksha Sewa</small>
+            <small className="text-[7px] font-semibold text-[#27334E]">Moksha Sewa</small>
           </span>
         </span>
         <div className="min-w-0 flex-1">
-          <b className="block text-[13px] font-bold leading-4 text-[#111827]">{draft.name}</b>
+          <b className="block text-[13px] font-semibold leading-4 text-[#111827]">{draft.name}</b>
           <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-[#FFF0F1] px-1.5 py-0.5 text-[10px] font-semibold text-[#E11D28]">
             <Megaphone className="size-2.5" />
             {draft.objective}
@@ -222,7 +222,7 @@ function SummaryCard({ draft, step }: { draft: CampaignDraft; step: number }) {
               <Flag className="size-3 text-[#526385]" />
               <dt className="text-[#8791A4]">Priority</dt>
               <dd>
-                <i className="flex w-fit items-center gap-0.5 rounded bg-[#FFEAEC] px-1 py-0.5 text-[8.5px] font-bold not-italic text-[#E11D28]">
+                <i className="flex w-fit items-center gap-0.5 rounded bg-[#FFEAEC] px-1 py-0.5 text-[8.5px] font-semibold not-italic text-[#E11D28]">
                   <Flag className="size-2" />
                   {draft.priority}
                 </i>

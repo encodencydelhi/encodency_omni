@@ -39,7 +39,7 @@ export default function ContentStudioShell() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-[20px] font-bold tracking-tight text-[#111B43]">Content Studio</h1>
+          <h1 className="text-[20px] font-semibold tracking-tight text-[#111B43]">Content Studio</h1>
           <p className="mt-0.5 text-[11.5px] text-[#687797]">Create, customize and publish content across all your channels.</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">

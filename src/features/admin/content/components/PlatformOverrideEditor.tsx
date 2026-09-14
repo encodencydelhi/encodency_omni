@@ -69,7 +69,7 @@ export function PlatformOverrideEditor({
         className="flex w-full items-center justify-between gap-2 border-b border-[#EDF1F5] px-3 py-2.5 text-left transition hover:bg-slate-50"
       >
         <div className="min-w-0">
-          <h3 className="truncate text-[13.5px] font-bold text-[#172044]">Platform Overrides</h3>
+          <h3 className="truncate text-[13.5px] font-semibold text-[#172044]">Platform Overrides</h3>
           <p className="mt-0.5 text-[11.5px] text-[#7A87A0]">Customize content for each platform</p>
         </div>
         {sectionOpen ? <ChevronDown className="size-4 text-[#7A87A0]" /> : <ChevronRight className="size-4 text-[#7A87A0]" />}
@@ -98,14 +98,14 @@ export function PlatformOverrideEditor({
               >
                 {isExpanded ? <ChevronDown className="size-3.5 text-[#7A87A0]" /> : <ChevronRight className="size-3.5 text-[#7A87A0]" />}
                 <PlatformBadge platform={p} size="sm" />
-                <span className="flex-1 text-[11.5px] font-bold text-[#33445F]">{meta.label}</span>
+                <span className="flex-1 text-[11.5px] font-semibold text-[#33445F]">{meta.label}</span>
                 {currentCT && (
                   <span className="text-[10px] font-semibold text-[#7A87A0]">
                     {specs.find(s => s.id === currentCT)?.label}
                   </span>
                 )}
                 {override.enabled && (
-                  <span className="rounded bg-[color:var(--pc-bg)] px-1.5 py-0.5 text-[9px] font-bold" style={{ color: meta.color, backgroundColor: meta.bg }}>
+                  <span className="rounded bg-[color:var(--pc-bg)] px-1.5 py-0.5 text-[9px] font-semibold" style={{ color: meta.color, backgroundColor: meta.bg }}>
                     Customized
                   </span>
                 )}
@@ -154,7 +154,7 @@ export function PlatformOverrideEditor({
                   {/* Ratio */}
                   {ratios.length > 0 && (
                     <div>
-                      <span className="mb-1 block text-[10.5px] font-bold text-[#7A87A0]">Aspect Ratio</span>
+                      <span className="mb-1 block text-[10.5px] font-semibold text-[#7A87A0]">Aspect Ratio</span>
                       <div className="flex flex-wrap gap-1">
                         {ratios.map((r) => (
                           <button
@@ -168,9 +168,9 @@ export function PlatformOverrideEditor({
                             )}
                             style={{ "--pc": meta.color, "--pc-bg": meta.bg } as React.CSSProperties}
                           >
-                            <span className="text-[10px] font-bold text-[#33445F]">{r.ratio}</span>
+                            <span className="text-[10px] font-semibold text-[#33445F]">{r.ratio}</span>
                             <span className="text-[8px] text-[#7A87A0]">{r.label}</span>
-                            {r.recommended && <span className="text-[7px] font-bold text-emerald-600">Rec.</span>}
+                            {r.recommended && <span className="text-[7px] font-semibold text-emerald-600">Rec.</span>}
                           </button>
                         ))}
                       </div>

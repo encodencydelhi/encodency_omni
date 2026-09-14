@@ -497,7 +497,7 @@ export function PostDetailModal({
 
         {/* Reschedule Success Toast */}
         {rescheduleSuccess && (
-          <div className="absolute left-1/2 top-[12px] z-[58] -translate-x-1/2 animate-in fade-in zoom-in-95 duration-200 flex items-center gap-2 rounded-full border border-[#86efac] bg-[#f0fdf4] px-4 py-2 text-[11px] font-bold text-[#15803d] shadow-lg">
+          <div className="absolute left-1/2 top-[12px] z-[58] -translate-x-1/2 animate-in fade-in zoom-in-95 duration-200 flex items-center gap-2 rounded-full border border-[#86efac] bg-[#f0fdf4] px-4 py-2 text-[11px] font-semibold text-[#15803d] shadow-lg">
             <CheckCircle size={16} className="text-[#16a34a]" />
             <span>{rescheduleSuccess}</span>
           </div>
@@ -726,7 +726,7 @@ export function PostDetailModal({
                               setRescheduleSuccess(`Rescheduled to ${formData.scheduledDate} at ${formData.time}!`);
                               setTimeout(() => setRescheduleSuccess(null), 3500);
                             }}
-                            className="flex items-center gap-1 rounded-[5px] bg-[#2563eb] px-2.5 py-1 text-[10px] font-bold text-white shadow-sm hover:bg-[#1d4ed8] active:scale-95"
+                            className="flex items-center gap-1 rounded-[5px] bg-[#2563eb] px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-[#1d4ed8] active:scale-95"
                           >
                             <CheckCircle size={11} />
                             Save
@@ -745,7 +745,7 @@ export function PostDetailModal({
                     {/* Quick presets */}
                     {isRescheduling && (
                       <div className="flex flex-wrap items-center gap-1 pt-1 border-t border-[#dbeafe]">
-                        <span className="text-[8.5px] font-bold text-[#64748b]">Quick Dates:</span>
+                        <span className="text-[8.5px] font-semibold text-[#64748b]">Quick Dates:</span>
                         {[
                           { label: "Today", days: 0 },
                           { label: "Tomorrow", days: 1 },

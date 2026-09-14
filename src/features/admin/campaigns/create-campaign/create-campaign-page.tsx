@@ -79,7 +79,7 @@ function Header() {
         <ChevronRight className="size-2.5" />
         <strong className="font-semibold text-[#27334E]">Create Campaign</strong>
       </div>
-      <h1 className="mt-1 text-[24px] font-bold leading-7 tracking-[-0.02em] text-[#111827]">
+      <h1 className="mt-1 text-[24px] font-semibold leading-7 tracking-[-0.02em] text-[#111827]">
         Create New Campaign
       </h1>
       <p className="text-[11.5px] text-[#8791A4]">
@@ -105,7 +105,7 @@ function Stepper({ current, onSelect }: { current: number; onSelect: (next: numb
               >
                 <span
                   className={cn(
-                    "grid size-[26px] shrink-0 place-items-center rounded-full text-[10.5px] font-bold transition-all",
+                    "grid size-[26px] shrink-0 place-items-center rounded-full text-[10.5px] font-semibold transition-all",
                     done && "bg-[#E11D28] text-white",
                     active && "bg-[#E11D28] text-white ring-4 ring-[#E11D28]/15",
                     !done && !active && "border border-[#DFE4EB] bg-white text-[#6B7280]",

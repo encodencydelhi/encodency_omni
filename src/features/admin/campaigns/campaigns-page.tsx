@@ -99,7 +99,7 @@ function SectionHeader({ title, action = "View all" }: { title: string; action?:
   return (
     <div className="flex h-10 items-start justify-between px-3 pt-2.5">
       <h2 className="m-0 text-[11px] font-[750] leading-[1.2] text-[#17223d]">{title}</h2>
-      <button className="flex items-center gap-[3px] border-0 bg-transparent p-0 text-[9px] font-bold text-[#df2832]">
+      <button className="flex items-center gap-[3px] border-0 bg-transparent p-0 text-[9px] font-semibold text-[#df2832]">
         {action}<ArrowUpRight size={11} />
       </button>
     </div>
@@ -125,7 +125,7 @@ function StatCard({ item }: { item: { icon: React.ComponentType<{ size?: number 
         <span className="text-[9px] font-semibold text-[#536078]">{item.title}</span>
         <div className="mt-0.5 flex items-baseline gap-[5px]">
           <strong className="text-[20px] leading-none tracking-[-.4px] text-[#13203e]">{item.value}</strong>
-          <em className={`text-[9px] font-bold not-italic ${item.down ? "text-[#df3440]" : "text-[#13a16b]"}`}>
+          <em className={`text-[9px] font-semibold not-italic ${item.down ? "text-[#df3440]" : "text-[#13a16b]"}`}>
             {item.down ? "↓" : "↑"} {item.trend}
           </em>
         </div>
@@ -136,19 +136,19 @@ function StatCard({ item }: { item: { icon: React.ComponentType<{ size?: number 
 }
 
 function PerformanceChart() {
-  const redPoints = [[0,92],[36,68],[72,80],[108,49],[144,59],[180,43],[216,52],[252,46],[288,27],[324,33],[360,36],[396,23],[432,15],[468,19],[504,8],[540,14],[578,5],[620,1]];
+  const redPoints = [[0, 92], [36, 68], [72, 80], [108, 49], [144, 59], [180, 43], [216, 52], [252, 46], [288, 27], [324, 33], [360, 36], [396, 23], [432, 15], [468, 19], [504, 8], [540, 14], [578, 5], [620, 1]];
   return (
     <div className="relative h-[136px] px-3 pb-0 pl-[34px]">
       <div className="absolute left-[11px] top-0.5 flex h-[105px] flex-col justify-between text-[9px] text-[#8a94a5]">
         <span>400</span><span>300</span><span>200</span><span>100</span><span>0</span>
       </div>
       <svg viewBox="0 0 620 155" preserveAspectRatio="none" className="block h-[111px] w-full">
-        {[14,49,84,119,154].map(y => <line key={y} x1="0" y1={y} x2="620" y2={y} stroke="#eef1f5" strokeWidth="1" />)}
-        {[0,104,208,312,416,520,620].map(x => <line key={x} x1={x} y1="0" x2={x} y2="154" stroke="#f3f5f8" strokeWidth="1" />)}
-        <polyline fill="none" stroke="#e4252e" strokeWidth="2.1" points="0,92 36,68 72,80 108,49 144,59 180,43 216,52 252,46 288,27 324,33 360,36 396,23 432,15 468,19 504,8 540,14 578,5 620,1"/>
-        <polyline fill="none" stroke="#3389e7" strokeWidth="2" points="0,118 36,108 72,111 108,103 144,108 180,96 216,99 252,94 288,87 324,79 360,91 396,82 432,76 468,83 504,71 540,66 578,58 620,51"/>
-        <polyline fill="none" stroke="#e887ae" strokeWidth="2" points="0,105 36,96 72,100 108,89 144,94 180,82 216,86 252,77 288,68 324,71 360,67 396,62 432,55 468,59 504,47 540,45 578,35 620,28"/>
-        {redPoints.map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.5" fill="#e4252e"/>)}
+        {[14, 49, 84, 119, 154].map(y => <line key={y} x1="0" y1={y} x2="620" y2={y} stroke="#eef1f5" strokeWidth="1" />)}
+        {[0, 104, 208, 312, 416, 520, 620].map(x => <line key={x} x1={x} y1="0" x2={x} y2="154" stroke="#f3f5f8" strokeWidth="1" />)}
+        <polyline fill="none" stroke="#e4252e" strokeWidth="2.1" points="0,92 36,68 72,80 108,49 144,59 180,43 216,52 252,46 288,27 324,33 360,36 396,23 432,15 468,19 504,8 540,14 578,5 620,1" />
+        <polyline fill="none" stroke="#3389e7" strokeWidth="2" points="0,118 36,108 72,111 108,103 144,108 180,96 216,99 252,94 288,87 324,79 360,91 396,82 432,76 468,83 504,71 540,66 578,58 620,51" />
+        <polyline fill="none" stroke="#e887ae" strokeWidth="2" points="0,105 36,96 72,100 108,89 144,94 180,82 216,86 252,77 288,68 324,71 360,67 396,62 432,55 468,59 504,47 540,45 578,35 620,28" />
+        {redPoints.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.5" fill="#e4252e" />)}
       </svg>
       <div className="flex justify-between px-0.5 text-[9px] text-[#8a94a5]">
         <span>Mar 15</span><span>Mar 22</span><span>Mar 29</span><span>Apr 5</span><span>Apr 12</span><span>Apr 19</span>
@@ -167,7 +167,7 @@ function CampaignThumb({ image, title }: { image?: string; title: string }) {
   }
   return (
     <div className="grid h-9 w-[45px] shrink-0 place-items-center overflow-hidden rounded-[5px] bg-gradient-to-br from-[#1a6da0] to-[#5ab3d9] text-white">
-      <span className="text-[9px] font-extrabold leading-[1.05]">CLEAN<br/>GANGA</span>
+      <span className="text-[9px] font-semibold leading-[1.05]">CLEAN<br />GANGA</span>
     </div>
   );
 }
@@ -212,7 +212,7 @@ export function CampaignsPage() {
         <header className="mb-2.5 grid grid-cols-1 items-center gap-3 lg:h-16 lg:grid-cols-[minmax(0,1fr)_580px]">
           <div>
             <div className="mb-0.5 flex items-center gap-2 text-[10px] text-[#758198]">
-              <span>Dashboard</span><ChevronRight size={10}/><b className="text-[#26314a]">Campaigns</b>
+              <span>Dashboard</span><ChevronRight size={10} /><b className="text-[#26314a]">Campaigns</b>
             </div>
             <h1 className="m-0 text-[24px] font-[780] leading-[1.05] tracking-[-.7px]">Campaigns</h1>
             <p className="mt-[5px] text-[11px] text-[#718097]">Plan, manage and track multi-channel marketing campaigns.</p>
@@ -222,16 +222,16 @@ export function CampaignsPage() {
             <div className="relative z-10 flex h-full flex-col justify-center">
               <b className="block text-[11px]">Turn Campaign Ideas Into Impact</b>
               <span className="text-[9px] text-[#7b8598]">Reach more people. Drive action. Create a cleaner, greener tomorrow.</span>
-              <div className="mt-[7px] h-[3px] w-12 rounded bg-[#df2029]"/>
+              <div className="mt-[7px] h-[3px] w-12 rounded bg-[#df2029]" />
             </div>
-            <Target className="relative z-10 text-[#e42b34]" size={62} strokeWidth={1.3}/>
-            <div className="absolute inset-y-0 right-0 w-[55%] bg-[radial-gradient(circle_at_78%_38%,rgba(227,30,39,.13)_0_17px,transparent_18px),radial-gradient(circle_at_89%_58%,rgba(227,30,39,.08)_0_28px,transparent_29px)]"/>
+            <Target className="relative z-10 text-[#e42b34]" size={62} strokeWidth={1.3} />
+            <div className="absolute inset-y-0 right-0 w-[55%] bg-[radial-gradient(circle_at_78%_38%,rgba(227,30,39,.13)_0_17px,transparent_18px),radial-gradient(circle_at_89%_58%,rgba(227,30,39,.08)_0_28px,transparent_29px)]" />
           </div>
         </header>
 
         {/* Stats */}
         <section className="mb-2.5 grid grid-cols-2 gap-[9px] lg:grid-cols-6">
-          {stats.map(item => <StatCard key={item.title} item={item}/>)}
+          {stats.map(item => <StatCard key={item.title} item={item} />)}
         </section>
 
         {/* Tabs / toolbar */}
@@ -240,18 +240,17 @@ export function CampaignsPage() {
             <button
               key={tab.filter}
               onClick={() => setActiveTab(tab.filter)}
-              className={`relative h-[42px] shrink-0 border-0 bg-transparent px-0 text-[10px] transition-colors ${
-                activeTab === tab.filter
+              className={`relative h-[42px] shrink-0 border-0 bg-transparent px-0 text-[10px] transition-colors ${activeTab === tab.filter
                   ? "font-[750] text-[#19233e] after:absolute after:bottom-0 after:left-[-6px] after:right-[-6px] after:h-0.5 after:bg-[#e62c36]"
                   : "text-[#5f6c83] hover:text-[#29354e]"
-              }`}
+                }`}
             >
               {tab.label} ({tab.count})
             </button>
           ))}
           <div className="ml-auto hidden shrink-0 items-center gap-2 lg:flex">
             <label className="flex h-[29px] w-[198px] items-center gap-1.5 rounded-[6px] border border-[#e0e5ec] bg-[#fbfcfe] px-2.5 text-[#8791a4]">
-              <Search size={13}/>
+              <Search size={13} />
               <input
                 className="w-full border-0 bg-transparent text-[9px] text-[#27334e] outline-none"
                 placeholder="Search campaigns..."
@@ -259,9 +258,9 @@ export function CampaignsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </label>
-            <button className="flex h-[29px] items-center gap-1.5 rounded-[6px] border border-[#dfe4eb] bg-white px-2.5 text-[9px] font-semibold text-[#29354e]"><SlidersHorizontal size={12}/>Filter</button>
-            <button className="flex h-[29px] items-center gap-1.5 rounded-[6px] border border-[#dfe4eb] bg-white px-2.5 text-[9px] font-semibold text-[#29354e]"><ArrowDownUp size={12}/>Sort<ChevronDown size={10}/></button>
-            <button onClick={() => router.push("/admin/campaigns/new")} className="flex h-[29px] items-center gap-1.5 rounded-[6px] border border-[#e51e28] bg-[#e51e28] px-3.5 text-[9px] font-semibold text-white"><Plus size={13}/>Create Campaign</button>
+            <button className="flex h-[29px] items-center gap-1.5 rounded-[6px] border border-[#dfe4eb] bg-white px-2.5 text-[9px] font-semibold text-[#29354e]"><SlidersHorizontal size={12} />Filter</button>
+            <button className="flex h-[29px] items-center gap-1.5 rounded-[6px] border border-[#dfe4eb] bg-white px-2.5 text-[9px] font-semibold text-[#29354e]"><ArrowDownUp size={12} />Sort<ChevronDown size={10} /></button>
+            <button onClick={() => router.push("/admin/campaigns/new")} className="flex h-[29px] items-center gap-1.5 rounded-[6px] border border-[#e51e28] bg-[#e51e28] px-3.5 text-[9px] font-semibold text-white"><Plus size={13} />Create Campaign</button>
           </div>
         </section>
 
@@ -270,14 +269,14 @@ export function CampaignsPage() {
           <div>
             <table className="w-full table-fixed border-collapse">
               <colgroup>
-                <col className="w-8"/><col className="w-[235px]"/><col className="w-[105px]"/><col className="w-[135px]"/>
-                <col className="w-[90px]"/><col className="w-[110px]"/><col className="w-[70px]"/><col className="w-[82px]"/>
-                <col className="w-[95px]"/><col className="w-[78px]"/><col className="w-[125px]"/><col className="w-[85px]"/>
+                <col className="w-8" /><col className="w-[235px]" /><col className="w-[105px]" /><col className="w-[135px]" />
+                <col className="w-[90px]" /><col className="w-[110px]" /><col className="w-[70px]" /><col className="w-[82px]" />
+                <col className="w-[95px]" /><col className="w-[78px]" /><col className="w-[125px]" /><col className="w-[85px]" />
               </colgroup>
               <thead>
                 <tr className="h-[31px] bg-[#f7f9fc] text-left text-[9px] font-semibold text-[#637088]">
-                  {["","Campaign","Project","Channels","Status","Date Range","Leads","Spend","Conversions","Performance","Last Updated","Actions"].map((h,i)=>
-                    <th key={i} className="border-y border-[#e8ecf2] px-2.5 font-semibold">{i===0?<input className="h-[13px] w-[13px] accent-[#e5222b]" type="checkbox"/>:h}</th>
+                  {["", "Campaign", "Project", "Channels", "Status", "Date Range", "Leads", "Spend", "Conversions", "Performance", "Last Updated", "Actions"].map((h, i) =>
+                    <th key={i} className="border-y border-[#e8ecf2] px-2.5 font-semibold">{i === 0 ? <input className="h-[13px] w-[13px] accent-[#e5222b]" type="checkbox" /> : h}</th>
                   )}
                 </tr>
               </thead>
@@ -289,69 +288,68 @@ export function CampaignsPage() {
                     </td>
                   </tr>
                 ) : (
-                filteredCampaigns.map((c)=>(
-                  <tr
-                    key={c.id}
-                    className="h-[49px] cursor-pointer border-b border-[#edf0f4] text-[9px] text-[#44516a] transition-colors hover:bg-[#f9fafc]"
-                    onClick={() => router.push(`/admin/campaigns/${c.id}`)}
-                  >
-                    <td className="px-2.5" onClick={(event) => event.stopPropagation()}><input className="h-[13px] w-[13px] accent-[#e5222b]" type="checkbox"/></td>
-                    <td className="px-2.5" onClick={(event) => event.stopPropagation()}>
-                      <div className="flex min-w-0 items-center gap-[9px]">
-                        <CampaignThumb image={c.image} title={c.title}/>
-                        <div className="min-w-0">
-                          <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#26334d] hover:text-[#e62c36]">{c.title}</b>
-                          <small className="mt-0.5 block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#8a94a6]">{c.desc}</small>
+                  filteredCampaigns.map((c) => (
+                    <tr
+                      key={c.id}
+                      className="h-[49px] cursor-pointer border-b border-[#edf0f4] text-[9px] text-[#44516a] transition-colors hover:bg-[#f9fafc]"
+                      onClick={() => router.push(`/admin/campaigns/${c.id}`)}
+                    >
+                      <td className="px-2.5" onClick={(event) => event.stopPropagation()}><input className="h-[13px] w-[13px] accent-[#e5222b]" type="checkbox" /></td>
+                      <td className="px-2.5" onClick={(event) => event.stopPropagation()}>
+                        <div className="flex min-w-0 items-center gap-[9px]">
+                          <CampaignThumb image={c.image} title={c.title} />
+                          <div className="min-w-0">
+                            <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#26334d] hover:text-[#e62c36]">{c.title}</b>
+                            <small className="mt-0.5 block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#8a94a6]">{c.desc}</small>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-2.5 font-semibold text-[#556178]">{c.project}</td>
-                    <td className="px-2.5">
-                      <div className="flex items-center gap-[5px]">
-                        {c.channels.map((ch,j)=><ChannelIcon key={j} channel={ch}/>)}
-                        {c.extra&&<span className="text-[9px] font-semibold text-[#647088]">{c.extra}</span>}
-                      </div>
-                    </td>
-                    <td className="px-2.5">
-                      <span className={`inline-flex items-center gap-1 rounded-lg px-[7px] py-1 text-[9px] font-bold ${
-                        c.statusTone==="active" ? "bg-[#e4f8ee] text-[#16a16d]" :
-                        c.statusTone==="scheduled" ? "bg-[#e8f2ff] text-[#397fd4]" :
-                        c.statusTone==="completed" ? "bg-[#e6f8ee] text-[#16a16d]" : "bg-[#eef2f6] text-[#66748a]"
-                      }`}><i className="h-[5px] w-[5px] rounded-full bg-current"/>{c.status}</span>
-                    </td>
-                    <td className="px-2.5 leading-[1.3]"><span className="block">{c.dates[0]}</span><span className="block text-[#5c687d]">- {c.dates[1]}</span></td>
-                    <td className="px-2.5"><strong className="block text-[9px] text-[#26334d]">{c.leads}</strong>{c.leadGrowth&&<em className="text-[9px] font-bold not-italic text-[#13a16b]">↑ {c.leadGrowth}</em>}</td>
-                    <td className="px-2.5"><strong className="text-[9px] text-[#26334d]">{c.spend}</strong></td>
-                    <td className="px-2.5"><strong className="block text-[9px] text-[#26334d]">{c.conversions}</strong>{c.conversionGrowth&&<em className="text-[9px] font-bold not-italic text-[#13a16b]">↑ {c.conversionGrowth}</em>}</td>
-                    <td className="px-2.5">
-                      <div className="relative grid h-9 w-9 place-items-center text-[9px] font-[750] text-[#27354d]">
-                        <svg className="h-9 w-9 -rotate-90" viewBox="0 0 36 36">
-                          <circle cx="18" cy="18" r="14" fill="none" stroke="#edf1f5" strokeWidth="3.5" />
-                          {c.score !== "—" && <circle cx="18" cy="18" r="14" fill="none"
-                            stroke={c.scoreTone==="yellow"?"#efbd25":c.scoreTone==="red"?"#ed3742":"#21b47b"}
-                            strokeWidth="3.5"
-                            strokeLinecap="round"
-                            strokeDasharray={`${(Number(c.score)/100)*87.96} 87.96`}
-                          />}
-                        </svg>
-                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-[750]">{c.score}</span>
-                      </div>
-                    </td>
-                    <td className="px-2.5 leading-[1.35]"><b className="block text-[9px] font-medium">{c.updated[0]}</b><small className="text-[9px] text-[#8b95a6]">{c.updated[1]}</small></td>
-                    <td className="px-2.5" onClick={(event) => event.stopPropagation()}>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          className="h-[29px] rounded-[6px] border border-[#e1e6ed] bg-white px-[13px] text-[9px] font-semibold text-[#35415a] hover:bg-[#f7f9fc]"
-                          onClick={() => router.push(`/admin/campaigns/${c.id}`)}
-                        >
-                          Open
-                        </button>
-                        <button type="button" className="grid h-[29px] w-[29px] place-items-center rounded-[6px] border border-[#e1e6ed] bg-white text-[#6d7890]"><MoreVertical size={13}/></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-2.5 font-semibold text-[#556178]">{c.project}</td>
+                      <td className="px-2.5">
+                        <div className="flex items-center gap-[5px]">
+                          {c.channels.map((ch, j) => <ChannelIcon key={j} channel={ch} />)}
+                          {c.extra && <span className="text-[9px] font-semibold text-[#647088]">{c.extra}</span>}
+                        </div>
+                      </td>
+                      <td className="px-2.5">
+                        <span className={`inline-flex items-center gap-1 rounded-lg px-[7px] py-1 text-[9px] font-semibold ${c.statusTone === "active" ? "bg-[#e4f8ee] text-[#16a16d]" :
+                            c.statusTone === "scheduled" ? "bg-[#e8f2ff] text-[#397fd4]" :
+                              c.statusTone === "completed" ? "bg-[#e6f8ee] text-[#16a16d]" : "bg-[#eef2f6] text-[#66748a]"
+                          }`}><i className="h-[5px] w-[5px] rounded-full bg-current" />{c.status}</span>
+                      </td>
+                      <td className="px-2.5 leading-[1.3]"><span className="block">{c.dates[0]}</span><span className="block text-[#5c687d]">- {c.dates[1]}</span></td>
+                      <td className="px-2.5"><strong className="block text-[9px] text-[#26334d]">{c.leads}</strong>{c.leadGrowth && <em className="text-[9px] font-semibold not-italic text-[#13a16b]">↑ {c.leadGrowth}</em>}</td>
+                      <td className="px-2.5"><strong className="text-[9px] text-[#26334d]">{c.spend}</strong></td>
+                      <td className="px-2.5"><strong className="block text-[9px] text-[#26334d]">{c.conversions}</strong>{c.conversionGrowth && <em className="text-[9px] font-semibold not-italic text-[#13a16b]">↑ {c.conversionGrowth}</em>}</td>
+                      <td className="px-2.5">
+                        <div className="relative grid h-9 w-9 place-items-center text-[9px] font-[750] text-[#27354d]">
+                          <svg className="h-9 w-9 -rotate-90" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="14" fill="none" stroke="#edf1f5" strokeWidth="3.5" />
+                            {c.score !== "—" && <circle cx="18" cy="18" r="14" fill="none"
+                              stroke={c.scoreTone === "yellow" ? "#efbd25" : c.scoreTone === "red" ? "#ed3742" : "#21b47b"}
+                              strokeWidth="3.5"
+                              strokeLinecap="round"
+                              strokeDasharray={`${(Number(c.score) / 100) * 87.96} 87.96`}
+                            />}
+                          </svg>
+                          <span className="absolute inset-0 flex items-center justify-center text-[9px] font-[750]">{c.score}</span>
+                        </div>
+                      </td>
+                      <td className="px-2.5 leading-[1.35]"><b className="block text-[9px] font-medium">{c.updated[0]}</b><small className="text-[9px] text-[#8b95a6]">{c.updated[1]}</small></td>
+                      <td className="px-2.5" onClick={(event) => event.stopPropagation()}>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            className="h-[29px] rounded-[6px] border border-[#e1e6ed] bg-white px-[13px] text-[9px] font-semibold text-[#35415a] hover:bg-[#f7f9fc]"
+                            onClick={() => router.push(`/admin/campaigns/${c.id}`)}
+                          >
+                            Open
+                          </button>
+                          <button type="button" className="grid h-[29px] w-[29px] place-items-center rounded-[6px] border border-[#e1e6ed] bg-white text-[#6d7890]"><MoreVertical size={13} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
@@ -359,11 +357,11 @@ export function CampaignsPage() {
           <div className="flex h-8 items-center justify-between px-3.5 text-[9px] text-[#69758b]">
             <span>Showing {filteredCampaigns.length} of {filteredCampaigns.length} campaigns</span>
             <div className="hidden items-center gap-1 sm:flex">
-              <button className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e1e6ed] bg-white"><ChevronLeft size={11}/></button>
-              {[2,3,4].map(n=><button key={n} className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e1e6ed] bg-white text-[9px]">{n}</button>)}
+              <button className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e1e6ed] bg-white"><ChevronLeft size={11} /></button>
+              {[2, 3, 4].map(n => <button key={n} className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e1e6ed] bg-white text-[9px]">{n}</button>)}
               <button className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e5252e] bg-[#e5252e] text-[9px] text-white">5</button>
-              <button className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e1e6ed] bg-white"><ChevronRight size={11}/></button>
-              <button className="flex h-[25px] w-[78px] items-center justify-center gap-1 rounded-[5px] border border-[#e1e6ed] bg-white text-[9px]">10 per page<ChevronDown size={10}/></button>
+              <button className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e1e6ed] bg-white"><ChevronRight size={11} /></button>
+              <button className="flex h-[25px] w-[78px] items-center justify-center gap-1 rounded-[5px] border border-[#e1e6ed] bg-white text-[9px]">10 per page<ChevronDown size={10} /></button>
             </div>
           </div>
         </section>
@@ -371,34 +369,34 @@ export function CampaignsPage() {
         {/* Bottom panels */}
         <section className="mt-2.5 grid grid-cols-1 gap-[9px] md:grid-cols-2 xl:grid-cols-[1.1fr_1.25fr_.92fr_1fr]">
           <article className="h-[200px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
-            <SectionHeader title="Campaign Performance Overview"/>
+            <SectionHeader title="Campaign Performance Overview" />
             <div className="flex justify-end gap-3.5 px-3 pb-0.5 text-[9px] text-[#657189]">
-              <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-full bg-[#e4252e]"/>Leads</span>
-              <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-full bg-[#3389e7]"/>Conversions</span>
-              <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-full bg-[#e887ae]"/>Spend</span>
-              <button className="flex h-6 items-center gap-1 rounded border border-[#dfe4eb] bg-white px-[7px] text-[9px]">Last 30 days<ChevronDown size={9}/></button>
+              <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-full bg-[#e4252e]" />Leads</span>
+              <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-full bg-[#3389e7]" />Conversions</span>
+              <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-full bg-[#e887ae]" />Spend</span>
+              <button className="flex h-6 items-center gap-1 rounded border border-[#dfe4eb] bg-white px-[7px] text-[9px]">Last 30 days<ChevronDown size={9} /></button>
             </div>
-            <PerformanceChart/>
+            <PerformanceChart />
           </article>
 
           <article className="h-[200px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
-            <SectionHeader title="Top Performing Campaigns"/>
+            <SectionHeader title="Top Performing Campaigns" />
             <div className="px-3 pt-1">
-              {topCampaigns.map(([name,meta,score,tone],i)=>(
+              {topCampaigns.map(([name, meta, score, tone], i) => (
                 <div className="grid min-h-8 grid-cols-[22px_1fr_32px] items-center gap-2 border-b border-[#f0f2f5] py-1.5 last:border-0" key={name}>
-                  <span className="grid h-[21px] w-[21px] place-items-center rounded-full bg-[#f0f3f7] text-[9px] font-[750] text-[#5d6a80]">{i+1}</span>
+                  <span className="grid h-[21px] w-[21px] place-items-center rounded-full bg-[#f0f3f7] text-[9px] font-[750] text-[#5d6a80]">{i + 1}</span>
                   <div className="min-w-0"><b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] text-[#35415a]">{name}</b><small className="text-[9px] text-[#8993a5]">{meta}</small></div>
-                  <div className="relative grid h-[30px] w-[30px] place-items-center text-[9px] font-bold">
+                  <div className="relative grid h-[30px] w-[30px] place-items-center text-[9px] font-semibold">
                     <svg className="h-[30px] w-[30px] -rotate-90" viewBox="0 0 30 30">
                       <circle cx="15" cy="15" r="12" fill="none" stroke="#edf1f5" strokeWidth="3" />
                       <circle cx="15" cy="15" r="12" fill="none"
-                        stroke={tone==="yellow"?"#efbd25":tone==="red"?"#ed3742":"#21b47b"}
+                        stroke={tone === "yellow" ? "#efbd25" : tone === "red" ? "#ed3742" : "#21b47b"}
                         strokeWidth="3"
                         strokeLinecap="round"
-                        strokeDasharray={`${(Number(score)/100)*75.4} 75.4`}
+                        strokeDasharray={`${(Number(score) / 100) * 75.4} 75.4`}
                       />
                     </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-[#27354d]">{score}</span>
+                    <span className="absolute inset-0 flex items-center justify-center text-[9px] font-semibold text-[#27354d]">{score}</span>
                   </div>
                 </div>
               ))}
@@ -406,7 +404,7 @@ export function CampaignsPage() {
           </article>
 
           <article className="h-[200px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
-            <SectionHeader title="Channel Contribution"/>
+            <SectionHeader title="Channel Contribution" />
             <div className="flex h-[142px] items-center justify-center gap-[15px]">
               <div className="relative h-[118px] w-[118px] shrink-0">
                 <svg
@@ -487,11 +485,11 @@ export function CampaignsPage() {
           </article>
 
           <article className="h-[200px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
-            <SectionHeader title="Upcoming Campaign Milestones"/>
+            <SectionHeader title="Upcoming Campaign Milestones" />
             <div className="px-3">
-              {milestones.map(([title,meta,tone])=>(
+              {milestones.map(([title, meta, tone]) => (
                 <div key={title} className="grid min-h-[34px] grid-cols-[23px_1fr] items-center gap-[7px] border-b border-[#f0f2f5] last:border-0">
-                  <span className={`grid h-[21px] w-[21px] place-items-center rounded-full border-2 ${tone==="green"?"border-[#18a773] text-[#18a773]":"border-[#e6303a] text-[#e6303a]"}`}><CalendarDays size={11}/></span>
+                  <span className={`grid h-[21px] w-[21px] place-items-center rounded-full border-2 ${tone === "green" ? "border-[#18a773] text-[#18a773]" : "border-[#e6303a] text-[#e6303a]"}`}><CalendarDays size={11} /></span>
                   <div><b className="block text-[9px]">{title}</b><small className="mt-0.5 block text-[9px] text-[#8b95a6]">{meta}</small></div>
                 </div>
               ))}
@@ -502,13 +500,13 @@ export function CampaignsPage() {
         {/* Quick actions */}
         <section className="mt-[9px] grid grid-cols-1 gap-[9px] sm:grid-cols-2 xl:grid-cols-4">
           {([
-            [Plus,"Create Campaign","Plan and launch a new marketing","campaign across multiple channels.","Create Campaign","red"],
-            [Copy,"Duplicate Campaign","Save time by duplicating an existing","campaign.","Duplicate Campaign","blue"],
-            [Link2,"Connect Channels","Connect your social media, website","and other channels.","Manage Integrations","blue"],
-            [BarChart3,"View Reports","See detailed analytics and performance","reports for your campaigns.","View Reports","purple"]
-          ] as [React.ComponentType<{size?:number}>, string, string, string, string, string][]).map(([Icon,title,p1,p2,button,tone])=>(
+            [Plus, "Create Campaign", "Plan and launch a new marketing", "campaign across multiple channels.", "Create Campaign", "red"],
+            [Copy, "Duplicate Campaign", "Save time by duplicating an existing", "campaign.", "Duplicate Campaign", "blue"],
+            [Link2, "Connect Channels", "Connect your social media, website", "and other channels.", "Manage Integrations", "blue"],
+            [BarChart3, "View Reports", "See detailed analytics and performance", "reports for your campaigns.", "View Reports", "purple"]
+          ] as [React.ComponentType<{ size?: number }>, string, string, string, string, string][]).map(([Icon, title, p1, p2, button, tone]) => (
             <div key={title} className="flex h-[63px] items-center gap-2.5 rounded-[7px] border border-[#e5e9ef] bg-white px-3">
-              <span className={`grid h-[31px] w-[31px] shrink-0 place-items-center rounded-full ${tone==="red"?"bg-[#fff0f1] text-[#e42a35]":tone==="purple"?"bg-[#f0eaff] text-[#8156d7]":"bg-[#e8f2ff] text-[#3582da]"}`}><Icon size={17}/></span>
+              <span className={`grid h-[31px] w-[31px] shrink-0 place-items-center rounded-full ${tone === "red" ? "bg-[#fff0f1] text-[#e42a35]" : tone === "purple" ? "bg-[#f0eaff] text-[#8156d7]" : "bg-[#e8f2ff] text-[#3582da]"}`}><Icon size={17} /></span>
               <div className="min-w-0"><b className="block text-[9px]">{title}</b><p className="mt-0.5 text-[9px] leading-[1.2] text-[#8b95a6]">{p1} {p2}</p></div>
               <button className="ml-auto shrink-0 whitespace-nowrap rounded-[5px] border border-[#dfe4eb] bg-white px-2 py-1.5 text-[9px] font-semibold text-[#35415a]">{button}</button>
             </div>

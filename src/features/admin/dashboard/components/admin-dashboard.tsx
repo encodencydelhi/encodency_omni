@@ -248,7 +248,7 @@ function Header() {
   return (
     <div className="grid min-h-[52px] grid-cols-[1fr_auto] items-center gap-4 lg:grid-cols-[minmax(0,1fr)_210px_185px]">
       <div className="self-center">
-        <h1 className="flex items-center gap-1.5 text-[20px] font-bold leading-6 tracking-[-0.025em] text-[#111B43]">
+        <h1 className="flex items-center gap-1.5 text-[20px] font-semibold leading-6 tracking-[-0.025em] text-[#111B43]">
           Good Morning, Manish <span aria-hidden>👋</span>
         </h1>
         <p className="mt-0.5 text-[10px] leading-4 text-[#687797]">
@@ -316,7 +316,7 @@ function Stat({
           <div className="flex items-baseline gap-1">
             <b className="text-[19px] leading-[22px] tracking-[-0.02em] text-[#142044]">{value}</b>
             {trend && (
-              <span className="whitespace-nowrap text-[8px] font-bold text-[#05A36D]">
+              <span className="whitespace-nowrap text-[8px] font-semibold text-[#05A36D]">
                 ↑ {trend}
               </span>
             )}
@@ -339,7 +339,7 @@ function Box({
   return (
     <section className="overflow-hidden rounded-md border border-[#DDE4ED] bg-white shadow-sm">
       <header className="flex h-8 items-center justify-between border-b border-[#E8EDF3] px-2.5">
-        <h2 className="text-[12px] font-bold text-[#172044]">{title}</h2>
+        <h2 className="text-[12px] font-semibold text-[#172044]">{title}</h2>
         {action && (
           <button className="text-[9px] font-semibold text-[#EB0711]">
             {action} →
@@ -661,7 +661,7 @@ function RecentLeads({
             className="grid grid-cols-[1.2fr_.58fr_.76fr_.62fr_.76fr_.66fr] items-center gap-1 border-t border-[#EDF1F5] py-1 text-[8px]"
           >
             <span className="flex min-w-0 items-center gap-1.5">
-              <i className={cn("grid size-4 shrink-0 place-items-center rounded-full font-bold not-italic", ["bg-[#DDF8E9] text-[#16A16C]", "bg-[#E5F7EF] text-[#11A578]", "bg-[#FFF0DC] text-[#F28C28]", "bg-[#E7F0FF] text-[#3478DB]", "bg-[#EEE7FF] text-[#8357DC]"][i])}>{l.name.charAt(0)}</i>
+              <i className={cn("grid size-4 shrink-0 place-items-center rounded-full font-semibold not-italic", ["bg-[#DDF8E9] text-[#16A16C]", "bg-[#E5F7EF] text-[#11A578]", "bg-[#FFF0DC] text-[#F28C28]", "bg-[#E7F0FF] text-[#3478DB]", "bg-[#EEE7FF] text-[#8357DC]"][i])}>{l.name.charAt(0)}</i>
               <b className="truncate">{l.name}</b>
             </span>
             <span>{l.source}</span>

@@ -92,7 +92,7 @@ export function ApprovalsTab() {
                 <img src={a.image} alt="" className="h-9 w-13 shrink-0 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className="truncate text-[12px] font-bold text-[#24365A]">{a.title}</p>
+                    <p className="truncate text-[12px] font-semibold text-[#24365A]">{a.title}</p>
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10.5px] text-[#7A87A0]">
                     <span>{PLATFORM_META[a.channel].label}</span>
@@ -111,7 +111,7 @@ export function ApprovalsTab() {
                   </div>
                 </div>
                 <StatusBadge status={a.status} />
-                <button className="rounded border border-[#E2E8F0] px-2 py-1 text-[10.5px] font-bold text-[#1769DF] hover:bg-blue-50">Review</button>
+                <button className="rounded border border-[#E2E8F0] px-2 py-1 text-[10.5px] font-semibold text-[#1769DF] hover:bg-blue-50">Review</button>
               </div>
             ))}
           </div>
@@ -130,14 +130,14 @@ export function ApprovalsTab() {
             {[["Draft created", `by ${activeApproval?.submittedBy ?? "Author"}`, true], ["Pending review", "Content team · in progress", true], ["Approve & schedule", "Next step", false]].map(([t, s, done], i) => (
               <div key={i} className="relative">
                 <span className={cn("absolute -left-[23px] top-0.5 grid size-3.5 place-items-center rounded-full", done ? "bg-emerald-500 text-white" : "bg-white ring-2 ring-[#CBD5E1]")}>{done ? <Check className="size-2" /> : null}</span>
-                <p className="text-[12px] font-bold text-[#33445F]">{t}</p>
+                <p className="text-[12px] font-semibold text-[#33445F]">{t}</p>
                 <p className="text-[10.5px] text-[#7A87A0]">{s}</p>
               </div>
             ))}
           </div>
           <div className="mt-3 flex gap-1.5">
-            <button className="h-8 flex-1 rounded-lg bg-emerald-600 text-[11.5px] font-bold text-white hover:bg-emerald-700">Approve</button>
-            <button className="h-8 flex-1 rounded-lg border border-red-200 text-[11.5px] font-bold text-red-600 hover:bg-red-50">Request changes</button>
+            <button className="h-8 flex-1 rounded-lg bg-emerald-600 text-[11.5px] font-semibold text-white hover:bg-emerald-700">Approve</button>
+            <button className="h-8 flex-1 rounded-lg border border-red-200 text-[11.5px] font-semibold text-red-600 hover:bg-red-50">Request changes</button>
           </div>
           <div className="mt-2.5 flex items-center gap-2">
             <MessageCircle className="size-3.5 text-[#7A87A0]" />

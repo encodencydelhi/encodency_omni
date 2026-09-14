@@ -102,13 +102,13 @@ function AdSetsView() {
             <div className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-2xs ring-1 ring-blue-500/20">
               <Grid2X2 className="size-4" aria-hidden="true" />
             </div>
-            <h2 className="text-sm font-extrabold text-slate-900">Ad Sets</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Ad Sets</h2>
             <span className="rounded-full bg-blue-100/80 px-2.5 py-0.5 text-[10.5px] font-black text-blue-700 ring-1 ring-blue-500/20">
               {rows.length}
             </span>
             {values.campaign !== DEFAULTS.campaign && (
               <span className="text-[11px] font-medium text-slate-600">
-                in <strong className="font-bold text-slate-900">{campaignFilter}</strong>
+                in <strong className="font-semibold text-slate-900">{campaignFilter}</strong>
               </span>
             )}
           </div>
@@ -322,7 +322,7 @@ function AdSetsView() {
 
         {rows.length > 0 && (
           <div className="border-t border-slate-200 bg-slate-50/50 px-4 py-3 text-xs font-medium text-slate-600">
-            Showing <strong className="font-bold text-slate-900">{rows.length}</strong> of <strong className="font-bold text-slate-900">{adSets.length}</strong> ad sets
+            Showing <strong className="font-semibold text-slate-900">{rows.length}</strong> of <strong className="font-semibold text-slate-900">{adSets.length}</strong> ad sets
           </div>
         )}
       </section>

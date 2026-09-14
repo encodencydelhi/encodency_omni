@@ -123,7 +123,7 @@ function Box({ title, action, children, className }: { title: string; action?: R
   return (
     <section className={cn("overflow-hidden rounded-md border border-[#DDE4ED] bg-white shadow-sm flex flex-col", className)}>
       <header className="flex h-10 shrink-0 items-center justify-between border-b border-[#E8EDF3] px-3">
-        <h2 className="text-[11.5px] font-bold text-[#172044]">{title}</h2>
+        <h2 className="text-[11.5px] font-semibold text-[#172044]">{title}</h2>
         {action && (
           <div className="text-[9px] font-semibold text-[#71809D] flex items-center gap-1">
             {action}
@@ -145,7 +145,7 @@ export function WebsiteChannelPage() {
             <Globe2 className="size-7" strokeWidth={1.5} />
           </span>
           <div>
-            <h1 className="text-[20px] font-bold text-[#172044]">Website</h1>
+            <h1 className="text-[20px] font-semibold text-[#172044]">Website</h1>
             <p className="text-[10px] text-[#71809D]">Manage website performance, traffic, pages, conversions, forms, and user behavior.</p>
           </div>
         </div>
@@ -168,7 +168,7 @@ export function WebsiteChannelPage() {
       {/* Tabs */}
       <div className="flex items-center gap-6 border-b border-[#DDE4ED] px-2">
         {["Overview", "Pages", "Landing Pages", "Forms", "Analytics", "SEO", "Settings"].map((tab, i) => (
-          <button key={tab} className={cn("pb-2 text-[10px] font-bold", i === 0 ? "border-b-2 border-[#EB0711] text-[#EB0711]" : "text-[#71809D] hover:text-[#38444D]")}>{tab}</button>
+          <button key={tab} className={cn("pb-2 text-[10px] font-semibold", i === 0 ? "border-b-2 border-[#EB0711] text-[#EB0711]" : "text-[#71809D] hover:text-[#38444D]")}>{tab}</button>
         ))}
       </div>
 
@@ -186,10 +186,10 @@ export function WebsiteChannelPage() {
             <div key={i} className="flex min-h-[70px] items-center gap-3 rounded-lg border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_3px_rgb(47_44_42/0.035)]">
               <span className={cn("grid size-[34px] shrink-0 place-items-center rounded-full", c[stat.color])}><stat.icon className="size-[18px]" /></span>
               <div className="min-w-0">
-                <p className="truncate text-[9.5px] font-bold text-[#52617D]">{stat.label}</p>
+                <p className="truncate text-[9.5px] font-semibold text-[#52617D]">{stat.label}</p>
                 <div className="flex items-baseline gap-1.5">
-                  <b className="text-[20px] font-bold tracking-[-0.02em] text-[#142044]">{stat.value}</b>
-                  <span className={cn("text-[9px] font-bold whitespace-nowrap", stat.trend.includes("↑") || stat.trend.includes("9") ? "text-[#00A66A]" : "text-[#EA111B]")}>{stat.trend}</span>
+                  <b className="text-[20px] font-semibold tracking-[-0.02em] text-[#142044]">{stat.value}</b>
+                  <span className={cn("text-[9px] font-semibold whitespace-nowrap", stat.trend.includes("↑") || stat.trend.includes("9") ? "text-[#00A66A]" : "text-[#EA111B]")}>{stat.trend}</span>
                 </div>
                 {stat.note && <p className="text-[8px] text-[#71809D]">{stat.note}</p>}
               </div>
@@ -260,7 +260,7 @@ export function WebsiteChannelPage() {
               <div key={i} className="flex gap-2 p-2.5">
                 <item.icon className={cn("size-3.5 mt-0.5", item.color)} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[9.5px] font-bold text-[#172044] leading-tight">{item.title}</p>
+                  <p className="text-[9.5px] font-semibold text-[#172044] leading-tight">{item.title}</p>
                   <p className="text-[8.5px] text-[#71809D] mt-0.5">{item.desc}</p>
                 </div>
                 <span className="text-[7.5px] text-[#A0ABBA] whitespace-nowrap">{item.time}</span>
@@ -274,7 +274,7 @@ export function WebsiteChannelPage() {
       <div className="grid h-[240px] grid-cols-[1.5fr_1.1fr_1.4fr] gap-2">
         <Box title="Top Pages">
           <div className="px-2 h-full flex flex-col">
-            <div className="grid grid-cols-[.2fr_1.2fr_.6fr_.6fr_.6fr_.6fr_.4fr] py-1.5 text-[8.5px] font-bold text-[#71809D] items-center">
+            <div className="grid grid-cols-[.2fr_1.2fr_.6fr_.6fr_.6fr_.6fr_.4fr] py-1.5 text-[8.5px] font-semibold text-[#71809D] items-center">
               <span>#</span>
               <span>Page</span>
               <span className="text-right">Page Views</span>
@@ -302,7 +302,7 @@ export function WebsiteChannelPage() {
               ))}
             </div>
             <div className="pt-1 pb-2">
-              <span className="text-[9px] font-bold text-[#3186F3] cursor-pointer">View all pages →</span>
+              <span className="text-[9px] font-semibold text-[#3186F3] cursor-pointer">View all pages →</span>
             </div>
           </div>
         </Box>
@@ -312,7 +312,7 @@ export function WebsiteChannelPage() {
             {funnelData.map((f, i) => (
               <div key={f.stage} className="flex items-center gap-3 text-[9px]">
                 <div className="w-[100px] shrink-0 text-[#52617D]">{f.stage}</div>
-                <div className="w-[45px] shrink-0 font-bold text-[#172044]">{f.count}</div>
+                <div className="w-[45px] shrink-0 font-semibold text-[#172044]">{f.count}</div>
                 <div className="flex-1 h-3.5 bg-[#F1F5F9] rounded-r-sm overflow-hidden flex items-center justify-between">
                   <div className={cn("h-full", f.color)} style={{ width: f.pct }} />
                   {i === 0 && <span className="pr-1 text-[7px] text-[#A0ABBA]">{f.pct}</span>}
@@ -325,7 +325,7 @@ export function WebsiteChannelPage() {
 
         <Box title="Active Forms / Lead Capture" action={<span className="text-[#EB0711] cursor-pointer">View all →</span>}>
           <div className="px-2">
-            <div className="grid grid-cols-[1.5fr_.5fr_.5fr_.5fr] py-1.5 text-[8.5px] font-bold text-[#71809D] items-center">
+            <div className="grid grid-cols-[1.5fr_.5fr_.5fr_.5fr] py-1.5 text-[8.5px] font-semibold text-[#71809D] items-center">
               <span>Form Name</span>
               <span className="text-right">Submissions</span>
               <span className="text-right">Conversion Rate</span>
@@ -340,7 +340,7 @@ export function WebsiteChannelPage() {
                 <span className="text-right text-[#172044] font-semibold">{f.sub}</span>
                 <span className="text-right text-[#52617D]">{f.conv}</span>
                 <span className="flex justify-end">
-                  <i className={cn("rounded px-1.5 py-0.5 text-[8px] font-bold", f.status === "Active" ? "bg-[#DCFCE7] text-[#15803D]" : "bg-[#F1F5F9] text-[#64748B]")}>{f.status}</i>
+                  <i className={cn("rounded px-1.5 py-0.5 text-[8px] font-semibold", f.status === "Active" ? "bg-[#DCFCE7] text-[#15803D]" : "bg-[#F1F5F9] text-[#64748B]")}>{f.status}</i>
                 </span>
               </div>
             ))}
@@ -355,33 +355,33 @@ export function WebsiteChannelPage() {
             <p className="text-[8px] text-[#71809D] mb-3">Core Web Vitals and technical performance</p>
             <div className="grid grid-cols-5 gap-2 flex-1 items-center">
               <div className="flex flex-col items-center justify-center border-r border-[#EDF1F5]">
-                <p className="text-[9px] font-bold text-[#172044]">LCP</p>
+                <p className="text-[9px] font-semibold text-[#172044]">LCP</p>
                 <b className="text-[16px] text-[#172044] my-1">2.1s</b>
-                <span className="bg-[#DCFCE7] text-[#15803D] text-[7.5px] px-1.5 rounded-sm font-bold mb-1">Good</span>
+                <span className="bg-[#DCFCE7] text-[#15803D] text-[7.5px] px-1.5 rounded-sm font-semibold mb-1">Good</span>
                 <span className="text-[7px] text-[#A0ABBA]">Target {'<'} 2.5s</span>
               </div>
               <div className="flex flex-col items-center justify-center border-r border-[#EDF1F5]">
-                <p className="text-[9px] font-bold text-[#172044]">INP</p>
+                <p className="text-[9px] font-semibold text-[#172044]">INP</p>
                 <b className="text-[16px] text-[#172044] my-1">180ms</b>
-                <span className="bg-[#DCFCE7] text-[#15803D] text-[7.5px] px-1.5 rounded-sm font-bold mb-1">Good</span>
+                <span className="bg-[#DCFCE7] text-[#15803D] text-[7.5px] px-1.5 rounded-sm font-semibold mb-1">Good</span>
                 <span className="text-[7px] text-[#A0ABBA]">Target {'<'} 200ms</span>
               </div>
               <div className="flex flex-col items-center justify-center border-r border-[#EDF1F5]">
-                <p className="text-[9px] font-bold text-[#172044]">CLS</p>
+                <p className="text-[9px] font-semibold text-[#172044]">CLS</p>
                 <b className="text-[16px] text-[#172044] my-1">0.08</b>
-                <span className="bg-[#DCFCE7] text-[#15803D] text-[7.5px] px-1.5 rounded-sm font-bold mb-1">Good</span>
+                <span className="bg-[#DCFCE7] text-[#15803D] text-[7.5px] px-1.5 rounded-sm font-semibold mb-1">Good</span>
                 <span className="text-[7px] text-[#A0ABBA]">Target {'<'} 0.1</span>
               </div>
               <div className="flex flex-col items-center justify-center border-r border-[#EDF1F5]">
-                <p className="text-[9px] font-bold text-[#172044]">Uptime</p>
+                <p className="text-[9px] font-semibold text-[#172044]">Uptime</p>
                 <b className="text-[16px] text-[#172044] my-1">99.9%</b>
-                <span className="bg-[#DCFCE7] text-[#15803D] text-[7.5px] px-1.5 rounded-sm font-bold mb-1">Excellent</span>
+                <span className="bg-[#DCFCE7] text-[#15803D] text-[7.5px] px-1.5 rounded-sm font-semibold mb-1">Excellent</span>
                 <span className="text-[7px] text-[#A0ABBA]">Last 30 days</span>
               </div>
               <div className="flex flex-col items-center justify-center">
-                <p className="text-[9px] font-bold text-[#172044]">Mobile Score</p>
+                <p className="text-[9px] font-semibold text-[#172044]">Mobile Score</p>
                 <b className="text-[16px] text-[#172044] my-1">84/100</b>
-                <span className="bg-[#DCFCE7] text-[#15803D] text-[7.5px] px-1.5 rounded-sm font-bold mb-1">Good</span>
+                <span className="bg-[#DCFCE7] text-[#15803D] text-[7.5px] px-1.5 rounded-sm font-semibold mb-1">Good</span>
                 <span className="text-[7px] text-[#10B981]">+ 6 points</span>
               </div>
             </div>
@@ -422,7 +422,7 @@ export function WebsiteChannelPage() {
               <div key={i} className="flex gap-2 mb-2">
                 <span className={cn("grid size-5 shrink-0 place-items-center rounded-full mt-0.5", a.color)}><a.icon className="size-2.5" /></span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[9px] font-bold text-[#172044] leading-tight">{a.title}</p>
+                  <p className="text-[9px] font-semibold text-[#172044] leading-tight">{a.title}</p>
                   <p className="text-[8px] text-[#71809D] leading-tight">{a.desc}</p>
                 </div>
                 <span className="text-[7px] text-[#A0ABBA] whitespace-nowrap">{a.time}</span>
@@ -443,7 +443,7 @@ export function WebsiteChannelPage() {
               { icon: Download, label: "Export Report", color: "text-[#3186F3]" },
               { icon: Globe2, label: "Website Settings", color: "text-[#3186F3]" },
             ].map((a, i) => (
-              <button key={i} className="flex h-8 items-center gap-1.5 rounded border border-[#E1E7EF] bg-[#FAFBFC] px-1.5 text-left text-[8.5px] font-bold text-[#172044] hover:bg-white transition-colors">
+              <button key={i} className="flex h-8 items-center gap-1.5 rounded border border-[#E1E7EF] bg-[#FAFBFC] px-1.5 text-left text-[8.5px] font-semibold text-[#172044] hover:bg-white transition-colors">
                 <span className={cn("grid size-5 shrink-0 place-items-center rounded-full bg-[#EBF4FF]", a.color, a.color.includes('EA111B') && "bg-[#FFE8EA]")}>
                   <a.icon className="size-3" />
                 </span>
@@ -455,9 +455,9 @@ export function WebsiteChannelPage() {
       </div>
 
       {/* Row 5 */}
-      <Box title="Connected Websites" action={<button className="flex h-6 items-center gap-1 rounded border border-[#DDE4ED] bg-white px-2 text-[8.5px] font-bold text-[#172044] hover:bg-[#FAFBFC]"><Plus className="size-3" /> Add Website</button>}>
+      <Box title="Connected Websites" action={<button className="flex h-6 items-center gap-1 rounded border border-[#DDE4ED] bg-white px-2 text-[8.5px] font-semibold text-[#172044] hover:bg-[#FAFBFC]"><Plus className="size-3" /> Add Website</button>}>
         <div className="px-2">
-          <div className="grid grid-cols-[1.5fr_1.5fr_.8fr_.8fr_.8fr_1fr_.2fr] py-1.5 text-[8.5px] font-bold text-[#71809D] items-center">
+          <div className="grid grid-cols-[1.5fr_1.5fr_.8fr_.8fr_.8fr_1fr_.2fr] py-1.5 text-[8.5px] font-semibold text-[#71809D] items-center">
             <span>Website</span>
             <span>Domain</span>
             <span>Status</span>
@@ -468,7 +468,7 @@ export function WebsiteChannelPage() {
           </div>
           {connectedWebsites.map((w, i) => (
             <div key={i} className="grid grid-cols-[1.5fr_1.5fr_.8fr_.8fr_.8fr_1fr_.2fr] border-t border-[#EDF1F5] py-2 text-[9px] items-center">
-              <span className="flex items-center gap-1.5 font-bold text-[#172044]">
+              <span className="flex items-center gap-1.5 font-semibold text-[#172044]">
                 <Globe2 className="size-3.5 text-[#3186F3]" />
                 {w.name}
               </span>

@@ -127,10 +127,10 @@ export function SeoOverviewPage() {
             <div key={i} className="flex min-h-[70px] items-center gap-3 rounded-lg border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_3px_rgb(47_44_42/0.035)]">
               <span className={cn("grid size-[34px] shrink-0 place-items-center rounded-full", c[stat.color])}><stat.icon className="size-[18px]" /></span>
               <div className="min-w-0">
-                <p className="truncate text-[9.5px] font-bold text-[#52617D]">{stat.label}</p>
+                <p className="truncate text-[9.5px] font-semibold text-[#52617D]">{stat.label}</p>
                 <div className="flex items-baseline gap-1.5">
-                  <b className="text-[20px] font-bold tracking-[-0.02em] text-[#142044]">{stat.value}</b>
-                  <span className={cn("text-[9px] font-bold whitespace-nowrap", stat.trend.includes("↑") || stat.trend.includes("9") ? "text-[#00A66A]" : "text-[#EA111B]")}>{stat.trend}</span>
+                  <b className="text-[20px] font-semibold tracking-[-0.02em] text-[#142044]">{stat.value}</b>
+                  <span className={cn("text-[9px] font-semibold whitespace-nowrap", stat.trend.includes("↑") || stat.trend.includes("9") ? "text-[#00A66A]" : "text-[#EA111B]")}>{stat.trend}</span>
                 </div>
                 <p className={cn("text-[8px]", i === 5 ? "text-[#10B981] font-semibold" : "text-[#71809D]")}>{stat.sub}</p>
               </div>
@@ -170,11 +170,11 @@ export function SeoOverviewPage() {
           <div className="flex flex-col h-full">
             <div className="flex items-center gap-4 border-b border-[#DDE4ED] px-3 pt-1">
               {["Top Gaining", "Top Pages", "Top Losing"].map((tab, i) => (
-                <button key={tab} className={cn("pb-1.5 text-[8.5px] font-bold", i === 0 ? "border-b-2 border-[#EB0711] text-[#172044]" : "text-[#71809D] hover:text-[#38444D]")}>{tab}</button>
+                <button key={tab} className={cn("pb-1.5 text-[8.5px] font-semibold", i === 0 ? "border-b-2 border-[#EB0711] text-[#172044]" : "text-[#71809D] hover:text-[#38444D]")}>{tab}</button>
               ))}
             </div>
             <div className="px-3 pt-1 flex-1 overflow-y-auto [scrollbar-width:thin]">
-              <div className="grid grid-cols-[1.5fr_.5fr_.5fr_.6fr] py-1 text-[8px] font-bold text-[#71809D]">
+              <div className="grid grid-cols-[1.5fr_.5fr_.5fr_.6fr] py-1 text-[8px] font-semibold text-[#71809D]">
                 <span>Keyword</span>
                 <span className="text-right">Position</span>
                 <span className="text-right">Change</span>
@@ -201,7 +201,7 @@ export function SeoOverviewPage() {
               </svg>
               <div className="absolute inset-0 grid place-items-center text-center">
                 <span>
-                  <b className="block text-[22px] text-[#172044] font-bold leading-none">92</b>
+                  <b className="block text-[22px] text-[#172044] font-semibold leading-none">92</b>
                   <small className="text-[8px] text-[#71809D]">Excellent</small>
                 </span>
               </div>
@@ -213,14 +213,14 @@ export function SeoOverviewPage() {
                 </div>
               ))}
             </div>
-            <button className="mt-auto w-full rounded border border-[#DDE4ED] py-1 text-[9px] font-bold text-[#172044]">View Detailed Report →</button>
+            <button className="mt-auto w-full rounded border border-[#DDE4ED] py-1 text-[9px] font-semibold text-[#172044]">View Detailed Report →</button>
           </div>
         </Box>
       </div>
 
       {/* Row 3 */}
       <div className="grid h-[228px] grid-cols-[1.2fr_1fr_1.4fr_1fr] gap-2">
-        <Box title="Site Audit Summary" action={<button className="flex h-6 items-center rounded border border-[#DDE4ED] px-2 text-[8.5px] font-bold text-[#172044]">View All Issues →</button>}>
+        <Box title="Site Audit Summary" action={<button className="flex h-6 items-center rounded border border-[#DDE4ED] px-2 text-[8.5px] font-semibold text-[#172044]">View All Issues →</button>}>
           <div className="flex h-full items-center px-2">
             <div className="relative size-[110px] shrink-0">
               <ResponsiveContainer>
@@ -232,7 +232,7 @@ export function SeoOverviewPage() {
               </ResponsiveContainer>
               <div className="absolute inset-0 grid place-items-center text-center">
                 <span>
-                  <b className="block text-[18px] font-bold text-[#172044]">142</b>
+                  <b className="block text-[18px] font-semibold text-[#172044]">142</b>
                   <small className="text-[7.5px] leading-tight text-[#71809D]">Total Issues</small>
                 </span>
               </div>
@@ -241,7 +241,7 @@ export function SeoOverviewPage() {
               {auditData.map((d) => (
                 <div key={d.name} className="flex items-center justify-between text-[9.5px] font-semibold">
                   <span className="flex items-center gap-1.5 text-[#52617D]"><i className="size-2 rounded-full" style={{ backgroundColor: d.color }} />{d.name}</span>
-                  <span className="text-[#172044] font-bold">{d.value}</span>
+                  <span className="text-[#172044] font-semibold">{d.value}</span>
                 </div>
               ))}
             </div>
@@ -250,7 +250,7 @@ export function SeoOverviewPage() {
 
         <Box title="Page Speed Insights" action={
           <div className="flex rounded-md border border-[#DDE4ED] bg-[#F8FAFC] p-0.5 text-[8.5px]">
-            <button className="rounded px-2 py-0.5 bg-white shadow-sm font-bold text-[#172044]">Desktop</button>
+            <button className="rounded px-2 py-0.5 bg-white shadow-sm font-semibold text-[#172044]">Desktop</button>
             <button className="rounded px-2 py-0.5 text-[#71809D] font-semibold">Mobile</button>
           </div>
         }>
@@ -263,18 +263,18 @@ export function SeoOverviewPage() {
               </svg>
               <div className="absolute inset-0 grid place-items-center text-center">
                 <span>
-                  <b className="block text-[18px] font-bold text-[#172044]">78</b>
-                  <small className="text-[8px] text-[#F59E0B] font-bold">Good</small>
+                  <b className="block text-[18px] font-semibold text-[#172044]">78</b>
+                  <small className="text-[8px] text-[#F59E0B] font-semibold">Good</small>
                 </span>
               </div>
             </div>
             <div className="ml-6 flex-1 space-y-3">
-              <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">LCP</span><span className="font-bold text-[#F59E0B]">2.1s</span></div>
-              <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">INP</span><span className="font-bold text-[#10B981]">120ms</span></div>
-              <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">CLS</span><span className="font-bold text-[#10B981]">0.05</span></div>
+              <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">LCP</span><span className="font-semibold text-[#F59E0B]">2.1s</span></div>
+              <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">INP</span><span className="font-semibold text-[#10B981]">120ms</span></div>
+              <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">CLS</span><span className="font-semibold text-[#10B981]">0.05</span></div>
             </div>
           </div>
-          <div className="shrink-0 px-4 pb-3"><button className="w-full rounded border border-[#DDE4ED] py-1 text-[9px] font-bold text-[#172044]">View Page Speed Report →</button></div>
+          <div className="shrink-0 px-4 pb-3"><button className="w-full rounded border border-[#DDE4ED] py-1 text-[9px] font-semibold text-[#172044]">View Page Speed Report →</button></div>
           </div>
         </Box>
 
@@ -283,15 +283,15 @@ export function SeoOverviewPage() {
             <div className="flex justify-between mb-2">
               <div>
                 <div className="text-[8.5px] text-[#71809D] font-semibold">Total Backlinks</div>
-                <div className="text-[14px] font-bold text-[#172044]">1,248 <span className="text-[8px] text-[#10B981]">↑ 18%</span></div>
+                <div className="text-[14px] font-semibold text-[#172044]">1,248 <span className="text-[8px] text-[#10B981]">↑ 18%</span></div>
               </div>
               <div>
                 <div className="text-[8.5px] text-[#71809D] font-semibold">Referring Domains</div>
-                <div className="text-[14px] font-bold text-[#172044]">312 <span className="text-[8px] text-[#10B981]">↑ 12%</span></div>
+                <div className="text-[14px] font-semibold text-[#172044]">312 <span className="text-[8px] text-[#10B981]">↑ 12%</span></div>
               </div>
               <div>
                 <div className="text-[8.5px] text-[#71809D] font-semibold">Domain Authority</div>
-                <div className="text-[14px] font-bold text-[#172044]">36 <span className="text-[8px] text-[#10B981]">↑ 4</span></div>
+                <div className="text-[14px] font-semibold text-[#172044]">36 <span className="text-[8px] text-[#10B981]">↑ 4</span></div>
               </div>
             </div>
             <div className="flex-1">
@@ -309,7 +309,7 @@ export function SeoOverviewPage() {
 
         <Box title="Top Performing Pages" action={<span className="text-[#EB0711] cursor-pointer">View All →</span>}>
           <div className="px-3 py-1 h-full">
-            <div className="grid grid-cols-[1fr_.4fr_.4fr] py-1 text-[8.5px] font-bold text-[#71809D]">
+            <div className="grid grid-cols-[1fr_.4fr_.4fr] py-1 text-[8.5px] font-semibold text-[#71809D]">
               <span>Page</span>
               <span className="text-right">Clicks</span>
               <span></span>
@@ -329,7 +329,7 @@ export function SeoOverviewPage() {
       <div className="grid h-[266px] grid-cols-[1.5fr_1.5fr_1fr] gap-2">
         <Box title="Recent SEO Issues" action={<span className="text-[#EB0711] cursor-pointer">View All →</span>}>
           <div className="px-3 py-1">
-            <div className="grid grid-cols-[1.2fr_.6fr_.6fr_.4fr] py-1.5 text-[8.5px] font-bold text-[#71809D]">
+            <div className="grid grid-cols-[1.2fr_.6fr_.6fr_.4fr] py-1.5 text-[8.5px] font-semibold text-[#71809D]">
               <span>Issue</span>
               <span>Type</span>
               <span className="text-right">Affected Pages</span>
@@ -344,7 +344,7 @@ export function SeoOverviewPage() {
                 <span className="text-[#71809D]">{issue.type}</span>
                 <span className="text-right text-[#172044]">{issue.pages}</span>
                 <span className="flex justify-end">
-                  <span className={cn("px-1.5 py-0.5 rounded text-[8px] font-bold",
+                  <span className={cn("px-1.5 py-0.5 rounded text-[8px] font-semibold",
                     issue.priority === "High" ? "bg-[#FFE4E6] text-[#E11D48]" :
                       issue.priority === "Medium" ? "bg-[#FEF3C7] text-[#D97706]" : "bg-[#DCFCE7] text-[#15803D]"
                   )}>{issue.priority}</span>
@@ -386,7 +386,7 @@ export function SeoOverviewPage() {
               <div key={i} className="flex items-center gap-2 mb-3">
                 <div className="size-3.5 rounded border border-[#cbd5e1] shrink-0" />
                 <span className="text-[9px] font-semibold text-[#172044] flex-1 truncate">{t.task}</span>
-                <span className={cn("px-1 py-0.5 rounded text-[7.5px] font-bold",
+                <span className={cn("px-1 py-0.5 rounded text-[7.5px] font-semibold",
                   t.priority === "High" ? "bg-[#FFE4E6] text-[#E11D48]" :
                     t.priority === "Medium" ? "bg-[#FEF3C7] text-[#D97706]" : "bg-[#DCFCE7] text-[#15803D]"
                 )}>{t.priority}</span>

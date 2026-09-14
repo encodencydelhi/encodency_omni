@@ -85,7 +85,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
       <div className="grid gap-3 xl:grid-cols-[220px_1fr_260px]">
         {/* Category navigation */}
         <nav aria-label="Help categories" className={cn(card, "h-fit p-2")}>
-          <p className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-wide text-[#94a3b8]">
+          <p className="px-2 py-1.5 text-[9px] font-semibold uppercase tracking-wide text-[#94a3b8]">
             Categories
           </p>
           <ul>
@@ -133,7 +133,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
             <span className="font-semibold text-[#14213d]">{article.title}</span>
           </nav>
 
-          <h1 className="text-[22px] font-bold leading-tight">{article.title}</h1>
+          <h1 className="text-[22px] font-semibold leading-tight">{article.title}</h1>
           <p className="mt-1.5 text-[12px] leading-relaxed text-[#64748b]">{article.summary}</p>
           <p className="mt-2 text-[10px] text-[#94a3b8]">
             Last updated {date(article.updated)} · {article.readMinutes} min read
@@ -143,7 +143,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
             {article.sections.map((section, i) => (
               <section key={i}>
                 {section.heading && (
-                  <h2 className="mb-1.5 text-[13px] font-bold">{section.heading}</h2>
+                  <h2 className="mb-1.5 text-[13px] font-semibold">{section.heading}</h2>
                 )}
 
                 {section.paragraphs?.map((p, j) => (
@@ -167,7 +167,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                   <ol className="mb-2 space-y-1.5">
                     {section.steps.map((s, j) => (
                       <li key={j} className="flex gap-2.5 text-[12px] leading-relaxed text-[#334155]">
-                        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e8eef5] text-[9px] font-bold text-[#475569]">
+                        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e8eef5] text-[9px] font-semibold text-[#475569]">
                           {j + 1}
                         </span>
                         <span>{s}</span>

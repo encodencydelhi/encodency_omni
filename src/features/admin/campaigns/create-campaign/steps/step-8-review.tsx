@@ -49,7 +49,7 @@ function Card({
         <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFEAEC]">
           <Icon className="size-3.5 text-[#E11D28]" />
         </span>
-        <b className="flex-1 text-[12.5px] font-bold text-[#101A3D]">{title}</b>
+        <b className="flex-1 text-[12.5px] font-semibold text-[#101A3D]">{title}</b>
         {onEdit && (
           <button onClick={onEdit} className="text-[10px] font-semibold text-[#1975E7]">Edit</button>
         )}
@@ -121,7 +121,7 @@ export function StepReview({
             <Rocket className="size-4 text-[#EB0711]" />
           </span>
           <div className="min-w-0 flex-1">
-            <b className="block text-[14px] font-bold leading-5 text-[#111827]">Review &amp; Launch</b>
+            <b className="block text-[14px] font-semibold leading-5 text-[#111827]">Review &amp; Launch</b>
             <small className="block text-[10.5px] text-[#8791A4]">
               Review your campaign details, confirm settings and launch when ready.
             </small>
@@ -191,7 +191,7 @@ export function StepReview({
               <span className="grid size-6 shrink-0 place-items-center rounded-md bg-[#E8F2FF]">
                 <ImageIcon className="size-3.5 text-[#1975E7]" />
               </span>
-              <b className="flex-1 text-[11.5px] font-bold text-[#111827]">Campaign Preview</b>
+              <b className="flex-1 text-[11.5px] font-semibold text-[#111827]">Campaign Preview</b>
               <button className="text-[10px] font-semibold text-[#1975E7]">View All Creatives</button>
             </div>
             <span className="relative block h-[150px] overflow-hidden rounded-lg">
@@ -252,7 +252,7 @@ export function StepReview({
           <span className="grid size-6 shrink-0 place-items-center rounded-md bg-[#E8F2FF]">
             <ImageIcon className="size-3.5 text-[#1975E7]" />
           </span>
-          <b className="flex-1 text-[11.5px] font-bold text-[#111827]">Platform Previews</b>
+          <b className="flex-1 text-[11.5px] font-semibold text-[#111827]">Platform Previews</b>
         </div>
         <div className="scrollbar-thin flex gap-2 overflow-x-auto pb-1">
           {PREVIEW_PLATFORMS.map((platform) => (
@@ -276,7 +276,7 @@ export function StepReview({
               <Check className="size-4 text-white" />
             </span>
             <div>
-              <b className="block text-[11.5px] font-bold text-[#111827]">Readiness Checklist</b>
+              <b className="block text-[11.5px] font-semibold text-[#111827]">Readiness Checklist</b>
               <small className="block text-[9.5px] text-[#8791A4]">All items must be complete before launch.</small>
             </div>
             <span className="relative size-9 shrink-0 ml-auto">
@@ -284,7 +284,7 @@ export function StepReview({
                 <circle cx="18" cy="18" r="15.9" fill="none" stroke="#EDF1F7" strokeWidth="3.4" />
                 <circle cx="18" cy="18" r="15.9" fill="none" stroke="#0AA673" strokeWidth="3.4" strokeLinecap="round" strokeDasharray={`${(readinessCount / readinessCount) * 100}, 100`} />
               </svg>
-              <span className="absolute inset-0 grid place-items-center text-[9px] font-bold text-[#27334E]">{readinessCount}/{readinessCount}</span>
+              <span className="absolute inset-0 grid place-items-center text-[9px] font-semibold text-[#27334E]">{readinessCount}/{readinessCount}</span>
             </span>
           </div>
           <div className="grid gap-1 sm:grid-cols-2">

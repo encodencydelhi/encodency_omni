@@ -42,7 +42,7 @@ export function SeoAuditView() {
               <ChevronRight className="size-3" />
               <span className="text-[#172044]">Site Audit</span>
             </div>
-            <h1 className="text-[26px] font-bold tracking-[-.03em] text-[#101A3D]">Site Audit</h1>
+            <h1 className="text-[26px] font-semibold tracking-[-.03em] text-[#101A3D]">Site Audit</h1>
             <p className="mt-1 text-[12px] text-[#687797]">Scan your website for SEO issues and get actionable recommendations to improve your search performance.</p>
           </div>
 
@@ -65,9 +65,9 @@ export function SeoAuditView() {
                 <Calendar className="size-4 text-[#3b82f6]" />
               </div>
               <div className="pr-2">
-                <p className="text-[9px] font-bold text-[#172044] leading-tight">Last Crawl</p>
+                <p className="text-[9px] font-semibold text-[#172044] leading-tight">Last Crawl</p>
                 <p className="text-[9px] text-[#75829D] leading-tight mb-0.5">Apr 14, 2025, 10:32 AM</p>
-                <span className="inline-block px-1.5 py-[1px] rounded text-[7px] font-bold bg-[#E6F6ED] text-[#168762]">Completed</span>
+                <span className="inline-block px-1.5 py-[1px] rounded text-[7px] font-semibold bg-[#E6F6ED] text-[#168762]">Completed</span>
               </div>
             </div>
           </div>
@@ -80,7 +80,7 @@ export function SeoAuditView() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "shrink-0 border-b-2 pb-2.5 text-[11px] font-bold transition-colors",
+                "shrink-0 border-b-2 pb-2.5 text-[11px] font-semibold transition-colors",
                 activeTab === tab ? "border-[#E30613] text-[#E30613]" : "border-transparent text-[#75829D] hover:text-[#172044]"
               )}
             >
@@ -112,7 +112,7 @@ function OverviewTab() {
         {/* Row 1 */}
         {/* SEO Health Score */}
         <div className="col-span-12 flex h-[236px] flex-col overflow-hidden rounded-xl border border-[#E1E7EF] bg-white p-4 shadow-[0_1px_4px_rgb(31_50_81/0.06)] lg:col-span-3">
-          <div className="flex items-center justify-between"><div><h2 className="text-[13px] font-bold text-[#172044]">SEO Health Score</h2><p className="mt-0.5 text-[9px] text-[#75829D]">Overall website quality</p></div><span className="rounded-full bg-[#E6F6ED] px-2 py-1 text-[8px] font-bold text-[#078359]">GOOD</span></div>
+          <div className="flex items-center justify-between"><div><h2 className="text-[13px] font-semibold text-[#172044]">SEO Health Score</h2><p className="mt-0.5 text-[9px] text-[#75829D]">Overall website quality</p></div><span className="rounded-full bg-[#E6F6ED] px-2 py-1 text-[8px] font-semibold text-[#078359]">GOOD</span></div>
           <div className="flex flex-1 items-center gap-4">
             <div className="relative size-[104px] shrink-0">
               <svg viewBox="0 0 100 100" className="rotate-[-90deg] drop-shadow-sm">
@@ -122,19 +122,19 @@ function OverviewTab() {
               <div className="absolute inset-0 flex flex-col items-center justify-center pt-1">
                 <div className="flex items-baseline">
                   <span className="text-[30px] font-black text-[#172044] tracking-tight">78</span>
-                  <span className="text-[10px] text-[#94a3b8] font-bold">/100</span>
+                  <span className="text-[10px] text-[#94a3b8] font-semibold">/100</span>
                 </div>
-                <span className="mt-0.5 text-[8px] font-bold text-[#10b981]">SEO SCORE</span>
+                <span className="mt-0.5 text-[8px] font-semibold text-[#10b981]">SEO SCORE</span>
               </div>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 text-[#10b981] mb-0.5">
                 <ArrowUp className="size-3.5 stroke-[3]" />
-                <span className="text-[14px] font-bold">+12 points</span>
+                <span className="text-[14px] font-semibold">+12 points</span>
               </div>
               <p className="mb-2 text-[9px] font-medium text-[#94a3b8]">since last audit</p>
               <p className="text-[10px] font-medium leading-[15px] text-[#64748b]">
-                Your website is in good shape, but there are still <span className="font-bold text-[#172044]">142 issues</span> to fix.
+                Your website is in good shape, but there are still <span className="font-semibold text-[#172044]">142 issues</span> to fix.
               </p>
             </div>
           </div>
@@ -142,7 +142,7 @@ function OverviewTab() {
 
         {/* Issue Summary */}
         <div className="col-span-12 flex h-[236px] flex-col overflow-hidden rounded-xl border border-[#E1E7EF] bg-white p-4 shadow-[0_1px_4px_rgb(31_50_81/0.06)] lg:col-span-6">
-          <div className="mb-3 flex items-center justify-between"><div><h2 className="text-[13px] font-bold text-[#172044]">Issue Summary</h2><p className="mt-0.5 text-[9px] text-[#75829D]">Changes since the previous crawl</p></div><button className="text-[9px] font-bold text-[#2878E5]">View all →</button></div>
+          <div className="mb-3 flex items-center justify-between"><div><h2 className="text-[13px] font-semibold text-[#172044]">Issue Summary</h2><p className="mt-0.5 text-[9px] text-[#75829D]">Changes since the previous crawl</p></div><button className="text-[9px] font-semibold text-[#2878E5]">View all →</button></div>
           <div className="grid flex-1 grid-cols-4 gap-2">
             {[
               { label: "Critical", count: "12", icon: AlertCircle, color: "text-[#E5484D]", bg: "bg-[#FFE7E8]", panel: "bg-[#FFF9F9]", border: "border-[#FFDADC]", accent: "bg-[#E5484D]", trendBg: "bg-[#FFE7E8]", trend: -8 },
@@ -156,11 +156,11 @@ function OverviewTab() {
                   <div className={cn("grid size-8 place-items-center rounded-lg", stat.bg)}>
                     <stat.icon className={cn("size-4", stat.color)} />
                   </div>
-                  <p className={cn("text-[10px] font-bold", stat.color)}>{stat.label}</p>
+                  <p className={cn("text-[10px] font-semibold", stat.color)}>{stat.label}</p>
                 </div>
-                <p className="mt-3 text-[25px] font-bold leading-7 tracking-[-.03em] text-[#172044]">{stat.count}</p>
+                <p className="mt-3 text-[25px] font-semibold leading-7 tracking-[-.03em] text-[#172044]">{stat.count}</p>
                 <p className="mt-0.5 text-[8px] text-[#75829D]">Total checks</p>
-                <div className={cn("mt-auto flex w-fit items-center gap-1 rounded-full px-2 py-1 text-[8px] font-bold", stat.trendBg, stat.isPositive ? "text-[#078359]" : stat.color)}> 
+                <div className={cn("mt-auto flex w-fit items-center gap-1 rounded-full px-2 py-1 text-[8px] font-semibold", stat.trendBg, stat.isPositive ? "text-[#078359]" : stat.color)}> 
                   {stat.trend > 0 ? <ArrowUp className="size-2.5" /> : <ArrowDown className="size-2.5" />}
                   {Math.abs(stat.trend)} vs last crawl
                 </div>
@@ -172,7 +172,7 @@ function OverviewTab() {
         {/* Crawl Information */}
         <div className="col-span-12 flex h-[236px] flex-col overflow-hidden rounded-xl border border-[#E1E7EF] bg-white p-4 shadow-[0_1px_4px_rgb(31_50_81/0.06)] lg:col-span-3">
           <div>
-            <div className="flex items-center justify-between"><div><h2 className="text-[13px] font-bold text-[#172044]">Crawl Information</h2><p className="mt-0.5 text-[9px] text-[#75829D]">Technical crawl details</p></div><FileSearch className="size-5 text-[#2878E5]" /></div>
+            <div className="flex items-center justify-between"><div><h2 className="text-[13px] font-semibold text-[#172044]">Crawl Information</h2><p className="mt-0.5 text-[9px] text-[#75829D]">Technical crawl details</p></div><FileSearch className="size-5 text-[#2878E5]" /></div>
             <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
               {[
                 { label: "Total Pages Crawled", value: "128" },
@@ -185,12 +185,12 @@ function OverviewTab() {
               ].map((item, i) => (
                 <div key={i} className="min-w-0">
                   <span className="block truncate text-[8px] font-medium text-[#75829D]">{item.label}</span>
-                  <span className="mt-0.5 block text-[10px] font-bold text-[#172044]">{item.value}</span>
+                  <span className="mt-0.5 block text-[10px] font-semibold text-[#172044]">{item.value}</span>
                 </div>
               ))}
             </div>
           </div>
-          <button className="mt-2 w-full shrink-0 rounded-md border border-[#DDE4ED] bg-white py-1.5 text-[9px] font-bold text-[#172044] shadow-sm transition-colors hover:bg-gray-50">
+          <button className="mt-2 w-full shrink-0 rounded-md border border-[#DDE4ED] bg-white py-1.5 text-[9px] font-semibold text-[#172044] shadow-sm transition-colors hover:bg-gray-50">
             View Crawl Log →
           </button>
         </div>
@@ -199,7 +199,7 @@ function OverviewTab() {
         {/* Top Issues */}
         <div className="col-span-12 lg:col-span-6 rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
           <div className="flex justify-between items-center mb-2">
-            <h2 className="text-[13px] font-bold text-[#172044]">Top Issues</h2>
+            <h2 className="text-[13px] font-semibold text-[#172044]">Top Issues</h2>
             <button className="text-[10px] font-semibold text-[#3b82f6] flex items-center gap-1 hover:underline">
               View All Issues <ChevronRight className="size-3" />
             </button>
@@ -235,7 +235,7 @@ function OverviewTab() {
                     <td className="py-2 text-[#94a3b8]">{row.type}</td>
                     <td className="py-2 text-[#172044]">{row.pages}</td>
                     <td className="py-2">
-                      <span className={cn("px-1.5 py-0.5 rounded text-[8px] font-bold", row.badgeBg, row.badgeText)}>{row.severity}</span>
+                      <span className={cn("px-1.5 py-0.5 rounded text-[8px] font-semibold", row.badgeBg, row.badgeText)}>{row.severity}</span>
                     </td>
                     <td className="py-2">
                       <button className="text-[#3b82f6] font-semibold hover:underline bg-[#eff6ff] px-2 py-0.5 rounded text-[9px]">{row.action}</button>
@@ -249,12 +249,12 @@ function OverviewTab() {
 
         {/* Page Type Distribution */}
         <div className="col-span-12 lg:col-span-3 rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm flex flex-col justify-center">
-          <h2 className="text-[15px] font-bold text-[#172044] mb-4">Page Type Distribution</h2>
+          <h2 className="text-[15px] font-semibold text-[#172044] mb-4">Page Type Distribution</h2>
           <div className="flex flex-col items-center justify-center gap-4">
             <div className="relative size-[110px] shrink-0">
               <div className="absolute inset-0 rounded-full border-[6px] border-transparent" style={{ background: "conic-gradient(#10b981 0% 1%, #3b82f6 1% 15%, #8b5cf6 15% 48%, #94a3b8 48% 100%)", WebkitMask: "radial-gradient(transparent 65%, black 66%)", mask: "radial-gradient(transparent 65%, black 66%)" }}></div>
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-white m-[6px] rounded-full">
-                <span className="text-2xl font-bold text-[#172044]">128</span>
+                <span className="text-2xl font-semibold text-[#172044]">128</span>
                 <span className="text-[10px] text-[#75829D]">Pages</span>
               </div>
             </div>
@@ -270,7 +270,7 @@ function OverviewTab() {
                     <span className={cn("size-2 rounded-full shrink-0", item.color)}></span>
                     <span className="text-[#172044] font-medium">{item.label}</span>
                   </div>
-                  <span className="font-bold text-[#172044]">{item.count}</span>
+                  <span className="font-semibold text-[#172044]">{item.count}</span>
                 </div>
               ))}
             </div>
@@ -280,7 +280,7 @@ function OverviewTab() {
         {/* Core Web Vitals */}
         <div className="col-span-12 lg:col-span-3 rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm flex flex-col justify-center">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-[15px] font-bold text-[#172044]">Core Web Vitals (Mobile)</h2>
+            <h2 className="text-[15px] font-semibold text-[#172044]">Core Web Vitals (Mobile)</h2>
             <button className="text-[11px] font-medium text-[#3b82f6] flex items-center gap-0.5 hover:underline">
               View Details <ChevronRight className="size-3.5" />
             </button>
@@ -294,10 +294,10 @@ function OverviewTab() {
               <div key={item.metric}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-[13px] font-bold text-[#172044]">{item.metric}</span>
-                    <span className={cn("text-[13px] font-bold", item.valColor)}>{item.value}</span>
+                    <span className="text-[13px] font-semibold text-[#172044]">{item.metric}</span>
+                    <span className={cn("text-[13px] font-semibold", item.valColor)}>{item.value}</span>
                   </div>
-                  <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded", item.badgeBg, item.valColor)}>{item.status}</span>
+                  <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded", item.badgeBg, item.valColor)}>{item.status}</span>
                 </div>
                 <div className="h-2.5 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
                   <div className={cn("h-full rounded-full", item.color)} style={{ width: `${item.progress}%` }}></div>
@@ -310,29 +310,29 @@ function OverviewTab() {
         {/* Row 3 */}
         {/* Indexability */}
         <div className="col-span-12 lg:col-span-3 rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
-          <h2 className="text-[13px] font-bold text-[#172044] mb-6">Indexability</h2>
+          <h2 className="text-[13px] font-semibold text-[#172044] mb-6">Indexability</h2>
           <div className="flex items-center justify-center gap-6 flex-1">
             <div className="relative size-[90px] shrink-0">
               <div className="absolute inset-0 rounded-full border-[12px] border-transparent" style={{ background: "conic-gradient(#10b981 0% 97%, #ef4444 97% 99%, #94a3b8 99% 100%)", WebkitMask: "radial-gradient(transparent 65%, black 66%)", mask: "radial-gradient(transparent 65%, black 66%)" }}></div>
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-white m-[12px] rounded-full">
-                <span className="text-xl font-bold text-[#172044]">124</span>
+                <span className="text-xl font-semibold text-[#172044]">124</span>
                 <span className="text-[9px] text-[#75829D]">Indexed</span>
               </div>
             </div>
             <div className="space-y-3 text-[10px]">
               <div className="flex items-center gap-2">
                 <span className="size-2.5 rounded-full bg-[#10b981] shrink-0"></span>
-                <span className="font-bold text-[#172044]">124</span>
+                <span className="font-semibold text-[#172044]">124</span>
                 <span className="text-[#75829D]">Indexed (97%)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="size-2.5 rounded-full bg-[#ef4444] shrink-0"></span>
-                <span className="font-bold text-[#172044]">3</span>
+                <span className="font-semibold text-[#172044]">3</span>
                 <span className="text-[#75829D]">Not Indexed (2%)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="size-2.5 rounded-full bg-[#94a3b8] shrink-0"></span>
-                <span className="font-bold text-[#172044]">1</span>
+                <span className="font-semibold text-[#172044]">1</span>
                 <span className="text-[#75829D]">Blocked (1%)</span>
               </div>
             </div>
@@ -341,12 +341,12 @@ function OverviewTab() {
 
         {/* Mobile Usability */}
         <div className="col-span-12 lg:col-span-3 rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
-          <h2 className="text-[13px] font-bold text-[#172044] mb-6">Mobile Usability</h2>
+          <h2 className="text-[13px] font-semibold text-[#172044] mb-6">Mobile Usability</h2>
           <div className="flex items-center justify-center gap-6 flex-1">
             <div className="relative size-[90px] shrink-0">
               <div className="absolute inset-0 rounded-full border-[8px] border-[#10b981]"></div>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold text-[#172044]">96</span>
+                <span className="text-2xl font-semibold text-[#172044]">96</span>
                 <span className="text-[10px] text-[#10b981] font-semibold">Good</span>
               </div>
             </div>
@@ -370,7 +370,7 @@ function OverviewTab() {
         {/* Structured Data */}
         <div className="col-span-12 lg:col-span-3 rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-[13px] font-bold text-[#172044]">Structured Data</h2>
+            <h2 className="text-[13px] font-semibold text-[#172044]">Structured Data</h2>
             <button className="text-[10px] font-semibold text-[#3b82f6] flex items-center gap-1 hover:underline">
               View Details <ChevronRight className="size-3" />
             </button>
@@ -379,24 +379,24 @@ function OverviewTab() {
             <div className="relative size-[90px] shrink-0">
               <div className="absolute inset-0 rounded-full border-[12px] border-transparent" style={{ background: "conic-gradient(#10b981 0% 72%, #ef4444 72% 80%, #f59e0b 80% 100%)", WebkitMask: "radial-gradient(transparent 65%, black 66%)", mask: "radial-gradient(transparent 65%, black 66%)" }}></div>
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-white m-[12px] rounded-full">
-                <span className="text-xl font-bold text-[#172044]">18</span>
+                <span className="text-xl font-semibold text-[#172044]">18</span>
                 <span className="text-[9px] text-[#75829D]">Valid</span>
               </div>
             </div>
             <div className="space-y-3 text-[10px]">
               <div className="flex items-center gap-2">
                 <span className="size-2.5 rounded-full bg-[#10b981] shrink-0"></span>
-                <span className="font-bold text-[#172044]">18</span>
+                <span className="font-semibold text-[#172044]">18</span>
                 <span className="text-[#75829D]">Valid</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="size-2.5 rounded-full bg-[#ef4444] shrink-0"></span>
-                <span className="font-bold text-[#172044]">2</span>
+                <span className="font-semibold text-[#172044]">2</span>
                 <span className="text-[#75829D]">Errors</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="size-2.5 rounded-full bg-[#f59e0b] shrink-0"></span>
-                <span className="font-bold text-[#172044]">5</span>
+                <span className="font-semibold text-[#172044]">5</span>
                 <span className="text-[#75829D]">Warnings</span>
               </div>
               <div className="flex items-center gap-2">
@@ -409,18 +409,18 @@ function OverviewTab() {
 
         {/* Quick Actions */}
         <div className="col-span-12 lg:col-span-3 rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
-          <h2 className="text-[13px] font-bold text-[#172044] mb-4">Quick Actions</h2>
+          <h2 className="text-[13px] font-semibold text-[#172044] mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-2 flex-1">
-            <button className="flex items-center justify-center gap-1.5 rounded-lg bg-[#6366f1] text-white py-3 text-[11px] font-bold shadow-sm hover:bg-[#4f46e5]">
+            <button className="flex items-center justify-center gap-1.5 rounded-lg bg-[#6366f1] text-white py-3 text-[11px] font-semibold shadow-sm hover:bg-[#4f46e5]">
               <Play className="size-3.5 fill-current" /> Run New Audit
             </button>
-            <button className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E8EDF3] bg-white shadow-sm text-[#172044] py-3 text-[11px] font-bold hover:bg-[#f1f5f9]">
+            <button className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E8EDF3] bg-white shadow-sm text-[#172044] py-3 text-[11px] font-semibold hover:bg-[#f1f5f9]">
               <ArrowLeftRight className="size-3.5 text-[#6366f1]" /> Compare Audits
             </button>
-            <button className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E8EDF3] bg-white shadow-sm text-[#172044] py-3 text-[11px] font-bold hover:bg-[#f1f5f9]">
+            <button className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E8EDF3] bg-white shadow-sm text-[#172044] py-3 text-[11px] font-semibold hover:bg-[#f1f5f9]">
               <FileText className="size-3.5 text-[#6366f1]" /> Generate Report
             </button>
-            <button className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E8EDF3] bg-white shadow-sm text-[#172044] py-3 text-[11px] font-bold hover:bg-[#f1f5f9]">
+            <button className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E8EDF3] bg-white shadow-sm text-[#172044] py-3 text-[11px] font-semibold hover:bg-[#f1f5f9]">
               <CalendarPlus className="size-3.5 text-[#6366f1]" /> Schedule Audit
             </button>
           </div>
@@ -429,7 +429,7 @@ function OverviewTab() {
         {/* Row 4 */}
         {/* Recent Audits */}
         <div className="col-span-12 lg:col-span-6 rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col justify-center">
-          <h2 className="text-[13px] font-bold text-[#172044] mb-4">Recent Audits</h2>
+          <h2 className="text-[13px] font-semibold text-[#172044] mb-4">Recent Audits</h2>
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-left">
               <thead>
@@ -454,10 +454,10 @@ function OverviewTab() {
                     <td className="py-3 text-[#75829D]">{row.pages}</td>
                     <td className={cn("py-3 font-semibold", row.issuesColor)}>{row.issues}</td>
                     <td className="py-3">
-                      <span className={cn("px-1.5 py-0.5 rounded-full border text-[8px] font-bold bg-white", row.scoreColor)}>{row.score}</span>
+                      <span className={cn("px-1.5 py-0.5 rounded-full border text-[8px] font-semibold bg-white", row.scoreColor)}>{row.score}</span>
                     </td>
                     <td className="py-3">
-                      <span className={cn("px-2 py-0.5 rounded-md text-[8px] font-bold", row.statusBg, row.statusColor)}>{row.status}</span>
+                      <span className={cn("px-2 py-0.5 rounded-md text-[8px] font-semibold", row.statusBg, row.statusColor)}>{row.status}</span>
                     </td>
                     <td className="py-3">
                       <button className="text-[#3b82f6] font-semibold hover:underline bg-[#eff6ff] px-2 py-0.5 rounded text-[9px]">View Report</button>
@@ -473,7 +473,7 @@ function OverviewTab() {
         <div className="col-span-12 lg:col-span-6 flex gap-2">
           <div className="flex-[1.5] rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col justify-center">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-[13px] font-bold text-[#172044]">Recommendations</h2>
+              <h2 className="text-[13px] font-semibold text-[#172044]">Recommendations</h2>
               <button className="text-[10px] font-semibold text-[#3b82f6] flex items-center gap-1 hover:underline">
                 View All <ChevronRight className="size-3" />
               </button>
@@ -490,7 +490,7 @@ function OverviewTab() {
                     <item.icon className={cn("size-4", item.color)} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-[11px] font-bold text-[#172044] mb-0.5">{item.title}</h3>
+                    <h3 className="text-[11px] font-semibold text-[#172044] mb-0.5">{item.title}</h3>
                     <p className="text-[10px] text-[#75829D]">{item.desc}</p>
                   </div>
                   <ChevronRight className="size-4 text-[#94a3b8] mt-1" />
@@ -504,11 +504,11 @@ function OverviewTab() {
             <div className="absolute -top-10 -left-10 size-40 bg-[#c4b5fd] rounded-full blur-[50px] opacity-30"></div>
 
             <Lightbulb className="size-10 text-[#6366f1] mb-3 relative z-10" />
-            <h2 className="text-[14px] font-bold text-[#1e1b4b] mb-2 relative z-10">Need help improving your SEO?</h2>
+            <h2 className="text-[14px] font-semibold text-[#1e1b4b] mb-2 relative z-10">Need help improving your SEO?</h2>
             <p className="text-[10px] text-[#4f46e5] mb-5 relative z-10 leading-relaxed font-medium">
               Get a detailed audit report with step-by-step recommendations from our experts.
             </p>
-            <button className="w-full py-2.5 bg-white rounded-lg text-[#4f46e5] text-[11px] font-bold shadow-sm relative z-10 border border-[#eaddff] hover:bg-gray-50 transition-colors">
+            <button className="w-full py-2.5 bg-white rounded-lg text-[#4f46e5] text-[11px] font-semibold shadow-sm relative z-10 border border-[#eaddff] hover:bg-gray-50 transition-colors">
               Request SEO Consultation
             </button>
           </div>
@@ -562,7 +562,7 @@ function OverviewTab() {
                 <td className="px-5 py-3.5 font-medium text-[#101A3D]">{row.issue}</td>
                 <td className="px-5 py-3.5">{row.cat}</td>
                 <td className="px-5 py-3.5">
-                  <span className={cn("px-2 py-1 rounded text-[10px] font-bold", row.sevClass)}>{row.sev}</span>
+                  <span className={cn("px-2 py-1 rounded text-[10px] font-semibold", row.sevClass)}>{row.sev}</span>
                 </td>
                 <td className="px-5 py-3.5">{row.urls}</td>
                 <td className="px-5 py-3.5 text-right">
@@ -615,7 +615,7 @@ function OverviewTab() {
                     </div>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className={cn("px-2 py-1 rounded text-[10px] font-bold",
+                    <span className={cn("px-2 py-1 rounded text-[10px] font-semibold",
                       row.status === 200 ? "bg-[#d1fae5] text-[#10b981]" :
                         row.status === 301 ? "bg-[#fef3c7] text-[#f59e0b]" :
                           "bg-[#fee2e2] text-[#ef4444]"
@@ -654,12 +654,12 @@ function OverviewTab() {
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-12 lg:col-span-8 space-y-4">
             <div className="rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm">
-              <h3 className="text-[14px] font-bold text-[#172044] mb-4">Meta Tags</h3>
+              <h3 className="text-[14px] font-semibold text-[#172044] mb-4">Meta Tags</h3>
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
                     <p className="text-[11px] text-[#64748b] font-semibold uppercase">Title Tag</p>
-                    <span className="text-[#10b981] font-bold text-[10px] bg-[#d1fae5] px-2 py-0.5 rounded">54 chars (Good)</span>
+                    <span className="text-[#10b981] font-semibold text-[10px] bg-[#d1fae5] px-2 py-0.5 rounded">54 chars (Good)</span>
                   </div>
                   <div className="p-3 bg-[#F8FAFD] border border-[#E8EDF3] rounded-md text-[13px] text-[#101A3D] font-medium">
                     Our Services | Moksha Sewa - Dignified Final Rites
@@ -668,7 +668,7 @@ function OverviewTab() {
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
                     <p className="text-[11px] text-[#64748b] font-semibold uppercase">Meta Description</p>
-                    <span className="text-[#ef4444] font-bold text-[10px] bg-[#fee2e2] px-2 py-0.5 rounded">Missing</span>
+                    <span className="text-[#ef4444] font-semibold text-[10px] bg-[#fee2e2] px-2 py-0.5 rounded">Missing</span>
                   </div>
                   <div className="p-3 bg-[#fff5f5] border border-[#fecaca] rounded-md text-[12px] text-[#ef4444]">
                     No meta description found. Add a compelling description to improve click-through rates.
@@ -678,19 +678,19 @@ function OverviewTab() {
             </div>
 
             <div className="rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm">
-              <h3 className="text-[14px] font-bold text-[#172044] mb-4">Content Metrics</h3>
+              <h3 className="text-[14px] font-semibold text-[#172044] mb-4">Content Metrics</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 bg-[#F8FAFD] rounded-lg border border-[#E8EDF3] text-center">
                   <p className="text-[11px] text-[#64748b] font-semibold uppercase mb-1">Word Count</p>
-                  <p className="text-2xl font-bold text-[#172044]">842</p>
+                  <p className="text-2xl font-semibold text-[#172044]">842</p>
                 </div>
                 <div className="p-4 bg-[#F8FAFD] rounded-lg border border-[#E8EDF3] text-center">
                   <p className="text-[11px] text-[#64748b] font-semibold uppercase mb-1">Readability</p>
-                  <p className="text-2xl font-bold text-[#172044]">A</p>
+                  <p className="text-2xl font-semibold text-[#172044]">A</p>
                 </div>
                 <div className="p-4 bg-[#fff5f5] rounded-lg border border-[#fecaca] text-center">
                   <p className="text-[11px] text-[#ef4444] font-semibold uppercase mb-1">Images w/o Alt</p>
-                  <p className="text-2xl font-bold text-[#ef4444]">3</p>
+                  <p className="text-2xl font-semibold text-[#ef4444]">3</p>
                 </div>
               </div>
             </div>
@@ -698,22 +698,22 @@ function OverviewTab() {
 
           <div className="col-span-12 lg:col-span-4">
             <div className="rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm h-full">
-              <h3 className="text-[14px] font-bold text-[#172044] mb-4">Heading Hierarchy</h3>
+              <h3 className="text-[14px] font-semibold text-[#172044] mb-4">Heading Hierarchy</h3>
               <div className="space-y-3">
                 <div className="flex gap-3 items-start">
-                  <span className="bg-[#eff6ff] text-[#3b82f6] px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0">H1</span>
+                  <span className="bg-[#eff6ff] text-[#3b82f6] px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0">H1</span>
                   <span className="text-[#101A3D] font-medium text-[12px] pt-0.5">Our Complete Services</span>
                 </div>
                 <div className="flex gap-3 items-start pl-4">
-                  <span className="bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0">H2</span>
+                  <span className="bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0">H2</span>
                   <span className="text-[#334155] text-[12px] pt-0.5">Cremation Assistance</span>
                 </div>
                 <div className="flex gap-3 items-start pl-4">
-                  <span className="bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0">H2</span>
+                  <span className="bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0">H2</span>
                   <span className="text-[#334155] text-[12px] pt-0.5">Ambulance Services</span>
                 </div>
                 <div className="flex gap-3 items-start pl-8">
-                  <span className="bg-[#f8fafc] text-[#94a3b8] px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 border border-[#e2e8f0]">H3</span>
+                  <span className="bg-[#f8fafc] text-[#94a3b8] px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0 border border-[#e2e8f0]">H3</span>
                   <span className="text-[#64748b] text-[11px] pt-0.5">Booking an Ambulance</span>
                 </div>
               </div>
@@ -743,7 +743,7 @@ function OverviewTab() {
               <item.icon className="size-5" />
             </div>
             <div>
-              <h3 className="text-[13px] font-bold text-[#172044] mb-1">{item.title}</h3>
+              <h3 className="text-[13px] font-semibold text-[#172044] mb-1">{item.title}</h3>
               <p className="text-[11px] text-[#64748b]">{item.desc}</p>
             </div>
           </div>
@@ -767,13 +767,13 @@ function OverviewTab() {
             <div key={v.short} className="rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <p className="text-[13px] font-bold text-[#172044]">{v.short}</p>
+                  <p className="text-[13px] font-semibold text-[#172044]">{v.short}</p>
                   <p className="text-[10px] text-[#64748b]">{v.label}</p>
                 </div>
-                <span className={cn("px-2 py-0.5 rounded text-[9px] font-bold uppercase", v.bg, v.text)}>{v.status}</span>
+                <span className={cn("px-2 py-0.5 rounded text-[9px] font-semibold uppercase", v.bg, v.text)}>{v.status}</span>
               </div>
 
-              <p className={cn("text-3xl font-bold mb-1", v.text)}>{v.val}</p>
+              <p className={cn("text-3xl font-semibold mb-1", v.text)}>{v.val}</p>
               <p className="text-[11px] text-[#64748b] mb-4">Target: {v.target}</p>
 
               <div className="h-2 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
@@ -793,7 +793,7 @@ function OverviewTab() {
   return (
       <div className="rounded-xl border border-[#E8EDF3] bg-white shadow-sm overflow-hidden">
         <div className="p-4 border-b border-[#E8EDF3] bg-white flex justify-between items-center">
-          <h2 className="text-[14px] font-bold text-[#101A3D]">Schema Validation</h2>
+          <h2 className="text-[14px] font-semibold text-[#101A3D]">Schema Validation</h2>
         </div>
         <table className="w-full text-left border-collapse">
           <thead className="bg-[#F8FAFD]">
@@ -815,7 +815,7 @@ function OverviewTab() {
                 <td className="px-5 py-3.5 font-mono text-[11px] text-[#172044]">{row.type}</td>
                 <td className="px-5 py-3.5">{row.count}</td>
                 <td className="px-5 py-3.5">
-                  <span className={cn("inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold", row.bg, row.color)}>
+                  <span className={cn("inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-semibold", row.bg, row.color)}>
                     <row.icon className="size-3" /> {row.status}
                   </span>
                 </td>
@@ -840,7 +840,7 @@ function OverviewTab() {
           <div className="size-12 bg-[#d1fae5] text-[#10b981] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#a7f3d0]">
             <ShieldCheck className="size-6" />
           </div>
-          <h2 className="text-[16px] font-bold text-[#101A3D]">Website is Secure</h2>
+          <h2 className="text-[16px] font-semibold text-[#101A3D]">Website is Secure</h2>
           <p className="text-[12px] text-[#64748b] mt-1">No major security issues detected.</p>
         </div>
 
@@ -856,7 +856,7 @@ function OverviewTab() {
                 <item.icon className="size-4 text-[#64748b]" />
               </div>
               <div className="flex-1">
-                <p className="text-[13px] font-bold text-[#172044] mb-0.5">{item.label}</p>
+                <p className="text-[13px] font-semibold text-[#172044] mb-0.5">{item.label}</p>
                 <p className="text-[11px] text-[#64748b]">{item.desc}</p>
               </div>
               <CheckCircle2 className="size-5 text-[#10b981]" />
@@ -874,7 +874,7 @@ function OverviewTab() {
   return (
       <div className="rounded-xl border border-[#E8EDF3] bg-white shadow-sm max-w-2xl mx-auto mt-4">
         <div className="p-5 border-b border-[#E8EDF3]">
-          <h2 className="text-[15px] font-bold text-[#101A3D]">Crawler Configuration</h2>
+          <h2 className="text-[15px] font-semibold text-[#101A3D]">Crawler Configuration</h2>
           <p className="text-[12px] text-[#64748b] mt-0.5">Manage how the SEO spider interacts with your website.</p>
         </div>
 

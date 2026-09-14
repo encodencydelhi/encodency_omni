@@ -97,7 +97,7 @@ export function DraftsTab() {
                   <img src={d.masterContent.media[0]?.url ?? ""} alt="" className="h-10 w-14 shrink-0 rounded-lg object-cover" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <p className="truncate text-[12.5px] font-bold text-[#24365A]">{d.title}</p>
+                      <p className="truncate text-[12.5px] font-semibold text-[#24365A]">{d.title}</p>
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10.5px] text-[#7A87A0]">
                       <div className="flex items-center gap-1">
@@ -150,7 +150,7 @@ export function DraftsTab() {
                     </span>
                   </div>
                   <div className="p-2">
-                    <p className="truncate text-[12px] font-bold text-[#24365A]">{d.title}</p>
+                    <p className="truncate text-[12px] font-semibold text-[#24365A]">{d.title}</p>
                     <p className="mt-0.5 text-[10.5px] text-[#7A87A0]">{d.updatedAt.split("T")[0]}</p>
                   </div>
                 </div>
@@ -178,7 +178,7 @@ export function DraftsTab() {
               </div>
             ))}
           </dl>
-          <button className="mt-2.5 h-8 w-full rounded-lg bg-[#172044] text-[11.5px] font-bold text-white transition hover:bg-slate-800">
+          <button className="mt-2.5 h-8 w-full rounded-lg bg-[#172044] text-[11.5px] font-semibold text-white transition hover:bg-slate-800">
             Continue editing
           </button>
         </Card>

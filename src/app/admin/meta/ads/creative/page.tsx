@@ -246,16 +246,16 @@ function CreativeView() {
                         sizes="(max-width: 768px) 50vw, 220px"
                         className="object-cover"
                       />
-                      <span className="absolute left-1.5 top-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[8px] font-bold text-white">
+                      <span className="absolute left-1.5 top-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[8px] font-semibold text-white">
                         {c.type}
                       </span>
-                      <span className="absolute right-1.5 top-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[8px] font-bold text-white">
+                      <span className="absolute right-1.5 top-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[8px] font-semibold text-white">
                         {c.ratio}
                       </span>
                     </button>
 
                     <div className="flex flex-1 flex-col gap-1.5 p-2.5">
-                      <p className="truncate text-[11px] font-bold" title={c.name}>
+                      <p className="truncate text-[11px] font-semibold" title={c.name}>
                         {c.name}
                       </p>
                       <p className="text-[9px] text-[#64748b]">
@@ -273,7 +273,7 @@ function CreativeView() {
                         <button
                           type="button"
                           onClick={() => setFilter("creative", c.id)}
-                          className="text-[10px] font-bold text-[#0671e9] hover:underline"
+                          className="text-[10px] font-semibold text-[#0671e9] hover:underline"
                         >
                           Preview
                         </button>
@@ -424,7 +424,7 @@ function CreativeView() {
                 <button
                   type="button"
                   onClick={() => router.push(`${ADS_ROOT}/ads/${selected.usedInAds[0]}?tab=performance`)}
-                  className="mt-2 text-[10px] font-bold text-[#0671e9] hover:underline"
+                  className="mt-2 text-[10px] font-semibold text-[#0671e9] hover:underline"
                 >
                   Open full ad performance →
                 </button>

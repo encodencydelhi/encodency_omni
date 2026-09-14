@@ -76,7 +76,7 @@ export function TeamStep({
       />
       <div className="space-y-3 p-5">
         <div>
-          <b className="block text-[14px] font-bold text-[#111827]">Team Assignment</b>
+          <b className="block text-[14px] font-semibold text-[#111827]">Team Assignment</b>
           <p className="text-[11.5px] text-[#6B7280]">
             Choose team members for each role and set their access permissions.
           </p>
@@ -107,7 +107,7 @@ export function TeamStep({
 
                 <span className="flex h-[42px] items-center gap-2 rounded-lg border border-[#E2E5EE] bg-white px-2.5">
                   <span
-                    className="grid size-7 shrink-0 place-items-center rounded-full text-[10px] font-bold text-white"
+                    className="grid size-7 shrink-0 place-items-center rounded-full text-[10px] font-semibold text-white"
                     style={{ background: member.color }}
                   >
                     {member.initials}
@@ -179,7 +179,7 @@ export function TeamStep({
                 <UserPlus className="size-4 text-[#4F46E5]" />
               </span>
               <div>
-                <b className="block text-[12px] font-bold text-[#111827]">Invite New Member</b>
+                <b className="block text-[12px] font-semibold text-[#111827]">Invite New Member</b>
                 <p className="text-[10.5px] text-[#6B7280]">Add a team member to your workspace.</p>
               </div>
             </div>
@@ -206,14 +206,14 @@ export function TeamStep({
                 <Crown className="size-4 text-[#F59E0B]" />
               </span>
               <div>
-                <b className="block text-[12px] font-bold text-[#111827]">
+                <b className="block text-[12px] font-semibold text-[#111827]">
                   Assign Client Owner<span className="ml-0.5 text-[#EF4444]">*</span>
                 </b>
                 <p className="text-[10.5px] text-[#6B7280]">Primary point of contact for this client.</p>
               </div>
             </div>
             <span className="flex h-[42px] items-center gap-2 rounded-lg border border-[#E2E5EE] bg-white px-2.5">
-              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#4F46E5] text-[10px] font-bold text-white">
+              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#4F46E5] text-[10px] font-semibold text-white">
                 MS
               </span>
               <span className="min-w-0 flex-1">
@@ -231,7 +231,7 @@ export function TeamStep({
                 <Users className="size-4 text-[#4F46E5]" />
               </span>
               <div>
-                <b className="block text-[12px] font-bold text-[#111827]">
+                <b className="block text-[12px] font-semibold text-[#111827]">
                   Approval Contact <span className="font-normal text-[#9CA3AF]">(Optional)</span>
                 </b>
                 <p className="text-[10.5px] text-[#6B7280]">Client-side contact for content approvals.</p>
@@ -258,7 +258,7 @@ export function TeamRail() {
         <div className="mb-3 flex items-start gap-2">
           <BookOpen className="mt-px size-4 shrink-0 text-[#4F46E5]" />
           <div>
-            <b className="block text-[13px] font-bold text-[#111827]">Role Explanations</b>
+            <b className="block text-[13px] font-semibold text-[#111827]">Role Explanations</b>
             <p className="text-[10.5px] text-[#6B7280]">Understand what each role can do.</p>
           </div>
         </div>
@@ -272,7 +272,7 @@ export function TeamRail() {
                 <Icon className="size-3.5" style={{ color }} />
               </span>
               <span className="min-w-0">
-                <b className="block text-[11.5px] font-bold text-[#111827]">{title}</b>
+                <b className="block text-[11.5px] font-semibold text-[#111827]">{title}</b>
                 <small className="block text-[10.5px] leading-[15px] text-[#6B7280]">{text}</small>
               </span>
             </li>
@@ -284,7 +284,7 @@ export function TeamRail() {
         <div className="mb-3 flex items-start gap-2">
           <Eye className="mt-px size-4 shrink-0 text-[#4F46E5]" />
           <div>
-            <b className="block text-[13px] font-bold text-[#111827]">Access Preview</b>
+            <b className="block text-[13px] font-semibold text-[#111827]">Access Preview</b>
             <p className="text-[10.5px] text-[#6B7280]">Quick overview of who can access what.</p>
           </div>
         </div>
@@ -303,7 +303,7 @@ export function TeamRail() {
                 {members.map((initials) => (
                   <i
                     key={initials}
-                    className="grid size-5 place-items-center rounded-full border border-white text-[8px] font-bold not-italic text-white"
+                    className="grid size-5 place-items-center rounded-full border border-white text-[8px] font-semibold not-italic text-white"
                     style={{ background: memberColor[initials] }}
                   >
                     {initials}

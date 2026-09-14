@@ -151,7 +151,7 @@ function AdDetail({ adId }: { adId: string }) {
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-[280px] flex-1">
-            <h1 className="flex flex-wrap items-center gap-2.5 text-[22px] font-extrabold leading-tight tracking-tight text-slate-900">
+            <h1 className="flex flex-wrap items-center gap-2.5 text-[22px] font-semibold leading-tight tracking-tight text-slate-900">
               {ad.name}
               <StatusChip status={ad.status} />
             </h1>
@@ -330,7 +330,7 @@ function AdDetail({ adId }: { adId: string }) {
 
             {form && (
               <Panel title="Linked Instant Form" icon={<FileText className="size-4 text-[#1877f2]" />}>
-                <Link href={`${ADS_ROOT}/forms/${form.id}`} className="block text-[11px] font-bold text-[#0671e9] hover:underline">
+                <Link href={`${ADS_ROOT}/forms/${form.id}`} className="block text-[11px] font-semibold text-[#0671e9] hover:underline">
                   {form.name}
                 </Link>
                 <dl className="mt-2">
@@ -488,7 +488,7 @@ function AdDetail({ adId }: { adId: string }) {
       {tab === "leads" && (
         <section className={cn(card, "overflow-hidden")}>
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#dde5ee] px-3 py-2.5">
-            <h2 className="text-sm font-bold">Leads from this ad ({adLeads.length})</h2>
+            <h2 className="text-sm font-semibold">Leads from this ad ({adLeads.length})</h2>
             <Link href={`${ADS_ROOT}/leads?ad=${ad.id}`} className={btn}>
               Open in Leads Center
             </Link>
@@ -539,7 +539,7 @@ function AdDetail({ adId }: { adId: string }) {
       {tab === "activity" && (
         <section className={cn(card, "overflow-hidden")}>
           <div className="border-b border-[#dde5ee] px-3 py-2.5">
-            <h2 className="text-sm font-bold">Activity</h2>
+            <h2 className="text-sm font-semibold">Activity</h2>
           </div>
           {(() => {
             const rows = activityLog.filter((a) => a.entityLabel === ad.name);

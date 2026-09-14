@@ -233,7 +233,7 @@ function Header() {
             <Play className="size-[15px] fill-white text-white" />
           </span>
           <div>
-            <h1 className="text-[27px] font-bold leading-8 tracking-[-0.025em] text-[#111B43]">
+            <h1 className="text-[27px] font-semibold leading-8 tracking-[-0.025em] text-[#111B43]">
               YouTube
             </h1>
             <p className="mt-0.5 text-[12.5px] leading-4 text-[#687797]">
@@ -305,7 +305,7 @@ function Card({
     >
       {title && (
         <header className="flex h-[42px] shrink-0 items-center justify-between gap-2 px-3.5">
-          <h2 className="text-[14px] font-bold leading-5 text-[#172044]">{title}</h2>
+          <h2 className="text-[14px] font-semibold leading-5 text-[#172044]">{title}</h2>
           {filter && (
             <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-[#DDE4ED] px-2 text-[10.5px] font-medium text-[#425273]">
               {filter}
@@ -342,7 +342,7 @@ function ChannelBanner() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0B3C63]/45 to-[#0B3C63]/20" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
-          <p className="text-[16px] font-bold leading-5 drop-shadow-sm">
+          <p className="text-[16px] font-semibold leading-5 drop-shadow-sm">
             Cleaner Rivers
             <br />
             Brighter Tomorrows
@@ -368,7 +368,7 @@ function ChannelBanner() {
         </span>
         <div className="flex items-start justify-between gap-3 pl-[74px] pt-1.5">
           <div className="min-w-0">
-            <p className="flex items-center gap-1 text-[14px] font-bold leading-5 text-[#172044]">
+            <p className="flex items-center gap-1 text-[14px] font-semibold leading-5 text-[#172044]">
               Namo Gange Trust
               <BadgeCheck className="size-3.5 shrink-0 text-[#1A6BC4]" />
             </p>
@@ -495,7 +495,7 @@ function Stat({
         <p className="truncate text-[10px] leading-4 text-[#6B7A96]">{label}</p>
         <p className="flex items-baseline gap-1.5">
           <b className="text-[17px] leading-5 tracking-[-0.02em] text-[#142044]">{value}</b>
-          <span className="whitespace-nowrap text-[9.5px] font-bold text-[#0B9457]">↑ {trend}</span>
+          <span className="whitespace-nowrap text-[9.5px] font-semibold text-[#0B9457]">↑ {trend}</span>
         </p>
       </div>
     </div>
@@ -709,7 +709,7 @@ function TopVideos() {
             key={video.title}
             className="flex items-center gap-2 border-t border-[#EDF1F5] py-[7px] first:border-t-0"
           >
-            <span className="w-3 shrink-0 text-center text-[10px] font-bold text-[#8A97AF]">
+            <span className="w-3 shrink-0 text-center text-[10px] font-semibold text-[#8A97AF]">
               {index + 1}
             </span>
             <span className="relative shrink-0">
@@ -769,7 +769,7 @@ function RecentComments() {
             ) : (
               <span
                 className={cn(
-                  "grid size-7 shrink-0 place-items-center rounded-full text-[10px] font-bold",
+                  "grid size-7 shrink-0 place-items-center rounded-full text-[10px] font-semibold",
                   commentTints[index],
                 )}
               >
@@ -807,8 +807,8 @@ function ContentCalendar() {
             className="flex items-center gap-2 border-t border-[#EDF1F5] py-2 first:border-t-0"
           >
             <span className="grid w-[30px] shrink-0 place-items-center rounded-md bg-[#FFEFF0] py-0.5 leading-none text-[#D6323C]">
-              <small className="text-[7.5px] font-bold">{item.month}</small>
-              <b className="text-[12px] font-bold leading-4">{item.day}</b>
+              <small className="text-[7.5px] font-semibold">{item.month}</small>
+              <b className="text-[12px] font-semibold leading-4">{item.day}</b>
             </span>
             <span className="relative shrink-0">
               <Image

@@ -112,7 +112,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-[280px] flex-1">
-            <h1 className="flex flex-wrap items-center gap-2.5 text-[22px] font-extrabold leading-tight tracking-tight text-slate-900">
+            <h1 className="flex flex-wrap items-center gap-2.5 text-[22px] font-semibold leading-tight tracking-tight text-slate-900">
               {form.name}
               <StatusChip status={form.status} />
             </h1>
@@ -208,7 +208,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
                   key={q.id}
                   className="flex items-center gap-2.5 rounded-md border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2"
                 >
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e8eef5] text-[9px] font-bold text-[#475569]">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e8eef5] text-[9px] font-semibold text-[#475569]">
                     {i + 1}
                   </span>
                   <span className="min-w-0 flex-1">
@@ -239,7 +239,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
                   form.privacyUrl ? (
                     <span className="break-all">{form.privacyUrl}</span>
                   ) : (
-                    <span className="font-bold text-[#b42318]">Not set</span>
+                    <span className="font-semibold text-[#b42318]">Not set</span>
                   )
                 }
               />
@@ -298,7 +298,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
                     <strong>{worst.label}</strong> loses the most people ({pct(worst.lostPct, 1)}).
                     Making it optional, or moving it after the contact details, usually lifts
                     completion.{" "}
-                    <Link href={`${ADS_ROOT}/help/form-completion`} className="font-bold underline">
+                    <Link href={`${ADS_ROOT}/help/form-completion`} className="font-semibold underline">
                       Improve completion rate
                     </Link>
                   </p>
@@ -366,7 +366,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
 
       <section className={cn(card, "mt-3 overflow-hidden")}>
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#dde5ee] px-3 py-2.5">
-          <h2 className="text-sm font-bold">Recent leads from this form ({formLeads.length})</h2>
+          <h2 className="text-sm font-semibold">Recent leads from this form ({formLeads.length})</h2>
           <Link href={`${ADS_ROOT}/leads?form=${form.id}`} className={btn}>
             View all in Leads Center
           </Link>

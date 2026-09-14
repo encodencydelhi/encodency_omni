@@ -20,7 +20,7 @@ export function ContentTypeSelector({ platform, selected, onSelect }: Props) {
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5">
         <PlatformBadge platform={platform} size="sm" />
-        <span className="text-[11px] font-bold text-[#33445F]">{meta.label}</span>
+        <span className="text-[11px] font-semibold text-[#33445F]">{meta.label}</span>
         <span className="text-[10px] text-[#7A87A0]">— Content Type</span>
       </div>
       <div className="flex flex-wrap gap-1">

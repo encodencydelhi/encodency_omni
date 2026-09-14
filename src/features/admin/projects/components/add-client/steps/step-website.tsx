@@ -44,7 +44,7 @@ function ConnectedIntegration({ channel, name, account, synced }: { channel: str
     <div className="flex items-start gap-2.5 rounded-xl border border-[#E6E8F0] bg-white p-3">
       <ChannelLogo channel={channel} className="size-7 shrink-0" />
       <div className="min-w-0 flex-1">
-        <b className="block truncate text-[12px] font-bold text-[#111827]">{name}</b>
+        <b className="block truncate text-[12px] font-semibold text-[#111827]">{name}</b>
         <p className="truncate text-[10.5px] text-[#6B7280]">{account}</p>
         <p className="text-[10px] text-[#9CA3AF]">Last synced: {synced}</p>
       </div>
@@ -111,7 +111,7 @@ export function WebsiteStep({
         <div className="grid gap-2.5 md:col-span-2 md:grid-cols-3">
           <div className="flex items-start justify-between gap-3 rounded-xl border border-[#E6E8F0] bg-white p-3">
             <div className="min-w-0">
-              <b className="block text-[12px] font-bold text-[#111827]">SEO Tracking Enabled</b>
+              <b className="block text-[12px] font-semibold text-[#111827]">SEO Tracking Enabled</b>
               <p className="mt-0.5 text-[10.5px] leading-[15px] text-[#6B7280]">
                 Track keyword rankings, organic traffic and SEO performance for this client.
               </p>
@@ -207,7 +207,7 @@ export function WebsiteRail() {
             <Search className="size-7 text-[#4F46E5]" />
           </span>
         </div>
-        <b className="block text-center text-[15px] font-bold text-[#111827]">
+        <b className="block text-center text-[15px] font-semibold text-[#111827]">
           What will happen after this step?
         </b>
         <p className="mx-auto mb-4 mt-1 text-center text-[11.5px] leading-[17px] text-[#6B7280]">

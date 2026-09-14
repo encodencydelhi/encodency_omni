@@ -180,7 +180,7 @@ function CreateAdsManagerInner() {
                   className={`group flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-[10.5px] font-semibold transition-all duration-300 ${active ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-200" : complete ? "text-slate-700 hover:bg-slate-50" : "text-slate-400 cursor-not-allowed"}`}
                 >
                   <span
-                    className={`flex size-5.5 items-center justify-center rounded-full text-[9px] font-bold transition-all duration-300 ${complete ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm shadow-emerald-500/30" : active ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/30" : "bg-slate-100 text-slate-500"}`}
+                    className={`flex size-5.5 items-center justify-center rounded-full text-[9px] font-semibold transition-all duration-300 ${complete ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm shadow-emerald-500/30" : active ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/30" : "bg-slate-100 text-slate-500"}`}
                   >
                     {complete ? <Check className="size-3" /> : i + 1}
                   </span>
@@ -1161,7 +1161,7 @@ function FormPreview() {
           />
         </div>
         <div className="p-3">
-          <h3 className="text-center text-base font-bold leading-tight">
+          <h3 className="text-center text-base font-semibold leading-tight">
             Get a Free Home
             <br />
             Renovation Quote
@@ -1182,7 +1182,7 @@ function FormPreview() {
               </div>
             ))}
           </div>
-          <span className="mt-3 block w-full rounded bg-[#126df3] py-2 text-center text-[10px] font-bold text-white">
+          <span className="mt-3 block w-full rounded bg-[#126df3] py-2 text-center text-[10px] font-semibold text-white">
             Next
           </span>
         </div>
@@ -1317,7 +1317,7 @@ function RightRail({ step }: { step: Step }) {
     <div className="space-y-2.5">
       <RailCard className="sticky top-0 z-10">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-bold">
+          <p className="text-sm font-semibold">
             {step === "adset"
               ? "Audience Quality Score"
               : step === "ad"
@@ -1329,11 +1329,11 @@ function RightRail({ step }: { step: Step }) {
                     : "Campaign Score"}{" "}
             <Info className="inline size-3.5 text-[#66758f]" />
           </p>
-          <span className="rounded bg-[#dcf8e8] px-2 py-1 text-[9px] font-bold text-[#079455]">
+          <span className="rounded bg-[#dcf8e8] px-2 py-1 text-[9px] font-semibold text-[#079455]">
             {isReview ? "Ready" : "Great"}
           </span>
         </div>
-        <div className="mt-2 text-3xl font-bold text-[#08a657]">
+        <div className="mt-2 text-3xl font-semibold text-[#08a657]">
           {step === "campaign"
             ? "78"
             : step === "adset"
@@ -1352,7 +1352,7 @@ function RightRail({ step }: { step: Step }) {
       </RailCard>
       <RailCard>
         <div className="flex items-center justify-between">
-          <p className="flex items-center gap-2 text-xs font-bold">
+          <p className="flex items-center gap-2 text-xs font-semibold">
             <Grid2X2 className="size-4 text-[#1671f8]" />
             Validation Issues
           </p>
@@ -1363,7 +1363,7 @@ function RightRail({ step }: { step: Step }) {
         <div className="mt-3 flex gap-3 rounded-md border border-[#f4d99d] bg-[#fffaf0] p-3">
           <AlertTriangle className="size-5 shrink-0 text-[#efa413]" />
           <div>
-            <p className="text-[10px] font-bold">
+            <p className="text-[10px] font-semibold">
               Consider adding a campaign image
             </p>
             <p className="mt-1 text-[9px] leading-relaxed text-[#66758f]">
@@ -1374,7 +1374,7 @@ function RightRail({ step }: { step: Step }) {
       </RailCard>
       <RailCard>
         <div className="flex items-center justify-between">
-          <p className="flex items-center gap-2 text-xs font-bold">
+          <p className="flex items-center gap-2 text-xs font-semibold">
             <ClipboardCheck className="size-4 text-[#1671f8]" />
             {isReview ? "Publish Checklist" : "Setup Checklist"}
           </p>
@@ -1400,7 +1400,7 @@ function RightRail({ step }: { step: Step }) {
       </RailCard>
       <RailCard>
         <div className="flex items-center justify-between">
-          <p className="flex items-center gap-2 text-xs font-bold">
+          <p className="flex items-center gap-2 text-xs font-semibold">
             <Lightbulb className="size-4 text-amber-500" />
             Recommendations
           </p>
@@ -1423,7 +1423,7 @@ function RightRail({ step }: { step: Step }) {
                 )}
               </span>
               <div className="flex-1">
-                <p className="text-[10px] font-bold">{x}</p>
+                <p className="text-[10px] font-semibold">{x}</p>
                 <p className="mt-0.5 text-[9px] text-[#66758f]">
                   Improve campaign performance with this recommendation.
                 </p>
@@ -1431,7 +1431,7 @@ function RightRail({ step }: { step: Step }) {
               <button
                 type="button"
                 onClick={() => toast.success(`${x} enabled`)}
-                className="text-[9px] font-bold text-[#0769e8] hover:underline"
+                className="text-[9px] font-semibold text-[#0769e8] hover:underline"
               >
                 Enable
               </button>

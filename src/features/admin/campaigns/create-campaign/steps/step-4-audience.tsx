@@ -327,7 +327,7 @@ function AudienceBox({
           <Icon className="size-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <b className="block text-[12px] font-bold text-[#132044]">{title}</b>
+          <b className="block text-[12px] font-semibold text-[#132044]">{title}</b>
           <small className="block text-[10px] leading-[13px] text-[#687797]">{caption}</small>
         </div>
         <GreenToggle on={on} onToggle={onToggle} />

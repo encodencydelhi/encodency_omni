@@ -52,7 +52,7 @@ export function AdPreview({
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-bold text-slate-900">{handle}</span>
+          <span className="block truncate text-xs font-semibold text-slate-900">{handle}</span>
           <span className="block text-[10px] font-semibold text-slate-500">Sponsored · Meta Feed</span>
         </div>
         <button type="button" aria-label="Ad options" className="text-slate-400 hover:text-slate-600">
@@ -74,7 +74,7 @@ export function AdPreview({
             className="object-cover transition-transform duration-500 hover:scale-105"
           />
         ) : (
-          <div className="flex size-full flex-col items-center justify-center gap-2 text-xs font-bold text-slate-400">
+          <div className="flex size-full flex-col items-center justify-center gap-2 text-xs font-semibold text-slate-400">
             <Sparkles className="size-6 text-slate-300" />
             No creative attached
           </div>
@@ -83,17 +83,17 @@ export function AdPreview({
 
       <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/80 px-3.5 py-2.5">
         <div className="min-w-0 flex-1">
-          <span className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-500">
+          <span className="block text-[9px] font-semibold uppercase tracking-wider text-slate-500">
             {ad.destination.split("—")[0]?.trim()}
           </span>
-          <strong className="block truncate text-xs font-extrabold text-slate-900">{ad.headline}</strong>
+          <strong className="block truncate text-xs font-semibold text-slate-900">{ad.headline}</strong>
           {ad.description && (
             <span className="block truncate text-[10px] font-medium text-slate-600">
               {ad.description}
             </span>
           )}
         </div>
-        <span className="shrink-0 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-1.5 text-xs font-extrabold text-white shadow-xs">
+        <span className="shrink-0 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs">
           {ad.cta}
         </span>
       </div>
@@ -108,13 +108,13 @@ export function AdPreview({
           </>
         ) : (
           <>
-            <button type="button" className="flex items-center gap-1.5 text-xs font-bold hover:text-blue-600 transition-colors">
+            <button type="button" className="flex items-center gap-1.5 text-xs font-semibold hover:text-blue-600 transition-colors">
               <ThumbsUp className="size-4" /> Like
             </button>
-            <button type="button" className="flex items-center gap-1.5 text-xs font-bold hover:text-blue-600 transition-colors">
+            <button type="button" className="flex items-center gap-1.5 text-xs font-semibold hover:text-blue-600 transition-colors">
               <MessageCircle className="size-4" /> Comment
             </button>
-            <button type="button" className="flex items-center gap-1.5 text-xs font-bold hover:text-blue-600 transition-colors">
+            <button type="button" className="flex items-center gap-1.5 text-xs font-semibold hover:text-blue-600 transition-colors">
               <Send className="size-4" /> Share
             </button>
           </>
@@ -145,17 +145,17 @@ export function InstantFormPreview({
 
       <div className="max-h-[440px] overflow-y-auto [scrollbar-width:thin]">
         <div className="bg-gradient-to-b from-slate-50 to-white px-4 py-4 border-b border-slate-100">
-          <span className="inline-block rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-600 shadow-2xs">
+          <span className="inline-block rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-600 shadow-2xs">
             {form.language} · Instant Form
           </span>
-          <h3 className="mt-2 text-sm font-extrabold text-slate-900 leading-snug">{form.introHeadline}</h3>
+          <h3 className="mt-2 text-sm font-semibold text-slate-900 leading-snug">{form.introHeadline}</h3>
           <p className="mt-1.5 text-xs font-medium leading-relaxed text-slate-600">{form.introBody}</p>
         </div>
 
         <div className="space-y-3 px-4 py-4">
           {form.questions.map((q) => (
             <label key={q.id} className="block">
-              <span className="block text-xs font-bold text-slate-700">
+              <span className="block text-xs font-semibold text-slate-700">
                 {q.label}
                 {q.required && <span className="text-rose-600 font-black"> *</span>}
               </span>
@@ -170,21 +170,21 @@ export function InstantFormPreview({
           {form.privacyUrl ? (
             <p className="text-[10px] font-medium leading-relaxed text-slate-500">
               By clicking Submit you agree to our{" "}
-              <span className="font-bold text-blue-600 underline">privacy policy</span>.
+              <span className="font-semibold text-blue-600 underline">privacy policy</span>.
             </p>
           ) : (
-            <p className="rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-[10px] font-bold leading-relaxed text-rose-800">
+            <p className="rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-[10px] font-semibold leading-relaxed text-rose-800">
               No privacy policy URL set. Meta requires a privacy policy.
             </p>
           )}
-          <span className="mt-3 block rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-center text-xs font-extrabold text-white shadow-md shadow-blue-500/20">
+          <span className="mt-3 block rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-center text-xs font-semibold text-white shadow-md shadow-blue-500/20">
             Submit Application
           </span>
         </div>
 
         <div className="border-t border-slate-100 bg-slate-100/60 px-4 py-3.5 text-center">
-          <p className="text-xs font-bold text-slate-800">{form.thankYouHeadline}</p>
-          <span className="mt-2 inline-block rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 shadow-2xs">
+          <p className="text-xs font-semibold text-slate-800">{form.thankYouHeadline}</p>
+          <span className="mt-2 inline-block rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-2xs">
             {form.thankYouCta}
           </span>
         </div>

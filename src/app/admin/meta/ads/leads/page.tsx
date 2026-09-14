@@ -280,7 +280,7 @@ function LeadsView() {
                         {i + 1}
                       </span>
                     )}
-                    <span className="text-[10.5px] font-bold text-slate-700">{stage}</span>
+                    <span className="text-[10.5px] font-semibold text-slate-700">{stage}</span>
                   </span>
                   <strong className="mt-2 text-lg font-black text-slate-900 leading-none">{count}</strong>
                   <Meter

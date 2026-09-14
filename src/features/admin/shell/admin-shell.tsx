@@ -37,7 +37,7 @@ function Shell({ children }: { children: ReactNode }) {
     );
   }
 
-  return <div className="admin-shell min-h-dvh bg-[#F5F8FC] text-[#172044]"><AdminSidebar /><div className={cn("flex min-h-dvh flex-col transition-[padding] duration-200", isSidebarCollapsed ? "lg:pl-[64px]" : "lg:pl-[220px]")}><AdminTopbar /><main className="mx-auto w-full max-w-[1536px] flex-1 px-4 py-5 sm:px-5 xl:px-6">{children}</main><AdminFooter /></div></div>;
+  return <div className="admin-shell min-h-dvh bg-[#F5F8FC] text-[#172044]"><AdminSidebar /><div className={cn("flex min-h-dvh flex-col transition-[padding] duration-200", isSidebarCollapsed ? "lg:pl-[64px]" : "lg:pl-[220px]")}><AdminTopbar /><main className="w-full flex-1 px-4 py-5 sm:px-5 xl:px-6">{children}</main><AdminFooter /></div></div>;
 }
 
 export function AdminShell({ children }: { children: ReactNode }) { return <AdminProvider><Shell>{children}</Shell></AdminProvider>; }

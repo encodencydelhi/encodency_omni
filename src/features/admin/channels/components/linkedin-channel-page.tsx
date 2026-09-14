@@ -21,7 +21,6 @@ import {
 } from "recharts";
 import {
   AlertTriangle,
-  ArrowUpRight,
   AtSign,
   Award,
   BarChart3,
@@ -36,6 +35,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Cloud,
   Copy,
   Database,
   Download,
@@ -48,7 +48,9 @@ import {
   IndianRupee,
   Key,
   Layers,
+  Leaf,
   Lightbulb,
+  Link,
   Link as LinkIcon,
   MapPin,
   Megaphone,
@@ -69,6 +71,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
+  Star,
   ThumbsUp,
   TrendingUp,
   Trophy,
@@ -127,7 +130,7 @@ function Card({
   return (
     <section
       className={cn(
-        "flex flex-col overflow-hidden rounded-xl border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]",
+        "flex flex-col overflow-hidden rounded-none border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]",
         className,
       )}
     >
@@ -137,9 +140,9 @@ function Card({
           headerClassName,
         )}
       >
-        <h2 className="text-[14px] font-bold text-[#172044]">{title}</h2>
+        <h2 className="text-[14px] font-semibold text-[#172044]">{title}</h2>
         {filter && (
-          <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+          <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
             {filter}
             <ChevronDown className="size-3" />
           </button>
@@ -179,19 +182,23 @@ export function LinkedInChannelPage() {
   const [activeTab, setActiveTab] = useState<TabType>("Overview");
 
   return (
-    <div className="space-y-3 pb-8">
-      {/* Glassmorphic Gradient Channel Header */}
-      <ChannelHeader channel="linkedin" />
-      <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
+    <div className="pb-8">
+      {/* White Header Area */}
+      <div className="-mx-4 -mt-5 mb-5 bg-white px-4 pt-5 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6 shadow-sm border-b border-[#E4EAF2]">
+        <ChannelHeader channel="linkedin" />
+        <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
 
-      {activeTab === "Overview" && <OverviewTab onNavigateTab={setActiveTab} />}
-      {activeTab === "Posts" && <PostsTab />}
-      {activeTab === "Analytics" && <AnalyticsTab />}
-      {activeTab === "Audience" && <AudienceTab />}
-      {activeTab === "Campaigns" && <CampaignsTab />}
-      {activeTab === "Leads" && <LeadsTab />}
-      {activeTab === "Inbox" && <InboxTab />}
-      {activeTab === "Settings" && <SettingsTab />}
+      <div className="space-y-2">
+        {activeTab === "Overview" && <OverviewTab onNavigateTab={setActiveTab} />}
+        {activeTab === "Posts" && <PostsTab />}
+        {activeTab === "Analytics" && <AnalyticsTab />}
+        {activeTab === "Audience" && <AudienceTab />}
+        {activeTab === "Campaigns" && <CampaignsTab />}
+        {activeTab === "Leads" && <LeadsTab />}
+        {activeTab === "Inbox" && <InboxTab />}
+        {activeTab === "Settings" && <SettingsTab />}
+      </div>
     </div>
   );
 }
@@ -342,11 +349,6 @@ const postsList = [
 
 function PostsTab() {
   const [filterTab, setFilterTab] = useState<"All" | "Published" | "Scheduled" | "Draft" | "Failed" | "Newsletters">("All");
-  const [advocacyRecommended, setAdvocacyRecommended] = useState<Record<number, boolean>>({ 1: true, 2: true });
-
-  const toggleAdvocacy = (id: number) => {
-    setAdvocacyRecommended((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
 
   const filteredPosts = postsList.filter((p) => {
     if (filterTab === "All") return true;
@@ -355,25 +357,25 @@ function PostsTab() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Top action header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-[19px] font-bold text-[#111B43]">Posts & Content</h2>
+          <h2 className="text-[19px] font-semibold text-[#111B43]">Posts & Content</h2>
           <p className="text-[12px] text-[#687797]">
             Create, schedule, manage articles, newsletters, and recommend posts to employees.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex h-[36px] items-center gap-1.5 rounded-lg border border-[#E9D5FF] bg-[#FAF5FF] px-3.5 text-[12px] font-semibold text-[#7E22CE] shadow-sm transition-colors hover:bg-[#F3E8FF]">
+          <button className="flex h-[36px] items-center gap-1.5 rounded-none border border-[#E9D5FF] bg-[#FAF5FF] px-3.5 text-[12px] font-semibold text-[#7E22CE] shadow-sm transition-colors hover:bg-[#F3E8FF]">
             <Sparkles className="size-3.5 text-[#9333EA]" />
             <span>AI Generate</span>
           </button>
-          <button className="flex h-[36px] items-center gap-1.5 rounded-lg border border-[#D7E0EB] bg-white px-3.5 text-[12px] font-semibold text-[#425273] shadow-sm transition-colors hover:bg-[#F8FAFD]">
+          <button className="flex h-[36px] items-center gap-1.5 rounded-none border border-[#D7E0EB] bg-white px-3.5 text-[12px] font-semibold text-[#425273] shadow-sm transition-colors hover:bg-[#F8FAFD]">
             <UploadCloud className="size-3.5 text-[#687797]" />
             <span>Bulk Upload</span>
           </button>
-          <button className="flex h-[36px] items-center gap-1.5 rounded-lg bg-[#0A66C2] px-4 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0958A8]">
+          <button className="flex h-[36px] items-center gap-1.5 rounded-none bg-[#0A66C2] px-4 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0958A8]">
             <Plus className="size-3.5" />
             <span>Create Post</span>
             <ChevronDown className="size-3 ml-0.5 opacity-80" />
@@ -382,45 +384,45 @@ function PostsTab() {
       </div>
 
       {/* LinkedIn Native Newsletter & Employee Advocacy Spotlight Card */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {/* Newsletter Banner */}
-        <div className="flex items-center justify-between rounded-xl border border-[#DDE4ED] bg-gradient-to-r from-[#F0F7FF] to-[#FFFFFF] p-3.5 shadow-sm">
+        <div className="flex items-center justify-between rounded-none border border-[#DDE4ED] bg-gradient-to-r from-[#F0F7FF] to-[#FFFFFF] p-3.5 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="grid size-10 place-items-center rounded-xl bg-[#0A66C2] text-white shadow-sm">
+            <div className="grid size-10 place-items-center rounded-none bg-[#0A66C2] text-white shadow-sm">
               <BookOpen className="size-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[13px] font-bold text-[#172044]">Clean Ganga Monthly Digest</span>
-                <span className="rounded bg-[#DCFCE7] px-1.5 py-0.5 text-[10.5px] font-bold text-[#16A34A]">Edition #18 Live</span>
+                <span className="text-[13px] font-semibold text-[#172044]">Clean Ganga Monthly Digest</span>
+                <span className="rounded-none bg-[#DCFCE7] px-1.5 py-0.5 text-[10.5px] font-semibold text-[#16A34A]">Edition #18 Live</span>
               </div>
               <p className="text-[11px] text-[#64748B]">
                 <b>4,120</b> subscribers • <b>42.8%</b> read rate • +312 new this month
               </p>
             </div>
           </div>
-          <button className="shrink-0 rounded-lg border border-[#0A66C2] bg-white px-3 py-1.5 text-[11px] font-bold text-[#0A66C2] hover:bg-[#EFF6FF]">
-            + Draft Edition
+          <button className="shrink-0 flex items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#0A66C2] hover:bg-[#F8FAFD] shadow-sm">
+            View Newsletter <ExternalLink className="size-3" />
           </button>
         </div>
 
         {/* Employee Advocacy Quick Summary */}
-        <div className="flex items-center justify-between rounded-xl border border-[#DDE4ED] bg-gradient-to-r from-[#FAF5FF] to-[#FFFFFF] p-3.5 shadow-sm">
+        <div className="flex items-center justify-between rounded-none border border-[#DDE4ED] bg-gradient-to-r from-[#FAF5FF] to-[#FFFFFF] p-3.5 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="grid size-10 place-items-center rounded-xl bg-[#7E22CE] text-white shadow-sm">
+            <div className="grid size-10 place-items-center rounded-none bg-[#7E22CE] text-white shadow-sm">
               <Award className="size-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[13px] font-bold text-[#172044]">Employee Advocacy Program</span>
-                <span className="rounded bg-[#FAF5FF] border border-[#E9D5FF] px-1.5 py-0.5 text-[10.5px] font-bold text-[#7E22CE]">48 Advocates</span>
+                <span className="text-[13px] font-semibold text-[#172044]">Employee Advocacy Program</span>
+                <span className="rounded-none bg-[#FAF5FF] border border-[#E9D5FF] px-1.5 py-0.5 text-[10.5px] font-semibold text-[#7E22CE]">48 Advocates</span>
               </div>
               <p className="text-[11px] text-[#64748B]">
                 <b>1,420</b> employee reshares generated <b>4,890</b> organic clicks
               </p>
             </div>
           </div>
-          <button className="shrink-0 rounded-lg bg-[#7E22CE] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#6B21A8]">
+          <button className="shrink-0 rounded-none border border-[#DDE4ED] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#0A66C2] shadow-sm hover:bg-[#F8FAFD]">
             View Leaderboard
           </button>
         </div>
@@ -521,7 +523,7 @@ function PostsTab() {
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
             )}
           >
-            <BookOpen className="size-3" />
+            <i className="size-2 rounded-full bg-[#9CA3AF]" />
             <span>Newsletters & Articles</span>
             <span
               className={cn(
@@ -561,10 +563,10 @@ function PostsTab() {
             <input
               type="text"
               placeholder="Search posts..."
-              className="h-[32px] w-[200px] rounded-lg border border-[#DDE4ED] bg-white pl-8 pr-3 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+              className="h-[32px] w-[200px] rounded-none border border-[#DDE4ED] bg-white pl-8 pr-3 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
             />
           </div>
-          <button className="flex h-[32px] items-center gap-1.5 rounded-lg border border-[#DDE4ED] bg-white px-3 text-[11.5px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+          <button className="flex h-[32px] items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white px-3 text-[11.5px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
             <SlidersHorizontal className="size-3.5 text-[#687797]" />
             <span>Filters</span>
           </button>
@@ -572,13 +574,13 @@ function PostsTab() {
       </div>
 
       {/* Table (NO PLATFORM COLUMN as explicitly requested) */}
-      <div className="overflow-hidden rounded-xl border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+      <div className="overflow-hidden rounded-none border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[11.5px] border-collapse">
             <thead>
-              <tr className="border-b border-[#EDF1F5] bg-[#F8FAFD] text-[10.5px] font-bold text-[#687797]">
+              <tr className="border-b border-[#EDF1F5] bg-[#F8FAFD] text-[10.5px] font-semibold text-[#687797]">
                 <th className="w-[36px] px-3 py-3 text-center">
-                  <input type="checkbox" className="rounded border-[#CBD5E1]" />
+                  <input type="checkbox" className="rounded-none border-[#CBD5E1]" />
                 </th>
                 <th className="min-w-[280px] px-3 py-3">Post</th>
                 <th className="w-[100px] px-3 py-3">Type</th>
@@ -591,18 +593,18 @@ function PostsTab() {
                 </th>
                 <th className="w-[110px] px-3 py-3">Impressions</th>
                 <th className="w-[110px] px-3 py-3">Engagement</th>
-                <th className="w-[140px] px-3 py-3 text-center">Actions & Advocacy</th>
+                <th className="w-[180px] px-3 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EDF1F5]">
               {filteredPosts.map((post) => (
                 <tr key={post.id} className="transition-colors hover:bg-[#F9FBFE]">
                   <td className="px-3 py-2.5 text-center">
-                    <input type="checkbox" className="rounded border-[#CBD5E1]" />
+                    <input type="checkbox" className="rounded-none border-[#CBD5E1]" />
                   </td>
                   <td className="px-3 py-2.5">
                     <div className="flex items-center gap-3">
-                      <div className="relative h-[42px] w-[62px] shrink-0 overflow-hidden rounded-md bg-[#EDF2F7]">
+                      <div className="relative h-[42px] w-[62px] shrink-0 overflow-hidden rounded-none bg-[#EDF2F7]">
                         <img
                           src={post.image}
                           alt=""
@@ -617,7 +619,7 @@ function PostsTab() {
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[12px] font-bold text-[#172044]">
+                        <p className="truncate text-[12px] font-semibold text-[#172044]">
                           {post.title}
                         </p>
                         <p className="truncate text-[10px] text-[#687797]">
@@ -630,7 +632,7 @@ function PostsTab() {
                     <div className="space-y-1">
                       <span
                         className={cn(
-                          "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold",
+                          "inline-flex items-center gap-1 rounded-none px-2 py-0.5 text-[10px] font-semibold",
                           post.type === "Image" && "border border-[#BFDBFE] bg-[#EFF6FF] text-[#1D4ED8]",
                           post.type === "Video" && "border border-[#E9D5FF] bg-[#FAF5FF] text-[#7E22CE]",
                           post.type === "Carousel" && "border border-[#FED7AA] bg-[#FFF7ED] text-[#C2410C]",
@@ -650,19 +652,22 @@ function PostsTab() {
                   </td>
                   <td className="px-3 py-2.5">
                     {post.status === "Published" && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ECFDF5] px-2 py-0.5 text-[10.5px] font-semibold text-[#047857]">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10.5px] font-semibold text-[#111827]">
                         <i className="size-1.5 rounded-full bg-[#10B981]" />
                         Published
                       </span>
                     )}
                     {post.status === "Scheduled" && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10.5px] font-semibold text-[#1D4ED8]">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10.5px] font-semibold text-[#111827]">
                         <i className="size-1.5 rounded-full bg-[#3B82F6]" />
                         Scheduled
                       </span>
                     )}
                     {post.status === "Draft" && (
-                      <span className="text-[10.5px] font-medium text-[#64748B]">Draft</span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10.5px] font-semibold text-[#111827]">
+                        <Cloud className="size-2.5 text-[#6B7280]" />
+                        Draft
+                      </span>
                     )}
                     {post.status === "Failed" && (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FEF2F2] px-2 py-0.5 text-[10.5px] font-semibold text-[#B91C1C]">
@@ -684,7 +689,7 @@ function PostsTab() {
                   <td className="px-3 py-2.5">
                     {post.impressions !== "—" ? (
                       <div>
-                        <p className="font-bold text-[#172044]">{post.impressions}</p>
+                        <p className="font-semibold text-[#172044]">{post.impressions}</p>
                         <p className="text-[10.5px] font-semibold text-[#10B981]">{post.impressionsTrend}</p>
                       </div>
                     ) : (
@@ -694,38 +699,54 @@ function PostsTab() {
                   <td className="px-3 py-2.5">
                     {post.engagement !== "—" ? (
                       <div>
-                        <p className="font-bold text-[#172044]">{post.engagement}</p>
+                        <p className="font-semibold text-[#172044]">{post.engagement}</p>
                         <p className="text-[10.5px] font-semibold text-[#10B981]">{post.engagementTrend}</p>
                       </div>
                     ) : (
                       <span className="text-[#9CA3AF]">—</span>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-center">
-                    <div className="flex items-center justify-center gap-1 text-[#687797]">
+                  <td className="px-3 py-2.5">
+                    <div className="flex items-center gap-1.5 text-[#687797]">
                       {post.status === "Published" && (
-                        <button
-                          onClick={() => toggleAdvocacy(post.id)}
-                          className={cn(
-                            "flex items-center gap-1 rounded-md px-1.5 py-1 text-[10.5px] font-bold transition-all",
-                            advocacyRecommended[post.id]
-                              ? "bg-[#FAF5FF] text-[#7E22CE] border border-[#E9D5FF]"
-                              : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
-                          )}
-                          title="Recommend this post to team employees for personal sharing"
-                        >
-                          <Award className="size-3 text-[#9333EA]" />
-                          <span>{advocacyRecommended[post.id] ? "Advocated" : "Advocate"}</span>
+                        <button className="flex items-center gap-1.5 rounded-none border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-[10.5px] font-semibold text-[#374151] hover:bg-[#F9FAFB] shadow-sm">
+                          <Eye className="size-3 text-[#0A66C2]" />
+                          View
                         </button>
                       )}
-                      <button className="rounded p-1 hover:bg-[#EDF2F7] hover:text-[#0A66C2]" title="View Analytics">
-                        <BarChart3 className="size-3.5" />
-                      </button>
-                      <button className="rounded p-1 hover:bg-[#EDF2F7] hover:text-[#172044]" title="Edit Post">
-                        <Pencil className="size-3.5" />
-                      </button>
-                      <button className="rounded p-1 hover:bg-[#EDF2F7] hover:text-[#172044]" title="More">
-                        <MoreHorizontal className="size-3.5" />
+                      {post.status === "Scheduled" && (
+                        <button className="flex items-center gap-1.5 rounded-none border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-[10.5px] font-semibold text-[#374151] hover:bg-[#F9FAFB] shadow-sm">
+                          <Eye className="size-3 text-[#0A66C2]" />
+                          Preview
+                        </button>
+                      )}
+                      {post.status === "Draft" && (
+                        <button className="flex items-center gap-1.5 rounded-none border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-[10.5px] font-semibold text-[#374151] hover:bg-[#F9FAFB] shadow-sm">
+                          <Pencil className="size-3 text-[#0A66C2]" />
+                          Edit
+                        </button>
+                      )}
+                      {post.status === "Failed" && (
+                        <button className="flex items-center gap-1.5 rounded-none border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-[10.5px] font-semibold text-[#374151] hover:bg-[#F9FAFB] shadow-sm">
+                          <Copy className="size-3 text-[#0A66C2]" />
+                          Duplicate
+                        </button>
+                      )}
+
+                      {post.status !== "Draft" ? (
+                        <button className="flex items-center gap-1.5 rounded-none border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-[10.5px] font-semibold text-[#374151] hover:bg-[#F9FAFB] shadow-sm">
+                          <Pencil className="size-3 text-[#0A66C2]" />
+                          Edit
+                        </button>
+                      ) : (
+                        <button className="flex items-center gap-1.5 rounded-none border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-[10.5px] font-semibold text-[#374151] hover:bg-[#F9FAFB] shadow-sm">
+                          <CalendarClock className="size-3 text-[#0A66C2]" />
+                          Schedule
+                        </button>
+                      )}
+
+                      <button className="rounded-none border border-[#E5E7EB] bg-white px-2 py-1.5 text-[#6B7280] shadow-sm hover:bg-[#F9FAFB]" title="More">
+                        <MoreHorizontal className="size-3" />
                       </button>
                     </div>
                   </td>
@@ -740,32 +761,32 @@ function PostsTab() {
           <span>Showing 1-8 of 48 posts</span>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
-              <button className="grid size-6 place-items-center rounded border border-[#DDE4ED] text-[#687797] hover:bg-[#F8FAFD]">
+              <button className="grid size-6 place-items-center rounded-none border border-[#DDE4ED] text-[#687797] hover:bg-[#F8FAFD]">
                 <ChevronLeft className="size-3" />
               </button>
-              <button className="grid size-6 place-items-center rounded bg-[#0A66C2] text-[10px] font-bold text-white shadow-sm">
+              <button className="grid size-6 place-items-center rounded-none bg-[#0A66C2] text-[10px] font-semibold text-white shadow-sm">
                 1
               </button>
-              <button className="grid size-6 place-items-center rounded border border-[#DDE4ED] text-[10px] text-[#52617D] hover:bg-[#F8FAFD]">
+              <button className="grid size-6 place-items-center rounded-none border border-[#DDE4ED] text-[10px] text-[#52617D] hover:bg-[#F8FAFD]">
                 2
               </button>
-              <button className="grid size-6 place-items-center rounded border border-[#DDE4ED] text-[10px] text-[#52617D] hover:bg-[#F8FAFD]">
+              <button className="grid size-6 place-items-center rounded-none border border-[#DDE4ED] text-[10px] text-[#52617D] hover:bg-[#F8FAFD]">
                 3
               </button>
-              <button className="grid size-6 place-items-center rounded border border-[#DDE4ED] text-[10px] text-[#52617D] hover:bg-[#F8FAFD]">
+              <button className="grid size-6 place-items-center rounded-none border border-[#DDE4ED] text-[10px] text-[#52617D] hover:bg-[#F8FAFD]">
                 4
               </button>
-              <button className="grid size-6 place-items-center rounded border border-[#DDE4ED] text-[10px] text-[#52617D] hover:bg-[#F8FAFD]">
+              <button className="grid size-6 place-items-center rounded-none border border-[#DDE4ED] text-[10px] text-[#52617D] hover:bg-[#F8FAFD]">
                 5
               </button>
-              <button className="grid size-6 place-items-center rounded border border-[#DDE4ED] text-[10px] text-[#52617D] hover:bg-[#F8FAFD]">
+              <button className="grid size-6 place-items-center rounded-none border border-[#DDE4ED] text-[10px] text-[#52617D] hover:bg-[#F8FAFD]">
                 6
               </button>
-              <button className="grid size-6 place-items-center rounded border border-[#DDE4ED] text-[#687797] hover:bg-[#F8FAFD]">
+              <button className="grid size-6 place-items-center rounded-none border border-[#DDE4ED] text-[#687797] hover:bg-[#F8FAFD]">
                 <ChevronRight className="size-3" />
               </button>
             </div>
-            <button className="flex h-6 items-center gap-1 rounded border border-[#DDE4ED] bg-white px-2 text-[10px] text-[#52617D]">
+            <button className="flex h-6 items-center gap-1 rounded-none border border-[#DDE4ED] bg-white px-2 text-[10px] text-[#52617D]">
               <span>8 per page</span>
               <ChevronDown className="size-2.5 opacity-70" />
             </button>
@@ -809,12 +830,12 @@ const demographicsData: Record<DemographicTab, DemographicGroup> = {
   "Job Function": {
     totalFollowers: "12,482",
     items: [
-      { name: "Operations", value: 28, count: "3,495", color: "#0A66C2" },
-      { name: "Education", value: 18, count: "2,247", color: "#21C56A" },
-      { name: "Community & Social S...", value: 14, count: "1,747", color: "#8B5CF6" },
-      { name: "Government", value: 12, count: "1,498", color: "#F5A524" },
+      { name: "Operations", value: 20, count: "2,486", color: "#0A66C2" },
+      { name: "Education", value: 19, count: "2,347", color: "#21C56A" },
+      { name: "Community & Social Services", value: 14, count: "1,747", color: "#8B5CF6" },
+      { name: "Government", value: 12, count: "1,488", color: "#F5A524" },
       { name: "Healthcare", value: 10, count: "1,248", color: "#F43F63" },
-      { name: "Other", value: 18, count: "2,247", color: "#94A3B8" },
+      { name: "Other", value: 19, count: "2,347", color: "#94A3B8" },
     ],
   },
   Industry: {
@@ -884,7 +905,7 @@ function AudienceDemographics({ onNavigateToAudience }: { onNavigateToAudience?:
             </button>
           ))}
         </div>
-        <div className="grid min-h-0 flex-1 grid-cols-[130px_1fr] sm:grid-cols-[148px_1fr] items-center gap-3 pt-2">
+        <div className="grid min-h-0 flex-1 grid-cols-[130px_1fr] sm:grid-cols-[148px_1fr] items-center gap-2 pt-2">
           <div className="relative size-[130px] sm:size-[148px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -912,7 +933,7 @@ function AudienceDemographics({ onNavigateToAudience }: { onNavigateToAudience?:
             <div className="absolute inset-0 grid place-items-center text-center pointer-events-none px-1">
               {hoveredSlice ? (
                 <div>
-                  <b className="block text-[15px] leading-5 font-bold text-[#142044] truncate max-w-[90px]">
+                  <b className="block text-[15px] leading-5 font-semibold text-[#142044] truncate max-w-[90px]">
                     {hoveredSlice.count}
                   </b>
                   <small className="block text-[10px] text-[#0A66C2] font-semibold leading-tight truncate max-w-[90px]">
@@ -921,7 +942,7 @@ function AudienceDemographics({ onNavigateToAudience }: { onNavigateToAudience?:
                 </div>
               ) : (
                 <div>
-                  <b className="block text-[18px] leading-5 font-bold text-[#142044]">
+                  <b className="block text-[18px] leading-5 font-semibold text-[#142044]">
                     {currentGroup.totalFollowers}
                   </b>
                   <small className="text-[10.5px] text-[#75829D]">Followers</small>
@@ -938,7 +959,7 @@ function AudienceDemographics({ onNavigateToAudience }: { onNavigateToAudience?:
                   onMouseEnter={() => setHoveredSlice(slice)}
                   onMouseLeave={() => setHoveredSlice(null)}
                   className={cn(
-                    "flex items-center justify-between gap-2 rounded-md px-1.5 py-0.5 text-[11.5px] transition-colors cursor-pointer",
+                    "flex items-center justify-between gap-2 rounded-none px-1.5 py-0.5 text-[11.5px] transition-colors cursor-pointer",
                     isHovered ? "bg-[#F1F5F9]" : "hover:bg-[#F8FAFC]",
                   )}
                 >
@@ -979,74 +1000,74 @@ const topFollowersList = [
 
 function AudienceTab() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* 5 Top Metric Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <div className="flex items-center gap-3 rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="flex items-center gap-3 rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-10 shrink-0 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
             <Users className="size-5" />
           </span>
           <div>
             <p className="text-[10.5px] text-[#687797]">Total Followers</p>
             <p className="flex items-baseline gap-1.5">
-              <b className="text-[19px] font-bold text-[#111B43]">12,482</b>
-              <span className="text-[10.5px] font-bold text-[#10B981]">↑ 18%</span>
+              <b className="text-[19px] font-semibold text-[#111B43]">12,482</b>
+              <span className="text-[10.5px] font-semibold text-[#10B981]">↑ 18%</span>
             </p>
             <p className="text-[10.5px] text-[#8A97AF]">+1,900 vs last month</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#ECFDF5] text-[#059669]">
+        <div className="flex items-center gap-3 rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-10 shrink-0 place-items-center rounded-none bg-[#ECFDF5] text-[#059669]">
             <UserPlus className="size-5" />
           </span>
           <div>
             <p className="text-[10.5px] text-[#687797]">New Followers</p>
             <p className="flex items-baseline gap-1.5">
-              <b className="text-[19px] font-bold text-[#111B43]">248</b>
-              <span className="text-[10.5px] font-bold text-[#10B981]">↑ 52%</span>
+              <b className="text-[19px] font-semibold text-[#111B43]">248</b>
+              <span className="text-[10.5px] font-semibold text-[#10B981]">↑ 52%</span>
             </p>
             <p className="text-[10.5px] text-[#8A97AF]">+85 vs last month</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#FAF5FF] text-[#7E22CE]">
+        <div className="flex items-center gap-3 rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-10 shrink-0 place-items-center rounded-none bg-[#FAF5FF] text-[#7E22CE]">
             <Eye className="size-5" />
           </span>
           <div>
             <p className="text-[10.5px] text-[#687797]">Profile Views</p>
             <p className="flex items-baseline gap-1.5">
-              <b className="text-[19px] font-bold text-[#111B43]">86,452</b>
-              <span className="text-[10.5px] font-bold text-[#10B981]">↑ 22%</span>
+              <b className="text-[19px] font-semibold text-[#111B43]">86,452</b>
+              <span className="text-[10.5px] font-semibold text-[#10B981]">↑ 22%</span>
             </p>
             <p className="text-[10.5px] text-[#8A97AF]">+15.6K vs last month</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#EEF2FF] text-[#4F46E5]">
+        <div className="flex items-center gap-3 rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-10 shrink-0 place-items-center rounded-none bg-[#EEF2FF] text-[#4F46E5]">
             <BarChart3 className="size-5" />
           </span>
           <div>
             <p className="text-[10.5px] text-[#687797]">Post Impressions</p>
             <p className="flex items-baseline gap-1.5">
-              <b className="text-[19px] font-bold text-[#111B43]">124.6K</b>
-              <span className="text-[10.5px] font-bold text-[#10B981]">↑ 28%</span>
+              <b className="text-[19px] font-semibold text-[#111B43]">124.6K</b>
+              <span className="text-[10.5px] font-semibold text-[#10B981]">↑ 28%</span>
             </p>
             <p className="text-[10.5px] text-[#8A97AF]">+27.1K vs last month</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#FFF1F2] text-[#E11D48]">
+        <div className="flex items-center gap-3 rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-10 shrink-0 place-items-center rounded-none bg-[#FFF1F2] text-[#E11D48]">
             <Heart className="size-5" />
           </span>
           <div>
             <p className="text-[10.5px] text-[#687797]">Engagement Rate</p>
             <p className="flex items-baseline gap-1.5">
-              <b className="text-[19px] font-bold text-[#111B43]">6.8%</b>
-              <span className="text-[10.5px] font-bold text-[#10B981]">↑ 16%</span>
+              <b className="text-[19px] font-semibold text-[#111B43]">6.8%</b>
+              <span className="text-[10.5px] font-semibold text-[#10B981]">↑ 16%</span>
             </p>
             <p className="text-[10.5px] text-[#8A97AF]">+0.9% vs last month</p>
           </div>
@@ -1054,7 +1075,7 @@ function AudienceTab() {
       </div>
 
       {/* Row 1: Audience Growth, Demographics, Top Locations */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {/* Audience Growth */}
         <Card title="Audience Growth" filter="Last 30 days">
           <div className="flex min-h-0 flex-1 flex-col p-3.5">
@@ -1117,7 +1138,7 @@ function AudienceTab() {
       </div>
 
       {/* Row 2: Follower Demographics, Audience Interests, Company Size */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {/* Follower Demographics */}
         <Card title="Follower Demographics">
           <div className="flex min-h-0 flex-1 flex-col p-3.5">
@@ -1204,7 +1225,7 @@ function AudienceTab() {
       </div>
 
       {/* Row 3: Top Followers, Growth Insights, Audience Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {/* Top Followers */}
         <Card title="Top Followers" action={<CardLink label="View All" />}>
           <div className="divide-y divide-[#EDF1F5] px-3.5 py-1">
@@ -1215,11 +1236,11 @@ function AudienceTab() {
                     {f.icon}
                   </span>
                   <div>
-                    <p className="text-[11.5px] font-bold text-[#172044]">{f.name}</p>
+                    <p className="text-[11.5px] font-semibold text-[#172044]">{f.name}</p>
                     <p className="text-[11.5px] text-[#8A97AF]">{f.title}</p>
                   </div>
                 </div>
-                <span className="text-[11px] font-bold text-[#0A66C2]">{f.followers}</span>
+                <span className="text-[11px] font-semibold text-[#0A66C2]">{f.followers}</span>
               </div>
             ))}
           </div>
@@ -1228,10 +1249,10 @@ function AudienceTab() {
         {/* Audience Growth Insights */}
         <Card title="Audience Growth Insights">
           <div className="space-y-3 p-3.5">
-            <div className="flex items-start gap-2.5 rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] p-2.5">
+            <div className="flex items-start gap-2.5 rounded-none border border-[#BBF7D0] bg-[#F0FDF4] p-2.5">
               <Lightbulb className="size-4 shrink-0 text-[#16A34A] mt-0.5" />
               <div>
-                <p className="text-[11px] font-bold text-[#166534]">
+                <p className="text-[11px] font-semibold text-[#166534]">
                   Your audience is growing 18% faster than similar LinkedIn pages in the Non-profit sector.
                 </p>
               </div>
@@ -1252,7 +1273,7 @@ function AudienceTab() {
               </p>
             </div>
 
-            <button className="text-[11.5px] font-bold text-[#0A66C2] hover:underline">
+            <button className="text-[11.5px] font-semibold text-[#0A66C2] hover:underline">
               View Detailed Insights →
             </button>
           </div>
@@ -1270,9 +1291,9 @@ function AudienceTab() {
             ].map((act) => {
               const Icon = act.icon;
               return (
-                <div key={act.label} className="flex items-center justify-between rounded-lg border border-[#EDF1F5] p-2">
+                <div key={act.label} className="flex items-center justify-between rounded-none border border-[#EDF1F5] p-2">
                   <div className="flex items-center gap-2">
-                    <span className={cn("grid size-6 place-items-center rounded-md", act.color)}>
+                    <span className={cn("grid size-6 place-items-center rounded-none", act.color)}>
                       <Icon className="size-3.5" />
                     </span>
                     <span className="text-[11px] font-medium text-[#425273]">{act.label}</span>
@@ -1387,103 +1408,103 @@ const allCampaignsList = [
 
 function CampaignsTab() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-[#FFF1F2] text-[#E11D48]">
+          <span className="grid size-10 place-items-center rounded-none bg-[#FFF1F2] text-[#E11D48]">
             <Megaphone className="size-5" />
           </span>
           <div>
-            <h2 className="text-[19px] font-bold text-[#111B43]">Campaigns</h2>
+            <h2 className="text-[19px] font-semibold text-[#111B43]">Campaigns</h2>
             <p className="text-[12px] text-[#687797]">
               Plan, manage and track your multi-channel marketing campaigns.
             </p>
           </div>
         </div>
-        <button className="flex h-[36px] items-center gap-1.5 rounded-lg bg-[#0A66C2] px-4 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0958A8]">
+        <button className="flex h-[36px] items-center gap-1.5 rounded-none bg-[#0A66C2] px-4 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0958A8]">
           <Plus className="size-3.5" />
           <span>Create Campaign</span>
         </button>
       </div>
 
       {/* 6 Metric Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
             <Megaphone className="size-4" />
           </span>
           <p className="mt-2 text-[10px] text-[#687797]">Total Campaigns</p>
           <p className="flex items-baseline gap-1">
-            <b className="text-[17px] font-bold text-[#111B43]">12</b>
-            <span className="text-[11.5px] font-bold text-[#10B981]">↑ 20%</span>
+            <b className="text-[17px] font-semibold text-[#111B43]">12</b>
+            <span className="text-[11.5px] font-semibold text-[#10B981]">↑ 20%</span>
           </p>
           <p className="text-[11px] text-[#8A97AF]">+2 vs last month</p>
         </div>
 
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#ECFDF5] text-[#059669]">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-8 place-items-center rounded-none bg-[#ECFDF5] text-[#059669]">
             <Play className="size-4 fill-current pl-0.5" />
           </span>
           <p className="mt-2 text-[10px] text-[#687797]">Active Campaigns</p>
           <p className="flex items-baseline gap-1">
-            <b className="text-[17px] font-bold text-[#111B43]">6</b>
-            <span className="text-[11.5px] font-bold text-[#10B981]">↑ 50%</span>
+            <b className="text-[17px] font-semibold text-[#111B43]">6</b>
+            <span className="text-[11.5px] font-semibold text-[#10B981]">↑ 50%</span>
           </p>
           <p className="text-[11px] text-[#8A97AF]">+2 vs last month</p>
         </div>
 
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#FFFBEB] text-[#D97706]">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-8 place-items-center rounded-none bg-[#FFFBEB] text-[#D97706]">
             <Pause className="size-4 fill-current" />
           </span>
           <p className="mt-2 text-[10px] text-[#687797]">Paused Campaigns</p>
           <p className="flex items-baseline gap-1">
-            <b className="text-[17px] font-bold text-[#111B43]">3</b>
-            <span className="text-[11.5px] font-bold text-[#EF4444]">↓ 25%</span>
+            <b className="text-[17px] font-semibold text-[#111B43]">3</b>
+            <span className="text-[11.5px] font-semibold text-[#EF4444]">↓ 25%</span>
           </p>
           <p className="text-[11px] text-[#8A97AF]">-1 vs last month</p>
         </div>
 
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#2563EB]">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#2563EB]">
             <CheckCircle className="size-4" />
           </span>
           <p className="mt-2 text-[10px] text-[#687797]">Completed Campaigns</p>
           <p className="flex items-baseline gap-1">
-            <b className="text-[17px] font-bold text-[#111B43]">2</b>
-            <span className="text-[11.5px] font-bold text-[#10B981]">↑ 100%</span>
+            <b className="text-[17px] font-semibold text-[#111B43]">2</b>
+            <span className="text-[11.5px] font-semibold text-[#10B981]">↑ 100%</span>
           </p>
           <p className="text-[11px] text-[#8A97AF]">+2 vs last month</p>
         </div>
 
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#FAF5FF] text-[#7E22CE]">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-8 place-items-center rounded-none bg-[#FAF5FF] text-[#7E22CE]">
             <Users className="size-4" />
           </span>
           <p className="mt-2 text-[10px] text-[#687797]">Total Reach</p>
           <p className="flex items-baseline gap-1">
-            <b className="text-[17px] font-bold text-[#111B43]">86.5K</b>
-            <span className="text-[11.5px] font-bold text-[#10B981]">↑ 24%</span>
+            <b className="text-[17px] font-semibold text-[#111B43]">86.5K</b>
+            <span className="text-[11.5px] font-semibold text-[#10B981]">↑ 24%</span>
           </p>
           <p className="text-[11px] text-[#8A97AF]">+16.8K vs last month</p>
         </div>
 
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#FFF7ED] text-[#EA580C]">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-8 place-items-center rounded-none bg-[#FFF7ED] text-[#EA580C]">
             <IndianRupee className="size-4" />
           </span>
           <p className="mt-2 text-[10px] text-[#687797]">Total Spend</p>
           <p className="flex items-baseline gap-1">
-            <b className="text-[17px] font-bold text-[#111B43]">₹48,250</b>
-            <span className="text-[11.5px] font-bold text-[#EF4444]">↓ 8%</span>
+            <b className="text-[17px] font-semibold text-[#111B43]">₹48,250</b>
+            <span className="text-[11.5px] font-semibold text-[#EF4444]">↓ 8%</span>
           </p>
           <p className="text-[11px] text-[#8A97AF]">8% under budget</p>
         </div>
       </div>
 
       {/* Row 1: Trend, Status, Top Channels */}
-      <div className="grid gap-3 lg:grid-cols-[1.3fr_1fr_1fr]">
+      <div className="grid gap-2 lg:grid-cols-[1.3fr_1fr_1fr]">
         {/* Trend */}
         <Card title="Campaign Performance Trend" filter="Last 30 days">
           <div className="flex min-h-0 flex-1 flex-col p-3.5">
@@ -1571,7 +1592,7 @@ function CampaignsTab() {
                     <span>{ch.icon}</span> {ch.name}
                   </span>
                   <div className="text-right">
-                    <span className="font-bold text-[#172044]">{ch.reach}</span>
+                    <span className="font-semibold text-[#172044]">{ch.reach}</span>
                     <span className="ml-1 text-[11.5px] font-semibold text-[#10B981]">{ch.trend}</span>
                   </div>
                 </div>
@@ -1585,23 +1606,23 @@ function CampaignsTab() {
       </div>
 
       {/* Row 2: All Campaigns Table (NO PLATFORM COLUMN) */}
-      <div className="overflow-hidden rounded-xl border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+      <div className="overflow-hidden rounded-none border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EDF1F5] p-3.5">
-          <h3 className="text-[14px] font-bold text-[#172044]">All Campaigns (12)</h3>
+          <h3 className="text-[14px] font-semibold text-[#172044]">All Campaigns (12)</h3>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#8A97AF]" />
               <input
                 type="text"
                 placeholder="Search campaigns..."
-                className="h-[30px] w-[180px] rounded-lg border border-[#DDE4ED] bg-white pl-8 pr-3 text-[11px] text-[#172044] outline-none placeholder:text-[#8A97AF]"
+                className="h-[30px] w-[180px] rounded-none border border-[#DDE4ED] bg-white pl-8 pr-3 text-[11px] text-[#172044] outline-none placeholder:text-[#8A97AF]"
               />
             </div>
-            <button className="flex h-[30px] items-center gap-1 rounded-lg border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273]">
+            <button className="flex h-[30px] items-center gap-1 rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273]">
               <span>All Status</span>
               <ChevronDown className="size-3 opacity-70" />
             </button>
-            <button className="flex h-[30px] items-center gap-1 rounded-lg border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-semibold text-[#425273]">
+            <button className="flex h-[30px] items-center gap-1 rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-semibold text-[#425273]">
               <Download className="size-3 text-[#687797]" />
               <span>Export</span>
             </button>
@@ -1611,9 +1632,9 @@ function CampaignsTab() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[11px] border-collapse">
             <thead>
-              <tr className="border-b border-[#EDF1F5] bg-[#F8FAFD] text-[10px] font-bold text-[#687797]">
+              <tr className="border-b border-[#EDF1F5] bg-[#F8FAFD] text-[10px] font-semibold text-[#687797]">
                 <th className="w-[36px] px-3 py-2.5 text-center">
-                  <input type="checkbox" className="rounded border-[#CBD5E1]" />
+                  <input type="checkbox" className="rounded-none border-[#CBD5E1]" />
                 </th>
                 <th className="min-w-[220px] px-3 py-2.5">Campaign Name</th>
                 <th className="w-[90px] px-3 py-2.5">Status</th>
@@ -1631,13 +1652,13 @@ function CampaignsTab() {
               {allCampaignsList.map((c) => (
                 <tr key={c.id} className="transition-colors hover:bg-[#F9FBFE]">
                   <td className="px-3 py-2 text-center">
-                    <input type="checkbox" className="rounded border-[#CBD5E1]" />
+                    <input type="checkbox" className="rounded-none border-[#CBD5E1]" />
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2.5">
-                      <img src={c.image} alt="" className="size-8 shrink-0 rounded object-cover" />
+                      <img src={c.image} alt="" className="size-8 shrink-0 rounded-none object-cover" />
                       <div>
-                        <p className="font-bold text-[#172044]">{c.name}</p>
+                        <p className="font-semibold text-[#172044]">{c.name}</p>
                         <p className="text-[11.5px] text-[#8A97AF]">{c.subtitle}</p>
                       </div>
                     </div>
@@ -1671,9 +1692,9 @@ function CampaignsTab() {
                   <td className="px-3 py-2 text-[#172044]">{c.conversions}</td>
                   <td className="px-3 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 text-[#687797]">
-                      <button className="rounded p-1 hover:text-[#0A66C2]"><BarChart3 className="size-3" /></button>
-                      <button className="rounded p-1 hover:text-[#172044]"><Pencil className="size-3" /></button>
-                      <button className="rounded p-1 hover:text-[#172044]"><MoreHorizontal className="size-3" /></button>
+                      <button className="rounded-none p-1 hover:text-[#0A66C2]"><BarChart3 className="size-3" /></button>
+                      <button className="rounded-none p-1 hover:text-[#172044]"><Pencil className="size-3" /></button>
+                      <button className="rounded-none p-1 hover:text-[#172044]"><MoreHorizontal className="size-3" /></button>
                     </div>
                   </td>
                 </tr>
@@ -1684,7 +1705,7 @@ function CampaignsTab() {
       </div>
 
       {/* Row 3: Calendar, Creatives, Quick Actions */}
-      <div className="grid gap-3 lg:grid-cols-[1fr_1.1fr_1.1fr]">
+      <div className="grid gap-2 lg:grid-cols-[1fr_1.1fr_1.1fr]">
         {/* Campaign Calendar */}
         <Card title="Campaign Calendar" action={<CardLink label="View Calendar" />}>
           <div className="space-y-2 p-3.5">
@@ -1694,10 +1715,10 @@ function CampaignsTab() {
               { month: "APR", day: "22", title: "Community Clean-up Drive", time: "11:00 AM", status: "Paused" },
               { month: "APR", day: "25", title: "World Water Day Recap", time: "03:00 PM", status: "Draft" },
             ].map((cal) => (
-              <div key={cal.title} className="flex items-center gap-2.5 rounded-lg border border-[#EDF1F5] p-2">
-                <span className="grid size-9 shrink-0 place-items-center rounded-md bg-[#FFF1F2] text-center leading-none text-[#E11D48]">
-                  <small className="text-[10.5px] font-bold">{cal.month}</small>
-                  <b className="text-[12px] font-bold">{cal.day}</b>
+              <div key={cal.title} className="flex items-center gap-2.5 rounded-none border border-[#EDF1F5] p-2">
+                <span className="grid size-9 shrink-0 place-items-center rounded-none bg-[#FFF1F2] text-center leading-none text-[#E11D48]">
+                  <small className="text-[10.5px] font-semibold">{cal.month}</small>
+                  <b className="text-[12px] font-semibold">{cal.day}</b>
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[11px] font-semibold text-[#172044]">{cal.title}</p>
@@ -1705,7 +1726,7 @@ function CampaignsTab() {
                 </div>
                 <span
                   className={cn(
-                    "rounded px-1.5 py-0.5 text-[11px] font-semibold",
+                    "rounded-none px-1.5 py-0.5 text-[11px] font-semibold",
                     cal.status === "Active" && "bg-[#ECFDF5] text-[#059669]",
                     cal.status === "Paused" && "bg-[#FFFBEB] text-[#D97706]",
                     cal.status === "Draft" && "bg-[#F1F5F9] text-[#64748B]",
@@ -1727,11 +1748,11 @@ function CampaignsTab() {
               { title: "Infographic – Water Tips", type: "Image", reach: "8.1K", eng: "540 Engagements", img: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=100&h=100&fit=crop" },
               { title: "Community Event", type: "Carousel", reach: "6.9K", eng: "468 Engagements", img: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=100&h=100&fit=crop" },
             ].map((cr) => (
-              <div key={cr.title} className="flex items-center gap-2.5 rounded-lg border border-[#EDF1F5] p-1.5">
-                <img src={cr.img} alt="" className="size-9 shrink-0 rounded object-cover" />
+              <div key={cr.title} className="flex items-center gap-2.5 rounded-none border border-[#EDF1F5] p-1.5">
+                <img src={cr.img} alt="" className="size-9 shrink-0 rounded-none object-cover" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[11px] font-bold text-[#172044]">{cr.title}</p>
-                  <span className="text-[11px] text-[#0A66C2] bg-[#EFF6FF] px-1 rounded">{cr.type}</span>
+                  <p className="truncate text-[11px] font-semibold text-[#172044]">{cr.title}</p>
+                  <span className="text-[11px] text-[#0A66C2] bg-[#EFF6FF] px-1 rounded-none">{cr.type}</span>
                 </div>
                 <div className="text-right">
                   <b className="text-[11px] text-[#172044]">{cr.reach}</b>
@@ -1743,7 +1764,7 @@ function CampaignsTab() {
         </Card>
 
         {/* Quick Actions & Recent Activity */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <Card title="Quick Actions">
             <div className="grid grid-cols-3 gap-1.5 p-3">
               {[
@@ -1758,7 +1779,7 @@ function CampaignsTab() {
                 return (
                   <button
                     key={q.label}
-                    className="flex flex-col items-center justify-center gap-1 rounded-lg border border-[#EDF1F5] p-2 text-center text-[11.5px] font-semibold text-[#425273] hover:bg-[#F8FAFD]"
+                    className="flex flex-col items-center justify-center gap-1 rounded-none border border-[#EDF1F5] p-2 text-center text-[11.5px] font-semibold text-[#425273] hover:bg-[#F8FAFD]"
                   >
                     <Icon className={cn("size-3.5", q.color)} />
                     <span className="leading-tight">{q.label}</span>
@@ -1773,7 +1794,7 @@ function CampaignsTab() {
               <div className="flex items-start gap-2">
                 <i className="size-2 shrink-0 rounded-full bg-[#10B981] mt-1" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-[#172044]">Campaign created</p>
+                  <p className="font-semibold text-[#172044]">Campaign created</p>
                   <p className="truncate text-[#8A97AF]">Save Rivers, Save Lives 2025</p>
                 </div>
                 <span className="text-[11px] text-[#9CA3AF]">10 min ago</span>
@@ -1781,7 +1802,7 @@ function CampaignsTab() {
               <div className="flex items-start gap-2">
                 <i className="size-2 shrink-0 rounded-full bg-[#0A66C2] mt-1" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-[#172044]">Ad set updated</p>
+                  <p className="font-semibold text-[#172044]">Ad set updated</p>
                   <p className="truncate text-[#8A97AF]">Community Clean-up Drive</p>
                 </div>
                 <span className="text-[11px] text-[#9CA3AF]">2 hours ago</span>
@@ -1789,7 +1810,7 @@ function CampaignsTab() {
               <div className="flex items-start gap-2">
                 <i className="size-2 shrink-0 rounded-full bg-[#8B5CF6] mt-1" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-[#172044]">Budget changed</p>
+                  <p className="font-semibold text-[#172044]">Budget changed</p>
                   <p className="truncate text-[#8A97AF]">Volunteer Stories</p>
                 </div>
                 <span className="text-[11px] text-[#9CA3AF]">5 hours ago</span>
@@ -1816,90 +1837,90 @@ const topPostsAnalytics = [
 
 function AnalyticsTab() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* 6 Top Metric Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-8 place-items-center rounded-none bg-[#FAF5FF] text-[#7E22CE]">
             <Eye className="size-4" />
           </span>
-          <p className="mt-2 text-[10px] text-[#687797]">Total Impressions</p>
+          <p className="mt-2 text-[10.5px] text-[#687797]">Post Impressions</p>
           <p className="flex items-baseline gap-1">
-            <b className="text-[17px] font-bold text-[#111B43]">86,452</b>
-            <span className="text-[11.5px] font-bold text-[#10B981]">↑ 28%</span>
+            <b className="text-[17px] font-semibold text-[#111B43]">86,452</b>
+            <span className="text-[11px] font-semibold text-[#10B981]">↑ 21.4%</span>
           </p>
-          <p className="text-[11px] text-[#8A97AF]">+18.7K vs previous period</p>
+          <p className="text-[10px] text-[#8A97AF]">+15.2K vs previous period</p>
         </div>
 
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#2563EB]">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
             <Users className="size-4" />
           </span>
-          <p className="mt-2 text-[10px] text-[#687797]">Total Followers</p>
+          <p className="mt-2 text-[10.5px] text-[#687797]">Total Followers</p>
           <p className="flex items-baseline gap-1">
-            <b className="text-[17px] font-bold text-[#111B43]">12,482</b>
-            <span className="text-[11.5px] font-bold text-[#10B981]">↑ 18%</span>
+            <b className="text-[17px] font-semibold text-[#111B43]">12,482</b>
+            <span className="text-[11px] font-semibold text-[#10B981]">↑ 8.2%</span>
           </p>
-          <p className="text-[11px] text-[#8A97AF]">+1.9K vs previous period</p>
+          <p className="text-[10px] text-[#8A97AF]">+942 vs previous period</p>
         </div>
 
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#ECFDF5] text-[#059669]">
-            <MousePointerClick className="size-4" />
-          </span>
-          <p className="mt-2 text-[10px] text-[#687797]">Post Clicks</p>
-          <p className="flex items-baseline gap-1">
-            <b className="text-[17px] font-bold text-[#111B43]">4,218</b>
-            <span className="text-[11.5px] font-bold text-[#10B981]">↑ 32%</span>
-          </p>
-          <p className="text-[11px] text-[#8A97AF]">+1.0K vs previous period</p>
-        </div>
-
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#FFF1F2] text-[#E11D48]">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-8 place-items-center rounded-none bg-[#FEF2F2] text-[#E11D48]">
             <Heart className="size-4" />
           </span>
-          <p className="mt-2 text-[10px] text-[#687797]">Engagements</p>
+          <p className="mt-2 text-[10.5px] text-[#687797]">Engagements</p>
           <p className="flex items-baseline gap-1">
-            <b className="text-[17px] font-bold text-[#111B43]">6,248</b>
-            <span className="text-[11.5px] font-bold text-[#10B981]">↑ 32%</span>
+            <b className="text-[17px] font-semibold text-[#111B43]">4,218</b>
+            <span className="text-[11px] font-semibold text-[#10B981]">↑ 22.1%</span>
           </p>
-          <p className="text-[11px] text-[#8A97AF]">+1.6K vs previous period</p>
+          <p className="text-[10px] text-[#8A97AF]">+762 vs previous period</p>
         </div>
 
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#FAF5FF] text-[#7E22CE]">
-            <Eye className="size-4" />
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-8 place-items-center rounded-none bg-[#ECFDF5] text-[#10B981]">
+            <Users className="size-4" />
           </span>
-          <p className="mt-2 text-[10px] text-[#687797]">Profile Views</p>
+          <p className="mt-2 text-[10.5px] text-[#687797]">Profile Views</p>
           <p className="flex items-baseline gap-1">
-            <b className="text-[17px] font-bold text-[#111B43]">248</b>
-            <span className="text-[11.5px] font-bold text-[#10B981]">↑ 22%</span>
+            <b className="text-[17px] font-semibold text-[#111B43]">248</b>
+            <span className="text-[11px] font-semibold text-[#10B981]">↑ 18.6%</span>
           </p>
-          <p className="text-[11px] text-[#8A97AF]">+45 vs previous period</p>
+          <p className="text-[10px] text-[#8A97AF]">+39 vs previous period</p>
         </div>
 
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-          <span className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
-            <BarChart3 className="size-4" />
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-8 place-items-center rounded-none bg-[#FAF5FF] text-[#9333EA]">
+            <Link className="size-4" />
           </span>
-          <p className="mt-2 text-[10px] text-[#687797]">Avg. Engagement Rate</p>
+          <p className="mt-2 text-[10.5px] text-[#687797]">Link Clicks</p>
           <p className="flex items-baseline gap-1">
-            <b className="text-[17px] font-bold text-[#111B43]">7.2%</b>
-            <span className="text-[11.5px] font-bold text-[#10B981]">↑ 18%</span>
+            <b className="text-[17px] font-semibold text-[#111B43]">6,248</b>
+            <span className="text-[11px] font-semibold text-[#10B981]">↑ 20.3%</span>
           </p>
-          <p className="text-[11px] text-[#8A97AF]">+1.1% vs previous period</p>
+          <p className="text-[10px] text-[#8A97AF]">+1.1K vs previous period</p>
+        </div>
+
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+          <span className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#3B82F6]">
+            <TrendingUp className="size-4" />
+          </span>
+          <p className="mt-2 text-[10.5px] text-[#687797]">Engagement Rate</p>
+          <p className="flex items-baseline gap-1">
+            <b className="text-[17px] font-semibold text-[#111B43]">7.2%</b>
+            <span className="text-[11px] font-semibold text-[#10B981]">↑ 1.1%</span>
+          </p>
+          <p className="text-[10px] text-[#8A97AF]">+0.8% vs previous period</p>
         </div>
       </div>
 
       {/* Row 1: Performance Trend & Audience Demographics */}
-      <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid gap-2 lg:grid-cols-[1.4fr_1fr]">
         <PerformanceTrend />
         <AudienceDemographics />
       </div>
 
       {/* Row 2: Content Performance, Follower Growth, Audience Insights */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {/* Content Performance */}
         <Card title="Content Performance" action={<CardLink label="View All" />}>
           <div className="flex min-h-0 flex-1 flex-col p-3">
@@ -1913,10 +1934,10 @@ function AnalyticsTab() {
               {topPostsAnalytics.map((p) => (
                 <div key={p.id} className="flex items-center justify-between py-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-[#8A97AF]">{p.id}</span>
-                    <img src={p.img} alt="" className="size-6 rounded object-cover" />
+                    <span className="text-[10px] font-semibold text-[#8A97AF]">{p.id}</span>
+                    <img src={p.img} alt="" className="size-6 rounded-none object-cover" />
                     <div>
-                      <p className="truncate max-w-[120px] font-bold text-[#172044]">{p.title}</p>
+                      <p className="truncate max-w-[120px] font-semibold text-[#172044]">{p.title}</p>
                       <span className="text-[11px] text-[#0A66C2]">{p.type}</span>
                     </div>
                   </div>
@@ -1935,8 +1956,8 @@ function AnalyticsTab() {
         <Card title="Follower Growth" filter="Last 30 days">
           <div className="flex min-h-0 flex-1 flex-col p-3">
             <div className="mb-1">
-              <span className="text-[16px] font-bold text-[#111B43]">12,482</span>
-              <span className="ml-1.5 text-[10px] font-bold text-[#10B981]">↑ 18%</span>
+              <span className="text-[16px] font-semibold text-[#111B43]">12,482</span>
+              <span className="ml-1.5 text-[10px] font-semibold text-[#10B981]">↑ 18%</span>
               <p className="text-[11px] text-[#8A97AF]">+1,892 new followers</p>
             </div>
             <div className="h-[120px] w-full">
@@ -1948,12 +1969,16 @@ function AnalyticsTab() {
             </div>
             <div className="mt-2 flex items-center justify-between border-t border-[#EDF1F5] pt-2 text-[10px]">
               <div>
-                <span className="text-[#8A97AF]">New Followers</span>
-                <p className="font-bold text-[#172044]">2,146 <span className="text-[#10B981]">↑52%</span></p>
+                <span className="text-[#8A97AF]">Total New Followers</span>
+                <p className="font-semibold text-[#172044] text-[14px]">942 <span className="text-[#10B981] text-[10px]">↑ 8.2%</span></p>
+              </div>
+              <div className="text-center">
+                <span className="text-[#8A97AF]">Total Unfollows</span>
+                <p className="font-semibold text-[#172044] text-[14px]">126 <span className="text-[#EF4444] text-[10px]">↓ 2.1%</span></p>
               </div>
               <div className="text-right">
-                <span className="text-[#8A97AF]">Unfollows</span>
-                <p className="font-bold text-[#172044]">254 <span className="text-[#EF4444]">↓8%</span></p>
+                <span className="text-[#8A97AF]">Net Growth</span>
+                <p className="font-semibold text-[#172044] text-[14px]">+816 <span className="text-[#10B981] text-[10px]">↑ 12.4%</span></p>
               </div>
             </div>
           </div>
@@ -1962,32 +1987,32 @@ function AnalyticsTab() {
         {/* Audience Insights */}
         <Card title="Audience Insights" action={<CardLink label="View All" />}>
           <div className="space-y-2 p-3">
-            <div className="flex items-start gap-2 rounded-lg border border-[#EDF1F5] p-2">
-              <MapPin className="size-4 shrink-0 text-[#0A66C2] mt-0.5" />
+            <div className="flex items-start gap-2 rounded-none border border-[#EDF1F5] p-2">
+              <Users className="size-4 shrink-0 text-[#0A66C2] mt-0.5" />
               <div>
-                <p className="text-[11px] font-bold text-[#172044]">Your audience is mostly from India</p>
-                <p className="text-[11.5px] text-[#687797]">68% of your followers are from India.</p>
+                <p className="text-[11px] font-semibold text-[#172044]">Your audience is mainly from India</p>
+                <p className="text-[11.5px] text-[#687797]">62% of your followers are from India.</p>
               </div>
             </div>
-            <div className="flex items-start gap-2 rounded-lg border border-[#EDF1F5] p-2">
-              <Users className="size-4 shrink-0 text-[#8B5CF6] mt-0.5" />
+            <div className="flex items-start gap-2 rounded-none border border-[#EDF1F5] p-2">
+              <FileText className="size-4 shrink-0 text-[#0A66C2] mt-0.5" />
               <div>
-                <p className="text-[11px] font-bold text-[#172044]">Operations is your top audience segment</p>
-                <p className="text-[11.5px] text-[#687797]">28% of your followers work in Operations.</p>
+                <p className="text-[11px] font-semibold text-[#172044]">Operations is your top audience segment</p>
+                <p className="text-[11.5px] text-[#687797]">20% of your followers work in Operations.</p>
               </div>
             </div>
-            <div className="flex items-start gap-2 rounded-lg border border-[#EDF1F5] p-2">
-              <Calendar className="size-4 shrink-0 text-[#F59E0B] mt-0.5" />
+            <div className="flex items-start gap-2 rounded-none border border-[#EDF1F5] p-2">
+              <Star className="size-4 shrink-0 text-[#F59E0B] mt-0.5" />
               <div>
-                <p className="text-[11px] font-bold text-[#172044]">Your content performs best on weekdays</p>
+                <p className="text-[11px] font-semibold text-[#172044]">Your content performs best on weekdays</p>
                 <p className="text-[11.5px] text-[#687797]">Highest engagement between 10 AM – 1 PM.</p>
               </div>
             </div>
-            <div className="flex items-start gap-2 rounded-lg border border-[#EDF1F5] p-2">
-              <Video className="size-4 shrink-0 text-[#10B981] mt-0.5" />
+            <div className="flex items-start gap-2 rounded-none border border-[#EDF1F5] p-2">
+              <Leaf className="size-4 shrink-0 text-[#10B981] mt-0.5" />
               <div>
-                <p className="text-[11px] font-bold text-[#172044]">Video posts get 2.3x more engagement</p>
-                <p className="text-[11.5px] text-[#687797]">Videos perform better than images.</p>
+                <p className="text-[11px] font-semibold text-[#172044]">Video posts get 2.3x more engagement</p>
+                <p className="text-[11.5px] text-[#687797]">Video content performs better than image posts.</p>
               </div>
             </div>
           </div>
@@ -1995,16 +2020,16 @@ function AnalyticsTab() {
       </div>
 
       {/* Row 3: Hashtags, Post Type Distribution, Engagement by Day & Time */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {/* Top Performing Hashtags */}
         <Card title="Top Performing Hashtags">
           <div className="space-y-2 p-3.5">
             {[
               { tag: "#CleanGanga", count: "4.2K", pct: 95 },
               { tag: "#WaterConservation", count: "3.1K", pct: 75 },
-              { tag: "#SustainableIndia", count: "2.8K", pct: 65 },
+              { tag: "#SustainableIndia", count: "2.6K", pct: 65 },
               { tag: "#NamoGange", count: "2.4K", pct: 55 },
-              { tag: "#CommunityAction", count: "1.9K", pct: 45 },
+              { tag: "#CommunityAction", count: "1.6K", pct: 45 },
             ].map((h) => (
               <div key={h.tag} className="space-y-0.5">
                 <div className="flex justify-between text-[11px]">
@@ -2027,10 +2052,11 @@ function AnalyticsTab() {
                 <PieChart>
                   <Pie
                     data={[
-                      { name: "Image", value: 42, color: "#0A66C2" },
+                      { name: "Image", value: 40, color: "#0A66C2" },
                       { name: "Video", value: 28, color: "#8B5CF6" },
                       { name: "Carousel", value: 18, color: "#F59E0B" },
-                      { name: "Text/Link", value: 12, color: "#94A3B8" },
+                      { name: "Document", value: 10, color: "#F43F63" },
+                      { name: "Text/Link", value: 4, color: "#94A3B8" },
                     ]}
                     dataKey="value"
                     innerRadius={35}
@@ -2042,6 +2068,7 @@ function AnalyticsTab() {
                       { color: "#0A66C2" },
                       { color: "#8B5CF6" },
                       { color: "#F59E0B" },
+                      { color: "#F43F63" },
                       { color: "#94A3B8" },
                     ].map((c, i) => (
                       <Cell key={i} fill={c.color} />
@@ -2060,7 +2087,7 @@ function AnalyticsTab() {
               <div className="flex items-center gap-2">
                 <i className="size-2 rounded-full bg-[#0A66C2]" />
                 <span className="text-[#52617D]">Image</span>
-                <b className="ml-auto text-[#172044]">42%</b>
+                <b className="ml-auto text-[#172044]">40%</b>
               </div>
               <div className="flex items-center gap-2">
                 <i className="size-2 rounded-full bg-[#8B5CF6]" />
@@ -2073,9 +2100,14 @@ function AnalyticsTab() {
                 <b className="ml-auto text-[#172044]">18%</b>
               </div>
               <div className="flex items-center gap-2">
+                <i className="size-2 rounded-full bg-[#F43F63]" />
+                <span className="text-[#52617D]">Document</span>
+                <b className="ml-auto text-[#172044]">10%</b>
+              </div>
+              <div className="flex items-center gap-2">
                 <i className="size-2 rounded-full bg-[#94A3B8]" />
                 <span className="text-[#52617D]">Text/Link</span>
-                <b className="ml-auto text-[#172044]">12%</b>
+                <b className="ml-auto text-[#172044]">4%</b>
               </div>
             </div>
           </div>
@@ -2084,7 +2116,7 @@ function AnalyticsTab() {
         {/* Engagement by Day & Time */}
         <Card title="Engagement by Day & Time" action={<CardLink label="View Details" />}>
           <div className="p-3">
-            <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-[#8A97AF]">
+            <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-[#8A97AF]">
               {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
                 <span key={d}>{d}</span>
               ))}
@@ -2126,17 +2158,17 @@ function AnalyticsTab() {
       </div>
 
       {/* Row 4: LinkedIn 6-Reactions Breakdown, Document/PDF Carousel Engagement, Employee Advocacy Impact */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {/* LinkedIn 6-Reactions Breakdown */}
-        <Card title="LinkedIn Reactions Breakdown" action={<span className="text-[10px] font-bold text-[#0A66C2]">6,248 Total</span>}>
+        <Card title="LinkedIn Reactions Breakdown" action={<span className="text-[10px] font-semibold text-[#0A66C2]">6,248 Total</span>}>
           <div className="space-y-2 p-3.5">
             {[
-              { name: "Like", emoji: "👍", count: "3,024", pct: 48.4, color: "bg-[#0A66C2]" },
-              { name: "Celebrate", emoji: "👏", count: "1,312", pct: 21.0, color: "bg-[#10B981]" },
-              { name: "Insightful", emoji: "💡", count: "874", pct: 14.0, color: "bg-[#F59E0B]" },
-              { name: "Love", emoji: "❤️", count: "687", pct: 11.0, color: "bg-[#EF4444]" },
-              { name: "Support", emoji: "🤍", count: "281", pct: 4.5, color: "bg-[#8B5CF6]" },
-              { name: "Funny", emoji: "😄", count: "94", pct: 1.5, color: "bg-[#06B6D4]" },
+              { name: "Like", emoji: "👍", count: "5,283", pct: 57.2, color: "bg-[#0A66C2]" },
+              { name: "Celebrate", emoji: "👏", count: "2,123", pct: 23.0, color: "bg-[#10B981]" },
+              { name: "Love", emoji: "❤️", count: "687", pct: 7.4, color: "bg-[#EF4444]" },
+              { name: "Insightful", emoji: "💡", count: "821", pct: 8.9, color: "bg-[#F59E0B]" },
+              { name: "Curious", emoji: "🤔", count: "214", pct: 2.3, color: "bg-[#8B5CF6]" },
+              { name: "Funny", emoji: "😄", count: "120", pct: 1.3, color: "bg-[#06B6D4]" },
             ].map((rx) => (
               <div key={rx.name} className="space-y-1">
                 <div className="flex items-center justify-between text-[11px]">
@@ -2161,31 +2193,31 @@ function AnalyticsTab() {
         <Card title="Document & Carousel Engagement" action={<CardLink label="View Reports" />}>
           <div className="space-y-3 p-3.5">
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-lg border border-[#EDF1F5] bg-[#F8FAFD] p-2">
-                <p className="text-[11.5px] text-[#687797]">Completion Rate</p>
-                <b className="text-[15px] font-bold text-[#0A66C2]">74.2%</b>
-                <p className="text-[11px] text-[#10B981]">↑ 6.4% MoM</p>
+              <div className="rounded-none border border-[#EDF1F5] bg-[#F8FAFD] p-2">
+                <p className="text-[11.5px] text-[#687797]">Avg Engagement Rate</p>
+                <b className="text-[15px] font-semibold text-[#0A66C2]">7.4%</b>
+                <p className="text-[11px] text-[#10B981]">↑ 64.3%</p>
               </div>
-              <div className="rounded-lg border border-[#EDF1F5] bg-[#F8FAFD] p-2">
-                <p className="text-[11.5px] text-[#687797]">Avg Slides Read</p>
-                <b className="text-[15px] font-bold text-[#172044]">7.4 / 10</b>
-                <p className="text-[11px] text-[#8A97AF]">slides / user</p>
+              <div className="rounded-none border border-[#EDF1F5] bg-[#F8FAFD] p-2">
+                <p className="text-[11.5px] text-[#687797]">Avg Clicks</p>
+                <b className="text-[15px] font-semibold text-[#172044]">412</b>
+                <p className="text-[11px] text-[#10B981]">↑ 38.2%</p>
               </div>
-              <div className="rounded-lg border border-[#EDF1F5] bg-[#F8FAFD] p-2">
+              <div className="rounded-none border border-[#EDF1F5] bg-[#F8FAFD] p-2">
                 <p className="text-[11.5px] text-[#687797]">Downloads</p>
-                <b className="text-[15px] font-bold text-[#8B5CF6]">842</b>
-                <p className="text-[11px] text-[#10B981]">↑ 24% vs last mo</p>
+                <b className="text-[15px] font-semibold text-[#8B5CF6]">842</b>
+                <p className="text-[11px] text-[#10B981]">↑ 28.1%</p>
               </div>
             </div>
 
             <div className="space-y-2 border-t border-[#EDF1F5] pt-2.5">
-              <p className="text-[10.5px] font-bold text-[#172044]">Top Document Posts</p>
+              <p className="text-[10.5px] font-semibold text-[#172044]">Top Document Posts</p>
               {[
                 { title: "10 Steps to Save Local Water Bodies (PDF)", views: "4.2K reads", completion: "92% rate", icon: "📄" },
                 { title: "Ganga Biodiversity Action Plan 2025 (Doc)", views: "2.8K reads", completion: "78% rate", icon: "📑" },
                 { title: "Community Volunteer Guidebook (Slide Deck)", views: "1.9K reads", completion: "69% rate", icon: "📊" },
               ].map((doc) => (
-                <div key={doc.title} className="flex items-center justify-between rounded-lg border border-[#EDF1F5] p-2 text-[10.5px]">
+                <div key={doc.title} className="flex items-center justify-between rounded-none border border-[#EDF1F5] p-2 text-[10.5px]">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="text-[14px]">{doc.icon}</span>
                     <p className="truncate font-semibold text-[#172044]">{doc.title}</p>
@@ -2201,34 +2233,34 @@ function AnalyticsTab() {
         </Card>
 
         {/* Employee Advocacy Impact & Top Advocates */}
-        <Card title="Employee Advocacy Impact" action={<span className="rounded bg-[#FAF5FF] px-1.5 py-0.5 text-[11.5px] font-bold text-[#7E22CE]">48 Advocates</span>}>
+        <Card title="Employee Advocacy Impact" action={<span className="rounded-none bg-[#FAF5FF] px-1.5 py-0.5 text-[11.5px] font-semibold text-[#7E22CE]">48 Advocates</span>}>
           <div className="space-y-3 p-3.5">
             <div className="grid grid-cols-2 gap-2 text-center">
-              <div className="rounded-lg border border-[#E9D5FF] bg-[#FAF5FF] p-2">
-                <span className="text-[11.5px] font-medium text-[#7E22CE]">Employee Reshares</span>
-                <p className="text-[16px] font-bold text-[#7E22CE]">1,420</p>
-                <span className="text-[11px] font-semibold text-[#10B981]">↑ 42% organic boost</span>
+              <div className="rounded-none border border-[#E9D5FF] bg-[#FAF5FF] p-2">
+                <span className="text-[11.5px] font-medium text-[#7E22CE]">Employees Sharing</span>
+                <p className="text-[16px] font-semibold text-[#7E22CE]">1,420</p>
+                <span className="text-[11px] font-semibold text-[#10B981]">↑ 42% vs previous period</span>
               </div>
-              <div className="rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] p-2">
+              <div className="rounded-none border border-[#BBF7D0] bg-[#F0FDF4] p-2">
                 <span className="text-[11.5px] font-medium text-[#047857]">Advocacy Clicks</span>
-                <p className="text-[16px] font-bold text-[#047857]">3,420</p>
-                <span className="text-[11px] font-semibold text-[#10B981]">71 clicks / advocate</span>
+                <p className="text-[16px] font-semibold text-[#047857]">3,420</p>
+                <span className="text-[11px] font-semibold text-[#10B981]">↑ 71% vs previous period</span>
               </div>
             </div>
 
             <div>
-              <p className="mb-1.5 text-[10.5px] font-bold text-[#172044]">Top Employee Advocates</p>
+              <p className="mb-1.5 text-[10.5px] font-semibold text-[#172044]">Top Employee Advocates</p>
               <div className="divide-y divide-[#EDF1F5]">
                 {[
                   { rank: "🥇", name: "Priya Sharma", role: "Marketing Manager", shares: 28, clicks: "840 clicks" },
-                  { rank: "🥈", name: "Manish Sirohi", role: "Program Director", shares: 22, clicks: "610 clicks" },
-                  { rank: "🥉", name: "Amit Kumar", role: "Community Lead", shares: 19, clicks: "490 clicks" },
+                  { rank: "🥈", name: "Manish Joshi", role: "Program Director", shares: 24, clicks: "712 clicks" },
+                  { rank: "🥉", name: "Anil Kumar", role: "Community Lead", shares: 19, clicks: "490 clicks" },
                 ].map((adv) => (
                   <div key={adv.name} className="flex items-center justify-between py-1.5 text-[11px]">
                     <div className="flex items-center gap-2">
                       <span className="text-[12px]">{adv.rank}</span>
                       <div>
-                        <p className="font-bold text-[#172044] leading-tight">{adv.name}</p>
+                        <p className="font-semibold text-[#172044] leading-tight">{adv.name}</p>
                         <p className="text-[11px] text-[#8A97AF]">{adv.role}</p>
                       </div>
                     </div>
@@ -2245,24 +2277,24 @@ function AnalyticsTab() {
       </div>
 
       {/* Row 5: Competitor Benchmarking (LinkedIn Page Analytics Native Tracking) */}
-      <div className="overflow-hidden rounded-xl border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+      <div className="overflow-hidden rounded-none border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EDF1F5] p-3.5">
           <div className="flex items-center gap-2.5">
-            <span className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+            <span className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
               <Trophy className="size-4" />
             </span>
             <div>
-              <h3 className="text-[14px] font-bold text-[#172044]">Competitor Benchmarking</h3>
+              <h3 className="text-[14px] font-semibold text-[#172044]">Competitor Benchmarking</h3>
               <p className="text-[11px] text-[#687797]">
                 Compare Namo Gange Trust against industry peers in organic LinkedIn reach & engagement.
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] px-2.5 py-1 text-[11px] font-semibold text-[#52617D]">
+            <span className="rounded-none border border-[#DDE4ED] bg-[#F8FAFD] px-2.5 py-1 text-[11px] font-semibold text-[#52617D]">
               Last 30 Days
             </span>
-            <button className="flex h-[30px] items-center gap-1 rounded-lg bg-[#0A66C2] px-3 text-[11px] font-semibold text-white shadow-sm hover:bg-[#0958A8]">
+            <button className="flex h-[30px] items-center gap-1 rounded-none bg-[#0A66C2] px-3 text-[11px] font-semibold text-white shadow-sm hover:bg-[#0958A8]">
               <Plus className="size-3" />
               <span>Add Competitor</span>
             </button>
@@ -2272,7 +2304,7 @@ function AnalyticsTab() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[11px] border-collapse">
             <thead>
-              <tr className="border-b border-[#EDF1F5] bg-[#F8FAFD] text-[10.5px] font-bold text-[#687797]">
+              <tr className="border-b border-[#EDF1F5] bg-[#F8FAFD] text-[10.5px] font-semibold text-[#687797]">
                 <th className="min-w-[220px] px-3.5 py-3">Organization</th>
                 <th className="w-[120px] px-3.5 py-3">Total Followers</th>
                 <th className="w-[130px] px-3.5 py-3">Follower Growth</th>
@@ -2289,11 +2321,11 @@ function AnalyticsTab() {
                   tag: "Your Page",
                   isYou: true,
                   followers: "12,482",
-                  growth: "+18.2%",
+                  growth: "+8.2%",
                   posts: "42 posts/mo",
-                  er: "6.8%",
+                  er: "7.2%",
                   impressions: "86.5K",
-                  badge: "Leader in ER",
+                  badge: "Leader",
                   avatar: "/namogange.webp",
                 },
                 {
@@ -2301,24 +2333,24 @@ function AnalyticsTab() {
                   tag: "Government Initiative",
                   isYou: false,
                   followers: "48,200",
-                  growth: "+8.4%",
+                  growth: "+6.4%",
                   posts: "28 posts/mo",
                   er: "4.2%",
-                  impressions: "210K",
+                  impressions: "219K",
                   badge: "High Reach",
                   avatar: "https://images.unsplash.com/photo-1500534623283-312aade485b7?w=100&h=100&fit=crop",
                 },
                 {
                   name: "WWF India",
-                  tag: "Global Non-profit",
+                  tag: "NGO",
                   isYou: false,
-                  followers: "184,500",
+                  followers: "185,500",
                   growth: "+12.1%",
-                  posts: "36 posts/mo",
+                  posts: "26 posts/mo",
                   er: "5.1%",
-                  impressions: "680K",
-                  badge: "Top Follower Base",
-                  avatar: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=100&h=100&fit=crop",
+                  impressions: "498K",
+                  badge: "Top Performer",
+                  avatar: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=100&h=100&fit=crop",
                 },
                 {
                   name: "Clean Rivers Network",
@@ -2342,12 +2374,12 @@ function AnalyticsTab() {
                 >
                   <td className="px-3.5 py-3">
                     <div className="flex items-center gap-2.5">
-                      <img src={comp.avatar} alt="" className="size-7 rounded-lg object-cover border border-[#DDE4ED]" />
+                      <img src={comp.avatar} alt="" className="size-7 rounded-none object-cover border border-[#DDE4ED]" />
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <p className="font-bold text-[#172044]">{comp.name}</p>
+                          <p className="font-semibold text-[#172044]">{comp.name}</p>
                           {comp.isYou && (
-                            <span className="rounded bg-[#0A66C2] px-1.5 py-0.2 text-[11px] font-bold text-white">
+                            <span className="rounded-none bg-[#0A66C2] px-1.5 py-0.2 text-[11px] font-semibold text-white">
                               YOU
                             </span>
                           )}
@@ -2356,15 +2388,15 @@ function AnalyticsTab() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-3.5 py-3 font-bold text-[#172044]">{comp.followers}</td>
+                  <td className="px-3.5 py-3 font-semibold text-[#172044]">{comp.followers}</td>
                   <td className="px-3.5 py-3">
-                    <span className="font-bold text-[#10B981]">{comp.growth}</span>
+                    <span className="font-semibold text-[#10B981]">{comp.growth}</span>
                     <span className="ml-1 text-[11px] text-[#8A97AF]">growth</span>
                   </td>
                   <td className="px-3.5 py-3 text-[#52617D]">{comp.posts}</td>
                   <td className="px-3.5 py-3">
-                    <span className="font-bold text-[#0A66C2]">{comp.er}</span>
-                    {comp.isYou && <span className="ml-1 text-[11px] font-bold text-[#10B981]">★ Highest</span>}
+                    <span className="font-semibold text-[#0A66C2]">{comp.er}</span>
+                    {comp.isYou && <span className="ml-1 text-[11px] font-semibold text-[#10B981]">★ Highest</span>}
                   </td>
                   <td className="px-3.5 py-3 font-semibold text-[#172044]">{comp.impressions}</td>
                   <td className="px-3.5 py-3 text-center">
@@ -2387,12 +2419,12 @@ function AnalyticsTab() {
 // ----------------------------------------------------
 
 const keyMetrics = [
-  { label: "Total Followers", value: "12,482", trend: "18%", icon: UsersRound, color: "blue" },
-  { label: "Profile Views", value: "248", trend: "22%", icon: Eye, color: "purple" },
-  { label: "Post Impressions", value: "86,452", trend: "28%", icon: BarChart3, color: "indigo" },
-  { label: "Post Engagements", value: "6,248", trend: "34%", icon: Heart, color: "rose" },
-  { label: "Website Clicks", value: "312", trend: "26%", icon: MousePointerClick, color: "amber" },
-  { label: "New Followers", value: "48", trend: "52%", icon: UserPlus, color: "green" },
+  { label: "Total Followers", value: "12,482", trend: "8.2%", absoluteTrend: "+942 vs prev period", icon: UsersRound, color: "blue" },
+  { label: "Post Impressions", value: "86,452", trend: "21.4%", absoluteTrend: "+15.2K vs prev period", icon: Eye, color: "purple" },
+  { label: "Profile Views", value: "248", trend: "18.6%", absoluteTrend: "+39 vs prev period", icon: Users, color: "green" },
+  { label: "Engagement Rate", value: "7.2%", trend: "1.1%", absoluteTrend: "+0.8% vs prev period", icon: Heart, color: "rose" },
+  { label: "Website Clicks", value: "312", trend: "4.3%", absoluteTrend: "+42 vs prev period", icon: MousePointerClick, color: "amber" },
+  { label: "New Followers", value: "124", trend: "12.0%", absoluteTrend: "+18 vs prev period", icon: UserPlus, color: "indigo" },
 ] as const;
 
 function dayLabel(index: number): string {
@@ -2424,10 +2456,10 @@ const pageGrowth = Array.from({ length: 31 }, (_, i) => {
 });
 
 const trendSeries = [
-  { key: "impressions", label: "Impressions", color: "#2D7FF0" },
-  { key: "engagements", label: "Engagements", color: "#21C56A" },
+  { key: "impressions", label: "Impressions", color: "#0A66C2" },
+  { key: "engagements", label: "Engagements", color: "#10B981" },
   { key: "profileViews", label: "Profile Views", color: "#8B5CF6" },
-  { key: "followers", label: "Followers (cumulative)", color: "#F5A524" },
+  { key: "followers", label: "Followers (cumulative)", color: "#F59E0B" },
 ] as const;
 
 const topPosts = [
@@ -2472,22 +2504,22 @@ const recentActivity = [
 
 function OverviewTab({ onNavigateTab }: { onNavigateTab?: (tab: TabType) => void }) {
   return (
-    <div className="space-y-3">
-      <div className="grid items-start gap-3 [&>section]:h-[318px] xl:grid-cols-[1.18fr_1fr_1fr]">
+    <div className="space-y-2">
+      <div className="grid items-start gap-2 [&>section]:h-[318px] xl:grid-cols-[1.18fr_1fr_1fr]">
         <PageOverview />
         <KeyMetrics />
         <AudienceDemographics onNavigateToAudience={() => onNavigateTab?.("Audience")} />
       </div>
-      <div className="grid items-start gap-3 [&>section]:h-[234px] xl:grid-cols-[.96fr_1fr]">
+      <div className="grid items-start gap-2 [&>section]:h-[234px] xl:grid-cols-[.96fr_1fr]">
         <PerformanceTrend />
         <TopPosts />
       </div>
-      <div className="grid items-start gap-3 [&>section]:h-[340px] xl:grid-cols-[.86fr_.88fr_1fr]">
+      <div className="grid items-start gap-2 [&>section]:h-[340px] xl:grid-cols-[.86fr_.88fr_1fr]">
         <ContentCalendar />
         <PageGrowth />
         <ActionsAndActivity />
       </div>
-      <div className="grid items-start gap-3 lg:grid-cols-2">
+      <div className="grid items-stretch gap-2 lg:grid-cols-2">
         <PageCustomCtaAnalytics />
         <LinkedInLiveEvents />
       </div>
@@ -2499,21 +2531,10 @@ function PageOverview() {
   return (
     <Card
       title="Page Overview"
-      action={
-        <span className="flex shrink-0 items-center gap-2">
-          <button className="flex items-center gap-1 whitespace-nowrap text-[11.5px] font-semibold text-[#0A66C2]">
-            View on LinkedIn
-            <ArrowUpRight className="size-3" />
-          </button>
-          <button className="h-7 rounded-md border border-[#DDE4ED] px-2.5 text-[11px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]">
-            Edit Page
-          </button>
-        </span>
-      }
     >
-      <div className="min-h-0 flex-1 px-3.5 pb-3.5">
+      <div className="min-h-0 flex-1 pb-4">
         <div className="relative">
-          <div className="relative h-[104px] overflow-hidden rounded-lg">
+          <div className="relative h-[104px] overflow-hidden rounded-none">
             <Image
               src="/campaigns/river-cleanup.jpg"
               alt="Namo Gange Trust page banner"
@@ -2523,20 +2544,24 @@ function PageOverview() {
               className="object-cover"
             />
             <div className="absolute inset-0 bg-[#0B3C63]/35" />
+            <div className="absolute right-3 top-3 z-10">
+              <button className="flex h-6 items-center gap-1.5 rounded-none bg-white px-2.5 text-[10.5px] font-semibold text-[#172044] shadow-sm hover:bg-slate-50">
+                <Pencil className="size-3" />
+                Edit Page
+              </button>
+            </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
-              <p className="text-[13px] font-bold leading-[17px] drop-shadow-sm">
-                Clean Rivers
+              <p className="text-[13px] font-semibold leading-[17px] drop-shadow-sm mt-2">
+                Cleaner Rivers
                 <br />
-                Healthy Communities
-                <br />
-                Brighter Tomorrow
+                Brighter Tomorrows
               </p>
-              <span className="mt-1 rounded bg-[#0A66C2] px-1.5 py-0.5 text-[11px] font-semibold">
-                #GangaForFuture
+              <span className="mt-1 rounded-none bg-[#0A66C2] px-1.5 py-0.5 text-[11px] font-semibold">
+                #NamoGange
               </span>
             </div>
           </div>
-          <span className="absolute -bottom-5 left-3 grid size-[58px] place-items-center rounded-lg border border-[#E8EDF3] bg-white p-1 shadow-[0_2px_8px_rgb(31_50_81/0.14)]">
+          <span className="absolute -bottom-5 left-4 grid size-[58px] place-items-center rounded-none border border-[#E8EDF3] bg-white p-1 shadow-[0_2px_8px_rgb(31_50_81/0.14)]">
             <Image
               src="/namogange.webp"
               alt="Namo Gange Trust"
@@ -2546,14 +2571,14 @@ function PageOverview() {
             />
           </span>
         </div>
-        <div className="mt-7 pl-[74px]">
-          <p className="text-[14px] font-bold leading-5 text-[#172044]">Namo Gange Trust</p>
+        <div className="mt-1.5 pr-4 pl-[86px]">
+          <p className="text-[14px] font-semibold leading-5 text-[#172044]">Namo Gange Trust</p>
           <p className="text-[11px] leading-4 text-[#75829D]">Non-profit Organization</p>
         </div>
-        <p className="mt-2 text-[11.5px] leading-[17px] text-[#52617D]">
+        <p className="mt-2 px-4 text-[11.5px] leading-[17px] text-[#52617D]">
           Working towards a cleaner Ganga through awareness, action and community participation.
         </p>
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-[#52617D]">
+        <div className="mt-2.5 px-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-[#52617D]">
           <span className="flex items-center gap-1.5">
             <MapPin className="size-3.5 shrink-0 text-[#8A97AF]" />
             New Delhi, India
@@ -2567,7 +2592,7 @@ function PageOverview() {
             namogangetrust.org
           </span>
         </div>
-        <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-[#52617D]">
+        <p className="mt-1.5 px-4 flex items-center gap-1.5 text-[11px] text-[#52617D]">
           <UsersRound className="size-3.5 shrink-0 text-[#8A97AF]" />
           12,482 followers · 50–200 employees
         </p>
@@ -2578,21 +2603,24 @@ function PageOverview() {
 
 function KeyMetrics() {
   return (
-    <Card title="Key Metrics" filter="Last 30 days">
-      <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-2 px-3.5 pb-3.5">
-        {keyMetrics.map(({ label, value, trend, icon: Icon, color }) => (
+    <Card title="" headerClassName="hidden">
+      <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-2 p-3.5">
+        {keyMetrics.map(({ label, value, trend, absoluteTrend, icon: Icon, color }) => (
           <div
             key={label}
-            className="flex flex-col justify-center rounded-lg border border-[#E4EAF2] bg-[#FBFCFE] px-2.5 py-2"
+            className="flex flex-col justify-center rounded-none border border-[#E4EAF2] bg-[#FBFCFE] px-3 py-2.5"
           >
-            <span className={cn("grid size-8 place-items-center rounded-lg", tint[color])}>
+            <span className={cn("grid size-8 place-items-center rounded-none mb-1.5", tint[color])}>
               <Icon className="size-4" />
             </span>
-            <b className="mt-2 block text-[19px] leading-6 tracking-[-0.02em] text-[#142044]">
+            <span className="block text-[18px] font-semibold leading-5 tracking-tight text-[#142044]">
               {value}
-            </b>
-            <p className="whitespace-nowrap text-[10px] leading-[13px] text-[#6B7A96]">{label}</p>
-            <p className="text-[10.5px] font-bold leading-4 text-[#0F9D58]">↑ {trend}</p>
+            </span>
+            <p className="whitespace-nowrap mt-0.5 text-[10.5px] font-medium leading-[14px] text-[#6B7A96]">{label}</p>
+            <div className="mt-1.5 flex items-center gap-1.5 text-[9.5px]">
+              <span className="font-medium text-[#0F9D58]">↑ {trend}</span>
+              <span className="text-[#8A97AF] truncate">{absoluteTrend}</span>
+            </div>
           </div>
         ))}
       </div>
@@ -2705,13 +2733,13 @@ function TopPosts() {
                 alt=""
                 width={42}
                 height={30}
-                className="h-[30px] w-[42px] shrink-0 rounded object-cover"
+                className="h-[30px] w-[42px] shrink-0 rounded-none object-cover"
               />
               <b className="truncate text-[11.5px] font-semibold text-[#172044]">{post.title}</b>
             </span>
             <span className="whitespace-nowrap text-[10.5px]">{post.date}</span>
             <span>
-              <i className="rounded bg-[#EAF2FE] px-1.5 py-0.5 text-[10px] font-semibold not-italic text-[#1A6BC4]">
+              <i className="rounded-none bg-[#EAF2FE] px-1.5 py-0.5 text-[10px] font-semibold not-italic text-[#1A6BC4]">
                 {post.type}
               </i>
             </span>
@@ -2743,9 +2771,9 @@ function ContentCalendar() {
             key={item.title}
             className="flex items-center gap-2.5 border-t border-[#EDF1F5] py-2 first:border-t-0"
           >
-            <span className="grid w-[34px] shrink-0 place-items-center rounded-md bg-[#FFEFF0] py-0.5 leading-none text-[#D6323C]">
-              <small className="text-[10.5px] font-bold">{item.month}</small>
-              <b className="text-[13px] font-bold leading-4">{item.day}</b>
+            <span className="grid w-[34px] shrink-0 place-items-center rounded-none bg-[#FFEFF0] py-0.5 leading-none text-[#D6323C]">
+              <small className="text-[10.5px] font-semibold">{item.month}</small>
+              <b className="text-[13px] font-semibold leading-4">{item.day}</b>
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[11.5px] font-semibold leading-4 text-[#172044]">
@@ -2755,7 +2783,7 @@ function ContentCalendar() {
             </div>
             <i
               className={cn(
-                "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold not-italic",
+                "shrink-0 rounded-none px-1.5 py-0.5 text-[10px] font-semibold not-italic",
                 item.status === "Scheduled"
                   ? "bg-[#E1F8EC] text-[#0B8A4D]"
                   : "bg-[#EEF1F6] text-[#5B6B87]",
@@ -2818,14 +2846,14 @@ function PageGrowth() {
           {growthTiles.map((tile) => (
             <div
               key={tile.label}
-              className="rounded-lg border border-[#E4EAF2] bg-[#FBFCFE] px-2 py-1.5"
+              className="rounded-none border border-[#E4EAF2] bg-[#FBFCFE] px-2 py-1.5"
             >
               <p className="truncate text-[11.5px] leading-3 text-[#7A87A0]">{tile.label}</p>
               <p className="flex items-baseline gap-1">
                 <b className="text-[16px] leading-5 text-[#142044]">{tile.value}</b>
                 <span
                   className={cn(
-                    "text-[10px] font-bold",
+                    "text-[10px] font-semibold",
                     tile.up ? "text-[#0F9D58]" : "text-[#E11D48]",
                   )}
                 >
@@ -2842,9 +2870,9 @@ function PageGrowth() {
 
 function ActionsAndActivity() {
   return (
-    <section className="flex flex-col overflow-hidden rounded-xl border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+    <section className="flex flex-col overflow-hidden rounded-none border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
       <header className="flex h-[46px] shrink-0 items-center px-3.5">
-        <h2 className="text-[14.5px] font-bold text-[#172044]">Quick Actions</h2>
+        <h2 className="text-[14.5px] font-semibold text-[#172044]">Quick Actions</h2>
       </header>
       <div className="grid shrink-0 grid-cols-4 gap-2 px-3.5 pb-3.5">
         {quickActions.map(({ label, icon: Icon, ...rest }) => {
@@ -2853,7 +2881,7 @@ function ActionsAndActivity() {
             <button
               key={label}
               className={cn(
-                "flex h-[42px] flex-col items-center justify-center gap-1 rounded-lg border text-[11.5px] font-semibold leading-3 transition-colors",
+                "flex h-[42px] flex-col items-center justify-center gap-1 rounded-none border text-[11.5px] font-semibold leading-3 transition-colors",
                 primary
                   ? "border-[#BBD7F5] bg-[#EAF3FD] text-[#0A66C2]"
                   : "border-[#E4EAF2] bg-white text-[#425273] hover:bg-[#F8FAFD]",
@@ -2866,7 +2894,7 @@ function ActionsAndActivity() {
         })}
       </div>
       <header className="flex h-9 shrink-0 items-center justify-between border-t border-[#EDF1F5] px-3.5">
-        <h2 className="text-[13px] font-bold text-[#172044]">Recent Activity</h2>
+        <h2 className="text-[13px] font-semibold text-[#172044]">Recent Activity</h2>
         <CardLink label="View All" />
       </header>
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3.5 pb-2">
@@ -2902,43 +2930,43 @@ function PageCustomCtaAnalytics() {
     <Card
       title="Custom Action Button (Page CTA)"
       action={
-        <span className="flex items-center gap-1.5 rounded-full bg-[#EFF6FF] px-2.5 py-0.5 text-[10px] font-bold text-[#0A66C2]">
+        <span className="flex items-center gap-1.5 rounded-full bg-[#EFF6FF] px-2.5 py-0.5 text-[10px] font-semibold text-[#0A66C2]">
           <MousePointerClick className="size-3" />
           Visit Website
         </span>
       }
     >
       <div className="space-y-3 p-3.5">
-        <div className="flex items-center justify-between rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] p-2.5">
+        <div className="flex items-center justify-between rounded-none border border-[#DDE4ED] bg-[#F8FAFD] p-2.5">
           <div>
             <span className="text-[10px] font-semibold text-[#687797]">Active Button Target</span>
-            <p className="font-bold text-[#172044] text-[12px]">https://namogangetrust.org</p>
+            <p className="font-semibold text-[#172044] text-[12px]">https://namogangetrust.org</p>
           </div>
-          <button className="rounded-md border border-[#CBD5E1] bg-white px-2.5 py-1 text-[10.5px] font-semibold text-[#425273] hover:bg-[#F1F5F9]">
+          <button className="rounded-none border border-[#CBD5E1] bg-white px-2.5 py-1 text-[10.5px] font-semibold text-[#425273] hover:bg-[#F1F5F9]">
             Change CTA
           </button>
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-lg border border-[#EDF1F5] bg-white p-2">
+          <div className="rounded-none border border-[#EDF1F5] bg-white p-2">
             <span className="text-[11.5px] text-[#687797]">Total Clicks</span>
-            <p className="text-[17px] font-bold text-[#0A66C2]">1,842</p>
+            <p className="text-[17px] font-semibold text-[#0A66C2]">1,842</p>
             <span className="text-[11px] font-semibold text-[#10B981]">↑ 38.4% MoM</span>
           </div>
-          <div className="rounded-lg border border-[#EDF1F5] bg-white p-2">
+          <div className="rounded-none border border-[#EDF1F5] bg-white p-2">
             <span className="text-[11.5px] text-[#687797]">Click-Through Rate</span>
-            <p className="text-[17px] font-bold text-[#172044]">4.8%</p>
+            <p className="text-[17px] font-semibold text-[#172044]">4.8%</p>
             <span className="text-[11px] text-[#10B981]">↑ 1.2% vs avg</span>
           </div>
-          <div className="rounded-lg border border-[#EDF1F5] bg-white p-2">
+          <div className="rounded-none border border-[#EDF1F5] bg-white p-2">
             <span className="text-[11.5px] text-[#687797]">Top Device</span>
-            <p className="text-[17px] font-bold text-[#8B5CF6]">64%</p>
+            <p className="text-[17px] font-semibold text-[#8B5CF6]">64%</p>
             <span className="text-[11px] text-[#8A97AF]">Desktop users</span>
           </div>
         </div>
 
         <div className="space-y-1.5 border-t border-[#EDF1F5] pt-2">
-          <p className="text-[10.5px] font-bold text-[#172044]">CTA Click Sources</p>
+          <p className="text-[10.5px] font-semibold text-[#172044]">CTA Click Sources</p>
           {[
             { source: "Organic Page Header", clicks: "1,142 clicks", pct: 62 },
             { source: "Sponsored Post CTAs", clicks: "515 clicks", pct: 28 },
@@ -2965,7 +2993,7 @@ function LinkedInLiveEvents() {
     <Card
       title="LinkedIn Live & Events"
       action={
-        <button className="flex items-center gap-1 rounded-md bg-[#0A66C2] px-2.5 py-1 text-[10.5px] font-semibold text-white hover:bg-[#0958A8]">
+        <button className="flex items-center gap-1 rounded-none bg-[#0A66C2] px-2.5 py-1 text-[10.5px] font-semibold text-white hover:bg-[#0958A8]">
           <Plus className="size-3" />
           Create Event
         </button>
@@ -2973,20 +3001,20 @@ function LinkedInLiveEvents() {
     >
       <div className="space-y-2.5 p-3.5">
         {/* Event 1 */}
-        <div className="rounded-lg border border-[#EDF1F5] p-2.5 transition-colors hover:bg-[#F9FBFE]">
+        <div className="rounded-none border border-[#EDF1F5] p-2.5 transition-colors hover:bg-[#F9FBFE]">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#FEF2F2] px-2 py-0.5 text-[11px] font-bold text-[#DC2626]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#FEF2F2] px-2 py-0.5 text-[11px] font-semibold text-[#DC2626]">
                 <Radio className="size-2.5 animate-pulse text-[#DC2626]" />
                 Live Webinar
               </span>
               <span className="text-[10px] font-medium text-[#687797]">Apr 20, 2025 • 11:00 AM IST</span>
             </div>
-            <span className="rounded bg-[#ECFDF5] px-1.5 py-0.2 text-[11.5px] font-bold text-[#059669]">
+            <span className="rounded-none bg-[#ECFDF5] px-1.5 py-0.2 text-[11.5px] font-semibold text-[#059669]">
               384 RSVPs
             </span>
           </div>
-          <p className="mt-1 font-bold text-[#172044] text-[11.5px]">
+          <p className="mt-1 font-semibold text-[#172044] text-[11.5px]">
             Youth for Ganga: Digital Cleanliness & Community Revitalization
           </p>
           <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#687797]">
@@ -3000,20 +3028,20 @@ function LinkedInLiveEvents() {
         </div>
 
         {/* Event 2 */}
-        <div className="rounded-lg border border-[#EDF1F5] p-2.5 transition-colors hover:bg-[#F9FBFE]">
+        <div className="rounded-none border border-[#EDF1F5] p-2.5 transition-colors hover:bg-[#F9FBFE]">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[11px] font-bold text-[#0A66C2]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[11px] font-semibold text-[#0A66C2]">
                 <Users className="size-2.5 text-[#0A66C2]" />
                 Audio Event
               </span>
               <span className="text-[10px] font-medium text-[#687797]">Apr 27, 2025 • 04:00 PM IST</span>
             </div>
-            <span className="rounded bg-[#ECFDF5] px-1.5 py-0.2 text-[11.5px] font-bold text-[#059669]">
+            <span className="rounded-none bg-[#ECFDF5] px-1.5 py-0.2 text-[11.5px] font-semibold text-[#059669]">
               192 RSVPs
             </span>
           </div>
-          <p className="mt-1 font-bold text-[#172044] text-[11.5px]">
+          <p className="mt-1 font-semibold text-[#172044] text-[11.5px]">
             River Conservation Policy Dialogues – Open Mic & Q&A
           </p>
           <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#687797]">
@@ -3218,102 +3246,102 @@ function LeadsTab() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* TOP 6 KPI CARDS */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {/* Card 1: Total Leads */}
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-sm">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-sm">
           <div className="flex items-start justify-between">
             <p className="text-[11px] font-medium text-[#687797]">Total Leads</p>
-            <span className="grid size-7 place-items-center rounded-lg bg-[#E7F1FC] text-[#0A66C2]">
+            <span className="grid size-7 place-items-center rounded-none bg-[#E7F1FC] text-[#0A66C2]">
               <Users className="size-3.5" />
             </span>
           </div>
-          <p className="mt-2 text-[20px] font-bold text-[#111B43]">248</p>
+          <p className="mt-2 text-[20px] font-semibold text-[#111B43]">248</p>
           <div className="mt-1 flex items-center gap-1.5 text-[11.5px]">
-            <span className="font-bold text-[#10B981]">↑ 36%</span>
+            <span className="font-semibold text-[#10B981]">↑ 36%</span>
             <span className="text-[#8A97AF]">+66 vs last month</span>
           </div>
         </div>
 
         {/* Card 2: Form Submissions */}
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-sm">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-sm">
           <div className="flex items-start justify-between">
             <p className="text-[11px] font-medium text-[#687797]">Form Submissions</p>
-            <span className="grid size-7 place-items-center rounded-lg bg-[#F1E9FE] text-[#7C3AED]">
+            <span className="grid size-7 place-items-center rounded-none bg-[#F1E9FE] text-[#7C3AED]">
               <FileText className="size-3.5" />
             </span>
           </div>
-          <p className="mt-2 text-[20px] font-bold text-[#111B43]">142</p>
+          <p className="mt-2 text-[20px] font-semibold text-[#111B43]">142</p>
           <div className="mt-1 flex items-center gap-1.5 text-[11.5px]">
-            <span className="font-bold text-[#10B981]">↑ 28%</span>
+            <span className="font-semibold text-[#10B981]">↑ 28%</span>
             <span className="text-[#8A97AF]">+31 vs last month</span>
           </div>
         </div>
 
         {/* Card 3: Message Leads */}
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-sm">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-sm">
           <div className="flex items-start justify-between">
             <p className="text-[11px] font-medium text-[#687797]">Message Leads</p>
-            <span className="grid size-7 place-items-center rounded-lg bg-[#E1F8EC] text-[#0F9D58]">
+            <span className="grid size-7 place-items-center rounded-none bg-[#E1F8EC] text-[#0F9D58]">
               <MessageSquare className="size-3.5" />
             </span>
           </div>
-          <p className="mt-2 text-[20px] font-bold text-[#111B43]">64</p>
+          <p className="mt-2 text-[20px] font-semibold text-[#111B43]">64</p>
           <div className="mt-1 flex items-center gap-1.5 text-[11.5px]">
-            <span className="font-bold text-[#10B981]">↑ 42%</span>
+            <span className="font-semibold text-[#10B981]">↑ 42%</span>
             <span className="text-[#8A97AF]">+19 vs last month</span>
           </div>
         </div>
 
         {/* Card 4: Qualified Leads */}
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-sm">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-sm">
           <div className="flex items-start justify-between">
             <p className="text-[11px] font-medium text-[#687797]">Qualified Leads</p>
-            <span className="grid size-7 place-items-center rounded-lg bg-[#FFF3DC] text-[#D97706]">
+            <span className="grid size-7 place-items-center rounded-none bg-[#FFF3DC] text-[#D97706]">
               <UserCheck className="size-3.5" />
             </span>
           </div>
-          <p className="mt-2 text-[20px] font-bold text-[#111B43]">38</p>
+          <p className="mt-2 text-[20px] font-semibold text-[#111B43]">38</p>
           <div className="mt-1 flex items-center gap-1.5 text-[11.5px]">
-            <span className="font-bold text-[#10B981]">↑ 27%</span>
+            <span className="font-semibold text-[#10B981]">↑ 27%</span>
             <span className="text-[#8A97AF]">+8 vs last month</span>
           </div>
         </div>
 
         {/* Card 5: Converted */}
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-sm">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-sm">
           <div className="flex items-start justify-between">
             <p className="text-[11px] font-medium text-[#687797]">Converted</p>
-            <span className="grid size-7 place-items-center rounded-lg bg-[#E1F8EC] text-[#059669]">
+            <span className="grid size-7 place-items-center rounded-none bg-[#E1F8EC] text-[#059669]">
               <CheckCircle2 className="size-3.5" />
             </span>
           </div>
-          <p className="mt-2 text-[20px] font-bold text-[#111B43]">12</p>
+          <p className="mt-2 text-[20px] font-semibold text-[#111B43]">12</p>
           <div className="mt-1 flex items-center gap-1.5 text-[11.5px]">
-            <span className="font-bold text-[#10B981]">↑ 50%</span>
+            <span className="font-semibold text-[#10B981]">↑ 50%</span>
             <span className="text-[#8A97AF]">+4 vs last month</span>
           </div>
         </div>
 
         {/* Card 6: Lead Ad Reach */}
-        <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-sm">
+        <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-sm">
           <div className="flex items-start justify-between">
             <p className="text-[11px] font-medium text-[#687797]">Lead Ad Reach</p>
-            <span className="grid size-7 place-items-center rounded-lg bg-[#F1E9FE] text-[#7C3AED]">
+            <span className="grid size-7 place-items-center rounded-none bg-[#F1E9FE] text-[#7C3AED]">
               <Eye className="size-3.5" />
             </span>
           </div>
-          <p className="mt-2 text-[20px] font-bold text-[#111B43]">86.4K</p>
+          <p className="mt-2 text-[20px] font-semibold text-[#111B43]">86.4K</p>
           <div className="mt-1 flex items-center gap-1.5 text-[11.5px]">
-            <span className="font-bold text-[#10B981]">↑ 18%</span>
+            <span className="font-semibold text-[#10B981]">↑ 18%</span>
             <span className="text-[#8A97AF]">+13.2K vs last month</span>
           </div>
         </div>
       </div>
 
       {/* MIDDLE VISUALIZATIONS ROW */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1.15fr_0.85fr]">
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-[1.2fr_1.15fr_0.85fr]">
         {/* Card 1: Leads Trend */}
         <Card
           title="Leads Trend"
@@ -3377,7 +3405,7 @@ function LeadsTab() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-[17px] font-bold text-[#111B43]">248</span>
+                <span className="text-[17px] font-semibold text-[#111B43]">248</span>
                 <span className="text-[11px] text-[#8A97AF]">Total Leads</span>
               </div>
             </div>
@@ -3389,7 +3417,7 @@ function LeadsTab() {
                     <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
                     <span className="whitespace-nowrap text-[11px] font-medium text-[#52617D]">{s.name}</span>
                   </div>
-                  <span className="shrink-0 font-bold text-[#172044]">{s.value}%</span>
+                  <span className="shrink-0 font-semibold text-[#172044]">{s.value}%</span>
                 </div>
               ))}
             </div>
@@ -3415,7 +3443,7 @@ function LeadsTab() {
                   <span className={cn("size-2 rounded-full", st.color)} />
                   <span className="text-[#52617D]">{st.label}</span>
                 </div>
-                <span className="font-bold text-[#172044]">{st.count}</span>
+                <span className="font-semibold text-[#172044]">{st.count}</span>
               </div>
             ))}
           </div>
@@ -3423,9 +3451,9 @@ function LeadsTab() {
       </div>
 
       {/* BOTTOM SECTION: Leads Table & Sidebars */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-[1fr_320px]">
         {/* LEFT / CENTER: Leads Table Card */}
-        <div className="overflow-hidden rounded-xl border border-[#DDE4ED] bg-white shadow-sm">
+        <div className="overflow-hidden rounded-none border border-[#DDE4ED] bg-white shadow-sm">
           {/* Row 1: All Leads (248) & New Leads (96) Tab Pills + Action Buttons */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EDF1F5] p-3.5 bg-white">
             <div className="flex items-center gap-2">
@@ -3458,11 +3486,11 @@ function LeadsTab() {
             </div>
 
             <div className="flex items-center gap-2">
-              <button className="flex h-[32px] items-center gap-1.5 rounded-lg border border-[#DDE4ED] bg-white px-3 text-[11.5px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+              <button className="flex h-[32px] items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white px-3 text-[11.5px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
                 <Download className="size-3.5 text-[#8A97AF]" />
                 <span>Export Leads</span>
               </button>
-              <button className="flex h-[32px] items-center gap-1.5 rounded-lg bg-[#0A66C2] px-3.5 text-[11.5px] font-bold text-white shadow-sm hover:bg-[#0958A8]">
+              <button className="flex h-[32px] items-center gap-1.5 rounded-none bg-[#0A66C2] px-3.5 text-[11.5px] font-semibold text-white shadow-sm hover:bg-[#0958A8]">
                 <Plus className="size-3.5" />
                 <span>Add Lead</span>
               </button>
@@ -3478,14 +3506,14 @@ function LeadsTab() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search leads..."
-                className="h-[32px] w-[180px] rounded-lg border border-[#DDE4ED] bg-white pl-8 pr-2.5 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2]"
+                className="h-[32px] w-[180px] rounded-none border border-[#DDE4ED] bg-white pl-8 pr-2.5 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2]"
               />
             </div>
 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-[32px] rounded-lg border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273] shadow-sm outline-none hover:bg-[#F8FAFD]"
+              className="h-[32px] rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273] shadow-sm outline-none hover:bg-[#F8FAFD]"
             >
               <option value="All">Status: All</option>
               <option value="New">New</option>
@@ -3499,7 +3527,7 @@ function LeadsTab() {
             <select
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
-              className="h-[32px] rounded-lg border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273] shadow-sm outline-none hover:bg-[#F8FAFD]"
+              className="h-[32px] rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273] shadow-sm outline-none hover:bg-[#F8FAFD]"
             >
               <option value="All">Source: All</option>
               <option value="Lead Gen Form">Lead Gen Form</option>
@@ -3508,12 +3536,12 @@ function LeadsTab() {
               <option value="Organic">Organic</option>
             </select>
 
-            <button className="flex h-[32px] items-center gap-1.5 rounded-lg border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+            <button className="flex h-[32px] items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
               <span>Date Range</span>
               <ChevronDown className="size-3 text-[#8A97AF]" />
             </button>
 
-            <button className="flex h-[32px] items-center gap-1 rounded-lg border border-dashed border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#0A66C2] hover:bg-[#F8FAFD]">
+            <button className="flex h-[32px] items-center gap-1 rounded-none border border-dashed border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#0A66C2] hover:bg-[#F8FAFD]">
               <Plus className="size-3" />
               <span>Add Filter</span>
             </button>
@@ -3523,9 +3551,9 @@ function LeadsTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[11px] border-collapse">
               <thead>
-                <tr className="border-b border-[#EDF1F5] bg-[#F8FAFD] text-[10px] font-bold text-[#687797]">
+                <tr className="border-b border-[#EDF1F5] bg-[#F8FAFD] text-[10px] font-semibold text-[#687797]">
                   <th className="w-8 px-3 py-2.5 text-center">
-                    <input type="checkbox" className="rounded text-[#0A66C2]" />
+                    <input type="checkbox" className="rounded-none text-[#0A66C2]" />
                   </th>
                   <th className="px-3 py-2.5 whitespace-nowrap">Name</th>
                   <th className="px-3 py-2.5 whitespace-nowrap">Company</th>
@@ -3541,7 +3569,7 @@ function LeadsTab() {
                   filteredLeads.map((row) => (
                     <tr key={row.id} className="hover:bg-[#FAFBFD]">
                       <td className="px-3 py-2.5 text-center">
-                        <input type="checkbox" className="rounded text-[#0A66C2]" />
+                        <input type="checkbox" className="rounded-none text-[#0A66C2]" />
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <div className="flex items-center gap-2">
@@ -3551,14 +3579,14 @@ function LeadsTab() {
                             className="size-7 rounded-full object-cover"
                           />
                           <div>
-                            <p className="font-bold text-[#172044]">{row.name}</p>
+                            <p className="font-semibold text-[#172044]">{row.name}</p>
                             <p className="text-[11px] text-[#8A97AF]">{row.connection}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
-                          <span className={cn("grid size-5 place-items-center rounded-full text-[11px] font-bold", row.companyIconColor)}>
+                          <span className={cn("grid size-5 place-items-center rounded-full text-[11px] font-semibold", row.companyIconColor)}>
                             ●
                           </span>
                           <span className="font-medium text-[#172044]">{row.company}</span>
@@ -3566,12 +3594,12 @@ function LeadsTab() {
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap text-[#52617D]">{row.designation}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        <span className={cn("inline-flex whitespace-nowrap rounded-md px-2 py-0.5 text-[11.5px] font-semibold", row.sourceColor)}>
+                        <span className={cn("inline-flex whitespace-nowrap rounded-none px-2 py-0.5 text-[11.5px] font-semibold", row.sourceColor)}>
                           {row.source}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        <span className={cn("inline-flex whitespace-nowrap rounded-md px-2 py-0.5 text-[11.5px] font-semibold", row.statusColor)}>
+                        <span className={cn("inline-flex whitespace-nowrap rounded-none px-2 py-0.5 text-[11.5px] font-semibold", row.statusColor)}>
                           {row.status === "New" ? "● New" : row.status}
                         </span>
                       </td>
@@ -3596,17 +3624,17 @@ function LeadsTab() {
         </div>
 
         {/* RIGHT SIDEBAR: Top Converting Campaigns & Recent Lead Activity */}
-        <div className="space-y-4">
+        <div className="space-y-2">
           {/* Top Converting Campaigns Card */}
-          <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-sm space-y-2.5">
+          <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-sm space-y-2.5">
             <div className="flex items-center justify-between">
-              <h4 className="text-[13px] font-bold text-[#172044]">Top Converting Campaigns</h4>
+              <h4 className="text-[13px] font-semibold text-[#172044]">Top Converting Campaigns</h4>
               <CardLink label="View All" />
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-[11px]">
                 <thead>
-                  <tr className="border-b border-[#EDF1F5] text-[11.5px] font-bold text-[#8A97AF]">
+                  <tr className="border-b border-[#EDF1F5] text-[11.5px] font-semibold text-[#8A97AF]">
                     <th className="pb-1.5">Campaign</th>
                     <th className="pb-1.5 text-center">Leads</th>
                     <th className="pb-1.5 text-center">Converted</th>
@@ -3625,7 +3653,7 @@ function LeadsTab() {
                       <td className="py-2 font-medium text-[#172044]">{c.name}</td>
                       <td className="py-2 text-center text-[#52617D]">{c.leads}</td>
                       <td className="py-2 text-center text-[#52617D]">{c.conv}</td>
-                      <td className="py-2 text-right font-bold text-[#10B981]">{c.rate}</td>
+                      <td className="py-2 text-right font-semibold text-[#10B981]">{c.rate}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -3634,9 +3662,9 @@ function LeadsTab() {
           </div>
 
           {/* Recent Lead Activity Card */}
-          <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-sm space-y-2.5">
+          <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-sm space-y-2.5">
             <div className="flex items-center justify-between">
-              <h4 className="text-[13px] font-bold text-[#172044]">Recent Lead Activity</h4>
+              <h4 className="text-[13px] font-semibold text-[#172044]">Recent Lead Activity</h4>
               <CardLink label="View All" />
             </div>
             <div className="space-y-2.5 divide-y divide-[#EDF1F5] text-[11px]">
@@ -3656,13 +3684,13 @@ function LeadsTab() {
                         className="size-7 rounded-full object-cover"
                       />
                       {act.inBadge && (
-                        <div className="absolute -bottom-0.5 -right-0.5 grid size-3 place-items-center rounded bg-[#0A66C2] text-[10px] font-bold text-white">
+                        <div className="absolute -bottom-0.5 -right-0.5 grid size-3 place-items-center rounded-none bg-[#0A66C2] text-[10px] font-semibold text-white">
                           in
                         </div>
                       )}
                     </div>
                     <div>
-                      <p className="font-bold text-[#172044]">{act.name}</p>
+                      <p className="font-semibold text-[#172044]">{act.name}</p>
                       <p className="text-[11.5px] text-[#8A97AF]">{act.action}</p>
                     </div>
                   </div>
@@ -3818,7 +3846,7 @@ function InboxTab() {
   ];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* Subtabs: Inbox, Comments, Mentions, Leads, Archived */}
       <div className="flex items-center gap-6 border-b border-[#E2E8F0] pb-2 text-[12.5px]">
         {(["Inbox", "Comments", "Mentions", "Leads", "Archived"] as const).map((tab) => (
@@ -3838,9 +3866,9 @@ function InboxTab() {
       </div>
 
       {/* 3-Column Layout */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[280px_1fr_290px] xl:grid-cols-[310px_1fr_310px]">
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-[280px_1fr_290px] xl:grid-cols-[310px_1fr_310px]">
         {/* LEFT COLUMN: Conversation List */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-[#DDE4ED] bg-white shadow-sm">
+        <div className="flex flex-col overflow-hidden rounded-none border border-[#DDE4ED] bg-white shadow-sm">
           <div className="border-b border-[#EDF1F5] p-3 space-y-2.5">
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
@@ -3848,10 +3876,10 @@ function InboxTab() {
                 <input
                   type="text"
                   placeholder="Search conversations..."
-                  className="h-[32px] w-full rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] pl-8 pr-2.5 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2]"
+                  className="h-[32px] w-full rounded-none border border-[#DDE4ED] bg-[#F8FAFD] pl-8 pr-2.5 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2]"
                 />
               </div>
-              <button className="grid size-8 shrink-0 place-items-center rounded-lg border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]">
+              <button className="grid size-8 shrink-0 place-items-center rounded-none border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]">
                 <Filter className="size-3.5" />
               </button>
             </div>
@@ -3907,19 +3935,19 @@ function InboxTab() {
                     )}
                     {item.hasLinkedInBadge && (
                       <div className="absolute -bottom-0.5 -right-0.5 grid size-3.5 place-items-center rounded-full bg-[#0A66C2] text-white">
-                        <span className="text-[10px] font-bold">in</span>
+                        <span className="text-[10px] font-semibold">in</span>
                       </div>
                     )}
                     {item.hasInstagramBadge && (
                       <div className="absolute -bottom-0.5 -right-0.5 grid size-3.5 place-items-center rounded-full bg-[#E11D48] text-white">
-                        <span className="text-[10px] font-bold">●</span>
+                        <span className="text-[10px] font-semibold">●</span>
                       </div>
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <p className={cn("truncate text-[12px] font-bold", isSelected ? "text-[#0A66C2]" : "text-[#172044]")}>
+                      <p className={cn("truncate text-[12px] font-semibold", isSelected ? "text-[#0A66C2]" : "text-[#172044]")}>
                         {item.name}
                       </p>
                       <span className="text-[11.5px] text-[#8A97AF]">{item.time}</span>
@@ -3941,7 +3969,7 @@ function InboxTab() {
         </div>
 
         {/* CENTER COLUMN: Active Chat */}
-        <div className="flex flex-col overflow-hidden rounded-xl border border-[#DDE4ED] bg-white shadow-sm min-h-[640px]">
+        <div className="flex flex-col overflow-hidden rounded-none border border-[#DDE4ED] bg-white shadow-sm min-h-[640px]">
           {/* Chat Header */}
           <div className="flex items-center justify-between border-b border-[#EDF1F5] p-3.5">
             <div className="flex items-center gap-3">
@@ -3952,8 +3980,8 @@ function InboxTab() {
               />
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="text-[13.5px] font-bold text-[#172044]">Priya Sharma</h3>
-                  <span className="grid size-3.5 place-items-center rounded bg-[#0A66C2] text-white text-[10.5px] font-bold">
+                  <h3 className="text-[13.5px] font-semibold text-[#172044]">Priya Sharma</h3>
+                  <span className="grid size-3.5 place-items-center rounded-none bg-[#0A66C2] text-white text-[10.5px] font-semibold">
                     in
                   </span>
                 </div>
@@ -3962,14 +3990,14 @@ function InboxTab() {
             </div>
 
             <div className="flex items-center gap-2">
-              <button className="flex items-center gap-1 rounded-md border border-[#DDE4ED] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+              <button className="flex items-center gap-1 rounded-none border border-[#DDE4ED] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
                 <UserCheck className="size-3 text-[#0A66C2]" />
                 <span>Mark as Lead</span>
               </button>
-              <button className="grid size-7 place-items-center rounded-md border border-[#DDE4ED] bg-white text-[#8A97AF] hover:bg-[#F8FAFD] hover:text-[#D97706]">
+              <button className="grid size-7 place-items-center rounded-none border border-[#DDE4ED] bg-white text-[#8A97AF] hover:bg-[#F8FAFD] hover:text-[#D97706]">
                 <Heart className="size-3.5" />
               </button>
-              <button className="grid size-7 place-items-center rounded-md border border-[#DDE4ED] bg-white text-[#8A97AF] hover:bg-[#F8FAFD]">
+              <button className="grid size-7 place-items-center rounded-none border border-[#DDE4ED] bg-white text-[#8A97AF] hover:bg-[#F8FAFD]">
                 <MoreHorizontal className="size-3.5" />
               </button>
             </div>
@@ -3990,7 +4018,7 @@ function InboxTab() {
                 alt="Priya"
                 className="size-7 rounded-full object-cover"
               />
-              <div className="max-w-[70%] rounded-2xl rounded-tl-none bg-white p-3 text-[11.5px] text-[#1E293B] shadow-sm border border-[#E2E8F0]">
+              <div className="max-w-[70%] rounded-none rounded-tl-none bg-white p-3 text-[11.5px] text-[#1E293B] shadow-sm border border-[#E2E8F0]">
                 <p>Hi! I came across your campaign and it's truly inspiring. 🌱</p>
                 <p className="mt-1">This is such an important initiative!</p>
                 <span className="mt-1.5 block text-right text-[11px] text-[#94A3B8]">10:24 AM</span>
@@ -3999,7 +4027,7 @@ function InboxTab() {
 
             {/* Outbound Message 1 */}
             <div className="flex items-start justify-end gap-2.5">
-              <div className="max-w-[70%] rounded-2xl rounded-tr-none bg-[#0A66C2] p-3 text-[11.5px] text-white shadow-sm">
+              <div className="max-w-[70%] rounded-none rounded-tr-none bg-[#0A66C2] p-3 text-[11.5px] text-white shadow-sm">
                 <p>Thank you so much, Priya! 🙏</p>
                 <p className="mt-1">We're glad you found it inspiring. Our goal is to bring more people together for cleaner rivers and healthier communities.</p>
                 <div className="mt-1.5 flex items-center justify-end gap-1 text-[11px] text-blue-100">
@@ -4007,7 +4035,7 @@ function InboxTab() {
                   <Check className="size-3" />
                 </div>
               </div>
-              <div className="grid size-7 place-items-center rounded-full bg-[#111B43] text-[11px] font-bold text-white">
+              <div className="grid size-7 place-items-center rounded-full bg-[#111B43] text-[11px] font-semibold text-white">
                 NG
               </div>
             </div>
@@ -4019,7 +4047,7 @@ function InboxTab() {
                 alt="Priya"
                 className="size-7 rounded-full object-cover"
               />
-              <div className="max-w-[70%] rounded-2xl rounded-tl-none bg-white p-3 text-[11.5px] text-[#1E293B] shadow-sm border border-[#E2E8F0]">
+              <div className="max-w-[70%] rounded-none rounded-tl-none bg-white p-3 text-[11.5px] text-[#1E293B] shadow-sm border border-[#E2E8F0]">
                 <p>I would love to know how I can volunteer for the upcoming river clean-up events. Do you have a form or registration link?</p>
                 <span className="mt-1.5 block text-right text-[11px] text-[#94A3B8]">10:28 AM</span>
               </div>
@@ -4027,7 +4055,7 @@ function InboxTab() {
 
             {/* Outbound Message 2 */}
             <div className="flex items-start justify-end gap-2.5">
-              <div className="max-w-[70%] rounded-2xl rounded-tr-none bg-[#0A66C2] p-3 text-[11.5px] text-white shadow-sm">
+              <div className="max-w-[70%] rounded-none rounded-tr-none bg-[#0A66C2] p-3 text-[11.5px] text-white shadow-sm">
                 <p>Yes! You can register as a volunteer through this link:</p>
                 <p className="mt-1 underline">https://namogange.org/volunteer</p>
                 <p className="mt-1">We'll also be sharing upcoming event dates soon. Stay tuned! 💙</p>
@@ -4036,7 +4064,7 @@ function InboxTab() {
                   <Check className="size-3" />
                 </div>
               </div>
-              <div className="grid size-7 place-items-center rounded-full bg-[#111B43] text-[11px] font-bold text-white">
+              <div className="grid size-7 place-items-center rounded-full bg-[#111B43] text-[11px] font-semibold text-white">
                 NG
               </div>
             </div>
@@ -4048,7 +4076,7 @@ function InboxTab() {
                 alt="Priya"
                 className="size-7 rounded-full object-cover"
               />
-              <div className="max-w-[70%] rounded-2xl rounded-tl-none bg-white p-3 text-[11.5px] text-[#1E293B] shadow-sm border border-[#E2E8F0]">
+              <div className="max-w-[70%] rounded-none rounded-tl-none bg-white p-3 text-[11.5px] text-[#1E293B] shadow-sm border border-[#E2E8F0]">
                 <p>Great! I've just registered. Looking forward to being a part of this. Keep up the amazing work! 💚</p>
                 <span className="mt-1.5 block text-right text-[11px] text-[#94A3B8]">10:31 AM</span>
               </div>
@@ -4056,7 +4084,7 @@ function InboxTab() {
 
             {/* Outbound Message 3 */}
             <div className="flex items-start justify-end gap-2.5">
-              <div className="max-w-[70%] rounded-2xl rounded-tr-none bg-[#0A66C2] p-3 text-[11.5px] text-white shadow-sm">
+              <div className="max-w-[70%] rounded-none rounded-tr-none bg-[#0A66C2] p-3 text-[11.5px] text-white shadow-sm">
                 <p>That's wonderful! 🎉</p>
                 <p className="mt-1">Together we can make a bigger impact. If you have any more questions, feel free to reach out.</p>
                 <div className="mt-1.5 flex items-center justify-end gap-1 text-[11px] text-blue-100">
@@ -4064,7 +4092,7 @@ function InboxTab() {
                   <Check className="size-3" />
                 </div>
               </div>
-              <div className="grid size-7 place-items-center rounded-full bg-[#111B43] text-[11px] font-bold text-white">
+              <div className="grid size-7 place-items-center rounded-full bg-[#111B43] text-[11px] font-semibold text-white">
                 NG
               </div>
             </div>
@@ -4077,17 +4105,17 @@ function InboxTab() {
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="Type a message..."
               rows={2}
-              className="w-full resize-none rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] p-2.5 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2]"
+              className="w-full resize-none rounded-none border border-[#DDE4ED] bg-[#F8FAFD] p-2.5 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2]"
             />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#64748B]">
-                <button className="rounded p-1 hover:bg-[#F1F5F9]"><SmileIcon className="size-4" /></button>
-                <button className="rounded p-1 hover:bg-[#F1F5F9]"><LinkIcon className="size-4" /></button>
-                <button className="rounded p-1 hover:bg-[#F1F5F9]"><ImageIcon className="size-4" /></button>
-                <button className="rounded p-1 text-[10px] font-bold uppercase hover:bg-[#F1F5F9]">GIF</button>
-                <button className="rounded p-1 hover:bg-[#F1F5F9]"><Layers className="size-4" /></button>
+                <button className="rounded-none p-1 hover:bg-[#F1F5F9]"><SmileIcon className="size-4" /></button>
+                <button className="rounded-none p-1 hover:bg-[#F1F5F9]"><LinkIcon className="size-4" /></button>
+                <button className="rounded-none p-1 hover:bg-[#F1F5F9]"><ImageIcon className="size-4" /></button>
+                <button className="rounded-none p-1 text-[10px] font-semibold uppercase hover:bg-[#F1F5F9]">GIF</button>
+                <button className="rounded-none p-1 hover:bg-[#F1F5F9]"><Layers className="size-4" /></button>
               </div>
-              <button className="flex items-center gap-1.5 rounded-lg bg-[#0A66C2] px-4 py-1.5 text-[12px] font-bold text-white shadow-sm hover:bg-[#0958A8]">
+              <button className="flex items-center gap-1.5 rounded-none bg-[#0A66C2] px-4 py-1.5 text-[12px] font-semibold text-white shadow-sm hover:bg-[#0958A8]">
                 <Send className="size-3.5" />
                 <span>Send</span>
               </button>
@@ -4096,11 +4124,11 @@ function InboxTab() {
         </div>
 
         {/* RIGHT COLUMN: Contact Details & Info */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {/* Contact Details Card */}
-          <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-sm space-y-3">
+          <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-sm space-y-3">
             <div className="flex items-start justify-between">
-              <h4 className="text-[13px] font-bold text-[#172044]">Contact Details</h4>
+              <h4 className="text-[13px] font-semibold text-[#172044]">Contact Details</h4>
               <button className="text-[#8A97AF] hover:text-[#172044]"><MoreHorizontal className="size-3.5" /></button>
             </div>
             <div className="flex flex-col items-center text-center">
@@ -4110,8 +4138,8 @@ function InboxTab() {
                 className="size-14 rounded-full object-cover"
               />
               <div className="mt-2 flex items-center gap-1">
-                <p className="text-[13px] font-bold text-[#172044]">Priya Sharma</p>
-                <span className="grid size-3 place-items-center rounded bg-[#0A66C2] text-[10px] font-bold text-white">in</span>
+                <p className="text-[13px] font-semibold text-[#172044]">Priya Sharma</p>
+                <span className="grid size-3 place-items-center rounded-none bg-[#0A66C2] text-[10px] font-semibold text-white">in</span>
               </div>
               <p className="text-[10px] text-[#64748B]">Marketing Manager at GreenStep India</p>
             </div>
@@ -4135,20 +4163,20 @@ function InboxTab() {
               </div>
             </div>
 
-            <button className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#DDE4ED] bg-white py-1.5 text-[11.5px] font-semibold text-[#0A66C2] hover:bg-[#F8FAFD]">
+            <button className="flex w-full items-center justify-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white py-1.5 text-[11.5px] font-semibold text-[#0A66C2] hover:bg-[#F8FAFD]">
               <span>View LinkedIn Profile</span>
               <ExternalLink className="size-3" />
             </button>
           </div>
 
           {/* Conversation Details Card */}
-          <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-sm space-y-2.5">
-            <h4 className="text-[13px] font-bold text-[#172044]">Conversation Details</h4>
+          <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-sm space-y-2.5">
+            <h4 className="text-[13px] font-semibold text-[#172044]">Conversation Details</h4>
             <div className="space-y-2 text-[11px]">
               <div className="flex items-center justify-between">
                 <span className="text-[#64748B]">Channel</span>
                 <span className="flex items-center gap-1 font-semibold text-[#172044]">
-                  <span className="grid size-3.5 place-items-center rounded bg-[#0A66C2] text-white text-[10.5px] font-bold">in</span>
+                  <span className="grid size-3.5 place-items-center rounded-none bg-[#0A66C2] text-white text-[10.5px] font-semibold">in</span>
                   LinkedIn
                 </span>
               </div>
@@ -4158,7 +4186,7 @@ function InboxTab() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[#64748B]">Status</span>
-                <span className="flex items-center gap-1 rounded-md bg-[#DCFCE7] px-2 py-0.5 text-[10px] font-bold text-[#16A34A]">
+                <span className="flex items-center gap-1 rounded-none bg-[#DCFCE7] px-2 py-0.5 text-[10px] font-semibold text-[#16A34A]">
                   ● Open <ChevronDown className="size-2.5" />
                 </span>
               </div>
@@ -4171,15 +4199,15 @@ function InboxTab() {
               <div className="flex items-center justify-between">
                 <span className="text-[#64748B]">Assigned To</span>
                 <span className="flex items-center gap-1 font-semibold text-[#172044]">
-                  <span className="grid size-4 place-items-center rounded-full bg-[#111B43] text-[10.5px] text-white font-bold">MS</span>
+                  <span className="grid size-4 place-items-center rounded-full bg-[#111B43] text-[10.5px] text-white font-semibold">MS</span>
                   Manish Sirohi <ChevronDown className="size-2.5 text-[#8A97AF]" />
                 </span>
               </div>
               <div className="flex items-start justify-between pt-1">
                 <span className="text-[#64748B]">Tags</span>
                 <div className="flex flex-wrap items-center justify-end gap-1">
-                  <span className="rounded bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-semibold text-[#2563EB]">Volunteer</span>
-                  <span className="rounded bg-[#F3E8FF] px-2 py-0.5 text-[10px] font-semibold text-[#9333EA]">Interested</span>
+                  <span className="rounded-none bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-semibold text-[#2563EB]">Volunteer</span>
+                  <span className="rounded-none bg-[#F3E8FF] px-2 py-0.5 text-[10px] font-semibold text-[#9333EA]">Interested</span>
                   <button className="text-[10px] font-semibold text-[#0A66C2] hover:underline">+ Add Tag</button>
                 </div>
               </div>
@@ -4187,22 +4215,22 @@ function InboxTab() {
           </div>
 
           {/* Quick Actions Card */}
-          <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-sm space-y-2.5">
-            <h4 className="text-[13px] font-bold text-[#172044]">Quick Actions</h4>
+          <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-sm space-y-2.5">
+            <h4 className="text-[13px] font-semibold text-[#172044]">Quick Actions</h4>
             <div className="grid grid-cols-2 gap-2">
-              <button className="flex items-center gap-1.5 rounded-lg border border-[#DDE4ED] bg-white p-2 text-left text-[11px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+              <button className="flex items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white p-2 text-left text-[11px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
                 <UserCheck className="size-3.5 text-[#0A66C2]" />
                 <span>Mark as Lead</span>
               </button>
-              <button className="flex items-center gap-1.5 rounded-lg border border-[#DDE4ED] bg-white p-2 text-left text-[11px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+              <button className="flex items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white p-2 text-left text-[11px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
                 <FileText className="size-3.5 text-[#425273]" />
                 <span>Add Note</span>
               </button>
-              <button className="flex items-center gap-1.5 rounded-lg border border-[#DDE4ED] bg-white p-2 text-left text-[11px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+              <button className="flex items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white p-2 text-left text-[11px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
                 <Calendar className="size-3.5 text-[#425273]" />
                 <span>Create Task</span>
               </button>
-              <button className="flex items-center gap-1.5 rounded-lg border border-[#DDE4ED] bg-white p-2 text-left text-[11px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+              <button className="flex items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white p-2 text-left text-[11px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
                 <Download className="size-3.5 text-[#425273]" />
                 <span>Move to Archive</span>
               </button>
@@ -4210,9 +4238,9 @@ function InboxTab() {
           </div>
 
           {/* Recent Conversations */}
-          <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 shadow-sm space-y-2.5">
+          <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 shadow-sm space-y-2.5">
             <div className="flex items-center justify-between">
-              <h4 className="text-[13px] font-bold text-[#172044]">Recent Conversations</h4>
+              <h4 className="text-[13px] font-semibold text-[#172044]">Recent Conversations</h4>
               <CardLink label="View All" />
             </div>
             <div className="space-y-2 divide-y divide-[#EDF1F5] text-[11px]">
@@ -4224,7 +4252,7 @@ function InboxTab() {
                     className="size-6 rounded-full object-cover"
                   />
                   <div>
-                    <p className="font-bold text-[#172044]">Rahul Mehta</p>
+                    <p className="font-semibold text-[#172044]">Rahul Mehta</p>
                     <p className="text-[11.5px] text-[#8A97AF]">Are there any events happening?</p>
                   </div>
                 </div>
@@ -4236,7 +4264,7 @@ function InboxTab() {
                     <Sparkles className="size-3" />
                   </div>
                   <div>
-                    <p className="font-bold text-[#172044]">Green Earth Club</p>
+                    <p className="font-semibold text-[#172044]">Green Earth Club</p>
                     <p className="text-[11.5px] text-[#8A97AF]">Collaboration opportunity</p>
                   </div>
                 </div>
@@ -4250,7 +4278,7 @@ function InboxTab() {
                     className="size-6 rounded-full object-cover"
                   />
                   <div>
-                    <p className="font-bold text-[#172044]">Aditi Verma</p>
+                    <p className="font-semibold text-[#172044]">Aditi Verma</p>
                     <p className="text-[11.5px] text-[#8A97AF]">Amazing work!</p>
                   </div>
                 </div>
@@ -4335,9 +4363,9 @@ function SettingsTab() {
   ] as const;
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[230px_1fr]">
+    <div className="grid grid-cols-1 gap-2 lg:grid-cols-[230px_1fr]">
       {/* Settings Left Vertical Sidebar */}
-      <div className="space-y-1 rounded-xl border border-[#DDE4ED] bg-white p-2 shadow-sm h-fit">
+      <div className="space-y-1 rounded-none border border-[#DDE4ED] bg-white p-2 shadow-sm h-fit">
         {subNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeSubnav === item.label;
@@ -4346,7 +4374,7 @@ function SettingsTab() {
               key={item.label}
               onClick={() => setActiveSubnav(item.label as any)}
               className={cn(
-                "flex w-full items-start gap-2.5 rounded-lg p-2.5 text-left transition-colors",
+                "flex w-full items-start gap-2.5 rounded-none p-2.5 text-left transition-colors",
                 isActive
                   ? "bg-[#EFF6FF] text-[#0A66C2]"
                   : "text-[#475569] hover:bg-[#F8FAFD]"
@@ -4354,7 +4382,7 @@ function SettingsTab() {
             >
               <Icon className={cn("mt-0.5 size-4 shrink-0", isActive ? "text-[#0A66C2]" : "text-[#8A97AF]")} />
               <div className="min-w-0 flex-1">
-                <p className={cn("text-[12px] font-bold leading-none", isActive ? "text-[#0A66C2]" : "text-[#172044]")}>
+                <p className={cn("text-[12px] font-semibold leading-none", isActive ? "text-[#0A66C2]" : "text-[#172044]")}>
                   {item.label}
                 </p>
                 <p className="mt-1 truncate text-[10px] text-[#8A97AF]">{item.desc}</p>
@@ -4365,50 +4393,50 @@ function SettingsTab() {
       </div>
 
       {/* Main Settings Body */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         {/* ==================================================== */}
         {/* SUBTAB 1: GENERAL */}
         {/* ==================================================== */}
         {activeSubnav === "General" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_0.9fr]">
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-2 lg:grid-cols-[1.2fr_0.9fr]">
               {/* General Settings Card */}
-              <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-4">
+              <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+                    <div className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
                       <Settings className="size-4" />
                     </div>
                     <div>
-                      <h3 className="text-[13.5px] font-bold text-[#172044]">General Settings</h3>
+                      <h3 className="text-[13.5px] font-semibold text-[#172044]">General Settings</h3>
                       <p className="text-[10.5px] text-[#8A97AF]">Basic configuration for your LinkedIn channel.</p>
                     </div>
                   </div>
-                  <button className="rounded-lg bg-[#0A66C2] px-3.5 py-1.5 text-[11.5px] font-bold text-white shadow-sm hover:bg-[#0958A8]">
+                  <button className="rounded-none bg-[#0A66C2] px-3.5 py-1.5 text-[11.5px] font-semibold text-white shadow-sm hover:bg-[#0958A8]">
                     Save Changes
                   </button>
                 </div>
 
                 <div className="space-y-3 text-[11.5px]">
                   <div>
-                    <label className="block font-bold text-[#172044]">Channel Name</label>
+                    <label className="block font-semibold text-[#172044]">Channel Name</label>
                     <input
                       type="text"
                       value={channelName}
                       onChange={(e) => setChannelName(e.target.value)}
-                      className="mt-1 h-[34px] w-full rounded-lg border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                     <p className="mt-1 text-[10px] text-[#8A97AF]">This name will be used internally in your dashboard.</p>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <div>
-                      <label className="block font-bold text-[#172044]">Connected Page</label>
-                      <div className="mt-1 flex items-center justify-between rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] px-2.5 py-1.5">
+                      <label className="block font-semibold text-[#172044]">Connected Page</label>
+                      <div className="mt-1 flex items-center justify-between rounded-none border border-[#DDE4ED] bg-[#F8FAFD] px-2.5 py-1.5">
                         <div className="flex items-center gap-2">
-                          <div className="grid size-6 place-items-center rounded bg-[#0A66C2] text-white text-[11px] font-bold">in</div>
+                          <div className="grid size-6 place-items-center rounded-none bg-[#0A66C2] text-white text-[11px] font-semibold">in</div>
                           <div>
-                            <p className="text-[11px] font-bold text-[#172044]">Namo Gange Trust</p>
+                            <p className="text-[11px] font-semibold text-[#172044]">Namo Gange Trust</p>
                             <p className="text-[11px] text-[#8A97AF]">12,482 followers</p>
                           </div>
                         </div>
@@ -4419,8 +4447,8 @@ function SettingsTab() {
                     </div>
 
                     <div>
-                      <label className="block font-bold text-[#172044]">Project</label>
-                      <div className="mt-1 flex h-[34px] items-center justify-between rounded-lg border border-[#DDE4ED] bg-white px-3">
+                      <label className="block font-semibold text-[#172044]">Project</label>
+                      <div className="mt-1 flex h-[34px] items-center justify-between rounded-none border border-[#DDE4ED] bg-white px-3">
                         <span className="flex items-center gap-1.5 font-medium text-[#172044]">
                           <Briefcase className="size-3.5 text-[#8A97AF]" />
                           {project}
@@ -4431,8 +4459,8 @@ function SettingsTab() {
                   </div>
 
                   <div>
-                    <label className="block font-bold text-[#172044]">Timezone</label>
-                    <div className="mt-1 flex h-[34px] items-center justify-between rounded-lg border border-[#DDE4ED] bg-white px-3">
+                    <label className="block font-semibold text-[#172044]">Timezone</label>
+                    <div className="mt-1 flex h-[34px] items-center justify-between rounded-none border border-[#DDE4ED] bg-white px-3">
                       <span className="flex items-center gap-1.5 font-medium text-[#172044]">
                         <span className="text-[#8A97AF]">🌐</span>
                         {timezone}
@@ -4443,39 +4471,39 @@ function SettingsTab() {
 
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-[#172044]">Description <span className="font-normal text-[#8A97AF]">(Optional)</span></label>
+                      <label className="font-semibold text-[#172044]">Description <span className="font-normal text-[#8A97AF]">(Optional)</span></label>
                       <span className="text-[10px] text-[#8A97AF]">{description.length}/250 characters</span>
                     </div>
                     <textarea
                       rows={2}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="mt-1 w-full resize-none rounded-lg border border-[#DDE4ED] bg-white p-2.5 text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 w-full resize-none rounded-none border border-[#DDE4ED] bg-white p-2.5 text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Connection Status Card */}
-              <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
+              <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="size-2.5 rounded-full bg-[#16A34A]" />
-                      <h3 className="text-[13.5px] font-bold text-[#172044]">Connection Status</h3>
+                      <h3 className="text-[13.5px] font-semibold text-[#172044]">Connection Status</h3>
                     </div>
                     <p className="mt-0.5 text-[10px] font-semibold text-[#16A34A]">Connected</p>
                     <p className="text-[10px] text-[#8A97AF]">Your LinkedIn page is connected and working properly.</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] p-2.5">
+                <div className="flex items-center justify-between rounded-none border border-[#DDE4ED] bg-[#F8FAFD] p-2.5">
                   <div className="flex items-center gap-2.5">
-                    <div className="grid size-9 place-items-center rounded-lg bg-[#0A66C2] text-white">
-                      <span className="text-[16px] font-bold">in</span>
+                    <div className="grid size-9 place-items-center rounded-none bg-[#0A66C2] text-white">
+                      <span className="text-[16px] font-semibold">in</span>
                     </div>
                     <div>
-                      <p className="text-[12px] font-bold text-[#172044]">Namo Gange Trust</p>
+                      <p className="text-[12px] font-semibold text-[#172044]">Namo Gange Trust</p>
                       <p className="text-[10px] text-[#8A97AF]">@namogangetrust</p>
                     </div>
                   </div>
@@ -4485,7 +4513,7 @@ function SettingsTab() {
                 <div className="space-y-2 divide-y divide-[#EDF1F5] text-[11px]">
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-[#64748B]">Followers</span>
-                    <span className="font-bold text-[#172044]">12,482</span>
+                    <span className="font-semibold text-[#172044]">12,482</span>
                   </div>
                   <div className="flex items-center justify-between pt-1.5">
                     <span className="text-[#64748B]">Page Type</span>
@@ -4505,7 +4533,7 @@ function SettingsTab() {
                   </div>
                 </div>
 
-                <button className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#DDE4ED] bg-white py-1.5 text-[11.5px] font-bold text-[#172044] hover:bg-[#F8FAFD]">
+                <button className="flex w-full items-center justify-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white py-1.5 text-[11.5px] font-semibold text-[#172044] hover:bg-[#F8FAFD]">
                   <RefreshCcw className="size-3 text-[#0A66C2]" />
                   <span>Sync Now</span>
                 </button>
@@ -4513,34 +4541,34 @@ function SettingsTab() {
             </div>
 
             {/* Danger Zone */}
-            <div className="rounded-xl border border-[#FCA5A5] bg-[#FEF2F2]/40 p-4 shadow-sm space-y-3">
+            <div className="rounded-none border border-[#FCA5A5] bg-[#FEF2F2]/40 p-4 shadow-sm space-y-3">
               <div className="flex items-center gap-2">
-                <div className="grid size-8 place-items-center rounded-lg bg-[#FEE2E2] text-[#DC2626]">
+                <div className="grid size-8 place-items-center rounded-none bg-[#FEE2E2] text-[#DC2626]">
                   <AlertTriangle className="size-4" />
                 </div>
                 <div>
-                  <h3 className="text-[13.5px] font-bold text-[#DC2626]">Danger Zone</h3>
+                  <h3 className="text-[13.5px] font-semibold text-[#DC2626]">Danger Zone</h3>
                   <p className="text-[10px] text-[#991B1B]">These actions are irreversible. Please proceed with caution.</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="flex items-center justify-between rounded-lg border border-[#FCA5A5] bg-white p-3">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="flex items-center justify-between rounded-none border border-[#FCA5A5] bg-white p-3">
                   <div>
-                    <p className="text-[11.5px] font-bold text-[#172044]">Reconnect LinkedIn Page</p>
+                    <p className="text-[11.5px] font-semibold text-[#172044]">Reconnect LinkedIn Page</p>
                     <p className="text-[10px] text-[#8A97AF]">Disconnect and reconnect your OAuth access token.</p>
                   </div>
-                  <button className="rounded-lg border border-[#DC2626] bg-white px-3 py-1 text-[11px] font-bold text-[#DC2626] hover:bg-[#FEF2F2]">
+                  <button className="rounded-none border border-[#DC2626] bg-white px-3 py-1 text-[11px] font-semibold text-[#DC2626] hover:bg-[#FEF2F2]">
                     Reconnect
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border border-[#FCA5A5] bg-white p-3">
+                <div className="flex items-center justify-between rounded-none border border-[#FCA5A5] bg-white p-3">
                   <div>
-                    <p className="text-[11.5px] font-bold text-[#172044]">Disconnect Channel</p>
+                    <p className="text-[11.5px] font-semibold text-[#172044]">Disconnect Channel</p>
                     <p className="text-[10px] text-[#8A97AF]">Stop syncing analytics & automated posting.</p>
                   </div>
-                  <button className="rounded-lg bg-[#DC2626] px-3 py-1 text-[11px] font-bold text-white hover:bg-[#B91C1C]">
+                  <button className="rounded-none bg-[#DC2626] px-3 py-1 text-[11px] font-semibold text-white hover:bg-[#B91C1C]">
                     Disconnect
                   </button>
                 </div>
@@ -4553,49 +4581,49 @@ function SettingsTab() {
         {/* SUBTAB 2: PAGE SETTINGS */}
         {/* ==================================================== */}
         {activeSubnav === "Page Settings" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.3fr_0.9fr]">
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-2 lg:grid-cols-[1.3fr_0.9fr]">
               {/* Organization Profile Details */}
-              <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-4">
+              <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+                    <div className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
                       <FileText className="size-4" />
                     </div>
                     <div>
-                      <h3 className="text-[13.5px] font-bold text-[#172044]">Organization Profile</h3>
+                      <h3 className="text-[13.5px] font-semibold text-[#172044]">Organization Profile</h3>
                       <p className="text-[10px] text-[#8A97AF]">Public LinkedIn organization information.</p>
                     </div>
                   </div>
-                  <button className="rounded-lg bg-[#0A66C2] px-3.5 py-1.5 text-[11.5px] font-bold text-white shadow-sm hover:bg-[#0958A8]">
+                  <button className="rounded-none bg-[#0A66C2] px-3.5 py-1.5 text-[11.5px] font-semibold text-white shadow-sm hover:bg-[#0958A8]">
                     Update Profile
                   </button>
                 </div>
 
                 <div className="space-y-3 text-[11.5px]">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <div>
-                      <label className="block font-bold text-[#172044]">Page Name</label>
+                      <label className="block font-semibold text-[#172044]">Page Name</label>
                       <input
                         type="text"
                         defaultValue="Namo Gange Trust"
-                        className="mt-1 h-[34px] w-full rounded-lg border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                        className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-[#172044]">Organization ID</label>
+                      <label className="block font-semibold text-[#172044]">Organization ID</label>
                       <input
                         type="text"
                         disabled
                         value="urn:li:organization:84920491"
-                        className="mt-1 h-[34px] w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFD] px-3 font-mono text-[10px] text-[#64748B]"
+                        className="mt-1 h-[34px] w-full rounded-none border border-[#E2E8F0] bg-[#F8FAFD] px-3 font-mono text-[10px] text-[#64748B]"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block font-bold text-[#172044]">LinkedIn Vanity URL</label>
-                    <div className="mt-1 flex h-[34px] items-center rounded-lg border border-[#DDE4ED] bg-white px-3">
+                    <label className="block font-semibold text-[#172044]">LinkedIn Vanity URL</label>
+                    <div className="mt-1 flex h-[34px] items-center rounded-none border border-[#DDE4ED] bg-white px-3">
                       <span className="text-[#8A97AF] mr-1">https://</span>
                       <input
                         type="text"
@@ -4606,58 +4634,58 @@ function SettingsTab() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <div>
-                      <label className="block font-bold text-[#172044]">Industry</label>
+                      <label className="block font-semibold text-[#172044]">Industry</label>
                       <input
                         type="text"
                         value={industry}
                         onChange={(e) => setIndustry(e.target.value)}
-                        className="mt-1 h-[34px] w-full rounded-lg border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                        className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-[#172044]">Company Size</label>
+                      <label className="block font-semibold text-[#172044]">Company Size</label>
                       <input
                         type="text"
                         value={companySize}
                         onChange={(e) => setCompanySize(e.target.value)}
-                        className="mt-1 h-[34px] w-full rounded-lg border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                        className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block font-bold text-[#172044]">Website URL</label>
+                    <label className="block font-semibold text-[#172044]">Website URL</label>
                     <input
                       type="text"
                       value={websiteUrl}
                       onChange={(e) => setWebsiteUrl(e.target.value)}
-                      className="mt-1 h-[34px] w-full rounded-lg border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold text-[#172044]">Tagline</label>
+                    <label className="block font-semibold text-[#172044]">Tagline</label>
                     <input
                       type="text"
                       value={tagline}
                       onChange={(e) => setTagline(e.target.value)}
-                      className="mt-1 h-[34px] w-full rounded-lg border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                   </div>
                 </div>
               </div>
 
               {/* OAuth & Admin Access Card */}
-              <div className="space-y-4">
-                <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3">
+              <div className="space-y-2">
+                <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3">
                   <div className="flex items-center gap-2">
-                    <div className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+                    <div className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
                       <ShieldCheck className="size-4" />
                     </div>
                     <div>
-                      <h3 className="text-[13.5px] font-bold text-[#172044]">OAuth Access & Admin Role</h3>
+                      <h3 className="text-[13.5px] font-semibold text-[#172044]">OAuth Access & Admin Role</h3>
                       <p className="text-[10px] text-[#8A97AF]">Current authenticated LinkedIn Administrator.</p>
                     </div>
                   </div>
@@ -4665,11 +4693,11 @@ function SettingsTab() {
                   <div className="space-y-2 divide-y divide-[#EDF1F5] text-[11px]">
                     <div className="flex items-center justify-between pt-1">
                       <span className="text-[#64748B]">Authenticated Admin</span>
-                      <span className="font-bold text-[#172044]">Manish Sirohi (Owner)</span>
+                      <span className="font-semibold text-[#172044]">Manish Sirohi (Owner)</span>
                     </div>
                     <div className="flex items-center justify-between pt-1.5">
                       <span className="text-[#64748B]">Admin Role</span>
-                      <span className="rounded bg-[#DCFCE7] px-2 py-0.5 text-[11.5px] font-bold text-[#16A34A]">Super Admin</span>
+                      <span className="rounded-none bg-[#DCFCE7] px-2 py-0.5 text-[11.5px] font-semibold text-[#16A34A]">Super Admin</span>
                     </div>
                     <div className="flex items-center justify-between pt-1.5">
                       <span className="text-[#64748B]">Access Token Expiry</span>
@@ -4678,33 +4706,33 @@ function SettingsTab() {
                     <div className="flex items-start justify-between pt-1.5">
                       <span className="text-[#64748B]">Permissions</span>
                       <div className="flex flex-wrap justify-end gap-1">
-                        <span className="rounded bg-[#EFF6FF] px-1.5 py-0.5 text-[11px] font-semibold text-[#0A66C2]">w_member_social</span>
-                        <span className="rounded bg-[#EFF6FF] px-1.5 py-0.5 text-[11px] font-semibold text-[#0A66C2]">rw_organization_admin</span>
-                        <span className="rounded bg-[#EFF6FF] px-1.5 py-0.5 text-[11px] font-semibold text-[#0A66C2]">r_ads_lead</span>
+                        <span className="rounded-none bg-[#EFF6FF] px-1.5 py-0.5 text-[11px] font-semibold text-[#0A66C2]">w_member_social</span>
+                        <span className="rounded-none bg-[#EFF6FF] px-1.5 py-0.5 text-[11px] font-semibold text-[#0A66C2]">rw_organization_admin</span>
+                        <span className="rounded-none bg-[#EFF6FF] px-1.5 py-0.5 text-[11px] font-semibold text-[#0A66C2]">r_ads_lead</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 pt-2">
-                    <button className="flex-1 rounded-lg border border-[#DDE4ED] bg-white py-1.5 text-[11px] font-bold text-[#172044] hover:bg-[#F8FAFD]">
+                    <button className="flex-1 rounded-none border border-[#DDE4ED] bg-white py-1.5 text-[11px] font-semibold text-[#172044] hover:bg-[#F8FAFD]">
                       Test Permissions
                     </button>
-                    <button className="flex-1 rounded-lg bg-[#0A66C2] py-1.5 text-[11px] font-bold text-white hover:bg-[#0958A8]">
+                    <button className="flex-1 rounded-none bg-[#0A66C2] py-1.5 text-[11px] font-semibold text-white hover:bg-[#0958A8]">
                       Refresh Token
                     </button>
                   </div>
                 </div>
 
                 {/* Sync Schedule Card */}
-                <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3">
-                  <h3 className="text-[13px] font-bold text-[#172044]">Automatic Sync Frequency</h3>
+                <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3">
+                  <h3 className="text-[13px] font-semibold text-[#172044]">Automatic Sync Frequency</h3>
                   <div className="grid grid-cols-3 gap-2 text-[11px]">
                     {["Every 30 mins", "Every 1 hour", "Daily once"].map((freq) => (
                       <button
                         key={freq}
                         onClick={() => setAutoSyncFreq(freq)}
                         className={cn(
-                          "rounded-lg border py-2 font-semibold transition-colors",
+                          "rounded-none border py-2 font-semibold transition-colors",
                           autoSyncFreq === freq
                             ? "border-[#0A66C2] bg-[#EFF6FF] text-[#0A66C2]"
                             : "border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]"
@@ -4725,16 +4753,16 @@ function SettingsTab() {
         {/* SUBTAB 3: PUBLISHING */}
         {/* ==================================================== */}
         {activeSubnav === "Publishing" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
               {/* Publishing Automation Settings */}
-              <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
+              <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
                 <div className="flex items-center gap-2">
-                  <div className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+                  <div className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
                     <Send className="size-4" />
                   </div>
                   <div>
-                    <h3 className="text-[13.5px] font-bold text-[#172044]">Publishing Controls</h3>
+                    <h3 className="text-[13.5px] font-semibold text-[#172044]">Publishing Controls</h3>
                     <p className="text-[10px] text-[#8A97AF]">Rules and defaults for publishing posts to LinkedIn.</p>
                   </div>
                 </div>
@@ -4742,7 +4770,7 @@ function SettingsTab() {
                 <div className="space-y-3 text-[11.5px]">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-[#172044]">Auto-publish approved content</p>
+                      <p className="font-semibold text-[#172044]">Auto-publish approved content</p>
                       <p className="text-[10px] text-[#8A97AF]">Automatically publish scheduled posts once approved</p>
                     </div>
                     <button
@@ -4755,7 +4783,7 @@ function SettingsTab() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-[#172044]">Show post preview before publishing</p>
+                      <p className="font-semibold text-[#172044]">Show post preview before publishing</p>
                       <p className="text-[10px] text-[#8A97AF]">Requires manual visual confirmation before live publish</p>
                     </div>
                     <button
@@ -4768,7 +4796,7 @@ function SettingsTab() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-[#172044]">Enable UTM tracking parameters</p>
+                      <p className="font-semibold text-[#172044]">Enable UTM tracking parameters</p>
                       <p className="text-[10px] text-[#8A97AF]">Automatically append UTM tags to outbound links</p>
                     </div>
                     <button
@@ -4781,13 +4809,13 @@ function SettingsTab() {
 
                   <div className="flex items-center justify-between pt-1">
                     <div>
-                      <p className="font-bold text-[#172044]">Default Post Visibility</p>
+                      <p className="font-semibold text-[#172044]">Default Post Visibility</p>
                       <p className="text-[10px] text-[#8A97AF]">Target audience for standard posts</p>
                     </div>
                     <select
                       value={postVisibility}
                       onChange={(e) => setPostVisibility(e.target.value)}
-                      className="h-[32px] rounded-lg border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#172044] outline-none"
+                      className="h-[32px] rounded-none border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#172044] outline-none"
                     >
                       <option value="Public">Public (Anyone)</option>
                       <option value="Followers only">Followers only</option>
@@ -4796,13 +4824,13 @@ function SettingsTab() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-[#172044]">Default Content Category</p>
+                      <p className="font-semibold text-[#172044]">Default Content Category</p>
                       <p className="text-[10px] text-[#8A97AF]">Primary classification for new draft posts</p>
                     </div>
                     <select
                       value={contentCategory}
                       onChange={(e) => setContentCategory(e.target.value)}
-                      className="h-[32px] rounded-lg border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#172044] outline-none"
+                      className="h-[32px] rounded-none border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#172044] outline-none"
                     >
                       <option value="Awareness">Awareness</option>
                       <option value="Community">Community</option>
@@ -4814,37 +4842,37 @@ function SettingsTab() {
               </div>
 
               {/* Default Hashtags & Footers */}
-              <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-4">
+              <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+                    <div className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
                       <Sparkles className="size-4" />
                     </div>
                     <div>
-                      <h3 className="text-[13.5px] font-bold text-[#172044]">Hashtags & Post Templates</h3>
+                      <h3 className="text-[13.5px] font-semibold text-[#172044]">Hashtags & Post Templates</h3>
                       <p className="text-[10px] text-[#8A97AF]">Defaults automatically applied to new posts.</p>
                     </div>
                   </div>
-                  <button className="rounded-lg bg-[#0A66C2] px-3 py-1 text-[11px] font-bold text-white shadow-sm hover:bg-[#0958A8]">
+                  <button className="rounded-none bg-[#0A66C2] px-3 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-[#0958A8]">
                     Save
                   </button>
                 </div>
 
                 <div className="space-y-3 text-[11.5px]">
                   <div>
-                    <label className="block font-bold text-[#172044]">Default Hashtags</label>
+                    <label className="block font-semibold text-[#172044]">Default Hashtags</label>
                     <input
                       type="text"
                       value={defaultHashtags}
                       onChange={(e) => setDefaultHashtags(e.target.value)}
-                      className="mt-1 h-[34px] w-full rounded-lg border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                     <p className="mt-1 text-[10px] text-[#8A97AF]">Pre-filled when drafting posts in the editor.</p>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className="block font-bold text-[#172044]">Default Post Footer Signature</label>
+                      <label className="block font-semibold text-[#172044]">Default Post Footer Signature</label>
                       <button
                         onClick={() => setAutoAppendFooter(!autoAppendFooter)}
                         className={cn("text-[10px] font-semibold", autoAppendFooter ? "text-[#16A34A]" : "text-[#8A97AF]")}
@@ -4856,14 +4884,14 @@ function SettingsTab() {
                       rows={2}
                       value={postFooter}
                       onChange={(e) => setPostFooter(e.target.value)}
-                      className="mt-1 w-full resize-none rounded-lg border border-[#DDE4ED] bg-white p-2 text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 w-full resize-none rounded-none border border-[#DDE4ED] bg-white p-2 text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                   </div>
 
                   <div className="divide-y divide-[#EDF1F5] pt-1">
                     <div className="flex items-center justify-between py-2">
                       <div>
-                        <p className="font-bold text-[#172044]">Auto-compress high resolution media</p>
+                        <p className="font-semibold text-[#172044]">Auto-compress high resolution media</p>
                         <p className="text-[10px] text-[#8A97AF]">Optimizes image file sizes for rapid loading</p>
                       </div>
                       <button
@@ -4876,7 +4904,7 @@ function SettingsTab() {
 
                     <div className="flex items-center justify-between py-2">
                       <div>
-                        <p className="font-bold text-[#172044]">AI-generated Alt text for images</p>
+                        <p className="font-semibold text-[#172044]">AI-generated Alt text for images</p>
                         <p className="text-[10px] text-[#8A97AF]">Improves accessibility and post reach</p>
                       </div>
                       <button
@@ -4897,19 +4925,19 @@ function SettingsTab() {
         {/* SUBTAB 4: TEAM & PERMISSIONS */}
         {/* ==================================================== */}
         {activeSubnav === "Team & Permissions" && (
-          <div className="space-y-4">
-            <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-4">
+          <div className="space-y-2">
+            <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <div className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+                  <div className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
                     <Users className="size-4" />
                   </div>
                   <div>
-                    <h3 className="text-[13.5px] font-bold text-[#172044]">Team Members & Access Levels</h3>
+                    <h3 className="text-[13.5px] font-semibold text-[#172044]">Team Members & Access Levels</h3>
                     <p className="text-[10px] text-[#8A97AF]">Control who can create, schedule, approve, and publish LinkedIn content.</p>
                   </div>
                 </div>
-                <button className="flex items-center gap-1.5 rounded-lg bg-[#0A66C2] px-3.5 py-1.5 text-[11.5px] font-bold text-white shadow-sm hover:bg-[#0958A8]">
+                <button className="flex items-center gap-1.5 rounded-none bg-[#0A66C2] px-3.5 py-1.5 text-[11.5px] font-semibold text-white shadow-sm hover:bg-[#0958A8]">
                   <UserPlus className="size-3.5" />
                   <span>Invite Member</span>
                 </button>
@@ -4918,7 +4946,7 @@ function SettingsTab() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-[11px] border-collapse">
                   <thead>
-                    <tr className="border-b border-[#EDF1F5] text-[10px] font-bold text-[#8A97AF]">
+                    <tr className="border-b border-[#EDF1F5] text-[10px] font-semibold text-[#8A97AF]">
                       <th className="py-2.5">Name & Email</th>
                       <th className="py-2.5">Channel Role</th>
                       <th className="py-2.5">Permissions Granted</th>
@@ -4936,13 +4964,13 @@ function SettingsTab() {
                     ].map((row) => (
                       <tr key={row.name} className="hover:bg-[#FAFBFD]">
                         <td className="py-2.5">
-                          <p className="font-bold text-[#172044]">
+                          <p className="font-semibold text-[#172044]">
                             {row.name} {row.isYou && <span className="font-normal text-[#8A97AF]">(you)</span>}
                           </p>
                           <p className="text-[10px] text-[#8A97AF]">{row.email}</p>
                         </td>
                         <td className="py-2.5">
-                          <span className={cn("rounded px-2 py-0.5 text-[10px] font-semibold", row.roleColor)}>
+                          <span className={cn("rounded-none px-2 py-0.5 text-[10px] font-semibold", row.roleColor)}>
                             {row.role}
                           </span>
                         </td>
@@ -4965,20 +4993,20 @@ function SettingsTab() {
             </div>
 
             {/* Permissions Policy Card */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-2">
-                <h4 className="text-[12.5px] font-bold text-[#172044]">Mandatory Approval Workflow</h4>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-2">
+                <h4 className="text-[12.5px] font-semibold text-[#172044]">Mandatory Approval Workflow</h4>
                 <p className="text-[10.5px] text-[#8A97AF]">Require Manager or Owner approval for posts drafted by Editors before they can go live.</p>
                 <div className="pt-2">
-                  <span className="rounded-full bg-[#DCFCE7] px-2.5 py-1 text-[10px] font-bold text-[#16A34A]">✓ Active Enforced</span>
+                  <span className="rounded-full bg-[#DCFCE7] px-2.5 py-1 text-[10px] font-semibold text-[#16A34A]">✓ Active Enforced</span>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-2">
-                <h4 className="text-[12.5px] font-bold text-[#172044]">Two-Factor Authentication (2FA)</h4>
+              <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-2">
+                <h4 className="text-[12.5px] font-semibold text-[#172044]">Two-Factor Authentication (2FA)</h4>
                 <p className="text-[10.5px] text-[#8A97AF]">All team members accessing the LinkedIn publishing suite must have 2FA enabled on their accounts.</p>
                 <div className="pt-2">
-                  <span className="rounded-full bg-[#EFF6FF] px-2.5 py-1 text-[10px] font-bold text-[#0A66C2]">Enforced for All Roles</span>
+                  <span className="rounded-full bg-[#EFF6FF] px-2.5 py-1 text-[10px] font-semibold text-[#0A66C2]">Enforced for All Roles</span>
                 </div>
               </div>
             </div>
@@ -4989,16 +5017,16 @@ function SettingsTab() {
         {/* SUBTAB 5: NOTIFICATIONS */}
         {/* ==================================================== */}
         {activeSubnav === "Notifications" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
               {/* Event Triggers Card */}
-              <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
+              <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
                 <div className="flex items-center gap-2">
-                  <div className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+                  <div className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
                     <Megaphone className="size-4" />
                   </div>
                   <div>
-                    <h3 className="text-[13.5px] font-bold text-[#172044]">Notification Triggers</h3>
+                    <h3 className="text-[13.5px] font-semibold text-[#172044]">Notification Triggers</h3>
                     <p className="text-[10px] text-[#8A97AF]">Select which events generate alerts.</p>
                   </div>
                 </div>
@@ -5006,7 +5034,7 @@ function SettingsTab() {
                 <div className="space-y-3 text-[11.5px]">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-[#172044]">Post publishing alerts</p>
+                      <p className="font-semibold text-[#172044]">Post publishing alerts</p>
                       <p className="text-[10px] text-[#8A97AF]">Get notified when scheduled posts go live</p>
                     </div>
                     <button
@@ -5019,7 +5047,7 @@ function SettingsTab() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-[#172044]">Engagement spike alerts</p>
+                      <p className="font-semibold text-[#172044]">Engagement spike alerts</p>
                       <p className="text-[10px] text-[#8A97AF]">Get notified when post reactions exceed 500 likes</p>
                     </div>
                     <button
@@ -5032,7 +5060,7 @@ function SettingsTab() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-[#172044]">New Leads notifications</p>
+                      <p className="font-semibold text-[#172044]">New Leads notifications</p>
                       <p className="text-[10px] text-[#8A97AF]">Immediate alert when a new lead form is submitted</p>
                     </div>
                     <button
@@ -5045,7 +5073,7 @@ function SettingsTab() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-[#172044]">Weekly performance summary</p>
+                      <p className="font-semibold text-[#172044]">Weekly performance summary</p>
                       <p className="text-[10px] text-[#8A97AF]">Receive weekly analytics report PDF via email</p>
                     </div>
                     <button
@@ -5058,7 +5086,7 @@ function SettingsTab() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-[#172044]">Follower milestone alerts</p>
+                      <p className="font-semibold text-[#172044]">Follower milestone alerts</p>
                       <p className="text-[10px] text-[#8A97AF]">Get notified on reaching 15k, 20k, etc.</p>
                     </div>
                     <button
@@ -5072,13 +5100,13 @@ function SettingsTab() {
               </div>
 
               {/* Delivery Channels Card */}
-              <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
+              <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
                 <div className="flex items-center gap-2">
-                  <div className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+                  <div className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
                     <Bell className="size-4" />
                   </div>
                   <div>
-                    <h3 className="text-[13.5px] font-bold text-[#172044]">Delivery Channels</h3>
+                    <h3 className="text-[13.5px] font-semibold text-[#172044]">Delivery Channels</h3>
                     <p className="text-[10px] text-[#8A97AF]">Where and how notifications are sent.</p>
                   </div>
                 </div>
@@ -5086,7 +5114,7 @@ function SettingsTab() {
                 <div className="space-y-3 text-[11.5px]">
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-[#172044]">Email Alerts</label>
+                      <label className="font-semibold text-[#172044]">Email Alerts</label>
                       <button
                         onClick={() => setEmailAlerts(!emailAlerts)}
                         className={cn("text-[10px] font-semibold", emailAlerts ? "text-[#16A34A]" : "text-[#8A97AF]")}
@@ -5098,32 +5126,32 @@ function SettingsTab() {
                       type="email"
                       value={alertEmail}
                       onChange={(e) => setAlertEmail(e.target.value)}
-                      className="mt-1 h-[34px] w-full rounded-lg border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className="font-bold text-[#172044]">Slack / Webhook Notification URL</label>
+                      <label className="font-semibold text-[#172044]">Slack / Webhook Notification URL</label>
                       <span className="text-[10px] text-[#8A97AF]">Optional</span>
                     </div>
                     <input
                       type="text"
                       value={slackWebhook}
                       onChange={(e) => setSlackWebhook(e.target.value)}
-                      className="mt-1 h-[34px] w-full rounded-lg border border-[#DDE4ED] bg-white px-3 font-mono text-[10.5px] text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 font-mono text-[10.5px] text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                   </div>
 
                   <div className="pt-1">
-                    <label className="block font-bold text-[#172044]">Delivery Frequency</label>
+                    <label className="block font-semibold text-[#172044]">Delivery Frequency</label>
                     <div className="mt-1.5 grid grid-cols-3 gap-2">
                       {["Instant", "Hourly Digest", "Daily Summary"].map((sched) => (
                         <button
                           key={sched}
                           onClick={() => setDeliverySchedule(sched)}
                           className={cn(
-                            "rounded-lg border py-1.5 text-[11px] font-semibold transition-colors",
+                            "rounded-none border py-1.5 text-[11px] font-semibold transition-colors",
                             deliverySchedule === sched
                               ? "border-[#0A66C2] bg-[#EFF6FF] text-[#0A66C2]"
                               : "border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]"
@@ -5144,21 +5172,21 @@ function SettingsTab() {
         {/* SUBTAB 6: LEAD SYNC */}
         {/* ==================================================== */}
         {activeSubnav === "Lead Sync" && (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {/* Top CRM Integrations Grid */}
-            <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
+            <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+                  <div className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
                     <Layers className="size-4" />
                   </div>
                   <div>
-                    <h3 className="text-[13.5px] font-bold text-[#172044]">CRM & Webhook Lead Sync</h3>
+                    <h3 className="text-[13.5px] font-semibold text-[#172044]">CRM & Webhook Lead Sync</h3>
                     <p className="text-[10px] text-[#8A97AF]">Automatically send LinkedIn lead form submissions to your CRM in real time.</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-[#172044]">Instant Auto-Sync:</span>
+                  <span className="text-[11px] font-semibold text-[#172044]">Instant Auto-Sync:</span>
                   <button
                     onClick={() => setAutoLeadSync(!autoLeadSync)}
                     className={cn("relative h-5 w-9 rounded-full transition-colors", autoLeadSync ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
@@ -5168,56 +5196,56 @@ function SettingsTab() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {/* HubSpot */}
-                <div className="rounded-xl border border-[#DDE4ED] bg-[#F8FAFD] p-3.5 space-y-2">
+                <div className="rounded-none border border-[#DDE4ED] bg-[#F8FAFD] p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-bold text-[#172044]">HubSpot CRM</span>
-                    <span className="rounded bg-[#DCFCE7] px-1.5 py-0.5 text-[11px] font-bold text-[#16A34A]">Connected</span>
+                    <span className="text-[12px] font-semibold text-[#172044]">HubSpot CRM</span>
+                    <span className="rounded-none bg-[#DCFCE7] px-1.5 py-0.5 text-[11px] font-semibold text-[#16A34A]">Connected</span>
                   </div>
                   <p className="text-[10px] text-[#8A97AF]">142 leads synced • Last sync 10m ago</p>
-                  <button className="w-full rounded-lg border border-[#DDE4ED] bg-white py-1 text-[10.5px] font-bold text-[#172044] hover:bg-[#F8FAFD]">
+                  <button className="w-full rounded-none border border-[#DDE4ED] bg-white py-1 text-[10.5px] font-semibold text-[#172044] hover:bg-[#F8FAFD]">
                     Configure Mapping
                   </button>
                 </div>
 
                 {/* Google Sheets */}
-                <div className="rounded-xl border border-[#DDE4ED] bg-[#F8FAFD] p-3.5 space-y-2">
+                <div className="rounded-none border border-[#DDE4ED] bg-[#F8FAFD] p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-bold text-[#172044]">Google Sheets</span>
-                    <span className="rounded bg-[#DCFCE7] px-1.5 py-0.5 text-[11px] font-bold text-[#16A34A]">Live Stream</span>
+                    <span className="text-[12px] font-semibold text-[#172044]">Google Sheets</span>
+                    <span className="rounded-none bg-[#DCFCE7] px-1.5 py-0.5 text-[11px] font-semibold text-[#16A34A]">Live Stream</span>
                   </div>
                   <p className="text-[10px] text-[#8A97AF]">Sheet: "LinkedIn Leads 2025"</p>
-                  <button className="w-full rounded-lg border border-[#DDE4ED] bg-white py-1 text-[10.5px] font-bold text-[#172044] hover:bg-[#F8FAFD]">
+                  <button className="w-full rounded-none border border-[#DDE4ED] bg-white py-1 text-[10.5px] font-semibold text-[#172044] hover:bg-[#F8FAFD]">
                     Open Spreadsheet
                   </button>
                 </div>
 
                 {/* Salesforce */}
-                <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 space-y-2">
+                <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-bold text-[#172044]">Salesforce</span>
-                    <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[11px] font-bold text-[#64748B]">Not Linked</span>
+                    <span className="text-[12px] font-semibold text-[#172044]">Salesforce</span>
+                    <span className="rounded-none bg-[#F1F5F9] px-1.5 py-0.5 text-[11px] font-semibold text-[#64748B]">Not Linked</span>
                   </div>
                   <p className="text-[10px] text-[#8A97AF]">Sync leads as Contacts/Opportunities</p>
                   <button
                     onClick={() => setSalesforceConnected(!salesforceConnected)}
-                    className="w-full rounded-lg bg-[#0A66C2] py-1 text-[10.5px] font-bold text-white hover:bg-[#0958A8]"
+                    className="w-full rounded-none bg-[#0A66C2] py-1 text-[10.5px] font-semibold text-white hover:bg-[#0958A8]"
                   >
                     Connect
                   </button>
                 </div>
 
                 {/* Zoho CRM */}
-                <div className="rounded-xl border border-[#DDE4ED] bg-white p-3.5 space-y-2">
+                <div className="rounded-none border border-[#DDE4ED] bg-white p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-bold text-[#172044]">Zoho CRM</span>
-                    <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[11px] font-bold text-[#64748B]">Not Linked</span>
+                    <span className="text-[12px] font-semibold text-[#172044]">Zoho CRM</span>
+                    <span className="rounded-none bg-[#F1F5F9] px-1.5 py-0.5 text-[11px] font-semibold text-[#64748B]">Not Linked</span>
                   </div>
                   <p className="text-[10px] text-[#8A97AF]">Sync to Zoho CRM Leads Module</p>
                   <button
                     onClick={() => setZohoConnected(!zohoConnected)}
-                    className="w-full rounded-lg bg-[#0A66C2] py-1 text-[10.5px] font-bold text-white hover:bg-[#0958A8]"
+                    className="w-full rounded-none bg-[#0A66C2] py-1 text-[10.5px] font-semibold text-white hover:bg-[#0958A8]"
                   >
                     Connect
                   </button>
@@ -5226,15 +5254,15 @@ function SettingsTab() {
 
               {/* Custom Webhook Card */}
               <div className="border-t border-[#EDF1F5] pt-3 text-[11.5px]">
-                <label className="block font-bold text-[#172044]">Custom Webhook Endpoint</label>
+                <label className="block font-semibold text-[#172044]">Custom Webhook Endpoint</label>
                 <div className="mt-1 flex items-center gap-2">
                   <input
                     type="text"
                     value={webhookUrl}
                     onChange={(e) => setWebhookUrl(e.target.value)}
-                    className="h-[34px] flex-1 rounded-lg border border-[#DDE4ED] bg-white px-3 font-mono text-[11px] text-[#172044] outline-none focus:border-[#0A66C2]"
+                    className="h-[34px] flex-1 rounded-none border border-[#DDE4ED] bg-white px-3 font-mono text-[11px] text-[#172044] outline-none focus:border-[#0A66C2]"
                   />
-                  <button className="h-[34px] rounded-lg border border-[#DDE4ED] bg-white px-3 text-[11px] font-bold text-[#172044] hover:bg-[#F8FAFD]">
+                  <button className="h-[34px] rounded-none border border-[#DDE4ED] bg-white px-3 text-[11px] font-semibold text-[#172044] hover:bg-[#F8FAFD]">
                     Send Test Ping
                   </button>
                 </div>
@@ -5242,16 +5270,16 @@ function SettingsTab() {
             </div>
 
             {/* Sync Activity Logs Table */}
-            <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3">
+            <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-[13px] font-bold text-[#172044]">Recent Lead Sync Logs</h4>
+                <h4 className="text-[13px] font-semibold text-[#172044]">Recent Lead Sync Logs</h4>
                 <button className="text-[11px] font-semibold text-[#0A66C2] hover:underline">Export Full Log</button>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-[11px] border-collapse">
                   <thead>
-                    <tr className="border-b border-[#EDF1F5] text-[10px] font-bold text-[#8A97AF]">
+                    <tr className="border-b border-[#EDF1F5] text-[10px] font-semibold text-[#8A97AF]">
                       <th className="py-2">Lead Name</th>
                       <th className="py-2">Form Source</th>
                       <th className="py-2">Destination</th>
@@ -5268,17 +5296,17 @@ function SettingsTab() {
                       { name: "Rahul Mehta", source: "Direct Message Inquiry", dest: "Custom Webhook", time: "Apr 13, 2025 03:18 PM", status: "Success" },
                     ].map((log, i) => (
                       <tr key={i} className="hover:bg-[#FAFBFD]">
-                        <td className="py-2 font-bold text-[#172044]">{log.name}</td>
+                        <td className="py-2 font-semibold text-[#172044]">{log.name}</td>
                         <td className="py-2 text-[#52617D]">{log.source}</td>
                         <td className="py-2 font-medium text-[#172044]">{log.dest}</td>
                         <td className="py-2 text-[#8A97AF]">{log.time}</td>
                         <td className="py-2">
-                          <span className="rounded bg-[#DCFCE7] px-2 py-0.5 text-[11.5px] font-bold text-[#16A34A]">
+                          <span className="rounded-none bg-[#DCFCE7] px-2 py-0.5 text-[11.5px] font-semibold text-[#16A34A]">
                             ✓ {log.status}
                           </span>
                         </td>
                         <td className="py-2 text-right">
-                          <button className="text-[10px] font-bold text-[#0A66C2] hover:underline">View Payload</button>
+                          <button className="text-[10px] font-semibold text-[#0A66C2] hover:underline">View Payload</button>
                         </td>
                       </tr>
                     ))}
@@ -5293,48 +5321,48 @@ function SettingsTab() {
         {/* SUBTAB 7: ADVANCED */}
         {/* ==================================================== */}
         {activeSubnav === "Advanced" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
               {/* API Configuration */}
-              <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
+              <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
                 <div className="flex items-center gap-2">
-                  <div className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+                  <div className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
                     <Key className="size-4" />
                   </div>
                   <div>
-                    <h3 className="text-[13.5px] font-bold text-[#172044]">API & Webhook Secrets</h3>
+                    <h3 className="text-[13.5px] font-semibold text-[#172044]">API & Webhook Secrets</h3>
                     <p className="text-[10px] text-[#8A97AF]">Developer credentials and endpoint configurations.</p>
                   </div>
                 </div>
 
                 <div className="space-y-3 text-[11.5px]">
                   <div>
-                    <label className="block font-bold text-[#172044]">API Version</label>
+                    <label className="block font-semibold text-[#172044]">API Version</label>
                     <input
                       type="text"
                       disabled
                       value={apiVersion}
-                      className="mt-1 h-[34px] w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFD] px-3 font-mono text-[10.5px] text-[#64748B]"
+                      className="mt-1 h-[34px] w-full rounded-none border border-[#E2E8F0] bg-[#F8FAFD] px-3 font-mono text-[10.5px] text-[#64748B]"
                     />
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className="block font-bold text-[#172044]">Webhook Signature Secret</label>
-                      <button className="text-[10px] font-bold text-[#0A66C2] hover:underline">Regenerate</button>
+                      <label className="block font-semibold text-[#172044]">Webhook Signature Secret</label>
+                      <button className="text-[10px] font-semibold text-[#0A66C2] hover:underline">Regenerate</button>
                     </div>
-                    <div className="mt-1 flex items-center justify-between rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] px-3 py-1.5 font-mono text-[10.5px] text-[#172044]">
+                    <div className="mt-1 flex items-center justify-between rounded-none border border-[#DDE4ED] bg-[#F8FAFD] px-3 py-1.5 font-mono text-[10.5px] text-[#172044]">
                       <span>{webhookSecret}</span>
                       <Copy className="size-3.5 cursor-pointer text-[#8A97AF] hover:text-[#0A66C2]" />
                     </div>
                   </div>
 
                   <div className="pt-2">
-                    <p className="font-bold text-[#172044]">Rate Limits & Quotas</p>
+                    <p className="font-semibold text-[#172044]">Rate Limits & Quotas</p>
                     <div className="mt-2 space-y-1.5 text-[10.5px]">
                       <div className="flex justify-between text-[#52617D]">
                         <span>Read Requests (LinkedIn API):</span>
-                        <span className="font-bold text-[#172044]">4,210 / 10,000 daily</span>
+                        <span className="font-semibold text-[#172044]">4,210 / 10,000 daily</span>
                       </div>
                       <div className="h-1.5 w-full rounded-full bg-[#E2E8F0]">
                         <div className="h-1.5 rounded-full bg-[#0A66C2]" style={{ width: "42%" }} />
@@ -5342,7 +5370,7 @@ function SettingsTab() {
 
                       <div className="flex justify-between text-[#52617D] pt-1">
                         <span>Write / Post Requests:</span>
-                        <span className="font-bold text-[#172044]">142 / 1,000 daily</span>
+                        <span className="font-semibold text-[#172044]">142 / 1,000 daily</span>
                       </div>
                       <div className="h-1.5 w-full rounded-full bg-[#E2E8F0]">
                         <div className="h-1.5 rounded-full bg-[#10B981]" style={{ width: "14%" }} />
@@ -5353,13 +5381,13 @@ function SettingsTab() {
               </div>
 
               {/* Data Retention & Diagnostics */}
-              <div className="rounded-xl border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
+              <div className="rounded-none border border-[#DDE4ED] bg-white p-4 shadow-sm space-y-3.5">
                 <div className="flex items-center gap-2">
-                  <div className="grid size-8 place-items-center rounded-lg bg-[#EFF6FF] text-[#0A66C2]">
+                  <div className="grid size-8 place-items-center rounded-none bg-[#EFF6FF] text-[#0A66C2]">
                     <Database className="size-4" />
                   </div>
                   <div>
-                    <h3 className="text-[13.5px] font-bold text-[#172044]">Data Retention & Cache</h3>
+                    <h3 className="text-[13.5px] font-semibold text-[#172044]">Data Retention & Cache</h3>
                     <p className="text-[10px] text-[#8A97AF]">Manage local storage, history retention and diagnostic tests.</p>
                   </div>
                 </div>
@@ -5367,13 +5395,13 @@ function SettingsTab() {
                 <div className="space-y-3 text-[11.5px]">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-[#172044]">Historical Data Retention</p>
+                      <p className="font-semibold text-[#172044]">Historical Data Retention</p>
                       <p className="text-[10px] text-[#8A97AF]">How long analytics logs are preserved locally</p>
                     </div>
                     <select
                       value={retentionPeriod}
                       onChange={(e) => setRetentionPeriod(e.target.value)}
-                      className="h-[32px] rounded-lg border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#172044] outline-none"
+                      className="h-[32px] rounded-none border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#172044] outline-none"
                     >
                       <option value="6 Months">6 Months</option>
                       <option value="1 Year">1 Year</option>
@@ -5384,7 +5412,7 @@ function SettingsTab() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-[#172044]">Auto-purge archived messages</p>
+                      <p className="font-semibold text-[#172044]">Auto-purge archived messages</p>
                       <p className="text-[10px] text-[#8A97AF]">Delete archived inbox items older than 90 days</p>
                     </div>
                     <button
@@ -5396,17 +5424,17 @@ function SettingsTab() {
                   </div>
 
                   <div className="border-t border-[#EDF1F5] pt-3 space-y-2">
-                    <button className="flex w-full items-center justify-between rounded-lg border border-[#DDE4ED] bg-white p-2 text-left hover:bg-[#F8FAFD]">
+                    <button className="flex w-full items-center justify-between rounded-none border border-[#DDE4ED] bg-white p-2 text-left hover:bg-[#F8FAFD]">
                       <div>
-                        <p className="text-[11px] font-bold text-[#172044]">Clear Channel Cache</p>
+                        <p className="text-[11px] font-semibold text-[#172044]">Clear Channel Cache</p>
                         <p className="text-[11.5px] text-[#8A97AF]">Purges locally cached thumbnails and post metrics</p>
                       </div>
                       <RefreshCcw className="size-3.5 text-[#0A66C2]" />
                     </button>
 
-                    <button className="flex w-full items-center justify-between rounded-lg border border-[#DDE4ED] bg-white p-2 text-left hover:bg-[#F8FAFD]">
+                    <button className="flex w-full items-center justify-between rounded-none border border-[#DDE4ED] bg-white p-2 text-left hover:bg-[#F8FAFD]">
                       <div>
-                        <p className="text-[11px] font-bold text-[#172044]">Download GDPR / Channel Export</p>
+                        <p className="text-[11px] font-semibold text-[#172044]">Download GDPR / Channel Export</p>
                         <p className="text-[11.5px] text-[#8A97AF]">Export all raw post, campaign & lead data as JSON/ZIP</p>
                       </div>
                       <Download className="size-3.5 text-[#0A66C2]" />

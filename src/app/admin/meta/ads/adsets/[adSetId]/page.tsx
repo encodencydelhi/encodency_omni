@@ -133,7 +133,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-[280px] flex-1">
-            <h1 className="flex flex-wrap items-center gap-2.5 text-[22px] font-extrabold leading-tight tracking-tight text-slate-900">
+            <h1 className="flex flex-wrap items-center gap-2.5 text-[22px] font-semibold leading-tight tracking-tight text-slate-900">
               {adSet.name}
               <StatusChip status={adSet.status} />
             </h1>
@@ -142,7 +142,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
               {campaign ? (
                 <Link
                   href={`${ADS_ROOT}/campaigns/${campaign.id}`}
-                  className="font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                  className="font-semibold text-blue-600 hover:text-blue-700 hover:underline"
                 >
                   {campaign.name}
                 </Link>
@@ -239,8 +239,8 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
                 <Field label="Advantage+ audience" value={adSet.audienceExpansion ? "On" : "Off"} />
               </dl>
               <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
-                <p className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">Estimated audience size</p>
-                <p className="mt-1 text-base font-extrabold text-slate-900">
+                <p className="text-[10px] font-semibold text-slate-700 uppercase tracking-wider">Estimated audience size</p>
+                <p className="mt-1 text-base font-semibold text-slate-900">
                   {num(adSet.audienceSize[0])} – {num(adSet.audienceSize[1])}
                 </p>
                 {adSet.audienceSize[1] < 150000 && (
@@ -289,7 +289,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
           </Panel>
 
           <Panel title="Detailed Targeting" icon={<Target className="size-4 text-blue-600" />}>
-            <p className="text-[10.5px] font-bold uppercase tracking-wider text-slate-600">Interests</p>
+            <p className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-600">Interests</p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {adSet.interests.length > 0 ? (
                 adSet.interests.map((i) => <Tag key={i}>{i}</Tag>)
@@ -298,7 +298,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
               )}
             </div>
 
-            <p className="mt-3.5 text-[10.5px] font-bold uppercase tracking-wider text-slate-600">Custom audiences</p>
+            <p className="mt-3.5 text-[10.5px] font-semibold uppercase tracking-wider text-slate-600">Custom audiences</p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {adSet.customAudiences.length > 0 ? (
                 adSet.customAudiences.map((a) => (
@@ -311,7 +311,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
               )}
             </div>
 
-            <p className="mt-3.5 text-[10.5px] font-bold uppercase tracking-wider text-slate-600">Lookalike audiences</p>
+            <p className="mt-3.5 text-[10.5px] font-semibold uppercase tracking-wider text-slate-600">Lookalike audiences</p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {adSet.lookalikes.length > 0 ? (
                 adSet.lookalikes.map((a) => (
@@ -324,7 +324,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
               )}
             </div>
 
-            <p className="mt-3.5 text-[10.5px] font-bold uppercase tracking-wider text-rose-700">Exclusions</p>
+            <p className="mt-3.5 text-[10.5px] font-semibold uppercase tracking-wider text-rose-700">Exclusions</p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {adSet.exclusions.length > 0 ? (
                 adSet.exclusions.map((a) => <Tag key={a}>{a}</Tag>)
@@ -334,7 +334,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
             </div>
 
             <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-3">
-              <span className="text-xs font-bold text-slate-800">Advantage+ audience expansion</span>
+              <span className="text-xs font-semibold text-slate-800">Advantage+ audience expansion</span>
               <ToneChip tone={adSet.audienceExpansion ? "green" : "slate"}>
                 {adSet.audienceExpansion ? "On" : "Off"}
               </ToneChip>
@@ -390,7 +390,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
       {tab === "ads" && (
         <section className={cn(card, "overflow-hidden")}>
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 bg-gradient-to-r from-slate-50/90 via-slate-50/40 to-white px-4 py-3">
-            <h2 className="text-sm font-extrabold text-slate-900">Ads in this ad set ({setAds.length})</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Ads in this ad set ({setAds.length})</h2>
             <div className="flex items-center gap-2">
               <Link href={`${ADS_ROOT}/ads?adset=${adSet.id}`} className={btn}>
                 Open in Ads
@@ -506,7 +506,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
       {tab === "activity" && (
         <section className={cn(card, "overflow-hidden")}>
           <div className="border-b border-[#dde5ee] px-3 py-2.5">
-            <h2 className="text-sm font-bold">Activity</h2>
+            <h2 className="text-sm font-semibold">Activity</h2>
           </div>
           {(() => {
             const rows = activityLog.filter((a) => a.entityLabel === adSet.name);

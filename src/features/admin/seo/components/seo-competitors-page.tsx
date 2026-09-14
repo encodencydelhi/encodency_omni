@@ -109,7 +109,7 @@ export function SeoCompetitorsPage() {
 
       <Box title="Competitive Landscape" className="h-[282px]" action={<Filter label="Google · India" />}>
         <div className="px-3">
-          <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-bold text-[#71809D]", cols)}>
+          <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-semibold text-[#71809D]", cols)}>
             <span>Competitor</span>
             <span className="text-right">DR</span>
             <span className="text-right">Traffic</span>
@@ -239,7 +239,7 @@ export function SeoCompetitorsPage() {
           }
         >
           <div className="px-3">
-            <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-bold text-[#71809D]", gapCols)}>
+            <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-semibold text-[#71809D]", gapCols)}>
               <span>Keyword</span>
               <span className="text-right">Volume</span>
               <span className="text-right">You</span>

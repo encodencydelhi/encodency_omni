@@ -82,7 +82,7 @@ const tint: Record<string, string> = {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[8.5px] font-bold text-[#52617D]">{label}</span>
+      <span className="mb-1 block text-[8.5px] font-semibold text-[#52617D]">{label}</span>
       {children}
     </label>
   );
@@ -158,7 +158,7 @@ export function SeoSettingsPage() {
                     </button>
                   </>
                 ) : (
-                  <button className="shrink-0 rounded bg-[#EB0711] px-2 py-0.5 text-[8px] font-bold text-white">
+                  <button className="shrink-0 rounded bg-[#EB0711] px-2 py-0.5 text-[8px] font-semibold text-white">
                     Connect
                   </button>
                 )}
@@ -206,7 +206,7 @@ export function SeoSettingsPage() {
             ))}
             <div className="mt-2 rounded border border-[#E4EAF2] bg-[#FBFCFE] p-2">
               <div className="flex items-center justify-between text-[8.5px]">
-                <span className="font-bold text-[#52617D]">Keyword quota</span>
+                <span className="font-semibold text-[#52617D]">Keyword quota</span>
                 <b className="text-[#172044]">1,245 / 2,000</b>
               </div>
               <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-[#EDF1F7]">
@@ -259,7 +259,7 @@ export function SeoSettingsPage() {
                   <b className="block truncate text-[9px] font-semibold text-[#172044]">{row.name}</b>
                   <small className="block truncate text-[8px] text-[#8A97AF]">{row.domain}</small>
                 </span>
-                <span className="shrink-0 text-[8.5px] font-bold text-[#52617D]">DR {row.dr}</span>
+                <span className="shrink-0 text-[8.5px] font-semibold text-[#52617D]">DR {row.dr}</span>
                 <button className="shrink-0 rounded p-0.5 text-[#EF4444] hover:bg-[#FFEAEC]">
                   <Trash2 className="size-3" />
                 </button>
@@ -316,13 +316,13 @@ export function SeoSettingsPage() {
             <div className="flex items-start gap-2 rounded border border-[#FFE1E4] bg-[#FFF7F7] px-2 py-1.5">
               <Trash2 className="mt-0.5 size-3.5 shrink-0 text-[#D6293E]" />
               <span className="min-w-0 flex-1">
-                <b className="block text-[9px] font-bold text-[#D6293E]">Reset SEO data</b>
+                <b className="block text-[9px] font-semibold text-[#D6293E]">Reset SEO data</b>
                 <small className="block text-[8px] leading-3 text-[#B4515C]">
                   Clears all crawl history, rankings and reports. This cannot be undone.
                 </small>
               </span>
             </div>
-            <button className="w-full rounded border border-[#F5C2C7] bg-white py-1 text-[9px] font-bold text-[#D6293E] hover:bg-[#FFF7F7]">
+            <button className="w-full rounded border border-[#F5C2C7] bg-white py-1 text-[9px] font-semibold text-[#D6293E] hover:bg-[#FFF7F7]">
               Reset all SEO data
             </button>
           </div>

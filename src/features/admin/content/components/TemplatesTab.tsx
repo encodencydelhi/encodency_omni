@@ -31,7 +31,7 @@ export function TemplatesTab() {
                 {t.isPro && <span className="absolute right-1.5 top-1.5 rounded bg-amber-400 px-1.5 py-px text-[9px] font-black text-amber-950">PRO</span>}
               </div>
               <div className="p-2">
-                <p className="truncate text-[11.5px] font-bold text-[#24365A]">{t.title}</p>
+                <p className="truncate text-[11.5px] font-semibold text-[#24365A]">{t.title}</p>
                 <p className="text-[10.5px] text-[#7A87A0]">{t.category}</p>
               </div>
             </button>
@@ -42,13 +42,13 @@ export function TemplatesTab() {
       {active && (
         <Card title="Preview" className="xl:sticky xl:top-4">
           <img src={active.image} alt="" className="aspect-[4/4.4] w-full rounded-lg object-cover" />
-          <p className="mt-2 text-[13px] font-bold text-[#172044]">{active.title}</p>
+          <p className="mt-2 text-[13px] font-semibold text-[#172044]">{active.title}</p>
           <div className="mt-1 flex items-center gap-1.5">
             <PlatformBadge platform={active.platform} size="sm" />
             <span className="text-[10.5px] text-[#7A87A0]">{PLATFORM_META[active.platform].label} · {active.ratio}</span>
           </div>
-          <button className="mt-2.5 h-9 w-full rounded-lg bg-[#EB0711] text-[12px] font-bold text-white shadow-sm transition hover:bg-[#D60811]">Use this template</button>
-          <button className="mt-1.5 h-8 w-full rounded-lg border text-[11.5px] font-bold text-[#687797] hover:bg-slate-50">Customize in editor</button>
+          <button className="mt-2.5 h-9 w-full rounded-lg bg-[#EB0711] text-[12px] font-semibold text-white shadow-sm transition hover:bg-[#D60811]">Use this template</button>
+          <button className="mt-1.5 h-8 w-full rounded-lg border text-[11.5px] font-semibold text-[#687797] hover:bg-slate-50">Customize in editor</button>
         </Card>
       )}
     </div>

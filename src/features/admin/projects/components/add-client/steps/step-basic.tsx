@@ -151,7 +151,7 @@ export function BasicRail() {
             </span>
           </div>
         </div>
-        <b className="block text-center text-[15px] font-bold text-[#111827]">Start with the basics</b>
+        <b className="block text-center text-[15px] font-semibold text-[#111827]">Start with the basics</b>
         <p className="mx-auto mb-4 mt-1 text-center text-[11.5px] leading-[17px] text-[#6B7280]">
           This information helps us personalize your client&apos;s workspace and provide better
           recommendations.

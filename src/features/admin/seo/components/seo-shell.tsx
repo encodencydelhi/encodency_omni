@@ -51,7 +51,7 @@ export function SeoShell({
           <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-[#71809D]">
             SEO <ChevronDown className="size-2.5 -rotate-90" /> {label}
           </div>
-          <h1 className="text-[20px] font-bold text-[#172044]">{title}</h1>
+          <h1 className="text-[20px] font-semibold text-[#172044]">{title}</h1>
           <p className="text-[10px] text-[#71809D]">{description}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -80,7 +80,7 @@ export function SeoShell({
             key={tab.id}
             href={tab.href}
             className={cn(
-              "shrink-0 whitespace-nowrap pb-2 text-[10px] font-bold transition-colors",
+              "shrink-0 whitespace-nowrap pb-2 text-[10px] font-semibold transition-colors",
               tab.id === view
                 ? "border-b-2 border-[#EB0711] text-[#EB0711]"
                 : "text-[#71809D] hover:text-[#38444D]",
@@ -118,7 +118,7 @@ export function Box({
       )}
     >
       <header className="flex h-10 shrink-0 items-center justify-between gap-2 border-b border-[#E8EDF3] px-3">
-        <h2 className="truncate text-[11.5px] font-bold text-[#172044]">{title}</h2>
+        <h2 className="truncate text-[11.5px] font-semibold text-[#172044]">{title}</h2>
         {action && (
           <div className="flex shrink-0 items-center gap-1 text-[9px] font-semibold text-[#71809D]">
             {action}
@@ -179,13 +179,13 @@ export function Stat({
         <Icon className="size-[18px]" />
       </span>
       <div className="min-w-0">
-        <p className="truncate text-[9.5px] font-bold text-[#52617D]">{label}</p>
+        <p className="truncate text-[9.5px] font-semibold text-[#52617D]">{label}</p>
         <div className="flex items-baseline gap-1.5">
-          <b className="text-[20px] font-bold tracking-[-0.02em] text-[#142044]">{value}</b>
+          <b className="text-[20px] font-semibold tracking-[-0.02em] text-[#142044]">{value}</b>
           {trend && (
             <span
               className={cn(
-                "whitespace-nowrap text-[9px] font-bold",
+                "whitespace-nowrap text-[9px] font-semibold",
                 down ? "text-[#EA111B]" : "text-[#00A66A]",
               )}
             >
@@ -212,7 +212,7 @@ export function Pill({ tone = "neutral", children }: { tone?: string; children: 
     teal: "bg-[#E2F6F5] text-[#0E9C92]",
   };
   return (
-    <i className={cn("w-fit rounded px-1.5 py-0.5 text-[8px] font-bold not-italic", tones[tone] ?? tones.neutral)}>
+    <i className={cn("w-fit rounded px-1.5 py-0.5 text-[8px] font-semibold not-italic", tones[tone] ?? tones.neutral)}>
       {children}
     </i>
   );
@@ -245,7 +245,7 @@ export function Delta({ value, suffix = "" }: { value: number; suffix?: string }
   const up = value > 0;
   return (
     <span
-      className={cn("whitespace-nowrap text-[9px] font-bold", up ? "text-[#10B981]" : "text-[#EF4444]")}
+      className={cn("whitespace-nowrap text-[9px] font-semibold", up ? "text-[#10B981]" : "text-[#EF4444]")}
     >
       {up ? "↑" : "↓"} {Math.abs(value)}
       {suffix}

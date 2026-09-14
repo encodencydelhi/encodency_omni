@@ -40,11 +40,11 @@ export function Section({
       )}
     >
       <div className="mb-3 flex items-center gap-2">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFEAEC] text-[13px] font-bold text-[#E11D28]">
+        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFEAEC] text-[13px] font-semibold text-[#E11D28]">
           {Icon ? <Icon className="size-4" /> : letter}
         </span>
         <div className="min-w-0 flex-1">
-          <b className="block text-[13.5px] font-bold leading-4 text-[#111827]">{title}</b>
+          <b className="block text-[13.5px] font-semibold leading-4 text-[#111827]">{title}</b>
           <small className="block text-[10px] text-[#8791A4]">{caption}</small>
         </div>
         {action}
@@ -73,11 +73,11 @@ export function SubSection({
   return (
     <div className={cn("rounded-xl border border-[#E6E8F0] bg-white p-3", className)}>
       <div className="mb-2.5 flex items-center gap-2">
-        <span className="grid size-6 shrink-0 place-items-center rounded-md bg-[#FFEAEC] text-[11px] font-bold text-[#E11D28]">
+        <span className="grid size-6 shrink-0 place-items-center rounded-md bg-[#FFEAEC] text-[11px] font-semibold text-[#E11D28]">
           {letter}
         </span>
         <div className="min-w-0 flex-1">
-          <b className="block text-[12px] font-bold leading-4 text-[#111827]">{title}</b>
+          <b className="block text-[12px] font-semibold leading-4 text-[#111827]">{title}</b>
           <small className="block text-[9.5px] text-[#8791A4]">{caption}</small>
         </div>
         {action}
@@ -552,7 +552,7 @@ export function OptionCard({
       <span className={cn("grid size-8 place-items-center rounded-lg", tintClass)}>
         <Icon className="size-4" />
       </span>
-      <b className="mt-1.5 block text-[11.5px] font-bold text-[#111827]">{title}</b>
+      <b className="mt-1.5 block text-[11.5px] font-semibold text-[#111827]">{title}</b>
       <small className="block text-[9.5px] leading-[13px] text-[#8791A4]">{caption}</small>
     </button>
   );

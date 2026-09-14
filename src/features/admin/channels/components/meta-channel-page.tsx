@@ -178,7 +178,7 @@ function Header() {
   return (
     <div className="flex min-h-[52px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="self-center">
-        <h1 className="flex items-center gap-2 text-[20px] font-bold leading-6 tracking-[-0.025em] text-[#111B43]">
+        <h1 className="flex items-center gap-2 text-[20px] font-semibold leading-6 tracking-[-0.025em] text-[#111B43]">
           Meta &amp; Instagram
           <ChannelLogo channel="Meta" className="size-[22px] bg-transparent" />
           <ChannelLogo channel="Instagram" className="size-[19px] bg-transparent" />
@@ -190,7 +190,7 @@ function Header() {
       <div className="flex shrink-0 items-center gap-3">
         <Link
           href="/admin/meta/ads"
-          className="flex h-10 items-center gap-2 rounded-xl bg-[#1769DF] px-4 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#1259BD]"
+          className="flex h-10 items-center gap-2 rounded-xl bg-[#1769DF] px-4 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#1259BD]"
         >
           <span className="text-left"><span className="block">Open Meta Ads Manager</span><span className="block text-[8px] font-medium text-blue-100">Paid ads across Facebook &amp; Instagram</span></span>
         </Link>
@@ -245,7 +245,7 @@ function Stat({
           <p className="truncate text-[9px] font-semibold leading-3 text-[#52617D]">{label}</p>
           <div className="flex items-baseline gap-1">
             <b className="text-[19px] leading-[22px] tracking-[-0.02em] text-[#142044]">{value}</b>
-            <span className="whitespace-nowrap text-[8px] font-bold text-[#05A36D]">↑ {trend}</span>
+            <span className="whitespace-nowrap text-[8px] font-semibold text-[#05A36D]">↑ {trend}</span>
           </div>
           <p className="mt-0.5 truncate text-[7.5px] leading-3 text-[#7C89A2]">{note}</p>
         </div>
@@ -278,10 +278,10 @@ function Box({
         )}
       >
         <div className="min-w-0">
-          <h2 className="flex items-center gap-1.5 text-[12px] font-bold leading-4 text-[#172044]">
+          <h2 className="flex items-center gap-1.5 text-[12px] font-semibold leading-4 text-[#172044]">
             {title}
             {badge && (
-              <i className="grid size-[15px] place-items-center rounded-full bg-[#EB0711] text-[8px] font-bold not-italic text-white">
+              <i className="grid size-[15px] place-items-center rounded-full bg-[#EB0711] text-[8px] font-semibold not-italic text-white">
                 {badge}
               </i>
             )}
@@ -413,7 +413,7 @@ function ConnectedAccounts() {
                 className="h-[26px] w-[34px] shrink-0 rounded object-cover shadow-sm"
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[10px] font-bold leading-4 text-[#172044]">{account.name}</p>
+                <p className="truncate text-[10px] font-semibold leading-4 text-[#172044]">{account.name}</p>
                 <p className="truncate text-[8px] leading-3 text-[#7C89A2]">{account.type}</p>
               </div>
               <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-[#E5F7EF] px-1.5 py-0.5 text-[8px] font-semibold text-[#078359]">
@@ -642,7 +642,7 @@ function AudienceInsights() {
           </div>
         </div>
         <div className="min-w-0 self-start pt-1">
-          <p className="mb-2 text-[11px] font-bold text-[#172044]">Top Audience Locations</p>
+          <p className="mb-2 text-[11px] font-semibold text-[#172044]">Top Audience Locations</p>
           <div className="space-y-[9px]">
             {locations.map((location) => (
               <div
@@ -690,7 +690,7 @@ function Conversations() {
             <span className="flex min-w-0 items-center gap-1.5">
               <i
                 className={cn(
-                  "grid size-4 shrink-0 place-items-center rounded-full text-[7px] font-bold not-italic",
+                  "grid size-4 shrink-0 place-items-center rounded-full text-[7px] font-semibold not-italic",
                   [
                     "bg-[#FFECF1] text-[#D8285F]",
                     "bg-[#E7F0FF] text-[#3478DB]",

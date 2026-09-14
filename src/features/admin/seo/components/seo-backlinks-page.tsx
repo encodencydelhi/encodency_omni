@@ -238,7 +238,7 @@ export function SeoBacklinksPage() {
           }
         >
           <div className="px-3">
-            <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-bold text-[#71809D]", cols)}>
+            <div className={cn("sticky top-0 z-10 grid gap-1.5 bg-white py-1.5 text-[8px] font-semibold text-[#71809D]", cols)}>
               <span>Referring Domain</span>
               <span>Domain Rating</span>
               <span className="text-right">Backlinks</span>
@@ -311,7 +311,7 @@ export function SeoBacklinksPage() {
                   <b className="block truncate text-[9px] font-semibold text-[#2C6FD1]">{row.domain}</b>
                   <small className="block truncate text-[8px] text-[#8A97AF]">{row.page}</small>
                 </span>
-                <span className="shrink-0 text-[8.5px] font-bold" style={{ color: drColor(row.dr) }}>
+                <span className="shrink-0 text-[8.5px] font-semibold" style={{ color: drColor(row.dr) }}>
                   DR {row.dr}
                 </span>
                 <Pill tone={statusOf(row.status).tone}>{statusOf(row.status).label}</Pill>

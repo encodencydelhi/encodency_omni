@@ -52,7 +52,7 @@ export function RatioSelector({
         className="flex w-full items-center justify-between gap-2 border-b border-[#EDF1F5] px-3 py-2.5 text-left transition hover:bg-slate-50"
       >
         <div className="min-w-0">
-          <h3 className="truncate text-[13.5px] font-bold text-[#172044]">Aspect Ratio</h3>
+          <h3 className="truncate text-[13.5px] font-semibold text-[#172044]">Aspect Ratio</h3>
           <p className="mt-0.5 text-[11.5px] text-[#7A87A0]">Master ratio + per-platform adaptation</p>
         </div>
         {isOpen ? <ChevronDown className="size-4 text-[#7A87A0]" /> : <ChevronRight className="size-4 text-[#7A87A0]" />}
@@ -74,7 +74,7 @@ export function RatioSelector({
               masterRatio === r.ratio ? "border-[#1769DF] bg-[#F0F6FF]" : "border-[#E2E8F0] hover:border-[#CBD5E1]"
             )}
           >
-            <span className="text-[10.5px] font-bold text-[#24365A]">{r.ratio}</span>
+            <span className="text-[10.5px] font-semibold text-[#24365A]">{r.ratio}</span>
             <span className="text-[8px] text-[#7A87A0] leading-tight">{r.label}</span>
           </button>
         ))}
@@ -83,7 +83,7 @@ export function RatioSelector({
       {/* Custom size editor */}
       {showCustom && masterRatio === "custom" && (
         <div className="mt-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFD] p-2.5">
-          <div className="flex items-center gap-2 text-[11px] font-bold text-[#33445F]">
+          <div className="flex items-center gap-2 text-[11px] font-semibold text-[#33445F]">
             <Crop className="size-3.5" /> Custom Dimensions
           </div>
           <div className="mt-2 grid grid-cols-3 gap-2">
@@ -97,7 +97,7 @@ export function RatioSelector({
             </label>
             <label className="block">
               <span className="mb-0.5 block text-[10px] font-semibold text-[#7A87A0]">Aspect Ratio</span>
-              <div className="flex h-8 items-center rounded-lg border border-[#D9E1EC] bg-[#F1F5F9] px-2 text-[11px] font-bold text-[#33445F]">4 : 5</div>
+              <div className="flex h-8 items-center rounded-lg border border-[#D9E1EC] bg-[#F1F5F9] px-2 text-[11px] font-semibold text-[#33445F]">4 : 5</div>
             </label>
           </div>
           <div className="mt-2 flex gap-1">
@@ -110,7 +110,7 @@ export function RatioSelector({
             <button className="flex items-center gap-1 rounded-md border border-[#E2E8F0] px-2 py-1 text-[10px] font-semibold text-[#687797] hover:bg-white">
               <RotateCcw className="size-2.5" /> Reset
             </button>
-            <button className="ml-auto rounded-md bg-[#1769DF] px-2 py-1 text-[10px] font-bold text-white hover:bg-[#1259BD]">Save as Preset</button>
+            <button className="ml-auto rounded-md bg-[#1769DF] px-2 py-1 text-[10px] font-semibold text-white hover:bg-[#1259BD]">Save as Preset</button>
           </div>
         </div>
       )}
@@ -168,7 +168,7 @@ export function RatioSelector({
                           key={r.ratio}
                           onClick={() => onPlatformRatioChange(p, r.ratio)}
                           className={cn(
-                            "rounded border px-1.5 py-0.5 text-[9px] font-bold transition",
+                            "rounded border px-1.5 py-0.5 text-[9px] font-semibold transition",
                             displayRatio === r.ratio
                               ? "border-[color:var(--pc)] bg-[color:var(--pc-bg)] text-[color:var(--pc)]"
                               : "border-[#E2E8F0] text-[#7A87A0] hover:border-[#CBD5E1]"

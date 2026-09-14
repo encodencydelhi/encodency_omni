@@ -147,7 +147,7 @@ export function MarketingRail({ draft }: { draft: ClientDraft }) {
     <>
       <RailCard>
         <div className="mb-3 flex items-center justify-between">
-          <b className="text-[13px] font-bold text-[#111827]">Client Onboarding Summary</b>
+          <b className="text-[13px] font-semibold text-[#111827]">Client Onboarding Summary</b>
           <button className="text-[11px] font-semibold text-[#4F46E5]">View All</button>
         </div>
         <div className="flex items-start gap-2.5">
@@ -164,7 +164,7 @@ export function MarketingRail({ draft }: { draft: ClientDraft }) {
             />
           </span>
           <div className="min-w-0">
-            <b className="block truncate text-[13px] font-bold text-[#111827]">{draft.legalName}</b>
+            <b className="block truncate text-[13px] font-semibold text-[#111827]">{draft.legalName}</b>
             <p className="text-[11px] text-[#6B7280]">Dignity for Every Life</p>
             <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-[#6B7280]">
               <MapPin className="size-3 shrink-0 text-[#9CA3AF]" />
@@ -185,7 +185,7 @@ export function MarketingRail({ draft }: { draft: ClientDraft }) {
       <RailCard>
         <div className="mb-3 flex items-center gap-2">
           <Sparkles className="size-4 text-[#7C3AED]" />
-          <b className="text-[13px] font-bold text-[#111827]">Smart Recommendations</b>
+          <b className="text-[13px] font-semibold text-[#111827]">Smart Recommendations</b>
         </div>
         <ul className="space-y-2.5">
           {[
@@ -198,7 +198,7 @@ export function MarketingRail({ draft }: { draft: ClientDraft }) {
                 <Icon className="size-3.5 text-[#4F46E5]" />
               </span>
               <span className="min-w-0">
-                <b className="block text-[11.5px] font-bold text-[#111827]">{title}</b>
+                <b className="block text-[11.5px] font-semibold text-[#111827]">{title}</b>
                 <small className="block text-[10.5px] leading-[15px] text-[#6B7280]">{text}</small>
               </span>
             </li>
@@ -209,7 +209,7 @@ export function MarketingRail({ draft }: { draft: ClientDraft }) {
       <RailCard>
         <div className="mb-2.5 flex items-center gap-2">
           <BadgeCheck className="size-4 text-[#4F46E5]" />
-          <b className="text-[13px] font-bold text-[#111827]">Best Practices</b>
+          <b className="text-[13px] font-semibold text-[#111827]">Best Practices</b>
         </div>
         <ul className="space-y-1.5">
           {[
