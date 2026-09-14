@@ -255,11 +255,10 @@ export default function RichTextEditor({
         onMouseDown={(e) => e.preventDefault()}
         onClick={onClick}
         title={title}
-        className={`flex h-7 min-w-7 items-center justify-center rounded-md transition-colors ${
-          isActive
+        className={`flex h-7 min-w-7 items-center justify-center rounded-sm transition-colors ${isActive
             ? "bg-blue-100 text-blue-600 shadow-inner"
             : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-        }`}
+          }`}
       >
         {children}
       </button>
@@ -275,7 +274,7 @@ export default function RichTextEditor({
         <select
           defaultValue="p"
           onChange={(e) => formatText("formatBlock", e.target.value)}
-          className="h-7 rounded-md border border-gray-200 bg-white px-1.5 text-[11px] text-gray-600 outline-none"
+          className="h-7 rounded-sm border border-gray-200 bg-white px-1.5 text-[11px] text-gray-600 outline-none"
         >
           <option value="p">Paragraph</option>
           <option value="h1">Heading 1</option>

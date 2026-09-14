@@ -127,7 +127,7 @@ export function TeamStep({
                     <i
                       key={scope.label}
                       className={cn(
-                        "rounded-md px-2 py-1 text-[10.5px] font-semibold not-italic",
+                        "rounded-sm px-2 py-1 text-[10.5px] font-semibold not-italic",
                         scopeTint[scope.tone],
                       )}
                     >
@@ -162,7 +162,7 @@ export function TeamStep({
                   <button
                     aria-label={`Remove ${member.role}`}
                     onClick={() => set("team", draft.team.filter((row) => row.role !== member.role))}
-                    className="grid size-7 place-items-center rounded-md text-[#9CA3AF] transition-colors hover:bg-[#FEF2F2] hover:text-[#EF4444]"
+                    className="grid size-7 place-items-center rounded-sm text-[#9CA3AF] transition-colors hover:bg-[#FEF2F2] hover:text-[#EF4444]"
                   >
                     <X className="size-4" />
                   </button>

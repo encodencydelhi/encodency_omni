@@ -467,7 +467,7 @@ function OverviewTab({
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold shadow-2xs",
+                        "inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[10px] font-semibold shadow-2xs",
                         rec.tagStyle,
                       )}
                     >

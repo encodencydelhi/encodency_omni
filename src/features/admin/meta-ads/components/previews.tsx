@@ -145,7 +145,7 @@ export function InstantFormPreview({
 
       <div className="max-h-[440px] overflow-y-auto [scrollbar-width:thin]">
         <div className="bg-gradient-to-b from-slate-50 to-white px-4 py-4 border-b border-slate-100">
-          <span className="inline-block rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-600 shadow-2xs">
+          <span className="inline-block rounded-sm border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-600 shadow-2xs">
             {form.language} · Instant Form
           </span>
           <h3 className="mt-2 text-sm font-semibold text-slate-900 leading-snug">{form.introHeadline}</h3>

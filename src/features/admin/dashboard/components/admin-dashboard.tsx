@@ -337,7 +337,7 @@ function Box({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-md border border-[#DDE4ED] bg-white shadow-sm">
+    <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-sm">
       <header className="flex h-8 items-center justify-between border-b border-[#E8EDF3] px-2.5">
         <h2 className="text-[12px] font-semibold text-[#172044]">{title}</h2>
         {action && (
@@ -686,7 +686,7 @@ function SeoSnapshot() {
         <Mini value="320K" label="Impressions" trend="↑ 18%" />
         <Mini value="12.6" label="Avg. Position" trend="↓ 2.4" negative />
       </div>
-      <div className="mx-2 mb-2 rounded-md border border-[#FFE1E4] bg-[#FFF0F1] p-2 text-[8px] leading-[14px] text-[#D91521]">
+      <div className="mx-2 mb-2 rounded-sm border border-[#FFE1E4] bg-[#FFF0F1] p-2 text-[8px] leading-[14px] text-[#D91521]">
         <b>⚠ 3 critical issues need attention</b>
         <p className="mt-1">• 12 keywords dropped</p>
         <p>• Missing meta descriptions</p>
@@ -721,7 +721,7 @@ function GmbSnapshot() {
           <span><b>1,120</b><br />Directions</span>
         </p>
       </div>
-      <div className="m-2 rounded-md border border-[#D8F2E7] bg-[#E8F8F1] p-2 text-[8px] leading-3 text-[#078359]">
+      <div className="m-2 rounded-sm border border-[#D8F2E7] bg-[#E8F8F1] p-2 text-[8px] leading-3 text-[#078359]">
         ✓ You&apos;re doing great! Keep engaging with reviews.
       </div>
     </Box>
@@ -742,7 +742,7 @@ function QuickActions() {
         {actions.map(([Icon, label], index) => (
           <button
             key={label}
-            className="flex h-9 items-center gap-2 rounded-md border border-[#E1E7EF] px-2 text-left text-[8px] font-semibold transition-colors hover:bg-[#F8FAFD]"
+            className="flex h-9 items-center gap-2 rounded-sm border border-[#E1E7EF] px-2 text-left text-[8px] font-semibold transition-colors hover:bg-[#F8FAFD]"
           >
             <span className={cn("grid size-6 shrink-0 place-items-center rounded-full", ["bg-[#FFE8EA] text-[#EB0711]", "bg-[#E8F1FF] text-[#1769D2]", "bg-[#DCF8ED] text-[#0A9E70]", "bg-[#EEE7FF] text-[#7B3FE4]", "bg-[#E8F1FF] text-[#1769D2]", "bg-[#FFF0DC] text-[#F07C18]"][index])}>
               <Icon className="size-3.5" />

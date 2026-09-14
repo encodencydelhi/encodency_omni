@@ -49,11 +49,11 @@ function ConnectedIntegration({ channel, name, account, synced }: { channel: str
         <p className="text-[10px] text-[#9CA3AF]">Last synced: {synced}</p>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1.5">
-        <span className="flex items-center gap-1 rounded-md bg-[#ECFDF5] px-1.5 py-0.5 text-[10px] font-semibold text-[#059669]">
+        <span className="flex items-center gap-1 rounded-sm bg-[#ECFDF5] px-1.5 py-0.5 text-[10px] font-semibold text-[#059669]">
           <CircleCheck className="size-3" />
           Connected
         </span>
-        <button className="rounded-md border border-[#E2E5EE] px-2 py-1 text-[10px] font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]">
+        <button className="rounded-sm border border-[#E2E5EE] px-2 py-1 text-[10px] font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]">
           Disconnect
         </button>
       </div>
@@ -84,7 +84,7 @@ export function WebsiteStep({
         <Field label="Additional Website / Landing Page URLs" optional hint="Add any additional websites, subdomains or landing pages.">
           <div className="flex gap-2">
             <span className="min-w-0 flex-1">
-              <TextInput icon={Link2} value="" onChange={() => {}} placeholder="https://www.example.com" />
+              <TextInput icon={Link2} value="" onChange={() => { }} placeholder="https://www.example.com" />
             </span>
             <button className="flex h-[42px] shrink-0 items-center gap-1 rounded-lg border border-[#C7D2FE] bg-[#EEF2FF] px-2.5 text-[11px] font-semibold text-[#4F46E5] transition-colors hover:bg-[#E0E7FF]">
               <Plus className="size-3.5" />

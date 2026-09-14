@@ -28,7 +28,7 @@ export function AlertBanner({ tone, title, children, action, className }: AlertB
   return (
     <div
       role={tone === "danger" ? "alert" : "status"}
-      className={cn("flex items-start gap-3 rounded-md border px-3.5 py-3", container, className)}
+      className={cn("flex items-start gap-3 rounded-sm border px-3.5 py-3", container, className)}
     >
       <Icon className={cn("mt-px size-4 shrink-0", iconColor)} aria-hidden />
       <div className="min-w-0 flex-1 space-y-0.5">

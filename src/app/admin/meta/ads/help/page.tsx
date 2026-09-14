@@ -167,7 +167,7 @@ function HelpCenter() {
                   >
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="text-[12px] font-semibold text-[#0671e9]">{article.title}</span>
-                      <span className="rounded-md border border-slate-200/50 bg-slate-50/80 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-slate-500">
+                      <span className="rounded-sm border border-slate-200/50 bg-slate-50/80 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-slate-500">
                         {helpCategories.find((c) => c.id === article.category)?.title}
                       </span>
                     </span>
@@ -263,7 +263,7 @@ function HelpCenter() {
                   <li key={article.slug}>
                     <Link
                       href={`${ADS_ROOT}/help/${article.slug}`}
-                      className="block rounded-md px-2 py-1.5 text-[11px] font-medium text-[#0671e9] transition hover:bg-[#f7f9fc] hover:underline"
+                      className="block rounded-sm px-2 py-1.5 text-[11px] font-medium text-[#0671e9] transition hover:bg-[#f7f9fc] hover:underline"
                     >
                       {article.title}
                     </Link>
@@ -279,7 +279,7 @@ function HelpCenter() {
                     <li key={article.slug}>
                       <Link
                         href={`${ADS_ROOT}/help/${article.slug}`}
-                        className="block rounded-md px-2 py-1.5 text-[11px] font-medium text-[#475569] transition hover:bg-[#f7f9fc]"
+                        className="block rounded-sm px-2 py-1.5 text-[11px] font-medium text-[#475569] transition hover:bg-[#f7f9fc]"
                       >
                         {article.title}
                         <span className="block text-[9px] text-[#94a3b8]">

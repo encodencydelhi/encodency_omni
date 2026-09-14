@@ -77,7 +77,7 @@ export function AdminSidebar() {
             )}
           >
             {isSidebarCollapsed ? (
-              <span className="grid size-8 place-items-center rounded-md bg-[#1E293B] text-[15px] font-semibold text-white shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+              <span className="grid size-8 place-items-center rounded-sm bg-[#1E293B] text-[15px] font-semibold text-white shadow-[0_0_10px_rgba(59,130,246,0.3)]">
                 e
               </span>
             ) : (
@@ -94,7 +94,7 @@ export function AdminSidebar() {
                 <button
                   onClick={() => setMobileNavOpen(false)}
                   aria-label="Close navigation"
-                  className="ml-2 grid size-7 shrink-0 place-items-center rounded-md text-[#64748B] transition-colors hover:bg-[#1E293B] hover:text-white lg:hidden"
+                  className="ml-2 grid size-7 shrink-0 place-items-center rounded-sm text-[#64748B] transition-colors hover:bg-[#1E293B] hover:text-white lg:hidden"
                 >
                   <X className="size-4" />
                 </button>

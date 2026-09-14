@@ -73,7 +73,7 @@ export function SubSection({
   return (
     <div className={cn("rounded-xl border border-[#E6E8F0] bg-white p-3", className)}>
       <div className="mb-2.5 flex items-center gap-2">
-        <span className="grid size-6 shrink-0 place-items-center rounded-md bg-[#FFEAEC] text-[11px] font-semibold text-[#E11D28]">
+        <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-[#FFEAEC] text-[11px] font-semibold text-[#E11D28]">
           {letter}
         </span>
         <div className="min-w-0 flex-1">
@@ -216,7 +216,7 @@ export function TextInput({
           <button
             type="button"
             onClick={() => setShowEmojiPicker((prev) => !prev)}
-            className="grid h-6 w-6 place-items-center rounded-md text-[#7A87A0] transition hover:bg-slate-100 hover:text-[#1769DF]"
+            className="grid h-6 w-6 place-items-center rounded-sm text-[#7A87A0] transition hover:bg-slate-100 hover:text-[#1769DF]"
             aria-label="Insert emoji"
           >
             <Smile className="size-3.5" />
@@ -371,7 +371,7 @@ export function TagField({
       {safeTags.map((tag) => (
         <span
           key={tag}
-          className="flex items-center gap-1 rounded-md border border-[#E6E8F0] bg-[#F8FAFC] px-1.5 py-0.5 text-[10px] font-medium text-[#374151]"
+          className="flex items-center gap-1 rounded-sm border border-[#E6E8F0] bg-[#F8FAFC] px-1.5 py-0.5 text-[10px] font-medium text-[#374151]"
         >
           {renderIcon?.(tag)}
           {tag}

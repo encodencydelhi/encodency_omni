@@ -319,16 +319,16 @@ export function KpiCard({
   return (
     <div className={cn(card, "group relative overflow-hidden p-4 transition-all duration-300 hover:shadow-md hover:border-blue-300 hover:-translate-y-0.5")}>
       <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-600 to-indigo-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      
+
       {/* Animated Shine Effect */}
       <div className="pointer-events-none absolute -inset-full top-0 z-10 block h-[150%] w-1/2 -rotate-45 bg-gradient-to-r from-transparent via-blue-100/20 to-transparent opacity-0 transition-all duration-700 ease-in-out group-hover:left-[150%] group-hover:opacity-100" />
-      
+
       <div className="relative flex items-center justify-between gap-2 text-xs font-semibold text-slate-600">
         <span className="min-w-0 truncate">{label}</span>
         <div className="flex shrink-0 items-center gap-1.5">
           {hint && <InfoHint text={hint} />}
           {Icon && (
-            <div className="flex size-6 items-center justify-center rounded-md bg-blue-50 text-blue-600 ring-1 ring-blue-500/15 transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white">
+            <div className="flex size-6 items-center justify-center rounded-sm bg-blue-50 text-blue-600 ring-1 ring-blue-500/15 transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white">
               <Icon className="size-3.5" />
             </div>
           )}
@@ -389,7 +389,7 @@ export function Field({
 
 export function Tag({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-md border border-slate-300/80 bg-slate-100/90 px-2.5 py-0.5 text-[10.5px] font-medium text-slate-800 shadow-2xs">
+    <span className="inline-flex items-center rounded-sm border border-slate-300/80 bg-slate-100/90 px-2.5 py-0.5 text-[10.5px] font-medium text-slate-800 shadow-2xs">
       {children}
     </span>
   );

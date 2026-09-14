@@ -86,7 +86,7 @@ export function ContentTypeSelectorInline({ platforms, contentTypes, onChange }:
                     key={spec.id}
                     onClick={() => onChange(p, spec.id)}
                     className={cn(
-                      "flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-semibold transition",
+                      "flex items-center gap-1 rounded-sm border px-2 py-1 text-[10px] font-semibold transition",
                       current === spec.id
                         ? "border-[color:var(--pc)] bg-[color:var(--pc-bg)] text-[color:var(--pc)]"
                         : "border-[#E2E8F0] text-[#687797] hover:border-[#CBD5E1]"

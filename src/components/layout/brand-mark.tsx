@@ -72,7 +72,7 @@ export function EnCodencyWordmark({ height = 46, className, priority = false }: 
 }
 
 const GLYPH_SIZES = {
-  sm: "size-7 rounded-md text-[0.6875rem]",
+  sm: "size-7 rounded-sm text-[0.6875rem]",
   md: "size-8 rounded-lg text-xs",
   lg: "size-10 rounded-xl text-sm",
 } as const;

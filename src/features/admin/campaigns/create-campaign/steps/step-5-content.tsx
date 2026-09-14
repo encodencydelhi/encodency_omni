@@ -112,7 +112,7 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
           <div className="min-w-0 rounded-lg border border-[#E7EDF5] bg-white p-3">
             <SectionTitle icon={ImageIcon} title="Media Assets" caption="Upload images and videos for your campaign." />
             <div className="mt-3 rounded-lg border border-dashed border-[#BFD4F2] bg-[#F8FBFF] p-3 text-center">
-              <button className="mx-auto flex h-8 items-center gap-2 rounded-md bg-[#155EEF] px-4 text-[11px] font-semibold text-white">
+              <button className="mx-auto flex h-8 items-center gap-2 rounded-sm bg-[#155EEF] px-4 text-[11px] font-semibold text-white">
                 <Upload className="size-3.5" />
                 Upload Media
               </button>
@@ -147,7 +147,7 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
           <div className="rounded-lg border border-[#E7EDF5] bg-white p-3">
             <SectionTitle icon={ImageIcon} title="Master Creative" caption="Upload one master creative to auto-generate platform versions." />
             <div className="mt-3 rounded-lg border border-dashed border-[#BFD4F2] bg-[#F8FBFF] p-6 text-center">
-              <button className="mx-auto flex h-8 items-center gap-2 rounded-md bg-[#155EEF] px-4 text-[11px] font-semibold text-white">
+              <button className="mx-auto flex h-8 items-center gap-2 rounded-sm bg-[#155EEF] px-4 text-[11px] font-semibold text-white">
                 <Upload className="size-3.5" />
                 Upload Master Creative
               </button>
@@ -155,13 +155,13 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
             </div>
             <div className="mt-3 grid grid-cols-6 gap-1.5">
               {DEFAULT_FORMATS.map((format) => (
-                <div key={format} className="rounded-md border border-[#DDE6F1] bg-[#F8FAFC] p-1.5 text-center">
+                <div key={format} className="rounded-sm border border-[#DDE6F1] bg-[#F8FAFC] p-1.5 text-center">
                   <span className="grid h-8 place-items-center rounded bg-white text-[8px] font-semibold text-[#526385]">{format.split(" ")[0]}</span>
                   <small className="mt-0.5 block text-[7px] text-[#8791A4]">{format.split(" ").slice(1).join(" ")}</small>
                 </div>
               ))}
               {customFormats.map((format, idx) => (
-                <div key={`custom-${idx}`} className="group relative rounded-md border border-[#C4B5FD] bg-[#F5F3FF] p-1.5 text-center">
+                <div key={`custom-${idx}`} className="group relative rounded-sm border border-[#C4B5FD] bg-[#F5F3FF] p-1.5 text-center">
                   <button onClick={() => removeCustomFormat(idx)} className="absolute -right-1 -top-1 hidden size-4 place-items-center rounded-full bg-[#E11D28] text-white group-hover:grid">
                     <X className="size-2.5" />
                   </button>
@@ -172,7 +172,7 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
               {!showCustomInput ? (
                 <button
                   onClick={() => setShowCustomInput(true)}
-                  className="rounded-md border border-dashed border-[#C4B5FD] bg-[#F5F3FF] p-1.5 text-center transition-colors hover:border-[#7C3AED] hover:bg-[#EDE9FE]"
+                  className="rounded-sm border border-dashed border-[#C4B5FD] bg-[#F5F3FF] p-1.5 text-center transition-colors hover:border-[#7C3AED] hover:bg-[#EDE9FE]"
                 >
                   <span className="grid h-8 place-items-center rounded bg-[#EDE9FE] text-[#7C3AED]">
                     <Plus className="size-4" />
@@ -180,7 +180,7 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
                   <small className="mt-0.5 block text-[7px] font-semibold text-[#7C3AED]">Custom</small>
                 </button>
               ) : (
-                <div className="rounded-md border border-[#7C3AED] bg-[#F5F3FF] p-1.5">
+                <div className="rounded-sm border border-[#7C3AED] bg-[#F5F3FF] p-1.5">
                   <SpellCheckedInput
                     value={newRatio}
                     onChangeValue={(val) => setNewRatio(val)}
@@ -207,7 +207,7 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
             <div className="mt-3 grid grid-cols-2 gap-2">
               {AI_ADAPTATIONS.map(({ label, desc }) => (
                 <div key={label} className="flex items-center gap-2 rounded-lg bg-[#F8FAFC] px-2.5 py-2">
-                  <span className="grid size-6 shrink-0 place-items-center rounded-md bg-[#EEF2FF] text-[#4F46E5]">
+                  <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-[#EEF2FF] text-[#4F46E5]">
                     <Sparkles className="size-3" />
                   </span>
                   <div className="min-w-0 flex-1">

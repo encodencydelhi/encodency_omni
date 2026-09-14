@@ -9,7 +9,7 @@ import type { Tone } from "@/types/common";
  * stay consistent everywhere a state is displayed.
  */
 const badgeVariants = cva(
-  "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-md border px-2 py-0.5 text-2xs font-medium whitespace-nowrap [&_svg]:size-3 [&_svg]:shrink-0",
+  "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-sm border px-2 py-0.5 text-2xs font-medium whitespace-nowrap [&_svg]:size-3 [&_svg]:shrink-0",
   {
     variants: {
       tone: {
@@ -27,7 +27,7 @@ const badgeVariants = cva(
 
 export interface BadgeProps
   extends React.ComponentProps<"span">,
-    VariantProps<typeof badgeVariants> {
+  VariantProps<typeof badgeVariants> {
   asChild?: boolean;
 }
 

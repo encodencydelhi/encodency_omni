@@ -307,7 +307,7 @@ function Card({
         <header className="flex h-[42px] shrink-0 items-center justify-between gap-2 px-3.5">
           <h2 className="text-[14px] font-semibold leading-5 text-[#172044]">{title}</h2>
           {filter && (
-            <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-[#DDE4ED] px-2 text-[10.5px] font-medium text-[#425273]">
+            <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-sm border border-[#DDE4ED] px-2 text-[10.5px] font-medium text-[#425273]">
               {filter}
               <ChevronDown className="size-3" />
             </button>
@@ -351,7 +351,7 @@ function ChannelBanner() {
             Education | Awareness | Action
           </p>
         </div>
-        <button className="absolute right-2.5 top-2.5 flex items-center gap-1.5 rounded-md bg-[#1B2333]/80 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
+        <button className="absolute right-2.5 top-2.5 flex items-center gap-1.5 rounded-sm bg-[#1B2333]/80 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
           <Pencil className="size-3" />
           Edit Cover
         </button>
@@ -378,13 +378,13 @@ function ChannelBanner() {
             </p>
           </div>
           <div className="flex shrink-0 flex-col gap-1.5">
-            <button className="flex h-7 items-center gap-1.5 rounded-md border border-[#DDE4ED] px-2.5 text-[10.5px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]">
+            <button className="flex h-7 items-center gap-1.5 rounded-sm border border-[#DDE4ED] px-2.5 text-[10.5px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]">
               View on YouTube
               <span className="grid h-3.5 w-[19px] place-items-center rounded-[3px] bg-[#FF0000]">
                 <Play className="size-2 fill-white text-white" />
               </span>
             </button>
-            <button className="flex h-7 items-center justify-center gap-1.5 rounded-md border border-[#DDE4ED] px-2.5 text-[10.5px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]">
+            <button className="flex h-7 items-center justify-center gap-1.5 rounded-sm border border-[#DDE4ED] px-2.5 text-[10.5px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]">
               <Pencil className="size-3" />
               Edit Channel
             </button>
@@ -462,7 +462,7 @@ function QuickActions() {
             key={label}
             className="flex items-center gap-2 rounded-lg border border-[#E4EAF2] bg-white px-2 text-[10px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]"
           >
-            <span className={cn("grid size-[22px] shrink-0 place-items-center rounded-md", tint[color])}>
+            <span className={cn("grid size-[22px] shrink-0 place-items-center rounded-sm", tint[color])}>
               <Icon className="size-3.5" />
             </span>
             <span className="truncate">{label}</span>
@@ -806,7 +806,7 @@ function ContentCalendar() {
             key={item.title}
             className="flex items-center gap-2 border-t border-[#EDF1F5] py-2 first:border-t-0"
           >
-            <span className="grid w-[30px] shrink-0 place-items-center rounded-md bg-[#FFEFF0] py-0.5 leading-none text-[#D6323C]">
+            <span className="grid w-[30px] shrink-0 place-items-center rounded-sm bg-[#FFEFF0] py-0.5 leading-none text-[#D6323C]">
               <small className="text-[7.5px] font-semibold">{item.month}</small>
               <b className="text-[12px] font-semibold leading-4">{item.day}</b>
             </span>

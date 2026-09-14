@@ -199,7 +199,7 @@ export default function AssetsPage() {
                             {asset.missingPermissions.map((p) => (
                               <span
                                 key={p}
-                                className="inline-flex items-center rounded-md border border-[#fae0a6] bg-white px-2 py-0.5 text-[10px] font-medium text-[#b45309]"
+                                className="inline-flex items-center rounded-sm border border-[#fae0a6] bg-white px-2 py-0.5 text-[10px] font-medium text-[#b45309]"
                               >
                                 {p}
                               </span>

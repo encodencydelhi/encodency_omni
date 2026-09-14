@@ -121,7 +121,7 @@ import { Mail, RefreshCcw } from "lucide-react";
 
 function Box({ title, action, children, className }: { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section className={cn("overflow-hidden rounded-md border border-[#DDE4ED] bg-white shadow-sm flex flex-col", className)}>
+    <section className={cn("overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-sm flex flex-col", className)}>
       <header className="flex h-10 shrink-0 items-center justify-between border-b border-[#E8EDF3] px-3">
         <h2 className="text-[11.5px] font-semibold text-[#172044]">{title}</h2>
         {action && (

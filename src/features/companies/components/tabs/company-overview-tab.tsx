@@ -92,7 +92,7 @@ export function CompanyOverviewTab({ company }: { company: Company }) {
               {overview.data?.Clients.map((project) => (
                 <li
                   key={project.id}
-                  className="rounded-md border border-border bg-surface-sunken px-2.5 py-1 text-2xs text-foreground"
+                  className="rounded-sm border border-border bg-surface-sunken px-2.5 py-1 text-2xs text-foreground"
                 >
                   {project.name}
                 </li>

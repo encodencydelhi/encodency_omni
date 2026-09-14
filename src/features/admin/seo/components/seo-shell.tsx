@@ -113,7 +113,7 @@ export function Box({
   return (
     <section
       className={cn(
-        "flex flex-col overflow-hidden rounded-md border border-[#DDE4ED] bg-white shadow-sm",
+        "flex flex-col overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-sm",
         className,
       )}
     >

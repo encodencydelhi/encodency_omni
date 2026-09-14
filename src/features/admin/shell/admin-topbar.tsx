@@ -10,12 +10,12 @@ import { useAuth } from "@/features/auth/components/auth-provider";
 export function AdminTopbar() {
   const { setMobileNavOpen } = useAdminContext();
   const { logout } = useAuth();
-  
+
   return (
     <header className="sticky top-0 z-30 flex h-[60px] items-center gap-4 border-b border-[#E2E8F0] bg-white px-4 sm:px-6 lg:px-8">
-      <button 
-        className="grid size-9 place-items-center rounded-md text-[#64748B] hover:bg-[#F1F5F9] transition-colors lg:hidden" 
-        onClick={() => setMobileNavOpen(true)} 
+      <button
+        className="grid size-9 place-items-center rounded-sm text-[#64748B] hover:bg-[#F1F5F9] transition-colors lg:hidden"
+        onClick={() => setMobileNavOpen(true)}
         aria-label="Open navigation"
       >
         <Menu className="size-5" />
@@ -24,9 +24,9 @@ export function AdminTopbar() {
       <div className="hidden flex-1 md:flex">
         <label className="relative flex h-9 w-full max-w-[480px] items-center gap-2.5 rounded-full bg-[#F4F4F5] px-4 transition-colors hover:bg-[#E4E4E7] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#E4E4E7] focus-within:hover:bg-white">
           <Search className="size-4 text-[#A1A1AA]" />
-          <input 
-            className="min-w-0 flex-1 bg-transparent text-[13px] text-[#27272A] outline-none placeholder:text-[#A1A1AA]" 
-            placeholder="Search..." 
+          <input
+            className="min-w-0 flex-1 bg-transparent text-[13px] text-[#27272A] outline-none placeholder:text-[#A1A1AA]"
+            placeholder="Search..."
           />
           <kbd className="hidden sm:flex items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[10px] font-medium text-[#A1A1AA] shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#E4E4E7]">
             <span>⌘</span>K
@@ -39,7 +39,7 @@ export function AdminTopbar() {
           <span className="text-[11px] font-semibold text-[#A1A1AA]">Project</span>
           <Clientswitcher />
         </div>
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="hidden h-8 items-center gap-1.5 rounded-full bg-[#EB0711] pl-3 pr-2.5 text-[12px] font-medium text-white shadow-sm hover:bg-[#D60811] transition-all hover:shadow md:flex">
@@ -58,8 +58,8 @@ export function AdminTopbar() {
 
         <div className="h-4 w-[1px] bg-[#E4E4E7] hidden sm:block mx-1" />
 
-        <button 
-          className="relative grid size-9 place-items-center rounded-full text-[#71717A] hover:bg-[#F4F4F5] hover:text-[#18181B] transition-colors" 
+        <button
+          className="relative grid size-9 place-items-center rounded-full text-[#71717A] hover:bg-[#F4F4F5] hover:text-[#18181B] transition-colors"
           aria-label="Notifications"
         >
           <Bell className="size-[18px]" />

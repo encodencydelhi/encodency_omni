@@ -21,7 +21,7 @@ export function StatusBadge({ status }: { status: ApprovalStatus | string }) {
 
 export function Chip({ children, active, onClick }: { children: React.ReactNode; active?: boolean; onClick?: () => void }) {
   return (
-    <button onClick={onClick} className={cn("h-7 shrink-0 rounded-md border px-2.5 text-[11px] font-semibold transition", active ? "border-[#1769DF] bg-[#F0F6FF] text-[#1769DF]" : "border-[#E2E8F0] text-[#687797] hover:bg-slate-50")}>
+    <button onClick={onClick} className={cn("h-7 shrink-0 rounded-sm border px-2.5 text-[11px] font-semibold transition", active ? "border-[#1769DF] bg-[#F0F6FF] text-[#1769DF]" : "border-[#E2E8F0] text-[#687797] hover:bg-slate-50")}>
       {children}
     </button>
   );

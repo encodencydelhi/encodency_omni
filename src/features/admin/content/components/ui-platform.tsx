@@ -27,9 +27,9 @@ export function PlatformBadge({ platform, size = "md" }: { platform: Platform; s
 export function PlatformStrip({ selected, onSelect }: { selected: Platform | "all"; onSelect: (p: Platform | "all") => void }) {
   return (
     <div className="flex items-center gap-1 overflow-x-auto border-b border-[#EDF1F5] pb-2">
-      <button onClick={() => onSelect("all")} className={cn("flex h-7 shrink-0 items-center gap-1 rounded-md px-2.5 text-[10.5px] font-semibold transition", selected === "all" ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#687797] hover:bg-slate-50")}>All</button>
+      <button onClick={() => onSelect("all")} className={cn("flex h-7 shrink-0 items-center gap-1 rounded-sm px-2.5 text-[10.5px] font-semibold transition", selected === "all" ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#687797] hover:bg-slate-50")}>All</button>
       {ALL_PLATFORMS.map((p) => (
-        <button key={p} onClick={() => onSelect(p)} className={cn("flex h-7 shrink-0 items-center gap-1 rounded-md px-2.5 text-[10.5px] font-semibold transition", selected === p ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#687797] hover:bg-slate-50")}>
+        <button key={p} onClick={() => onSelect(p)} className={cn("flex h-7 shrink-0 items-center gap-1 rounded-sm px-2.5 text-[10.5px] font-semibold transition", selected === p ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#687797] hover:bg-slate-50")}>
           <PlatformBadge platform={p} size="sm" />
           {PLATFORM_META[p].label}
         </button>

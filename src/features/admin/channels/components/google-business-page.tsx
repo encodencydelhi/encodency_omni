@@ -320,7 +320,7 @@ function Card({
           {subtitle && <p className="truncate text-[9px] leading-3 text-[#7C89A2]">{subtitle}</p>}
         </div>
         {filter && (
-          <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-[#DDE4ED] px-2 text-[10.5px] font-medium text-[#425273]">
+          <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-sm border border-[#DDE4ED] px-2 text-[10.5px] font-medium text-[#425273]">
             {filter}
             <ChevronDown className="size-3" />
           </button>
@@ -554,7 +554,7 @@ function RecentReviews() {
             >
               {review.replied ? "Replied" : "Not Replied"}
             </i>
-            <button className="w-[78px] shrink-0 rounded-md border border-[#DDE4ED] py-1 text-[9.5px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]">
+            <button className="w-[78px] shrink-0 rounded-sm border border-[#DDE4ED] py-1 text-[9.5px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]">
               {review.action}
             </button>
           </div>
@@ -654,7 +654,7 @@ function QuickActions() {
         {quickActions.map(({ label, icon: Icon, color }) => (
           <button
             key={label}
-            className="flex items-center justify-center gap-1 rounded-md border border-[#E4EAF2] bg-white px-0.5 text-[8.5px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]"
+            className="flex items-center justify-center gap-1 rounded-sm border border-[#E4EAF2] bg-white px-0.5 text-[8.5px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]"
           >
             <span className={cn("grid size-[18px] shrink-0 place-items-center rounded", tint[color])}>
               <Icon className="size-[11px]" />
@@ -772,7 +772,7 @@ function ProfileHealth() {
             ))}
           </ul>
         </div>
-        <p className="mt-1.5 flex shrink-0 items-center gap-1.5 rounded-md border border-[#F7E3BE] bg-[#FFFAEF] px-2 py-1.5 text-[9.5px] text-[#9A6A05]">
+        <p className="mt-1.5 flex shrink-0 items-center gap-1.5 rounded-sm border border-[#F7E3BE] bg-[#FFFAEF] px-2 py-1.5 text-[9.5px] text-[#9A6A05]">
           <ShieldAlert className="size-3.5 shrink-0 text-[#E0930B]" />
           Add more photos and complete your business hours to improve visibility.
         </p>

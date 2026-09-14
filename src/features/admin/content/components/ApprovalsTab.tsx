@@ -47,19 +47,19 @@ export function ApprovalsTab() {
             <span className="text-[11px] font-semibold text-[#7A87A0] mr-1">Type:</span>
             <button
               onClick={() => setTypeFilter("all")}
-              className={cn("h-6 rounded-md px-2 text-[10.5px] font-semibold transition", typeFilter === "all" ? "bg-[#172044] text-white" : "border border-[#D9E1EC] bg-white text-[#687797] hover:bg-slate-50")}
+              className={cn("h-6 rounded-sm px-2 text-[10.5px] font-semibold transition", typeFilter === "all" ? "bg-[#172044] text-white" : "border border-[#D9E1EC] bg-white text-[#687797] hover:bg-slate-50")}
             >
               All
             </button>
             <button
               onClick={() => setTypeFilter("campaign")}
-              className={cn("h-6 rounded-md px-2 text-[10.5px] font-semibold transition", typeFilter === "campaign" ? "bg-[#1769DF] text-white" : "border border-[#D9E1EC] bg-white text-[#687797] hover:bg-slate-50")}
+              className={cn("h-6 rounded-sm px-2 text-[10.5px] font-semibold transition", typeFilter === "campaign" ? "bg-[#1769DF] text-white" : "border border-[#D9E1EC] bg-white text-[#687797] hover:bg-slate-50")}
             >
               🎯 Campaign
             </button>
             <button
               onClick={() => setTypeFilter("standalone")}
-              className={cn("h-6 rounded-md px-2 text-[10.5px] font-semibold transition", typeFilter === "standalone" ? "bg-[#0AA673] text-white" : "border border-[#D9E1EC] bg-white text-[#687797] hover:bg-slate-50")}
+              className={cn("h-6 rounded-sm px-2 text-[10.5px] font-semibold transition", typeFilter === "standalone" ? "bg-[#0AA673] text-white" : "border border-[#D9E1EC] bg-white text-[#687797] hover:bg-slate-50")}
             >
               ⚡ Standalone
             </button>
@@ -70,7 +70,7 @@ export function ApprovalsTab() {
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
-                className={cn("h-6 rounded-md px-2 text-[10.5px] font-semibold", statusFilter === f ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#7A87A0]")}
+                className={cn("h-6 rounded-sm px-2 text-[10.5px] font-semibold", statusFilter === f ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#7A87A0]")}
               >
                 {f === "changes-requested" ? "Changes" : f.charAt(0).toUpperCase() + f.slice(1)}
               </button>
@@ -119,7 +119,7 @@ export function ApprovalsTab() {
       </div>
 
       <div className="space-y-2.5 xl:sticky xl:top-4">
-        <ContentPreviewPanel platform={activeApproval?.channel ?? "instagram"} setPlatform={() => {}} channels={[activeApproval?.channel ?? "instagram"]} />
+        <ContentPreviewPanel platform={activeApproval?.channel ?? "instagram"} setPlatform={() => { }} channels={[activeApproval?.channel ?? "instagram"]} />
         <Card title="Approval details & workflow">
           <div className="mb-2 rounded-lg bg-[#F8FAFD] border border-[#E2E8F0] p-2 text-[11px]">
             <div className="flex justify-between py-0.5"><span className="text-[#7A87A0]">Client:</span><span className="font-semibold text-[#24365A]">{activeApproval?.client}</span></div>

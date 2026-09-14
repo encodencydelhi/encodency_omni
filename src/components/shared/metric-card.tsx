@@ -54,7 +54,7 @@ export function MetricCard({
       <div className="flex items-start justify-between gap-3">
         <p className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
         {Icon ? (
-          <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-md", ICON_STYLES[emphasis])}>
+          <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-sm", ICON_STYLES[emphasis])}>
             <Icon className="size-3.5" />
           </span>
         ) : null}

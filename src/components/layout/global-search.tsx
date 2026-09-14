@@ -112,7 +112,7 @@ export function GlobalSearch() {
                 <button
                   type="button"
                   onClick={() => goTo(ROUTES.superAdmin.company(company.id))}
-                  className="flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-accent"
+                  className="flex w-full items-center gap-2.5 rounded-sm px-2 py-2 text-left transition-colors hover:bg-accent"
                 >
                   <Building2Icon className="size-3.5 shrink-0 text-muted-foreground" />
                   <span className="min-w-0 flex-1 truncate text-[0.8125rem] text-foreground">

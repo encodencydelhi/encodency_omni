@@ -205,7 +205,7 @@ function PublishResult() {
         {campaign && (
           <Panel title="What was published" icon={<Folder className="size-4 text-[#1877f2]" />}>
             <ul className="space-y-2">
-              <li className="flex items-start gap-2.5 rounded-md border border-[#e8edf4] bg-[#fbfcfe] p-2.5">
+              <li className="flex items-start gap-2.5 rounded-sm border border-[#e8edf4] bg-[#fbfcfe] p-2.5">
                 <Folder className="mt-0.5 size-4 shrink-0 text-[#1877f2]" aria-hidden="true" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[8px] font-semibold uppercase tracking-wide text-[#94a3b8]">
@@ -227,7 +227,7 @@ function PublishResult() {
               {sets.map((s) => (
                 <li
                   key={s.id}
-                  className="ml-4 flex items-start gap-2.5 rounded-md border border-[#e8edf4] bg-white p-2.5"
+                  className="ml-4 flex items-start gap-2.5 rounded-sm border border-[#e8edf4] bg-white p-2.5"
                 >
                   <Grid2X2 className="mt-0.5 size-4 shrink-0 text-[#1877f2]" aria-hidden="true" />
                   <span className="min-w-0 flex-1">
@@ -251,7 +251,7 @@ function PublishResult() {
               {campaignAds.map((a) => (
                 <li
                   key={a.id}
-                  className="ml-8 flex items-start gap-2.5 rounded-md border border-[#e8edf4] bg-white p-2.5"
+                  className="ml-8 flex items-start gap-2.5 rounded-sm border border-[#e8edf4] bg-white p-2.5"
                 >
                   <FileImage className="mt-0.5 size-4 shrink-0 text-[#1877f2]" aria-hidden="true" />
                   <span className="min-w-0 flex-1">
@@ -271,7 +271,7 @@ function PublishResult() {
               ))}
 
               {form && (
-                <li className="ml-8 flex items-start gap-2.5 rounded-md border border-[#e8edf4] bg-white p-2.5">
+                <li className="ml-8 flex items-start gap-2.5 rounded-sm border border-[#e8edf4] bg-white p-2.5">
                   <FileText className="mt-0.5 size-4 shrink-0 text-[#1877f2]" aria-hidden="true" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[8px] font-semibold uppercase tracking-wide text-[#94a3b8]">

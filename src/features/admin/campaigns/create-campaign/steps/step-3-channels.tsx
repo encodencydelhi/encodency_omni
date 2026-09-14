@@ -81,7 +81,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
               </span>
               <b className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#111827]">{channel.name}</b>
               {channel.connected && (
-                <i className="shrink-0 rounded-md bg-[#E4F8F0] px-1.5 py-0.5 text-[10px] font-semibold not-italic text-[#0AA673]">
+                <i className="shrink-0 rounded-sm bg-[#E4F8F0] px-1.5 py-0.5 text-[10px] font-semibold not-italic text-[#0AA673]">
                   Connected
                 </i>
               )}
@@ -98,7 +98,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
                       key={account.handle}
                       type="button"
                       onClick={() => toggleAccount(channel.name, account.handle)}
-                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-white"
+                      className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left transition-colors hover:bg-white"
                     >
                       <span className={cn("grid size-4 shrink-0 place-items-center rounded border transition-colors", selected ? "border-[#2563EB] bg-[#2563EB]" : "border-[#CBD5E1] bg-white")}>
                         {selected && <Check className="size-2.5 text-white" />}
@@ -121,7 +121,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
                       key={placement.id}
                       type="button"
                       onClick={() => togglePlacement(placement.id)}
-                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-white"
+                      className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left transition-colors hover:bg-white"
                     >
                       <span className={cn("grid size-4 shrink-0 place-items-center rounded border transition-colors", active ? "border-[#2563EB] bg-[#2563EB]" : "border-[#CBD5E1] bg-white")}>
                         {active && <Check className="size-2.5 text-white" />}
@@ -139,7 +139,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
                 })}
               </div>
               {channel.note && (
-                <p className="mt-2 flex items-start gap-1.5 rounded-md bg-[#EFF6FF] px-2 py-1.5 text-[9.5px] leading-[13px] text-[#33507A]">
+                <p className="mt-2 flex items-start gap-1.5 rounded-sm bg-[#EFF6FF] px-2 py-1.5 text-[9.5px] leading-[13px] text-[#33507A]">
                   <Info className="mt-px size-3 shrink-0 text-[#1975E7]" />
                   {channel.note}
                 </p>

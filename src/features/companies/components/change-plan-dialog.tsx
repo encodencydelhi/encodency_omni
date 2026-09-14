@@ -105,7 +105,7 @@ export function ChangePlanDialog({ company, onOpenChange }: ChangePlanDialogProp
                 <label
                   key={option.value}
                   className={cn(
-                    "flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2.5 transition-colors",
+                    "flex cursor-pointer items-start gap-3 rounded-sm border px-3 py-2.5 transition-colors",
                     effective === option.value
                       ? "border-primary/40 bg-primary-subtle"
                       : "border-border hover:bg-accent",

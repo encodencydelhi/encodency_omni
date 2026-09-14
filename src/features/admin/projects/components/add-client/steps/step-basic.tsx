@@ -120,7 +120,7 @@ export function BasicStep({
                   type="color"
                   value={draft.brandColor}
                   onChange={(event) => set("brandColor", event.target.value)}
-                  className="size-7 cursor-pointer rounded-md border-0 bg-transparent p-0"
+                  className="size-7 cursor-pointer rounded-sm border-0 bg-transparent p-0"
                   aria-label="Brand colour"
                 />
                 <input

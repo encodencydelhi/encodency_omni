@@ -171,7 +171,7 @@ export function ChannelLogo({
     return (
       <span
         className={cn(
-          "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-md",
+          "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-sm",
           className
         )}
       >
@@ -183,7 +183,7 @@ export function ChannelLogo({
   return (
     <span
       className={cn(
-        "grid place-items-center rounded-md bg-[#EDF2F8] text-[9px] font-black text-[#36547A]",
+        "grid place-items-center rounded-sm bg-[#EDF2F8] text-[9px] font-black text-[#36547A]",
         className
       )}
     >

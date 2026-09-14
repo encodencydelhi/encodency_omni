@@ -70,7 +70,7 @@ export function CreateContentTab() {
   /* ── Derived ── */
   const connectedPlatforms = useMemo(() =>
     ALL_PLATFORMS.filter(p => MOCK_CONNECTIONS[p].status === "connected"),
-  []);
+    []);
 
   /* ── Handlers ── */
   const toggleChannel = (p: Platform) => {
@@ -241,7 +241,7 @@ export function CreateContentTab() {
               </div>
               <div className="mt-1.5 flex flex-wrap gap-1">
                 {["Media Library", "Unsplash", "Pexels", "Google Drive", "AI Generate"].map((s) => (
-                  <button key={s} className="flex h-6 items-center gap-1 rounded-md border border-[#E2E8F0] px-2 text-[10px] font-semibold text-[#687797] hover:bg-slate-50">
+                  <button key={s} className="flex h-6 items-center gap-1 rounded-sm border border-[#E2E8F0] px-2 text-[10px] font-semibold text-[#687797] hover:bg-slate-50">
                     {s === "AI Generate" && <Sparkles className="size-2.5 text-purple-500" />}
                     {s}
                   </button>

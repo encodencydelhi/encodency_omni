@@ -174,7 +174,7 @@ export function ChannelsRail({ step }: { step: number }) {
     <>
       <RailCard>
         <div className="mb-2 flex items-center gap-2">
-          <span className="grid size-6 place-items-center rounded-md bg-[#EEF2FF]">
+          <span className="grid size-6 place-items-center rounded-sm bg-[#EEF2FF]">
             <RefreshCw className="size-3.5 text-[#4F46E5]" />
           </span>
           <b className="text-[13px] font-semibold text-[#111827]">Your Progress</b>
@@ -209,7 +209,7 @@ export function ChannelsRail({ step }: { step: number }) {
             "Integrations can be managed anytime from client settings",
           ].map((label) => (
             <li key={label} className="flex items-start gap-2.5">
-              <span className="grid size-5 shrink-0 place-items-center rounded-md bg-[#4F46E5]">
+              <span className="grid size-5 shrink-0 place-items-center rounded-sm bg-[#4F46E5]">
                 <CircleCheck className="size-3.5 text-white" />
               </span>
               <span className="text-[11.5px] leading-[16px] text-[#374151]">{label}</span>

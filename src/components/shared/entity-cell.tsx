@@ -20,9 +20,9 @@ interface EntityCellProps {
 export function EntityCell({ name, meta, imageUrl, shape = "circle", className }: EntityCellProps) {
   return (
     <div className={cn("flex min-w-0 items-center gap-2.5", className)}>
-      <Avatar className={cn("size-7 shrink-0", shape === "square" && "rounded-md")}>
+      <Avatar className={cn("size-7 shrink-0", shape === "square" && "rounded-sm")}>
         {imageUrl ? <AvatarImage src={imageUrl} alt="" /> : null}
-        <AvatarFallback className={cn(shape === "square" && "rounded-md")}>
+        <AvatarFallback className={cn(shape === "square" && "rounded-sm")}>
           {getInitials(name)}
         </AvatarFallback>
       </Avatar>

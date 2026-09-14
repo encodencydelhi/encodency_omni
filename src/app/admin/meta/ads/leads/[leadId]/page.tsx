@@ -351,7 +351,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
                       value={draftNote}
                       onChange={(e) => setDraftNote(e.target.value)}
                       placeholder="Add a note about this lead…"
-                      className="w-full rounded-md border border-[#d8e0ea] bg-[#fbfcfe] p-2.5 text-[11px] outline-none transition focus:border-[#1877f2] focus:bg-white focus:ring-2 focus:ring-[#1877f2]/10"
+                      className="w-full rounded-sm border border-[#d8e0ea] bg-[#fbfcfe] p-2.5 text-[11px] outline-none transition focus:border-[#1877f2] focus:bg-white focus:ring-2 focus:ring-[#1877f2]/10"
                     />
                     <div className="mt-2 flex justify-end">
                       <button type="submit" className={btnPrimary} disabled={!draftNote.trim()}>
@@ -369,7 +369,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
                   ) : (
                     <ul className="space-y-2">
                       {lead.notes.map((n, i) => (
-                        <li key={i} className="rounded-md border border-[#e8edf4] bg-[#fbfcfe] p-2.5">
+                        <li key={i} className="rounded-sm border border-[#e8edf4] bg-[#fbfcfe] p-2.5">
                           <p className="text-[11px] leading-relaxed">{n.text}</p>
                           <p className="mt-1 text-[9px] text-[#64748b]">
                             {n.author} · {dateTime(n.at)}
@@ -394,7 +394,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
                     {lead.tasks.map((t, i) => (
                       <li
                         key={i}
-                        className="flex items-center gap-2.5 rounded-md border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2"
+                        className="flex items-center gap-2.5 rounded-sm border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2"
                       >
                         <input
                           type="checkbox"
@@ -424,7 +424,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
                 ) : (
                   <ul className="space-y-2">
                     {lead.appointments.map((a, i) => (
-                      <li key={i} className="rounded-md border border-[#e8edf4] bg-[#fbfcfe] p-2.5">
+                      <li key={i} className="rounded-sm border border-[#e8edf4] bg-[#fbfcfe] p-2.5">
                         <p className="text-[11px] font-semibold">{a.title}</p>
                         <p className="mt-0.5 text-[10px] text-[#64748b]">
                           {date(a.at)} at {time(a.at)} · with {a.with}
@@ -447,7 +447,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
                     {lead.documents.map((d, i) => (
                       <li
                         key={i}
-                        className="flex items-center gap-2.5 rounded-md border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2"
+                        className="flex items-center gap-2.5 rounded-sm border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2"
                       >
                         <Paperclip className="size-3.5 shrink-0 text-[#64748b]" aria-hidden="true" />
                         <span className="min-w-0 flex-1">
@@ -512,7 +512,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
                 <Link
                   key={row.label}
                   href={row.href}
-                  className="block rounded-md border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2 transition hover:border-[#bcd9ff]"
+                  className="block rounded-sm border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2 transition hover:border-[#bcd9ff]"
                 >
                   <span className="block text-[9px] text-[#64748b]">{row.label}</span>
                   <span className="block truncate font-semibold text-[#0671e9]">

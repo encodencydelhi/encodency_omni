@@ -131,7 +131,7 @@ function Card({ title, subtitle, action, children, className }: {
 function StepTitle({ step, title, hint }: { step: string; title: string; hint?: string }) {
   return (
     <div className="mb-2.5 flex items-center gap-2">
-      <span className="grid size-5 shrink-0 place-items-center rounded-md bg-[#F0F4FF] text-[10px] font-semibold text-[#1769DF]">
+      <span className="grid size-5 shrink-0 place-items-center rounded-sm bg-[#F0F4FF] text-[10px] font-semibold text-[#1769DF]">
         {step}
       </span>
       <div className="min-w-0">
@@ -325,7 +325,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
                 key={t}
                 onClick={() => setSubTab(t)}
                 className={cn(
-                  "h-7 rounded-md border px-2.5 text-[11px] font-semibold transition",
+                  "h-7 rounded-sm border px-2.5 text-[11px] font-semibold transition",
                   subTab === t ? "border-red-200 bg-red-50 text-red-600" : "border-[#e5ecf4] text-slate-500 hover:bg-slate-50",
                 )}
               >
@@ -376,7 +376,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
                     <p className="text-[10.5px] font-semibold uppercase tracking-wide text-[#1769DF]">Variation {i + 1}</p>
                     <p className="mt-0.5 text-[12px] leading-4.5 text-slate-600">{v}</p>
                   </div>
-                  <button className="flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"><Copy className="size-3" /> Copy</button>
+                  <button className="flex shrink-0 items-center gap-1 rounded-sm border px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"><Copy className="size-3" /> Copy</button>
                 </div>
               ))}
             </div>
@@ -471,7 +471,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
                 <p className="text-[12px] font-semibold text-[#33445F]">{row.label}</p>
                 <p className="text-[11px] text-slate-500">{row.value}</p>
               </div>
-              <Toggle label={row.label} on={row.on} onChange={() => {}} />
+              <Toggle label={row.label} on={row.on} onChange={() => { }} />
             </div>
           ))}
         </div>
@@ -676,9 +676,9 @@ function DraftsTab() {
                 </div>
                 <span className="hidden rounded-full bg-slate-100 px-2 py-px text-[10.5px] font-semibold text-slate-600 sm:block">Draft</span>
                 <div className="flex shrink-0 gap-0.5">
-                  <button className="rounded-md p-1.5 text-[#1769DF] hover:bg-blue-50" aria-label="Edit"><Pencil className="size-3.5" /></button>
-                  <button className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100" aria-label="Duplicate"><Copy className="size-3.5" /></button>
-                  <button className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100" aria-label="More"><MoreHorizontal className="size-3.5" /></button>
+                  <button className="rounded-sm p-1.5 text-[#1769DF] hover:bg-blue-50" aria-label="Edit"><Pencil className="size-3.5" /></button>
+                  <button className="rounded-sm p-1.5 text-slate-400 hover:bg-slate-100" aria-label="Duplicate"><Copy className="size-3.5" /></button>
+                  <button className="rounded-sm p-1.5 text-slate-400 hover:bg-slate-100" aria-label="More"><MoreHorizontal className="size-3.5" /></button>
                 </div>
               </div>
             ))}
@@ -791,7 +791,7 @@ function ApprovalsTab() {
           action={
             <div className="flex gap-1">
               {["All", "Pending", "Approved", "Changes requested"].map((f) => (
-                <button key={f} onClick={() => setFilter(f)} className={cn("h-7 rounded-md border px-2.5 text-[11px] font-semibold", filter === f ? "border-[#1769DF] bg-[#F0F6FF] text-[#1769DF]" : "border-[#e5ecf4] text-slate-500")}>{f}</button>
+                <button key={f} onClick={() => setFilter(f)} className={cn("h-7 rounded-sm border px-2.5 text-[11px] font-semibold", filter === f ? "border-[#1769DF] bg-[#F0F6FF] text-[#1769DF]" : "border-[#e5ecf4] text-slate-500")}>{f}</button>
               ))}
             </div>
           }
@@ -812,7 +812,7 @@ function ApprovalsTab() {
                 )}>
                   {a.status}
                 </span>
-                <button className="rounded-md border border-[#e2e8f0] px-2.5 py-1 text-[11.5px] font-semibold text-[#1769DF] hover:bg-blue-50">Review</button>
+                <button className="rounded-sm border border-[#e2e8f0] px-2.5 py-1 text-[11.5px] font-semibold text-[#1769DF] hover:bg-blue-50">Review</button>
               </div>
             ))}
           </div>

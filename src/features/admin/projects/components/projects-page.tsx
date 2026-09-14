@@ -202,10 +202,10 @@ export function ClientsPage() {
                   </td>
                   <td className="px-2 py-1.5">
                     <div className="flex items-center gap-1">
-                      <Link href={`/admin/projects/${project.id}`} className="rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
+                      <Link href={`/admin/projects/${project.id}`} className="rounded-sm border px-2 py-1 text-[10px] font-semibold transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
                         Open
                       </Link>
-                      <button className="grid size-6 place-items-center rounded-md border transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
+                      <button className="grid size-6 place-items-center rounded-sm border transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
                         <MoreVertical className="size-3" />
                       </button>
                     </div>
@@ -220,16 +220,16 @@ export function ClientsPage() {
         <div className="flex items-center justify-between border-t px-3 py-1.5 text-[10px] text-muted-foreground">
           <span>Showing 1 to {rows.length} of {rows.length} Clients</span>
           <div className="flex items-center gap-1">
-            <button className="grid size-6 place-items-center rounded-md border transition-colors hover:bg-accent disabled:opacity-50" disabled>
+            <button className="grid size-6 place-items-center rounded-sm border transition-colors hover:bg-accent disabled:opacity-50" disabled>
               <ChevronLeft className="size-3" />
             </button>
-            <button className="grid size-6 place-items-center rounded-md bg-primary text-primary-foreground font-semibold shadow-sm">
+            <button className="grid size-6 place-items-center rounded-sm bg-primary text-primary-foreground font-semibold shadow-sm">
               1
             </button>
-            <button className="grid size-6 place-items-center rounded-md border transition-colors hover:bg-accent disabled:opacity-50" disabled>
+            <button className="grid size-6 place-items-center rounded-sm border transition-colors hover:bg-accent disabled:opacity-50" disabled>
               <ChevronRight className="size-3" />
             </button>
-            <div className="ml-1 h-6 flex items-center rounded-md border px-2 transition-colors hover:bg-accent cursor-pointer">
+            <div className="ml-1 h-6 flex items-center rounded-sm border px-2 transition-colors hover:bg-accent cursor-pointer">
               10 per page
               <ChevronDown className="ml-1 size-2.5" />
             </div>
@@ -304,7 +304,7 @@ function Quick({ icon: Icon, title, text, action, color }: { icon: any; title: s
       <div className="flex flex-col">
         <p className="text-[11px] font-semibold text-foreground">{title}</p>
         <p className="mt-0.5 text-[9.5px] text-muted-foreground flex-1 leading-relaxed">{text}</p>
-        <button className="mt-2 w-fit rounded-md border px-2 py-1 text-[9.5px] font-semibold shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground bg-white">
+        <button className="mt-2 w-fit rounded-sm border px-2 py-1 text-[9.5px] font-semibold shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground bg-white">
           {action}
         </button>
       </div>

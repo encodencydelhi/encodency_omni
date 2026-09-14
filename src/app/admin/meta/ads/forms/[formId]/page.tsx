@@ -206,7 +206,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
               {form.questions.map((q, i) => (
                 <li
                   key={q.id}
-                  className="flex items-center gap-2.5 rounded-md border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2"
+                  className="flex items-center gap-2.5 rounded-sm border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2"
                 >
                   <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e8eef5] text-[9px] font-semibold text-[#475569]">
                     {i + 1}
@@ -294,7 +294,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
                   ))}
                 </ol>
                 {worst && worst.lostPct > 10 && (
-                  <p className="mt-3 rounded-md border border-[#fae0a6] bg-[#fffaeb] p-2 text-[10px] leading-relaxed text-[#b45309]">
+                  <p className="mt-3 rounded-sm border border-[#fae0a6] bg-[#fffaeb] p-2 text-[10px] leading-relaxed text-[#b45309]">
                     <strong>{worst.label}</strong> loses the most people ({pct(worst.lostPct, 1)}).
                     Making it optional, or moving it after the contact details, usually lifts
                     completion.{" "}
@@ -319,7 +319,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
             ) : (
               <ul className="space-y-1.5">
                 {linkedCampaigns.map((c) => (
-                  <li key={c.id} className="flex items-center justify-between gap-2 rounded-md border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2">
+                  <li key={c.id} className="flex items-center justify-between gap-2 rounded-sm border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2">
                     <Link
                       href={`${ADS_ROOT}/campaigns/${c.id}`}
                       className="min-w-0 flex-1 truncate text-[11px] font-semibold text-[#0671e9] hover:underline"

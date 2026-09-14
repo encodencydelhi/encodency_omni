@@ -270,7 +270,7 @@ function Box({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col overflow-hidden rounded-md border border-[#DDE4ED] bg-white shadow-sm">
+    <section className="flex flex-col overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-sm">
       <header
         className={cn(
           "flex shrink-0 items-center justify-between gap-2 border-b border-[#E8EDF3] px-2.5",
@@ -289,7 +289,7 @@ function Box({
           {subtitle && <p className="truncate text-[8px] leading-3 text-[#7C89A2]">{subtitle}</p>}
         </div>
         {filter && (
-          <button className="flex h-[22px] shrink-0 items-center gap-1 rounded-md border border-[#DDE4ED] px-1.5 text-[8px] font-semibold text-[#425273]">
+          <button className="flex h-[22px] shrink-0 items-center gap-1 rounded-sm border border-[#DDE4ED] px-1.5 text-[8px] font-semibold text-[#425273]">
             {filter}
             <ChevronDown className="size-2.5" />
           </button>
@@ -585,7 +585,7 @@ function QuickActions() {
             href={href}
             key={label}
             className={cn(
-              "flex h-[44px] items-center gap-1.5 rounded-md border px-1.5 text-left text-[8.5px] font-semibold leading-3 transition-colors",
+              "flex h-[44px] items-center gap-1.5 rounded-sm border px-1.5 text-left text-[8.5px] font-semibold leading-3 transition-colors",
               actionSkin[color],
             )}
           >

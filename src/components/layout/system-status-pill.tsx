@@ -19,7 +19,7 @@ export function SystemStatusPill({ isCollapsed }: { isCollapsed: boolean }) {
   const { data, isPending } = useSystemHealth();
 
   if (isPending) {
-    return <Skeleton className={cn("h-9", isCollapsed ? "w-9 rounded-md" : "w-full")} />;
+    return <Skeleton className={cn("h-9", isCollapsed ? "w-9 rounded-sm" : "w-full")} />;
   }
 
   const status = data?.overallStatus ?? "operational";
@@ -30,7 +30,7 @@ export function SystemStatusPill({ isCollapsed }: { isCollapsed: boolean }) {
     <Link
       href={ROUTES.superAdmin.systemHealth}
       className={cn(
-        "flex items-center gap-2.5 rounded-md border border-border bg-card px-2.5 py-2 transition-colors hover:bg-accent",
+        "flex items-center gap-2.5 rounded-sm border border-border bg-card px-2.5 py-2 transition-colors hover:bg-accent",
         isCollapsed && "justify-center px-0 py-2",
       )}
     >

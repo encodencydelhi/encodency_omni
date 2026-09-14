@@ -202,7 +202,7 @@ export function ApiUsagePanel({
           </div>
           <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">API Usage Snapshot</h3>
         </div>
-        <select className="text-[11px] border border-slate-200 rounded-md px-1.5 py-1 bg-white text-slate-500 font-medium outline-none shrink-0 cursor-pointer">
+        <select className="text-[11px] border border-slate-200 rounded-sm px-1.5 py-1 bg-white text-slate-500 font-medium outline-none shrink-0 cursor-pointer">
           <option>Last 30 days</option>
         </select>
       </CardHeader>

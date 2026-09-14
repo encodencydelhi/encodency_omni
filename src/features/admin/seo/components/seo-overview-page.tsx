@@ -249,32 +249,32 @@ export function SeoOverviewPage() {
         </Box>
 
         <Box title="Page Speed Insights" action={
-          <div className="flex rounded-md border border-[#DDE4ED] bg-[#F8FAFC] p-0.5 text-[8.5px]">
+          <div className="flex rounded-sm border border-[#DDE4ED] bg-[#F8FAFC] p-0.5 text-[8.5px]">
             <button className="rounded px-2 py-0.5 bg-white shadow-sm font-semibold text-[#172044]">Desktop</button>
             <button className="rounded px-2 py-0.5 text-[#71809D] font-semibold">Mobile</button>
           </div>
         }>
           <div className="flex h-full flex-col">
-          <div className="flex min-h-0 flex-1 items-center px-4">
-            <div className="relative size-[90px] shrink-0">
-              <svg className="w-full h-full" viewBox="0 0 36 36">
-                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#E2E8F0" strokeWidth="3.5" />
-                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#F59E0B" strokeWidth="3.5" strokeDasharray="78, 100" />
-              </svg>
-              <div className="absolute inset-0 grid place-items-center text-center">
-                <span>
-                  <b className="block text-[18px] font-semibold text-[#172044]">78</b>
-                  <small className="text-[8px] text-[#F59E0B] font-semibold">Good</small>
-                </span>
+            <div className="flex min-h-0 flex-1 items-center px-4">
+              <div className="relative size-[90px] shrink-0">
+                <svg className="w-full h-full" viewBox="0 0 36 36">
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#E2E8F0" strokeWidth="3.5" />
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#F59E0B" strokeWidth="3.5" strokeDasharray="78, 100" />
+                </svg>
+                <div className="absolute inset-0 grid place-items-center text-center">
+                  <span>
+                    <b className="block text-[18px] font-semibold text-[#172044]">78</b>
+                    <small className="text-[8px] text-[#F59E0B] font-semibold">Good</small>
+                  </span>
+                </div>
+              </div>
+              <div className="ml-6 flex-1 space-y-3">
+                <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">LCP</span><span className="font-semibold text-[#F59E0B]">2.1s</span></div>
+                <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">INP</span><span className="font-semibold text-[#10B981]">120ms</span></div>
+                <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">CLS</span><span className="font-semibold text-[#10B981]">0.05</span></div>
               </div>
             </div>
-            <div className="ml-6 flex-1 space-y-3">
-              <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">LCP</span><span className="font-semibold text-[#F59E0B]">2.1s</span></div>
-              <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">INP</span><span className="font-semibold text-[#10B981]">120ms</span></div>
-              <div className="flex justify-between items-center text-[10px]"><span className="text-[#71809D] font-semibold">CLS</span><span className="font-semibold text-[#10B981]">0.05</span></div>
-            </div>
-          </div>
-          <div className="shrink-0 px-4 pb-3"><button className="w-full rounded border border-[#DDE4ED] py-1 text-[9px] font-semibold text-[#172044]">View Page Speed Report →</button></div>
+            <div className="shrink-0 px-4 pb-3"><button className="w-full rounded border border-[#DDE4ED] py-1 text-[9px] font-semibold text-[#172044]">View Page Speed Report →</button></div>
           </div>
         </Box>
 

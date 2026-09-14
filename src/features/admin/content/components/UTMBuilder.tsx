@@ -73,7 +73,7 @@ export function UTMBuilder({
           <div>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-[#33445F]">Global UTM</span>
-              <button onClick={generateAll} className="flex items-center gap-1 rounded-md bg-[#F0F6FF] px-2 py-1 text-[10px] font-semibold text-[#1769DF] hover:bg-[#E0EDFF]">
+              <button onClick={generateAll} className="flex items-center gap-1 rounded-sm bg-[#F0F6FF] px-2 py-1 text-[10px] font-semibold text-[#1769DF] hover:bg-[#E0EDFF]">
                 <RefreshCw className="size-2.5" /> Auto Generate
               </button>
             </div>

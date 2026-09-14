@@ -79,135 +79,135 @@ export function PlatformOverrideEditor({
         <div className="p-3">
           <div className="space-y-1">
             {platforms.map((p) => {
-          const meta = PLATFORM_META[p];
-          const isExpanded = expanded === p;
-          const override = getOverride(p);
-          const specs = PLATFORM_CONTENT_TYPES[p] ?? [];
-          const currentCT = contentTypes[p];
-          const spec = specs.find(s => s.id === currentCT);
-          const ratios = getRatiosForPlatform(p, currentCT);
-          const placements = spec?.placements ?? [];
-          const fields = spec?.fields ?? [];
+              const meta = PLATFORM_META[p];
+              const isExpanded = expanded === p;
+              const override = getOverride(p);
+              const specs = PLATFORM_CONTENT_TYPES[p] ?? [];
+              const currentCT = contentTypes[p];
+              const spec = specs.find(s => s.id === currentCT);
+              const ratios = getRatiosForPlatform(p, currentCT);
+              const placements = spec?.placements ?? [];
+              const fields = spec?.fields ?? [];
 
-          return (
-            <div key={p} className="rounded-lg border border-[#E2E8F0] overflow-hidden">
-              {/* Header */}
-              <button
-                onClick={() => toggleExpand(p)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left transition hover:bg-slate-50"
-              >
-                {isExpanded ? <ChevronDown className="size-3.5 text-[#7A87A0]" /> : <ChevronRight className="size-3.5 text-[#7A87A0]" />}
-                <PlatformBadge platform={p} size="sm" />
-                <span className="flex-1 text-[11.5px] font-semibold text-[#33445F]">{meta.label}</span>
-                {currentCT && (
-                  <span className="text-[10px] font-semibold text-[#7A87A0]">
-                    {specs.find(s => s.id === currentCT)?.label}
-                  </span>
-                )}
-                {override.enabled && (
-                  <span className="rounded bg-[color:var(--pc-bg)] px-1.5 py-0.5 text-[9px] font-semibold" style={{ color: meta.color, backgroundColor: meta.bg }}>
-                    Customized
-                  </span>
-                )}
-                {!override.enabled && (
+              return (
+                <div key={p} className="rounded-lg border border-[#E2E8F0] overflow-hidden">
+                  {/* Header */}
                   <button
-                    onClick={(e) => { e.stopPropagation(); copyFromMaster(p); }}
-                    className="flex items-center gap-0.5 rounded border border-[#E2E8F0] px-1.5 py-0.5 text-[9.5px] font-semibold text-[#687797] hover:bg-slate-50"
+                    onClick={() => toggleExpand(p)}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left transition hover:bg-slate-50"
                   >
-                    <Copy className="size-2.5" /> Use Master
+                    {isExpanded ? <ChevronDown className="size-3.5 text-[#7A87A0]" /> : <ChevronRight className="size-3.5 text-[#7A87A0]" />}
+                    <PlatformBadge platform={p} size="sm" />
+                    <span className="flex-1 text-[11.5px] font-semibold text-[#33445F]">{meta.label}</span>
+                    {currentCT && (
+                      <span className="text-[10px] font-semibold text-[#7A87A0]">
+                        {specs.find(s => s.id === currentCT)?.label}
+                      </span>
+                    )}
+                    {override.enabled && (
+                      <span className="rounded bg-[color:var(--pc-bg)] px-1.5 py-0.5 text-[9px] font-semibold" style={{ color: meta.color, backgroundColor: meta.bg }}>
+                        Customized
+                      </span>
+                    )}
+                    {!override.enabled && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); copyFromMaster(p); }}
+                        className="flex items-center gap-0.5 rounded border border-[#E2E8F0] px-1.5 py-0.5 text-[9.5px] font-semibold text-[#687797] hover:bg-slate-50"
+                      >
+                        <Copy className="size-2.5" /> Use Master
+                      </button>
+                    )}
                   </button>
-                )}
-              </button>
 
-              {/* Expanded content */}
-              {isExpanded && (
-                <div className="border-t border-[#EDF1F5] bg-[#F8FAFD] p-3 space-y-3">
-                  {/* Content Type */}
-                  <ContentTypeSelector
-                    platform={p}
-                    selected={currentCT ?? null}
-                    onSelect={(ct) => onContentTypeChange(p, ct)}
-                  />
+                  {/* Expanded content */}
+                  {isExpanded && (
+                    <div className="border-t border-[#EDF1F5] bg-[#F8FAFD] p-3 space-y-3">
+                      {/* Content Type */}
+                      <ContentTypeSelector
+                        platform={p}
+                        selected={currentCT ?? null}
+                        onSelect={(ct) => onContentTypeChange(p, ct)}
+                      />
 
-                  {/* Placement */}
-                  {placements.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {placements.map((pl) => (
-                        <button
-                          key={pl}
-                          onClick={() => onPlacementChange(p, pl)}
-                          className={cn(
-                            "rounded-md border px-2 py-1 text-[10px] font-semibold transition",
-                            selectedPlacement[p] === pl
-                              ? "border-[color:var(--pc)] bg-[color:var(--pc-bg)] text-[color:var(--pc)]"
-                              : "border-[#E2E8F0] text-[#687797] hover:border-[#CBD5E1]"
-                          )}
-                          style={{ "--pc": meta.color, "--pc-bg": meta.bg } as React.CSSProperties}
-                        >
-                          {selectedPlacement[p] === pl && <Check className="mr-0.5 inline size-2.5" />}
-                          {pl}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                      {/* Placement */}
+                      {placements.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {placements.map((pl) => (
+                            <button
+                              key={pl}
+                              onClick={() => onPlacementChange(p, pl)}
+                              className={cn(
+                                "rounded-sm border px-2 py-1 text-[10px] font-semibold transition",
+                                selectedPlacement[p] === pl
+                                  ? "border-[color:var(--pc)] bg-[color:var(--pc-bg)] text-[color:var(--pc)]"
+                                  : "border-[#E2E8F0] text-[#687797] hover:border-[#CBD5E1]"
+                              )}
+                              style={{ "--pc": meta.color, "--pc-bg": meta.bg } as React.CSSProperties}
+                            >
+                              {selectedPlacement[p] === pl && <Check className="mr-0.5 inline size-2.5" />}
+                              {pl}
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
-                  {/* Ratio */}
-                  {ratios.length > 0 && (
-                    <div>
-                      <span className="mb-1 block text-[10.5px] font-semibold text-[#7A87A0]">Aspect Ratio</span>
-                      <div className="flex flex-wrap gap-1">
-                        {ratios.map((r) => (
-                          <button
-                            key={r.ratio}
-                            onClick={() => onRatioChange(p, r.ratio)}
-                            className={cn(
-                              "flex flex-col items-center rounded-lg border px-2 py-1.5 text-center transition",
-                              selectedRatio[p] === r.ratio
-                                ? "border-[color:var(--pc)] bg-[color:var(--pc-bg)]"
-                                : "border-[#E2E8F0] hover:border-[#CBD5E1]"
-                            )}
-                            style={{ "--pc": meta.color, "--pc-bg": meta.bg } as React.CSSProperties}
-                          >
-                            <span className="text-[10px] font-semibold text-[#33445F]">{r.ratio}</span>
-                            <span className="text-[8px] text-[#7A87A0]">{r.label}</span>
-                            {r.recommended && <span className="text-[7px] font-semibold text-emerald-600">Rec.</span>}
-                          </button>
+                      {/* Ratio */}
+                      {ratios.length > 0 && (
+                        <div>
+                          <span className="mb-1 block text-[10.5px] font-semibold text-[#7A87A0]">Aspect Ratio</span>
+                          <div className="flex flex-wrap gap-1">
+                            {ratios.map((r) => (
+                              <button
+                                key={r.ratio}
+                                onClick={() => onRatioChange(p, r.ratio)}
+                                className={cn(
+                                  "flex flex-col items-center rounded-lg border px-2 py-1.5 text-center transition",
+                                  selectedRatio[p] === r.ratio
+                                    ? "border-[color:var(--pc)] bg-[color:var(--pc-bg)]"
+                                    : "border-[#E2E8F0] hover:border-[#CBD5E1]"
+                                )}
+                                style={{ "--pc": meta.color, "--pc-bg": meta.bg } as React.CSSProperties}
+                              >
+                                <span className="text-[10px] font-semibold text-[#33445F]">{r.ratio}</span>
+                                <span className="text-[8px] text-[#7A87A0]">{r.label}</span>
+                                {r.recommended && <span className="text-[7px] font-semibold text-emerald-600">Rec.</span>}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Platform-specific fields */}
+                      <div className="space-y-2">
+                        {(override.enabled ? fields : ["caption", "hashtags", "firstComment", "altText"]).map((field) => (
+                          <PlatformField
+                            key={field}
+                            field={field}
+                            platform={p}
+                            override={override}
+                            masterContent={masterContent}
+                            onChange={(key, val) => updateOverride(p, { [key]: val })}
+                          />
                         ))}
+                      </div>
+
+                      {/* Quick actions */}
+                      <div className="flex gap-1 pt-1 border-t border-[#EDF1F5]">
+                        <button
+                          onClick={() => copyFromMaster(p)}
+                          className="flex items-center gap-1 rounded-sm border border-[#E2E8F0] px-2 py-1 text-[10px] font-semibold text-[#687797] hover:bg-white"
+                        >
+                          <Copy className="size-2.5" /> Copy from Master
+                        </button>
+                        <button className="flex items-center gap-1 rounded-sm border border-purple-200 bg-purple-50 px-2 py-1 text-[10px] font-semibold text-purple-700 hover:bg-purple-100">
+                          <Sparkles className="size-2.5" /> AI Rewrite for {meta.short}
+                        </button>
                       </div>
                     </div>
                   )}
-
-                  {/* Platform-specific fields */}
-                  <div className="space-y-2">
-                    {(override.enabled ? fields : ["caption", "hashtags", "firstComment", "altText"]).map((field) => (
-                      <PlatformField
-                        key={field}
-                        field={field}
-                        platform={p}
-                        override={override}
-                        masterContent={masterContent}
-                        onChange={(key, val) => updateOverride(p, { [key]: val })}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Quick actions */}
-                  <div className="flex gap-1 pt-1 border-t border-[#EDF1F5]">
-                    <button
-                      onClick={() => copyFromMaster(p)}
-                      className="flex items-center gap-1 rounded-md border border-[#E2E8F0] px-2 py-1 text-[10px] font-semibold text-[#687797] hover:bg-white"
-                    >
-                      <Copy className="size-2.5" /> Copy from Master
-                    </button>
-                    <button className="flex items-center gap-1 rounded-md border border-purple-200 bg-purple-50 px-2 py-1 text-[10px] font-semibold text-purple-700 hover:bg-purple-100">
-                      <Sparkles className="size-2.5" /> AI Rewrite for {meta.short}
-                    </button>
-                  </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
+              );
+            })}
           </div>
         </div>
       )}

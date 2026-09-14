@@ -199,7 +199,7 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
                         key={v}
                         onClick={() => updateTest(test.id, { variable: v })}
                         className={cn(
-                          "h-7 rounded-md border px-2 text-[10px] font-semibold",
+                          "h-7 rounded-sm border px-2 text-[10px] font-semibold",
                           test.variable === v ? "border-[#7C3AED] bg-[#F2EAFF] text-[#7C3AED]" : "border-[#DDE6F1] text-[#526385]",
                         )}
                       >

@@ -7,7 +7,7 @@ import { SpellCheckedInput, SpellCheckedTextarea } from "@/components/ui/spellch
 export function StepTitle({ step, title, hint }: { step: string; title: string; hint?: string }) {
   return (
     <div className="mb-2.5 flex items-center gap-2">
-      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md bg-[#F0F4FF] text-[10px] font-semibold text-[#1769DF]">{step}</span>
+      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-sm bg-[#F0F4FF] text-[10px] font-semibold text-[#1769DF]">{step}</span>
       <div className="min-w-0">
         <h4 className="text-[13px] font-semibold leading-4 text-[#172044]">{title}</h4>
         {hint && <p className="text-[11px] text-[#7A87A0]">{hint}</p>}

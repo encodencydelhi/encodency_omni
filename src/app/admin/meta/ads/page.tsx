@@ -326,10 +326,10 @@ function Overview() {
             <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full size-2 bg-emerald-500"></span>
           </span>
-          <h2 className="text-xs font-black uppercase tracking-wider text-slate-700">
+          <h2 className="text-xs font-normal uppercase tracking-wider text-slate-700">
             Real-Time Campaign Performance
           </h2>
-          <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10.5px] font-semibold text-slate-600 shadow-2xs">
+          <span className="rounded-sm border border-slate-200 bg-white px-2 py-0.5 text-[10.5px] font-semibold text-slate-600 shadow-2xs">
             Last 30 Days
           </span>
         </div>
@@ -510,7 +510,7 @@ function Overview() {
                   />
                 </Td>
                 <Td>
-                  <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
+                  <span className="inline-flex items-center rounded-sm border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
                     {c.objective}
                   </span>
                 </Td>
@@ -534,7 +534,7 @@ function Overview() {
                 </Td>
                 <Td numeric>
                   {c.metrics.leads > 0 ? (
-                    <span className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-black text-emerald-800">
+                    <span className="inline-flex items-center rounded-sm border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-black text-emerald-800">
                       {num(c.metrics.leads)}
                     </span>
                   ) : (
@@ -620,7 +620,7 @@ function Overview() {
                   {c.name}
                 </Link>
                 <span className="shrink-0 text-right font-semibold text-emerald-800">
-                  <span className="inline-block rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-black text-emerald-800">
+                  <span className="inline-block rounded-sm border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-black text-emerald-800">
                     {num(c.metrics.leads)} leads
                   </span>
                   <span className="block text-[10.5px] font-semibold text-slate-600 mt-0.5">

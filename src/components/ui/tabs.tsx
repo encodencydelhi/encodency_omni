@@ -10,7 +10,7 @@ export function TabsList({ className, ...props }: React.ComponentProps<typeof Ta
   return (
     <TabsPrimitive.List
       className={cn(
-        "inline-flex h-9 items-center gap-1 overflow-x-auto rounded-md bg-surface-sunken p-1 scrollbar-thin",
+        "inline-flex h-9 items-center gap-1 overflow-x-auto rounded-sm bg-surface-sunken p-1 scrollbar-thin",
         className,
       )}
       {...props}

@@ -718,7 +718,7 @@ function AdSetStep() {
         >
           <div className="grid grid-cols-2 gap-3">
             <Choice
-                group="conversion-location"
+              group="conversion-location"
               selected
               icon={<Sparkles className="size-4" />}
               title="Advantage+ Placements"
@@ -726,7 +726,7 @@ function AdSetStep() {
               badge="Recommended"
             />
             <Choice
-                group="conversion-location"
+              group="conversion-location"
               icon={<Settings2 className="size-4" />}
               title="Manual Placements"
               sub="Choose placements separately by platform"
@@ -1006,7 +1006,7 @@ function LiveAdPreview() {
           <p className="text-[9px] text-[#66758f]">META INSTANT FORM</p>
           <div className="flex justify-between gap-2">
             <strong className="text-xs">Glow Brighter, Naturally</strong>
-             <span className="shrink-0 self-center rounded-lg bg-gradient-to-r from-slate-100 to-slate-200 px-2.5 py-1.5 text-[9px] font-semibold text-slate-700">
+            <span className="shrink-0 self-center rounded-lg bg-gradient-to-r from-slate-100 to-slate-200 px-2.5 py-1.5 text-[9px] font-semibold text-slate-700">
               Learn More
             </span>
           </div>
@@ -1048,18 +1048,18 @@ function FormStep() {
                   <option>Hindi</option>
                 </Select>
               </Field>
-              <label className="flex h-9 items-center justify-between rounded-md border border-[#cfd9e6] px-3 text-[10px] font-semibold">Save as Template <input type="checkbox" /></label>
+              <label className="flex h-9 items-center justify-between rounded-sm border border-[#cfd9e6] px-3 text-[10px] font-semibold">Save as Template <input type="checkbox" /></label>
             </div>
           </Card>
           <Card title="Form Type" sub="Choose the balance between lead volume and intent." icon={<Target className="size-5" />}>
-            <div className="grid grid-cols-2 gap-3"><Choice group="form-type" selected title="Higher Intent" sub="More thoughtful responses with a review step" badge="Recommended"/><Choice group="form-type" title="More Volume" sub="A shorter form designed to capture more leads"/></div>
+            <div className="grid grid-cols-2 gap-3"><Choice group="form-type" selected title="Higher Intent" sub="More thoughtful responses with a review step" badge="Recommended" /><Choice group="form-type" title="More Volume" sub="A shorter form designed to capture more leads" /></div>
           </Card>
           <Card
             title="Intro / Welcome Screen"
             icon={<ImageIcon className="size-5" />}
           >
             <div className="grid grid-cols-[150px_1fr] gap-3">
-              <div className="relative h-24 overflow-hidden rounded-md">
+              <div className="relative h-24 overflow-hidden rounded-sm">
                 <Image
                   src="/images/ads-manager/renovation-home.png"
                   alt="Modern renovated home"
@@ -1135,7 +1135,7 @@ function FormStep() {
             </Card>
           </div>
           <Card title="Thank You Screen" sub="Show a clear confirmation and next action after submission." icon={<CheckCircle2 className="size-5" />}>
-            <div className="grid grid-cols-3 gap-3"><Field label="Headline"><input className={input} defaultValue="Thank you for your interest!"/></Field><Field label="CTA Button"><Select><option>Visit Website</option><option>Call Now</option><option>WhatsApp</option><option>Download Brochure</option></Select></Field><Field label="CTA URL"><input className={input} defaultValue="https://www.namogange.org"/></Field></div>
+            <div className="grid grid-cols-3 gap-3"><Field label="Headline"><input className={input} defaultValue="Thank you for your interest!" /></Field><Field label="CTA Button"><Select><option>Visit Website</option><option>Call Now</option><option>WhatsApp</option><option>Download Brochure</option></Select></Field><Field label="CTA URL"><input className={input} defaultValue="https://www.namogange.org" /></Field></div>
           </Card>
         </div>
         <FormPreview />
@@ -1269,39 +1269,39 @@ function RightRail({ step }: { step: Step }) {
   const checklist =
     step === "campaign"
       ? [
-          "Campaign basics",
-          "Budget & bid strategy",
-          "Optimization settings",
-          "Ad Set pending",
-          "Ad pending",
-          "Review pending",
-        ]
+        "Campaign basics",
+        "Budget & bid strategy",
+        "Optimization settings",
+        "Ad Set pending",
+        "Ad pending",
+        "Review pending",
+      ]
       : step === "adset"
         ? [
-            "Ad set basics",
-            "Audience targeting",
-            "Placements",
-            "Schedule",
-            "Delivery settings",
-          ]
+          "Ad set basics",
+          "Audience targeting",
+          "Placements",
+          "Schedule",
+          "Delivery settings",
+        ]
         : step === "ad"
           ? [
-              "Ad identity",
-              "Creative upload",
-              "Primary text & headline",
-              "Destination & tracking",
-              "Placement compatibility",
-            ]
+            "Ad identity",
+            "Creative upload",
+            "Primary text & headline",
+            "Destination & tracking",
+            "Placement compatibility",
+          ]
           : step === "form"
             ? [
-                "Form basics",
-                "Form type",
-                "Intro / welcome screen",
-                "Questions",
-                "Qualification",
-                "Privacy & consent",
-                "Thank you screen",
-              ]
+              "Form basics",
+              "Form type",
+              "Intro / welcome screen",
+              "Questions",
+              "Qualification",
+              "Privacy & consent",
+              "Thank you screen",
+            ]
             : ["Campaign", "Ad Set", "Ad creative", "Instant form", "Tracking"];
   const completeCount =
     step === "campaign"
@@ -1360,7 +1360,7 @@ function RightRail({ step }: { step: Step }) {
             0 blocking · <b className="text-amber-600">1 warning</b>
           </span>
         </div>
-        <div className="mt-3 flex gap-3 rounded-md border border-[#f4d99d] bg-[#fffaf0] p-3">
+        <div className="mt-3 flex gap-3 rounded-sm border border-[#f4d99d] bg-[#fffaf0] p-3">
           <AlertTriangle className="size-5 shrink-0 text-[#efa413]" />
           <div>
             <p className="text-[10px] font-semibold">

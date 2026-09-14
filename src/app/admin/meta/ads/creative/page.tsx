@@ -214,9 +214,9 @@ function CreativeView() {
                 isFiltered
                   ? undefined
                   : {
-                      label: "Upload Creative",
-                      onClick: () => toast.success("Opening the media uploader…"),
-                    }
+                    label: "Upload Creative",
+                    onClick: () => toast.success("Opening the media uploader…"),
+                  }
               }
               secondary={{ label: "Creative specs", href: `${ADS_ROOT}/help/aspect-ratios` }}
               compact={isFiltered}
@@ -324,13 +324,13 @@ function CreativeView() {
                   type="button"
                   onClick={() => setFilter("creative", "")}
                   aria-label="Close creative details"
-                  className="flex size-6 items-center justify-center rounded-md border border-[#d8e0ea] text-[#64748b] hover:bg-[#f8fafc]"
+                  className="flex size-6 items-center justify-center rounded-sm border border-[#d8e0ea] text-[#64748b] hover:bg-[#f8fafc]"
                 >
                   <X className="size-3.5" />
                 </button>
               }
             >
-              <div className="relative aspect-square w-full overflow-hidden rounded-md border border-[#e5eaf1] bg-[#f7f9fc]">
+              <div className="relative aspect-square w-full overflow-hidden rounded-sm border border-[#e5eaf1] bg-[#f7f9fc]">
                 <Image src={selected.src} alt={selected.name} fill sizes="320px" className="object-cover" />
               </div>
               <dl className="mt-3">
@@ -396,7 +396,7 @@ function CreativeView() {
                     return (
                       <li
                         key={adId}
-                        className="flex items-center justify-between gap-2 rounded-md border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2"
+                        className="flex items-center justify-between gap-2 rounded-sm border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2"
                       >
                         <Link
                           href={`${ADS_ROOT}/ads/${ad.id}`}

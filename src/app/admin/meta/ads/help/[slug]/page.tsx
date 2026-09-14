@@ -95,7 +95,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                   href={`${ADS_ROOT}/help?category=${c.id}`}
                   aria-current={c.id === article.category ? "page" : undefined}
                   className={cn(
-                    "block rounded-md px-2 py-1.5 text-[11px] font-medium transition",
+                    "block rounded-sm px-2 py-1.5 text-[11px] font-medium transition",
                     c.id === article.category
                       ? "bg-[#eff6ff] text-[#1877f2]"
                       : "text-[#475569] hover:bg-[#f7f9fc]",
@@ -179,7 +179,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                 {section.callout && (
                   <div
                     className={cn(
-                      "flex gap-2.5 rounded-md border p-2.5",
+                      "flex gap-2.5 rounded-sm border p-2.5",
                       section.callout.tone === "warning"
                         ? "border-[#fae0a6] bg-[#fffaeb] text-[#b45309]"
                         : "border-[#bcd9ff] bg-[#eff6ff] text-[#0b5ed7]",
@@ -198,7 +198,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
           </div>
 
           {/* Was this helpful */}
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#e8edf4] bg-[#fbfcfe] p-3">
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-[#e8edf4] bg-[#fbfcfe] p-3">
             {feedback === null ? (
               <>
                 <p className="text-[11px] font-semibold">Was this helpful?</p>
@@ -261,7 +261,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                   <li key={a.slug}>
                     <Link
                       href={`${ADS_ROOT}/help/${a.slug}`}
-                      className="block rounded-md px-2 py-1.5 text-[11px] font-medium text-[#0671e9] transition hover:bg-[#f7f9fc] hover:underline"
+                      className="block rounded-sm px-2 py-1.5 text-[11px] font-medium text-[#0671e9] transition hover:bg-[#f7f9fc] hover:underline"
                     >
                       {a.title}
                     </Link>
@@ -278,7 +278,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                   <li key={a.slug}>
                     <Link
                       href={`${ADS_ROOT}/help/${a.slug}`}
-                      className="block rounded-md px-2 py-1.5 text-[11px] font-medium text-[#475569] transition hover:bg-[#f7f9fc]"
+                      className="block rounded-sm px-2 py-1.5 text-[11px] font-medium text-[#475569] transition hover:bg-[#f7f9fc]"
                     >
                       {a.title}
                     </Link>

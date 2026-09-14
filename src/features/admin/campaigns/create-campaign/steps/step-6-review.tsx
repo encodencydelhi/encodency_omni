@@ -170,7 +170,7 @@ export function StepReview({
 
         <div className="rounded-xl border border-[#E6E8F0] bg-white p-3">
           <div className="mb-2 flex items-center gap-1.5">
-            <span className="grid size-6 shrink-0 place-items-center rounded-md bg-[#E8F2FF]">
+            <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-[#E8F2FF]">
               <ImageIcon className="size-3.5 text-[#1975E7]" />
             </span>
             <b className="flex-1 text-[11.5px] font-semibold text-[#111827]">Campaign Preview</b>
@@ -194,7 +194,7 @@ export function StepReview({
               { src: "/campaigns/save-rivers/banner.png", ratio: "16:9", label: "Website Banner" },
             ].map(({ src, ratio, label }) => (
               <div key={label} className="min-w-0 rounded-lg border border-[#DDE6F1] bg-white p-1 text-center">
-                <span className="relative block h-12 overflow-hidden rounded-md">
+                <span className="relative block h-12 overflow-hidden rounded-sm">
                   <Image src={src} alt="" fill sizes="120px" className="object-cover" />
                   {ratio === "9:16" && <PlayCircle className="absolute inset-0 m-auto size-5 rounded-full bg-black/45 text-white" />}
                 </span>
@@ -208,16 +208,16 @@ export function StepReview({
         <div className="space-y-2.5">
           <Card icon={TriangleAlert} title="Risks & Warnings">
             <ul className="space-y-2">
-            {RISKS.map(({ tone, text }) => (
-              <li key={text} className="flex items-start gap-1.5 text-[10px] leading-[14px] text-[#374151]">
-                {tone === "warn" ? (
-                  <CircleAlert className="mt-px size-3.5 shrink-0 text-[#F59E0B]" />
-                ) : (
-                  <CircleCheck className="mt-px size-3.5 shrink-0 text-[#0AA673]" />
-                )}
-                {text}
-              </li>
-            ))}
+              {RISKS.map(({ tone, text }) => (
+                <li key={text} className="flex items-start gap-1.5 text-[10px] leading-[14px] text-[#374151]">
+                  {tone === "warn" ? (
+                    <CircleAlert className="mt-px size-3.5 shrink-0 text-[#F59E0B]" />
+                  ) : (
+                    <CircleCheck className="mt-px size-3.5 shrink-0 text-[#0AA673]" />
+                  )}
+                  {text}
+                </li>
+              ))}
             </ul>
           </Card>
           <div className="rounded-xl border border-[#CDECE1] bg-[#F1FCF7] p-3">

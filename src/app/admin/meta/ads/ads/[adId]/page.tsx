@@ -343,7 +343,7 @@ function AdDetail({ adId }: { adId: string }) {
                   />
                 </dl>
                 {!form.privacyUrl && (
-                  <p className="mt-2 rounded-md border border-[#fbcfcb] bg-[#fef3f2] p-2 text-[9px] font-semibold text-[#b42318]">
+                  <p className="mt-2 rounded-sm border border-[#fbcfcb] bg-[#fef3f2] p-2 text-[9px] font-semibold text-[#b42318]">
                     This form has no privacy policy URL.{" "}
                     <Link href={`${ADS_ROOT}/forms/${form.id}`} className="underline">
                       Fix the form
@@ -360,7 +360,7 @@ function AdDetail({ adId }: { adId: string }) {
       {tab === "creative" && creative && (
         <div className="grid gap-3 lg:grid-cols-[320px_1fr]">
           <Panel title="Media" icon={<ImageIcon className="size-4 text-[#1877f2]" />}>
-            <div className="relative aspect-square w-full overflow-hidden rounded-md border border-[#e5eaf1] bg-[#f7f9fc]">
+            <div className="relative aspect-square w-full overflow-hidden rounded-sm border border-[#e5eaf1] bg-[#f7f9fc]">
               <Image src={creative.src} alt={creative.name} fill sizes="320px" className="object-cover" />
             </div>
             <dl className="mt-3">

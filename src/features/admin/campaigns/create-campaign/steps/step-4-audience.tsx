@@ -219,7 +219,7 @@ export function StepAudience({ draft, set }: { draft: CampaignDraft; set: Setter
                   key={opt}
                   onClick={() => set("lookalikePercent", opt)}
                   className={cn(
-                    "h-7 flex-1 rounded-md border text-[10px] font-semibold",
+                    "h-7 flex-1 rounded-sm border text-[10px] font-semibold",
                     draft.lookalikePercent === opt ? "border-[#155EEF] bg-[#EFF6FF] text-[#155EEF]" : "border-[#DDE6F1] text-[#526385]",
                   )}
                 >

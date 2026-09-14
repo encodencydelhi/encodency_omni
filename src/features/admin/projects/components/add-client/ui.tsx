@@ -211,7 +211,7 @@ export function TagField({
         <span
           key={tag}
           className={cn(
-            "flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium",
+            "flex items-center gap-1 rounded-sm px-2 py-1 text-[11px] font-medium",
             tone === "indigo" ? "bg-[#EEF2FF] text-[#4338CA]" : "bg-[#F1F5F9] text-[#475569]",
           )}
         >
@@ -325,7 +325,7 @@ export function RailBullets({
     <ul className="space-y-2.5">
       {items.map(({ icon: Icon, label }) => (
         <li key={label} className="flex items-start gap-2.5">
-          <span className="grid size-6 shrink-0 place-items-center rounded-md bg-[#EEF2FF]">
+          <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-[#EEF2FF]">
             <Icon className="size-3.5 text-[#4F46E5]" />
           </span>
           <span className="text-[11.5px] leading-[17px] text-[#374151]">{label}</span>

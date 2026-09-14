@@ -50,7 +50,7 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
               key={val}
               onClick={() => { setBulkSchedule(val); if (val !== "later") applyBulk(); }}
               className={cn(
-                "rounded-md px-2 py-1 text-[10px] font-semibold transition",
+                "rounded-sm px-2 py-1 text-[10px] font-semibold transition",
                 bulkSchedule === val ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#7A87A0] hover:bg-slate-50"
               )}
             >
@@ -78,8 +78,8 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
                 <span className={cn(
                   "rounded px-1.5 py-0.5 text-[9px] font-semibold",
                   sched.schedule === "now" ? "bg-emerald-50 text-emerald-600" :
-                  sched.schedule === "later" ? "bg-blue-50 text-[#1769DF]" :
-                  "bg-slate-100 text-slate-600"
+                    sched.schedule === "later" ? "bg-blue-50 text-[#1769DF]" :
+                      "bg-slate-100 text-slate-600"
                 )}>
                   {sched.schedule === "now" ? "Publish Now" : sched.schedule === "later" ? `${sched.date ?? "TBD"} ${sched.time ?? ""}` : "Draft"}
                 </span>

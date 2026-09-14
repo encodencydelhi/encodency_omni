@@ -198,7 +198,7 @@ function SummaryCard({ draft, step }: { draft: CampaignDraft; step: number }) {
         </span>
         <div className="min-w-0 flex-1">
           <b className="block text-[13px] font-semibold leading-4 text-[#111827]">{draft.name}</b>
-          <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-[#FFF0F1] px-1.5 py-0.5 text-[10px] font-semibold text-[#E11D28]">
+          <span className="mt-1 inline-flex items-center gap-1 rounded-sm bg-[#FFF0F1] px-1.5 py-0.5 text-[10px] font-semibold text-[#E11D28]">
             <Megaphone className="size-2.5" />
             {draft.objective}
           </span>
