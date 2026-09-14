@@ -195,8 +195,7 @@ export const initialCampaign: CampaignDraft = {
     { channel: "Google", percent: 10 },
     { channel: "WhatsApp", percent: 10 },
     { channel: "Website", percent: 10 },
-    { channel: "Email", percent: 5 },
-    { channel: "X", percent: 5 },
+    { channel: "Google Business", percent: 10 },
   ],
   contingency: "5,000",
 
@@ -532,8 +531,6 @@ export const CHANNEL_CATALOG = [
   { name: "YouTube", channel: "YouTube", caption: "Video content and wider reach", connected: true, reach: "~20K - 100K reach" },
   { name: "WhatsApp", channel: "WhatsApp", caption: "Direct engagement and community updates", connected: true, reach: "~10K - 50K reach" },
   { name: "Website", channel: "Website", caption: "Your website and landing pages", connected: true, reach: "~5K - 30K reach" },
-  { name: "Email", channel: "Email", caption: "Email marketing campaigns", connected: true, reach: "~2K - 10K reach" },
-  { name: "X", channel: "X", caption: "Real-time engagement and conversations", connected: false, reach: "~5K - 20K reach" },
   { name: "Google Business", channel: "Google Business", caption: "Local visibility and community reach", connected: true, reach: "~3K - 15K reach" },
 ] as const;
 
@@ -592,16 +589,10 @@ export const PLATFORM_ACCOUNTS: Record<string, { name: string; handle: string }[
   WhatsApp: [
     { name: "Moksha Sewa", handle: "+91 98765 43210" },
   ],
-  X: [
-    { name: "Moksha Sewa", handle: "@mokshasewa" },
-  ],
   "Google Business": [
     { name: "Moksha Sewa Foundation", handle: "Varanasi, UP" },
   ],
   Website: [
     { name: "mokshasewa.org", handle: "mokshasewa.org" },
-  ],
-  Email: [
-    { name: "Moksha Sewa Mailchimp", handle: "info@mokshasewa.org" },
   ],
 };

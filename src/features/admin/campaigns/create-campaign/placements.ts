@@ -64,16 +64,6 @@ export const PLACEMENT_CHANNELS: PlacementChannel[] = [
     ],
   },
   {
-    name: "X",
-    logos: ["X"],
-    caption: "Real-time engagement and conversations.",
-    connected: false,
-    placements: [
-      { id: "x-post", label: "X Post", ratios: ["16:9", "1:1"], chip: "X Post 16:9" },
-      { id: "x-video", label: "X Video", ratios: ["16:9"], chip: "X Video 16:9" },
-    ],
-  },
-  {
     name: "WhatsApp",
     logos: ["WhatsApp"],
     caption: "Reach your audience directly with broadcasts.",
@@ -102,16 +92,6 @@ export const PLACEMENT_CHANNELS: PlacementChannel[] = [
       { id: "web-hero", label: "Landing Page Hero", ratios: ["16:9"], chip: "Web Hero 16:9" },
       { id: "web-article", label: "Article Banner", ratios: ["1.91:1"], chip: "Web Article 1.91:1" },
       { id: "web-popup", label: "Popup / CTA Banner", ratios: ["1.91:1"], chip: "Web Popup 1.91:1" },
-    ],
-  },
-  {
-    name: "Email",
-    logos: ["Email"],
-    caption: "Email marketing campaigns.",
-    connected: true,
-    placements: [
-      { id: "email-header", label: "Email Header Banner", ratios: ["16:9", "3:1"], chip: "Email Header 16:9" },
-      { id: "email-inline", label: "Inline Image", ratios: ["1:1", "16:9"], chip: "Email Inline 1:1" },
     ],
   },
 ];
