@@ -1,5 +1,5 @@
 "use client";
-import { FaFacebookF, FaGoogle, FaInstagram, FaLinkedinIn, FaWhatsapp, FaYoutube } from "react-icons/fa6";
+import { FaFacebookF, FaGoogle, FaInstagram, FaLinkedinIn, FaWhatsapp, FaYoutube, FaTiktok, FaXTwitter, FaPinterest, FaThreads } from "react-icons/fa6";
 import { cn } from "@/lib/utils/cn";
 import type { Platform } from "../types/content.types";
 import { PLATFORM_META, ALL_PLATFORMS } from "../config/platform-config";
@@ -11,10 +11,15 @@ export function PlatformBadge({ platform, size = "md" }: { platform: Platform; s
       {platform === "instagram" && <FaInstagram />}
       {platform === "facebook" && <FaFacebookF />}
       {platform === "linkedin" && <FaLinkedinIn />}
-      {platform === "google-business" && <FaGoogle />}
-      {platform === "whatsapp" && <FaWhatsapp />}
       {platform === "youtube" && <FaYoutube />}
+      {platform === "tiktok" && <FaTiktok />}
+      {platform === "x" && <FaXTwitter />}
+      {platform === "pinterest" && <FaPinterest />}
+      {platform === "threads" && <FaThreads />}
+      {platform === "whatsapp" && <FaWhatsapp />}
+      {platform === "google-business" && <FaGoogle />}
       {platform === "website" && <span>{meta.icon}</span>}
+      {platform === "email" && <span>{meta.icon}</span>}
     </span>
   );
 }

@@ -119,7 +119,7 @@ export function StepReview({
             <Row label="Daily Budget (INR)" value={`₹ ${draft.dailyBudget}`} />
           </div>
           <div className="grid grid-cols-2 gap-2 border-t border-[#EEF1F5] pt-2">
-            <Row label="Expected Leads" value={draft.expectedLeads} />
+            <Row label="Target Leads" value={draft.targetLeads} />
             <Row label="Target CPL (INR)" value={`₹ ${draft.targetCpl}`} />
           </div>
         </Card>

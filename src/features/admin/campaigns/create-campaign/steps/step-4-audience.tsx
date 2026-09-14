@@ -11,21 +11,18 @@ import {
   Info,
   Languages,
   MapPin,
-  MessageSquare,
-  Plus,
   RefreshCw,
   Tag,
   Upload,
   Users,
 } from "lucide-react";
 import type { CampaignDraft } from "../draft";
-import { Field, GreenToggle, SelectInput, TagField } from "../ui";
+import { Field, GreenToggle, SelectInput, Segmented, TagField } from "../ui";
 import { cn } from "@/lib/utils/cn";
 
 type Setter = <K extends keyof CampaignDraft>(key: K, value: CampaignDraft[K]) => void;
 
 const AGE_TICKS = ["13+", "18", "25", "35", "45", "55", "65+"];
-const TAGS = ["Environment", "River Conservation", "Sustainability", "Volunteers", "NGOs", "Students", "Families"];
 
 const AGE_BREAKDOWN = [
   { name: "18-24 years", value: 28, color: "#155EEF" },
@@ -40,6 +37,8 @@ const GENDER_SPLIT = [
   { name: "Non-binary", value: 2, color: "#A855F7" },
 ];
 
+const LOOKALIKE_OPTIONS = ["1%", "2%", "5%", "10%"];
+
 export function StepAudience({ draft, set }: { draft: CampaignDraft; set: Setter }) {
   return (
     <div className="overflow-hidden rounded-xl border border-[#DDE6F1] bg-white shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
@@ -50,28 +49,38 @@ export function StepAudience({ draft, set }: { draft: CampaignDraft; set: Setter
         <div className="min-w-0 flex-1">
           <h2 className="text-[19px] font-black leading-6 text-[#101A3D]">Target Audience Profile</h2>
           <p className="text-[11.5px] leading-4 text-[#526385]">
-            Define who you want to reach. The right audience helps you create greater impact for a cleaner, healthier tomorrow.
+            Define who you want to reach. The right audience helps create greater impact.
           </p>
         </div>
         <button className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-[#DDE6F1] bg-white px-3 text-[11px] font-semibold text-[#155EEF]">
           <FileText className="size-3.5" />
-          Save as Audience Template
+          Save as Template
         </button>
       </div>
 
-      <div className="grid gap-x-4 gap-y-3 border-b border-[#E7EDF5] p-3.5 xl:grid-cols-[1.05fr_.95fr_1fr]">
-        <Field label="Audience Type" required hint="Define a custom audience based on demographics, interests and behavior.">
-          <SelectInput
-            icon={Users}
-            value="Custom Audience"
-            onChange={(v) => set("audienceType", v)}
-            options={["Custom Audience", "General Public", "Donors", "Volunteers", "Students"]}
-          />
+      <div className="border-b border-[#E7EDF5] p-3.5">
+        <Field label="Audience Type" required hint="Define how you want to build your audience.">
+          <div className="grid grid-cols-5 gap-1.5">
+            {["Custom Audience", "Saved Audience", "Lookalike Audience", "Retargeting", "Broad Audience"].map((type) => (
+              <button
+                key={type}
+                onClick={() => set("audienceType", type)}
+                className={cn(
+                  "h-[38px] rounded-lg border px-2 text-[10px] font-semibold",
+                  draft.audienceType === type ? "border-[#155EEF] bg-[#EFF6FF] text-[#155EEF]" : "border-[#DDE6F1] bg-white text-[#435371]",
+                )}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
         </Field>
+      </div>
 
+      <div className="grid gap-x-4 gap-y-3 border-b border-[#E7EDF5] p-3.5 xl:grid-cols-[1.05fr_.95fr_1fr]">
         <Field label="Age Range" required>
           <div className="px-1 pt-1">
-            <div className="mb-2 flex justify-end text-[11px] font-semibold text-[#687797]">15 - 45 years</div>
+            <div className="mb-2 flex justify-end text-[11px] font-semibold text-[#687797]">{draft.ageMin} - {draft.ageMax} years</div>
             <span className="relative block h-1.5 rounded-full bg-[#E7EDF5]">
               <i className="absolute inset-y-0 left-[22%] right-[34%] rounded-full bg-[#155EEF]" />
               <i className="absolute left-[22%] top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#155EEF] shadow" />
@@ -106,51 +115,55 @@ export function StepAudience({ draft, set }: { draft: CampaignDraft; set: Setter
           </div>
         </Field>
 
-        <Field label="Target Cities / Regions" required>
-          <TagField icon={MapPin} tags={["All India", "Uttarakhand", "Uttar Pradesh", "Delhi NCR", "Bihar"]} onChange={(v) => set("regions", v)} addLabel="Add location" />
+        <Field label="Device Preference">
+          <Segmented
+            value={draft.devicePreference}
+            onChange={(v) => set("devicePreference", v)}
+            options={[
+              { id: "All", label: "All Devices" },
+              { id: "Mobile", label: "Mobile" },
+              { id: "Desktop", label: "Desktop" },
+              { id: "Tablet", label: "Tablet" },
+            ]}
+          />
+        </Field>
+
+        <Field label="Target Locations" required>
+          <TagField icon={MapPin} tags={draft.regions} onChange={(v) => set("regions", v)} addLabel="Add location" />
         </Field>
 
         <Field label="Languages" required>
-          <TagField icon={Languages} tags={["Hindi", "English", "Regional (e.g. Bengali)"]} onChange={(v) => set("languages", v)} addLabel="Add language" />
+          <TagField icon={Languages} tags={draft.languages} onChange={(v) => set("languages", v)} addLabel="Add language" />
         </Field>
 
-        <Field label="Device Preference">
-          <div className="grid grid-cols-4 gap-1.5">
-            {["All Devices", "Mobile", "Desktop", "Tablet"].map((item) => (
-              <button
-                key={item}
-                onClick={() => set("devicePreference", item)}
-                className={cn(
-                  "h-[38px] rounded-lg border px-2 text-[10.5px] font-semibold",
-                  (draft.devicePreference === item || (item === "All Devices" && draft.devicePreference === "All Devices"))
-                    ? "border-[#155EEF] bg-[#EFF6FF] text-[#155EEF]"
-                    : "border-[#DDE6F1] bg-white text-[#435371]",
-                )}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
+        <Field label="Exclude Locations" optional>
+          <TagField icon={Ban} tags={draft.excludedRegions} onChange={(v) => set("excludedRegions", v)} addLabel="Add exclusion" chevron={false} />
         </Field>
 
+        <Field label="Education" optional>
+          <SelectInput value={draft.education} onChange={(v) => set("education", v)} options={["All", "High School", "Bachelor's", "Master's", "Doctorate"]} />
+        </Field>
+
+        <Field label="Job Title" optional>
+          <SelectInput value={draft.jobTitle} onChange={(v) => set("jobTitle", v)} options={["All", "Marketing Manager", "Business Owner", "IT Professional", "Student", "NGO Worker"]} />
+        </Field>
+
+        <Field label="Industry" optional>
+          <SelectInput value={draft.industry} onChange={(v) => set("industry", v)} options={["All", "Technology", "Healthcare", "Education", "Non-Profit", "Government"]} />
+        </Field>
+      </div>
+
+      <div className="grid gap-x-4 gap-y-3 border-b border-[#E7EDF5] p-3.5">
         <Field label="Interests">
-          <TagField icon={Heart} tags={["Environment", "River Conservation", "Sustainability", "Climate Action", "NGOs", "Social Good"]} onChange={(v) => set("interests", v)} addLabel="Add interest" />
+          <TagField icon={Heart} tags={draft.interests} onChange={(v) => set("interests", v)} addLabel="Add interest" />
+        </Field>
+
+        <Field label="Behaviors">
+          <TagField icon={Tag} tags={draft.behaviors} onChange={(v) => set("behaviors", v)} addLabel="Add behavior" />
         </Field>
 
         <Field label="Audience Segments">
-          <TagField icon={Users} tags={["Students", "Families", "Volunteers", "NGO Followers", "Environmental Enthusiasts"]} onChange={(v) => set("segments", v)} addLabel="Add segment" />
-        </Field>
-
-        <Field label="Platform-Specific Notes">
-          <div className="relative rounded-lg border border-[#DDE6F1] bg-white">
-            <MessageSquare className="absolute left-2.5 top-2.5 size-4 text-[#155EEF]" />
-            <textarea
-              rows={3}
-              placeholder="Tailor messaging for each platform. E.g. inspirational videos for Instagram, detailed information for LinkedIn, community stories for Facebook."
-              className="h-[70px] w-full resize-none rounded-lg bg-transparent pb-5 pl-8 pr-3 pt-2 text-[11px] leading-[15px] text-[#34415F] outline-none placeholder:text-[#8090AD]"
-            />
-            <span className="absolute bottom-1.5 right-2.5 text-[10px] text-[#687797]">0/300</span>
-          </div>
+          <TagField icon={Users} tags={draft.segments} onChange={(v) => set("segments", v)} addLabel="Add segment" />
         </Field>
       </div>
 
@@ -158,7 +171,7 @@ export function StepAudience({ draft, set }: { draft: CampaignDraft; set: Setter
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[#DDE6F1] bg-white px-3 py-2">
           <Tag className="size-5 shrink-0 text-[#0AA673]" />
           <b className="mr-2 text-[12px] text-[#132044]">Suggested Tags</b>
-          {TAGS.map((tag, index) => (
+          {["Environment", "River Conservation", "Sustainability", "Climate Action", "Volunteers", "NGOs", "Students"].map((tag, index) => (
             <span
               key={tag}
               className={cn(
@@ -171,35 +184,45 @@ export function StepAudience({ draft, set }: { draft: CampaignDraft; set: Setter
               {tag}
             </span>
           ))}
-          <button className="ml-auto flex h-7 items-center gap-1 rounded-full border border-[#DDE6F1] px-3 text-[10.5px] font-semibold text-[#155EEF]">
-            <Plus className="size-3.5" />
-            Add tag
-          </button>
         </div>
       </div>
 
       <div className="grid gap-2 border-b border-[#E7EDF5] p-3.5 xl:grid-cols-4">
-        <AudienceBox icon={Users} title="Custom Audience" caption="Upload your existing audience data to reach specific people." on={true}>
+        <AudienceBox icon={Users} title="Custom Audience" caption="Upload existing audience data." on={true}>
           <button className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[#9BC2FF] bg-white text-[11px] font-semibold text-[#155EEF]">
             <Upload className="size-4" />
             Upload Audience List
           </button>
           <p className="mt-2 text-center text-[9.5px] text-[#7A89A4]">Supports CSV, TXT (Max 10 MB)</p>
-          <button className="mt-1 block w-full text-center text-[10px] font-semibold text-[#155EEF]">Download template</button>
         </AudienceBox>
 
-        <AudienceBox icon={RefreshCw} title="Retargeting" caption="Reach people who have previously engaged with your content." on={draft.retargeting} onToggle={() => set("retargeting", !draft.retargeting)}>
-          <CheckRows rows={["Website visitors (last 180 days)", "Video viewers (25% or more)", "Engaged social media users", "Past campaign audience"]} />
+        <AudienceBox icon={RefreshCw} title="Retargeting" caption="Reach people who previously engaged." on={draft.retargeting} onToggle={() => set("retargeting", !draft.retargeting)}>
+          <CheckRows rows={["Website visitors (last 180 days)", "Video viewers (25%+)", "Engaged social users", "Past campaign audience"]} />
         </AudienceBox>
 
-        <AudienceBox icon={Users} title="Lookalike Audience" caption="Find new people similar to your existing audience." on={draft.lookalike} onToggle={() => set("lookalike", !draft.lookalike)}>
+        <AudienceBox icon={Users} title="Lookalike Audience" caption="Find new people similar to existing audience." on={draft.lookalike} onToggle={() => set("lookalike", !draft.lookalike)}>
           <MiniSelect label="Source Audience" value="Website Visitors" />
-          <MiniSelect label="Similarity" value="1% (Recommended)" />
-          <p className="mt-1 text-[9px] text-[#7A89A4]">Find people most similar to your source audience.</p>
+          <div className="mt-2">
+            <span className="mb-1 block text-[10px] font-semibold text-[#34415F]">Similarity</span>
+            <div className="flex gap-1">
+              {LOOKALIKE_OPTIONS.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => set("lookalikePercent", opt)}
+                  className={cn(
+                    "h-7 flex-1 rounded-md border text-[10px] font-semibold",
+                    draft.lookalikePercent === opt ? "border-[#155EEF] bg-[#EFF6FF] text-[#155EEF]" : "border-[#DDE6F1] text-[#526385]",
+                  )}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
         </AudienceBox>
 
         <AudienceBox icon={Ban} title="Excluded Audiences" caption="Exclude people who should not see this campaign." on={true}>
-          <TagField tags={["Existing Donors", "Internal Team", "Past Converters", "Competitors"]} onChange={(v) => set("excluded", v)} addLabel="Add exclusion" chevron={false} />
+          <TagField tags={draft.excluded} onChange={(v) => set("excluded", v)} addLabel="Add exclusion" chevron={false} />
         </AudienceBox>
       </div>
 

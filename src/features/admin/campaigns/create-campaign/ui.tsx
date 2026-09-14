@@ -188,7 +188,7 @@ export function SelectInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className={cn(
-          "min-w-0 flex-1 cursor-pointer appearance-none bg-transparent pr-4 outline-none",
+          "min-w-0 flex-1 cursor-pointer appearance-none bg-transparent py-2 pr-4 pl-0.5 text-left outline-none",
           tone === "danger" && "font-semibold text-[#E11D28]",
         )}
       >
@@ -247,7 +247,7 @@ export function TagField({
   renderIcon,
   addLabel,
 }: {
-  tags: string[];
+  tags?: string[];
   onChange: (next: string[]) => void;
   placeholder?: string;
   icon?: typeof Flag;
@@ -256,10 +256,11 @@ export function TagField({
   /** Renders a "+ Add tag" affordance in place of the plain placeholder. */
   addLabel?: string;
 }) {
+  const safeTags = tags ?? [];
   const [draft, setDraft] = useState("");
   const commit = () => {
     const value = draft.trim();
-    if (value && !tags.includes(value)) onChange([...tags, value]);
+    if (value && !safeTags.includes(value)) onChange([...safeTags, value]);
     setDraft("");
   };
   return (
@@ -270,7 +271,7 @@ export function TagField({
       )}
     >
       {Icon && <Icon className="size-3.5 shrink-0 text-[#9CA3AF]" />}
-      {tags.map((tag) => (
+      {safeTags.map((tag) => (
         <span
           key={tag}
           className="flex items-center gap-1 rounded-md border border-[#E6E8F0] bg-[#F8FAFC] px-1.5 py-0.5 text-[10px] font-medium text-[#374151]"
@@ -280,7 +281,7 @@ export function TagField({
           <button
             type="button"
             aria-label={`Remove ${tag}`}
-            onClick={() => onChange(tags.filter((item) => item !== tag))}
+            onClick={() => onChange(safeTags.filter((item) => item !== tag))}
             className="text-[#9CA3AF] transition-colors hover:text-[#E11D28]"
           >
             <X className="size-2.5" />
@@ -297,10 +298,10 @@ export function TagField({
               event.preventDefault();
               commit();
             }
-            if (event.key === "Backspace" && !draft && tags.length) onChange(tags.slice(0, -1));
+            if (event.key === "Backspace" && !draft && safeTags.length) onChange(safeTags.slice(0, -1));
           }}
           onBlur={commit}
-          placeholder={addLabel ?? (tags.length ? "" : placeholder)}
+          placeholder={addLabel ?? (safeTags.length ? "" : placeholder)}
           className="min-w-0 flex-1 bg-transparent text-[11px] outline-none placeholder:text-[#9CA3AF]"
         />
       </span>

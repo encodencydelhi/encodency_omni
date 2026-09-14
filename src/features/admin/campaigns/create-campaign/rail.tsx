@@ -7,7 +7,6 @@ import {
   Circle,
   CircleCheck,
   ExternalLink,
-  Filter,
   Flag,
   Globe2,
   IndianRupee,
@@ -39,7 +38,7 @@ export function CampaignRail({ draft, step }: { draft: CampaignDraft; step: numb
           </span>
           <div className="min-w-0 flex-1">
             <b className="block text-[12px] font-bold text-[#111827]">
-              {step >= 3 ? "Quick Launch Tips" : "Quick Tips"}
+              {step >= 6 ? "Quick Launch Tips" : "Quick Tips"}
             </b>
             <small className="block text-[9.5px] leading-[13px] text-[#8791A4]">{rail.tipsCaption}</small>
           </div>
@@ -69,7 +68,7 @@ export function CampaignRail({ draft, step }: { draft: CampaignDraft; step: numb
           </span>
           <div className="min-w-0 flex-1">
             <b className="block text-[12px] font-bold text-[#111827]">Readiness Checklist</b>
-            {step === 3 && (
+            {step === 4 && (
               <small className="block text-[9.5px] leading-[13px] text-[#8791A4]">
                 Complete all steps to launch your campaign.
               </small>
@@ -89,8 +88,6 @@ export function CampaignRail({ draft, step }: { draft: CampaignDraft; step: numb
                 strokeDasharray={`${(done / total) * 100}, 100`}
               />
             </svg>
-            {/* One figure only — the ring previously showed the count and the
-                ratio sat beside it, which read as a duplicate. */}
             <span className="absolute inset-0 grid place-items-center text-[9px] font-bold text-[#27334E]">
               {done}/{total}
             </span>
@@ -118,25 +115,21 @@ export function CampaignRail({ draft, step }: { draft: CampaignDraft; step: numb
           <div>
             <b className="block text-[12px] font-bold text-[#111827]">Performance Estimate</b>
             <small className="block text-[9.5px] leading-[13px] text-[#8791A4]">
-              {step === 1
-                ? "Based on similar campaigns in your workspace."
-                : step === 2
-                  ? "Based on your current goals and budget."
-                  : step === 3
-                    ? "Based on your current channel and placement selection."
-                    : step === 4
-                      ? "Based on your campaign and audience settings."
-                      : step === 5
-                        ? "Based on your content, channels and schedule."
-                        : "Based on your campaign settings."}
+              {step <= 2
+                ? "Based on your current goals and budget."
+                : step <= 4
+                  ? "Based on your channel and audience selection."
+                  : step <= 6
+                    ? "Based on your content, channels and tracking."
+                    : "Based on your complete campaign settings."}
             </small>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-1 text-center">
           {[
-            { icon: Users, value: step === 4 ? "12.5M - 18.3M" : "50K - 120K", label: step === 4 ? "Estimated Reach" : "Estimated Reach" },
-            { icon: MousePointerClick, value: step === 4 ? "250K - 520K" : "2K - 6K", label: "Estimated Clicks" },
-            { icon: step === 2 ? Filter : BarChart3, value: step === 4 ? "15K - 42K" : step === 3 ? "500 - 1,500" : "500", label: "Estimated Leads" },
+            { icon: Users, value: step >= 4 ? "12.5M - 18.3M" : "50K - 120K", label: "Estimated Reach" },
+            { icon: MousePointerClick, value: step >= 4 ? "250K - 520K" : "2K - 6K", label: "Estimated Clicks" },
+            { icon: BarChart3, value: step >= 4 ? "15K - 42K" : "500", label: "Estimated Leads" },
           ].map(({ icon: Icon, value, label }) => (
             <div key={label} className="min-w-0">
               <Icon className="mx-auto size-4 text-[#155EEF]" />
@@ -151,10 +144,9 @@ export function CampaignRail({ draft, step }: { draft: CampaignDraft; step: numb
 }
 
 function SummaryCard({ draft, step }: { draft: CampaignDraft; step: number }) {
-  /* Budget, duration and channels are only committed on later steps, so the
-     summary reports them as unset until the user has been there. */
   const rows = [
-    { icon: Target, label: "Objective", value: draft.type, muted: false },
+    { icon: Target, label: "Mode", value: draft.campaignMode, muted: false },
+    { icon: Target, label: "Objective", value: draft.objective, muted: false },
     { icon: Target, label: "Project", value: draft.client, muted: false },
     {
       icon: IndianRupee,
@@ -184,8 +176,6 @@ function SummaryCard({ draft, step }: { draft: CampaignDraft; step: number }) {
       </div>
       <div className="flex gap-2.5">
         <span className="relative h-[118px] w-[82px] shrink-0 overflow-hidden rounded-lg">
-          {/* Top-left of the square creative, where the "Save Rivers, Save
-              Lives 2025 / CLEAN RIVERS, BRIGHTER TOMORROW" lockup sits. */}
           <Image
             src="/campaigns/save-rivers/square.png"
             alt=""
@@ -210,7 +200,7 @@ function SummaryCard({ draft, step }: { draft: CampaignDraft; step: number }) {
           <b className="block text-[13px] font-bold leading-4 text-[#111827]">{draft.name}</b>
           <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-[#FFF0F1] px-1.5 py-0.5 text-[10px] font-semibold text-[#E11D28]">
             <Megaphone className="size-2.5" />
-            {draft.type}
+            {draft.objective}
           </span>
           <dl className="mt-1.5 space-y-[3px]">
             {rows.map(({ icon: Icon, label, value, muted }) => (

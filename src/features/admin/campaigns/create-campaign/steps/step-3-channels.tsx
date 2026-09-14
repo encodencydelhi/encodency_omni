@@ -1,39 +1,32 @@
 "use client";
 
-import { ArrowRight, Check, ChevronUp, CircleCheck, CircleHelp, Crop, Info, LayoutGrid, Scan, Settings, X } from "lucide-react";
+import { ArrowRight, Check, CircleCheck, CircleHelp, Crop, Info, LayoutGrid, Scan, Settings, X } from "lucide-react";
 import type { CampaignDraft } from "../draft";
 import { PLACEMENT_CHANNELS, PLACEMENT_INDEX } from "../placements";
+import { PLATFORM_ACCOUNTS } from "../draft";
 import { ChannelLogo } from "../../../shared/channel-logo";
 import { cn } from "@/lib/utils/cn";
 
 type Setter = <K extends keyof CampaignDraft>(key: K, value: CampaignDraft[K]) => void;
 
 const AUTO_RESIZE = [
-  {
-    icon: Crop,
-    title: "Smart Auto-Crop",
-    text: "Images and videos are automatically cropped to fit each channel's aspect ratio while keeping the key subject in focus.",
-  },
-  {
-    icon: Scan,
-    title: "Safe Area Protection",
-    text: "We keep important elements (text, logos, faces) within safe zones to prevent cutting on different devices.",
-  },
-  {
-    icon: Settings,
-    title: "Channel-Specific Adaptation",
-    text: "Each platform gets optimized versions with the right format, file size and quality for best performance.",
-  },
+  { icon: Crop, title: "Smart Auto-Crop", text: "Images and videos automatically cropped to fit each channel's aspect ratio." },
+  { icon: Scan, title: "Safe Area Protection", text: "Keep important elements within safe zones to prevent cutting on different devices." },
+  { icon: Settings, title: "Channel-Specific Adaptation", text: "Each platform gets optimized versions with the right format and quality." },
 ] as const;
 
 export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter }) {
-  const toggle = (id: string) =>
-    set(
-      "placements",
-      draft.placements.includes(id)
-        ? draft.placements.filter((item) => item !== id)
-        : [...draft.placements, id],
-    );
+  const togglePlacement = (id: string) =>
+    set("placements", draft.placements.includes(id) ? draft.placements.filter((item) => item !== id) : [...draft.placements, id]);
+
+  const toggleChannel = (name: string) =>
+    set("channels", draft.channels.includes(name) ? draft.channels.filter((item) => item !== name) : [...draft.channels, name]);
+
+  const toggleAccount = (platform: string, account: string) => {
+    const current = draft.connectedAccounts[platform] ?? [];
+    const next = current.includes(account) ? current.filter((a) => a !== account) : [...current, account];
+    set("connectedAccounts", { ...draft.connectedAccounts, [platform]: next });
+  };
 
   return (
     <section className="rounded-xl border border-[#E6E8F0] bg-white p-3.5 shadow-[0_1px_3px_rgb(15_23_42/0.04)]">
@@ -42,10 +35,9 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
           <LayoutGrid className="size-[18px] text-[#4F46E5]" />
         </span>
         <div className="min-w-0 flex-1">
-          <b className="block text-[14px] font-bold leading-5 text-[#111827]">Channels &amp; Placements</b>
+          <b className="block text-[14px] font-bold leading-5 text-[#111827]">Channels, Accounts &amp; Placements</b>
           <small className="block text-[10.5px] text-[#8791A4]">
-            Select the channels you want to use and choose specific placements, media formats and aspect ratios for
-            your campaign.
+            Select channels, connect accounts and choose specific placements for your campaign.
           </small>
         </div>
         <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-lg bg-[#EEF2FF] px-2.5 text-[10.5px] font-semibold text-[#4F46E5]">
@@ -54,8 +46,32 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
         </button>
       </div>
 
-      <div className="grid gap-2.5 lg:grid-cols-3">
-        {PLACEMENT_CHANNELS.map((channel) => (
+      <div className="mb-3">
+        <p className="mb-2 text-[11px] font-semibold text-[#374151]">Select Channels</p>
+        <div className="flex flex-wrap gap-1.5">
+          {PLACEMENT_CHANNELS.map((ch) => {
+            const active = draft.channels.includes(ch.name);
+            return (
+              <button
+                key={ch.name}
+                type="button"
+                onClick={() => toggleChannel(ch.name)}
+                className={cn(
+                  "flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[10.5px] font-semibold transition-colors",
+                  active ? "border-[#2563EB] bg-[#EFF6FF] text-[#2563EB]" : "border-[#DDE6F1] bg-white text-[#526385] hover:border-[#CBD5E1]",
+                )}
+              >
+                <ChannelLogo channel={ch.logos[0]} className="size-4" />
+                {ch.name}
+                {ch.connected && <i className="size-1.5 rounded-full bg-[#0AA673]" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid gap-2.5 lg:grid-cols-2 xl:grid-cols-3">
+        {PLACEMENT_CHANNELS.filter((ch) => draft.channels.includes(ch.name)).map((channel) => (
           <div key={channel.name} className="flex flex-col rounded-xl border border-[#E6E8F0] bg-white p-3">
             <div className="flex items-center gap-2">
               <span className="flex shrink-0 -space-x-1.5">
@@ -69,12 +85,34 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
                   Connected
                 </i>
               )}
-              <ChevronUp className="size-3.5 shrink-0 text-[#9CA3AF]" />
             </div>
             <p className="mt-1 text-[10.5px] leading-[14px] text-[#8791A4]">{channel.caption}</p>
 
             <div className="mt-2 rounded-lg bg-[#F8FAFC] p-2">
-              <p className="mb-1.5 text-[10.5px] font-semibold text-[#374151]">Select Placements</p>
+              <p className="mb-1.5 text-[10px] font-semibold text-[#374151]">Connected Accounts</p>
+              <div className="space-y-1">
+                {(PLATFORM_ACCOUNTS[channel.name] ?? []).map((account) => {
+                  const selected = (draft.connectedAccounts[channel.name] ?? []).includes(account.handle);
+                  return (
+                    <button
+                      key={account.handle}
+                      type="button"
+                      onClick={() => toggleAccount(channel.name, account.handle)}
+                      className="flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left transition-colors hover:bg-white"
+                    >
+                      <span className={cn("grid size-3.5 shrink-0 place-items-center rounded border transition-colors", selected ? "border-[#2563EB] bg-[#2563EB]" : "border-[#CBD5E1] bg-white")}>
+                        {selected && <Check className="size-2.5 text-white" />}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-[10px] text-[#374151]">{account.name}</span>
+                      <span className="text-[9px] text-[#8791A4]">{account.handle}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-2 rounded-lg bg-[#F8FAFC] p-2">
+              <p className="mb-1.5 text-[10px] font-semibold text-[#374151]">Placements</p>
               <div className="space-y-1">
                 {channel.placements.map((placement) => {
                   const active = draft.placements.includes(placement.id);
@@ -82,25 +120,16 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
                     <button
                       key={placement.id}
                       type="button"
-                      onClick={() => toggle(placement.id)}
-                      aria-pressed={active}
+                      onClick={() => togglePlacement(placement.id)}
                       className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left transition-colors hover:bg-white"
                     >
-                      <span
-                        className={cn(
-                          "grid size-3.5 shrink-0 place-items-center rounded border transition-colors",
-                          active ? "border-[#2563EB] bg-[#2563EB]" : "border-[#CBD5E1] bg-white",
-                        )}
-                      >
+                      <span className={cn("grid size-3.5 shrink-0 place-items-center rounded border transition-colors", active ? "border-[#2563EB] bg-[#2563EB]" : "border-[#CBD5E1] bg-white")}>
                         {active && <Check className="size-2.5 text-white" />}
                       </span>
                       <span className="min-w-0 flex-1 truncate text-[10.5px] text-[#374151]">{placement.label}</span>
                       <span className="flex shrink-0 gap-1">
                         {placement.ratios.map((ratio) => (
-                          <i
-                            key={ratio}
-                            className="rounded bg-white px-1.5 py-0.5 text-[9px] font-semibold not-italic text-[#52617D] shadow-[0_1px_2px_rgb(15_23_42/0.06)]"
-                          >
+                          <i key={ratio} className="rounded bg-white px-1.5 py-0.5 text-[9px] font-semibold not-italic text-[#52617D] shadow-[0_1px_2px_rgb(15_23_42/0.06)]">
                             {ratio}
                           </i>
                         ))}
@@ -109,7 +138,6 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
                   );
                 })}
               </div>
-
               {channel.note && (
                 <p className="mt-2 flex items-start gap-1.5 rounded-md bg-[#EFF6FF] px-2 py-1.5 text-[9.5px] leading-[13px] text-[#33507A]">
                   <Info className="mt-px size-3 shrink-0 text-[#1975E7]" />
@@ -133,9 +161,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
           </span>
           <div>
             <b className="block text-[12px] font-bold text-[#111827]">Placement Compatibility &amp; Auto-Resize</b>
-            <small className="block text-[10px] text-[#8791A4]">
-              We&apos;ll automatically optimize your media for each selected placement.
-            </small>
+            <small className="block text-[10px] text-[#8791A4]">We&apos;ll automatically optimize your media for each selected placement.</small>
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
@@ -156,36 +182,19 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
       <div className="mt-2.5 rounded-xl border border-[#CDECE1] bg-[#F7FDFA] p-3">
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <CircleCheck className="size-4 shrink-0 text-[#0AA673]" />
-          <b className="text-[12px] font-bold text-[#111827]">
-            Selected Placements ({draft.placements.length})
-          </b>
-          <small className="min-w-0 flex-1 text-[10px] text-[#8791A4]">
-            These placements will be used for your campaign. You can modify them anytime.
-          </small>
-          <button
-            onClick={() => set("placements", [])}
-            className="shrink-0 text-[10.5px] font-semibold text-[#2563EB]"
-          >
-            Clear All
-          </button>
+          <b className="text-[12px] font-bold text-[#111827]">Selected Placements ({draft.placements.length})</b>
+          <small className="min-w-0 flex-1 text-[10px] text-[#8791A4]">These placements will be used for your campaign.</small>
+          <button onClick={() => set("placements", [])} className="shrink-0 text-[10.5px] font-semibold text-[#2563EB]">Clear All</button>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {draft.placements.map((id) => {
             const meta = PLACEMENT_INDEX.get(id);
             if (!meta) return null;
             return (
-              <span
-                key={id}
-                className="flex items-center gap-1.5 rounded-lg border border-[#E6E8F0] bg-white px-2 py-1 text-[10px] font-medium text-[#374151]"
-              >
+              <span key={id} className="flex items-center gap-1.5 rounded-lg border border-[#E6E8F0] bg-white px-2 py-1 text-[10px] font-medium text-[#374151]">
                 <ChannelLogo channel={meta.logo} className="size-3.5 shrink-0" />
                 {meta.chip}
-                <button
-                  type="button"
-                  aria-label={`Remove ${meta.chip}`}
-                  onClick={() => toggle(id)}
-                  className="text-[#9CA3AF] transition-colors hover:text-[#E11D28]"
-                >
+                <button type="button" onClick={() => togglePlacement(id)} className="text-[#9CA3AF] transition-colors hover:text-[#E11D28]">
                   <X className="size-2.5" />
                 </button>
               </span>

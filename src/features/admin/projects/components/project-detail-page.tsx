@@ -123,12 +123,12 @@ function StatCard({ item }: { item: [LucideIcon | IconType, string, string, stri
     <div className="flex min-w-0 items-start gap-3 rounded-[8px] border border-[#e2e8f1] bg-white px-3.5 py-3 shadow-[0_1px_3px_rgba(20,35,65,.03)]">
       <IconBadge Icon={Icon} tone={tone} />
       <div className="min-w-0">
-        <div className="truncate text-[10px] font-medium text-[#66738c]">{label}</div>
+        <div className="truncate text-[11px] font-semibold text-[#66738c]">{label}</div>
         <div className="mt-0.5 flex items-baseline gap-2">
-          <strong className="text-[20px] font-extrabold leading-none tracking-[-.5px] text-[#101d49]">{value}</strong>
-          {trend && <span className={`text-[9px] font-bold ${trend.includes("↓") ? "text-[#e84b64]" : "text-[#19aa79]"}`}>{trend}</span>}
+          <strong className="text-[20px] font-semibold leading-none tracking-[-.5px] text-[#101d49]">{value}</strong>
+          {trend && <span className={`text-[11px] font-semibold ${trend.includes("↓") ? "text-[#e84b64]" : "text-[#19aa79]"}`}>{trend}</span>}
         </div>
-        <div className="mt-1 text-[9px] text-[#8994a8]">{note}</div>
+        <div className="mt-1 text-[11px] font-semibold text-[#8994a8]">{note}</div>
       </div>
     </div>
   );
@@ -137,8 +137,8 @@ function StatCard({ item }: { item: [LucideIcon | IconType, string, string, stri
 function ClientHeader({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) {
   return (
     <>
-      <div className="mb-2 text-[10px] text-[#6e7b94]">
-        <span>Clients</span><ChevronRight className="mx-1 inline" size={10}/><b className="text-[#233050]">Moksha Sewa</b>
+      <div className="mb-2 text-[11px] font-semibold text-[#6e7b94]">
+        <span>Clients</span><ChevronRight className="mx-1 inline" size={11}/><b className="font-semibold text-[#233050]">Moksha Sewa</b>
       </div>
 
       <section className="">
@@ -149,11 +149,11 @@ function ClientHeader({ activeTab, setActiveTab }: { activeTab: string; setActiv
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="m-0 text-[23px] font-extrabold tracking-[-.7px] text-[#111d4a]">Moksha Sewa</h1>
-                <span className="rounded-full bg-[#e2faf0] px-2.5 py-1 text-[9px] font-bold text-[#1aad7a]">● Active</span>
+                <h1 className="m-0 text-[23px] font-semibold tracking-[-.7px] text-[#111d4a]">Moksha Sewa</h1>
+                <span className="rounded-full bg-[#e2faf0] px-2.5 py-1 text-[11px] font-semibold text-[#1aad7a]">● Active</span>
               </div>
-              <p className="mt-1 text-[11px] text-[#66748d]">End-to-end support for dignified funeral services.</p>
-              <div className="mt-5 flex flex-wrap gap-x-7 gap-y-2 text-[9px] text-[#65728b]">
+              <p className="mt-1 text-[11px] font-semibold text-[#66748d]">End-to-end support for dignified funeral services.</p>
+              <div className="mt-5 flex flex-wrap gap-x-7 gap-y-2 text-[11px] font-semibold text-[#65728b]">
                 <span className="flex items-center gap-2"><IconBadge Icon={Building2} tone="purple" size={18}/><span>NGO / Social Impact</span></span>
                 <span className="flex items-center gap-2"><IconBadge Icon={MapPin} tone="blue" size={18}/><span>New Delhi, India</span></span>
                 <span className="flex items-center gap-2"><IconBadge Icon={Link2} tone="purple" size={12}/><span className="font-semibold text-[#5c35d9]">https://mokshasewa.org</span></span>
@@ -162,7 +162,7 @@ function ClientHeader({ activeTab, setActiveTab }: { activeTab: string; setActiv
           </div>
 
           <div className="flex shrink-0 gap-2">
-            <button className="flex h-9 items-center gap-1.5 rounded-md border border-[#dce3ed] bg-white px-3 text-[10px] font-semibold text-[#35415c]"><Pencil size={13}/>Edit Client</button>
+            <button className="flex h-9 items-center gap-1.5 rounded-md border border-[#dce3ed] bg-white px-3 text-[11px] font-semibold text-[#35415c]"><Pencil size={13}/>Edit Client</button>
             <button className="grid h-9 w-9 place-items-center rounded-md border border-[#dce3ed] bg-white"><MoreVertical size={15}/></button>
           </div>
 
@@ -175,7 +175,7 @@ function ClientHeader({ activeTab, setActiveTab }: { activeTab: string; setActiv
 
       <div className="mt-2 flex overflow-x-auto rounded-[8px] border border-[#dfe5ed] bg-white">
         {tabs.map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)} className={`relative flex h-[37px] min-w-[140px] shrink-0 items-center justify-center px-4 text-[10px] font-medium ${activeTab === tab ? "font-bold text-[#5632db] after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-[#5a32e4]" : "text-[#5d6981]"}`}>
+          <button key={tab} onClick={() => setActiveTab(tab)} className={`relative flex h-[37px] min-w-[140px] shrink-0 items-center justify-center px-4 text-[11px] font-semibold ${activeTab === tab ? "font-semibold text-[#5632db] after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-[#5a32e4]" : "text-[#5d6981]"}`}>
             {tab}
           </button>
         ))}
@@ -190,9 +190,14 @@ function OverviewView() {
       <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-6">{overviewStats.map((x,i)=><StatCard item={x} key={i}/>)}</div>
       <div className="mt-2.5 grid grid-cols-1 gap-2.5 xl:grid-cols-[1.45fr_1fr_.8fr]">
         <Panel title="About Moksha Sewa" action="Edit">
-          <p className="text-[10px] leading-[1.5] text-[#6c7890]">Moksha Sewa works towards providing dignified funeral services for the underprivileged and communities. Our mission is to serve humanity with compassion, respect and dignity. We organize cremation services, support families in need, and create awareness about the importance of dignified end-of-life care. Through volunteers and donations, we strive to ensure that every individual receives a respectful farewell, regardless of their socio-economic background.</p>
+          <p className="text-[11px] font-semibold leading-[1.5] text-[#6c7890]">Moksha Sewa works towards providing dignified funeral services for the underprivileged and communities. Our mission is to serve humanity with compassion, respect and dignity. We organize cremation services, support families in need, and create awareness about the importance of dignified end-of-life care. Through volunteers and donations, we strive to ensure that every individual receives a respectful farewell, regardless of their socio-economic background.</p>
           <div className="mt-3 grid grid-cols-4 gap-2">
-            {[["♡","Compassion","Care for every life"],["♧","Service","Support communities"],["⌁","Dignity","Respect in every farewell"],["☆","Awareness","A kinder, more humane society"]].map(x=><div key={x[1]} className="text-center"><span className="mx-auto grid h-9 w-9 place-items-center rounded-full bg-[#f3efff] text-[19px] text-[#6535dc]">{x[0]}</span><b className="mt-1 block text-[9px] text-[#33405d]">{x[1]}</b><small className="text-[9px] text-[#8993a5]">{x[2]}</small></div>)}
+            {[
+              ["♡","Compassion","Care for every life"],
+              ["♧","Service","Support communities"],
+              ["⌁","Dignity","Respect in every farewell"],
+              ["☆","Awareness","A kinder, humane society"]
+            ].map(x=><div key={x[1]} className="grid min-h-[86px] place-items-center text-center"><span className="mx-auto grid h-9 w-9 place-items-center rounded-full bg-[#f3efff] text-[19px] text-[#6535dc]">{x[0]}</span><b className="mt-1 block text-[11px] font-semibold text-[#33405d]">{x[1]}</b><small className="mt-0.5 block max-w-[110px] text-[11px] font-semibold leading-[1.35] text-[#8993a5]">{x[2]}</small></div>)}
           </div>
         </Panel>
         <Panel title="Primary Contacts" action="+ Add Contact">
@@ -203,7 +208,7 @@ function OverviewView() {
               ["RK","Rahul Kumar","Volunteer Coordinator","rahul@mokshasewa.org","+91 98991 22334"],
               ["SN","Sneha Nair","Communications Lead","sneha@mokshasewa.org","+91 98118 77665"],
             ].map(r=><div key={r[0]} className="grid grid-cols-[34px_1fr_1fr_1.2fr] items-center border-b border-[#eef1f5] px-2 py-2 last:border-0">
-              <Avatar text={r[0]!}/><b className="text-[9px]">{r[1]}</b><span className="text-[9px] text-[#7d8799]">{r[2]}</span><div className="flex flex-col"><span className="text-[9px] text-[#5e35d6]">{r[3]}</span><span className="text-[9px] text-[#7d8799]">{r[4]}</span></div>
+              <Avatar text={r[0]!}/><b className="text-[11px] font-semibold">{r[1]}</b><span className="text-[11px] font-semibold text-[#7d8799]">{r[2]}</span><div className="flex flex-col"><span className="text-[11px] font-semibold text-[#5e35d6]">{r[3]}</span><span className="text-[11px] font-semibold text-[#7d8799]">{r[4]}</span></div>
             </div>)}
           </div>
         </Panel>
@@ -211,8 +216,9 @@ function OverviewView() {
           <Goal Icon={Heart} title="Increase Donations" desc="Drive consistent monthly donations" tone="rose"/>
           <Goal Icon={UsersRound} title="Build Awareness" desc="Reach more people about our mission" tone="purple"/>
           <Goal Icon={UserPlus} title="Recruit Volunteers" desc="Grow our volunteer community" tone="blue"/>
-          <Goal Icon={BarChart3} title="Increase Website Traffic" desc="Improve organic and direct traffic" tone="green"/>
-          <Goal Icon={MapPin} title="Improve Local Visibility" desc="Rank higher in Delhi NCR for relevant searches" tone="orange"/>
+          <div className="mb-3 last:mb-0">
+            <Goal Icon={BarChart3} title="Increase Website Traffic" desc="Improve organic and direct traffic" tone="green"/>
+          </div>
         </Panel>
       </div>
 
@@ -222,18 +228,18 @@ function OverviewView() {
         <Panel title="Brand Snapshot" action="Edit">
           <div className="flex gap-3">
             <div className="flex h-[128px] w-[120px] shrink-0 items-center justify-center rounded border border-[#e7ebf1] bg-white p-2"><img src="/brand/moksha-sewa-logo.png" alt="Moksha Sewa" className="max-h-full max-w-full object-contain" /></div>
-            <div className="min-w-0 text-[9px] text-[#6e7890]">
+            <div className="min-w-0 text-[11px] font-semibold text-[#6e7890]">
               <div className="flex gap-4">
-                <div><b className="text-[9px] text-[#394561]">Primary Color</b><div className="mt-1 flex items-center gap-2"><span className="h-5 w-5 rounded bg-[#2e7d32]"/><span>#2E7D32</span></div></div>
-                <div><b className="text-[9px] text-[#394561]">Secondary Color</b><div className="mt-1 flex items-center gap-2"><span className="h-5 w-5 rounded border border-[#e1e5eb] bg-[#f8f1e7]"/><span>#F8F1E7</span></div></div>
+                <div><b className="text-[11px] font-semibold text-[#394561]">Primary Color</b><div className="mt-1 flex items-center gap-2"><span className="h-5 w-5 rounded bg-[#2e7d32]"/><span>#2E7D32</span></div></div>
+                <div><b className="text-[11px] font-semibold text-[#394561]">Secondary Color</b><div className="mt-1 flex items-center gap-2"><span className="h-5 w-5 rounded border border-[#e1e5eb] bg-[#f8f1e7]"/><span>#F8F1E7</span></div></div>
               </div>
-              <b className="mt-3 block text-[9px] text-[#394561]">Brand Tone</b><p className="mt-1">Compassionate, Trustworthy,<br/>Human-Centric</p>
-              <b className="mt-3 block text-[9px] text-[#394561]">Call to Action</b><p className="mt-1">Donate. Volunteer. Spread Awareness.</p>
+              <b className="mt-3 block text-[11px] font-semibold text-[#394561]">Brand Tone</b><p className="mt-1">Compassionate, Trustworthy,<br/>Human-Centric</p>
+              <b className="mt-3 block text-[11px] font-semibold text-[#394561]">Call to Action</b><p className="mt-1">Donate. Volunteer. Spread Awareness.</p>
             </div>
           </div>
           <div className="mt-2 flex items-center gap-4 rounded-md border border-[#d5e8da] bg-[#f1faf4] px-5 py-4">
             <span className="text-[40px] leading-none text-[#4caf50]">"</span>
-            <p className="m-0 text-[11px] font-medium italic leading-relaxed text-[#2f5a3a]">A respectful farewell<br/>is every human's right.</p>
+            <p className="m-0 text-[11px] font-semibold italic leading-relaxed text-[#2f5a3a]">A respectful farewell<br/>is every human's right.</p>
             <div className="mx-1 h-[2px] w-10 shrink-0 rounded bg-[#4caf50]"/>
             <svg className="h-[50px] w-[50px] shrink-0 text-[#81c784] opacity-50" viewBox="0 0 24 24" fill="currentColor"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg>
           </div>
@@ -250,10 +256,10 @@ function ActivityView() {
       <div className="mt-2.5 grid grid-cols-1 items-stretch gap-2.5 xl:grid-cols-[1.75fr_.75fr]">
         <Panel title="" className="mt-0">
           <div className="mb-2 flex items-center gap-2">
-            <div className="min-w-0"><b className="text-[12px] font-extrabold tracking-[-.2px] text-[#182443]">Activity Timeline</b><p className="mt-0.5 text-[9px] text-[#8792a7]">Track all important actions, updates and progress for this client.</p></div>
+            <div className="min-w-0"><b className="text-[12px] font-semibold tracking-[-.2px] text-[#182443]">Activity Timeline</b><p className="mt-0.5 text-[11px] font-semibold text-[#8792a7]">Track all important actions, updates and progress for this client.</p></div>
             <div className="flex items-center gap-2 ml-auto">
-              {["Last 30 Days","All Actions","All Team Members"].map(x=><button key={x} className="flex h-7 items-center gap-2 rounded-md border border-[#dfe5ed] bg-white px-2.5 text-[9px] text-[#4c5871]"><CalendarDays size={11}/>{x}<ChevronDown size={10}/></button>)}
-              <button className="flex h-7 items-center gap-1.5 rounded-md border border-[#dfe5ed] bg-white px-3 text-[9px] font-semibold text-[#35415c]">Export</button>
+              {["Last 30 Days","All Actions","All Team Members"].map(x=><button key={x} className="flex h-7 items-center gap-2 rounded-md border border-[#dfe5ed] bg-white px-2.5 text-[11px] font-semibold text-[#4c5871]"><CalendarDays size={12}/>{x}<ChevronDown size={11}/></button>)}
+              <button className="flex h-7 items-center gap-1.5 rounded-md border border-[#dfe5ed] bg-white px-3 text-[11px] font-semibold text-[#35415c]">Export</button>
             </div>
           </div>
           <div>
@@ -270,12 +276,12 @@ function ActivityView() {
                 gray: "bg-[#f0f3f7] text-[#64748b]",
               };
               const tone = r[7] as string;
-              return <div key={i} className="grid grid-cols-[58px_32px_1fr_150px_105px_24px] items-center gap-2 border-b border-[#eef1f5] py-2">
-                <div className="text-right text-[9px] text-[#8a94a6]"><b className="block text-[#6c7890]">{r[0]}</b>{r[1]}</div>
+              return <div key={i} className="grid grid-cols-[68px_32px_1fr_150px_105px_24px] items-center gap-2 border-b border-[#eef1f5] py-2">
+                <div className="text-right text-[11px] font-semibold text-[#8a94a6]"><b className="block font-semibold text-[#6c7890]">{r[0]}</b>{r[1]}</div>
                 <span className={`grid h-8 w-8 place-items-center rounded-full ${toneColors[tone] || toneColors.gray}`}><Icon size={15}/></span>
-                <div><b className="block text-[9px] text-[#34415d]">{r[2]}</b><small className="text-[9px] text-[#8b95a6]">{r[3]}</small></div>
-                <div className="flex items-center gap-2"><Avatar text={r[5]!}/><div><b className="block text-[9px]">{r[4]}</b><small className="text-[9px] text-[#8b95a6]">{r[4]==="Manish Sirohi"?"Workspace Admin":"Social Media Manager"}</small></div></div>
-                <span className="justify-self-start rounded-full bg-[#f0edff] px-2 py-1 text-[9px] font-semibold text-[#5d39d2]">{r[6]}</span>
+                <div><b className="block text-[11px] font-semibold text-[#34415d]">{r[2]}</b><small className="text-[11px] font-semibold text-[#8b95a6]">{r[3]}</small></div>
+                <div className="flex items-center gap-2"><Avatar text={r[5]!}/><div><b className="block text-[11px] font-semibold">{r[4]}</b><small className="text-[11px] font-semibold text-[#8b95a6]">{r[4]==="Manish Sirohi"?"Workspace Admin":"Social Media Manager"}</small></div></div>
+                <span className="justify-self-start rounded-full bg-[#f0edff] px-2 py-1 text-[11px] font-semibold text-[#5d39d2]">{r[6]}</span>
                 <button><MoreVertical size={13} className="text-[#8993a5]"/></button>
               </div>
             })}
@@ -289,7 +295,7 @@ function ActivityView() {
               ["Follow up on website content updates","Due Jan 18, 2025","Medium","NG"],
               ["Discuss new service page requirements","Due Jan 20, 2025","Low","MS"],
               ["Client feedback on audit recommendations","Due Jan 22, 2025","Low","AS"],
-            ].map(x=><div key={x[0]} className="flex items-start gap-2 border-b border-[#eef1f5] py-2 last:border-0"><span className="mt-0.5 h-4 w-4 rounded border border-[#cdd6e3]"/><div className="min-w-0 flex-1"><b className="block text-[9px]">{x[0]}</b><small className="text-[9px] text-[#8b95a6]">{x[1]}</small></div><span className="rounded-full bg-[#fff0f4] px-2 py-1 text-[9px] font-semibold text-[#ef557d]">{x[2]}</span><Avatar text={x[3]!}/></div>)}
+            ].map(x=><div key={x[0]} className="flex items-start gap-2 border-b border-[#eef1f5] py-2 last:border-0"><span className="mt-0.5 h-4 w-4 rounded border border-[#cdd6e3]"/><div className="min-w-0 flex-1"><b className="block text-[11px] font-semibold">{x[0]}</b><small className="text-[11px] font-semibold text-[#8b95a6]">{x[1]}</small></div><span className="rounded-full bg-[#fff0f4] px-2 py-1 text-[11px] font-semibold text-[#ef557d]">{x[2]}</span><Avatar text={x[3]!}/></div>)}
           </Panel>
           <Panel title="Client Notes" action="+ Add Note">
             <Note initials="MS" name="Manish Sirohi" time="Jan 15, 2025, 10:30 AM">Client is very happy with the recent campaign performance. Planning to expand to LinkedIn content next month.</Note>
@@ -311,12 +317,12 @@ function TeamView() {
     <>
       <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-5">{teamStats.map((x,i)=><StatCard item={x} key={i}/>)}</div>
       <Panel title="" className="mt-2.5">
-        <div className="mb-2 flex items-center justify-between gap-2"><b className="text-[12px] font-extrabold tracking-[-.2px] text-[#182443]">Team Members (8)</b><div className="flex items-center gap-2"><div className="flex h-8 w-[180px] items-center gap-2 rounded border border-[#dfe5ed] px-2 text-[9px] text-[#8a94a6]"><Search size={11}/>Search team members...</div><button className="flex h-8 items-center gap-2 rounded border border-[#dfe5ed] px-3 text-[9px]">All Status<ChevronDown size={10}/></button><button className="flex h-8 items-center gap-1.5 rounded-md bg-[#5a32e4] px-3 text-[9px] font-semibold text-white"><Plus size={13}/>Invite Member</button></div></div>
+        <div className="mb-2 flex items-center justify-between gap-2"><b className="text-[12px] font-semibold tracking-[-.2px] text-[#182443]">Team Members (8)</b><div className="flex items-center gap-2"><div className="flex h-8 w-[180px] items-center gap-2 rounded border border-[#dfe5ed] px-2 text-[11px] font-semibold text-[#8a94a6]"><Search size={12}/>Search team members...</div><button className="flex h-8 items-center gap-2 rounded border border-[#dfe5ed] px-3 text-[11px] font-semibold">All Status<ChevronDown size={11}/></button><button className="flex h-8 items-center gap-1.5 rounded-md bg-[#5a32e4] px-3 text-[11px] font-semibold text-white"><Plus size={13}/>Invite Member</button></div></div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[950px] border-collapse text-[9px]">
+          <table className="w-full min-w-[950px] border-collapse text-[11px]">
             <thead><tr className="bg-[#f7f9fc] text-left text-[#64728b]">{["#","Name","Designation","Email","Phone","Role","Modules","Permissions","Status","Last Activity","Actions"].map(x=><th key={x} className="border-y border-[#e8edf3] px-2 py-2 font-semibold">{x}</th>)}</tr></thead>
             <tbody>{teamMembers.map((r,i)=><tr key={r[0]} className="border-b border-[#eef1f5]">
-              <td className="px-2 py-2 text-[#8190a5]">{i+1}</td><td className="px-2 py-2"><div className="flex items-center gap-2"><Avatar text={r[9]!}/><b>{r[0]}</b></div></td><td className="px-2 text-[#7c8799]">{r[1]}</td><td className="px-2 text-[#5d36d6]">{r[2]}</td><td className="px-2 text-[#7c8799]">{r[3]}</td><td className="px-2"><Badge text={r[4]} tone={({"Client Owner":"pink","Workspace Admin":"purple","Content Approver":"blue","Campaign Manager":"green","Social Media Manager":"orange","Content Creator":"mint","SEO Manager":"blue","Support & CRM":"purple"} as Record<string,string>)[r[4]]||"blue"}/></td><td className="px-2"><Badge text={r[5]} tone="blue"/></td><td className="px-2"><Badge text={r[6]} tone="purple"/></td><td className="px-2"><Badge text={r[7]} tone={r[7]==="Away"?"orange":"green"} dot/></td><td className="px-2 text-[#7c8799]">{r[8]}</td><td className="px-2 text-right"><MoreVertical size={13}/></td>
+              <td className="px-2 py-2 font-semibold text-[#8190a5]">{i+1}</td><td className="px-2 py-2"><div className="flex items-center gap-2"><Avatar text={r[9]!}/><b className="font-semibold">{r[0]}</b></div></td><td className="px-2 font-semibold text-[#7c8799]">{r[1]}</td><td className="px-2 font-semibold text-[#5d36d6]">{r[2]}</td><td className="px-2 font-semibold text-[#7c8799]">{r[3]}</td><td className="px-2"><Badge text={r[4]} tone={({"Client Owner":"pink","Workspace Admin":"purple","Content Approver":"blue","Campaign Manager":"green","Social Media Manager":"orange","Content Creator":"mint","SEO Manager":"blue","Support & CRM":"purple"} as Record<string,string>)[r[4]]||"blue"}/></td><td className="px-2"><Badge text={r[5]} tone="blue"/></td><td className="px-2"><Badge text={r[6]} tone="purple"/></td><td className="px-2"><Badge text={r[7]} tone={r[7]==="Away"?"orange":"green"} dot/></td><td className="px-2 font-semibold text-[#7c8799]">{r[8]}</td><td className="px-2 text-right"><MoreVertical size={13}/></td>
             </tr>)}</tbody>
           </table>
         </div>
@@ -347,7 +353,7 @@ function BusinessView() {
       </div>
       <div className="mt-2.5 grid grid-cols-1 items-stretch gap-2.5 xl:grid-cols-[1.1fr_1fr_.9fr]">
         <Panel title="Competitor List" action="Edit"><div className="flex flex-wrap gap-2">{["Antim Sewa","Shanti Sewa","Final Journey","Moksh Dham Sewa","Cremation Care","HinduHelp"].map(x=><Badge key={x} text={x} tone="blue"/>)}</div></Panel>
-        <Panel title="Client Notes" action="Edit"><p className="text-[9px] leading-[1.5] text-[#6c7890]">Very responsive team. Passionate about their mission. Prefer community-focused messaging and real stories. Avoid overly promotional tone. Open to innovative campaigns and CSR collaborations.</p></Panel>
+        <Panel title="Client Notes" action="Edit"><p className="text-[11px] font-semibold leading-[1.5] text-[#6c7890]">Very responsive team. Passionate about their mission. Prefer community-focused messaging and real stories. Avoid overly promotional tone. Open to innovative campaigns and CSR collaborations.</p></Panel>
         <Panel title="Approval Preferences" action="Edit"><InfoRows rows={[["Content Approval","Required (Client Review)"],["Campaign Approval","Required"],["Ad Spend Approval","Required"],["Report Frequency","Monthly"],["Preferred Contact","Email / WhatsApp"]]}/></Panel>
       </div>
     </>
@@ -360,15 +366,15 @@ function ChannelsView() {
       <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-4">{channelStats.map((x,i)=><StatCard item={x} key={i}/>)}</div>
       <Panel title="" className="mt-2.5">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <div className="min-w-0"><b className="text-[12px] font-extrabold tracking-[-.2px] text-[#182443]">Connected Channels & Integrations</b><p className="mt-0.5 text-[9px] text-[#8792a7]">Manage all your connected marketing channels, data sync settings and permissions.</p></div>
+          <div className="min-w-0"><b className="text-[12px] font-semibold tracking-[-.2px] text-[#182443]">Connected Channels & Integrations</b><p className="mt-0.5 text-[11px] font-semibold text-[#8792a7]">Manage all your connected marketing channels, data sync settings and permissions.</p></div>
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-[180px] items-center gap-2 rounded border border-[#dfe5ed] px-2 text-[9px] text-[#8a94a6]"><Search size={11}/>Search integrations...</div>
-            <button className="flex h-8 items-center gap-2 rounded border border-[#dfe5ed] px-3 text-[9px]">All Statuses<ChevronDown size={10}/></button>
-            <button className="flex h-8 items-center gap-1.5 rounded-md bg-[#5a32e4] px-3 text-[9px] font-semibold text-white"><Plus size={13}/>Add Integration</button>
+            <div className="flex h-8 w-[180px] items-center gap-2 rounded border border-[#dfe5ed] px-2 text-[11px] font-semibold text-[#8a94a6]"><Search size={12}/>Search integrations...</div>
+            <button className="flex h-8 items-center gap-2 rounded border border-[#dfe5ed] px-3 text-[11px] font-semibold">All Statuses<ChevronDown size={11}/></button>
+            <button className="flex h-8 items-center gap-1.5 rounded-md bg-[#5a32e4] px-3 text-[11px] font-semibold text-white"><Plus size={13}/>Add Integration</button>
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-[9px]">
+          <table className="w-full border-collapse text-[11px]">
             <thead><tr className="bg-[#f7f9fc] text-left text-[#64728b]">{["Channel","Status","Connected Account / Page","Last Sync","Data Synced","Permission Scope","Owner","Actions"].map(x=><th key={x} className="border-y border-[#e8edf3] px-2 py-2 font-semibold">{x}</th>)}</tr></thead>
             <tbody>{channels.map((r,i)=>{
               const I=r[8] as LucideIcon | IconType;
@@ -384,20 +390,20 @@ function ChannelsView() {
               };
               const pc = platformColors[r[0]] || { bg: "bg-[#f0f3f7]", text: "text-[#64748b]" };
               return <tr key={r[0]} className="border-b border-[#eef1f5]">
-              <td className="px-2 py-2"><div className="flex items-center gap-2"><span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${pc.bg} ${pc.text}`}><I size={15}/></span><div><b className="block text-[9px]">{r[0]}</b><small className="text-[9px] text-[#8b95a6]">{r[1]}</small></div></div></td>
+              <td className="px-2 py-2"><div className="flex items-center gap-2"><span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${pc.bg} ${pc.text}`}><I size={15}/></span><div><b className="block font-semibold text-[11px]">{r[0]}</b><small className="text-[11px] font-semibold text-[#8b95a6]">{r[1]}</small></div></div></td>
               <td className="px-2"><Badge text={r[9]==="reauth"?"Needs Reauth":"Connected"} tone={r[9]==="reauth"?"orange":"green"} dot/></td>
-              <td className="px-2"><b className="block">{r[2]}</b><small className="text-[9px] text-[#8993a5]">{r[3]}</small></td>
-              <td className="px-2"><span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${r[9]==="reauth"?"bg-[#e52f42]":"bg-[#15ad77]"}`}/>{r[4]}</td>
-              <td className="px-2"><b className="block font-medium">{r[5]}</b><small className="text-[9px] text-[#8993a5]">{i%2?"Page Insights":"Audience, Messages"}</small></td>
-              <td className="px-2">{r[6]}</td>
-              <td className="px-2"><div className="flex items-center gap-1.5"><Avatar text={r[7]!.split(" ").map((x:string)=>x[0]).join("").slice(0,2)}/>{r[7]}</div></td>
-              <td className="px-2"><div className="flex gap-1.5"><button className="rounded border border-[#dfe5ed] px-3 py-1.5 text-[9px] font-semibold">Manage</button><button className="rounded border border-[#dfe5ed] bg-[#f2f5ff] px-3 py-1.5 text-[9px] font-semibold text-[#5332d7]">{r[9]==="reauth"?"Reconnect":"Sync Now"}</button><MoreVertical size={13}/></div></td>
+              <td className="px-2"><b className="block font-semibold">{r[2]}</b><small className="text-[11px] font-semibold text-[#8993a5]">{r[3]}</small></td>
+              <td className="px-2 font-semibold"><span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${r[9]==="reauth"?"bg-[#e52f42]":"bg-[#15ad77]"}`}/>{r[4]}</td>
+              <td className="px-2"><b className="block font-semibold">{r[5]}</b><small className="text-[11px] font-semibold text-[#8993a5]">{i%2?"Page Insights":"Audience, Messages"}</small></td>
+              <td className="px-2 font-semibold">{r[6]}</td>
+              <td className="px-2 font-semibold"><div className="flex items-center gap-1.5"><Avatar text={r[7]!.split(" ").map((x:string)=>x[0]).join("").slice(0,2)}/>{r[7]}</div></td>
+              <td className="px-2"><div className="flex gap-1.5"><button className="rounded border border-[#dfe5ed] px-3 py-1.5 text-[11px] font-semibold">Manage</button><button className="rounded border border-[#dfe5ed] bg-[#f2f5ff] px-3 py-1.5 text-[11px] font-semibold text-[#5332d7]">{r[9]==="reauth"?"Reconnect":"Sync Now"}</button><MoreVertical size={13}/></div></td>
             </tr>})}</tbody>
           </table>
         </div>
       </Panel>
       <div className="mt-2.5 grid grid-cols-1 items-stretch gap-2.5 xl:grid-cols-4">
-        <Panel title="Action Required"><div className="flex items-start gap-2 text-[9px] text-[#6d7890]"><IconBadge Icon={AlertTriangle} tone="orange"/><p className="m-0">Google Analytics connection needs to be reauthorized. Your access token has expired. Please reconnect to continue syncing data.</p></div><div className="mt-3 flex gap-2"><button className="rounded-md bg-[#ed202d] px-3 py-2 text-[9px] font-bold text-white">Reconnect Google Analytics</button><button className="rounded-md border border-[#dfe5ed] px-3 py-2 text-[9px] font-semibold">Learn More</button></div></Panel>
+        <Panel title="Action Required"><div className="flex items-start gap-2 text-[11px] font-semibold text-[#6d7890]"><IconBadge Icon={AlertTriangle} tone="orange"/><p className="m-0 font-semibold">Google Analytics connection needs to be reauthorized. Your access token has expired. Please reconnect to continue syncing data.</p></div><div className="mt-3 flex gap-2"><button className="rounded-md bg-[#ed202d] px-3 py-2 text-[11px] font-semibold text-white">Reconnect Google Analytics</button><button className="rounded-md border border-[#dfe5ed] px-3 py-2 text-[11px] font-semibold">Learn More</button></div></Panel>
         <Panel title="Publishing Preferences" action="Edit"><InfoRows rows={[["Default Timezone","Asia/Kolkata (IST)"],["Preferred Posting Times","9:00 AM - 6:00 PM"],["Content Approval","Required (Client)"],["Auto-Publish","● Enabled"],["Default Hashtags","#MokshaSewa #DignityForAll"],["Content Categories","Awareness, Stories, Updates"]]}/></Panel>
         <Panel title="Sync Preferences" action="Edit"><InfoRows rows={[["Auto Sync Frequency","Every 1 hour"],["Sync Historical Data","Last 12 months"],["Sync Contacts/Leads","Enabled"],["Sync Campaign Data","Enabled"],["Data Retention","24 months"],["Sync Notifications","Email alerts (Errors only)"]]}/></Panel>
         <Panel title="Webhooks & Inbound Forms" action="Edit"><InfoRows rows={[["Website Form Webhook","● Active"],["Lead Notification Email","leads@mokshasewa.org"],["Webhook URL","https://api.encodency.com/webhooks/..."],["Inbound Form Sync","● Enabled"],["Last Received","2 hours ago (3 leads)"],["Status","● Healthy"]]}/></Panel>
@@ -416,8 +422,8 @@ function Panel({ title, subtitle, action, children, className="" }: {
   return (
     <section className={`overflow-hidden rounded-[8px] border border-[#e1e7ef] bg-white shadow-[0_1px_3px_rgba(20,35,65,.025)] ${className}`}>
       <div className="flex items-start justify-between px-3.5 pb-1 pt-2">
-        <div><h2 className="m-0 text-[12px] font-extrabold tracking-[-.2px] text-[#182443]">{title}</h2>{subtitle&&<p className="mt-0.5 text-[9px] text-[#8792a7]">{subtitle}</p>}</div>
-        {action&&<button className="rounded border border-[#dfe5ed] bg-white px-2.5 py-1.5 text-[9px] font-semibold text-[#38445f]">{action}</button>}
+        <div><h2 className="m-0 text-[12px] font-semibold tracking-[-.2px] text-[#182443]">{title}</h2>{subtitle&&<p className="mt-0.5 text-[11px] font-semibold text-[#8792a7]">{subtitle}</p>}</div>
+        {action&&<button className="rounded border border-[#dfe5ed] bg-white px-2.5 py-1.5 text-[11px] font-semibold text-[#38445f]">{action}</button>}
       </div>
       <div className="px-3.5 pb-2">{children}</div>
     </section>
@@ -427,7 +433,7 @@ function Panel({ title, subtitle, action, children, className="" }: {
 function Avatar({ text }: { text: string }) {
   const colors = ["bg-[#6737dc]","bg-[#347fe0]","bg-[#a950b9]","bg-[#27354c]","bg-[#ef9b21]"];
   const n = (text || "").charCodeAt(0) % colors.length;
-  return <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[9px] font-bold text-white ${colors[n]}`}>{text}</span>;
+  return <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-semibold text-white ${colors[n]}`}>{text}</span>;
 }
 
 function Badge({ text, tone="blue", dot=false }: { text: string; tone?: string; dot?: boolean }) {
@@ -436,11 +442,11 @@ function Badge({ text, tone="blue", dot=false }: { text: string; tone?: string; 
     green:"bg-[#e4f8ef] text-[#18a978]", orange:"bg-[#fff2dc] text-[#d98b17]",
     pink:"bg-[#ffeaf3] text-[#df5b92]"
   };
-  return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-semibold ${map[tone]}`}>{dot&&<i className="h-1.5 w-1.5 rounded-full bg-current"/>}{text}</span>;
+  return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${map[tone]}`}>{dot&&<i className="h-1.5 w-1.5 rounded-full bg-current"/>}{text}</span>;
 }
 
 function Goal({ Icon, title, desc, tone = "purple" }: { Icon: LucideIcon | IconType; title: string; desc: string; tone?: string }) {
-  return <div className="mb-3 flex items-center gap-3 last:mb-0"><IconBadge Icon={Icon} tone={tone} size={16}/><div><b className="block text-[9px] text-[#38435e]">{title}</b><small className="text-[9px] text-[#8993a5]">{desc}</small></div></div>;
+  return <div className="mb-3 flex min-h-[42px] items-center gap-3 last:mb-0"><IconBadge Icon={Icon} tone={tone} size={16}/><div><b className="block text-[11px] font-semibold text-[#38435e]">{title}</b><small className="text-[11px] font-semibold text-[#8993a5]">{desc}</small></div></div>;
 }
 
 function ChannelMiniList() {
@@ -453,7 +459,7 @@ function ChannelMiniList() {
     ["Website", Globe2, "https://mokshasewa.org", "#60708d"],
     ["Google Search Console", BarChart3, "Connected", "#4285F4"],
   ];
-  return <div>{channels.map(([n, I, a, color]) => <div key={n} className="grid h-8 grid-cols-[25px_1fr_1fr_16px] items-center gap-2 border-b border-[#eef1f5] text-[9px] last:border-0"><I className="shrink-0" style={{ color }} size={15}/><b>{n}</b><span className="truncate text-[#7f899d]">{a}</span><MoreVertical size={16}/></div>)}</div>;
+  return <div>{channels.map(([n, I, a, color]) => <div key={n} className="grid h-8 grid-cols-[25px_1fr_1fr_16px] items-center gap-2 border-b border-[#eef1f5] text-[11px] font-semibold last:border-0"><I className="shrink-0" style={{ color }} size={15}/><b className="font-semibold">{n}</b><span className="truncate text-[#7f899d]">{a}</span><MoreVertical size={16}/></div>)}</div>;
 }
 
 function RecentActivity() {
@@ -464,15 +470,15 @@ function RecentActivity() {
     { title: "Replied to Google Review", desc: "Thanked user for their kind words", time: "2 days ago", Icon: FaGoogle, bg: "bg-[#e8f5e9]", color: "text-[#34a853]" },
     { title: "Campaign Published", desc: "Dignity for Every Life campaign is live", time: "3 days ago", Icon: CampaignIcon, bg: "bg-[#fff5e7]", color: "text-[#ef9b21]" },
   ];
-  return <div>{activities.map((a) => <div key={a.title} className="flex items-center gap-2 border-b border-[#eef1f5] py-2 last:border-0"><span className={`grid h-7 w-7 place-items-center rounded-full ${a.bg} ${a.color}`}><a.Icon size={13}/></span><div className="min-w-0 flex-1"><b className="block text-[9px]">{a.title}</b><small className="block truncate text-[9px] text-[#8993a5]">{a.desc}</small></div><small className="text-[9px] text-[#8993a5]">{a.time}</small></div>)}</div>;
+  return <div>{activities.map((a) => <div key={a.title} className="flex items-center gap-2 border-b border-[#eef1f5] py-2 last:border-0"><span className={`grid h-7 w-7 place-items-center rounded-full ${a.bg} ${a.color}`}><a.Icon size={13}/></span><div className="min-w-0 flex-1"><b className="block text-[11px] font-semibold">{a.title}</b><small className="block truncate text-[11px] font-semibold text-[#8993a5]">{a.desc}</small></div><small className="text-[11px] font-semibold text-[#8993a5]">{a.time}</small></div>)}</div>;
 }
 
 function Note({ initials, name, time, children }: { initials: string; name: string; time: string; children: ReactNode }) {
-  return <div className="flex gap-2 border-b border-[#eef1f5] py-2 last:border-0"><Avatar text={initials}/><div><b className="text-[9px]">{name}</b><small className="ml-2 text-[9px] text-[#8993a5]">{time}</small><p className="mt-1 text-[9px] leading-[1.45] text-[#707c91]">{children}</p></div></div>;
+  return <div className="flex gap-2 border-b border-[#eef1f5] py-2 last:border-0"><Avatar text={initials}/><div><b className="text-[11px] font-semibold">{name}</b><small className="ml-2 text-[11px] font-semibold text-[#8993a5]">{time}</small><p className="mt-1 text-[11px] font-semibold leading-[1.45] text-[#707c91]">{children}</p></div></div>;
 }
 
 function LogPanel({ title, rows }: { title: string; rows: string[] }) {
-  return <Panel title={title} action="View All"><div className="overflow-hidden rounded border border-[#eef1f5]">{rows.map((x,i)=><div key={x} className="grid grid-cols-[110px_40px_1fr_1fr] items-center border-b border-[#eef1f5] px-2 py-1.5 text-[9px] last:border-0"><span>Jan {16-i}, 11:24 AM</span><Avatar text={["PS","NG","RV","MS","AS"][i]!}/><b>{x}</b><span className="text-[#7f899d]">{i%2?"SEO score: 86":"Instagram post"}</span></div>)}</div></Panel>;
+  return <Panel title={title} action="View All"><div className="overflow-hidden rounded border border-[#eef1f5]">{rows.map((x,i)=><div key={x} className="grid grid-cols-[110px_40px_1fr_1fr] items-center border-b border-[#eef1f5] px-2 py-1.5 text-[11px] font-semibold last:border-0"><span className="font-semibold">Jan {16-i}, 11:24 AM</span><Avatar text={["PS","NG","RV","MS","AS"][i]!}/><b className="font-semibold">{x}</b><span className="text-[#7f899d]">{i%2?"SEO score: 86":"Instagram post"}</span></div>)}</div></Panel>;
 }
 
 function ModuleGrid() {
@@ -488,11 +494,11 @@ function ModuleGrid() {
     { name: "Leads", icon: UserPlus, color: "bg-[#fff0f4]", colorText: "text-[#ef4b78]" },
     { name: "Reports", icon: BarChart3, color: "bg-[#eef5ff]", colorText: "text-[#3485df]" },
   ];
-  return <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{modules.map((m,i)=><div key={m.name} className="rounded border border-[#e7ebf1] p-2"><div className="flex items-center gap-2"><span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full ${m.color} ${m.colorText}`}><m.icon size={12}/></span><b className="text-[9px]">{m.name}</b></div><small className="mt-1 block text-[9px] text-[#8993a5]">{i+4} members</small><Badge text="Enabled" tone="green" dot/></div>)}</div>;
+  return <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{modules.map((m,i)=><div key={m.name} className="rounded border border-[#e7ebf1] p-2"><div className="flex items-center gap-2"><span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full ${m.color} ${m.colorText}`}><m.icon size={12}/></span><b className="text-[11px] font-semibold">{m.name}</b></div><small className="mt-1 block text-[11px] font-semibold text-[#8993a5]">{i+4} members</small><Badge text="Enabled" tone="green" dot/></div>)}</div>;
 }
 
 function WorkflowCard({ title, tone }: { title: string; tone: string }) {
-  return <div className="mb-2 rounded border border-[#e8ecf2] p-2 last:mb-0"><div className="flex items-center gap-2"><IconBadge Icon={tone==="pink"?Megaphone:FileText} tone={tone==="pink"?"pink":"purple"} size={14}/><div><b className="text-[9px]">{title}</b><small className="block text-[9px] text-[#8993a5]">{tone==="pink"?"Paid campaigns, major initiatives":"Social media posts, blogs, website content"}</small></div></div><div className="mt-2 space-y-1.5 text-[9px]"><div><b>1</b>　Content Creator　 <span className="text-[#8993a5]">Creates content</span></div><div><b>2</b>　Content Approver　 <span className="text-[#8993a5]">Reviews & approves</span></div><div><b>3</b>　Client Owner　 <span className="text-[#8993a5]">Final approval</span></div></div></div>;
+  return <div className="mb-2 rounded border border-[#e8ecf2] p-2 last:mb-0"><div className="flex items-center gap-2"><IconBadge Icon={tone==="pink"?Megaphone:FileText} tone={tone==="pink"?"pink":"purple"} size={14}/><div><b className="text-[11px] font-semibold">{title}</b><small className="block text-[11px] font-semibold text-[#8993a5]">{tone==="pink"?"Paid campaigns, major initiatives":"Social media posts, blogs, website content"}</small></div></div><div className="mt-2 space-y-1.5 text-[11px] font-semibold"><div><b className="font-semibold">1</b>　Content Creator　 <span className="text-[#8993a5]">Creates content</span></div><div><b className="font-semibold">2</b>　Content Approver　 <span className="text-[#8993a5]">Reviews & approves</span></div><div><b className="font-semibold">3</b>　Client Owner　 <span className="text-[#8993a5]">Final approval</span></div></div></div>;
 }
 
 function OwnerList() {
@@ -504,36 +510,36 @@ function OwnerList() {
     { channel: "Website", name: "Priya Desai", initials: "PS", icon: Globe2, color: "text-[#4285f4]" },
     { channel: "WhatsApp", name: "Vikram Singh", initials: "VK", icon: FaWhatsapp, color: "text-[#25d366]" },
   ];
-  return <div>{owners.map((o)=><div key={o.channel} className="flex items-center gap-2 border-b border-[#eef1f5] py-1.5 last:border-0"><o.icon size={14} className={o.color}/><b className="flex-1 text-[9px]">{o.channel}</b><span className="text-[9px]">{o.name}</span><Avatar text={o.initials}/><MoreVertical size={11}/></div>)}</div>;
+  return <div>{owners.map((o)=><div key={o.channel} className="flex items-center gap-2 border-b border-[#eef1f5] py-1.5 last:border-0"><o.icon size={14} className={o.color}/><b className="flex-1 text-[11px] font-semibold">{o.channel}</b><span className="text-[11px] font-semibold">{o.name}</span><Avatar text={o.initials}/><MoreVertical size={11}/></div>)}</div>;
 }
 
 function ContactMini({ initials, name, role }: { initials: string; name: string; role: string }) {
-  return <div className="flex gap-2 border-b border-[#eef1f5] py-1.5 last:border-0"><Avatar text={initials}/><div><b className="block text-[9px]">{name}</b><small className="text-[9px] text-[#8993a5]">{role}</small><small className="mt-1 block text-[9px] text-[#5d36d6]">+91 98102 34567</small></div></div>;
+  return <div className="flex gap-2 border-b border-[#eef1f5] py-1.5 last:border-0"><Avatar text={initials}/><div><b className="block text-[11px] font-semibold">{name}</b><small className="text-[11px] font-semibold text-[#8993a5]">{role}</small><small className="mt-1 block text-[11px] font-semibold text-[#5d36d6]">+91 98102 34567</small></div></div>;
 }
 
 function InfoRows({ rows }: { rows: ReadonlyArray<readonly [string, string]> }) {
-  return <div>{rows.map(([a, b]) => <div key={a} className="grid grid-cols-[42%_58%] gap-2 border-b border-[#f0f2f6] py-1.5 last:border-0"><span className="text-[9px] text-[#778399]">{a}</span><b className={`text-[9px] font-medium ${String(b).includes("●") ? "text-[#18a978]" : "text-[#45516b]"}`}>{b}</b></div>)}</div>;
+  return <div>{rows.map(([a, b]) => <div key={a} className="grid grid-cols-[42%_58%] gap-2 border-b border-[#f0f2f6] py-1.5 last:border-0"><span className="text-[11px] font-semibold text-[#778399]">{a}</span><b className={`text-[11px] font-semibold ${String(b).includes("●") ? "text-[#18a978]" : "text-[#45516b]"}`}>{b}</b></div>)}</div>;
 }
 
 function CheckList({ items }: { items: string[] }) {
-  return <div>{items.map(x=><div key={x} className="mb-2 flex items-center gap-2 text-[9px] text-[#56627b] last:mb-0"><span className="grid h-4 w-4 place-items-center rounded bg-[#dff7ea] text-[#13a874]"><Check size={10}/></span>{x}</div>)}</div>;
+  return <div>{items.map(x=><div key={x} className="mb-2 flex items-center gap-2 text-[11px] font-semibold text-[#56627b] last:mb-0"><span className="grid h-4 w-4 place-items-center rounded bg-[#dff7ea] text-[#13a874]"><Check size={10}/></span>{x}</div>)}</div>;
 }
 
 function BulletList({ items }: { items: string[] }) {
-  return <ul className="m-0 space-y-1.5 pl-4 text-[9px] text-[#626e84]">{items.map(x=><li key={x}>{x}</li>)}</ul>;
+  return <ul className="m-0 space-y-1.5 pl-4 text-[11px] font-semibold text-[#626e84]">{items.map(x=><li key={x}>{x}</li>)}</ul>;
 }
 
 function QuoteBox({ text }: { text: string }) {
-  return <div className="rounded-md bg-[#f4f0ff] px-3 py-2 text-[9px] leading-[1.45] text-[#59647b]">“ {text} ”</div>;
+  return <div className="rounded-md bg-[#f4f0ff] px-3 py-2 text-[11px] font-semibold leading-[1.45] text-[#59647b]">“ {text} ”</div>;
 }
 
 function BrandGuidelines() {
   return <Panel title="Brand Guidelines" action="Edit">
     <div className="grid grid-cols-[120px_1fr] gap-3">
       <div className="grid h-[105px] place-items-center rounded border border-[#e7ebf1] p-2"><img src="/brand/moksha-sewa-logo.png" alt="Moksha Sewa" className="max-h-full max-w-full object-contain" /></div>
-      <div className="text-[9px] text-[#67738b]"><b>Brand Colors</b><div className="mt-2 flex gap-2"><span className="h-5 w-5 rounded bg-[#7b3f98]"/><span className="h-5 w-5 rounded bg-[#f57373]"/><span className="h-5 w-5 rounded bg-[#2e7d32]"/><span className="h-5 w-5 rounded bg-[#f8f9fa] border"/></div><b className="mt-3 block">Brand Tone</b><div className="mt-1 flex flex-wrap gap-1"><Badge text="Compassionate" tone="purple"/><Badge text="Trustworthy" tone="blue"/><Badge text="Human-Centric" tone="green"/></div></div>
+      <div className="text-[11px] font-semibold text-[#67738b]"><b className="font-semibold">Brand Colors</b><div className="mt-2 flex gap-2"><span className="h-5 w-5 rounded bg-[#7b3f98]"/><span className="h-5 w-5 rounded bg-[#f57373]"/><span className="h-5 w-5 rounded bg-[#2e7d32]"/><span className="h-5 w-5 rounded bg-[#f8f9fa] border"/></div><b className="mt-3 block font-semibold">Brand Tone</b><div className="mt-1 flex flex-wrap gap-1"><Badge text="Compassionate" tone="purple"/><Badge text="Trustworthy" tone="blue"/><Badge text="Human-Centric" tone="green"/></div></div>
     </div>
-    <div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded bg-[#f7f2ff] p-2 text-center text-[9px] font-bold">“Support a Dignified Goodbye”<button className="mt-2 block mx-auto rounded bg-[#6030d8] px-3 py-1.5 text-white">Donate Now →</button></div><div><b className="text-[9px]">Uploaded Assets</b><p className="text-[9px] text-[#798499]">MokshaSewa_Logo.png<br/>Brand_Guidelines.pdf<br/>Banner_Image.jpg</p></div></div>
+    <div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded bg-[#f7f2ff] p-2 text-center text-[11px] font-semibold">“Support a Dignified Goodbye”<button className="mt-2 block mx-auto rounded bg-[#6030d8] px-3 py-1.5 text-white font-semibold">Donate Now →</button></div><div><b className="text-[11px] font-semibold">Uploaded Assets</b><p className="text-[11px] font-semibold text-[#798499]">MokshaSewa_Logo.png<br/>Brand_Guidelines.pdf<br/>Banner_Image.jpg</p></div></div>
   </Panel>;
 }
 
