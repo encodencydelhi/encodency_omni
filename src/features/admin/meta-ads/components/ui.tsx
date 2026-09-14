@@ -286,9 +286,9 @@ export function Panel({
 }) {
   return (
     <section className={cn(card, "overflow-hidden flex flex-col group hover:shadow-[0_12px_40px_rgba(15,23,42,0.1)]", className)}>
-      <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 bg-gradient-to-r from-slate-50/90 via-slate-50/40 to-white px-5 py-3.5">
-        <h2 className="flex min-w-0 items-center gap-2.5 text-[13.5px] font-semibold text-slate-900">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-blue-50/80 text-blue-600 shadow-xs ring-1 ring-blue-500/20">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 bg-gradient-to-r from-slate-50/90 via-slate-50/40 to-white px-4 py-3">
+        <h2 className="flex min-w-0 items-center gap-2 text-xs font-semibold text-slate-900">
+          <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-blue-50/80 text-blue-600 shadow-xs ring-1 ring-blue-500/20">
             {icon}
           </span>
           <span className="truncate">{title}</span>

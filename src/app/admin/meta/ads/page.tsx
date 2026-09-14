@@ -154,7 +154,7 @@ function MasterKpiCard({
       </div>
 
       <div className="relative z-10 mt-2 flex items-baseline justify-between gap-2">
-        <span className="text-xl font-black tracking-tight text-slate-900 leading-none">
+        <span className="text-xl font-normal tracking-tight text-slate-900 leading-none">
           {value}
         </span>
         {change && (
@@ -412,7 +412,7 @@ function Overview() {
           <div className="min-w-0 flex-1">
             <span className="block text-[10.5px] font-semibold text-slate-500">Active Campaigns</span>
             <div className="flex items-center gap-1.5">
-              <strong className="text-sm font-black text-slate-900">{active.length} Delivering</strong>
+              <strong className="text-sm font-normal text-slate-900">{active.length} Delivering</strong>
               <span className="text-[10px] font-semibold text-slate-400">/ {campaigns.length} total</span>
             </div>
           </div>
@@ -425,7 +425,7 @@ function Overview() {
           <div className="min-w-0 flex-1">
             <span className="block text-[10.5px] font-semibold text-slate-500">Total Link Clicks</span>
             <div className="flex items-center gap-1.5">
-              <strong className="text-sm font-black text-slate-900">{num(totals.clicks)}</strong>
+              <strong className="text-sm font-normal text-slate-900">{num(totals.clicks)}</strong>
               <span className="text-[10px] font-semibold text-sky-700">· {moneyPrecise(cpc(totals))} CPC</span>
             </div>
           </div>
@@ -438,7 +438,7 @@ function Overview() {
           <div className="min-w-0 flex-1">
             <span className="block text-[10.5px] font-semibold text-slate-500">Conversion Rate</span>
             <div className="flex items-center gap-1.5">
-              <strong className="text-sm font-black text-emerald-800">{orDash(conversionRate(totals), (v) => pct(v, 2))}</strong>
+              <strong className="text-sm font-normal text-emerald-800">{orDash(conversionRate(totals), (v) => pct(v, 2))}</strong>
               <span className="text-[10px] font-semibold text-slate-400">Visitor → Lead</span>
             </div>
           </div>
@@ -451,7 +451,7 @@ function Overview() {
           <div className="min-w-0 flex-1">
             <span className="block text-[10.5px] font-semibold text-slate-500">Active Ad Sets</span>
             <div className="flex items-center gap-1.5">
-              <strong className="text-sm font-black text-slate-900">{adSets.length} Placements</strong>
+              <strong className="text-sm font-normal text-slate-900">{adSets.length} Placements</strong>
               <span className="text-[10px] font-semibold text-purple-700">· 100% Live</span>
             </div>
           </div>
@@ -534,7 +534,7 @@ function Overview() {
                 </Td>
                 <Td numeric>
                   {c.metrics.leads > 0 ? (
-                    <span className="inline-flex items-center rounded-sm border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-black text-emerald-800">
+                    <span className="inline-flex items-center rounded-sm border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-normal text-emerald-800">
                       {num(c.metrics.leads)}
                     </span>
                   ) : (
@@ -572,21 +572,21 @@ function Overview() {
       <section className="grid items-stretch gap-2 xl:grid-cols-2 2xl:grid-cols-4">
         <Panel
           className="flex h-full flex-col shadow-sm"
-          bodyClassName="flex-1"
+          bodyClassName="flex-1 min-h-0 min-w-0"
           title="Performance Trend"
           icon={<Activity className="size-4" />}
           action={
             <Link href={`${ADS_ROOT}/analytics`} className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline">
-              Open Analytics →
+              Analytics →
             </Link>
           }
         >
-          <PerformanceTrend height={186} />
+          <PerformanceTrend />
         </Panel>
 
         <Panel
           className="flex h-full flex-col shadow-sm"
-          bodyClassName="flex-1"
+          bodyClassName="flex-1 min-h-0 min-w-0"
           title="Best Cost per Lead"
           icon={<Trophy className="size-4 text-amber-500" />}
           action={
@@ -600,7 +600,7 @@ function Overview() {
               <li key={c.id} className="flex items-center gap-3 text-xs">
                 <span
                   className={cn(
-                    "flex size-6 shrink-0 items-center justify-center rounded-lg text-xs font-black shadow-2xs",
+                    "flex size-6 shrink-0 items-center justify-center rounded-lg text-xs font-normal shadow-2xs",
                     i === 0
                       ? "bg-gradient-to-tr from-amber-500 to-yellow-400 text-white shadow-amber-500/20"
                       : i === 1
@@ -620,7 +620,7 @@ function Overview() {
                   {c.name}
                 </Link>
                 <span className="shrink-0 text-right font-semibold text-emerald-800">
-                  <span className="inline-block rounded-sm border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-black text-emerald-800">
+                  <span className="inline-block rounded-sm border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-normal text-emerald-800">
                     {num(c.metrics.leads)} leads
                   </span>
                   <span className="block text-[10.5px] font-semibold text-slate-600 mt-0.5">
@@ -634,7 +634,7 @@ function Overview() {
 
         <Panel
           className="flex h-full flex-col shadow-sm"
-          bodyClassName="flex-1"
+          bodyClassName="flex-1 min-h-0 min-w-0"
           title="Placement Performance"
           icon={<BarChart3 className="size-4" />}
           action={
@@ -659,7 +659,7 @@ function Overview() {
                 </span>
                 <span className="shrink-0 tabular-nums font-semibold text-slate-600">{money(row.spend)}</span>
                 <Meter value={row.share} className="min-w-[40px]" />
-                <strong className="shrink-0 text-right tabular-nums text-xs font-black text-slate-900">{pct(row.share, 0)}</strong>
+                <strong className="shrink-0 text-right tabular-nums text-xs font-normal text-slate-900">{pct(row.share, 0)}</strong>
               </li>
             ))}
           </ul>
@@ -667,7 +667,7 @@ function Overview() {
 
         <Panel
           className="flex h-full flex-col shadow-sm"
-          bodyClassName="flex-1"
+          bodyClassName="flex-1 min-h-0 min-w-0"
           title="Recent Activity"
           icon={<Lightbulb className="size-4 text-amber-500" />}
           action={
@@ -676,8 +676,8 @@ function Overview() {
             </Link>
           }
         >
-          <ol className="max-h-[186px] divide-y divide-slate-100 overflow-y-auto pr-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]">
-            {activityLog.slice(0, 6).map((entry) => (
+          <ol className="h-full divide-y divide-slate-100 overflow-y-auto pr-2 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]">
+            {activityLog.slice(0, 5).map((entry) => (
               <li key={entry.id} className="flex items-center gap-2.5 py-2.5 first:pt-0">
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs font-semibold text-slate-900">{entry.action}</span>
@@ -747,7 +747,7 @@ function Overview() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-xs font-semibold text-slate-500 group-hover:text-slate-700">{tile.label}</span>
-              <strong className="block text-xl font-black text-slate-900 leading-tight">{tile.value}</strong>
+              <strong className="block text-xl font-normal text-slate-900 leading-tight">{tile.value}</strong>
             </span>
             <span className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-blue-600 transition-colors group-hover:border-blue-300 group-hover:bg-blue-50 group-hover:text-blue-700">
               Open →

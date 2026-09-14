@@ -67,14 +67,14 @@ export function ChartLegend({
 
 /** Spend / leads / CPL over the reporting window. */
 export function PerformanceTrend({
-  height = 200,
+  height,
   data = trendSeries,
 }: {
-  height?: number;
+  height?: number | string;
   data?: typeof trendSeries;
 }) {
   return (
-    <>
+    <div className="flex h-full flex-col">
       <ChartLegend
         items={[
           { label: "Spend", color: SERIES.spend },
@@ -82,8 +82,8 @@ export function PerformanceTrend({
           { label: "Avg. CPL", color: SERIES.cpl },
         ]}
       />
-      <div style={{ height }}>
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={height}>
+      <div className="flex-1 min-h-0" style={height ? { height } : undefined}>
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={height ?? 0}>
           <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
@@ -93,7 +93,7 @@ export function PerformanceTrend({
             </defs>
             <CartesianGrid stroke="#e5eaf1" vertical={false} />
             <XAxis dataKey="label" tick={axis} axisLine={false} tickLine={false} interval={5} />
-            <YAxis width={38} tick={axis} axisLine={false} tickLine={false} />
+            <YAxis width={40} tick={axis} axisLine={false} tickLine={false} tickFormatter={(v) => compactNum(v / 100)} />
             <Tooltip contentStyle={tooltipStyle} />
             <Area
               type="monotone"
@@ -109,7 +109,7 @@ export function PerformanceTrend({
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </>
+    </div>
   );
 }
 
