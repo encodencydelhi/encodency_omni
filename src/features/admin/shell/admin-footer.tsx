@@ -1,14 +1,31 @@
 export function AdminFooter() {
   return (
-    <footer className="sticky bottom-0 z-10 flex min-h-10 flex-wrap items-center justify-between gap-2 border-t border-[#1a2533] bg-[#0B1121] px-4 py-2 text-[10px] text-[#8C949A] sm:px-5 xl:px-7">
-      <span className="flex items-center gap-2">
-        <span className="bg-gradient-to-r from-[#e20611] to-[#ff4d4d] bg-clip-text font-semibold tracking-wider text-transparent">OmniPlatform</span>
-        <b className="px-1 text-[#C9C4C0]">|</b>
-        <span>© EnCodency Pvt. Ltd.</span>
-      </span>
-      <span>
-        People <b className="px-1 text-[#C9C4C0]">·</b> Platforms <b className="px-1 text-[#C9C4C0]">·</b> Possibilities <b className="px-1 text-[#C9C4C0]">·</b> <strong className="font-semibold text-[#68747C]">Raise the Bar</strong>
-      </span>
+    <footer className="sticky bottom-0 z-50 flex items-center justify-between border-t border-slate-800 bg-slate-900/95 px-5 py-2.5 text-[11px] font-medium text-slate-400 backdrop-blur-md xl:px-8 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+      <div className="flex items-center gap-3">
+        <span className="flex items-center gap-1.5">
+          <span className="bg-gradient-to-r from-red-500 to-rose-400 bg-clip-text font-bold tracking-wide text-transparent">
+            OmniPlatform
+          </span>
+        </span>
+        <span className="h-3 w-px bg-slate-700" />
+        <span>&copy; {new Date().getFullYear()} EnCodency Pvt. Ltd.</span>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <span className="flex items-center gap-1.5 transition-colors hover:text-slate-200 cursor-pointer">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+          </span>
+          All systems operational
+        </span>
+        <span className="h-3 w-px bg-slate-700" />
+        <span className="flex gap-3">
+          <a href="#" className="transition-colors hover:text-white">Support</a>
+          <a href="#" className="transition-colors hover:text-white">Documentation</a>
+          <a href="#" className="transition-colors hover:text-white">Terms</a>
+        </span>
+      </div>
     </footer>
   );
 }
