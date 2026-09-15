@@ -192,25 +192,25 @@ const tint: Record<string, string> = {
 
 export function YouTubeChannelPage() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <Header />
       <Tabs />
-      <div className="grid items-start gap-3 [&>section]:h-[236px] xl:grid-cols-[1.71fr_1fr_1fr]">
+      <div className="grid items-start gap-1 [&>section]:h-[236px] xl:grid-cols-[1.71fr_1fr_1fr]">
         <ChannelBanner />
         <ChannelHealth />
         <QuickActions />
       </div>
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-6">
         {stats.map((stat) => (
           <Stat key={stat.label} {...stat} />
         ))}
       </div>
-      <div className="grid items-start gap-3 [&>section]:h-[224px] xl:grid-cols-[1.6fr_1.02fr_1fr]">
+      <div className="grid items-start gap-1 [&>section]:h-[224px] xl:grid-cols-[1.6fr_1.02fr_1fr]">
         <PerformanceOverview />
         <TrafficSources />
         <Audience />
       </div>
-      <div className="grid items-start gap-3 [&>section]:h-[290px] xl:grid-cols-[1.21fr_.94fr_1fr]">
+      <div className="grid items-start gap-1 [&>section]:h-[290px] xl:grid-cols-[1.21fr_.94fr_1fr]">
         <TopVideos />
         <RecentComments />
         <ContentCalendar />
@@ -228,8 +228,8 @@ function Header() {
         <span className="font-semibold text-[#E02B20]">YouTube</span>
       </nav>
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <span className="grid h-[34px] w-[48px] shrink-0 place-items-center rounded-lg bg-[#FF0000] shadow-[0_1px_5px_rgb(255_0_0/0.28)]">
+        <div className="flex items-center gap-1">
+          <span className="grid h-[34px] w-[48px] shrink-0 place-items-center rounded-sm bg-[#FF0000] shadow-[0_1px_5px_rgb(255_0_0/0.28)]">
             <Play className="size-[15px] fill-white text-white" />
           </span>
           <div>
@@ -241,8 +241,8 @@ function Header() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2.5">
-          <button className="flex h-[42px] items-center gap-2 rounded-lg border border-[#D7E0EB] bg-white px-3 shadow-[0_1px_4px_rgb(31_50_81/0.06)]">
+        <div className="flex items-center gap-1.5">
+          <button className="flex h-[42px] items-center gap-1 rounded-sm border border-[#D7E0EB] bg-white px-3 shadow-[0_1px_4px_rgb(31_50_81/0.06)]">
             <CalendarDays className="size-4 shrink-0 text-[#19315E]" />
             <span className="text-left leading-none">
               <b className="block text-[11.5px] leading-4 text-[#172044]">Last 28 days</b>
@@ -252,7 +252,7 @@ function Header() {
             </span>
             <ChevronDown className="ml-1 size-3.5 shrink-0 text-[#75829D]" />
           </button>
-          <button className="flex h-[42px] items-center gap-2 rounded-lg bg-[#E4222B] px-4 text-[12.5px] font-semibold text-white shadow-[0_1px_4px_rgb(228_34_43/0.3)] transition-colors hover:bg-[#C91C24]">
+          <button className="flex h-[42px] items-center gap-1 rounded-sm bg-[#E4222B] px-4 text-[12.5px] font-semibold text-white shadow-[0_1px_4px_rgb(228_34_43/0.3)] transition-colors hover:bg-[#C91C24]">
             <Video className="size-4" />
             Create Video
           </button>
@@ -299,12 +299,12 @@ function Card({
   return (
     <section
       className={cn(
-        "flex flex-col overflow-hidden rounded-xl border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]",
+        "flex flex-col overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]",
         className,
       )}
     >
       {title && (
-        <header className="flex h-[42px] shrink-0 items-center justify-between gap-2 px-3.5">
+        <header className="flex h-[42px] shrink-0 items-center justify-between gap-1 px-3.5">
           <h2 className="text-[14px] font-semibold leading-5 text-[#172044]">{title}</h2>
           {filter && (
             <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-sm border border-[#DDE4ED] px-2 text-[10.5px] font-medium text-[#425273]">
@@ -357,16 +357,16 @@ function ChannelBanner() {
         </button>
       </div>
       <div className="relative min-h-0 flex-1 px-3.5">
-        <span className="absolute -top-[30px] left-3.5 grid size-[62px] place-items-center rounded-full border-[3px] border-white bg-white shadow-[0_2px_8px_rgb(31_50_81/0.16)]">
+        <span className="absolute -top-[30px] left-3.5 grid size-[62px] place-items-center rounded-sm border-[3px] border-white bg-white shadow-[0_2px_8px_rgb(31_50_81/0.16)]">
           <Image
             src="/namogange.webp"
             alt="Namo Gange Trust"
             width={54}
             height={54}
-            className="size-full rounded-full object-contain"
+            className="size-full rounded-sm object-contain"
           />
         </span>
-        <div className="flex items-start justify-between gap-3 pl-[74px] pt-1.5">
+        <div className="flex items-start justify-between gap-1 pl-[74px] pt-1.5">
           <div className="min-w-0">
             <p className="flex items-center gap-1 text-[14px] font-semibold leading-5 text-[#172044]">
               Namo Gange Trust
@@ -402,7 +402,7 @@ function ChannelBanner() {
 function ChannelHealth() {
   return (
     <Card title="Channel Health">
-      <div className="grid min-h-0 flex-1 grid-cols-[124px_1fr] items-center gap-2 px-3.5 pb-3.5">
+      <div className="grid min-h-0 flex-1 grid-cols-[124px_1fr] items-center gap-1 px-3.5 pb-3.5">
         <div>
           <div className="relative mx-auto size-[118px]">
             <ResponsiveContainer>
@@ -456,11 +456,11 @@ function ChannelHealth() {
 function QuickActions() {
   return (
     <Card title="Quick Actions">
-      <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-4 gap-2 px-3.5 pb-3.5">
+      <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-4 gap-1 px-3.5 pb-3.5">
         {quickActions.map(({ label, icon: Icon, color }) => (
           <button
             key={label}
-            className="flex items-center gap-2 rounded-lg border border-[#E4EAF2] bg-white px-2 text-[10px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]"
+            className="flex items-center gap-1 rounded-sm border border-[#E4EAF2] bg-white px-2 text-[10px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]"
           >
             <span className={cn("grid size-[22px] shrink-0 place-items-center rounded-sm", tint[color])}>
               <Icon className="size-3.5" />
@@ -487,8 +487,8 @@ function Stat({
   color: string;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-[#DCE4EE] bg-white px-2.5 py-2 shadow-[0_1px_4px_rgb(31_50_81/0.05)] transition-shadow hover:shadow-md">
-      <span className={cn("grid size-[34px] shrink-0 place-items-center rounded-full", tint[color])}>
+    <div className="flex items-center gap-1 rounded-sm border border-[#DCE4EE] bg-white px-2.5 py-2 shadow-[0_1px_4px_rgb(31_50_81/0.05)] transition-shadow hover:shadow-md">
+      <span className={cn("grid size-[34px] shrink-0 place-items-center rounded-sm", tint[color])}>
         <Icon className="size-[17px]" />
       </span>
       <div className="min-w-0">
@@ -507,7 +507,7 @@ function ChartLegend({ items }: { items: readonly { label: string; color: string
     <div className="flex shrink-0 flex-wrap items-center gap-x-3.5 gap-y-1 text-[10px] text-[#52617D]">
       {items.map((item) => (
         <span key={item.label} className="flex items-center gap-1.5">
-          <i className="size-2 rounded-full" style={{ background: item.color }} />
+          <i className="size-2 rounded-sm" style={{ background: item.color }} />
           {item.label}
         </span>
       ))}
@@ -586,7 +586,7 @@ function PerformanceOverview() {
 function TrafficSources() {
   return (
     <Card title="Traffic Sources" action={<ViewAll label="View Details" />}>
-      <div className="grid min-h-0 flex-1 grid-cols-[124px_1fr] items-center gap-2 px-3.5 pb-3">
+      <div className="grid min-h-0 flex-1 grid-cols-[124px_1fr] items-center gap-1 px-3.5 pb-3">
         <div className="relative size-[122px]">
           <ResponsiveContainer>
             <PieChart>
@@ -614,7 +614,7 @@ function TrafficSources() {
         <ul className="min-w-0 space-y-[5px]">
           {trafficSources.map((slice) => (
             <li key={slice.name} className="flex items-center gap-1.5 text-[10.5px]">
-              <i className="size-2 shrink-0 rounded-full" style={{ background: slice.color }} />
+              <i className="size-2 shrink-0 rounded-sm" style={{ background: slice.color }} />
               <span className="min-w-0 flex-1 truncate text-[#52617D]">{slice.name}</span>
               <b className="shrink-0 text-[#172044]">{slice.value}%</b>
             </li>
@@ -644,7 +644,7 @@ function Audience() {
             </button>
           ))}
         </div>
-        <div className="grid min-h-0 flex-1 grid-cols-[104px_1fr] items-center gap-2">
+        <div className="grid min-h-0 flex-1 grid-cols-[104px_1fr] items-center gap-1">
           <div>
             <div className="relative mx-auto size-[86px]">
               <ResponsiveContainer>
@@ -664,7 +664,7 @@ function Audience() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-0.5 flex justify-center gap-3">
+            <div className="mt-0.5 flex justify-center gap-1">
               {gender.map((slice) => (
                 <span key={slice.name} className="text-center">
                   <UsersRound
@@ -684,9 +684,9 @@ function Audience() {
                 className="grid grid-cols-[38px_1fr_26px] items-center gap-1.5 text-[9.5px]"
               >
                 <span className="text-[#52617D]">{group.range}</span>
-                <span className="h-1.5 overflow-hidden rounded-full bg-[#EDF1F7]">
+                <span className="h-1.5 overflow-hidden rounded-sm bg-[#EDF1F7]">
                   <i
-                    className="block h-full rounded-full bg-[#2D7FF0]"
+                    className="block h-full rounded-sm bg-[#2D7FF0]"
                     style={{ width: `${(group.value / 64) * 100}%` }}
                   />
                 </span>
@@ -707,7 +707,7 @@ function TopVideos() {
         {topVideos.map((video, index) => (
           <div
             key={video.title}
-            className="flex items-center gap-2 border-t border-[#EDF1F5] py-[7px] first:border-t-0"
+            className="flex items-center gap-1 border-t border-[#EDF1F5] py-[7px] first:border-t-0"
           >
             <span className="w-3 shrink-0 text-center text-[10px] font-semibold text-[#8A97AF]">
               {index + 1}
@@ -756,7 +756,7 @@ function RecentComments() {
         {comments.map((comment, index) => (
           <div
             key={comment.name}
-            className="flex items-center gap-2 border-t border-[#EDF1F5] py-2 first:border-t-0"
+            className="flex items-center gap-1 border-t border-[#EDF1F5] py-2 first:border-t-0"
           >
             {index === 0 && comment.photo ? (
               <Image
@@ -764,12 +764,12 @@ function RecentComments() {
                 alt=""
                 width={28}
                 height={28}
-                className="size-7 shrink-0 rounded-full object-cover"
+                className="size-7 shrink-0 rounded-sm object-cover"
               />
             ) : (
               <span
                 className={cn(
-                  "grid size-7 shrink-0 place-items-center rounded-full text-[10px] font-semibold",
+                  "grid size-7 shrink-0 place-items-center rounded-sm text-[10px] font-semibold",
                   commentTints[index],
                 )}
               >
@@ -804,7 +804,7 @@ function ContentCalendar() {
         {contentCalendar.map((item) => (
           <div
             key={item.title}
-            className="flex items-center gap-2 border-t border-[#EDF1F5] py-2 first:border-t-0"
+            className="flex items-center gap-1 border-t border-[#EDF1F5] py-2 first:border-t-0"
           >
             <span className="grid w-[30px] shrink-0 place-items-center rounded-sm bg-[#FFEFF0] py-0.5 leading-none text-[#D6323C]">
               <small className="text-[7.5px] font-semibold">{item.month}</small>

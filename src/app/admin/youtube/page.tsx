@@ -1,5 +1,5 @@
-import { YouTubeChannelPage } from "@/features/admin/channels/components/youtube-channel-page";
+import { OverviewPage } from "@/features/admin/youtube/pages/overview-page";
 
 export default function Page() {
-  return <YouTubeChannelPage />;
+  return <OverviewPage />;
 }
