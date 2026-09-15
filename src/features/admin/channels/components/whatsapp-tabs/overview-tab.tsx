@@ -67,23 +67,23 @@ const messageStats = [
 ];
 
 const performanceData30d = [
-  { d: "Mar 15", sent: 1250, delivered: 980, read: 640, replied: 190 },
-  { d: "Mar 20", sent: 1580, delivered: 1240, read: 820, replied: 260 },
-  { d: "Mar 25", sent: 1420, delivered: 1150, read: 780, replied: 230 },
-  { d: "Mar 30", sent: 2100, delivered: 1680, read: 1150, replied: 380 },
-  { d: "Apr 5", sent: 2450, delivered: 1960, read: 1380, replied: 460 },
-  { d: "Apr 10", sent: 2780, delivered: 2240, read: 1620, replied: 540 },
-  { d: "Apr 14", sent: 3100, delivered: 2520, read: 1850, replied: 620 },
+  { d: "Mar 15", sent: 2400, delivered: 1750, read: 1100, replied: 350 },
+  { d: "Mar 20", sent: 2700, delivered: 2000, read: 1300, replied: 420 },
+  { d: "Mar 25", sent: 2550, delivered: 1850, read: 1200, replied: 380 },
+  { d: "Mar 30", sent: 3300, delivered: 2450, read: 1600, replied: 520 },
+  { d: "Apr 5", sent: 3700, delivered: 2800, read: 1850, replied: 620 },
+  { d: "Apr 10", sent: 4100, delivered: 3100, read: 2100, replied: 750 },
+  { d: "Apr 14", sent: 4500, delivered: 3450, read: 2350, replied: 880 },
 ];
 
 const performanceData7d = [
-  { d: "Apr 8", sent: 2300, delivered: 1850, read: 1280, replied: 410 },
-  { d: "Apr 9", sent: 2450, delivered: 1960, read: 1390, replied: 450 },
-  { d: "Apr 10", sent: 2600, delivered: 2100, read: 1520, replied: 490 },
-  { d: "Apr 11", sent: 2720, delivered: 2200, read: 1600, replied: 530 },
-  { d: "Apr 12", sent: 2850, delivered: 2320, read: 1690, replied: 560 },
-  { d: "Apr 13", sent: 2980, delivered: 2420, read: 1780, replied: 590 },
-  { d: "Apr 14", sent: 3100, delivered: 2520, read: 1850, replied: 620 },
+  { d: "Apr 8", sent: 3600, delivered: 2700, read: 1750, replied: 580 },
+  { d: "Apr 9", sent: 3750, delivered: 2820, read: 1850, replied: 630 },
+  { d: "Apr 10", sent: 3950, delivered: 2980, read: 1980, replied: 690 },
+  { d: "Apr 11", sent: 4100, delivered: 3100, read: 2080, replied: 740 },
+  { d: "Apr 12", sent: 4250, delivered: 3220, read: 2180, replied: 800 },
+  { d: "Apr 13", sent: 4380, delivered: 3340, read: 2260, replied: 840 },
+  { d: "Apr 14", sent: 4500, delivered: 3450, read: 2350, replied: 880 },
 ];
 
 const breakdownData = [
@@ -260,14 +260,14 @@ export function OverviewTab({
             </div>
             <div className="ml-4 flex-1 space-y-2.5">
               {breakdownData.map((d, i) => (
-                <div key={d.name} className="flex items-center justify-between text-xs">
+                <div key={d.name} className="flex items-center justify-between text-xs whitespace-nowrap">
                   <span className="flex items-center gap-1.5 text-slate-600 font-medium">
-                    <i className="size-2.5 rounded-sm" style={{ backgroundColor: d.color }} />
+                    <i className="size-2.5 rounded-sm shrink-0" style={{ backgroundColor: d.color }} />
                     {d.name}
                   </span>
-                  <div className="flex items-baseline gap-1.5 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
                     <b className="text-slate-900 font-bold text-xs">{d.value.toLocaleString()}</b>
-                    <span className={cn("text-[11px] font-medium", i === 3 ? "text-rose-600" : "text-emerald-600")}>
+                    <span className={cn("text-[11px] font-semibold", i === 3 ? "text-rose-600" : "text-emerald-600")}>
                       {["(96.5%)", "(77.6%)", "(26.2%)", "(3.5%)"][i]}
                     </span>
                   </div>
@@ -354,15 +354,15 @@ export function OverviewTab({
           }
         >
           <div className="overflow-x-auto [scrollbar-width:thin] px-3 py-1">
-            <div className="grid min-w-[420px] grid-cols-[1.5fr_1fr_1fr_1fr_1.3fr] gap-2 py-2 text-[10.5px] font-bold text-slate-400 uppercase border-b border-slate-100">
+            <div className="grid min-w-[460px] grid-cols-[1.5fr_1fr_1fr_1fr_1.3fr] gap-2 py-2 text-[10.5px] font-bold text-slate-400 uppercase border-b border-slate-100 whitespace-nowrap">
               <span>Campaign</span>
               <span>Type</span>
               <span>Audience</span>
               <span>Status</span>
-              <span>Sent On</span>
+              <span className="whitespace-nowrap">Sent On</span>
             </div>
             {recentCampaigns.map((c) => (
-              <div key={c.name} className="grid min-w-[420px] grid-cols-[1.5fr_1fr_1fr_1fr_1.3fr] gap-2 items-center border-b border-slate-50 py-2.5 text-xs hover:bg-slate-50/80 transition-colors">
+              <div key={c.name} className="grid min-w-[460px] grid-cols-[1.5fr_1fr_1fr_1fr_1.3fr] gap-2 items-center border-b border-slate-50 py-2.5 text-xs hover:bg-slate-50/80 transition-colors whitespace-nowrap">
                 <span className="truncate font-bold text-slate-900">{c.name}</span>
                 <span>
                   <i className={cn("inline-flex items-center justify-center w-[74px] rounded-sm py-0.5 text-[10px] font-bold not-italic border text-center shrink-0", c.type === "Marketing" ? "bg-pink-50 text-pink-700 border-pink-200" : "bg-blue-50 text-blue-700 border-blue-200")}>
@@ -375,7 +375,7 @@ export function OverviewTab({
                     {c.status}
                   </i>
                 </span>
-                <span className="text-slate-500 text-[10.5px] font-semibold leading-tight">{c.date}</span>
+                <span className="text-slate-500 text-[10.5px] font-semibold whitespace-nowrap">{c.date}</span>
               </div>
             ))}
           </div>
