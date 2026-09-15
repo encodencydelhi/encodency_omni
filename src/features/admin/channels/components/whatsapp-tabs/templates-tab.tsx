@@ -15,6 +15,9 @@ import {
   FileX,
   ChevronLeft,
   ChevronRight,
+  ShieldCheck,
+  Sparkles,
+  Send,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
@@ -73,7 +76,39 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
   };
 
   return (
-    <div className="space-y-4 pt-1">
+    <div className="space-y-3 pt-1">
+      {/* 6 Key Template Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+        {[
+          { label: "Total Templates", value: "12", trend: "Approved", icon: FileText, bg: "bg-emerald-50/80 border-emerald-200/80", iconBg: "bg-emerald-600 text-white shadow-xs", text: "text-emerald-700", note: "WABA approved" },
+          { label: "Marketing", value: "6", trend: "50%", icon: Send, bg: "bg-blue-50/80 border-blue-200/80", iconBg: "bg-blue-600 text-white shadow-xs", text: "text-blue-700", note: "promotions & offers" },
+          { label: "Utility", value: "4", trend: "33%", icon: Sparkles, bg: "bg-purple-50/80 border-purple-200/80", iconBg: "bg-purple-600 text-white shadow-xs", text: "text-purple-700", note: "alerts & updates" },
+          { label: "Authentication", value: "2", trend: "17%", icon: ShieldCheck, bg: "bg-teal-50/80 border-teal-200/80", iconBg: "bg-teal-600 text-white shadow-xs", text: "text-teal-700", note: "OTP & codes" },
+          { label: "Pending Meta", value: "0", trend: "0%", icon: Clock, bg: "bg-amber-50/80 border-amber-200/80", iconBg: "bg-amber-600 text-white shadow-xs", text: "text-amber-700", note: "under review" },
+          { label: "Quality Rating", value: "High", trend: "100%", icon: CheckCircle2, bg: "bg-emerald-50/80 border-emerald-200/80", iconBg: "bg-emerald-600 text-white shadow-xs", text: "text-emerald-700", note: "zero template flags" },
+        ].map((stat, i) => (
+          <div
+            key={i}
+            className={cn(
+              "flex items-center gap-2.5 rounded-sm border p-3 bg-white shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-xs",
+              stat.bg
+            )}
+          >
+            <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", stat.iconBg)}>
+              <stat.icon className="size-4.5" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-[10.5px] font-medium text-slate-500 uppercase tracking-wider">{stat.label}</p>
+              <div className="flex items-baseline gap-1">
+                <b className="text-lg font-bold tracking-tight text-slate-900">{stat.value}</b>
+                <span className={cn("text-[11px] font-medium whitespace-nowrap", stat.text)}>{stat.trend}</span>
+              </div>
+              <p className="text-[9.5px] text-slate-400 font-normal truncate">{stat.note}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
@@ -121,21 +156,25 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
       </div>
 
       {/* Summary KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
         {[
-          { label: "Total Templates", value: templateList.length.toString(), icon: FileText, color: "bg-blue-50 text-blue-600 border-blue-100" },
-          { label: "Approved", value: templateList.filter((t) => t.status === "Approved").length.toString(), icon: CheckCircle2, color: "bg-emerald-50 text-emerald-600 border-emerald-100" },
-          { label: "Pending Meta", value: templateList.filter((t) => t.status === "Pending").length.toString(), icon: Clock, color: "bg-amber-50 text-amber-600 border-amber-100" },
-          { label: "Rejected", value: templateList.filter((t) => t.status === "Rejected").length.toString(), icon: AlertTriangle, color: "bg-rose-50 text-rose-600 border-rose-100" },
-          { label: "Draft", value: templateList.filter((t) => t.status === "Draft").length.toString(), icon: FileX, color: "bg-slate-100 text-slate-600 border-slate-200" },
+          { label: "Total Templates", value: templateList.length.toString(), trend: "All", icon: FileText, bg: "bg-blue-50/80 border-blue-200/80", iconBg: "bg-blue-600 text-white shadow-xs", text: "text-blue-700", note: "WABA templates" },
+          { label: "Approved", value: templateList.filter((t) => t.status === "Approved").length.toString(), trend: "Active", icon: CheckCircle2, bg: "bg-emerald-50/80 border-emerald-200/80", iconBg: "bg-emerald-600 text-white shadow-xs", text: "text-emerald-700", note: "ready to send" },
+          { label: "Pending Meta", value: templateList.filter((t) => t.status === "Pending").length.toString(), trend: "Review", icon: Clock, bg: "bg-amber-50/80 border-amber-200/80", iconBg: "bg-amber-600 text-white shadow-xs", text: "text-amber-700", note: "under review" },
+          { label: "Rejected", value: templateList.filter((t) => t.status === "Rejected").length.toString(), trend: "Fix", icon: AlertTriangle, bg: "bg-rose-50/80 border-rose-200/80", iconBg: "bg-rose-600 text-white shadow-xs", text: "text-rose-700", note: "needs update" },
+          { label: "Draft", value: templateList.filter((t) => t.status === "Draft").length.toString(), trend: "Draft", icon: FileX, bg: "bg-slate-50/80 border-slate-200/80", iconBg: "bg-slate-600 text-white shadow-xs", text: "text-slate-700", note: "not submitted" },
         ].map((s, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-sm border border-slate-200/90 bg-white p-3 shadow-xs">
-            <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm font-bold", s.color)}>
-              <s.icon className="size-4" />
+          <div key={i} className={cn("flex items-center gap-2.5 rounded-sm border p-3 bg-white shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-xs", s.bg)}>
+            <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", s.iconBg)}>
+              <s.icon className="size-4.5" />
             </span>
-            <div>
-              <p className="text-xs font-semibold text-slate-500">{s.label}</p>
-              <b className="text-lg font-bold text-slate-900">{s.value}</b>
+            <div className="min-w-0">
+              <p className="truncate text-[10.5px] font-medium text-slate-500 uppercase tracking-wider">{s.label}</p>
+              <div className="flex items-baseline gap-1">
+                <b className="text-lg font-bold tracking-tight text-slate-900">{s.value}</b>
+                <span className={cn("text-[11px] font-medium whitespace-nowrap", s.text)}>{s.trend}</span>
+              </div>
+              {s.note && <p className="text-[9.5px] text-slate-400 font-normal truncate">{s.note}</p>}
             </div>
           </div>
         ))}

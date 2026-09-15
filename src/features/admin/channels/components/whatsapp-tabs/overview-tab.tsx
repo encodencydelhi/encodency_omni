@@ -17,7 +17,6 @@ import {
 } from "recharts";
 import {
   CheckCircle2,
-  ChevronDown,
   MonitorPlay,
   Send,
   Eye,
@@ -33,15 +32,8 @@ import {
   UserCheck,
   UserX,
   UserMinus,
-  Sparkles,
   ArrowUpRight,
-  ShieldCheck,
   Pencil,
-  Zap,
-  Globe,
-  Clock,
-  PhoneCall,
-  Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
@@ -149,7 +141,7 @@ function Box({
   className?: string;
 }) {
   return (
-    <section className={cn("overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs flex flex-col transition-all hover:shadow-md", className)}>
+    <section className={cn("overflow-hidden rounded-sm border border-slate-200 bg-white shadow-xs flex flex-col transition-all hover:shadow-md", className)}>
       <header className="flex h-12 shrink-0 items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4">
         <h2 className="text-xs font-bold tracking-wider text-slate-800 uppercase">{title}</h2>
         {action && <div className="text-xs font-semibold text-slate-500 flex items-center gap-1">{action}</div>}
@@ -171,9 +163,9 @@ export function OverviewTab({
   const details = integrationDetails || defaultIntegrationDetails;
 
   return (
-    <div className="space-y-4 pt-1 bg-slate-50/30 p-1 rounded-2xl">
+    <div className="space-y-2 pt-1 bg-slate-50/30 p-1 rounded-sm">
       {/* 6 Key Metric Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
         {messageStats.map((stat, i) => {
           const colorStyles: Record<string, { bg: string; iconBg: string; text: string }> = {
             green: { bg: "bg-emerald-50/80 border-emerald-200/80", iconBg: "bg-emerald-600 text-white shadow-xs", text: "text-emerald-700" },
@@ -181,26 +173,26 @@ export function OverviewTab({
             purple: { bg: "bg-purple-50/80 border-purple-200/80", iconBg: "bg-purple-600 text-white shadow-xs", text: "text-purple-700" },
             red: { bg: "bg-rose-50/80 border-rose-200/80", iconBg: "bg-rose-600 text-white shadow-xs", text: "text-rose-700" },
           };
-          const style = colorStyles[stat.color] || colorStyles.green;
+          const style = (colorStyles[stat.color] || colorStyles.green) as { bg: string; iconBg: string; text: string };
 
           return (
             <div
               key={i}
               className={cn(
-                "flex items-center gap-3 rounded-2xl border p-3.5 bg-white shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md",
+                "flex items-center gap-2.5 rounded-sm border p-3 bg-white shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-xs",
                 style.bg
               )}
             >
-              <span className={cn("grid size-10 shrink-0 place-items-center rounded-sm font-bold", style.iconBg)}>
-                <stat.icon className="size-5" />
+              <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", style.iconBg)}>
+                <stat.icon className="size-4.5" />
               </span>
               <div className="min-w-0">
-                <p className="truncate text-[11px] font-bold text-slate-500 uppercase tracking-wider">{stat.label}</p>
-                <div className="flex items-baseline gap-1.5">
-                  <b className="text-xl font-extrabold tracking-tight text-slate-900">{stat.value}</b>
-                  <span className={cn("text-xs font-bold whitespace-nowrap", style.text)}>{stat.trend}</span>
+                <p className="truncate text-[10.5px] font-medium text-slate-500 uppercase tracking-wider">{stat.label}</p>
+                <div className="flex items-baseline gap-1">
+                  <b className="text-lg font-bold tracking-tight text-slate-900">{stat.value}</b>
+                  <span className={cn("text-[11px] font-medium whitespace-nowrap", style.text)}>{stat.trend}</span>
                 </div>
-                {stat.note && <p className="text-[10px] text-slate-400 font-semibold truncate">{stat.note}</p>}
+                {stat.note && <p className="text-[9.5px] text-slate-400 font-normal truncate">{stat.note}</p>}
               </div>
             </div>
           );
@@ -208,7 +200,7 @@ export function OverviewTab({
       </div>
 
       {/* Row 2: Performance, Breakdown, Top Campaigns */}
-      <div className="grid min-h-[290px] grid-cols-1 lg:grid-cols-3 gap-3">
+      <div className="grid min-h-[290px] grid-cols-1 lg:grid-cols-3 gap-2">
         <Box
           title="Message Performance"
           action={
@@ -317,7 +309,7 @@ export function OverviewTab({
       </div>
 
       {/* Row 3: Recent Campaigns, Message Templates, Quick Actions */}
-      <div className="grid min-h-[310px] grid-cols-1 lg:grid-cols-3 gap-3">
+      <div className="grid min-h-[310px] grid-cols-1 lg:grid-cols-3 gap-2">
         <Box
           title="Recent Campaigns"
           action={
@@ -408,9 +400,9 @@ export function OverviewTab({
               <button
                 key={i}
                 onClick={() => (a.modal ? onOpenModal(a.modal) : a.tab && onTabChange(a.tab))}
-                className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left text-xs font-bold text-slate-800 hover:bg-slate-100/80 transition-all border border-transparent hover:border-slate-200 group"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-800 hover:bg-slate-100/80 transition-all border border-transparent hover:border-slate-200 group"
               >
-                <span className={cn("p-1.5 rounded-sm border transition-transform group-hover:scale-105", a.color)}>
+                <span className={cn("p-1.5 rounded-lg border transition-transform group-hover:scale-105", a.color)}>
                   <a.icon className="size-3.5" />
                 </span>
                 {a.label}
@@ -421,7 +413,7 @@ export function OverviewTab({
       </div>
 
       {/* Row 4: Recent Conversations, Audience Growth, Integration Details */}
-      <div className="grid min-h-[340px] grid-cols-1 lg:grid-cols-3 gap-3">
+      <div className="grid min-h-[340px] grid-cols-1 lg:grid-cols-3 gap-2">
         <Box
           title="Recent Conversations"
           action={

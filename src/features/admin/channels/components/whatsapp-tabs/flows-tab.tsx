@@ -14,7 +14,6 @@ import {
   Workflow,
   Users,
   X,
-  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
@@ -89,7 +88,7 @@ export function FlowsTab() {
   };
 
   return (
-    <div className="space-y-4 pt-1">
+    <div className="space-y-2 pt-1">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -105,21 +104,31 @@ export function FlowsTab() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
         {[
-          { label: "Total Flows", value: flowList.length.toString(), icon: Workflow, color: "bg-emerald-50 text-emerald-600 border-emerald-100" },
-          { label: "Published", value: flowList.filter((f) => f.status === "Published").length.toString(), icon: Zap, color: "bg-blue-50 text-blue-600 border-blue-100" },
-          { label: "Total Submissions", value: "3,352", icon: FormInput, color: "bg-purple-50 text-purple-600 border-purple-100" },
-          { label: "Avg Completion", value: "81%", icon: BarChart3, color: "bg-teal-50 text-teal-600 border-teal-100" },
-          { label: "Active Form Users", value: "1,847", icon: Users, color: "bg-amber-50 text-amber-600 border-amber-100" },
+          { label: "Total Flows", value: flowList.length.toString(), trend: "Live", note: "interactive forms", icon: Workflow, bg: "bg-emerald-50/80 border-emerald-200/80", iconBg: "bg-emerald-600 text-white shadow-xs", text: "text-emerald-700" },
+          { label: "Published", value: flowList.filter((f) => f.status === "Published").length.toString(), trend: "Active", note: "in production chats", icon: Zap, bg: "bg-blue-50/80 border-blue-200/80", iconBg: "bg-blue-600 text-white shadow-xs", text: "text-blue-700" },
+          { label: "Total Submissions", value: "3,352", trend: "↑ 28%", note: "form responses", icon: FormInput, bg: "bg-purple-50/80 border-purple-200/80", iconBg: "bg-purple-600 text-white shadow-xs", text: "text-purple-700" },
+          { label: "Avg Completion", value: "81.4%", trend: "↑ 3.2%", note: "high finish rate", icon: BarChart3, bg: "bg-teal-50/80 border-teal-200/80", iconBg: "bg-teal-600 text-white shadow-xs", text: "text-teal-700" },
+          { label: "Active Flow Users", value: "1,847", trend: "↑ 19%", note: "engaged subscribers", icon: Users, bg: "bg-amber-50/80 border-amber-200/80", iconBg: "bg-amber-600 text-white shadow-xs", text: "text-amber-700" },
         ].map((s, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-sm border border-slate-200/90 bg-white p-3 shadow-xs">
-            <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm font-bold", s.color)}>
-              <s.icon className="size-4" />
+          <div
+            key={i}
+            className={cn(
+              "flex items-center gap-2.5 rounded-sm border p-3 bg-white shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-xs",
+              s.bg
+            )}
+          >
+            <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", s.iconBg)}>
+              <s.icon className="size-4.5" />
             </span>
-            <div>
-              <p className="text-xs font-semibold text-slate-500">{s.label}</p>
-              <b className="text-lg font-bold text-slate-900">{s.value}</b>
+            <div className="min-w-0">
+              <p className="truncate text-[10.5px] font-medium text-slate-500 uppercase tracking-wider">{s.label}</p>
+              <div className="flex items-baseline gap-1">
+                <b className="text-lg font-bold tracking-tight text-slate-900">{s.value}</b>
+                <span className={cn("text-[11px] font-medium whitespace-nowrap", s.text)}>{s.trend}</span>
+              </div>
+              <p className="text-[9.5px] text-slate-400 font-normal truncate">{s.note}</p>
             </div>
           </div>
         ))}
@@ -199,7 +208,7 @@ export function FlowsTab() {
       </section>
 
       {/* Screen Sequence Preview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-3">
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Flow Screen Builder Structure</h3>
           <div className="space-y-2.5">

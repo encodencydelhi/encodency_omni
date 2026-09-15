@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send, Plus, Sparkles } from "lucide-react";
+import { Send } from "lucide-react";
 import { toast } from "sonner";
 import { ChannelHeader } from "./channel-header";
 import { cn } from "@/lib/utils/cn";
@@ -77,7 +77,7 @@ export function WhatsappChannelPage() {
   return (
     <div className="pb-8">
       {/* Header Navigation & Banner */}
-      <div className="-mx-4 -mt-5 mb-5 bg-white px-4 pt-5 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6 shadow-xs border-b border-slate-200">
+      <div className="-mx-4 -mt-5 mb-[4px] bg-white px-4 pt-5 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6 shadow-xs border-b border-slate-200">
         <ChannelHeader
           channel="whatsapp"
           onSync={handleSync}

@@ -85,6 +85,7 @@ import {
 import { ChannelLogo } from "../../shared/channel-logo";
 import { ChannelHeader } from "./channel-header";
 import { cn } from "@/lib/utils/cn";
+import { LinkedInCreatePostModal } from "./linkedin-create-post-modal";
 
 const tabs = [
   "Overview",
@@ -130,7 +131,7 @@ function Card({
   return (
     <section
       className={cn(
-        "flex flex-col overflow-hidden rounded-none border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]",
+        "flex flex-col overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]",
         className,
       )}
     >
@@ -142,7 +143,7 @@ function Card({
       >
         <h2 className="text-[14px] font-semibold text-[#172044]">{title}</h2>
         {filter && (
-          <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+          <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-sm border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
             {filter}
             <ChevronDown className="size-3" />
           </button>
@@ -180,12 +181,16 @@ function CardLink({
 
 export function LinkedInChannelPage() {
   const [activeTab, setActiveTab] = useState<TabType>("Overview");
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
 
   return (
     <div className="pb-8">
       {/* White Header Area */}
       <div className="-mx-4 -mt-5 mb-5 bg-white px-4 pt-5 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6 shadow-sm border-b border-[#E4EAF2]">
-        <ChannelHeader channel="linkedin" />
+        <ChannelHeader
+          channel="linkedin"
+          onPrimaryAction={() => setIsCreatePostOpen(true)}
+        />
         <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
@@ -199,6 +204,11 @@ export function LinkedInChannelPage() {
         {activeTab === "Inbox" && <InboxTab />}
         {activeTab === "Settings" && <SettingsTab />}
       </div>
+
+      <LinkedInCreatePostModal
+        isOpen={isCreatePostOpen}
+        onClose={() => setIsCreatePostOpen(false)}
+      />
     </div>
   );
 }
@@ -2505,20 +2515,27 @@ const recentActivity = [
 function OverviewTab({ onNavigateTab }: { onNavigateTab?: (tab: TabType) => void }) {
   return (
     <div className="space-y-2">
-      <div className="grid items-start gap-2 [&>section]:h-[318px] xl:grid-cols-[1.18fr_1fr_1fr]">
-        <PageOverview />
-        <KeyMetrics />
-        <AudienceDemographics onNavigateToAudience={() => onNavigateTab?.("Audience")} />
-      </div>
-      <div className="grid items-start gap-2 [&>section]:h-[234px] xl:grid-cols-[.96fr_1fr]">
+      {/* 1. Namo Gange Trust Page Banner (Commented out for now) */}
+      {/* <PageOverview /> */}
+
+      {/* 2. 6 Key Metrics in a FULL ROW */}
+      <KeyMetrics />
+
+      {/* 3. Performance Trend, Top Posts & Audience Demographics */}
+      <div className="grid items-start gap-2 [&>section]:h-[260px] xl:grid-cols-[1.1fr_1fr_1fr]">
         <PerformanceTrend />
         <TopPosts />
+        <AudienceDemographics onNavigateToAudience={() => onNavigateTab?.("Audience")} />
       </div>
+
+      {/* 4. Content Calendar, Page Growth, Quick Actions & Recent Activity */}
       <div className="grid items-start gap-2 [&>section]:h-[340px] xl:grid-cols-[.86fr_.88fr_1fr]">
         <ContentCalendar />
         <PageGrowth />
         <ActionsAndActivity />
       </div>
+
+      {/* 5. Custom CTA & Live Events */}
       <div className="grid items-stretch gap-2 lg:grid-cols-2">
         <PageCustomCtaAnalytics />
         <LinkedInLiveEvents />
@@ -2527,58 +2544,62 @@ function OverviewTab({ onNavigateTab }: { onNavigateTab?: (tab: TabType) => void
   );
 }
 
-function PageOverview() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function PageOverview() {
   return (
-    <Card
-      title="Page Overview"
-    >
-      <div className="min-h-0 flex-1 pb-4">
+    <Card title="" headerClassName="hidden">
+      <div className="min-h-0 flex-1 pb-3.5">
         <div className="relative">
-          <div className="relative h-[104px] overflow-hidden rounded-none">
+          <div className="relative h-[116px] sm:h-[130px] overflow-hidden rounded-t-sm">
             <Image
               src="/campaigns/river-cleanup.jpg"
               alt="Namo Gange Trust page banner"
               fill
-              sizes="480px"
+              sizes="100vw"
               priority
               className="object-cover"
             />
             <div className="absolute inset-0 bg-[#0B3C63]/35" />
             <div className="absolute right-3 top-3 z-10">
-              <button className="flex h-6 items-center gap-1.5 rounded-none bg-white px-2.5 text-[10.5px] font-semibold text-[#172044] shadow-sm hover:bg-slate-50">
+              <button className="flex h-7 items-center gap-1.5 rounded-sm bg-white px-2.5 text-[11px] font-semibold text-[#172044] shadow-xs hover:bg-slate-50 cursor-pointer">
                 <Pencil className="size-3" />
                 Edit Page
               </button>
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
-              <p className="text-[13px] font-semibold leading-[17px] drop-shadow-sm mt-2">
-                Cleaner Rivers
-                <br />
-                Brighter Tomorrows
+              <p className="text-[14px] font-semibold leading-[18px] drop-shadow-sm mt-1">
+                Cleaner Rivers · Brighter Tomorrows
               </p>
-              <span className="mt-1 rounded-none bg-[#0A66C2] px-1.5 py-0.5 text-[11px] font-semibold">
+              <span className="mt-1 rounded-sm bg-[#0A66C2] px-2 py-0.5 text-[11px] font-semibold shadow-xs">
                 #NamoGange
               </span>
             </div>
           </div>
-          <span className="absolute -bottom-5 left-4 grid size-[58px] place-items-center rounded-none border border-[#E8EDF3] bg-white p-1 shadow-[0_2px_8px_rgb(31_50_81/0.14)]">
+          <span className="absolute -bottom-6 left-5 grid size-[64px] place-items-center rounded-sm border border-[#E8EDF3] bg-white p-1 shadow-[0_2px_8px_rgb(31_50_81/0.14)]">
             <Image
               src="/namogange.webp"
               alt="Namo Gange Trust"
-              width={48}
-              height={48}
+              width={54}
+              height={54}
               className="size-full object-contain"
             />
           </span>
         </div>
-        <div className="mt-1.5 pr-4 pl-[86px]">
-          <p className="text-[14px] font-semibold leading-5 text-[#172044]">Namo Gange Trust</p>
-          <p className="text-[11px] leading-4 text-[#75829D]">Non-profit Organization</p>
+        <div className="mt-2 pr-5 pl-[96px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-[16px] font-bold leading-5 text-[#172044]">Namo Gange Trust</h2>
+              <span className="rounded-sm bg-[#E7F1FC] px-1.5 py-0.5 text-[10px] font-semibold text-[#0A66C2]">
+                Verified Page
+              </span>
+            </div>
+            <p className="text-[11.5px] leading-4 text-[#75829D]">Non-profit Organization</p>
+          </div>
         </div>
-        <p className="mt-2 px-4 text-[11.5px] leading-[17px] text-[#52617D]">
+        <p className="mt-2 px-5 text-[12px] leading-[18px] text-[#52617D]">
           Working towards a cleaner Ganga through awareness, action and community participation.
         </p>
-        <div className="mt-2.5 px-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-[#52617D]">
+        <div className="mt-2.5 px-5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11.5px] text-[#52617D]">
           <span className="flex items-center gap-1.5">
             <MapPin className="size-3.5 shrink-0 text-[#8A97AF]" />
             New Delhi, India
@@ -2591,11 +2612,11 @@ function PageOverview() {
             <LinkIcon className="size-3.5 shrink-0" />
             namogangetrust.org
           </span>
+          <span className="flex items-center gap-1.5 text-[#52617D]">
+            <UsersRound className="size-3.5 shrink-0 text-[#8A97AF]" />
+            12,482 followers · 50–200 employees
+          </span>
         </div>
-        <p className="mt-1.5 px-4 flex items-center gap-1.5 text-[11px] text-[#52617D]">
-          <UsersRound className="size-3.5 shrink-0 text-[#8A97AF]" />
-          12,482 followers · 50–200 employees
-        </p>
       </div>
     </Card>
   );
@@ -2603,28 +2624,26 @@ function PageOverview() {
 
 function KeyMetrics() {
   return (
-    <Card title="" headerClassName="hidden">
-      <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-2 p-3.5">
-        {keyMetrics.map(({ label, value, trend, absoluteTrend, icon: Icon, color }) => (
-          <div
-            key={label}
-            className="flex flex-col justify-center rounded-none border border-[#E4EAF2] bg-[#FBFCFE] px-3 py-2.5"
-          >
-            <span className={cn("grid size-8 place-items-center rounded-none mb-1.5", tint[color])}>
-              <Icon className="size-4" />
-            </span>
-            <span className="block text-[18px] font-semibold leading-5 tracking-tight text-[#142044]">
-              {value}
-            </span>
-            <p className="whitespace-nowrap mt-0.5 text-[10.5px] font-medium leading-[14px] text-[#6B7A96]">{label}</p>
-            <div className="mt-1.5 flex items-center gap-1.5 text-[9.5px]">
-              <span className="font-medium text-[#0F9D58]">↑ {trend}</span>
-              <span className="text-[#8A97AF] truncate">{absoluteTrend}</span>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+      {keyMetrics.map(({ label, value, trend, absoluteTrend, icon: Icon, color }) => (
+        <div
+          key={label}
+          className="flex items-center gap-2.5 rounded-sm border border-[#DDE4ED] bg-white p-3 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-xs"
+        >
+          <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", tint[color])}>
+            <Icon className="size-4.5" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-[10.5px] font-medium text-[#6B7A96] uppercase tracking-wider">{label}</p>
+            <div className="flex items-baseline gap-1">
+              <b className="text-lg font-bold tracking-tight text-[#142044]">{value}</b>
+              <span className="text-[11px] font-medium text-[#0F9D58] whitespace-nowrap">↑ {trend}</span>
             </div>
+            <p className="text-[9.5px] text-[#8A97AF] font-normal truncate">{absoluteTrend}</p>
           </div>
-        ))}
-      </div>
-    </Card>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -2733,13 +2752,13 @@ function TopPosts() {
                 alt=""
                 width={42}
                 height={30}
-                className="h-[30px] w-[42px] shrink-0 rounded-none object-cover"
+                className="h-[30px] w-[42px] shrink-0 rounded-sm object-cover"
               />
               <b className="truncate text-[11.5px] font-semibold text-[#172044]">{post.title}</b>
             </span>
             <span className="whitespace-nowrap text-[10.5px]">{post.date}</span>
             <span>
-              <i className="rounded-none bg-[#EAF2FE] px-1.5 py-0.5 text-[10px] font-semibold not-italic text-[#1A6BC4]">
+              <i className="rounded-sm bg-[#EAF2FE] px-1.5 py-0.5 text-[10px] font-semibold not-italic text-[#1A6BC4]">
                 {post.type}
               </i>
             </span>
@@ -2771,7 +2790,7 @@ function ContentCalendar() {
             key={item.title}
             className="flex items-center gap-2.5 border-t border-[#EDF1F5] py-2 first:border-t-0"
           >
-            <span className="grid w-[34px] shrink-0 place-items-center rounded-none bg-[#FFEFF0] py-0.5 leading-none text-[#D6323C]">
+            <span className="grid w-[34px] shrink-0 place-items-center rounded-sm bg-[#FFEFF0] py-0.5 leading-none text-[#D6323C]">
               <small className="text-[10.5px] font-semibold">{item.month}</small>
               <b className="text-[13px] font-semibold leading-4">{item.day}</b>
             </span>
@@ -2783,7 +2802,7 @@ function ContentCalendar() {
             </div>
             <i
               className={cn(
-                "shrink-0 rounded-none px-1.5 py-0.5 text-[10px] font-semibold not-italic",
+                "shrink-0 rounded-sm px-1.5 py-0.5 text-[10px] font-semibold not-italic",
                 item.status === "Scheduled"
                   ? "bg-[#E1F8EC] text-[#0B8A4D]"
                   : "bg-[#EEF1F6] text-[#5B6B87]",
@@ -2830,7 +2849,7 @@ function PageGrowth() {
               <Tooltip
                 contentStyle={{
                   fontSize: 11,
-                  borderRadius: 8,
+                  borderRadius: 6,
                   border: "1px solid #DDE4ED",
                   padding: "6px 10px",
                 }}
@@ -2846,7 +2865,7 @@ function PageGrowth() {
           {growthTiles.map((tile) => (
             <div
               key={tile.label}
-              className="rounded-none border border-[#E4EAF2] bg-[#FBFCFE] px-2 py-1.5"
+              className="rounded-sm border border-[#E4EAF2] bg-[#FBFCFE] px-2 py-1.5 shadow-2xs"
             >
               <p className="truncate text-[11.5px] leading-3 text-[#7A87A0]">{tile.label}</p>
               <p className="flex items-baseline gap-1">
@@ -2870,7 +2889,7 @@ function PageGrowth() {
 
 function ActionsAndActivity() {
   return (
-    <section className="flex flex-col overflow-hidden rounded-none border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+    <section className="flex flex-col overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
       <header className="flex h-[46px] shrink-0 items-center px-3.5">
         <h2 className="text-[14.5px] font-semibold text-[#172044]">Quick Actions</h2>
       </header>
@@ -2881,7 +2900,7 @@ function ActionsAndActivity() {
             <button
               key={label}
               className={cn(
-                "flex h-[42px] flex-col items-center justify-center gap-1 rounded-none border text-[11.5px] font-semibold leading-3 transition-colors",
+                "flex h-[42px] flex-col items-center justify-center gap-1 rounded-sm border text-[11.5px] font-semibold leading-3 transition-colors cursor-pointer",
                 primary
                   ? "border-[#BBD7F5] bg-[#EAF3FD] text-[#0A66C2]"
                   : "border-[#E4EAF2] bg-white text-[#425273] hover:bg-[#F8FAFD]",
@@ -2937,28 +2956,28 @@ function PageCustomCtaAnalytics() {
       }
     >
       <div className="space-y-3 p-3.5">
-        <div className="flex items-center justify-between rounded-none border border-[#DDE4ED] bg-[#F8FAFD] p-2.5">
+        <div className="flex items-center justify-between rounded-sm border border-[#DDE4ED] bg-[#F8FAFD] p-2.5">
           <div>
             <span className="text-[10px] font-semibold text-[#687797]">Active Button Target</span>
             <p className="font-semibold text-[#172044] text-[12px]">https://namogangetrust.org</p>
           </div>
-          <button className="rounded-none border border-[#CBD5E1] bg-white px-2.5 py-1 text-[10.5px] font-semibold text-[#425273] hover:bg-[#F1F5F9]">
+          <button className="rounded-sm border border-[#CBD5E1] bg-white px-2.5 py-1 text-[10.5px] font-semibold text-[#425273] hover:bg-[#F1F5F9] cursor-pointer">
             Change CTA
           </button>
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-none border border-[#EDF1F5] bg-white p-2">
+          <div className="rounded-sm border border-[#EDF1F5] bg-white p-2 shadow-2xs">
             <span className="text-[11.5px] text-[#687797]">Total Clicks</span>
             <p className="text-[17px] font-semibold text-[#0A66C2]">1,842</p>
             <span className="text-[11px] font-semibold text-[#10B981]">↑ 38.4% MoM</span>
           </div>
-          <div className="rounded-none border border-[#EDF1F5] bg-white p-2">
+          <div className="rounded-sm border border-[#EDF1F5] bg-white p-2 shadow-2xs">
             <span className="text-[11.5px] text-[#687797]">Click-Through Rate</span>
             <p className="text-[17px] font-semibold text-[#172044]">4.8%</p>
             <span className="text-[11px] text-[#10B981]">↑ 1.2% vs avg</span>
           </div>
-          <div className="rounded-none border border-[#EDF1F5] bg-white p-2">
+          <div className="rounded-sm border border-[#EDF1F5] bg-white p-2 shadow-2xs">
             <span className="text-[11.5px] text-[#687797]">Top Device</span>
             <p className="text-[17px] font-semibold text-[#8B5CF6]">64%</p>
             <span className="text-[11px] text-[#8A97AF]">Desktop users</span>
@@ -2993,7 +3012,7 @@ function LinkedInLiveEvents() {
     <Card
       title="LinkedIn Live & Events"
       action={
-        <button className="flex items-center gap-1 rounded-none bg-[#0A66C2] px-2.5 py-1 text-[10.5px] font-semibold text-white hover:bg-[#0958A8]">
+        <button className="flex items-center gap-1 rounded-sm bg-[#0A66C2] px-2.5 py-1 text-[10.5px] font-semibold text-white hover:bg-[#0958A8] cursor-pointer">
           <Plus className="size-3" />
           Create Event
         </button>
@@ -3001,7 +3020,7 @@ function LinkedInLiveEvents() {
     >
       <div className="space-y-2.5 p-3.5">
         {/* Event 1 */}
-        <div className="rounded-none border border-[#EDF1F5] p-2.5 transition-colors hover:bg-[#F9FBFE]">
+        <div className="rounded-sm border border-[#EDF1F5] p-2.5 transition-colors hover:bg-[#F9FBFE]">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-sm bg-[#FEF2F2] px-2 py-0.5 text-[11px] font-semibold text-[#DC2626]">
@@ -3010,7 +3029,7 @@ function LinkedInLiveEvents() {
               </span>
               <span className="text-[10px] font-medium text-[#687797]">Apr 20, 2025 • 11:00 AM IST</span>
             </div>
-            <span className="rounded-none bg-[#ECFDF5] px-1.5 py-0.2 text-[11.5px] font-semibold text-[#059669]">
+            <span className="rounded-sm bg-[#ECFDF5] px-1.5 py-0.2 text-[11.5px] font-semibold text-[#059669]">
               384 RSVPs
             </span>
           </div>
@@ -3020,15 +3039,15 @@ function LinkedInLiveEvents() {
           <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#687797]">
             <span>3 Guest Speakers • LinkedIn Stream</span>
             <div className="flex items-center gap-2">
-              <button className="font-semibold text-[#0A66C2] hover:underline">View RSVPs</button>
+              <button className="font-semibold text-[#0A66C2] hover:underline cursor-pointer">View RSVPs</button>
               <span>·</span>
-              <button className="font-semibold text-[#425273] hover:underline">Broadcast Studio</button>
+              <button className="font-semibold text-[#425273] hover:underline cursor-pointer">Broadcast Studio</button>
             </div>
           </div>
         </div>
 
         {/* Event 2 */}
-        <div className="rounded-none border border-[#EDF1F5] p-2.5 transition-colors hover:bg-[#F9FBFE]">
+        <div className="rounded-sm border border-[#EDF1F5] p-2.5 transition-colors hover:bg-[#F9FBFE]">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-sm bg-[#EFF6FF] px-2 py-0.5 text-[11px] font-semibold text-[#0A66C2]">
@@ -3037,7 +3056,7 @@ function LinkedInLiveEvents() {
               </span>
               <span className="text-[10px] font-medium text-[#687797]">Apr 27, 2025 • 04:00 PM IST</span>
             </div>
-            <span className="rounded-none bg-[#ECFDF5] px-1.5 py-0.2 text-[11.5px] font-semibold text-[#059669]">
+            <span className="rounded-sm bg-[#ECFDF5] px-1.5 py-0.2 text-[11.5px] font-semibold text-[#059669]">
               192 RSVPs
             </span>
           </div>
@@ -3047,9 +3066,36 @@ function LinkedInLiveEvents() {
           <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#687797]">
             <span>Co-host: Namo Gange x WWF Network</span>
             <div className="flex items-center gap-2">
-              <button className="font-semibold text-[#0A66C2] hover:underline">View RSVPs</button>
+              <button className="font-semibold text-[#0A66C2] hover:underline cursor-pointer">View RSVPs</button>
               <span>·</span>
-              <button className="font-semibold text-[#425273] hover:underline">Edit Details</button>
+              <button className="font-semibold text-[#425273] hover:underline cursor-pointer">Edit Details</button>
+            </div>
+          </div>
+        </div>
+
+        {/* Event 3 */}
+        <div className="rounded-sm border border-[#EDF1F5] p-2.5 transition-colors hover:bg-[#F9FBFE]">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded-sm bg-[#F0FDF4] px-2 py-0.5 text-[11px] font-semibold text-[#16A34A]">
+                <Sparkles className="size-2.5 text-[#16A34A]" />
+                Hybrid Conclave
+              </span>
+              <span className="text-[10px] font-medium text-[#687797]">May 5, 2025 • 02:30 PM IST</span>
+            </div>
+            <span className="rounded-sm bg-[#ECFDF5] px-1.5 py-0.2 text-[11.5px] font-semibold text-[#059669]">
+              520 RSVPs
+            </span>
+          </div>
+          <p className="mt-1 font-semibold text-[#172044] text-[11.5px]">
+            National Ganga Cleanliness Conclave 2025 – Action Plans & Youth Leaders
+          </p>
+          <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#687797]">
+            <span>Varanasi & Live Stream • Ministry Partners</span>
+            <div className="flex items-center gap-2">
+              <button className="font-semibold text-[#0A66C2] hover:underline cursor-pointer">View RSVPs</button>
+              <span>·</span>
+              <button className="font-semibold text-[#425273] hover:underline cursor-pointer">Event Portal</button>
             </div>
           </div>
         </div>

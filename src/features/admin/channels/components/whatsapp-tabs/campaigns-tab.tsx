@@ -17,7 +17,10 @@ import {
   TrendingUp,
   ChevronLeft,
   ChevronRight,
-  Filter,
+  CheckCircle2,
+  Eye,
+  CornerUpLeft,
+  UsersRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
@@ -88,7 +91,39 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
   };
 
   return (
-    <div className="space-y-4 pt-1">
+    <div className="space-y-3 pt-1">
+      {/* 6 Key Campaigns Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+        {[
+          { label: "Total Campaigns", value: "10", trend: "↑ 25%", icon: Megaphone, bg: "bg-emerald-50/80 border-emerald-200/80", iconBg: "bg-emerald-600 text-white shadow-xs", text: "text-emerald-700", note: "all time broadcasts" },
+          { label: "Messages Sent", value: "11,230", trend: "↑ 32%", icon: Send, bg: "bg-blue-50/80 border-blue-200/80", iconBg: "bg-blue-600 text-white shadow-xs", text: "text-blue-700", note: "delivered & queued" },
+          { label: "Delivered Rate", value: "97.2%", trend: "↑ 1.4%", icon: CheckCircle2, bg: "bg-emerald-50/80 border-emerald-200/80", iconBg: "bg-emerald-600 text-white shadow-xs", text: "text-emerald-700", note: "high delivery score" },
+          { label: "Open / Read", value: "78.5%", trend: "↑ 4.2%", icon: Eye, bg: "bg-purple-50/80 border-purple-200/80", iconBg: "bg-purple-600 text-white shadow-xs", text: "text-purple-700", note: "audience read rate" },
+          { label: "Response Rate", value: "23.8%", trend: "↑ 3.1%", icon: CornerUpLeft, bg: "bg-amber-50/80 border-amber-200/80", iconBg: "bg-amber-600 text-white shadow-xs", text: "text-amber-700", note: "inbound replies" },
+          { label: "Active Broadcasts", value: "2", trend: "Running", icon: UsersRound, bg: "bg-teal-50/80 border-teal-200/80", iconBg: "bg-teal-600 text-white shadow-xs", text: "text-teal-700", note: "broadcasts live" },
+        ].map((stat, i) => (
+          <div
+            key={i}
+            className={cn(
+              "flex items-center gap-2.5 rounded-sm border p-3 bg-white shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-xs",
+              stat.bg
+            )}
+          >
+            <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", stat.iconBg)}>
+              <stat.icon className="size-4.5" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-[10.5px] font-medium text-slate-500 uppercase tracking-wider">{stat.label}</p>
+              <div className="flex items-baseline gap-1">
+                <b className="text-lg font-bold tracking-tight text-slate-900">{stat.value}</b>
+                <span className={cn("text-[11px] font-medium whitespace-nowrap", stat.text)}>{stat.trend}</span>
+              </div>
+              <p className="text-[9.5px] text-slate-400 font-normal truncate">{stat.note}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Top Filter Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
@@ -135,23 +170,24 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {[
-          { label: "Total Campaigns", value: "24", icon: Send, color: "bg-blue-50 text-blue-600 border-blue-100", trend: "+6 this month" },
-          { label: "Active Running", value: "3", icon: Play, color: "bg-emerald-50 text-emerald-600 border-emerald-100", trend: "Running now" },
-          { label: "Scheduled", value: "5", icon: CalendarDays, color: "bg-purple-50 text-purple-600 border-purple-100", trend: "Upcoming queue" },
-          { label: "Completed", value: "16", icon: Pause, color: "bg-teal-50 text-teal-600 border-teal-100", trend: "↑ 28% vs last month" },
+          { label: "Total Campaigns", value: "24", trend: "+6 this month", icon: Send, bg: "bg-blue-50/80 border-blue-200/80", iconBg: "bg-blue-600 text-white shadow-xs", text: "text-blue-700", note: "this month" },
+          { label: "Active Running", value: "3", trend: "Running now", icon: Play, bg: "bg-emerald-50/80 border-emerald-200/80", iconBg: "bg-emerald-600 text-white shadow-xs", text: "text-emerald-700", note: "live broadcasts" },
+          { label: "Scheduled", value: "5", trend: "Upcoming", icon: CalendarDays, bg: "bg-purple-50/80 border-purple-200/80", iconBg: "bg-purple-600 text-white shadow-xs", text: "text-purple-700", note: "queue pending" },
+          { label: "Completed", value: "16", trend: "↑ 28%", icon: Pause, bg: "bg-teal-50/80 border-teal-200/80", iconBg: "bg-teal-600 text-white shadow-xs", text: "text-teal-700", note: "vs last month" },
         ].map((s, i) => (
-          <div key={i} className="flex items-center gap-3.5 rounded-sm border border-slate-200/90 bg-white p-3.5 shadow-xs">
-            <span className={cn("grid size-10 shrink-0 place-items-center rounded-sm font-bold", s.color)}>
-              <s.icon className="size-5" />
+          <div key={i} className={cn("flex items-center gap-2.5 rounded-sm border p-3 bg-white shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-xs", s.bg)}>
+            <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", s.iconBg)}>
+              <s.icon className="size-4.5" />
             </span>
-            <div>
-              <p className="text-xs font-semibold text-slate-500">{s.label}</p>
-              <div className="flex items-baseline gap-1.5">
-                <b className="text-xl font-bold text-slate-900">{s.value}</b>
-                <span className="text-[11px] font-medium text-slate-400">{s.trend}</span>
+            <div className="min-w-0">
+              <p className="truncate text-[10.5px] font-medium text-slate-500 uppercase tracking-wider">{s.label}</p>
+              <div className="flex items-baseline gap-1">
+                <b className="text-lg font-bold tracking-tight text-slate-900">{s.value}</b>
+                <span className={cn("text-[11px] font-medium whitespace-nowrap", s.text)}>{s.trend}</span>
               </div>
+              {s.note && <p className="text-[9.5px] text-slate-400 font-normal truncate">{s.note}</p>}
             </div>
           </div>
         ))}
@@ -257,20 +293,24 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
           {[
-            { label: "Active Ads", value: "3", icon: Megaphone, color: "bg-blue-50 text-blue-600 border-blue-100" },
-            { label: "Total Conversations", value: "4,821", icon: MessageCircle, color: "bg-emerald-50 text-emerald-600 border-emerald-100" },
-            { label: "Cost per Conversation", value: "₹12.40", icon: IndianRupee, color: "bg-amber-50 text-amber-600 border-amber-100" },
-            { label: "Conversion Rate", value: "18.2%", icon: TrendingUp, color: "bg-purple-50 text-purple-600 border-purple-100" },
+            { label: "Active Ads", value: "3", trend: "Live", icon: Megaphone, bg: "bg-blue-50/80 border-blue-200/80", iconBg: "bg-blue-600 text-white shadow-xs", text: "text-blue-700", note: "running campaigns" },
+            { label: "Total Conversations", value: "4,821", trend: "↑ 18%", icon: MessageCircle, bg: "bg-emerald-50/80 border-emerald-200/80", iconBg: "bg-emerald-600 text-white shadow-xs", text: "text-emerald-700", note: "all time chats" },
+            { label: "Cost per Conversation", value: "₹12.40", trend: "↓ 8%", icon: IndianRupee, bg: "bg-amber-50/80 border-amber-200/80", iconBg: "bg-amber-600 text-white shadow-xs", text: "text-amber-700", note: "avg cost" },
+            { label: "Conversion Rate", value: "18.2%", trend: "↑ 3.1%", icon: TrendingUp, bg: "bg-purple-50/80 border-purple-200/80", iconBg: "bg-purple-600 text-white shadow-xs", text: "text-purple-700", note: "lead to convert" },
           ].map((s, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-sm border border-slate-200/90 bg-slate-50/50 p-3">
-              <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm font-bold", s.color)}>
-                <s.icon className="size-4" />
+            <div key={i} className={cn("flex items-center gap-2.5 rounded-sm border p-3 bg-white shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-xs", s.bg)}>
+              <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", s.iconBg)}>
+                <s.icon className="size-4.5" />
               </span>
-              <div>
-                <p className="text-[11px] font-semibold text-slate-500">{s.label}</p>
-                <b className="text-sm font-bold text-slate-900">{s.value}</b>
+              <div className="min-w-0">
+                <p className="truncate text-[10.5px] font-medium text-slate-500 uppercase tracking-wider">{s.label}</p>
+                <div className="flex items-baseline gap-1">
+                  <b className="text-lg font-bold tracking-tight text-slate-900">{s.value}</b>
+                  <span className={cn("text-[11px] font-medium whitespace-nowrap", s.text)}>{s.trend}</span>
+                </div>
+                {s.note && <p className="text-[9.5px] text-slate-400 font-normal truncate">{s.note}</p>}
               </div>
             </div>
           ))}

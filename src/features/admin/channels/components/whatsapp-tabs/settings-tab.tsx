@@ -9,9 +9,7 @@ import {
   AlertTriangle,
   Plus,
   Pencil,
-  CheckCircle2,
   RefreshCw,
-  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
@@ -70,7 +68,7 @@ export function SettingsTab() {
   };
 
   return (
-    <div className="space-y-4 pt-1">
+    <div className="space-y-2 pt-1">
       {/* Sub tabs */}
       <div className="flex gap-2 overflow-x-auto border-b border-slate-200 pb-1">
         {settingsTabs.map((tab) => (
@@ -90,10 +88,10 @@ export function SettingsTab() {
       </div>
 
       {activeSettingTab === "General" && (
-        <div className="space-y-4">
-          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+        <div className="space-y-2">
+          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-2">
             <h3 className="text-sm font-bold text-slate-900">Business Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">Business Name</label>
                 <Input defaultValue="Namo Gange Trust" className="h-10 text-xs border-slate-200 focus:border-emerald-500" />
@@ -138,7 +136,7 @@ export function SettingsTab() {
               <Switch checked={autoReply} onCheckedChange={setAutoReply} />
             </div>
             {autoReply && (
-              <div className="mt-3 grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+              <div className="mt-3 grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700">Working Hours Start</label>
                   <Input type="time" defaultValue="09:00" className="h-9 text-xs" />
@@ -160,10 +158,10 @@ export function SettingsTab() {
       )}
 
       {activeSettingTab === "API Configuration" && (
-        <div className="space-y-4">
-          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+        <div className="space-y-2">
+          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-2">
             <h3 className="text-sm font-bold text-slate-900">WhatsApp Business API Setup</h3>
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">BSP Provider</label>
                 <Select defaultValue="aisensy">
@@ -219,10 +217,10 @@ export function SettingsTab() {
       )}
 
       {activeSettingTab === "Notifications" && (
-        <div className="space-y-4">
-          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+        <div className="space-y-2">
+          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-2">
             <h3 className="text-sm font-bold text-slate-900">Notification Preferences</h3>
-            <div className="space-y-4 divide-y divide-slate-100">
+            <div className="space-y-2 divide-y divide-slate-100">
               {[
                 { label: "New Inbound Message Alert", desc: "Get notified when a contact sends a message", checked: notifNewMsg, onChange: setNotifNewMsg },
                 { label: "Broadcast Completion", desc: "Notify when a broadcast campaign finishes sending", checked: notifCampaign, onChange: setNotifCampaign },
@@ -250,10 +248,10 @@ export function SettingsTab() {
       )}
 
       {activeSettingTab === "Business Profile" && (
-        <div className="space-y-4">
-          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+        <div className="space-y-2">
+          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-2">
             <h3 className="text-sm font-bold text-slate-900">WhatsApp Business Profile</h3>
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">Business Description</label>
                 <Input defaultValue="Namo Gange Trust - River Conservation, Tree Plantation & Community Service" className="h-10 text-xs border-slate-200" />
@@ -280,7 +278,7 @@ export function SettingsTab() {
       )}
 
       {activeSettingTab === "Team Members" && (
-        <div className="space-y-4">
+        <div className="space-y-2">
           <div className="flex justify-end">
             <Button onClick={() => toast.success("Opening Add Member dialog")} className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm shadow-md">
               <Plus className="size-4 mr-1" /> Add Team Member
