@@ -169,7 +169,7 @@ function AddToPlaylistBody({ open, onOpenChange, videoIds }: VideoIdsDialogProps
               const checked = inAll || selected.includes(p.id);
               return (
                 <li key={p.id}>
-                  <label className={cn("flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#F8FAFC]", inAll && "cursor-default opacity-70")}>
+                  <label className={cn("flex cursor-pointer items-center gap-3 rounded-sm px-2 py-2 hover:bg-[#F8FAFC]", inAll && "cursor-default opacity-70")}>
                     <Checkbox
                       checked={checked}
                       disabled={inAll}
@@ -402,7 +402,7 @@ function ThumbnailBody({ open, onOpenChange, video }: VideoDialogProps & { video
                 }}
                 disabled={!thumbGate.allowed}
                 className={cn(
-                  "flex w-full flex-col items-center justify-center rounded-lg border border-dashed px-4 py-6 text-center transition",
+                  "flex w-full flex-col items-center justify-center rounded-sm border border-dashed px-4 py-6 text-center transition",
                   dragging ? "border-[#E5202E] bg-[#FFF8F8]" : "border-[#C9D1DC] bg-[#F8FAFC] hover:border-[#98A2B3]",
                   !thumbGate.allowed && "cursor-not-allowed opacity-60",
                   yt.focus,
@@ -421,7 +421,7 @@ function ThumbnailBody({ open, onOpenChange, video }: VideoDialogProps & { video
               <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">From your media library</p>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {suggestions.map((url) => (
-                  <button key={url} type="button" onClick={() => setCandidate(url)} aria-pressed={candidate === url} className={cn("rounded-md ring-offset-2 transition", candidate === url ? "ring-2 ring-[#E5202E]" : "hover:ring-2 hover:ring-[#C9D1DC]", yt.focus)}>
+                  <button key={url} type="button" onClick={() => setCandidate(url)} aria-pressed={candidate === url} className={cn("rounded-sm ring-offset-2 transition", candidate === url ? "ring-2 ring-[#E5202E]" : "hover:ring-2 hover:ring-[#C9D1DC]", yt.focus)}>
                     <Thumb src={url} sizes="140px" />
                   </button>
                 ))}
@@ -437,7 +437,7 @@ function ThumbnailBody({ open, onOpenChange, video }: VideoDialogProps & { video
               ) : (
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                   {history.map((url) => (
-                    <button key={url} type="button" onClick={() => setCandidate(url)} aria-pressed={candidate === url} className={cn("rounded-md ring-offset-2", candidate === url ? "ring-2 ring-[#E5202E]" : "hover:ring-2 hover:ring-[#C9D1DC]", yt.focus)}>
+                    <button key={url} type="button" onClick={() => setCandidate(url)} aria-pressed={candidate === url} className={cn("rounded-sm ring-offset-2", candidate === url ? "ring-2 ring-[#E5202E]" : "hover:ring-2 hover:ring-[#C9D1DC]", yt.focus)}>
                       <Thumb src={url} sizes="120px" />
                     </button>
                   ))}
@@ -448,10 +448,10 @@ function ThumbnailBody({ open, onOpenChange, video }: VideoDialogProps & { video
 
           <div>
             <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Preview</p>
-            <div className="rounded-lg border border-[#EEF1F5] bg-[#F8FAFC] p-3">
+            <div className="rounded-sm border border-[#EEF1F5] bg-[#F8FAFC] p-3">
               <Thumb src={preview} durationSec={video.durationSec} sizes="280px" />
               <div className="mt-2.5 flex gap-2">
-                <span className="relative size-8 shrink-0 overflow-hidden rounded-full bg-white ring-1 ring-[#E4E9F0]">
+                <span className="relative size-8 shrink-0 overflow-hidden rounded-sm bg-white ring-1 ring-[#E4E9F0]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={channel.avatarUrl} alt="" className="size-full object-contain" />
                 </span>
@@ -577,16 +577,16 @@ function EditMetadataBody({ open, onOpenChange, video }: VideoDialogProps & { vi
               />
             </FormField>
             <FormField label="Playlists">
-              <div className="max-h-40 space-y-0.5 overflow-y-auto rounded-lg border border-[#DCE2EA] p-1.5">
+              <div className="max-h-40 space-y-0.5 overflow-y-auto rounded-sm border border-[#DCE2EA] p-1.5">
                 {playlists.map((p) => (
-                  <label key={p.id} className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-[12.5px] text-[#24324F] hover:bg-[#F8FAFC]">
+                  <label key={p.id} className="flex cursor-pointer items-center gap-2.5 rounded-sm px-2 py-1.5 text-[12.5px] text-[#24324F] hover:bg-[#F8FAFC]">
                     <Checkbox checked={draft.playlistIds.includes(p.id)} onCheckedChange={(c) => set("playlistIds", c ? [...draft.playlistIds, p.id] : draft.playlistIds.filter((x) => x !== p.id))} />
                     <span className="truncate">{p.title}</span>
                   </label>
                 ))}
               </div>
             </FormField>
-            <div className="divide-y divide-[#EEF1F5] rounded-lg border border-[#E4E9F0]">
+            <div className="divide-y divide-[#EEF1F5] rounded-sm border border-[#E4E9F0]">
               <ToggleRow label="Made for kids" description="Required by COPPA. Limits comments, notifications and personalised ads." checked={draft.madeForKids} onChange={(c) => set("madeForKids", c)} />
               <ToggleRow label="Allow comments" description={draft.madeForKids ? "Comments are always off for made-for-kids videos." : "Viewers can comment on this video."} checked={draft.commentsEnabled && !draft.madeForKids} disabled={draft.madeForKids} onChange={(c) => set("commentsEnabled", c)} />
             </div>
@@ -664,14 +664,14 @@ export function VersionHistorySheet({ open, onOpenChange, video }: { open: boole
             <ol className="relative space-y-4 border-l border-[#E4E9F0] pl-5">
               {entries.map((entry) => (
                 <li key={entry.id} className="relative">
-                  <span className="absolute -left-[26px] top-1 size-2.5 rounded-full border-2 border-white bg-[#98A2B3] ring-1 ring-[#E4E9F0]" />
+                  <span className="absolute -left-[26px] top-1 size-2.5 rounded-sm border-2 border-white bg-[#98A2B3] ring-1 ring-[#E4E9F0]" />
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-[12.5px] text-[#3C4A66]">
                       <b className="font-semibold text-[#0F1B3D]">{entry.actor}</b> changed <b className="font-semibold text-[#0F1B3D]">{FIELD_LABEL[entry.field].toLowerCase()}</b>
                     </p>
                     <span className="text-[11.5px] text-[#98A2B3]" title={dateTime(entry.at)}>{relative(entry.at)}</span>
                   </div>
-                  <div className="mt-2 grid gap-2 rounded-lg border border-[#EEF1F5] bg-[#F8FAFC] p-2.5 text-[12px] sm:grid-cols-2">
+                  <div className="mt-2 grid gap-2 rounded-sm border border-[#EEF1F5] bg-[#F8FAFC] p-2.5 text-[12px] sm:grid-cols-2">
                     <div className="min-w-0">
                       <p className="mb-1 text-[10.5px] font-semibold uppercase tracking-[0.04em] text-[#98A2B3]">Before</p>
                       <div className="text-[#6B7890] line-through decoration-[#C9D1DC]">{show(entry.field, entry.previous)}</div>
@@ -753,7 +753,7 @@ export function FactorRow({ factor, onNavigate }: { factor: ScoreFactor; onNavig
       </div>
       <Meter value={factor.score} tone={tone} className="mt-2" />
       <p className="mt-2 text-[12.5px] leading-5 text-[#3C4A66]">{factor.explanation}</p>
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[#F8FAFC] px-2.5 py-2">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-sm bg-[#F8FAFC] px-2.5 py-2">
         <p className="min-w-0 flex-1 text-[12px] leading-4 text-[#24324F]"><b className="font-semibold">Recommended:</b> {factor.recommendation}</p>
         {factor.action && (
           <Button size="xs" variant="secondary" href={factor.action.href} onClick={onNavigate}>{factor.action.label}</Button>

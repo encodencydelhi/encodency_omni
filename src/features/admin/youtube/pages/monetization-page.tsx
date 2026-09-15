@@ -87,7 +87,7 @@ export function RevenueTrendCard({ data, label, className }: { data: ReturnType<
                 const row = payload?.[0]?.payload as { date: string; revenue: number } | undefined;
                 if (!active || !row) return null;
                 return (
-                  <div className="rounded-lg border border-[#E4E9F0] bg-white px-3 py-2 text-[12px] shadow-md">
+                  <div className="rounded-sm border border-[#E4E9F0] bg-white px-3 py-2 text-[12px] shadow-md">
                     <p className="font-semibold text-[#0F1B3D]">{format(parseISO(row.date), "EEE, MMM d")}</p>
                     <p className="text-[#3C4A66]">Estimated revenue <b>{inr(row.revenue)}</b></p>
                   </div>
@@ -120,7 +120,7 @@ function Revenue() {
   return (
     <div className="space-y-1">
       <Card className="flex flex-wrap items-center gap-4 p-4">
-        <span className="grid size-10 place-items-center rounded-xl bg-[#ECFAF3] text-[#067647]"><BadgeCheck className="size-5" /></span>
+        <span className="grid size-10 place-items-center rounded-sm bg-[#ECFAF3] text-[#067647]"><BadgeCheck className="size-5" /></span>
         <div className="min-w-[200px] flex-1">
           <p className="flex items-center gap-2 text-[13.5px] font-semibold text-[#0F1B3D]">Monetization status <Badge tone="green" dot>Monetized</Badge></p>
           <p className="mt-0.5 text-[12.5px] text-[#6B7890]">YouTube Partner Program · Ads, Shorts Feed ads, YouTube Premium and Supers are enabled.</p>

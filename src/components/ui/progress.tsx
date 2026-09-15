@@ -12,7 +12,7 @@ export function Progress({
 }: React.ComponentProps<typeof ProgressPrimitive.Root> & { indicatorClassName?: string }) {
   return (
     <ProgressPrimitive.Root
-      className={cn("relative h-1.5 w-full overflow-hidden rounded-full bg-muted", className)}
+      className={cn("relative h-1.5 w-full overflow-hidden rounded-sm bg-muted", className)}
       {...props}
     >
       <ProgressPrimitive.Indicator

@@ -258,28 +258,28 @@ const todaySchedule: [
   EventType,
   "Scheduled" | "Draft"
 ][] = [
-  [
-    "10:00 AM",
-    "World Health Day Post",
-    "Healthier Communities, Cleaner Rivers.",
-    "fb",
-    "Scheduled",
-  ],
-  [
-    "12:00 PM",
-    "Team Meeting Post",
-    "Planning for April Campaigns",
-    "li",
-    "Draft",
-  ],
-  [
-    "04:00 PM",
-    "Behind the Scenes Story",
-    "Our team in action",
-    "ig",
-    "Scheduled",
-  ],
-];
+    [
+      "10:00 AM",
+      "World Health Day Post",
+      "Healthier Communities, Cleaner Rivers.",
+      "fb",
+      "Scheduled",
+    ],
+    [
+      "12:00 PM",
+      "Team Meeting Post",
+      "Planning for April Campaigns",
+      "li",
+      "Draft",
+    ],
+    [
+      "04:00 PM",
+      "Behind the Scenes Story",
+      "Our team in action",
+      "ig",
+      "Scheduled",
+    ],
+  ];
 
 const upcoming = [
   ["Clean Ganga Drive Post", "Facebook • Apr 14, 9:00 AM", "fb"],
@@ -478,11 +478,10 @@ export default function ContentCalendar() {
                       ].join(" ")}
                     >
                       <span
-                        className={`mb-[3px] block text-[11px] ${
-                          cell.out
+                        className={`mb-[3px] block text-[11px] ${cell.out
                             ? "text-[#8792a5]"
                             : "text-[#172440]"
-                        } ${cell.selected ? "font-[750]" : ""}`}
+                          } ${cell.selected ? "font-[750]" : ""}`}
                       >
                         {cell.d}
                       </span>
@@ -492,13 +491,12 @@ export default function ContentCalendar() {
                           <div
                             key={eventIndex}
                             onClick={() => setSelectedEvent(evt)}
-                            className={`grid min-w-0 shrink-0 cursor-pointer grid-cols-[14px_minmax(0,1fr)_8px] items-center gap-[8px] rounded-[4px] px-[4px] py-[2px] text-[#263754] transition-opacity hover:opacity-80 max-[560px]:grid-cols-[13px_minmax(0,1fr)_6px] max-[560px]:gap-[6px] max-[560px]:p-[2px] ${
-                              eventIndex % 3 === 2
+                            className={`grid min-w-0 shrink-0 cursor-pointer grid-cols-[14px_minmax(0,1fr)_8px] items-center gap-[8px] rounded-[4px] px-[4px] py-[2px] text-[#263754] transition-opacity hover:opacity-80 max-[560px]:grid-cols-[13px_minmax(0,1fr)_6px] max-[560px]:gap-[6px] max-[560px]:p-[2px] ${eventIndex % 3 === 2
                                 ? "bg-[#fff0f2]"
                                 : eventIndex % 4 === 3
                                   ? "bg-[#eaf8f3]"
                                   : "bg-[#edf5ff]"
-                            }`}
+                              }`}
                           >
                             <ChannelIcon type={evt.type} size={10} />
 
@@ -600,11 +598,10 @@ export default function ContentCalendar() {
 
                         <td className="border-t border-[#eef1f5] px-3">
                           <span
-                            className={`rounded-[7px] px-[7px] py-1 text-[11px] ${
-                              status === "Draft"
+                            className={`rounded-[7px] px-[7px] py-1 text-[11px] ${status === "Draft"
                                 ? "bg-[#eef1f5] text-[#65738a]"
                                 : "bg-[#e9f3ff] text-[#2874cc]"
-                            }`}
+                              }`}
                           >
                             {status}
                           </span>
@@ -706,13 +703,12 @@ export default function ContentCalendar() {
                 ].map((day, index) => (
                   <span
                     key={index}
-                    className={`grid h-[20px] place-items-center rounded-full text-[11px] ${
-                      index < 2 || index > 31
+                    className={`grid h-[20px] place-items-center rounded-sm text-[11px] ${index < 2 || index > 31
                         ? "text-[#a2aab8]"
                         : day === 14
                           ? "bg-[#e32630] text-white"
                           : "text-[#38455f]"
-                    }`}
+                      }`}
                   >
                     {day}
                   </span>
@@ -764,7 +760,7 @@ export default function ContentCalendar() {
                   className="flex h-[20px] items-center gap-2 text-[11px]"
                 >
                   <i
-                    className="block h-2 w-2 rounded-full"
+                    className="block h-2 w-2 rounded-sm"
                     style={{ backgroundColor: dot }}
                   />
                   {label}

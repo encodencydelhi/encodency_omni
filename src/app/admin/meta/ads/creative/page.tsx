@@ -227,7 +227,7 @@ function CreativeView() {
                 <li key={c.id}>
                   <article
                     className={cn(
-                      "flex h-full flex-col overflow-hidden rounded-lg border bg-white transition",
+                      "flex h-full flex-col overflow-hidden rounded-sm border bg-white transition",
                       values.creative === c.id
                         ? "border-[#1877f2] shadow-[0_0_0_2px_rgba(24,119,242,.12)]"
                         : "border-[#e5eaf1] hover:border-[#bcd9ff]",

@@ -101,7 +101,7 @@ function Audience() {
                 { label: "Lost", value: `−${full(Math.round(subs.value * 0.18))}`, tone: "text-[#C81E2B]" },
                 { label: "Net", value: `+${full(subs.value)}`, tone: "text-[#0F1B3D]" },
               ].map((s) => (
-                <div key={s.label} className="rounded-lg bg-[#F8FAFC] px-3 py-2">
+                <div key={s.label} className="rounded-sm bg-[#F8FAFC] px-3 py-2">
                   <p className="text-[11.5px] text-[#6B7890]">{s.label}</p>
                   <p className={cn("text-[18px] font-semibold tabular-nums", s.tone)}>{s.value}</p>
                 </div>
@@ -122,7 +122,7 @@ function Audience() {
 export function ThresholdNotice() {
   return (
     <div className="flex flex-col items-center justify-center py-10 text-center">
-      <span className="grid size-10 place-items-center rounded-xl bg-[#F3F5F9] text-[#6B7890] ring-1 ring-[#E4E9F0]"><UsersRound className="size-5" /></span>
+      <span className="grid size-10 place-items-center rounded-sm bg-[#F3F5F9] text-[#6B7890] ring-1 ring-[#E4E9F0]"><UsersRound className="size-5" /></span>
       <p className="mt-3 text-[13.5px] font-semibold text-[#0F1B3D]">Not enough audience data yet</p>
       <p className="mt-1 max-w-[320px] text-[12.5px] leading-5 text-[#6B7890]">YouTube only shares this breakdown once enough viewers have watched, to protect their privacy. Try a longer date range.</p>
     </div>
@@ -185,7 +185,7 @@ function GeographyCard({ className, compactView, metric, onMetric, selected, onS
           {compactView ? (
             <BarList data={rows.slice(0, 6).map((r) => ({ label: r.country, value: (r.views / total) * 100 }))} color="#E5202E" />
           ) : (
-            <div className="scrollbar-thin overflow-x-auto rounded-lg border border-[#EEF1F5]">
+            <div className="scrollbar-thin overflow-x-auto rounded-sm border border-[#EEF1F5]">
               <table className="w-full min-w-[560px] border-separate border-spacing-0 text-left">
                 <thead>
                   <tr>
@@ -232,13 +232,13 @@ function DevicesCard({ className, detailed }: { className?: string; detailed?: b
           {audience.devices.map((d) => {
             const Icon = DEVICE_ICON[d.label] ?? Monitor;
             return (
-              <div key={d.label} className="rounded-lg border border-[#EEF1F5] p-3">
+              <div key={d.label} className="rounded-sm border border-[#EEF1F5] p-3">
                 <div className="flex items-center justify-between">
-                  <span className="grid size-8 place-items-center rounded-lg bg-[#F4F0FF] text-[#6D28D9]"><Icon className="size-4" /></span>
+                  <span className="grid size-8 place-items-center rounded-sm bg-[#F4F0FF] text-[#6D28D9]"><Icon className="size-4" /></span>
                   <span className="text-[18px] font-semibold tabular-nums text-[#0F1B3D]">{d.value.toFixed(1)}%</span>
                 </div>
                 <p className="mt-2 text-[12.5px] font-medium text-[#24324F]">{d.label}</p>
-                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#EEF1F5]"><span className="block h-full rounded-full bg-[#7C3AED]" style={{ width: `${d.value}%` }} /></div>
+                <div className="mt-1.5 h-1.5 overflow-hidden rounded-sm bg-[#EEF1F5]"><span className="block h-full rounded-sm bg-[#7C3AED]" style={{ width: `${d.value}%` }} /></div>
                 {detailed && d.watchTimeHours !== undefined && <p className="mt-1.5 text-[11.5px] text-[#6B7890]">{hours(d.watchTimeHours)} watch time</p>}
               </div>
             );
@@ -267,7 +267,7 @@ function ActivityCard({ className, timezone, detailed }: { className?: string; t
         ) : (
           <>
             {best && (
-              <p className="mb-3 rounded-lg bg-[#F8FAFC] px-3 py-2 text-[12.5px] text-[#3C4A66]">
+              <p className="mb-3 rounded-sm bg-[#F8FAFC] px-3 py-2 text-[12.5px] text-[#3C4A66]">
                 Peak activity is <b className="font-semibold text-[#0F1B3D]">{days[best.d]} around {best.h % 12 || 12} {best.h < 12 ? "AM" : "PM"}</b>.{detailed ? " Schedule uploads 1–2 hours before your peak so videos are processed and indexed." : ""}
               </p>
             )}

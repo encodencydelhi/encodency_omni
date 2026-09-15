@@ -14,7 +14,7 @@ export function AuthSubmitButton({ isPending, pendingLabel, children }: AuthSubm
     <button
       type="submit"
       disabled={isPending}
-      className="mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-linear-to-r from-brand-cta-from to-brand-cta-to font-semibold text-primary-foreground shadow-[0_8px_20px_-6px_rgb(226_6_17/0.35)] transition hover:brightness-95 focus-visible:outline-offset-4 disabled:cursor-not-allowed disabled:opacity-60"
+      className="mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-sm bg-linear-to-r from-brand-cta-from to-brand-cta-to font-semibold text-primary-foreground shadow-[0_8px_20px_-6px_rgb(226_6_17/0.35)] transition hover:brightness-95 focus-visible:outline-offset-4 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {isPending ? (
         <>

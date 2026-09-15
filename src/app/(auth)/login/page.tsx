@@ -17,9 +17,9 @@ function LoginFallback() {
       <Skeleton className="mt-4 h-8 w-72" />
       <Skeleton className="mt-4 h-5 w-full max-w-md" />
       <div className="mt-9 space-y-5">
-        <Skeleton className="h-14 w-full rounded-xl" />
-        <Skeleton className="h-14 w-full rounded-xl" />
-        <Skeleton className="h-14 w-full rounded-xl" />
+        <Skeleton className="h-14 w-full rounded-sm" />
+        <Skeleton className="h-14 w-full rounded-sm" />
+        <Skeleton className="h-14 w-full rounded-sm" />
       </div>
     </AuthCard>
   );

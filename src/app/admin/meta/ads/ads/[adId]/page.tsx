@@ -222,7 +222,7 @@ function AdDetail({ adId }: { adId: string }) {
       <LinkTabs
         tabs={tabs}
         current={tab}
-        className="my-3 rounded-xl border border-slate-200 bg-white px-3 shadow-2xs"
+        className="my-3 rounded-sm border border-slate-200 bg-white px-3 shadow-2xs"
       />
 
       {tab === "overview" && (

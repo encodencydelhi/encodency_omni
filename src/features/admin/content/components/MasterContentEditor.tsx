@@ -55,7 +55,7 @@ export function MasterContentEditor({ content, onChange }: Props) {
   };
 
   return (
-    <section className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+    <section className="overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex w-full items-center justify-between gap-2 border-b border-[#EDF1F5] px-3 py-2.5 text-left transition hover:bg-slate-50"
@@ -108,7 +108,7 @@ export function MasterContentEditor({ content, onChange }: Props) {
 
           {tab === "Headline" && (
             <div>
-              <div className="h-9 w-full rounded-lg border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] text-[#24365A] transition hover:border-[#1769DF] focus-within:border-[#1769DF] flex items-center">
+              <div className="h-9 w-full rounded-sm border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] text-[#24365A] transition hover:border-[#1769DF] focus-within:border-[#1769DF] flex items-center">
                 <SpellCheckedInput
                   name="headline"
                   id="master-headline"
@@ -123,7 +123,7 @@ export function MasterContentEditor({ content, onChange }: Props) {
           )}
 
           {tab === "Description" && (
-            <div className="w-full rounded-lg border border-[#D9E1EC] bg-white p-2.5 text-[12.5px] leading-5 text-[#24365A] transition hover:border-[#1769DF] focus-within:border-[#1769DF]">
+            <div className="w-full rounded-sm border border-[#D9E1EC] bg-white p-2.5 text-[12.5px] leading-5 text-[#24365A] transition hover:border-[#1769DF] focus-within:border-[#1769DF]">
               <SpellCheckedTextarea
                 name="description"
                 id="master-description"
@@ -140,7 +140,7 @@ export function MasterContentEditor({ content, onChange }: Props) {
             <div className="space-y-2">
               <label className="block">
                 <span className="mb-1 block text-[11.5px] font-semibold text-[#4B5B76]">CTA Text</span>
-                <div className="h-9 w-full rounded-lg border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] text-[#24365A] transition hover:border-[#1769DF] focus-within:border-[#1769DF] flex items-center">
+                <div className="h-9 w-full rounded-sm border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] text-[#24365A] transition hover:border-[#1769DF] focus-within:border-[#1769DF] flex items-center">
                   <SpellCheckedInput
                     name="cta"
                     id="master-cta"
@@ -159,17 +159,17 @@ export function MasterContentEditor({ content, onChange }: Props) {
                   value={content.ctaUrl}
                   onChange={(e) => update("ctaUrl", e.target.value)}
                   placeholder="https://..."
-                  className="h-9 w-full rounded-lg border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] text-[#24365A] outline-none transition hover:border-[#1769DF] focus:border-[#1769DF]"
+                  className="h-9 w-full rounded-sm border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] text-[#24365A] outline-none transition hover:border-[#1769DF] focus:border-[#1769DF]"
                 />
               </label>
             </div>
           )}
 
           {tab === "Hashtags" && (
-            <div className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFD] p-2.5">
+            <div className="rounded-sm border border-[#E2E8F0] bg-[#F8FAFD] p-2.5">
               <div className="flex flex-wrap gap-1">
                 {content.hashtags.map((h) => (
-                  <span key={h} className="flex items-center gap-1 rounded-full bg-[#F0F6FF] px-2 py-0.5 text-[10.5px] font-semibold text-[#1769DF]">
+                  <span key={h} className="flex items-center gap-1 rounded-sm bg-[#F0F6FF] px-2 py-0.5 text-[10.5px] font-semibold text-[#1769DF]">
                     {h}
                     <button onClick={() => update("hashtags", content.hashtags.filter(x => x !== h))} className="text-slate-400 hover:text-red-500">
                       <X className="size-2.5" />
@@ -197,10 +197,10 @@ export function MasterContentEditor({ content, onChange }: Props) {
           )}
 
           {tab === "Mentions" && (
-            <div className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFD] p-2.5">
+            <div className="rounded-sm border border-[#E2E8F0] bg-[#F8FAFD] p-2.5">
               <div className="flex flex-wrap gap-1">
                 {content.mentions.map((m) => (
-                  <span key={m} className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-700">
+                  <span key={m} className="flex items-center gap-1 rounded-sm bg-emerald-50 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-700">
                     {m}
                     <button onClick={() => update("mentions", content.mentions.filter(x => x !== m))} className="text-slate-400 hover:text-red-500">
                       <X className="size-2.5" />
@@ -225,9 +225,9 @@ export function MasterContentEditor({ content, onChange }: Props) {
           )}
 
           {tab === "Media" && (
-            <div className="rounded-lg border-2 border-dashed border-[#B9CFF2] bg-[#F7FAFF] py-4 text-center">
+            <div className="rounded-sm border-2 border-dashed border-[#B9CFF2] bg-[#F7FAFF] py-4 text-center">
               <p className="text-[12px] font-semibold text-[#24365A]">Drag & drop files here, or click to browse</p>
-              <button className="mt-1.5 h-7 rounded-lg bg-[#1769DF] px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-[#1259BD]">Upload from device</button>
+              <button className="mt-1.5 h-7 rounded-sm bg-[#1769DF] px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-[#1259BD]">Upload from device</button>
               <p className="mt-1 text-[10px] text-[#7A87A0]">Images, Videos, GIFs, Documents up to 100MB</p>
             </div>
           )}
@@ -241,7 +241,7 @@ export function MasterContentEditor({ content, onChange }: Props) {
                 value={content.link}
                 onChange={(e) => update("link", e.target.value)}
                 placeholder="https://..."
-                className="h-9 w-full rounded-lg border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] text-[#24365A] outline-none transition hover:border-[#1769DF] focus:border-[#1769DF]"
+                className="h-9 w-full rounded-sm border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] text-[#24365A] outline-none transition hover:border-[#1769DF] focus:border-[#1769DF]"
               />
             </label>
           )}
@@ -249,7 +249,7 @@ export function MasterContentEditor({ content, onChange }: Props) {
           {tab === "Location" && (
             <label className="block">
               <span className="mb-1 block text-[11.5px] font-semibold text-[#4B5B76]">Location</span>
-              <div className="h-9 w-full rounded-lg border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] text-[#24365A] transition hover:border-[#1769DF] focus-within:border-[#1769DF] flex items-center">
+              <div className="h-9 w-full rounded-sm border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] text-[#24365A] transition hover:border-[#1769DF] focus-within:border-[#1769DF] flex items-center">
                 <SpellCheckedInput
                   name="location"
                   id="master-location"
@@ -265,7 +265,7 @@ export function MasterContentEditor({ content, onChange }: Props) {
           {tab === "Alt Text" && (
             <label className="block">
               <span className="mb-1 block text-[11.5px] font-semibold text-[#4B5B76]">Alt Text</span>
-              <div className="w-full rounded-lg border border-[#D9E1EC] bg-white p-2.5 text-[12.5px] leading-5 text-[#24365A] transition hover:border-[#1769DF] focus-within:border-[#1769DF]">
+              <div className="w-full rounded-sm border border-[#D9E1EC] bg-white p-2.5 text-[12.5px] leading-5 text-[#24365A] transition hover:border-[#1769DF] focus-within:border-[#1769DF]">
                 <SpellCheckedTextarea
                   name="altText"
                   id="master-alt-text"
@@ -293,7 +293,7 @@ export function MasterContentEditor({ content, onChange }: Props) {
 
           {tab === "AI" && (
             <div className="space-y-1.5">
-              <div className="rounded-lg border border-purple-200 bg-purple-50/50 p-2.5">
+              <div className="rounded-sm border border-purple-200 bg-purple-50/50 p-2.5">
                 <div className="flex items-center gap-1.5 text-[11.5px] font-semibold text-purple-700">
                   <Sparkles className="size-3.5" /> AI Content Actions
                 </div>
@@ -306,10 +306,10 @@ export function MasterContentEditor({ content, onChange }: Props) {
                   ))}
                 </div>
               </div>
-              <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-2.5">
+              <div className="rounded-sm border border-blue-200 bg-blue-50/50 p-2.5">
                 <p className="text-[11px] font-semibold text-blue-700">Generate Platform Variations</p>
                 <p className="mt-0.5 text-[10px] text-blue-600/70">AI will rewrite your master content for each selected platform</p>
-                <button className="mt-1.5 h-7 rounded-lg bg-[#1769DF] px-3 text-[11px] font-semibold text-white hover:bg-[#1259BD]">Generate All Variations</button>
+                <button className="mt-1.5 h-7 rounded-sm bg-[#1769DF] px-3 text-[11px] font-semibold text-white hover:bg-[#1259BD]">Generate All Variations</button>
               </div>
             </div>
           )}

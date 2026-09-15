@@ -132,7 +132,7 @@ export function AdminSidebar() {
                         title={isSidebarCollapsed ? item.label : undefined}
                         onClick={() => setMobileNavOpen(false)}
                         className={cn(
-                          "group flex h-[36px] items-center gap-3 rounded-xl border text-[12px] transition-all duration-200",
+                          "group flex h-[36px] items-center gap-3 rounded-sm border text-[12px] transition-all duration-200",
                           isSidebarCollapsed ? "justify-center px-0" : "px-3",
                           active
                             ? "border-[#2563EB]/40 bg-[#1E3A8A]/50 text-white shadow-[0_0_20px_rgba(59,130,246,0.25)]"
@@ -170,7 +170,7 @@ export function AdminSidebar() {
 
           {/* Support */}
           {!isSidebarCollapsed ? (
-            <button className="mx-3 mb-3 mt-1 flex min-h-[48px] shrink-0 items-center gap-3 rounded-xl border border-[#D946EF]/30 bg-[#D946EF]/10 px-3 py-1.5 text-left transition-all hover:border-[#D946EF]/60 shadow-[0_0_15px_rgba(217,70,239,0.1)] group">
+            <button className="mx-3 mb-3 mt-1 flex min-h-[48px] shrink-0 items-center gap-3 rounded-sm border border-[#D946EF]/30 bg-[#D946EF]/10 px-3 py-1.5 text-left transition-all hover:border-[#D946EF]/60 shadow-[0_0_15px_rgba(217,70,239,0.1)] group">
               <span className="grid size-8 shrink-0 place-items-center">
                 <Headphones className="size-4 text-[#D946EF]" />
               </span>
@@ -186,7 +186,7 @@ export function AdminSidebar() {
             </button>
           ) : (
             <div className="mb-3 flex shrink-0 justify-center" title="Help & Support">
-              <span className="grid size-[36px] place-items-center rounded-xl border border-[#D946EF]/30 bg-[#D946EF]/10 shadow-[0_0_15px_rgba(217,70,239,0.1)]">
+              <span className="grid size-[36px] place-items-center rounded-sm border border-[#D946EF]/30 bg-[#D946EF]/10 shadow-[0_0_15px_rgba(217,70,239,0.1)]">
                 <Headphones className="size-4 text-[#D946EF]" />
               </span>
             </div>

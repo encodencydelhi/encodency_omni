@@ -53,7 +53,7 @@ export function StepHeader({
           <p className="mt-0.5 text-[12px] leading-4 text-[#6B7280]">{description}</p>
         </div>
       </div>
-      <div className="flex max-w-[330px] shrink-0 items-start gap-2 rounded-xl bg-[#F5F3FF] px-3 py-2.5">
+      <div className="flex max-w-[330px] shrink-0 items-start gap-2 rounded-sm bg-[#F5F3FF] px-3 py-2.5">
         <Lightbulb className="mt-px size-3.5 shrink-0 text-[#7C3AED]" />
         <p className="min-w-0">
           <b className="block text-[11px] font-semibold text-[#4C1D95]">Quick Tip</b>
@@ -93,7 +93,7 @@ export function Field({
 }
 
 const controlBase =
-  "flex h-[42px] w-full items-center gap-2 rounded-lg border border-[#E2E5EE] bg-white px-3 text-[12.5px] text-[#111827] transition-colors focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/12";
+  "flex h-[42px] w-full items-center gap-2 rounded-sm border border-[#E2E5EE] bg-white px-3 text-[12.5px] text-[#111827] transition-colors focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/12";
 
 export function TextInput({
   value,
@@ -178,7 +178,7 @@ export function TextareaField({
         onChange={(event) => onChange(event.target.value.slice(0, max))}
         placeholder={placeholder}
         rows={rows}
-        className="w-full resize-none rounded-lg border border-[#E2E5EE] bg-white px-3 py-2.5 text-[12.5px] leading-[18px] text-[#111827] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/12"
+        className="w-full resize-none rounded-sm border border-[#E2E5EE] bg-white px-3 py-2.5 text-[12.5px] leading-[18px] text-[#111827] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#4F46E5] focus:ring-2 focus:ring-[#4F46E5]/12"
       />
       <p className="mt-0.5 text-right text-[10.5px] text-[#9CA3AF]">
         {value.length}/{max}
@@ -206,7 +206,7 @@ export function TagField({
     setDraft("");
   };
   return (
-    <div className="relative flex min-h-[42px] w-full flex-wrap items-center gap-1.5 rounded-lg border border-[#E2E5EE] bg-white px-2.5 py-2 pr-8 transition-colors focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/12">
+    <div className="relative flex min-h-[42px] w-full flex-wrap items-center gap-1.5 rounded-sm border border-[#E2E5EE] bg-white px-2.5 py-2 pr-8 transition-colors focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/12">
       {tags.map((tag) => (
         <span
           key={tag}
@@ -255,13 +255,13 @@ export function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) 
       aria-checked={on}
       onClick={onToggle}
       className={cn(
-        "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+        "relative h-6 w-11 shrink-0 rounded-sm transition-colors",
         on ? "bg-[#4F46E5]" : "bg-[#CBD5E1]",
       )}
     >
       <span
         className={cn(
-          "absolute top-0.5 block size-5 rounded-full bg-white shadow-sm transition-all",
+          "absolute top-0.5 block size-5 rounded-sm bg-white shadow-sm transition-all",
           on ? "left-[22px]" : "left-0.5",
         )}
       />
@@ -282,7 +282,7 @@ export function Checkbox({
     <button
       type="button"
       onClick={onToggle}
-      className="flex items-center gap-2 rounded-lg border border-[#E2E5EE] bg-white px-2.5 py-2 text-left text-[11.5px] font-medium text-[#374151] transition-colors hover:border-[#C7D2FE]"
+      className="flex items-center gap-2 rounded-sm border border-[#E2E5EE] bg-white px-2.5 py-2 text-left text-[11.5px] font-medium text-[#374151] transition-colors hover:border-[#C7D2FE]"
     >
       <span
         className={cn(
@@ -342,7 +342,7 @@ export function NeedHelpCard() {
         {["#C7D2FE", "#DDD6FE", "#FBCFE8"].map((color, index) => (
           <span
             key={color}
-            className="grid size-8 place-items-center rounded-full border-2 border-white text-[11px] font-semibold text-[#4338CA]"
+            className="grid size-8 place-items-center rounded-sm border-2 border-white text-[11px] font-semibold text-[#4338CA]"
             style={{ background: color }}
           >
             {["A", "R", "S"][index]}
@@ -353,7 +353,7 @@ export function NeedHelpCard() {
       <p className="mx-auto mt-1 max-w-[200px] text-[11px] leading-4 text-[#6B7280]">
         Our team is here to help you set up your client.
       </p>
-      <button className="mt-3 inline-flex h-9 items-center gap-2 rounded-lg bg-[#4F46E5] px-4 text-[12px] font-semibold text-white transition-colors hover:bg-[#4338CA]">
+      <button className="mt-3 inline-flex h-9 items-center gap-2 rounded-sm bg-[#4F46E5] px-4 text-[12px] font-semibold text-white transition-colors hover:bg-[#4338CA]">
         Contact Support
       </button>
     </RailCard>

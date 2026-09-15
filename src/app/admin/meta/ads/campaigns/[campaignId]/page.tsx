@@ -249,7 +249,7 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
         </div>
       </DetailBar>
 
-      <LinkTabs tabs={tabs} current={tab} className="mb-4 bg-white/60 backdrop-blur-md px-2 rounded-xl border border-slate-200/60 shadow-sm" />
+      <LinkTabs tabs={tabs} current={tab} className="mb-4 bg-white/60 backdrop-blur-md px-2 rounded-sm border border-slate-200/60 shadow-sm" />
 
       {tab === "overview" && (
         <OverviewTab campaign={campaign} sets={sets} campaignAds={campaignAds} openIssues={openIssues} />
@@ -433,7 +433,7 @@ function OverviewTab({
         title="AI Recommendations & Growth Actions"
         icon={<Sparkles className="size-4 text-amber-500" />}
         action={
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-semibold text-amber-800 shadow-2xs">
+          <span className="inline-flex items-center gap-1 rounded-sm border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-semibold text-amber-800 shadow-2xs">
             <Sparkles className="size-3 text-amber-600" />
             Meta AI Optimized
           </span>
@@ -458,7 +458,7 @@ function OverviewTab({
                 {/* Subtle corner aura */}
                 <div
                   className={cn(
-                    "pointer-events-none absolute -right-8 -top-8 size-24 rounded-full opacity-10 blur-xl transition-opacity duration-300 group-hover:opacity-30",
+                    "pointer-events-none absolute -right-8 -top-8 size-24 rounded-sm opacity-10 blur-xl transition-opacity duration-300 group-hover:opacity-30",
                     rec.cornerColor,
                   )}
                 />
@@ -481,7 +481,7 @@ function OverviewTab({
                   <div className="mt-3 flex items-start gap-3">
                     <span
                       className={cn(
-                        "flex size-9 shrink-0 items-center justify-center rounded-xl shadow-xs transition-transform duration-300 group-hover:scale-105",
+                        "flex size-9 shrink-0 items-center justify-center rounded-sm shadow-xs transition-transform duration-300 group-hover:scale-105",
                         rec.gradient,
                       )}
                     >
@@ -501,7 +501,7 @@ function OverviewTab({
                 <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
                   <Link
                     href={rec.href}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-blue-600 shadow-2xs transition-all duration-200 group-hover:border-blue-300 group-hover:bg-blue-600 group-hover:text-white"
+                    className="inline-flex items-center gap-1.5 rounded-sm border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-blue-600 shadow-2xs transition-all duration-200 group-hover:border-blue-300 group-hover:bg-blue-600 group-hover:text-white"
                   >
                     <span>{rec.action}</span>
                     <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -766,7 +766,7 @@ function AdsTab({
               return (
                 <Tr key={a.id}>
                   <Td>
-                    <span className="block size-10 overflow-hidden rounded-lg border border-slate-200/60 bg-white/60 shadow-sm">
+                    <span className="block size-10 overflow-hidden rounded-sm border border-slate-200/60 bg-white/60 shadow-sm">
                       {creative && (
                         <Image
                           src={creative.src}

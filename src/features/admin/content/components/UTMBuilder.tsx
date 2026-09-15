@@ -86,7 +86,7 @@ export function UTMBuilder({
               <TextField label="Content" value={globalUtm.content} placeholder="feed_01" onChange={(v) => onGlobalUtmChange({ ...globalUtm, content: v })} />
               <TextField label="Term" value={globalUtm.term} placeholder="optional" onChange={(v) => onGlobalUtmChange({ ...globalUtm, term: v })} />
             </div>
-            <div className="mt-1.5 rounded-lg bg-[#F8FAFD] border border-[#E2E8F0] px-2.5 py-1.5">
+            <div className="mt-1.5 rounded-sm bg-[#F8FAFD] border border-[#E2E8F0] px-2.5 py-1.5">
               <span className="text-[9.5px] font-semibold text-[#7A87A0]">Preview: </span>
               <span className="text-[10px] font-mono text-[#33445F] break-all">
                 ?utm_source={globalUtm.source || "source"}&utm_medium={globalUtm.medium || "medium"}&utm_campaign={globalUtm.campaign || "campaign"}&utm_content={globalUtm.content || "content"}{globalUtm.term ? `&utm_term=${globalUtm.term}` : ""}
@@ -103,7 +103,7 @@ export function UTMBuilder({
               const isPExpanded = expandedPlatform === p;
 
               return (
-                <div key={p} className="rounded-lg border border-[#E2E8F0] overflow-hidden">
+                <div key={p} className="rounded-sm border border-[#E2E8F0] overflow-hidden">
                   <button
                     onClick={() => setExpandedPlatform(isPExpanded ? null : p)}
                     className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left transition hover:bg-slate-50"

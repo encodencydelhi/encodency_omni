@@ -196,7 +196,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
               <li key={stage} className="min-w-[110px] flex-1">
                 <div
                   className={cn(
-                    "rounded-xl border p-2.5 text-center transition-all duration-200 shadow-2xs",
+                    "rounded-sm border p-2.5 text-center transition-all duration-200 shadow-2xs",
                     done
                       ? "border-emerald-300 bg-emerald-50 text-emerald-800 font-semibold"
                       : "border-slate-200 bg-slate-50/70 text-slate-400 font-medium",
@@ -211,7 +211,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
           })}
           {isTerminal && (
             <li className="min-w-[110px] flex-1">
-              <div className="rounded-xl border border-rose-300 bg-rose-50 p-2.5 text-center shadow-2xs">
+              <div className="rounded-sm border border-rose-300 bg-rose-50 p-2.5 text-center shadow-2xs">
                 <span className="block text-[11px] font-semibold text-rose-800">{lead.stage}</span>
               </div>
             </li>
@@ -312,7 +312,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
                     return (
                       <li key={`${entry.at}-${i}`} className="flex gap-2.5">
                         <span className="flex flex-col items-center">
-                          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#eff6ff] text-[#1877f2]">
+                          <span className="flex size-6 shrink-0 items-center justify-center rounded-sm bg-[#eff6ff] text-[#1877f2]">
                             <Icon className="size-3.5" aria-hidden="true" />
                           </span>
                           {i < lead.timeline.length - 1 && (
@@ -558,7 +558,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
             <ul className="space-y-1.5">
               {nextActions.map((action) => (
                 <li key={action} className="flex items-start gap-2 text-[10px] leading-relaxed">
-                  <span className="mt-1 size-1.5 shrink-0 rounded-full bg-[#1877f2]" aria-hidden="true" />
+                  <span className="mt-1 size-1.5 shrink-0 rounded-sm bg-[#1877f2]" aria-hidden="true" />
                   {action}
                 </li>
               ))}

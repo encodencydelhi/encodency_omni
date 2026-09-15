@@ -46,7 +46,7 @@ export function RatioSelector({
   };
 
   return (
-    <section className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+    <section className="overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex w-full items-center justify-between gap-2 border-b border-[#EDF1F5] px-3 py-2.5 text-left transition hover:bg-slate-50"
@@ -70,7 +70,7 @@ export function RatioSelector({
                   setShowCustom(r.ratio === "custom");
                 }}
                 className={cn(
-                  "flex flex-col items-center rounded-lg border px-1 py-2 text-center transition",
+                  "flex flex-col items-center rounded-sm border px-1 py-2 text-center transition",
                   masterRatio === r.ratio ? "border-[#1769DF] bg-[#F0F6FF]" : "border-[#E2E8F0] hover:border-[#CBD5E1]"
                 )}
               >
@@ -82,22 +82,22 @@ export function RatioSelector({
 
           {/* Custom size editor */}
           {showCustom && masterRatio === "custom" && (
-            <div className="mt-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFD] p-2.5">
+            <div className="mt-2 rounded-sm border border-[#E2E8F0] bg-[#F8FAFD] p-2.5">
               <div className="flex items-center gap-2 text-[11px] font-semibold text-[#33445F]">
                 <Crop className="size-3.5" /> Custom Dimensions
               </div>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 <label className="block">
                   <span className="mb-0.5 block text-[10px] font-semibold text-[#7A87A0]">Width (px)</span>
-                  <input type="number" defaultValue={1080} className="h-8 w-full rounded-lg border border-[#D9E1EC] bg-white px-2 text-[11px] text-[#24365A] outline-none focus:border-[#1769DF]" />
+                  <input type="number" defaultValue={1080} className="h-8 w-full rounded-sm border border-[#D9E1EC] bg-white px-2 text-[11px] text-[#24365A] outline-none focus:border-[#1769DF]" />
                 </label>
                 <label className="block">
                   <span className="mb-0.5 block text-[10px] font-semibold text-[#7A87A0]">Height (px)</span>
-                  <input type="number" defaultValue={1350} className="h-8 w-full rounded-lg border border-[#D9E1EC] bg-white px-2 text-[11px] text-[#24365A] outline-none focus:border-[#1769DF]" />
+                  <input type="number" defaultValue={1350} className="h-8 w-full rounded-sm border border-[#D9E1EC] bg-white px-2 text-[11px] text-[#24365A] outline-none focus:border-[#1769DF]" />
                 </label>
                 <label className="block">
                   <span className="mb-0.5 block text-[10px] font-semibold text-[#7A87A0]">Aspect Ratio</span>
-                  <div className="flex h-8 items-center rounded-lg border border-[#D9E1EC] bg-[#F1F5F9] px-2 text-[11px] font-semibold text-[#33445F]">4 : 5</div>
+                  <div className="flex h-8 items-center rounded-sm border border-[#D9E1EC] bg-[#F1F5F9] px-2 text-[11px] font-semibold text-[#33445F]">4 : 5</div>
                 </label>
               </div>
               <div className="mt-2 flex gap-1">
@@ -117,7 +117,7 @@ export function RatioSelector({
 
           {/* Auto Adapt */}
           <div className="mt-2 space-y-1.5">
-            <div className="flex items-center justify-between rounded-lg border border-[#E2E8F0] px-2.5 py-1.5">
+            <div className="flex items-center justify-between rounded-sm border border-[#E2E8F0] px-2.5 py-1.5">
               <div>
                 <p className="text-[11.5px] font-semibold text-[#33445F]">Auto Adapt</p>
                 <p className="text-[10px] text-[#7A87A0]">Resize per platform automatically</p>
@@ -159,7 +159,7 @@ export function RatioSelector({
                     const displayRatio = customRatio || adapted;
 
                     return (
-                      <div key={p} className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] px-2 py-1">
+                      <div key={p} className="flex items-center gap-2 rounded-sm border border-[#E2E8F0] px-2 py-1">
                         <PlatformBadge platform={p} size="sm" />
                         <span className="flex-1 text-[10.5px] font-semibold text-[#33445F]">{meta.label}</span>
                         <div className="flex gap-1">

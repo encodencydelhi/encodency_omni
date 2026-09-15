@@ -321,12 +321,12 @@ function LiveNowCard({ event, onEnd, onSetup }: { event: LiveEvent; onEnd: () =>
         <div className="relative">
           <Thumb src={event.thumbnailUrl} className="rounded-none" sizes="900px" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0F1B3D]/70 via-transparent to-transparent" />
-          <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-md bg-[#E5202E] px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
-            <span className="size-1.5 animate-pulse rounded-full bg-white" /> Live
+          <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-sm bg-[#E5202E] px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
+            <span className="size-1.5 animate-pulse rounded-sm bg-white" /> Live
           </span>
           <div className="absolute inset-x-3 bottom-3 flex flex-wrap items-end justify-between gap-2 text-white">
             <p className="text-[16px] font-semibold drop-shadow">{event.title}</p>
-            <span className="rounded-md bg-black/40 px-2 py-0.5 font-mono text-[12px]">{duration(elapsed)}</span>
+            <span className="rounded-sm bg-black/40 px-2 py-0.5 font-mono text-[12px]">{duration(elapsed)}</span>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-px bg-[#EEF1F5] sm:grid-cols-4">
@@ -441,7 +441,7 @@ function SetupDrawer({ event, onClose, onGoLive }: { event: LiveEvent | null; on
               <ol className="flex items-center gap-1" aria-label="Stream status">
                 {HEALTH_STEPS.map((h, i) => (
                   <li key={h} className="flex flex-1 flex-col items-center gap-1 text-center">
-                    <span className={cn("grid size-6 place-items-center rounded-full text-[10px] font-bold", i < step ? "bg-[#12B76A] text-white" : i === step ? (h === "live" ? "bg-[#E5202E] text-white" : "bg-[#0F1B3D] text-white") : "bg-[#F1F4F8] text-[#98A2B3]")}>
+                    <span className={cn("grid size-6 place-items-center rounded-sm text-[10px] font-bold", i < step ? "bg-[#12B76A] text-white" : i === step ? (h === "live" ? "bg-[#E5202E] text-white" : "bg-[#0F1B3D] text-white") : "bg-[#F1F4F8] text-[#98A2B3]")}>
                       {i < step ? <Check className="size-3" /> : i + 1}
                     </span>
                     <span className={cn("text-[10.5px] leading-tight", i === step ? "font-semibold text-[#0F1B3D]" : "text-[#98A2B3]")}>{HEALTH[h].label.replace(" for stream", "")}</span>
@@ -649,8 +649,8 @@ function LiveCreate() {
         <ol className="flex min-w-max gap-1">
           {CREATE_STEPS.map((s, i) => (
             <li key={s}>
-              <button type="button" onClick={() => setStep(s)} aria-current={s === step ? "step" : undefined} className={cn("flex items-center gap-2 rounded-lg px-3 py-1.5 text-[12.5px] font-medium", s === step ? "bg-[#FEF1F2] text-[#0F1B3D]" : "text-[#6B7890] hover:bg-[#F8FAFC]", yt.focus)}>
-                <span className={cn("grid size-5 place-items-center rounded-full text-[10.5px] font-bold", touched && errors[s] ? "bg-[#FEF1F2] text-[#C81E2B] ring-1 ring-[#FBD5D9]" : i < idx ? "bg-[#12B76A] text-white" : s === step ? "bg-[#E5202E] text-white" : "bg-[#F1F4F8] text-[#6B7890]")}>
+              <button type="button" onClick={() => setStep(s)} aria-current={s === step ? "step" : undefined} className={cn("flex items-center gap-2 rounded-sm px-3 py-1.5 text-[12.5px] font-medium", s === step ? "bg-[#FEF1F2] text-[#0F1B3D]" : "text-[#6B7890] hover:bg-[#F8FAFC]", yt.focus)}>
+                <span className={cn("grid size-5 place-items-center rounded-sm text-[10.5px] font-bold", touched && errors[s] ? "bg-[#FEF1F2] text-[#C81E2B] ring-1 ring-[#FBD5D9]" : i < idx ? "bg-[#12B76A] text-white" : s === step ? "bg-[#E5202E] text-white" : "bg-[#F1F4F8] text-[#6B7890]")}>
                   {touched && errors[s] ? "!" : i < idx ? <Check className="size-3" /> : i + 1}
                 </span>
                 {s}
@@ -698,11 +698,11 @@ function LiveCreate() {
             {step === "Thumbnail" && (
               <>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <button type="button" onClick={() => input.current?.click()} className={cn("flex aspect-video flex-col items-center justify-center gap-1 rounded-md border border-dashed border-[#C9D1DC] bg-[#F8FAFC] text-[12px] font-medium text-[#3C4A66] hover:border-[#98A2B3]", yt.focus)}>
+                  <button type="button" onClick={() => input.current?.click()} className={cn("flex aspect-video flex-col items-center justify-center gap-1 rounded-sm border border-dashed border-[#C9D1DC] bg-[#F8FAFC] text-[12px] font-medium text-[#3C4A66] hover:border-[#98A2B3]", yt.focus)}>
                     <ImagePlus className="size-4" />Upload
                   </button>
                   {THUMBNAIL_LIBRARY.slice(0, 7).map((url) => (
-                    <button key={url} type="button" aria-pressed={form.thumbnailUrl === url} onClick={() => set("thumbnailUrl", url)} className={cn("relative rounded-md ring-offset-2", form.thumbnailUrl === url ? "ring-2 ring-[#E5202E]" : "hover:ring-2 hover:ring-[#C9D1DC]", yt.focus)}>
+                    <button key={url} type="button" aria-pressed={form.thumbnailUrl === url} onClick={() => set("thumbnailUrl", url)} className={cn("relative rounded-sm ring-offset-2", form.thumbnailUrl === url ? "ring-2 ring-[#E5202E]" : "hover:ring-2 hover:ring-[#C9D1DC]", yt.focus)}>
                       <Thumb src={url} sizes="160px" />
                     </button>
                   ))}

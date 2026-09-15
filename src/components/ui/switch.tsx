@@ -8,7 +8,7 @@ export function Switch({ className, ...props }: React.ComponentProps<typeof Swit
   return (
     <SwitchPrimitive.Root
       className={cn(
-        "peer inline-flex h-5 w-9 shrink-0 items-center rounded-full border border-transparent transition-colors outline-none",
+        "peer inline-flex h-5 w-9 shrink-0 items-center rounded-sm border border-transparent transition-colors outline-none",
         "focus-visible:ring-2 focus-visible:ring-ring/25",
         "data-[state=checked]:bg-primary data-[state=unchecked]:bg-border-strong",
         "disabled:cursor-not-allowed disabled:opacity-50",
@@ -18,7 +18,7 @@ export function Switch({ className, ...props }: React.ComponentProps<typeof Swit
     >
       <SwitchPrimitive.Thumb
         className={cn(
-          "pointer-events-none block size-4 rounded-full bg-card shadow-sm ring-0 transition-transform",
+          "pointer-events-none block size-4 rounded-sm bg-card shadow-sm ring-0 transition-transform",
           "data-[state=checked]:translate-x-[1.125rem] data-[state=unchecked]:translate-x-0.5",
         )}
       />

@@ -46,7 +46,7 @@ export function RouteGuard({ children, returnTo }: RouteGuardProps) {
   if (!isAllowed) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-background px-6">
-        <div className="w-full max-w-md rounded-xl border border-border bg-card">
+        <div className="w-full max-w-md rounded-sm border border-border bg-card">
           <EmptyState
             icon={ShieldAlertIcon}
             title="You do not have access to the Super Admin panel"

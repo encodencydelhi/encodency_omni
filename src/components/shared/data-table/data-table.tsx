@@ -118,14 +118,14 @@ export function DataTable<TRow>({
 
   if (error) {
     return (
-      <div className="rounded-lg border border-border bg-card">
+      <div className="rounded-sm border border-border bg-card">
         <ErrorState error={error} onRetry={onRetry} />
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card">
+    <div className="overflow-hidden rounded-sm border border-border bg-card">
       {enableColumnVisibility ? (
         <div className="flex items-center justify-end border-b border-border px-3 py-2">
           <DropdownMenu>
@@ -209,46 +209,46 @@ export function DataTable<TRow>({
           <TableBody className={cn(isFetching && !isLoading && "opacity-60 transition-opacity")}>
             {isLoading
               ? Array.from({ length: skeletonRows }, (_, rowIndex) => (
-                  <TableRow key={`skeleton-${rowIndex}`} className="hover:bg-transparent">
-                    {Array.from({ length: columnCount }, (_, cellIndex) => (
-                      <TableCell key={cellIndex}>
-                        <Skeleton className={cn("h-4", cellIndex === 0 ? "w-40" : "w-20")} />
+                <TableRow key={`skeleton-${rowIndex}`} className="hover:bg-transparent">
+                  {Array.from({ length: columnCount }, (_, cellIndex) => (
+                    <TableCell key={cellIndex}>
+                      <Skeleton className={cn("h-4", cellIndex === 0 ? "w-40" : "w-20")} />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+              : rows.map((row) => {
+                const id = getRowId(row);
+                const isSelected = selectedIds.includes(id);
+
+                return (
+                  <TableRow
+                    key={id}
+                    data-state={isSelected ? "selected" : undefined}
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    className={cn(onRowClick && "cursor-pointer")}
+                  >
+                    {selection ? (
+                      <TableCell className="pr-0" onClick={(event) => event.stopPropagation()}>
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleRow(id)}
+                          aria-label="Select row"
+                        />
+                      </TableCell>
+                    ) : null}
+
+                    {visibleColumns.map((column) => (
+                      <TableCell
+                        key={column.id}
+                        className={cn(column.align === "right" && "text-right", column.className)}
+                      >
+                        {column.cell(row)}
                       </TableCell>
                     ))}
                   </TableRow>
-                ))
-              : rows.map((row) => {
-                  const id = getRowId(row);
-                  const isSelected = selectedIds.includes(id);
-
-                  return (
-                    <TableRow
-                      key={id}
-                      data-state={isSelected ? "selected" : undefined}
-                      onClick={onRowClick ? () => onRowClick(row) : undefined}
-                      className={cn(onRowClick && "cursor-pointer")}
-                    >
-                      {selection ? (
-                        <TableCell className="pr-0" onClick={(event) => event.stopPropagation()}>
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleRow(id)}
-                            aria-label="Select row"
-                          />
-                        </TableCell>
-                      ) : null}
-
-                      {visibleColumns.map((column) => (
-                        <TableCell
-                          key={column.id}
-                          className={cn(column.align === "right" && "text-right", column.className)}
-                        >
-                          {column.cell(row)}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })}
+                );
+              })}
           </TableBody>
         </Table>
       </div>

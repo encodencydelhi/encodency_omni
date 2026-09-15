@@ -80,11 +80,11 @@ export default function AssetsPage() {
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[10.5px] font-semibold",
+          "inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm border px-2.5 py-0.5 text-[10.5px] font-semibold",
           s.bg, s.text, s.border,
         )}
       >
-        <span className={cn("size-2 rounded-full shrink-0", s.dot)} />
+        <span className={cn("size-2 rounded-sm shrink-0", s.dot)} />
         {status}
       </span>
     );
@@ -104,7 +104,7 @@ export default function AssetsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search assets..."
-            className="h-9 w-full rounded-lg border border-[#e2e8f0] bg-white pl-9 pr-3 text-[12px] font-medium text-[#0f172a] placeholder:text-[#94a3b8] outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20"
+            className="h-9 w-full rounded-sm border border-[#e2e8f0] bg-white pl-9 pr-3 text-[12px] font-medium text-[#0f172a] placeholder:text-[#94a3b8] outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/20"
           />
         </div>
       </div>
@@ -118,17 +118,17 @@ export default function AssetsPage() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-all",
+                "flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-[12px] font-semibold transition-all",
                 isActive
                   ? "bg-[#eff6ff] border-2 border-[#2563eb] text-[#1e40af]"
                   : "bg-white text-[#334155] border border-[#e2e8f0] hover:bg-[#f8fafc] hover:border-[#cbd5e1]",
               )}
             >
-              {meta.dotColor && <span className={cn("size-2 rounded-full shrink-0", meta.dotColor)} />}
+              {meta.dotColor && <span className={cn("size-2 rounded-sm shrink-0", meta.dotColor)} />}
               {tab}
               <span
                 className={cn(
-                  "rounded-full px-1.5 py-px text-[10px] font-bold",
+                  "rounded-sm px-1.5 py-px text-[10px] font-bold",
                   isActive ? "bg-[#2563eb]/10 text-[#2563eb]" : "bg-[#f1f5f9] text-[#475569]",
                 )}
               >
@@ -139,7 +139,7 @@ export default function AssetsPage() {
         })}
       </div>
 
-      <div className="rounded-xl border border-[#e2e8f0] bg-white shadow-sm overflow-hidden">
+      <div className="rounded-sm border border-[#e2e8f0] bg-white shadow-sm overflow-hidden">
         <TableShell minWidth={900} striped={false}>
           <thead>
             <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
@@ -155,7 +155,7 @@ export default function AssetsPage() {
               <Tr key={asset.id} className="border-b border-[#f1f5f9] last:border-0">
                 <Td>
                   <div className="flex items-center gap-3">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#f1f5f9]">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-[#f1f5f9]">
                       {GROUP_ICONS[asset.group]}
                     </span>
                     <div className="min-w-0">
@@ -184,12 +184,12 @@ export default function AssetsPage() {
                 <Td>
                   <div className="flex flex-wrap gap-1">
                     {asset.permissions.map((p) => (
-                      <span key={p} className="rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-2 py-0.5 text-[10px] font-medium text-[#334155]">
+                      <span key={p} className="rounded-sm border border-[#e2e8f0] bg-[#f8fafc] px-2 py-0.5 text-[10px] font-medium text-[#334155]">
                         {p}
                       </span>
                     ))}
                     {asset.missingPermissions.map((p) => (
-                      <span key={p} className="rounded-md border border-[#fde68a] bg-[#fef3c7] px-2 py-0.5 text-[10px] font-medium text-[#92400e]">
+                      <span key={p} className="rounded-sm border border-[#fde68a] bg-[#fef3c7] px-2 py-0.5 text-[10px] font-medium text-[#92400e]">
                         {p}
                       </span>
                     ))}
@@ -201,7 +201,7 @@ export default function AssetsPage() {
                       <button
                         type="button"
                         onClick={() => toast.success(`Reconnecting ${asset.name}…`)}
-                        className="rounded-lg bg-[#2563eb] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#1d4ed8] transition-colors"
+                        className="rounded-sm bg-[#2563eb] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#1d4ed8] transition-colors"
                       >
                         Reconnect
                       </button>
@@ -209,7 +209,7 @@ export default function AssetsPage() {
                       <button
                         type="button"
                         onClick={() => toast.success(`Syncing ${asset.name}…`)}
-                        className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors"
+                        className="rounded-sm border border-[#e2e8f0] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors"
                       >
                         <RefreshCw className="size-3 inline mr-1" />
                         Sync
@@ -218,14 +218,14 @@ export default function AssetsPage() {
                     <button
                       type="button"
                       onClick={() => toast.success(`Refreshing permissions for ${asset.name}…`)}
-                      className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors"
+                      className="rounded-sm border border-[#e2e8f0] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors"
                     >
                       Refresh
                     </button>
                     <button
                       type="button"
                       onClick={() => toast.success(`Opening ${asset.name} in Meta Business Suite`)}
-                      className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors"
+                      className="rounded-sm border border-[#e2e8f0] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors"
                     >
                       Manage
                     </button>
@@ -236,7 +236,7 @@ export default function AssetsPage() {
                           description: "Campaigns using this asset will stop delivering until it is reconnected.",
                         })
                       }
-                      className="rounded-lg border border-[#fecaca] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#dc2626] hover:bg-[#fef2f2] transition-colors"
+                      className="rounded-sm border border-[#fecaca] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#dc2626] hover:bg-[#fef2f2] transition-colors"
                     >
                       <Unplug className="size-3 inline mr-1" />
                       Disconnect
@@ -249,9 +249,9 @@ export default function AssetsPage() {
         </TableShell>
       </div>
 
-      <section className="mt-4 rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-sm">
+      <section className="mt-4 rounded-sm border border-[#e2e8f0] bg-white p-4 shadow-sm">
         <div className="mb-3 flex items-center gap-2">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-[#eff6ff]">
+          <span className="flex size-7 items-center justify-center rounded-sm bg-[#eff6ff]">
             <Plug className="size-4 text-[#2563eb]" />
           </span>
           <h3 className="text-[13px] font-bold text-[#0f172a]">Connection Health</h3>
@@ -262,9 +262,9 @@ export default function AssetsPage() {
         </div>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {HEALTH_ITEMS.map((item) => (
-            <div key={item.status} className="rounded-lg border border-[#e2e8f0] bg-[#f8fafc] p-3">
+            <div key={item.status} className="rounded-sm border border-[#e2e8f0] bg-[#f8fafc] p-3">
               <div className="mb-1.5 flex items-center gap-2">
-                <span className={cn("size-2.5 rounded-full", item.dotColor)} />
+                <span className={cn("size-2.5 rounded-sm", item.dotColor)} />
                 <span className="text-[11px] font-bold text-[#0f172a]">{item.status}</span>
               </div>
               <p className="text-[10px] leading-relaxed text-[#475569]">{item.description}</p>

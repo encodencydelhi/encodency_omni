@@ -73,7 +73,7 @@ export function BusinessStep({
             {SOCIALS.map(({ key, channel, placeholder }) => (
               <span
                 key={key}
-                className="flex h-[42px] items-center gap-2 rounded-lg border border-[#E2E5EE] bg-white px-2.5 transition-colors focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/12"
+                className="flex h-[42px] items-center gap-2 rounded-sm border border-[#E2E5EE] bg-white px-2.5 transition-colors focus-within:border-[#4F46E5] focus-within:ring-2 focus-within:ring-[#4F46E5]/12"
               >
                 <ChannelLogo channel={channel} className="size-[18px] shrink-0" />
                 <input
@@ -98,8 +98,8 @@ export function BusinessRail() {
   return (
     <>
       <RailCard>
-        <div className="mb-3 grid h-[108px] place-items-center rounded-xl bg-gradient-to-b from-[#EEF2FF] to-[#F8FAFF]">
-          <span className="grid h-[62px] w-[86px] place-items-center rounded-lg border border-[#C7D2FE] bg-white shadow-sm">
+        <div className="mb-3 grid h-[108px] place-items-center rounded-sm bg-gradient-to-b from-[#EEF2FF] to-[#F8FAFF]">
+          <span className="grid h-[62px] w-[86px] place-items-center rounded-sm border border-[#C7D2FE] bg-white shadow-sm">
             <Building2 className="size-7 text-[#4F46E5]" />
           </span>
         </div>

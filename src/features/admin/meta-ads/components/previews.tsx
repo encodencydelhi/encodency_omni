@@ -39,7 +39,7 @@ export function AdPreview({
       <div className="flex items-center gap-2.5 border-b border-slate-100 px-3.5 py-3">
         <span
           className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-xl shadow-2xs",
+            "flex size-8 shrink-0 items-center justify-center rounded-sm shadow-2xs",
             isInstagram
               ? "bg-gradient-to-tr from-[#fdf497] via-[#fd5949] to-[#d6249f] text-white"
               : "bg-[#1877f2] text-white",
@@ -93,7 +93,7 @@ export function AdPreview({
             </span>
           )}
         </div>
-        <span className="shrink-0 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs">
+        <span className="shrink-0 rounded-sm bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs">
           {ad.cta}
         </span>
       </div>
@@ -140,7 +140,7 @@ export function InstantFormPreview({
       )}
     >
       <div className="bg-slate-900 px-3 pb-2 pt-2 text-center">
-        <span className="mx-auto block h-1.5 w-12 rounded-full bg-slate-700" aria-hidden="true" />
+        <span className="mx-auto block h-1.5 w-12 rounded-sm bg-slate-700" aria-hidden="true" />
       </div>
 
       <div className="max-h-[440px] overflow-y-auto [scrollbar-width:thin]">
@@ -159,7 +159,7 @@ export function InstantFormPreview({
                 {q.label}
                 {q.required && <span className="text-rose-600 font-black"> *</span>}
               </span>
-              <span className="mt-1.5 flex h-8 items-center rounded-xl border border-slate-300 bg-slate-50/80 px-3 text-xs font-medium text-slate-400 shadow-2xs">
+              <span className="mt-1.5 flex h-8 items-center rounded-sm border border-slate-300 bg-slate-50/80 px-3 text-xs font-medium text-slate-400 shadow-2xs">
                 {q.type.startsWith("Prefilled") ? "Prefilled from Meta profile" : "Your answer"}
               </span>
             </label>
@@ -173,18 +173,18 @@ export function InstantFormPreview({
               <span className="font-semibold text-blue-600 underline">privacy policy</span>.
             </p>
           ) : (
-            <p className="rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-[10px] font-semibold leading-relaxed text-rose-800">
+            <p className="rounded-sm border border-rose-200 bg-rose-50 p-2.5 text-[10px] font-semibold leading-relaxed text-rose-800">
               No privacy policy URL set. Meta requires a privacy policy.
             </p>
           )}
-          <span className="mt-3 block rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-center text-xs font-semibold text-white shadow-md shadow-blue-500/20">
+          <span className="mt-3 block rounded-sm bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-center text-xs font-semibold text-white shadow-md shadow-blue-500/20">
             Submit Application
           </span>
         </div>
 
         <div className="border-t border-slate-100 bg-slate-100/60 px-4 py-3.5 text-center">
           <p className="text-xs font-semibold text-slate-800">{form.thankYouHeadline}</p>
-          <span className="mt-2 inline-block rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-2xs">
+          <span className="mt-2 inline-block rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-2xs">
             {form.thankYouCta}
           </span>
         </div>

@@ -154,7 +154,7 @@ export function SeoKeywordsPage() {
             <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5">
               {distribution.map((bucket) => (
                 <span key={bucket.bucket} className="flex items-center gap-1.5 text-[8.5px]">
-                  <i className="size-1.5 rounded-full" style={{ background: bucket.color }} />
+                  <i className="size-1.5 rounded-sm" style={{ background: bucket.color }} />
                   <span className="flex-1 text-[#52617D]">Pos {bucket.bucket}</span>
                   <b className="text-[#172044]">{bucket.count}</b>
                 </span>
@@ -167,13 +167,13 @@ export function SeoKeywordsPage() {
           <div className="flex h-full flex-col px-3 pb-2 pt-1">
             <div className="flex gap-3 text-[8.5px] font-semibold text-[#52617D]">
               <span className="flex items-center gap-1.5">
-                <i className="size-1.5 rounded-full bg-[#10B981]" /> Top 3
+                <i className="size-1.5 rounded-sm bg-[#10B981]" /> Top 3
               </span>
               <span className="flex items-center gap-1.5">
-                <i className="size-1.5 rounded-full bg-[#3186F3]" /> Top 10
+                <i className="size-1.5 rounded-sm bg-[#3186F3]" /> Top 10
               </span>
               <span className="flex items-center gap-1.5">
-                <i className="size-1.5 rounded-full bg-[#8B5CF6]" /> Top 50
+                <i className="size-1.5 rounded-sm bg-[#8B5CF6]" /> Top 50
               </span>
             </div>
             <div className="min-h-0 flex-1">
@@ -220,7 +220,7 @@ export function SeoKeywordsPage() {
             <div className="mt-1.5 w-full space-y-0.5">
               {intents.map((intent) => (
                 <span key={intent.name} className="flex items-center gap-1.5 text-[8.5px]">
-                  <i className="size-1.5 rounded-full" style={{ background: intent.color }} />
+                  <i className="size-1.5 rounded-sm" style={{ background: intent.color }} />
                   <span className="flex-1 text-[#52617D]">{intent.name}</span>
                   <b className="text-[#172044]">{intent.value}%</b>
                 </span>

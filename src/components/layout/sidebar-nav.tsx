@@ -48,7 +48,7 @@ export function SidebarNav({ isCollapsed, onNavigate }: SidebarNavProps) {
                   onClick={onNavigate}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "group flex items-center gap-3 rounded-lg px-3 py-2 text-[0.8125rem] font-medium transition-colors",
+                    "group flex items-center gap-3 rounded-sm px-3 py-2 text-[0.8125rem] font-medium transition-colors",
                     isCollapsed && "justify-center px-0",
                     isActive
                       ? "bg-primary-subtle text-primary"

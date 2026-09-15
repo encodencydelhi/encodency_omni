@@ -58,7 +58,7 @@ export function AuthField({
 
 /** Shared input styling for the auth screen. */
 export const AUTH_INPUT_CLASS = cn(
-  "h-12 w-full rounded-xl border border-input bg-card pl-11 pr-4 text-sm text-foreground outline-none transition",
+  "h-12 w-full rounded-sm border border-input bg-card pl-11 pr-4 text-sm text-foreground outline-none transition",
   "placeholder:text-muted-foreground/80",
   "focus:border-ring focus:ring-4 focus:ring-primary/10",
   "disabled:cursor-not-allowed disabled:opacity-60",

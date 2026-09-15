@@ -82,7 +82,7 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
     <div className="space-y-2.5">
       <Panel letter="A" icon={ImageIcon} title="Campaign Assets" caption="Upload images, videos, carousels and other media for your campaign.">
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.05fr)_minmax(420px,.95fr)]">
-          <div className="min-w-0 rounded-lg border border-[#E7EDF5] bg-white p-3">
+          <div className="min-w-0 rounded-sm border border-[#E7EDF5] bg-white p-3">
             <SectionTitle icon={FileText} title="Campaign Content" />
             <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_.8fr]">
               <Field label="Campaign Title" required>
@@ -109,9 +109,9 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
             </div>
           </div>
 
-          <div className="min-w-0 rounded-lg border border-[#E7EDF5] bg-white p-3">
+          <div className="min-w-0 rounded-sm border border-[#E7EDF5] bg-white p-3">
             <SectionTitle icon={ImageIcon} title="Media Assets" caption="Upload images and videos for your campaign." />
-            <div className="mt-3 rounded-lg border border-dashed border-[#BFD4F2] bg-[#F8FBFF] p-3 text-center">
+            <div className="mt-3 rounded-sm border border-dashed border-[#BFD4F2] bg-[#F8FBFF] p-3 text-center">
               <button className="mx-auto flex h-8 items-center gap-2 rounded-sm bg-[#155EEF] px-4 text-[11px] font-semibold text-white">
                 <Upload className="size-3.5" />
                 Upload Media
@@ -120,11 +120,11 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
             </div>
             <div className="mt-3 grid grid-cols-4 gap-2">
               {MEDIA.map((asset) => (
-                <div key={asset.name} className="overflow-hidden rounded-lg border border-[#DDE6F1] bg-white">
+                <div key={asset.name} className="overflow-hidden rounded-sm border border-[#DDE6F1] bg-white">
                   <span className="relative block h-[78px]">
                     <Image src={asset.src} alt="" fill sizes="160px" className="object-cover" />
                     <i className="absolute left-1.5 top-1.5 grid size-5 place-items-center rounded bg-[#0AA673] text-white"><Check className="size-3" /></i>
-                    {asset.video && <i className="absolute inset-0 m-auto grid size-9 place-items-center rounded-full bg-black/55 text-white"><Video className="size-4" /></i>}
+                    {asset.video && <i className="absolute inset-0 m-auto grid size-9 place-items-center rounded-sm bg-black/55 text-white"><Video className="size-4" /></i>}
                     <button className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded bg-white text-[#E11D28]"><X className="size-3" /></button>
                   </span>
                   <div className="p-1.5">
@@ -133,8 +133,8 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
                   </div>
                 </div>
               ))}
-              <button className="flex min-h-[124px] flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[#BFD4F2] bg-[#F8FBFF] text-[10px] font-semibold text-[#155EEF]">
-                <span className="grid size-9 place-items-center rounded-full bg-[#EAF2FF]"><Plus className="size-4" /></span>
+              <button className="flex min-h-[124px] flex-col items-center justify-center gap-1 rounded-sm border border-dashed border-[#BFD4F2] bg-[#F8FBFF] text-[10px] font-semibold text-[#155EEF]">
+                <span className="grid size-9 place-items-center rounded-sm bg-[#EAF2FF]"><Plus className="size-4" /></span>
                 Add More
               </button>
             </div>
@@ -144,9 +144,9 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
 
       <Panel letter="B" icon={Sparkles} title="Master Creative & AI Adaptation" caption="Upload a master creative and let AI automatically adapt it for each platform.">
         <div className="grid gap-3 xl:grid-cols-[1fr_1fr]">
-          <div className="rounded-lg border border-[#E7EDF5] bg-white p-3">
+          <div className="rounded-sm border border-[#E7EDF5] bg-white p-3">
             <SectionTitle icon={ImageIcon} title="Master Creative" caption="Upload one master creative to auto-generate platform versions." />
-            <div className="mt-3 rounded-lg border border-dashed border-[#BFD4F2] bg-[#F8FBFF] p-6 text-center">
+            <div className="mt-3 rounded-sm border border-dashed border-[#BFD4F2] bg-[#F8FBFF] p-6 text-center">
               <button className="mx-auto flex h-8 items-center gap-2 rounded-sm bg-[#155EEF] px-4 text-[11px] font-semibold text-white">
                 <Upload className="size-3.5" />
                 Upload Master Creative
@@ -162,7 +162,7 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
               ))}
               {customFormats.map((format, idx) => (
                 <div key={`custom-${idx}`} className="group relative rounded-sm border border-[#C4B5FD] bg-[#F5F3FF] p-1.5 text-center">
-                  <button onClick={() => removeCustomFormat(idx)} className="absolute -right-1 -top-1 hidden size-4 place-items-center rounded-full bg-[#E11D28] text-white group-hover:grid">
+                  <button onClick={() => removeCustomFormat(idx)} className="absolute -right-1 -top-1 hidden size-4 place-items-center rounded-sm bg-[#E11D28] text-white group-hover:grid">
                     <X className="size-2.5" />
                   </button>
                   <span className="grid h-8 place-items-center rounded bg-[#EDE9FE] text-[8px] font-semibold text-[#7C3AED]">{format.ratio}</span>
@@ -202,11 +202,11 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
             </div>
           </div>
 
-          <div className="rounded-lg border border-[#E7EDF5] bg-white p-3">
+          <div className="rounded-sm border border-[#E7EDF5] bg-white p-3">
             <SectionTitle icon={Sparkles} title="AI Adapt Options" caption="Select what AI should generate for each platform." />
             <div className="mt-3 grid grid-cols-2 gap-2">
               {AI_ADAPTATIONS.map(({ label, desc }) => (
-                <div key={label} className="flex items-center gap-2 rounded-lg bg-[#F8FAFC] px-2.5 py-2">
+                <div key={label} className="flex items-center gap-2 rounded-sm bg-[#F8FAFC] px-2.5 py-2">
                   <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-[#EEF2FF] text-[#4F46E5]">
                     <Sparkles className="size-3" />
                   </span>
@@ -214,13 +214,13 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
                     <b className="block text-[10px] font-semibold text-[#34415F]">{label}</b>
                     <small className="block text-[8.5px] text-[#8791A4]">{desc}</small>
                   </div>
-                  <button className="h-5 w-8 shrink-0 rounded-full bg-[#18B875] p-0.5">
-                    <i className="block size-4 translate-x-3 rounded-full bg-white" />
+                  <button className="h-5 w-8 shrink-0 rounded-sm bg-[#18B875] p-0.5">
+                    <i className="block size-4 translate-x-3 rounded-sm bg-white" />
                   </button>
                 </div>
               ))}
             </div>
-            <button className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-[#4F46E5] text-[11px] font-semibold text-white">
+            <button className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-sm bg-[#4F46E5] text-[11px] font-semibold text-white">
               <Sparkles className="size-3.5" />
               Generate All Adaptations
             </button>
@@ -247,7 +247,7 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Field label="Media">
-              <span className="relative block h-[96px] overflow-hidden rounded-lg border border-[#DDE6F1]">
+              <span className="relative block h-[96px] overflow-hidden rounded-sm border border-[#DDE6F1]">
                 <Image src="/campaigns/save-rivers/square.png" alt="" fill sizes="150px" className="object-cover" />
                 <button className="absolute bottom-1.5 right-1.5 rounded bg-black/60 px-2 py-0.5 text-[8px] font-semibold text-white">Edit</button>
               </span>
@@ -265,7 +265,7 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
               <b className="mb-2 block text-[11.5px] text-[#132044]">Platform Options</b>
               {["Include Location", "Tag People", "Add Link in Bio Reminder"].map((item) => (
                 <div key={item} className="mb-2 flex items-center gap-2">
-                  <span className="h-5 w-9 rounded-full bg-[#18B875] p-0.5"><i className="block size-4 translate-x-4 rounded-full bg-white" /></span>
+                  <span className="h-5 w-9 rounded-sm bg-[#18B875] p-0.5"><i className="block size-4 translate-x-4 rounded-sm bg-white" /></span>
                   <span className="text-[10px] font-semibold text-[#34415F]">{item}</span>
                 </div>
               ))}
@@ -297,7 +297,7 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
           <b className="block text-[10px] text-[#34415F]">{draft.publishDate} - {draft.publishTime}</b>
           <div className="mt-2 grid grid-cols-7 gap-1">
             {Object.entries(draft.platformSchedules).slice(0, 7).map(([platform, sched]) => (
-              <span key={platform} className="grid place-items-center rounded-lg bg-[#F8FAFC] px-1 py-1.5">
+              <span key={platform} className="grid place-items-center rounded-sm bg-[#F8FAFC] px-1 py-1.5">
                 <ChannelLogo channel={platform} className="size-4" />
                 <small className="mt-1 text-[8px] text-[#155EEF]">{sched.time}</small>
               </span>
@@ -312,7 +312,7 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
               { label: "Videos", count: "1", color: "bg-[#F2EAFF] text-[#7C3AED]" },
               { label: "Captions", count: "10", color: "bg-[#E4F8F0] text-[#0AA673]" },
             ].map(({ label, count, color }) => (
-              <div key={label} className={cn("rounded-lg p-2 text-center", color)}>
+              <div key={label} className={cn("rounded-sm p-2 text-center", color)}>
                 <b className="block text-[16px] font-black">{count}</b>
                 <small className="text-[9px]">{label}</small>
               </div>
@@ -330,9 +330,9 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
 
 function Panel({ letter, icon: Icon, title, caption, action, children }: { letter: string; icon: typeof ImageIcon; title: string; caption: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-[#DDE6F1] bg-white p-3 shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
+    <section className="rounded-sm border border-[#DDE6F1] bg-white p-3 shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
       <div className="mb-3 flex items-center gap-2">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFE6EA] text-[13px] font-black text-[#EB0711]">{letter}</span>
+        <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#FFE6EA] text-[13px] font-black text-[#EB0711]">{letter}</span>
         <Icon className="size-4 text-[#155EEF]" />
         <div className="min-w-0 flex-1">
           <b className="block text-[15px] font-black leading-5 text-[#101A3D]">{title}</b>
@@ -348,7 +348,7 @@ function Panel({ letter, icon: Icon, title, caption, action, children }: { lette
 function SectionTitle({ icon: Icon, title, caption }: { icon: typeof ImageIcon; title: string; caption?: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#EAF2FF] text-[#155EEF]"><Icon className="size-4" /></span>
+      <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#EAF2FF] text-[#155EEF]"><Icon className="size-4" /></span>
       <span>
         <b className="block text-[12px] font-semibold text-[#111827]">{title}</b>
         {caption && <small className="block text-[10.5px] text-[#64748B]">{caption}</small>}
@@ -361,9 +361,9 @@ function PostPreview() {
   return (
     <div>
       <b className="mb-2 block text-[12px] font-semibold text-[#111827]">Preview</b>
-      <div className="overflow-hidden rounded-lg border border-[#DDE6F1] bg-white">
+      <div className="overflow-hidden rounded-sm border border-[#DDE6F1] bg-white">
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <span className="relative size-6 overflow-hidden rounded-full"><Image src="/campaigns/save-rivers/square.png" alt="" fill sizes="40px" className="object-cover" /></span>
+          <span className="relative size-6 overflow-hidden rounded-sm"><Image src="/campaigns/save-rivers/square.png" alt="" fill sizes="40px" className="object-cover" /></span>
           <span><b className="block text-[9.5px] font-semibold text-[#111827]">moksha.sewa</b><small className="text-[8.5px] text-[#64748B]">India</small></span>
         </div>
         <span className="relative block aspect-square"><Image src="/campaigns/save-rivers/square.png" alt="" fill sizes="220px" className="object-cover" /></span>
@@ -375,9 +375,9 @@ function PostPreview() {
 
 function BottomCard({ icon: Icon, title, caption, children }: { icon: typeof ImageIcon; title: string; caption?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-[#DDE6F1] bg-white p-3 shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
+    <section className="rounded-sm border border-[#DDE6F1] bg-white p-3 shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
       <div className="mb-2 flex items-start gap-2">
-        <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#EAF2FF] text-[#155EEF]"><Icon className="size-4" /></span>
+        <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#EAF2FF] text-[#155EEF]"><Icon className="size-4" /></span>
         <span>
           <b className="block text-[12px] font-semibold text-[#111827]">{title}</b>
           {caption && <small className="block text-[10px] leading-3 text-[#64748B]">{caption}</small>}

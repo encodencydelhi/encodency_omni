@@ -30,7 +30,7 @@ export function ClientsPage() {
           <p className="mt-0.5 text-[11px] text-muted-foreground">Manage all your brands and marketing Clients in one place.</p>
         </div>
 
-        <div className="relative hidden h-[76px] overflow-hidden rounded-xl border bg-gradient-to-r from-white via-red-50/30 to-blue-50/50 px-4 py-3 lg:block">
+        <div className="relative hidden h-[76px] overflow-hidden rounded-sm border bg-gradient-to-r from-white via-red-50/30 to-blue-50/50 px-4 py-3 lg:block">
           <p className="text-[13px] font-semibold text-foreground">Turn Ideas Into Impact</p>
           <p className="text-[11px] text-muted-foreground mt-0.5">Build. Publish. Engage. Grow.</p>
 
@@ -40,15 +40,15 @@ export function ClientsPage() {
               <span className="h-7 w-2 rounded-t-sm bg-red-400" />
               <span className="h-10 w-2 rounded-t-sm bg-primary" />
             </div>
-            <div className="ml-3 flex h-10 w-[100px] items-center justify-center rounded-lg border bg-white shadow-sm p-1.5 gap-1.5">
-              <span className="grid size-5 place-items-center rounded-full border border-red-200 text-primary bg-red-50 text-[11px]">
+            <div className="ml-3 flex h-10 w-[100px] items-center justify-center rounded-sm border bg-white shadow-sm p-1.5 gap-1.5">
+              <span className="grid size-5 place-items-center rounded-sm border border-red-200 text-primary bg-red-50 text-[11px]">
                 ◎
               </span>
               <div className="flex gap-0.5">
-                <div className="size-3 rounded-full bg-[#1877F2]" />
-                <div className="size-3 rounded-full bg-[#E4405F]" />
-                <div className="size-3 rounded-full bg-[#0A66C2]" />
-                <div className="size-3 rounded-full bg-[#FF0000]" />
+                <div className="size-3 rounded-sm bg-[#1877F2]" />
+                <div className="size-3 rounded-sm bg-[#E4405F]" />
+                <div className="size-3 rounded-sm bg-[#0A66C2]" />
+                <div className="size-3 rounded-sm bg-[#FF0000]" />
               </div>
             </div>
           </div>
@@ -65,7 +65,7 @@ export function ClientsPage() {
       </div>
 
       {/* Table Section */}
-      <section className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <section className="overflow-hidden rounded-sm border bg-card shadow-sm">
         {/* Table Toolbar */}
         <div className="flex flex-wrap items-center gap-2 border-b px-2.5 pt-1">
           <div className="flex self-end">
@@ -92,7 +92,7 @@ export function ClientsPage() {
             ))}
           </div>
           <div className="ml-auto flex items-center gap-2 py-1.5">
-            <label className="flex h-8 w-[200px] items-center gap-1.5 rounded-lg border bg-muted/30 px-2 transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+            <label className="flex h-8 w-[200px] items-center gap-1.5 rounded-sm border bg-muted/30 px-2 transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
               <Search className="size-3.5 text-muted-foreground" />
               <input
                 value={query}
@@ -101,16 +101,16 @@ export function ClientsPage() {
                 placeholder="Search Clients..."
               />
             </label>
-            <button className="flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[11px] font-semibold hover:bg-accent hover:text-accent-foreground">
+            <button className="flex h-8 items-center gap-1.5 rounded-sm border px-2.5 text-[11px] font-semibold hover:bg-accent hover:text-accent-foreground">
               <Filter className="size-3.5" />
               Filter
             </button>
-            <button className="flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[11px] font-semibold hover:bg-accent hover:text-accent-foreground">
+            <button className="flex h-8 items-center gap-1.5 rounded-sm border px-2.5 text-[11px] font-semibold hover:bg-accent hover:text-accent-foreground">
               <ArrowDownUp className="size-3.5" />
               Sort
               <ChevronDown className="size-3.5 text-muted-foreground" />
             </button>
-            <Link href="/admin/projects/new" className="flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-[11px] font-semibold text-primary-foreground hover:bg-primary-hover shadow-sm transition-colors">
+            <Link href="/admin/projects/new" className="flex h-8 items-center gap-1.5 rounded-sm bg-primary px-3 text-[11px] font-semibold text-primary-foreground hover:bg-primary-hover shadow-sm transition-colors">
               <Plus className="size-3.5" />
               Add Client
             </Link>
@@ -134,7 +134,7 @@ export function ClientsPage() {
                   <td className="pl-3 py-1.5"><input type="checkbox" className="rounded border-gray-300 size-3" /></td>
                   <td className="px-2 py-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-emerald-50 text-[11px] font-semibold border border-emerald-100" style={{ color: project.color || '#078359' }}>
+                      <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-emerald-50 text-[11px] font-semibold border border-emerald-100" style={{ color: project.color || '#078359' }}>
                         {project.logoText}
                       </span>
                       <div className="min-w-0">
@@ -158,7 +158,7 @@ export function ClientsPage() {
                       "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
                       project.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                     )}>
-                      <span className={cn("size-1 rounded-full", project.status === "active" ? "bg-emerald-500" : "bg-amber-500")} />
+                      <span className={cn("size-1 rounded-sm", project.status === "active" ? "bg-emerald-500" : "bg-amber-500")} />
                       {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                     </span>
                   </td>
@@ -202,10 +202,10 @@ export function ClientsPage() {
                   </td>
                   <td className="px-2 py-1.5">
                     <div className="flex items-center gap-1">
-                      <Link href={`/admin/projects/${project.id}`} className="rounded-sm border px-2 py-1 text-[11px] font-semibold transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
+                      <Link href={`/admin/projects/${project.id}`} className="rounded-full border px-2 py-1 text-[11px] font-semibold transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
                         Open
                       </Link>
-                      <button className="grid size-6 place-items-center rounded-sm border transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
+                      <button className="grid size-6 place-items-center rounded-full border transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
                         <MoreVertical className="size-3" />
                       </button>
                     </div>
@@ -258,8 +258,8 @@ function Stat({ icon: Icon, label, value, trend, note, color }: { icon: any; lab
   };
 
   return (
-    <div className="rounded-xl border bg-card p-2.5 shadow-sm flex items-start gap-2">
-      <span className={cn("grid size-8 shrink-0 place-items-center rounded-full", colors[color])}>
+    <div className="rounded-sm border bg-card p-2.5 shadow-sm flex items-start gap-2">
+      <span className={cn("grid size-8 shrink-0 place-items-center rounded-sm", colors[color])}>
         <Icon className="size-3.5" />
       </span>
       <div>
@@ -297,8 +297,8 @@ function Quick({ icon: Icon, title, text, action, color }: { icon: any; title: s
   };
 
   return (
-    <div className="flex gap-2 rounded-xl border bg-card p-2.5 shadow-sm transition-shadow hover:shadow-md">
-      <span className={cn("grid size-8 shrink-0 place-items-center rounded-full", colors[color])}>
+    <div className="flex gap-2 rounded-sm border bg-card p-2.5 shadow-sm transition-shadow hover:shadow-md">
+      <span className={cn("grid size-8 shrink-0 place-items-center rounded-sm", colors[color])}>
         <Icon className="size-3.5" />
       </span>
       <div className="flex flex-col">

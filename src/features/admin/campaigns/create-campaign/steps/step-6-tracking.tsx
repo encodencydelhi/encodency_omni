@@ -51,7 +51,7 @@ const TRACKING_HEALTH = [
 
 export function StepTracking({ draft, set }: { draft: CampaignDraft; set: Setter }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-[#DDE6F1] bg-white shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
+    <div className="overflow-hidden rounded-sm border border-[#DDE6F1] bg-white shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
       <StepSection letter="A" title="UTM Builder" caption="Configure UTM parameters for campaign tracking and attribution.">
         <div className="grid gap-2 md:grid-cols-5">
           <Field label="utm_source" required>
@@ -70,7 +70,7 @@ export function StepTracking({ draft, set }: { draft: CampaignDraft; set: Setter
             <TextInput value={draft.utmTerm} onChange={(v) => set("utmTerm", v)} icon={Tag} placeholder="e.g. river-conservation" />
           </Field>
         </div>
-        <div className="mt-2 rounded-lg bg-[#F8FAFC] p-2.5">
+        <div className="mt-2 rounded-sm bg-[#F8FAFC] p-2.5">
           <p className="text-[10px] font-semibold text-[#374151]">Generated Tracking URL</p>
           <p className="mt-1 truncate text-[10px] text-[#526385]">
             {draft.landingPageUrl}?utm_source={draft.utmSource || "social"}&utm_medium={draft.utmMedium || "cpc"}&utm_campaign={draft.utmCampaign || "campaign"}
@@ -86,11 +86,11 @@ export function StepTracking({ draft, set }: { draft: CampaignDraft; set: Setter
               <div
                 key={key}
                 className={cn(
-                  "flex items-start gap-3 rounded-lg border p-3 transition-colors",
+                  "flex items-start gap-3 rounded-sm border p-3 transition-colors",
                   active ? "border-[#0AA673] bg-[#F7FDFA]" : "border-[#DDE6F1] bg-white",
                 )}
               >
-                <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg text-[18px]", color)}>
+                <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm text-[18px]", color)}>
                   {key.includes("Pixel") ? "📱" : key.includes("Google") ? "📊" : key.includes("LinkedIn") ? "💼" : key.includes("Website") ? "🌐" : "🔗"}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -100,9 +100,9 @@ export function StepTracking({ draft, set }: { draft: CampaignDraft; set: Setter
                 <button
                   type="button"
                   onClick={() => set("trackingIntegrations", { ...draft.trackingIntegrations, [key]: !active })}
-                  className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", active ? "bg-[#0AA673]" : "bg-[#CBD5E1]")}
+                  className={cn("relative h-5 w-9 shrink-0 rounded-sm transition-colors", active ? "bg-[#0AA673]" : "bg-[#CBD5E1]")}
                 >
-                  <span className={cn("absolute top-0.5 block size-4 rounded-full bg-white shadow-sm transition-all", active ? "left-[18px]" : "left-0.5")} />
+                  <span className={cn("absolute top-0.5 block size-4 rounded-sm bg-white shadow-sm transition-all", active ? "left-[18px]" : "left-0.5")} />
                 </button>
               </div>
             );
@@ -120,11 +120,11 @@ export function StepTracking({ draft, set }: { draft: CampaignDraft; set: Setter
                 type="button"
                 onClick={() => set("conversionEvents", active ? draft.conversionEvents.filter((e) => e !== key) : [...draft.conversionEvents, key])}
                 className={cn(
-                  "flex items-start gap-2.5 rounded-lg border p-2.5 text-left transition-colors",
+                  "flex items-start gap-2.5 rounded-sm border p-2.5 text-left transition-colors",
                   active ? "border-[#155EEF] bg-[#EFF6FF]" : "border-[#DDE6F1] bg-white hover:border-[#CBD5E1]",
                 )}
               >
-                <span className={cn("grid size-7 shrink-0 place-items-center rounded-lg", active ? "bg-[#155EEF] text-white" : "bg-[#F1F5F9] text-[#475569]")}>
+                <span className={cn("grid size-7 shrink-0 place-items-center rounded-sm", active ? "bg-[#155EEF] text-white" : "bg-[#F1F5F9] text-[#475569]")}>
                   <Icon className="size-3.5" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -132,7 +132,7 @@ export function StepTracking({ draft, set }: { draft: CampaignDraft; set: Setter
                   <small className="block text-[10px] leading-[14px] text-[#64748B]">{desc}</small>
                 </div>
                 {active && (
-                  <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#155EEF]">
+                  <span className="grid size-5 shrink-0 place-items-center rounded-sm bg-[#155EEF]">
                     <Check className="size-3 text-white" />
                   </span>
                 )}
@@ -147,8 +147,8 @@ export function StepTracking({ draft, set }: { draft: CampaignDraft; set: Setter
           <Field label="Landing Page URL" required>
             <TextInput value={draft.landingPageUrl} onChange={(v) => set("landingPageUrl", v)} icon={Globe} placeholder="https://example.com/landing" />
           </Field>
-          <div className="flex items-start gap-3 rounded-lg border border-[#CDECE1] bg-[#F7FDFA] p-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#0AA673] text-white">
+          <div className="flex items-start gap-3 rounded-sm border border-[#CDECE1] bg-[#F7FDFA] p-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-[#0AA673] text-white">
               <ShieldCheck className="size-5" />
             </span>
             <div className="min-w-0 flex-1">
@@ -183,7 +183,7 @@ function StepSection({
   return (
     <section className="border-b border-[#E7EDF5] p-3.5 last:border-b-0">
       <div className="mb-3 flex items-start gap-3">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFE6EA] text-[16px] font-black text-[#EB0711]">
+        <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#FFE6EA] text-[16px] font-black text-[#EB0711]">
           {letter}
         </span>
         <div className="min-w-0 flex-1">

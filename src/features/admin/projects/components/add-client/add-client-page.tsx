@@ -129,7 +129,7 @@ function Stepper({ step, onSelect }: { step: number; onSelect: (next: number) =>
               >
                 <span
                   className={cn(
-                    "grid size-9 place-items-center rounded-full border-2 text-[13px] font-semibold transition-colors",
+                    "grid size-9 place-items-center rounded-sm border-2 text-[13px] font-semibold transition-colors",
                     done && "border-[#4F46E5] bg-[#4F46E5] text-white",
                     active && "border-[#4F46E5] bg-[#4F46E5] text-white ring-4 ring-[#4F46E5]/15",
                     !done && !active && "border-[#E2E8F0] bg-white text-[#9CA3AF]",
@@ -176,7 +176,7 @@ function Footer({
       {step === 1 ? (
         <button
           onClick={onDiscard}
-          className="flex h-9 items-center gap-1.5 rounded-lg border border-[#E2E5EE] px-3 text-[12px] font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
+          className="flex h-9 items-center gap-1.5 rounded-sm border border-[#E2E5EE] px-3 text-[12px] font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
         >
           <X className="size-3.5" />
           Discard
@@ -184,7 +184,7 @@ function Footer({
       ) : (
         <button
           onClick={onBack}
-          className="flex h-9 items-center gap-1.5 rounded-lg border border-[#E2E5EE] px-3 text-[12px] font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
+          className="flex h-9 items-center gap-1.5 rounded-sm border border-[#E2E5EE] px-3 text-[12px] font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
         >
           <ArrowLeft className="size-3.5" />
           Back
@@ -193,7 +193,7 @@ function Footer({
 
       <div className="flex flex-wrap items-center gap-2">
         {step > 1 && (
-          <button className="flex h-9 items-center gap-1.5 rounded-lg border border-[#E2E5EE] px-3 text-[12px] font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]">
+          <button className="flex h-9 items-center gap-1.5 rounded-sm border border-[#E2E5EE] px-3 text-[12px] font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]">
             <Save className="size-3.5" />
             {isLast ? "Save as Draft" : "Save Draft"}
           </button>
@@ -201,7 +201,7 @@ function Footer({
         {step === 4 && (
           <button
             onClick={onNext}
-            className="flex h-9 items-center rounded-lg border border-[#E2E5EE] px-3 text-[12px] font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
+            className="flex h-9 items-center rounded-sm border border-[#E2E5EE] px-3 text-[12px] font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC]"
           >
             Skip for Now
           </button>
@@ -210,7 +210,7 @@ function Footer({
           onClick={isLast ? onCreate : onNext}
           disabled={isLast && !draft.confirmed}
           className={cn(
-            "flex h-9 items-center gap-1.5 rounded-lg px-4 text-[12px] font-semibold text-white transition-colors",
+            "flex h-9 items-center gap-1.5 rounded-sm px-4 text-[12px] font-semibold text-white transition-colors",
             isLast && !draft.confirmed
               ? "cursor-not-allowed bg-[#C7D2FE]"
               : "bg-[#4F46E5] hover:bg-[#4338CA]",

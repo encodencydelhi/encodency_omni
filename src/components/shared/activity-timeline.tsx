@@ -24,7 +24,7 @@ export function ActivityTimeline({ entries, className }: ActivityTimelineProps) 
       <span className="absolute inset-y-1 left-[3px] w-px bg-border" aria-hidden />
       {entries.map((entry) => (
         <li key={entry.id} className="relative">
-          <span className="absolute top-1.5 -start-5 size-[7px] rounded-full border-2 border-card bg-border-strong" aria-hidden />
+          <span className="absolute top-1.5 -start-5 size-[7px] rounded-sm border-2 border-card bg-border-strong" aria-hidden />
           <p className="text-[0.8125rem] leading-snug text-foreground">
             <span className="font-medium">{entry.actor}</span>{" "}
             <span className="text-muted-foreground">{humaniseAction(entry.action).toLowerCase()}</span>{" "}

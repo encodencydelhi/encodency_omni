@@ -155,7 +155,7 @@ function PlaylistsList() {
             <div key={p.id} className={cn(yt.card, "group overflow-hidden transition hover:border-[#C9D1DC]")}>
               <Link href={ytRoutes.playlist(p.id)} className="relative block">
                 <Collage videos={videosOf(p)} />
-                <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-md bg-[#0F1B3D]/80 px-1.5 py-0.5 text-[11px] font-semibold text-white"><ListVideo className="size-3" />{p.videoIds.length}</span>
+                <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-sm bg-[#0F1B3D]/80 px-1.5 py-0.5 text-[11px] font-semibold text-white"><ListVideo className="size-3" />{p.videoIds.length}</span>
               </Link>
               <div className="flex items-start gap-2 p-3">
                 <div className="min-w-0 flex-1">
@@ -178,7 +178,7 @@ function PlaylistsList() {
           <ul className="divide-y divide-[#EEF1F5]">
             {rows.map((p) => (
               <li key={p.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-[#F8FAFC]">
-                <button type="button" onClick={() => router.push(ytRoutes.playlist(p.id))} className="w-[120px] shrink-0 overflow-hidden rounded-md" aria-label={`Open ${p.title}`}>
+                <button type="button" onClick={() => router.push(ytRoutes.playlist(p.id))} className="w-[120px] shrink-0 overflow-hidden rounded-sm" aria-label={`Open ${p.title}`}>
                   <Collage videos={videosOf(p)} />
                 </button>
                 <div className="min-w-0 flex-1">
@@ -304,7 +304,7 @@ function AddVideosBody({ playlist, onClose }: { playlist: Playlist; onClose: () 
           {candidates.length === 0 && <li className="py-8 text-center text-[12.5px] text-[#6B7890]">{q ? `No videos match “${q}”.` : "Every video is already in this playlist."}</li>}
           {candidates.map((v) => (
             <li key={v.id}>
-              <label className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-[#F8FAFC]">
+              <label className="flex cursor-pointer items-center gap-3 rounded-sm px-2 py-1.5 hover:bg-[#F8FAFC]">
                 <Checkbox checked={selected.includes(v.id)} onCheckedChange={(c) => setSelected((prev) => (c ? [...prev, v.id] : prev.filter((x) => x !== v.id)))} aria-label={v.title} />
                 <Thumb src={v.thumbnailUrl} durationSec={v.durationSec} className="w-[72px]" sizes="72px" />
                 <span className="min-w-0 flex-1">
@@ -410,7 +410,7 @@ function PlaylistDetail({ playlist }: { playlist: Playlist }) {
                 ["Total length", duration(totalDuration)],
                 ["Total views", compact(totalViews)],
               ].map(([label, value]) => (
-                <div key={String(label)} className="rounded-lg bg-[#F8FAFC] px-2.5 py-2">
+                <div key={String(label)} className="rounded-sm bg-[#F8FAFC] px-2.5 py-2">
                   <dt className="text-[11px] text-[#6B7890]">{label}</dt>
                   <dd className="mt-0.5 text-[13px] font-semibold text-[#0F1B3D]">{value}</dd>
                 </div>

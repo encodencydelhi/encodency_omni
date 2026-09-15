@@ -81,13 +81,13 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search templates..."
-              className="h-10 pl-9 text-xs border-slate-200 focus:border-emerald-500 rounded-xl"
+              className="h-10 pl-9 text-xs border-slate-200 focus:border-emerald-500 rounded-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="h-10 w-36 text-xs border-slate-200 rounded-xl">
+            <SelectTrigger className="h-10 w-36 text-xs border-slate-200 rounded-sm">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -99,7 +99,7 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
           </Select>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-10 w-36 text-xs border-slate-200 rounded-xl">
+            <SelectTrigger className="h-10 w-36 text-xs border-slate-200 rounded-sm">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -114,7 +114,7 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
 
         <Button
           onClick={() => onOpenModal("create-template")}
-          className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-2"
+          className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm shadow-md shadow-emerald-600/20 flex items-center gap-2"
         >
           <Plus className="size-4" /> Create Template
         </Button>
@@ -129,8 +129,8 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
           { label: "Rejected", value: templateList.filter((t) => t.status === "Rejected").length.toString(), icon: AlertTriangle, color: "bg-rose-50 text-rose-600 border-rose-100" },
           { label: "Draft", value: templateList.filter((t) => t.status === "Draft").length.toString(), icon: FileX, color: "bg-slate-100 text-slate-600 border-slate-200" },
         ].map((s, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-xl border border-slate-200/90 bg-white p-3 shadow-xs">
-            <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl font-bold", s.color)}>
+          <div key={i} className="flex items-center gap-3 rounded-sm border border-slate-200/90 bg-white p-3 shadow-xs">
+            <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm font-bold", s.color)}>
               <s.icon className="size-4" />
             </span>
             <div>
@@ -142,7 +142,7 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
       </div>
 
       {/* Templates Table */}
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
+      <section className="overflow-hidden rounded-sm border border-slate-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
@@ -163,13 +163,13 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
                 <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="px-4 py-3 font-bold text-slate-900">{t.name}</td>
                   <td className="px-3 py-3">
-                    <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-bold border", categoryColors[t.category])}>
+                    <span className={cn("rounded-sm px-2 py-0.5 text-[11px] font-bold border", categoryColors[t.category])}>
                       {t.category}
                     </span>
                   </td>
                   <td className="px-3 py-3 text-slate-600 font-medium">{t.lang}</td>
                   <td className="px-3 py-3">
-                    <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-bold border", statusColors[t.status])}>
+                    <span className={cn("rounded-sm px-2 py-0.5 text-[11px] font-bold border", statusColors[t.status])}>
                       {t.status}
                     </span>
                   </td>
@@ -181,13 +181,13 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
                   <td className="px-3 py-3 text-slate-400 font-medium">{t.modified}</td>
                   <td className="px-3 py-3">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => setPreviewTemplate(t)} className="rounded-lg p-1.5 hover:bg-blue-50 text-blue-600" title="Preview">
+                      <button onClick={() => setPreviewTemplate(t)} className="rounded-sm p-1.5 hover:bg-blue-50 text-blue-600" title="Preview">
                         <Eye className="size-3.5" />
                       </button>
-                      <button onClick={() => toast.success(`Editing template: ${t.name}`)} className="rounded-lg p-1.5 hover:bg-slate-100 text-slate-500" title="Edit">
+                      <button onClick={() => toast.success(`Editing template: ${t.name}`)} className="rounded-sm p-1.5 hover:bg-slate-100 text-slate-500" title="Edit">
                         <Pencil className="size-3.5" />
                       </button>
-                      <button onClick={() => handleDelete(t.id)} className="rounded-lg p-1.5 hover:bg-rose-50 text-rose-600" title="Delete">
+                      <button onClick={() => handleDelete(t.id)} className="rounded-sm p-1.5 hover:bg-rose-50 text-rose-600" title="Delete">
                         <Trash2 className="size-3.5" />
                       </button>
                     </div>
@@ -218,14 +218,14 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
           <div className="w-[380px] rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-emerald-700/20 bg-emerald-600 px-4 py-3 text-white">
               <h3 className="text-sm font-bold text-white">Template Preview</h3>
-              <button onClick={() => setPreviewTemplate(null)} className="rounded-lg p-1 hover:bg-white/10 text-emerald-100 hover:text-white">
+              <button onClick={() => setPreviewTemplate(null)} className="rounded-sm p-1 hover:bg-white/10 text-emerald-100 hover:text-white">
                 <X className="size-4" />
               </button>
             </div>
             <div className="p-4 bg-slate-100">
-              <div className="rounded-xl bg-[#DCFCE7] border border-emerald-200 p-3.5 shadow-sm text-slate-800">
+              <div className="rounded-sm bg-[#DCFCE7] border border-emerald-200 p-3.5 shadow-sm text-slate-800">
                 <div className="mb-2 flex items-center gap-2 border-b border-emerald-200/60 pb-2">
-                  <span className="grid size-7 place-items-center rounded-full bg-emerald-600 text-xs font-bold text-white">NG</span>
+                  <span className="grid size-7 place-items-center rounded-sm bg-emerald-600 text-xs font-bold text-white">NG</span>
                   <div>
                     <p className="text-xs font-bold text-slate-900">Namo Gange Trust</p>
                     <p className="text-[10px] text-slate-500 font-medium">Verified WABA Account</p>
@@ -234,7 +234,7 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
                 <p className="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed">{previewTemplate.body}</p>
                 {previewTemplate.buttons !== "None" && (
                   <div className="mt-3 flex gap-2">
-                    <button onClick={() => { toast.success("Template response simulated"); setPreviewTemplate(null); }} className="flex-1 rounded-lg border border-emerald-600 bg-white py-1.5 text-xs font-bold text-emerald-700 shadow-xs hover:bg-emerald-50">
+                    <button onClick={() => { toast.success("Template response simulated"); setPreviewTemplate(null); }} className="flex-1 rounded-sm border border-emerald-600 bg-white py-1.5 text-xs font-bold text-emerald-700 shadow-xs hover:bg-emerald-50">
                       Quick Reply
                     </button>
                   </div>

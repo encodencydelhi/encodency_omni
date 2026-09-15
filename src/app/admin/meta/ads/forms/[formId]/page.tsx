@@ -208,7 +208,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
                   key={q.id}
                   className="flex items-center gap-2.5 rounded-sm border border-[#e8edf4] bg-[#fbfcfe] px-2.5 py-2"
                 >
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e8eef5] text-[9px] font-semibold text-[#475569]">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-[#e8eef5] text-[9px] font-semibold text-[#475569]">
                     {i + 1}
                   </span>
                   <span className="min-w-0 flex-1">

@@ -378,10 +378,10 @@ function ContentManager() {
                         </td>
                         <td className={cn(tdClass, "max-w-[320px] py-2")}>
                           <div className="flex items-center gap-3">
-                            <button type="button" onClick={() => can.canEditVideo.allowed && setThumbVideo(v.id)} aria-label={`Change thumbnail for ${v.title}`} className="group/thumb relative shrink-0 rounded-md" disabled={!can.canEditVideo.allowed}>
+                            <button type="button" onClick={() => can.canEditVideo.allowed && setThumbVideo(v.id)} aria-label={`Change thumbnail for ${v.title}`} className="group/thumb relative shrink-0 rounded-sm" disabled={!can.canEditVideo.allowed}>
                               <Thumb src={v.thumbnailUrl} durationSec={v.durationSec} className="w-[80px]" sizes="80px" />
                               {can.canEditVideo.allowed && (
-                                <span className="absolute inset-0 grid place-items-center rounded-md bg-[#0F1B3D]/55 text-white opacity-0 transition group-hover/thumb:opacity-100 group-focus-visible/thumb:opacity-100">
+                                <span className="absolute inset-0 grid place-items-center rounded-sm bg-[#0F1B3D]/55 text-white opacity-0 transition group-hover/thumb:opacity-100 group-focus-visible/thumb:opacity-100">
                                   <ImageIcon className="size-4" />
                                 </span>
                               )}

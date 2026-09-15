@@ -60,7 +60,7 @@ export function NeedsAttentionPanel({ items, isLoading }: NeedsAttentionPanelPro
       action={
         <div className="flex items-center gap-3">
           {!isLoading && sorted.length > 0 ? (
-            <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[0.625rem] font-semibold text-primary-foreground">
+            <span className="flex size-5 items-center justify-center rounded-sm bg-primary text-[0.625rem] font-semibold text-primary-foreground">
               {sorted.length}
             </span>
           ) : null}
@@ -99,7 +99,7 @@ export function NeedsAttentionPanel({ items, isLoading }: NeedsAttentionPanelPro
                 <Link href={item.href} className="group flex items-center gap-3">
                   <span
                     className={cn(
-                      "flex size-7 shrink-0 items-center justify-center rounded-lg",
+                      "flex size-7 shrink-0 items-center justify-center rounded-sm",
                       SEVERITY_ACCENT[item.severity],
                     )}
                   >

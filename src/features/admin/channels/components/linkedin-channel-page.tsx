@@ -434,7 +434,7 @@ function PostsTab() {
           <button
             onClick={() => setFilterTab("All")}
             className={cn(
-              "flex h-[32px] items-center gap-1.5 rounded-full px-3 text-[11.5px] font-semibold transition-all",
+              "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
               filterTab === "All"
                 ? "bg-[#0A66C2] text-white shadow-sm"
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
@@ -443,7 +443,7 @@ function PostsTab() {
             <span>All Posts</span>
             <span
               className={cn(
-                "rounded-full px-1.5 py-0.2 text-[10px]",
+                "rounded-sm px-1.5 py-0.2 text-[10px]",
                 filterTab === "All" ? "bg-white/20 text-white" : "bg-[#EDF2F7] text-[#52617D]",
               )}
             >
@@ -454,17 +454,17 @@ function PostsTab() {
           <button
             onClick={() => setFilterTab("Published")}
             className={cn(
-              "flex h-[32px] items-center gap-1.5 rounded-full px-3 text-[11.5px] font-semibold transition-all",
+              "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
               filterTab === "Published"
                 ? "bg-[#0A66C2] text-white shadow-sm"
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
             )}
           >
-            <i className="size-2 rounded-full bg-[#10B981]" />
+            <i className="size-2 rounded-sm bg-[#10B981]" />
             <span>Published</span>
             <span
               className={cn(
-                "rounded-full px-1.5 py-0.2 text-[10px]",
+                "rounded-sm px-1.5 py-0.2 text-[10px]",
                 filterTab === "Published" ? "bg-white/20 text-white" : "bg-[#EDF2F7] text-[#52617D]",
               )}
             >
@@ -475,17 +475,17 @@ function PostsTab() {
           <button
             onClick={() => setFilterTab("Scheduled")}
             className={cn(
-              "flex h-[32px] items-center gap-1.5 rounded-full px-3 text-[11.5px] font-semibold transition-all",
+              "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
               filterTab === "Scheduled"
                 ? "bg-[#0A66C2] text-white shadow-sm"
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
             )}
           >
-            <i className="size-2 rounded-full bg-[#3B82F6]" />
+            <i className="size-2 rounded-sm bg-[#3B82F6]" />
             <span>Scheduled</span>
             <span
               className={cn(
-                "rounded-full px-1.5 py-0.2 text-[10px]",
+                "rounded-sm px-1.5 py-0.2 text-[10px]",
                 filterTab === "Scheduled" ? "bg-white/20 text-white" : "bg-[#EDF2F7] text-[#52617D]",
               )}
             >
@@ -496,17 +496,17 @@ function PostsTab() {
           <button
             onClick={() => setFilterTab("Draft")}
             className={cn(
-              "flex h-[32px] items-center gap-1.5 rounded-full px-3 text-[11.5px] font-semibold transition-all",
+              "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
               filterTab === "Draft"
                 ? "bg-[#0A66C2] text-white shadow-sm"
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
             )}
           >
-            <i className="size-2 rounded-full bg-[#9CA3AF]" />
+            <i className="size-2 rounded-sm bg-[#9CA3AF]" />
             <span>Drafts</span>
             <span
               className={cn(
-                "rounded-full px-1.5 py-0.2 text-[10px]",
+                "rounded-sm px-1.5 py-0.2 text-[10px]",
                 filterTab === "Draft" ? "bg-white/20 text-white" : "bg-[#EDF2F7] text-[#52617D]",
               )}
             >
@@ -517,17 +517,17 @@ function PostsTab() {
           <button
             onClick={() => setFilterTab("Newsletters")}
             className={cn(
-              "flex h-[32px] items-center gap-1.5 rounded-full px-3 text-[11.5px] font-semibold transition-all",
+              "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
               filterTab === "Newsletters"
                 ? "bg-[#0A66C2] text-white shadow-sm"
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
             )}
           >
-            <i className="size-2 rounded-full bg-[#9CA3AF]" />
+            <i className="size-2 rounded-sm bg-[#9CA3AF]" />
             <span>Newsletters & Articles</span>
             <span
               className={cn(
-                "rounded-full px-1.5 py-0.2 text-[10px]",
+                "rounded-sm px-1.5 py-0.2 text-[10px]",
                 filterTab === "Newsletters" ? "bg-white/20 text-white" : "bg-[#EDF2F7] text-[#52617D]",
               )}
             >
@@ -538,17 +538,17 @@ function PostsTab() {
           <button
             onClick={() => setFilterTab("Failed")}
             className={cn(
-              "flex h-[32px] items-center gap-1.5 rounded-full px-3 text-[11.5px] font-semibold transition-all",
+              "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
               filterTab === "Failed"
                 ? "bg-[#0A66C2] text-white shadow-sm"
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
             )}
           >
-            <i className="size-2 rounded-full bg-[#EF4444]" />
+            <i className="size-2 rounded-sm bg-[#EF4444]" />
             <span>Failed</span>
             <span
               className={cn(
-                "rounded-full px-1.5 py-0.2 text-[10px]",
+                "rounded-sm px-1.5 py-0.2 text-[10px]",
                 filterTab === "Failed" ? "bg-white/20 text-white" : "bg-[#EDF2F7] text-[#52617D]",
               )}
             >
@@ -612,7 +612,7 @@ function PostsTab() {
                         />
                         {post.hasVideo && (
                           <div className="absolute inset-0 grid place-items-center bg-black/30">
-                            <span className="grid size-4 place-items-center rounded-full bg-white text-black shadow">
+                            <span className="grid size-4 place-items-center rounded-sm bg-white text-black shadow">
                               <Play className="size-2 fill-current pl-[1px]" />
                             </span>
                           </div>
@@ -652,26 +652,26 @@ function PostsTab() {
                   </td>
                   <td className="px-3 py-2.5">
                     {post.status === "Published" && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10.5px] font-semibold text-[#111827]">
-                        <i className="size-1.5 rounded-full bg-[#10B981]" />
+                      <span className="inline-flex items-center gap-1.5 rounded-sm bg-[#F3F4F6] px-2 py-0.5 text-[10.5px] font-semibold text-[#111827]">
+                        <i className="size-1.5 rounded-sm bg-[#10B981]" />
                         Published
                       </span>
                     )}
                     {post.status === "Scheduled" && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10.5px] font-semibold text-[#111827]">
-                        <i className="size-1.5 rounded-full bg-[#3B82F6]" />
+                      <span className="inline-flex items-center gap-1.5 rounded-sm bg-[#F3F4F6] px-2 py-0.5 text-[10.5px] font-semibold text-[#111827]">
+                        <i className="size-1.5 rounded-sm bg-[#3B82F6]" />
                         Scheduled
                       </span>
                     )}
                     {post.status === "Draft" && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10.5px] font-semibold text-[#111827]">
+                      <span className="inline-flex items-center gap-1.5 rounded-sm bg-[#F3F4F6] px-2 py-0.5 text-[10.5px] font-semibold text-[#111827]">
                         <Cloud className="size-2.5 text-[#6B7280]" />
                         Draft
                       </span>
                     )}
                     {post.status === "Failed" && (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FEF2F2] px-2 py-0.5 text-[10.5px] font-semibold text-[#B91C1C]">
-                        <i className="size-1.5 rounded-full bg-[#EF4444]" />
+                      <span className="inline-flex items-center gap-1.5 rounded-sm bg-[#FEF2F2] px-2 py-0.5 text-[10.5px] font-semibold text-[#B91C1C]">
+                        <i className="size-1.5 rounded-sm bg-[#EF4444]" />
                         Failed
                       </span>
                     )}
@@ -964,7 +964,7 @@ function AudienceDemographics({ onNavigateToAudience }: { onNavigateToAudience?:
                   )}
                 >
                   <span className="flex min-w-0 items-center gap-2 truncate text-[#52617D]">
-                    <i className="size-2 shrink-0 rounded-full" style={{ background: slice.color }} />
+                    <i className="size-2 shrink-0 rounded-sm" style={{ background: slice.color }} />
                     <span className="truncate">{slice.name}</span>
                   </span>
                   <div className="flex shrink-0 items-center gap-1.5">
@@ -1081,15 +1081,15 @@ function AudienceTab() {
           <div className="flex min-h-0 flex-1 flex-col p-3.5">
             <div className="mb-2 flex items-center gap-3 text-[10.5px] text-[#687797]">
               <span className="flex items-center gap-1.5">
-                <i className="size-2 rounded-full bg-[#0A66C2]" />
+                <i className="size-2 rounded-sm bg-[#0A66C2]" />
                 Total Followers
               </span>
               <span className="flex items-center gap-1.5">
-                <i className="size-2 rounded-full bg-[#10B981]" />
+                <i className="size-2 rounded-sm bg-[#10B981]" />
                 New Followers
               </span>
               <span className="flex items-center gap-1.5">
-                <i className="size-2 rounded-full bg-[#EF4444]" />
+                <i className="size-2 rounded-sm bg-[#EF4444]" />
                 Unfollows
               </span>
             </div>
@@ -1128,8 +1128,8 @@ function AudienceTab() {
                   <span className="font-medium text-[#425273]">{loc.name}</span>
                   <b className="text-[#172044]">{loc.pct}%</b>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EDF2F7]">
-                  <div className="h-full rounded-full bg-[#0A66C2]" style={{ width: `${loc.pct}%` }} />
+                <div className="h-1.5 w-full overflow-hidden rounded-sm bg-[#EDF2F7]">
+                  <div className="h-full rounded-sm bg-[#0A66C2]" style={{ width: `${loc.pct}%` }} />
                 </div>
               </div>
             ))}
@@ -1150,10 +1150,10 @@ function AudienceTab() {
               </div>
               <div className="flex gap-2 text-[10.5px]">
                 <span className="flex items-center gap-1 text-[#0A66C2]">
-                  <i className="size-1.5 rounded-full bg-[#0A66C2]" /> Men 62%
+                  <i className="size-1.5 rounded-sm bg-[#0A66C2]" /> Men 62%
                 </span>
                 <span className="flex items-center gap-1 text-[#8B5CF6]">
-                  <i className="size-1.5 rounded-full bg-[#8B5CF6]" /> Women 38%
+                  <i className="size-1.5 rounded-sm bg-[#8B5CF6]" /> Women 38%
                 </span>
               </div>
             </div>
@@ -1190,8 +1190,8 @@ function AudienceTab() {
                   <span className="truncate text-[#52617D]">{item.label}</span>
                   <b className="text-[#172044]">{item.pct}%</b>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EDF2F7]">
-                  <div className="h-full rounded-full bg-[#0A66C2]" style={{ width: `${item.pct * 3}%` }} />
+                <div className="h-1.5 w-full overflow-hidden rounded-sm bg-[#EDF2F7]">
+                  <div className="h-full rounded-sm bg-[#0A66C2]" style={{ width: `${item.pct * 3}%` }} />
                 </div>
               </div>
             ))}
@@ -1215,8 +1215,8 @@ function AudienceTab() {
                   <span className="text-[#52617D]">{item.size}</span>
                   <b className="text-[#172044]">{item.pct}%</b>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EDF2F7]">
-                  <div className="h-full rounded-full bg-[#8B5CF6]" style={{ width: `${item.pct * 3}%` }} />
+                <div className="h-1.5 w-full overflow-hidden rounded-sm bg-[#EDF2F7]">
+                  <div className="h-full rounded-sm bg-[#8B5CF6]" style={{ width: `${item.pct * 3}%` }} />
                 </div>
               </div>
             ))}
@@ -1232,7 +1232,7 @@ function AudienceTab() {
             {topFollowersList.map((f) => (
               <div key={f.name} className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-2.5">
-                  <span className="grid size-7 place-items-center rounded-full bg-[#F1F5F9] text-[13px]">
+                  <span className="grid size-7 place-items-center rounded-sm bg-[#F1F5F9] text-[13px]">
                     {f.icon}
                   </span>
                   <div>
@@ -1510,16 +1510,16 @@ function CampaignsTab() {
           <div className="flex min-h-0 flex-1 flex-col p-3.5">
             <div className="mb-2 flex items-center gap-3 text-[10.5px] text-[#687797]">
               <span className="flex items-center gap-1.5">
-                <i className="size-2 rounded-full bg-[#0A66C2]" /> Reach
+                <i className="size-2 rounded-sm bg-[#0A66C2]" /> Reach
               </span>
               <span className="flex items-center gap-1.5">
-                <i className="size-2 rounded-full bg-[#10B981]" /> Leads
+                <i className="size-2 rounded-sm bg-[#10B981]" /> Leads
               </span>
               <span className="flex items-center gap-1.5">
-                <i className="size-2 rounded-full bg-[#8B5CF6]" /> Conversions
+                <i className="size-2 rounded-sm bg-[#8B5CF6]" /> Conversions
               </span>
               <span className="flex items-center gap-1.5">
-                <i className="size-2 rounded-full bg-[#EF4444]" /> Spend (₹)
+                <i className="size-2 rounded-sm bg-[#EF4444]" /> Spend (₹)
               </span>
             </div>
             <div className="h-[180px] w-full">
@@ -1561,16 +1561,16 @@ function CampaignsTab() {
             </div>
             <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
               <span className="flex items-center gap-1.5 text-[#52617D]">
-                <i className="size-2 rounded-full bg-[#10B981]" /> Active <strong>6 (50%)</strong>
+                <i className="size-2 rounded-sm bg-[#10B981]" /> Active <strong>6 (50%)</strong>
               </span>
               <span className="flex items-center gap-1.5 text-[#52617D]">
-                <i className="size-2 rounded-full bg-[#F59E0B]" /> Paused <strong>3 (25%)</strong>
+                <i className="size-2 rounded-sm bg-[#F59E0B]" /> Paused <strong>3 (25%)</strong>
               </span>
               <span className="flex items-center gap-1.5 text-[#52617D]">
-                <i className="size-2 rounded-full bg-[#EF4444]" /> Completed <strong>2 (17%)</strong>
+                <i className="size-2 rounded-sm bg-[#EF4444]" /> Completed <strong>2 (17%)</strong>
               </span>
               <span className="flex items-center gap-1.5 text-[#52617D]">
-                <i className="size-2 rounded-full bg-[#94A3B8]" /> Draft <strong>1 (8%)</strong>
+                <i className="size-2 rounded-sm bg-[#94A3B8]" /> Draft <strong>1 (8%)</strong>
               </span>
             </div>
           </div>
@@ -1596,8 +1596,8 @@ function CampaignsTab() {
                     <span className="ml-1 text-[11.5px] font-semibold text-[#10B981]">{ch.trend}</span>
                   </div>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EDF2F7]">
-                  <div className="h-full rounded-full bg-[#0A66C2]" style={{ width: `${ch.pct}%` }} />
+                <div className="h-1.5 w-full overflow-hidden rounded-sm bg-[#EDF2F7]">
+                  <div className="h-full rounded-sm bg-[#0A66C2]" style={{ width: `${ch.pct}%` }} />
                 </div>
               </div>
             ))}
@@ -1666,7 +1666,7 @@ function CampaignsTab() {
                   <td className="px-3 py-2">
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11.5px] font-semibold",
+                        "inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[11.5px] font-semibold",
                         c.status === "Active" && "bg-[#ECFDF5] text-[#047857]",
                         c.status === "Paused" && "bg-[#FFFBEB] text-[#B45309]",
                         c.status === "Completed" && "bg-[#FEF2F2] text-[#B91C1C]",
@@ -1674,7 +1674,7 @@ function CampaignsTab() {
                     >
                       <i
                         className={cn(
-                          "size-1.5 rounded-full",
+                          "size-1.5 rounded-sm",
                           c.status === "Active" && "bg-[#10B981]",
                           c.status === "Paused" && "bg-[#F59E0B]",
                           c.status === "Completed" && "bg-[#EF4444]",
@@ -1792,7 +1792,7 @@ function CampaignsTab() {
           <Card title="Recent Activity" action={<CardLink label="View All" />}>
             <div className="space-y-2 p-3 text-[10.5px]">
               <div className="flex items-start gap-2">
-                <i className="size-2 shrink-0 rounded-full bg-[#10B981] mt-1" />
+                <i className="size-2 shrink-0 rounded-sm bg-[#10B981] mt-1" />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-[#172044]">Campaign created</p>
                   <p className="truncate text-[#8A97AF]">Save Rivers, Save Lives 2025</p>
@@ -1800,7 +1800,7 @@ function CampaignsTab() {
                 <span className="text-[11px] text-[#9CA3AF]">10 min ago</span>
               </div>
               <div className="flex items-start gap-2">
-                <i className="size-2 shrink-0 rounded-full bg-[#0A66C2] mt-1" />
+                <i className="size-2 shrink-0 rounded-sm bg-[#0A66C2] mt-1" />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-[#172044]">Ad set updated</p>
                   <p className="truncate text-[#8A97AF]">Community Clean-up Drive</p>
@@ -1808,7 +1808,7 @@ function CampaignsTab() {
                 <span className="text-[11px] text-[#9CA3AF]">2 hours ago</span>
               </div>
               <div className="flex items-start gap-2">
-                <i className="size-2 shrink-0 rounded-full bg-[#8B5CF6] mt-1" />
+                <i className="size-2 shrink-0 rounded-sm bg-[#8B5CF6] mt-1" />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-[#172044]">Budget changed</p>
                   <p className="truncate text-[#8A97AF]">Volunteer Stories</p>
@@ -2036,8 +2036,8 @@ function AnalyticsTab() {
                   <span className="font-semibold text-[#0A66C2]">{h.tag}</span>
                   <b className="text-[#172044]">{h.count}</b>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EDF2F7]">
-                  <div className="h-full rounded-full bg-[#0A66C2]" style={{ width: `${h.pct}%` }} />
+                <div className="h-1.5 w-full overflow-hidden rounded-sm bg-[#EDF2F7]">
+                  <div className="h-full rounded-sm bg-[#0A66C2]" style={{ width: `${h.pct}%` }} />
                 </div>
               </div>
             ))}
@@ -2085,27 +2085,27 @@ function AnalyticsTab() {
             </div>
             <div className="space-y-1.5 text-[11px]">
               <div className="flex items-center gap-2">
-                <i className="size-2 rounded-full bg-[#0A66C2]" />
+                <i className="size-2 rounded-sm bg-[#0A66C2]" />
                 <span className="text-[#52617D]">Image</span>
                 <b className="ml-auto text-[#172044]">40%</b>
               </div>
               <div className="flex items-center gap-2">
-                <i className="size-2 rounded-full bg-[#8B5CF6]" />
+                <i className="size-2 rounded-sm bg-[#8B5CF6]" />
                 <span className="text-[#52617D]">Video</span>
                 <b className="ml-auto text-[#172044]">28%</b>
               </div>
               <div className="flex items-center gap-2">
-                <i className="size-2 rounded-full bg-[#F59E0B]" />
+                <i className="size-2 rounded-sm bg-[#F59E0B]" />
                 <span className="text-[#52617D]">Carousel</span>
                 <b className="ml-auto text-[#172044]">18%</b>
               </div>
               <div className="flex items-center gap-2">
-                <i className="size-2 rounded-full bg-[#F43F63]" />
+                <i className="size-2 rounded-sm bg-[#F43F63]" />
                 <span className="text-[#52617D]">Document</span>
                 <b className="ml-auto text-[#172044]">10%</b>
               </div>
               <div className="flex items-center gap-2">
-                <i className="size-2 rounded-full bg-[#94A3B8]" />
+                <i className="size-2 rounded-sm bg-[#94A3B8]" />
                 <span className="text-[#52617D]">Text/Link</span>
                 <b className="ml-auto text-[#172044]">4%</b>
               </div>
@@ -2181,8 +2181,8 @@ function AnalyticsTab() {
                     <b className="text-[11px] text-[#172044] w-9 text-right">{rx.pct}%</b>
                   </div>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EDF2F7]">
-                  <div className={cn("h-full rounded-full", rx.color)} style={{ width: `${rx.pct}%` }} />
+                <div className="h-1.5 w-full overflow-hidden rounded-sm bg-[#EDF2F7]">
+                  <div className={cn("h-full rounded-sm", rx.color)} style={{ width: `${rx.pct}%` }} />
                 </div>
               </div>
             ))}
@@ -2400,7 +2400,7 @@ function AnalyticsTab() {
                   </td>
                   <td className="px-3.5 py-3 font-semibold text-[#172044]">{comp.impressions}</td>
                   <td className="px-3.5 py-3 text-center">
-                    <span className="inline-block rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11.5px] font-semibold text-[#475569]">
+                    <span className="inline-block rounded-sm bg-[#F1F5F9] px-2 py-0.5 text-[11.5px] font-semibold text-[#475569]">
                       {comp.badge}
                     </span>
                   </td>
@@ -2637,7 +2637,7 @@ function ChartLegend({
     <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[#52617D]">
       {items.map((item) => (
         <span key={item.label} className="flex items-center gap-1.5">
-          <i className="size-2 rounded-full" style={{ background: item.color }} />
+          <i className="size-2 rounded-sm" style={{ background: item.color }} />
           {item.label}
         </span>
       ))}
@@ -2906,11 +2906,11 @@ function ActionsAndActivity() {
               className="flex items-center gap-2 border-t border-[#EDF1F5] py-[3px] first:border-t-0"
             >
               {Icon ? (
-                <span className={cn("grid size-6 shrink-0 place-items-center rounded-full", tint[color])}>
+                <span className={cn("grid size-6 shrink-0 place-items-center rounded-sm", tint[color])}>
                   <Icon className="size-3.5" />
                 </span>
               ) : (
-                <ChannelLogo channel="LinkedIn" className="size-6 shrink-0 rounded-full" />
+                <ChannelLogo channel="LinkedIn" className="size-6 shrink-0 rounded-sm" />
               )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[11px] font-semibold leading-[14px] text-[#172044]">{title}</p>
@@ -2930,7 +2930,7 @@ function PageCustomCtaAnalytics() {
     <Card
       title="Custom Action Button (Page CTA)"
       action={
-        <span className="flex items-center gap-1.5 rounded-full bg-[#EFF6FF] px-2.5 py-0.5 text-[10px] font-semibold text-[#0A66C2]">
+        <span className="flex items-center gap-1.5 rounded-sm bg-[#EFF6FF] px-2.5 py-0.5 text-[10px] font-semibold text-[#0A66C2]">
           <MousePointerClick className="size-3" />
           Visit Website
         </span>
@@ -2977,8 +2977,8 @@ function PageCustomCtaAnalytics() {
                 <span className="whitespace-nowrap text-[#52617D]">{src.source}</span>
                 <b className="whitespace-nowrap text-[#172044]">{src.clicks} ({src.pct}%)</b>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EDF2F7]">
-                <div className="h-full rounded-full bg-[#0A66C2]" style={{ width: `${src.pct}%` }} />
+              <div className="h-1.5 w-full overflow-hidden rounded-sm bg-[#EDF2F7]">
+                <div className="h-full rounded-sm bg-[#0A66C2]" style={{ width: `${src.pct}%` }} />
               </div>
             </div>
           ))}
@@ -3004,7 +3004,7 @@ function LinkedInLiveEvents() {
         <div className="rounded-none border border-[#EDF1F5] p-2.5 transition-colors hover:bg-[#F9FBFE]">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#FEF2F2] px-2 py-0.5 text-[11px] font-semibold text-[#DC2626]">
+              <span className="inline-flex items-center gap-1 rounded-sm bg-[#FEF2F2] px-2 py-0.5 text-[11px] font-semibold text-[#DC2626]">
                 <Radio className="size-2.5 animate-pulse text-[#DC2626]" />
                 Live Webinar
               </span>
@@ -3031,7 +3031,7 @@ function LinkedInLiveEvents() {
         <div className="rounded-none border border-[#EDF1F5] p-2.5 transition-colors hover:bg-[#F9FBFE]">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[11px] font-semibold text-[#0A66C2]">
+              <span className="inline-flex items-center gap-1 rounded-sm bg-[#EFF6FF] px-2 py-0.5 text-[11px] font-semibold text-[#0A66C2]">
                 <Users className="size-2.5 text-[#0A66C2]" />
                 Audio Event
               </span>
@@ -3349,15 +3349,15 @@ function LeadsTab() {
           action={
             <div className="flex items-center gap-3 text-[10px]">
               <span className="flex items-center gap-1 text-[#425273]">
-                <span className="size-2 rounded-full bg-[#0A66C2]" />
+                <span className="size-2 rounded-sm bg-[#0A66C2]" />
                 Total Leads
               </span>
               <span className="flex items-center gap-1 text-[#425273]">
-                <span className="size-2 rounded-full bg-[#10B981]" />
+                <span className="size-2 rounded-sm bg-[#10B981]" />
                 Qualified Leads
               </span>
               <span className="flex items-center gap-1 text-[#425273]">
-                <span className="size-2 rounded-full bg-[#8B5CF6]" />
+                <span className="size-2 rounded-sm bg-[#8B5CF6]" />
                 Converted
               </span>
             </div>
@@ -3414,7 +3414,7 @@ function LeadsTab() {
               {sourceDonutData.map((s) => (
                 <div key={s.name} className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
+                    <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: s.color }} />
                     <span className="whitespace-nowrap text-[11px] font-medium text-[#52617D]">{s.name}</span>
                   </div>
                   <span className="shrink-0 font-semibold text-[#172044]">{s.value}%</span>
@@ -3440,7 +3440,7 @@ function LeadsTab() {
             ].map((st) => (
               <div key={st.label} className="flex items-center justify-between border-b border-[#F8FAFD] pb-1.5 last:border-none">
                 <div className="flex items-center gap-2">
-                  <span className={cn("size-2 rounded-full", st.color)} />
+                  <span className={cn("size-2 rounded-sm", st.color)} />
                   <span className="text-[#52617D]">{st.label}</span>
                 </div>
                 <span className="font-semibold text-[#172044]">{st.count}</span>
@@ -3465,7 +3465,7 @@ function LeadsTab() {
                     key={tab}
                     onClick={() => setSubTab(tab)}
                     className={cn(
-                      "flex h-[32px] items-center gap-1.5 rounded-full px-3 text-[11.5px] font-semibold transition-all",
+                      "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
                       isSelected
                         ? "bg-[#0A66C2] text-white shadow-sm"
                         : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]"
@@ -3474,7 +3474,7 @@ function LeadsTab() {
                     <span>{tab}</span>
                     <span
                       className={cn(
-                        "rounded-full px-1.5 py-0.2 text-[10px]",
+                        "rounded-sm px-1.5 py-0.2 text-[10px]",
                         isSelected ? "bg-white/20 text-white" : "bg-[#EDF2F7] text-[#52617D]"
                       )}
                     >
@@ -3576,7 +3576,7 @@ function LeadsTab() {
                           <img
                             src={row.avatar}
                             alt={row.name}
-                            className="size-7 rounded-full object-cover"
+                            className="size-7 rounded-sm object-cover"
                           />
                           <div>
                             <p className="font-semibold text-[#172044]">{row.name}</p>
@@ -3586,7 +3586,7 @@ function LeadsTab() {
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
-                          <span className={cn("grid size-5 place-items-center rounded-full text-[11px] font-semibold", row.companyIconColor)}>
+                          <span className={cn("grid size-5 place-items-center rounded-sm text-[11px] font-semibold", row.companyIconColor)}>
                             ●
                           </span>
                           <span className="font-medium text-[#172044]">{row.company}</span>
@@ -3681,7 +3681,7 @@ function LeadsTab() {
                       <img
                         src={act.avatar}
                         alt={act.name}
-                        className="size-7 rounded-full object-cover"
+                        className="size-7 rounded-sm object-cover"
                       />
                       {act.inBadge && (
                         <div className="absolute -bottom-0.5 -right-0.5 grid size-3 place-items-center rounded-none bg-[#0A66C2] text-[10px] font-semibold text-white">
@@ -3896,7 +3896,7 @@ function InboxTab() {
                   key={pill.key}
                   onClick={() => setFilterPill(pill.key as any)}
                   className={cn(
-                    "rounded-full px-2.5 py-0.5 font-medium transition-colors",
+                    "rounded-sm px-2.5 py-0.5 font-medium transition-colors",
                     filterPill === pill.key
                       ? "bg-[#0A66C2] text-white"
                       : "bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]"
@@ -3923,23 +3923,23 @@ function InboxTab() {
                 >
                   <div className="relative shrink-0">
                     {item.isClub ? (
-                      <div className="grid size-9 place-items-center rounded-full bg-[#E1F8EC] text-[#0F9D58]">
+                      <div className="grid size-9 place-items-center rounded-sm bg-[#E1F8EC] text-[#0F9D58]">
                         <Sparkles className="size-4" />
                       </div>
                     ) : (
                       <img
                         src={item.avatar}
                         alt={item.name}
-                        className="size-9 rounded-full object-cover"
+                        className="size-9 rounded-sm object-cover"
                       />
                     )}
                     {item.hasLinkedInBadge && (
-                      <div className="absolute -bottom-0.5 -right-0.5 grid size-3.5 place-items-center rounded-full bg-[#0A66C2] text-white">
+                      <div className="absolute -bottom-0.5 -right-0.5 grid size-3.5 place-items-center rounded-sm bg-[#0A66C2] text-white">
                         <span className="text-[10px] font-semibold">in</span>
                       </div>
                     )}
                     {item.hasInstagramBadge && (
-                      <div className="absolute -bottom-0.5 -right-0.5 grid size-3.5 place-items-center rounded-full bg-[#E11D48] text-white">
+                      <div className="absolute -bottom-0.5 -right-0.5 grid size-3.5 place-items-center rounded-sm bg-[#E11D48] text-white">
                         <span className="text-[10px] font-semibold">●</span>
                       </div>
                     )}
@@ -3954,11 +3954,11 @@ function InboxTab() {
                     </div>
                     <p className="truncate text-[10.5px] text-[#52617D]">{item.preview}</p>
                     <div className="mt-1 flex items-center justify-between">
-                      <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", item.badgeColor)}>
+                      <span className={cn("rounded-sm px-2 py-0.5 text-[11px] font-semibold", item.badgeColor)}>
                         {item.badge}
                       </span>
                       {item.unread && (
-                        <span className="size-2 rounded-full bg-[#0A66C2]" />
+                        <span className="size-2 rounded-sm bg-[#0A66C2]" />
                       )}
                     </div>
                   </div>
@@ -3976,7 +3976,7 @@ function InboxTab() {
               <img
                 src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
                 alt="Priya Sharma"
-                className="size-10 rounded-full object-cover"
+                className="size-10 rounded-sm object-cover"
               />
               <div>
                 <div className="flex items-center gap-1.5">
@@ -4006,7 +4006,7 @@ function InboxTab() {
           {/* Messages Body */}
           <div className="flex-1 space-y-4 overflow-y-auto bg-[#FAFBFD] p-4">
             <div className="text-center">
-              <span className="rounded-full bg-[#E2E8F0] px-3 py-1 text-[11.5px] font-semibold text-[#64748B]">
+              <span className="rounded-sm bg-[#E2E8F0] px-3 py-1 text-[11.5px] font-semibold text-[#64748B]">
                 Today
               </span>
             </div>
@@ -4016,7 +4016,7 @@ function InboxTab() {
               <img
                 src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
                 alt="Priya"
-                className="size-7 rounded-full object-cover"
+                className="size-7 rounded-sm object-cover"
               />
               <div className="max-w-[70%] rounded-none rounded-tl-none bg-white p-3 text-[11.5px] text-[#1E293B] shadow-sm border border-[#E2E8F0]">
                 <p>Hi! I came across your campaign and it's truly inspiring. 🌱</p>
@@ -4035,7 +4035,7 @@ function InboxTab() {
                   <Check className="size-3" />
                 </div>
               </div>
-              <div className="grid size-7 place-items-center rounded-full bg-[#111B43] text-[11px] font-semibold text-white">
+              <div className="grid size-7 place-items-center rounded-sm bg-[#111B43] text-[11px] font-semibold text-white">
                 NG
               </div>
             </div>
@@ -4045,7 +4045,7 @@ function InboxTab() {
               <img
                 src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
                 alt="Priya"
-                className="size-7 rounded-full object-cover"
+                className="size-7 rounded-sm object-cover"
               />
               <div className="max-w-[70%] rounded-none rounded-tl-none bg-white p-3 text-[11.5px] text-[#1E293B] shadow-sm border border-[#E2E8F0]">
                 <p>I would love to know how I can volunteer for the upcoming river clean-up events. Do you have a form or registration link?</p>
@@ -4064,7 +4064,7 @@ function InboxTab() {
                   <Check className="size-3" />
                 </div>
               </div>
-              <div className="grid size-7 place-items-center rounded-full bg-[#111B43] text-[11px] font-semibold text-white">
+              <div className="grid size-7 place-items-center rounded-sm bg-[#111B43] text-[11px] font-semibold text-white">
                 NG
               </div>
             </div>
@@ -4074,7 +4074,7 @@ function InboxTab() {
               <img
                 src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
                 alt="Priya"
-                className="size-7 rounded-full object-cover"
+                className="size-7 rounded-sm object-cover"
               />
               <div className="max-w-[70%] rounded-none rounded-tl-none bg-white p-3 text-[11.5px] text-[#1E293B] shadow-sm border border-[#E2E8F0]">
                 <p>Great! I've just registered. Looking forward to being a part of this. Keep up the amazing work! 💚</p>
@@ -4092,7 +4092,7 @@ function InboxTab() {
                   <Check className="size-3" />
                 </div>
               </div>
-              <div className="grid size-7 place-items-center rounded-full bg-[#111B43] text-[11px] font-semibold text-white">
+              <div className="grid size-7 place-items-center rounded-sm bg-[#111B43] text-[11px] font-semibold text-white">
                 NG
               </div>
             </div>
@@ -4135,7 +4135,7 @@ function InboxTab() {
               <img
                 src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80"
                 alt="Priya"
-                className="size-14 rounded-full object-cover"
+                className="size-14 rounded-sm object-cover"
               />
               <div className="mt-2 flex items-center gap-1">
                 <p className="text-[13px] font-semibold text-[#172044]">Priya Sharma</p>
@@ -4199,7 +4199,7 @@ function InboxTab() {
               <div className="flex items-center justify-between">
                 <span className="text-[#64748B]">Assigned To</span>
                 <span className="flex items-center gap-1 font-semibold text-[#172044]">
-                  <span className="grid size-4 place-items-center rounded-full bg-[#111B43] text-[10.5px] text-white font-semibold">MS</span>
+                  <span className="grid size-4 place-items-center rounded-sm bg-[#111B43] text-[10.5px] text-white font-semibold">MS</span>
                   Manish Sirohi <ChevronDown className="size-2.5 text-[#8A97AF]" />
                 </span>
               </div>
@@ -4249,7 +4249,7 @@ function InboxTab() {
                   <img
                     src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&auto=format&fit=crop&q=80"
                     alt="Rahul"
-                    className="size-6 rounded-full object-cover"
+                    className="size-6 rounded-sm object-cover"
                   />
                   <div>
                     <p className="font-semibold text-[#172044]">Rahul Mehta</p>
@@ -4260,7 +4260,7 @@ function InboxTab() {
               </div>
               <div className="pt-1.5 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="grid size-6 place-items-center rounded-full bg-[#E1F8EC] text-[#0F9D58]">
+                  <div className="grid size-6 place-items-center rounded-sm bg-[#E1F8EC] text-[#0F9D58]">
                     <Sparkles className="size-3" />
                   </div>
                   <div>
@@ -4275,7 +4275,7 @@ function InboxTab() {
                   <img
                     src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&auto=format&fit=crop&q=80"
                     alt="Aditi"
-                    className="size-6 rounded-full object-cover"
+                    className="size-6 rounded-sm object-cover"
                   />
                   <div>
                     <p className="font-semibold text-[#172044]">Aditi Verma</p>
@@ -4489,7 +4489,7 @@ function SettingsTab() {
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="size-2.5 rounded-full bg-[#16A34A]" />
+                      <span className="size-2.5 rounded-sm bg-[#16A34A]" />
                       <h3 className="text-[13.5px] font-semibold text-[#172044]">Connection Status</h3>
                     </div>
                     <p className="mt-0.5 text-[10px] font-semibold text-[#16A34A]">Connected</p>
@@ -4775,9 +4775,9 @@ function SettingsTab() {
                     </div>
                     <button
                       onClick={() => setAutoPublish(!autoPublish)}
-                      className={cn("relative h-5 w-9 rounded-full transition-colors", autoPublish ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
+                      className={cn("relative h-5 w-9 rounded-sm transition-colors", autoPublish ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
                     >
-                      <span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-transform", autoPublish ? "right-0.5" : "left-0.5")} />
+                      <span className={cn("absolute top-0.5 size-4 rounded-sm bg-white transition-transform", autoPublish ? "right-0.5" : "left-0.5")} />
                     </button>
                   </div>
 
@@ -4788,9 +4788,9 @@ function SettingsTab() {
                     </div>
                     <button
                       onClick={() => setShowPreviews(!showPreviews)}
-                      className={cn("relative h-5 w-9 rounded-full transition-colors", showPreviews ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
+                      className={cn("relative h-5 w-9 rounded-sm transition-colors", showPreviews ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
                     >
-                      <span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-transform", showPreviews ? "right-0.5" : "left-0.5")} />
+                      <span className={cn("absolute top-0.5 size-4 rounded-sm bg-white transition-transform", showPreviews ? "right-0.5" : "left-0.5")} />
                     </button>
                   </div>
 
@@ -4801,9 +4801,9 @@ function SettingsTab() {
                     </div>
                     <button
                       onClick={() => setEnableUtm(!enableUtm)}
-                      className={cn("relative h-5 w-9 rounded-full transition-colors", enableUtm ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
+                      className={cn("relative h-5 w-9 rounded-sm transition-colors", enableUtm ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
                     >
-                      <span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-transform", enableUtm ? "right-0.5" : "left-0.5")} />
+                      <span className={cn("absolute top-0.5 size-4 rounded-sm bg-white transition-transform", enableUtm ? "right-0.5" : "left-0.5")} />
                     </button>
                   </div>
 
@@ -4896,9 +4896,9 @@ function SettingsTab() {
                       </div>
                       <button
                         onClick={() => setCompressMedia(!compressMedia)}
-                        className={cn("relative h-5 w-9 rounded-full transition-colors", compressMedia ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
+                        className={cn("relative h-5 w-9 rounded-sm transition-colors", compressMedia ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
                       >
-                        <span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-transform", compressMedia ? "right-0.5" : "left-0.5")} />
+                        <span className={cn("absolute top-0.5 size-4 rounded-sm bg-white transition-transform", compressMedia ? "right-0.5" : "left-0.5")} />
                       </button>
                     </div>
 
@@ -4909,9 +4909,9 @@ function SettingsTab() {
                       </div>
                       <button
                         onClick={() => setAiAltText(!aiAltText)}
-                        className={cn("relative h-5 w-9 rounded-full transition-colors", aiAltText ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
+                        className={cn("relative h-5 w-9 rounded-sm transition-colors", aiAltText ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
                       >
-                        <span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-transform", aiAltText ? "right-0.5" : "left-0.5")} />
+                        <span className={cn("absolute top-0.5 size-4 rounded-sm bg-white transition-transform", aiAltText ? "right-0.5" : "left-0.5")} />
                       </button>
                     </div>
                   </div>
@@ -4998,7 +4998,7 @@ function SettingsTab() {
                 <h4 className="text-[12.5px] font-semibold text-[#172044]">Mandatory Approval Workflow</h4>
                 <p className="text-[10.5px] text-[#8A97AF]">Require Manager or Owner approval for posts drafted by Editors before they can go live.</p>
                 <div className="pt-2">
-                  <span className="rounded-full bg-[#DCFCE7] px-2.5 py-1 text-[10px] font-semibold text-[#16A34A]">✓ Active Enforced</span>
+                  <span className="rounded-sm bg-[#DCFCE7] px-2.5 py-1 text-[10px] font-semibold text-[#16A34A]">✓ Active Enforced</span>
                 </div>
               </div>
 
@@ -5006,7 +5006,7 @@ function SettingsTab() {
                 <h4 className="text-[12.5px] font-semibold text-[#172044]">Two-Factor Authentication (2FA)</h4>
                 <p className="text-[10.5px] text-[#8A97AF]">All team members accessing the LinkedIn publishing suite must have 2FA enabled on their accounts.</p>
                 <div className="pt-2">
-                  <span className="rounded-full bg-[#EFF6FF] px-2.5 py-1 text-[10px] font-semibold text-[#0A66C2]">Enforced for All Roles</span>
+                  <span className="rounded-sm bg-[#EFF6FF] px-2.5 py-1 text-[10px] font-semibold text-[#0A66C2]">Enforced for All Roles</span>
                 </div>
               </div>
             </div>
@@ -5039,9 +5039,9 @@ function SettingsTab() {
                     </div>
                     <button
                       onClick={() => setNotifyPublish(!notifyPublish)}
-                      className={cn("relative h-5 w-9 rounded-full transition-colors", notifyPublish ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
+                      className={cn("relative h-5 w-9 rounded-sm transition-colors", notifyPublish ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
                     >
-                      <span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-transform", notifyPublish ? "right-0.5" : "left-0.5")} />
+                      <span className={cn("absolute top-0.5 size-4 rounded-sm bg-white transition-transform", notifyPublish ? "right-0.5" : "left-0.5")} />
                     </button>
                   </div>
 
@@ -5052,9 +5052,9 @@ function SettingsTab() {
                     </div>
                     <button
                       onClick={() => setNotifyEngagement(!notifyEngagement)}
-                      className={cn("relative h-5 w-9 rounded-full transition-colors", notifyEngagement ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
+                      className={cn("relative h-5 w-9 rounded-sm transition-colors", notifyEngagement ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
                     >
-                      <span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-transform", notifyEngagement ? "right-0.5" : "left-0.5")} />
+                      <span className={cn("absolute top-0.5 size-4 rounded-sm bg-white transition-transform", notifyEngagement ? "right-0.5" : "left-0.5")} />
                     </button>
                   </div>
 
@@ -5065,9 +5065,9 @@ function SettingsTab() {
                     </div>
                     <button
                       onClick={() => setNotifyCampaigns(!notifyCampaigns)}
-                      className={cn("relative h-5 w-9 rounded-full transition-colors", notifyCampaigns ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
+                      className={cn("relative h-5 w-9 rounded-sm transition-colors", notifyCampaigns ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
                     >
-                      <span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-transform", notifyCampaigns ? "right-0.5" : "left-0.5")} />
+                      <span className={cn("absolute top-0.5 size-4 rounded-sm bg-white transition-transform", notifyCampaigns ? "right-0.5" : "left-0.5")} />
                     </button>
                   </div>
 
@@ -5078,9 +5078,9 @@ function SettingsTab() {
                     </div>
                     <button
                       onClick={() => setNotifyWeekly(!notifyWeekly)}
-                      className={cn("relative h-5 w-9 rounded-full transition-colors", notifyWeekly ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
+                      className={cn("relative h-5 w-9 rounded-sm transition-colors", notifyWeekly ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
                     >
-                      <span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-transform", notifyWeekly ? "right-0.5" : "left-0.5")} />
+                      <span className={cn("absolute top-0.5 size-4 rounded-sm bg-white transition-transform", notifyWeekly ? "right-0.5" : "left-0.5")} />
                     </button>
                   </div>
 
@@ -5091,9 +5091,9 @@ function SettingsTab() {
                     </div>
                     <button
                       onClick={() => setNotifyFollowers(!notifyFollowers)}
-                      className={cn("relative h-5 w-9 rounded-full transition-colors", notifyFollowers ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
+                      className={cn("relative h-5 w-9 rounded-sm transition-colors", notifyFollowers ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
                     >
-                      <span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-transform", notifyFollowers ? "right-0.5" : "left-0.5")} />
+                      <span className={cn("absolute top-0.5 size-4 rounded-sm bg-white transition-transform", notifyFollowers ? "right-0.5" : "left-0.5")} />
                     </button>
                   </div>
                 </div>
@@ -5189,9 +5189,9 @@ function SettingsTab() {
                   <span className="text-[11px] font-semibold text-[#172044]">Instant Auto-Sync:</span>
                   <button
                     onClick={() => setAutoLeadSync(!autoLeadSync)}
-                    className={cn("relative h-5 w-9 rounded-full transition-colors", autoLeadSync ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
+                    className={cn("relative h-5 w-9 rounded-sm transition-colors", autoLeadSync ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
                   >
-                    <span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-transform", autoLeadSync ? "right-0.5" : "left-0.5")} />
+                    <span className={cn("absolute top-0.5 size-4 rounded-sm bg-white transition-transform", autoLeadSync ? "right-0.5" : "left-0.5")} />
                   </button>
                 </div>
               </div>
@@ -5364,16 +5364,16 @@ function SettingsTab() {
                         <span>Read Requests (LinkedIn API):</span>
                         <span className="font-semibold text-[#172044]">4,210 / 10,000 daily</span>
                       </div>
-                      <div className="h-1.5 w-full rounded-full bg-[#E2E8F0]">
-                        <div className="h-1.5 rounded-full bg-[#0A66C2]" style={{ width: "42%" }} />
+                      <div className="h-1.5 w-full rounded-sm bg-[#E2E8F0]">
+                        <div className="h-1.5 rounded-sm bg-[#0A66C2]" style={{ width: "42%" }} />
                       </div>
 
                       <div className="flex justify-between text-[#52617D] pt-1">
                         <span>Write / Post Requests:</span>
                         <span className="font-semibold text-[#172044]">142 / 1,000 daily</span>
                       </div>
-                      <div className="h-1.5 w-full rounded-full bg-[#E2E8F0]">
-                        <div className="h-1.5 rounded-full bg-[#10B981]" style={{ width: "14%" }} />
+                      <div className="h-1.5 w-full rounded-sm bg-[#E2E8F0]">
+                        <div className="h-1.5 rounded-sm bg-[#10B981]" style={{ width: "14%" }} />
                       </div>
                     </div>
                   </div>
@@ -5417,9 +5417,9 @@ function SettingsTab() {
                     </div>
                     <button
                       onClick={() => setAutoPurgeArchived(!autoPurgeArchived)}
-                      className={cn("relative h-5 w-9 rounded-full transition-colors", autoPurgeArchived ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
+                      className={cn("relative h-5 w-9 rounded-sm transition-colors", autoPurgeArchived ? "bg-[#16A34A]" : "bg-[#CBD5E1]")}
                     >
-                      <span className={cn("absolute top-0.5 size-4 rounded-full bg-white transition-transform", autoPurgeArchived ? "right-0.5" : "left-0.5")} />
+                      <span className={cn("absolute top-0.5 size-4 rounded-sm bg-white transition-transform", autoPurgeArchived ? "right-0.5" : "left-0.5")} />
                     </button>
                   </div>
 

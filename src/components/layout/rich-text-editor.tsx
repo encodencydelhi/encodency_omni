@@ -256,8 +256,8 @@ export default function RichTextEditor({
         onClick={onClick}
         title={title}
         className={`flex h-7 min-w-7 items-center justify-center rounded-sm transition-colors ${isActive
-            ? "bg-blue-100 text-blue-600 shadow-inner"
-            : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          ? "bg-blue-100 text-blue-600 shadow-inner"
+          : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
           }`}
       >
         {children}
@@ -268,7 +268,7 @@ export default function RichTextEditor({
   const Divider = () => <div className="mx-1 h-5 w-px bg-gray-200" />;
 
   return (
-    <div className={`relative rounded-lg border border-gray-200 bg-white ${className}`}>
+    <div className={`relative rounded-sm border border-gray-200 bg-white ${className}`}>
       {/* Editor Toolbar */}
       <div className="flex flex-wrap items-center gap-1 border-b border-gray-100 bg-gray-50/50 px-2 py-1.5">
         <select
@@ -317,7 +317,7 @@ export default function RichTextEditor({
                 left: `${pickerPos.left}px`,
                 zIndex: 999999,
               }}
-              className="shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-xl border border-gray-200 bg-white overflow-hidden"
+              className="shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-sm border border-gray-200 bg-white overflow-hidden"
             >
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}

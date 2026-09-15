@@ -128,7 +128,7 @@ export function CreateContentTab() {
       <div className="space-y-2.5 min-w-0">
 
         {/* Channels & Content Types */}
-        <section className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+        <section className="overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
           <button
             onClick={() => setChannelsOpen(!channelsOpen)}
             className="flex w-full items-center justify-between gap-2 border-b border-[#EDF1F5] px-3 py-2.5 text-left transition hover:bg-slate-50"
@@ -154,7 +154,7 @@ export function CreateContentTab() {
                         onClick={() => toggleChannel(p)}
                         disabled={conn.status === "disconnected"}
                         className={cn(
-                          "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition",
+                          "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left transition",
                           conn.status === "disconnected" ? "opacity-50 cursor-not-allowed" : on ? "bg-[#F0F6FF]" : "hover:bg-slate-50"
                         )}
                       >
@@ -208,7 +208,7 @@ export function CreateContentTab() {
         <MasterContentEditor content={masterContent} onChange={setMasterContent} />
 
         {/* Media */}
-        <section className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+        <section className="overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
           <button
             onClick={() => setMediaOpen(!mediaOpen)}
             className="flex w-full items-center justify-between gap-2 border-b border-[#EDF1F5] px-3 py-2.5 text-left transition hover:bg-slate-50"
@@ -222,20 +222,20 @@ export function CreateContentTab() {
 
           {mediaOpen && (
             <div className="p-3">
-              <div className="rounded-lg border-2 border-dashed border-[#B9CFF2] bg-[#F7FAFF] py-4 text-center transition hover:border-[#1769DF] hover:bg-[#F0F6FF]">
+              <div className="rounded-sm border-2 border-dashed border-[#B9CFF2] bg-[#F7FAFF] py-4 text-center transition hover:border-[#1769DF] hover:bg-[#F0F6FF]">
                 <p className="text-[12px] font-semibold text-[#24365A]">Drag & drop files here, or click to browse</p>
-                <button className="mt-1.5 h-7 rounded-lg bg-[#1769DF] px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-[#1259BD]">Upload from device</button>
+                <button className="mt-1.5 h-7 rounded-sm bg-[#1769DF] px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-[#1259BD]">Upload from device</button>
                 <p className="mt-1 text-[10px] text-[#7A87A0]">Recommended 1080 × 1350 (4:5) for Instagram</p>
               </div>
               <div className="mt-2 grid grid-cols-5 gap-1">
                 {MOCK_MEDIA.slice(0, 4).map((m, i) => (
-                  <div key={m.id} className="relative overflow-hidden rounded-lg border border-[#E2E8F0]">
+                  <div key={m.id} className="relative overflow-hidden rounded-sm border border-[#E2E8F0]">
                     <img src={m.url} alt={m.alt} className="h-14 w-full object-cover" />
                     <span className="absolute left-0.5 top-0.5 grid size-3.5 place-items-center rounded bg-[#172044]/80 text-[8px] font-semibold text-white">{i + 1}</span>
                     <button className="absolute right-0.5 top-0.5 rounded bg-white/90 p-0.5"><MoreHorizontal className="size-2.5 text-slate-500" /></button>
                   </div>
                 ))}
-                <button className="grid h-14 place-items-center rounded-lg border border-dashed border-[#CBD5E1] text-[#7A87A0] hover:bg-slate-50">
+                <button className="grid h-14 place-items-center rounded-sm border border-dashed border-[#CBD5E1] text-[#7A87A0] hover:bg-slate-50">
                   <Plus className="size-3.5" /><span className="mt-0.5 text-[9px] font-semibold">Add</span>
                 </button>
               </div>
@@ -301,8 +301,8 @@ export function CreateContentTab() {
         <Card>
           <SelectField label="Approver" value="Content Team" />
           <div className="mt-1.5 flex gap-1">
-            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-[#E2E8F0] text-[10.5px] font-semibold text-[#687797] hover:bg-slate-50">Save Draft</button>
-            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-[#1769DF] text-[10.5px] font-semibold text-white hover:bg-[#1259BD]">Send for Review</button>
+            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm border border-[#E2E8F0] text-[10.5px] font-semibold text-[#687797] hover:bg-slate-50">Save Draft</button>
+            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm bg-[#1769DF] text-[10.5px] font-semibold text-white hover:bg-[#1259BD]">Send for Review</button>
           </div>
         </Card>
       </div>
@@ -333,11 +333,11 @@ export function CreateContentTab() {
         />
 
         <div className="flex gap-1">
-          <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-[#E2E8F0] text-[10.5px] font-semibold text-[#687797] hover:bg-slate-50">
+          <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm border border-[#E2E8F0] text-[10.5px] font-semibold text-[#687797] hover:bg-slate-50">
             <Download className="size-3" /> Export
           </button>
           <button className={cn(
-            "flex h-8 flex-1 items-center justify-center gap-1 rounded-lg text-[10.5px] font-semibold text-white shadow-sm transition",
+            "flex h-8 flex-1 items-center justify-center gap-1 rounded-sm text-[10.5px] font-semibold text-white shadow-sm transition",
             errorCount > 0 ? "bg-gray-400 cursor-not-allowed" : "bg-[#EB0711] hover:bg-[#D60811]"
           )}>
             <Send className="size-3" />

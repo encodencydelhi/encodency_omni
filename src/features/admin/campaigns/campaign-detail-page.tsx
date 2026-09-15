@@ -190,7 +190,7 @@ function SoftIcon({
 }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full ${iconTone[tone]}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-sm ${iconTone[tone]}`}
       style={{ width: size, height: size }}
     >
       <Icon size={Math.max(15, size * 0.45)} strokeWidth={1.8} />
@@ -216,7 +216,7 @@ function StatusPill({
     purple: "bg-[#f4efff] text-[#7642d7]",
   };
   return (
-    <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${map[tone]} ${fixed ? "min-w-[72px]" : ""}`}>
+    <span className={`inline-flex items-center justify-center rounded-sm px-2.5 py-1 text-[11px] font-semibold ${map[tone]} ${fixed ? "min-w-[72px]" : ""}`}>
       {children}
     </span>
   );
@@ -339,8 +339,8 @@ function Donut({
     cursor = end;
   }
   return (
-    <div className="relative h-[118px] w-[118px] shrink-0 rounded-full" style={{ background: `conic-gradient(${stops.join(", ")})` }}>
-      <div className="absolute inset-[17px] flex flex-col items-center justify-center rounded-full bg-white">
+    <div className="relative h-[118px] w-[118px] shrink-0 rounded-sm" style={{ background: `conic-gradient(${stops.join(", ")})` }}>
+      <div className="absolute inset-[17px] flex flex-col items-center justify-center rounded-sm bg-white">
         <span className="text-[17px] font-semibold text-[#172754]">{center}</span>
         {centerSub && <span className="text-[11px] text-[#7b879b]">{centerSub}</span>}
       </div>
@@ -361,8 +361,8 @@ function BarList({
       {rows.map((r) => (
         <div key={r.label} className="flex items-center gap-2">
           <span className="w-[30px] shrink-0 truncate text-[11px] font-medium text-[#475674]">{r.label.slice(0, 2)}</span>
-          <div className="h-[7px] min-w-0 flex-1 overflow-hidden rounded-full bg-[#edf1f6]">
-            <div className="h-full rounded-full bg-[#4b90ea]" style={{ width: `${(r.pct / m) * 100}%` }} />
+          <div className="h-[7px] min-w-0 flex-1 overflow-hidden rounded-sm bg-[#edf1f6]">
+            <div className="h-full rounded-sm bg-[#4b90ea]" style={{ width: `${(r.pct / m) * 100}%` }} />
           </div>
           <span className="w-[54px] shrink-0 text-right text-[11px] font-semibold text-[#6b7890]">{r.value}</span>
         </div>
@@ -394,7 +394,7 @@ function TopHeader() {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-[22px] font-semibold tracking-[-0.03em] text-[#0f204b]">Save Rivers, Save Lives 2025</h1>
-            <StatusPill tone="green"><span className="mr-1 h-1.5 w-1.5 rounded-full bg-[#16b86d]" />Active</StatusPill>
+            <StatusPill tone="green"><span className="mr-1 h-1.5 w-1.5 rounded-sm bg-[#16b86d]" />Active</StatusPill>
           </div>
           <p className="mt-1 max-w-[620px] text-[11.5px] leading-[1.4] text-[#7a879b]">
             A nationwide awareness campaign to promote river conservation, inspire community action and drive support for a cleaner, healthier India.
@@ -477,273 +477,273 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
       </Card>
 
       {activeTab === "Overview" && (
-      <Card title="Budget Utilization" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View Details</button>}>
-        <div className="p-3">
-          <div className="flex items-center justify-between">
-            <div className="text-[16px] font-semibold text-[#1b2a50]">₹48,250 <span className="text-[11px] font-medium text-[#8490a4]">/ ₹50,000</span></div>
-            <b className="text-[13px] font-semibold text-[#26375d]">96%</b>
+        <Card title="Budget Utilization" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View Details</button>}>
+          <div className="p-3">
+            <div className="flex items-center justify-between">
+              <div className="text-[16px] font-semibold text-[#1b2a50]">₹48,250 <span className="text-[11px] font-medium text-[#8490a4]">/ ₹50,000</span></div>
+              <b className="text-[13px] font-semibold text-[#26375d]">96%</b>
+            </div>
+            <div className="mt-2 h-[7px] rounded-sm bg-[#e8eef4]"><div className="h-full w-[96%] rounded-sm bg-[#17ae70]" /></div>
+            <div className="mt-2 flex justify-between text-[11px] text-[#718099]"><span>₹48,250 Spent</span><span>₹1,750 Remaining</span></div>
+            <div className="mt-2 rounded-[7px] bg-[#effbf5] px-2 py-1.5 text-[11px] text-[#25935f]">You are 8% under budget. Great pacing!</div>
           </div>
-          <div className="mt-2 h-[7px] rounded-full bg-[#e8eef4]"><div className="h-full w-[96%] rounded-full bg-[#17ae70]" /></div>
-          <div className="mt-2 flex justify-between text-[11px] text-[#718099]"><span>₹48,250 Spent</span><span>₹1,750 Remaining</span></div>
-          <div className="mt-2 rounded-[7px] bg-[#effbf5] px-2 py-1.5 text-[11px] text-[#25935f]">You are 8% under budget. Great pacing!</div>
-        </div>
-      </Card>
+        </Card>
       )}
 
       {activeTab === "Budget" && (
-      <>
-      <Card title="Budget Utilization" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View Details</button>}>
-        <div className="p-3">
-          <div className="flex items-center justify-between">
-            <div className="text-[16px] font-semibold text-[#1b2a50]">₹42,830 <span className="text-[11px] font-medium text-[#8490a4]">/ ₹48,250</span></div>
-            <b className="text-[13px] font-semibold text-[#26375d]">88%</b>
-          </div>
-          <div className="mt-2 h-[7px] rounded-full bg-[#e8eef4]"><div className="h-full w-[88%] rounded-full bg-[#17ae70]" /></div>
-          <div className="mt-2 flex justify-between text-[11px] text-[#718099]"><span>● ₹42,830 Spent</span><span>● ₹5,420 Remaining</span></div>
-        </div>
-      </Card>
-
-      <Card title="Alerts & Notifications" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
-        <div className="divide-y divide-[#edf1f5]">
-          {[
-            { icon: AlertCircle, title: "Approaching budget limit", note: "88% of budget spent", tag: "Watch", tagColor: "bg-[#fef3e6] text-[#d97706]" },
-            { icon: TrendingDown, title: "YouTube underperforming", note: "24% below planned spend", tag: "Review", tagColor: "bg-[#fef3e6] text-[#d97706]" },
-            { icon: CheckCircle2, title: "Good pacing", note: "Daily spend 22% below plan", tag: "Good", tagColor: "bg-[#e9fbf3] text-[#17a96b]" },
-          ].map((item) => (
-            <div key={item.title} className="flex items-start gap-2 px-3 py-2.5">
-              <item.icon size={15} className="mt-0.5 text-[#6b7890]" />
-              <div className="min-w-0 flex-1">
-                <div className="text-[11.5px] font-semibold text-[#334464]">{item.title}</div>
-                <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.note}</div>
+        <>
+          <Card title="Budget Utilization" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View Details</button>}>
+            <div className="p-3">
+              <div className="flex items-center justify-between">
+                <div className="text-[16px] font-semibold text-[#1b2a50]">₹42,830 <span className="text-[11px] font-medium text-[#8490a4]">/ ₹48,250</span></div>
+                <b className="text-[13px] font-semibold text-[#26375d]">88%</b>
               </div>
-              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${item.tagColor}`}>{item.tag}</span>
+              <div className="mt-2 h-[7px] rounded-sm bg-[#e8eef4]"><div className="h-full w-[88%] rounded-sm bg-[#17ae70]" /></div>
+              <div className="mt-2 flex justify-between text-[11px] text-[#718099]"><span>● ₹42,830 Spent</span><span>● ₹5,420 Remaining</span></div>
             </div>
-          ))}
-        </div>
-      </Card>
+          </Card>
 
-      <Card title="Optimization Suggestions" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
-        <div className="divide-y divide-[#edf1f5]">
-          {[
-            { title: "Reallocate budget to Meta", note: "+24% better cost per lead", btn: "Apply", btnColor: "bg-[#1979e9] text-white" },
-            { title: "Increase budget for Website", note: "High conversion rate (5.2%)", btn: "Consider", btnColor: "bg-[#f0f4ff] text-[#1d77e7] border border-[#d0daf0]" },
-            { title: "Pause low-performing YouTube ad", note: "Save ₹1,200 in remaining period", btn: "Review", btnColor: "bg-[#f0f4ff] text-[#1d77e7] border border-[#d0daf0]" },
-          ].map((item) => (
-            <div key={item.title} className="flex items-start gap-2 px-3 py-2.5">
-              <Sparkles size={14} className="mt-0.5 shrink-0 text-[#f59e0b]" />
-              <div className="min-w-0 flex-1">
-                <div className="text-[11.5px] font-semibold text-[#334464]">{item.title}</div>
-                <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.note}</div>
-              </div>
-              <button className={`shrink-0 rounded-[5px] px-2 py-1 text-[11px] font-semibold ${item.btnColor}`}>{item.btn}</button>
+          <Card title="Alerts & Notifications" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
+            <div className="divide-y divide-[#edf1f5]">
+              {[
+                { icon: AlertCircle, title: "Approaching budget limit", note: "88% of budget spent", tag: "Watch", tagColor: "bg-[#fef3e6] text-[#d97706]" },
+                { icon: TrendingDown, title: "YouTube underperforming", note: "24% below planned spend", tag: "Review", tagColor: "bg-[#fef3e6] text-[#d97706]" },
+                { icon: CheckCircle2, title: "Good pacing", note: "Daily spend 22% below plan", tag: "Good", tagColor: "bg-[#e9fbf3] text-[#17a96b]" },
+              ].map((item) => (
+                <div key={item.title} className="flex items-start gap-2 px-3 py-2.5">
+                  <item.icon size={15} className="mt-0.5 text-[#6b7890]" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11.5px] font-semibold text-[#334464]">{item.title}</div>
+                    <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.note}</div>
+                  </div>
+                  <span className={`shrink-0 rounded-sm px-2 py-0.5 text-[11px] font-semibold ${item.tagColor}`}>{item.tag}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </Card>
-      </>
+          </Card>
+
+          <Card title="Optimization Suggestions" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
+            <div className="divide-y divide-[#edf1f5]">
+              {[
+                { title: "Reallocate budget to Meta", note: "+24% better cost per lead", btn: "Apply", btnColor: "bg-[#1979e9] text-white" },
+                { title: "Increase budget for Website", note: "High conversion rate (5.2%)", btn: "Consider", btnColor: "bg-[#f0f4ff] text-[#1d77e7] border border-[#d0daf0]" },
+                { title: "Pause low-performing YouTube ad", note: "Save ₹1,200 in remaining period", btn: "Review", btnColor: "bg-[#f0f4ff] text-[#1d77e7] border border-[#d0daf0]" },
+              ].map((item) => (
+                <div key={item.title} className="flex items-start gap-2 px-3 py-2.5">
+                  <Sparkles size={14} className="mt-0.5 shrink-0 text-[#f59e0b]" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11.5px] font-semibold text-[#334464]">{item.title}</div>
+                    <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.note}</div>
+                  </div>
+                  <button className={`shrink-0 rounded-[5px] px-2 py-1 text-[11px] font-semibold ${item.btnColor}`}>{item.btn}</button>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </>
       )}
 
       {showPerformanceScore && (
-      <Card title="Performance Score">
-        <div className="flex items-center gap-3 p-3">
-          <div className="relative h-[72px] w-[72px] shrink-0 rounded-full" style={{background:"conic-gradient(#16aa67 0 82%, #e8edf3 82% 100%)"}}>
-            <div className="absolute inset-[7px] flex flex-col items-center justify-center rounded-full bg-white">
-              <b className="text-[16px] font-semibold text-[#26375b]">82</b><span className="text-[11px] text-[#8994a8]">/100</span>
+        <Card title="Performance Score">
+          <div className="flex items-center gap-3 p-3">
+            <div className="relative h-[72px] w-[72px] shrink-0 rounded-sm" style={{ background: "conic-gradient(#16aa67 0 82%, #e8edf3 82% 100%)" }}>
+              <div className="absolute inset-[7px] flex flex-col items-center justify-center rounded-sm bg-white">
+                <b className="text-[16px] font-semibold text-[#26375b]">82</b><span className="text-[11px] text-[#8994a8]">/100</span>
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-1">
+                <span className="text-[12px] font-semibold text-[#17a96b]">↑ 12%</span>
+              </div>
+              <div className="mt-0.5 text-[11px] text-[#8290a4]">vs last period</div>
+              <div className="mt-1.5 rounded-[5px] bg-[#edfbf3] px-2 py-1 text-[11px] font-semibold text-[#17a96b]">Great Performance</div>
             </div>
           </div>
-          <div>
-            <div className="flex items-center gap-1">
-              <span className="text-[12px] font-semibold text-[#17a96b]">↑ 12%</span>
-            </div>
-            <div className="mt-0.5 text-[11px] text-[#8290a4]">vs last period</div>
-            <div className="mt-1.5 rounded-[5px] bg-[#edfbf3] px-2 py-1 text-[11px] font-semibold text-[#17a96b]">Great Performance</div>
-          </div>
-        </div>
-      </Card>
+        </Card>
       )}
 
       {(activeTab === "Performance" || activeTab === "Overview") && (
-      <Card title="Quick Notes & Alerts" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All →</button>}>
-        <div className="divide-y divide-[#edf1f5]">
-          <AlertRow icon={AlertCircle} title="CTR dropping on LinkedIn" note="-18% vs last week" tone="red" tag="High" />
-          <AlertRow icon={Info} title="YouTube not connected" note="Connect to track complete performance" tone="orange" tag="Medium" />
-          <AlertRow icon={Info} title="Budget pacing ahead of schedule" note="You used 96% of budget" tone="blue" tag="Medium" />
-          <AlertRow icon={CheckCircle2} title="No major issues" note="Campaign running smoothly" tone="green" tag="Good" />
-        </div>
-      </Card>
+        <Card title="Quick Notes & Alerts" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All →</button>}>
+          <div className="divide-y divide-[#edf1f5]">
+            <AlertRow icon={AlertCircle} title="CTR dropping on LinkedIn" note="-18% vs last week" tone="red" tag="High" />
+            <AlertRow icon={Info} title="YouTube not connected" note="Connect to track complete performance" tone="orange" tag="Medium" />
+            <AlertRow icon={Info} title="Budget pacing ahead of schedule" note="You used 96% of budget" tone="blue" tag="Medium" />
+            <AlertRow icon={CheckCircle2} title="No major issues" note="Campaign running smoothly" tone="green" tag="Good" />
+          </div>
+        </Card>
       )}
 
       {activeTab === "Performance" && (
-      <Card title="Optimization Recommendations" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All →</button>}>
-        <div className="divide-y divide-[#edf1f5]">
-          <Recommendation title="Increase budget on high-performing Meta & Instagram" detail="20% more conversions" />
-          <Recommendation title="Create more short-form video content" detail="Similar creatives show 2.3× higher CTR" />
-          <Recommendation title="Focus targeting on top 5 states" detail="UP, Delhi, Maharashtra, Karnataka, Bihar" />
-        </div>
-      </Card>
+        <Card title="Optimization Recommendations" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All →</button>}>
+          <div className="divide-y divide-[#edf1f5]">
+            <Recommendation title="Increase budget on high-performing Meta & Instagram" detail="20% more conversions" />
+            <Recommendation title="Create more short-form video content" detail="Similar creatives show 2.3× higher CTR" />
+            <Recommendation title="Focus targeting on top 5 states" detail="UP, Delhi, Maharashtra, Karnataka, Bihar" />
+          </div>
+        </Card>
       )}
 
       {activeTab === "Content & Schedule" && (
-      <>
-      <Card title="Publishing Rules" action={<button className="text-[11px] font-semibold text-[#1d77e7]">Edit</button>}>
-        <div className="divide-y divide-[#edf1f5]">
-          {[
-            { icon: Clock3, label: "Posting Window", value: "08:00 AM – 08:00 PM (IST)" },
-            { icon: CalendarDays, label: "Max Posts Per Day", value: "3 per channel" },
-            { icon: Users, label: "Audience Focus", value: "India (Urban & Semi-Urban)" },
-            { icon: Copy, label: "Mandatory Hashtags", value: "#CleanRivers #MokshaSewa" },
-            { icon: CheckCircle2, label: "Content Approval", value: "Required before publishing" },
-            { icon: FileText, label: "Language", value: "English & Hindi" },
-          ].map((rule) => (
-            <div key={rule.label} className="flex items-start gap-2 px-3 py-2">
-              <rule.icon size={14} className="mt-0.5 text-[#6b7890]" />
-              <div className="min-w-0 flex-1">
-                <div className="text-[11px] font-semibold text-[#334464]">{rule.label}</div>
-                <div className="mt-0.5 text-[11px] text-[#8792a6]">{rule.value}</div>
+        <>
+          <Card title="Publishing Rules" action={<button className="text-[11px] font-semibold text-[#1d77e7]">Edit</button>}>
+            <div className="divide-y divide-[#edf1f5]">
+              {[
+                { icon: Clock3, label: "Posting Window", value: "08:00 AM – 08:00 PM (IST)" },
+                { icon: CalendarDays, label: "Max Posts Per Day", value: "3 per channel" },
+                { icon: Users, label: "Audience Focus", value: "India (Urban & Semi-Urban)" },
+                { icon: Copy, label: "Mandatory Hashtags", value: "#CleanRivers #MokshaSewa" },
+                { icon: CheckCircle2, label: "Content Approval", value: "Required before publishing" },
+                { icon: FileText, label: "Language", value: "English & Hindi" },
+              ].map((rule) => (
+                <div key={rule.label} className="flex items-start gap-2 px-3 py-2">
+                  <rule.icon size={14} className="mt-0.5 text-[#6b7890]" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] font-semibold text-[#334464]">{rule.label}</div>
+                    <div className="mt-0.5 text-[11px] text-[#8792a6]">{rule.value}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card title="Content Checklist">
+            <div className="p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[11px] text-[#718099]">Progress</span>
+                <span className="text-[11px] font-semibold text-[#334464]">6/8</span>
+              </div>
+              <div className="mb-3 h-[5px] overflow-hidden rounded-sm bg-[#edf1f6]">
+                <div className="h-full w-[75%] rounded-sm bg-[#17ae70]" />
+              </div>
+              <div className="space-y-2">
+                {[
+                  { text: "Campaign key visuals created", done: true },
+                  { text: "Channel-specific captions", done: true },
+                  { text: "Hashtags & UTM links added", done: true },
+                  { text: "Alt text for accessibility", done: true },
+                  { text: "Approved by client", done: true },
+                  { text: "Scheduled in calendar", done: true },
+                  { text: "Community response plan", done: false },
+                  { text: "Performance tracking setup", done: false },
+                ].map((item) => (
+                  <div key={item.text} className="flex items-center gap-2">
+                    <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-sm ${item.done ? "bg-[#17ae70] text-white" : "border border-[#d1d9e6] bg-white"}`}>
+                      {item.done && <Check size={10} />}
+                    </span>
+                    <span className={`text-[11px] ${item.done ? "text-[#475674]" : "text-[#8792a6]"}`}>{item.text}</span>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      </Card>
-
-      <Card title="Content Checklist">
-        <div className="p-3">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[11px] text-[#718099]">Progress</span>
-            <span className="text-[11px] font-semibold text-[#334464]">6/8</span>
-          </div>
-          <div className="mb-3 h-[5px] overflow-hidden rounded-full bg-[#edf1f6]">
-            <div className="h-full w-[75%] rounded-full bg-[#17ae70]" />
-          </div>
-          <div className="space-y-2">
-            {[
-              { text: "Campaign key visuals created", done: true },
-              { text: "Channel-specific captions", done: true },
-              { text: "Hashtags & UTM links added", done: true },
-              { text: "Alt text for accessibility", done: true },
-              { text: "Approved by client", done: true },
-              { text: "Scheduled in calendar", done: true },
-              { text: "Community response plan", done: false },
-              { text: "Performance tracking setup", done: false },
-            ].map((item) => (
-              <div key={item.text} className="flex items-center gap-2">
-                <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${item.done ? "bg-[#17ae70] text-white" : "border border-[#d1d9e6] bg-white"}`}>
-                  {item.done && <Check size={10} />}
-                </span>
-                <span className={`text-[11px] ${item.done ? "text-[#475674]" : "text-[#8792a6]"}`}>{item.text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
-      </>
+          </Card>
+        </>
       )}
 
       {(activeTab === "Leads" || activeTab === "Audience") && (
-      <>
-      <Card title="Target Audience Definition" action={<button className="text-[11px] font-semibold text-[#1d77e7]">Edit</button>}>
-        <div className="p-3 space-y-2.5">
-          {[
-            { icon: MapPin, label: "Location", value: "India (Urban & Semi-Urban)" },
-            { icon: Users, label: "Age Group", value: "18–65 years" },
-            { icon: Users, label: "Gender", value: "All genders" },
-            { icon: Heart, label: "Interests", value: "Environment, Sustainability, Rivers, Clean Water, Climate Action" },
-            { icon: MessageCircle, label: "Languages", value: "English, Hindi + Regional" },
-            { icon: Target, label: "Audience Size", value: "~2.4M (Estimated)" },
-          ].map((item) => (
-            <div key={item.label} className="flex items-start gap-2">
-              <item.icon size={14} className="mt-0.5 shrink-0 text-[#6b7890]" />
-              <div className="min-w-0 flex-1">
-                <div className="text-[11px] font-semibold text-[#334464]">{item.label}</div>
-                <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.value}</div>
-              </div>
+        <>
+          <Card title="Target Audience Definition" action={<button className="text-[11px] font-semibold text-[#1d77e7]">Edit</button>}>
+            <div className="p-3 space-y-2.5">
+              {[
+                { icon: MapPin, label: "Location", value: "India (Urban & Semi-Urban)" },
+                { icon: Users, label: "Age Group", value: "18–65 years" },
+                { icon: Users, label: "Gender", value: "All genders" },
+                { icon: Heart, label: "Interests", value: "Environment, Sustainability, Rivers, Clean Water, Climate Action" },
+                { icon: MessageCircle, label: "Languages", value: "English, Hindi + Regional" },
+                { icon: Target, label: "Audience Size", value: "~2.4M (Estimated)" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-start gap-2">
+                  <item.icon size={14} className="mt-0.5 shrink-0 text-[#6b7890]" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] font-semibold text-[#334464]">{item.label}</div>
+                    <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.value}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </Card>
+          </Card>
 
-      <Card title="Best Performing Segment">
-        <div className="p-3">
-          <div className="rounded-[7px] border border-[#e6ebf2] bg-[#f8fafc] p-2.5">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#e9fbf3]">
-                <Target size={14} className="text-[#17a96b]" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="text-[11.5px] font-semibold text-[#1b2a50]">18–34, Environment Enthusiasts</div>
-                <div className="text-[11px] text-[#8792a6]">Highest engagement rate (4.8%)</div>
-                <div className="text-[11px] font-semibold text-[#17a96b]">2.3x higher than average</div>
+          <Card title="Best Performing Segment">
+            <div className="p-3">
+              <div className="rounded-[7px] border border-[#e6ebf2] bg-[#f8fafc] p-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-[#e9fbf3]">
+                    <Target size={14} className="text-[#17a96b]" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11.5px] font-semibold text-[#1b2a50]">18–34, Environment Enthusiasts</div>
+                    <div className="text-[11px] text-[#8792a6]">Highest engagement rate (4.8%)</div>
+                    <div className="text-[11px] font-semibold text-[#17a96b]">2.3x higher than average</div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </Card>
-      </>
+          </Card>
+        </>
       )}
 
       {activeTab === "Activity Log" && (
-      <>
-      <Card title="Latest Updates" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
-        <div className="divide-y divide-[#edf1f5]">
-          {[
-            { text: "Content published on Instagram", time: "2 hours ago" },
-            { text: "Budget updated to ₹48,250", time: "5 hours ago" },
-            { text: "New team member added", time: "1 day ago" },
-            { text: "Post scheduled on LinkedIn", time: "2 days ago" },
-            { text: "Audience synced (1,260 contacts)", time: "2 days ago" },
-          ].map((item) => (
-            <div key={item.text} className="flex items-start gap-2 px-3 py-2.5">
-              <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-[#17a96b]" />
-              <div className="min-w-0 flex-1">
-                <div className="text-[11.5px] font-semibold text-[#334464]">{item.text}</div>
-                <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.time}</div>
-              </div>
+        <>
+          <Card title="Latest Updates" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
+            <div className="divide-y divide-[#edf1f5]">
+              {[
+                { text: "Content published on Instagram", time: "2 hours ago" },
+                { text: "Budget updated to ₹48,250", time: "5 hours ago" },
+                { text: "New team member added", time: "1 day ago" },
+                { text: "Post scheduled on LinkedIn", time: "2 days ago" },
+                { text: "Audience synced (1,260 contacts)", time: "2 days ago" },
+              ].map((item) => (
+                <div key={item.text} className="flex items-start gap-2 px-3 py-2.5">
+                  <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-[#17a96b]" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11.5px] font-semibold text-[#334464]">{item.text}</div>
+                    <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.time}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </Card>
+          </Card>
 
-      <Card title="Collaborators (6)" action={<button className="text-[11px] font-semibold text-[#1d77e7]">Manage</button>}>
-        <div className="divide-y divide-[#edf1f5]">
-          {[
-            { initials: "MS", name: "Manish Sirohi", role: "Campaign Owner", access: "Owner", color: "bg-[#111827]" },
-            { initials: "AV", name: "Anjali Verma", role: "Finance Manager", access: "Editor", color: "bg-[#e9f4ff] text-[#2878e8]" },
-            { initials: "RM", name: "Rohan Mehta", role: "Project Manager", access: "Editor", color: "bg-[#e9fbf3] text-[#17a96b]" },
-            { initials: "SI", name: "Sneha Iyer", role: "Content Writer", access: "Editor", color: "bg-[#f3e8ff] text-[#8b5cf6]" },
-            { initials: "NS", name: "Neha Sharma", role: "Social Media Lead", access: "Editor", color: "bg-[#fef3e6] text-[#f59e0b]" },
-            { initials: "VS", name: "Vikram Singh", role: "Analyst", access: "Viewer", color: "bg-[#e0f2fe] text-[#0ea5e9]" },
-          ].map((user) => (
-            <div key={user.name} className="flex items-center gap-2 px-3 py-2">
-              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ${user.color}`}>{user.initials}</span>
-              <div className="min-w-0 flex-1">
-                <div className="text-[11.5px] font-semibold text-[#334464]">{user.name}</div>
-                <div className="text-[11px] text-[#8792a6]">{user.role}</div>
-              </div>
-              <StatusPill tone={user.access === "Owner" ? "green" : user.access === "Viewer" ? "green" : "gray"}>{user.access}</StatusPill>
+          <Card title="Collaborators (6)" action={<button className="text-[11px] font-semibold text-[#1d77e7]">Manage</button>}>
+            <div className="divide-y divide-[#edf1f5]">
+              {[
+                { initials: "MS", name: "Manish Sirohi", role: "Campaign Owner", access: "Owner", color: "bg-[#111827]" },
+                { initials: "AV", name: "Anjali Verma", role: "Finance Manager", access: "Editor", color: "bg-[#e9f4ff] text-[#2878e8]" },
+                { initials: "RM", name: "Rohan Mehta", role: "Project Manager", access: "Editor", color: "bg-[#e9fbf3] text-[#17a96b]" },
+                { initials: "SI", name: "Sneha Iyer", role: "Content Writer", access: "Editor", color: "bg-[#f3e8ff] text-[#8b5cf6]" },
+                { initials: "NS", name: "Neha Sharma", role: "Social Media Lead", access: "Editor", color: "bg-[#fef3e6] text-[#f59e0b]" },
+                { initials: "VS", name: "Vikram Singh", role: "Analyst", access: "Viewer", color: "bg-[#e0f2fe] text-[#0ea5e9]" },
+              ].map((user) => (
+                <div key={user.name} className="flex items-center gap-2 px-3 py-2">
+                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-[11px] font-semibold text-white ${user.color}`}>{user.initials}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11.5px] font-semibold text-[#334464]">{user.name}</div>
+                    <div className="text-[11px] text-[#8792a6]">{user.role}</div>
+                  </div>
+                  <StatusPill tone={user.access === "Owner" ? "green" : user.access === "Viewer" ? "green" : "gray"}>{user.access}</StatusPill>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </Card>
+          </Card>
 
-      <Card title="Alerts & Reminders (3)" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
-        <div className="divide-y divide-[#edf1f5]">
-          {[
-            { icon: AlertCircle, title: "Content approval pending", note: "Aarti currently reviewing", time: "4h ago", color: "text-[#ef4444]" },
-            { icon: Info, title: "Budget at 96%", note: "Campaign spending is on track", time: "5h ago", color: "text-[#f59e0b]" },
-            { icon: CalendarDays, title: "Scheduled post tomorrow", note: "River Facts Series #3", time: "1d ago", color: "text-[#2878e8]" },
-          ].map((item) => (
-            <div key={item.title} className="flex items-start gap-2 px-3 py-2.5">
-              <item.icon size={15} className={`mt-0.5 shrink-0 ${item.color}`} />
-              <div className="min-w-0 flex-1">
-                <div className="text-[11.5px] font-semibold text-[#334464]">{item.title}</div>
-                <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.note}</div>
-              </div>
-              <span className="shrink-0 text-[11px] text-[#8792a6]">{item.time}</span>
+          <Card title="Alerts & Reminders (3)" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
+            <div className="divide-y divide-[#edf1f5]">
+              {[
+                { icon: AlertCircle, title: "Content approval pending", note: "Aarti currently reviewing", time: "4h ago", color: "text-[#ef4444]" },
+                { icon: Info, title: "Budget at 96%", note: "Campaign spending is on track", time: "5h ago", color: "text-[#f59e0b]" },
+                { icon: CalendarDays, title: "Scheduled post tomorrow", note: "River Facts Series #3", time: "1d ago", color: "text-[#2878e8]" },
+              ].map((item) => (
+                <div key={item.title} className="flex items-start gap-2 px-3 py-2.5">
+                  <item.icon size={15} className={`mt-0.5 shrink-0 ${item.color}`} />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11.5px] font-semibold text-[#334464]">{item.title}</div>
+                    <div className="mt-0.5 text-[11px] text-[#8792a6]">{item.note}</div>
+                  </div>
+                  <span className="shrink-0 text-[11px] text-[#8792a6]">{item.time}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </Card>
-      </>
+          </Card>
+        </>
       )}
     </aside>
   );
@@ -894,7 +894,7 @@ function OverviewTab() {
               ["RM", "Rohan Mehta", "Performance Analyst", "Viewer"],
             ].map(([initials, name, role, access]) => (
               <div key={name} className="flex items-center gap-2 px-3 py-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#111827] text-[11px] font-semibold text-white">{initials}</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-sm bg-[#111827] text-[11px] font-semibold text-white">{initials}</span>
                 <div className="min-w-0 flex-1"><b className="block text-[11.5px] font-semibold text-[#344565]">{name}</b><span className="text-[11px] text-[#8994a7]">{role}</span></div>
                 <StatusPill tone={access === "Viewer" ? "green" : "gray"}>{access}</StatusPill>
               </div>
@@ -937,11 +937,11 @@ function PerformanceTab() {
             <MultiLineChart
               labels={["Mar 15", "Mar 18", "Mar 21", "Mar 24", "Mar 27", "Mar 30", "Apr 02", "Apr 05", "Apr 08", "Apr 11", "Apr 14", "Apr 17", "Apr 20", "Apr 23", "Apr 26", "Apr 29"]}
               series={[
-                { name: "Reach", color: "#2878e8", values: [12,15,18,17,22,26,25,30,31,34,32,38,41,44,42,47] },
-                { name: "Impressions", color: "#8b5cf6", values: [15,20,25,24,30,34,37,39,38,42,40,45,48,46,51,54] },
-                { name: "Clicks", color: "#16a86b", values: [3,5,6,7,8,9,10,11,13,12,15,16,17,18,19,21] },
-                { name: "Leads", color: "#f59e0b", values: [2,2,3,4,4,5,6,6,7,8,8,9,10,11,12,14] },
-                { name: "Conversions", color: "#ef476f", values: [1,1,1,2,2,3,3,4,4,5,5,6,7,7,8,9] },
+                { name: "Reach", color: "#2878e8", values: [12, 15, 18, 17, 22, 26, 25, 30, 31, 34, 32, 38, 41, 44, 42, 47] },
+                { name: "Impressions", color: "#8b5cf6", values: [15, 20, 25, 24, 30, 34, 37, 39, 38, 42, 40, 45, 48, 46, 51, 54] },
+                { name: "Clicks", color: "#16a86b", values: [3, 5, 6, 7, 8, 9, 10, 11, 13, 12, 15, 16, 17, 18, 19, 21] },
+                { name: "Leads", color: "#f59e0b", values: [2, 2, 3, 4, 4, 5, 6, 6, 7, 8, 8, 9, 10, 11, 12, 14] },
+                { name: "Conversions", color: "#ef476f", values: [1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7, 7, 8, 9] },
               ]}
             />
           </div>
@@ -1015,7 +1015,7 @@ function PerformanceTab() {
         </Card>
         <Card title="Device Split">
           <div className="flex items-center gap-4 p-3">
-            <Donut segments={[{value:68.4,color:"#2878e8"},{value:24.1,color:"#8b5cf6"},{value:7.5,color:"#22a884"}]} center="142K" centerSub="Impressions" />
+            <Donut segments={[{ value: 68.4, color: "#2878e8" }, { value: 24.1, color: "#8b5cf6" }, { value: 7.5, color: "#22a884" }]} center="142K" centerSub="Impressions" />
             <div className="space-y-2 text-[11px]">
               <Legend color="#2878e8" label="Mobile" value="68.4%" />
               <Legend color="#8b5cf6" label="Desktop" value="24.1%" />
@@ -1075,14 +1075,14 @@ function ContentScheduleTab() {
         <MetricCard icon={CheckCircle2} tone="green" label="Approved" value="27" change="56%" sub="" />
       </div>
 
-      <Card title="Publication Calendar" action={<div className="flex items-center gap-1"><button className="icon-btn"><ChevronLeft size={13}/></button><b className="px-2 text-[11px] font-semibold text-[#35466a]">April 2025</b><button className="icon-btn"><ChevronRight size={13}/></button><button className="ml-2 rounded-[5px] border border-[#dfe6ef] px-2 py-1 text-[11px] font-semibold text-[#2278e8]">Today</button></div>}>
+      <Card title="Publication Calendar" action={<div className="flex items-center gap-1"><button className="icon-btn"><ChevronLeft size={13} /></button><b className="px-2 text-[11px] font-semibold text-[#35466a]">April 2025</b><button className="icon-btn"><ChevronRight size={13} /></button><button className="ml-2 rounded-[5px] border border-[#dfe6ef] px-2 py-1 text-[11px] font-semibold text-[#2278e8]">Today</button></div>}>
         <div className="p-3">
           <div className="mb-2 flex justify-end gap-3 text-[11px] text-[#718099]"><Legend color="#16a96c" label="Published" /><Legend color="#2878e8" label="Scheduled" /><Legend color="#f59e0b" label="In Review" /><Legend color="#ef4444" label="Needs Changes" /><Legend color="#94a3b8" label="Draft" /></div>
           <div className="grid grid-cols-14 overflow-hidden rounded-[7px] border border-[#e5eaf1]">
-            {["Mon 14","Tue 15","Wed 16","Thu 17","Fri 18","Sat 19","Sun 20","Mon 21","Tue 22","Wed 23","Thu 24","Fri 25","Sat 26","Sun 27"].map((day,i)=>(
-              <div key={day} className={`min-h-[56px] border-r border-b border-[#edf1f5] p-2 ${i===2 ? "bg-[#f2f7ff]" : ""}`}>
-                <div className={`text-[11px] font-semibold ${i===2 ? "text-[#1f79e9]" : "text-[#64738b]"}`}>{day}</div>
-                <div className="mt-3 flex gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#16a96c]" /><span className="h-1.5 w-1.5 rounded-full bg-[#2878e8]" />{i%3===0&&<span className="h-1.5 w-1.5 rounded-full bg-[#f59e0b]" />}</div>
+            {["Mon 14", "Tue 15", "Wed 16", "Thu 17", "Fri 18", "Sat 19", "Sun 20", "Mon 21", "Tue 22", "Wed 23", "Thu 24", "Fri 25", "Sat 26", "Sun 27"].map((day, i) => (
+              <div key={day} className={`min-h-[56px] border-r border-b border-[#edf1f5] p-2 ${i === 2 ? "bg-[#f2f7ff]" : ""}`}>
+                <div className={`text-[11px] font-semibold ${i === 2 ? "text-[#1f79e9]" : "text-[#64738b]"}`}>{day}</div>
+                <div className="mt-3 flex gap-1"><span className="h-1.5 w-1.5 rounded-sm bg-[#16a96c]" /><span className="h-1.5 w-1.5 rounded-sm bg-[#2878e8]" />{i % 3 === 0 && <span className="h-1.5 w-1.5 rounded-sm bg-[#f59e0b]" />}</div>
               </div>
             ))}
           </div>
@@ -1092,12 +1092,12 @@ function ContentScheduleTab() {
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1fr_1fr_.85fr]">
         <Card title="Upcoming Scheduled Content" action={<button className="text-[11px] font-semibold text-[#1e78e8]">View All</button>}>
           <div className="divide-y divide-[#edf1f5]">
-            {content.map(([platform,title,date,status]) => (
+            {content.map(([platform, title, date, status]) => (
               <div key={title} className="flex items-center gap-2 px-3 py-2.5">
                 <BrandIcon platform={platform} size={17} />
                 <img src={campaignImage} className="h-[38px] w-[48px] rounded-[5px] object-cover" alt="" />
                 <div className="min-w-0 flex-1"><div className="truncate text-[11px] font-semibold text-[#314365]">{title}</div><div className="mt-0.5 text-[11px] text-[#8994a7]">{date}</div></div>
-                <StatusPill tone={status==="In Review"?"orange":"blue"}>{status}</StatusPill>
+                <StatusPill tone={status === "In Review" ? "orange" : "blue"}>{status}</StatusPill>
               </div>
             ))}
           </div>
@@ -1106,13 +1106,13 @@ function ContentScheduleTab() {
         <Card title="Channel-wise Content Queue" action={<button className="text-[11px] font-semibold text-[#1e78e8]">View All</button>}>
           <div className="space-y-3 p-3">
             {[
-              ["instagram",12,6,18],["linkedin",8,4,12],["google",5,2,7],["youtube",6,2,8],["facebook",4,2,6],["website",2,0,2]
-            ].map(([platform,queued,published,total]) => (
+              ["instagram", 12, 6, 18], ["linkedin", 8, 4, 12], ["google", 5, 2, 7], ["youtube", 6, 2, 8], ["facebook", 4, 2, 6], ["website", 2, 0, 2]
+            ].map(([platform, queued, published, total]) => (
               <div key={String(platform)} className="grid grid-cols-[18px_1fr_56px_62px] items-center gap-2">
-                <BrandIcon platform={platform as keyof typeof platformMeta} size={16}/>
+                <BrandIcon platform={platform as keyof typeof platformMeta} size={16} />
                 <div className="text-[11px] font-semibold text-[#3c4d6d]">{platformMeta[platform as keyof typeof platformMeta].label}</div>
                 <div className="text-[11px] text-[#77859a]">{queued} queued</div>
-                <div className="h-[6px] rounded-full bg-[#edf1f5]"><div className="h-full rounded-full bg-[#4b91e8]" style={{width:`${Math.min(100, (Number(published) / Number(total)) * 100)}%`}}/></div>
+                <div className="h-[6px] rounded-sm bg-[#edf1f5]"><div className="h-full rounded-sm bg-[#4b91e8]" style={{ width: `${Math.min(100, (Number(published) / Number(total)) * 100)}%` }} /></div>
               </div>
             ))}
           </div>
@@ -1120,7 +1120,7 @@ function ContentScheduleTab() {
 
         <Card title="Content Pillars Distribution">
           <div className="flex items-center gap-3 p-3">
-            <Donut segments={[{value:38,color:"#2878e8"},{value:22,color:"#19a86b"},{value:16,color:"#8b5cf6"},{value:12,color:"#f59e0b"},{value:8,color:"#ec4899"},{value:4,color:"#94a3b8"}]} center="48" centerSub="Posts"/>
+            <Donut segments={[{ value: 38, color: "#2878e8" }, { value: 22, color: "#19a86b" }, { value: 16, color: "#8b5cf6" }, { value: 12, color: "#f59e0b" }, { value: 8, color: "#ec4899" }, { value: 4, color: "#94a3b8" }]} center="48" centerSub="Posts" />
             <div className="space-y-1.5 text-[11px]">
               <Legend color="#2878e8" label="Environmental Awareness" value="38%" />
               <Legend color="#19a86b" label="Community Action" value="22%" />
@@ -1138,10 +1138,10 @@ function ContentScheduleTab() {
           <div className="p-3">
             <div className="mb-2 flex gap-3 text-[11px]"><Legend color="#2878e8" label="Posts Published" /><Legend color="#dbe9fb" label="Scheduled" /></div>
             <div className="flex h-[120px] items-end gap-2 border-b border-l border-[#e6ebf2] px-2">
-              {[2,3,4,5,7,3,2,4,3,5,3,4,2,6].map((n,i)=>(
+              {[2, 3, 4, 5, 7, 3, 2, 4, 3, 5, 3, 4, 2, 6].map((n, i) => (
                 <div key={i} className="flex h-full flex-1 items-end gap-0.5">
-                  <div className="w-1/2 rounded-t-[2px] bg-[#2878e8]" style={{height:`${n*11}px`}}/>
-                  <div className="w-1/2 rounded-t-[2px] bg-[#dbe9fb]" style={{height:`${(8-n)*7}px`}}/>
+                  <div className="w-1/2 rounded-t-[2px] bg-[#2878e8]" style={{ height: `${n * 11}px` }} />
+                  <div className="w-1/2 rounded-t-[2px] bg-[#dbe9fb]" style={{ height: `${(8 - n) * 7}px` }} />
                 </div>
               ))}
             </div>
@@ -1152,13 +1152,13 @@ function ContentScheduleTab() {
         <Card title="Recent Content & Assets" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
           <div className="grid grid-cols-4 gap-2 p-3">
             {[
-              ["RIVERS GIVE LIFE","Social Post","1080 × 1080"],
-              ["PROTECT THEIR HOME","Reel / Short","1080 × 1920"],
-              ["SMALL ACTIONS BIG CHANGE","Carousel","1080 × 1080"],
-              ["CLEAN RIVERS BRIGHTER TOMORROW","Banner","1920 × 1080"],
-            ].map(([t,type,size],i)=>(
+              ["RIVERS GIVE LIFE", "Social Post", "1080 × 1080"],
+              ["PROTECT THEIR HOME", "Reel / Short", "1080 × 1920"],
+              ["SMALL ACTIONS BIG CHANGE", "Carousel", "1080 × 1080"],
+              ["CLEAN RIVERS BRIGHTER TOMORROW", "Banner", "1920 × 1080"],
+            ].map(([t, type, size], i) => (
               <div key={t} className="overflow-hidden rounded-[6px] border border-[#e6ebf2]">
-                <img src={campaignImage} className="h-[66px] w-full object-cover" alt="" style={{filter:`hue-rotate(${i*8}deg)`}}/>
+                <img src={campaignImage} className="h-[66px] w-full object-cover" alt="" style={{ filter: `hue-rotate(${i * 8}deg)` }} />
                 <div className="p-1.5"><div className="line-clamp-2 text-[11.5px] font-semibold text-[#324463]">{t}</div><div className="mt-1 text-[11px] text-[#8792a6]">{type}</div><div className="text-[11px] text-[#8792a6]">{size}</div></div>
               </div>
             ))}
@@ -1168,15 +1168,15 @@ function ContentScheduleTab() {
         <Card title="Approval Workflow" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
           <div className="p-3">
             {[
-              ["Content Creation","Completed","Apr 14, 2025",true],
-              ["Internal Review","Approved","Apr 15, 2025",true],
-              ["Client Review","Approved","Apr 15, 2025",true],
-              ["Scheduled","32 of 48 posts scheduled","",true],
-              ["Published","14 of 48 posts live","",false],
-            ].map(([a,b,c,done],i)=>(
+              ["Content Creation", "Completed", "Apr 14, 2025", true],
+              ["Internal Review", "Approved", "Apr 15, 2025", true],
+              ["Client Review", "Approved", "Apr 15, 2025", true],
+              ["Scheduled", "32 of 48 posts scheduled", "", true],
+              ["Published", "14 of 48 posts live", "", false],
+            ].map(([a, b, c, done], i) => (
               <div key={a as string} className="relative flex gap-2.5 pb-3">
-                {i<4 && <div className="absolute left-[6px] top-[13px] h-full w-px bg-[#dfe7f1]"/>}
-                <span className={`relative z-10 flex h-[13px] w-[13px] items-center justify-center rounded-full ${done ? "bg-[#17aa6d] text-white" : "border-2 border-[#aab6c8] bg-white"}`}>{done && <Check size={9}/>}</span>
+                {i < 4 && <div className="absolute left-[6px] top-[13px] h-full w-px bg-[#dfe7f1]" />}
+                <span className={`relative z-10 flex h-[13px] w-[13px] items-center justify-center rounded-sm ${done ? "bg-[#17aa6d] text-white" : "border-2 border-[#aab6c8] bg-white"}`}>{done && <Check size={9} />}</span>
                 <div><span className="block text-[11.5px] font-semibold text-[#354667]">{a as string}</span><span className="text-[11px] text-[#8792a6]">{b as string} {c as string}</span></div>
               </div>
             ))}
@@ -1189,14 +1189,14 @@ function ContentScheduleTab() {
 
 function LeadsTab() {
   const leads = [
-    ["Aarav Sharma","Website","website","Qualified","Manish Sirohi","92","Form submitted 2 hours ago","Apr 28, 2025"],
-    ["Priya Mehta","Instagram","instagram","New","Aarti Verma","78","DM received 4 hours ago","Apr 28, 2025"],
-    ["Rahul Joshi","Google Business","google","Nurturing","Priya Sharma","65","Email opened 6 hours ago","Apr 27, 2025"],
-    ["Sneha Iyer","LinkedIn","linkedin","Qualified","Manish Sirohi","88","Call completed 1 day ago","Apr 27, 2025"],
-    ["Vikram Singh","YouTube","youtube","New","Rohan Mehta","54","Comment received 1 day ago","Apr 27, 2025"],
-    ["Neha Kapoor","Website","website","Converted","Aarti Verma","95","Donation completed 1 day ago","Apr 26, 2025"],
-    ["Arjun Patel","Meta Ads","facebook","Nurturing","Priya Sharma","62","DM received 2 days ago","Apr 26, 2025"],
-    ["Kavya Nair","WhatsApp","whatsapp","Qualified","Rohan Mehta","80","Message replied 2 days ago","Apr 25, 2025"],
+    ["Aarav Sharma", "Website", "website", "Qualified", "Manish Sirohi", "92", "Form submitted 2 hours ago", "Apr 28, 2025"],
+    ["Priya Mehta", "Instagram", "instagram", "New", "Aarti Verma", "78", "DM received 4 hours ago", "Apr 28, 2025"],
+    ["Rahul Joshi", "Google Business", "google", "Nurturing", "Priya Sharma", "65", "Email opened 6 hours ago", "Apr 27, 2025"],
+    ["Sneha Iyer", "LinkedIn", "linkedin", "Qualified", "Manish Sirohi", "88", "Call completed 1 day ago", "Apr 27, 2025"],
+    ["Vikram Singh", "YouTube", "youtube", "New", "Rohan Mehta", "54", "Comment received 1 day ago", "Apr 27, 2025"],
+    ["Neha Kapoor", "Website", "website", "Converted", "Aarti Verma", "95", "Donation completed 1 day ago", "Apr 26, 2025"],
+    ["Arjun Patel", "Meta Ads", "facebook", "Nurturing", "Priya Sharma", "62", "DM received 2 days ago", "Apr 26, 2025"],
+    ["Kavya Nair", "WhatsApp", "whatsapp", "Qualified", "Rohan Mehta", "80", "Message replied 2 days ago", "Apr 25, 2025"],
   ] as const;
 
   return (
@@ -1244,41 +1244,41 @@ function LeadsTab() {
 
         <Card title="Leads by Source">
           <div className="flex items-center gap-3 p-3">
-            <Donut segments={[{value:35,color:"#2878e8"},{value:23,color:"#ef476f"},{value:17,color:"#f59e0b"},{value:11,color:"#8b5cf6"},{value:7,color:"#ef4444"},{value:4,color:"#19a86b"},{value:3,color:"#94a3b8"}]} center="248" centerSub="Total Leads"/>
+            <Donut segments={[{ value: 35, color: "#2878e8" }, { value: 23, color: "#ef476f" }, { value: 17, color: "#f59e0b" }, { value: 11, color: "#8b5cf6" }, { value: 7, color: "#ef4444" }, { value: 4, color: "#19a86b" }, { value: 3, color: "#94a3b8" }]} center="248" centerSub="Total Leads" />
             <div className="space-y-1.5 text-[11px]">
               {[
-                ["Meta & Instagram","89","35%","#2878e8"],["Google Business","56","23%","#ef476f"],["Website","42","17%","#f59e0b"],["LinkedIn","28","11%","#8b5cf6"],["YouTube","18","7%","#ef4444"],["WhatsApp","9","4%","#19a86b"],["Others","6","2%","#94a3b8"]
-              ].map(([n,v,p,c])=><Legend key={n} color={c!} label={n!} value={`${v}  ${p}`}/>)}
+                ["Meta & Instagram", "89", "35%", "#2878e8"], ["Google Business", "56", "23%", "#ef476f"], ["Website", "42", "17%", "#f59e0b"], ["LinkedIn", "28", "11%", "#8b5cf6"], ["YouTube", "18", "7%", "#ef4444"], ["WhatsApp", "9", "4%", "#19a86b"], ["Others", "6", "2%", "#94a3b8"]
+              ].map(([n, v, p, c]) => <Legend key={n} color={c!} label={n!} value={`${v}  ${p}`} />)}
             </div>
           </div>
         </Card>
 
         <Card title="Conversion Trend" action={<Select label="Last 30 days" />}>
           <div className="h-[165px] p-3">
-            <div className="mb-1 flex gap-3 text-[11px]"><Legend color="#2878e8" label="Leads"/><Legend color="#8b5cf6" label="Qualified"/><Legend color="#19a86b" label="Conversions"/></div>
-            <MultiLineChart labels={["Mar 15","Mar 20","Mar 25","Mar 30","Apr 04","Apr 09","Apr 14","Apr 19","Apr 24","Apr 29"]} series={[
-              {name:"Leads",color:"#2878e8",values:[12,16,18,21,25,27,31,30,37,42]},
-              {name:"Qualified",color:"#8b5cf6",values:[6,8,10,12,14,16,18,19,22,25]},
-              {name:"Conversions",color:"#19a86b",values:[2,3,4,4,5,6,7,7,8,10]},
-            ]}/>
+            <div className="mb-1 flex gap-3 text-[11px]"><Legend color="#2878e8" label="Leads" /><Legend color="#8b5cf6" label="Qualified" /><Legend color="#19a86b" label="Conversions" /></div>
+            <MultiLineChart labels={["Mar 15", "Mar 20", "Mar 25", "Mar 30", "Apr 04", "Apr 09", "Apr 14", "Apr 19", "Apr 24", "Apr 29"]} series={[
+              { name: "Leads", color: "#2878e8", values: [12, 16, 18, 21, 25, 27, 31, 30, 37, 42] },
+              { name: "Qualified", color: "#8b5cf6", values: [6, 8, 10, 12, 14, 16, 18, 19, 22, 25] },
+              { name: "Conversions", color: "#19a86b", values: [2, 3, 4, 4, 5, 6, 7, 7, 8, 10] },
+            ]} />
           </div>
         </Card>
       </div>
 
-      <Card title="Leads (248)" action={<div className="flex gap-1.5"><div className="flex h-[27px] w-[230px] items-center gap-2 rounded-[5px] border border-[#e2e8f0] px-2 text-[11px] text-[#8994a7]"><Search size={12}/>Search leads by name, email or phone...</div><button className="action-btn"><Filter size={12}/> Filter</button><button className="action-btn">Stage <ChevronDown size={11}/></button><button className="action-btn">Source <ChevronDown size={11}/></button><button className="action-btn">Owner <ChevronDown size={11}/></button><button className="action-btn">Last 30 days <ChevronDown size={11}/></button><button className="rounded-[5px] bg-[#1979e9] px-2.5 text-[11px] font-semibold text-white">+ Add Lead</button></div>}>
+      <Card title="Leads (248)" action={<div className="flex gap-1.5"><div className="flex h-[27px] w-[230px] items-center gap-2 rounded-[5px] border border-[#e2e8f0] px-2 text-[11px] text-[#8994a7]"><Search size={12} />Search leads by name, email or phone...</div><button className="action-btn"><Filter size={12} /> Filter</button><button className="action-btn">Stage <ChevronDown size={11} /></button><button className="action-btn">Source <ChevronDown size={11} /></button><button className="action-btn">Owner <ChevronDown size={11} /></button><button className="action-btn">Last 30 days <ChevronDown size={11} /></button><button className="rounded-[5px] bg-[#1979e9] px-2.5 text-[11px] font-semibold text-white">+ Add Lead</button></div>}>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[950px] border-collapse">
-            <thead><tr className="border-b border-[#e7ecf2] bg-[#fafbfd] text-left text-[11px] font-semibold text-[#78859a]">{[""," #","Lead Name","Source","Channel","Stage","Assigned Owner","Score","Last Activity","Date Added","Actions"].map((h,i)=><th key={i} className="px-2 py-2">{h}</th>)}</tr></thead>
+            <thead><tr className="border-b border-[#e7ecf2] bg-[#fafbfd] text-left text-[11px] font-semibold text-[#78859a]">{["", " #", "Lead Name", "Source", "Channel", "Stage", "Assigned Owner", "Score", "Last Activity", "Date Added", "Actions"].map((h, i) => <th key={i} className="px-2 py-2">{h}</th>)}</tr></thead>
             <tbody>
-              {leads.map((r,i)=>(
+              {leads.map((r, i) => (
                 <tr key={r[0]} className="border-b border-[#edf1f5] text-[11px]">
-                  <td className="px-2 py-2"><input type="checkbox" className="h-3 w-3"/></td><td className="px-2 text-[#8a95a7]">{i+1}</td>
-                  <td className="px-2 font-semibold text-[#344565]"><span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#e6eef9] text-[11px] text-[#4c78b7]">{r[0][0]}</span>{r[0]}</td>
-                  <td className="px-2 text-[#62718a]">{r[1]}</td><td className="px-2"><BrandIcon platform={r[2]} size={15}/></td>
-                  <td className="px-2"><StatusPill tone={r[3]==="Converted"?"green":r[3]==="Qualified"?"green":r[3]==="Nurturing"?"orange":"blue"}>{r[3]}</StatusPill></td>
-                  <td className="px-2 text-[#62718a]">{r[4]}</td><td className="px-2"><span className="rounded-full bg-[#e7f9ee] px-2 py-1 font-semibold text-[#1b9c62]">{r[5]}</span></td>
+                  <td className="px-2 py-2"><input type="checkbox" className="h-3 w-3" /></td><td className="px-2 text-[#8a95a7]">{i + 1}</td>
+                  <td className="px-2 font-semibold text-[#344565]"><span className="mr-1.5 inline-flex h-5 w-5 items-center justify-center rounded-sm bg-[#e6eef9] text-[11px] text-[#4c78b7]">{r[0][0]}</span>{r[0]}</td>
+                  <td className="px-2 text-[#62718a]">{r[1]}</td><td className="px-2"><BrandIcon platform={r[2]} size={15} /></td>
+                  <td className="px-2"><StatusPill tone={r[3] === "Converted" ? "green" : r[3] === "Qualified" ? "green" : r[3] === "Nurturing" ? "orange" : "blue"}>{r[3]}</StatusPill></td>
+                  <td className="px-2 text-[#62718a]">{r[4]}</td><td className="px-2"><span className="rounded-sm bg-[#e7f9ee] px-2 py-1 font-semibold text-[#1b9c62]">{r[5]}</span></td>
                   <td className="max-w-[145px] px-2 text-[#7c889c]">{r[6]}</td><td className="px-2 text-[#7c889c]">{r[7]}</td>
-                  <td className="px-2"><div className="flex gap-2 text-[#4c77ac]"><Phone size={12}/><MessageCircle size={12}/><MoreHorizontal size={12}/></div></td>
+                  <td className="px-2"><div className="flex gap-2 text-[#4c77ac]"><Phone size={12} /><MessageCircle size={12} /><MoreHorizontal size={12} /></div></td>
                 </tr>
               ))}
             </tbody>
@@ -1287,8 +1287,8 @@ function LeadsTab() {
       </Card>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1fr_1fr]">
-        <Card title="Follow-up Tasks (12)" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All →</button>}><SimpleTable headers={["Task","Related Lead","Due Date","Status","Owner"]} rows={[["Call and share campaign brochure","Aarav Sharma","Apr 28, 2025","Overdue","MS"],["Send impact video","Priya Mehta","Apr 28, 2025","Today","AP"],["Follow up on donation interest","Rahul Joshi","Apr 29, 2025","Upcoming","PS"],["Schedule meeting","Sneha Iyer","Apr 29, 2025","Upcoming","MS"]]}/></Card>
-        <Card title="Recent Enquiries (5)" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All →</button>}><SimpleTable headers={["Name","Message","Source","Time"]} rows={[["Rohan Kulkarni","How can I volunteer?","website","1 hour ago"],["Meera Bansal","Do you have river clean-up events?","instagram","3 hours ago"],["Siddharth Rao","I want to support this initiative.","linkedin","5 hours ago"],["Ananya Das","Can students participate?","youtube","8 hours ago"],["Kunal Verma","Please share details info.","google","1 day ago"]]}/></Card>
+        <Card title="Follow-up Tasks (12)" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All →</button>}><SimpleTable headers={["Task", "Related Lead", "Due Date", "Status", "Owner"]} rows={[["Call and share campaign brochure", "Aarav Sharma", "Apr 28, 2025", "Overdue", "MS"], ["Send impact video", "Priya Mehta", "Apr 28, 2025", "Today", "AP"], ["Follow up on donation interest", "Rahul Joshi", "Apr 29, 2025", "Upcoming", "PS"], ["Schedule meeting", "Sneha Iyer", "Apr 29, 2025", "Upcoming", "MS"]]} /></Card>
+        <Card title="Recent Enquiries (5)" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All →</button>}><SimpleTable headers={["Name", "Message", "Source", "Time"]} rows={[["Rohan Kulkarni", "How can I volunteer?", "website", "1 hour ago"], ["Meera Bansal", "Do you have river clean-up events?", "instagram", "3 hours ago"], ["Siddharth Rao", "I want to support this initiative.", "linkedin", "5 hours ago"], ["Ananya Das", "Can students participate?", "youtube", "8 hours ago"], ["Kunal Verma", "Please share details info.", "google", "1 day ago"]]} /></Card>
       </div>
     </div>
   );
@@ -1309,11 +1309,11 @@ function AudienceTab() {
         <Card title="Audience by Age Group" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View Details</button>}>
           <div className="flex h-[165px] items-end justify-between gap-3 px-4 pb-4 pt-5">
             {[
-              ["13–17",8],["18–24",18],["25–34",28],["35–44",22],["45–54",14],["55+",7]
-            ].map(([label,v])=>(
+              ["13–17", 8], ["18–24", 18], ["25–34", 28], ["35–44", 22], ["45–54", 14], ["55+", 7]
+            ].map(([label, v]) => (
               <div key={label as string} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
                 <span className="text-[11px] font-semibold text-[#23365d]">{v}%</span>
-                <div className="w-full max-w-[36px] rounded-t-[4px] bg-[#6198e5]" style={{height:`${(v as number)*3.4}px`}}/>
+                <div className="w-full max-w-[36px] rounded-t-[4px] bg-[#6198e5]" style={{ height: `${(v as number) * 3.4}px` }} />
                 <span className="text-[11px] text-[#78869b]">{label}</span>
               </div>
             ))}
@@ -1322,18 +1322,18 @@ function AudienceTab() {
 
         <Card title="Audience by Gender" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View Details</button>}>
           <div className="flex h-[165px] items-center justify-center gap-5 p-3">
-            <Donut segments={[{value:56,color:"#2878e8"},{value:42,color:"#8b5cf6"},{value:2,color:"#b8c0cb"}]} center="248K" centerSub="Total Audience"/>
+            <Donut segments={[{ value: 56, color: "#2878e8" }, { value: 42, color: "#8b5cf6" }, { value: 2, color: "#b8c0cb" }]} center="248K" centerSub="Total Audience" />
             <div className="space-y-3 text-[11px]">
-              <Legend color="#2878e8" label="Male" value="56%  138,259"/>
-              <Legend color="#8b5cf6" label="Female" value="42%  104,210"/>
-              <Legend color="#b8c0cb" label="Non-binary / Other" value="2%  5,851"/>
+              <Legend color="#2878e8" label="Male" value="56%  138,259" />
+              <Legend color="#8b5cf6" label="Female" value="42%  104,210" />
+              <Legend color="#b8c0cb" label="Non-binary / Other" value="2%  5,851" />
             </div>
           </div>
         </Card>
 
         <Card title="Top Cities" action={<button className="text-[11.5px] font-semibold text-[#e23b55]">View All ›</button>}>
           <div className="p-3"><BarList rows={[
-            {label:"Delhi",value:"12.4%  30,810",pct:12.4},{label:"Varanasi",value:"9.8%  24,330",pct:9.8},{label:"Lucknow",value:"7.6%  18,860",pct:7.6},{label:"Patna",value:"6.1%  15,150",pct:6.1},{label:"Bengaluru",value:"5.8%  14,380",pct:5.8},{label:"Other Cities",value:"58.3%  144,790",pct:58.3}
+            { label: "Delhi", value: "12.4%  30,810", pct: 12.4 }, { label: "Varanasi", value: "9.8%  24,330", pct: 9.8 }, { label: "Lucknow", value: "7.6%  18,860", pct: 7.6 }, { label: "Patna", value: "6.1%  15,150", pct: 6.1 }, { label: "Bengaluru", value: "5.8%  14,380", pct: 5.8 }, { label: "Other Cities", value: "58.3%  144,790", pct: 58.3 }
           ]} /></div>
         </Card>
       </div>
@@ -1352,23 +1352,23 @@ function AudienceTab() {
               ]} />
             </div>
             <BarList rows={[
-              {label:"Uttar Pradesh",value:"22.8%",pct:22.8},{label:"Maharashtra",value:"14.6%",pct:14.6},{label:"Delhi",value:"12.4%",pct:12.4},{label:"Bihar",value:"8.9%",pct:8.9},{label:"Karnataka",value:"7.6%",pct:7.6},{label:"West Bengal",value:"6.8%",pct:6.8},{label:"Others",value:"26.9%",pct:26.9}
-            ]}/></div>
+              { label: "Uttar Pradesh", value: "22.8%", pct: 22.8 }, { label: "Maharashtra", value: "14.6%", pct: 14.6 }, { label: "Delhi", value: "12.4%", pct: 12.4 }, { label: "Bihar", value: "8.9%", pct: 8.9 }, { label: "Karnataka", value: "7.6%", pct: 7.6 }, { label: "West Bengal", value: "6.8%", pct: 6.8 }, { label: "Others", value: "26.9%", pct: 26.9 }
+            ]} /></div>
         </Card>
 
         <Card title="Top Interests & Affinity Segments" action={<button className="text-[11.5px] font-semibold text-[#e23b55]">View All ›</button>}>
           <div className="space-y-2 p-3">
             {[
-              ["Environment & Sustainability","32.6%","green"],["Clean Energy","28.4%","green"],["Wildlife & Nature","24.1%","green"],["Social Good","18.9%","purple"],["Travel & Outdoor","16.7%","blue"],["Health & Wellness","14.3%","red"]
-            ].map(([a,b,t])=><div key={a} className="flex items-center gap-2"><SoftIcon icon={t==="red"?Heart:t==="purple"?Heart:Sparkles} tone={t as keyof typeof iconTone} size={25}/><span className="flex-1 text-[11px] font-semibold text-[#3d4d6b]">{a}</span><span className="text-[11px] font-semibold text-[#68778f]">{b}</span></div>)}
+              ["Environment & Sustainability", "32.6%", "green"], ["Clean Energy", "28.4%", "green"], ["Wildlife & Nature", "24.1%", "green"], ["Social Good", "18.9%", "purple"], ["Travel & Outdoor", "16.7%", "blue"], ["Health & Wellness", "14.3%", "red"]
+            ].map(([a, b, t]) => <div key={a} className="flex items-center gap-2"><SoftIcon icon={t === "red" ? Heart : t === "purple" ? Heart : Sparkles} tone={t as keyof typeof iconTone} size={25} /><span className="flex-1 text-[11px] font-semibold text-[#3d4d6b]">{a}</span><span className="text-[11px] font-semibold text-[#68778f]">{b}</span></div>)}
           </div>
         </Card>
 
         <Card title="Audience Source Mix" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View Details</button>}>
           <div className="flex items-center gap-4 p-3">
-            <Donut segments={[{value:41,color:"#2878e8"},{value:28,color:"#19a86b"},{value:15,color:"#8b5cf6"},{value:9,color:"#f59e0b"},{value:5,color:"#ef7f9d"},{value:2,color:"#94a3b8"}]} center="248K" centerSub="Total Audience"/>
+            <Donut segments={[{ value: 41, color: "#2878e8" }, { value: 28, color: "#19a86b" }, { value: 15, color: "#8b5cf6" }, { value: 9, color: "#f59e0b" }, { value: 5, color: "#ef7f9d" }, { value: 2, color: "#94a3b8" }]} center="248K" centerSub="Total Audience" />
             <div className="space-y-2 text-[11px]">
-              <Legend color="#2878e8" label="Organic Reach" value="41%"/><Legend color="#19a86b" label="Paid Ads" value="28%"/><Legend color="#8b5cf6" label="Social Engagement" value="15%"/><Legend color="#f59e0b" label="Website Visits" value="9%"/><Legend color="#ef7f9d" label="Partner Channels" value="5%"/><Legend color="#94a3b8" label="Other" value="2%"/>
+              <Legend color="#2878e8" label="Organic Reach" value="41%" /><Legend color="#19a86b" label="Paid Ads" value="28%" /><Legend color="#8b5cf6" label="Social Engagement" value="15%" /><Legend color="#f59e0b" label="Website Visits" value="9%" /><Legend color="#ef7f9d" label="Partner Channels" value="5%" /><Legend color="#94a3b8" label="Other" value="2%" />
             </div>
           </div>
         </Card>
@@ -1378,21 +1378,21 @@ function AudienceTab() {
         <Card title="Lookalike & Remarketing Audiences" action={<button className="text-[11.5px] font-semibold text-[#e23b55]">View All ›</button>}>
           <div className="grid grid-cols-3 gap-2 p-3">
             {[
-              ["Lookalike Audience","52,680","34%","19% Lookalike (Website Visitors)"],
-              ["Remarketing Audience","41,360","18%","People who engaged (30 days)"],
-              ["Video Viewers Audience","28,940","27%","75%+ video views (180 days)"]
-            ].map(([a,n,c,d])=><div key={a} className="rounded-[7px] border border-[#e7edf4] p-2.5"><SoftIcon icon={Users} tone="blue" size={28}/><div className="mt-2 text-[11px] font-semibold text-[#334465]">{a}</div><div className="mt-1 text-[16px] font-semibold text-[#24365d]">{n}</div><div className="text-[11px] font-semibold text-[#18a76a]">↑ {c}</div><div className="mt-1 text-[11px] text-[#8994a7]">{d}</div><button className="mt-2 w-full rounded-[5px] border border-[#dfe6ef] py-1 text-[11px] font-semibold text-[#4b6389]">View Audience</button></div>)}
+              ["Lookalike Audience", "52,680", "34%", "19% Lookalike (Website Visitors)"],
+              ["Remarketing Audience", "41,360", "18%", "People who engaged (30 days)"],
+              ["Video Viewers Audience", "28,940", "27%", "75%+ video views (180 days)"]
+            ].map(([a, n, c, d]) => <div key={a} className="rounded-[7px] border border-[#e7edf4] p-2.5"><SoftIcon icon={Users} tone="blue" size={28} /><div className="mt-2 text-[11px] font-semibold text-[#334465]">{a}</div><div className="mt-1 text-[16px] font-semibold text-[#24365d]">{n}</div><div className="text-[11px] font-semibold text-[#18a76a]">↑ {c}</div><div className="mt-1 text-[11px] text-[#8994a7]">{d}</div><button className="mt-2 w-full rounded-[5px] border border-[#dfe6ef] py-1 text-[11px] font-semibold text-[#4b6389]">View Audience</button></div>)}
           </div>
         </Card>
 
         <Card title="Engagement by Segment" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View Details</button>}>
-          <SimpleTable headers={["Segment","Audience Size","Engagement Rate"]} rows={[
-            ["Environment Enthusiasts","82,430","4.8%"],
-            ["Students & Young Professionals","54,210","3.6%"],
-            ["Community Leaders","28,760","3.1%"],
-            ["Travel & Adventure","26,140","2.9%"],
-            ["Eco-conscious Families","21,380","2.4%"],
-          ]}/>
+          <SimpleTable headers={["Segment", "Audience Size", "Engagement Rate"]} rows={[
+            ["Environment Enthusiasts", "82,430", "4.8%"],
+            ["Students & Young Professionals", "54,210", "3.6%"],
+            ["Community Leaders", "28,760", "3.1%"],
+            ["Travel & Adventure", "26,140", "2.9%"],
+            ["Eco-conscious Families", "21,380", "2.4%"],
+          ]} />
         </Card>
 
         <Card title="Recommendations" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
@@ -1423,50 +1423,50 @@ function BudgetTab() {
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1.2fr_1fr]">
         <Card title="Spend Over Time" action={<Select label="Last 30 days" />}>
           <div className="max-h-[225px] overflow-y-auto p-3">
-            <div className="mb-2 flex gap-4 text-[11px]"><Legend color="#2878e8" label="Daily Spend"/><Legend color="#2f72dc" label="Cumulative Spend"/><Legend color="#a9b4c4" label="Planned Spend"/></div>
-            <MultiLineChart labels={["Mar 15","Mar 22","Mar 29","Apr 05","Apr 12","Apr 19","Apr 26"]} series={[
-              {name:"Daily Spend",color:"#a6c7ef",values:[6,12,10,16,13,18,20]},
-              {name:"Cumulative Spend",color:"#2878e8",values:[8,17,25,32,39,44,48]},
-              {name:"Planned Spend",color:"#a9b4c4",values:[8,16,24,32,40,48,56]},
-            ]} height={180}/>
+            <div className="mb-2 flex gap-4 text-[11px]"><Legend color="#2878e8" label="Daily Spend" /><Legend color="#2f72dc" label="Cumulative Spend" /><Legend color="#a9b4c4" label="Planned Spend" /></div>
+            <MultiLineChart labels={["Mar 15", "Mar 22", "Mar 29", "Apr 05", "Apr 12", "Apr 19", "Apr 26"]} series={[
+              { name: "Daily Spend", color: "#a6c7ef", values: [6, 12, 10, 16, 13, 18, 20] },
+              { name: "Cumulative Spend", color: "#2878e8", values: [8, 17, 25, 32, 39, 44, 48] },
+              { name: "Planned Spend", color: "#a9b4c4", values: [8, 16, 24, 32, 40, 48, 56] },
+            ]} height={180} />
           </div>
         </Card>
         <Card title="Channel Budget Allocation">
-          <SimpleTable headers={["Channel","Allocated Budget","Spent","Remaining","Utilization"]} rows={[
-            ["Meta & Instagram","₹12,400","₹11,200","₹1,200","90%"],
-            ["LinkedIn","₹8,640","₹7,820","₹820","90%"],
-            ["Google Business","₹7,250","₹6,380","₹870","88%"],
-            ["YouTube","₹6,800","₹6,120","₹680","90%"],
-            ["Website","₹5,200","₹3,310","₹1,890","64%"],
-          ]}/>
+          <SimpleTable headers={["Channel", "Allocated Budget", "Spent", "Remaining", "Utilization"]} rows={[
+            ["Meta & Instagram", "₹12,400", "₹11,200", "₹1,200", "90%"],
+            ["LinkedIn", "₹8,640", "₹7,820", "₹820", "90%"],
+            ["Google Business", "₹7,250", "₹6,380", "₹870", "88%"],
+            ["YouTube", "₹6,800", "₹6,120", "₹680", "90%"],
+            ["Website", "₹5,200", "₹3,310", "₹1,890", "64%"],
+          ]} />
         </Card>
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1fr_1fr]">
         <Card title="Budget by Objective / Phase" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View Details</button>}>
-          <SimpleTable headers={["Objective / Phase","Allocated","Spent","Remaining","Utilization"]} rows={[
-            ["Awareness (Reach)","₹18,000","₹16,240","₹1,760","90%"],
-            ["Engagement","₹12,000","₹10,680","₹1,320","89%"],
-            ["Lead Generation","₹10,000","₹8,750","₹1,250","88%"],
-            ["Community Action","₹5,250","₹4,380","₹870","83%"],
-            ["Contingency","₹3,000","₹2,780","₹220","93%"],
-          ]}/>
+          <SimpleTable headers={["Objective / Phase", "Allocated", "Spent", "Remaining", "Utilization"]} rows={[
+            ["Awareness (Reach)", "₹18,000", "₹16,240", "₹1,760", "90%"],
+            ["Engagement", "₹12,000", "₹10,680", "₹1,320", "89%"],
+            ["Lead Generation", "₹10,000", "₹8,750", "₹1,250", "88%"],
+            ["Community Action", "₹5,250", "₹4,380", "₹870", "83%"],
+            ["Contingency", "₹3,000", "₹2,780", "₹220", "93%"],
+          ]} />
         </Card>
         <Card title="Invoice / Payment Snapshot" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
-          <SimpleTable headers={["Invoice #","Date","Amount","Status","Download"]} rows={[
-            ["INV-2025-001","Mar 15, 2025","₹12,000","Paid","↓"],
-            ["INV-2025-002","Mar 28, 2025","₹10,000","Paid","↓"],
-            ["INV-2025-003","Apr 10, 2025","₹10,000","Paid","↓"],
-            ["INV-2025-004","Apr 20, 2025","₹8,000","Processing","↓"],
-            ["INV-2025-005","Apr 25, 2025","₹8,250","Scheduled","↓"],
-          ]}/>
+          <SimpleTable headers={["Invoice #", "Date", "Amount", "Status", "Download"]} rows={[
+            ["INV-2025-001", "Mar 15, 2025", "₹12,000", "Paid", "↓"],
+            ["INV-2025-002", "Mar 28, 2025", "₹10,000", "Paid", "↓"],
+            ["INV-2025-003", "Apr 10, 2025", "₹10,000", "Paid", "↓"],
+            ["INV-2025-004", "Apr 20, 2025", "₹8,000", "Processing", "↓"],
+            ["INV-2025-005", "Apr 25, 2025", "₹8,250", "Scheduled", "↓"],
+          ]} />
         </Card>
       </div>
 
       <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[1fr_1fr]">
         <Card title="Remaining Budget Forecast">
           <div className="flex items-center gap-4 p-3">
-            <SoftIcon icon={CheckCircle2} tone="green" size={40}/>
+            <SoftIcon icon={CheckCircle2} tone="green" size={40} />
             <div className="flex-1"><div className="text-[11.5px] font-semibold text-[#22935e]">You're on track</div><div className="mt-1 text-[11px] text-[#7f8ca0]">At current burn rate (₹1,720/day), your remaining budget of ₹5,420 will last for approximately <span className="font-semibold">3 days</span> (Apr 29, 2025).</div></div>
             <div className="text-right"><span className="block text-[13px] font-semibold text-[#26375a]">₹1,720</span><span className="text-[11px] text-[#8a96a8]">Current daily burn</span></div>
             <div className="text-right"><span className="block text-[13px] font-semibold text-[#26375a]">3 days</span><span className="text-[11px] text-[#8a96a8]">Budget runway</span></div>
@@ -1474,7 +1474,7 @@ function BudgetTab() {
         </Card>
         <Card title="Pacing & Forecast">
           <div className="flex items-center gap-3 p-3">
-            <div className="h-[100px] flex-1"><MultiLineChart labels={["Mar 15","Mar 22","Mar 29","Apr 05","Apr 12","Apr 19","Apr 26","Apr 30"]} series={[{name:"Actual",color:"#2878e8",values:[10,14,20,24,28,36,43,47]},{name:"Planned",color:"#aeb9c8",values:[9,15,22,29,35,42,48,50]},{name:"Forecast",color:"#19a86b",values:[10,14,20,24,28,36,43,49]}]} height={100}/></div>
+            <div className="h-[100px] flex-1"><MultiLineChart labels={["Mar 15", "Mar 22", "Mar 29", "Apr 05", "Apr 12", "Apr 19", "Apr 26", "Apr 30"]} series={[{ name: "Actual", color: "#2878e8", values: [10, 14, 20, 24, 28, 36, 43, 47] }, { name: "Planned", color: "#aeb9c8", values: [9, 15, 22, 29, 35, 42, 48, 50] }, { name: "Forecast", color: "#19a86b", values: [10, 14, 20, 24, 28, 36, 43, 49] }]} height={100} /></div>
             <div className="w-[115px] rounded-[8px] bg-[#ecfbf4] p-2.5"><div className="text-[11px] text-[#718099]">Projected Total Spend</div><span className="mt-1 block text-[16px] font-semibold text-[#1d8f5e]">₹47,100</span><span className="text-[11px] font-semibold text-[#19a66a]">−2.4% vs. budget</span></div>
           </div>
         </Card>
@@ -1496,8 +1496,8 @@ function ActivityLogTab() {
       </div>
 
       <div className="flex flex-wrap gap-1.5 rounded-[9px] border border-[#e5ebf3] bg-white p-2">
-        <Select label="Mar 15, 2025 - Apr 30, 2025" /><Select label="All Activity Types"/><Select label="All Users"/><Select label="All Channels"/><Select label="All Statuses"/>
-        <div className="flex min-w-[230px] flex-1 items-center gap-2 rounded-[5px] border border-[#e1e7ef] px-2 text-[11px] text-[#8994a8]"><Search size={12}/>Search activities, comments or changes...</div>
+        <Select label="Mar 15, 2025 - Apr 30, 2025" /><Select label="All Activity Types" /><Select label="All Users" /><Select label="All Channels" /><Select label="All Statuses" />
+        <div className="flex min-w-[230px] flex-1 items-center gap-2 rounded-[5px] border border-[#e1e7ef] px-2 text-[11px] text-[#8994a8]"><Search size={12} />Search activities, comments or changes...</div>
         <button className="rounded-[5px] bg-[#eff6ff] px-3 text-[11px] font-semibold text-[#2378e8]">Clear Filters</button>
       </div>
 
@@ -1505,21 +1505,21 @@ function ActivityLogTab() {
         <Card title="Activity Timeline (364 activities)" action={<div className="flex rounded-[5px] bg-[#eef5ff] p-0.5"><button className="rounded bg-[#1d7be9] px-3 py-1 text-[11px] font-semibold text-white">☷ Timeline</button><button className="px-3 py-1 text-[11px] font-semibold text-[#687890]">☷ List</button></div>}>
           <div className="divide-y divide-[#edf1f5]">
             {[
-              ["2 hours ago","Apr 28, 2025","11:30 AM","Content published on Instagram","River Facts Series #3 · “Every Drop Counts”","Manish Sirohi","Published","instagram"],
-              ["5 hours ago","Apr 28, 2025","08:15 AM","Campaign budget updated","Budget increased from ₹40,000 to ₹48,250","Anjali Verma","Updated","website"],
-              ["1 day ago","Apr 27, 2025","06:42 PM","Creative approved","Creative: Clean Rivers Brighter Tomorrow (v2)","Rohan Mehta","Approved","website"],
-              ["1 day ago","Apr 27, 2025","04:20 PM","New team member added","Sneha Iyer joined the campaign team","Manish Sirohi","Team","website"],
-              ["2 days ago","Apr 26, 2025","10:18 AM","Post scheduled on LinkedIn","Article: “India's Rivers, Our Shared Future”","Sneha Iyer","Scheduled","linkedin"],
-              ["2 days ago","Apr 26, 2025","09:05 AM","Audience synced","Synced 1,260 new contacts from Meta Ads","System","Synced","facebook"],
-              ["3 days ago","Apr 25, 2025","04:33 PM","Editing updates rejected","Copy update for Google Business post","Anjali Verma","Rejected","google"],
-              ["3 days ago","Apr 25, 2025","11:11 AM","Content created","Blog draft: “How Citizen Action Can Revive Rivers”","Sneha Iyer","Created","website"],
-            ].map(([ago,date,time,title,desc,user,status],i)=>(
+              ["2 hours ago", "Apr 28, 2025", "11:30 AM", "Content published on Instagram", "River Facts Series #3 · “Every Drop Counts”", "Manish Sirohi", "Published", "instagram"],
+              ["5 hours ago", "Apr 28, 2025", "08:15 AM", "Campaign budget updated", "Budget increased from ₹40,000 to ₹48,250", "Anjali Verma", "Updated", "website"],
+              ["1 day ago", "Apr 27, 2025", "06:42 PM", "Creative approved", "Creative: Clean Rivers Brighter Tomorrow (v2)", "Rohan Mehta", "Approved", "website"],
+              ["1 day ago", "Apr 27, 2025", "04:20 PM", "New team member added", "Sneha Iyer joined the campaign team", "Manish Sirohi", "Team", "website"],
+              ["2 days ago", "Apr 26, 2025", "10:18 AM", "Post scheduled on LinkedIn", "Article: “India's Rivers, Our Shared Future”", "Sneha Iyer", "Scheduled", "linkedin"],
+              ["2 days ago", "Apr 26, 2025", "09:05 AM", "Audience synced", "Synced 1,260 new contacts from Meta Ads", "System", "Synced", "facebook"],
+              ["3 days ago", "Apr 25, 2025", "04:33 PM", "Editing updates rejected", "Copy update for Google Business post", "Anjali Verma", "Rejected", "google"],
+              ["3 days ago", "Apr 25, 2025", "11:11 AM", "Content created", "Blog draft: “How Citizen Action Can Revive Rivers”", "Sneha Iyer", "Created", "website"],
+            ].map(([ago, date, time, title, desc, user, status], i) => (
               <div key={title} className="flex items-start gap-2.5 px-3 py-2.5">
-                <div className="relative pt-0.5"><span className={`flex h-7 w-7 items-center justify-center rounded-full ${i===0?"bg-[#e8fff4]":i===6?"bg-[#fff0f1]":"bg-[#eef5ff]"}`}>{i===0?<Send size={14} className="text-[#16aa6b]"/>:i===2?<CheckCircle2 size={14} className="text-[#f59e0b]"/>:i===6?<AlertCircle size={14} className="text-[#ef4444]"/>:<Activity size={14} className="text-[#2878e8]" />}</span></div>
+                <div className="relative pt-0.5"><span className={`flex h-7 w-7 items-center justify-center rounded-sm ${i === 0 ? "bg-[#e8fff4]" : i === 6 ? "bg-[#fff0f1]" : "bg-[#eef5ff]"}`}>{i === 0 ? <Send size={14} className="text-[#16aa6b]" /> : i === 2 ? <CheckCircle2 size={14} className="text-[#f59e0b]" /> : i === 6 ? <AlertCircle size={14} className="text-[#ef4444]" /> : <Activity size={14} className="text-[#2878e8]" />}</span></div>
                 <div className="w-[85px] shrink-0"><span className="block text-[11px] font-semibold text-[#617089]">{ago}</span><span className="text-[11px] text-[#8b96a8]">{date}</span><span className="block text-[11px] text-[#8b96a8]">{time}</span></div>
                 <div className="min-w-0 flex-1"><span className="block text-[11.5px] font-semibold text-[#2e4163]">{title}</span><span className="block truncate text-[11px] text-[#8490a3]">{desc}</span></div>
-                <div className="hidden w-[110px] items-center gap-1.5 md:flex"><span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#162038] text-[11px] font-semibold text-white">{user?.[0]}</span><span className="truncate text-[11px] font-semibold text-[#5f6d84]">{user}</span></div>
-                <StatusPill fixed tone={status==="Rejected"?"red":status==="Updated"?"blue":status==="Approved"?"green":status==="Published"?"green":status==="Scheduled"?"blue":"gray"}>{status}</StatusPill>
+                <div className="hidden w-[110px] items-center gap-1.5 md:flex"><span className="flex h-6 w-6 items-center justify-center rounded-sm bg-[#162038] text-[11px] font-semibold text-white">{user?.[0]}</span><span className="truncate text-[11px] font-semibold text-[#5f6d84]">{user}</span></div>
+                <StatusPill fixed tone={status === "Rejected" ? "red" : status === "Updated" ? "blue" : status === "Approved" ? "green" : status === "Published" ? "green" : status === "Scheduled" ? "blue" : "gray"}>{status}</StatusPill>
               </div>
             ))}
           </div>
@@ -1528,24 +1528,24 @@ function ActivityLogTab() {
         <div className="space-y-2.5 overflow-x-auto">
           <Card title="Approval History (24)" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
             <div className="overflow-x-auto">
-              <SimpleTable headers={["","Item","By","Status"]} rows={[
-                ["✓","Creative approved","Rohan Mehta","Approved"],
-                ["✓","Budget approved","Moksha Sewa","Approved"],
-                ["×","Ad copy rejected","Neha Sharma","Rejected"],
-                ["✓","Landing page approved","Vikram Singh","Approved"],
-                ["✓","Social post approved","Rohan Mehta","Approved"],
-              ]}/>
+              <SimpleTable headers={["", "Item", "By", "Status"]} rows={[
+                ["✓", "Creative approved", "Rohan Mehta", "Approved"],
+                ["✓", "Budget approved", "Moksha Sewa", "Approved"],
+                ["×", "Ad copy rejected", "Neha Sharma", "Rejected"],
+                ["✓", "Landing page approved", "Vikram Singh", "Approved"],
+                ["✓", "Social post approved", "Rohan Mehta", "Approved"],
+              ]} />
             </div>
           </Card>
           <Card title="Recent Changes (96)" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
             <div className="overflow-x-auto">
-              <SimpleTable headers={["Time","Item","Field","Old Value","New Value"]} rows={[
-                ["2h ago","Campaign","Status","Paused","Active"],
-                ["5h ago","Budget","Total Budget","₹40,000","₹48,250"],
-                ["1d ago","Content","Caption","—","Updated"],
-                ["1d ago","Schedule","Post Time","Apr 28, 10:00","Apr 28, 11:30"],
-                ["2d ago","Audience","Size","23,240","24,500"],
-              ]}/>
+              <SimpleTable headers={["Time", "Item", "Field", "Old Value", "New Value"]} rows={[
+                ["2h ago", "Campaign", "Status", "Paused", "Active"],
+                ["5h ago", "Budget", "Total Budget", "₹40,000", "₹48,250"],
+                ["1d ago", "Content", "Caption", "—", "Updated"],
+                ["1d ago", "Schedule", "Post Time", "Apr 28, 10:00", "Apr 28, 11:30"],
+                ["2d ago", "Audience", "Size", "23,240", "24,500"],
+              ]} />
             </div>
           </Card>
           <Card title="System Events & Notifications (30)" action={<button className="text-[11.5px] font-semibold text-[#1e78e8]">View All</button>}>
@@ -1561,22 +1561,22 @@ function ActivityLogTab() {
 
 function ChannelTable({ detailed = false }: { detailed?: boolean }) {
   const rows = [
-    ["Meta & Instagram","facebook","28.4K","48.2K","4.2K","3.7%","93","18","₹12,400","₹133","4.6x"],
-    ["LinkedIn","linkedin","18.6K","28.1K","0.9K","3.2%","46","7","₹8,600","₹187","3.1x"],
-    ["Google Business","google","16.2K","24.8K","0.8K","2.5%","42","7","₹7,250","₹173","3.2x"],
-    ["YouTube","youtube","12.8K","22.1K","0.5K","2.3%","38","6","₹6,800","₹179","2.9x"],
-    ["Website (Direct)","website","10.5K","18.6K","0.3K","1.8%","24","4","₹5,200","₹217","2.4x"],
+    ["Meta & Instagram", "facebook", "28.4K", "48.2K", "4.2K", "3.7%", "93", "18", "₹12,400", "₹133", "4.6x"],
+    ["LinkedIn", "linkedin", "18.6K", "28.1K", "0.9K", "3.2%", "46", "7", "₹8,600", "₹187", "3.1x"],
+    ["Google Business", "google", "16.2K", "24.8K", "0.8K", "2.5%", "42", "7", "₹7,250", "₹173", "3.2x"],
+    ["YouTube", "youtube", "12.8K", "22.1K", "0.5K", "2.3%", "38", "6", "₹6,800", "₹179", "2.9x"],
+    ["Website (Direct)", "website", "10.5K", "18.6K", "0.3K", "1.8%", "24", "4", "₹5,200", "₹217", "2.4x"],
   ] as const;
-  const headers = detailed ? ["Channel","Reach","Impressions","Clicks","CTR","Leads","Conversions","Spend","CPL","ROAS"] : ["Channel","Status","Reach","Clicks","Leads","Conversions","Spend"];
+  const headers = detailed ? ["Channel", "Reach", "Impressions", "Clicks", "CTR", "Leads", "Conversions", "Spend", "CPL", "ROAS"] : ["Channel", "Status", "Reach", "Clicks", "Leads", "Conversions", "Spend"];
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
-        <thead><tr className="border-b border-[#e8edf3] bg-[#fafbfd] text-left text-[11px] text-[#78859a]">{headers.map(h=><th key={h} className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
-        <tbody>{rows.map((r)=>(
+        <thead><tr className="border-b border-[#e8edf3] bg-[#fafbfd] text-left text-[11px] text-[#78859a]">{headers.map(h => <th key={h} className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
+        <tbody>{rows.map((r) => (
           <tr key={r[0]} className="border-b border-[#edf1f5]">
-            <td className="px-2 py-2"><div className="flex items-center gap-1.5"><BrandIcon platform={r[1]} size={15}/><span className="text-[11px] font-semibold text-[#40516e]">{r[0]}</span></div></td>
+            <td className="px-2 py-2"><div className="flex items-center gap-1.5"><BrandIcon platform={r[1]} size={15} /><span className="text-[11px] font-semibold text-[#40516e]">{r[0]}</span></div></td>
             {detailed ? <>
-              {r.slice(2).map((x,i)=><td key={i} className="px-2 text-[11px] text-[#687790]">{x}</td>)}
+              {r.slice(2).map((x, i) => <td key={i} className="px-2 text-[11px] text-[#687790]">{x}</td>)}
             </> : <>
               <td className="px-2"><StatusPill tone="green">● Active</StatusPill></td><td className="px-2 text-[11px] text-[#687790]">{r[2]}</td><td className="px-2 text-[11px] text-[#687790]">{r[4]}</td><td className="px-2 text-[11px] text-[#687790]">{r[6]}</td><td className="px-2 text-[11px] text-[#687790]">{r[7]}</td><td className="px-2 text-[11px] text-[#687790]">{r[8]}</td>
             </>}
@@ -1588,26 +1588,26 @@ function ChannelTable({ detailed = false }: { detailed?: boolean }) {
 }
 
 function InfoLine({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
-  return <div className="grid grid-cols-[22px_92px_1fr] items-start gap-1.5"><Icon size={14} className="mt-0.5 text-[#2b80e8]"/><span className="text-[11px] font-semibold text-[#77859a]">{label}</span><span className="text-[11px] text-[#4d5e79]">{value}</span></div>;
+  return <div className="grid grid-cols-[22px_92px_1fr] items-start gap-1.5"><Icon size={14} className="mt-0.5 text-[#2b80e8]" /><span className="text-[11px] font-semibold text-[#77859a]">{label}</span><span className="text-[11px] text-[#4d5e79]">{value}</span></div>;
 }
 
 function Legend({ color, label, value }: { color: string; label: string; value?: string }) {
-  return <span className="inline-flex items-center gap-1"><i className="h-2 w-2 rounded-full" style={{background:color}}/><span>{label}</span>{value && <span className="ml-1 font-semibold text-[#445572]">{value}</span>}</span>;
+  return <span className="inline-flex items-center gap-1"><i className="h-2 w-2 rounded-sm" style={{ background: color }} /><span>{label}</span>{value && <span className="ml-1 font-semibold text-[#445572]">{value}</span>}</span>;
 }
 
 function Select({ label }: { label: string }) {
-  return <button className="inline-flex h-[27px] items-center gap-1 rounded-[5px] border border-[#dfe6ef] bg-white px-2 text-[11px] font-medium text-[#66758d] whitespace-nowrap">{label}<ChevronDown size={11}/></button>;
+  return <button className="inline-flex h-[27px] items-center gap-1 rounded-[5px] border border-[#dfe6ef] bg-white px-2 text-[11px] font-medium text-[#66758d] whitespace-nowrap">{label}<ChevronDown size={11} /></button>;
 }
 
 function SimpleTable({ headers, rows }: { headers: string[]; rows: (string | readonly string[])[][] }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[420px] border-collapse">
-        <thead><tr className="border-b border-[#e7ecf2] bg-[#fafbfd] text-left text-[11px] text-[#7b879b]">{headers.map(h=><th key={h} className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
-        <tbody>{rows.map((row,i)=><tr key={i} className="border-b border-[#edf1f5] last:border-b-0">{row.map((cell,j)=>{
+        <thead><tr className="border-b border-[#e7ecf2] bg-[#fafbfd] text-left text-[11px] text-[#7b879b]">{headers.map(h => <th key={h} className="px-2 py-2 font-semibold">{h}</th>)}</tr></thead>
+        <tbody>{rows.map((row, i) => <tr key={i} className="border-b border-[#edf1f5] last:border-b-0">{row.map((cell, j) => {
           const text = String(cell);
-          const platform = ["instagram","facebook","linkedin","youtube","google","whatsapp","website"].includes(text) ? text as keyof typeof platformMeta : null;
-          return <td key={j} className="px-2 py-2 text-[11px] text-[#65748c] whitespace-pre-line">{platform ? <BrandIcon platform={platform} size={15}/> : text}</td>;
+          const platform = ["instagram", "facebook", "linkedin", "youtube", "google", "whatsapp", "website"].includes(text) ? text as keyof typeof platformMeta : null;
+          return <td key={j} className="px-2 py-2 text-[11px] text-[#65748c] whitespace-pre-line">{platform ? <BrandIcon platform={platform} size={15} /> : text}</td>;
         })}</tr>)}</tbody>
       </table>
     </div>
@@ -1617,15 +1617,15 @@ function SimpleTable({ headers, rows }: { headers: string[]; rows: (string | rea
 function ActivityRows() {
   return <div className="divide-y divide-[#edf1f5]">
     {[
-      ["Post published on Instagram","Apr 28, 2025, 10:00 AM by Ankit Verma"],
-      ["New lead received from website","Apr 27, 2025, 02:40 PM"],
-      ["Creative approved","Apr 26, 2025, 04:15 PM by Priya Sharma"],
-      ["Budget updated","Apr 25, 2025, 11:30 AM by Manish Sirohi"],
-    ].map(([a,b],i)=><div key={a} className="flex items-start gap-2 px-3 py-2"><span className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full ${i===0?"bg-[#e9fbf3] text-[#18a96b]":"bg-[#edf5ff] text-[#2878e8]"}`}><Activity size={11}/></span><div><span className="block text-[11px] font-semibold text-[#465675]">{a}</span><span className="text-[11px] text-[#8994a7]">{b}</span></div></div>)}
+      ["Post published on Instagram", "Apr 28, 2025, 10:00 AM by Ankit Verma"],
+      ["New lead received from website", "Apr 27, 2025, 02:40 PM"],
+      ["Creative approved", "Apr 26, 2025, 04:15 PM by Priya Sharma"],
+      ["Budget updated", "Apr 25, 2025, 11:30 AM by Manish Sirohi"],
+    ].map(([a, b], i) => <div key={a} className="flex items-start gap-2 px-3 py-2"><span className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-sm ${i === 0 ? "bg-[#e9fbf3] text-[#18a96b]" : "bg-[#edf5ff] text-[#2878e8]"}`}><Activity size={11} /></span><div><span className="block text-[11px] font-semibold text-[#465675]">{a}</span><span className="text-[11px] text-[#8994a7]">{b}</span></div></div>)}
   </div>;
 }
 
-function CampaignPage({}: { id?: string }) {
+function CampaignPage({ }: { id?: string }) {
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
 
   const content = useMemo(() => {
@@ -1663,12 +1663,11 @@ function CampaignPage({}: { id?: string }) {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`relative whitespace-nowrap px-3 py-2 text-[12px] font-semibold transition-colors ${
-                activeTab === tab ? "text-[#1d2d55]" : "text-[#738098] hover:text-[#2b4169]"
-              }`}
+              className={`relative whitespace-nowrap px-3 py-2 text-[12px] font-semibold transition-colors ${activeTab === tab ? "text-[#1d2d55]" : "text-[#738098] hover:text-[#2b4169]"
+                }`}
             >
               {tab}
-              {activeTab === tab && <span className="absolute inset-x-2 bottom-[-1px] h-[2px] rounded-full bg-[#ef3f50]" />}
+              {activeTab === tab && <span className="absolute inset-x-2 bottom-[-1px] h-[2px] rounded-sm bg-[#ef3f50]" />}
             </button>
           ))}
         </div>

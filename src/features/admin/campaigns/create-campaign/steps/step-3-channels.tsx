@@ -29,9 +29,9 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
   };
 
   return (
-    <section className="rounded-xl border border-[#E6E8F0] bg-white p-3.5 shadow-[0_1px_3px_rgb(15_23_42/0.04)]">
+    <section className="rounded-sm border border-[#E6E8F0] bg-white p-3.5 shadow-[0_1px_3px_rgb(15_23_42/0.04)]">
       <div className="mb-3 flex items-center gap-2">
-        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#EEF2FF]">
+        <span className="grid size-9 shrink-0 place-items-center rounded-sm bg-[#EEF2FF]">
           <LayoutGrid className="size-[18px] text-[#4F46E5]" />
         </span>
         <div className="min-w-0 flex-1">
@@ -40,7 +40,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
             Select channels, connect accounts and choose specific placements for your campaign.
           </small>
         </div>
-        <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-lg bg-[#EEF2FF] px-2.5 text-[10.5px] font-semibold text-[#4F46E5]">
+        <button className="flex h-7 shrink-0 items-center gap-1.5 rounded-sm bg-[#EEF2FF] px-2.5 text-[10.5px] font-semibold text-[#4F46E5]">
           <CircleHelp className="size-3.5" />
           Need Help?
         </button>
@@ -57,13 +57,13 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
                 type="button"
                 onClick={() => toggleChannel(ch.name)}
                 className={cn(
-                  "flex h-8.5 items-center gap-1.5 rounded-lg border px-3 text-[11.5px] font-semibold transition-colors",
+                  "flex h-8.5 items-center gap-1.5 rounded-sm border px-3 text-[11.5px] font-semibold transition-colors",
                   active ? "border-[#2563EB] bg-[#EFF6FF] text-[#2563EB]" : "border-[#DDE6F1] bg-white text-[#526385] hover:border-[#CBD5E1]",
                 )}
               >
                 <ChannelLogo channel={ch.logos[0]} className="size-4" />
                 {ch.name}
-                {ch.connected && <i className="size-1.5 rounded-full bg-[#0AA673]" />}
+                {ch.connected && <i className="size-1.5 rounded-sm bg-[#0AA673]" />}
               </button>
             );
           })}
@@ -72,11 +72,11 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
 
       <div className="grid gap-2.5 lg:grid-cols-2 xl:grid-cols-3">
         {PLACEMENT_CHANNELS.filter((ch) => draft.channels.includes(ch.name)).map((channel) => (
-          <div key={channel.name} className="flex flex-col rounded-xl border border-[#E6E8F0] bg-white p-3.5">
+          <div key={channel.name} className="flex flex-col rounded-sm border border-[#E6E8F0] bg-white p-3.5">
             <div className="flex items-center gap-2">
               <span className="flex shrink-0 -space-x-1.5">
                 {channel.logos.map((logo) => (
-                  <ChannelLogo key={logo} channel={logo} className="size-7 rounded-lg" />
+                  <ChannelLogo key={logo} channel={logo} className="size-7 rounded-sm" />
                 ))}
               </span>
               <b className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#111827]">{channel.name}</b>
@@ -88,7 +88,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
             </div>
             <p className="mt-1 text-[11px] leading-[15px] text-[#64748B]">{channel.caption}</p>
 
-            <div className="mt-2.5 rounded-lg bg-[#F8FAFC] p-2.5">
+            <div className="mt-2.5 rounded-sm bg-[#F8FAFC] p-2.5">
               <p className="mb-1.5 text-[11.5px] font-semibold text-[#1F2937]">Connected Accounts</p>
               <div className="space-y-1">
                 {(PLATFORM_ACCOUNTS[channel.name] ?? []).map((account) => {
@@ -111,7 +111,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
               </div>
             </div>
 
-            <div className="mt-2.5 rounded-lg bg-[#F8FAFC] p-2.5">
+            <div className="mt-2.5 rounded-sm bg-[#F8FAFC] p-2.5">
               <p className="mb-1.5 text-[11.5px] font-semibold text-[#1F2937]">Placements</p>
               <div className="space-y-1">
                 {channel.placements.map((placement) => {
@@ -154,9 +154,9 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
         ))}
       </div>
 
-      <div className="mt-2.5 rounded-xl border border-[#E6E8F0] bg-white p-3">
+      <div className="mt-2.5 rounded-sm border border-[#E6E8F0] bg-white p-3">
         <div className="mb-2.5 flex items-start gap-2">
-          <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#EEF2FF]">
+          <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#EEF2FF]">
             <Settings className="size-3.5 text-[#4F46E5]" />
           </span>
           <div>
@@ -167,7 +167,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
         <div className="grid gap-3 sm:grid-cols-3">
           {AUTO_RESIZE.map(({ icon: Icon, title, text }) => (
             <div key={title} className="flex items-start gap-2">
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#F1F5F9]">
+              <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#F1F5F9]">
                 <Icon className="size-4 text-[#475569]" />
               </span>
               <div className="min-w-0">
@@ -179,7 +179,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
         </div>
       </div>
 
-      <div className="mt-2.5 rounded-xl border border-[#CDECE1] bg-[#F7FDFA] p-3">
+      <div className="mt-2.5 rounded-sm border border-[#CDECE1] bg-[#F7FDFA] p-3">
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <CircleCheck className="size-4 shrink-0 text-[#0AA673]" />
           <b className="text-[12px] font-semibold text-[#111827]">Selected Placements ({draft.placements.length})</b>
@@ -191,7 +191,7 @@ export function StepChannels({ draft, set }: { draft: CampaignDraft; set: Setter
             const meta = PLACEMENT_INDEX.get(id);
             if (!meta) return null;
             return (
-              <span key={id} className="flex items-center gap-1.5 rounded-lg border border-[#E6E8F0] bg-white px-2 py-1 text-[10px] font-medium text-[#374151]">
+              <span key={id} className="flex items-center gap-1.5 rounded-sm border border-[#E6E8F0] bg-white px-2 py-1 text-[10px] font-medium text-[#374151]">
                 <ChannelLogo channel={meta.logo} className="size-3.5 shrink-0" />
                 {meta.chip}
                 <button type="button" onClick={() => togglePlacement(id)} className="text-[#9CA3AF] transition-colors hover:text-[#E11D28]">

@@ -82,7 +82,7 @@ export function GlobalSearch() {
             }}
             placeholder="Search companies, users, Clients, tickets..."
             aria-label="Search companies"
-            className="h-9 rounded-lg bg-surface-sunken pr-14 pl-9 [&::-webkit-search-cancel-button]:hidden"
+            className="h-9 rounded-sm bg-surface-sunken pr-14 pl-9 [&::-webkit-search-cancel-button]:hidden"
           />
           <kbd className="pointer-events-none absolute top-1/2 right-2.5 hidden -translate-y-1/2 rounded border border-border bg-card px-1.5 py-0.5 font-mono text-[0.5625rem] text-muted-foreground sm:block">
             ⌘ K

@@ -46,7 +46,7 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-xs",
+        "flex flex-col gap-3 rounded-sm border border-border bg-card p-4 shadow-xs",
         EMPHASIS_STYLES[emphasis],
         className,
       )}

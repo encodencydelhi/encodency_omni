@@ -80,7 +80,7 @@ export function CreateCampaignModal({ isOpen, onClose }: ModalProps) {
         <div className="bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-600 p-6 text-white relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-xl">
+              <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-sm">
                 <Megaphone className="size-6 text-white" />
               </div>
               <div>
@@ -100,7 +100,7 @@ export function CreateCampaignModal({ isOpen, onClose }: ModalProps) {
               placeholder="e.g. Earth Day Volunteer Rally 2025"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="h-10 text-sm border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl"
+              className="h-10 text-sm border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-sm"
             />
           </div>
 
@@ -108,7 +108,7 @@ export function CreateCampaignModal({ isOpen, onClose }: ModalProps) {
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Campaign Type</label>
               <Select value={type} onValueChange={setType}>
-                <SelectTrigger className="h-10 text-sm border-slate-200 rounded-xl">
+                <SelectTrigger className="h-10 text-sm border-slate-200 rounded-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -121,7 +121,7 @@ export function CreateCampaignModal({ isOpen, onClose }: ModalProps) {
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Target Audience</label>
               <Select value={audience} onValueChange={setAudience}>
-                <SelectTrigger className="h-10 text-sm border-slate-200 rounded-xl">
+                <SelectTrigger className="h-10 text-sm border-slate-200 rounded-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -137,7 +137,7 @@ export function CreateCampaignModal({ isOpen, onClose }: ModalProps) {
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Approved Message Template</label>
             <Select value={template} onValueChange={setTemplate}>
-              <SelectTrigger className="h-10 text-sm border-slate-200 rounded-xl">
+              <SelectTrigger className="h-10 text-sm border-slate-200 rounded-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -149,7 +149,7 @@ export function CreateCampaignModal({ isOpen, onClose }: ModalProps) {
             </Select>
           </div>
 
-          <div className="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200/80 text-xs text-emerald-900 space-y-1">
+          <div className="p-3.5 bg-emerald-50 rounded-sm border border-emerald-200/80 text-xs text-emerald-900 space-y-1">
             <p className="font-bold flex items-center gap-1.5 text-emerald-800">
               <ShieldCheck className="size-4 text-emerald-600" /> Meta WABA Quality Assurance:
             </p>
@@ -159,13 +159,13 @@ export function CreateCampaignModal({ isOpen, onClose }: ModalProps) {
           </div>
 
           <div className="pt-2 flex items-center justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose} className="h-10 px-4 text-xs font-bold rounded-xl">
+            <Button type="button" variant="outline" onClick={onClose} className="h-10 px-4 text-xs font-bold rounded-sm">
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-10 px-5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20"
+              className="h-10 px-5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm shadow-md shadow-emerald-600/20"
             >
               {isSubmitting ? "Launching..." : "Launch Campaign"}
             </Button>
@@ -203,7 +203,7 @@ export function SendTemplateModal({ isOpen, onClose }: ModalProps) {
       <DialogContent className="max-w-md bg-white p-0 overflow-hidden rounded-2xl shadow-2xl border border-slate-200">
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-xl">
+            <div className="p-2 bg-white/20 rounded-sm">
               <Send className="size-5 text-white" />
             </div>
             <div>
@@ -222,14 +222,14 @@ export function SendTemplateModal({ isOpen, onClose }: ModalProps) {
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
               placeholder="+91 98XXX XXXXX"
-              className="h-10 text-sm border-slate-200 focus:border-emerald-500 rounded-xl"
+              className="h-10 text-sm border-slate-200 focus:border-emerald-500 rounded-sm"
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 uppercase">Select Template</label>
             <Select value={template} onValueChange={setTemplate}>
-              <SelectTrigger className="h-10 text-sm border-slate-200 rounded-xl">
+              <SelectTrigger className="h-10 text-sm border-slate-200 rounded-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -241,13 +241,13 @@ export function SendTemplateModal({ isOpen, onClose }: ModalProps) {
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-sm border border-slate-200">
             <div className="space-y-1">
               <label className="text-[11px] font-bold text-slate-600">Variable {"{{1}}"}</label>
               <Input
                 value={var1}
                 onChange={(e) => setVar1(e.target.value)}
-                className="h-8 text-xs bg-white rounded-lg"
+                className="h-8 text-xs bg-white rounded-sm"
                 placeholder="Name"
               />
             </div>
@@ -256,17 +256,17 @@ export function SendTemplateModal({ isOpen, onClose }: ModalProps) {
               <Input
                 value={var2}
                 onChange={(e) => setVar2(e.target.value)}
-                className="h-8 text-xs bg-white rounded-lg"
+                className="h-8 text-xs bg-white rounded-sm"
                 placeholder="Date/Value"
               />
             </div>
           </div>
 
           <div className="pt-2 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose} className="h-9 text-xs font-bold rounded-xl">
+            <Button type="button" variant="outline" onClick={onClose} className="h-9 text-xs font-bold rounded-sm">
               Cancel
             </Button>
-            <Button type="submit" disabled={isSending} className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
+            <Button type="submit" disabled={isSending} className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm">
               {isSending ? "Sending..." : "Send Message"}
             </Button>
           </div>
@@ -315,7 +315,7 @@ export function CreateTemplateModal({ isOpen, onClose }: ModalProps) {
       <DialogContent className="max-w-4xl bg-white p-0 overflow-hidden rounded-2xl shadow-2xl border border-slate-200">
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white/20 rounded-xl">
+            <div className="p-2.5 bg-white/20 rounded-sm">
               <FileText className="size-6 text-white" />
             </div>
             <div>
@@ -337,13 +337,13 @@ export function CreateTemplateModal({ isOpen, onClose }: ModalProps) {
                   placeholder="e.g. ganga_cleanup_invite"
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"))}
-                  className="h-9 text-xs rounded-xl"
+                  className="h-9 text-xs rounded-sm"
                 />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">Category</label>
                 <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="h-9 text-xs rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-xs rounded-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Marketing">Marketing</SelectItem>
                     <SelectItem value="Utility">Utility</SelectItem>
@@ -357,7 +357,7 @@ export function CreateTemplateModal({ isOpen, onClose }: ModalProps) {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">Language</label>
                 <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger className="h-9 text-xs rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-xs rounded-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="English">English (en)</SelectItem>
                     <SelectItem value="Hindi">Hindi (hi)</SelectItem>
@@ -367,7 +367,7 @@ export function CreateTemplateModal({ isOpen, onClose }: ModalProps) {
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">Header Format</label>
                 <Select value={headerType} onValueChange={setHeaderType}>
-                  <SelectTrigger className="h-9 text-xs rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-xs rounded-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="None">None</SelectItem>
                     <SelectItem value="Text">Text Header</SelectItem>
@@ -381,7 +381,7 @@ export function CreateTemplateModal({ isOpen, onClose }: ModalProps) {
             {headerType === "Text" && (
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">Header Text</label>
-                <Input value={headerText} onChange={(e) => setHeaderText(e.target.value)} className="h-9 text-xs rounded-xl" />
+                <Input value={headerText} onChange={(e) => setHeaderText(e.target.value)} className="h-9 text-xs rounded-sm" />
               </div>
             )}
 
@@ -394,28 +394,28 @@ export function CreateTemplateModal({ isOpen, onClose }: ModalProps) {
                 rows={4}
                 value={bodyText}
                 onChange={(e) => setBodyText(e.target.value)}
-                className="text-xs resize-none rounded-xl"
+                className="text-xs resize-none rounded-sm"
               />
             </div>
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700">Footer Text (Optional)</label>
-              <Input value={footerText} onChange={(e) => setFooterText(e.target.value)} className="h-9 text-xs rounded-xl" />
+              <Input value={footerText} onChange={(e) => setFooterText(e.target.value)} className="h-9 text-xs rounded-sm" />
             </div>
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700">Interactive Buttons</label>
               <div className="grid grid-cols-2 gap-2">
-                <Input value={button1} onChange={(e) => setButton1(e.target.value)} placeholder="Button 1" className="h-8 text-xs rounded-lg" />
-                <Input value={button2} onChange={(e) => setButton2(e.target.value)} placeholder="Button 2" className="h-8 text-xs rounded-lg" />
+                <Input value={button1} onChange={(e) => setButton1(e.target.value)} placeholder="Button 1" className="h-8 text-xs rounded-sm" />
+                <Input value={button2} onChange={(e) => setButton2(e.target.value)} placeholder="Button 2" className="h-8 text-xs rounded-sm" />
               </div>
             </div>
 
             <div className="pt-2 flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onClose} className="h-9 text-xs font-bold rounded-xl">
+              <Button type="button" variant="outline" onClick={onClose} className="h-9 text-xs font-bold rounded-sm">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
+              <Button type="submit" disabled={isSubmitting} className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm">
                 {isSubmitting ? "Submitting..." : "Submit for Meta Approval"}
               </Button>
             </div>
@@ -425,12 +425,12 @@ export function CreateTemplateModal({ isOpen, onClose }: ModalProps) {
           <div className="col-span-5 bg-slate-50 p-6 flex flex-col items-center justify-center border-l border-slate-200">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Live WhatsApp Preview</p>
             <div className="w-[280px] bg-[#E5DDD5] rounded-2xl p-3 shadow-lg border-4 border-slate-300 relative">
-              <div className="bg-white rounded-lg p-3 shadow-sm text-slate-800 space-y-1.5 relative">
+              <div className="bg-white rounded-sm p-3 shadow-sm text-slate-800 space-y-1.5 relative">
                 {headerType === "Text" && headerText && (
                   <p className="text-xs font-bold text-slate-900 border-b border-slate-100 pb-1">{headerText}</p>
                 )}
                 {headerType === "Image" && (
-                  <div className="h-28 bg-slate-200 rounded-md flex items-center justify-center text-xs text-slate-500 font-bold">
+                  <div className="h-28 bg-slate-200 rounded-sm flex items-center justify-center text-xs text-slate-500 font-bold">
                     🖼 Image Preview
                   </div>
                 )}
@@ -441,12 +441,12 @@ export function CreateTemplateModal({ isOpen, onClose }: ModalProps) {
 
               <div className="mt-1.5 space-y-1">
                 {button1 && (
-                  <div className="bg-white rounded-lg py-2 px-3 text-center text-[11px] font-bold text-emerald-600 shadow-xs border border-slate-200">
+                  <div className="bg-white rounded-sm py-2 px-3 text-center text-[11px] font-bold text-emerald-600 shadow-xs border border-slate-200">
                     {button1}
                   </div>
                 )}
                 {button2 && (
-                  <div className="bg-white rounded-lg py-2 px-3 text-center text-[11px] font-bold text-emerald-600 shadow-xs border border-slate-200">
+                  <div className="bg-white rounded-sm py-2 px-3 text-center text-[11px] font-bold text-emerald-600 shadow-xs border border-slate-200">
                     {button2}
                   </div>
                 )}
@@ -485,7 +485,7 @@ export function ImportContactsModal({ isOpen, onClose }: ModalProps) {
       <DialogContent className="max-w-md bg-white p-0 overflow-hidden rounded-2xl shadow-2xl border border-slate-200">
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-xl">
+            <div className="p-2 bg-white/20 rounded-sm">
               <Upload className="size-5 text-white" />
             </div>
             <div>
@@ -498,7 +498,7 @@ export function ImportContactsModal({ isOpen, onClose }: ModalProps) {
         </div>
 
         <form onSubmit={handleImport} className="p-5 space-y-4">
-          <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-emerald-500 transition-colors bg-slate-50 cursor-pointer">
+          <div className="border-2 border-dashed border-slate-200 rounded-sm p-6 text-center hover:border-emerald-500 transition-colors bg-slate-50 cursor-pointer">
             <Upload className="size-8 text-slate-400 mx-auto mb-2" />
             <p className="text-xs font-bold text-slate-700">Drag and drop CSV file here</p>
             <p className="text-[11px] text-slate-400 mt-0.5 font-medium">Supports .csv, .xlsx (Max size 10MB)</p>
@@ -509,7 +509,7 @@ export function ImportContactsModal({ isOpen, onClose }: ModalProps) {
               id="csv-upload"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
-            <label htmlFor="csv-upload" className="inline-block mt-3 px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50">
+            <label htmlFor="csv-upload" className="inline-block mt-3 px-3 py-1.5 bg-white border border-slate-300 rounded-sm text-xs font-bold text-slate-700 hover:bg-slate-50">
               Browse Files
             </label>
             {file && <p className="text-xs font-bold text-emerald-600 mt-2">Selected: {file.name}</p>}
@@ -518,7 +518,7 @@ export function ImportContactsModal({ isOpen, onClose }: ModalProps) {
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 uppercase">Apply Tag/Label</label>
             <Select value={tag} onValueChange={setTag}>
-              <SelectTrigger className="h-9 text-xs rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 text-xs rounded-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Donor">Donor</SelectItem>
                 <SelectItem value="Volunteer">Volunteer</SelectItem>
@@ -529,10 +529,10 @@ export function ImportContactsModal({ isOpen, onClose }: ModalProps) {
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onClose} className="h-9 text-xs font-bold rounded-xl">
+            <Button type="button" variant="outline" onClick={onClose} className="h-9 text-xs font-bold rounded-sm">
               Cancel
             </Button>
-            <Button type="submit" disabled={isImporting} className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
+            <Button type="submit" disabled={isImporting} className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm">
               {isImporting ? "Importing..." : "Start Import"}
             </Button>
           </div>
@@ -570,7 +570,7 @@ export function EditIntegrationModal({
       <DialogContent className="max-w-md bg-white p-0 overflow-hidden rounded-2xl shadow-2xl border border-slate-200">
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-xl">
+            <div className="p-2 bg-white/20 rounded-sm">
               <Settings className="size-5 text-white" />
             </div>
             <div>
@@ -588,7 +588,7 @@ export function EditIntegrationModal({
             <Input
               value={form.businessName}
               onChange={(e) => setForm({ ...form, businessName: e.target.value })}
-              className="h-9 text-xs rounded-xl"
+              className="h-9 text-xs rounded-sm"
             />
           </div>
 
@@ -597,14 +597,14 @@ export function EditIntegrationModal({
             <Input
               value={form.phoneNumber}
               onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
-              className="h-9 text-xs rounded-xl"
+              className="h-9 text-xs rounded-sm"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700">Provider</label>
-              <Input value={form.provider} disabled className="h-9 text-xs bg-slate-100 rounded-xl" />
+              <Input value={form.provider} disabled className="h-9 text-xs bg-slate-100 rounded-sm" />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700">Daily Messaging Limit</label>
@@ -612,7 +612,7 @@ export function EditIntegrationModal({
                 value={form.dailyLimit}
                 onValueChange={(val) => setForm({ ...form, dailyLimit: val })}
               >
-                <SelectTrigger className="h-9 text-xs rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-9 text-xs rounded-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1,000 messages">1,000 / day</SelectItem>
                   <SelectItem value="10,000 messages">10,000 / day</SelectItem>
@@ -630,7 +630,7 @@ export function EditIntegrationModal({
                 value={form.qualityRating}
                 onValueChange={(val) => setForm({ ...form, qualityRating: val })}
               >
-                <SelectTrigger className="h-9 text-xs rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-9 text-xs rounded-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="High">High (Green)</SelectItem>
                   <SelectItem value="Medium">Medium (Yellow)</SelectItem>
@@ -644,7 +644,7 @@ export function EditIntegrationModal({
                 value={form.timezone}
                 onValueChange={(val) => setForm({ ...form, timezone: val })}
               >
-                <SelectTrigger className="h-9 text-xs rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-9 text-xs rounded-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Asia/Kolkata">Asia/Kolkata (IST)</SelectItem>
                   <SelectItem value="UTC">UTC</SelectItem>
@@ -654,10 +654,10 @@ export function EditIntegrationModal({
           </div>
 
           <div className="pt-2 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose} className="h-9 text-xs font-bold rounded-xl">
+            <Button type="button" variant="outline" onClick={onClose} className="h-9 text-xs font-bold rounded-sm">
               Cancel
             </Button>
-            <Button type="submit" className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
+            <Button type="submit" className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm">
               Save Changes
             </Button>
           </div>
@@ -694,7 +694,7 @@ export function CreateRuleModal({ isOpen, onClose }: ModalProps) {
       <DialogContent className="max-w-md bg-white p-0 overflow-hidden rounded-2xl shadow-2xl border border-slate-200">
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-xl">
+            <div className="p-2 bg-white/20 rounded-sm">
               <Zap className="size-5 text-white" />
             </div>
             <div>
@@ -713,14 +713,14 @@ export function CreateRuleModal({ isOpen, onClose }: ModalProps) {
               placeholder="e.g. Keyword Reply - Volunteer Info"
               value={ruleName}
               onChange={(e) => setRuleName(e.target.value)}
-              className="h-9 text-xs rounded-xl"
+              className="h-9 text-xs rounded-sm"
             />
           </div>
 
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-700">Trigger Type</label>
             <Select value={triggerType} onValueChange={setTriggerType}>
-              <SelectTrigger className="h-9 text-xs rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 text-xs rounded-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="keyword">Inbound Keyword Match</SelectItem>
                 <SelectItem value="event">New Contact Added</SelectItem>
@@ -735,7 +735,7 @@ export function CreateRuleModal({ isOpen, onClose }: ModalProps) {
               placeholder='e.g. "donate" or "volunteer"'
               value={triggerValue}
               onChange={(e) => setTriggerValue(e.target.value)}
-              className="h-9 text-xs rounded-xl"
+              className="h-9 text-xs rounded-sm"
             />
           </div>
 
@@ -744,15 +744,15 @@ export function CreateRuleModal({ isOpen, onClose }: ModalProps) {
             <Input
               value={action}
               onChange={(e) => setAction(e.target.value)}
-              className="h-9 text-xs rounded-xl"
+              className="h-9 text-xs rounded-sm"
             />
           </div>
 
           <div className="pt-2 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose} className="h-9 text-xs font-bold rounded-xl">
+            <Button type="button" variant="outline" onClick={onClose} className="h-9 text-xs font-bold rounded-sm">
               Cancel
             </Button>
-            <Button type="submit" className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
+            <Button type="submit" className="h-9 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm">
               Create Rule
             </Button>
           </div>
@@ -783,7 +783,7 @@ export function CreateCTWAAdModal({ isOpen, onClose }: ModalProps) {
       <DialogContent className="max-w-md bg-white p-0 overflow-hidden rounded-2xl shadow-2xl border border-slate-200">
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-xl">
+            <div className="p-2 bg-white/20 rounded-sm">
               <Megaphone className="size-5 text-white" />
             </div>
             <div>
@@ -802,7 +802,7 @@ export function CreateCTWAAdModal({ isOpen, onClose }: ModalProps) {
               placeholder="e.g. Assi Ghat Volunteers Lead Gen"
               value={adName}
               onChange={(e) => setAdName(e.target.value)}
-              className="h-9 text-xs rounded-xl"
+              className="h-9 text-xs rounded-sm"
             />
           </div>
 
@@ -810,7 +810,7 @@ export function CreateCTWAAdModal({ isOpen, onClose }: ModalProps) {
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700">Platform</label>
               <Select value={platform} onValueChange={setPlatform}>
-                <SelectTrigger className="h-9 text-xs rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-9 text-xs rounded-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Facebook">Facebook Feed</SelectItem>
                   <SelectItem value="Instagram">Instagram Reels/Feed</SelectItem>
@@ -824,16 +824,16 @@ export function CreateCTWAAdModal({ isOpen, onClose }: ModalProps) {
                 type="number"
                 value={dailyBudget}
                 onChange={(e) => setDailyBudget(e.target.value)}
-                className="h-9 text-xs rounded-xl"
+                className="h-9 text-xs rounded-sm"
               />
             </div>
           </div>
 
           <div className="pt-2 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose} className="h-9 text-xs font-bold rounded-xl">
+            <Button type="button" variant="outline" onClick={onClose} className="h-9 text-xs font-bold rounded-sm">
               Cancel
             </Button>
-            <Button type="submit" className="h-9 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl">
+            <Button type="submit" className="h-9 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-sm">
               Launch Ad
             </Button>
           </div>

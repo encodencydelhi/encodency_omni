@@ -80,7 +80,7 @@ const steps: { id: Step; label: string; sub: string; icon: typeof Folder }[] = [
 
 const order: Step[] = ["campaign", "adset", "ad", "form", "review"];
 const input =
-  "h-9 w-full rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-sm px-3.5 text-[11.5px] font-medium text-slate-800 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_0_0_4px_rgba(59,130,246,0.08)] hover:border-slate-300";
+  "h-9 w-full rounded-sm border border-slate-200/80 bg-white/80 backdrop-blur-sm px-3.5 text-[11.5px] font-medium text-slate-800 shadow-sm outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:shadow-[0_0_0_4px_rgba(59,130,246,0.08)] hover:border-slate-300";
 
 /**
  * Entry context. Management pages deep-link into the builder — "Add Ad Set"
@@ -147,7 +147,7 @@ function CreateAdsManagerInner() {
     <div className="ads-create-workspace flex h-dvh w-full flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 text-slate-800">
       <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-white/60 bg-white/70 px-5 backdrop-blur-xl shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
         <div className="flex shrink-0 items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 p-1.5 shadow-md shadow-blue-500/20">
+          <div className="flex items-center gap-1.5 rounded-sm bg-gradient-to-br from-blue-600 to-indigo-600 p-1.5 shadow-md shadow-blue-500/20">
             <FaMeta className="size-5 text-white" />
           </div>
           <FaInstagram className="size-4.5 text-fuchsia-500" />
@@ -177,10 +177,10 @@ function CreateAdsManagerInner() {
                 <button
                   disabled={i > index}
                   onClick={() => setStep(item)}
-                  className={`group flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-[10.5px] font-semibold transition-all duration-300 ${active ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-200" : complete ? "text-slate-700 hover:bg-slate-50" : "text-slate-400 cursor-not-allowed"}`}
+                  className={`group flex items-center gap-1.5 whitespace-nowrap rounded-sm px-3 py-2 text-[10.5px] font-semibold transition-all duration-300 ${active ? "bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-200" : complete ? "text-slate-700 hover:bg-slate-50" : "text-slate-400 cursor-not-allowed"}`}
                 >
                   <span
-                    className={`flex size-5.5 items-center justify-center rounded-full text-[9px] font-semibold transition-all duration-300 ${complete ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm shadow-emerald-500/30" : active ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/30" : "bg-slate-100 text-slate-500"}`}
+                    className={`flex size-5.5 items-center justify-center rounded-sm text-[9px] font-semibold transition-all duration-300 ${complete ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm shadow-emerald-500/30" : active ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/30" : "bg-slate-100 text-slate-500"}`}
                   >
                     {complete ? <Check className="size-3" /> : i + 1}
                   </span>
@@ -194,13 +194,13 @@ function CreateAdsManagerInner() {
           })}
         </nav>
         <div className="flex shrink-0 items-center gap-2">
-          <span className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[10px] font-semibold text-emerald-700 shadow-sm">
+          <span className="flex items-center gap-1.5 rounded-sm border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[10px] font-semibold text-emerald-700 shadow-sm">
             <CheckCircle2 className="size-3.5" />
             Connected
           </span>
           <Link
             href={returnHref}
-            className="flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:bg-red-50 hover:border-red-200 hover:text-red-500"
+            className="flex size-8 items-center justify-center rounded-sm border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 hover:bg-red-50 hover:border-red-200 hover:text-red-500"
             aria-label="Close campaign builder"
           >
             <X className="size-4" />
@@ -218,7 +218,7 @@ function CreateAdsManagerInner() {
               to start getting results.
             </p>
             {contextLabel && (
-              <p className="mt-2.5 rounded-xl border border-blue-200/60 bg-gradient-to-r from-blue-50 to-indigo-50 px-3 py-2 text-[10px] font-semibold leading-relaxed text-blue-700">
+              <p className="mt-2.5 rounded-sm border border-blue-200/60 bg-gradient-to-r from-blue-50 to-indigo-50 px-3 py-2 text-[10px] font-semibold leading-relaxed text-blue-700">
                 {contextLabel}
               </p>
             )}
@@ -233,13 +233,13 @@ function CreateAdsManagerInner() {
                   key={item.id}
                   disabled={i > index}
                   onClick={() => setStep(item.id)}
-                  className={`relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-300 ${active ? "bg-gradient-to-r from-blue-50/80 to-indigo-50/60 shadow-sm ring-1 ring-blue-200/50" : complete ? "hover:bg-slate-50/80" : "cursor-not-allowed opacity-60"}`}
+                  className={`relative flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-left transition-all duration-300 ${active ? "bg-gradient-to-r from-blue-50/80 to-indigo-50/60 shadow-sm ring-1 ring-blue-200/50" : complete ? "hover:bg-slate-50/80" : "cursor-not-allowed opacity-60"}`}
                 >
                   {active && (
-                    <span className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-gradient-to-b from-blue-600 to-indigo-600" />
+                    <span className="absolute inset-y-2 left-0 w-[3px] rounded-sm bg-gradient-to-b from-blue-600 to-indigo-600" />
                   )}
                   <span
-                    className={`flex size-9 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${active ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25" : complete ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm shadow-emerald-500/20" : "bg-slate-100 text-slate-500"}`}
+                    className={`flex size-9 shrink-0 items-center justify-center rounded-sm transition-all duration-300 ${active ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25" : complete ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm shadow-emerald-500/20" : "bg-slate-100 text-slate-500"}`}
                   >
                     {complete ? (
                       <Check className="size-4" />
@@ -263,7 +263,7 @@ function CreateAdsManagerInner() {
           </nav>
           <div className="mt-auto rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/80 p-3.5 ring-1 ring-blue-100/60">
             <div className="flex gap-2.5">
-              <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+              <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-sm bg-blue-100 text-blue-600">
                 <CircleHelp className="size-4" />
               </span>
               <div>
@@ -282,7 +282,7 @@ function CreateAdsManagerInner() {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 overflow-y-auto p-4 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5">
+        <main className="min-w-0 flex-1 overflow-y-auto p-4 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar-thumb]:rounded-sm [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5">
           {step === "campaign" && <CampaignStep />}
           {step === "adset" && <AdSetStep />}
           {step === "ad" && <AdStep />}
@@ -302,7 +302,7 @@ function CreateAdsManagerInner() {
         <button
           onClick={back}
           disabled={index === 0}
-          className="flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[11px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow disabled:opacity-40"
+          className="flex h-9 items-center gap-2 rounded-sm border border-slate-200 bg-white px-4 text-[11px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow disabled:opacity-40"
         >
           <ArrowLeft className="size-3.5" />
           Back
@@ -310,14 +310,14 @@ function CreateAdsManagerInner() {
         <div className="flex gap-2.5">
           <button
             onClick={saveDraft}
-            className="flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-[11px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow"
+            className="flex h-9 items-center gap-2 rounded-sm border border-slate-200 bg-white px-5 text-[11px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:border-slate-300 hover:shadow"
           >
             <Save className="size-3.5" />
             Save Draft
           </button>
           <button
             onClick={step === "review" ? publish : next}
-            className="flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 px-5 text-[11px] font-semibold text-white shadow-[0_4px_14px_rgba(37,99,235,0.35)] ring-1 ring-white/20 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-0.5 active:translate-y-0"
+            className="flex h-9 items-center gap-2 rounded-sm bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 px-5 text-[11px] font-semibold text-white shadow-[0_4px_14px_rgba(37,99,235,0.35)] ring-1 ring-white/20 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-0.5 active:translate-y-0"
           >
             {step === "review"
               ? "Publish Campaign"
@@ -364,7 +364,7 @@ function Card({
       className={`rounded-2xl border border-slate-200/70 bg-white/80 backdrop-blur-sm p-4 shadow-[0_2px_12px_rgba(15,23,42,0.04)] transition-all duration-300 hover:shadow-[0_4px_20px_rgba(15,23,42,0.07)] hover:border-slate-300/70 ${className}`}
     >
       <div className="mb-3.5 flex items-start gap-3">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 ring-1 ring-blue-200/40">{icon}</span>
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 ring-1 ring-blue-200/40">{icon}</span>
         <div>
           <h2 className="text-[13px] font-semibold text-slate-900">{title}</h2>
           {sub && <p className="mt-0.5 text-[10.5px] font-medium text-slate-500">{sub}</p>}
@@ -414,8 +414,8 @@ function Choice({
         defaultChecked={selected}
         className="sr-only"
       />
-      <span className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-slate-200/80 bg-white/80 p-3 text-left shadow-sm transition-all duration-300 group-has-[:checked]:border-blue-400 group-has-[:checked]:bg-gradient-to-r group-has-[:checked]:from-blue-50/80 group-has-[:checked]:to-indigo-50/60 group-has-[:checked]:ring-1 group-has-[:checked]:ring-blue-400/50 group-has-[:checked]:shadow-md group-has-[:checked]:shadow-blue-500/10 group-has-[:focus-visible]:ring-2 group-has-[:focus-visible]:ring-blue-500/40 hover:border-slate-300 hover:shadow">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition-all duration-300 group-has-[:checked]:bg-gradient-to-br group-has-[:checked]:from-blue-600 group-has-[:checked]:to-indigo-600 group-has-[:checked]:text-white group-has-[:checked]:shadow-sm group-has-[:checked]:shadow-blue-500/25">
+      <span className="flex min-h-14 w-full items-center gap-3 rounded-sm border border-slate-200/80 bg-white/80 p-3 text-left shadow-sm transition-all duration-300 group-has-[:checked]:border-blue-400 group-has-[:checked]:bg-gradient-to-r group-has-[:checked]:from-blue-50/80 group-has-[:checked]:to-indigo-50/60 group-has-[:checked]:ring-1 group-has-[:checked]:ring-blue-400/50 group-has-[:checked]:shadow-md group-has-[:checked]:shadow-blue-500/10 group-has-[:focus-visible]:ring-2 group-has-[:focus-visible]:ring-blue-500/40 hover:border-slate-300 hover:shadow">
+        <span className="flex size-9 items-center justify-center rounded-sm bg-slate-100 text-slate-500 transition-all duration-300 group-has-[:checked]:bg-gradient-to-br group-has-[:checked]:from-blue-600 group-has-[:checked]:to-indigo-600 group-has-[:checked]:text-white group-has-[:checked]:shadow-sm group-has-[:checked]:shadow-blue-500/25">
           {icon}
         </span>
         <span className="min-w-0 flex-1">
@@ -423,7 +423,7 @@ function Choice({
           <span className="text-[10px] font-medium text-slate-500">{sub}</span>
         </span>
         {badge && (
-          <span className="rounded-full bg-gradient-to-r from-blue-100 to-indigo-100 px-2.5 py-0.5 text-[9px] font-semibold text-blue-700 ring-1 ring-blue-200/50">
+          <span className="rounded-sm bg-gradient-to-r from-blue-100 to-indigo-100 px-2.5 py-0.5 text-[9px] font-semibold text-blue-700 ring-1 ring-blue-200/50">
             {badge}
           </span>
         )}
@@ -493,15 +493,15 @@ function CampaignStep() {
               <div className="flex gap-4 text-[11px]">
                 <label className="group flex cursor-pointer items-center gap-2">
                   <input type="radio" name="budgetStrategy" defaultChecked className="sr-only" />
-                  <span className="flex size-4 items-center justify-center rounded-full border-2 border-slate-300 transition group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
-                    <span className="size-1.5 rounded-full bg-white opacity-0 transition group-has-[:checked]:opacity-100" />
+                  <span className="flex size-4 items-center justify-center rounded-sm border-2 border-slate-300 transition group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
+                    <span className="size-1.5 rounded-sm bg-white opacity-0 transition group-has-[:checked]:opacity-100" />
                   </span>
                   <span className="font-medium text-slate-700">Campaign Budget</span>
                 </label>
                 <label className="group flex cursor-pointer items-center gap-2">
                   <input type="radio" name="budgetStrategy" className="sr-only" />
-                  <span className="flex size-4 items-center justify-center rounded-full border-2 border-slate-300 transition group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
-                    <span className="size-1.5 rounded-full bg-white opacity-0 transition group-has-[:checked]:opacity-100" />
+                  <span className="flex size-4 items-center justify-center rounded-sm border-2 border-slate-300 transition group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
+                    <span className="size-1.5 rounded-sm bg-white opacity-0 transition group-has-[:checked]:opacity-100" />
                   </span>
                   <span className="font-medium text-slate-700">Ad Set Budget</span>
                 </label>
@@ -536,16 +536,16 @@ function CampaignStep() {
         >
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
-              <span className="rounded-full bg-gradient-to-r from-emerald-50 to-emerald-100 px-3 py-1.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200/60">
+              <span className="rounded-sm bg-gradient-to-r from-emerald-50 to-emerald-100 px-3 py-1.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200/60">
                 ◎ Optimize for Leads
               </span>
-              <span className="rounded-full bg-gradient-to-r from-emerald-50 to-emerald-100 px-3 py-1.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200/60">
+              <span className="rounded-sm bg-gradient-to-r from-emerald-50 to-emerald-100 px-3 py-1.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200/60">
                 High Intent
               </span>
             </div>
             <span className="flex items-center gap-2 text-[11px] font-semibold text-slate-700">
-              <span className="relative h-5.5 w-10 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 p-0.5 shadow-inner">
-                <span className="ml-auto block size-4.5 rounded-full bg-white shadow-sm transition-all" />
+              <span className="relative h-5.5 w-10 rounded-sm bg-gradient-to-r from-blue-600 to-indigo-600 p-0.5 shadow-inner">
+                <span className="ml-auto block size-4.5 rounded-sm bg-white shadow-sm transition-all" />
               </span>
               On
             </span>
@@ -560,8 +560,8 @@ function CampaignStep() {
             {["None selected", "Housing", "Employment", "Credit", "Social Issues"].map((cat, i) => (
               <label key={cat} className="group flex cursor-pointer items-center gap-2">
                 <input type="radio" name="specialAdCategory" defaultChecked={i === 0} className="sr-only" />
-                <span className="flex size-4 items-center justify-center rounded-full border-2 border-slate-300 transition group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
-                  <span className="size-1.5 rounded-full bg-white opacity-0 transition group-has-[:checked]:opacity-100" />
+                <span className="flex size-4 items-center justify-center rounded-sm border-2 border-slate-300 transition group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
+                  <span className="size-1.5 rounded-sm bg-white opacity-0 transition group-has-[:checked]:opacity-100" />
                 </span>
                 <span className="font-medium text-slate-700 transition group-has-[:checked]:text-blue-700">{cat}</span>
               </label>
@@ -778,14 +778,14 @@ function PlacementGroup({
   items: string[];
 }) {
   return (
-    <div className="rounded-xl border border-slate-200/70 bg-gradient-to-br from-white to-slate-50/50 p-3.5 transition-all duration-300 hover:shadow-sm">
+    <div className="rounded-sm border border-slate-200/70 bg-gradient-to-br from-white to-slate-50/50 p-3.5 transition-all duration-300 hover:shadow-sm">
       <p className={`mb-2.5 flex items-center gap-2 text-[11.5px] font-semibold ${color}`}>
         {icon}
         {title}
       </p>
       <div className="grid grid-cols-2 gap-2.5 text-[10.5px]">
         {items.map((x) => (
-          <label key={x} className="group flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1 transition hover:bg-slate-50">
+          <label key={x} className="group flex cursor-pointer items-center gap-2 rounded-sm px-1.5 py-1 transition hover:bg-slate-50">
             <input type="checkbox" defaultChecked className="size-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30" />
             <span className="font-medium text-slate-700">{x}</span>
           </label>
@@ -831,8 +831,8 @@ function AdStep() {
               {["Facebook only", "Instagram only", "Use both identities"].map((mode, i) => (
                 <label key={mode} className="group flex cursor-pointer items-center gap-2">
                   <input type="radio" name="identityMode" defaultChecked={i === 2} className="sr-only" />
-                  <span className="flex size-4 items-center justify-center rounded-full border-2 border-slate-300 transition group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
-                    <span className="size-1.5 rounded-full bg-white opacity-0 transition group-has-[:checked]:opacity-100" />
+                  <span className="flex size-4 items-center justify-center rounded-sm border-2 border-slate-300 transition group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
+                    <span className="size-1.5 rounded-sm bg-white opacity-0 transition group-has-[:checked]:opacity-100" />
                   </span>
                   <span className="font-medium text-slate-700 transition group-has-[:checked]:text-blue-700">{mode}</span>
                 </label>
@@ -865,7 +865,7 @@ function AdStep() {
                 onClick={() => toast.success("Opening the media uploader…")}
                 className="flex min-h-32 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-300/60 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 text-[11px] transition-all duration-300 hover:border-blue-400 hover:bg-blue-50/60 hover:shadow-sm"
               >
-                <span className="mb-2.5 flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 shadow-sm ring-1 ring-blue-200/50">
+                <span className="mb-2.5 flex size-10 items-center justify-center rounded-sm bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 shadow-sm ring-1 ring-blue-200/50">
                   <Upload className="size-5" />
                 </span>
                 <span className="font-semibold text-slate-800">Add images or videos</span>
@@ -891,7 +891,7 @@ function AdStep() {
                         defaultChecked={i === 0}
                         className="sr-only"
                       />
-                      <span className="flex h-16 items-center justify-center rounded-xl border border-slate-200/80 text-center text-[10px] font-semibold shadow-sm transition-all duration-300 group-has-[:checked]:border-blue-400 group-has-[:checked]:bg-gradient-to-br group-has-[:checked]:from-blue-50 group-has-[:checked]:to-indigo-50 group-has-[:checked]:text-blue-700 group-has-[:checked]:ring-1 group-has-[:checked]:ring-blue-400/40 group-has-[:checked]:shadow-md group-has-[:checked]:shadow-blue-500/10 group-has-[:focus-visible]:ring-2 group-has-[:focus-visible]:ring-blue-500/40 hover:border-slate-300 hover:shadow">
+                      <span className="flex h-16 items-center justify-center rounded-sm border border-slate-200/80 text-center text-[10px] font-semibold shadow-sm transition-all duration-300 group-has-[:checked]:border-blue-400 group-has-[:checked]:bg-gradient-to-br group-has-[:checked]:from-blue-50 group-has-[:checked]:to-indigo-50 group-has-[:checked]:text-blue-700 group-has-[:checked]:ring-1 group-has-[:checked]:ring-blue-400/40 group-has-[:checked]:shadow-md group-has-[:checked]:shadow-blue-500/10 group-has-[:focus-visible]:ring-2 group-has-[:focus-visible]:ring-blue-500/40 hover:border-slate-300 hover:shadow">
                         {x}
                       </span>
                     </label>
@@ -900,7 +900,7 @@ function AdStep() {
                 <button
                   type="button"
                   onClick={() => toast.success("Opening the media uploader…")}
-                  className="mt-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-[10.5px] font-semibold text-white shadow-md shadow-blue-500/25 ring-1 ring-white/20 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0"
+                  className="mt-3 rounded-sm bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 text-[10.5px] font-semibold text-white shadow-md shadow-blue-500/25 ring-1 ring-white/20 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0"
                 >
                   Upload Media
                 </button>
@@ -978,7 +978,7 @@ function LiveAdPreview() {
             type="button"
             onClick={() => setSurface(x)}
             aria-pressed={surface === x}
-            className={`rounded-xl px-1.5 py-2 text-[8.5px] font-semibold transition-all duration-300 ${surface === x ? "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 ring-1 ring-blue-200/60 shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200/70"}`}
+            className={`rounded-sm px-1.5 py-2 text-[8.5px] font-semibold transition-all duration-300 ${surface === x ? "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 ring-1 ring-blue-200/60 shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200/70"}`}
           >
             {x}
           </button>
@@ -1006,7 +1006,7 @@ function LiveAdPreview() {
           <p className="text-[9px] text-[#66758f]">META INSTANT FORM</p>
           <div className="flex justify-between gap-2">
             <strong className="text-xs">Glow Brighter, Naturally</strong>
-            <span className="shrink-0 self-center rounded-lg bg-gradient-to-r from-slate-100 to-slate-200 px-2.5 py-1.5 text-[9px] font-semibold text-slate-700">
+            <span className="shrink-0 self-center rounded-sm bg-gradient-to-r from-slate-100 to-slate-200 px-2.5 py-1.5 text-[9px] font-semibold text-slate-700">
               Learn More
             </span>
           </div>
@@ -1092,11 +1092,11 @@ function FormStep() {
               {questions.map((q, i) => (
                 <div
                   key={q}
-                  className="flex items-center gap-3 rounded-lg py-2 text-[10.5px] transition hover:bg-slate-50/60"
+                  className="flex items-center gap-3 rounded-sm py-2 text-[10.5px] transition hover:bg-slate-50/60"
                 >
                   <span className="cursor-grab text-slate-400">⠿</span>
                   <span className="flex-1 font-medium text-slate-800">{q}</span>
-                  <span className="rounded-lg bg-gradient-to-r from-slate-100 to-slate-50 px-2.5 py-1 text-[9.5px] font-medium text-slate-600 ring-1 ring-slate-200/60">
+                  <span className="rounded-sm bg-gradient-to-r from-slate-100 to-slate-50 px-2.5 py-1 text-[9.5px] font-medium text-slate-600 ring-1 ring-slate-200/60">
                     {i < 3 ? "Standard field" : "Custom question"}
                   </span>
                   <span className={`w-16 text-[9.5px] font-medium ${i === 5 || i === 6 ? "text-slate-400" : "text-emerald-600"}`}>
@@ -1204,7 +1204,7 @@ function ReviewStep() {
         icon={<FileText className="size-5" />}
       >
         <div className="flex items-center gap-6">
-          <div className="flex size-20 items-center justify-center rounded-full border-[6px] border-emerald-500 bg-gradient-to-br from-emerald-50 to-emerald-100 shadow-lg shadow-emerald-500/15">
+          <div className="flex size-20 items-center justify-center rounded-sm border-[6px] border-emerald-500 bg-gradient-to-br from-emerald-50 to-emerald-100 shadow-lg shadow-emerald-500/15">
             <span className="text-center">
               <span className="block text-2xl font-semibold text-emerald-700">92</span>
               <span className="block text-[10px] font-medium text-slate-500">/100</span>
@@ -1243,16 +1243,16 @@ function ReviewStep() {
           return (
             <div
               key={String(t)}
-              className="group flex items-center gap-3 rounded-xl border border-slate-200/70 bg-white/80 p-3.5 shadow-sm transition-all duration-300 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+              className="group flex items-center gap-3 rounded-sm border border-slate-200/70 bg-white/80 p-3.5 shadow-sm transition-all duration-300 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
             >
-              <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 ring-1 ring-blue-200/40 transition group-hover:shadow-sm">
+              <span className="flex size-9 items-center justify-center rounded-sm bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 ring-1 ring-blue-200/40 transition group-hover:shadow-sm">
                 <Icon className="size-4.5" />
               </span>
               <div className="flex-1">
                 <span className="text-[11.5px] font-semibold text-slate-800">{String(t)}</span>
                 <p className="text-[10px] font-medium text-slate-500">{String(s)}</p>
               </div>
-              <span className="rounded-full bg-gradient-to-r from-emerald-50 to-emerald-100 px-2.5 py-1 text-[9px] font-semibold text-emerald-700 ring-1 ring-emerald-200/60">
+              <span className="rounded-sm bg-gradient-to-r from-emerald-50 to-emerald-100 px-2.5 py-1 text-[9px] font-semibold text-emerald-700 ring-1 ring-emerald-200/60">
                 Complete
               </span>
               <ChevronRight className="size-4 text-slate-400 transition group-hover:text-blue-500 group-hover:translate-x-0.5" />
@@ -1386,7 +1386,7 @@ function RightRail({ step }: { step: Step }) {
           {checklist.map((x, i) => (
             <div key={x} className="flex items-center gap-2 text-[10px]">
               <span
-                className={`flex size-4 items-center justify-center rounded-full ${i < completeCount ? "bg-[#10a85e] text-white" : "border border-[#9aa7ba]"}`}
+                className={`flex size-4 items-center justify-center rounded-sm ${i < completeCount ? "bg-[#10a85e] text-white" : "border border-[#9aa7ba]"}`}
               >
                 {i < completeCount && <Check className="size-3" />}
               </span>

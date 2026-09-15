@@ -35,12 +35,12 @@ export function Section({
   return (
     <section
       className={cn(
-        "rounded-xl border border-[#E6E8F0] bg-white p-3.5 shadow-[0_1px_3px_rgb(15_23_42/0.04)]",
+        "rounded-sm border border-[#E6E8F0] bg-white p-3.5 shadow-[0_1px_3px_rgb(15_23_42/0.04)]",
         className,
       )}
     >
       <div className="mb-3 flex items-center gap-2">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFEAEC] text-[13px] font-semibold text-[#E11D28]">
+        <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#FFEAEC] text-[13px] font-semibold text-[#E11D28]">
           {Icon ? <Icon className="size-4" /> : letter}
         </span>
         <div className="min-w-0 flex-1">
@@ -71,7 +71,7 @@ export function SubSection({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-xl border border-[#E6E8F0] bg-white p-3", className)}>
+    <div className={cn("rounded-sm border border-[#E6E8F0] bg-white p-3", className)}>
       <div className="mb-2.5 flex items-center gap-2">
         <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-[#FFEAEC] text-[11px] font-semibold text-[#E11D28]">
           {letter}
@@ -123,7 +123,7 @@ export function Field({
 }
 
 export const control =
-  "flex h-[38px] w-full items-center gap-1.5 rounded-lg border border-[#E2E5EE] bg-white px-2.5 text-[11.5px] text-[#111827] transition-colors focus-within:border-[#E11D28] focus-within:ring-2 focus-within:ring-[#E11D28]/12";
+  "flex h-[38px] w-full items-center gap-1.5 rounded-sm border border-[#E2E5EE] bg-white px-2.5 text-[11.5px] text-[#111827] transition-colors focus-within:border-[#E11D28] focus-within:ring-2 focus-within:ring-[#E11D28]/12";
 
 export function TextInput({
   value,
@@ -223,7 +223,7 @@ export function TextInput({
           </button>
 
           {showEmojiPicker && (
-            <div className="absolute right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-xl">
+            <div className="absolute right-0 top-full z-50 mt-1 overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-xl">
               <EmojiPicker
                 onEmojiClick={(emojiData: EmojiClickData) => insertEmoji(emojiData.emoji)}
                 autoFocusSearch={false}
@@ -268,7 +268,7 @@ export function SelectInput({
         tone === "success" && "border-[#CDECE1] bg-white",
       )}
     >
-      {tone === "success" && <i className="size-1.5 shrink-0 rounded-full bg-[#0AA673]" />}
+      {tone === "success" && <i className="size-1.5 shrink-0 rounded-sm bg-[#0AA673]" />}
       {Icon && <Icon className={cn("size-3.5 shrink-0 text-[#9CA3AF]", iconClass)} />}
       <select
         name={name}
@@ -313,7 +313,7 @@ export function Textarea({
   spellCheck?: boolean;
 }) {
   return (
-    <div className="relative rounded-lg border border-[#E2E5EE] bg-white transition-colors focus-within:border-[#E11D28] focus-within:ring-2 focus-within:ring-[#E11D28]/12">
+    <div className="relative rounded-sm border border-[#E2E5EE] bg-white transition-colors focus-within:border-[#E11D28] focus-within:ring-2 focus-within:ring-[#E11D28]/12">
       {Icon && <Icon className="absolute left-2.5 top-2.5 size-3.5 text-[#9CA3AF]" />}
       <SpellCheckedTextarea
         name={name}
@@ -363,7 +363,7 @@ export function TagField({
   return (
     <div
       className={cn(
-        "relative flex min-h-[38px] w-full flex-wrap items-center gap-1.5 rounded-lg border border-[#E2E5EE] bg-white px-2.5 py-1.5 transition-colors focus-within:border-[#E11D28] focus-within:ring-2 focus-within:ring-[#E11D28]/12",
+        "relative flex min-h-[38px] w-full flex-wrap items-center gap-1.5 rounded-sm border border-[#E2E5EE] bg-white px-2.5 py-1.5 transition-colors focus-within:border-[#E11D28] focus-within:ring-2 focus-within:ring-[#E11D28]/12",
         chevron && "pr-7",
       )}
     >
@@ -418,13 +418,13 @@ export function Toggle({ on, onToggle }: { on: boolean; onToggle?: () => void })
       aria-checked={on}
       onClick={onToggle}
       className={cn(
-        "relative h-5 w-9 shrink-0 rounded-full transition-colors",
+        "relative h-5 w-9 shrink-0 rounded-sm transition-colors",
         on ? "bg-[#E11D28]" : "bg-[#CBD5E1]",
       )}
     >
       <span
         className={cn(
-          "absolute top-0.5 block size-4 rounded-full bg-white shadow-sm transition-all",
+          "absolute top-0.5 block size-4 rounded-sm bg-white shadow-sm transition-all",
           on ? "left-[18px]" : "left-0.5",
         )}
       />
@@ -440,13 +440,13 @@ export function GreenToggle({ on, onToggle }: { on: boolean; onToggle?: () => vo
       aria-checked={on}
       onClick={onToggle}
       className={cn(
-        "relative h-5 w-9 shrink-0 rounded-full transition-colors",
+        "relative h-5 w-9 shrink-0 rounded-sm transition-colors",
         on ? "bg-[#0AA673]" : "bg-[#CBD5E1]",
       )}
     >
       <span
         className={cn(
-          "absolute top-0.5 block size-4 rounded-full bg-white shadow-sm transition-all",
+          "absolute top-0.5 block size-4 rounded-sm bg-white shadow-sm transition-all",
           on ? "left-[18px]" : "left-0.5",
         )}
       />
@@ -504,7 +504,7 @@ export function Segmented({
             onClick={() => onChange(id)}
             aria-pressed={active}
             className={cn(
-              "flex h-[34px] items-center gap-1.5 rounded-lg border px-3 text-[11px] font-semibold transition-colors",
+              "flex h-[34px] items-center gap-1.5 rounded-sm border px-3 text-[11px] font-semibold transition-colors",
               active
                 ? "border-[#E11D28] bg-[#FFF5F6] text-[#E11D28]"
                 : "border-[#E2E5EE] bg-white text-[#374151] hover:border-[#F5B5BA]",
@@ -540,16 +540,16 @@ export function OptionCard({
       onClick={onSelect}
       aria-pressed={active}
       className={cn(
-        "relative flex flex-col rounded-xl border p-2.5 text-left transition-colors",
+        "relative flex flex-col rounded-sm border p-2.5 text-left transition-colors",
         active ? "border-[#E11D28] bg-[#FFF5F6]" : "border-[#E6E8F0] bg-white hover:border-[#F5B5BA]",
       )}
     >
       {active && (
-        <span className="absolute right-2 top-2 grid size-4 place-items-center rounded-full bg-[#E11D28]">
+        <span className="absolute right-2 top-2 grid size-4 place-items-center rounded-sm bg-[#E11D28]">
           <Check className="size-2.5 text-white" />
         </span>
       )}
-      <span className={cn("grid size-8 place-items-center rounded-lg", tintClass)}>
+      <span className={cn("grid size-8 place-items-center rounded-sm", tintClass)}>
         <Icon className="size-4" />
       </span>
       <b className="mt-1.5 block text-[11.5px] font-semibold text-[#111827]">{title}</b>
@@ -561,10 +561,10 @@ export function OptionCard({
 /** Read-only allocation bar used by Budget Distribution by Channel. */
 export function Slider({ percent }: { percent: number }) {
   return (
-    <span className="relative block h-1.5 w-full rounded-full bg-[#EDF1F7]">
-      <i className="absolute left-0 top-0 block h-full rounded-full bg-[#E11D28]" style={{ width: `${percent}%` }} />
+    <span className="relative block h-1.5 w-full rounded-sm bg-[#EDF1F7]">
+      <i className="absolute left-0 top-0 block h-full rounded-sm bg-[#E11D28]" style={{ width: `${percent}%` }} />
       <i
-        className="absolute top-1/2 block size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#E11D28] shadow-sm"
+        className="absolute top-1/2 block size-3 -translate-x-1/2 -translate-y-1/2 rounded-sm border-2 border-white bg-[#E11D28] shadow-sm"
         style={{ left: `${percent}%` }}
       />
     </span>
@@ -575,7 +575,7 @@ export function RailCard({ children, className }: { children: ReactNode; classNa
   return (
     <section
       className={cn(
-        "rounded-xl border border-[#E6E8F0] bg-white p-3 shadow-[0_1px_3px_rgb(15_23_42/0.04)]",
+        "rounded-sm border border-[#E6E8F0] bg-white p-3 shadow-[0_1px_3px_rgb(15_23_42/0.04)]",
         className,
       )}
     >

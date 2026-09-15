@@ -197,10 +197,10 @@ function LeadsView() {
       values.campaign === DEFAULTS.campaign
         ? adSets
         : adSets.filter(
-            (s) =>
-              s.campaignId === values.campaign ||
-              getCampaign(s.campaignId)?.name === values.campaign,
-          );
+          (s) =>
+            s.campaignId === values.campaign ||
+            getCampaign(s.campaignId)?.name === values.campaign,
+        );
     return [DEFAULTS.adset, ...scoped.map((s) => s.name)];
   }, [values.campaign]);
 
@@ -209,8 +209,8 @@ function LeadsView() {
       values.adset === DEFAULTS.adset
         ? ads
         : ads.filter(
-            (a) => a.adSetId === values.adset || getAdSet(a.adSetId)?.name === values.adset,
-          );
+          (a) => a.adSetId === values.adset || getAdSet(a.adSetId)?.name === values.adset,
+        );
     return [DEFAULTS.ad, ...scoped.map((a) => a.name)];
   }, [values.adset]);
 
@@ -268,7 +268,7 @@ function LeadsView() {
                   onClick={() => setFilter("stage", active ? DEFAULTS.stage : stage)}
                   aria-pressed={active}
                   className={cn(
-                    "flex h-full w-full flex-col justify-between rounded-xl border p-3 text-left transition-all duration-200 hover:-translate-y-0.5 shadow-2xs",
+                    "flex h-full w-full flex-col justify-between rounded-sm border p-3 text-left transition-all duration-200 hover:-translate-y-0.5 shadow-2xs",
                     active
                       ? "border-blue-500 bg-blue-50/80 shadow-xs ring-1 ring-blue-500/20"
                       : "border-slate-200 bg-slate-50/60 hover:border-slate-300 hover:bg-slate-50",
@@ -276,7 +276,7 @@ function LeadsView() {
                 >
                   <span className="flex items-center gap-1.5">
                     {!terminal && (
-                      <span className="flex size-4 items-center justify-center rounded-full bg-slate-200 text-[9px] font-black text-slate-700">
+                      <span className="flex size-4 items-center justify-center rounded-sm bg-slate-200 text-[9px] font-black text-slate-700">
                         {i + 1}
                       </span>
                     )}

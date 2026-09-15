@@ -174,7 +174,7 @@ export function SeoTechnicalPage() {
         <Box title="Core Web Vitals" action={<Filter label="Mobile" />}>
           <div className="grid grid-cols-2 gap-2 px-3 py-2.5">
             {vitals.map((vital) => (
-              <div key={vital.name} className="rounded-lg border border-[#E4EAF2] bg-[#FBFCFE] px-2.5 py-2">
+              <div key={vital.name} className="rounded-sm border border-[#E4EAF2] bg-[#FBFCFE] px-2.5 py-2">
                 <div className="flex items-center justify-between">
                   <b className="text-[9.5px] font-semibold text-[#172044]">{vital.name}</b>
                   <Pill tone={vital.status === "Good" ? "good" : "medium"}>{vital.status}</Pill>
@@ -284,79 +284,79 @@ export function SeoTechnicalPage() {
 
       <div className="grid items-start gap-2 [&>section]:h-[200px] xl:grid-cols-[.9fr_.9fr_1.6fr]">
         <Box title="Issue Breakdown">
-            <div className="flex h-full items-center gap-2 px-3 pb-2">
-              <div className="relative size-[96px] shrink-0">
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie data={issueMix} dataKey="value" innerRadius={28} outerRadius={44} strokeWidth={0} isAnimationActive={false}>
-                      {issueMix.map((slice) => (
-                        <Cell key={slice.name} fill={slice.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 grid place-items-center text-center">
-                  <span>
-                    <b className="block text-[14px] leading-4 text-[#172044]">542</b>
-                    <small className="text-[7px] text-[#71809D]">Checks</small>
-                  </span>
-                </div>
-              </div>
-              <div className="min-w-0 flex-1 space-y-1">
-                {issueMix.map((slice) => (
-                  <span key={slice.name} className="flex items-center gap-1.5 text-[8.5px]">
-                    <i className="size-1.5 shrink-0 rounded-full" style={{ background: slice.color }} />
-                    <span className="min-w-0 flex-1 truncate text-[#52617D]">{slice.name}</span>
-                    <b className="text-[#172044]">{slice.value}</b>
-                  </span>
-                ))}
+          <div className="flex h-full items-center gap-2 px-3 pb-2">
+            <div className="relative size-[96px] shrink-0">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={issueMix} dataKey="value" innerRadius={28} outerRadius={44} strokeWidth={0} isAnimationActive={false}>
+                    {issueMix.map((slice) => (
+                      <Cell key={slice.name} fill={slice.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 grid place-items-center text-center">
+                <span>
+                  <b className="block text-[14px] leading-4 text-[#172044]">542</b>
+                  <small className="text-[7px] text-[#71809D]">Checks</small>
+                </span>
               </div>
             </div>
-          </Box>
-
-          <Box title="HTTP Status Codes">
-            <div className="space-y-1.5 px-3 py-2">
-              {statusCodes.map((row) => (
-                <div key={row.code}>
-                  <div className="flex items-center justify-between text-[8.5px]">
-                    <span className="text-[#52617D]">{row.code}</span>
-                    <b className="text-[#172044]">{row.count}</b>
-                  </div>
-                  <Meter value={row.count} max={124} color={row.tone} className="mt-0.5" />
-                </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              {issueMix.map((slice) => (
+                <span key={slice.name} className="flex items-center gap-1.5 text-[8.5px]">
+                  <i className="size-1.5 shrink-0 rounded-sm" style={{ background: slice.color }} />
+                  <span className="min-w-0 flex-1 truncate text-[#52617D]">{slice.name}</span>
+                  <b className="text-[#172044]">{slice.value}</b>
+                </span>
               ))}
             </div>
-      </Box>
+          </div>
+        </Box>
+
+        <Box title="HTTP Status Codes">
+          <div className="space-y-1.5 px-3 py-2">
+            {statusCodes.map((row) => (
+              <div key={row.code}>
+                <div className="flex items-center justify-between text-[8.5px]">
+                  <span className="text-[#52617D]">{row.code}</span>
+                  <b className="text-[#172044]">{row.count}</b>
+                </div>
+                <Meter value={row.count} max={124} color={row.tone} className="mt-0.5" />
+              </div>
+            ))}
+          </div>
+        </Box>
 
         <Box title="Audit History" action={<Filter label="Last 60 days" />}>
-        <div className="flex h-full flex-col px-3 pb-2 pt-1">
-          <div className="flex gap-3 text-[8.5px] font-semibold text-[#52617D]">
-            <span className="flex items-center gap-1.5">
-              <i className="size-1.5 rounded-full bg-[#10B981]" /> Site health score
-            </span>
-            <span className="flex items-center gap-1.5">
-              <i className="size-1.5 rounded-full bg-[#EF4444]" /> Open issues
-            </span>
+          <div className="flex h-full flex-col px-3 pb-2 pt-1">
+            <div className="flex gap-3 text-[8.5px] font-semibold text-[#52617D]">
+              <span className="flex items-center gap-1.5">
+                <i className="size-1.5 rounded-sm bg-[#10B981]" /> Site health score
+              </span>
+              <span className="flex items-center gap-1.5">
+                <i className="size-1.5 rounded-sm bg-[#EF4444]" /> Open issues
+              </span>
+            </div>
+            <div className="min-h-0 flex-1">
+              <ResponsiveContainer>
+                <AreaChart data={crawlHistory} margin={{ top: 6, right: 6, left: -22, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="techHealth" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10B981" stopOpacity={0.2} />
+                      <stop offset="100%" stopColor="#10B981" stopOpacity={0.01} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#EDF1F7" vertical={false} />
+                  <XAxis dataKey="d" tick={{ fontSize: 8, fill: "#71809D" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 8, fill: "#71809D" }} axisLine={false} tickLine={false} domain={[0, 100]} />
+                  <Tooltip {...chartTooltip} />
+                  <Area dataKey="health" name="Health score" stroke="#10B981" strokeWidth={1.7} fill="url(#techHealth)" dot={{ r: 1.8, strokeWidth: 0, fill: "#10B981" }} isAnimationActive={false} />
+                  <Area dataKey="issues" name="Open issues" stroke="#EF4444" strokeWidth={1.6} fill="transparent" dot={{ r: 1.8, strokeWidth: 0, fill: "#EF4444" }} isAnimationActive={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="min-h-0 flex-1">
-            <ResponsiveContainer>
-              <AreaChart data={crawlHistory} margin={{ top: 6, right: 6, left: -22, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="techHealth" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10B981" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#10B981" stopOpacity={0.01} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="#EDF1F7" vertical={false} />
-                <XAxis dataKey="d" tick={{ fontSize: 8, fill: "#71809D" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 8, fill: "#71809D" }} axisLine={false} tickLine={false} domain={[0, 100]} />
-                <Tooltip {...chartTooltip} />
-                <Area dataKey="health" name="Health score" stroke="#10B981" strokeWidth={1.7} fill="url(#techHealth)" dot={{ r: 1.8, strokeWidth: 0, fill: "#10B981" }} isAnimationActive={false} />
-                <Area dataKey="issues" name="Open issues" stroke="#EF4444" strokeWidth={1.6} fill="transparent" dot={{ r: 1.8, strokeWidth: 0, fill: "#EF4444" }} isAnimationActive={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
         </Box>
       </div>
     </SeoShell>

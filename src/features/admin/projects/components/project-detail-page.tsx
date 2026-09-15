@@ -111,7 +111,7 @@ function IconBadge({ Icon, tone = "purple", size = 18 }: {
     gray: "bg-[#f0f3f7] text-[#64748b]",
   };
   return (
-    <span className={`grid shrink-0 place-items-center rounded-full ${tones[tone] || tones.purple} h-10 w-10`}>
+    <span className={`grid shrink-0 place-items-center rounded-sm ${tones[tone] || tones.purple} h-10 w-10`}>
       <Icon size={size} strokeWidth={1.9} />
     </span>
   );
@@ -150,7 +150,7 @@ function ClientHeader({ activeTab, setActiveTab }: { activeTab: string; setActiv
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="m-0 text-[23px] font-semibold tracking-[-.7px] text-[#111d4a]">Moksha Sewa</h1>
-                <span className="rounded-full bg-[#e2faf0] px-2.5 py-1 text-[11px] font-semibold text-[#1aad7a]">● Active</span>
+                <span className="rounded-sm bg-[#e2faf0] px-2.5 py-1 text-[11px] font-semibold text-[#1aad7a]">● Active</span>
               </div>
               <p className="mt-1 text-[11px] font-semibold text-[#66748d]">End-to-end support for dignified funeral services.</p>
               <div className="mt-5 flex flex-wrap gap-x-7 gap-y-2 text-[11px] font-semibold text-[#65728b]">
@@ -166,7 +166,7 @@ function ClientHeader({ activeTab, setActiveTab }: { activeTab: string; setActiv
             <button className="grid h-9 w-9 place-items-center rounded-sm border border-[#dce3ed] bg-white"><MoreVertical size={15} /></button>
           </div>
 
-          <div className="hidden h-[123px] w-[335px] shrink-0 overflow-hidden rounded-lg lg:block">
+          <div className="hidden h-[123px] w-[335px] shrink-0 overflow-hidden rounded-sm lg:block">
             <img src="/dignity.png" alt="Moksha Sewa" className="h-full w-full object-cover" />
           </div>
 
@@ -197,7 +197,7 @@ function OverviewView() {
               ["♧", "Service", "Support communities"],
               ["⌁", "Dignity", "Respect in every farewell"],
               ["☆", "Awareness", "A kinder, humane society"]
-            ].map(x => <div key={x[1]} className="grid min-h-[86px] place-items-center text-center"><span className="mx-auto grid h-9 w-9 place-items-center rounded-full bg-[#f3efff] text-[19px] text-[#6535dc]">{x[0]}</span><b className="mt-1 block text-[11px] font-semibold text-[#33405d]">{x[1]}</b><small className="mt-0.5 block max-w-[110px] text-[11px] font-semibold leading-[1.35] text-[#8993a5]">{x[2]}</small></div>)}
+            ].map(x => <div key={x[1]} className="grid min-h-[86px] place-items-center text-center"><span className="mx-auto grid h-9 w-9 place-items-center rounded-sm bg-[#f3efff] text-[19px] text-[#6535dc]">{x[0]}</span><b className="mt-1 block text-[11px] font-semibold text-[#33405d]">{x[1]}</b><small className="mt-0.5 block max-w-[110px] text-[11px] font-semibold leading-[1.35] text-[#8993a5]">{x[2]}</small></div>)}
           </div>
         </Panel>
         <Panel title="Primary Contacts" action="+ Add Contact">
@@ -278,10 +278,10 @@ function ActivityView() {
               const tone = r[7] as string;
               return <div key={i} className="grid grid-cols-[68px_32px_1fr_150px_105px_24px] items-center gap-2 border-b border-[#eef1f5] py-2">
                 <div className="text-right text-[11px] font-semibold text-[#8a94a6]"><b className="block font-semibold text-[#6c7890]">{r[0]}</b>{r[1]}</div>
-                <span className={`grid h-8 w-8 place-items-center rounded-full ${toneColors[tone] || toneColors.gray}`}><Icon size={15} /></span>
+                <span className={`grid h-8 w-8 place-items-center rounded-sm ${toneColors[tone] || toneColors.gray}`}><Icon size={15} /></span>
                 <div><b className="block text-[11px] font-semibold text-[#34415d]">{r[2]}</b><small className="text-[11px] font-semibold text-[#8b95a6]">{r[3]}</small></div>
                 <div className="flex items-center gap-2"><Avatar text={r[5]!} /><div><b className="block text-[11px] font-semibold">{r[4]}</b><small className="text-[11px] font-semibold text-[#8b95a6]">{r[4] === "Manish Sirohi" ? "Workspace Admin" : "Social Media Manager"}</small></div></div>
-                <span className="justify-self-start rounded-full bg-[#f0edff] px-2 py-1 text-[11px] font-semibold text-[#5d39d2]">{r[6]}</span>
+                <span className="justify-self-start rounded-sm bg-[#f0edff] px-2 py-1 text-[11px] font-semibold text-[#5d39d2]">{r[6]}</span>
                 <button><MoreVertical size={13} className="text-[#8993a5]" /></button>
               </div>
             })}
@@ -295,7 +295,7 @@ function ActivityView() {
               ["Follow up on website content updates", "Due Jan 18, 2025", "Medium", "NG"],
               ["Discuss new service page requirements", "Due Jan 20, 2025", "Low", "MS"],
               ["Client feedback on audit recommendations", "Due Jan 22, 2025", "Low", "AS"],
-            ].map(x => <div key={x[0]} className="flex items-start gap-2 border-b border-[#eef1f5] py-2 last:border-0"><span className="mt-0.5 h-4 w-4 rounded border border-[#cdd6e3]" /><div className="min-w-0 flex-1"><b className="block text-[11px] font-semibold">{x[0]}</b><small className="text-[11px] font-semibold text-[#8b95a6]">{x[1]}</small></div><span className="rounded-full bg-[#fff0f4] px-2 py-1 text-[11px] font-semibold text-[#ef557d]">{x[2]}</span><Avatar text={x[3]!} /></div>)}
+            ].map(x => <div key={x[0]} className="flex items-start gap-2 border-b border-[#eef1f5] py-2 last:border-0"><span className="mt-0.5 h-4 w-4 rounded border border-[#cdd6e3]" /><div className="min-w-0 flex-1"><b className="block text-[11px] font-semibold">{x[0]}</b><small className="text-[11px] font-semibold text-[#8b95a6]">{x[1]}</small></div><span className="rounded-sm bg-[#fff0f4] px-2 py-1 text-[11px] font-semibold text-[#ef557d]">{x[2]}</span><Avatar text={x[3]!} /></div>)}
           </Panel>
           <Panel title="Client Notes" action="+ Add Note">
             <Note initials="MS" name="Manish Sirohi" time="Jan 15, 2025, 10:30 AM">Client is very happy with the recent campaign performance. Planning to expand to LinkedIn content next month.</Note>
@@ -390,10 +390,10 @@ function ChannelsView() {
               };
               const pc = platformColors[r[0]] || { bg: "bg-[#f0f3f7]", text: "text-[#64748b]" };
               return <tr key={r[0]} className="border-b border-[#eef1f5]">
-                <td className="px-2 py-2"><div className="flex items-center gap-2"><span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${pc.bg} ${pc.text}`}><I size={15} /></span><div><b className="block font-semibold text-[11px]">{r[0]}</b><small className="text-[11px] font-semibold text-[#8b95a6]">{r[1]}</small></div></div></td>
+                <td className="px-2 py-2"><div className="flex items-center gap-2"><span className={`grid h-7 w-7 shrink-0 place-items-center rounded-sm ${pc.bg} ${pc.text}`}><I size={15} /></span><div><b className="block font-semibold text-[11px]">{r[0]}</b><small className="text-[11px] font-semibold text-[#8b95a6]">{r[1]}</small></div></div></td>
                 <td className="px-2"><Badge text={r[9] === "reauth" ? "Needs Reauth" : "Connected"} tone={r[9] === "reauth" ? "orange" : "green"} dot /></td>
                 <td className="px-2"><b className="block font-semibold">{r[2]}</b><small className="text-[11px] font-semibold text-[#8993a5]">{r[3]}</small></td>
-                <td className="px-2 font-semibold"><span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${r[9] === "reauth" ? "bg-[#e52f42]" : "bg-[#15ad77]"}`} />{r[4]}</td>
+                <td className="px-2 font-semibold"><span className={`mr-1 inline-block h-1.5 w-1.5 rounded-sm ${r[9] === "reauth" ? "bg-[#e52f42]" : "bg-[#15ad77]"}`} />{r[4]}</td>
                 <td className="px-2"><b className="block font-semibold">{r[5]}</b><small className="text-[11px] font-semibold text-[#8993a5]">{i % 2 ? "Page Insights" : "Audience, Messages"}</small></td>
                 <td className="px-2 font-semibold">{r[6]}</td>
                 <td className="px-2 font-semibold"><div className="flex items-center gap-1.5"><Avatar text={r[7]!.split(" ").map((x: string) => x[0]).join("").slice(0, 2)} />{r[7]}</div></td>
@@ -434,7 +434,7 @@ function Panel({ title, subtitle, action, children, className = "" }: {
 function Avatar({ text }: { text: string }) {
   const colors = ["bg-[#6737dc]", "bg-[#347fe0]", "bg-[#a950b9]", "bg-[#27354c]", "bg-[#ef9b21]"];
   const n = (text || "").charCodeAt(0) % colors.length;
-  return <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-semibold text-white ${colors[n]}`}>{text}</span>;
+  return <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-sm text-[11px] font-semibold text-white ${colors[n]}`}>{text}</span>;
 }
 
 function Badge({ text, tone = "blue", dot = false }: { text: string; tone?: string; dot?: boolean }) {
@@ -443,7 +443,7 @@ function Badge({ text, tone = "blue", dot = false }: { text: string; tone?: stri
     green: "bg-[#e4f8ef] text-[#18a978]", orange: "bg-[#fff2dc] text-[#d98b17]",
     pink: "bg-[#ffeaf3] text-[#df5b92]"
   };
-  return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${map[tone]}`}>{dot && <i className="h-1.5 w-1.5 rounded-full bg-current" />}{text}</span>;
+  return <span className={`inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[11px] font-semibold ${map[tone]}`}>{dot && <i className="h-1.5 w-1.5 rounded-sm bg-current" />}{text}</span>;
 }
 
 function Goal({ Icon, title, desc, tone = "purple" }: { Icon: LucideIcon | IconType; title: string; desc: string; tone?: string }) {
@@ -471,7 +471,7 @@ function RecentActivity() {
     { title: "Replied to Google Review", desc: "Thanked user for their kind words", time: "2 days ago", Icon: FaGoogle, bg: "bg-[#e8f5e9]", color: "text-[#34a853]" },
     { title: "Campaign Published", desc: "Dignity for Every Life campaign is live", time: "3 days ago", Icon: CampaignIcon, bg: "bg-[#fff5e7]", color: "text-[#ef9b21]" },
   ];
-  return <div>{activities.map((a) => <div key={a.title} className="flex items-center gap-2 border-b border-[#eef1f5] py-2 last:border-0"><span className={`grid h-7 w-7 place-items-center rounded-full ${a.bg} ${a.color}`}><a.Icon size={13} /></span><div className="min-w-0 flex-1"><b className="block text-[11px] font-semibold">{a.title}</b><small className="block truncate text-[11px] font-semibold text-[#8993a5]">{a.desc}</small></div><small className="text-[11px] font-semibold text-[#8993a5]">{a.time}</small></div>)}</div>;
+  return <div>{activities.map((a) => <div key={a.title} className="flex items-center gap-2 border-b border-[#eef1f5] py-2 last:border-0"><span className={`grid h-7 w-7 place-items-center rounded-sm ${a.bg} ${a.color}`}><a.Icon size={13} /></span><div className="min-w-0 flex-1"><b className="block text-[11px] font-semibold">{a.title}</b><small className="block truncate text-[11px] font-semibold text-[#8993a5]">{a.desc}</small></div><small className="text-[11px] font-semibold text-[#8993a5]">{a.time}</small></div>)}</div>;
 }
 
 function Note({ initials, name, time, children }: { initials: string; name: string; time: string; children: ReactNode }) {
@@ -495,7 +495,7 @@ function ModuleGrid() {
     { name: "Leads", icon: UserPlus, color: "bg-[#fff0f4]", colorText: "text-[#ef4b78]" },
     { name: "Reports", icon: BarChart3, color: "bg-[#eef5ff]", colorText: "text-[#3485df]" },
   ];
-  return <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{modules.map((m, i) => <div key={m.name} className="rounded border border-[#e7ebf1] p-2"><div className="flex items-center gap-2"><span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full ${m.color} ${m.colorText}`}><m.icon size={12} /></span><b className="text-[11px] font-semibold">{m.name}</b></div><small className="mt-1 block text-[11px] font-semibold text-[#8993a5]">{i + 4} members</small><Badge text="Enabled" tone="green" dot /></div>)}</div>;
+  return <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{modules.map((m, i) => <div key={m.name} className="rounded border border-[#e7ebf1] p-2"><div className="flex items-center gap-2"><span className={`grid h-6 w-6 shrink-0 place-items-center rounded-sm ${m.color} ${m.colorText}`}><m.icon size={12} /></span><b className="text-[11px] font-semibold">{m.name}</b></div><small className="mt-1 block text-[11px] font-semibold text-[#8993a5]">{i + 4} members</small><Badge text="Enabled" tone="green" dot /></div>)}</div>;
 }
 
 function WorkflowCard({ title, tone }: { title: string; tone: string }) {

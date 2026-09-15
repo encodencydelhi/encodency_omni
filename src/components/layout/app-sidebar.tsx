@@ -37,7 +37,7 @@ function SidebarBrand({ isCollapsed, onNavigate }: { isCollapsed: boolean; onNav
 /** Support entry point, pinned to the foot of the rail. */
 function SidebarHelpCard() {
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-sm border border-border bg-card p-4">
       <p className="flex items-center gap-2 text-[0.8125rem] font-semibold text-foreground">
         <HeadphonesIcon className="size-4 text-primary" />
         Need Help?
@@ -92,7 +92,7 @@ export function AppSidebar() {
           onClick={toggleCollapsed}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-expanded={!isCollapsed}
-          className="absolute -right-3 top-24 size-6 rounded-full p-0 text-muted-foreground shadow-xs"
+          className="absolute -right-3 top-24 size-6 rounded-sm p-0 text-muted-foreground shadow-xs"
         >
           <PanelLeftIcon className={cn("size-3 transition-transform", isCollapsed && "rotate-180")} />
         </Button>

@@ -231,7 +231,7 @@ function Header() {
         </div>
       </div>
       <div className="flex items-start gap-2.5">
-        <button className="flex h-[42px] items-center gap-2 rounded-lg border border-[#D7E0EB] bg-white px-3 shadow-[0_1px_4px_rgb(31_50_81/0.06)]">
+        <button className="flex h-[42px] items-center gap-2 rounded-sm border border-[#D7E0EB] bg-white px-3 shadow-[0_1px_4px_rgb(31_50_81/0.06)]">
           <CalendarDays className="size-4 shrink-0 text-[#19315E]" />
           <span className="text-left leading-none">
             <b className="block text-[11.5px] leading-4 text-[#172044]">Last 30 days</b>
@@ -242,7 +242,7 @@ function Header() {
           <ChevronDown className="ml-1 size-3.5 shrink-0 text-[#75829D]" />
         </button>
         <div className="text-right">
-          <button className="flex h-[38px] items-center gap-2 rounded-lg bg-[#1A73E8] px-4 text-[12.5px] font-semibold text-white shadow-[0_1px_4px_rgb(26_115_232/0.3)] transition-colors hover:bg-[#1665CE]">
+          <button className="flex h-[38px] items-center gap-2 rounded-sm bg-[#1A73E8] px-4 text-[12.5px] font-semibold text-white shadow-[0_1px_4px_rgb(26_115_232/0.3)] transition-colors hover:bg-[#1665CE]">
             <RefreshCw className="size-3.5" />
             Sync Locations
           </button>
@@ -269,9 +269,9 @@ function Stat({
   color: string;
 }) {
   return (
-    <div className="flex min-h-[78px] items-center rounded-xl border border-[#DCE4EE] bg-white px-2.5 py-2.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)] transition-shadow hover:shadow-md">
+    <div className="flex min-h-[78px] items-center rounded-sm border border-[#DCE4EE] bg-white px-2.5 py-2.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)] transition-shadow hover:shadow-md">
       <div className="flex w-full items-center gap-2">
-        <span className={cn("grid size-[34px] shrink-0 place-items-center rounded-full", tint[color])}>
+        <span className={cn("grid size-[34px] shrink-0 place-items-center rounded-sm", tint[color])}>
           <Icon className="size-[17px]" />
         </span>
         <div className="min-w-0">
@@ -305,7 +305,7 @@ function Card({
   return (
     <section
       className={cn(
-        "flex flex-col overflow-hidden rounded-xl border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]",
+        "flex flex-col overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]",
         className,
       )}
     >
@@ -351,7 +351,7 @@ function PerformanceOverview() {
         <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 pb-1 text-[10px] text-[#52617D]">
           {performanceSeries.map((series) => (
             <span key={series.key} className="flex items-center gap-1.5">
-              <i className="size-2 rounded-full" style={{ background: series.color }} />
+              <i className="size-2 rounded-sm" style={{ background: series.color }} />
               {series.label}
             </span>
           ))}
@@ -473,10 +473,10 @@ function LocationsOverview() {
             </span>
             <span>{location.reviews}</span>
             <span className="flex items-center gap-1.5">
-              <i className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#EDF1F7]">
+              <i className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-sm bg-[#EDF1F7]">
                 <i
                   className={cn(
-                    "block h-full rounded-full",
+                    "block h-full rounded-sm",
                     location.profile >= 85 ? "bg-[#12A150]" : location.profile >= 75 ? "bg-[#5AC47F]" : "bg-[#2D7FF0]",
                   )}
                   style={{ width: `${location.profile}%` }}
@@ -498,7 +498,7 @@ function NeedsAttention() {
       <div className="scrollbar-thin flex min-h-0 flex-1 flex-col divide-y divide-[#EDF1F5] overflow-y-auto">
         {attention.map(({ title, detail, priority, icon: Icon, color }) => (
           <div key={title} className="flex flex-1 items-center gap-2 px-3 py-1.5">
-            <span className={cn("grid size-[26px] shrink-0 place-items-center rounded-lg", tint[color])}>
+            <span className={cn("grid size-[26px] shrink-0 place-items-center rounded-sm", tint[color])}>
               <Icon className="size-3.5" />
             </span>
             <div className="min-w-0 flex-1">
@@ -507,7 +507,7 @@ function NeedsAttention() {
             </div>
             <i
               className={cn(
-                "shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-semibold not-italic",
+                "shrink-0 rounded-sm px-2 py-0.5 text-[9.5px] font-semibold not-italic",
                 priorityTint[priority],
               )}
             >
@@ -528,7 +528,7 @@ function RecentReviews() {
           <div key={review.name} className="flex flex-1 items-center gap-2.5 px-3.5 py-2">
             <span
               className={cn(
-                "grid size-8 shrink-0 place-items-center rounded-full text-[10px] font-semibold",
+                "grid size-8 shrink-0 place-items-center rounded-sm text-[10px] font-semibold",
                 avatarTints[index],
               )}
             >
@@ -695,9 +695,9 @@ function CustomerActions() {
         {customerActions.map(({ label, value, trend, note, icon: Icon, color }) => (
           <div
             key={label}
-            className="flex flex-col justify-center rounded-lg border border-[#E4EAF2] bg-[#FBFCFE] px-2 py-2"
+            className="flex flex-col justify-center rounded-sm border border-[#E4EAF2] bg-[#FBFCFE] px-2 py-2"
           >
-            <span className={cn("grid size-8 place-items-center rounded-full", tint[color])}>
+            <span className={cn("grid size-8 place-items-center rounded-sm", tint[color])}>
               <Icon className="size-4" />
             </span>
             <p className="mt-1.5 truncate text-[9.5px] leading-4 text-[#6B7A96]">{label}</p>

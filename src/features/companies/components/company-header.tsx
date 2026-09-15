@@ -31,8 +31,8 @@ function MetaItem({ icon: Icon, children }: { icon: typeof MailIcon; children: R
 export function CompanyHeader({ company, isLoading, actions }: CompanyHeaderProps) {
   if (isLoading || !company) {
     return (
-      <div className="flex items-start gap-4 rounded-xl border border-border bg-card p-5">
-        <Skeleton className="size-14 rounded-xl" />
+      <div className="flex items-start gap-4 rounded-sm border border-border bg-card p-5">
+        <Skeleton className="size-14 rounded-sm" />
         <div className="flex-1 space-y-3">
           <Skeleton className="h-6 w-56" />
           <Skeleton className="h-4 w-80" />
@@ -43,11 +43,11 @@ export function CompanyHeader({ company, isLoading, actions }: CompanyHeaderProp
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-sm border border-border bg-card p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex min-w-0 items-start gap-4">
-          <Avatar className="size-14 rounded-xl">
-            <AvatarFallback className="rounded-xl text-sm">{getInitials(company.name)}</AvatarFallback>
+          <Avatar className="size-14 rounded-sm">
+            <AvatarFallback className="rounded-sm text-sm">{getInitials(company.name)}</AvatarFallback>
           </Avatar>
 
           <div className="min-w-0 space-y-2">

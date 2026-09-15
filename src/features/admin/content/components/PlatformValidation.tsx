@@ -29,12 +29,12 @@ export function PlatformValidationPanel({ validations, totalPlatforms }: Props) 
   const allReady = errorCount === 0 && warningCount === 0;
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)] overflow-hidden">
+    <div className="rounded-sm border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)] overflow-hidden">
       <header className="px-3 py-2.5 border-b border-[#EDF1F5]">
         <div className="flex items-center justify-between">
           <h3 className="text-[13.5px] font-semibold text-[#172044]">Channel Status</h3>
           <span className={cn(
-            "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+            "rounded-sm px-2 py-0.5 text-[10px] font-semibold",
             allReady ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-700"
           )}>
             {readyCount}/{totalPlatforms} ready
@@ -47,7 +47,7 @@ export function PlatformValidationPanel({ validations, totalPlatforms }: Props) 
           const meta = PLATFORM_META[v.platform];
 
           return (
-            <div key={v.platform} className="rounded-lg border border-[#E2E8F0] overflow-hidden">
+            <div key={v.platform} className="rounded-sm border border-[#E2E8F0] overflow-hidden">
               <div className="flex items-center gap-2 px-2.5 py-1.5">
                 {LEVEL_ICON[v.level]}
                 <PlatformBadge platform={v.platform} size="sm" />

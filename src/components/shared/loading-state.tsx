@@ -6,7 +6,7 @@ export function MetricGridSkeleton({ count = 4, className }: { count?: number; c
   return (
     <div className={cn("grid gap-4 sm:grid-cols-2 xl:grid-cols-4", className)}>
       {Array.from({ length: count }, (_, index) => (
-        <div key={index} className="space-y-3 rounded-lg border border-border bg-card p-4">
+        <div key={index} className="space-y-3 rounded-sm border border-border bg-card p-4">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="h-7 w-20" />
           <Skeleton className="h-3 w-28" />

@@ -24,9 +24,9 @@ export function HealthIndicator({ tone, label, pulse = false, className }: Healt
     <span className={cn("inline-flex items-center gap-2 text-[0.8125rem] text-foreground", className)}>
       <span className="relative flex size-2 shrink-0">
         {pulse ? (
-          <span className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-60", DOT_TONES[tone])} />
+          <span className={cn("absolute inline-flex size-full animate-ping rounded-sm opacity-60", DOT_TONES[tone])} />
         ) : null}
-        <span className={cn("relative inline-flex size-2 rounded-full", DOT_TONES[tone])} />
+        <span className={cn("relative inline-flex size-2 rounded-sm", DOT_TONES[tone])} />
       </span>
       {label}
     </span>

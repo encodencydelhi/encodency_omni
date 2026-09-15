@@ -105,7 +105,7 @@ function Stepper({ current, onSelect }: { current: number; onSelect: (next: numb
               >
                 <span
                   className={cn(
-                    "grid size-[26px] shrink-0 place-items-center rounded-full text-[10.5px] font-semibold transition-all",
+                    "grid size-[26px] shrink-0 place-items-center rounded-sm text-[10.5px] font-semibold transition-all",
                     done && "bg-[#E11D28] text-white",
                     active && "bg-[#E11D28] text-white ring-4 ring-[#E11D28]/15",
                     !done && !active && "border border-[#DFE4EB] bg-white text-[#6B7280]",
@@ -135,7 +135,7 @@ function Stepper({ current, onSelect }: { current: number; onSelect: (next: numb
               {index < CAMPAIGN_STEPS.length - 1 && (
                 <i
                   className={cn(
-                    "mx-3 hidden h-[2px] w-6 shrink-0 rounded-full sm:block",
+                    "mx-3 hidden h-[2px] w-6 shrink-0 rounded-sm sm:block",
                     step.id < current - 1 && "bg-[#22C55E]",
                     (step.id === current - 1 || (current === 1 && step.id === 1)) && "bg-[#E11D28]",
                     step.id >= current && !(current === 1 && step.id === 1) && "bg-[#E2E8F0]",
@@ -178,7 +178,7 @@ function FooterBar({
           {showDraft ? (
             <button
               onClick={onExit}
-              className="flex h-8 items-center gap-1.5 rounded-lg border border-[#DFE4EB] px-3 text-[11px] font-semibold text-[#29354E] transition-colors hover:bg-[#F8FAFC]"
+              className="flex h-8 items-center gap-1.5 rounded-sm border border-[#DFE4EB] px-3 text-[11px] font-semibold text-[#29354E] transition-colors hover:bg-[#F8FAFC]"
             >
               <Save className="size-3.5" />
               Save as Draft
@@ -186,7 +186,7 @@ function FooterBar({
           ) : nav.back ? (
             <button
               onClick={onBack}
-              className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-[11px] font-semibold text-[#1975E7] transition-colors hover:bg-[#F4F9FF]"
+              className="flex h-8 items-center gap-1.5 rounded-sm px-2 text-[11px] font-semibold text-[#1975E7] transition-colors hover:bg-[#F4F9FF]"
             >
               <ArrowLeft className="size-3.5" />
               {nav.back}
@@ -198,7 +198,7 @@ function FooterBar({
 
         <div className="flex items-center gap-2">
           {isLast && (
-            <button className="flex h-8 items-center gap-1.5 rounded-lg border border-[#DFE4EB] px-3 text-[11px] font-semibold text-[#29354E] transition-colors hover:bg-[#F8FAFC]">
+            <button className="flex h-8 items-center gap-1.5 rounded-sm border border-[#DFE4EB] px-3 text-[11px] font-semibold text-[#29354E] transition-colors hover:bg-[#F8FAFC]">
               <Eye className="size-3.5" />
               Preview Campaign
             </button>
@@ -206,7 +206,7 @@ function FooterBar({
           {nav.back && (
             <button
               onClick={onBack}
-              className="flex h-8 items-center gap-1.5 rounded-lg border border-[#DFE4EB] bg-white px-5 text-[11px] font-semibold text-[#29354E] transition-colors hover:bg-[#F8FAFC]"
+              className="flex h-8 items-center gap-1.5 rounded-sm border border-[#DFE4EB] bg-white px-5 text-[11px] font-semibold text-[#29354E] transition-colors hover:bg-[#F8FAFC]"
             >
               <ArrowLeft className="size-3.5" />
               {nav.back}
@@ -214,7 +214,7 @@ function FooterBar({
           )}
           <button
             onClick={isLast ? onExit : onNext}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-[#E11D28] px-5 text-[11px] font-semibold text-white transition-colors hover:bg-[#C3161F]"
+            className="flex h-8 items-center gap-1.5 rounded-sm bg-[#E11D28] px-5 text-[11px] font-semibold text-white transition-colors hover:bg-[#C3161F]"
           >
             {isLast && <Rocket className="size-3.5" />}
             {nav.next}

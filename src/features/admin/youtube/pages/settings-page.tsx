@@ -183,7 +183,7 @@ function Settings() {
                 key={s.id}
                 href={`#${s.id}`}
                 aria-current={active === s.id ? "true" : undefined}
-                className={cn("flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[12.5px] font-medium transition", active === s.id ? "bg-[#FEF1F2] text-[#0F1B3D]" : "text-[#3C4A66] hover:bg-[#F8FAFC]", s.id === "danger" && "text-[#C81E2B]", yt.focus)}
+                className={cn("flex shrink-0 items-center gap-2 whitespace-nowrap rounded-sm px-2.5 py-1.5 text-[12.5px] font-medium transition", active === s.id ? "bg-[#FEF1F2] text-[#0F1B3D]" : "text-[#3C4A66] hover:bg-[#F8FAFC]", s.id === "danger" && "text-[#C81E2B]", yt.focus)}
               >
                 <s.icon className={cn("size-3.5", active === s.id ? "text-[#E5202E]" : "text-[#98A2B3]", s.id === "danger" && "text-[#C81E2B]")} />
                 {s.label}
@@ -358,7 +358,7 @@ function Settings() {
 
       {dirty && (
         <div className="fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 lg:pl-[240px]">
-          <div role="region" aria-label="Unsaved settings" className="flex w-full max-w-[640px] items-center gap-3 rounded-xl border border-[#E4E9F0] bg-white px-4 py-2.5 shadow-[0_16px_40px_-12px_rgba(15,27,61,0.3)]">
+          <div role="region" aria-label="Unsaved settings" className="flex w-full max-w-[640px] items-center gap-3 rounded-sm border border-[#E4E9F0] bg-white px-4 py-2.5 shadow-[0_16px_40px_-12px_rgba(15,27,61,0.3)]">
             <AlertTriangle className="size-4 shrink-0 text-[#B54708]" />
             <p className="flex-1 text-[13px] font-medium text-[#0F1B3D]">You have unsaved changes</p>
             <Button size="sm" variant="ghost" onClick={discard} disabled={saving}>Discard</Button>
@@ -429,7 +429,7 @@ function PermissionsSection() {
         {ALL_SCOPES.map((scope) => {
           const granted = scopes.includes(scope);
           return (
-            <li key={scope} className={cn("flex items-start gap-2.5 rounded-lg border px-3 py-2.5", granted ? "border-[#E4E9F0]" : "border-[#FBE3B6] bg-[#FFFAF0]")}>
+            <li key={scope} className={cn("flex items-start gap-2.5 rounded-sm border px-3 py-2.5", granted ? "border-[#E4E9F0]" : "border-[#FBE3B6] bg-[#FFFAF0]")}>
               {granted ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[#12B76A]" /> : <XCircle className="mt-0.5 size-4 shrink-0 text-[#B54708]" />}
               <span className="min-w-0">
                 <span className="flex items-center gap-2 text-[13px] font-semibold text-[#0F1B3D]">{SCOPE_INFO[scope].label}<span className="sr-only">{granted ? "granted" : "missing"}</span></span>
@@ -594,7 +594,7 @@ function PreviewSection() {
           <ul className="space-y-1 rounded-[10px] border border-[#E4E9F0] p-2">
             {ALL_SCOPES.map((s) => (
               <li key={s}>
-                <label className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-[#F8FAFC]">
+                <label className="flex cursor-pointer items-center gap-2.5 rounded-sm px-2 py-1.5 hover:bg-[#F8FAFC]">
                   <Checkbox checked={scopes.includes(s)} onCheckedChange={(c) => simulate.toggleScope(s, Boolean(c))} />
                   <span className="min-w-0">
                     <span className="block text-[12.5px] font-medium text-[#0F1B3D]">{SCOPE_INFO[s].label}</span>

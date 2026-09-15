@@ -124,8 +124,8 @@ export function SeoOverviewPage() {
             orange: "bg-[#FFF0DC] text-[#F28C28]",
           };
           return (
-            <div key={i} className="flex min-h-[70px] items-center gap-3 rounded-lg border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_3px_rgb(47_44_42/0.035)]">
-              <span className={cn("grid size-[34px] shrink-0 place-items-center rounded-full", c[stat.color])}><stat.icon className="size-[18px]" /></span>
+            <div key={i} className="flex min-h-[70px] items-center gap-3 rounded-sm border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_3px_rgb(47_44_42/0.035)]">
+              <span className={cn("grid size-[34px] shrink-0 place-items-center rounded-sm", c[stat.color])}><stat.icon className="size-[18px]" /></span>
               <div className="min-w-0">
                 <p className="truncate text-[9.5px] font-semibold text-[#52617D]">{stat.label}</p>
                 <div className="flex items-baseline gap-1.5">
@@ -240,7 +240,7 @@ export function SeoOverviewPage() {
             <div className="ml-4 flex-1 space-y-2">
               {auditData.map((d) => (
                 <div key={d.name} className="flex items-center justify-between text-[9.5px] font-semibold">
-                  <span className="flex items-center gap-1.5 text-[#52617D]"><i className="size-2 rounded-full" style={{ backgroundColor: d.color }} />{d.name}</span>
+                  <span className="flex items-center gap-1.5 text-[#52617D]"><i className="size-2 rounded-sm" style={{ backgroundColor: d.color }} />{d.name}</span>
                   <span className="text-[#172044] font-semibold">{d.value}</span>
                 </div>
               ))}
@@ -359,10 +359,10 @@ export function SeoOverviewPage() {
         }>
           <div className="p-3 h-full flex flex-col">
             <div className="flex gap-4 text-[8.5px] font-semibold text-[#52617D] mb-4">
-              <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#3B82F6]" /> Your Site</span>
-              <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#A855F7]" /> Competitor 1</span>
-              <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#F59E0B]" /> Competitor 2</span>
-              <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#10B981]" /> Competitor 3</span>
+              <span className="flex items-center gap-1.5"><i className="size-2 rounded-sm bg-[#3B82F6]" /> Your Site</span>
+              <span className="flex items-center gap-1.5"><i className="size-2 rounded-sm bg-[#A855F7]" /> Competitor 1</span>
+              <span className="flex items-center gap-1.5"><i className="size-2 rounded-sm bg-[#F59E0B]" /> Competitor 2</span>
+              <span className="flex items-center gap-1.5"><i className="size-2 rounded-sm bg-[#10B981]" /> Competitor 3</span>
             </div>
             <div className="flex-1">
               <ResponsiveContainer width="100%" height="100%">

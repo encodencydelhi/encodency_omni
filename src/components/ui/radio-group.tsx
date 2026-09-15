@@ -12,7 +12,7 @@ export function RadioGroupItem({ className, ...props }: React.ComponentProps<typ
   return (
     <RadioGroupPrimitive.Item
       className={cn(
-        "aspect-square size-4 shrink-0 rounded-full border border-input bg-card shadow-xs outline-none transition-colors",
+        "aspect-square size-4 shrink-0 rounded-sm border border-input bg-card shadow-xs outline-none transition-colors",
         "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/20",
         "data-[state=checked]:border-primary disabled:cursor-not-allowed disabled:opacity-50",
         className,
@@ -20,7 +20,7 @@ export function RadioGroupItem({ className, ...props }: React.ComponentProps<typ
       {...props}
     >
       <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
-        <span className="block size-2 rounded-full bg-primary" />
+        <span className="block size-2 rounded-sm bg-primary" />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   );

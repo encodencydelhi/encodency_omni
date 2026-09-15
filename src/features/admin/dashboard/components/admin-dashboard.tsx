@@ -14,29 +14,22 @@ import {
   YAxis,
 } from "recharts";
 import {
-  Activity,
   AlertTriangle,
   ArrowUp,
   BarChart3,
   CalendarDays,
-  CheckCircle2,
   ChevronDown,
   CircleStar,
-  DollarSign,
   Filter,
   Gauge,
   Globe2,
   Megaphone,
-  MessageSquare,
   MousePointerClick,
   Navigation,
   Phone,
   Plus,
   SearchCheck,
   Sparkles,
-  Star,
-  Target,
-  TrendingUp,
   UsersRound,
 } from "lucide-react";
 import { ChannelLogo } from "../../shared/channel-logo";
@@ -225,32 +218,32 @@ export function AdminDashboard() {
       </div>
     );
   return (
-    <div className="space-y-3.5">
+    <div className="space-y-1">
       <Header />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8 gap-1">
         {topStats.map((stat) => (
           <Stat key={stat.label} {...stat} />
         ))}
       </div>
-      <div className="grid items-start gap-3 grid-cols-1 lg:grid-cols-3">
+      <div className="grid items-start gap-1 grid-cols-1 lg:grid-cols-3">
         <Performance />
         <ChannelOverview channels={data.channels} />
         <Attention items={data.attention} />
       </div>
 
       {/* Row 2: Ad Spend & ROI, Monthly Marketing Goals, Live Activity Stream */}
-      <div className="grid gap-3 grid-cols-1 lg:grid-cols-3">
+      <div className="grid gap-1 grid-cols-1 lg:grid-cols-3">
         <RoiBudgetOverview />
         <MarketingGoals />
         <ActivityFeed />
       </div>
 
-      <div className="grid gap-3 grid-cols-1 lg:grid-cols-3">
+      <div className="grid gap-1 grid-cols-1 lg:grid-cols-3">
         <LeadSources />
         <Campaigns />
         <Upcoming />
       </div>
-      <div className="grid gap-3 grid-cols-1 lg:grid-cols-3">
+      <div className="grid gap-1 grid-cols-1 lg:grid-cols-3">
         <RecentLeads leads={data.recentLeads} />
         <SeoSnapshot />
         <GmbSnapshot />
@@ -278,8 +271,8 @@ function Header() {
           “Consistent effort creates extraordinary brands.”
           <footer className="text-[11px] font-normal text-slate-400">— EnCodency</footer>
         </blockquote>
-        <button className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-3.5 py-2 text-left shadow-2xs transition-all hover:border-slate-300 hover:shadow-xs cursor-pointer shrink-0">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600">
+        <button className="flex items-center gap-3 rounded-sm border border-slate-200/80 bg-white px-3.5 py-2 text-left shadow-2xs transition-all hover:border-slate-300 hover:shadow-xs cursor-pointer shrink-0">
+          <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-blue-50 text-blue-600">
             <CalendarDays className="size-4" />
           </span>
           <span className="leading-tight">
@@ -319,12 +312,12 @@ function Stat({
   const style = c[color] ?? { bg: "bg-blue-50/90", text: "text-blue-600" };
 
   return (
-    <div className="group relative flex flex-col justify-between min-h-[84px] rounded-xl border border-slate-200/80 bg-white px-3.5 py-2.5 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xs">
+    <div className="group relative flex flex-col justify-between min-h-[84px] rounded-sm border border-slate-200/80 bg-white px-3.5 py-2.5 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xs">
       <div className="flex items-center justify-between gap-1.5">
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 leading-none">
           {label}
         </span>
-        <span className={cn("grid size-7 shrink-0 place-items-center rounded-lg transition-transform group-hover:scale-105", style.bg, style.text)}>
+        <span className={cn("grid size-7 shrink-0 place-items-center rounded-sm transition-transform group-hover:scale-105", style.bg, style.text)}>
           <Icon className="size-3.5" />
         </span>
       </div>
@@ -332,7 +325,7 @@ function Stat({
       <div className="mt-1.5 flex items-baseline justify-between gap-1">
         <b className="text-xl font-bold tracking-tight text-slate-900 tabular-nums">{value}</b>
         {trend && (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10.5px] font-bold text-emerald-700 border border-emerald-200/50">
+          <span className="inline-flex items-center gap-0.5 rounded-sm bg-emerald-50 px-1.5 py-0.5 text-[10.5px] font-bold text-emerald-700 border border-emerald-200/50">
             <ArrowUp className="size-2.5" />
             {trend}
           </span>
@@ -372,19 +365,19 @@ function Performance() {
       <div className="px-2.5 pb-2">
         <div className="flex flex-wrap items-center gap-3 py-1.5 text-[12px]">
           <span className="flex items-center gap-1.5">
-            <i className="size-2 rounded-full bg-[#F20C20]" />
+            <i className="size-2 rounded-sm bg-[#F20C20]" />
             Website Visits
           </span>
           <span className="flex items-center gap-1.5">
-            <i className="size-2 rounded-full bg-[#F2709B]" />
+            <i className="size-2 rounded-sm bg-[#F2709B]" />
             Social Reach
           </span>
           <span className="flex items-center gap-1.5">
-            <i className="size-2 rounded-full bg-[#3186F3]" />
+            <i className="size-2 rounded-sm bg-[#3186F3]" />
             Leads
           </span>
           <span className="flex items-center gap-1.5">
-            <i className="size-2 rounded-full bg-[#10A66E]" />
+            <i className="size-2 rounded-sm bg-[#10A66E]" />
             Conversions
           </span>
         </div>
@@ -461,7 +454,7 @@ function ChannelOverview({
               <span className="text-slate-600 font-medium tabular-nums">{ch.engagement}</span>
               <span className="text-slate-900 font-bold tabular-nums">{ch.leads}</span>
               <span>
-                <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/60">
+                <span className="rounded-sm bg-emerald-50 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/60">
                   Connected
                 </span>
               </span>
@@ -505,7 +498,7 @@ function Attention({
             key={item.id}
             className="flex items-center gap-2.5 px-3 py-2 text-xs transition-colors hover:bg-slate-50/80"
           >
-            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-amber-50 text-amber-600 border border-amber-200/60">
+            <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-amber-50 text-amber-600 border border-amber-200/60">
               <AlertTriangle className="size-3.5" />
             </span>
             <div className="min-w-0 flex-1">
@@ -516,7 +509,7 @@ function Attention({
                 {item.detail}
               </p>
             </div>
-            <span className="shrink-0 rounded-md bg-rose-50 px-2 py-0.5 text-[10.5px] font-bold text-rose-700 border border-rose-200/60">
+            <span className="shrink-0 rounded-sm bg-rose-50 px-2 py-0.5 text-[10.5px] font-bold text-rose-700 border border-rose-200/60">
               {
                 [
                   "Connection",
@@ -565,7 +558,7 @@ function LeadSources() {
           {sources.map((s) => (
             <div key={s.name} className="flex items-center gap-1.5 text-xs leading-5">
               <i
-                className="size-2 rounded-full shrink-0"
+                className="size-2 rounded-sm shrink-0"
                 style={{ background: s.color }}
               />
               <span className="flex-1 whitespace-nowrap text-slate-700 font-medium">{s.name}</span>
@@ -707,10 +700,10 @@ function RecentLeads({
           {leads.map((l, i) => (
             <div
               key={l.id}
-              className="grid min-w-[580px] grid-cols-[140px_85px_115px_85px_105px_50px] items-center gap-2 py-2 px-1 text-xs transition-colors hover:bg-slate-50/80 rounded-xl"
+              className="grid min-w-[580px] grid-cols-[140px_85px_115px_85px_105px_50px] items-center gap-2 py-2 px-1 text-xs transition-colors hover:bg-slate-50/80 rounded-sm"
             >
               <span className="flex items-center gap-1.5 min-w-0">
-                <span className={cn("grid size-5 shrink-0 place-items-center rounded-full font-bold text-[10px] shadow-2xs", avatarColors[i % avatarColors.length])}>
+                <span className={cn("grid size-5 shrink-0 place-items-center rounded-sm font-bold text-[10px] shadow-2xs", avatarColors[i % avatarColors.length])}>
                   {l.name.charAt(0)}
                 </span>
                 <b className="whitespace-nowrap font-semibold text-slate-900 text-xs">{l.name}</b>
@@ -718,7 +711,7 @@ function RecentLeads({
               <span className="text-slate-600 font-medium whitespace-nowrap">{l.source}</span>
               <span className="whitespace-nowrap text-slate-600">{projects[i % projects.length]}</span>
               <span>
-                <span className={cn("inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold border", stageStyles[l.stage] || "bg-slate-50 text-slate-700 border-slate-200")}>
+                <span className={cn("inline-flex items-center rounded-sm px-1.5 py-0.5 text-[10px] font-bold border", stageStyles[l.stage] || "bg-slate-50 text-slate-700 border-slate-200")}>
                   {l.stage}
                 </span>
               </span>
@@ -736,17 +729,17 @@ function RoiBudgetOverview() {
     <Box title="Ad Budget & ROI Overview" action="View breakdown">
       <div className="p-3 space-y-3">
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-2">
+          <div className="rounded-sm border border-emerald-100 bg-emerald-50/60 p-2">
             <span className="text-[10px] font-bold text-slate-500 uppercase block">Total Revenue</span>
             <b className="text-sm font-extrabold text-slate-900 block mt-0.5">₹6,84,000</b>
             <span className="text-[10px] font-bold text-emerald-600">↑ 34%</span>
           </div>
-          <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-2">
+          <div className="rounded-sm border border-blue-100 bg-blue-50/60 p-2">
             <span className="text-[10px] font-bold text-slate-500 uppercase block">Ad Spend</span>
             <b className="text-sm font-extrabold text-slate-900 block mt-0.5">₹1,42,500</b>
             <span className="text-[10px] font-semibold text-slate-500">75% budget</span>
           </div>
-          <div className="rounded-xl border border-purple-100 bg-purple-50/60 p-2">
+          <div className="rounded-sm border border-purple-100 bg-purple-50/60 p-2">
             <span className="text-[10px] font-bold text-slate-500 uppercase block">ROAS Multiplier</span>
             <b className="text-sm font-extrabold text-purple-700 block mt-0.5">4.8x</b>
             <span className="text-[10px] font-bold text-emerald-600">High Yield</span>
@@ -759,24 +752,24 @@ function RoiBudgetOverview() {
             <span className="text-slate-600 text-[11px]">Meta & Instagram Ads</span>
             <span className="text-slate-900 font-extrabold text-[11px]">₹60,000 <span className="text-slate-400 font-normal">(42%)</span></span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-            <div className="h-full rounded-full bg-pink-500" style={{ width: "42%" }} />
+          <div className="h-1.5 w-full rounded-sm bg-slate-100 overflow-hidden">
+            <div className="h-full rounded-sm bg-pink-500" style={{ width: "42%" }} />
           </div>
 
           <div className="flex items-center justify-between text-xs font-bold pt-1">
             <span className="text-slate-600 text-[11px]">Google Search & Display</span>
             <span className="text-slate-900 font-extrabold text-[11px]">₹42,500 <span className="text-slate-400 font-normal">(30%)</span></span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-            <div className="h-full rounded-full bg-blue-500" style={{ width: "30%" }} />
+          <div className="h-1.5 w-full rounded-sm bg-slate-100 overflow-hidden">
+            <div className="h-full rounded-sm bg-blue-500" style={{ width: "30%" }} />
           </div>
 
           <div className="flex items-center justify-between text-xs font-bold pt-1">
             <span className="text-slate-600 text-[11px]">WhatsApp Cloud API Broadcasts</span>
             <span className="text-slate-900 font-extrabold text-[11px]">₹25,000 <span className="text-slate-400 font-normal">(18%)</span></span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-            <div className="h-full rounded-full bg-emerald-500" style={{ width: "18%" }} />
+          <div className="h-1.5 w-full rounded-sm bg-slate-100 overflow-hidden">
+            <div className="h-full rounded-sm bg-emerald-500" style={{ width: "18%" }} />
           </div>
         </div>
       </div>
@@ -803,8 +796,8 @@ function MarketingGoals() {
                 {g.current} <span className="text-slate-400 font-medium">/ {g.target}</span> ({g.percent}%)
               </span>
             </div>
-            <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-              <div className={cn("h-full rounded-full transition-all duration-500", g.color)} style={{ width: `${g.percent}%` }} />
+            <div className="h-2 w-full rounded-sm bg-slate-100 overflow-hidden">
+              <div className={cn("h-full rounded-sm transition-all duration-500", g.color)} style={{ width: `${g.percent}%` }} />
             </div>
           </div>
         ))}
@@ -825,9 +818,9 @@ function ActivityFeed() {
     <Box title="Live Activity Stream" action="View log">
       <div className="p-2.5 divide-y divide-slate-100 max-h-[220px] overflow-y-auto scrollbar-thin">
         {activities.map((act, i) => (
-          <div key={i} className="flex items-center justify-between gap-2.5 py-2 text-xs hover:bg-slate-50/80 px-1 rounded-lg">
+          <div key={i} className="flex items-center justify-between gap-2.5 py-2 text-xs hover:bg-slate-50/80 px-1 rounded-sm">
             <div className="flex items-center gap-2 min-w-0">
-              <span className={cn("size-2 rounded-full shrink-0", i === 0 ? "bg-blue-500 animate-pulse" : i === 1 ? "bg-emerald-500" : i === 2 ? "bg-amber-500" : "bg-purple-500")} />
+              <span className={cn("size-2 rounded-sm shrink-0", i === 0 ? "bg-blue-500 animate-pulse" : i === 1 ? "bg-emerald-500" : i === 2 ? "bg-amber-500" : "bg-purple-500")} />
               <p className="font-semibold text-slate-800 text-[11.5px] truncate">{act.text}</p>
             </div>
             <span className="text-[10px] text-slate-400 font-semibold shrink-0">{act.time}</span>
@@ -850,7 +843,7 @@ function SeoSnapshot() {
         </div>
 
         {/* Top Keywords Ranking */}
-        <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2 text-xs">
+        <div className="rounded-sm border border-slate-100 bg-slate-50/60 p-2 text-xs">
           <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase border-b border-slate-200/60 pb-1">
             <span>Top Keywords</span>
             <span>Rank</span>
@@ -870,20 +863,20 @@ function SeoSnapshot() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-rose-200/80 bg-rose-50/60 p-2.5 text-xs text-rose-900 shadow-2xs">
+        <div className="rounded-sm border border-rose-200/80 bg-rose-50/60 p-2.5 text-xs text-rose-900 shadow-2xs">
           <div className="flex items-center gap-2 font-bold text-rose-900">
-            <span className="grid size-5 place-items-center rounded-md bg-rose-100 text-rose-700">
+            <span className="grid size-5 place-items-center rounded-sm bg-rose-100 text-rose-700">
               <AlertTriangle className="size-3.5" />
             </span>
             <span>3 critical issues need attention</span>
           </div>
           <ul className="mt-1 space-y-0.5 text-rose-800 font-medium pl-1 text-[11px]">
             <li className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full bg-rose-500" />
+              <span className="size-1.5 rounded-sm bg-rose-500" />
               12 keywords dropped position
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full bg-rose-500" />
+              <span className="size-1.5 rounded-sm bg-rose-500" />
               Missing meta descriptions on 4 pages
             </li>
           </ul>
@@ -897,8 +890,8 @@ function GmbSnapshot() {
   return (
     <Box title="Google Business Snapshot" action="View details">
       <div className="p-3 space-y-2.5">
-        <div className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/60 p-2.5">
-          <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-white border border-slate-200/60 p-1.5 shadow-2xs">
+        <div className="flex items-center gap-2.5 rounded-sm border border-slate-100 bg-slate-50/60 p-2.5">
+          <div className="grid size-9 shrink-0 place-items-center rounded-sm bg-white border border-slate-200/60 p-1.5 shadow-2xs">
             <ChannelLogo channel="Google Business" className="size-5" />
           </div>
           <div className="flex items-baseline gap-1">
@@ -906,23 +899,23 @@ function GmbSnapshot() {
             <span className="text-amber-500 font-bold text-sm">★</span>
           </div>
           <span className="text-[11px] text-slate-500 font-medium">428 reviews</span>
-          <span className="ml-auto rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/60">
+          <span className="ml-auto rounded-sm bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/60">
             ↑ 0.2
           </span>
         </div>
 
         <div className="grid grid-cols-3 gap-1.5 text-xs">
-          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center">
+          <div className="rounded-sm border border-slate-100 bg-slate-50/50 p-2 text-center">
             <Phone className="mx-auto size-3.5 text-rose-500 mb-1" />
             <b className="block text-slate-900 font-bold tabular-nums text-xs">1,248</b>
             <span className="text-[10px] text-emerald-600 font-semibold">Calls ↑18%</span>
           </div>
-          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center">
+          <div className="rounded-sm border border-slate-100 bg-slate-50/50 p-2 text-center">
             <MousePointerClick className="mx-auto size-3.5 text-blue-500 mb-1" />
             <b className="block text-slate-900 font-bold tabular-nums text-xs">2,836</b>
             <span className="text-[10px] text-emerald-600 font-semibold">Clicks ↑24%</span>
           </div>
-          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center">
+          <div className="rounded-sm border border-slate-100 bg-slate-50/50 p-2 text-center">
             <Navigation className="mx-auto size-3.5 text-emerald-500 mb-1" />
             <b className="block text-slate-900 font-bold tabular-nums text-xs">1,120</b>
             <span className="text-[10px] text-slate-500 font-medium">Directions</span>
@@ -930,7 +923,7 @@ function GmbSnapshot() {
         </div>
 
         {/* Recent Review Card */}
-        <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 p-2 text-xs">
+        <div className="rounded-sm border border-amber-200/80 bg-amber-50/50 p-2 text-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 text-amber-500 font-bold text-[10px]">
               <span>★★★★★</span>
@@ -947,8 +940,8 @@ function GmbSnapshot() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/60 p-2 text-[11px] font-semibold text-emerald-800 flex items-center gap-2 shadow-2xs">
-          <span className="grid size-5 shrink-0 place-items-center rounded-full bg-emerald-200/60 text-emerald-800 font-bold">
+        <div className="rounded-sm border border-emerald-200/80 bg-emerald-50/60 p-2 text-[11px] font-semibold text-emerald-800 flex items-center gap-2 shadow-2xs">
+          <span className="grid size-5 shrink-0 place-items-center rounded-sm bg-emerald-200/60 text-emerald-800 font-bold">
             ✓
           </span>
           <span>You&apos;re doing great! Keep engaging with reviews.</span>
@@ -974,9 +967,9 @@ function QuickActions() {
         {actions.map(([Icon, label, colors]) => (
           <button
             key={label}
-            className="group flex min-h-[44px] items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-left text-xs font-semibold text-slate-800 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xs hover:bg-slate-50/60 cursor-pointer"
+            className="group flex min-h-[44px] items-center gap-2.5 rounded-sm border border-slate-200/80 bg-white px-3 py-2 text-left text-xs font-semibold text-slate-800 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xs hover:bg-slate-50/60 cursor-pointer"
           >
-            <span className={cn("grid size-7 shrink-0 place-items-center rounded-lg border transition-transform group-hover:scale-105", colors)}>
+            <span className={cn("grid size-7 shrink-0 place-items-center rounded-sm border transition-transform group-hover:scale-105", colors)}>
               <Icon className="size-3.5" />
             </span>
             <span className="truncate">{label}</span>
@@ -989,7 +982,7 @@ function QuickActions() {
 
 function Mini({ value, label, trend, negative = false }: { value: string; label: string; trend?: string; negative?: boolean }) {
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center transition-colors hover:bg-slate-100/60">
+    <div className="rounded-sm border border-slate-100 bg-slate-50/50 p-2 text-center transition-colors hover:bg-slate-100/60">
       <b className="block text-sm font-bold text-slate-900 tabular-nums">{value}</b>
       <span className="block text-[11px] font-medium text-slate-500 mt-0.5">{label}</span>
       {trend && (

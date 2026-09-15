@@ -7,7 +7,7 @@ import { PLATFORM_META, ALL_PLATFORMS } from "../config/platform-config";
 export function PlatformBadge({ platform, size = "md" }: { platform: Platform; size?: "sm" | "md" }) {
   const meta = PLATFORM_META[platform];
   return (
-    <span className={cn("inline-flex shrink-0 items-center justify-center rounded-full font-semibold", meta.bg, size === "sm" ? "h-5 w-5 text-[10px]" : "h-7 w-7 text-[13px]")} style={{ color: meta.color }}>
+    <span className={cn("inline-flex shrink-0 items-center justify-center rounded-sm font-semibold", meta.bg, size === "sm" ? "h-5 w-5 text-[10px]" : "h-7 w-7 text-[13px]")} style={{ color: meta.color }}>
       {platform === "instagram" && <FaInstagram />}
       {platform === "facebook" && <FaFacebookF />}
       {platform === "linkedin" && <FaLinkedinIn />}

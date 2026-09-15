@@ -67,7 +67,7 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
           const isExpanded = expanded === p;
 
           return (
-            <div key={p} className="rounded-lg border border-[#E2E8F0] overflow-hidden">
+            <div key={p} className="rounded-sm border border-[#E2E8F0] overflow-hidden">
               <button
                 onClick={() => setExpanded(isExpanded ? null : p)}
                 className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left transition hover:bg-slate-50"
@@ -97,7 +97,7 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
                           time: val === "later" ? sched.time ?? "10:00 AM" : undefined,
                         })}
                         className={cn(
-                          "flex items-center justify-center gap-1 rounded-lg border py-1.5 text-[10.5px] font-semibold transition",
+                          "flex items-center justify-center gap-1 rounded-sm border py-1.5 text-[10.5px] font-semibold transition",
                           sched.schedule === val
                             ? "border-[color:var(--pc)] bg-[color:var(--pc-bg)] text-[color:var(--pc)]"
                             : "border-[#E2E8F0] text-[#687797] hover:bg-white"
@@ -128,7 +128,7 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
                   )}
 
                   {sched.schedule === "now" && (
-                    <div className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-emerald-50 p-2 ring-1 ring-emerald-100">
+                    <div className="mt-1.5 flex items-start gap-1.5 rounded-sm bg-emerald-50 p-2 ring-1 ring-emerald-100">
                       <Zap className="mt-px size-3 shrink-0 text-emerald-600" />
                       <p className="text-[10px] leading-4 text-emerald-800">Will publish immediately after approval</p>
                     </div>
@@ -141,7 +141,7 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
       </div>
 
       {/* Best time suggestion */}
-      <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-amber-50 p-2 ring-1 ring-amber-100">
+      <div className="mt-2 flex items-start gap-1.5 rounded-sm bg-amber-50 p-2 ring-1 ring-amber-100">
         <Clock3 className="mt-px size-3 shrink-0 text-amber-600" />
         <p className="text-[10.5px] leading-4 text-amber-900"><b>Best time:</b> Today 11 AM – 1 PM (based on audience analytics)</p>
       </div>

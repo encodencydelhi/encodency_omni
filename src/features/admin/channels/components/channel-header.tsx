@@ -177,7 +177,7 @@ export function ChannelHeader({
           <div className="flex items-start gap-3.5 min-w-0">
             {/* Brand Logo Box */}
             <div className="relative shrink-0 mt-0.5">
-              <div className={cn("grid size-10 place-items-center shadow-xs", channel === "whatsapp" ? "rounded-full bg-[#DCFCE7]/80 backdrop-blur-sm border border-[#A7F3D0]/50" : "rounded bg-[#0A66C2]")}>
+              <div className={cn("grid size-10 place-items-center shadow-xs", channel === "whatsapp" ? "rounded-sm bg-[#DCFCE7]/80 backdrop-blur-sm border border-[#A7F3D0]/50" : "rounded bg-[#0A66C2]")}>
                 {channel === "website" ? (
                   <Globe2 className="size-5 text-[#2563EB]" />
                 ) : (
@@ -199,8 +199,8 @@ export function ChannelHeader({
               </div>
               {/* Online indicator ping */}
               <span className="absolute -bottom-0.5 -right-0.5 flex size-3.5 items-center justify-center">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#10B981] opacity-75" />
-                <span className="relative inline-flex size-2.5 rounded-full border-2 border-white bg-[#10B981]" />
+                <span className="absolute inline-flex size-full animate-ping rounded-sm bg-[#10B981] opacity-75" />
+                <span className="relative inline-flex size-2.5 rounded-sm border-2 border-white bg-[#10B981]" />
               </span>
             </div>
 
@@ -213,8 +213,8 @@ export function ChannelHeader({
                 <span className="text-[#DDE4ED] text-[20px] leading-none font-light">|</span>
                 <span className="text-[14px] font-bold text-[#111B43]">{customAccountHandle || config.accountHandle}</span>
                 {config.statusText && config.statusText.split("•")[0] && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ECFDF5] px-2.5 py-0.5 text-[11px] font-bold text-[#047857] border border-emerald-200/60">
-                    <span className="size-1.5 rounded-full bg-[#10B981]" />
+                  <span className="inline-flex items-center gap-1.5 rounded-sm bg-[#ECFDF5] px-2.5 py-0.5 text-[11px] font-bold text-[#047857] border border-emerald-200/60">
+                    <span className="size-1.5 rounded-sm bg-[#10B981]" />
                     {config.statusText.split("•")[0]}
                   </span>
                 )}
@@ -235,8 +235,8 @@ export function ChannelHeader({
         {/* Row 2: Actions Toolbar (Sync Live, Date Range, Export, Extra Actions, Primary Action) */}
         <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-slate-100">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 border border-emerald-200/70">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" /> WABA Cloud API Connected
+            <span className="inline-flex items-center gap-1.5 rounded-sm bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 border border-emerald-200/70">
+              <span className="size-2 rounded-sm bg-emerald-500 animate-pulse" /> WABA Cloud API Connected
             </span>
           </div>
 
@@ -247,7 +247,7 @@ export function ChannelHeader({
               disabled={isSyncing}
               title="Sync latest metrics"
               className={cn(
-                "flex h-[36px] shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-emerald-600 active:scale-98",
+                "flex h-[36px] shrink-0 items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-emerald-600 active:scale-98",
                 isSyncing && "opacity-75 cursor-not-allowed"
               )}
             >
@@ -256,7 +256,7 @@ export function ChannelHeader({
             </button>
 
             {/* Date Range Selector */}
-            <div className="flex h-[36px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-xs transition-colors hover:bg-slate-50 cursor-pointer">
+            <div className="flex h-[36px] items-center gap-2 rounded-sm border border-slate-200 bg-white px-3 shadow-xs transition-colors hover:bg-slate-50 cursor-pointer">
               <CalendarDays className="size-3.5 shrink-0 text-emerald-600" />
               <div className="text-left leading-none">
                 <p className="text-[10px] font-bold text-slate-800">{dateRangeText}</p>
@@ -268,7 +268,7 @@ export function ChannelHeader({
             {/* Export Report Button */}
             <button
               onClick={onExport}
-              className="flex h-[36px] items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-emerald-600"
+              className="flex h-[36px] items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-emerald-600"
             >
               <Download className="size-3.5 text-slate-500" />
               <span>Export</span>
@@ -281,7 +281,7 @@ export function ChannelHeader({
             {config.primaryActionLabel && (
               <button
                 onClick={onPrimaryAction}
-                className="flex h-[36px] items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-[11.5px] font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-98"
+                className="flex h-[36px] items-center gap-1.5 rounded-sm bg-emerald-600 px-3.5 text-[11.5px] font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-98"
               >
                 <PrimaryIcon className="size-3.5" />
                 <span>{config.primaryActionLabel}</span>

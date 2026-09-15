@@ -160,8 +160,8 @@ function Box({
 }
 
 export function OverviewTab({
-  onTabChange = () => {},
-  onOpenModal = () => {},
+  onTabChange = () => { },
+  onOpenModal = () => { },
   integrationDetails = defaultIntegrationDetails,
 }: OverviewTabProps) {
   const [perfDateRange, setPerfDateRange] = useState("30d");
@@ -191,7 +191,7 @@ export function OverviewTab({
                 style.bg
               )}
             >
-              <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl font-bold", style.iconBg)}>
+              <span className={cn("grid size-10 shrink-0 place-items-center rounded-sm font-bold", style.iconBg)}>
                 <stat.icon className="size-5" />
               </span>
               <div className="min-w-0">
@@ -213,7 +213,7 @@ export function OverviewTab({
           title="Message Performance"
           action={
             <Select value={perfDateRange} onValueChange={setPerfDateRange}>
-              <SelectTrigger className="h-7 border-slate-200 text-xs px-2 bg-white rounded-lg"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-7 border-slate-200 text-xs px-2 bg-white rounded-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="30d">Last 30 days</SelectItem>
                 <SelectItem value="7d">Last 7 days</SelectItem>
@@ -223,10 +223,10 @@ export function OverviewTab({
         >
           <div className="flex h-full flex-col px-3.5 py-3">
             <div className="mb-2 flex shrink-0 gap-3 text-[11px] font-bold text-slate-600">
-              <span className="flex items-center gap-1"><i className="size-2 rounded-full bg-emerald-500" />Sent</span>
-              <span className="flex items-center gap-1"><i className="size-2 rounded-full bg-blue-500" />Delivered</span>
-              <span className="flex items-center gap-1"><i className="size-2 rounded-full bg-purple-500" />Read</span>
-              <span className="flex items-center gap-1"><i className="size-2 rounded-full bg-amber-500" />Replied</span>
+              <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-emerald-500" />Sent</span>
+              <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-blue-500" />Delivered</span>
+              <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-purple-500" />Read</span>
+              <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-amber-500" />Replied</span>
             </div>
             <div className="min-h-[190px] flex-1">
               <ResponsiveContainer width="100%" height="100%">
@@ -269,7 +269,7 @@ export function OverviewTab({
               {breakdownData.map((d, i) => (
                 <div key={d.name} className="flex items-center justify-between text-xs font-bold">
                   <span className="flex items-center gap-1.5 text-slate-600">
-                    <i className="size-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                    <i className="size-2.5 rounded-sm" style={{ backgroundColor: d.color }} />
                     {d.name}
                   </span>
                   <div className="text-right">
@@ -341,13 +341,13 @@ export function OverviewTab({
               <div key={c.name} className="grid grid-cols-[1.6fr_1fr_1fr_1fr_1.4fr] gap-2 items-center border-b border-slate-50 py-2.5 text-xs hover:bg-slate-50/80 transition-colors">
                 <span className="truncate font-bold text-slate-900">{c.name}</span>
                 <span>
-                  <i className={cn("inline-flex items-center justify-center w-[74px] rounded-md py-0.5 text-[10px] font-bold not-italic border text-center shrink-0", c.type === "Marketing" ? "bg-pink-50 text-pink-700 border-pink-200" : "bg-blue-50 text-blue-700 border-blue-200")}>
+                  <i className={cn("inline-flex items-center justify-center w-[74px] rounded-sm py-0.5 text-[10px] font-bold not-italic border text-center shrink-0", c.type === "Marketing" ? "bg-pink-50 text-pink-700 border-pink-200" : "bg-blue-50 text-blue-700 border-blue-200")}>
                     {c.type}
                   </i>
                 </span>
                 <span className="text-slate-600 font-bold">{c.audience}</span>
                 <span>
-                  <i className="inline-flex items-center justify-center w-[74px] rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 py-0.5 text-[10px] font-bold not-italic text-center shrink-0">
+                  <i className="inline-flex items-center justify-center w-[74px] rounded-sm bg-emerald-50 text-emerald-700 border border-emerald-200 py-0.5 text-[10px] font-bold not-italic text-center shrink-0">
                     {c.status}
                   </i>
                 </span>
@@ -362,7 +362,7 @@ export function OverviewTab({
           action={
             <button
               onClick={() => onOpenModal("create-template")}
-              className="flex h-7 items-center gap-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-2.5 text-[11px] font-bold text-white shadow-xs transition-all"
+              className="flex h-7 items-center gap-1 rounded-sm bg-emerald-600 hover:bg-emerald-700 px-2.5 text-[11px] font-bold text-white shadow-xs transition-all"
             >
               <Plus className="size-3.5" /> Add Template
             </button>
@@ -379,13 +379,13 @@ export function OverviewTab({
               <div key={t.name} className="grid grid-cols-[1.8fr_1fr_1fr_1fr] gap-2 items-center border-b border-slate-50 py-2.5 text-xs hover:bg-slate-50/80 transition-colors">
                 <span className="truncate font-bold text-slate-900">{t.name}</span>
                 <span>
-                  <i className={cn("inline-flex items-center justify-center w-[84px] rounded-md py-0.5 text-[10px] font-bold not-italic border text-center shrink-0", t.category === "Marketing" ? "bg-pink-50 text-pink-700 border-pink-200" : t.category === "Utility" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-purple-50 text-purple-700 border-purple-200")}>
+                  <i className={cn("inline-flex items-center justify-center w-[84px] rounded-sm py-0.5 text-[10px] font-bold not-italic border text-center shrink-0", t.category === "Marketing" ? "bg-pink-50 text-pink-700 border-pink-200" : t.category === "Utility" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-purple-50 text-purple-700 border-purple-200")}>
                     {t.category}
                   </i>
                 </span>
                 <span className="text-slate-500 font-semibold">{t.lang}</span>
                 <span>
-                  <i className="inline-flex items-center justify-center w-[74px] rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 py-0.5 text-[10px] font-bold not-italic text-center shrink-0">
+                  <i className="inline-flex items-center justify-center w-[74px] rounded-sm bg-emerald-50 text-emerald-700 border border-emerald-200 py-0.5 text-[10px] font-bold not-italic text-center shrink-0">
                     {t.status}
                   </i>
                 </span>
@@ -408,9 +408,9 @@ export function OverviewTab({
               <button
                 key={i}
                 onClick={() => (a.modal ? onOpenModal(a.modal) : a.tab && onTabChange(a.tab))}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-800 hover:bg-slate-100/80 transition-all border border-transparent hover:border-slate-200 group"
+                className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left text-xs font-bold text-slate-800 hover:bg-slate-100/80 transition-all border border-transparent hover:border-slate-200 group"
               >
-                <span className={cn("p-1.5 rounded-lg border transition-transform group-hover:scale-105", a.color)}>
+                <span className={cn("p-1.5 rounded-sm border transition-transform group-hover:scale-105", a.color)}>
                   <a.icon className="size-3.5" />
                 </span>
                 {a.label}
@@ -443,7 +443,7 @@ export function OverviewTab({
             {conversations.map((c, i) => (
               <div key={i} className="grid grid-cols-[1.6fr_1.8fr_1fr_1fr] gap-2 items-center border-b border-slate-50 py-2.5 text-xs hover:bg-slate-50/80 transition-colors">
                 <div className="flex items-center gap-2 overflow-hidden pr-1">
-                  <span className={cn("grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold shadow-xs", c.color)}>
+                  <span className={cn("grid size-7 shrink-0 place-items-center rounded-sm text-xs font-bold shadow-xs", c.color)}>
                     {c.initial}
                   </span>
                   <div className="min-w-0">
@@ -454,7 +454,7 @@ export function OverviewTab({
                 <span className="truncate text-slate-600 pr-1 font-semibold">{c.msg}</span>
                 <span className="text-slate-400 text-[11px] font-semibold">{c.time}</span>
                 <span>
-                  <i className={cn("inline-flex items-center justify-center w-[64px] rounded-md py-0.5 text-[10px] font-bold not-italic border text-center shrink-0", c.status === "Replied" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200")}>
+                  <i className={cn("inline-flex items-center justify-center w-[64px] rounded-sm py-0.5 text-[10px] font-bold not-italic border text-center shrink-0", c.status === "Replied" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200")}>
                     {c.status}
                   </i>
                 </span>
@@ -467,7 +467,7 @@ export function OverviewTab({
           title="Audience Growth"
           action={
             <Select value={growthRange} onValueChange={setGrowthRange}>
-              <SelectTrigger className="h-7 border-slate-200 text-xs px-2 bg-white rounded-lg"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-7 border-slate-200 text-xs px-2 bg-white rounded-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="30d">Last 30 days</SelectItem>
                 <SelectItem value="7d">Last 7 days</SelectItem>
@@ -489,29 +489,29 @@ export function OverviewTab({
             </div>
 
             <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-100">
-              <div className="flex items-center gap-2 p-1.5 rounded-xl bg-blue-50/60 border border-blue-100 min-w-0">
-                <span className="grid size-6 shrink-0 place-items-center rounded-lg bg-blue-600 text-white font-bold"><UsersRound className="size-3" /></span>
+              <div className="flex items-center gap-2 p-1.5 rounded-sm bg-blue-50/60 border border-blue-100 min-w-0">
+                <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-blue-600 text-white font-bold"><UsersRound className="size-3" /></span>
                 <div className="min-w-0">
                   <p className="text-[9px] text-slate-500 font-bold uppercase truncate">Total</p>
                   <p className="flex items-baseline gap-1"><b className="text-xs text-slate-900 font-extrabold">3,842</b><span className="text-[9px] font-bold text-emerald-600">↑18%</span></p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 p-1.5 rounded-xl bg-emerald-50/60 border border-emerald-100 min-w-0">
-                <span className="grid size-6 shrink-0 place-items-center rounded-lg bg-emerald-600 text-white font-bold"><UserCheck className="size-3" /></span>
+              <div className="flex items-center gap-2 p-1.5 rounded-sm bg-emerald-50/60 border border-emerald-100 min-w-0">
+                <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-emerald-600 text-white font-bold"><UserCheck className="size-3" /></span>
                 <div className="min-w-0">
                   <p className="text-[9px] text-slate-500 font-bold uppercase truncate">Active</p>
                   <p className="flex items-baseline gap-1"><b className="text-xs text-slate-900 font-extrabold">3,612</b><span className="text-[9px] font-bold text-emerald-600">↑20%</span></p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 p-1.5 rounded-xl bg-rose-50/60 border border-rose-100 min-w-0">
-                <span className="grid size-6 shrink-0 place-items-center rounded-lg bg-rose-600 text-white font-bold"><UserX className="size-3" /></span>
+              <div className="flex items-center gap-2 p-1.5 rounded-sm bg-rose-50/60 border border-rose-100 min-w-0">
+                <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-rose-600 text-white font-bold"><UserX className="size-3" /></span>
                 <div className="min-w-0">
                   <p className="text-[9px] text-slate-500 font-bold uppercase truncate">Blocked</p>
                   <p className="flex items-baseline gap-1"><b className="text-xs text-slate-900 font-extrabold">48</b><span className="text-[9px] font-bold text-rose-600">↓12%</span></p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 p-1.5 rounded-xl bg-amber-50/60 border border-amber-100 min-w-0">
-                <span className="grid size-6 shrink-0 place-items-center rounded-lg bg-amber-600 text-white font-bold"><UserMinus className="size-3" /></span>
+              <div className="flex items-center gap-2 p-1.5 rounded-sm bg-amber-50/60 border border-amber-100 min-w-0">
+                <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-amber-600 text-white font-bold"><UserMinus className="size-3" /></span>
                 <div className="min-w-0">
                   <p className="text-[9px] text-slate-500 font-bold uppercase truncate">Opt-out</p>
                   <p className="flex items-baseline gap-1"><b className="text-xs text-slate-900 font-extrabold">182</b><span className="text-[9px] font-bold text-emerald-600">↑5%</span></p>
@@ -545,8 +545,8 @@ export function OverviewTab({
               <div key={label} className="flex items-center justify-between text-xs border-b border-slate-50 pb-1.5 last:border-0 last:pb-0">
                 <span className="text-slate-500 font-semibold">{label}</span>
                 {label === "WABA Status" || label === "Quality Rating" ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-extrabold text-emerald-700">
-                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="inline-flex items-center gap-1.5 rounded-sm bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-extrabold text-emerald-700">
+                    <span className="size-1.5 rounded-sm bg-emerald-500 animate-pulse" />
                     {value}
                   </span>
                 ) : (

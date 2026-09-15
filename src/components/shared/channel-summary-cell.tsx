@@ -26,7 +26,7 @@ export function ChannelSummaryCell({ channels }: { channels: ChannelSummary }) {
         <span className="inline-flex items-center gap-2.5">
           {parts.map((part) => (
             <span key={part.label} className="inline-flex items-center gap-1">
-              <span className={`size-1.5 rounded-full ${part.dot}`} aria-hidden />
+              <span className={`size-1.5 rounded-sm ${part.dot}`} aria-hidden />
               <span className={`text-2xs tabular ${part.text}`}>{part.count}</span>
             </span>
           ))}

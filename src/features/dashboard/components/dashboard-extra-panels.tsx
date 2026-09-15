@@ -80,7 +80,7 @@ const IntegrationLogos: Record<string, React.ReactNode> = {
     </svg>
   ),
   Zoom: (
-    <div className="w-5 h-5 bg-[#2D8CFF] rounded-full flex items-center justify-center">
+    <div className="w-5 h-5 bg-[#2D8CFF] rounded-sm flex items-center justify-center">
       <svg viewBox="0 0 24 24" className="w-3 h-3 text-white">
         <path fill="currentColor" d="M17 7h-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h9c1.1 0 2-.9 2-2v-1h2l4 3V4l-4 3z" />
       </svg>
@@ -99,7 +99,7 @@ export function PlanDistributionPanel({
     <Card className="flex flex-col h-[280px] rounded-2xl shadow-sm border-slate-200">
       <CardHeader className="pb-3 px-4 pt-4">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex size-8 items-center justify-center rounded-full bg-red-100 text-red-500 shrink-0">
+          <div className="flex size-8 items-center justify-center rounded-sm bg-red-100 text-red-500 shrink-0">
             <ClipboardListIcon className="size-4" />
           </div>
           <div className="flex flex-col min-w-0">
@@ -108,7 +108,7 @@ export function PlanDistributionPanel({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col justify-center overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <CardContent className="flex-1 flex flex-col justify-center overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-sm">
         {isLoading ? (
           <CardSkeleton lines={4} />
         ) : (
@@ -118,11 +118,11 @@ export function PlanDistributionPanel({
               return (
                 <div key={segment.tier} className="flex items-center text-[13px]">
                   <div className="flex w-[80px] items-center gap-2 shrink-0">
-                    <div className={cn("size-2.5 rounded-full shrink-0", PLAN_COLORS[segment.tier])} />
+                    <div className={cn("size-2.5 rounded-sm shrink-0", PLAN_COLORS[segment.tier])} />
                     <span className="text-slate-600 capitalize truncate">{segment.label}</span>
                   </div>
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 mx-2">
-                    <div className={cn("h-full rounded-full", PLAN_COLORS[segment.tier])} style={{ width: `${percent}%` }} />
+                  <div className="h-2 flex-1 overflow-hidden rounded-sm bg-slate-100 mx-2">
+                    <div className={cn("h-full rounded-sm", PLAN_COLORS[segment.tier])} style={{ width: `${percent}%` }} />
                   </div>
                   <div className="flex w-[52px] shrink-0 items-center justify-end gap-2 font-semibold text-slate-800">
                     <span>{segment.companies}</span>
@@ -149,7 +149,7 @@ export function LatestSignupsPanel({
     <Card className="flex flex-col h-[280px] rounded-2xl shadow-sm border-slate-200">
       <CardHeader className="pb-3 px-4 pt-4 flex flex-row items-center justify-between gap-2 space-y-0">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 text-blue-500 shrink-0">
+          <div className="flex size-8 items-center justify-center rounded-sm bg-blue-100 text-blue-500 shrink-0">
             <Building2Icon className="size-4" />
           </div>
           <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">Latest Signups</h3>
@@ -158,7 +158,7 @@ export function LatestSignupsPanel({
           View all <ArrowRightIcon className="size-3" />
         </Link>
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <CardContent className="flex-1 overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-sm">
         {isLoading ? (
           <CardSkeleton lines={5} />
         ) : (
@@ -166,7 +166,7 @@ export function LatestSignupsPanel({
             {signups.map((signup) => (
               <li key={signup.id} className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={cn("flex size-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white", getAvatarColor(signup.name))}>
+                  <div className={cn("flex size-7 shrink-0 items-center justify-center rounded-sm text-[10px] font-semibold text-white", getAvatarColor(signup.name))}>
                     {signup.name.substring(0, 2).toUpperCase()}
                   </div>
                   <div className="flex flex-col gap-0.5 min-w-0">
@@ -174,7 +174,7 @@ export function LatestSignupsPanel({
                     <span className="text-xs text-slate-400 whitespace-nowrap">{signup.timeAgo}</span>
                   </div>
                 </div>
-                <span className={cn("shrink-0 inline-flex h-[24px] px-2.5 items-center justify-center rounded-full text-[10px] font-semibold capitalize tracking-wide", TIER_BADGE[signup.tier])}>
+                <span className={cn("shrink-0 inline-flex h-[24px] px-2.5 items-center justify-center rounded-sm text-[10px] font-semibold capitalize tracking-wide", TIER_BADGE[signup.tier])}>
                   {signup.tier}
                 </span>
               </li>
@@ -197,7 +197,7 @@ export function ApiUsagePanel({
     <Card className="flex flex-col h-[280px] rounded-2xl shadow-sm border-slate-200">
       <CardHeader className="pb-3 px-4 pt-4 flex flex-row items-center justify-between gap-2 space-y-0">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="flex size-8 items-center justify-center rounded-full bg-purple-100 text-purple-500 shrink-0">
+          <div className="flex size-8 items-center justify-center rounded-sm bg-purple-100 text-purple-500 shrink-0">
             <ActivityIcon className="size-4" />
           </div>
           <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">API Usage Snapshot</h3>
@@ -206,7 +206,7 @@ export function ApiUsagePanel({
           <option>Last 30 days</option>
         </select>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <CardContent className="flex-1 flex flex-col overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-sm">
         {isLoading ? (
           <CardSkeleton lines={4} />
         ) : (
@@ -262,7 +262,7 @@ export function IntegrationStatusPanel({
     <Card className="flex flex-col h-[280px] rounded-2xl shadow-sm border-slate-200">
       <CardHeader className="pb-3 px-4 pt-4 flex flex-row items-center justify-between gap-2 space-y-0">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="flex size-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-500 shrink-0">
+          <div className="flex size-8 items-center justify-center rounded-sm bg-emerald-100 text-emerald-500 shrink-0">
             <SettingsIcon className="size-4" />
           </div>
           <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">Integration Status</h3>
@@ -271,7 +271,7 @@ export function IntegrationStatusPanel({
           View all <ArrowRightIcon className="size-3" />
         </Link>
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <CardContent className="flex-1 overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-sm">
         {isLoading ? (
           <CardSkeleton lines={5} />
         ) : (
@@ -291,7 +291,7 @@ export function IntegrationStatusPanel({
                   <span className="font-medium text-slate-700 truncate">{integration.name}</span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <div className={cn("size-1.5 rounded-full", integration.status === "Connected" ? "bg-[#10b981]" : "bg-red-500")} />
+                  <div className={cn("size-1.5 rounded-sm", integration.status === "Connected" ? "bg-[#10b981]" : "bg-red-500")} />
                   <span className={cn("text-[12px] font-semibold", integration.status === "Connected" ? "text-[#10b981]" : "text-red-500")}>
                     {integration.status}
                   </span>

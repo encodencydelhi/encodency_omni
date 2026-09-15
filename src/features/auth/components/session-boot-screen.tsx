@@ -10,7 +10,7 @@ export function SessionBootScreen() {
       <div className="flex flex-col items-center gap-4">
         <EnCodencyLogo height={44} priority />
         <div className="flex items-center gap-2 text-2xs text-muted-foreground">
-          <span className="size-1.5 animate-pulse rounded-full bg-primary" />
+          <span className="size-1.5 animate-pulse rounded-sm bg-primary" />
           Restoring your session
         </div>
       </div>

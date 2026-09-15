@@ -32,9 +32,9 @@ function SummaryCard({
   onEdit: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-[#E6E8F0] bg-white p-3.5">
+    <div className="rounded-sm border border-[#E6E8F0] bg-white p-3.5">
       <div className="mb-2.5 flex items-center gap-2">
-        <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#EEF2FF]">
+        <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#EEF2FF]">
           <Icon className="size-4 text-[#4F46E5]" />
         </span>
         <b className="flex-1 text-[13px] font-semibold text-[#111827]">{title}</b>
@@ -292,7 +292,7 @@ export function ReviewRail({ draft }: { draft: ClientDraft }) {
             { title: "Invite more team members", text: "Bring in your client's team to collaborate" },
           ].map((item, index) => (
             <li key={item.title} className="flex items-start gap-2.5">
-              <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#EEF2FF] text-[10px] font-semibold text-[#4F46E5]">
+              <span className="grid size-5 shrink-0 place-items-center rounded-sm bg-[#EEF2FF] text-[10px] font-semibold text-[#4F46E5]">
                 {index + 1}
               </span>
               <span className="min-w-0">

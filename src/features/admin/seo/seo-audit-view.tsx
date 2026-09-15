@@ -35,7 +35,7 @@ export function SeoAuditView() {
       `}</style>
       <div className="mx-auto max-w-[1500px] space-y-4 pb-10 text-[#172044]">
         {/* Header */}
-        <div className="flex flex-col justify-between gap-4 rounded-xl border border-[#E3E9F1] bg-gradient-to-r from-white to-[#F7FAFE] p-4 shadow-sm xl:flex-row xl:items-center">
+        <div className="flex flex-col justify-between gap-4 rounded-sm border border-[#E3E9F1] bg-gradient-to-r from-white to-[#F7FAFE] p-4 shadow-sm xl:flex-row xl:items-center">
           <div>
             <div className="flex items-center gap-2 text-[10px] text-[#75829D] font-medium mb-1">
               <span>SEO</span>
@@ -60,7 +60,7 @@ export function SeoAuditView() {
               <MoreVertical className="size-3.5 text-[#75829D]" />
             </button>
 
-            <div className="flex items-center gap-3 ml-2 p-1.5 rounded-lg bg-[#F8FAFD] border border-[#E8EDF3]">
+            <div className="flex items-center gap-3 ml-2 p-1.5 rounded-sm bg-[#F8FAFD] border border-[#E8EDF3]">
               <div className="p-1.5 bg-white rounded-sm shadow-sm border border-[#E8EDF3]">
                 <Calendar className="size-4 text-[#3b82f6]" />
               </div>
@@ -111,8 +111,8 @@ function OverviewTab() {
     <div className="grid grid-cols-12 gap-3">
       {/* Row 1 */}
       {/* SEO Health Score */}
-      <div className="col-span-12 flex h-[236px] flex-col overflow-hidden rounded-xl border border-[#E1E7EF] bg-white p-4 shadow-[0_1px_4px_rgb(31_50_81/0.06)] lg:col-span-3">
-        <div className="flex items-center justify-between"><div><h2 className="text-[13px] font-semibold text-[#172044]">SEO Health Score</h2><p className="mt-0.5 text-[9px] text-[#75829D]">Overall website quality</p></div><span className="rounded-full bg-[#E6F6ED] px-2 py-1 text-[8px] font-semibold text-[#078359]">GOOD</span></div>
+      <div className="col-span-12 flex h-[236px] flex-col overflow-hidden rounded-sm border border-[#E1E7EF] bg-white p-4 shadow-[0_1px_4px_rgb(31_50_81/0.06)] lg:col-span-3">
+        <div className="flex items-center justify-between"><div><h2 className="text-[13px] font-semibold text-[#172044]">SEO Health Score</h2><p className="mt-0.5 text-[9px] text-[#75829D]">Overall website quality</p></div><span className="rounded-sm bg-[#E6F6ED] px-2 py-1 text-[8px] font-semibold text-[#078359]">GOOD</span></div>
         <div className="flex flex-1 items-center gap-4">
           <div className="relative size-[104px] shrink-0">
             <svg viewBox="0 0 100 100" className="rotate-[-90deg] drop-shadow-sm">
@@ -141,7 +141,7 @@ function OverviewTab() {
       </div>
 
       {/* Issue Summary */}
-      <div className="col-span-12 flex h-[236px] flex-col overflow-hidden rounded-xl border border-[#E1E7EF] bg-white p-4 shadow-[0_1px_4px_rgb(31_50_81/0.06)] lg:col-span-6">
+      <div className="col-span-12 flex h-[236px] flex-col overflow-hidden rounded-sm border border-[#E1E7EF] bg-white p-4 shadow-[0_1px_4px_rgb(31_50_81/0.06)] lg:col-span-6">
         <div className="mb-3 flex items-center justify-between"><div><h2 className="text-[13px] font-semibold text-[#172044]">Issue Summary</h2><p className="mt-0.5 text-[9px] text-[#75829D]">Changes since the previous crawl</p></div><button className="text-[9px] font-semibold text-[#2878E5]">View all →</button></div>
         <div className="grid flex-1 grid-cols-4 gap-2">
           {[
@@ -150,17 +150,17 @@ function OverviewTab() {
             { label: "Notices", count: "64", icon: Info, color: "text-[#2878E5]", bg: "bg-[#E1EEFF]", panel: "bg-[#F8FBFF]", border: "border-[#D7E7FC]", accent: "bg-[#4285F4]", trendBg: "bg-[#E1EEFF]", trend: -14 },
             { label: "Passed", count: "438", icon: CheckCircle2, color: "text-[#078359]", bg: "bg-[#DDF7EA]", panel: "bg-[#F7FCF9]", border: "border-[#D3F0E2]", accent: "bg-[#0AA673]", trendBg: "bg-[#DDF7EA]", trend: 26, isPositive: true },
           ].map((stat) => (
-            <div key={stat.label} className={cn("relative flex flex-col overflow-hidden rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md", stat.panel, stat.border)}>
+            <div key={stat.label} className={cn("relative flex flex-col overflow-hidden rounded-sm border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md", stat.panel, stat.border)}>
               <span className={cn("absolute inset-x-0 top-0 h-1", stat.accent)} />
               <div className="mt-1 flex items-center gap-2">
-                <div className={cn("grid size-8 place-items-center rounded-lg", stat.bg)}>
+                <div className={cn("grid size-8 place-items-center rounded-sm", stat.bg)}>
                   <stat.icon className={cn("size-4", stat.color)} />
                 </div>
                 <p className={cn("text-[10px] font-semibold", stat.color)}>{stat.label}</p>
               </div>
               <p className="mt-3 text-[25px] font-semibold leading-7 tracking-[-.03em] text-[#172044]">{stat.count}</p>
               <p className="mt-0.5 text-[8px] text-[#75829D]">Total checks</p>
-              <div className={cn("mt-auto flex w-fit items-center gap-1 rounded-full px-2 py-1 text-[8px] font-semibold", stat.trendBg, stat.isPositive ? "text-[#078359]" : stat.color)}>
+              <div className={cn("mt-auto flex w-fit items-center gap-1 rounded-sm px-2 py-1 text-[8px] font-semibold", stat.trendBg, stat.isPositive ? "text-[#078359]" : stat.color)}>
                 {stat.trend > 0 ? <ArrowUp className="size-2.5" /> : <ArrowDown className="size-2.5" />}
                 {Math.abs(stat.trend)} vs last crawl
               </div>
@@ -170,7 +170,7 @@ function OverviewTab() {
       </div>
 
       {/* Crawl Information */}
-      <div className="col-span-12 flex h-[236px] flex-col overflow-hidden rounded-xl border border-[#E1E7EF] bg-white p-4 shadow-[0_1px_4px_rgb(31_50_81/0.06)] lg:col-span-3">
+      <div className="col-span-12 flex h-[236px] flex-col overflow-hidden rounded-sm border border-[#E1E7EF] bg-white p-4 shadow-[0_1px_4px_rgb(31_50_81/0.06)] lg:col-span-3">
         <div>
           <div className="flex items-center justify-between"><div><h2 className="text-[13px] font-semibold text-[#172044]">Crawl Information</h2><p className="mt-0.5 text-[9px] text-[#75829D]">Technical crawl details</p></div><FileSearch className="size-5 text-[#2878E5]" /></div>
           <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
@@ -197,7 +197,7 @@ function OverviewTab() {
 
       {/* Row 2 */}
       {/* Top Issues */}
-      <div className="col-span-12 lg:col-span-6 rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
+      <div className="col-span-12 lg:col-span-6 rounded-sm border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-[13px] font-semibold text-[#172044]">Top Issues</h2>
           <button className="text-[10px] font-semibold text-[#3b82f6] flex items-center gap-1 hover:underline">
@@ -228,7 +228,7 @@ function OverviewTab() {
                   <td className="py-2 text-[#94a3b8]">{row.id}</td>
                   <td className="py-2 font-medium text-[#172044]">
                     <div className="flex items-center gap-1.5">
-                      <span className={cn("size-1.5 rounded-full shrink-0", row.color)}></span>
+                      <span className={cn("size-1.5 rounded-sm shrink-0", row.color)}></span>
                       {row.issue}
                     </div>
                   </td>
@@ -248,12 +248,12 @@ function OverviewTab() {
       </div>
 
       {/* Page Type Distribution */}
-      <div className="col-span-12 lg:col-span-3 rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm flex flex-col justify-center">
+      <div className="col-span-12 lg:col-span-3 rounded-sm border border-[#E8EDF3] bg-white p-5 shadow-sm flex flex-col justify-center">
         <h2 className="text-[15px] font-semibold text-[#172044] mb-4">Page Type Distribution</h2>
         <div className="flex flex-col items-center justify-center gap-4">
           <div className="relative size-[110px] shrink-0">
-            <div className="absolute inset-0 rounded-full border-[6px] border-transparent" style={{ background: "conic-gradient(#10b981 0% 1%, #3b82f6 1% 15%, #8b5cf6 15% 48%, #94a3b8 48% 100%)", WebkitMask: "radial-gradient(transparent 65%, black 66%)", mask: "radial-gradient(transparent 65%, black 66%)" }}></div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white m-[6px] rounded-full">
+            <div className="absolute inset-0 rounded-sm border-[6px] border-transparent" style={{ background: "conic-gradient(#10b981 0% 1%, #3b82f6 1% 15%, #8b5cf6 15% 48%, #94a3b8 48% 100%)", WebkitMask: "radial-gradient(transparent 65%, black 66%)", mask: "radial-gradient(transparent 65%, black 66%)" }}></div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white m-[6px] rounded-sm">
               <span className="text-2xl font-semibold text-[#172044]">128</span>
               <span className="text-[10px] text-[#75829D]">Pages</span>
             </div>
@@ -267,7 +267,7 @@ function OverviewTab() {
             ].map((item) => (
               <div key={item.label} className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                  <span className={cn("size-2 rounded-full shrink-0", item.color)}></span>
+                  <span className={cn("size-2 rounded-sm shrink-0", item.color)}></span>
                   <span className="text-[#172044] font-medium">{item.label}</span>
                 </div>
                 <span className="font-semibold text-[#172044]">{item.count}</span>
@@ -278,7 +278,7 @@ function OverviewTab() {
       </div>
 
       {/* Core Web Vitals */}
-      <div className="col-span-12 lg:col-span-3 rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm flex flex-col justify-center">
+      <div className="col-span-12 lg:col-span-3 rounded-sm border border-[#E8EDF3] bg-white p-5 shadow-sm flex flex-col justify-center">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-[15px] font-semibold text-[#172044]">Core Web Vitals (Mobile)</h2>
           <button className="text-[11px] font-medium text-[#3b82f6] flex items-center gap-0.5 hover:underline">
@@ -299,8 +299,8 @@ function OverviewTab() {
                 </div>
                 <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded", item.badgeBg, item.valColor)}>{item.status}</span>
               </div>
-              <div className="h-2.5 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
-                <div className={cn("h-full rounded-full", item.color)} style={{ width: `${item.progress}%` }}></div>
+              <div className="h-2.5 w-full bg-[#F1F5F9] rounded-sm overflow-hidden">
+                <div className={cn("h-full rounded-sm", item.color)} style={{ width: `${item.progress}%` }}></div>
               </div>
             </div>
           ))}
@@ -309,29 +309,29 @@ function OverviewTab() {
 
       {/* Row 3 */}
       {/* Indexability */}
-      <div className="col-span-12 lg:col-span-3 rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
+      <div className="col-span-12 lg:col-span-3 rounded-sm border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
         <h2 className="text-[13px] font-semibold text-[#172044] mb-6">Indexability</h2>
         <div className="flex items-center justify-center gap-6 flex-1">
           <div className="relative size-[90px] shrink-0">
-            <div className="absolute inset-0 rounded-full border-[12px] border-transparent" style={{ background: "conic-gradient(#10b981 0% 97%, #ef4444 97% 99%, #94a3b8 99% 100%)", WebkitMask: "radial-gradient(transparent 65%, black 66%)", mask: "radial-gradient(transparent 65%, black 66%)" }}></div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white m-[12px] rounded-full">
+            <div className="absolute inset-0 rounded-sm border-[12px] border-transparent" style={{ background: "conic-gradient(#10b981 0% 97%, #ef4444 97% 99%, #94a3b8 99% 100%)", WebkitMask: "radial-gradient(transparent 65%, black 66%)", mask: "radial-gradient(transparent 65%, black 66%)" }}></div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white m-[12px] rounded-sm">
               <span className="text-xl font-semibold text-[#172044]">124</span>
               <span className="text-[9px] text-[#75829D]">Indexed</span>
             </div>
           </div>
           <div className="space-y-3 text-[10px]">
             <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-[#10b981] shrink-0"></span>
+              <span className="size-2.5 rounded-sm bg-[#10b981] shrink-0"></span>
               <span className="font-semibold text-[#172044]">124</span>
               <span className="text-[#75829D]">Indexed (97%)</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-[#ef4444] shrink-0"></span>
+              <span className="size-2.5 rounded-sm bg-[#ef4444] shrink-0"></span>
               <span className="font-semibold text-[#172044]">3</span>
               <span className="text-[#75829D]">Not Indexed (2%)</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-[#94a3b8] shrink-0"></span>
+              <span className="size-2.5 rounded-sm bg-[#94a3b8] shrink-0"></span>
               <span className="font-semibold text-[#172044]">1</span>
               <span className="text-[#75829D]">Blocked (1%)</span>
             </div>
@@ -340,11 +340,11 @@ function OverviewTab() {
       </div>
 
       {/* Mobile Usability */}
-      <div className="col-span-12 lg:col-span-3 rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
+      <div className="col-span-12 lg:col-span-3 rounded-sm border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
         <h2 className="text-[13px] font-semibold text-[#172044] mb-6">Mobile Usability</h2>
         <div className="flex items-center justify-center gap-6 flex-1">
           <div className="relative size-[90px] shrink-0">
-            <div className="absolute inset-0 rounded-full border-[8px] border-[#10b981]"></div>
+            <div className="absolute inset-0 rounded-sm border-[8px] border-[#10b981]"></div>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-2xl font-semibold text-[#172044]">96</span>
               <span className="text-[10px] text-[#10b981] font-semibold">Good</span>
@@ -368,7 +368,7 @@ function OverviewTab() {
       </div>
 
       {/* Structured Data */}
-      <div className="col-span-12 lg:col-span-3 rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
+      <div className="col-span-12 lg:col-span-3 rounded-sm border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-[13px] font-semibold text-[#172044]">Structured Data</h2>
           <button className="text-[10px] font-semibold text-[#3b82f6] flex items-center gap-1 hover:underline">
@@ -377,30 +377,30 @@ function OverviewTab() {
         </div>
         <div className="flex items-center justify-center gap-6 flex-1">
           <div className="relative size-[90px] shrink-0">
-            <div className="absolute inset-0 rounded-full border-[12px] border-transparent" style={{ background: "conic-gradient(#10b981 0% 72%, #ef4444 72% 80%, #f59e0b 80% 100%)", WebkitMask: "radial-gradient(transparent 65%, black 66%)", mask: "radial-gradient(transparent 65%, black 66%)" }}></div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white m-[12px] rounded-full">
+            <div className="absolute inset-0 rounded-sm border-[12px] border-transparent" style={{ background: "conic-gradient(#10b981 0% 72%, #ef4444 72% 80%, #f59e0b 80% 100%)", WebkitMask: "radial-gradient(transparent 65%, black 66%)", mask: "radial-gradient(transparent 65%, black 66%)" }}></div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white m-[12px] rounded-sm">
               <span className="text-xl font-semibold text-[#172044]">18</span>
               <span className="text-[9px] text-[#75829D]">Valid</span>
             </div>
           </div>
           <div className="space-y-3 text-[10px]">
             <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-[#10b981] shrink-0"></span>
+              <span className="size-2.5 rounded-sm bg-[#10b981] shrink-0"></span>
               <span className="font-semibold text-[#172044]">18</span>
               <span className="text-[#75829D]">Valid</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-[#ef4444] shrink-0"></span>
+              <span className="size-2.5 rounded-sm bg-[#ef4444] shrink-0"></span>
               <span className="font-semibold text-[#172044]">2</span>
               <span className="text-[#75829D]">Errors</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-[#f59e0b] shrink-0"></span>
+              <span className="size-2.5 rounded-sm bg-[#f59e0b] shrink-0"></span>
               <span className="font-semibold text-[#172044]">5</span>
               <span className="text-[#75829D]">Warnings</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-[#94a3b8] shrink-0"></span>
+              <span className="size-2.5 rounded-sm bg-[#94a3b8] shrink-0"></span>
               <span className="text-[#75829D]">No Markup</span>
             </div>
           </div>
@@ -408,19 +408,19 @@ function OverviewTab() {
       </div>
 
       {/* Quick Actions */}
-      <div className="col-span-12 lg:col-span-3 rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
+      <div className="col-span-12 lg:col-span-3 rounded-sm border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
         <h2 className="text-[13px] font-semibold text-[#172044] mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 gap-2 flex-1">
-          <button className="flex items-center justify-center gap-1.5 rounded-lg bg-[#6366f1] text-white py-3 text-[11px] font-semibold shadow-sm hover:bg-[#4f46e5]">
+          <button className="flex items-center justify-center gap-1.5 rounded-sm bg-[#6366f1] text-white py-3 text-[11px] font-semibold shadow-sm hover:bg-[#4f46e5]">
             <Play className="size-3.5 fill-current" /> Run New Audit
           </button>
-          <button className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E8EDF3] bg-white shadow-sm text-[#172044] py-3 text-[11px] font-semibold hover:bg-[#f1f5f9]">
+          <button className="flex items-center justify-center gap-1.5 rounded-sm border border-[#E8EDF3] bg-white shadow-sm text-[#172044] py-3 text-[11px] font-semibold hover:bg-[#f1f5f9]">
             <ArrowLeftRight className="size-3.5 text-[#6366f1]" /> Compare Audits
           </button>
-          <button className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E8EDF3] bg-white shadow-sm text-[#172044] py-3 text-[11px] font-semibold hover:bg-[#f1f5f9]">
+          <button className="flex items-center justify-center gap-1.5 rounded-sm border border-[#E8EDF3] bg-white shadow-sm text-[#172044] py-3 text-[11px] font-semibold hover:bg-[#f1f5f9]">
             <FileText className="size-3.5 text-[#6366f1]" /> Generate Report
           </button>
-          <button className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E8EDF3] bg-white shadow-sm text-[#172044] py-3 text-[11px] font-semibold hover:bg-[#f1f5f9]">
+          <button className="flex items-center justify-center gap-1.5 rounded-sm border border-[#E8EDF3] bg-white shadow-sm text-[#172044] py-3 text-[11px] font-semibold hover:bg-[#f1f5f9]">
             <CalendarPlus className="size-3.5 text-[#6366f1]" /> Schedule Audit
           </button>
         </div>
@@ -428,7 +428,7 @@ function OverviewTab() {
 
       {/* Row 4 */}
       {/* Recent Audits */}
-      <div className="col-span-12 lg:col-span-6 rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col justify-center">
+      <div className="col-span-12 lg:col-span-6 rounded-sm border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col justify-center">
         <h2 className="text-[13px] font-semibold text-[#172044] mb-4">Recent Audits</h2>
         <div className="flex-1 overflow-x-auto">
           <table className="w-full text-left">
@@ -454,7 +454,7 @@ function OverviewTab() {
                   <td className="py-3 text-[#75829D]">{row.pages}</td>
                   <td className={cn("py-3 font-semibold", row.issuesColor)}>{row.issues}</td>
                   <td className="py-3">
-                    <span className={cn("px-1.5 py-0.5 rounded-full border text-[8px] font-semibold bg-white", row.scoreColor)}>{row.score}</span>
+                    <span className={cn("px-1.5 py-0.5 rounded-sm border text-[8px] font-semibold bg-white", row.scoreColor)}>{row.score}</span>
                   </td>
                   <td className="py-3">
                     <span className={cn("px-2 py-0.5 rounded-sm text-[8px] font-semibold", row.statusBg, row.statusColor)}>{row.status}</span>
@@ -471,7 +471,7 @@ function OverviewTab() {
 
       {/* Recommendations & Help */}
       <div className="col-span-12 lg:col-span-6 flex gap-2">
-        <div className="flex-[1.5] rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col justify-center">
+        <div className="flex-[1.5] rounded-sm border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col justify-center">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-[13px] font-semibold text-[#172044]">Recommendations</h2>
             <button className="text-[10px] font-semibold text-[#3b82f6] flex items-center gap-1 hover:underline">
@@ -486,7 +486,7 @@ function OverviewTab() {
               { title: "Fix broken internal links", desc: "6 internal links are broken and should be updated.", icon: AlertCircle, color: "text-[#ef4444]", bg: "bg-[#fee2e2]" },
             ].map((item, i) => (
               <div key={i} className="flex gap-3">
-                <div className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg mt-0.5", item.bg)}>
+                <div className={cn("flex size-8 shrink-0 items-center justify-center rounded-sm mt-0.5", item.bg)}>
                   <item.icon className={cn("size-4", item.color)} />
                 </div>
                 <div className="flex-1">
@@ -499,16 +499,16 @@ function OverviewTab() {
           </div>
         </div>
 
-        <div className="flex-[1] rounded-xl bg-gradient-to-br from-[#f8f5ff] to-[#f3ebff] p-5 flex flex-col items-center justify-center text-center relative overflow-hidden border border-[#eaddff]">
-          <div className="absolute -bottom-10 -right-10 size-40 bg-[#d8b4fe] rounded-full blur-[50px] opacity-40"></div>
-          <div className="absolute -top-10 -left-10 size-40 bg-[#c4b5fd] rounded-full blur-[50px] opacity-30"></div>
+        <div className="flex-[1] rounded-sm bg-gradient-to-br from-[#f8f5ff] to-[#f3ebff] p-5 flex flex-col items-center justify-center text-center relative overflow-hidden border border-[#eaddff]">
+          <div className="absolute -bottom-10 -right-10 size-40 bg-[#d8b4fe] rounded-sm blur-[50px] opacity-40"></div>
+          <div className="absolute -top-10 -left-10 size-40 bg-[#c4b5fd] rounded-sm blur-[50px] opacity-30"></div>
 
           <Lightbulb className="size-10 text-[#6366f1] mb-3 relative z-10" />
           <h2 className="text-[14px] font-semibold text-[#1e1b4b] mb-2 relative z-10">Need help improving your SEO?</h2>
           <p className="text-[10px] text-[#4f46e5] mb-5 relative z-10 leading-relaxed font-medium">
             Get a detailed audit report with step-by-step recommendations from our experts.
           </p>
-          <button className="w-full py-2.5 bg-white rounded-lg text-[#4f46e5] text-[11px] font-semibold shadow-sm relative z-10 border border-[#eaddff] hover:bg-gray-50 transition-colors">
+          <button className="w-full py-2.5 bg-white rounded-sm text-[#4f46e5] text-[11px] font-semibold shadow-sm relative z-10 border border-[#eaddff] hover:bg-gray-50 transition-colors">
             Request SEO Consultation
           </button>
         </div>
@@ -522,7 +522,7 @@ function OverviewTab() {
 // -----------------------------------------------------------------------------
 function IssuesTab() {
   return (
-    <div className="rounded-xl border border-[#E8EDF3] bg-white shadow-sm overflow-hidden min-h-[500px]">
+    <div className="rounded-sm border border-[#E8EDF3] bg-white shadow-sm overflow-hidden min-h-[500px]">
       <div className="p-4 border-b border-[#E8EDF3] flex justify-between items-center bg-white">
         <div className="relative">
           <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
@@ -581,7 +581,7 @@ function IssuesTab() {
 // -----------------------------------------------------------------------------
 function CrawlExplorerTab() {
   return (
-    <div className="rounded-xl border border-[#E8EDF3] bg-white shadow-sm overflow-hidden flex flex-col h-[600px]">
+    <div className="rounded-sm border border-[#E8EDF3] bg-white shadow-sm overflow-hidden flex flex-col h-[600px]">
       <div className="p-4 border-b border-[#E8EDF3] flex justify-between items-center bg-white">
         <div className="relative w-[300px]">
           <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
@@ -641,7 +641,7 @@ function CrawlExplorerTab() {
 function PageAnalysisTab() {
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-[#E8EDF3] bg-white p-4 shadow-sm flex items-center gap-3">
+      <div className="rounded-sm border border-[#E8EDF3] bg-white p-4 shadow-sm flex items-center gap-3">
         <div className="flex-1 relative">
           <Globe className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
           <input type="text" defaultValue="https://mokshasewa.org/services" className="pl-9 pr-3 py-1.5 w-full text-[13px] border border-[#E8EDF3] rounded-sm focus:outline-none focus:border-[#3b82f6] shadow-sm" />
@@ -653,7 +653,7 @@ function PageAnalysisTab() {
 
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 lg:col-span-8 space-y-4">
-          <div className="rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm">
+          <div className="rounded-sm border border-[#E8EDF3] bg-white p-5 shadow-sm">
             <h3 className="text-[14px] font-semibold text-[#172044] mb-4">Meta Tags</h3>
             <div className="space-y-4">
               <div>
@@ -677,18 +677,18 @@ function PageAnalysisTab() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm">
+          <div className="rounded-sm border border-[#E8EDF3] bg-white p-5 shadow-sm">
             <h3 className="text-[14px] font-semibold text-[#172044] mb-4">Content Metrics</h3>
             <div className="grid grid-cols-3 gap-4">
-              <div className="p-4 bg-[#F8FAFD] rounded-lg border border-[#E8EDF3] text-center">
+              <div className="p-4 bg-[#F8FAFD] rounded-sm border border-[#E8EDF3] text-center">
                 <p className="text-[11px] text-[#64748b] font-semibold uppercase mb-1">Word Count</p>
                 <p className="text-2xl font-semibold text-[#172044]">842</p>
               </div>
-              <div className="p-4 bg-[#F8FAFD] rounded-lg border border-[#E8EDF3] text-center">
+              <div className="p-4 bg-[#F8FAFD] rounded-sm border border-[#E8EDF3] text-center">
                 <p className="text-[11px] text-[#64748b] font-semibold uppercase mb-1">Readability</p>
                 <p className="text-2xl font-semibold text-[#172044]">A</p>
               </div>
-              <div className="p-4 bg-[#fff5f5] rounded-lg border border-[#fecaca] text-center">
+              <div className="p-4 bg-[#fff5f5] rounded-sm border border-[#fecaca] text-center">
                 <p className="text-[11px] text-[#ef4444] font-semibold uppercase mb-1">Images w/o Alt</p>
                 <p className="text-2xl font-semibold text-[#ef4444]">3</p>
               </div>
@@ -697,7 +697,7 @@ function PageAnalysisTab() {
         </div>
 
         <div className="col-span-12 lg:col-span-4">
-          <div className="rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm h-full">
+          <div className="rounded-sm border border-[#E8EDF3] bg-white p-5 shadow-sm h-full">
             <h3 className="text-[14px] font-semibold text-[#172044] mb-4">Heading Hierarchy</h3>
             <div className="space-y-3">
               <div className="flex gap-3 items-start">
@@ -738,8 +738,8 @@ function TechnicalSEOTab() {
         { title: "404 Errors", desc: "12 broken internal links", icon: AlertCircle, ok: false },
         { title: "Redirect Chains", desc: "3 chains with >2 hops", icon: ArrowLeftRight, ok: false },
       ].map((item, i) => (
-        <div key={i} className="col-span-12 md:col-span-4 rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm flex items-start gap-4">
-          <div className={cn("p-2.5 rounded-lg shrink-0", item.ok ? "bg-[#d1fae5] text-[#10b981]" : item.neutral ? "bg-[#f1f5f9] text-[#64748b]" : "bg-[#fee2e2] text-[#ef4444]")}>
+        <div key={i} className="col-span-12 md:col-span-4 rounded-sm border border-[#E8EDF3] bg-white p-5 shadow-sm flex items-start gap-4">
+          <div className={cn("p-2.5 rounded-sm shrink-0", item.ok ? "bg-[#d1fae5] text-[#10b981]" : item.neutral ? "bg-[#f1f5f9] text-[#64748b]" : "bg-[#fee2e2] text-[#ef4444]")}>
             <item.icon className="size-5" />
           </div>
           <div>
@@ -764,7 +764,7 @@ function CoreWebVitalsTab() {
           { label: "Interaction to Next Paint", short: "INP", val: "120ms", target: "< 200ms", status: "Good", color: "bg-[#10b981]", text: "text-[#10b981]", bg: "bg-[#d1fae5]", progress: "w-[40%]" },
           { label: "Cumulative Layout Shift", short: "CLS", val: "0.05", target: "< 0.1", status: "Good", color: "bg-[#10b981]", text: "text-[#10b981]", bg: "bg-[#d1fae5]", progress: "w-[20%]" },
         ].map((v) => (
-          <div key={v.short} className="rounded-xl border border-[#E8EDF3] bg-white p-5 shadow-sm">
+          <div key={v.short} className="rounded-sm border border-[#E8EDF3] bg-white p-5 shadow-sm">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <p className="text-[13px] font-semibold text-[#172044]">{v.short}</p>
@@ -776,8 +776,8 @@ function CoreWebVitalsTab() {
             <p className={cn("text-3xl font-semibold mb-1", v.text)}>{v.val}</p>
             <p className="text-[11px] text-[#64748b] mb-4">Target: {v.target}</p>
 
-            <div className="h-2 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
-              <div className={cn("h-full rounded-full", v.color, v.progress)}></div>
+            <div className="h-2 w-full bg-[#F1F5F9] rounded-sm overflow-hidden">
+              <div className={cn("h-full rounded-sm", v.color, v.progress)}></div>
             </div>
           </div>
         ))}
@@ -791,7 +791,7 @@ function CoreWebVitalsTab() {
 // -----------------------------------------------------------------------------
 function StructuredDataTab() {
   return (
-    <div className="rounded-xl border border-[#E8EDF3] bg-white shadow-sm overflow-hidden">
+    <div className="rounded-sm border border-[#E8EDF3] bg-white shadow-sm overflow-hidden">
       <div className="p-4 border-b border-[#E8EDF3] bg-white flex justify-between items-center">
         <h2 className="text-[14px] font-semibold text-[#101A3D]">Schema Validation</h2>
       </div>
@@ -835,9 +835,9 @@ function StructuredDataTab() {
 // -----------------------------------------------------------------------------
 function SecurityTab() {
   return (
-    <div className="rounded-xl border border-[#E8EDF3] bg-white p-6 shadow-sm max-w-2xl mx-auto mt-4">
+    <div className="rounded-sm border border-[#E8EDF3] bg-white p-6 shadow-sm max-w-2xl mx-auto mt-4">
       <div className="text-center mb-8">
-        <div className="size-12 bg-[#d1fae5] text-[#10b981] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#a7f3d0]">
+        <div className="size-12 bg-[#d1fae5] text-[#10b981] rounded-sm flex items-center justify-center mx-auto mb-4 border border-[#a7f3d0]">
           <ShieldCheck className="size-6" />
         </div>
         <h2 className="text-[16px] font-semibold text-[#101A3D]">Website is Secure</h2>
@@ -851,7 +851,7 @@ function SecurityTab() {
           { label: "Mixed Content", desc: "No unsecure resources found.", icon: ImageIcon, ok: true },
           { label: "HSTS Header", desc: "Strict-Transport-Security is active.", icon: Key, ok: true },
         ].map((item, i) => (
-          <div key={i} className="flex items-center gap-4 p-4 border border-[#E8EDF3] rounded-lg bg-white">
+          <div key={i} className="flex items-center gap-4 p-4 border border-[#E8EDF3] rounded-sm bg-white">
             <div className="p-2 bg-[#F8FAFD] rounded-sm border border-[#E8EDF3]">
               <item.icon className="size-4 text-[#64748b]" />
             </div>
@@ -872,7 +872,7 @@ function SecurityTab() {
 // -----------------------------------------------------------------------------
 function SettingsTab() {
   return (
-    <div className="rounded-xl border border-[#E8EDF3] bg-white shadow-sm max-w-2xl mx-auto mt-4">
+    <div className="rounded-sm border border-[#E8EDF3] bg-white shadow-sm max-w-2xl mx-auto mt-4">
       <div className="p-5 border-b border-[#E8EDF3]">
         <h2 className="text-[15px] font-semibold text-[#101A3D]">Crawler Configuration</h2>
         <p className="text-[12px] text-[#64748b] mt-0.5">Manage how the SEO spider interacts with your website.</p>

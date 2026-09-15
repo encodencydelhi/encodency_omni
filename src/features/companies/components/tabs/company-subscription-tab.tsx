@@ -19,7 +19,7 @@ export function CompanySubscriptionTab({ companyId }: { companyId: string }) {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-border bg-card">
+      <div className="rounded-sm border border-border bg-card">
         <ErrorState error={error} onRetry={() => void refetch()} />
       </div>
     );

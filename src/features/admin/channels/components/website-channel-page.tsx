@@ -139,9 +139,9 @@ export function WebsiteChannelPage() {
   return (
     <div className="space-y-3 pb-8">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4 rounded-lg border border-[#DDE4ED] bg-white p-3 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4 rounded-sm border border-[#DDE4ED] bg-white p-3 shadow-sm">
         <div className="flex items-center gap-3">
-          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#EBF4FF] text-[#3186F3]">
+          <span className="grid size-12 shrink-0 place-items-center rounded-sm bg-[#EBF4FF] text-[#3186F3]">
             <Globe2 className="size-7" strokeWidth={1.5} />
           </span>
           <div>
@@ -183,8 +183,8 @@ export function WebsiteChannelPage() {
             orange: "bg-[#FFF0DC] text-[#F28C28]",
           };
           return (
-            <div key={i} className="flex min-h-[70px] items-center gap-3 rounded-lg border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_3px_rgb(47_44_42/0.035)]">
-              <span className={cn("grid size-[34px] shrink-0 place-items-center rounded-full", c[stat.color])}><stat.icon className="size-[18px]" /></span>
+            <div key={i} className="flex min-h-[70px] items-center gap-3 rounded-sm border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_3px_rgb(47_44_42/0.035)]">
+              <span className={cn("grid size-[34px] shrink-0 place-items-center rounded-sm", c[stat.color])}><stat.icon className="size-[18px]" /></span>
               <div className="min-w-0">
                 <p className="truncate text-[9.5px] font-semibold text-[#52617D]">{stat.label}</p>
                 <div className="flex items-baseline gap-1.5">
@@ -206,9 +206,9 @@ export function WebsiteChannelPage() {
           <div className="px-3 py-1 flex flex-col h-full">
             <p className="text-[8px] text-[#71809D] mb-2">Visitors, sessions and conversions over time</p>
             <div className="mb-2 flex gap-4 text-[9px] font-semibold text-[#52617D]">
-              <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#3186F3]" />Visitors</span>
-              <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#8B5CF6]" />Sessions</span>
-              <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-[#EF4444]" />Conversions</span>
+              <span className="flex items-center gap-1.5"><i className="size-2 rounded-sm bg-[#3186F3]" />Visitors</span>
+              <span className="flex items-center gap-1.5"><i className="size-2 rounded-sm bg-[#8B5CF6]" />Sessions</span>
+              <span className="flex items-center gap-1.5"><i className="size-2 rounded-sm bg-[#EF4444]" />Conversions</span>
             </div>
             <div className="flex-1 min-h-[140px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -246,7 +246,7 @@ export function WebsiteChannelPage() {
             <div className="ml-2 flex-1 space-y-1.5">
               {sourceData.map((d) => (
                 <div key={d.name} className="flex items-center justify-between text-[8px] font-semibold">
-                  <span className="flex items-center gap-1.5 text-[#52617D]"><i className="size-1.5 rounded-full" style={{ backgroundColor: d.color }} />{d.name}</span>
+                  <span className="flex items-center gap-1.5 text-[#52617D]"><i className="size-1.5 rounded-sm" style={{ backgroundColor: d.color }} />{d.name}</span>
                   <span className="text-[#172044]">{d.value}%</span>
                 </div>
               ))}
@@ -408,7 +408,7 @@ export function WebsiteChannelPage() {
             <div className="ml-3 flex-1 space-y-2">
               {deviceData.map((d) => (
                 <div key={d.name} className="flex items-center justify-between text-[8px] font-semibold">
-                  <span className="flex items-center gap-1.5 text-[#52617D]"><i className="size-1.5 rounded-full" style={{ backgroundColor: d.color }} />{d.name}</span>
+                  <span className="flex items-center gap-1.5 text-[#52617D]"><i className="size-1.5 rounded-sm" style={{ backgroundColor: d.color }} />{d.name}</span>
                   <span className="text-[#172044]">{d.value}%</span>
                 </div>
               ))}
@@ -420,7 +420,7 @@ export function WebsiteChannelPage() {
           <div className="px-3 pt-2">
             {recentActivity.map((a, i) => (
               <div key={i} className="flex gap-2 mb-2">
-                <span className={cn("grid size-5 shrink-0 place-items-center rounded-full mt-0.5", a.color)}><a.icon className="size-2.5" /></span>
+                <span className={cn("grid size-5 shrink-0 place-items-center rounded-sm mt-0.5", a.color)}><a.icon className="size-2.5" /></span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[9px] font-semibold text-[#172044] leading-tight">{a.title}</p>
                   <p className="text-[8px] text-[#71809D] leading-tight">{a.desc}</p>
@@ -444,7 +444,7 @@ export function WebsiteChannelPage() {
               { icon: Globe2, label: "Website Settings", color: "text-[#3186F3]" },
             ].map((a, i) => (
               <button key={i} className="flex h-8 items-center gap-1.5 rounded border border-[#E1E7EF] bg-[#FAFBFC] px-1.5 text-left text-[8.5px] font-semibold text-[#172044] hover:bg-white transition-colors">
-                <span className={cn("grid size-5 shrink-0 place-items-center rounded-full bg-[#EBF4FF]", a.color, a.color.includes('EA111B') && "bg-[#FFE8EA]")}>
+                <span className={cn("grid size-5 shrink-0 place-items-center rounded-sm bg-[#EBF4FF]", a.color, a.color.includes('EA111B') && "bg-[#FFE8EA]")}>
                   <a.icon className="size-3" />
                 </span>
                 <span className="truncate">{a.label}</span>
@@ -473,7 +473,7 @@ export function WebsiteChannelPage() {
                 {w.name}
               </span>
               <span className="text-[#3186F3] hover:underline cursor-pointer">{w.domain}</span>
-              <span className="flex items-center gap-1 text-[#15803D] font-semibold"><i className="size-1.5 rounded-full bg-[#15803D]" /> {w.status}</span>
+              <span className="flex items-center gap-1 text-[#15803D] font-semibold"><i className="size-1.5 rounded-sm bg-[#15803D]" /> {w.status}</span>
               <span className="flex items-center gap-1 text-[#15803D] font-semibold"><CheckCircle2 className="size-2.5" /> {w.ssl}</span>
               <span className="text-[#52617D]">{w.uptime}</span>
               <span className="text-[#71809D]">{w.sync}</span>

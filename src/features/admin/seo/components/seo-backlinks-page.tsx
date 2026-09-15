@@ -132,13 +132,13 @@ export function SeoBacklinksPage() {
           <div className="flex h-full flex-col px-3 pb-2 pt-1">
             <div className="flex gap-3 text-[8.5px] font-semibold text-[#52617D]">
               <span className="flex items-center gap-1.5">
-                <i className="size-1.5 rounded-full bg-[#3186F3]" /> Total backlinks
+                <i className="size-1.5 rounded-sm bg-[#3186F3]" /> Total backlinks
               </span>
               <span className="flex items-center gap-1.5">
-                <i className="size-1.5 rounded-full bg-[#10B981]" /> Gained
+                <i className="size-1.5 rounded-sm bg-[#10B981]" /> Gained
               </span>
               <span className="flex items-center gap-1.5">
-                <i className="size-1.5 rounded-full bg-[#EF4444]" /> Lost
+                <i className="size-1.5 rounded-sm bg-[#EF4444]" /> Lost
               </span>
             </div>
             <div className="min-h-0 flex-1">
@@ -193,7 +193,7 @@ export function SeoBacklinksPage() {
             <div className="mt-1 space-y-0.5">
               {drBuckets.map((bucket) => (
                 <span key={bucket.bucket} className="flex items-center gap-1.5 text-[8.5px]">
-                  <i className="size-1.5 rounded-full" style={{ background: bucket.color }} />
+                  <i className="size-1.5 rounded-sm" style={{ background: bucket.color }} />
                   <span className="flex-1 text-[#52617D]">{bucket.bucket}</span>
                   <b className="text-[#172044]">{bucket.count}</b>
                 </span>
@@ -292,7 +292,7 @@ export function SeoBacklinksPage() {
               <div className="min-w-0 flex-1 space-y-1">
                 {linkTypes.map((type) => (
                   <span key={type.name} className="flex items-center gap-1.5 text-[8.5px]">
-                    <i className="size-1.5 shrink-0 rounded-full" style={{ background: type.color }} />
+                    <i className="size-1.5 shrink-0 rounded-sm" style={{ background: type.color }} />
                     <span className="min-w-0 flex-1 truncate text-[#52617D]">{type.name}</span>
                     <b className="text-[#172044]">{type.value}%</b>
                   </span>

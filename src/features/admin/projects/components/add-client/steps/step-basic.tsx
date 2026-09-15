@@ -87,7 +87,7 @@ export function BasicStep({
 
         <Field label="Client Logo" className="md:col-span-2">
           <div className="grid gap-2.5 md:grid-cols-[1fr_1fr_1fr]">
-            <label className="flex h-[86px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#C7D2FE] bg-[#F8FAFF] px-3 text-center transition-colors hover:bg-[#EEF2FF]">
+            <label className="flex h-[86px] cursor-pointer flex-col items-center justify-center rounded-sm border border-dashed border-[#C7D2FE] bg-[#F8FAFF] px-3 text-center transition-colors hover:bg-[#EEF2FF]">
               <CloudUpload className="size-5 text-[#4F46E5]" />
               <span className="mt-1 text-[11px] font-semibold text-[#374151]">Drag &amp; drop your logo here</span>
               <span className="text-[10px] text-[#9CA3AF]">or click to browse</span>
@@ -95,7 +95,7 @@ export function BasicStep({
               <input type="file" accept="image/*" className="hidden" />
             </label>
 
-            <div className="relative flex h-[86px] items-center justify-center gap-2.5 rounded-xl border border-[#E6E8F0] bg-white px-3">
+            <div className="relative flex h-[86px] items-center justify-center gap-2.5 rounded-sm border border-[#E6E8F0] bg-white px-3">
               {/* The supplied logo is a full lockup (mark + "MOKSHA SEWA"), so the
                   name is not repeated here — only the tagline sits beside it. */}
               <Image
@@ -108,14 +108,14 @@ export function BasicStep({
               <small className="text-[9.5px] leading-3 text-[#9CA3AF]">Dignity for Every Life</small>
               <button
                 aria-label="Remove logo"
-                className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-[#F1F5F9] text-[#64748B] transition-colors hover:bg-[#E2E8F0]"
+                className="absolute right-2 top-2 grid size-5 place-items-center rounded-sm bg-[#F1F5F9] text-[#64748B] transition-colors hover:bg-[#E2E8F0]"
               >
                 <X className="size-3" />
               </button>
             </div>
 
             <Field label="Brand Color" optional hint="Used for branding in reports and dashboards.">
-              <div className="flex h-[42px] items-center gap-2 rounded-lg border border-[#E2E5EE] bg-white px-2">
+              <div className="flex h-[42px] items-center gap-2 rounded-sm border border-[#E2E5EE] bg-white px-2">
                 <input
                   type="color"
                   value={draft.brandColor}
@@ -141,12 +141,12 @@ export function BasicRail() {
   return (
     <>
       <RailCard>
-        <div className="mb-3 grid h-[108px] place-items-center rounded-xl bg-gradient-to-b from-[#EEF2FF] to-[#F8FAFF]">
+        <div className="mb-3 grid h-[108px] place-items-center rounded-sm bg-gradient-to-b from-[#EEF2FF] to-[#F8FAFF]">
           <div className="relative">
-            <span className="grid h-[62px] w-[86px] place-items-center rounded-lg border border-[#C7D2FE] bg-white shadow-sm">
+            <span className="grid h-[62px] w-[86px] place-items-center rounded-sm border border-[#C7D2FE] bg-white shadow-sm">
               <UserRound className="size-7 text-[#4F46E5]" />
             </span>
-            <span className="absolute -bottom-2 -right-2 grid size-7 place-items-center rounded-lg bg-[#4F46E5] text-white shadow-sm">
+            <span className="absolute -bottom-2 -right-2 grid size-7 place-items-center rounded-sm bg-[#4F46E5] text-white shadow-sm">
               <Zap className="size-3.5" />
             </span>
           </div>

@@ -158,7 +158,7 @@ function Analytics() {
           />
         </div>
         <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
-          <label className="flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-[#DCE2EA] bg-white px-2.5 text-[12px] font-medium text-[#24324F]">
+          <label className="flex h-8 cursor-pointer items-center gap-2 rounded-sm border border-[#DCE2EA] bg-white px-2.5 text-[12px] font-medium text-[#24324F]">
             <Switch checked={compare} onCheckedChange={(c) => set({ compare: c ? "1" : "0" })} className="scale-90" aria-label="Compare with previous period" />
             Compare to previous
           </label>
@@ -339,7 +339,7 @@ function RealtimeCard({ className, videos, factor }: { className?: string; video
         <ul className="space-y-1.5">
           {top.map((v, i) => (
             <li key={v.id}>
-              <Link href={ytRoutes.video(v.id)} className="flex items-center gap-2.5 rounded-md py-0.5 hover:bg-[#F8FAFC]">
+              <Link href={ytRoutes.video(v.id)} className="flex items-center gap-2.5 rounded-sm py-0.5 hover:bg-[#F8FAFC]">
                 <Thumb src={v.thumbnailUrl} className="w-12" sizes="48px" />
                 <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-[#0F1B3D]">{v.title}</span>
                 <span className="text-[12px] font-semibold tabular-nums text-[#3C4A66]">{full(Math.round((v.stats.views / 1000) * factor * (3 - i) * 4))}</span>

@@ -105,9 +105,9 @@ export function TeamStep({
                   {index === 0 && <span className="ml-0.5 text-[#EF4444]">*</span>}
                 </span>
 
-                <span className="flex h-[42px] items-center gap-2 rounded-lg border border-[#E2E5EE] bg-white px-2.5">
+                <span className="flex h-[42px] items-center gap-2 rounded-sm border border-[#E2E5EE] bg-white px-2.5">
                   <span
-                    className="grid size-7 shrink-0 place-items-center rounded-full text-[10px] font-semibold text-white"
+                    className="grid size-7 shrink-0 place-items-center rounded-sm text-[10px] font-semibold text-white"
                     style={{ background: member.color }}
                   >
                     {member.initials}
@@ -173,9 +173,9 @@ export function TeamStep({
         </div>
 
         <div className="grid gap-2.5 lg:grid-cols-3">
-          <div className="rounded-xl border border-[#E6E8F0] bg-white p-3.5">
+          <div className="rounded-sm border border-[#E6E8F0] bg-white p-3.5">
             <div className="mb-2.5 flex items-start gap-2">
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#EEF2FF]">
+              <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#EEF2FF]">
                 <UserPlus className="size-4 text-[#4F46E5]" />
               </span>
               <div>
@@ -186,23 +186,23 @@ export function TeamStep({
             <div className="flex gap-2">
               <input
                 placeholder="Enter email address"
-                className="h-[38px] min-w-0 flex-1 rounded-lg border border-[#E2E5EE] px-2.5 text-[11.5px] outline-none focus:border-[#4F46E5]"
+                className="h-[38px] min-w-0 flex-1 rounded-sm border border-[#E2E5EE] px-2.5 text-[11.5px] outline-none focus:border-[#4F46E5]"
               />
-              <select className="h-[38px] shrink-0 rounded-lg border border-[#E2E5EE] px-2 text-[11.5px] outline-none">
+              <select className="h-[38px] shrink-0 rounded-sm border border-[#E2E5EE] px-2 text-[11.5px] outline-none">
                 <option>Select role</option>
                 <option>SEO Manager</option>
                 <option>Content Writer</option>
               </select>
-              <button className="flex h-[38px] shrink-0 items-center gap-1.5 rounded-lg bg-[#4F46E5] px-2.5 text-[11.5px] font-semibold text-white transition-colors hover:bg-[#4338CA]">
+              <button className="flex h-[38px] shrink-0 items-center gap-1.5 rounded-sm bg-[#4F46E5] px-2.5 text-[11.5px] font-semibold text-white transition-colors hover:bg-[#4338CA]">
                 <Send className="size-3.5" />
                 Send Invite
               </button>
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#E6E8F0] bg-white p-3.5">
+          <div className="rounded-sm border border-[#E6E8F0] bg-white p-3.5">
             <div className="mb-2.5 flex items-start gap-2">
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFFBEB]">
+              <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#FFFBEB]">
                 <Crown className="size-4 text-[#F59E0B]" />
               </span>
               <div>
@@ -212,8 +212,8 @@ export function TeamStep({
                 <p className="text-[10.5px] text-[#6B7280]">Primary point of contact for this client.</p>
               </div>
             </div>
-            <span className="flex h-[42px] items-center gap-2 rounded-lg border border-[#E2E5EE] bg-white px-2.5">
-              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#4F46E5] text-[10px] font-semibold text-white">
+            <span className="flex h-[42px] items-center gap-2 rounded-sm border border-[#E2E5EE] bg-white px-2.5">
+              <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#4F46E5] text-[10px] font-semibold text-white">
                 MS
               </span>
               <span className="min-w-0 flex-1">
@@ -225,9 +225,9 @@ export function TeamStep({
             </span>
           </div>
 
-          <div className="rounded-xl border border-[#E6E8F0] bg-white p-3.5">
+          <div className="rounded-sm border border-[#E6E8F0] bg-white p-3.5">
             <div className="mb-2.5 flex items-start gap-2">
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#EEF2FF]">
+              <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#EEF2FF]">
                 <Users className="size-4 text-[#4F46E5]" />
               </span>
               <div>
@@ -266,7 +266,7 @@ export function TeamRail() {
           {ROLE_GUIDE.map(({ icon: Icon, color, title, text }) => (
             <li key={title} className="flex items-start gap-2.5">
               <span
-                className="grid size-7 shrink-0 place-items-center rounded-lg"
+                className="grid size-7 shrink-0 place-items-center rounded-sm"
                 style={{ background: `${color}1A` }}
               >
                 <Icon className="size-3.5" style={{ color }} />
@@ -288,7 +288,7 @@ export function TeamRail() {
             <p className="text-[10.5px] text-[#6B7280]">Quick overview of who can access what.</p>
           </div>
         </div>
-        <div className="overflow-hidden rounded-lg border border-[#E6E8F0]">
+        <div className="overflow-hidden rounded-sm border border-[#E6E8F0]">
           <div className="grid grid-cols-[1fr_1fr] bg-[#F8FAFC] px-2.5 py-1.5 text-[10.5px] font-semibold text-[#6B7280]">
             <span>Module</span>
             <span>Team Members</span>
@@ -303,7 +303,7 @@ export function TeamRail() {
                 {members.map((initials) => (
                   <i
                     key={initials}
-                    className="grid size-5 place-items-center rounded-full border border-white text-[8px] font-semibold not-italic text-white"
+                    className="grid size-5 place-items-center rounded-sm border border-white text-[8px] font-semibold not-italic text-white"
                     style={{ background: memberColor[initials] }}
                   >
                     {initials}

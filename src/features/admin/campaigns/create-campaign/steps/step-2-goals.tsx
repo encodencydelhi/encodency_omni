@@ -57,7 +57,7 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
   const reserve = toNumber(draft.contingency);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[#DDE6F1] bg-white shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
+    <div className="overflow-hidden rounded-sm border border-[#DDE6F1] bg-white shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
       <StepSection letter="A" title="Primary Objective" caption="Choose the primary goal for this campaign. This determines optimization strategy.">
         <div className="grid gap-2 sm:grid-cols-4 lg:grid-cols-8">
           {OBJECTIVES.map(({ id, title, caption, icon: Icon, tone }) => {
@@ -68,14 +68,14 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
                 type="button"
                 onClick={() => set("primaryObjective", id)}
                 className={cn(
-                  "relative min-h-[100px] rounded-lg border bg-white p-2.5 text-left transition-colors",
+                  "relative min-h-[100px] rounded-sm border bg-white p-2.5 text-left transition-colors",
                   active ? "border-[#EB0711] bg-[#FFF7F8] shadow-[0_0_0_1px_#EB0711]" : "border-[#DDE6F1] hover:border-[#F5B5BA]",
                 )}
               >
-                <span className="absolute right-2 top-2 grid size-4 place-items-center rounded-full border border-[#A9B6CA] bg-white">
-                  {active && <i className="block size-2 rounded-full bg-[#EB0711]" />}
+                <span className="absolute right-2 top-2 grid size-4 place-items-center rounded-sm border border-[#A9B6CA] bg-white">
+                  {active && <i className="block size-2 rounded-sm bg-[#EB0711]" />}
                 </span>
-                <span className={cn("grid size-8 place-items-center rounded-lg", `bg-${tone === "red" ? "[#FFEAEC] text-[#E11D28]" : tone === "green" ? "[#E4F8F0] text-[#0AA673]" : tone === "purple" ? "[#F2EAFF] text-[#7C3AED]" : tone === "amber" ? "[#FFF3DC] text-[#D97706]" : "[#E8F2FF] text-[#1975E7]"}`)}>
+                <span className={cn("grid size-8 place-items-center rounded-sm", `bg-${tone === "red" ? "[#FFEAEC] text-[#E11D28]" : tone === "green" ? "[#E4F8F0] text-[#0AA673]" : tone === "purple" ? "[#F2EAFF] text-[#7C3AED]" : tone === "amber" ? "[#FFF3DC] text-[#D97706]" : "[#E8F2FF] text-[#1975E7]"}`)}>
                   <Icon className="size-4" />
                 </span>
                 <b className="mt-1.5 block text-[12px] font-semibold leading-4 text-[#081438]">{title}</b>
@@ -191,8 +191,8 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
         </div>
 
         <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <div className="flex items-center gap-3 rounded-lg border border-[#E0E9F6] bg-[#F3F8FF] p-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white text-[#1975E7]">
+          <div className="flex items-center gap-3 rounded-sm border border-[#E0E9F6] bg-[#F3F8FF] p-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-white text-[#1975E7]">
               <Clock className="size-5" />
             </span>
             <div className="min-w-0 flex-1">
@@ -201,9 +201,9 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
                 <button
                   type="button"
                   onClick={() => set("dayparting", !draft.dayparting)}
-                  className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", draft.dayparting ? "bg-[#0AA673]" : "bg-[#CBD5E1]")}
+                  className={cn("relative h-5 w-9 shrink-0 rounded-sm transition-colors", draft.dayparting ? "bg-[#0AA673]" : "bg-[#CBD5E1]")}
                 >
-                  <span className={cn("absolute top-0.5 block size-4 rounded-full bg-white shadow-sm transition-all", draft.dayparting ? "left-[18px]" : "left-0.5")} />
+                  <span className={cn("absolute top-0.5 block size-4 rounded-sm bg-white shadow-sm transition-all", draft.dayparting ? "left-[18px]" : "left-0.5")} />
                 </button>
               </div>
               <small className="block text-[10px] leading-[13px] text-[#405277]">
@@ -212,8 +212,8 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-lg border border-[#E0E9F6] bg-[#F3F8FF] p-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white text-[#1975E7]">
+          <div className="flex items-center gap-3 rounded-sm border border-[#E0E9F6] bg-[#F3F8FF] p-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-white text-[#1975E7]">
               <Lightbulb className="size-5" />
             </span>
             <div className="min-w-0">
@@ -252,8 +252,8 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
         </div>
 
         <div className="mt-3 grid gap-3 lg:grid-cols-2">
-          <div className="flex items-center gap-3 rounded-lg border border-[#E0E9F6] bg-[#F3F8FF] p-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white text-[#2563EB]">
+          <div className="flex items-center gap-3 rounded-sm border border-[#E0E9F6] bg-[#F3F8FF] p-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-white text-[#2563EB]">
               <ShieldCheck className="size-5" />
             </span>
             <div className="min-w-0 flex-1">
@@ -262,7 +262,7 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
                 Keep a reserve for mid-campaign adjustments and opportunities.
               </small>
             </div>
-            <span className="flex h-9 w-[84px] items-center overflow-hidden rounded-lg border border-[#D7E2F1] bg-white text-[12px] font-semibold">
+            <span className="flex h-9 w-[84px] items-center overflow-hidden rounded-sm border border-[#D7E2F1] bg-white text-[12px] font-semibold">
               <input
                 value={reserve ? Math.round((reserve / total) * 100) : 10}
                 onChange={(event) => set("contingency", format(Math.round((total * Number(event.target.value || 0)) / 100)))}
@@ -270,7 +270,7 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
               />
               <i className="pr-3 not-italic text-[#34415F]">%</i>
             </span>
-            <span className="grid h-9 w-[108px] place-items-center rounded-lg bg-[#EAF0F8] text-[12px] font-semibold text-[#132044]">
+            <span className="grid h-9 w-[108px] place-items-center rounded-sm bg-[#EAF0F8] text-[12px] font-semibold text-[#132044]">
               ₹ {format(reserve)}
             </span>
           </div>
@@ -285,7 +285,7 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
             { icon: Users, title: "Expected Leads", value: "~500", label: `At target CPL of ₹${draft.targetCpl}`, tone: "text-[#0AA673]" },
             { icon: BarChart3, title: "Estimated Impressions", value: "150K - 350K", label: "Total impressions", tone: "text-[#1975E7]" },
           ].map(({ icon: Icon, title, value, label, tone }) => (
-            <div key={title} className="flex min-h-[64px] items-center gap-3 rounded-lg border border-[#DDE6F1] bg-white px-3 py-2">
+            <div key={title} className="flex min-h-[64px] items-center gap-3 rounded-sm border border-[#DDE6F1] bg-white px-3 py-2">
               <Icon className={cn("size-6 shrink-0", tone)} />
               <div className="min-w-0">
                 <small className="block text-[10px] font-semibold text-[#405277]">{title}</small>
@@ -316,7 +316,7 @@ function StepSection({
   return (
     <section className="border-b border-[#E7EDF5] p-3.5 last:border-b-0">
       <div className="mb-3 flex items-start gap-3">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFE6EA] text-[16px] font-black text-[#EB0711]">
+        <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#FFE6EA] text-[16px] font-black text-[#EB0711]">
           {letter}
         </span>
         <div className="min-w-0 flex-1">

@@ -52,7 +52,7 @@ export function UsageProgress({ used, limit, unit, label, compact = false, class
 
       <div className="flex items-center gap-2">
         <div
-          className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"
+          className="h-1.5 flex-1 overflow-hidden rounded-sm bg-muted"
           role="progressbar"
           aria-valuenow={Math.round(percent)}
           aria-valuemin={0}
@@ -60,7 +60,7 @@ export function UsageProgress({ used, limit, unit, label, compact = false, class
           aria-label={label ?? "Usage"}
         >
           <div
-            className={cn("h-full rounded-full transition-[width]", BAR_TONES[tone])}
+            className={cn("h-full rounded-sm transition-[width]", BAR_TONES[tone])}
             style={{ width: `${isUnmetered ? 6 : Math.max(percent, 2)}%` }}
           />
         </div>

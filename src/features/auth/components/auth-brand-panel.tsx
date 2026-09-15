@@ -33,7 +33,7 @@ export function AuthBrandPanel() {
       {/* Soft light bloom, kept low-contrast so type stays the focus. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-32 top-48 size-96 rounded-full bg-white/5 blur-3xl"
+        className="pointer-events-none absolute -left-32 top-48 size-96 rounded-sm bg-white/5 blur-3xl"
       />
       <div
         aria-hidden
@@ -55,7 +55,7 @@ export function AuthBrandPanel() {
       </div>
 
       <div className="relative z-10 max-w-xl py-8">
-        <div className="mb-8 h-[3px] w-14 rounded-full bg-white/60" aria-hidden />
+        <div className="mb-8 h-[3px] w-14 rounded-sm bg-white/60" aria-hidden />
 
         <p className="text-xl font-medium text-white/80">{APP.name}</p>
 
@@ -66,7 +66,7 @@ export function AuthBrandPanel() {
         <ul className="mt-10 space-y-5 xl:space-y-6">
           {CAPABILITIES.map((capability) => (
             <li key={capability.title} className="flex items-center gap-4">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-white/10">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-sm bg-white/10">
                 <capability.icon size={20} />
               </span>
               <span>

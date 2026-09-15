@@ -35,7 +35,7 @@ export function DraftsTab() {
           <button
             onClick={() => setFilterType("all")}
             className={cn(
-              "flex h-7 items-center gap-1 rounded-lg px-2.5 text-[11px] font-semibold transition",
+              "flex h-7 items-center gap-1 rounded-sm px-2.5 text-[11px] font-semibold transition",
               filterType === "all" ? "bg-[#172044] text-white" : "border border-[#D9E1EC] bg-white text-[#687797] hover:bg-slate-50"
             )}
           >
@@ -44,7 +44,7 @@ export function DraftsTab() {
           <button
             onClick={() => setFilterType("campaign")}
             className={cn(
-              "flex h-7 items-center gap-1 rounded-lg px-2.5 text-[11px] font-semibold transition",
+              "flex h-7 items-center gap-1 rounded-sm px-2.5 text-[11px] font-semibold transition",
               filterType === "campaign" ? "bg-[#1769DF] text-white" : "border border-[#D9E1EC] bg-white text-[#687797] hover:bg-slate-50"
             )}
           >
@@ -53,7 +53,7 @@ export function DraftsTab() {
           <button
             onClick={() => setFilterType("standalone")}
             className={cn(
-              "flex h-7 items-center gap-1 rounded-lg px-2.5 text-[11px] font-semibold transition",
+              "flex h-7 items-center gap-1 rounded-sm px-2.5 text-[11px] font-semibold transition",
               filterType === "standalone" ? "bg-[#0AA673] text-white" : "border border-[#D9E1EC] bg-white text-[#687797] hover:bg-slate-50"
             )}
           >
@@ -66,7 +66,7 @@ export function DraftsTab() {
           subtitle="Campaign-linked and independent standalone posts"
           action={
             <div className="flex items-center gap-1.5">
-              <label className="hidden h-8 w-48 items-center gap-1.5 rounded-lg border border-[#D9E1EC] px-2.5 text-[11.5px] text-[#7A87A0] md:flex">
+              <label className="hidden h-8 w-48 items-center gap-1.5 rounded-sm border border-[#D9E1EC] px-2.5 text-[11.5px] text-[#7A87A0] md:flex">
                 <Search className="size-3.5" />
                 <input
                   value={query}
@@ -76,7 +76,7 @@ export function DraftsTab() {
                   className="w-full bg-transparent outline-none"
                 />
               </label>
-              <div className="flex rounded-lg border border-[#D9E1EC] p-0.5">
+              <div className="flex rounded-sm border border-[#D9E1EC] p-0.5">
                 <button onClick={() => setView("list")} className={cn("rounded p-1.5", view === "list" ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#94A3B8]")}><List className="size-3.5" /></button>
                 <button onClick={() => setView("grid")} className={cn("rounded p-1.5", view === "grid" ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#94A3B8]")}><Grid2X2 className="size-3.5" /></button>
               </div>
@@ -90,11 +90,11 @@ export function DraftsTab() {
                   key={d.id}
                   onClick={() => setSelectedDraftId(d.id)}
                   className={cn(
-                    "flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-2.5 transition hover:bg-slate-50",
+                    "flex cursor-pointer items-center gap-2.5 rounded-sm px-2 py-2.5 transition hover:bg-slate-50",
                     activeDraft?.id === d.id ? "bg-[#F7FAFF]" : ""
                   )}
                 >
-                  <img src={d.masterContent.media[0]?.url ?? ""} alt="" className="h-10 w-14 shrink-0 rounded-lg object-cover" />
+                  <img src={d.masterContent.media[0]?.url ?? ""} alt="" className="h-10 w-14 shrink-0 rounded-sm object-cover" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <p className="truncate text-[12.5px] font-semibold text-[#24365A]">{d.title}</p>
@@ -131,7 +131,7 @@ export function DraftsTab() {
                   key={d.id}
                   onClick={() => setSelectedDraftId(d.id)}
                   className={cn(
-                    "cursor-pointer overflow-hidden rounded-lg border transition hover:border-[#1769DF]",
+                    "cursor-pointer overflow-hidden rounded-sm border transition hover:border-[#1769DF]",
                     activeDraft?.id === d.id ? "border-[#1769DF] ring-1 ring-[#1769DF]" : "border-[#E2E8F0]"
                   )}
                 >
@@ -161,7 +161,7 @@ export function DraftsTab() {
       </div>
 
       <div className="space-y-2.5 xl:sticky xl:top-4">
-        <ContentPreviewPanel platform="instagram" setPlatform={() => {}} channels={activeDraft?.channels ?? ["instagram"]} />
+        <ContentPreviewPanel platform="instagram" setPlatform={() => { }} channels={activeDraft?.channels ?? ["instagram"]} />
         <Card title="Draft details">
           <dl className="space-y-1.5 text-[11.5px]">
             {[
@@ -178,7 +178,7 @@ export function DraftsTab() {
               </div>
             ))}
           </dl>
-          <button className="mt-2.5 h-8 w-full rounded-lg bg-[#172044] text-[11.5px] font-semibold text-white transition hover:bg-slate-800">
+          <button className="mt-2.5 h-8 w-full rounded-sm bg-[#172044] text-[11.5px] font-semibold text-white transition hover:bg-slate-800">
             Continue editing
           </button>
         </Card>

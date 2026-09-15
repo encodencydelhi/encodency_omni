@@ -143,7 +143,7 @@ export function SeoSettingsPage() {
                 key={name}
                 className="flex items-center gap-2 border-b border-[#EDF1F5] py-[9px] last:border-b-0"
               >
-                <span className={cn("grid size-7 shrink-0 place-items-center rounded-lg", tint[color])}>
+                <span className={cn("grid size-7 shrink-0 place-items-center rounded-sm", tint[color])}>
                   <Icon className="size-3.5" />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -209,8 +209,8 @@ export function SeoSettingsPage() {
                 <span className="font-semibold text-[#52617D]">Keyword quota</span>
                 <b className="text-[#172044]">1,245 / 2,000</b>
               </div>
-              <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-[#EDF1F7]">
-                <i className="block h-full rounded-full bg-[#3186F3]" style={{ width: "62%" }} />
+              <span className="mt-1 block h-1.5 overflow-hidden rounded-sm bg-[#EDF1F7]">
+                <i className="block h-full rounded-sm bg-[#3186F3]" style={{ width: "62%" }} />
               </span>
               <p className="mt-1 text-[8px] text-[#8A97AF]">755 slots remaining on your plan.</p>
             </div>

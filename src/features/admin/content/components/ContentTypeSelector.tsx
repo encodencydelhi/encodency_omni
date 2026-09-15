@@ -29,7 +29,7 @@ export function ContentTypeSelector({ platform, selected, onSelect }: Props) {
             key={spec.id}
             onClick={() => onSelect(spec.id)}
             className={cn(
-              "flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[10.5px] font-semibold transition",
+              "flex items-center gap-1 rounded-sm border px-2.5 py-1.5 text-[10.5px] font-semibold transition",
               selected === spec.id
                 ? "border-[color:var(--pc)] bg-[color:var(--pc-bg)] text-[color:var(--pc)]"
                 : "border-[#E2E8F0] text-[#687797] hover:border-[#CBD5E1] hover:bg-slate-50"
@@ -68,7 +68,7 @@ export function ContentTypeSelectorInline({ platforms, contentTypes, onChange }:
           <div key={p}>
             <button
               onClick={() => setExpanded(isExpanded ? null : p)}
-              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-slate-50"
+              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left transition hover:bg-slate-50"
             >
               {isExpanded ? <ChevronDown className="size-3 text-[#7A87A0]" /> : <ChevronRight className="size-3 text-[#7A87A0]" />}
               <PlatformBadge platform={p} size="sm" />

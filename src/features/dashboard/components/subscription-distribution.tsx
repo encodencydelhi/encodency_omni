@@ -48,7 +48,7 @@ export function SubscriptionDistribution({ distribution, isLoading }: Subscripti
             {segments.map((segment) => (
               <li key={segment.key} className="flex items-center gap-2.5">
                 <span
-                  className="size-2.5 shrink-0 rounded-full"
+                  className="size-2.5 shrink-0 rounded-sm"
                   style={{ backgroundColor: segment.color }}
                   aria-hidden
                 />

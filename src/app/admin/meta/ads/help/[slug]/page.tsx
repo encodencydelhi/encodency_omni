@@ -167,7 +167,7 @@ export default function Page({ params }: { params: Promise<{ slug: string }> }) 
                   <ol className="mb-2 space-y-1.5">
                     {section.steps.map((s, j) => (
                       <li key={j} className="flex gap-2.5 text-[12px] leading-relaxed text-[#334155]">
-                        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e8eef5] text-[9px] font-semibold text-[#475569]">
+                        <span className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-[#e8eef5] text-[9px] font-semibold text-[#475569]">
                           {j + 1}
                         </span>
                         <span>{s}</span>

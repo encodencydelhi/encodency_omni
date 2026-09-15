@@ -171,10 +171,10 @@ function GlobalSearch() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search campaigns, ad sets, ads…"
         aria-label="Search Ads Manager"
-        className="h-10 w-full rounded-xl border border-slate-300 bg-white pl-10 pr-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 outline-none shadow-2xs transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20"
+        className="h-10 w-full rounded-sm border border-slate-300 bg-white pl-10 pr-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 outline-none shadow-2xs transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20"
       />
       {open && (
-        <div className="absolute left-0 right-0 top-11 z-40 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+        <div className="absolute left-0 right-0 top-11 z-40 overflow-hidden rounded-sm border border-slate-200 bg-white shadow-xl">
           {hits.length === 0 ? (
             <p className="px-3.5 py-3 text-xs font-medium text-slate-600">
               No campaigns, ad sets, ads or forms match “{query}”.
@@ -229,13 +229,13 @@ function AssetChip({
       href={href}
       title={`${label}: ${value}`}
       className={cn(
-        "flex h-8.5 min-w-0 items-center gap-2 rounded-xl border px-3 text-xs font-medium shadow-2xs transition-all duration-200",
+        "flex h-8.5 min-w-0 items-center gap-2 rounded-sm border px-3 text-xs font-medium shadow-2xs transition-all duration-200",
         warning
           ? "border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 hover:border-amber-400"
           : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:shadow-sm",
       )}
     >
-      <span className="flex size-5.5 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700 ring-1 ring-slate-200">
+      <span className="flex size-5.5 shrink-0 items-center justify-center rounded-sm bg-slate-100 text-slate-700 ring-1 ring-slate-200">
         {icon}
       </span>
       <span className="hidden shrink-0 font-semibold text-slate-600 lg:inline">
@@ -308,7 +308,7 @@ export function AdsWorkspace({
 
         {/* Row 2 — which Meta assets this workspace is acting on. */}
         <div className="mb-3.5 flex flex-wrap items-center gap-2">
-          <span className="flex h-8.5 shrink-0 items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-2.5 shadow-2xs">
+          <span className="flex h-8.5 shrink-0 items-center gap-1.5 rounded-sm border border-emerald-300 bg-emerald-50 px-2.5 shadow-2xs">
             <CheckCircle2 className="size-4 fill-emerald-600 text-white" aria-hidden="true" />
             <span className="whitespace-nowrap text-xs font-semibold text-emerald-800">
               Meta Connected
@@ -351,7 +351,7 @@ export function AdsWorkspace({
                   href={href}
                   aria-current={current ? "page" : undefined}
                   className={cn(
-                    "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200",
+                    "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm px-3.5 py-2 text-xs font-semibold transition-all duration-200",
                     current
                       ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/25 ring-1 ring-blue-600"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
@@ -360,7 +360,7 @@ export function AdsWorkspace({
                   <Icon className={cn("size-3.5", current ? "text-white" : "text-slate-500")} aria-hidden="true" />
                   {label}
                   {badge !== null && (
-                    <span className={cn("rounded-full px-1.5 py-px text-[9.5px] font-black", current ? "bg-white text-rose-600" : "bg-rose-100 text-rose-700")}>
+                    <span className={cn("rounded-sm px-1.5 py-px text-[9.5px] font-black", current ? "bg-white text-rose-600" : "bg-rose-100 text-rose-700")}>
                       {badge}
                     </span>
                   )}

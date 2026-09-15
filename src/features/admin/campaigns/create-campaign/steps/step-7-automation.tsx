@@ -90,9 +90,9 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
       <Panel letter="A" icon={Zap} title="Automation Rules" caption="Set up automatic rules to optimize your campaign in real-time.">
         <div className="space-y-3">
           {draft.automationRules.map((rule) => (
-            <div key={rule.id} className="rounded-xl border border-[#E6E8F0] bg-white p-3">
+            <div key={rule.id} className="rounded-sm border border-[#E6E8F0] bg-white p-3">
               <div className="mb-3 flex items-center gap-2">
-                <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#EEF2FF] text-[#4F46E5]">
+                <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#EEF2FF] text-[#4F46E5]">
                   <Zap className="size-3.5" />
                 </span>
                 <input
@@ -104,9 +104,9 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
                 <button
                   type="button"
                   onClick={() => updateRule(rule.id, { enabled: !rule.enabled })}
-                  className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", rule.enabled ? "bg-[#0AA673]" : "bg-[#CBD5E1]")}
+                  className={cn("relative h-5 w-9 shrink-0 rounded-sm transition-colors", rule.enabled ? "bg-[#0AA673]" : "bg-[#CBD5E1]")}
                 >
-                  <span className={cn("absolute top-0.5 block size-4 rounded-full bg-white shadow-sm transition-all", rule.enabled ? "left-[18px]" : "left-0.5")} />
+                  <span className={cn("absolute top-0.5 block size-4 rounded-sm bg-white shadow-sm transition-all", rule.enabled ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <button onClick={() => removeRule(rule.id)} className="text-[#9CA3AF] hover:text-[#E11D28]">
                   <span className="text-[11px]">&times;</span>
@@ -114,13 +114,13 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
               </div>
 
               <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr]">
-                <div className="rounded-lg border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
+                <div className="rounded-sm border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
                   <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-[#475569]">WHEN</span>
                   <div className="space-y-2">
                     <select
                       value={rule.condition}
                       onChange={(e) => updateRule(rule.id, { condition: e.target.value })}
-                      className="flex h-9 w-full items-center appearance-none rounded-lg border border-[#DDE6F1] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[#1F2937] outline-none"
+                      className="flex h-9 w-full items-center appearance-none rounded-sm border border-[#DDE6F1] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[#1F2937] outline-none"
                     >
                       {CONDITIONS.map((c) => <option key={c}>{c}</option>)}
                     </select>
@@ -131,18 +131,18 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
                 </div>
 
                 <div className="flex items-center justify-center">
-                  <span className="grid size-8 place-items-center rounded-full bg-[#EEF2FF] text-[#4F46E5]">
+                  <span className="grid size-8 place-items-center rounded-sm bg-[#EEF2FF] text-[#4F46E5]">
                     <ArrowRight className="size-4" />
                   </span>
                 </div>
 
-                <div className="rounded-lg border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
+                <div className="rounded-sm border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
                   <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-[#475569]">THEN</span>
                   <div className="space-y-2">
                     <select
                       value={rule.action}
                       onChange={(e) => updateRule(rule.id, { action: e.target.value })}
-                      className="flex h-9 w-full items-center appearance-none rounded-lg border border-[#DDE6F1] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[#1F2937] outline-none"
+                      className="flex h-9 w-full items-center appearance-none rounded-sm border border-[#DDE6F1] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[#1F2937] outline-none"
                     >
                       {ACTIONS.map((a) => <option key={a}>{a}</option>)}
                     </select>
@@ -157,7 +157,7 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
 
           <button
             onClick={addRule}
-            className="flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[#BFD4F2] bg-[#F8FBFF] text-[11px] font-semibold text-[#155EEF] hover:bg-[#EFF6FF]"
+            className="flex h-9 w-full items-center justify-center gap-2 rounded-sm border border-dashed border-[#BFD4F2] bg-[#F8FBFF] text-[11px] font-semibold text-[#155EEF] hover:bg-[#EFF6FF]"
           >
             <Plus className="size-3.5" />
             Add Automation Rule
@@ -168,9 +168,9 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
       <Panel letter="B" icon={Beaker} title="A/B Testing & Experiments" caption="Test different variants to optimize campaign performance.">
         <div className="space-y-3">
           {draft.abTests.map((test) => (
-            <div key={test.id} className="rounded-xl border border-[#E6E8F0] bg-white p-3">
+            <div key={test.id} className="rounded-sm border border-[#E6E8F0] bg-white p-3">
               <div className="mb-3 flex items-center gap-2">
-                <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#F2EAFF] text-[#7C3AED]">
+                <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#F2EAFF] text-[#7C3AED]">
                   <Beaker className="size-3.5" />
                 </span>
                 <input
@@ -182,9 +182,9 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
                 <button
                   type="button"
                   onClick={() => updateTest(test.id, { enabled: !test.enabled })}
-                  className={cn("relative h-5 w-9 shrink-0 rounded-full transition-colors", test.enabled ? "bg-[#0AA673]" : "bg-[#CBD5E1]")}
+                  className={cn("relative h-5 w-9 shrink-0 rounded-sm transition-colors", test.enabled ? "bg-[#0AA673]" : "bg-[#CBD5E1]")}
                 >
-                  <span className={cn("absolute top-0.5 block size-4 rounded-full bg-white shadow-sm transition-all", test.enabled ? "left-[18px]" : "left-0.5")} />
+                  <span className={cn("absolute top-0.5 block size-4 rounded-sm bg-white shadow-sm transition-all", test.enabled ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <button onClick={() => removeTest(test.id)} className="text-[#9CA3AF] hover:text-[#E11D28]">
                   <span className="text-[11px]">&times;</span>
@@ -211,11 +211,11 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
               </div>
 
               <div className="grid gap-3 md:grid-cols-2">
-                <div className="rounded-lg border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
+                <div className="rounded-sm border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
                   <span className="mb-1 block text-[10px] font-semibold text-[#155EEF]">Variant A (Control)</span>
                   <TextInput value={test.variantA} onChange={(v) => updateTest(test.id, { variantA: v })} placeholder="Describe variant A" />
                 </div>
-                <div className="rounded-lg border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
+                <div className="rounded-sm border border-[#E7EDF5] bg-[#F8FAFC] p-2.5">
                   <span className="mb-1 block text-[10px] font-semibold text-[#7C3AED]">Variant B</span>
                   <TextInput value={test.variantB} onChange={(v) => updateTest(test.id, { variantB: v })} placeholder="Describe variant B" />
                 </div>
@@ -225,8 +225,8 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
                 <span className="text-[10px] font-semibold text-[#374151]">Traffic Split:</span>
                 <div className="flex flex-1 items-center gap-2">
                   <span className="text-[10px] text-[#155EEF]">A: {test.trafficSplit}%</span>
-                  <span className="relative h-2 flex-1 rounded-full bg-[#E7EDF5]">
-                    <i className="absolute left-0 top-0 h-full rounded-full bg-[#155EEF]" style={{ width: `${test.trafficSplit}%` }} />
+                  <span className="relative h-2 flex-1 rounded-sm bg-[#E7EDF5]">
+                    <i className="absolute left-0 top-0 h-full rounded-sm bg-[#155EEF]" style={{ width: `${test.trafficSplit}%` }} />
                   </span>
                   <span className="text-[10px] text-[#7C3AED]">B: {100 - test.trafficSplit}%</span>
                 </div>
@@ -249,7 +249,7 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
 
           <button
             onClick={addTest}
-            className="flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[#D4BFFA] bg-[#FAF7FF] text-[11px] font-semibold text-[#7C3AED] hover:bg-[#F2EAFF]"
+            className="flex h-9 w-full items-center justify-center gap-2 rounded-sm border border-dashed border-[#D4BFFA] bg-[#FAF7FF] text-[11px] font-semibold text-[#7C3AED] hover:bg-[#F2EAFF]"
           >
             <Plus className="size-3.5" />
             Add A/B Test
@@ -262,9 +262,9 @@ export function StepAutomation({ draft, set }: { draft: CampaignDraft; set: Sett
 
 function Panel({ letter, icon: Icon, title, caption, children }: { letter: string; icon: typeof Zap; title: string; caption: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-[#DDE6F1] bg-white p-3 shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
+    <section className="rounded-sm border border-[#DDE6F1] bg-white p-3 shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
       <div className="mb-3 flex items-center gap-2">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFE6EA] text-[13px] font-black text-[#EB0711]">{letter}</span>
+        <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#FFE6EA] text-[13px] font-black text-[#EB0711]">{letter}</span>
         <Icon className="size-4 text-[#7C3AED]" />
         <div className="min-w-0 flex-1">
           <b className="block text-[15px] font-black leading-5 text-[#101A3D]">{title}</b>

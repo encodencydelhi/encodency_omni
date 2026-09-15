@@ -91,14 +91,14 @@ export default function IndiaMap({ data }: { data: StateData[] }) {
     <div ref={containerRef} className="relative h-[180px] w-full">
       {tooltipData && (
         <div
-          className="pointer-events-none absolute z-50 rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 shadow-lg"
+          className="pointer-events-none absolute z-50 rounded-sm border border-[#e2e8f0] bg-white px-3 py-2 shadow-lg"
           style={{ left: tooltipPos.x, top: tooltipPos.y }}
         >
           <div className="mb-1 text-[11.5px] font-semibold text-[#1e293b]">{tooltipData.name}</div>
           {tooltipData.value && (
             <div className="flex items-center gap-2 text-[11px]">
               <span className="font-semibold text-[#475569]">{tooltipData.value}</span>
-              <span className="rounded-full bg-[#eef2ff] px-1.5 py-0.5 text-[11px] font-semibold text-[#4f46e5]">{tooltipData.pct}%</span>
+              <span className="rounded-sm bg-[#eef2ff] px-1.5 py-0.5 text-[11px] font-semibold text-[#4f46e5]">{tooltipData.pct}%</span>
             </div>
           )}
           {!tooltipData.value && (

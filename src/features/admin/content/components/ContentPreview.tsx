@@ -22,7 +22,7 @@ export function ContentPreviewPanel({ platform, setPlatform, channels }: { platf
           ))}
         </div>
       </div>
-      <div className="overflow-hidden rounded-xl border border-[#E2E8F0]">
+      <div className="overflow-hidden rounded-sm border border-[#E2E8F0]">
         <div className="flex items-center justify-between bg-[#F8FAFD] px-2 py-1.5">
           <div className="flex items-center gap-1.5">
             <PlatformBadge platform={platform} size="sm" />
@@ -31,7 +31,7 @@ export function ContentPreviewPanel({ platform, setPlatform, channels }: { platf
           <MoreHorizontal className="size-3 text-[#94A3B8]" />
         </div>
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <span className="grid size-6 place-items-center rounded-full bg-green-100 text-[11px]">🌿</span>
+          <span className="grid size-6 place-items-center rounded-sm bg-green-100 text-[11px]">🌿</span>
           <div>
             <p className="text-[10.5px] font-semibold text-[#172044]">Moksha Sewa</p>
             <p className="text-[8.5px] text-[#94A3B8]">Sponsored</p>

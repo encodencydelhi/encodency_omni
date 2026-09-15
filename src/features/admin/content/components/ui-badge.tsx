@@ -13,7 +13,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 export function StatusBadge({ status }: { status: ApprovalStatus | string }) {
   return (
-    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-inset", STATUS_STYLES[status] ?? "bg-slate-100 text-slate-600")}>
+    <span className={cn("inline-flex items-center rounded-sm px-2 py-0.5 text-[10.5px] font-semibold ring-1 ring-inset", STATUS_STYLES[status] ?? "bg-slate-100 text-slate-600")}>
       {status.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
     </span>
   );

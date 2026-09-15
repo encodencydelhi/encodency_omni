@@ -96,13 +96,13 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search broadcast campaigns..."
-              className="h-10 pl-9 text-xs border-slate-200 focus:border-emerald-500 rounded-xl"
+              className="h-10 pl-9 text-xs border-slate-200 focus:border-emerald-500 rounded-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-10 w-36 text-xs border-slate-200 rounded-xl">
+            <SelectTrigger className="h-10 w-36 text-xs border-slate-200 rounded-sm">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -115,7 +115,7 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
           </Select>
 
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="h-10 w-36 text-xs border-slate-200 rounded-xl">
+            <SelectTrigger className="h-10 w-36 text-xs border-slate-200 rounded-sm">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
@@ -128,7 +128,7 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
 
         <Button
           onClick={() => onOpenModal("create-campaign")}
-          className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-2"
+          className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm shadow-md shadow-emerald-600/20 flex items-center gap-2"
         >
           <Plus className="size-4" /> Create Broadcast Campaign
         </Button>
@@ -142,8 +142,8 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
           { label: "Scheduled", value: "5", icon: CalendarDays, color: "bg-purple-50 text-purple-600 border-purple-100", trend: "Upcoming queue" },
           { label: "Completed", value: "16", icon: Pause, color: "bg-teal-50 text-teal-600 border-teal-100", trend: "↑ 28% vs last month" },
         ].map((s, i) => (
-          <div key={i} className="flex items-center gap-3.5 rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-xs">
-            <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl font-bold", s.color)}>
+          <div key={i} className="flex items-center gap-3.5 rounded-sm border border-slate-200/90 bg-white p-3.5 shadow-xs">
+            <span className={cn("grid size-10 shrink-0 place-items-center rounded-sm font-bold", s.color)}>
               <s.icon className="size-5" />
             </span>
             <div>
@@ -158,7 +158,7 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
       </div>
 
       {/* Main Campaigns Table */}
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
+      <section className="overflow-hidden rounded-sm border border-slate-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
@@ -180,13 +180,13 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
                 <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="px-4 py-3 font-bold text-slate-900">{c.name}</td>
                   <td className="px-3 py-3">
-                    <span className={cn("inline-flex items-center justify-center w-[74px] text-center rounded-md py-0.5 text-[11px] font-bold border shrink-0", c.type === "Marketing" ? "bg-pink-50 text-pink-700 border-pink-200" : "bg-blue-50 text-blue-700 border-blue-200")}>
+                    <span className={cn("inline-flex items-center justify-center w-[74px] text-center rounded-sm py-0.5 text-[11px] font-bold border shrink-0", c.type === "Marketing" ? "bg-pink-50 text-pink-700 border-pink-200" : "bg-blue-50 text-blue-700 border-blue-200")}>
                       {c.type}
                     </span>
                   </td>
                   <td className="px-3 py-3 text-right text-slate-600 font-semibold">{c.audience.toLocaleString()}</td>
                   <td className="px-3 py-3">
-                    <span className={cn("inline-flex items-center justify-center w-[74px] text-center rounded-md py-0.5 text-[11px] font-bold border shrink-0", statusColors[c.status])}>
+                    <span className={cn("inline-flex items-center justify-center w-[74px] text-center rounded-sm py-0.5 text-[11px] font-bold border shrink-0", statusColors[c.status])}>
                       {c.status}
                     </span>
                   </td>
@@ -197,13 +197,13 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
                   <td className="px-3 py-3 text-slate-400 font-medium">{c.created}</td>
                   <td className="px-3 py-3">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => toast.success(`Editing campaign details: ${c.name}`)} className="rounded-lg p-1.5 hover:bg-slate-100 text-slate-500" title="Edit">
+                      <button onClick={() => toast.success(`Editing campaign details: ${c.name}`)} className="rounded-sm p-1.5 hover:bg-slate-100 text-slate-500" title="Edit">
                         <Pencil className="size-3.5" />
                       </button>
-                      <button onClick={() => handleClone(c.id)} className="rounded-lg p-1.5 hover:bg-slate-100 text-slate-500" title="Clone">
+                      <button onClick={() => handleClone(c.id)} className="rounded-sm p-1.5 hover:bg-slate-100 text-slate-500" title="Clone">
                         <Copy className="size-3.5" />
                       </button>
-                      <button onClick={() => handleDelete(c.id)} className="rounded-lg p-1.5 hover:bg-rose-50 text-rose-600" title="Delete">
+                      <button onClick={() => handleDelete(c.id)} className="rounded-sm p-1.5 hover:bg-rose-50 text-rose-600" title="Delete">
                         <Trash2 className="size-3.5" />
                       </button>
                     </div>
@@ -243,7 +243,7 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
       </section>
 
       {/* Click-to-WhatsApp (CTWA) Ads Section */}
-      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+      <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm font-bold text-slate-900 tracking-tight">Click-to-WhatsApp (CTWA) Ads</h3>
@@ -251,7 +251,7 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
           </div>
           <Button
             onClick={() => onOpenModal("create-ctwa")}
-            className="h-9 px-3.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-xs flex items-center gap-1.5"
+            className="h-9 px-3.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-sm shadow-xs flex items-center gap-1.5"
           >
             <Plus className="size-3.5" /> Create CTWA Ad
           </Button>
@@ -264,8 +264,8 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
             { label: "Cost per Conversation", value: "₹12.40", icon: IndianRupee, color: "bg-amber-50 text-amber-600 border-amber-100" },
             { label: "Conversion Rate", value: "18.2%", icon: TrendingUp, color: "bg-purple-50 text-purple-600 border-purple-100" },
           ].map((s, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-xl border border-slate-200/90 bg-slate-50/50 p-3">
-              <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl font-bold", s.color)}>
+            <div key={i} className="flex items-center gap-3 rounded-sm border border-slate-200/90 bg-slate-50/50 p-3">
+              <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm font-bold", s.color)}>
                 <s.icon className="size-4" />
               </span>
               <div>
@@ -282,14 +282,14 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
             { name: "Volunteer Recruitment - Awareness", platform: "Instagram", status: "Active", conversations: 1650, cost: "₹13.20", ctr: "2.8%", budget: "₹20,000", spent: "₹14,200" },
             { name: "Donation Appeal - Festival Season", platform: "Facebook", status: "Active", conversations: 1031, cost: "₹12.90", ctr: "3.5%", budget: "₹15,000", spent: "₹11,100" },
           ].map((ad, i) => (
-            <div key={i} className="flex items-center gap-4 rounded-xl border border-slate-200/80 bg-slate-50/30 p-3 hover:bg-slate-50 transition-colors">
-              <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-blue-600 text-white text-xs font-bold shadow-xs">
+            <div key={i} className="flex items-center gap-4 rounded-sm border border-slate-200/80 bg-slate-50/30 p-3 hover:bg-slate-50 transition-colors">
+              <div className="grid size-9 shrink-0 place-items-center rounded-sm bg-blue-600 text-white text-xs font-bold shadow-xs">
                 {ad.platform === "Facebook" ? "f" : "IG"}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-xs font-bold text-slate-900">{ad.name}</p>
-                  <span className="rounded-md bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">{ad.status}</span>
+                  <span className="rounded-sm bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">{ad.status}</span>
                 </div>
                 <div className="mt-1 flex items-center gap-4 text-[11px] text-slate-500">
                   <span>Conversations: <b className="text-slate-900">{ad.conversations.toLocaleString()}</b></span>
@@ -299,8 +299,8 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
               </div>
               <div className="text-right">
                 <p className="text-[11px] text-slate-500 font-medium">Budget: {ad.budget}</p>
-                <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-slate-200">
-                  <div className="h-full rounded-full bg-blue-600" style={{ width: `${(parseInt(ad.spent.replace(/[₹,]/g, "")) / parseInt(ad.budget.replace(/[₹,]/g, ""))) * 100}%` }} />
+                <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-sm bg-slate-200">
+                  <div className="h-full rounded-sm bg-blue-600" style={{ width: `${(parseInt(ad.spent.replace(/[₹,]/g, "")) / parseInt(ad.budget.replace(/[₹,]/g, ""))) * 100}%` }} />
                 </div>
                 <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">Spent: {ad.spent}</p>
               </div>

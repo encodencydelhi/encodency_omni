@@ -75,7 +75,7 @@ export function ErrorState({ error, onRetry, className }: ErrorStateProps) {
   return (
     <div className={className}>
       <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center">
-        <span className="flex size-10 items-center justify-center rounded-full bg-danger-subtle text-danger">
+        <span className="flex size-10 items-center justify-center rounded-sm bg-danger-subtle text-danger">
           <Icon className="size-5" />
         </span>
         <div className="space-y-1">

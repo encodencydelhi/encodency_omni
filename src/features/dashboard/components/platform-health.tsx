@@ -73,7 +73,7 @@ export function PlatformHealth({ entries, isLoading }: PlatformHealthProps) {
                   {entry.label}
                 </span>
                 <span className={cn("flex shrink-0 items-center gap-1.5 text-2xs font-medium", styles.text)}>
-                  <span className={cn("size-1.5 rounded-full", styles.dot)} aria-hidden />
+                  <span className={cn("size-1.5 rounded-sm", styles.dot)} aria-hidden />
                   {SERVICE_STATUS[entry.status].label}
                 </span>
               </li>

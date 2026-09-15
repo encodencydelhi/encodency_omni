@@ -116,7 +116,7 @@ function HelpCenter() {
     >
       <section className={cn(card, "mb-3 p-6")}>
         <div className="mx-auto max-w-[680px] text-center">
-          <span className="mx-auto flex size-12 items-center justify-center rounded-xl bg-blue-50/80 shadow-sm ring-1 ring-blue-100">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-sm bg-blue-50/80 shadow-sm ring-1 ring-blue-100">
             <CircleHelp className="size-6 text-blue-600" aria-hidden="true" />
           </span>
           <h1 className="mt-2.5 text-[22px] font-semibold leading-tight">
@@ -137,7 +137,7 @@ function HelpCenter() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search Ads Manager help..."
               aria-label="Search Ads Manager help"
-              className="h-12 w-full rounded-xl border border-slate-200/60 bg-white/80 pl-11 pr-4 text-xs shadow-sm backdrop-blur-md outline-none transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 hover:bg-white hover:shadow-md"
+              className="h-12 w-full rounded-sm border border-slate-200/60 bg-white/80 pl-11 pr-4 text-xs shadow-sm backdrop-blur-md outline-none transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 hover:bg-white hover:shadow-md"
             />
           </div>
         </div>
@@ -204,7 +204,7 @@ function HelpCenter() {
                     <li key={article.slug}>
                       <Link
                         href={`${ADS_ROOT}/help/${article.slug}`}
-                        className="block rounded-lg border border-slate-200/60 bg-white/60 p-3 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+                        className="block rounded-sm border border-slate-200/60 bg-white/60 p-3 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
                       >
                         <span className="block text-[11px] font-semibold text-[#0671e9]">
                           {article.title}
@@ -230,13 +230,13 @@ function HelpCenter() {
                       <Link
                         href={`${ADS_ROOT}/help?category=${category.id}`}
                         className={cn(
-                          "flex h-full gap-3 rounded-xl border bg-white/60 p-3.5 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md",
+                          "flex h-full gap-3 rounded-sm border bg-white/60 p-3.5 shadow-sm backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md",
                           highlighted === category.id
                             ? "border-blue-500 ring-1 ring-blue-500/30"
                             : "border-slate-200/60 hover:border-blue-200",
                         )}
                       >
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-blue-50/80 shadow-sm ring-1 ring-blue-100">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-blue-50/80 shadow-sm ring-1 ring-blue-100">
                           <Icon className="size-4.5 text-blue-600" aria-hidden="true" />
                         </span>
                         <span className="min-w-0">

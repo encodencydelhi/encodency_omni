@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils/cn";
 export function Avatar({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Root>) {
   return (
     <AvatarPrimitive.Root
-      className={cn("relative flex size-8 shrink-0 overflow-hidden rounded-full", className)}
+      className={cn("relative flex size-8 shrink-0 overflow-hidden rounded-sm", className)}
       {...props}
     />
   );
@@ -24,7 +24,7 @@ export function AvatarFallback({
   return (
     <AvatarPrimitive.Fallback
       className={cn(
-        "flex size-full items-center justify-center rounded-full bg-primary-subtle text-2xs font-semibold text-primary",
+        "flex size-full items-center justify-center rounded-sm bg-primary-subtle text-2xs font-semibold text-primary",
         className,
       )}
       {...props}

@@ -195,7 +195,7 @@ function IssuesView() {
                 <li key={issue.id} className="flex flex-wrap items-start gap-3 p-3">
                   <span
                     className={cn(
-                      "flex size-8 shrink-0 items-center justify-center rounded-full",
+                      "flex size-8 shrink-0 items-center justify-center rounded-sm",
                       issue.resolved
                         ? "bg-[#eefaf3] text-[#087a50]"
                         : issue.severity === "warning"

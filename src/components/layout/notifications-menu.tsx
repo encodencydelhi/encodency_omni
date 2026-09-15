@@ -41,7 +41,7 @@ export function NotificationsMenu() {
         >
           <BellIcon />
           {unreadCount > 0 ? (
-            <span className="absolute -top-0.5 -right-0.5 flex min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[0.5625rem] font-semibold text-destructive-foreground">
+            <span className="absolute -top-0.5 -right-0.5 flex min-w-4 items-center justify-center rounded-sm bg-danger px-1 text-[0.5625rem] font-semibold text-destructive-foreground">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           ) : null}
@@ -93,7 +93,7 @@ export function NotificationsMenu() {
                 const body = (
                   <div className="flex gap-3">
                     <span
-                      className={cn("mt-1.5 size-1.5 shrink-0 rounded-full", SEVERITY_DOT[notification.severity])}
+                      className={cn("mt-1.5 size-1.5 shrink-0 rounded-sm", SEVERITY_DOT[notification.severity])}
                       aria-hidden
                     />
                     <div className="min-w-0 flex-1 space-y-0.5">

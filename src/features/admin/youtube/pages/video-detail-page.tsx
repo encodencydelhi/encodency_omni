@@ -134,10 +134,10 @@ function VideoDetail({ video }: { video: Video }) {
 
       <Card className="p-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-start">
-          <button type="button" onClick={() => setThumbOpen(true)} disabled={!can.canEditVideo.allowed} className="group relative w-full shrink-0 rounded-lg md:w-[220px]" aria-label="Change thumbnail">
-            <Thumb src={video.thumbnailUrl} durationSec={video.durationSec} className="rounded-lg" sizes="220px" />
+          <button type="button" onClick={() => setThumbOpen(true)} disabled={!can.canEditVideo.allowed} className="group relative w-full shrink-0 rounded-sm md:w-[220px]" aria-label="Change thumbnail">
+            <Thumb src={video.thumbnailUrl} durationSec={video.durationSec} className="rounded-sm" sizes="220px" />
             {can.canEditVideo.allowed && (
-              <span className="absolute inset-0 grid place-items-center rounded-lg bg-[#0F1B3D]/55 text-[12px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
+              <span className="absolute inset-0 grid place-items-center rounded-sm bg-[#0F1B3D]/55 text-[12px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
                 <span className="flex items-center gap-1.5"><ImageIcon className="size-4" />Change thumbnail</span>
               </span>
             )}
@@ -384,7 +384,7 @@ function AnalyticsTab({ video }: { video: Video }) {
         <Card>
           <CardHeader title="Subscriber impact" />
           <div className="space-y-3 px-4 pb-4">
-            <div className="rounded-lg bg-[#ECFAF3] px-3 py-2.5">
+            <div className="rounded-sm bg-[#ECFAF3] px-3 py-2.5">
               <p className="text-[12px] text-[#067647]">Subscribers from this video</p>
               <p className="text-[22px] font-semibold tabular-nums text-[#0F1B3D]">+{full(subsGained)}</p>
             </div>
@@ -478,7 +478,7 @@ function DetailsTab({ video, onEdit, onHistory }: { video: Video; onEdit: () => 
             description={settings.moderation.requireApproval ? "Contributors submit content for review before it's published." : "Approval is optional for this workspace."}
           />
           <div className="space-y-3 px-4 pb-4">
-            <div className="flex items-center justify-between rounded-lg bg-[#F8FAFC] px-3 py-2">
+            <div className="flex items-center justify-between rounded-sm bg-[#F8FAFC] px-3 py-2">
               <span className="text-[12px] text-[#6B7890]">Internal status</span>
               {video.approval === "none" ? <Badge>Not submitted</Badge> : <ApprovalBadge state={video.approval} />}
             </div>
@@ -516,7 +516,7 @@ function DetailsTab({ video, onEdit, onHistory }: { video: Video; onEdit: () => 
                           <b className="font-semibold text-[#0F1B3D]">{h.actor}</b> {h.action === "submitted" ? "submitted for approval" : h.action === "approved" ? "approved" : h.action === "rejected" ? "rejected" : "requested changes"}
                           <span className="text-[#98A2B3]"> · {relative(h.at)}</span>
                         </p>
-                        {h.note && <p className="mt-0.5 rounded-md bg-[#F8FAFC] px-2 py-1 text-[12px] text-[#24324F]">“{h.note}”</p>}
+                        {h.note && <p className="mt-0.5 rounded-sm bg-[#F8FAFC] px-2 py-1 text-[12px] text-[#24324F]">“{h.note}”</p>}
                       </div>
                     </li>
                   ))}

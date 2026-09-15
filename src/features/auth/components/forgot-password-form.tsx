@@ -49,7 +49,7 @@ export function ForgotPasswordForm() {
       <AuthCard>
         {sentTo ? (
           <>
-            <span className="flex size-11 items-center justify-center rounded-xl bg-success-subtle text-success">
+            <span className="flex size-11 items-center justify-center rounded-sm bg-success-subtle text-success">
               <MailCheckIcon size={22} />
             </span>
 
@@ -65,7 +65,7 @@ export function ForgotPasswordForm() {
 
             <Link
               href={ROUTES.login}
-              className="mt-7 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border-strong bg-card font-semibold text-foreground transition hover:bg-accent"
+              className="mt-7 flex h-12 w-full items-center justify-center gap-2 rounded-sm border border-border-strong bg-card font-semibold text-foreground transition hover:bg-accent"
             >
               <ArrowLeftIcon size={19} aria-hidden />
               Back to sign in

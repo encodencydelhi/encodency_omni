@@ -102,13 +102,13 @@ export function ContactsTab({ onOpenModal }: ContactsTabProps) {
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search contacts..."
-              className="h-10 pl-9 text-xs border-slate-200 focus:border-emerald-500 rounded-xl"
+              className="h-10 pl-9 text-xs border-slate-200 focus:border-emerald-500 rounded-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <Select value={labelFilter} onValueChange={setLabelFilter}>
-            <SelectTrigger className="h-10 w-36 text-xs border-slate-200 rounded-xl">
+            <SelectTrigger className="h-10 w-36 text-xs border-slate-200 rounded-sm">
               <SelectValue placeholder="Label" />
             </SelectTrigger>
             <SelectContent>
@@ -121,7 +121,7 @@ export function ContactsTab({ onOpenModal }: ContactsTabProps) {
           </Select>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-10 w-36 text-xs border-slate-200 rounded-xl">
+            <SelectTrigger className="h-10 w-36 text-xs border-slate-200 rounded-sm">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -137,13 +137,13 @@ export function ContactsTab({ onOpenModal }: ContactsTabProps) {
           <Button
             variant="outline"
             onClick={() => onOpenModal("import-contacts")}
-            className="h-10 text-xs font-bold px-3.5 border-slate-200 rounded-xl flex items-center gap-1.5"
+            className="h-10 text-xs font-bold px-3.5 border-slate-200 rounded-sm flex items-center gap-1.5"
           >
             <Upload className="size-3.5 text-slate-600" /> Import CSV
           </Button>
           <Button
             onClick={() => onOpenModal("add-contact")}
-            className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
+            className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
           >
             <Plus className="size-4" /> Add Contact
           </Button>
@@ -158,8 +158,8 @@ export function ContactsTab({ onOpenModal }: ContactsTabProps) {
           { label: "Blocked", value: "48", trend: "↓ 12%", icon: UserX, color: "bg-rose-50 text-rose-600 border-rose-100" },
           { label: "Unsubscribed", value: "182", trend: "↑ 5%", icon: UserMinus, color: "bg-amber-50 text-amber-600 border-amber-100" },
         ].map((s, i) => (
-          <div key={i} className="flex items-center gap-3.5 rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-xs">
-            <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl font-bold", s.color)}>
+          <div key={i} className="flex items-center gap-3.5 rounded-sm border border-slate-200/90 bg-white p-3.5 shadow-xs">
+            <span className={cn("grid size-10 shrink-0 place-items-center rounded-sm font-bold", s.color)}>
               <s.icon className="size-5" />
             </span>
             <div>
@@ -175,7 +175,7 @@ export function ContactsTab({ onOpenModal }: ContactsTabProps) {
 
       {/* Bulk Select Banner */}
       {selected.length > 0 && (
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-2.5 shadow-xs">
+        <div className="flex items-center gap-3 rounded-sm border border-emerald-200 bg-emerald-50/80 px-4 py-2.5 shadow-xs">
           <span className="text-xs font-bold text-emerald-900">{selected.length} contacts selected</span>
           <div className="h-4 w-px bg-emerald-200" />
           <Button size="sm" variant="ghost" onClick={() => toast.success(`Exporting ${selected.length} contacts to CSV...`)} className="h-7 text-xs font-bold text-emerald-800 hover:bg-emerald-100">
@@ -194,7 +194,7 @@ export function ContactsTab({ onOpenModal }: ContactsTabProps) {
       )}
 
       {/* Main Table */}
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
+      <section className="overflow-hidden rounded-sm border border-slate-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
@@ -221,7 +221,7 @@ export function ContactsTab({ onOpenModal }: ContactsTabProps) {
                   </td>
                   <td className="px-3 py-3">
                     <div className="flex items-center gap-2.5">
-                      <span className={cn("grid size-8 shrink-0 place-items-center rounded-full text-xs font-bold shadow-xs", c.color)}>
+                      <span className={cn("grid size-8 shrink-0 place-items-center rounded-sm text-xs font-bold shadow-xs", c.color)}>
                         {c.initial}
                       </span>
                       <span className="font-bold text-slate-900">{c.name}</span>
@@ -232,7 +232,7 @@ export function ContactsTab({ onOpenModal }: ContactsTabProps) {
                   <td className="px-3 py-3">
                     <div className="flex flex-wrap gap-1">
                       {c.labels.map((l) => (
-                        <span key={l} className={cn("rounded-md px-2 py-0.5 text-[10px] font-bold border", labelColors[l])}>
+                        <span key={l} className={cn("rounded-sm px-2 py-0.5 text-[10px] font-bold border", labelColors[l])}>
                           {l}
                         </span>
                       ))}
@@ -240,7 +240,7 @@ export function ContactsTab({ onOpenModal }: ContactsTabProps) {
                   </td>
                   <td className="px-3 py-3 text-slate-400 font-medium">{c.lastInteraction}</td>
                   <td className="px-3 py-3">
-                    <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-bold border", statusColors[c.status])}>
+                    <span className={cn("rounded-sm px-2 py-0.5 text-[11px] font-bold border", statusColors[c.status])}>
                       {c.status}
                     </span>
                   </td>
@@ -252,16 +252,16 @@ export function ContactsTab({ onOpenModal }: ContactsTabProps) {
                   <td className="px-3 py-3 text-slate-400 font-medium">{c.created}</td>
                   <td className="px-3 py-3">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => toast.success(`Editing contact: ${c.name}`)} className="rounded-lg p-1.5 hover:bg-slate-100 text-slate-500" title="Edit">
+                      <button onClick={() => toast.success(`Editing contact: ${c.name}`)} className="rounded-sm p-1.5 hover:bg-slate-100 text-slate-500" title="Edit">
                         <Pencil className="size-3.5" />
                       </button>
-                      <button onClick={() => toast.info(`Viewing activity history for ${c.name}`)} className="rounded-lg p-1.5 hover:bg-blue-50 text-blue-600" title="History">
+                      <button onClick={() => toast.info(`Viewing activity history for ${c.name}`)} className="rounded-sm p-1.5 hover:bg-blue-50 text-blue-600" title="History">
                         <History className="size-3.5" />
                       </button>
-                      <button onClick={() => handleBlock(c.id)} className="rounded-lg p-1.5 hover:bg-rose-50 text-rose-600" title="Block">
+                      <button onClick={() => handleBlock(c.id)} className="rounded-sm p-1.5 hover:bg-rose-50 text-rose-600" title="Block">
                         <Ban className="size-3.5" />
                       </button>
-                      <button onClick={() => handleDelete(c.id)} className="rounded-lg p-1.5 hover:bg-rose-50 text-rose-600" title="Delete">
+                      <button onClick={() => handleDelete(c.id)} className="rounded-sm p-1.5 hover:bg-rose-50 text-rose-600" title="Delete">
                         <Trash2 className="size-3.5" />
                       </button>
                     </div>

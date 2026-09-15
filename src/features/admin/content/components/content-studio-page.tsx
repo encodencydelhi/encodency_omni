@@ -113,7 +113,7 @@ function Card({ title, subtitle, action, children, className }: {
   children: React.ReactNode; className?: string;
 }) {
   return (
-    <section className={cn("overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]", className)}>
+    <section className={cn("overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]", className)}>
       {(title || action) && (
         <header className="flex items-center justify-between gap-2 border-b border-[#EDF1F5] px-4 py-3">
           <div className="min-w-0">
@@ -148,7 +148,7 @@ function SelectField({ label, value, required }: { label: string; value: string;
       <span className="mb-1 block text-[11.5px] font-semibold text-[#4B5B76]">
         {label} {required && <span className="text-red-500">*</span>}
       </span>
-      <span className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-[#dce4ef] bg-white px-2.5 text-[12.5px] font-medium text-[#24365A] transition hover:border-[#1769DF]">
+      <span className="flex h-9 w-full items-center justify-between gap-2 rounded-sm border border-[#dce4ef] bg-white px-2.5 text-[12.5px] font-medium text-[#24365A] transition hover:border-[#1769DF]">
         <span className="truncate">{value}</span>
         <ChevronDown className="size-3.5 shrink-0 text-slate-400" />
       </span>
@@ -163,11 +163,11 @@ function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; la
       aria-checked={on}
       aria-label={label}
       onClick={onChange}
-      className={cn("relative shrink-0 rounded-full transition", on ? "bg-[#1769DF]" : "bg-[#D5DDE8]")}
+      className={cn("relative shrink-0 rounded-sm transition", on ? "bg-[#1769DF]" : "bg-[#D5DDE8]")}
       style={{ height: 20, width: 36 }}
     >
       <span
-        className="absolute top-[2px] size-[16px] rounded-full bg-white shadow-sm transition-all"
+        className="absolute top-[2px] size-[16px] rounded-sm bg-white shadow-sm transition-all"
         style={{ [on ? "right" : "left"]: 2 } as React.CSSProperties}
       />
     </button>
@@ -177,7 +177,7 @@ function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; la
 function PlatformBadge({ platform, size = "md" }: { platform: Platform; size?: "sm" | "md" }) {
   const s = platformStyle[platform];
   return (
-    <span className={cn("inline-flex shrink-0 items-center justify-center rounded-full", s.chip, size === "sm" ? "size-5.5 text-[11px]" : "size-7 text-[13px]")}>
+    <span className={cn("inline-flex shrink-0 items-center justify-center rounded-sm", s.chip, size === "sm" ? "size-5.5 text-[11px]" : "size-7 text-[13px]")}>
       {s.icon}
     </span>
   );
@@ -187,17 +187,17 @@ function PlatformBadge({ platform, size = "md" }: { platform: Platform; size?: "
 
 function PhonePreview({ platform = "Instagram", status = "Scheduled" }: { platform?: Platform; status?: string }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-[#e2e8f0]">
+    <div className="overflow-hidden rounded-sm border border-[#e2e8f0]">
       <div className="flex items-center justify-between bg-[#f8fafd] px-2.5 py-2">
         <div className="flex items-center gap-1.5">
           <PlatformBadge platform={platform} size="sm" />
           <span className="text-[12px] font-semibold text-[#16233F]">{platform}</span>
-          <span className="rounded-full bg-emerald-50 px-1.5 py-px text-[10px] font-semibold text-emerald-700">{status}</span>
+          <span className="rounded-sm bg-emerald-50 px-1.5 py-px text-[10px] font-semibold text-emerald-700">{status}</span>
         </div>
         <MoreHorizontal className="size-3.5 text-slate-400" />
       </div>
       <div className="flex items-center gap-2 px-2.5 py-2">
-        <span className="grid size-8 place-items-center rounded-full bg-green-100 text-[14px]">🌿</span>
+        <span className="grid size-8 place-items-center rounded-sm bg-green-100 text-[14px]">🌿</span>
         <div>
           <p className="text-[12px] font-semibold text-[#16233F]">Moksha Sewa</p>
           <p className="text-[10.5px] text-slate-500">Sponsored · Varanasi</p>
@@ -246,13 +246,13 @@ function Checklist() {
   const done = items.filter(([, d]) => d).length;
   return (
     <Card title="Publishing checklist" subtitle={`${done} of ${items.length} complete`}>
-      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all" style={{ width: `${(done / items.length) * 100}%` }} />
+      <div className="h-1.5 overflow-hidden rounded-sm bg-slate-100">
+        <div className="h-full rounded-sm bg-gradient-to-r from-emerald-500 to-teal-500 transition-all" style={{ width: `${(done / items.length) * 100}%` }} />
       </div>
       <ul className="mt-2 space-y-1.5">
         {items.map(([text, ok]) => (
           <li key={text} className="flex items-center gap-2">
-            <span className={cn("grid size-4 shrink-0 place-items-center rounded-full", ok ? "bg-emerald-100 text-emerald-700" : "border border-slate-300 text-transparent")}>
+            <span className={cn("grid size-4 shrink-0 place-items-center rounded-sm", ok ? "bg-emerald-100 text-emerald-700" : "border border-slate-300 text-transparent")}>
               <Check className="size-2.5" />
             </span>
             <span className={cn("text-[12px]", ok ? "font-medium text-[#33445F]" : "text-slate-400")}>{text}</span>
@@ -294,13 +294,13 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
               key={t.id}
               onClick={() => setPostType(t.id)}
               className={cn(
-                "rounded-lg border p-2 text-center transition",
+                "rounded-sm border p-2 text-center transition",
                 postType === t.id
                   ? "border-[#1769DF] bg-[#F0F6FF] shadow-sm shadow-blue-100"
                   : "border-[#E2E8F0] hover:border-[#CBD5E1] hover:bg-slate-50",
               )}
             >
-              <span className={cn("mx-auto mb-1 grid size-7 place-items-center rounded-lg", postType === t.id ? "bg-[#1769DF] text-white" : "bg-[#F1F5F9] text-[#64748B]")}>
+              <span className={cn("mx-auto mb-1 grid size-7 place-items-center rounded-sm", postType === t.id ? "bg-[#1769DF] text-white" : "bg-[#F1F5F9] text-[#64748B]")}>
                 {t.icon}
               </span>
               <span className="block text-[11px] font-semibold text-[#24365A]">{t.id}</span>
@@ -354,10 +354,10 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
           )}
 
           {subTab === "Hashtags" && (
-            <div className="rounded-lg border border-[#e5ecf4] bg-[#f8fafc] p-2.5">
+            <div className="rounded-sm border border-[#e5ecf4] bg-[#f8fafc] p-2.5">
               <div className="flex flex-wrap gap-1">
                 {["#CleanGanga", "#HealthyIndia", "#Sustainability", "#MokshaSewa", "#SaveWater", "#CleanIndia"].map((h) => (
-                  <span key={h} className="rounded-full bg-[#F0F6FF] px-2.5 py-1 text-[11.5px] font-semibold text-[#1769DF]">{h}</span>
+                  <span key={h} className="rounded-sm bg-[#F0F6FF] px-2.5 py-1 text-[11.5px] font-semibold text-[#1769DF]">{h}</span>
                 ))}
               </div>
               <button className="mt-2 flex items-center gap-1 text-[11.5px] font-semibold text-[#1769DF]"><Sparkles className="size-3" /> Generate more</button>
@@ -371,7 +371,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
                 "Cleaner rivers begin with everyday choices. Let's make a difference together.",
                 "A healthier India starts with cleaner water. Join the movement today.",
               ].map((v, i) => (
-                <div key={v} className="flex items-start justify-between gap-2 rounded-lg border border-[#e5ecf4] p-2.5">
+                <div key={v} className="flex items-start justify-between gap-2 rounded-sm border border-[#e5ecf4] p-2.5">
                   <div className="min-w-0">
                     <p className="text-[10.5px] font-semibold uppercase tracking-wide text-[#1769DF]">Variation {i + 1}</p>
                     <p className="mt-0.5 text-[12px] leading-4.5 text-slate-600">{v}</p>
@@ -383,7 +383,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
           )}
 
           {(subTab === "First comment" || subTab === "AI improve") && (
-            <div className="rounded-lg border border-[#e5ecf4] p-2.5 text-[12px] leading-4.5 text-slate-600">
+            <div className="rounded-sm border border-[#e5ecf4] p-2.5 text-[12px] leading-4.5 text-slate-600">
               {subTab === "First comment"
                 ? "What small action will you take today? Tell us below 💚 #CleanGanga"
                 : "AI suggestion: shorten the hook to one line, add a clear CTA (“Join Saturday's drive”), and keep 3–5 high-intent hashtags."}
@@ -393,19 +393,19 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
 
         <div className="mt-3">
           <StepTitle step="4" title="Media" hint="JPG, PNG, MP4 up to 100MB" />
-          <div className="rounded-lg border-2 border-dashed border-[#b9cff2] bg-[#f7faff] p-4 text-center transition hover:border-[#1769DF] hover:bg-[#f0f6ff]">
+          <div className="rounded-sm border-2 border-dashed border-[#b9cff2] bg-[#f7faff] p-4 text-center transition hover:border-[#1769DF] hover:bg-[#f0f6ff]">
             <p className="text-[12.5px] font-semibold text-[#24365A]">Drag & drop files here, or browse</p>
-            <button className="mt-2 h-8 rounded-lg bg-[#1769DF] px-4 text-[12px] font-semibold text-white shadow-sm hover:bg-[#1259bd]">Upload from device</button>
+            <button className="mt-2 h-8 rounded-sm bg-[#1769DF] px-4 text-[12px] font-semibold text-white shadow-sm hover:bg-[#1259bd]">Upload from device</button>
             <p className="mt-1.5 text-[11px] text-slate-500">1080 × 1350 (4:5) recommended · 3 files selected</p>
           </div>
           <div className="mt-2 grid grid-cols-4 gap-1.5">
             {IMAGES.slice(0, 3).map((src, i) => (
-              <div key={src} className="relative overflow-hidden rounded-lg border border-[#e2e8f0]">
+              <div key={src} className="relative overflow-hidden rounded-sm border border-[#e2e8f0]">
                 <img src={src} alt="" className="h-20 w-full object-cover" />
                 <span className="absolute left-1.5 top-1.5 grid size-4 place-items-center rounded bg-[#16233F]/80 text-[9px] font-semibold text-white">{i + 1}</span>
               </div>
             ))}
-            <button className="grid h-20 place-items-center rounded-lg border border-dashed border-slate-300 text-slate-500 hover:bg-slate-50">
+            <button className="grid h-20 place-items-center rounded-sm border border-dashed border-slate-300 text-slate-500 hover:bg-slate-50">
               <span><Plus className="mx-auto size-4" /><span className="mt-0.5 block text-[10.5px] font-semibold">Add more</span></span>
             </button>
           </div>
@@ -422,7 +422,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
               <button
                 key={p}
                 onClick={() => toggleChannel(p)}
-                className={cn("flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition", on ? "border-blue-200 bg-[#f2f7ff]" : "border-transparent hover:bg-slate-50")}
+                className={cn("flex w-full items-center gap-2 rounded-sm border px-2 py-1.5 text-left transition", on ? "border-blue-200 bg-[#f2f7ff]" : "border-transparent hover:bg-slate-50")}
               >
                 <span className={cn("grid shrink-0 place-items-center rounded border", on ? "border-[#1769DF] bg-[#1769DF] text-white" : "border-slate-300 text-transparent")} style={{ width: 16, height: 16 }}>
                   <Check className="size-2.5" />
@@ -440,7 +440,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
         <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Schedule</p>
         <div className="space-y-1">
           {["Publish now", "Schedule for later", "Save as draft"].map((s) => (
-            <label key={s} className={cn("flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-[12px] font-medium transition", schedule === s ? "border-[#1769DF] bg-[#f2f7ff] text-[#16233F]" : "border-[#e5ecf4] text-slate-600 hover:bg-slate-50")}>
+            <label key={s} className={cn("flex cursor-pointer items-center gap-2 rounded-sm border px-2.5 py-2 text-[12px] font-medium transition", schedule === s ? "border-[#1769DF] bg-[#f2f7ff] text-[#16233F]" : "border-[#e5ecf4] text-slate-600 hover:bg-slate-50")}>
               <input type="radio" name="schedule" checked={schedule === s} onChange={() => setSchedule(s)} className="accent-[#1769DF]" />
               {s}
             </label>
@@ -454,7 +454,7 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
           </div>
         )}
 
-        <div className="mt-2.5 flex items-start gap-2 rounded-lg bg-amber-50 p-2.5 ring-1 ring-amber-100">
+        <div className="mt-2.5 flex items-start gap-2 rounded-sm bg-amber-50 p-2.5 ring-1 ring-amber-100">
           <Clock3 className="mt-px size-3.5 shrink-0 text-amber-600" />
           <p className="text-[11.5px] leading-4.5 text-amber-900"><b>Best time:</b> Today, 11 AM – 1 PM.</p>
         </div>
@@ -481,12 +481,12 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
       <div className="space-y-2.5 lg:sticky lg:top-4">
         <Card
           title="Live preview"
-          action={<span className="rounded-full bg-slate-100 px-2 py-px text-[10.5px] font-semibold text-slate-600">{channels[0] ?? "Instagram"}</span>}
+          action={<span className="rounded-sm bg-slate-100 px-2 py-px text-[10.5px] font-semibold text-slate-600">{channels[0] ?? "Instagram"}</span>}
         >
           <PhonePreview platform={(channels[0] as Platform) ?? "Instagram"} />
           <div className="mt-2 flex gap-1.5">
-            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border text-[11.5px] font-semibold text-slate-600 hover:bg-slate-50"><Download className="size-3.5" /> Export</button>
-            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg bg-[#16233F] text-[11.5px] font-semibold text-white hover:bg-[#0f1830]"><Pencil className="size-3.5" /> Open editor</button>
+            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm border text-[11.5px] font-semibold text-slate-600 hover:bg-slate-50"><Download className="size-3.5" /> Export</button>
+            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm bg-[#16233F] text-[11.5px] font-semibold text-white hover:bg-[#0f1830]"><Pencil className="size-3.5" /> Open editor</button>
           </div>
         </Card>
         <Checklist />
@@ -503,7 +503,7 @@ function AIAssistantTab() {
     <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
       <Card title="Describe your idea" subtitle="AI drafts caption, hashtags and creative">
         <label className="mb-1 block text-[12px] font-semibold text-[#33445F]">Topic / prompt *</label>
-        <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} spellCheck className="w-full resize-none rounded-lg border border-[#dce4ef] p-2.5 text-[12.5px] leading-5 outline-none focus:border-[#7C3AED]" />
+        <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} spellCheck className="w-full resize-none rounded-sm border border-[#dce4ef] p-2.5 text-[12.5px] leading-5 outline-none focus:border-[#7C3AED]" />
         <div className="mt-2 grid grid-cols-3 gap-1.5">
           <SelectField label="Audience" value="General public" />
           <SelectField label="Tone" value="Positive" />
@@ -512,13 +512,13 @@ function AIAssistantTab() {
         <p className="mb-1.5 mt-3 text-[12px] font-semibold text-[#33445F]">Image style</p>
         <div className="grid grid-cols-3 gap-1.5">
           {IMAGES.slice(0, 6).map((src, i) => (
-            <button key={src + i} className={cn("overflow-hidden rounded-lg border text-left", i === 0 ? "border-[#7C3AED] ring-2 ring-violet-100" : "border-[#e5ecf4]")}>
+            <button key={src + i} className={cn("overflow-hidden rounded-sm border text-left", i === 0 ? "border-[#7C3AED] ring-2 ring-violet-100" : "border-[#e5ecf4]")}>
               <img src={src} alt="" className="h-14 w-full object-cover" />
               <span className="block px-2 py-1 text-[10.5px] font-semibold text-slate-600">{["Realistic", "Nature", "Minimal", "Documentary", "Community", "River"][i]}</span>
             </button>
           ))}
         </div>
-        <button className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-[#7C3AED] text-[13px] font-semibold text-white shadow-sm shadow-purple-200 transition hover:bg-[#6D28D9]">
+        <button className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-sm bg-[#7C3AED] text-[13px] font-semibold text-white shadow-sm shadow-purple-200 transition hover:bg-[#6D28D9]">
           <Sparkles className="size-4" /> Generate content
         </button>
       </Card>
@@ -528,17 +528,17 @@ function AIAssistantTab() {
         subtitle="Review, then send to editor"
         action={<button className="text-[11.5px] font-semibold text-[#1769DF]">Regenerate</button>}
       >
-        <div className="rounded-lg border border-[#e2e8f0] p-2.5 text-[12.5px] leading-5 text-slate-700">
+        <div className="rounded-sm border border-[#e2e8f0] p-2.5 text-[12.5px] leading-5 text-slate-700">
           Small actions create a cleaner tomorrow.
           <br /><br />
           Let&apos;s work together for a healthier, greener and cleaner India. 💙🌱
           <br /><br />
           <span className="font-semibold text-[#1769DF]">#CleanGanga #HealthyIndia #Sustainability #MokshaSewa</span>
         </div>
-        <img src={IMAGES[4]} alt="" className="mt-2 aspect-video w-full rounded-lg object-cover" />
+        <img src={IMAGES[4]} alt="" className="mt-2 aspect-video w-full rounded-sm object-cover" />
         <div className="mt-2 flex gap-1.5">
-          <button className="h-8 flex-1 rounded-lg border text-[12px] font-semibold text-slate-600">Save draft</button>
-          <button className="h-8 flex-1 rounded-lg bg-[#1769DF] text-[12px] font-semibold text-white">Use this post</button>
+          <button className="h-8 flex-1 rounded-sm border text-[12px] font-semibold text-slate-600">Save draft</button>
+          <button className="h-8 flex-1 rounded-sm bg-[#1769DF] text-[12px] font-semibold text-white">Use this post</button>
         </div>
       </Card>
 
@@ -547,7 +547,7 @@ function AIAssistantTab() {
         <Card title="Quick refinements">
           <div className="grid grid-cols-2 gap-1">
             {["Make shorter", "Add CTA", "Change tone", "More hashtags", "Hindi version", "Add emojis"].map((x) => (
-              <button key={x} className="rounded-lg border border-[#e5ecf4] px-2 py-1.5 text-left text-[11.5px] font-semibold text-slate-600 hover:border-violet-200 hover:bg-violet-50/50">✨ {x}</button>
+              <button key={x} className="rounded-sm border border-[#e5ecf4] px-2 py-1.5 text-left text-[11.5px] font-semibold text-slate-600 hover:border-violet-200 hover:bg-violet-50/50">✨ {x}</button>
             ))}
           </div>
         </Card>
@@ -580,7 +580,7 @@ function TemplatesTab() {
       <Card className="[&>div]:p-2" title="Categories">
         <div className="space-y-px">
           {CATEGORIES.map((c) => (
-            <button key={c} onClick={() => setCat(c)} className={cn("flex w-full items-center rounded-lg px-2.5 py-2 text-left text-[12px] font-semibold transition", cat === c ? "bg-[#F0F6FF] text-[#1769DF]" : "text-slate-600 hover:bg-slate-50")}>
+            <button key={c} onClick={() => setCat(c)} className={cn("flex w-full items-center rounded-sm px-2.5 py-2 text-left text-[12px] font-semibold transition", cat === c ? "bg-[#F0F6FF] text-[#1769DF]" : "text-slate-600 hover:bg-slate-50")}>
               {c}
             </button>
           ))}
@@ -591,7 +591,7 @@ function TemplatesTab() {
         title={`All templates · ${TEMPLATES.length}`}
         subtitle="Click a design to preview it"
         action={
-          <label className="flex h-9 w-52 items-center gap-2 rounded-lg border border-[#dce4ef] px-2.5 text-[12px] text-slate-500">
+          <label className="flex h-9 w-52 items-center gap-2 rounded-sm border border-[#dce4ef] px-2.5 text-[12px] text-slate-500">
             <Search className="size-3.5" />
             <input placeholder="Search templates…" spellCheck={true} className="w-full bg-transparent outline-none placeholder:text-slate-400" />
           </label>
@@ -599,7 +599,7 @@ function TemplatesTab() {
       >
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 2xl:grid-cols-4">
           {TEMPLATES.map((t, i) => (
-            <button key={t.title} onClick={() => setSelected(i)} className={cn("overflow-hidden rounded-lg border bg-white text-left transition", selected === i ? "border-[#1769DF] shadow-md ring-1 ring-blue-100" : "border-[#e2e8f0] hover:shadow-md")}>
+            <button key={t.title} onClick={() => setSelected(i)} className={cn("overflow-hidden rounded-sm border bg-white text-left transition", selected === i ? "border-[#1769DF] shadow-md ring-1 ring-blue-100" : "border-[#e2e8f0] hover:shadow-md")}>
               <div className="relative">
                 <img src={t.img} alt={t.title} className="aspect-[4/3] w-full object-cover" />
                 {t.pro && <span className="absolute right-1.5 top-1.5 rounded bg-amber-400 px-1.5 py-px text-[9px] font-black text-amber-950">PRO</span>}
@@ -614,11 +614,11 @@ function TemplatesTab() {
       </Card>
 
       <Card title="Template preview" className="lg:sticky lg:top-4">
-        <img src={active.img} alt="" className="aspect-[4/4.4] w-full rounded-lg object-cover" />
+        <img src={active.img} alt="" className="aspect-[4/4.4] w-full rounded-sm object-cover" />
         <p className="mt-2 text-[14px] font-semibold text-[#16233F]">{active.title}</p>
         <p className="mt-0.5 text-[12px] leading-4.5 text-slate-500">Clean, impactful layout for awareness and community campaigns. Fully editable.</p>
-        <button className="mt-2 h-10 w-full rounded-lg bg-[#EB0711] text-[13px] font-semibold text-white shadow-sm shadow-red-200 transition hover:bg-[#D60811]">Use this template</button>
-        <button className="mt-1.5 h-9 w-full rounded-lg border text-[12px] font-semibold text-slate-600 hover:bg-slate-50">Customize in editor</button>
+        <button className="mt-2 h-10 w-full rounded-sm bg-[#EB0711] text-[13px] font-semibold text-white shadow-sm shadow-red-200 transition hover:bg-[#D60811]">Use this template</button>
+        <button className="mt-1.5 h-9 w-full rounded-sm border text-[12px] font-semibold text-slate-600 hover:bg-slate-50">Customize in editor</button>
         <dl className="mt-3 space-y-1.5 border-t border-slate-100 pt-2.5 text-[11.5px]">
           {[["Platform", "Instagram"], ["Size", "1080 × 1350 (4:5)"], ["Type", "Image · JPG / PNG"], ["Text", "Fully editable"]].map(([k, v]) => (
             <div key={k} className="flex justify-between"><dt className="text-slate-500">{k}</dt><dd className="font-semibold text-[#33445F]">{v}</dd></div>
@@ -650,11 +650,11 @@ function DraftsTab() {
         subtitle="Continue where you left off"
         action={
           <div className="flex items-center gap-1.5">
-            <label className="hidden h-9 w-52 items-center gap-2 rounded-lg border border-[#dce4ef] px-2.5 text-[12px] text-slate-500 md:flex">
+            <label className="hidden h-9 w-52 items-center gap-2 rounded-sm border border-[#dce4ef] px-2.5 text-[12px] text-slate-500 md:flex">
               <Search className="size-3.5" />
               <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search drafts…" spellCheck={true} className="w-full bg-transparent outline-none" />
             </label>
-            <div className="flex rounded-lg border border-[#dce4ef] p-0.5">
+            <div className="flex rounded-sm border border-[#dce4ef] p-0.5">
               <button onClick={() => setView("list")} className={cn("rounded p-1.5", view === "list" ? "bg-[#F0F6FF] text-[#1769DF]" : "text-slate-400")} aria-label="List view"><List className="size-3.5" /></button>
               <button onClick={() => setView("grid")} className={cn("rounded p-1.5", view === "grid" ? "bg-[#F0F6FF] text-[#1769DF]" : "text-slate-400")} aria-label="Grid view"><Grid2X2 className="size-3.5" /></button>
             </div>
@@ -665,7 +665,7 @@ function DraftsTab() {
           <div className="divide-y divide-slate-100">
             {rows.map((d) => (
               <div key={d.title} className="flex items-center gap-2.5 py-2.5 first:pt-0 last:pb-0">
-                <img src={d.img} alt="" className="h-11 w-14 shrink-0 rounded-lg object-cover" />
+                <img src={d.img} alt="" className="h-11 w-14 shrink-0 rounded-sm object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-semibold text-[#24365A]">{d.title}</p>
                   <p className="mt-px flex flex-wrap items-center gap-x-1.5 text-[11.5px] text-slate-500">
@@ -674,7 +674,7 @@ function DraftsTab() {
                   </p>
                   <p className="mt-px text-[11px] text-slate-400">{d.date}</p>
                 </div>
-                <span className="hidden rounded-full bg-slate-100 px-2 py-px text-[10.5px] font-semibold text-slate-600 sm:block">Draft</span>
+                <span className="hidden rounded-sm bg-slate-100 px-2 py-px text-[10.5px] font-semibold text-slate-600 sm:block">Draft</span>
                 <div className="flex shrink-0 gap-0.5">
                   <button className="rounded-sm p-1.5 text-[#1769DF] hover:bg-blue-50" aria-label="Edit"><Pencil className="size-3.5" /></button>
                   <button className="rounded-sm p-1.5 text-slate-400 hover:bg-slate-100" aria-label="Duplicate"><Copy className="size-3.5" /></button>
@@ -686,7 +686,7 @@ function DraftsTab() {
         ) : (
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
             {rows.map((d) => (
-              <div key={d.title} className="overflow-hidden rounded-lg border border-[#e2e8f0]">
+              <div key={d.title} className="overflow-hidden rounded-sm border border-[#e2e8f0]">
                 <img src={d.img} alt="" className="aspect-video w-full object-cover" />
                 <div className="p-2">
                   <p className="truncate text-[12.5px] font-semibold text-[#24365A]">{d.title}</p>
@@ -706,7 +706,7 @@ function DraftsTab() {
               <div key={k} className="flex justify-between gap-2"><dt className="text-slate-500">{k}</dt><dd className="text-right font-semibold text-[#33445F]">{v}</dd></div>
             ))}
           </dl>
-          <button className="mt-3 h-9 w-full rounded-lg bg-[#16233F] text-[12.5px] font-semibold text-white">Continue editing</button>
+          <button className="mt-3 h-9 w-full rounded-sm bg-[#16233F] text-[12.5px] font-semibold text-white">Continue editing</button>
         </Card>
       </div>
     </div>
@@ -732,11 +732,11 @@ function IdeasTab() {
       <Card
         title="Content ideas"
         subtitle="Curated prompts for your next post"
-        action={<button className="flex h-9 items-center gap-1.5 rounded-lg bg-violet-50 px-3 text-[12px] font-semibold text-violet-700 ring-1 ring-violet-100 hover:bg-violet-100"><Sparkles className="size-3.5" /> Generate with AI</button>}
+        action={<button className="flex h-9 items-center gap-1.5 rounded-sm bg-violet-50 px-3 text-[12px] font-semibold text-violet-700 ring-1 ring-violet-100 hover:bg-violet-100"><Sparkles className="size-3.5" /> Generate with AI</button>}
       >
         <div className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-3">
           {IDEAS.map((idea, i) => (
-            <button key={idea.title} onClick={() => setSelected(i)} className={cn("overflow-hidden rounded-lg border text-left transition", selected === i ? "border-[#1769DF] shadow-md ring-1 ring-blue-100" : "border-[#e2e8f0] hover:shadow-md")}>
+            <button key={idea.title} onClick={() => setSelected(i)} className={cn("overflow-hidden rounded-sm border text-left transition", selected === i ? "border-[#1769DF] shadow-md ring-1 ring-blue-100" : "border-[#e2e8f0] hover:shadow-md")}>
               <img src={idea.img} alt="" className="aspect-[16/9] w-full object-cover" />
               <div className="p-2.5">
                 <span className="rounded bg-blue-50 px-1.5 py-px text-[10px] font-semibold text-[#1769DF]">#{idea.tag}</span>
@@ -748,11 +748,11 @@ function IdeasTab() {
         </div>
       </Card>
       <Card title="Idea details" className="lg:sticky lg:top-4">
-        <img src={active.img} alt="" className="aspect-video w-full rounded-lg object-cover" />
+        <img src={active.img} alt="" className="aspect-video w-full rounded-sm object-cover" />
         <p className="mt-2 text-[14px] font-semibold text-[#16233F]">{active.title}</p>
         <p className="mt-0.5 text-[12px] leading-4.5 text-slate-500">{active.desc} Suggested for Instagram, Facebook and LinkedIn · best posted 9–11 AM.</p>
-        <button className="mt-2 h-10 w-full rounded-lg bg-[#EB0711] text-[13px] font-semibold text-white transition hover:bg-[#D60811]">Use this idea</button>
-        <button className="mt-1.5 h-9 w-full rounded-lg border text-[12px] font-semibold text-slate-600 hover:bg-slate-50">Customize with AI</button>
+        <button className="mt-2 h-10 w-full rounded-sm bg-[#EB0711] text-[13px] font-semibold text-white transition hover:bg-[#D60811]">Use this idea</button>
+        <button className="mt-1.5 h-9 w-full rounded-sm border text-[12px] font-semibold text-slate-600 hover:bg-slate-50">Customize with AI</button>
       </Card>
     </div>
   );
@@ -779,8 +779,8 @@ function ApprovalsTab() {
             { n: "3", label: "Changes requested", icon: <FileText className="size-4" />, tone: "bg-red-50 text-red-600" },
             { n: "5", label: "Scheduled", icon: <CalendarDays className="size-4" />, tone: "bg-blue-50 text-[#1769DF]" },
           ].map((s) => (
-            <div key={s.label} className="flex items-center gap-2.5 rounded-xl border border-[#dfe6f0] bg-white p-3 shadow-sm">
-              <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl", s.tone)}>{s.icon}</span>
+            <div key={s.label} className="flex items-center gap-2.5 rounded-sm border border-[#dfe6f0] bg-white p-3 shadow-sm">
+              <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", s.tone)}>{s.icon}</span>
               <div><p className="text-[18px] font-black leading-4 text-[#16233F]">{s.n}</p><p className="mt-px text-[11px] font-medium text-slate-500">{s.label}</p></div>
             </div>
           ))}
@@ -799,13 +799,13 @@ function ApprovalsTab() {
           <div className="divide-y divide-slate-100">
             {rows.map((a) => (
               <div key={a.title} className="flex items-center gap-2.5 py-2.5 first:pt-0 last:pb-0">
-                <img src={a.img} alt="" className="h-10 w-14 shrink-0 rounded-lg object-cover" />
+                <img src={a.img} alt="" className="h-10 w-14 shrink-0 rounded-sm object-cover" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-semibold text-[#24365A]">{a.title}</p>
                   <p className="mt-px text-[11.5px] text-slate-500">{a.channel} · by {a.by} · {a.date}</p>
                 </div>
                 <span className={cn(
-                  "hidden rounded-full px-2 py-px text-[10.5px] font-semibold sm:block",
+                  "hidden rounded-sm px-2 py-px text-[10.5px] font-semibold sm:block",
                   a.status === "Approved" && "bg-emerald-50 text-emerald-700",
                   a.status === "Pending" && "bg-amber-50 text-amber-700",
                   a.status === "Changes requested" && "bg-red-50 text-red-600",
@@ -825,7 +825,7 @@ function ApprovalsTab() {
           <div className="space-y-2 border-l-2 border-slate-200 pl-3.5">
             {[["Draft created", "by Manish Sirohi · Sep 4", true], ["Pending review", "Content team · waiting", true], ["Approve & schedule", "Next step", false]].map(([t, s, done]) => (
               <div key={t as string} className="relative">
-                <span className={cn("absolute -left-[23px] top-0.5 grid size-3.5 place-items-center rounded-full", done ? "bg-emerald-500 text-white" : "bg-white ring-2 ring-slate-200")}>
+                <span className={cn("absolute -left-[23px] top-0.5 grid size-3.5 place-items-center rounded-sm", done ? "bg-emerald-500 text-white" : "bg-white ring-2 ring-slate-200")}>
                   {done ? <Check className="size-2" /> : null}
                 </span>
                 <p className="text-[12.5px] font-semibold text-[#33445F]">{t as string}</p>
@@ -834,8 +834,8 @@ function ApprovalsTab() {
             ))}
           </div>
           <div className="mt-3 flex gap-1.5">
-            <button className="h-9 flex-1 rounded-lg bg-emerald-600 text-[12.5px] font-semibold text-white hover:bg-emerald-700">Approve</button>
-            <button className="h-9 flex-1 rounded-lg border border-red-200 text-[12.5px] font-semibold text-red-600 hover:bg-red-50">Request changes</button>
+            <button className="h-9 flex-1 rounded-sm bg-emerald-600 text-[12.5px] font-semibold text-white hover:bg-emerald-700">Approve</button>
+            <button className="h-9 flex-1 rounded-sm border border-red-200 text-[12.5px] font-semibold text-red-600 hover:bg-red-50">Request changes</button>
           </div>
         </Card>
       </div>
@@ -869,10 +869,10 @@ export default function ContentStudio() {
           <p className="mt-0.5 text-[11.5px] text-[#687797]">Create, customize and publish content across all your channels.</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <button className="flex h-9 items-center gap-1.5 rounded-lg border border-[#D7E0EB] bg-white px-3.5 text-[12.5px] font-semibold text-[#33445F] shadow-[0_1px_3px_rgb(31_50_81/0.06)] transition hover:bg-[#F8FAFD]">
+          <button className="flex h-9 items-center gap-1.5 rounded-sm border border-[#D7E0EB] bg-white px-3.5 text-[12.5px] font-semibold text-[#33445F] shadow-[0_1px_3px_rgb(31_50_81/0.06)] transition hover:bg-[#F8FAFD]">
             <Bookmark className="size-3.5 text-[#71809D]" /> Save draft
           </button>
-          <button className="flex h-9 items-center gap-1.5 rounded-lg bg-[#EB0711] px-4 text-[12.5px] font-semibold text-white shadow-[0_1px_3px_rgb(235_7_17/0.25)] transition hover:bg-[#D60811]">
+          <button className="flex h-9 items-center gap-1.5 rounded-sm bg-[#EB0711] px-4 text-[12.5px] font-semibold text-white shadow-[0_1px_3px_rgb(235_7_17/0.25)] transition hover:bg-[#D60811]">
             <Send className="size-3.5" /> Publish <ChevronDown className="size-3.5 opacity-80" />
           </button>
         </div>

@@ -61,7 +61,7 @@ export function RecentActivity({ entries, isLoading }: RecentActivityProps) {
 
             return (
               <li key={entry.id} className="flex items-start gap-2.5">
-                <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg", accent)}>
+                <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-sm", accent)}>
                   <Icon className="size-3.5" />
                 </span>
                 <div className="min-w-0 flex-1">

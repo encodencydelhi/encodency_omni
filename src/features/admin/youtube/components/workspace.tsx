@@ -316,7 +316,7 @@ function GlobalSearch() {
                 {hit.thumb ? (
                   <Thumb src={hit.thumb} className="w-14" sizes="56px" />
                 ) : (
-                  <span className="grid h-8 w-14 shrink-0 place-items-center rounded-md bg-[#F1F4F8] text-[#6B7890]">
+                  <span className="grid h-8 w-14 shrink-0 place-items-center rounded-sm bg-[#F1F4F8] text-[#6B7890]">
                     {hit.type === "Playlist" ? <ListPlus className="size-4" /> : hit.type === "Comment" ? <MessageSquare className="size-4" /> : <Radio className="size-4" />}
                   </span>
                 )}
@@ -363,7 +363,7 @@ function NotificationsButton() {
       <PopoverTrigger asChild>
         <button type="button" aria-label={`YouTube notifications${unread ? `, ${unread} unread` : ""}`} className={cn(buttonClass("secondary", "icon", "relative size-9"))}>
           <Bell className="size-4" />
-          {unread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[#E5202E] px-1 text-[10px] font-bold text-white ring-2 ring-[#F6F8FB]">{unread}</span>}
+          {unread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-sm bg-[#E5202E] px-1 text-[10px] font-bold text-white ring-2 ring-[#F6F8FB]">{unread}</span>}
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[360px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[10px] border-[#E4E9F0] p-0">
@@ -386,11 +386,11 @@ function NotificationsButton() {
                   }}
                   className={cn("flex gap-2.5 border-b border-[#F3F5F9] px-3.5 py-2.5 hover:bg-[#F8FAFC]", !n.read && "bg-[#FFFBFB]")}
                 >
-                  <span className={cn("grid size-7 shrink-0 place-items-center rounded-full", meta.tone)}><Icon className="size-3.5" /></span>
+                  <span className={cn("grid size-7 shrink-0 place-items-center rounded-sm", meta.tone)}><Icon className="size-3.5" /></span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center justify-between gap-2">
                       <span className="truncate text-[12.5px] font-semibold text-[#0F1B3D]">{n.title}</span>
-                      {!n.read && <span className="size-2 shrink-0 rounded-full bg-[#E5202E]" aria-label="Unread" />}
+                      {!n.read && <span className="size-2 shrink-0 rounded-sm bg-[#E5202E]" aria-label="Unread" />}
                     </span>
                     <span className="line-clamp-2 text-[12px] leading-4 text-[#3C4A66]">{n.body}</span>
                     <span className="mt-0.5 block text-[11px] text-[#98A2B3]">{relative(n.at)}</span>
@@ -572,11 +572,11 @@ function WorkspaceTabs({ activeLabel }: { activeLabel: string }) {
               )}
             >
               {t.label}
-              {t.label === "Comments" && needsAttention > 0 && <span className="rounded-full bg-[#FEF1F2] px-1.5 text-[10.5px] font-bold leading-4 text-[#C81E2B]">{needsAttention}</span>}
-              {t.label === "Content" && failed > 0 && <span className="rounded-full bg-[#FEF1F2] px-1.5 text-[10.5px] font-bold leading-4 text-[#C81E2B]" title={`${failed} failed`}>{failed}</span>}
+              {t.label === "Comments" && needsAttention > 0 && <span className="rounded-sm bg-[#FEF1F2] px-1.5 text-[10.5px] font-bold leading-4 text-[#C81E2B]">{needsAttention}</span>}
+              {t.label === "Content" && failed > 0 && <span className="rounded-sm bg-[#FEF1F2] px-1.5 text-[10.5px] font-bold leading-4 text-[#C81E2B]" title={`${failed} failed`}>{failed}</span>}
               {t.label === "Live" && liveNow && (
-                <span className="flex items-center gap-1 rounded-full bg-[#E5202E] px-1.5 text-[10px] font-bold uppercase leading-4 text-white">
-                  <span className="size-1.5 animate-pulse rounded-full bg-white" />Live
+                <span className="flex items-center gap-1 rounded-sm bg-[#E5202E] px-1.5 text-[10px] font-bold uppercase leading-4 text-white">
+                  <span className="size-1.5 animate-pulse rounded-sm bg-white" />Live
                 </span>
               )}
             </Link>

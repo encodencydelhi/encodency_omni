@@ -52,14 +52,14 @@ export function CompanyIntegrationsTab({ companyId }: { companyId: string }) {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-border bg-card">
+      <div className="rounded-sm border border-border bg-card">
         <ErrorState error={error} onRetry={() => void refetch()} />
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
+    <div className="overflow-hidden rounded-sm border border-border bg-card">
       {isPending ? (
         <div className="space-y-4 p-5">
           {Array.from({ length: 5 }, (_, index) => (

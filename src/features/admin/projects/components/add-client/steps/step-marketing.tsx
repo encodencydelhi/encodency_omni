@@ -154,7 +154,7 @@ export function MarketingRail({ draft }: { draft: ClientDraft }) {
           {/* The lockup's wordmark is unreadable at 44px, so the tile shows just
               the lotus + waves: render the art ~34% taller than the tile and clip
               the bottom third, which is where the "MOKSHA SEWA" text sits. */}
-          <span className="relative size-11 shrink-0 overflow-hidden rounded-xl border border-[#E6E8F0] bg-white">
+          <span className="relative size-11 shrink-0 overflow-hidden rounded-sm border border-[#E6E8F0] bg-white">
             <Image
               src={mokshaLogo}
               alt=""
@@ -194,7 +194,7 @@ export function MarketingRail({ draft }: { draft: ClientDraft }) {
             { icon: TrendingUp, title: "Use local targeting", text: "Helps increase visibility in your city." },
           ].map(({ icon: Icon, title, text }) => (
             <li key={title} className="flex items-start gap-2.5">
-              <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#EEF2FF]">
+              <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#EEF2FF]">
                 <Icon className="size-3.5 text-[#4F46E5]" />
               </span>
               <span className="min-w-0">

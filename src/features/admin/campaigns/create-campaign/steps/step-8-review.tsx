@@ -44,9 +44,9 @@ function Card({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-xl border border-[#DDE6F1] bg-white p-3 shadow-[0_1px_3px_rgb(15_23_42/0.04)]", className)}>
+    <div className={cn("rounded-sm border border-[#DDE6F1] bg-white p-3 shadow-[0_1px_3px_rgb(15_23_42/0.04)]", className)}>
       <div className="mb-2 flex items-center gap-1.5">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFEAEC]">
+        <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#FFEAEC]">
           <Icon className="size-3.5 text-[#E11D28]" />
         </span>
         <b className="flex-1 text-[12.5px] font-semibold text-[#101A3D]">{title}</b>
@@ -115,9 +115,9 @@ export function StepReview({
 
   return (
     <div className="space-y-2.5">
-      <div className="rounded-xl border border-[#DDE6F1] bg-white p-3.5 shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
+      <div className="rounded-sm border border-[#DDE6F1] bg-white p-3.5 shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
         <div className="mb-3 flex items-center gap-2">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFE6EA]">
+          <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#FFE6EA]">
             <Rocket className="size-4 text-[#EB0711]" />
           </span>
           <div className="min-w-0 flex-1">
@@ -160,7 +160,7 @@ export function StepReview({
                 <li key={channel} className="flex items-center gap-2">
                   <ChannelLogo channel={channel} className="size-5 shrink-0" />
                   <span className="min-w-0 flex-1 truncate text-[10.5px] font-medium text-[#374151]">{channel}</span>
-                  <i className="shrink-0 rounded-full bg-[#DDF8EA] px-2 py-1 text-[9.5px] font-semibold not-italic text-[#078359]">Ready</i>
+                  <i className="shrink-0 rounded-sm bg-[#DDF8EA] px-2 py-1 text-[9.5px] font-semibold not-italic text-[#078359]">Ready</i>
                 </li>
               ))}
               {draft.channels.length > 6 && (
@@ -186,7 +186,7 @@ export function StepReview({
             <Row icon={FileText} label="Hashtags" value={`${draft.hashtags.length} hashtags`} />
           </Card>
 
-          <div className="rounded-xl border border-[#E6E8F0] bg-white p-3">
+          <div className="rounded-sm border border-[#E6E8F0] bg-white p-3">
             <div className="mb-2 flex items-center gap-1.5">
               <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-[#E8F2FF]">
                 <ImageIcon className="size-3.5 text-[#1975E7]" />
@@ -194,7 +194,7 @@ export function StepReview({
               <b className="flex-1 text-[11.5px] font-semibold text-[#111827]">Campaign Preview</b>
               <button className="text-[10px] font-semibold text-[#1975E7]">View All Creatives</button>
             </div>
-            <span className="relative block h-[150px] overflow-hidden rounded-lg">
+            <span className="relative block h-[150px] overflow-hidden rounded-sm">
               <Image src="/campaigns/save-rivers/banner.png" alt="Campaign creative" fill sizes="520px" className="object-cover" />
             </span>
             <div className="mt-2 grid grid-cols-5 gap-2">
@@ -205,10 +205,10 @@ export function StepReview({
                 { src: "/campaigns/save-rivers/standard.png", ratio: "1:1", label: "LinkedIn" },
                 { src: "/campaigns/save-rivers/banner.png", ratio: "16:9", label: "Website" },
               ].map(({ src, ratio, label }) => (
-                <div key={label} className="min-w-0 rounded-lg border border-[#DDE6F1] bg-white p-1 text-center">
+                <div key={label} className="min-w-0 rounded-sm border border-[#DDE6F1] bg-white p-1 text-center">
                   <span className="relative block h-12 overflow-hidden rounded-sm">
                     <Image src={src} alt="" fill sizes="120px" className="object-cover" />
-                    {ratio === "9:16" && <PlayCircle className="absolute inset-0 m-auto size-5 rounded-full bg-black/45 text-white" />}
+                    {ratio === "9:16" && <PlayCircle className="absolute inset-0 m-auto size-5 rounded-sm bg-black/45 text-white" />}
                   </span>
                   <b className="mt-1 block text-[9px] leading-3 text-[#155EEF]">{ratio}</b>
                   <small className="block truncate text-[8px] text-[#526385]">{label}</small>
@@ -238,7 +238,7 @@ export function StepReview({
               <Row icon={Zap} label="A/B Tests" value={`${draft.abTests.length} experiments`} />
               {draft.automationRules.map((rule) => (
                 <div key={rule.id} className="flex items-center gap-1.5 text-[9.5px] text-[#374151]">
-                  <i className={cn("size-1.5 rounded-full", rule.enabled ? "bg-[#0AA673]" : "bg-[#CBD5E1]")} />
+                  <i className={cn("size-1.5 rounded-sm", rule.enabled ? "bg-[#0AA673]" : "bg-[#CBD5E1]")} />
                   {rule.name}
                 </div>
               ))}
@@ -247,7 +247,7 @@ export function StepReview({
         </div>
       </div>
 
-      <div className="rounded-xl border border-[#E6E8F0] bg-white p-3 shadow-[0_1px_3px_rgb(15_23_42/0.04)]">
+      <div className="rounded-sm border border-[#E6E8F0] bg-white p-3 shadow-[0_1px_3px_rgb(15_23_42/0.04)]">
         <div className="mb-2 flex items-center gap-1.5">
           <span className="grid size-6 shrink-0 place-items-center rounded-sm bg-[#E8F2FF]">
             <ImageIcon className="size-3.5 text-[#1975E7]" />
@@ -256,7 +256,7 @@ export function StepReview({
         </div>
         <div className="scrollbar-thin flex gap-2 overflow-x-auto pb-1">
           {PREVIEW_PLATFORMS.map((platform) => (
-            <div key={platform.id} className="min-w-[200px] shrink-0 rounded-lg border border-[#E7EDF5] bg-[#F8FAFC] p-2">
+            <div key={platform.id} className="min-w-[200px] shrink-0 rounded-sm border border-[#E7EDF5] bg-[#F8FAFC] p-2">
               <div className="mb-1.5 flex items-center gap-1.5">
                 <ChannelLogo channel={platform.channel} className="size-4" />
                 <span className="text-[10px] font-semibold text-[#374151]">{platform.label}</span>
@@ -270,9 +270,9 @@ export function StepReview({
       </div>
 
       <div className="grid gap-2.5 xl:grid-cols-[1.25fr_.9fr_.9fr]">
-        <div className="rounded-xl border border-[#CDECE1] bg-[#F7FDFA] p-3">
+        <div className="rounded-sm border border-[#CDECE1] bg-[#F7FDFA] p-3">
           <div className="mb-2 flex items-center gap-2">
-            <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#0AA673]">
+            <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#0AA673]">
               <Check className="size-4 text-white" />
             </span>
             <div>
@@ -307,8 +307,8 @@ export function StepReview({
               onClick={() => set("launchMode", id)}
               className="mb-1.5 flex w-full items-start gap-2 text-left last:mb-0"
             >
-              <span className={cn("mt-px grid size-3.5 shrink-0 place-items-center rounded-full border-[1.5px]", draft.launchMode === id ? "border-[#E11D28]" : "border-[#CBD5E1]")}>
-                {draft.launchMode === id && <i className="block size-1.5 rounded-full bg-[#E11D28]" />}
+              <span className={cn("mt-px grid size-3.5 shrink-0 place-items-center rounded-sm border-[1.5px]", draft.launchMode === id ? "border-[#E11D28]" : "border-[#CBD5E1]")}>
+                {draft.launchMode === id && <i className="block size-1.5 rounded-sm bg-[#E11D28]" />}
               </span>
               <span className="min-w-0">
                 <b className="block text-[10.5px] font-semibold text-[#111827]">{title}</b>

@@ -202,7 +202,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
       <LinkTabs
         tabs={tabs}
         current={tab}
-        className="mb-4 rounded-xl border border-slate-200 bg-white px-3 shadow-2xs"
+        className="mb-4 rounded-sm border border-slate-200 bg-white px-3 shadow-2xs"
       />
 
       {tab === "overview" && (
@@ -238,7 +238,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
                 <Field label="Languages" value={adSet.languages.join(", ") || "All"} />
                 <Field label="Advantage+ audience" value={adSet.audienceExpansion ? "On" : "Off"} />
               </dl>
-              <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+              <div className="mt-3 rounded-sm border border-slate-200 bg-slate-50/70 p-3">
                 <p className="text-[10px] font-semibold text-slate-700 uppercase tracking-wider">Estimated audience size</p>
                 <p className="mt-1 text-base font-semibold text-slate-900">
                   {num(adSet.audienceSize[0])} – {num(adSet.audienceSize[1])}
@@ -275,7 +275,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
           <Panel title="Locations" icon={<MapPin className="size-4 text-blue-600" />}>
             <ul className="space-y-1.5">
               {adSet.locations.map((location) => (
-                <li key={location} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-semibold text-slate-800">
+                <li key={location} className="flex items-center gap-2 rounded-sm border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-semibold text-slate-800">
                   <MapPin className="size-3.5 text-slate-500" aria-hidden="true" />
                   {location}
                 </li>
@@ -333,7 +333,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
               )}
             </div>
 
-            <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+            <div className="mt-4 flex items-center justify-between rounded-sm border border-slate-200 bg-slate-50/70 p-3">
               <span className="text-xs font-semibold text-slate-800">Advantage+ audience expansion</span>
               <ToneChip tone={adSet.audienceExpansion ? "green" : "slate"}>
                 {adSet.audienceExpansion ? "On" : "Off"}

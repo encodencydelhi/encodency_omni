@@ -34,7 +34,7 @@ export function StatusBadge<TStatus extends string>({
 
   return (
     <Badge tone={meta.tone} className={className} title={meta.description}>
-      {withDot ? <span className={cn("size-1.5 rounded-full", DOT_TONES[meta.tone])} aria-hidden /> : null}
+      {withDot ? <span className={cn("size-1.5 rounded-sm", DOT_TONES[meta.tone])} aria-hidden /> : null}
       {meta.label}
     </Badge>
   );

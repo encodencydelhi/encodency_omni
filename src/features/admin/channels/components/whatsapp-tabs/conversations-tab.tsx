@@ -108,7 +108,7 @@ export function ConversationsTab() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-210px)] min-h-[550px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
+    <div className="flex h-[calc(100vh-210px)] min-h-[550px] overflow-hidden rounded-sm border border-slate-200 bg-white shadow-xs">
       {/* Left Chat Sidebar */}
       <div className="flex w-[320px] md:w-[350px] shrink-0 flex-col border-r border-slate-100 bg-slate-50/50">
         <div className="border-b border-slate-100 p-3 space-y-2.5">
@@ -116,7 +116,7 @@ export function ConversationsTab() {
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search conversations..."
-              className="h-9 pl-9 text-xs border-slate-200 focus:border-emerald-500 rounded-xl bg-white"
+              className="h-9 pl-9 text-xs border-slate-200 focus:border-emerald-500 rounded-sm bg-white"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -127,7 +127,7 @@ export function ConversationsTab() {
                 key={tab}
                 onClick={() => setFilterTab(tab)}
                 className={cn(
-                  "rounded-lg px-3 py-1 text-xs font-bold transition-all",
+                  "rounded-sm px-3 py-1 text-xs font-bold transition-all",
                   filterTab === tab
                     ? "bg-slate-900 text-white shadow-xs"
                     : "text-slate-500 hover:bg-slate-200/60"
@@ -153,10 +153,10 @@ export function ConversationsTab() {
               )}
             >
               <div className="relative shrink-0">
-                <span className={cn("grid size-10 place-items-center rounded-full text-xs font-bold shadow-xs", c.color)}>
+                <span className={cn("grid size-10 place-items-center rounded-sm text-xs font-bold shadow-xs", c.color)}>
                   {c.initial}
                 </span>
-                {c.online && <span className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-white bg-emerald-500" />}
+                {c.online && <span className="absolute bottom-0 right-0 size-2.5 rounded-sm border-2 border-white bg-emerald-500" />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
@@ -166,7 +166,7 @@ export function ConversationsTab() {
                 <div className="flex items-center justify-between mt-0.5">
                   <p className="truncate text-xs text-slate-500 font-medium">{c.lastMsg}</p>
                   {c.unread > 0 && (
-                    <span className="ml-1.5 grid size-4 shrink-0 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                    <span className="ml-1.5 grid size-4 shrink-0 place-items-center rounded-sm bg-emerald-600 text-[10px] font-bold text-white">
                       {c.unread}
                     </span>
                   )}
@@ -183,10 +183,10 @@ export function ConversationsTab() {
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 bg-slate-50/50">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <span className={cn("grid size-10 place-items-center rounded-full text-xs font-bold shadow-xs", selectedContact.color)}>
+              <span className={cn("grid size-10 place-items-center rounded-sm text-xs font-bold shadow-xs", selectedContact.color)}>
                 {selectedContact.initial}
               </span>
-              {selectedContact.online && <span className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-white bg-emerald-500" />}
+              {selectedContact.online && <span className="absolute bottom-0 right-0 size-2.5 rounded-sm border-2 border-white bg-emerald-500" />}
             </div>
             <div>
               <p className="text-xs font-bold text-slate-900">{selectedContact.name}</p>
@@ -197,16 +197,16 @@ export function ConversationsTab() {
           </div>
 
           <div className="flex items-center gap-1">
-            <button onClick={() => toast.info(`Calling ${selectedContact.phone}...`)} className="rounded-lg p-2 hover:bg-slate-200/60 text-slate-600" title="Audio Call">
+            <button onClick={() => toast.info(`Calling ${selectedContact.phone}...`)} className="rounded-sm p-2 hover:bg-slate-200/60 text-slate-600" title="Audio Call">
               <Phone className="size-4" />
             </button>
-            <button onClick={() => toast.info(`Starting video call with ${selectedContact.name}...`)} className="rounded-lg p-2 hover:bg-slate-200/60 text-slate-600" title="Video Call">
+            <button onClick={() => toast.info(`Starting video call with ${selectedContact.name}...`)} className="rounded-sm p-2 hover:bg-slate-200/60 text-slate-600" title="Video Call">
               <Video className="size-4" />
             </button>
-            <button onClick={() => toggleStar(selectedContact.id)} className="rounded-lg p-2 hover:bg-slate-200/60 text-slate-600" title="Star Conversation">
+            <button onClick={() => toggleStar(selectedContact.id)} className="rounded-sm p-2 hover:bg-slate-200/60 text-slate-600" title="Star Conversation">
               <Star className={cn("size-4", starred[selectedContact.id] && "fill-amber-400 text-amber-400")} />
             </button>
-            <button onClick={() => toast.info("More chat actions...")} className="rounded-lg p-2 hover:bg-slate-200/60 text-slate-600">
+            <button onClick={() => toast.info("More chat actions...")} className="rounded-sm p-2 hover:bg-slate-200/60 text-slate-600">
               <MoreVertical className="size-4" />
             </button>
           </div>
@@ -242,7 +242,7 @@ export function ConversationsTab() {
               <button
                 key={i}
                 onClick={() => handleSendMessage(qr)}
-                className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 transition-all shadow-2xs"
+                className="shrink-0 rounded-sm border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 transition-all shadow-2xs"
               >
                 {qr}
               </button>
@@ -252,22 +252,22 @@ export function ConversationsTab() {
 
         {/* Input Bar */}
         <div className="flex items-center gap-2 border-t border-slate-100 bg-white p-3">
-          <button onClick={() => toast.info("Attachment picker opened")} className="rounded-lg p-2 hover:bg-slate-100 text-slate-500">
+          <button onClick={() => toast.info("Attachment picker opened")} className="rounded-sm p-2 hover:bg-slate-100 text-slate-500">
             <Paperclip className="size-4" />
           </button>
-          <button onClick={() => toast.info("Emoji picker opened")} className="rounded-lg p-2 hover:bg-slate-100 text-slate-500">
+          <button onClick={() => toast.info("Emoji picker opened")} className="rounded-sm p-2 hover:bg-slate-100 text-slate-500">
             <Smile className="size-4" />
           </button>
           <Input
             placeholder="Type a message or response..."
-            className="h-10 flex-1 text-xs border-slate-200 focus:border-emerald-500 rounded-xl"
+            className="h-10 flex-1 text-xs border-slate-200 focus:border-emerald-500 rounded-sm"
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
           />
           <button
             onClick={() => handleSendMessage()}
-            className="grid size-10 place-items-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition-all"
+            className="grid size-10 place-items-center rounded-sm bg-emerald-600 text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition-all"
           >
             <Send className="size-4" />
           </button>

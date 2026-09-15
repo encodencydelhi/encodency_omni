@@ -86,7 +86,7 @@ export function WhatsappChannelPage() {
           extraActions={
             <button
               onClick={handleSendTest}
-              className="flex h-[38px] items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-emerald-600"
+              className="flex h-[38px] items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-emerald-600"
             >
               <Send className="size-3.5 text-emerald-600" />
               <span>Send Test Message</span>

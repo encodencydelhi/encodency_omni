@@ -54,7 +54,7 @@ export function ChartLegend({
       {items.map((item) => (
         <span key={item.label} className="flex items-center gap-1.5">
           <span
-            className="size-2.5 rounded-full ring-2 ring-white shadow-2xs"
+            className="size-2.5 rounded-sm ring-2 ring-white shadow-2xs"
             style={{ background: item.color }}
             aria-hidden="true"
           />

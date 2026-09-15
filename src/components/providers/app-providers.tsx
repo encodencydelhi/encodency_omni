@@ -19,7 +19,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
             toastOptions={{
               classNames: {
                 toast:
-                  "!bg-card !border-border !text-foreground !shadow-md !rounded-lg !text-[0.8125rem]",
+                  "!bg-card !border-border !text-foreground !shadow-md !rounded-sm !text-[0.8125rem]",
                 description: "!text-muted-foreground",
               },
             }}

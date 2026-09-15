@@ -27,11 +27,11 @@ export function ContentCalendarPage() {
             </div>
 
             {/* Banner Graphic */}
-            <div className="hidden md:flex relative h-[68px] w-[420px] rounded-xl bg-gradient-to-r from-red-50 to-red-100 overflow-hidden items-center px-5 border border-red-100/50 shadow-sm">
+            <div className="hidden md:flex relative h-[68px] w-[420px] rounded-sm bg-gradient-to-r from-red-50 to-red-100 overflow-hidden items-center px-5 border border-red-100/50 shadow-sm">
                <div className="relative z-10">
                   <h3 className="text-[13px] font-semibold text-gray-900 leading-tight">Consistency today.</h3>
                   <h3 className="text-[13px] font-semibold text-gray-900 leading-tight mb-1.5">A stronger tomorrow.</h3>
-                  <div className="w-10 h-[3px] bg-[#EB0711] rounded-full" />
+                  <div className="w-10 h-[3px] bg-[#EB0711] rounded-sm" />
                </div>
                {/* Decorative elements */}
                <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 opacity-90">
@@ -42,7 +42,7 @@ export function ContentCalendarPage() {
                      </div>
                   </div>
                </div>
-               <div className="absolute right-0 top-0 w-32 h-32 bg-gradient-to-bl from-red-200/40 to-transparent rounded-full -translate-y-1/2 translate-x-1/4" />
+               <div className="absolute right-0 top-0 w-32 h-32 bg-gradient-to-bl from-red-200/40 to-transparent rounded-sm -translate-y-1/2 translate-x-1/4" />
             </div>
          </div>
 
@@ -51,7 +51,7 @@ export function ContentCalendarPage() {
 
             {/* LEFT COLUMN: Main Calendar Area */}
             <div className="space-y-3">
-               <section className="rounded-xl border bg-white shadow-sm overflow-hidden">
+               <section className="rounded-sm border bg-white shadow-sm overflow-hidden">
                   {/* Toolbar */}
                   <div className="flex flex-wrap items-center justify-between border-b p-3 bg-white">
                      <div className="flex items-center gap-2">
@@ -129,11 +129,11 @@ export function ContentCalendarPage() {
                {/* Bottom Row: Today's Schedule & Quick Actions */}
                <div className="grid lg:grid-cols-[1.5fr_1fr] gap-3 items-start">
                   {/* Today's Schedule */}
-                  <div className="bg-white rounded-xl border shadow-sm p-3">
+                  <div className="bg-white rounded-sm border shadow-sm p-3">
                      <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                            <h2 className="text-[14px] font-semibold text-foreground">Today's Schedule</h2>
-                           <span className="flex items-center justify-center size-[18px] rounded-full bg-gray-100 text-[10px] font-semibold text-gray-700">3</span>
+                           <span className="flex items-center justify-center size-[18px] rounded-sm bg-gray-100 text-[10px] font-semibold text-gray-700">3</span>
                         </div>
                         <button className="text-[11px] font-semibold text-[#EB0711] hover:underline flex items-center gap-1">View all &rarr;</button>
                      </div>
@@ -223,22 +223,22 @@ export function ContentCalendarPage() {
                   <div>
                      <h2 className="text-[14px] font-semibold text-foreground mb-3">Quick Actions</h2>
                      <div className="grid grid-cols-2 gap-3">
-                        <button className="text-left p-3.5 rounded-xl bg-[#FFF1F2] hover:bg-red-100/80 transition-colors border border-red-100">
+                        <button className="text-left p-3.5 rounded-sm bg-[#FFF1F2] hover:bg-red-100/80 transition-colors border border-red-100">
                            <Edit2 className="size-4 text-red-600 mb-2.5" />
                            <p className="text-[12px] font-semibold text-red-900">Create Post</p>
                            <p className="text-[10px] text-red-700/70 leading-tight mt-0.5">Design and schedule content</p>
                         </button>
-                        <button className="text-left p-3.5 rounded-xl bg-blue-50 hover:bg-blue-100/80 transition-colors border border-blue-100">
+                        <button className="text-left p-3.5 rounded-sm bg-blue-50 hover:bg-blue-100/80 transition-colors border border-blue-100">
                            <Megaphone className="size-4 text-blue-600 mb-2.5" />
                            <p className="text-[12px] font-semibold text-blue-900">Plan Campaign</p>
                            <p className="text-[10px] text-blue-700/70 leading-tight mt-0.5">Create a multi-channel campaign</p>
                         </button>
-                        <button className="text-left p-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-100/80 transition-colors border border-emerald-100">
+                        <button className="text-left p-3.5 rounded-sm bg-emerald-50 hover:bg-emerald-100/80 transition-colors border border-emerald-100">
                            <ImageIcon className="size-4 text-emerald-600 mb-2.5" />
                            <p className="text-[12px] font-semibold text-emerald-900">Upload Media</p>
                            <p className="text-[10px] text-emerald-700/70 leading-tight mt-0.5">Add images, videos or files</p>
                         </button>
-                        <button className="text-left p-3.5 rounded-xl bg-purple-50 hover:bg-purple-100/80 transition-colors border border-purple-100">
+                        <button className="text-left p-3.5 rounded-sm bg-purple-50 hover:bg-purple-100/80 transition-colors border border-purple-100">
                            <BarChart2 className="size-4 text-purple-600 mb-2.5" />
                            <p className="text-[12px] font-semibold text-purple-900">View Reports</p>
                            <p className="text-[10px] text-purple-700/70 leading-tight mt-0.5">See content performance</p>
@@ -251,7 +251,7 @@ export function ContentCalendarPage() {
             {/* RIGHT COLUMN: Sidebar */}
             <div className="space-y-3">
                {/* Mini Calendar */}
-               <div className="bg-white rounded-xl border shadow-sm p-3">
+               <div className="bg-white rounded-sm border shadow-sm p-3">
                   <div className="flex items-center justify-between mb-3">
                      <h3 className="text-[13px] font-semibold text-gray-900">September 2026</h3>
                      <div className="flex items-center gap-1">
@@ -270,7 +270,7 @@ export function ContentCalendarPage() {
                         const isSelected = d === new Date().getDate();
                         return (
                            <div key={d} className="flex justify-center py-0.5">
-                              <button className={cn("size-6 rounded-full text-[11px] font-medium flex items-center justify-center", isSelected ? "bg-[#EB0711] text-white font-semibold shadow-sm" : "text-gray-700 hover:bg-gray-100")}>
+                              <button className={cn("size-6 rounded-sm text-[11px] font-medium flex items-center justify-center", isSelected ? "bg-[#EB0711] text-white font-semibold shadow-sm" : "text-gray-700 hover:bg-gray-100")}>
                                  {d}
                               </button>
                            </div>
@@ -280,7 +280,7 @@ export function ContentCalendarPage() {
                </div>
 
                {/* Filters */}
-               <div className="bg-white rounded-xl border shadow-sm p-3">
+               <div className="bg-white rounded-sm border shadow-sm p-3">
                   <div className="flex items-center justify-between mb-3">
                      <h3 className="text-[13px] font-semibold text-gray-900">Filters</h3>
                      <button className="text-[11px] font-semibold text-[#EB0711] hover:underline">Reset</button>
@@ -318,30 +318,30 @@ export function ContentCalendarPage() {
                </div>
 
                {/* Content Status */}
-               <div className="bg-white rounded-xl border shadow-sm p-3">
+               <div className="bg-white rounded-sm border shadow-sm p-3">
                   <h3 className="text-[13px] font-semibold text-gray-900 mb-2.5">Content Status</h3>
                   <div className="space-y-2">
                      <div className="flex items-center justify-between text-[12px]">
-                        <div className="flex items-center gap-2 text-gray-700 font-medium"><div className="size-2 rounded-full bg-blue-500" /> Scheduled</div>
+                        <div className="flex items-center gap-2 text-gray-700 font-medium"><div className="size-2 rounded-sm bg-blue-500" /> Scheduled</div>
                         <span className="font-semibold">12</span>
                      </div>
                      <div className="flex items-center justify-between text-[12px]">
-                        <div className="flex items-center gap-2 text-gray-700 font-medium"><div className="size-2 rounded-full bg-emerald-500" /> Published</div>
+                        <div className="flex items-center gap-2 text-gray-700 font-medium"><div className="size-2 rounded-sm bg-emerald-500" /> Published</div>
                         <span className="font-semibold">28</span>
                      </div>
                      <div className="flex items-center justify-between text-[12px]">
-                        <div className="flex items-center gap-2 text-gray-700 font-medium"><div className="size-2 rounded-full bg-gray-400" /> Draft</div>
+                        <div className="flex items-center gap-2 text-gray-700 font-medium"><div className="size-2 rounded-sm bg-gray-400" /> Draft</div>
                         <span className="font-semibold">6</span>
                      </div>
                      <div className="flex items-center justify-between text-[12px]">
-                        <div className="flex items-center gap-2 text-gray-700 font-medium"><div className="size-2 rounded-full bg-red-500" /> Failed</div>
+                        <div className="flex items-center gap-2 text-gray-700 font-medium"><div className="size-2 rounded-sm bg-red-500" /> Failed</div>
                         <span className="font-semibold">2</span>
                      </div>
                   </div>
                </div>
 
                {/* Upcoming (Next 7 Days) */}
-               <div className="bg-white rounded-xl border shadow-sm p-3">
+               <div className="bg-white rounded-sm border shadow-sm p-3">
                   <div className="flex items-center justify-between mb-3">
                      <h3 className="text-[13px] font-semibold text-gray-900">Upcoming (Next 7 Days)</h3>
                      <button className="text-[11px] font-semibold text-[#EB0711] hover:underline flex items-center gap-0.5">View all &rarr;</button>

@@ -43,10 +43,10 @@ export default function ContentStudioShell() {
           <p className="mt-0.5 text-[11.5px] text-[#687797]">Create, customize and publish content across all your channels.</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <button className="flex h-9 items-center gap-1.5 rounded-lg border border-[#D7E0EB] bg-white px-3.5 text-[12.5px] font-semibold text-[#33445F] shadow-[0_1px_3px_rgb(31_50_81/0.06)] transition hover:bg-[#F8FAFD]">
+          <button className="flex h-9 items-center gap-1.5 rounded-sm border border-[#D7E0EB] bg-white px-3.5 text-[12.5px] font-semibold text-[#33445F] shadow-[0_1px_3px_rgb(31_50_81/0.06)] transition hover:bg-[#F8FAFD]">
             <Bookmark className="size-3.5 text-[#71809D]" /> Save draft
           </button>
-          <button className="flex h-9 items-center gap-1.5 rounded-lg bg-[#EB0711] px-4 text-[12.5px] font-semibold text-white shadow-[0_1px_3px_rgb(235_7_17/0.25)] transition hover:bg-[#D60811]">
+          <button className="flex h-9 items-center gap-1.5 rounded-sm bg-[#EB0711] px-4 text-[12.5px] font-semibold text-white shadow-[0_1px_3px_rgb(235_7_17/0.25)] transition hover:bg-[#D60811]">
             <Send className="size-3.5" /> Publish <ChevronDown className="size-3.5 opacity-80" />
           </button>
         </div>

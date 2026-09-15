@@ -129,7 +129,7 @@ export function SeoCompetitorsPage() {
               )}
             >
               <span className="flex min-w-0 items-center gap-1.5">
-                <i className="size-2 shrink-0 rounded-full" style={{ background: row.color }} />
+                <i className="size-2 shrink-0 rounded-sm" style={{ background: row.color }} />
                 <span className="min-w-0">
                   <b className="flex items-center gap-1 truncate text-[9px] text-[#172044]">
                     {row.name}
@@ -161,7 +161,7 @@ export function SeoCompetitorsPage() {
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-[8.5px] font-semibold text-[#52617D]">
               {competitors.slice(0, 4).map((row) => (
                 <span key={row.domain} className="flex items-center gap-1.5">
-                  <i className="size-1.5 rounded-full" style={{ background: row.color }} />
+                  <i className="size-1.5 rounded-sm" style={{ background: row.color }} />
                   {row.name}
                 </span>
               ))}
@@ -294,7 +294,7 @@ export function SeoCompetitorsPage() {
               <div className="min-w-0 flex-1 space-y-[3px]">
                 {competitors.map((row) => (
                   <span key={row.domain} className="flex items-center gap-1.5 text-[8px]">
-                    <i className="size-1.5 shrink-0 rounded-full" style={{ background: row.color }} />
+                    <i className="size-1.5 shrink-0 rounded-sm" style={{ background: row.color }} />
                     <span className="min-w-0 flex-1 truncate text-[#52617D]">{row.name}</span>
                     <b className="text-[#172044]">{row.sov}%</b>
                   </span>

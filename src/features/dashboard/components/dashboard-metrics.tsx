@@ -59,8 +59,8 @@ function MetricTile({ metric }: { metric: DashboardMetric }) {
   const { label, icon: Icon, accent } = METRIC_PRESENTATION[metric.key];
 
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3.5 shadow-xs">
-      <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-full", accent)}>
+    <div className="flex items-start gap-3 rounded-sm border border-border bg-card px-4 py-3.5 shadow-xs">
+      <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-sm", accent)}>
         <Icon className="size-[1.125rem]" />
       </span>
 
@@ -74,7 +74,7 @@ function MetricTile({ metric }: { metric: DashboardMetric }) {
             </span>
             {metric.delta ? <TrendIndicator delta={metric.delta} /> : null}
           </div>
-          
+
           {metric.series ? (
             <div className="flex items-end gap-[1px] h-6 w-[60px] shrink-0 text-primary opacity-25 hover:opacity-100 transition-opacity">
               {metric.series.map((val, i) => (
@@ -92,8 +92,8 @@ function MetricTile({ metric }: { metric: DashboardMetric }) {
 
 function MetricTileSkeleton() {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3.5">
-      <Skeleton className="size-10 shrink-0 rounded-full" />
+    <div className="flex items-start gap-3 rounded-sm border border-border bg-card px-4 py-3.5">
+      <Skeleton className="size-10 shrink-0 rounded-sm" />
       <div className="w-full space-y-2">
         <Skeleton className="h-3 w-28" />
         <Skeleton className="h-5 w-24" />

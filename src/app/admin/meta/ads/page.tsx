@@ -79,7 +79,7 @@ const PerformanceTrend = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[186px] w-full animate-pulse items-center justify-center rounded-xl bg-slate-100/70 text-xs font-semibold text-slate-400">
+      <div className="flex h-[186px] w-full animate-pulse items-center justify-center rounded-sm bg-slate-100/70 text-xs font-semibold text-slate-400">
         Loading performance trend...
       </div>
     ),
@@ -116,14 +116,14 @@ function MasterKpiCard({
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        "group relative overflow-hidden rounded-sm border border-slate-200/90 bg-white p-3.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
         borderGlow,
       )}
     >
       {/* Corner radial aura */}
       <div
         className={cn(
-          "pointer-events-none absolute -right-6 -top-6 size-24 rounded-full opacity-15 blur-xl transition-opacity duration-300 group-hover:opacity-35",
+          "pointer-events-none absolute -right-6 -top-6 size-24 rounded-sm opacity-15 blur-xl transition-opacity duration-300 group-hover:opacity-35",
           cornerGlow,
         )}
       />
@@ -145,7 +145,7 @@ function MasterKpiCard({
         </div>
         <div
           className={cn(
-            "flex size-7 shrink-0 items-center justify-center rounded-lg shadow-2xs transition-transform duration-200 group-hover:scale-105",
+            "flex size-7 shrink-0 items-center justify-center rounded-sm shadow-2xs transition-transform duration-200 group-hover:scale-105",
             gradient,
           )}
         >
@@ -160,7 +160,7 @@ function MasterKpiCard({
         {change && (
           <span
             className={cn(
-              "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9.5px] font-semibold shadow-2xs shrink-0",
+              "inline-flex items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-[9.5px] font-semibold shadow-2xs shrink-0",
               changePositive
                 ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
                 : "border border-rose-200 bg-rose-50 text-rose-800",
@@ -323,8 +323,8 @@ function Overview() {
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="flex size-2">
-            <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full size-2 bg-emerald-500"></span>
+            <span className="animate-ping absolute inline-flex h-2 w-2 rounded-sm bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-sm size-2 bg-emerald-500"></span>
           </span>
           <h2 className="text-xs font-normal uppercase tracking-wider text-slate-700">
             Real-Time Campaign Performance
@@ -405,8 +405,8 @@ function Overview() {
 
       {/* Secondary Quick Metrics Strip */}
       <section className="mb-2 grid grid-cols-2 gap-2 md:grid-cols-4">
-        <div className="flex items-center gap-3 rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-2xs">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 ring-1 ring-blue-500/15">
+        <div className="flex items-center gap-3 rounded-sm border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-2xs">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-blue-50 text-blue-600 ring-1 ring-blue-500/15">
             <Megaphone className="size-4" />
           </div>
           <div className="min-w-0 flex-1">
@@ -418,8 +418,8 @@ function Overview() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-2xs">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600 ring-1 ring-sky-500/15">
+        <div className="flex items-center gap-3 rounded-sm border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-2xs">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-sky-50 text-sky-600 ring-1 ring-sky-500/15">
             <MousePointerClick className="size-4" />
           </div>
           <div className="min-w-0 flex-1">
@@ -431,8 +431,8 @@ function Overview() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-2xs">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 ring-1 ring-emerald-500/15">
+        <div className="flex items-center gap-3 rounded-sm border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-2xs">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-emerald-50 text-emerald-600 ring-1 ring-emerald-500/15">
             <Percent className="size-4" />
           </div>
           <div className="min-w-0 flex-1">
@@ -444,8 +444,8 @@ function Overview() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-2xs">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-purple-50 text-purple-600 ring-1 ring-purple-500/15">
+        <div className="flex items-center gap-3 rounded-sm border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-2xs">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-purple-50 text-purple-600 ring-1 ring-purple-500/15">
             <Layers className="size-4" />
           </div>
           <div className="min-w-0 flex-1">
@@ -462,7 +462,7 @@ function Overview() {
       <section className={cn(card, "mb-2 overflow-hidden border border-slate-200 shadow-sm")}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 via-white to-slate-50 px-5 py-3.5">
           <div className="flex items-center gap-2.5">
-            <div className="flex size-8 items-center justify-center rounded-xl bg-blue-100/80 text-blue-600 ring-1 ring-blue-500/20">
+            <div className="flex size-8 items-center justify-center rounded-sm bg-blue-100/80 text-blue-600 ring-1 ring-blue-500/20">
               <Megaphone className="size-4" aria-hidden="true" />
             </div>
             <div>
@@ -600,7 +600,7 @@ function Overview() {
               <li key={c.id} className="flex items-center gap-3 text-xs">
                 <span
                   className={cn(
-                    "flex size-6 shrink-0 items-center justify-center rounded-lg text-xs font-normal shadow-2xs",
+                    "flex size-6 shrink-0 items-center justify-center rounded-sm text-xs font-normal shadow-2xs",
                     i === 0
                       ? "bg-gradient-to-tr from-amber-500 to-yellow-400 text-white shadow-amber-500/20"
                       : i === 1
@@ -688,7 +688,7 @@ function Overview() {
                     {entry.entityLabel}
                   </Link>
                 </span>
-                <span className="shrink-0 whitespace-nowrap rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[9.5px] font-semibold text-slate-600">
+                <span className="shrink-0 whitespace-nowrap rounded-sm bg-slate-100 border border-slate-200 px-2 py-0.5 text-[9.5px] font-semibold text-slate-600">
                   {relative(entry.at)}
                 </span>
               </li>
@@ -742,14 +742,14 @@ function Overview() {
               tile.glow,
             )}
           >
-            <span className={cn("flex size-10 items-center justify-center rounded-xl border shadow-2xs transition-transform duration-300 group-hover:scale-105", tile.badgeBg)}>
+            <span className={cn("flex size-10 items-center justify-center rounded-sm border shadow-2xs transition-transform duration-300 group-hover:scale-105", tile.badgeBg)}>
               {tile.icon}
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-xs font-semibold text-slate-500 group-hover:text-slate-700">{tile.label}</span>
               <strong className="block text-xl font-normal text-slate-900 leading-tight">{tile.value}</strong>
             </span>
-            <span className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-blue-600 transition-colors group-hover:border-blue-300 group-hover:bg-blue-50 group-hover:text-blue-700">
+            <span className="flex items-center gap-1 rounded-sm border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-blue-600 transition-colors group-hover:border-blue-300 group-hover:bg-blue-50 group-hover:text-blue-700">
               Open →
             </span>
           </Link>

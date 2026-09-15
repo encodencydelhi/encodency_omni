@@ -98,7 +98,7 @@ export function FlowsTab() {
         </div>
         <Button
           onClick={() => toast.success("Opening Interactive Flow Builder...")}
-          className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
+          className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
         >
           <Plus className="size-4" /> Create WhatsApp Flow
         </Button>
@@ -113,8 +113,8 @@ export function FlowsTab() {
           { label: "Avg Completion", value: "81%", icon: BarChart3, color: "bg-teal-50 text-teal-600 border-teal-100" },
           { label: "Active Form Users", value: "1,847", icon: Users, color: "bg-amber-50 text-amber-600 border-amber-100" },
         ].map((s, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-xl border border-slate-200/90 bg-white p-3 shadow-xs">
-            <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl font-bold", s.color)}>
+          <div key={i} className="flex items-center gap-3 rounded-sm border border-slate-200/90 bg-white p-3 shadow-xs">
+            <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm font-bold", s.color)}>
               <s.icon className="size-4" />
             </span>
             <div>
@@ -126,7 +126,7 @@ export function FlowsTab() {
       </div>
 
       {/* Main Table */}
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
+      <section className="overflow-hidden rounded-sm border border-slate-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
@@ -149,24 +149,24 @@ export function FlowsTab() {
                   <tr key={f.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <span className={cn("grid size-7 shrink-0 place-items-center rounded-lg font-bold border", typeColors[f.type])}>
+                        <span className={cn("grid size-7 shrink-0 place-items-center rounded-sm font-bold border", typeColors[f.type])}>
                           <TypeIcon className="size-3.5" />
                         </span>
                         <span className="font-bold text-slate-900">{f.name}</span>
                       </div>
                     </td>
                     <td className="px-3 py-3">
-                      <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-bold border", typeColors[f.type])}>
+                      <span className={cn("rounded-sm px-2 py-0.5 text-[11px] font-bold border", typeColors[f.type])}>
                         {f.type}
                       </span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-bold border", categoryColors[f.category])}>
+                      <span className={cn("rounded-sm px-2 py-0.5 text-[11px] font-bold border", categoryColors[f.category])}>
                         {f.category}
                       </span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-bold border", statusColors[f.status])}>
+                      <span className={cn("rounded-sm px-2 py-0.5 text-[11px] font-bold border", statusColors[f.status])}>
                         {f.status}
                       </span>
                     </td>
@@ -176,16 +176,16 @@ export function FlowsTab() {
                     <td className="px-3 py-3 text-slate-400 font-medium">{f.lastModified}</td>
                     <td className="px-3 py-3">
                       <div className="flex items-center justify-center gap-1">
-                        <button onClick={() => setPreviewFlow(f)} className="rounded-lg p-1.5 hover:bg-blue-50 text-blue-600" title="Preview">
+                        <button onClick={() => setPreviewFlow(f)} className="rounded-sm p-1.5 hover:bg-blue-50 text-blue-600" title="Preview">
                           <Eye className="size-3.5" />
                         </button>
-                        <button onClick={() => toast.success(`Editing flow: ${f.name}`)} className="rounded-lg p-1.5 hover:bg-slate-100 text-slate-500" title="Edit">
+                        <button onClick={() => toast.success(`Editing flow: ${f.name}`)} className="rounded-sm p-1.5 hover:bg-slate-100 text-slate-500" title="Edit">
                           <Pencil className="size-3.5" />
                         </button>
-                        <button onClick={() => handleDuplicate(f.id)} className="rounded-lg p-1.5 hover:bg-slate-100 text-slate-500" title="Duplicate">
+                        <button onClick={() => handleDuplicate(f.id)} className="rounded-sm p-1.5 hover:bg-slate-100 text-slate-500" title="Duplicate">
                           <Copy className="size-3.5" />
                         </button>
-                        <button onClick={() => handleDelete(f.id)} className="rounded-lg p-1.5 hover:bg-rose-50 text-rose-600" title="Delete">
+                        <button onClick={() => handleDelete(f.id)} className="rounded-sm p-1.5 hover:bg-rose-50 text-rose-600" title="Delete">
                           <Trash2 className="size-3.5" />
                         </button>
                       </div>
@@ -200,21 +200,21 @@ export function FlowsTab() {
 
       {/* Screen Sequence Preview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+        <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-3">
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Flow Screen Builder Structure</h3>
           <div className="space-y-2.5">
             {flowScreens.map((screen, i) => (
               <div key={screen.id} className="flex items-center gap-3">
                 <div className="flex flex-col items-center">
-                  <span className="grid size-6 place-items-center rounded-full bg-emerald-600 text-[10px] font-bold text-white shadow-xs">
+                  <span className="grid size-6 place-items-center rounded-sm bg-emerald-600 text-[10px] font-bold text-white shadow-xs">
                     {i + 1}
                   </span>
                   {i < flowScreens.length - 1 && <div className="mt-1 h-4 w-0.5 bg-slate-200" />}
                 </div>
-                <div className="flex-1 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+                <div className="flex-1 rounded-sm border border-slate-200 bg-slate-50/60 p-3">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-bold text-slate-900">{screen.title}</p>
-                    <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800 uppercase">
+                    <span className="rounded-sm bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800 uppercase">
                       {screen.type}
                     </span>
                   </div>
@@ -225,7 +225,7 @@ export function FlowsTab() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+        <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-3">
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Active Flow Completion Rates</h3>
           <div className="space-y-3 pt-1">
             {flowList.filter((f) => f.status === "Published").map((f) => (
@@ -234,8 +234,8 @@ export function FlowsTab() {
                   <span className="text-slate-900">{f.name}</span>
                   <span className="text-emerald-700 font-bold">{f.completionRate}</span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: f.completionRate }} />
+                <div className="h-2 overflow-hidden rounded-sm bg-slate-100">
+                  <div className="h-full rounded-sm bg-emerald-500 transition-all" style={{ width: f.completionRate }} />
                 </div>
               </div>
             ))}
@@ -249,14 +249,14 @@ export function FlowsTab() {
           <div className="w-[380px] rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-200" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-900 px-4 py-3 text-white">
               <h3 className="text-sm font-bold text-white">Flow Preview: {previewFlow.name}</h3>
-              <button onClick={() => setPreviewFlow(null)} className="rounded-lg p-1 hover:bg-white/10 text-slate-400 hover:text-white">
+              <button onClick={() => setPreviewFlow(null)} className="rounded-sm p-1 hover:bg-white/10 text-slate-400 hover:text-white">
                 <X className="size-4" />
               </button>
             </div>
             <div className="p-4 bg-slate-100">
-              <div className="rounded-xl bg-[#DCFCE7] border border-emerald-200 p-4 shadow-sm text-slate-800">
+              <div className="rounded-sm bg-[#DCFCE7] border border-emerald-200 p-4 shadow-sm text-slate-800">
                 <div className="mb-3 flex items-center gap-2 border-b border-emerald-200/60 pb-2">
-                  <span className="grid size-8 place-items-center rounded-full bg-emerald-600 text-xs font-bold text-white">NG</span>
+                  <span className="grid size-8 place-items-center rounded-sm bg-emerald-600 text-xs font-bold text-white">NG</span>
                   <div>
                     <p className="text-xs font-bold text-slate-900">Namo Gange Trust</p>
                     <p className="text-[10px] text-slate-500 font-medium">Interactive Flow</p>
@@ -264,7 +264,7 @@ export function FlowsTab() {
                 </div>
                 <div className="space-y-2">
                   {flowScreens.slice(0, previewFlow.screens).map((screen) => (
-                    <div key={screen.id} className="rounded-lg bg-white p-3 shadow-xs border border-slate-200/60">
+                    <div key={screen.id} className="rounded-sm bg-white p-3 shadow-xs border border-slate-200/60">
                       <p className="text-xs font-bold text-slate-900">{screen.title}</p>
                       <p className="text-[11px] text-slate-500 mt-0.5">{screen.description}</p>
                     </div>

@@ -84,7 +84,7 @@ export function UnsavedChangesDialog() {
       <DialogContent className="w-[calc(100vw-24px)] max-w-[420px] gap-0 p-0">
         <DialogHeader className="px-5 pt-5">
           <div className="flex items-start gap-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#FFF7E8] text-[#B54708]">
+            <span className="grid size-9 shrink-0 place-items-center rounded-sm bg-[#FFF7E8] text-[#B54708]">
               <AlertTriangle className="size-4.5" />
             </span>
             <div>

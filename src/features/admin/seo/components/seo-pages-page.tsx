@@ -122,10 +122,10 @@ export function SeoPagesPage() {
           <div className="flex h-full flex-col px-3 pb-2 pt-1">
             <div className="flex gap-3 text-[8.5px] font-semibold text-[#52617D]">
               <span className="flex items-center gap-1.5">
-                <i className="size-1.5 rounded-full bg-[#3186F3]" /> Clicks
+                <i className="size-1.5 rounded-sm bg-[#3186F3]" /> Clicks
               </span>
               <span className="flex items-center gap-1.5">
-                <i className="size-1.5 rounded-full bg-[#8B5CF6]" /> Impressions
+                <i className="size-1.5 rounded-sm bg-[#8B5CF6]" /> Impressions
               </span>
             </div>
             <div className="min-h-0 flex-1">
@@ -185,7 +185,7 @@ export function SeoPagesPage() {
             <div className="min-w-0 flex-1 space-y-1">
               {pageTypes.map((type) => (
                 <span key={type.name} className="flex items-center gap-1.5 text-[8.5px]">
-                  <i className="size-1.5 shrink-0 rounded-full" style={{ background: type.color }} />
+                  <i className="size-1.5 shrink-0 rounded-sm" style={{ background: type.color }} />
                   <span className="min-w-0 flex-1 truncate text-[#52617D]">{type.name}</span>
                   <b className="text-[#172044]">{type.value}</b>
                 </span>

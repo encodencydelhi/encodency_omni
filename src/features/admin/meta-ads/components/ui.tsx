@@ -41,10 +41,10 @@ import type { EntityStatus, Platform } from "../types";
 export const BORDER = "border-slate-200";
 
 export const btn =
-  "inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300/90 bg-white px-3.5 py-1.5 text-[11.5px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-400 hover:shadow disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1.5 rounded-sm border border-slate-300/90 bg-white px-3.5 py-1.5 text-[11.5px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-400 hover:shadow disabled:opacity-50";
 
 export const btnPrimary =
-  "inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 px-5 text-[11.5px] font-semibold text-white shadow-[0_4px_14px_rgba(37,99,235,0.35)] ring-1 ring-white/20 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
+  "inline-flex h-9 items-center justify-center gap-2 rounded-sm bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 px-5 text-[11.5px] font-semibold text-white shadow-[0_4px_14px_rgba(37,99,235,0.35)] ring-1 ring-white/20 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
 
 export const card =
   "rounded-2xl border border-slate-200/90 bg-white shadow-[0_4px_20px_rgba(15,23,42,0.05),0_1px_3px_rgba(15,23,42,0.03)] transition-all duration-300 hover:border-slate-300 hover:shadow-[0_8px_30px_rgba(15,23,42,0.08)]";
@@ -66,7 +66,7 @@ export function StatusChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[9.5px] font-semibold tracking-wide uppercase transition-colors shadow-2xs",
+        "inline-flex items-center gap-1.5 rounded-sm border px-2.5 py-0.5 text-[9.5px] font-semibold tracking-wide uppercase transition-colors shadow-2xs",
         t.chip,
         className,
       )}
@@ -75,14 +75,14 @@ export function StatusChip({
         {isPulse && (
           <span
             className={cn(
-              "absolute inline-flex size-full animate-ping rounded-full opacity-75",
+              "absolute inline-flex size-full animate-ping rounded-sm opacity-75",
               t.dot,
             )}
           />
         )}
         <span
           className={cn(
-            "relative inline-flex size-2 rounded-full",
+            "relative inline-flex size-2 rounded-sm",
             t.dot,
           )}
         />
@@ -108,7 +108,7 @@ export function ToneChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[10.5px] font-semibold shadow-2xs",
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm border px-2.5 py-0.5 text-[10.5px] font-semibold shadow-2xs",
         t.chip,
         className,
       )}
@@ -117,12 +117,12 @@ export function ToneChip({
         {isPulse && (
           <span
             className={cn(
-              "absolute inline-flex size-full animate-ping rounded-full opacity-75",
+              "absolute inline-flex size-full animate-ping rounded-sm opacity-75",
               t.dot,
             )}
           />
         )}
-        <span className={cn("relative inline-flex size-2 rounded-full", t.dot)} />
+        <span className={cn("relative inline-flex size-2 rounded-sm", t.dot)} />
       </span>
       {children}
     </span>
@@ -143,12 +143,12 @@ export function DeliveryCell({ status }: { status: EntityStatus }) {
         {isPulse && (
           <span
             className={cn(
-              "absolute inline-flex size-full animate-ping rounded-full opacity-75",
+              "absolute inline-flex size-full animate-ping rounded-sm opacity-75",
               tone.dot,
             )}
           />
         )}
-        <span className={cn("relative inline-flex size-2 rounded-full", tone.dot)} />
+        <span className={cn("relative inline-flex size-2 rounded-sm", tone.dot)} />
       </span>
       {DELIVERY_LABEL[status]}
     </span>
@@ -288,7 +288,7 @@ export function Panel({
     <section className={cn(card, "overflow-hidden flex flex-col group hover:shadow-[0_12px_40px_rgba(15,23,42,0.1)]", className)}>
       <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 bg-gradient-to-r from-slate-50/90 via-slate-50/40 to-white px-4 py-3">
         <h2 className="flex min-w-0 items-center gap-2 text-xs font-semibold text-slate-900">
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-blue-50/80 text-blue-600 shadow-xs ring-1 ring-blue-500/20">
+          <span className="flex size-6 shrink-0 items-center justify-center rounded-sm bg-blue-50/80 text-blue-600 shadow-xs ring-1 ring-blue-500/20">
             {icon}
           </span>
           <span className="truncate">{title}</span>
@@ -350,7 +350,7 @@ export function InfoHint({ text }: { text: string }) {
           <button
             type="button"
             aria-label={text}
-            className="flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white text-[9px] font-medium text-slate-600 transition-colors hover:border-blue-400 hover:text-blue-600 shadow-2xs"
+            className="flex size-4 shrink-0 items-center justify-center rounded-sm border border-slate-300 bg-white text-[9px] font-medium text-slate-600 transition-colors hover:border-blue-400 hover:text-blue-600 shadow-2xs"
           >
             i
           </button>
@@ -433,7 +433,7 @@ export function LinkTabs({
             {tab.count !== undefined && (
               <span
                 className={cn(
-                  "rounded-full px-2 py-0.5 text-[9.5px] font-semibold",
+                  "rounded-sm px-2 py-0.5 text-[9.5px] font-semibold",
                   active ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700 border border-slate-200",
                 )}
               >
@@ -517,7 +517,7 @@ export function SearchInput({
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="h-9 w-full rounded-xl border border-slate-300 bg-white pl-10 pr-3 text-xs font-medium text-slate-900 placeholder:text-slate-400 outline-none shadow-2xs transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20"
+        className="h-9 w-full rounded-sm border border-slate-300 bg-white pl-10 pr-3 text-xs font-medium text-slate-900 placeholder:text-slate-400 outline-none shadow-2xs transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20"
       />
     </div>
   );
@@ -649,7 +649,7 @@ export function RowMenu({
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={label}
-        className="flex size-7.5 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 shadow-2xs transition hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+        className="flex size-7.5 items-center justify-center rounded-sm border border-slate-300 bg-white text-slate-600 shadow-2xs transition hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
       >
         <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
@@ -833,7 +833,7 @@ export function StateNotice({
   }[tone];
 
   return (
-    <div className={cn("flex flex-wrap items-start gap-3.5 rounded-xl border p-3.5 shadow-2xs", palette)}>
+    <div className={cn("flex flex-wrap items-start gap-3.5 rounded-sm border p-3.5 shadow-2xs", palette)}>
       {Icon && <Icon className="mt-0.5 size-4.5 shrink-0" />}
       <div className="min-w-[220px] flex-1">
         <p className="text-xs font-medium">{title}</p>
@@ -896,7 +896,7 @@ export function NotFoundState({
 export function SkeletonBar({ className }: { className?: string }) {
   return (
     <span
-      className={cn("block animate-pulse rounded-lg bg-slate-200", className)}
+      className={cn("block animate-pulse rounded-sm bg-slate-200", className)}
       aria-hidden="true"
     />
   );
@@ -956,10 +956,10 @@ export function Meter({
 }) {
   return (
     <span
-      className={cn("block h-2 overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200", className)}
+      className={cn("block h-2 overflow-hidden rounded-sm bg-slate-100 ring-1 ring-slate-200", className)}
     >
       <span
-        className={cn("block h-full rounded-full transition-all duration-500", TONE_CLASS[tone].dot)}
+        className={cn("block h-full rounded-sm transition-all duration-500", TONE_CLASS[tone].dot)}
         style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
       />
     </span>
@@ -969,7 +969,7 @@ export function Meter({
 export function Avatar({ name }: { name: string }) {
   const initial = name === "Unassigned" ? "?" : name.charAt(0).toUpperCase();
   return (
-    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-800 ring-1 ring-slate-300">
+    <span className="flex size-6 shrink-0 items-center justify-center rounded-sm bg-slate-200 text-[10px] font-semibold text-slate-800 ring-1 ring-slate-300">
       {initial}
     </span>
   );

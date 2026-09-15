@@ -77,7 +77,7 @@ const funnelSteps = [
 
 function Box({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className={cn("overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs flex flex-col", className)}>
+    <section className={cn("overflow-hidden rounded-sm border border-slate-200 bg-white shadow-xs flex flex-col", className)}>
       <header className="flex h-11 shrink-0 items-center border-b border-slate-100 bg-slate-50/50 px-4">
         <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">{title}</h2>
       </header>
@@ -101,7 +101,7 @@ export function AnalyticsTab() {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5">
           <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="h-10 w-40 text-xs border-slate-200 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-10 w-40 text-xs border-slate-200 rounded-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="7d">Last 7 days</SelectItem>
               <SelectItem value="30d">Last 30 days</SelectItem>
@@ -110,7 +110,7 @@ export function AnalyticsTab() {
           </Select>
 
           <Select defaultValue="all">
-            <SelectTrigger className="h-10 w-44 text-xs border-slate-200 rounded-xl"><SelectValue placeholder="Campaign" /></SelectTrigger>
+            <SelectTrigger className="h-10 w-44 text-xs border-slate-200 rounded-sm"><SelectValue placeholder="Campaign" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Campaigns</SelectItem>
               <SelectItem value="world-water">World Water Day</SelectItem>
@@ -119,7 +119,7 @@ export function AnalyticsTab() {
           </Select>
         </div>
 
-        <Button onClick={handleExport} variant="outline" className="h-10 px-4 text-xs font-bold border-slate-200 rounded-xl flex items-center gap-1.5">
+        <Button onClick={handleExport} variant="outline" className="h-10 px-4 text-xs font-bold border-slate-200 rounded-sm flex items-center gap-1.5">
           <Download className="size-4 text-slate-600" /> Export CSV Report
         </Button>
       </div>
@@ -134,8 +134,8 @@ export function AnalyticsTab() {
           { label: "Click Rate", value: "12.8%", trend: "↑ 1.8%", icon: MousePointerClick, color: "bg-amber-50 text-amber-600 border-amber-100" },
           { label: "Conversion Rate", value: "4.2%", trend: "↑ 0.6%", icon: Target, color: "bg-teal-50 text-teal-600 border-teal-100" },
         ].map((s, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-xs">
-            <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl font-bold", s.color)}>
+          <div key={i} className="flex items-center gap-3 rounded-sm border border-slate-200/90 bg-white p-3.5 shadow-xs">
+            <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm font-bold", s.color)}>
               <s.icon className="size-4" />
             </span>
             <div>
@@ -154,10 +154,10 @@ export function AnalyticsTab() {
         <Box title="Message Trends Over Time">
           <div className="p-4">
             <div className="mb-3 flex gap-4 text-xs font-semibold text-slate-600">
-              <span className="flex items-center gap-1"><i className="size-2 rounded-full bg-emerald-500" />Sent</span>
-              <span className="flex items-center gap-1"><i className="size-2 rounded-full bg-blue-500" />Delivered</span>
-              <span className="flex items-center gap-1"><i className="size-2 rounded-full bg-purple-500" />Read</span>
-              <span className="flex items-center gap-1"><i className="size-2 rounded-full bg-amber-500" />Replied</span>
+              <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-emerald-500" />Sent</span>
+              <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-blue-500" />Delivered</span>
+              <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-purple-500" />Read</span>
+              <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-amber-500" />Replied</span>
             </div>
             <ResponsiveContainer width="100%" height={210}>
               <LineChart data={trendData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
@@ -226,7 +226,7 @@ export function AnalyticsTab() {
               {typeDistribution.map((d) => (
                 <div key={d.name} className="flex items-center justify-between text-xs font-semibold">
                   <span className="flex items-center gap-2 text-slate-600">
-                    <i className="size-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                    <i className="size-2.5 rounded-sm" style={{ backgroundColor: d.color }} />
                     {d.name}
                   </span>
                   <div className="text-right">
@@ -267,7 +267,7 @@ export function AnalyticsTab() {
                   <td className="px-3 py-3 text-right text-slate-600 font-medium">{c.clicks}</td>
                   <td className="px-3 py-3 text-right text-slate-600 font-medium">{c.conversions}</td>
                   <td className="px-3 py-3 text-right">
-                    <span className="rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+                    <span className="rounded-sm bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
                       {c.roi}
                     </span>
                   </td>
@@ -286,13 +286,13 @@ export function AnalyticsTab() {
               <div className="text-center">
                 <div
                   className={cn(
-                    "mx-auto mb-1 flex flex-col items-center justify-center rounded-xl border-2 px-5 py-3 shadow-xs min-w-[110px]",
+                    "mx-auto mb-1 flex flex-col items-center justify-center rounded-sm border-2 px-5 py-3 shadow-xs min-w-[110px]",
                     i === 0 ? "border-blue-300 bg-blue-50/80 text-blue-900" :
-                    i === 1 ? "border-emerald-300 bg-emerald-50/80 text-emerald-900" :
-                    i === 2 ? "border-purple-300 bg-purple-50/80 text-purple-900" :
-                    i === 3 ? "border-amber-300 bg-amber-50/80 text-amber-900" :
-                    i === 4 ? "border-rose-300 bg-rose-50/80 text-rose-900" :
-                    "border-teal-300 bg-teal-50/80 text-teal-900"
+                      i === 1 ? "border-emerald-300 bg-emerald-50/80 text-emerald-900" :
+                        i === 2 ? "border-purple-300 bg-purple-50/80 text-purple-900" :
+                          i === 3 ? "border-amber-300 bg-amber-50/80 text-amber-900" :
+                            i === 4 ? "border-rose-300 bg-rose-50/80 text-rose-900" :
+                              "border-teal-300 bg-teal-50/80 text-teal-900"
                   )}
                 >
                   <b className="block text-base font-bold text-slate-900">{step.value.toLocaleString()}</b>

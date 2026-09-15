@@ -24,7 +24,7 @@ export function CapabilityState({ capability, title, className, compact }: { cap
 
   return (
     <div className={cn("flex flex-col items-center justify-center px-6 text-center", compact ? "py-6" : "py-12", className)}>
-      <span className="grid size-10 place-items-center rounded-xl bg-[#F3F5F9] text-[#6B7890] ring-1 ring-[#E4E9F0]">
+      <span className="grid size-10 place-items-center rounded-sm bg-[#F3F5F9] text-[#6B7890] ring-1 ring-[#E4E9F0]">
         <Icon className="size-5" />
       </span>
       <p className="mt-3 text-[13.5px] font-semibold text-[#0F1B3D]">{title ?? meta.title}</p>
@@ -102,9 +102,9 @@ export function PageSkeleton({ variant = "dashboard" }: { variant?: "dashboard" 
       <div className="grid gap-1 xl:grid-cols-12">
         <div className={cn(yt.card, "overflow-hidden xl:col-span-8")}>
           <Skeleton className="h-28 w-full rounded-none" />
-          <div className="flex gap-3 p-4"><Skeleton className="size-16 rounded-full" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-48" /><Skeleton className="h-3 w-72" /><Skeleton className="h-3 w-full" /></div></div>
+          <div className="flex gap-3 p-4"><Skeleton className="size-16 rounded-sm" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-48" /><Skeleton className="h-3 w-72" /><Skeleton className="h-3 w-full" /></div></div>
         </div>
-        <div className={cn(yt.card, "p-4 xl:col-span-4")}><Skeleton className="h-4 w-32" /><div className="mt-4 flex gap-4"><Skeleton className="size-24 rounded-full" /><div className="flex-1 space-y-2.5">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-3 w-full" />)}</div></div></div>
+        <div className={cn(yt.card, "p-4 xl:col-span-4")}><Skeleton className="h-4 w-32" /><div className="mt-4 flex gap-4"><Skeleton className="size-24 rounded-sm" /><div className="flex-1 space-y-2.5">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-3 w-full" />)}</div></div></div>
       </div>
       <div className="grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-6">
         {Array.from({ length: 6 }, (_, i) => (
@@ -113,7 +113,7 @@ export function PageSkeleton({ variant = "dashboard" }: { variant?: "dashboard" 
       </div>
       <div className="grid gap-1 xl:grid-cols-12">
         <div className={cn(yt.card, "p-4 xl:col-span-8")}><Skeleton className="h-4 w-40" /><Skeleton className="mt-4 h-60 w-full" /></div>
-        <div className={cn(yt.card, "p-4 xl:col-span-4")}><Skeleton className="h-4 w-32" /><Skeleton className="mx-auto mt-6 size-32 rounded-full" /></div>
+        <div className={cn(yt.card, "p-4 xl:col-span-4")}><Skeleton className="h-4 w-32" /><Skeleton className="mx-auto mt-6 size-32 rounded-sm" /></div>
       </div>
     </div>
   );

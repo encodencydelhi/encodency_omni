@@ -174,8 +174,8 @@ export function Stat({
   subTone?: string;
 }) {
   return (
-    <div className="flex min-h-[70px] items-center gap-3 rounded-lg border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_3px_rgb(47_44_42/0.035)]">
-      <span className={cn("grid size-[34px] shrink-0 place-items-center rounded-full", statTint[color])}>
+    <div className="flex min-h-[70px] items-center gap-3 rounded-sm border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_3px_rgb(47_44_42/0.035)]">
+      <span className={cn("grid size-[34px] shrink-0 place-items-center rounded-sm", statTint[color])}>
         <Icon className="size-[18px]" />
       </span>
       <div className="min-w-0">
@@ -231,9 +231,9 @@ export function Meter({
   className?: string;
 }) {
   return (
-    <span className={cn("block h-1.5 overflow-hidden rounded-full bg-[#EDF1F7]", className)}>
+    <span className={cn("block h-1.5 overflow-hidden rounded-sm bg-[#EDF1F7]", className)}>
       <i
-        className="block h-full rounded-full"
+        className="block h-full rounded-sm"
         style={{ width: `${Math.min((value / max) * 100, 100)}%`, background: color }}
       />
     </span>
@@ -258,13 +258,13 @@ export function Toggle({ on }: { on: boolean }) {
   return (
     <span
       className={cn(
-        "relative block h-4 w-7 shrink-0 rounded-full transition-colors",
+        "relative block h-4 w-7 shrink-0 rounded-sm transition-colors",
         on ? "bg-[#10B981]" : "bg-[#CBD5E1]",
       )}
     >
       <i
         className={cn(
-          "absolute top-0.5 block size-3 rounded-full bg-white shadow-sm transition-all",
+          "absolute top-0.5 block size-3 rounded-sm bg-white shadow-sm transition-all",
           on ? "left-[14px]" : "left-0.5",
         )}
       />

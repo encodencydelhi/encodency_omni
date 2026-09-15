@@ -62,9 +62,9 @@ export const yt = {
   faint: "text-[#98A2B3]",
   divider: "border-[#EEF1F5]",
   input:
-    "h-9 w-full rounded-lg border border-[#DCE2EA] bg-white px-3 text-[13px] text-[#0F1B3D] placeholder:text-[#98A2B3] outline-none transition focus:border-[#E5202E] focus:ring-[3px] focus:ring-[#E5202E]/12 disabled:cursor-not-allowed disabled:bg-[#F6F8FB] disabled:text-[#98A2B3]",
+    "h-9 w-full rounded-sm border border-[#DCE2EA] bg-white px-3 text-[13px] text-[#0F1B3D] placeholder:text-[#98A2B3] outline-none transition focus:border-[#E5202E] focus:ring-[3px] focus:ring-[#E5202E]/12 disabled:cursor-not-allowed disabled:bg-[#F6F8FB] disabled:text-[#98A2B3]",
   textarea:
-    "w-full rounded-lg border border-[#DCE2EA] bg-white px-3 py-2 text-[13px] leading-relaxed text-[#0F1B3D] placeholder:text-[#98A2B3] outline-none transition focus:border-[#E5202E] focus:ring-[3px] focus:ring-[#E5202E]/12",
+    "w-full rounded-sm border border-[#DCE2EA] bg-white px-3 py-2 text-[13px] leading-relaxed text-[#0F1B3D] placeholder:text-[#98A2B3] outline-none transition focus:border-[#E5202E] focus:ring-[3px] focus:ring-[#E5202E]/12",
   focus: "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#E5202E]/25",
 };
 
@@ -82,11 +82,11 @@ const VARIANTS = {
 } as const;
 
 const SIZES = {
-  xs: "h-7 gap-1 rounded-md px-2 text-[11.5px]",
-  sm: "h-8 gap-1.5 rounded-lg px-2.5 text-[12px]",
-  md: "h-9 gap-1.5 rounded-lg px-3.5 text-[12.5px]",
-  icon: "size-8 rounded-lg",
-  iconSm: "size-7 rounded-md",
+  xs: "h-7 gap-1 rounded-sm px-2 text-[11.5px]",
+  sm: "h-8 gap-1.5 rounded-sm px-2.5 text-[12px]",
+  md: "h-9 gap-1.5 rounded-sm px-3.5 text-[12.5px]",
+  icon: "size-8 rounded-sm",
+  iconSm: "size-7 rounded-sm",
 } as const;
 
 export type ButtonVariant = keyof typeof VARIANTS;
@@ -156,7 +156,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span tabIndex={0} className={cn("inline-flex rounded-lg", yt.focus)} aria-label={reason}>
+        <span tabIndex={0} className={cn("inline-flex rounded-sm", yt.focus)} aria-label={reason}>
           {button}
         </span>
       </TooltipTrigger>
@@ -179,7 +179,7 @@ export function Hint({ text, children, side = "top" }: { text: ReactNode; childr
 export function InfoTip({ text, className }: { text: ReactNode; className?: string }) {
   return (
     <Hint text={text}>
-      <button type="button" aria-label="More information" className={cn("inline-grid size-4 place-items-center rounded-full text-[#98A2B3] hover:text-[#3C4A66]", yt.focus, className)}>
+      <button type="button" aria-label="More information" className={cn("inline-grid size-4 place-items-center rounded-sm text-[#98A2B3] hover:text-[#3C4A66]", yt.focus, className)}>
         <Info className="size-3.5" />
       </button>
     </Hint>
@@ -217,7 +217,7 @@ export function CardHeader({
     <header className={cn("flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-4 pt-3.5 pb-2.5", className)}>
       <div className="flex min-w-0 items-start gap-2.5">
         {Icon && (
-          <span className="mt-px grid size-7 shrink-0 place-items-center rounded-lg bg-[#F3F5F9] text-[#3C4A66]">
+          <span className="mt-px grid size-7 shrink-0 place-items-center rounded-sm bg-[#F3F5F9] text-[#3C4A66]">
             <Icon className="size-4" />
           </span>
         )}
@@ -296,8 +296,8 @@ export function Badge({
   className?: string;
 }) {
   return (
-    <span className={cn("inline-flex h-[22px] items-center gap-1 whitespace-nowrap rounded-md px-1.5 text-[11px] font-semibold ring-1 ring-inset", TONES[tone], className)}>
-      {dot && <span className={cn("size-1.5 rounded-full", TONE_DOT[tone])} />}
+    <span className={cn("inline-flex h-[22px] items-center gap-1 whitespace-nowrap rounded-sm px-1.5 text-[11px] font-semibold ring-1 ring-inset", TONES[tone], className)}>
+      {dot && <span className={cn("size-1.5 rounded-sm", TONE_DOT[tone])} />}
       {Icon && <Icon className="size-3" />}
       {children}
     </span>
@@ -359,7 +359,7 @@ export function ApprovalBadge({ state }: { state: ApprovalState }) {
 /** Marks OmniPlatform-owned data so it's never mistaken for YouTube's own. */
 export function InternalBadge({ label = "OmniPlatform", hint }: { label?: string; hint?: string }) {
   const badge = (
-    <span className="inline-flex h-5 items-center gap-1 rounded-md bg-[#F4F0FF] px-1.5 text-[10.5px] font-semibold text-[#6D28D9] ring-1 ring-inset ring-[#E2D8FD]">
+    <span className="inline-flex h-5 items-center gap-1 rounded-sm bg-[#F4F0FF] px-1.5 text-[10.5px] font-semibold text-[#6D28D9] ring-1 ring-inset ring-[#E2D8FD]">
       <Sparkles className="size-3" />
       {label}
     </span>
@@ -414,7 +414,7 @@ export function UnderlineTabs<T extends string>({
             {item.icon && <item.icon className={cn("size-3.5", active ? "text-[#E5202E]" : "text-[#98A2B3]")} />}
             {item.label}
             {item.count !== undefined && (
-              <span className={cn("rounded-full px-1.5 text-[10.5px] font-semibold leading-4", active ? "bg-[#FEF1F2] text-[#C81E2B]" : "bg-[#F1F4F8] text-[#6B7890]")}>
+              <span className={cn("rounded-sm px-1.5 text-[10.5px] font-semibold leading-4", active ? "bg-[#FEF1F2] text-[#C81E2B]" : "bg-[#F1F4F8] text-[#6B7890]")}>
                 {item.count}
               </span>
             )}
@@ -462,7 +462,7 @@ export function Segmented<T extends string>({
   className?: string;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} onKeyDown={(e) => onArrowKey(e, items, value, onChange)} className={cn("inline-flex h-8 items-center rounded-lg bg-[#F1F4F8] p-0.5", className)}>
+    <div role="radiogroup" aria-label={label} onKeyDown={(e) => onArrowKey(e, items, value, onChange)} className={cn("inline-flex h-8 items-center rounded-sm bg-[#F1F4F8] p-0.5", className)}>
       {items.map((item) => {
         const active = item.value === value;
         return (
@@ -476,7 +476,7 @@ export function Segmented<T extends string>({
             title={item.title}
             onClick={() => onChange(item.value)}
             className={cn(
-              "flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-semibold transition",
+              "flex h-7 items-center gap-1.5 rounded-sm px-2.5 text-[12px] font-semibold transition",
               active ? "bg-white text-[#0F1B3D] shadow-[0_1px_2px_rgba(15,27,61,0.1)]" : "text-[#6B7890] hover:text-[#0F1B3D]",
               yt.focus,
             )}
@@ -536,7 +536,7 @@ export function SelectMenu<T extends string>({
         aria-label={label}
         disabled={disabled}
         className={cn(
-          "group inline-flex items-center gap-1.5 rounded-lg border border-[#DCE2EA] bg-white text-left font-medium text-[#24324F] shadow-[0_1px_2px_rgba(15,27,61,0.04)] transition hover:border-[#C9D1DC] data-[state=open]:border-[#E5202E] data-[state=open]:ring-[3px] data-[state=open]:ring-[#E5202E]/12 disabled:cursor-not-allowed disabled:opacity-60",
+          "group inline-flex items-center gap-1.5 rounded-sm border border-[#DCE2EA] bg-white text-left font-medium text-[#24324F] shadow-[0_1px_2px_rgba(15,27,61,0.04)] transition hover:border-[#C9D1DC] data-[state=open]:border-[#E5202E] data-[state=open]:ring-[3px] data-[state=open]:ring-[#E5202E]/12 disabled:cursor-not-allowed disabled:opacity-60",
           size === "sm" ? "h-8 px-2.5 text-[12px]" : "h-9 px-3 text-[13px]",
           fullWidth && "w-full",
           yt.focus,
@@ -553,7 +553,7 @@ export function SelectMenu<T extends string>({
           align={align}
           sideOffset={6}
           collisionPadding={12}
-          className="z-50 max-h-[min(360px,var(--radix-dropdown-menu-content-available-height))] min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto rounded-lg border border-[#E4E9F0] bg-white p-1 shadow-[0_12px_32px_-8px_rgba(15,27,61,0.18)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+          className="z-50 max-h-[min(360px,var(--radix-dropdown-menu-content-available-height))] min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto rounded-sm border border-[#E4E9F0] bg-white p-1 shadow-[0_12px_32px_-8px_rgba(15,27,61,0.18)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
           <DropdownPrimitive.RadioGroup value={value} onValueChange={(v) => onChange(v as T)}>
             {options.map((option) => (
@@ -561,7 +561,7 @@ export function SelectMenu<T extends string>({
                 key={option.value}
                 value={option.value}
                 disabled={option.disabled}
-                className="relative flex cursor-pointer select-none items-start gap-2 rounded-md py-1.5 pl-7 pr-2.5 text-[12.5px] text-[#24324F] outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-[#F3F5F9] data-[state=checked]:font-semibold data-[state=checked]:text-[#0F1B3D]"
+                className="relative flex cursor-pointer select-none items-start gap-2 rounded-sm py-1.5 pl-7 pr-2.5 text-[12.5px] text-[#24324F] outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-[#F3F5F9] data-[state=checked]:font-semibold data-[state=checked]:text-[#0F1B3D]"
               >
                 <DropdownPrimitive.ItemIndicator className="absolute left-2 top-2">
                   <Check className="size-3.5 text-[#E5202E]" />
@@ -616,7 +616,7 @@ export function ActionMenu({
           sideOffset={6}
           collisionPadding={12}
           style={{ minWidth: width }}
-          className="z-50 rounded-lg border border-[#E4E9F0] bg-white p-1 shadow-[0_12px_32px_-8px_rgba(15,27,61,0.18)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+          className="z-50 rounded-sm border border-[#E4E9F0] bg-white p-1 shadow-[0_12px_32px_-8px_rgba(15,27,61,0.18)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
           {visible.map((item, index) => {
             if (item === "separator") {
@@ -627,7 +627,7 @@ export function ActionMenu({
             const blocked = item.gate && !item.gate.allowed;
             const Icon = blocked ? Lock : item.icon;
             const cls = cn(
-              "flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px] font-medium outline-none data-[highlighted]:bg-[#F3F5F9] data-[disabled]:cursor-not-allowed",
+              "flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-[12.5px] font-medium outline-none data-[highlighted]:bg-[#F3F5F9] data-[disabled]:cursor-not-allowed",
               item.danger ? "text-[#C81E2B] data-[highlighted]:bg-[#FEF1F2]" : "text-[#24324F]",
               blocked && "text-[#98A2B3]",
             );
@@ -785,9 +785,9 @@ export function TagInput({ value, onChange, placeholder = "Add a tag and press E
     setDraft("");
   };
   return (
-    <div className="flex min-h-9 flex-wrap items-center gap-1.5 rounded-lg border border-[#DCE2EA] bg-white px-2 py-1.5 focus-within:border-[#E5202E] focus-within:ring-[3px] focus-within:ring-[#E5202E]/12">
+    <div className="flex min-h-9 flex-wrap items-center gap-1.5 rounded-sm border border-[#DCE2EA] bg-white px-2 py-1.5 focus-within:border-[#E5202E] focus-within:ring-[3px] focus-within:ring-[#E5202E]/12">
       {value.map((tag) => (
-        <span key={tag} className="inline-flex h-6 items-center gap-1 rounded-md bg-[#F1F4F8] pl-2 pr-1 text-[12px] font-medium text-[#24324F]">
+        <span key={tag} className="inline-flex h-6 items-center gap-1 rounded-sm bg-[#F1F4F8] pl-2 pr-1 text-[12px] font-medium text-[#24324F]">
           {tag}
           <button type="button" aria-label={`Remove ${tag}`} onClick={() => onChange(value.filter((t) => t !== tag))} className="grid size-4 place-items-center rounded text-[#6B7890] hover:bg-[#E4E9F0]">
             <X className="size-3" />
@@ -836,14 +836,14 @@ export function ChoiceCard({
     <label
       htmlFor={id}
       className={cn(
-        "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition",
+        "flex cursor-pointer items-start gap-3 rounded-sm border p-3 transition",
         checked ? "border-[#E5202E] bg-[#FFF8F8] ring-[3px] ring-[#E5202E]/10" : "border-[#DCE2EA] bg-white hover:border-[#C9D1DC]",
         disabled && "cursor-not-allowed opacity-60",
       )}
     >
       <input id={id} type="radio" name={name} checked={checked} disabled={disabled} onChange={onSelect} className="peer sr-only" />
-      <span className={cn("mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border-2 peer-focus-visible:ring-[3px] peer-focus-visible:ring-[#E5202E]/25", checked ? "border-[#E5202E]" : "border-[#C9D1DC]")}>
-        {checked && <span className="size-1.5 rounded-full bg-[#E5202E]" />}
+      <span className={cn("mt-0.5 grid size-4 shrink-0 place-items-center rounded-sm border-2 peer-focus-visible:ring-[3px] peer-focus-visible:ring-[#E5202E]/25", checked ? "border-[#E5202E]" : "border-[#C9D1DC]")}>
+        {checked && <span className="size-1.5 rounded-sm bg-[#E5202E]" />}
       </span>
       {Icon && <Icon className="mt-px size-4 shrink-0 text-[#6B7890]" />}
       <span className="min-w-0">
@@ -874,7 +874,7 @@ export function Thumb({
   sizes?: string;
 }) {
   return (
-    <span className={cn("relative block shrink-0 overflow-hidden rounded-md bg-[#E9EDF3]", vertical ? "aspect-[9/16]" : "aspect-video", className)}>
+    <span className={cn("relative block shrink-0 overflow-hidden rounded-sm bg-[#E9EDF3]", vertical ? "aspect-[9/16]" : "aspect-video", className)}>
       <Image src={src} alt={alt} fill sizes={sizes} unoptimized={src.startsWith("blob:") || src.startsWith("data:")} className="object-cover" />
       {durationSec !== undefined && durationSec > 0 && (
         <span className="absolute bottom-1 right-1 rounded bg-[#0F1B3D]/80 px-1 text-[10px] font-semibold leading-4 text-white">{fmtDuration(durationSec)}</span>
@@ -895,12 +895,12 @@ export function Avatar({ name, src, className }: { name: string; src?: string; c
   const tint = AVATAR_TINTS[[...name].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % AVATAR_TINTS.length];
   if (src) {
     return (
-      <span className={cn("relative block size-8 shrink-0 overflow-hidden rounded-full bg-[#E9EDF3]", className)}>
+      <span className={cn("relative block size-8 shrink-0 overflow-hidden rounded-sm bg-[#E9EDF3]", className)}>
         <Image src={src} alt="" fill sizes="40px" className="object-cover" />
       </span>
     );
   }
-  return <span className={cn("grid size-8 shrink-0 place-items-center rounded-full text-[11px] font-semibold", tint, className)} aria-hidden="true">{initials}</span>;
+  return <span className={cn("grid size-8 shrink-0 place-items-center rounded-sm text-[11px] font-semibold", tint, className)} aria-hidden="true">{initials}</span>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -908,7 +908,7 @@ export function Avatar({ name, src, className }: { name: string; src?: string; c
 /* ------------------------------------------------------------------ */
 
 export function Skeleton({ className }: { className?: string }) {
-  return <span aria-hidden="true" className={cn("block animate-pulse rounded-md bg-[#EDF1F6]", className)} />;
+  return <span aria-hidden="true" className={cn("block animate-pulse rounded-sm bg-[#EDF1F6]", className)} />;
 }
 
 export function EmptyState({
@@ -930,7 +930,7 @@ export function EmptyState({
 }) {
   return (
     <div className={cn("flex flex-col items-center justify-center px-6 text-center", compact ? "py-8" : "py-14", className)}>
-      <span className="grid size-11 place-items-center rounded-xl bg-[#F3F5F9] text-[#6B7890] ring-1 ring-[#E4E9F0]">
+      <span className="grid size-11 place-items-center rounded-sm bg-[#F3F5F9] text-[#6B7890] ring-1 ring-[#E4E9F0]">
         <Icon className="size-5" />
       </span>
       <h3 className="mt-3 text-[14px] font-semibold text-[#0F1B3D]">{title}</h3>
@@ -984,8 +984,8 @@ export function Notice({
 
 export function Meter({ value, tone = "red", className }: { value: number; tone?: Tone; className?: string }) {
   return (
-    <span className={cn("block h-1.5 overflow-hidden rounded-full bg-[#EEF1F5]", className)} role="presentation">
-      <span className={cn("block h-full rounded-full transition-[width] duration-500", TONE_DOT[tone])} style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+    <span className={cn("block h-1.5 overflow-hidden rounded-sm bg-[#EEF1F5]", className)} role="presentation">
+      <span className={cn("block h-full rounded-sm transition-[width] duration-500", TONE_DOT[tone])} style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
     </span>
   );
 }
@@ -1013,7 +1013,7 @@ export function SecretField({ label, value, masked = true }: { label: string; va
     <div>
       <p className="mb-1.5 text-[12px] font-semibold text-[#24324F]">{label}</p>
       <div className="flex items-center gap-1.5">
-        <code className="flex h-9 min-w-0 flex-1 items-center truncate rounded-lg border border-[#DCE2EA] bg-[#F8FAFC] px-3 font-mono text-[12.5px] text-[#0F1B3D]">{shown}</code>
+        <code className="flex h-9 min-w-0 flex-1 items-center truncate rounded-sm border border-[#DCE2EA] bg-[#F8FAFC] px-3 font-mono text-[12.5px] text-[#0F1B3D]">{shown}</code>
         {masked && (
           <Button size="icon" variant="secondary" aria-label={revealed ? `Hide ${label}` : `Reveal ${label}`} onClick={() => setRevealed((r) => !r)} className="size-9">
             {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -1079,7 +1079,7 @@ function ConfirmDialogBody({
       <DialogContent className="w-[calc(100vw-24px)] max-w-[440px] gap-0 p-0">
         <DialogHeader className="px-5 pt-5">
           <div className="flex items-start gap-3">
-            <span className={cn("grid size-9 shrink-0 place-items-center rounded-full", destructive ? "bg-[#FEF1F2] text-[#C81E2B]" : "bg-[#EFF4FF] text-[#1D4ED8]")}>
+            <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", destructive ? "bg-[#FEF1F2] text-[#C81E2B]" : "bg-[#EFF4FF] text-[#1D4ED8]")}>
               {destructive ? <AlertTriangle className="size-4.5" /> : <Info className="size-4.5" />}
             </span>
             <div className="min-w-0">
@@ -1091,10 +1091,10 @@ function ConfirmDialogBody({
         {(affected?.length || confirmText) && (
           <div className="space-y-3 px-5 pt-3">
             {affected && affected.length > 0 && (
-              <ul className="max-h-36 space-y-1 overflow-y-auto rounded-lg border border-[#EEF1F5] bg-[#F8FAFC] p-2.5 text-[12px] text-[#24324F]">
+              <ul className="max-h-36 space-y-1 overflow-y-auto rounded-sm border border-[#EEF1F5] bg-[#F8FAFC] p-2.5 text-[12px] text-[#24324F]">
                 {affected.map((item) => (
                   <li key={item} className="flex items-start gap-1.5">
-                    <span className="mt-1.5 size-1 shrink-0 rounded-full bg-[#98A2B3]" />
+                    <span className="mt-1.5 size-1 shrink-0 rounded-sm bg-[#98A2B3]" />
                     <span className="min-w-0 break-words">{item}</span>
                   </li>
                 ))}
@@ -1197,7 +1197,7 @@ export function Pagination({
               type="button"
               aria-current={p === page ? "page" : undefined}
               onClick={() => onPage(p)}
-              className={cn("h-7 min-w-7 rounded-md px-1.5 text-[12px] font-semibold", p === page ? "bg-[#0F1B3D] text-white" : "text-[#3C4A66] hover:bg-[#F1F4F8]", yt.focus)}
+              className={cn("h-7 min-w-7 rounded-sm px-1.5 text-[12px] font-semibold", p === page ? "bg-[#0F1B3D] text-white" : "text-[#3C4A66] hover:bg-[#F1F4F8]", yt.focus)}
             >
               {p}
             </button>

@@ -117,9 +117,9 @@ export function SeoReportsPage() {
             {templates.map(({ name, detail, icon: Icon, color, sections }) => (
               <article
                 key={name}
-                className="group rounded-lg border border-[#E4EAF2] bg-[#FBFCFE] p-2.5 transition-colors hover:border-[#C9D6E8] hover:bg-white"
+                className="group rounded-sm border border-[#E4EAF2] bg-[#FBFCFE] p-2.5 transition-colors hover:border-[#C9D6E8] hover:bg-white"
               >
-                <span className={cn("grid size-7 place-items-center rounded-lg", tint[color])}>
+                <span className={cn("grid size-7 place-items-center rounded-sm", tint[color])}>
                   <Icon className="size-3.5" />
                 </span>
                 <b className="mt-1.5 block truncate text-[9.5px] font-semibold text-[#172044]">{name}</b>
@@ -278,7 +278,7 @@ export function SeoReportsPage() {
                 key={row.email}
                 className="flex items-center gap-2 border-b border-[#EDF1F5] py-2 last:border-b-0"
               >
-                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#EAF2FF] text-[9px] font-semibold text-[#1A6BC4]">
+                <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#EAF2FF] text-[9px] font-semibold text-[#1A6BC4]">
                   {row.name
                     .split(" ")
                     .map((part) => part[0])

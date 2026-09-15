@@ -115,7 +115,7 @@ function PublishResult() {
         <section className={cn(card, "p-6 text-center")}>
           <span
             className={cn(
-              "mx-auto flex size-12 items-center justify-center rounded-full",
+              "mx-auto flex size-12 items-center justify-center rounded-sm",
               meta.tone === "green"
                 ? "bg-[#eefaf3] text-[#087a50]"
                 : meta.tone === "amber"
@@ -312,7 +312,7 @@ function PublishResult() {
               "Leads flow into the Leads Center as soon as people submit your instant form.",
             ].map((step, i) => (
               <li key={step} className="flex gap-2.5 text-[11px] leading-relaxed">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e8eef5] text-[9px] font-semibold text-[#475569]">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-sm bg-[#e8eef5] text-[9px] font-semibold text-[#475569]">
                   {i + 1}
                 </span>
                 {step}

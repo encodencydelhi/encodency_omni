@@ -278,11 +278,11 @@ function UploadFlow() {
                     type="button"
                     onClick={() => goTo(s)}
                     aria-current={current ? "step" : undefined}
-                    className={cn("flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[12.5px] font-medium transition", current ? "bg-[#FEF1F2] text-[#0F1B3D]" : "text-[#3C4A66] hover:bg-[#F8FAFC]", yt.focus)}
+                    className={cn("flex w-full items-center gap-2.5 rounded-sm px-2.5 py-2 text-left text-[12.5px] font-medium transition", current ? "bg-[#FEF1F2] text-[#0F1B3D]" : "text-[#3C4A66] hover:bg-[#F8FAFC]", yt.focus)}
                   >
                     <span
                       className={cn(
-                        "grid size-5 shrink-0 place-items-center rounded-full text-[10.5px] font-bold",
+                        "grid size-5 shrink-0 place-items-center rounded-sm text-[10.5px] font-bold",
                         hasError ? "bg-[#FEF1F2] text-[#C81E2B] ring-1 ring-[#FBD5D9]" : complete ? "bg-[#12B76A] text-white" : current ? "bg-[#E5202E] text-white" : "bg-[#F1F4F8] text-[#6B7890]",
                       )}
                     >
@@ -497,13 +497,13 @@ function UploadStep({ file, setFile, type, setType }: { file: FileInfo | null; s
             }}
             className={cn("flex w-full flex-col items-center justify-center rounded-[10px] border-2 border-dashed px-6 py-12 text-center transition", dragging ? "border-[#E5202E] bg-[#FFF8F8]" : "border-[#D0D7E2] bg-[#F8FAFC] hover:border-[#98A2B3]", yt.focus)}
           >
-            <span className="grid size-14 place-items-center rounded-full bg-white text-[#E5202E] shadow-[0_1px_3px_rgba(15,27,61,0.1)]">
+            <span className="grid size-14 place-items-center rounded-sm bg-white text-[#E5202E] shadow-[0_1px_3px_rgba(15,27,61,0.1)]">
               <Upload className="size-6" />
             </span>
             <span className="mt-3 text-[14px] font-semibold text-[#0F1B3D]">Drag and drop a video file</span>
             <span className="mt-1 text-[12.5px] text-[#6B7890]">Your video stays private until you publish.</span>
             <span className={cn("mt-4", "pointer-events-none")}>
-              <span className="inline-flex h-9 items-center rounded-lg bg-[#E5202E] px-4 text-[12.5px] font-semibold text-white">Choose file</span>
+              <span className="inline-flex h-9 items-center rounded-sm bg-[#E5202E] px-4 text-[12.5px] font-semibold text-white">Choose file</span>
             </span>
           </button>
           <input
@@ -522,7 +522,7 @@ function UploadStep({ file, setFile, type, setType }: { file: FileInfo | null; s
       ) : (
         <div className="rounded-[10px] border border-[#E4E9F0] p-4">
           <div className="flex items-start gap-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#FEF1F2] text-[#E5202E]"><FileVideo className="size-5" /></span>
+            <span className="grid size-10 shrink-0 place-items-center rounded-sm bg-[#FEF1F2] text-[#E5202E]"><FileVideo className="size-5" /></span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-semibold text-[#0F1B3D]">{file.name}</p>
               <p className="text-[12px] text-[#6B7890]">
@@ -568,14 +568,14 @@ function DetailsStep({ draft, set, showErrors }: StepProps & { showErrors: boole
         <p className="mb-1.5 text-[12.5px] font-semibold text-[#24324F]">Thumbnail</p>
         <p className="mb-2 text-[12px] text-[#6B7890]">Upload a custom image or pick from your media library. 1280×720, up to 2 MB.</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <button type="button" onClick={() => thumbInput.current?.click()} className={cn("flex aspect-video flex-col items-center justify-center gap-1 rounded-md border border-dashed border-[#C9D1DC] bg-[#F8FAFC] text-[12px] font-medium text-[#3C4A66] hover:border-[#98A2B3]", yt.focus)}>
+          <button type="button" onClick={() => thumbInput.current?.click()} className={cn("flex aspect-video flex-col items-center justify-center gap-1 rounded-sm border border-dashed border-[#C9D1DC] bg-[#F8FAFC] text-[12px] font-medium text-[#3C4A66] hover:border-[#98A2B3]", yt.focus)}>
             <ImagePlus className="size-4" />
             Upload custom
           </button>
           {THUMBNAIL_LIBRARY.slice(0, 3).map((url) => (
-            <button key={url} type="button" aria-pressed={draft.thumbnailUrl === url} onClick={() => set("thumbnailUrl", url)} className={cn("relative rounded-md ring-offset-2", draft.thumbnailUrl === url ? "ring-2 ring-[#E5202E]" : "hover:ring-2 hover:ring-[#C9D1DC]", yt.focus)}>
+            <button key={url} type="button" aria-pressed={draft.thumbnailUrl === url} onClick={() => set("thumbnailUrl", url)} className={cn("relative rounded-sm ring-offset-2", draft.thumbnailUrl === url ? "ring-2 ring-[#E5202E]" : "hover:ring-2 hover:ring-[#C9D1DC]", yt.focus)}>
               <Thumb src={url} sizes="160px" />
-              {draft.thumbnailUrl === url && <span className="absolute right-1 top-1 grid size-5 place-items-center rounded-full bg-[#E5202E] text-white"><Check className="size-3" /></span>}
+              {draft.thumbnailUrl === url && <span className="absolute right-1 top-1 grid size-5 place-items-center rounded-sm bg-[#E5202E] text-white"><Check className="size-3" /></span>}
             </button>
           ))}
         </div>
@@ -627,7 +627,7 @@ function AudienceStep({ draft, set }: StepProps) {
         <ChoiceCard name="kids" checked={draft.madeForKids === true} onSelect={() => set("madeForKids", true)} icon={Baby} title="Yes, it's made for kids" description="Comments, notifications and personalised ads are turned off." />
         <ChoiceCard name="kids" checked={draft.madeForKids === false} onSelect={() => set("madeForKids", false)} icon={UsersRound} title="No, it's not made for kids" />
       </div>
-      <div className="rounded-lg border border-[#E4E9F0]">
+      <div className="rounded-sm border border-[#E4E9F0]">
         <ToggleRow label="Restrict to viewers over 18" description="Age-restricted videos can't show ads and aren't shown in some sections of YouTube." checked={draft.ageRestricted} disabled={draft.madeForKids === true} onChange={(c) => set("ageRestricted", c)} />
       </div>
     </div>
@@ -642,7 +642,7 @@ function ElementsStep({ draft, set }: StepProps) {
       <div className="rounded-[10px] border border-[#E4E9F0] p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex gap-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#EFF4FF] text-[#1D4ED8]"><Captions className="size-4" /></span>
+            <span className="grid size-9 shrink-0 place-items-center rounded-sm bg-[#EFF4FF] text-[#1D4ED8]"><Captions className="size-4" /></span>
             <div>
               <p className="text-[13px] font-semibold text-[#0F1B3D]">Subtitles</p>
               <p className="text-[12px] text-[#6B7890]">Upload .srt or .vtt caption files. Sent to YouTube with the video.</p>
@@ -665,7 +665,7 @@ function ElementsStep({ draft, set }: StepProps) {
           }}
         />
         {draft.captions.length > 0 && (
-          <ul className="mt-3 divide-y divide-[#EEF1F5] rounded-lg border border-[#EEF1F5]">
+          <ul className="mt-3 divide-y divide-[#EEF1F5] rounded-sm border border-[#EEF1F5]">
             {draft.captions.map((c) => (
               <li key={c.language} className="flex items-center justify-between gap-2 px-3 py-2 text-[12.5px]">
                 <span className="min-w-0 truncate text-[#24324F]">{c.name}</span>

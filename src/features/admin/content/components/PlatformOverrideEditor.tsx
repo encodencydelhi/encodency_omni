@@ -63,7 +63,7 @@ export function PlatformOverrideEditor({
   };
 
   return (
-    <section className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+    <section className="overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
       <button
         onClick={() => setSectionOpen(!sectionOpen)}
         className="flex w-full items-center justify-between gap-2 border-b border-[#EDF1F5] px-3 py-2.5 text-left transition hover:bg-slate-50"
@@ -90,7 +90,7 @@ export function PlatformOverrideEditor({
               const fields = spec?.fields ?? [];
 
               return (
-                <div key={p} className="rounded-lg border border-[#E2E8F0] overflow-hidden">
+                <div key={p} className="rounded-sm border border-[#E2E8F0] overflow-hidden">
                   {/* Header */}
                   <button
                     onClick={() => toggleExpand(p)}
@@ -161,7 +161,7 @@ export function PlatformOverrideEditor({
                                 key={r.ratio}
                                 onClick={() => onRatioChange(p, r.ratio)}
                                 className={cn(
-                                  "flex flex-col items-center rounded-lg border px-2 py-1.5 text-center transition",
+                                  "flex flex-col items-center rounded-sm border px-2 py-1.5 text-center transition",
                                   selectedRatio[p] === r.ratio
                                     ? "border-[color:var(--pc)] bg-[color:var(--pc-bg)]"
                                     : "border-[#E2E8F0] hover:border-[#CBD5E1]"
@@ -416,7 +416,7 @@ function PlatformField({
       );
     case "madeForKids":
       return (
-        <div className="flex items-center justify-between rounded-lg border border-[#E2E8F0] px-2.5 py-1.5">
+        <div className="flex items-center justify-between rounded-sm border border-[#E2E8F0] px-2.5 py-1.5">
           <span className="text-[11px] font-semibold text-[#33445F]">Made for Kids</span>
           <Toggle on={!!fieldValue} onChange={() => onChange("fields", { ...override.fields, madeForKids: !fieldValue })} label="Made for kids" />
         </div>
@@ -426,7 +426,7 @@ function PlatformField({
     case "allowStitch":
     case "linkPreview":
       return (
-        <div className="flex items-center justify-between rounded-lg border border-[#E2E8F0] px-2.5 py-1.5">
+        <div className="flex items-center justify-between rounded-sm border border-[#E2E8F0] px-2.5 py-1.5">
           <span className="text-[11px] font-semibold text-[#33445F]">{field.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase())}</span>
           <Toggle on={!!fieldValue} onChange={() => onChange("fields", { ...override.fields, [field]: !fieldValue })} label={field} />
         </div>

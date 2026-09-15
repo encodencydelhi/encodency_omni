@@ -71,13 +71,13 @@ export function AutomationTab({ onOpenModal }: AutomationTabProps) {
           <p className="text-xs text-slate-500">Automate responses, agent assignment and drip sequences via AiSensy WABA engine.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-sm px-3 py-1.5">
             <span className="text-xs font-bold text-slate-700">Master Switch</span>
             <Switch checked={automationEnabled} onCheckedChange={(val) => { setAutomationEnabled(val); toast.info(val ? "Automation Enabled" : "Automation Paused"); }} />
           </div>
           <Button
             onClick={() => onOpenModal("create-rule")}
-            className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
+            className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
           >
             <Plus className="size-4" /> Create Rule
           </Button>
@@ -92,8 +92,8 @@ export function AutomationTab({ onOpenModal }: AutomationTabProps) {
           { label: "Success Rate", value: "94.2%", icon: Workflow, color: "bg-teal-50 text-teal-600 border-teal-100", trend: "↑ 2.1%" },
           { label: "Messages Automated", value: "12,340", icon: MessageSquare, color: "bg-purple-50 text-purple-600 border-purple-100", trend: "↑ 18% vs last month" },
         ].map((s, i) => (
-          <div key={i} className="flex items-center gap-3.5 rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-xs">
-            <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl font-bold", s.color)}>
+          <div key={i} className="flex items-center gap-3.5 rounded-sm border border-slate-200/90 bg-white p-3.5 shadow-xs">
+            <span className={cn("grid size-10 shrink-0 place-items-center rounded-sm font-bold", s.color)}>
               <s.icon className="size-5" />
             </span>
             <div>
@@ -115,18 +115,18 @@ export function AutomationTab({ onOpenModal }: AutomationTabProps) {
             <div
               key={rule.id}
               className={cn(
-                "flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border p-4 bg-white shadow-xs transition-all hover:shadow-md",
+                "flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-sm border p-4 bg-white shadow-xs transition-all hover:shadow-md",
                 rule.enabled ? "border-slate-200" : "border-slate-200 opacity-60 bg-slate-50/50"
               )}
             >
-              <div className={cn("grid size-11 shrink-0 place-items-center rounded-xl border font-bold", triggerColors[rule.triggerType])}>
+              <div className={cn("grid size-11 shrink-0 place-items-center rounded-sm border font-bold", triggerColors[rule.triggerType])}>
                 <TriggerIcon className="size-5" />
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h4 className="text-xs font-bold text-slate-900">{rule.name}</h4>
-                  <span className={cn("rounded-md px-2 py-0.5 text-[10px] font-bold uppercase border", triggerColors[rule.triggerType])}>
+                  <span className={cn("rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase border", triggerColors[rule.triggerType])}>
                     {rule.triggerType}
                   </span>
                 </div>
@@ -145,10 +145,10 @@ export function AutomationTab({ onOpenModal }: AutomationTabProps) {
                 </div>
                 <Switch checked={rule.enabled} onCheckedChange={() => toggleRule(rule.id)} />
                 <div className="flex items-center gap-1">
-                  <button onClick={() => toast.success(`Editing rule: ${rule.name}`)} className="rounded-lg p-1.5 hover:bg-slate-100 text-slate-500" title="Edit">
+                  <button onClick={() => toast.success(`Editing rule: ${rule.name}`)} className="rounded-sm p-1.5 hover:bg-slate-100 text-slate-500" title="Edit">
                     <Pencil className="size-4" />
                   </button>
-                  <button onClick={() => handleDelete(rule.id)} className="rounded-lg p-1.5 hover:bg-rose-50 text-rose-600" title="Delete">
+                  <button onClick={() => handleDelete(rule.id)} className="rounded-sm p-1.5 hover:bg-rose-50 text-rose-600" title="Delete">
                     <Trash2 className="size-4" />
                   </button>
                 </div>
@@ -159,7 +159,7 @@ export function AutomationTab({ onOpenModal }: AutomationTabProps) {
       </div>
 
       {/* Visual Workflow Preview Node Diagram */}
-      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+      <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs">
         <h3 className="mb-3 text-xs font-bold text-slate-900 uppercase tracking-wider">Visual Bot Flow Execution Diagram</h3>
         <div className="flex items-center justify-center gap-3 overflow-x-auto py-4">
           {[
@@ -170,7 +170,7 @@ export function AutomationTab({ onOpenModal }: AutomationTabProps) {
             { label: "5. Resolution", sub: "Mark Chat Resolved", color: "bg-slate-100 border-slate-300 text-slate-700" },
           ].map((node, i) => (
             <div key={i} className="flex items-center gap-3">
-              <div className={cn("rounded-xl border-2 px-4 py-3 text-center min-w-[150px] shadow-xs", node.color)}>
+              <div className={cn("rounded-sm border-2 px-4 py-3 text-center min-w-[150px] shadow-xs", node.color)}>
                 <p className="text-[10px] font-bold uppercase tracking-wider opacity-75">{node.label}</p>
                 <p className="text-xs font-bold mt-0.5">{node.sub}</p>
               </div>

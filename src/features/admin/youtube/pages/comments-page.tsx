@@ -87,7 +87,7 @@ function AttentionSummary() {
             onClick={() => set({ status: t.status, reply: t.reply ?? "all", page: "1" })}
             className={cn("flex items-center gap-3 rounded-[10px] border bg-white p-3.5 text-left shadow-[0_1px_2px_rgba(15,27,61,0.04)] transition hover:border-[#C9D1DC] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#E5202E]/25", active ? "border-[#0F1B3D]/25 ring-[3px] ring-[#0F1B3D]/6" : "border-[#E4E9F0]")}
           >
-            <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg", t.tone)}><t.icon className="size-4" /></span>
+            <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", t.tone)}><t.icon className="size-4" /></span>
             <span className="min-w-0">
               <span className="block text-[20px] font-semibold leading-6 tabular-nums text-[#0F1B3D]">{t.count}</span>
               <span className="block truncate text-[12px] font-medium text-[#3C4A66]">{t.label}</span>
@@ -336,7 +336,7 @@ function ThreadDrawer({ thread, onClose, onDelete }: { thread: CommentThread | n
           <>
             <SheetBody className="space-y-4">
               {thread.moderationStatus !== "published" && (
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#FBE3B6] bg-[#FFFAF0] px-3 py-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-sm border border-[#FBE3B6] bg-[#FFFAF0] px-3 py-2">
                   <span className="text-[12.5px] text-[#3C4A66]"><b className="font-semibold text-[#0F1B3D]">{MODERATION_LABEL[thread.moderationStatus]}.</b> Not visible to viewers.</span>
                   <Button size="xs" variant="primary" icon={CheckCircle2} gate={can.canModerateComments} onClick={() => void moderateComments([thread.id], "published")}>Approve</Button>
                 </div>

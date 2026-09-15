@@ -190,11 +190,11 @@ function Header() {
       <div className="flex shrink-0 items-center gap-3">
         <Link
           href="/admin/meta/ads"
-          className="flex h-12 items-center gap-2 rounded-xl bg-[#1769DF] px-4 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#1259BD]"
+          className="flex h-12 items-center gap-2 rounded-sm bg-[#1769DF] px-4 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#1259BD]"
         >
           <span className="text-left"><span className="block">Open Meta Ads Manager</span><span className="block text-[11px] font-medium text-blue-100">Paid ads across Facebook &amp; Instagram</span></span>
         </Link>
-        <button className="flex h-12 w-[230px] items-center gap-2 rounded-xl border border-[#D7E0EB] bg-white px-3 shadow-[0_1px_4px_rgb(31_50_81/0.08)] overflow-hidden">
+        <button className="flex h-12 w-[230px] items-center gap-2 rounded-sm border border-[#D7E0EB] bg-white px-3 shadow-[0_1px_4px_rgb(31_50_81/0.08)] overflow-hidden">
           <CalendarDays className="size-3.5 shrink-0 text-[#19315E]" />
           <span className="text-left leading-none">
             <b className="block text-[11px] leading-4 text-[#172044]">Last 30 days</b>
@@ -236,9 +236,9 @@ function Stat({
   color: string;
 }) {
   return (
-    <div className="flex min-h-[78px] items-center rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-2.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)] transition-shadow hover:shadow-md">
+    <div className="flex min-h-[78px] items-center rounded-sm border border-[#DCE4EE] bg-white px-2.5 py-2.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)] transition-shadow hover:shadow-md">
       <div className="flex w-full items-center gap-2">
-        <span className={cn("grid size-[30px] shrink-0 place-items-center rounded-full", tint[color])}>
+        <span className={cn("grid size-[30px] shrink-0 place-items-center rounded-sm", tint[color])}>
           <Icon className="size-[15px]" />
         </span>
         <div className="min-w-0">
@@ -281,7 +281,7 @@ function Box({
           <h2 className="flex items-center gap-1.5 text-[12px] font-semibold leading-4 text-[#172044]">
             {title}
             {badge && (
-              <i className="grid size-[15px] place-items-center rounded-full bg-[#EB0711] text-[11px] font-semibold not-italic text-white">
+              <i className="grid size-[15px] place-items-center rounded-sm bg-[#EB0711] text-[11px] font-semibold not-italic text-white">
                 {badge}
               </i>
             )}
@@ -320,7 +320,7 @@ function PerformanceOverview() {
         <div className="flex h-6 shrink-0 flex-wrap items-center gap-x-2.5 text-[11px] text-[#52617D]">
           {legend.map(([label, color]) => (
             <span key={label} className="flex items-center gap-1">
-              <i className="size-1.5 rounded-full" style={{ background: color }} />
+              <i className="size-1.5 rounded-sm" style={{ background: color }} />
               {label}
             </span>
           ))}
@@ -416,7 +416,7 @@ function ConnectedAccounts() {
                 <p className="truncate text-[11px] font-semibold leading-4 text-[#172044]">{account.name}</p>
                 <p className="truncate text-[11px] leading-3 text-[#7C89A2]">{account.type}</p>
               </div>
-              <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-[#E5F7EF] px-1.5 py-0.5 text-[11px] font-semibold text-[#078359]">
+              <span className="flex shrink-0 items-center gap-0.5 rounded-sm bg-[#E5F7EF] px-1.5 py-0.5 text-[11px] font-semibold text-[#078359]">
                 <BadgeCheck className="size-2.5" />
                 Connected
               </span>
@@ -447,7 +447,7 @@ function NeedsAttention() {
           <div key={title} className="flex flex-1 items-center gap-2 px-2 py-[9px]">
             <span
               className={cn(
-                "grid size-5 shrink-0 place-items-center rounded-full",
+                "grid size-5 shrink-0 place-items-center rounded-sm",
                 tone === "amber" ? "bg-[#FFF0E2] text-[#F07800]" : "bg-[#FFEAEC] text-[#EA1A26]",
               )}
             >
@@ -589,7 +589,7 @@ function QuickActions() {
               actionSkin[color],
             )}
           >
-            <span className={cn("grid size-6 shrink-0 place-items-center rounded-full", tint[color])}>
+            <span className={cn("grid size-6 shrink-0 place-items-center rounded-sm", tint[color])}>
               <Icon className="size-3.5" />
             </span>
             {label}
@@ -634,7 +634,7 @@ function AudienceInsights() {
           <div className="mt-1 space-y-[3px] px-0.5 text-[11px] text-[#52617D]">
             {gender.map((slice) => (
               <span key={slice.name} className="flex items-center gap-1.5">
-                <i className="size-2 shrink-0 rounded-full" style={{ background: slice.color }} />
+                <i className="size-2 shrink-0 rounded-sm" style={{ background: slice.color }} />
                 <span className="flex-1">{slice.name}</span>
                 <b className="text-[#172044]">{slice.value}%</b>
               </span>
@@ -650,9 +650,9 @@ function AudienceInsights() {
                 className="grid grid-cols-[74px_1fr_26px] items-center gap-2 text-[11px]"
               >
                 <span className="truncate text-[#52617D]">{location.name}</span>
-                <span className="h-2 overflow-hidden rounded-full bg-[#EDF1F7]">
+                <span className="h-2 overflow-hidden rounded-sm bg-[#EDF1F7]">
                   <i
-                    className="block h-full rounded-full bg-[#3186F3]"
+                    className="block h-full rounded-sm bg-[#3186F3]"
                     style={{ width: `${location.value}%` }}
                   />
                 </span>
@@ -690,7 +690,7 @@ function Conversations() {
             <span className="flex min-w-0 items-center gap-1.5">
               <i
                 className={cn(
-                  "grid size-4 shrink-0 place-items-center rounded-full text-[11px] font-semibold not-italic",
+                  "grid size-4 shrink-0 place-items-center rounded-sm text-[11px] font-semibold not-italic",
                   [
                     "bg-[#FFECF1] text-[#D8285F]",
                     "bg-[#E7F0FF] text-[#3478DB]",

@@ -102,7 +102,7 @@ export function TotpStep({ challenge, rememberMe, onVerified, onBack }: TotpStep
 
   return (
     <>
-      <span className="flex size-11 items-center justify-center rounded-xl bg-primary-subtle text-primary">
+      <span className="flex size-11 items-center justify-center rounded-sm bg-primary-subtle text-primary">
         <ShieldCheckIcon size={22} />
       </span>
 
@@ -138,7 +138,7 @@ export function TotpStep({ challenge, rememberMe, onVerified, onBack }: TotpStep
                 onChange={(event) => handleChange(event.target.value, index)}
                 onKeyDown={(event) => handleKeyDown(event, index)}
                 onPaste={handlePaste}
-                className="h-12 w-full min-w-0 rounded-xl border border-input bg-card text-center text-lg font-semibold text-foreground outline-none transition focus:border-ring focus:ring-4 focus:ring-primary/10 disabled:opacity-60 sm:h-13 sm:text-xl"
+                className="h-12 w-full min-w-0 rounded-sm border border-input bg-card text-center text-lg font-semibold text-foreground outline-none transition focus:border-ring focus:ring-4 focus:ring-primary/10 disabled:opacity-60 sm:h-13 sm:text-xl"
               />
             ))}
           </div>

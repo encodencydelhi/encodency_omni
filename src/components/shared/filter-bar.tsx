@@ -36,7 +36,7 @@ export function FilterBar({
           <Button variant="ghost" size="sm" onClick={onClearFilters} className="gap-1.5">
             <FilterXIcon />
             Clear
-            <span className="rounded-full bg-muted px-1.5 text-2xs tabular">{activeFilterCount}</span>
+            <span className="rounded-sm bg-muted px-1.5 text-2xs tabular">{activeFilterCount}</span>
           </Button>
         ) : null}
       </div>

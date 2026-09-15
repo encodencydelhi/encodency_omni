@@ -46,7 +46,7 @@ export function ChannelsStep({
         tip="You can skip this step and connect channels later from client settings."
       />
       <div className="space-y-3 p-5">
-        <div className="flex items-start gap-2.5 rounded-xl border border-[#E0E7FF] bg-[#F8FAFF] px-3.5 py-3">
+        <div className="flex items-start gap-2.5 rounded-sm border border-[#E0E7FF] bg-[#F8FAFF] px-3.5 py-3">
           <Shield className="mt-px size-4 shrink-0 text-[#4F46E5]" />
           <div className="min-w-0 flex-1">
             <b className="block text-[12px] font-semibold text-[#111827]">Your data stays secure</b>
@@ -72,7 +72,7 @@ export function ChannelsStep({
               const meta = STATUS[state];
               const isConnected = state === "connected";
               return (
-                <div key={name} className="flex flex-col rounded-xl border border-[#E6E8F0] bg-white p-3">
+                <div key={name} className="flex flex-col rounded-sm border border-[#E6E8F0] bg-white p-3">
                   <div className="flex items-start gap-2">
                     <ChannelLogo channel={channel} className="size-8 shrink-0" />
                     <div className="min-w-0 flex-1">
@@ -86,13 +86,13 @@ export function ChannelsStep({
                     )}
                   </div>
                   <span className="mt-2 flex items-center gap-1.5 text-[10.5px] font-medium text-[#6B7280]">
-                    <i className={cn("size-1.5 rounded-full", meta.dot)} />
+                    <i className={cn("size-1.5 rounded-sm", meta.dot)} />
                     {meta.label}
                   </span>
                   <button
                     onClick={() => toggle(name)}
                     className={cn(
-                      "mt-2 h-8 w-full rounded-lg text-[11.5px] font-semibold transition-colors",
+                      "mt-2 h-8 w-full rounded-sm text-[11.5px] font-semibold transition-colors",
                       state === "none"
                         ? "bg-[#4F46E5] text-white hover:bg-[#4338CA]"
                         : "border border-[#E2E5EE] bg-[#F8FAFC] text-[#475569] hover:bg-[#F1F5F9]",
@@ -107,7 +107,7 @@ export function ChannelsStep({
         </div>
 
         <div className="grid gap-2.5 lg:grid-cols-2">
-          <div className="rounded-xl border border-[#E6E8F0] bg-white p-3.5">
+          <div className="rounded-sm border border-[#E6E8F0] bg-white p-3.5">
             <div className="mb-2.5 flex items-start gap-2">
               <Send className="mt-px size-4 shrink-0 text-[#4F46E5]" />
               <div>
@@ -135,7 +135,7 @@ export function ChannelsStep({
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#E6E8F0] bg-white p-3.5">
+          <div className="rounded-sm border border-[#E6E8F0] bg-white p-3.5">
             <div className="mb-2.5 flex items-start gap-2">
               <RefreshCw className="mt-px size-4 shrink-0 text-[#4F46E5]" />
               <div>
@@ -181,16 +181,16 @@ export function ChannelsRail({ step }: { step: number }) {
         </div>
         <p className="text-[11px] text-[#6B7280]">{step} of 7 completed</p>
         <div className="mt-2 flex items-center gap-2">
-          <span className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#EDF1F7]">
-            <i className="block h-full rounded-full bg-[#4F46E5]" style={{ width: `${percent}%` }} />
+          <span className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-sm bg-[#EDF1F7]">
+            <i className="block h-full rounded-sm bg-[#4F46E5]" style={{ width: `${percent}%` }} />
           </span>
           <b className="shrink-0 text-[11px] text-[#4F46E5]">{percent}%</b>
         </div>
       </RailCard>
 
       <RailCard>
-        <div className="mb-3 grid h-[108px] place-items-center rounded-xl bg-gradient-to-b from-[#EEF2FF] to-[#F8FAFF]">
-          <span className="grid h-[62px] w-[86px] place-items-center rounded-lg border border-[#C7D2FE] bg-white shadow-sm">
+        <div className="mb-3 grid h-[108px] place-items-center rounded-sm bg-gradient-to-b from-[#EEF2FF] to-[#F8FAFF]">
+          <span className="grid h-[62px] w-[86px] place-items-center rounded-sm border border-[#C7D2FE] bg-white shadow-sm">
             <Link2 className="size-7 text-[#4F46E5]" />
           </span>
         </div>

@@ -150,9 +150,9 @@ function InstagramPreview({ event }: { event: PostDetailData }) {
           <span className="text-[12px] font-[650] text-[#111827]">Instagram</span>
         </div>
         <div className="flex items-center gap-[2px]">
-          <span className="h-[3px] w-[3px] rounded-full bg-[#111827]" />
-          <span className="h-[3px] w-[3px] rounded-full bg-[#111827]" />
-          <span className="h-[3px] w-[3px] rounded-full bg-[#111827]" />
+          <span className="h-[3px] w-[3px] rounded-sm bg-[#111827]" />
+          <span className="h-[3px] w-[3px] rounded-sm bg-[#111827]" />
+          <span className="h-[3px] w-[3px] rounded-sm bg-[#111827]" />
         </div>
       </div>
 
@@ -203,7 +203,7 @@ function FacebookPreview({ event }: { event: PostDetailData }) {
   return (
     <div className="flex h-full w-full max-w-none flex-col overflow-hidden rounded-[10px] border border-[#e4e8ef] bg-white shadow-sm">
       <div className="flex items-center gap-[8px] px-[10px] pt-[8px] pb-[6px]">
-        <div className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full bg-[#1877f2]">
+        <div className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-sm bg-[#1877f2]">
           <FaFacebook size={14} className="text-white" />
         </div>
         <div className="min-w-0">
@@ -229,7 +229,7 @@ function LinkedInPreview({ event }: { event: PostDetailData }) {
   return (
     <div className="flex h-full w-full max-w-none flex-col overflow-hidden rounded-[10px] border border-[#e4e8ef] bg-white shadow-sm">
       <div className="flex items-center gap-[8px] px-[10px] pt-[8px] pb-[6px]">
-        <div className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full bg-[#0a66c2]">
+        <div className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-sm bg-[#0a66c2]">
           <FaLinkedin size={14} className="text-white" />
         </div>
         <div className="min-w-0">
@@ -257,7 +257,7 @@ function YouTubePreview({ event }: { event: PostDetailData }) {
       <div className={`relative mx-[10px] mt-[10px] overflow-hidden bg-[#0f0f0f] ${isShort ? "aspect-[9/16] max-h-[400px]" : "aspect-video"}`}>
         <img src={event.image} alt={event.name} className="h-full w-full object-cover opacity-90" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="grid h-[44px] w-[44px] place-items-center rounded-full bg-black/60 text-white backdrop-blur-sm">
+          <div className="grid h-[44px] w-[44px] place-items-center rounded-sm bg-black/60 text-white backdrop-blur-sm">
             <svg viewBox="0 0 24 24" className="h-[20px] w-[20px] pl-1" fill="currentColor">
               <path d="M8 5v14l11-7z" />
             </svg>
@@ -288,7 +288,7 @@ function WhatsAppPreview({ event }: { event: PostDetailData }) {
     <div className="flex h-full w-full max-w-none flex-col overflow-hidden rounded-[10px] bg-[#e5ddd5] shadow-sm">
       <div className="bg-[#075e54] px-[12px] py-[10px]">
         <div className="flex items-center gap-[8px]">
-          <div className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full bg-[#16b866]">
+          <div className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-sm bg-[#16b866]">
             <FaWhatsapp size={14} className="text-white" />
           </div>
           <span className="text-[11px] font-[650] text-white">{event.campaign}</span>
@@ -312,7 +312,7 @@ function GMBPreview({ event }: { event: PostDetailData }) {
   return (
     <div className="flex h-full w-full max-w-none flex-col overflow-hidden rounded-[10px] border border-[#e4e8ef] bg-white shadow-sm">
       <div className="flex items-center gap-[8px] px-[10px] pt-[8px] pb-[6px]">
-        <div className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full bg-[#4285f4] text-[11px] font-[800] text-white">
+        <div className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-sm bg-[#4285f4] text-[11px] font-[800] text-white">
           G
         </div>
         <div className="min-w-0">
@@ -440,11 +440,10 @@ export function PostDetailModal({
                 }}
                 title={isRescheduling ? "Done Rescheduling" : "Reschedule Post Date & Time"}
                 aria-label="Reschedule"
-                className={`group grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full border shadow-md transition-all hover:scale-110 active:scale-95 max-[480px]:h-[26px] max-[480px]:w-[26px] ${
-                  isRescheduling
+                className={`group grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-sm border shadow-md transition-all hover:scale-110 active:scale-95 max-[480px]:h-[26px] max-[480px]:w-[26px] ${isRescheduling
                     ? "border-[#2563eb] bg-[#2563eb] text-white ring-2 ring-blue-300"
                     : "border-[#dfe4ec] bg-white text-[#4b5563] hover:border-[#2563eb] hover:bg-[#eff6ff] hover:text-[#2563eb]"
-                }`}
+                  }`}
               >
                 <Clock size={14} strokeWidth={2.2} className={`transition-transform duration-200 ${isRescheduling ? "rotate-45" : "group-hover:rotate-45"}`} />
               </button>
@@ -456,7 +455,7 @@ export function PostDetailModal({
                 }}
                 title="Edit Post"
                 aria-label="Edit Post"
-                className="group grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full border border-[#dfe4ec] bg-white text-[#4b5563] shadow-md transition-all hover:border-[#ef2029] hover:bg-[#fff5f5] hover:text-[#ef2029] hover:scale-110 active:scale-95 max-[480px]:h-[26px] max-[480px]:w-[26px]"
+                className="group grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-sm border border-[#dfe4ec] bg-white text-[#4b5563] shadow-md transition-all hover:border-[#ef2029] hover:bg-[#fff5f5] hover:text-[#ef2029] hover:scale-110 active:scale-95 max-[480px]:h-[26px] max-[480px]:w-[26px]"
               >
                 <Pencil size={13} strokeWidth={2} className="transition-transform group-hover:rotate-12" />
               </button>
@@ -468,7 +467,7 @@ export function PostDetailModal({
                 onClick={handleSave}
                 title="Save Changes"
                 aria-label="Save Changes"
-                className="grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full bg-[#059669] text-white shadow-md transition-all hover:bg-[#047857] hover:scale-110 active:scale-95 max-[480px]:h-[26px] max-[480px]:w-[26px]"
+                className="grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-sm bg-[#059669] text-white shadow-md transition-all hover:bg-[#047857] hover:scale-110 active:scale-95 max-[480px]:h-[26px] max-[480px]:w-[26px]"
               >
                 <Save size={13} strokeWidth={2} />
               </button>
@@ -477,7 +476,7 @@ export function PostDetailModal({
                 onClick={handleCancel}
                 title="Cancel Edit"
                 aria-label="Cancel Edit"
-                className="grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full border border-[#dfe4ec] bg-white text-[#6b7280] shadow-md transition-all hover:bg-[#f3f4f6] hover:scale-110 active:scale-95 max-[480px]:h-[26px] max-[480px]:w-[26px]"
+                className="grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-sm border border-[#dfe4ec] bg-white text-[#6b7280] shadow-md transition-all hover:bg-[#f3f4f6] hover:scale-110 active:scale-95 max-[480px]:h-[26px] max-[480px]:w-[26px]"
               >
                 <XCircle size={13} strokeWidth={2} />
               </button>
@@ -489,7 +488,7 @@ export function PostDetailModal({
             onClick={onClose}
             aria-label="Close"
             title="Close"
-            className="grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full bg-gradient-to-br from-[#ef2029] to-[#d91922] text-white shadow-lg shadow-red-200/50 transition-all hover:bg-[#d91922] hover:scale-110 active:scale-95 hover:shadow-xl max-[480px]:h-[26px] max-[480px]:w-[26px]"
+            className="grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-sm bg-gradient-to-br from-[#ef2029] to-[#d91922] text-white shadow-lg shadow-red-200/50 transition-all hover:bg-[#d91922] hover:scale-110 active:scale-95 hover:shadow-xl max-[480px]:h-[26px] max-[480px]:w-[26px]"
           >
             <X size={14} strokeWidth={2.2} />
           </button>
@@ -497,7 +496,7 @@ export function PostDetailModal({
 
         {/* Reschedule Success Toast */}
         {rescheduleSuccess && (
-          <div className="absolute left-1/2 top-[12px] z-[58] -translate-x-1/2 animate-in fade-in zoom-in-95 duration-200 flex items-center gap-2 rounded-full border border-[#86efac] bg-[#f0fdf4] px-4 py-2 text-[11px] font-semibold text-[#15803d] shadow-lg">
+          <div className="absolute left-1/2 top-[12px] z-[58] -translate-x-1/2 animate-in fade-in zoom-in-95 duration-200 flex items-center gap-2 rounded-sm border border-[#86efac] bg-[#f0fdf4] px-4 py-2 text-[11px] font-semibold text-[#15803d] shadow-lg">
             <CheckCircle size={16} className="text-[#16a34a]" />
             <span>{rescheduleSuccess}</span>
           </div>
@@ -513,7 +512,7 @@ export function PostDetailModal({
         {/* Right — Post Details */}
         <div className="min-w-0 flex-1 overflow-y-auto bg-white px-[20px] py-[18px] max-[900px]:px-[18px] max-[480px]:px-[12px] max-[480px]:py-[14px]">
           {/* Decorative Header Accent */}
-          <div className="mb-[14px] h-[3px] w-full rounded-full bg-gradient-to-r from-[#ef2029] via-[#f59e0b] to-[#8055d2]" />
+          <div className="mb-[14px] h-[3px] w-full rounded-sm bg-gradient-to-r from-[#ef2029] via-[#f59e0b] to-[#8055d2]" />
 
           {/* Title */}
           <h2 className="m-0 mb-[6px] pr-[115px] text-[16px] font-[750] leading-[1.2] text-[#1c2743] max-[480px]:text-[14px]">
@@ -531,24 +530,23 @@ export function PostDetailModal({
 
           {/* Platform / Status / Time / Priority */}
           <div className="mb-[8px] flex flex-wrap items-center gap-[6px]">
-            <span className={`flex h-[26px] items-center gap-[5px] rounded-full ${platformColor.bg} px-[10px] text-[10px] font-[650] ${platformColor.text}`}>
+            <span className={`flex h-[26px] items-center gap-[5px] rounded-sm ${platformColor.bg} px-[10px] text-[10px] font-[650] ${platformColor.text}`}>
               <PlatformIcon type={event.type} size={12} />
               {getPlatformLabel(event.type)}
             </span>
-            <span className={`flex h-[26px] items-center rounded-full px-[10px] text-[10px] font-[650] ${getStatusClasses(event.status)}`}>
+            <span className={`flex h-[26px] items-center rounded-sm px-[10px] text-[10px] font-[650] ${getStatusClasses(event.status)}`}>
               {event.status}
             </span>
-            <span className="flex h-[26px] items-center gap-[4px] rounded-full bg-[#f5f7fa] px-[10px] text-[10px] font-[500] text-[#66738a]">
+            <span className="flex h-[26px] items-center gap-[4px] rounded-sm bg-[#f5f7fa] px-[10px] text-[10px] font-[500] text-[#66738a]">
               <Clock size={11} strokeWidth={1.8} />
               {formData.time}
             </span>
             {event.priority && (
-              <span className={`flex h-[26px] items-center gap-[4px] rounded-full px-[10px] text-[10px] font-[650] ${
-                event.priority === "Urgent" ? "bg-[#fef2f2] text-[#dc2626]" :
-                event.priority === "High" ? "bg-[#fff7ed] text-[#ea580c]" :
-                event.priority === "Medium" ? "bg-[#fefce8] text-[#ca8a04]" :
-                "bg-[#f0fdf4] text-[#16a34a]"
-              }`}>
+              <span className={`flex h-[26px] items-center gap-[4px] rounded-sm px-[10px] text-[10px] font-[650] ${event.priority === "Urgent" ? "bg-[#fef2f2] text-[#dc2626]" :
+                  event.priority === "High" ? "bg-[#fff7ed] text-[#ea580c]" :
+                    event.priority === "Medium" ? "bg-[#fefce8] text-[#ca8a04]" :
+                      "bg-[#f0fdf4] text-[#16a34a]"
+                }`}>
                 <AlertTriangle size={10} strokeWidth={1.8} />
                 {event.priority}
               </span>
@@ -574,7 +572,7 @@ export function PostDetailModal({
           {/* Created By / Approved By */}
           <div className="mb-[10px] grid grid-cols-2 gap-[8px]">
             <div className="flex items-center gap-[8px] rounded-[8px] border border-[#e7ebf1] bg-white px-[10px] py-[8px]">
-              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full bg-[#fff0f2] text-[#e12630]">
+              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-sm bg-[#fff0f2] text-[#e12630]">
                 <User size={14} strokeWidth={1.8} />
               </span>
               <div className="min-w-0">
@@ -583,7 +581,7 @@ export function PostDetailModal({
               </div>
             </div>
             <div className="flex items-center gap-[8px] rounded-[8px] border border-[#e7ebf1] bg-white px-[10px] py-[8px]">
-              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full bg-[#e5f7ef] text-[#078359]">
+              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-sm bg-[#e5f7ef] text-[#078359]">
                 <CheckCircle size={14} strokeWidth={1.8} />
               </span>
               <div className="min-w-0">
@@ -595,7 +593,7 @@ export function PostDetailModal({
 
           {/* Campaign */}
           <div className="mb-[10px] flex items-center gap-[8px] rounded-[8px] border border-[#e7ebf1] bg-white px-[10px] py-[8px]">
-            <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full bg-[#f0eaff] text-[#8055d2]">
+            <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-sm bg-[#f0eaff] text-[#8055d2]">
               <Tag size={14} strokeWidth={1.8} />
             </span>
             <div className="min-w-0 flex-1">
@@ -618,7 +616,7 @@ export function PostDetailModal({
 
           {/* Caption */}
           <div className="mb-[10px] flex items-start gap-[8px]">
-            <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full bg-[#edf2f8] text-[#29354f]">
+            <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-sm bg-[#edf2f8] text-[#29354f]">
               <FileText size={14} strokeWidth={1.8} />
             </span>
             <div className="min-w-0 flex-1">
@@ -642,7 +640,7 @@ export function PostDetailModal({
           {/* Content Type */}
           {event.contentType && (
             <div className="mb-[10px] flex items-center gap-[8px]">
-              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full bg-[#fef3c7] text-[#d97706]">
+              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-sm bg-[#fef3c7] text-[#d97706]">
                 <svg viewBox="0 0 24 24" className="h-[14px] w-[14px]" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <rect x="3" y="3" width="18" height="18" rx="2" />
                   <circle cx="9" cy="9" r="2" />
@@ -667,17 +665,15 @@ export function PostDetailModal({
 
           {/* Post Date & Time */}
           <div
-            className={`mb-[10px] rounded-[8px] transition-all ${
-              isRescheduling
+            className={`mb-[10px] rounded-[8px] transition-all ${isRescheduling
                 ? "border border-[#93c5fd] bg-[#eff6ff] p-[10px] shadow-sm ring-2 ring-blue-100"
                 : "flex items-center gap-[8px] p-[2px]"
-            }`}
+              }`}
           >
             <div className="flex w-full items-start gap-[8px]">
               <span
-                className={`grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full transition-colors ${
-                  isRescheduling ? "bg-[#2563eb] text-white" : "bg-[#edf2f8] text-[#29354f]"
-                }`}
+                className={`grid h-[28px] w-[28px] shrink-0 place-items-center rounded-sm transition-colors ${isRescheduling ? "bg-[#2563eb] text-white" : "bg-[#edf2f8] text-[#29354f]"
+                  }`}
               >
                 <CalendarDays size={14} strokeWidth={1.8} />
               </span>
@@ -787,7 +783,7 @@ export function PostDetailModal({
           {/* Location */}
           {event.location && (
             <div className="mb-[10px] flex items-center gap-[8px]">
-              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full bg-[#fef2f2] text-[#dc2626]">
+              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-sm bg-[#fef2f2] text-[#dc2626]">
                 <MapPin size={14} strokeWidth={1.8} />
               </span>
               <div className="flex-1">
@@ -809,7 +805,7 @@ export function PostDetailModal({
           {/* Hashtags */}
           {event.hashtags && event.hashtags.length > 0 && (
             <div className="mb-[10px] flex items-start gap-[8px]">
-              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full bg-[#ede9fe] text-[#7c3aed]">
+              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-sm bg-[#ede9fe] text-[#7c3aed]">
                 <Hash size={14} strokeWidth={1.8} />
               </span>
               <div className="min-w-0 flex-1">
@@ -825,7 +821,7 @@ export function PostDetailModal({
                 ) : (
                   <div className="mt-[4px] flex flex-wrap gap-[4px]">
                     {event.hashtags.map((tag) => (
-                      <span key={tag} className="rounded-full bg-[#f0eaff] px-[8px] py-[2px] text-[9px] font-[600] text-[#7c3aed]">
+                      <span key={tag} className="rounded-sm bg-[#f0eaff] px-[8px] py-[2px] text-[9px] font-[600] text-[#7c3aed]">
                         {tag}
                       </span>
                     ))}
@@ -838,7 +834,7 @@ export function PostDetailModal({
           {/* Estimated Reach */}
           {event.reach && (
             <div className="mb-[10px] flex items-center gap-[8px]">
-              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full bg-[#e0f2fe] text-[#0284c7]">
+              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-sm bg-[#e0f2fe] text-[#0284c7]">
                 <Eye size={14} strokeWidth={1.8} />
               </span>
               <div className="flex-1">
@@ -863,21 +859,21 @@ export function PostDetailModal({
               <span className="mb-[8px] block text-[10px] font-[700] text-[#29354f]">Engagement Preview</span>
               <div className="grid grid-cols-3 gap-[8px]">
                 <div className="flex flex-col items-center gap-[2px]">
-                  <span className="grid h-[28px] w-[28px] place-items-center rounded-full bg-[#fff0f2] text-[#e12630]">
+                  <span className="grid h-[28px] w-[28px] place-items-center rounded-sm bg-[#fff0f2] text-[#e12630]">
                     <Heart size={12} strokeWidth={1.8} />
                   </span>
                   <span className="text-[12px] font-[700] text-[#1c2743]">{event.engagement.likes}</span>
                   <span className="text-[8px] text-[#8a94a5]">Likes</span>
                 </div>
                 <div className="flex flex-col items-center gap-[2px]">
-                  <span className="grid h-[28px] w-[28px] place-items-center rounded-full bg-[#e0f2fe] text-[#0284c7]">
+                  <span className="grid h-[28px] w-[28px] place-items-center rounded-sm bg-[#e0f2fe] text-[#0284c7]">
                     <MessageSquare size={12} strokeWidth={1.8} />
                   </span>
                   <span className="text-[12px] font-[700] text-[#1c2743]">{event.engagement.comments}</span>
                   <span className="text-[8px] text-[#8a94a5]">Comments</span>
                 </div>
                 <div className="flex flex-col items-center gap-[2px]">
-                  <span className="grid h-[28px] w-[28px] place-items-center rounded-full bg-[#e5f7ef] text-[#078359]">
+                  <span className="grid h-[28px] w-[28px] place-items-center rounded-sm bg-[#e5f7ef] text-[#078359]">
                     <Share2 size={12} strokeWidth={1.8} />
                   </span>
                   <span className="text-[12px] font-[700] text-[#1c2743]">{event.engagement.shares}</span>
@@ -890,7 +886,7 @@ export function PostDetailModal({
           {/* Notes */}
           {event.notes && (
             <div className="mb-[10px] flex items-start gap-[8px]">
-              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full bg-[#fefce8] text-[#ca8a04]">
+              <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-sm bg-[#fefce8] text-[#ca8a04]">
                 <StickyNote size={14} strokeWidth={1.8} />
               </span>
               <div className="min-w-0 flex-1">
@@ -913,7 +909,7 @@ export function PostDetailModal({
 
           {/* Media */}
           <div className="mb-[12px] flex items-center gap-[8px]">
-            <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full bg-[#edf2f8] text-[#29354f]">
+            <span className="grid h-[28px] w-[28px] shrink-0 place-items-center rounded-sm bg-[#edf2f8] text-[#29354f]">
               <svg viewBox="0 0 24 24" className="h-[14px] w-[14px]" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <rect x="3" y="3" width="18" height="18" rx="2" />
                 <circle cx="9" cy="9" r="2" />

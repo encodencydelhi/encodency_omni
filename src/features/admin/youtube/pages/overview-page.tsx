@@ -163,7 +163,7 @@ function ChannelProfile({ className }: { className?: string }) {
       <div className="px-4 pb-3.5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="flex min-w-0 items-end gap-3">
-            <span className="relative -mt-9 grid size-[72px] shrink-0 place-items-center overflow-hidden rounded-full border-4 border-white bg-white shadow-[0_2px_8px_rgba(15,27,61,0.15)]">
+            <span className="relative -mt-9 grid size-[72px] shrink-0 place-items-center overflow-hidden rounded-sm border-4 border-white bg-white shadow-[0_2px_8px_rgba(15,27,61,0.15)]">
               <Image src={channel.avatarUrl} alt="" width={64} height={64} className="size-full object-contain" />
             </span>
             <div className="min-w-0 pt-2">
@@ -274,7 +274,7 @@ function VideoPickerDialog({ open, onOpenChange, videos, onPick }: { open: boole
           {list.length === 0 && <li className="py-6 text-center text-[12.5px] text-[#6B7890]">No videos match “{q}”.</li>}
           {list.map((v) => (
             <li key={v.id}>
-              <button type="button" onClick={() => onPick(v)} className={cn("flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left hover:bg-[#F8FAFC]", yt.focus)}>
+              <button type="button" onClick={() => onPick(v)} className={cn("flex w-full items-center gap-3 rounded-sm px-2 py-1.5 text-left hover:bg-[#F8FAFC]", yt.focus)}>
                 <Thumb src={v.thumbnailUrl} className="w-[72px]" sizes="72px" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[12.5px] font-semibold text-[#0F1B3D]">{v.title}</span>
@@ -371,7 +371,7 @@ function PerformanceCard({
                 { value: "monthly", label: "Monthly", disabled: days < 90, description: days < 90 ? "Needs 90+ days" : undefined },
               ]}
             />
-            <label className="flex h-8 cursor-pointer items-center gap-2 rounded-lg border border-[#DCE2EA] bg-white px-2.5 text-[12px] font-medium text-[#24324F]">
+            <label className="flex h-8 cursor-pointer items-center gap-2 rounded-sm border border-[#DCE2EA] bg-white px-2.5 text-[12px] font-medium text-[#24324F]">
               <Switch checked={compare} onCheckedChange={setCompare} className="scale-90" aria-label="Compare with previous period" />
               Compare
             </label>
@@ -507,7 +507,7 @@ function AudienceSnapshot({ className }: { className?: string }) {
                 <div className="space-y-4">
                   <div className="flex gap-2">
                     {a.gender.slice(0, 2).map((g, i) => (
-                      <div key={g.label} className="flex-1 rounded-lg bg-[#F8FAFC] px-3 py-2">
+                      <div key={g.label} className="flex-1 rounded-sm bg-[#F8FAFC] px-3 py-2">
                         <p className="text-[11.5px] text-[#6B7890]">{g.label}</p>
                         <p className="text-[17px] font-semibold tabular-nums" style={{ color: i === 0 ? "#2563EB" : "#DB2777" }}>{g.value.toFixed(1)}%</p>
                       </div>
@@ -664,7 +664,7 @@ function UpcomingContent() {
             return (
               <li key={item.id}>
                 <Link href={item.href} className="group flex items-center gap-3 px-4 py-2.5 hover:bg-[#F8FAFC]">
-                  <span className={cn("grid w-11 shrink-0 place-items-center rounded-lg py-1 leading-none", d ? "bg-[#FEF1F2] text-[#C81E2B]" : "bg-[#F1F4F8] text-[#6B7890]")}>
+                  <span className={cn("grid w-11 shrink-0 place-items-center rounded-sm py-1 leading-none", d ? "bg-[#FEF1F2] text-[#C81E2B]" : "bg-[#F1F4F8] text-[#6B7890]")}>
                     <small className="text-[10px] font-semibold uppercase">{d ? format(d, "MMM") : "No"}</small>
                     <b className="text-[15px] font-semibold leading-5">{d ? format(d, "d") : "date"}</b>
                   </span>

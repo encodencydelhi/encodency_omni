@@ -118,7 +118,7 @@ function StatCard({ item }: { item: { icon: React.ComponentType<{ size?: number 
 
   return (
     <div className="flex h-[82px] items-center gap-3 rounded-[7px] border border-[#e6eaf0] bg-white px-[13px] py-3 shadow-[0_2px_8px_rgba(25,39,65,.025)]">
-      <div className={`grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full ${iconTone}`}>
+      <div className={`grid h-[38px] w-[38px] shrink-0 place-items-center rounded-sm ${iconTone}`}>
         <Icon size={18} />
       </div>
       <div className="flex min-w-0 flex-col">
@@ -241,8 +241,8 @@ export function CampaignsPage() {
               key={tab.filter}
               onClick={() => setActiveTab(tab.filter)}
               className={`relative h-[42px] shrink-0 border-0 bg-transparent px-0 text-[10px] transition-colors ${activeTab === tab.filter
-                  ? "font-[750] text-[#19233e] after:absolute after:bottom-0 after:left-[-6px] after:right-[-6px] after:h-0.5 after:bg-[#e62c36]"
-                  : "text-[#5f6c83] hover:text-[#29354e]"
+                ? "font-[750] text-[#19233e] after:absolute after:bottom-0 after:left-[-6px] after:right-[-6px] after:h-0.5 after:bg-[#e62c36]"
+                : "text-[#5f6c83] hover:text-[#29354e]"
                 }`}
             >
               {tab.label} ({tab.count})
@@ -312,10 +312,10 @@ export function CampaignsPage() {
                         </div>
                       </td>
                       <td className="px-2.5">
-                        <span className={`inline-flex items-center gap-1 rounded-lg px-[7px] py-1 text-[12px] font-semibold ${c.statusTone === "active" ? "bg-[#e4f8ee] text-[#16a16d]" :
-                            c.statusTone === "scheduled" ? "bg-[#e8f2ff] text-[#397fd4]" :
-                              c.statusTone === "completed" ? "bg-[#e6f8ee] text-[#16a16d]" : "bg-[#eef2f6] text-[#66748a]"
-                          }`}><i className="h-[5px] w-[5px] rounded-full bg-current" />{c.status}</span>
+                        <span className={`inline-flex items-center gap-1 rounded-sm px-[7px] py-1 text-[12px] font-semibold ${c.statusTone === "active" ? "bg-[#e4f8ee] text-[#16a16d]" :
+                          c.statusTone === "scheduled" ? "bg-[#e8f2ff] text-[#397fd4]" :
+                            c.statusTone === "completed" ? "bg-[#e6f8ee] text-[#16a16d]" : "bg-[#eef2f6] text-[#66748a]"
+                          }`}><i className="h-[5px] w-[5px] rounded-sm bg-current" />{c.status}</span>
                       </td>
                       <td className="px-2.5 leading-[1.3]"><span className="block">{c.dates[0]}</span><span className="block text-[#5c687d]">- {c.dates[1]}</span></td>
                       <td className="px-2.5"><strong className="block text-[12px] text-[#26334d]">{c.leads}</strong>{c.leadGrowth && <em className="text-[12px] font-semibold not-italic text-[#13a16b]">↑ {c.leadGrowth}</em>}</td>
@@ -372,9 +372,9 @@ export function CampaignsPage() {
             <SectionHeader title="Campaign Performance Overview" />
             <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-0.5 text-[11px] text-[#657189]">
               <div className="flex gap-3">
-                <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-full bg-[#e4252e]" />Leads</span>
-                <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-full bg-[#3389e7]" />Conversions</span>
-                <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-full bg-[#e887ae]" />Spend</span>
+                <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-sm bg-[#e4252e]" />Leads</span>
+                <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-sm bg-[#3389e7]" />Conversions</span>
+                <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-sm bg-[#e887ae]" />Spend</span>
               </div>
               <button className="flex h-6 items-center gap-1 rounded border border-[#dfe4eb] bg-white px-[7px] text-[11px]">Last 30 days<ChevronDown size={9} /></button>
             </div>
@@ -386,7 +386,7 @@ export function CampaignsPage() {
             <div className="px-3 pt-1">
               {topCampaigns.map(([name, meta, score, tone], i) => (
                 <div className="grid min-h-10 grid-cols-[22px_1fr_32px] items-center gap-2 border-b border-[#f0f2f5] py-2 last:border-0" key={name}>
-                  <span className="grid h-[21px] w-[21px] place-items-center rounded-full bg-[#f0f3f7] text-[11px] font-[750] text-[#5d6a80]">{i + 1}</span>
+                  <span className="grid h-[21px] w-[21px] place-items-center rounded-sm bg-[#f0f3f7] text-[11px] font-[750] text-[#5d6a80]">{i + 1}</span>
                   <div className="min-w-0"><b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[#35415a]">{name}</b><small className="text-[10px] text-[#8993a5]">{meta}</small></div>
                   <div className="relative grid h-[30px] w-[30px] place-items-center text-[11px] font-semibold">
                     <svg className="h-[30px] w-[30px] -rotate-90" viewBox="0 0 30 30">
@@ -463,7 +463,7 @@ export function CampaignsPage() {
                   })()}
                 </svg>
 
-                <div className="absolute inset-[25px] flex flex-col items-center justify-center rounded-full bg-white text-center">
+                <div className="absolute inset-[25px] flex flex-col items-center justify-center rounded-sm bg-white text-center">
                   <strong className="text-[16px] leading-none">1,248</strong>
                   <span className="mt-0.5 text-[11px] text-[#8a94a6]">
                     Total Leads
@@ -491,7 +491,7 @@ export function CampaignsPage() {
             <div className="px-3">
               {milestones.map(([title, meta, tone]) => (
                 <div key={title} className="grid min-h-[34px] grid-cols-[23px_1fr] items-center gap-[7px] border-b border-[#f0f2f5] last:border-0">
-                  <span className={`grid h-[21px] w-[21px] place-items-center rounded-full border-2 ${tone === "green" ? "border-[#18a773] text-[#18a773]" : "border-[#e6303a] text-[#e6303a]"}`}><CalendarDays size={11} /></span>
+                  <span className={`grid h-[21px] w-[21px] place-items-center rounded-sm border-2 ${tone === "green" ? "border-[#18a773] text-[#18a773]" : "border-[#e6303a] text-[#e6303a]"}`}><CalendarDays size={11} /></span>
                   <div><b className="block text-[12px]">{title}</b><small className="mt-0.5 block text-[12px] text-[#8b95a6]">{meta}</small></div>
                 </div>
               ))}
@@ -509,7 +509,7 @@ export function CampaignsPage() {
           ] as [React.ComponentType<{ size?: number }>, string, string, string, string][]).map(([Icon, title, desc, button, tone]) => (
             <div key={title} className="flex flex-col rounded-[7px] border border-[#e5e9ef] bg-white p-3">
               <div className="flex items-start gap-2.5">
-                <span className={`grid h-[34px] w-[34px] shrink-0 place-items-center rounded-full ${tone === "red" ? "bg-[#fff0f1] text-[#e42a35]" : tone === "purple" ? "bg-[#f0eaff] text-[#8156d7]" : "bg-[#e8f2ff] text-[#3582da]"}`}><Icon size={17} /></span>
+                <span className={`grid h-[34px] w-[34px] shrink-0 place-items-center rounded-sm ${tone === "red" ? "bg-[#fff0f1] text-[#e42a35]" : tone === "purple" ? "bg-[#f0eaff] text-[#8156d7]" : "bg-[#e8f2ff] text-[#3582da]"}`}><Icon size={17} /></span>
                 <div className="min-w-0 flex-1">
                   <b className="block text-[12px] text-[#17223d]">{title}</b>
                   <p className="mt-0.5 text-[11px] leading-[1.4] text-[#8b95a6]">{desc}</p>

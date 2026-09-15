@@ -127,7 +127,7 @@ export function KpiCard({
           {Icon && <Icon className="size-3.5 shrink-0" />}
           <span className="truncate">{meta.label}</span>
         </span>
-        {active && <span className="size-2 shrink-0 rounded-full" style={{ background: meta.color }} />}
+        {active && <span className="size-2 shrink-0 rounded-sm" style={{ background: meta.color }} />}
       </span>
       {unavailable ? (
         <span className="mt-2 block text-[12px] leading-5 text-[#98A2B3]">{unavailable}</span>
@@ -212,16 +212,16 @@ export function TrendChart({
               if (!active || !row) return null;
               const delta = changePct(row.value, row.previous);
               return (
-                <div className="min-w-[180px] rounded-lg border border-[#E4E9F0] bg-white px-3 py-2 text-[12px] shadow-[0_12px_32px_-8px_rgba(15,27,61,0.2)]">
+                <div className="min-w-[180px] rounded-sm border border-[#E4E9F0] bg-white px-3 py-2 text-[12px] shadow-[0_12px_32px_-8px_rgba(15,27,61,0.2)]">
                   <p className="font-semibold text-[#0F1B3D]">{format(parseISO(row.date), granularity === "daily" ? "EEE, MMM d, yyyy" : granularity === "weekly" ? "'Week of' MMM d" : "MMMM yyyy")}</p>
                   <p className="mt-1.5 flex items-center justify-between gap-4">
-                    <span className="flex items-center gap-1.5 text-[#6B7890]"><i className="size-2 rounded-full" style={{ background: meta.color }} />{meta.label}</span>
+                    <span className="flex items-center gap-1.5 text-[#6B7890]"><i className="size-2 rounded-sm" style={{ background: meta.color }} />{meta.label}</span>
                     <b className="tabular-nums text-[#0F1B3D]">{formatMetric(metric, row.value)}</b>
                   </p>
                   {compare && row.previous !== null && (
                     <>
                       <p className="mt-1 flex items-center justify-between gap-4">
-                        <span className="flex items-center gap-1.5 text-[#6B7890]"><i className="size-2 rounded-full bg-[#C9D1DC]" />Previous{row.previousDate ? ` (${format(parseISO(row.previousDate), "MMM d")})` : ""}</span>
+                        <span className="flex items-center gap-1.5 text-[#6B7890]"><i className="size-2 rounded-sm bg-[#C9D1DC]" />Previous{row.previousDate ? ` (${format(parseISO(row.previousDate), "MMM d")})` : ""}</span>
                         <span className="tabular-nums text-[#3C4A66]">{formatMetric(metric, row.previous)}</span>
                       </p>
                       <p className="mt-1 text-right"><TrendDelta value={delta} /></p>
@@ -328,8 +328,8 @@ export function BarList({ data, color = "#2563EB", format: fmt = (v: number) => 
       {data.map((row) => (
         <li key={row.label} className="grid grid-cols-[minmax(72px,120px)_1fr_auto] items-center gap-2.5 text-[12.5px]">
           <span className="truncate text-[#3C4A66]">{row.label}</span>
-          <span className="h-2 overflow-hidden rounded-full bg-[#EEF1F5]">
-            <span className="block h-full rounded-full" style={{ width: `${(row.value / top) * 100}%`, background: color }} />
+          <span className="h-2 overflow-hidden rounded-sm bg-[#EEF1F5]">
+            <span className="block h-full rounded-sm" style={{ width: `${(row.value / top) * 100}%`, background: color }} />
           </span>
           <b className="min-w-[44px] text-right font-semibold tabular-nums text-[#0F1B3D]">{fmt(row.value)}</b>
         </li>
@@ -351,7 +351,7 @@ export function ColumnChart({ data, height = 160, color = "#E5202E", labelFormat
               const row = payload?.[0]?.payload as { label: string; value: number } | undefined;
               if (!active || !row) return null;
               return (
-                <div className="rounded-lg border border-[#E4E9F0] bg-white px-2.5 py-1.5 text-[12px] shadow-md">
+                <div className="rounded-sm border border-[#E4E9F0] bg-white px-2.5 py-1.5 text-[12px] shadow-md">
                   <p className="text-[#6B7890]">{labelFormat(row.label)}</p>
                   <b className="text-[#0F1B3D]">{row.value.toLocaleString("en-IN")} views</b>
                 </div>
@@ -383,7 +383,7 @@ export function RetentionChart({ data, height = 240, durationSec }: { data: { po
               const row = payload?.[0]?.payload as { position: number; retention: number; typical: number } | undefined;
               if (!active || !row) return null;
               return (
-                <div className="rounded-lg border border-[#E4E9F0] bg-white px-3 py-2 text-[12px] shadow-md">
+                <div className="rounded-sm border border-[#E4E9F0] bg-white px-3 py-2 text-[12px] shadow-md">
                   <p className="font-semibold text-[#0F1B3D]">At {label(row.position)}</p>
                   <p className="mt-1 text-[#3C4A66]">This content: <b>{row.retention}%</b> still watching</p>
                   <p className="text-[#6B7890]">Typical: {row.typical}%</p>
@@ -466,8 +466,8 @@ export function Funnel({ steps }: { steps: { label: string; value: string; rate?
               ↓ <b className="font-semibold text-[#0F1B3D]">{step.rate}</b>
             </p>
           )}
-          <div className="relative h-11 overflow-hidden rounded-lg bg-[#F3F5F9]">
-            <span className="absolute inset-y-0 left-0 rounded-lg bg-gradient-to-r from-[#FDE3E5] to-[#FBD0D4]" style={{ width: `${Math.max(12, step.width)}%` }} />
+          <div className="relative h-11 overflow-hidden rounded-sm bg-[#F3F5F9]">
+            <span className="absolute inset-y-0 left-0 rounded-sm bg-gradient-to-r from-[#FDE3E5] to-[#FBD0D4]" style={{ width: `${Math.max(12, step.width)}%` }} />
             <span className="relative flex h-full items-center justify-between gap-3 px-3">
               <span className="flex items-center gap-1 text-[12.5px] font-medium text-[#24324F]">
                 {step.label}
@@ -528,7 +528,7 @@ export function BubbleMap({ rows, metric, selected, onSelect }: { rows: Geograph
   const max = Math.max(...rows.map((r) => r[metric]), 1);
   const project = (lat: number, lon: number) => [((lon + 180) / 360) * W, ((75 - lat) / 135) * H] as const;
   return (
-    <div className="relative w-full overflow-hidden rounded-lg bg-[linear-gradient(180deg,#F8FAFC,#F2F5F9)] ring-1 ring-inset ring-[#EEF1F5]">
+    <div className="relative w-full overflow-hidden rounded-sm bg-[linear-gradient(180deg,#F8FAFC,#F2F5F9)] ring-1 ring-inset ring-[#EEF1F5]">
       <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label="Views by country">
         {LAND_DOTS.map(([lat, lon]) => {
           const [x, y] = project(lat, lon);

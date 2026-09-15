@@ -48,7 +48,7 @@ const OBJECTIVE_ICONS: Record<string, typeof Target> = {
 
 export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-[#DDE6F1] bg-white shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
+    <div className="overflow-hidden rounded-sm border border-[#DDE6F1] bg-white shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
       <StepSection
         letter="A"
         title="Campaign Identity"
@@ -100,13 +100,13 @@ export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }
                   type="button"
                   onClick={() => set("campaignMode", mode)}
                   className={cn(
-                    "relative flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors",
+                    "relative flex items-center gap-3 rounded-sm border px-3.5 py-3 text-left transition-colors",
                     active
                       ? "border-[#E11D28] bg-[#FFF5F6] shadow-[0_0_0_1px_#E11D28]"
                       : "border-[#E6E8F0] bg-white hover:border-[#F5B5BA]",
                   )}
                 >
-                  <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg", mode === "Organic" ? "bg-[#E4F8F0] text-[#0AA673]" : mode === "Paid" ? "bg-[#FFF3DC] text-[#D97706]" : "bg-[#F2EAFF] text-[#7C3AED]")}>
+                  <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", mode === "Organic" ? "bg-[#E4F8F0] text-[#0AA673]" : mode === "Paid" ? "bg-[#FFF3DC] text-[#D97706]" : "bg-[#F2EAFF] text-[#7C3AED]")}>
                     {mode === "Organic" ? <Leaf className="size-4.5" /> : mode === "Paid" ? <Megaphone className="size-4.5" /> : <Target className="size-4.5" />}
                   </span>
                   <span className="flex flex-1 flex-col">
@@ -116,10 +116,10 @@ export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }
                     </small>
                   </span>
                   <span className={cn(
-                    "size-4 shrink-0 rounded-full border-2 flex items-center justify-center",
+                    "size-4 shrink-0 rounded-sm border-2 flex items-center justify-center",
                     active ? "border-[#E11D28]" : "border-[#D1D5DB]"
                   )}>
-                    {active && <span className="size-2 rounded-full bg-[#E11D28]" />}
+                    {active && <span className="size-2 rounded-sm bg-[#E11D28]" />}
                   </span>
                 </button>
               );
@@ -138,14 +138,14 @@ export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }
                   type="button"
                   onClick={() => set("objective", obj)}
                   className={cn(
-                    "relative flex items-center gap-2 rounded-lg border p-2.5 text-left transition-colors",
+                    "relative flex items-center gap-2 rounded-sm border p-2.5 text-left transition-colors",
                     active
                       ? "border-[#E11D28] bg-[#FFF5F6]"
                       : "border-[#E6E8F0] bg-white hover:border-[#F5B5BA]",
                   )}
                 >
                   {active && (
-                    <span className="absolute right-1.5 top-1.5 grid size-3.5 place-items-center rounded-full bg-[#E11D28]">
+                    <span className="absolute right-1.5 top-1.5 grid size-3.5 place-items-center rounded-sm bg-[#E11D28]">
                       <svg className="size-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
@@ -270,7 +270,7 @@ export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }
               <div className="flex flex-col items-center gap-1">
                 <span
                   className={cn(
-                    "grid size-8 place-items-center rounded-full text-[10px] font-semibold text-white",
+                    "grid size-8 place-items-center rounded-sm text-[10px] font-semibold text-white",
                     index === 0 ? "ring-2 ring-offset-1" : "",
                   )}
                   style={{ backgroundColor: item.color, ...(index === 0 ? { ringColor: item.color } : {}) }}
@@ -285,7 +285,7 @@ export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }
                 <span className="text-[9px] font-semibold text-[#374151]">{item.step}</span>
               </div>
               {index < APPROVAL_WORKFLOW.length - 1 && (
-                <i className="mx-1.5 mt-[-14px] h-[2px] w-6 shrink-0 rounded-full bg-[#E2E8F0]" />
+                <i className="mx-1.5 mt-[-14px] h-[2px] w-6 shrink-0 rounded-sm bg-[#E2E8F0]" />
               )}
             </div>
           ))}
@@ -309,7 +309,7 @@ function StepSection({
   return (
     <section className="border-b border-[#E7EDF5] p-3.5 last:border-b-0">
       <div className="mb-3 flex items-start gap-3">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#FFE6EA] text-[16px] font-black text-[#EB0711]">
+        <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#FFE6EA] text-[16px] font-black text-[#EB0711]">
           {letter}
         </span>
         <div className="min-w-0 flex-1">

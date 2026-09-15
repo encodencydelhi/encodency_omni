@@ -91,7 +91,7 @@ export function SettingsTab() {
 
       {activeSettingTab === "General" && (
         <div className="space-y-4">
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-4">
             <h3 className="text-sm font-bold text-slate-900">Business Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -128,7 +128,7 @@ export function SettingsTab() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-3">
             <h3 className="text-sm font-bold text-slate-900">Auto-Reply Settings</h3>
             <div className="flex items-center justify-between">
               <div>
@@ -152,7 +152,7 @@ export function SettingsTab() {
           </section>
 
           <div className="flex justify-end">
-            <Button onClick={handleSave} className="h-10 px-5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20">
+            <Button onClick={handleSave} className="h-10 px-5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm shadow-md shadow-emerald-600/20">
               <Save className="size-4 mr-1.5" /> Save Changes
             </Button>
           </div>
@@ -161,7 +161,7 @@ export function SettingsTab() {
 
       {activeSettingTab === "API Configuration" && (
         <div className="space-y-4">
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-4">
             <h3 className="text-sm font-bold text-slate-900">WhatsApp Business API Setup</h3>
             <div className="space-y-4">
               <div className="space-y-1">
@@ -192,7 +192,7 @@ export function SettingsTab() {
                 <Input defaultValue="https://api.namogange.org/whatsapp/webhook" className="h-10 text-xs border-slate-200 font-mono" />
               </div>
 
-              <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
+              <div className="flex items-center justify-between rounded-sm border border-emerald-200 bg-emerald-50/70 p-4">
                 <div>
                   <p className="text-xs font-bold text-emerald-900">Connection Status: Active</p>
                   <p className="text-xs text-emerald-700">Last verified: 2 minutes ago</p>
@@ -211,7 +211,7 @@ export function SettingsTab() {
           </section>
 
           <div className="flex justify-end">
-            <Button onClick={handleSave} className="h-10 px-5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20">
+            <Button onClick={handleSave} className="h-10 px-5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm shadow-md shadow-emerald-600/20">
               <Save className="size-4 mr-1.5" /> Save Changes
             </Button>
           </div>
@@ -220,7 +220,7 @@ export function SettingsTab() {
 
       {activeSettingTab === "Notifications" && (
         <div className="space-y-4">
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-4">
             <h3 className="text-sm font-bold text-slate-900">Notification Preferences</h3>
             <div className="space-y-4 divide-y divide-slate-100">
               {[
@@ -242,7 +242,7 @@ export function SettingsTab() {
           </section>
 
           <div className="flex justify-end">
-            <Button onClick={handleSave} className="h-10 px-5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20">
+            <Button onClick={handleSave} className="h-10 px-5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm shadow-md shadow-emerald-600/20">
               <Save className="size-4 mr-1.5" /> Save Changes
             </Button>
           </div>
@@ -251,7 +251,7 @@ export function SettingsTab() {
 
       {activeSettingTab === "Business Profile" && (
         <div className="space-y-4">
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-4">
             <h3 className="text-sm font-bold text-slate-900">WhatsApp Business Profile</h3>
             <div className="space-y-4">
               <div className="space-y-1">
@@ -272,7 +272,7 @@ export function SettingsTab() {
           </section>
 
           <div className="flex justify-end">
-            <Button onClick={handleSave} className="h-10 px-5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md shadow-emerald-600/20">
+            <Button onClick={handleSave} className="h-10 px-5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm shadow-md shadow-emerald-600/20">
               <Save className="size-4 mr-1.5" /> Save Changes
             </Button>
           </div>
@@ -282,12 +282,12 @@ export function SettingsTab() {
       {activeSettingTab === "Team Members" && (
         <div className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={() => toast.success("Opening Add Member dialog")} className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md">
+            <Button onClick={() => toast.success("Opening Add Member dialog")} className="h-10 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm shadow-md">
               <Plus className="size-4 mr-1" /> Add Team Member
             </Button>
           </div>
 
-          <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
+          <section className="overflow-hidden rounded-sm border border-slate-200 bg-white shadow-xs">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/70 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -304,21 +304,21 @@ export function SettingsTab() {
                     <td className="px-4 py-3 font-bold text-slate-900">{m.name}</td>
                     <td className="px-3 py-3 text-slate-600 font-medium">{m.email}</td>
                     <td className="px-3 py-3">
-                      <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-bold border", roleColors[m.role])}>
+                      <span className={cn("rounded-sm px-2 py-0.5 text-[11px] font-bold border", roleColors[m.role])}>
                         {m.role}
                       </span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className="rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-[11px] font-bold">
+                      <span className="rounded-sm bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-[11px] font-bold">
                         {m.status}
                       </span>
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex items-center justify-center gap-1">
-                        <button onClick={() => toast.success(`Editing member: ${m.name}`)} className="rounded-lg p-1.5 hover:bg-slate-100 text-slate-500">
+                        <button onClick={() => toast.success(`Editing member: ${m.name}`)} className="rounded-sm p-1.5 hover:bg-slate-100 text-slate-500">
                           <Pencil className="size-3.5" />
                         </button>
-                        <button onClick={() => handleDeleteMember(m.id)} className="rounded-lg p-1.5 hover:bg-rose-50 text-rose-600">
+                        <button onClick={() => handleDeleteMember(m.id)} className="rounded-sm p-1.5 hover:bg-rose-50 text-rose-600">
                           <Trash2 className="size-3.5" />
                         </button>
                       </div>
@@ -332,7 +332,7 @@ export function SettingsTab() {
       )}
 
       {/* Danger Zone */}
-      <section className="rounded-xl border-2 border-rose-200 bg-rose-50/30 p-5 shadow-xs space-y-3">
+      <section className="rounded-sm border-2 border-rose-200 bg-rose-50/30 p-5 shadow-xs space-y-3">
         <h3 className="flex items-center gap-2 text-sm font-bold text-rose-700">
           <AlertTriangle className="size-4" /> Danger Zone
         </h3>

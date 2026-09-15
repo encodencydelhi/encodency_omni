@@ -33,7 +33,7 @@ export function CampaignRail({ draft, step }: { draft: CampaignDraft; step: numb
 
       <RailCard>
         <div className="mb-2 flex items-start gap-2">
-          <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#FFF6E5]">
+          <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#FFF6E5]">
             <Lightbulb className="size-3.5 text-[#E0930B]" />
           </span>
           <div className="min-w-0 flex-1">
@@ -63,7 +63,7 @@ export function CampaignRail({ draft, step }: { draft: CampaignDraft; step: numb
 
       <RailCard>
         <div className="mb-2 flex items-center gap-2">
-          <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#FFEAEC]">
+          <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#FFEAEC]">
             <CircleCheck className="size-3.5 text-[#E11D28]" />
           </span>
           <div className="min-w-0 flex-1">
@@ -109,7 +109,7 @@ export function CampaignRail({ draft, step }: { draft: CampaignDraft; step: numb
 
       <RailCard>
         <div className="mb-2.5 flex items-start gap-2">
-          <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[#E8F2FF]">
+          <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-[#E8F2FF]">
             <BarChart3 className="size-3.5 text-[#1975E7]" />
           </span>
           <div>
@@ -175,7 +175,7 @@ function SummaryCard({ draft, step }: { draft: CampaignDraft; step: number }) {
         <button className="text-[10px] font-semibold text-[#1975E7]">Edit</button>
       </div>
       <div className="flex gap-2.5">
-        <span className="relative h-[118px] w-[82px] shrink-0 overflow-hidden rounded-lg">
+        <span className="relative h-[118px] w-[82px] shrink-0 overflow-hidden rounded-sm">
           <Image
             src="/campaigns/save-rivers/square.png"
             alt=""
