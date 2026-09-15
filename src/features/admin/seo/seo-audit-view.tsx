@@ -108,9 +108,7 @@ export function SeoAuditView() {
 
 function OverviewTab() {
   return (
-    <div className="grid grid-cols-12 gap-3">
-      {/* Row 1 */}
-      {/* SEO Health Score */}
+    <div className="grid grid-cols-12 gap-1.5">
       <div className="col-span-12 flex h-[236px] flex-col overflow-hidden rounded-sm border border-[#E1E7EF] bg-white p-4 shadow-[0_1px_4px_rgb(31_50_81/0.06)] lg:col-span-3">
         <div className="flex items-center justify-between"><div><h2 className="text-[13px] font-semibold text-[#172044]">SEO Health Score</h2><p className="mt-0.5 text-[9px] text-[#75829D]">Overall website quality</p></div><span className="rounded-sm bg-[#E6F6ED] px-2 py-1 text-[8px] font-semibold text-[#078359]">GOOD</span></div>
         <div className="flex flex-1 items-center gap-4">
@@ -124,7 +122,6 @@ function OverviewTab() {
                 <span className="text-[30px] font-black text-[#172044] tracking-tight">78</span>
                 <span className="text-[10px] text-[#94a3b8] font-semibold">/100</span>
               </div>
-              <span className="mt-0.5 text-[8px] font-semibold text-[#10b981]">SEO SCORE</span>
             </div>
           </div>
           <div className="min-w-0">
@@ -145,9 +142,9 @@ function OverviewTab() {
         <div className="mb-3 flex items-center justify-between"><div><h2 className="text-[13px] font-semibold text-[#172044]">Issue Summary</h2><p className="mt-0.5 text-[9px] text-[#75829D]">Changes since the previous crawl</p></div><button className="text-[9px] font-semibold text-[#2878E5]">View all →</button></div>
         <div className="grid flex-1 grid-cols-4 gap-2">
           {[
-            { label: "Critical", count: "12", icon: AlertCircle, color: "text-[#E5484D]", bg: "bg-[#FFE7E8]", panel: "bg-[#FFF9F9]", border: "border-[#FFDADC]", accent: "bg-[#E5484D]", trendBg: "bg-[#FFE7E8]", trend: -8 },
-            { label: "Warnings", count: "28", icon: AlertTriangle, color: "text-[#D98B00]", bg: "bg-[#FFF0C9]", panel: "bg-[#FFFCF5]", border: "border-[#FFE7B0]", accent: "bg-[#F2A20C]", trendBg: "bg-[#FFF0C9]", trend: -14 },
-            { label: "Notices", count: "64", icon: Info, color: "text-[#2878E5]", bg: "bg-[#E1EEFF]", panel: "bg-[#F8FBFF]", border: "border-[#D7E7FC]", accent: "bg-[#4285F4]", trendBg: "bg-[#E1EEFF]", trend: -14 },
+            { label: "Critical", count: "12", icon: AlertCircle, color: "text-[#E5484D]", bg: "bg-[#FFE7E8]", panel: "bg-[#FFF9F9]", border: "border-[#FFDADC]", accent: "bg-[#E5484D]", trendBg: "bg-[#DDF7EA]", trend: -8, isPositive: true },
+            { label: "Warnings", count: "28", icon: AlertTriangle, color: "text-[#D98B00]", bg: "bg-[#FFF0C9]", panel: "bg-[#FFFCF5]", border: "border-[#FFE7B0]", accent: "bg-[#F2A20C]", trendBg: "bg-[#DDF7EA]", trend: -14, isPositive: true },
+            { label: "Notices", count: "64", icon: Info, color: "text-[#2878E5]", bg: "bg-[#E1EEFF]", panel: "bg-[#F8FBFF]", border: "border-[#D7E7FC]", accent: "bg-[#4285F4]", trendBg: "bg-[#DDF7EA]", trend: -14, isPositive: true },
             { label: "Passed", count: "438", icon: CheckCircle2, color: "text-[#078359]", bg: "bg-[#DDF7EA]", panel: "bg-[#F7FCF9]", border: "border-[#D3F0E2]", accent: "bg-[#0AA673]", trendBg: "bg-[#DDF7EA]", trend: 26, isPositive: true },
           ].map((stat) => (
             <div key={stat.label} className={cn("relative flex flex-col overflow-hidden rounded-sm border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md", stat.panel, stat.border)}>
@@ -179,13 +176,13 @@ function OverviewTab() {
               { label: "Total Links Found", value: "1,842" },
               { label: "Crawl Duration", value: "13 mins" },
               { label: "Avg Response Time", value: "420 ms" },
-              { label: "Crawl Status", value: <span className="flex items-center justify-end gap-1 text-[#10b981]"><CheckCircle2 className="size-3" /> Completed</span> },
+              { label: "Crawl Status", value: <span className="flex items-center justify-start gap-1 text-[#10b981]"><CheckCircle2 className="size-3" /> Completed</span> },
               { label: "Sitemap URLs", value: "2" },
-              { label: "Robots.txt", value: <span className="flex items-center justify-end gap-1 text-[#10b981]"><CheckCircle2 className="size-3" /> Found</span> },
+              { label: "Robots.txt", value: <span className="flex items-center justify-start gap-1 text-[#10b981]"><CheckCircle2 className="size-3" /> Found</span> },
             ].map((item, i) => (
               <div key={i} className="min-w-0">
-                <span className="block truncate text-[8px] font-medium text-[#75829D]">{item.label}</span>
-                <span className="mt-0.5 block text-[10px] font-semibold text-[#172044]">{item.value}</span>
+                <span className="block truncate text-[9px] font-medium text-[#75829D]">{item.label}</span>
+                <div className="mt-1 flex items-center">{typeof item.value === 'string' ? <span className="text-[11px] font-semibold text-[#172044]">{item.value}</span> : item.value}</div>
               </div>
             ))}
           </div>
@@ -248,12 +245,12 @@ function OverviewTab() {
       </div>
 
       {/* Page Type Distribution */}
-      <div className="col-span-12 lg:col-span-3 rounded-sm border border-[#E8EDF3] bg-white p-5 shadow-sm flex flex-col justify-center">
+      <div className="col-span-12 lg:col-span-3 rounded-sm border border-[#E8EDF3] bg-white p-5 shadow-sm flex flex-col">
         <h2 className="text-[15px] font-semibold text-[#172044] mb-4">Page Type Distribution</h2>
         <div className="flex flex-col items-center justify-center gap-4">
           <div className="relative size-[110px] shrink-0">
-            <div className="absolute inset-0 rounded-sm border-[6px] border-transparent" style={{ background: "conic-gradient(#10b981 0% 1%, #3b82f6 1% 15%, #8b5cf6 15% 48%, #94a3b8 48% 100%)", WebkitMask: "radial-gradient(transparent 65%, black 66%)", mask: "radial-gradient(transparent 65%, black 66%)" }}></div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white m-[6px] rounded-sm">
+            <div className="absolute inset-0 rounded-full" style={{ background: "conic-gradient(#10b981 0% 1%, #3b82f6 1% 15%, #8b5cf6 15% 48%, #94a3b8 48% 100%)", WebkitMask: "radial-gradient(closest-side, transparent 82%, black 83%)", mask: "radial-gradient(closest-side, transparent 82%, black 83%)" }}></div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-2xl font-semibold text-[#172044]">128</span>
               <span className="text-[10px] text-[#75829D]">Pages</span>
             </div>
@@ -278,7 +275,7 @@ function OverviewTab() {
       </div>
 
       {/* Core Web Vitals */}
-      <div className="col-span-12 lg:col-span-3 rounded-sm border border-[#E8EDF3] bg-white p-5 shadow-sm flex flex-col justify-center">
+      <div className="col-span-12 lg:col-span-3 rounded-sm border border-[#E8EDF3] bg-white p-5 shadow-sm flex flex-col">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-[15px] font-semibold text-[#172044]">Core Web Vitals (Mobile)</h2>
           <button className="text-[11px] font-medium text-[#3b82f6] flex items-center gap-0.5 hover:underline">
@@ -313,8 +310,8 @@ function OverviewTab() {
         <h2 className="text-[13px] font-semibold text-[#172044] mb-6">Indexability</h2>
         <div className="flex items-center justify-center gap-6 flex-1">
           <div className="relative size-[90px] shrink-0">
-            <div className="absolute inset-0 rounded-sm border-[12px] border-transparent" style={{ background: "conic-gradient(#10b981 0% 97%, #ef4444 97% 99%, #94a3b8 99% 100%)", WebkitMask: "radial-gradient(transparent 65%, black 66%)", mask: "radial-gradient(transparent 65%, black 66%)" }}></div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white m-[12px] rounded-sm">
+            <div className="absolute inset-0 rounded-full" style={{ background: "conic-gradient(#10b981 0% 97%, #ef4444 97% 99%, #94a3b8 99% 100%)", WebkitMask: "radial-gradient(closest-side, transparent 82%, black 83%)", mask: "radial-gradient(closest-side, transparent 82%, black 83%)" }}></div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-xl font-semibold text-[#172044]">124</span>
               <span className="text-[9px] text-[#75829D]">Indexed</span>
             </div>
@@ -344,7 +341,7 @@ function OverviewTab() {
         <h2 className="text-[13px] font-semibold text-[#172044] mb-6">Mobile Usability</h2>
         <div className="flex items-center justify-center gap-6 flex-1">
           <div className="relative size-[90px] shrink-0">
-            <div className="absolute inset-0 rounded-sm border-[8px] border-[#10b981]"></div>
+            <div className="absolute inset-0 rounded-full border-[8px] border-[#10b981]"></div>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-2xl font-semibold text-[#172044]">96</span>
               <span className="text-[10px] text-[#10b981] font-semibold">Good</span>
@@ -377,8 +374,8 @@ function OverviewTab() {
         </div>
         <div className="flex items-center justify-center gap-6 flex-1">
           <div className="relative size-[90px] shrink-0">
-            <div className="absolute inset-0 rounded-sm border-[12px] border-transparent" style={{ background: "conic-gradient(#10b981 0% 72%, #ef4444 72% 80%, #f59e0b 80% 100%)", WebkitMask: "radial-gradient(transparent 65%, black 66%)", mask: "radial-gradient(transparent 65%, black 66%)" }}></div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white m-[12px] rounded-sm">
+            <div className="absolute inset-0 rounded-full" style={{ background: "conic-gradient(#10b981 0% 72%, #ef4444 72% 80%, #f59e0b 80% 100%)", WebkitMask: "radial-gradient(closest-side, transparent 82%, black 83%)", mask: "radial-gradient(closest-side, transparent 82%, black 83%)" }}></div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-xl font-semibold text-[#172044]">18</span>
               <span className="text-[9px] text-[#75829D]">Valid</span>
             </div>
@@ -428,7 +425,7 @@ function OverviewTab() {
 
       {/* Row 4 */}
       {/* Recent Audits */}
-      <div className="col-span-12 lg:col-span-6 rounded-sm border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col justify-center">
+      <div className="col-span-12 lg:col-span-6 rounded-sm border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
         <h2 className="text-[13px] font-semibold text-[#172044] mb-4">Recent Audits</h2>
         <div className="flex-1 overflow-x-auto">
           <table className="w-full text-left">
@@ -471,7 +468,7 @@ function OverviewTab() {
 
       {/* Recommendations & Help */}
       <div className="col-span-12 lg:col-span-6 flex gap-2">
-        <div className="flex-[1.5] rounded-sm border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col justify-center">
+        <div className="flex-[1.5] rounded-sm border border-[#E8EDF3] bg-white p-4 shadow-sm flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-[13px] font-semibold text-[#172044]">Recommendations</h2>
             <button className="text-[10px] font-semibold text-[#3b82f6] flex items-center gap-1 hover:underline">
