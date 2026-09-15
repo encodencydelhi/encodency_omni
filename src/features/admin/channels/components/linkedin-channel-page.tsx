@@ -82,10 +82,10 @@ import {
   UsersRound,
   Video,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ChannelLogo } from "../../shared/channel-logo";
 import { ChannelHeader } from "./channel-header";
 import { cn } from "@/lib/utils/cn";
-import { LinkedInCreatePostModal } from "./linkedin-create-post-modal";
 
 const tabs = [
   "Overview",
@@ -137,7 +137,7 @@ function Card({
     >
       <header
         className={cn(
-          "flex h-[46px] shrink-0 items-center justify-between gap-2 px-3.5",
+          "flex h-11.5 shrink-0 items-center justify-between gap-2 px-3.5",
           headerClassName,
         )}
       >
@@ -180,8 +180,8 @@ function CardLink({
 // ----------------------------------------------------
 
 export function LinkedInChannelPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("Overview");
-  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
 
   return (
     <div className="pb-8">
@@ -189,7 +189,7 @@ export function LinkedInChannelPage() {
       <div className="-mx-4 -mt-5 mb-5 bg-white px-4 pt-5 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6 shadow-sm border-b border-[#E4EAF2]">
         <ChannelHeader
           channel="linkedin"
-          onPrimaryAction={() => setIsCreatePostOpen(true)}
+          onPrimaryAction={() => router.push("/admin/linkedin/create-post")}
         />
         <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
@@ -204,11 +204,6 @@ export function LinkedInChannelPage() {
         {activeTab === "Inbox" && <InboxTab />}
         {activeTab === "Settings" && <SettingsTab />}
       </div>
-
-      <LinkedInCreatePostModal
-        isOpen={isCreatePostOpen}
-        onClose={() => setIsCreatePostOpen(false)}
-      />
     </div>
   );
 }
@@ -358,6 +353,7 @@ const postsList = [
 ];
 
 function PostsTab() {
+  const router = useRouter();
   const [filterTab, setFilterTab] = useState<"All" | "Published" | "Scheduled" | "Draft" | "Failed" | "Newsletters">("All");
 
   const filteredPosts = postsList.filter((p) => {
@@ -377,15 +373,15 @@ function PostsTab() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex h-[36px] items-center gap-1.5 rounded-none border border-[#E9D5FF] bg-[#FAF5FF] px-3.5 text-[12px] font-semibold text-[#7E22CE] shadow-sm transition-colors hover:bg-[#F3E8FF]">
+          <button className="flex h-9 items-center gap-1.5 rounded-none border border-[#E9D5FF] bg-[#FAF5FF] px-3.5 text-[12px] font-semibold text-[#7E22CE] shadow-sm transition-colors hover:bg-[#F3E8FF]">
             <Sparkles className="size-3.5 text-[#9333EA]" />
             <span>AI Generate</span>
           </button>
-          <button className="flex h-[36px] items-center gap-1.5 rounded-none border border-[#D7E0EB] bg-white px-3.5 text-[12px] font-semibold text-[#425273] shadow-sm transition-colors hover:bg-[#F8FAFD]">
+          <button className="flex h-9 items-center gap-1.5 rounded-none border border-[#D7E0EB] bg-white px-3.5 text-[12px] font-semibold text-[#425273] shadow-sm transition-colors hover:bg-[#F8FAFD]">
             <UploadCloud className="size-3.5 text-[#687797]" />
             <span>Bulk Upload</span>
           </button>
-          <button className="flex h-[36px] items-center gap-1.5 rounded-none bg-[#0A66C2] px-4 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0958A8]">
+          <button onClick={() => router.push("/admin/linkedin/create-post")} className="flex h-9 items-center gap-1.5 rounded-none bg-[#0A66C2] px-4 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0958A8]">
             <Plus className="size-3.5" />
             <span>Create Post</span>
             <ChevronDown className="size-3 ml-0.5 opacity-80" />
@@ -396,7 +392,7 @@ function PostsTab() {
       {/* LinkedIn Native Newsletter & Employee Advocacy Spotlight Card */}
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {/* Newsletter Banner */}
-        <div className="flex items-center justify-between rounded-none border border-[#DDE4ED] bg-gradient-to-r from-[#F0F7FF] to-[#FFFFFF] p-3.5 shadow-sm">
+        <div className="flex items-center justify-between rounded-none border border-[#DDE4ED] bg-linear-to-r from-[#F0F7FF] to-[#FFFFFF] p-3.5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="grid size-10 place-items-center rounded-none bg-[#0A66C2] text-white shadow-sm">
               <BookOpen className="size-5" />
@@ -417,7 +413,7 @@ function PostsTab() {
         </div>
 
         {/* Employee Advocacy Quick Summary */}
-        <div className="flex items-center justify-between rounded-none border border-[#DDE4ED] bg-gradient-to-r from-[#FAF5FF] to-[#FFFFFF] p-3.5 shadow-sm">
+        <div className="flex items-center justify-between rounded-none border border-[#DDE4ED] bg-linear-to-r from-[#FAF5FF] to-[#FFFFFF] p-3.5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="grid size-10 place-items-center rounded-none bg-[#7E22CE] text-white shadow-sm">
               <Award className="size-5" />
@@ -444,7 +440,7 @@ function PostsTab() {
           <button
             onClick={() => setFilterTab("All")}
             className={cn(
-              "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
+              "flex h-8 items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
               filterTab === "All"
                 ? "bg-[#0A66C2] text-white shadow-sm"
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
@@ -464,7 +460,7 @@ function PostsTab() {
           <button
             onClick={() => setFilterTab("Published")}
             className={cn(
-              "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
+              "flex h-8 items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
               filterTab === "Published"
                 ? "bg-[#0A66C2] text-white shadow-sm"
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
@@ -485,7 +481,7 @@ function PostsTab() {
           <button
             onClick={() => setFilterTab("Scheduled")}
             className={cn(
-              "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
+              "flex h-8 items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
               filterTab === "Scheduled"
                 ? "bg-[#0A66C2] text-white shadow-sm"
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
@@ -506,7 +502,7 @@ function PostsTab() {
           <button
             onClick={() => setFilterTab("Draft")}
             className={cn(
-              "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
+              "flex h-8 items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
               filterTab === "Draft"
                 ? "bg-[#0A66C2] text-white shadow-sm"
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
@@ -527,7 +523,7 @@ function PostsTab() {
           <button
             onClick={() => setFilterTab("Newsletters")}
             className={cn(
-              "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
+              "flex h-8 items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
               filterTab === "Newsletters"
                 ? "bg-[#0A66C2] text-white shadow-sm"
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
@@ -548,7 +544,7 @@ function PostsTab() {
           <button
             onClick={() => setFilterTab("Failed")}
             className={cn(
-              "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
+              "flex h-8 items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
               filterTab === "Failed"
                 ? "bg-[#0A66C2] text-white shadow-sm"
                 : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]",
@@ -573,10 +569,10 @@ function PostsTab() {
             <input
               type="text"
               placeholder="Search posts..."
-              className="h-[32px] w-[200px] rounded-none border border-[#DDE4ED] bg-white pl-8 pr-3 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
+              className="h-8 w-50 rounded-none border border-[#DDE4ED] bg-white pl-8 pr-3 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2] focus:ring-1 focus:ring-[#0A66C2]"
             />
           </div>
-          <button className="flex h-[32px] items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white px-3 text-[11.5px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+          <button className="flex h-8 items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white px-3 text-[11.5px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
             <SlidersHorizontal className="size-3.5 text-[#687797]" />
             <span>Filters</span>
           </button>
@@ -589,21 +585,21 @@ function PostsTab() {
           <table className="w-full text-left text-[11.5px] border-collapse">
             <thead>
               <tr className="border-b border-[#EDF1F5] bg-[#F8FAFD] text-[10.5px] font-semibold text-[#687797]">
-                <th className="w-[36px] px-3 py-3 text-center">
+                <th className="w-9 px-3 py-3 text-center">
                   <input type="checkbox" className="rounded-none border-[#CBD5E1]" />
                 </th>
-                <th className="min-w-[280px] px-3 py-3">Post</th>
-                <th className="w-[100px] px-3 py-3">Type</th>
-                <th className="w-[105px] px-3 py-3">Status</th>
-                <th className="w-[125px] px-3 py-3">
+                <th className="min-w-70 px-3 py-3">Post</th>
+                <th className="w-25 px-3 py-3">Type</th>
+                <th className="w-26.25 px-3 py-3">Status</th>
+                <th className="w-31.25 px-3 py-3">
                   <span className="flex items-center gap-1 text-[#0A66C2]">
                     Date & Time
                     <span>↓</span>
                   </span>
                 </th>
-                <th className="w-[110px] px-3 py-3">Impressions</th>
-                <th className="w-[110px] px-3 py-3">Engagement</th>
-                <th className="w-[180px] px-3 py-3">Actions</th>
+                <th className="w-27.5 px-3 py-3">Impressions</th>
+                <th className="w-27.5 px-3 py-3">Engagement</th>
+                <th className="w-45 px-3 py-3">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EDF1F5]">
@@ -614,7 +610,7 @@ function PostsTab() {
                   </td>
                   <td className="px-3 py-2.5">
                     <div className="flex items-center gap-3">
-                      <div className="relative h-[42px] w-[62px] shrink-0 overflow-hidden rounded-none bg-[#EDF2F7]">
+                      <div className="relative h-10.5 w-15.5 shrink-0 overflow-hidden rounded-none bg-[#EDF2F7]">
                         <img
                           src={post.image}
                           alt=""
@@ -623,7 +619,7 @@ function PostsTab() {
                         {post.hasVideo && (
                           <div className="absolute inset-0 grid place-items-center bg-black/30">
                             <span className="grid size-4 place-items-center rounded-sm bg-white text-black shadow">
-                              <Play className="size-2 fill-current pl-[1px]" />
+                              <Play className="size-2 fill-current pl-px" />
                             </span>
                           </div>
                         )}
@@ -916,7 +912,7 @@ function AudienceDemographics({ onNavigateToAudience }: { onNavigateToAudience?:
           ))}
         </div>
         <div className="grid min-h-0 flex-1 grid-cols-[130px_1fr] sm:grid-cols-[148px_1fr] items-center gap-2 pt-2">
-          <div className="relative size-[130px] sm:size-[148px]">
+          <div className="relative size-32.5 sm:size-37">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -943,10 +939,10 @@ function AudienceDemographics({ onNavigateToAudience }: { onNavigateToAudience?:
             <div className="absolute inset-0 grid place-items-center text-center pointer-events-none px-1">
               {hoveredSlice ? (
                 <div>
-                  <b className="block text-[15px] leading-5 font-semibold text-[#142044] truncate max-w-[90px]">
+                  <b className="block text-[15px] leading-5 font-semibold text-[#142044] truncate max-w-22.5">
                     {hoveredSlice.count}
                   </b>
-                  <small className="block text-[10px] text-[#0A66C2] font-semibold leading-tight truncate max-w-[90px]">
+                  <small className="block text-[10px] text-[#0A66C2] font-semibold leading-tight truncate max-w-22.5">
                     {hoveredSlice.name} ({hoveredSlice.value}%)
                   </small>
                 </div>
@@ -960,7 +956,7 @@ function AudienceDemographics({ onNavigateToAudience }: { onNavigateToAudience?:
               )}
             </div>
           </div>
-          <div className="min-w-0 space-y-[6px]">
+          <div className="min-w-0 space-y-1.5">
             {currentGroup.items.map((slice) => {
               const isHovered = hoveredSlice?.name === slice.name;
               return (
@@ -1103,7 +1099,7 @@ function AudienceTab() {
                 Unfollows
               </span>
             </div>
-            <div className="h-[180px] w-full">
+            <div className="h-45 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={audienceGrowthData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid stroke="#F1F5F9" vertical={false} />
@@ -1167,7 +1163,7 @@ function AudienceTab() {
                 </span>
               </div>
             </div>
-            <div className="h-[170px] w-full">
+            <div className="h-42.5 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={ageGenderData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                   <CartesianGrid stroke="#F1F5F9" vertical={false} />
@@ -1432,7 +1428,7 @@ function CampaignsTab() {
             </p>
           </div>
         </div>
-        <button className="flex h-[36px] items-center gap-1.5 rounded-none bg-[#0A66C2] px-4 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0958A8]">
+        <button className="flex h-9 items-center gap-1.5 rounded-none bg-[#0A66C2] px-4 text-[12px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0958A8]">
           <Plus className="size-3.5" />
           <span>Create Campaign</span>
         </button>
@@ -1532,7 +1528,7 @@ function CampaignsTab() {
                 <i className="size-2 rounded-sm bg-[#EF4444]" /> Spend (₹)
               </span>
             </div>
-            <div className="h-[180px] w-full">
+            <div className="h-45 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={campaignTrendData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid stroke="#F1F5F9" vertical={false} />
@@ -1552,7 +1548,7 @@ function CampaignsTab() {
         {/* Campaign Status */}
         <Card title="Campaign Status">
           <div className="flex min-h-0 flex-1 flex-col items-center justify-center p-3.5">
-            <div className="relative size-[120px]">
+            <div className="relative size-30">
               <ResponsiveContainer>
                 <PieChart>
                   <Pie data={campaignStatusData} dataKey="value" innerRadius={38} outerRadius={56} strokeWidth={0} isAnimationActive={false}>
@@ -1625,14 +1621,14 @@ function CampaignsTab() {
               <input
                 type="text"
                 placeholder="Search campaigns..."
-                className="h-[30px] w-[180px] rounded-none border border-[#DDE4ED] bg-white pl-8 pr-3 text-[11px] text-[#172044] outline-none placeholder:text-[#8A97AF]"
+                className="h-7.5 w-45 rounded-none border border-[#DDE4ED] bg-white pl-8 pr-3 text-[11px] text-[#172044] outline-none placeholder:text-[#8A97AF]"
               />
             </div>
-            <button className="flex h-[30px] items-center gap-1 rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273]">
+            <button className="flex h-7.5 items-center gap-1 rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273]">
               <span>All Status</span>
               <ChevronDown className="size-3 opacity-70" />
             </button>
-            <button className="flex h-[30px] items-center gap-1 rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-semibold text-[#425273]">
+            <button className="flex h-7.5 items-center gap-1 rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-semibold text-[#425273]">
               <Download className="size-3 text-[#687797]" />
               <span>Export</span>
             </button>
@@ -1643,19 +1639,19 @@ function CampaignsTab() {
           <table className="w-full text-left text-[11px] border-collapse">
             <thead>
               <tr className="border-b border-[#EDF1F5] bg-[#F8FAFD] text-[10px] font-semibold text-[#687797]">
-                <th className="w-[36px] px-3 py-2.5 text-center">
+                <th className="w-9 px-3 py-2.5 text-center">
                   <input type="checkbox" className="rounded-none border-[#CBD5E1]" />
                 </th>
-                <th className="min-w-[220px] px-3 py-2.5">Campaign Name</th>
-                <th className="w-[90px] px-3 py-2.5">Status</th>
-                <th className="w-[95px] px-3 py-2.5">Start Date</th>
-                <th className="w-[95px] px-3 py-2.5">End Date</th>
-                <th className="w-[85px] px-3 py-2.5">Budget</th>
-                <th className="w-[85px] px-3 py-2.5">Spend</th>
-                <th className="w-[80px] px-3 py-2.5">Reach</th>
-                <th className="w-[70px] px-3 py-2.5">Leads</th>
-                <th className="w-[85px] px-3 py-2.5">Conversions</th>
-                <th className="w-[80px] px-3 py-2.5 text-center">Actions</th>
+                <th className="min-w-55 px-3 py-2.5">Campaign Name</th>
+                <th className="w-22.5 px-3 py-2.5">Status</th>
+                <th className="w-23.75 px-3 py-2.5">Start Date</th>
+                <th className="w-23.75 px-3 py-2.5">End Date</th>
+                <th className="w-21.25 px-3 py-2.5">Budget</th>
+                <th className="w-21.25 px-3 py-2.5">Spend</th>
+                <th className="w-20 px-3 py-2.5">Reach</th>
+                <th className="w-17.5 px-3 py-2.5">Leads</th>
+                <th className="w-21.25 px-3 py-2.5">Conversions</th>
+                <th className="w-20 px-3 py-2.5 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EDF1F5]">
@@ -1947,7 +1943,7 @@ function AnalyticsTab() {
                     <span className="text-[10px] font-semibold text-[#8A97AF]">{p.id}</span>
                     <img src={p.img} alt="" className="size-6 rounded-none object-cover" />
                     <div>
-                      <p className="truncate max-w-[120px] font-semibold text-[#172044]">{p.title}</p>
+                      <p className="truncate max-w-30 font-semibold text-[#172044]">{p.title}</p>
                       <span className="text-[11px] text-[#0A66C2]">{p.type}</span>
                     </div>
                   </div>
@@ -1970,7 +1966,7 @@ function AnalyticsTab() {
               <span className="ml-1.5 text-[10px] font-semibold text-[#10B981]">↑ 18%</span>
               <p className="text-[11px] text-[#8A97AF]">+1,892 new followers</p>
             </div>
-            <div className="h-[120px] w-full">
+            <div className="h-30 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={pageGrowth} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                   <Bar dataKey="gained" fill="#0A66C2" radius={[2, 2, 0, 0]} isAnimationActive={false} />
@@ -2057,7 +2053,7 @@ function AnalyticsTab() {
         {/* Post Type Distribution */}
         <Card title="Post Type Distribution">
           <div className="flex min-h-0 flex-1 items-center justify-between p-3.5">
-            <div className="relative size-[110px]">
+            <div className="relative size-27.5">
               <ResponsiveContainer>
                 <PieChart>
                   <Pie
@@ -2304,7 +2300,7 @@ function AnalyticsTab() {
             <span className="rounded-none border border-[#DDE4ED] bg-[#F8FAFD] px-2.5 py-1 text-[11px] font-semibold text-[#52617D]">
               Last 30 Days
             </span>
-            <button className="flex h-[30px] items-center gap-1 rounded-none bg-[#0A66C2] px-3 text-[11px] font-semibold text-white shadow-sm hover:bg-[#0958A8]">
+            <button className="flex h-7.5 items-center gap-1 rounded-none bg-[#0A66C2] px-3 text-[11px] font-semibold text-white shadow-sm hover:bg-[#0958A8]">
               <Plus className="size-3" />
               <span>Add Competitor</span>
             </button>
@@ -2315,13 +2311,13 @@ function AnalyticsTab() {
           <table className="w-full text-left text-[11px] border-collapse">
             <thead>
               <tr className="border-b border-[#EDF1F5] bg-[#F8FAFD] text-[10.5px] font-semibold text-[#687797]">
-                <th className="min-w-[220px] px-3.5 py-3">Organization</th>
-                <th className="w-[120px] px-3.5 py-3">Total Followers</th>
-                <th className="w-[130px] px-3.5 py-3">Follower Growth</th>
-                <th className="w-[130px] px-3.5 py-3">Monthly Posts</th>
-                <th className="w-[130px] px-3.5 py-3">Engagement Rate</th>
-                <th className="w-[120px] px-3.5 py-3">Est. Impressions</th>
-                <th className="w-[90px] px-3.5 py-3 text-center">Benchmark</th>
+                <th className="min-w-55 px-3.5 py-3">Organization</th>
+                <th className="w-30 px-3.5 py-3">Total Followers</th>
+                <th className="w-32.5 px-3.5 py-3">Follower Growth</th>
+                <th className="w-32.5 px-3.5 py-3">Monthly Posts</th>
+                <th className="w-32.5 px-3.5 py-3">Engagement Rate</th>
+                <th className="w-30 px-3.5 py-3">Est. Impressions</th>
+                <th className="w-22.5 px-3.5 py-3 text-center">Benchmark</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EDF1F5]">
@@ -2522,14 +2518,14 @@ function OverviewTab({ onNavigateTab }: { onNavigateTab?: (tab: TabType) => void
       <KeyMetrics />
 
       {/* 3. Performance Trend, Top Posts & Audience Demographics */}
-      <div className="grid items-start gap-2 [&>section]:h-[260px] xl:grid-cols-[1.1fr_1fr_1fr]">
+      <div className="grid items-start gap-2 [&>section]:h-65 xl:grid-cols-[1.1fr_1fr_1fr]">
         <PerformanceTrend />
         <TopPosts />
         <AudienceDemographics onNavigateToAudience={() => onNavigateTab?.("Audience")} />
       </div>
 
       {/* 4. Content Calendar, Page Growth, Quick Actions & Recent Activity */}
-      <div className="grid items-start gap-2 [&>section]:h-[340px] xl:grid-cols-[.86fr_.88fr_1fr]">
+      <div className="grid items-start gap-2 [&>section]:h-85 xl:grid-cols-[.86fr_.88fr_1fr]">
         <ContentCalendar />
         <PageGrowth />
         <ActionsAndActivity />
@@ -2550,7 +2546,7 @@ export function PageOverview() {
     <Card title="" headerClassName="hidden">
       <div className="min-h-0 flex-1 pb-3.5">
         <div className="relative">
-          <div className="relative h-[116px] sm:h-[130px] overflow-hidden rounded-t-sm">
+          <div className="relative h-29 sm:h-32.5 overflow-hidden rounded-t-sm">
             <Image
               src="/campaigns/river-cleanup.jpg"
               alt="Namo Gange Trust page banner"
@@ -2567,7 +2563,7 @@ export function PageOverview() {
               </button>
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white">
-              <p className="text-[14px] font-semibold leading-[18px] drop-shadow-sm mt-1">
+              <p className="text-[14px] font-semibold leading-4.5 drop-shadow-sm mt-1">
                 Cleaner Rivers · Brighter Tomorrows
               </p>
               <span className="mt-1 rounded-sm bg-[#0A66C2] px-2 py-0.5 text-[11px] font-semibold shadow-xs">
@@ -2575,7 +2571,7 @@ export function PageOverview() {
               </span>
             </div>
           </div>
-          <span className="absolute -bottom-6 left-5 grid size-[64px] place-items-center rounded-sm border border-[#E8EDF3] bg-white p-1 shadow-[0_2px_8px_rgb(31_50_81/0.14)]">
+          <span className="absolute -bottom-6 left-5 grid size-16 place-items-center rounded-sm border border-[#E8EDF3] bg-white p-1 shadow-[0_2px_8px_rgb(31_50_81/0.14)]">
             <Image
               src="/namogange.webp"
               alt="Namo Gange Trust"
@@ -2585,7 +2581,7 @@ export function PageOverview() {
             />
           </span>
         </div>
-        <div className="mt-2 pr-5 pl-[96px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div className="mt-2 pr-5 pl-24 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-[16px] font-bold leading-5 text-[#172044]">Namo Gange Trust</h2>
@@ -2596,7 +2592,7 @@ export function PageOverview() {
             <p className="text-[11.5px] leading-4 text-[#75829D]">Non-profit Organization</p>
           </div>
         </div>
-        <p className="mt-2 px-5 text-[12px] leading-[18px] text-[#52617D]">
+        <p className="mt-2 px-5 text-[12px] leading-4.5 text-[#52617D]">
           Working towards a cleaner Ganga through awareness, action and community participation.
         </p>
         <div className="mt-2.5 px-5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11.5px] text-[#52617D]">
@@ -2742,7 +2738,7 @@ function TopPosts() {
           <div
             key={post.title}
             className={cn(
-              "grid items-center gap-2 border-t border-[#EDF1F5] py-[3px] text-[11px] text-[#52617D] first:border-t-0",
+              "grid items-center gap-2 border-t border-[#EDF1F5] py-0.75 text-[11px] text-[#52617D] first:border-t-0",
               postCols,
             )}
           >
@@ -2752,7 +2748,7 @@ function TopPosts() {
                 alt=""
                 width={42}
                 height={30}
-                className="h-[30px] w-[42px] shrink-0 rounded-sm object-cover"
+                className="h-7.5 w-10.5 shrink-0 rounded-sm object-cover"
               />
               <b className="truncate text-[11.5px] font-semibold text-[#172044]">{post.title}</b>
             </span>
@@ -2790,7 +2786,7 @@ function ContentCalendar() {
             key={item.title}
             className="flex items-center gap-2.5 border-t border-[#EDF1F5] py-2 first:border-t-0"
           >
-            <span className="grid w-[34px] shrink-0 place-items-center rounded-sm bg-[#FFEFF0] py-0.5 leading-none text-[#D6323C]">
+            <span className="grid w-8.5 shrink-0 place-items-center rounded-sm bg-[#FFEFF0] py-0.5 leading-none text-[#D6323C]">
               <small className="text-[10.5px] font-semibold">{item.month}</small>
               <b className="text-[13px] font-semibold leading-4">{item.day}</b>
             </span>
@@ -2890,7 +2886,7 @@ function PageGrowth() {
 function ActionsAndActivity() {
   return (
     <section className="flex flex-col overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
-      <header className="flex h-[46px] shrink-0 items-center px-3.5">
+      <header className="flex h-11.5 shrink-0 items-center px-3.5">
         <h2 className="text-[14.5px] font-semibold text-[#172044]">Quick Actions</h2>
       </header>
       <div className="grid shrink-0 grid-cols-4 gap-2 px-3.5 pb-3.5">
@@ -2900,7 +2896,7 @@ function ActionsAndActivity() {
             <button
               key={label}
               className={cn(
-                "flex h-[42px] flex-col items-center justify-center gap-1 rounded-sm border text-[11.5px] font-semibold leading-3 transition-colors cursor-pointer",
+                "flex h-10.5 flex-col items-center justify-center gap-1 rounded-sm border text-[11.5px] font-semibold leading-3 transition-colors cursor-pointer",
                 primary
                   ? "border-[#BBD7F5] bg-[#EAF3FD] text-[#0A66C2]"
                   : "border-[#E4EAF2] bg-white text-[#425273] hover:bg-[#F8FAFD]",
@@ -2922,7 +2918,7 @@ function ActionsAndActivity() {
           return (
             <div
               key={title}
-              className="flex items-center gap-2 border-t border-[#EDF1F5] py-[3px] first:border-t-0"
+              className="flex items-center gap-2 border-t border-[#EDF1F5] py-0.75 first:border-t-0"
             >
               {Icon ? (
                 <span className={cn("grid size-6 shrink-0 place-items-center rounded-sm", tint[color])}>
@@ -2932,8 +2928,8 @@ function ActionsAndActivity() {
                 <ChannelLogo channel="LinkedIn" className="size-6 shrink-0 rounded-sm" />
               )}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[11px] font-semibold leading-[14px] text-[#172044]">{title}</p>
-                <p className="truncate text-[10px] leading-[14px] text-[#8A97AF]">{detail}</p>
+                <p className="truncate text-[11px] font-semibold leading-3.5 text-[#172044]">{title}</p>
+                <p className="truncate text-[10px] leading-3.5 text-[#8A97AF]">{detail}</p>
               </div>
               <span className="shrink-0 whitespace-nowrap text-[11.5px] text-[#9AA6BC]">{time}</span>
             </div>
@@ -3410,7 +3406,7 @@ function LeadsTab() {
           }
         >
           <div className="p-3.5">
-            <div className="h-[210px] w-full">
+            <div className="h-52.5 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={leadsTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
@@ -3430,8 +3426,8 @@ function LeadsTab() {
 
         {/* Card 2: Leads by Source */}
         <Card title="Leads by Source">
-          <div className="flex h-[230px] items-center justify-between gap-3 p-3.5">
-            <div className="relative size-[135px] shrink-0">
+          <div className="flex h-57.5 items-center justify-between gap-3 p-3.5">
+            <div className="relative size-33.75 shrink-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -3511,7 +3507,7 @@ function LeadsTab() {
                     key={tab}
                     onClick={() => setSubTab(tab)}
                     className={cn(
-                      "flex h-[32px] items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
+                      "flex h-8 items-center gap-1.5 rounded-sm px-3 text-[11.5px] font-semibold transition-all",
                       isSelected
                         ? "bg-[#0A66C2] text-white shadow-sm"
                         : "border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]"
@@ -3532,11 +3528,11 @@ function LeadsTab() {
             </div>
 
             <div className="flex items-center gap-2">
-              <button className="flex h-[32px] items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white px-3 text-[11.5px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+              <button className="flex h-8 items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white px-3 text-[11.5px] font-semibold text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
                 <Download className="size-3.5 text-[#8A97AF]" />
                 <span>Export Leads</span>
               </button>
-              <button className="flex h-[32px] items-center gap-1.5 rounded-none bg-[#0A66C2] px-3.5 text-[11.5px] font-semibold text-white shadow-sm hover:bg-[#0958A8]">
+              <button className="flex h-8 items-center gap-1.5 rounded-none bg-[#0A66C2] px-3.5 text-[11.5px] font-semibold text-white shadow-sm hover:bg-[#0958A8]">
                 <Plus className="size-3.5" />
                 <span>Add Lead</span>
               </button>
@@ -3552,14 +3548,14 @@ function LeadsTab() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search leads..."
-                className="h-[32px] w-[180px] rounded-none border border-[#DDE4ED] bg-white pl-8 pr-2.5 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2]"
+                className="h-8 w-45 rounded-none border border-[#DDE4ED] bg-white pl-8 pr-2.5 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2]"
               />
             </div>
 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-[32px] rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273] shadow-sm outline-none hover:bg-[#F8FAFD]"
+              className="h-8 rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273] shadow-sm outline-none hover:bg-[#F8FAFD]"
             >
               <option value="All">Status: All</option>
               <option value="New">New</option>
@@ -3573,7 +3569,7 @@ function LeadsTab() {
             <select
               value={sourceFilter}
               onChange={(e) => setSourceFilter(e.target.value)}
-              className="h-[32px] rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273] shadow-sm outline-none hover:bg-[#F8FAFD]"
+              className="h-8 rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273] shadow-sm outline-none hover:bg-[#F8FAFD]"
             >
               <option value="All">Source: All</option>
               <option value="Lead Gen Form">Lead Gen Form</option>
@@ -3582,12 +3578,12 @@ function LeadsTab() {
               <option value="Organic">Organic</option>
             </select>
 
-            <button className="flex h-[32px] items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
+            <button className="flex h-8 items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#425273] shadow-sm hover:bg-[#F8FAFD]">
               <span>Date Range</span>
               <ChevronDown className="size-3 text-[#8A97AF]" />
             </button>
 
-            <button className="flex h-[32px] items-center gap-1 rounded-none border border-dashed border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#0A66C2] hover:bg-[#F8FAFD]">
+            <button className="flex h-8 items-center gap-1 rounded-none border border-dashed border-[#DDE4ED] bg-white px-2.5 text-[11px] font-medium text-[#0A66C2] hover:bg-[#F8FAFD]">
               <Plus className="size-3" />
               <span>Add Filter</span>
             </button>
@@ -3922,7 +3918,7 @@ function InboxTab() {
                 <input
                   type="text"
                   placeholder="Search conversations..."
-                  className="h-[32px] w-full rounded-none border border-[#DDE4ED] bg-[#F8FAFD] pl-8 pr-2.5 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2]"
+                  className="h-8 w-full rounded-none border border-[#DDE4ED] bg-[#F8FAFD] pl-8 pr-2.5 text-[11.5px] text-[#172044] outline-none placeholder:text-[#8A97AF] focus:border-[#0A66C2]"
                 />
               </div>
               <button className="grid size-8 shrink-0 place-items-center rounded-none border border-[#DDE4ED] bg-white text-[#52617D] hover:bg-[#F8FAFD]">
@@ -3954,7 +3950,7 @@ function InboxTab() {
             </div>
           </div>
 
-          <div className="max-h-[640px] divide-y divide-[#EDF1F5] overflow-y-auto">
+          <div className="max-h-160 divide-y divide-[#EDF1F5] overflow-y-auto">
             {conversationList.map((item) => {
               const isSelected = selectedConversation === item.name;
               return (
@@ -4015,7 +4011,7 @@ function InboxTab() {
         </div>
 
         {/* CENTER COLUMN: Active Chat */}
-        <div className="flex flex-col overflow-hidden rounded-none border border-[#DDE4ED] bg-white shadow-sm min-h-[640px]">
+        <div className="flex flex-col overflow-hidden rounded-none border border-[#DDE4ED] bg-white shadow-sm min-h-160">
           {/* Chat Header */}
           <div className="flex items-center justify-between border-b border-[#EDF1F5] p-3.5">
             <div className="flex items-center gap-3">
@@ -4470,7 +4466,7 @@ function SettingsTab() {
                       type="text"
                       value={channelName}
                       onChange={(e) => setChannelName(e.target.value)}
-                      className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 h-8.5 w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                     <p className="mt-1 text-[10px] text-[#8A97AF]">This name will be used internally in your dashboard.</p>
                   </div>
@@ -4494,7 +4490,7 @@ function SettingsTab() {
 
                     <div>
                       <label className="block font-semibold text-[#172044]">Project</label>
-                      <div className="mt-1 flex h-[34px] items-center justify-between rounded-none border border-[#DDE4ED] bg-white px-3">
+                      <div className="mt-1 flex h-8.5 items-center justify-between rounded-none border border-[#DDE4ED] bg-white px-3">
                         <span className="flex items-center gap-1.5 font-medium text-[#172044]">
                           <Briefcase className="size-3.5 text-[#8A97AF]" />
                           {project}
@@ -4506,7 +4502,7 @@ function SettingsTab() {
 
                   <div>
                     <label className="block font-semibold text-[#172044]">Timezone</label>
-                    <div className="mt-1 flex h-[34px] items-center justify-between rounded-none border border-[#DDE4ED] bg-white px-3">
+                    <div className="mt-1 flex h-8.5 items-center justify-between rounded-none border border-[#DDE4ED] bg-white px-3">
                       <span className="flex items-center gap-1.5 font-medium text-[#172044]">
                         <span className="text-[#8A97AF]">🌐</span>
                         {timezone}
@@ -4653,7 +4649,7 @@ function SettingsTab() {
                       <input
                         type="text"
                         defaultValue="Namo Gange Trust"
-                        className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                        className="mt-1 h-8.5 w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                       />
                     </div>
                     <div>
@@ -4662,14 +4658,14 @@ function SettingsTab() {
                         type="text"
                         disabled
                         value="urn:li:organization:84920491"
-                        className="mt-1 h-[34px] w-full rounded-none border border-[#E2E8F0] bg-[#F8FAFD] px-3 font-mono text-[10px] text-[#64748B]"
+                        className="mt-1 h-8.5 w-full rounded-none border border-[#E2E8F0] bg-[#F8FAFD] px-3 font-mono text-[10px] text-[#64748B]"
                       />
                     </div>
                   </div>
 
                   <div>
                     <label className="block font-semibold text-[#172044]">LinkedIn Vanity URL</label>
-                    <div className="mt-1 flex h-[34px] items-center rounded-none border border-[#DDE4ED] bg-white px-3">
+                    <div className="mt-1 flex h-8.5 items-center rounded-none border border-[#DDE4ED] bg-white px-3">
                       <span className="text-[#8A97AF] mr-1">https://</span>
                       <input
                         type="text"
@@ -4687,7 +4683,7 @@ function SettingsTab() {
                         type="text"
                         value={industry}
                         onChange={(e) => setIndustry(e.target.value)}
-                        className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                        className="mt-1 h-8.5 w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                       />
                     </div>
                     <div>
@@ -4696,7 +4692,7 @@ function SettingsTab() {
                         type="text"
                         value={companySize}
                         onChange={(e) => setCompanySize(e.target.value)}
-                        className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                        className="mt-1 h-8.5 w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                       />
                     </div>
                   </div>
@@ -4707,7 +4703,7 @@ function SettingsTab() {
                       type="text"
                       value={websiteUrl}
                       onChange={(e) => setWebsiteUrl(e.target.value)}
-                      className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 h-8.5 w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                   </div>
 
@@ -4717,7 +4713,7 @@ function SettingsTab() {
                       type="text"
                       value={tagline}
                       onChange={(e) => setTagline(e.target.value)}
-                      className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 h-8.5 w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                   </div>
                 </div>
@@ -4861,7 +4857,7 @@ function SettingsTab() {
                     <select
                       value={postVisibility}
                       onChange={(e) => setPostVisibility(e.target.value)}
-                      className="h-[32px] rounded-none border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#172044] outline-none"
+                      className="h-8 rounded-none border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#172044] outline-none"
                     >
                       <option value="Public">Public (Anyone)</option>
                       <option value="Followers only">Followers only</option>
@@ -4876,7 +4872,7 @@ function SettingsTab() {
                     <select
                       value={contentCategory}
                       onChange={(e) => setContentCategory(e.target.value)}
-                      className="h-[32px] rounded-none border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#172044] outline-none"
+                      className="h-8 rounded-none border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#172044] outline-none"
                     >
                       <option value="Awareness">Awareness</option>
                       <option value="Community">Community</option>
@@ -4911,7 +4907,7 @@ function SettingsTab() {
                       type="text"
                       value={defaultHashtags}
                       onChange={(e) => setDefaultHashtags(e.target.value)}
-                      className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 h-8.5 w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                     <p className="mt-1 text-[10px] text-[#8A97AF]">Pre-filled when drafting posts in the editor.</p>
                   </div>
@@ -5172,7 +5168,7 @@ function SettingsTab() {
                       type="email"
                       value={alertEmail}
                       onChange={(e) => setAlertEmail(e.target.value)}
-                      className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 h-8.5 w-full rounded-none border border-[#DDE4ED] bg-white px-3 text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                   </div>
 
@@ -5185,7 +5181,7 @@ function SettingsTab() {
                       type="text"
                       value={slackWebhook}
                       onChange={(e) => setSlackWebhook(e.target.value)}
-                      className="mt-1 h-[34px] w-full rounded-none border border-[#DDE4ED] bg-white px-3 font-mono text-[10.5px] text-[#172044] outline-none focus:border-[#0A66C2]"
+                      className="mt-1 h-8.5 w-full rounded-none border border-[#DDE4ED] bg-white px-3 font-mono text-[10.5px] text-[#172044] outline-none focus:border-[#0A66C2]"
                     />
                   </div>
 
@@ -5306,9 +5302,9 @@ function SettingsTab() {
                     type="text"
                     value={webhookUrl}
                     onChange={(e) => setWebhookUrl(e.target.value)}
-                    className="h-[34px] flex-1 rounded-none border border-[#DDE4ED] bg-white px-3 font-mono text-[11px] text-[#172044] outline-none focus:border-[#0A66C2]"
+                    className="h-8.5 flex-1 rounded-none border border-[#DDE4ED] bg-white px-3 font-mono text-[11px] text-[#172044] outline-none focus:border-[#0A66C2]"
                   />
-                  <button className="h-[34px] rounded-none border border-[#DDE4ED] bg-white px-3 text-[11px] font-semibold text-[#172044] hover:bg-[#F8FAFD]">
+                  <button className="h-8.5 rounded-none border border-[#DDE4ED] bg-white px-3 text-[11px] font-semibold text-[#172044] hover:bg-[#F8FAFD]">
                     Send Test Ping
                   </button>
                 </div>
@@ -5388,7 +5384,7 @@ function SettingsTab() {
                       type="text"
                       disabled
                       value={apiVersion}
-                      className="mt-1 h-[34px] w-full rounded-none border border-[#E2E8F0] bg-[#F8FAFD] px-3 font-mono text-[10.5px] text-[#64748B]"
+                      className="mt-1 h-8.5 w-full rounded-none border border-[#E2E8F0] bg-[#F8FAFD] px-3 font-mono text-[10.5px] text-[#64748B]"
                     />
                   </div>
 
@@ -5447,7 +5443,7 @@ function SettingsTab() {
                     <select
                       value={retentionPeriod}
                       onChange={(e) => setRetentionPeriod(e.target.value)}
-                      className="h-[32px] rounded-none border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#172044] outline-none"
+                      className="h-8 rounded-none border border-[#DDE4ED] bg-white px-2 text-[11px] font-medium text-[#172044] outline-none"
                     >
                       <option value="6 Months">6 Months</option>
                       <option value="1 Year">1 Year</option>

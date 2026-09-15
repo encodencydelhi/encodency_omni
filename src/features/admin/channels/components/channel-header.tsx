@@ -125,7 +125,7 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
     iconBg: "bg-[#2563EB]",
     brandColor: "#2563EB",
     externalUrl: "https://namogangetrust.org",
-    primaryActionLabel: "New Page / CTA",
+    primaryActionLabel: "New Page",
     primaryActionIcon: Plus,
   },
 };
@@ -140,6 +140,8 @@ interface ChannelHeaderProps {
   onExport?: () => void;
   onSync?: () => void;
   onPrimaryAction?: () => void;
+  primaryActionLabel?: string;
+  hidePrimaryAction?: boolean;
   extraActions?: React.ReactNode;
 }
 
@@ -153,10 +155,13 @@ export function ChannelHeader({
   onExport,
   onSync,
   onPrimaryAction,
+  primaryActionLabel,
+  hidePrimaryAction = false,
   extraActions,
 }: ChannelHeaderProps) {
   const [isSyncing, setIsSyncing] = useState(false);
   const config = CHANNEL_CONFIGS[channel];
+  const effectivePrimaryLabel = primaryActionLabel !== undefined ? primaryActionLabel : config.primaryActionLabel;
 
   const handleSyncClick = () => {
     setIsSyncing(true);
@@ -168,8 +173,6 @@ export function ChannelHeader({
 
   return (
     <header className="relative space-y-2.5">
-      {/* Top row removed as per request */}
-
       {/* 2-Row Clean Header */}
       <div className="relative py-3.5 space-y-3">
         {/* Row 1: Title, Account Handle, Status Badge & Tagline */}
@@ -177,9 +180,16 @@ export function ChannelHeader({
           <div className="flex items-start gap-3.5 min-w-0">
             {/* Brand Logo Box */}
             <div className="relative shrink-0 mt-0.5">
-              <div className={cn("grid size-10 place-items-center shadow-xs", channel === "whatsapp" ? "rounded-sm bg-[#DCFCE7]/80 backdrop-blur-sm border border-[#A7F3D0]/50" : "rounded bg-[#0A66C2]")}>
+              <div
+                className={cn(
+                  "grid size-10 place-items-center shadow-xs rounded-sm",
+                  channel === "whatsapp"
+                    ? "bg-[#DCFCE7]/80 backdrop-blur-sm border border-[#A7F3D0]/50"
+                    : config.iconBg || "bg-[#2563EB]"
+                )}
+              >
                 {channel === "website" ? (
-                  <Globe2 className="size-5 text-[#2563EB]" />
+                  <Globe2 className="size-5 text-white" />
                 ) : (
                   <ChannelLogo
                     channel={
@@ -235,9 +245,22 @@ export function ChannelHeader({
         {/* Row 2: Actions Toolbar (Sync Live, Date Range, Export, Extra Actions, Primary Action) */}
         <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-slate-100">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-            <span className="inline-flex items-center gap-1.5 rounded-sm bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 border border-emerald-200/70">
-              <span className="size-2 rounded-sm bg-emerald-500 animate-pulse" /> WABA Cloud API Connected
-            </span>
+            {(() => {
+              const statusPills: Record<ChannelType, { label: string; text: string; bg: string; border: string; dot: string }> = {
+                whatsapp: { label: "WABA Cloud API Connected", text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200/70", dot: "bg-emerald-500" },
+                website: { label: "Web Analytics & SSL Active", text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200/70", dot: "bg-blue-500" },
+                meta: { label: "Meta Graph API Connected", text: "text-pink-700", bg: "bg-pink-50", border: "border-pink-200/70", dot: "bg-pink-500" },
+                linkedin: { label: "LinkedIn Company API Active", text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200/70", dot: "bg-blue-600" },
+                google: { label: "Google Business Profile Verified", text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200/70", dot: "bg-blue-500" },
+                youtube: { label: "YouTube Partner API Active", text: "text-rose-700", bg: "bg-rose-50", border: "border-rose-200/70", dot: "bg-rose-500" },
+              };
+              const pill = statusPills[channel] || statusPills.website;
+              return (
+                <span className={cn("inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[11px] font-bold border", pill.bg, pill.text, pill.border)}>
+                  <span className={cn("size-2 rounded-sm animate-pulse", pill.dot)} /> {pill.label}
+                </span>
+              );
+            })()}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -247,28 +270,28 @@ export function ChannelHeader({
               disabled={isSyncing}
               title="Sync latest metrics"
               className={cn(
-                "flex h-[36px] shrink-0 items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-emerald-600 active:scale-98",
+                "flex h-[36px] shrink-0 items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-98 cursor-pointer",
                 isSyncing && "opacity-75 cursor-not-allowed"
               )}
             >
-              <RefreshCw className={cn("size-3.5 text-emerald-600", isSyncing && "animate-spin")} />
+              <RefreshCw className={cn("size-3.5", channel === "whatsapp" ? "text-emerald-600" : "text-blue-600", isSyncing && "animate-spin")} />
               <span>{isSyncing ? "Syncing..." : "Sync Live"}</span>
             </button>
 
             {/* Date Range Selector */}
             <div className="flex h-[36px] items-center gap-2 rounded-sm border border-slate-200 bg-white px-3 shadow-xs transition-colors hover:bg-slate-50 cursor-pointer">
-              <CalendarDays className="size-3.5 shrink-0 text-emerald-600" />
-              <div className="text-left leading-none">
-                <p className="text-[10px] font-bold text-slate-800">{dateRangeText}</p>
-                <p className="text-[9.5px] font-medium text-slate-500">{dateRangeSubtext}</p>
+              <CalendarDays className={cn("size-3.5 shrink-0", channel === "whatsapp" ? "text-emerald-600" : "text-blue-600")} />
+              <div className="text-left text-xs leading-none">
+                <span className="block font-bold text-slate-800">{dateRangeText}</span>
+                <span className="block mt-0.5 text-[10px] text-slate-400 font-medium">{dateRangeSubtext}</span>
               </div>
               <ChevronDown className="size-3 text-slate-400" />
             </div>
 
-            {/* Export Report Button */}
+            {/* Export Action */}
             <button
               onClick={onExport}
-              className="flex h-[36px] items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-emerald-600"
+              className="flex h-[36px] items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
             >
               <Download className="size-3.5 text-slate-500" />
               <span>Export</span>
@@ -278,13 +301,24 @@ export function ChannelHeader({
             {extraActions}
 
             {/* Primary Action Button */}
-            {config.primaryActionLabel && (
+            {!hidePrimaryAction && effectivePrimaryLabel && (
               <button
                 onClick={onPrimaryAction}
-                className="flex h-[36px] items-center gap-1.5 rounded-sm bg-emerald-600 px-3.5 text-[11.5px] font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-98"
+                className={cn(
+                  "flex h-[36px] items-center gap-1.5 rounded-sm px-3.5 text-[11.5px] font-bold text-white shadow-xs transition-all active:scale-98 cursor-pointer",
+                  channel === "whatsapp"
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : channel === "website"
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : channel === "meta"
+                    ? "bg-pink-600 hover:bg-pink-700"
+                    : channel === "linkedin"
+                    ? "bg-[#0A66C2] hover:bg-[#084e96]"
+                    : "bg-blue-600 hover:bg-blue-700"
+                )}
               >
                 <PrimaryIcon className="size-3.5" />
-                <span>{config.primaryActionLabel}</span>
+                <span>{effectivePrimaryLabel}</span>
               </button>
             )}
           </div>
