@@ -176,7 +176,7 @@
     Menlo, Consolas, monospace;
 
   /* Type scale — tight, information-dense, no giant display numbers */
-  --text-2xs: 0.6875rem; /* 11px — table meta, timestamps */
+  --text-2xs: 0.75rem; /* 12px minimum */
   --text-2xs--line-height: 1rem;
 }
 
@@ -293,6 +293,18 @@
   }
   .scrollbar-dark:hover::-webkit-scrollbar-thumb {
     background: #475569;
+  }
+
+  /* Enforce minimum 12px font size in admin shell */
+  .admin-shell [class*="text-[6"],
+  .admin-shell [class*="text-[7"],
+  .admin-shell [class*="text-[8"],
+  .admin-shell [class*="text-[9"],
+  .admin-shell [class*="text-[10px]"],
+  .admin-shell [class*="text-[10.5px]"],
+  .admin-shell [class*="text-[11px]"],
+  .admin-shell [class*="text-[11.5px]"] {
+    font-size: 12px !important;
   }
 }
 

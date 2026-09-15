@@ -28,7 +28,7 @@ export function AdminTopbar() {
             className="min-w-0 flex-1 bg-transparent text-[13px] text-[#27272A] outline-none placeholder:text-[#A1A1AA]"
             placeholder="Search..."
           />
-          <kbd className="hidden sm:flex items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[10px] font-medium text-[#A1A1AA] shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#E4E4E7]">
+          <kbd className="hidden sm:flex items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[12px] font-medium text-[#A1A1AA] shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#E4E4E7]">
             <span>⌘</span>K
           </kbd>
         </label>
@@ -36,7 +36,7 @@ export function AdminTopbar() {
 
       <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
         <div className="hidden items-center gap-2 lg:flex mr-2">
-          <span className="text-[11px] font-semibold text-[#A1A1AA]">Project</span>
+          <span className="text-[12px] font-semibold text-[#A1A1AA]">Project</span>
           <Clientswitcher />
         </div>
 
@@ -49,7 +49,7 @@ export function AdminTopbar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 rounded-xl">
-            <DropdownMenuLabel className="text-[11px] font-medium text-[#A1A1AA]">Create new</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-[12px] font-medium text-[#A1A1AA]">Create new</DropdownMenuLabel>
             {["Create post", "Add lead", "Create campaign", "Add Client", "Run SEO audit"].map((item) => (
               <DropdownMenuItem key={item} className="text-[13px] rounded-lg cursor-pointer">{item}</DropdownMenuItem>
             ))}
@@ -69,7 +69,7 @@ export function AdminTopbar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 rounded-full p-1 hover:bg-[#F4F4F5] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E4E4E7]">
-              <span className="grid size-8 place-items-center rounded-full bg-[#18181B] text-[11px] font-medium tracking-wide text-white shadow-sm">
+              <span className="grid size-8 place-items-center rounded-full bg-[#18181B] text-[12px] font-medium tracking-wide text-white shadow-sm">
                 {MOCK_ADMIN_USER.initials}
               </span>
               <span className="hidden text-left xl:block pl-1 pr-2">

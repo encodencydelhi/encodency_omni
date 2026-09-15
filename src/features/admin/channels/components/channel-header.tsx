@@ -170,15 +170,14 @@ export function ChannelHeader({
     <header className="relative space-y-2.5">
       {/* Top row removed as per request */}
 
-      {/* Clean Header */}
-      <div className="relative py-4">
-
-        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          {/* Left Column: Icon + Title + Account details + Status */}
-          <div className="flex items-start gap-3.5">
+      {/* 2-Row Clean Header */}
+      <div className="relative py-3.5 space-y-3">
+        {/* Row 1: Title, Account Handle, Status Badge & Tagline */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3.5 min-w-0">
             {/* Brand Logo Box */}
-            <div className="relative shrink-0 mt-1">
-              <div className="grid size-10 place-items-center rounded bg-[#0A66C2] shadow-sm">
+            <div className="relative shrink-0 mt-0.5">
+              <div className={cn("grid size-10 place-items-center shadow-xs", channel === "whatsapp" ? "rounded-full bg-[#DCFCE7]/80 backdrop-blur-sm border border-[#A7F3D0]/50" : "rounded bg-[#0A66C2]")}>
                 {channel === "website" ? (
                   <Globe2 className="size-5 text-[#2563EB]" />
                 ) : (
@@ -206,65 +205,73 @@ export function ChannelHeader({
             </div>
 
             {/* Text details */}
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-[20px] font-semibold text-[#111B43] sm:text-[22px]">
+                <h1 className="text-[20px] font-bold text-[#111B43] sm:text-[22px]">
                   {customTitle || config.name}
                 </h1>
-                <span className="text-[#DDE4ED] text-[20px] leading-none mb-1 font-light">|</span>
-                <span className="text-[14px] font-semibold text-[#111B43]">{customAccountHandle || config.accountHandle}</span>
+                <span className="text-[#DDE4ED] text-[20px] leading-none font-light">|</span>
+                <span className="text-[14px] font-bold text-[#111B43]">{customAccountHandle || config.accountHandle}</span>
                 {config.statusText && config.statusText.split("•")[0] && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ECFDF5] px-2 py-0.5 text-[10.5px] font-semibold text-[#047857]">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ECFDF5] px-2.5 py-0.5 text-[11px] font-bold text-[#047857] border border-emerald-200/60">
                     <span className="size-1.5 rounded-full bg-[#10B981]" />
                     {config.statusText.split("•")[0]}
                   </span>
                 )}
                 {config.statusText && config.statusText.split("•")[1] && (
-                  <span className="text-[12px] text-[#64748B]">
+                  <span className="text-[12px] text-[#64748B] font-semibold">
                     • {config.statusText.split("•")[1]?.trim()}
                   </span>
                 )}
               </div>
 
-              <p className="mt-1 line-clamp-1 text-[12px] text-[#64748B]">
+              <p className="mt-0.5 text-[12px] text-[#64748B] font-medium">
                 {customTagline || config.tagline}
               </p>
             </div>
           </div>
+        </div>
 
-          {/* Right Column: Actions & Controls */}
-          <div className="flex flex-nowrap shrink-0 items-center gap-2 self-start lg:self-center">
+        {/* Row 2: Actions Toolbar (Sync Live, Date Range, Export, Extra Actions, Primary Action) */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-slate-100">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 border border-emerald-200/70">
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" /> WABA Cloud API Connected
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
             {/* Live Sync Action */}
             <button
               onClick={handleSyncClick}
               disabled={isSyncing}
               title="Sync latest metrics"
               className={cn(
-                "flex h-[38px] shrink-0 items-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white/90 px-3 text-[11px] font-semibold text-[#334155] shadow-xs transition-all hover:bg-white hover:text-[#0A66C2] active:scale-98",
+                "flex h-[36px] shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-emerald-600 active:scale-98",
                 isSyncing && "opacity-75 cursor-not-allowed"
               )}
             >
-              <RefreshCw className={cn("size-3.5 text-[#0A66C2]", isSyncing && "animate-spin")} />
-              <span className="hidden sm:inline">{isSyncing ? "Syncing..." : "Sync Live"}</span>
+              <RefreshCw className={cn("size-3.5 text-emerald-600", isSyncing && "animate-spin")} />
+              <span>{isSyncing ? "Syncing..." : "Sync Live"}</span>
             </button>
 
             {/* Date Range Selector */}
-            <div className="flex h-[38px] items-center gap-2 rounded-xl border border-[#DDE4ED] bg-white/90 px-3 shadow-xs transition-colors hover:bg-white">
-              <CalendarDays className="size-3.5 shrink-0 text-[#0A66C2]" />
+            <div className="flex h-[36px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-xs transition-colors hover:bg-slate-50 cursor-pointer">
+              <CalendarDays className="size-3.5 shrink-0 text-emerald-600" />
               <div className="text-left leading-none">
-                <p className="text-[10px] font-semibold text-[#172044]">{dateRangeText}</p>
-                <p className="text-[10px] text-[#64748B]">{dateRangeSubtext}</p>
+                <p className="text-[10px] font-bold text-slate-800">{dateRangeText}</p>
+                <p className="text-[9.5px] font-medium text-slate-500">{dateRangeSubtext}</p>
               </div>
-              <ChevronDown className="size-3 text-[#94A3B8]" />
+              <ChevronDown className="size-3 text-slate-400" />
             </div>
 
             {/* Export Report Button */}
             <button
               onClick={onExport}
-              className="flex h-[38px] items-center gap-1.5 rounded-xl border border-[#DDE4ED] bg-white/90 px-3 text-[11px] font-semibold text-[#334155] shadow-xs transition-all hover:bg-white hover:text-[#0A66C2]"
+              className="flex h-[36px] items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-emerald-600"
             >
-              <Download className="size-3.5 text-[#64748B]" />
-              <span className="hidden sm:inline">Export</span>
+              <Download className="size-3.5 text-slate-500" />
+              <span>Export</span>
             </button>
 
             {/* Channel-Specific Extra Actions */}
@@ -274,10 +281,7 @@ export function ChannelHeader({
             {config.primaryActionLabel && (
               <button
                 onClick={onPrimaryAction}
-                className="flex h-[38px] items-center gap-1.5 rounded-xl bg-[#0A66C2] px-3.5 text-[11.5px] font-semibold text-white shadow-[0_2px_8px_rgb(10_102_194/0.25)] transition-all hover:bg-[#0958A8] active:scale-98"
-                style={{
-                  backgroundColor: channel === "youtube" ? "#DC2626" : channel === "whatsapp" ? "#16A34A" : "#0A66C2",
-                }}
+                className="flex h-[36px] items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-[11.5px] font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-98"
               >
                 <PrimaryIcon className="size-3.5" />
                 <span>{config.primaryActionLabel}</span>

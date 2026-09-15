@@ -1,6 +1,6 @@
 export function AdminFooter() {
   return (
-    <footer className="sticky bottom-0 z-50 flex items-center justify-between border-t border-slate-800 bg-slate-900/95 px-5 py-2.5 text-[11px] font-medium text-slate-400 backdrop-blur-md xl:px-8 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+    <footer className="sticky bottom-0 z-50 flex items-center justify-between border-t border-slate-800 bg-slate-900/95 px-5 py-2.5 text-[12px] font-medium text-slate-400 backdrop-blur-md xl:px-8 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
       <div className="flex items-center gap-3">
         <span className="flex items-center gap-1.5">
           <span className="bg-gradient-to-r from-red-500 to-rose-400 bg-clip-text font-bold tracking-wide text-transparent">

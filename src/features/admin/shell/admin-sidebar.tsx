@@ -112,7 +112,7 @@ export function AdminSidebar() {
               <div key={section.label} className={cn(index > 0 && "mt-5")}>
                 {!isSidebarCollapsed ? (
                   <div className="flex items-center gap-3 px-2 mb-3">
-                    <p className="text-[9.5px] font-semibold uppercase tracking-widest text-[#7E8DA6]">
+                    <p className="text-[12px] font-semibold uppercase tracking-widest text-[#7E8DA6]">
                       {section.label}
                     </p>
                     <div className="h-[1px] w-8 bg-[#1E293B]" />
@@ -170,15 +170,15 @@ export function AdminSidebar() {
 
           {/* Support */}
           {!isSidebarCollapsed ? (
-            <button className="mx-3 mb-3 mt-1 flex h-[46px] shrink-0 items-center gap-3 rounded-xl border border-[#D946EF]/30 bg-[#D946EF]/10 px-3 text-left transition-all hover:border-[#D946EF]/60 shadow-[0_0_15px_rgba(217,70,239,0.1)] group">
+            <button className="mx-3 mb-3 mt-1 flex min-h-[48px] shrink-0 items-center gap-3 rounded-xl border border-[#D946EF]/30 bg-[#D946EF]/10 px-3 py-1.5 text-left transition-all hover:border-[#D946EF]/60 shadow-[0_0_15px_rgba(217,70,239,0.1)] group">
               <span className="grid size-8 shrink-0 place-items-center">
                 <Headphones className="size-4 text-[#D946EF]" />
               </span>
               <span className="min-w-0 flex-1">
-                <b className="block truncate text-[11.5px] font-semibold leading-tight text-white">
+                <b className="block truncate text-[12px] font-semibold leading-tight text-white">
                   Help &amp; Support
                 </b>
-                <small className="block truncate text-[9px] leading-tight text-[#94A3B8] mt-0.5">
+                <small className="block truncate text-[12px] leading-tight text-[#94A3B8] mt-0.5">
                   Need help? Contact us.
                 </small>
               </span>
@@ -196,7 +196,7 @@ export function AdminSidebar() {
             onClick={toggleSidebar}
             aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             className={cn(
-              "hidden h-12 shrink-0 items-center gap-3 border-t border-[#1E293B] text-[11.5px] font-medium text-[#94A3B8] transition-colors hover:bg-white/[0.02] hover:text-white lg:flex",
+              "hidden h-12 shrink-0 items-center gap-3 border-t border-[#1E293B] text-[12px] font-medium text-[#94A3B8] transition-colors hover:bg-white/[0.02] hover:text-white lg:flex",
               isSidebarCollapsed ? "justify-center px-0" : "px-5",
             )}
           >

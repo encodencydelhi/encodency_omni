@@ -14,21 +14,29 @@ import {
   YAxis,
 } from "recharts";
 import {
+  Activity,
   AlertTriangle,
+  ArrowUp,
   BarChart3,
   CalendarDays,
+  CheckCircle2,
   ChevronDown,
   CircleStar,
+  DollarSign,
   Filter,
   Gauge,
   Globe2,
   Megaphone,
+  MessageSquare,
   MousePointerClick,
   Navigation,
   Phone,
   Plus,
   SearchCheck,
   Sparkles,
+  Star,
+  Target,
+  TrendingUp,
   UsersRound,
 } from "lucide-react";
 import { ChannelLogo } from "../../shared/channel-logo";
@@ -41,7 +49,7 @@ const topStats = [
     label: "Clients",
     value: "4",
     trend: "33%",
-    note: "+1 new this month",
+    note: "+1 this month",
     icon: BarChart3,
     color: "blue",
   },
@@ -49,7 +57,7 @@ const topStats = [
     label: "Total Leads",
     value: "248",
     trend: "18%",
-    note: "+42 new this month",
+    note: "+42 this month",
     icon: UsersRound,
     color: "blue",
   },
@@ -65,7 +73,7 @@ const topStats = [
     label: "Website Visits",
     value: "12.4K",
     trend: "28%",
-    note: "+2.4K from last month",
+    note: "+2.4K this month",
     icon: BarChart3,
     color: "green",
   },
@@ -73,7 +81,7 @@ const topStats = [
     label: "Social Reach",
     value: "86.5K",
     trend: "12%",
-    note: "Across all channels",
+    note: "All channels",
     icon: Sparkles,
     color: "purple",
   },
@@ -81,7 +89,7 @@ const topStats = [
     label: "SEO Score",
     value: "78/100",
     trend: "6%",
-    note: "+5 from last month",
+    note: "+5 this month",
     icon: Gauge,
     color: "green",
   },
@@ -89,7 +97,7 @@ const topStats = [
     label: "Conversion Rate",
     value: "4.8%",
     trend: "12%",
-    note: "+0.7% from last month",
+    note: "+0.7% this month",
     icon: Filter,
     color: "blue",
   },
@@ -97,7 +105,7 @@ const topStats = [
     label: "GMB Rating",
     value: "4.7 ★",
     trend: "",
-    note: "428 reviews · +0.2 this month",
+    note: "428 reviews",
     icon: CircleStar,
     color: "amber",
   },
@@ -212,32 +220,42 @@ export function AdminDashboard() {
   const { data, isLoading } = useAdminDashboard(selectedProjectId);
   if (isLoading || !data)
     return (
-      <div className="grid h-80 place-items-center text-[10px] text-[#71809D]">
+      <div className="grid h-80 place-items-center text-[12px] text-[#71809D]">
         Loading marketing dashboard...
       </div>
     );
   return (
-    <div className="space-y-2">
+    <div className="space-y-3.5">
       <Header />
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8 gap-3">
         {topStats.map((stat) => (
           <Stat key={stat.label} {...stat} />
         ))}
       </div>
-      <div className="grid items-start gap-2 [&>section]:h-[252px] xl:grid-cols-[1.48fr_1.05fr_.95fr]">
+      <div className="grid items-start gap-3 grid-cols-1 lg:grid-cols-3">
         <Performance />
         <ChannelOverview channels={data.channels} />
         <Attention items={data.attention} />
       </div>
-      <div className="grid gap-2 xl:grid-cols-[.88fr_1.18fr_1fr]">
+
+      {/* Row 2: Ad Spend & ROI, Monthly Marketing Goals, Live Activity Stream */}
+      <div className="grid gap-3 grid-cols-1 lg:grid-cols-3">
+        <RoiBudgetOverview />
+        <MarketingGoals />
+        <ActivityFeed />
+      </div>
+
+      <div className="grid gap-3 grid-cols-1 lg:grid-cols-3">
         <LeadSources />
         <Campaigns />
         <Upcoming />
       </div>
-      <div className="grid gap-2 xl:grid-cols-[1.1fr_.72fr_.72fr_.68fr]">
+      <div className="grid gap-3 grid-cols-1 lg:grid-cols-3">
         <RecentLeads leads={data.recentLeads} />
         <SeoSnapshot />
         <GmbSnapshot />
+      </div>
+      <div>
         <QuickActions />
       </div>
     </div>
@@ -246,31 +264,31 @@ export function AdminDashboard() {
 
 function Header() {
   return (
-    <div className="grid min-h-[52px] grid-cols-[1fr_auto] items-center gap-4 lg:grid-cols-[minmax(0,1fr)_210px_185px]">
-      <div className="self-center">
-        <h1 className="flex items-center gap-1.5 text-[20px] font-semibold leading-6 tracking-[-0.025em] text-[#111B43]">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900">
           Good Morning, Manish <span aria-hidden>👋</span>
         </h1>
-        <p className="mt-0.5 text-[10px] leading-4 text-[#687797]">
+        <p className="mt-0.5 text-xs text-slate-500 font-medium">
           Here&apos;s how your marketing is performing across all projects.
         </p>
       </div>
-      <div className="contents">
-        <blockquote className="hidden justify-self-end text-center text-[10px] font-medium leading-[14px] text-[#21335F] lg:block">
-          “Consistent effort creates
-          <br />
-          extraordinary brands.”
-          <footer className="mt-0.5 text-[9px] font-normal text-[#7B88A4]">— EnCodency</footer>
+      <div className="flex items-center gap-4 shrink-0">
+        <blockquote className="hidden text-right text-xs font-medium text-slate-600 lg:block border-r border-slate-200/80 pr-4">
+          “Consistent effort creates extraordinary brands.”
+          <footer className="text-[11px] font-normal text-slate-400">— EnCodency</footer>
         </blockquote>
-        <button className="flex h-11 w-full items-center gap-2 rounded-xl border border-[#D7E0EB] bg-white px-3 shadow-[0_1px_4px_rgb(31_50_81/0.08)]">
-          <CalendarDays className="size-3.5 shrink-0 text-[#19315E]" />
-          <span className="text-left leading-none">
-            <b className="block text-[9.5px] leading-4 text-[#172044]">Last 30 days</b>
-            <small className="block whitespace-nowrap text-[7.5px] leading-3 text-[#75829D]">
+        <button className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-3.5 py-2 text-left shadow-2xs transition-all hover:border-slate-300 hover:shadow-xs cursor-pointer shrink-0">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600">
+            <CalendarDays className="size-4" />
+          </span>
+          <span className="leading-tight">
+            <b className="block text-xs font-bold text-slate-800">Last 30 days</b>
+            <small className="block text-[11px] font-medium text-slate-500 whitespace-nowrap">
               Mar 15, 2025 – Apr 14, 2025
             </small>
           </span>
-          <ChevronDown className="ml-auto size-3 shrink-0" />
+          <ChevronDown className="size-4 shrink-0 text-slate-400 ml-1" />
         </button>
       </div>
     </div>
@@ -291,39 +309,37 @@ function Stat({
   icon: typeof BarChart3;
   color: string;
 }) {
-  const c: Record<string, string> = {
-    blue: "bg-[#E8F2FF] text-[#1975E7]",
-    red: "bg-[#FFE9EB] text-[#EA1A26]",
-    green: "bg-[#E4F8F0] text-[#0AA673]",
-    purple: "bg-[#F2E9FF] text-[#8A38DD]",
-    amber: "bg-[#FFF1D8] text-[#E79A00]",
+  const c: Record<string, { bg: string; text: string }> = {
+    blue: { bg: "bg-blue-50/90", text: "text-blue-600" },
+    red: { bg: "bg-rose-50/90", text: "text-rose-600" },
+    green: { bg: "bg-emerald-50/90", text: "text-emerald-600" },
+    purple: { bg: "bg-purple-50/90", text: "text-purple-600" },
+    amber: { bg: "bg-amber-50/90", text: "text-amber-600" },
   };
+  const style = c[color] ?? { bg: "bg-blue-50/90", text: "text-blue-600" };
+
   return (
-    <div className="flex min-h-[78px] items-center rounded-lg border border-[#DCE4EE] bg-white px-2.5 py-2.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)] transition-shadow hover:shadow-md">
-      <div className="flex w-full items-center gap-2">
-        <span
-          className={cn(
-            "grid size-[30px] shrink-0 place-items-center rounded-full",
-            c[color],
-          )}
-        >
-          <Icon className="size-[15px]" />
+    <div className="group relative flex flex-col justify-between min-h-[84px] rounded-xl border border-slate-200/80 bg-white px-3.5 py-2.5 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xs">
+      <div className="flex items-center justify-between gap-1.5">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 leading-none">
+          {label}
         </span>
-        <div className="min-w-0">
-          <p className="truncate text-[9px] font-semibold leading-3 text-[#52617D]">
-            {label}
-          </p>
-          <div className="flex items-baseline gap-1">
-            <b className="text-[19px] leading-[22px] tracking-[-0.02em] text-[#142044]">{value}</b>
-            {trend && (
-              <span className="whitespace-nowrap text-[8px] font-semibold text-[#05A36D]">
-                ↑ {trend}
-              </span>
-            )}
-          </div>
-          <p className="mt-0.5 truncate text-[7.5px] leading-3 text-[#7C89A2]">{note}</p>
-        </div>
+        <span className={cn("grid size-7 shrink-0 place-items-center rounded-lg transition-transform group-hover:scale-105", style.bg, style.text)}>
+          <Icon className="size-3.5" />
+        </span>
       </div>
+
+      <div className="mt-1.5 flex items-baseline justify-between gap-1">
+        <b className="text-xl font-bold tracking-tight text-slate-900 tabular-nums">{value}</b>
+        {trend && (
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10.5px] font-bold text-emerald-700 border border-emerald-200/50">
+            <ArrowUp className="size-2.5" />
+            {trend}
+          </span>
+        )}
+      </div>
+
+      <p className="mt-0.5 text-[11px] font-medium text-slate-500 leading-tight">{note}</p>
     </div>
   );
 }
@@ -337,48 +353,56 @@ function Box({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-sm">
-      <header className="flex h-8 items-center justify-between border-b border-[#E8EDF3] px-2.5">
-        <h2 className="text-[12px] font-semibold text-[#172044]">{title}</h2>
+    <section className="flex flex-col h-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xs transition-all duration-200 hover:shadow-xs">
+      <header className="flex min-h-[44px] shrink-0 items-center justify-between border-b border-slate-100 bg-slate-50/40 px-3.5 py-2">
+        <h2 className="text-xs font-bold tracking-tight text-slate-800">{title}</h2>
         {action && (
-          <button className="text-[9px] font-semibold text-[#EB0711]">
+          <button className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 transition-colors hover:text-rose-700">
             {action} →
           </button>
         )}
       </header>
-      {children}
+      <div className="flex-1 flex flex-col min-h-0">{children}</div>
     </section>
   );
 }
 function Performance() {
   return (
     <Box title="Marketing Performance">
-      <div className="px-2 pb-1">
-        <div className="flex h-7 items-center gap-3 text-[9px]">
-          <i className="size-1.5 rounded-full bg-[#F20C20]" />
-          Website Visits
-          <i className="size-1.5 rounded-full bg-[#F2709B]" />
-          Social Reach
-          <i className="size-1.5 rounded-full bg-[#3186F3]" />
-          Leads
-          <i className="size-1.5 rounded-full bg-[#10A66E]" />
-          Conversions
+      <div className="px-2.5 pb-2">
+        <div className="flex flex-wrap items-center gap-3 py-1.5 text-[12px]">
+          <span className="flex items-center gap-1.5">
+            <i className="size-2 rounded-full bg-[#F20C20]" />
+            Website Visits
+          </span>
+          <span className="flex items-center gap-1.5">
+            <i className="size-2 rounded-full bg-[#F2709B]" />
+            Social Reach
+          </span>
+          <span className="flex items-center gap-1.5">
+            <i className="size-2 rounded-full bg-[#3186F3]" />
+            Leads
+          </span>
+          <span className="flex items-center gap-1.5">
+            <i className="size-2 rounded-full bg-[#10A66E]" />
+            Conversions
+          </span>
         </div>
-        <div className="h-[165px]">
+        <div className="h-[175px]">
           <ResponsiveContainer>
             <AreaChart
               data={graph}
-              margin={{ top: 3, right: 3, left: -30, bottom: 0 }}
+              margin={{ top: 5, right: 5, left: -15, bottom: 0 }}
             >
               <CartesianGrid stroke="#E8EDF3" vertical />
               <XAxis
                 dataKey="d"
-                tick={{ fontSize: 8, fill: "#71809D" }}
+                tick={{ fontSize: 12, fill: "#71809D" }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 8, fill: "#71809D" }}
+                tick={{ fontSize: 12, fill: "#71809D" }}
                 axisLine={false}
                 tickLine={false}
               />
@@ -414,37 +438,39 @@ function ChannelOverview({
 }) {
   return (
     <Box title="Channel Overview" action="View all">
-      <div className="max-h-[218px] overflow-y-auto px-2 [scrollbar-color:#CBD5E1_transparent] [scrollbar-width:thin]">
-        <div className="sticky top-0 z-10 grid grid-cols-[1.35fr_.48fr_.62fr_.3fr_.66fr_.36fr] gap-1 bg-white py-1.5 text-[9px] font-medium text-[#7A87A0]">
+      <div className="max-h-[235px] overflow-y-auto overflow-x-auto px-3 scrollbar-thin">
+        <div className="sticky top-0 z-10 grid min-w-[500px] grid-cols-[135px_70px_85px_55px_85px_60px] gap-2 bg-white py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
           <span>Channel</span>
           <span>Reach</span>
           <span>Engagement</span>
           <span>Leads</span>
           <span>Status</span>
-          <span>Trend</span>
+          <span className="text-right">Trend</span>
         </div>
-        {channels.slice(0, 6).map((ch) => (
-          <div
-            key={ch.id}
-            className="grid grid-cols-[1.35fr_.48fr_.62fr_.3fr_.66fr_.36fr] items-center gap-1 border-t border-[#EDF1F5] py-2 text-[10.5px]"
-          >
-            <span className="flex items-center gap-1">
-              <ChannelLogo channel={ch.name} className="size-[18px]" />
-              <b className="truncate">{ch.name}</b>
-            </span>
-            <span>{ch.reach}</span>
-            <span>{ch.engagement}</span>
-            <span>{ch.leads}</span>
-            <span>
-              <i className="rounded bg-[#E5F7EF] px-1.5 py-0.5 text-[8.5px] text-[#078359]">
-                Connected
-              </i>
-            </span>
-            <b className="text-right text-[#078359]">
-              ↑ {Math.abs(ch.trend).toFixed(0)}%
-            </b>
-          </div>
-        ))}
+        <div className="divide-y divide-slate-100">
+          {channels.slice(0, 6).map((ch) => (
+            <div
+              key={ch.id}
+              className="grid min-w-[500px] grid-cols-[135px_70px_85px_55px_85px_60px] items-center gap-2 py-2 text-xs"
+            >
+              <span className="flex items-center gap-1.5 min-w-0">
+                <ChannelLogo channel={ch.name} className="size-4 shrink-0" />
+                <b className="whitespace-nowrap font-semibold text-slate-900">{ch.name}</b>
+              </span>
+              <span className="text-slate-600 font-medium tabular-nums">{ch.reach}</span>
+              <span className="text-slate-600 font-medium tabular-nums">{ch.engagement}</span>
+              <span className="text-slate-900 font-bold tabular-nums">{ch.leads}</span>
+              <span>
+                <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/60">
+                  Connected
+                </span>
+              </span>
+              <b className="text-right text-emerald-600 font-bold tabular-nums">
+                ↑ {Math.abs(ch.trend).toFixed(0)}%
+              </b>
+            </div>
+          ))}
+        </div>
       </div>
     </Box>
   );
@@ -473,24 +499,24 @@ function Attention({
   ];
   return (
     <Box title="Needs Attention" action="View all">
-      <div className="max-h-[218px] overflow-y-auto [scrollbar-color:#CBD5E1_transparent] [scrollbar-width:thin]">
+      <div className="max-h-[235px] overflow-y-auto divide-y divide-slate-100 scrollbar-thin">
         {[...items, ...extra].slice(0, 6).map((item, i) => (
           <div
             key={item.id}
-            className="flex items-center gap-2 border-b border-[#EDF1F5] px-2 py-1.5"
+            className="flex items-center gap-2.5 px-3 py-2 text-xs transition-colors hover:bg-slate-50/80"
           >
-            <span className="grid size-5 place-items-center rounded-full bg-[#FFF0E2] text-[#F07800]">
-              <AlertTriangle className="size-3" />
+            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-amber-50 text-amber-600 border border-amber-200/60">
+              <AlertTriangle className="size-3.5" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[9px] font-semibold">
+              <p className="text-xs font-semibold leading-snug text-slate-800">
                 {item.title}
               </p>
-              <p className="truncate text-[8px] text-[#7A87A0]">
+              <p className="text-[11px] text-slate-500 font-medium mt-0.5 leading-tight">
                 {item.detail}
               </p>
             </div>
-            <span className="rounded bg-[#FFF0F1] px-1 py-0.5 text-[7.5px] text-[#EB0711]">
+            <span className="shrink-0 rounded-md bg-rose-50 px-2 py-0.5 text-[10.5px] font-bold text-rose-700 border border-rose-200/60">
               {
                 [
                   "Connection",
@@ -511,7 +537,7 @@ function Attention({
 function LeadSources() {
   return (
     <Box title="Leads by Source" action="View all">
-      <div className="flex h-[162px] items-center gap-2 px-2.5">
+      <div className="flex min-h-[175px] items-center gap-3 px-3 py-2">
         <div className="relative size-[126px] shrink-0">
           <ResponsiveContainer>
             <PieChart>
@@ -530,21 +556,21 @@ function LeadSources() {
           </ResponsiveContainer>
           <div className="absolute inset-0 grid place-items-center text-center">
             <span>
-              <b className="block text-[16px]">248</b>
-              <small className="text-[9px] text-[#71809D]">Total Leads</small>
+              <b className="block text-base font-bold text-slate-900 tabular-nums">248</b>
+              <small className="text-[11px] font-semibold text-slate-500">Total Leads</small>
             </span>
           </div>
         </div>
         <div className="min-w-0 flex-1 space-y-1">
           {sources.map((s) => (
-            <div key={s.name} className="flex items-center gap-1.5 text-[9.5px] leading-4">
+            <div key={s.name} className="flex items-center gap-1.5 text-xs leading-5">
               <i
-                className="size-1.5 rounded-full"
+                className="size-2 rounded-full shrink-0"
                 style={{ background: s.color }}
               />
-              <span className="flex-1">{s.name}</span>
-              <b className="text-[#172044]">{s.value}%</b>
-              <span className="min-w-[24px] text-right text-[9px] text-[#7A87A0]">
+              <span className="flex-1 whitespace-nowrap text-slate-700 font-medium">{s.name}</span>
+              <b className="text-slate-900 tabular-nums">{s.value}%</b>
+              <span className="min-w-[28px] text-right text-[11px] text-slate-500 tabular-nums">
                 ({Math.round(s.value * 2.48)})
               </span>
             </div>
@@ -557,8 +583,8 @@ function LeadSources() {
 function Campaigns() {
   return (
     <Box title="Top Performing Campaigns" action="View all">
-      <div className="px-2">
-        <div className="grid grid-cols-[1.35fr_.75fr_.28fr_.38fr_.55fr_.45fr] gap-1 py-1 text-[8px] text-[#7A87A0]">
+      <div className="overflow-x-auto px-3 py-1 scrollbar-thin">
+        <div className="sticky top-0 z-10 grid min-w-[620px] grid-cols-[180px_130px_55px_60px_80px_65px] gap-2 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 bg-white">
           <span>Campaign</span>
           <span>Project</span>
           <span>Leads</span>
@@ -566,37 +592,41 @@ function Campaigns() {
           <span>Conversions</span>
           <span>Status</span>
         </div>
-        {campaigns.map((c, i) => (
-          <div
-            key={c.name}
-            className="grid grid-cols-[1.35fr_.75fr_.28fr_.38fr_.55fr_.45fr] items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[8.5px]"
-          >
-            <span className="flex min-w-0 items-center gap-1.5">
-              <Image
-                src={campaignPhotos[i] ?? "/campaigns/river-cleanup.jpg"}
-                alt=""
-                width={34}
-                height={24}
-                className="h-6 w-[34px] shrink-0 rounded object-cover shadow-sm"
-              />
-              <b className="truncate">{c.name}</b>
-            </span>
-            <span className="truncate text-[#6F7D98]">{c.project}</span>
-            <b>{c.leads}</b>
-            <span>{c.cpl}</span>
-            <span>{c.conv}</span>
-            <i
-              className={cn(
-                "w-fit rounded px-1 py-0.5 text-[7.5px]",
-                c.status === "Active"
-                  ? "bg-[#E5F7EF] text-[#078359]"
-                  : "bg-[#FFE8EA] text-[#D91521]",
-              )}
+        <div className="divide-y divide-slate-100">
+          {campaigns.map((c, i) => (
+            <div
+              key={c.name}
+              className="grid min-w-[620px] grid-cols-[180px_130px_55px_60px_80px_65px] items-center gap-2 py-2 text-xs"
             >
-              {c.status}
-            </i>
-          </div>
-        ))}
+              <span className="flex min-w-0 items-center gap-1.5">
+                <Image
+                  src={campaignPhotos[i] ?? "/campaigns/river-cleanup.jpg"}
+                  alt=""
+                  width={34}
+                  height={24}
+                  className="h-6 w-[34px] shrink-0 rounded object-cover shadow-2xs"
+                />
+                <b className="whitespace-nowrap font-semibold text-slate-900">{c.name}</b>
+              </span>
+              <span className="whitespace-nowrap text-slate-600 font-medium">{c.project}</span>
+              <b className="text-slate-900 tabular-nums">{c.leads}</b>
+              <span className="text-slate-600 tabular-nums">{c.cpl}</span>
+              <span className="text-slate-600 tabular-nums">{c.conv}</span>
+              <span>
+                <i
+                  className={cn(
+                    "rounded px-1.5 py-0.5 text-[11px] font-bold not-italic border",
+                    c.status === "Active"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200/60"
+                      : "bg-rose-50 text-rose-700 border-rose-200/60",
+                  )}
+                >
+                  {c.status}
+                </i>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </Box>
   );
@@ -604,25 +634,25 @@ function Campaigns() {
 function Upcoming() {
   return (
     <Box title="Upcoming Scheduled Content" action="View all">
-      <div>
+      <div className="divide-y divide-slate-100 max-h-[235px] overflow-y-auto overflow-x-auto p-1 scrollbar-thin">
         {upcoming.map((item, i) => (
           <div
             key={item.title}
-            className="grid grid-cols-[38px_1fr_.7fr_20px_.7fr] items-center gap-1.5 border-b border-[#EDF1F5] px-2 py-1"
+            className="grid min-w-[420px] grid-cols-[38px_150px_110px_24px_80px] items-center gap-2 px-2 py-2 text-xs transition-colors hover:bg-slate-50/80"
           >
             <Image
               src={campaignPhotos[i] ?? "/campaigns/river-cleanup.jpg"}
               alt=""
               width={38}
               height={28}
-              className="h-7 w-[38px] rounded object-cover shadow-sm"
+              className="h-7 w-[38px] rounded object-cover shadow-2xs shrink-0"
             />
-            <b className="truncate text-[8.5px]">{item.title}</b>
-            <span className="truncate text-[7.5px] text-[#71809D]">
+            <b className="whitespace-nowrap text-xs font-bold text-slate-900">{item.title}</b>
+            <span className="whitespace-nowrap text-xs text-slate-500 font-medium">
               {item.project}
             </span>
-            <ChannelLogo channel={item.channel} className="size-4" />
-            <span className="text-right text-[7.5px] text-[#62718E]">
+            <ChannelLogo channel={item.channel} className="size-4 shrink-0" />
+            <span className="text-right text-[11px] leading-tight text-slate-600 font-medium whitespace-nowrap tabular-nums">
               {item.date}
               <br />
               {item.time}
@@ -644,122 +674,329 @@ function RecentLeads({
     receivedAt: string;
   }>;
 }) {
+  const avatarColors = [
+    "bg-emerald-100 text-emerald-800",
+    "bg-indigo-100 text-indigo-800",
+    "bg-amber-100 text-amber-800",
+    "bg-blue-100 text-blue-800",
+    "bg-purple-100 text-purple-800",
+  ];
+
+  const projects = ["Moksha Sewa", "Ganga Explorer", "Ganga Drive", "Namo Gange Trust", "Moksha Sewa"];
+  const assignees = ["Priya Sharma", "Amit Singh", "Neha Verma", "Rohit Kumar", "Priya Sharma"];
+
+  const stageStyles: Record<string, string> = {
+    New: "bg-blue-50 text-blue-700 border-blue-200/70",
+    Contacted: "bg-purple-50 text-purple-700 border-purple-200/70",
+    Qualified: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
+    Proposal: "bg-amber-50 text-amber-700 border-amber-200/70",
+  };
+
   return (
     <Box title="Recent Leads" action="View all">
-      <div className="px-2">
-        <div className="grid grid-cols-[1.2fr_.58fr_.76fr_.62fr_.76fr_.66fr] gap-1 py-1 text-[7.5px] text-[#71809D]">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto p-3 scrollbar-thin">
+        <div className="sticky top-0 z-10 bg-white grid min-w-[580px] grid-cols-[140px_85px_115px_85px_105px_50px] gap-2 pb-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 px-1">
           <span>Name</span>
           <span>Source</span>
           <span>Project</span>
           <span>Stage</span>
-          <span>Assigned To</span>
-          <span>Date</span>
+          <span>Assigned</span>
+          <span className="text-right">Date</span>
         </div>
-        {leads.map((l, i) => (
-          <div
-            key={l.id}
-            className="grid grid-cols-[1.2fr_.58fr_.76fr_.62fr_.76fr_.66fr] items-center gap-1 border-t border-[#EDF1F5] py-1 text-[8px]"
-          >
-            <span className="flex min-w-0 items-center gap-1.5">
-              <i className={cn("grid size-4 shrink-0 place-items-center rounded-full font-semibold not-italic", ["bg-[#DDF8E9] text-[#16A16C]", "bg-[#E5F7EF] text-[#11A578]", "bg-[#FFF0DC] text-[#F28C28]", "bg-[#E7F0FF] text-[#3478DB]", "bg-[#EEE7FF] text-[#8357DC]"][i])}>{l.name.charAt(0)}</i>
-              <b className="truncate">{l.name}</b>
-            </span>
-            <span>{l.source}</span>
-            <span className="truncate">{["Moksha Sewa", "Ganga Explorer", "Ganga Drive", "Namo Gange Trust", "Moksha Sewa"][i]}</span>
-            <i className="w-fit rounded bg-[#EAF2FF] px-1 py-0.5 text-[#286CB7]">
-              {l.stage}
-            </i>
-            <span className="truncate">{["Priya Sharma", "Amit Singh", "Neha Verma", "Rohit Kumar", "Priya Sharma"][i]}</span>
-            <span>Apr {14 - i}, 2025</span>
+        <div className="divide-y divide-slate-100">
+          {leads.map((l, i) => (
+            <div
+              key={l.id}
+              className="grid min-w-[580px] grid-cols-[140px_85px_115px_85px_105px_50px] items-center gap-2 py-2 px-1 text-xs transition-colors hover:bg-slate-50/80 rounded-xl"
+            >
+              <span className="flex items-center gap-1.5 min-w-0">
+                <span className={cn("grid size-5 shrink-0 place-items-center rounded-full font-bold text-[10px] shadow-2xs", avatarColors[i % avatarColors.length])}>
+                  {l.name.charAt(0)}
+                </span>
+                <b className="whitespace-nowrap font-semibold text-slate-900 text-xs">{l.name}</b>
+              </span>
+              <span className="text-slate-600 font-medium whitespace-nowrap">{l.source}</span>
+              <span className="whitespace-nowrap text-slate-600">{projects[i % projects.length]}</span>
+              <span>
+                <span className={cn("inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold border", stageStyles[l.stage] || "bg-slate-50 text-slate-700 border-slate-200")}>
+                  {l.stage}
+                </span>
+              </span>
+              <span className="whitespace-nowrap text-slate-600">{assignees[i % assignees.length]}</span>
+              <span className="text-slate-500 font-medium tabular-nums whitespace-nowrap text-[11px] text-right">Apr {14 - i}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Box>
+  );
+}
+function RoiBudgetOverview() {
+  return (
+    <Box title="Ad Budget & ROI Overview" action="View breakdown">
+      <div className="p-3 space-y-3">
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-2">
+            <span className="text-[10px] font-bold text-slate-500 uppercase block">Total Revenue</span>
+            <b className="text-sm font-extrabold text-slate-900 block mt-0.5">₹6,84,000</b>
+            <span className="text-[10px] font-bold text-emerald-600">↑ 34%</span>
+          </div>
+          <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-2">
+            <span className="text-[10px] font-bold text-slate-500 uppercase block">Ad Spend</span>
+            <b className="text-sm font-extrabold text-slate-900 block mt-0.5">₹1,42,500</b>
+            <span className="text-[10px] font-semibold text-slate-500">75% budget</span>
+          </div>
+          <div className="rounded-xl border border-purple-100 bg-purple-50/60 p-2">
+            <span className="text-[10px] font-bold text-slate-500 uppercase block">ROAS Multiplier</span>
+            <b className="text-sm font-extrabold text-purple-700 block mt-0.5">4.8x</b>
+            <span className="text-[10px] font-bold text-emerald-600">High Yield</span>
+          </div>
+        </div>
+
+        {/* Budget Bar Breakdown */}
+        <div className="space-y-1.5 pt-1 border-t border-slate-100">
+          <div className="flex items-center justify-between text-xs font-bold">
+            <span className="text-slate-600 text-[11px]">Meta & Instagram Ads</span>
+            <span className="text-slate-900 font-extrabold text-[11px]">₹60,000 <span className="text-slate-400 font-normal">(42%)</span></span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-full rounded-full bg-pink-500" style={{ width: "42%" }} />
+          </div>
+
+          <div className="flex items-center justify-between text-xs font-bold pt-1">
+            <span className="text-slate-600 text-[11px]">Google Search & Display</span>
+            <span className="text-slate-900 font-extrabold text-[11px]">₹42,500 <span className="text-slate-400 font-normal">(30%)</span></span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-full rounded-full bg-blue-500" style={{ width: "30%" }} />
+          </div>
+
+          <div className="flex items-center justify-between text-xs font-bold pt-1">
+            <span className="text-slate-600 text-[11px]">WhatsApp Cloud API Broadcasts</span>
+            <span className="text-slate-900 font-extrabold text-[11px]">₹25,000 <span className="text-slate-400 font-normal">(18%)</span></span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-full rounded-full bg-emerald-500" style={{ width: "18%" }} />
+          </div>
+        </div>
+      </div>
+    </Box>
+  );
+}
+
+function MarketingGoals() {
+  const goals = [
+    { label: "Monthly Leads Goal", current: "248", target: "300", percent: 82, color: "bg-blue-600" },
+    { label: "Website Traffic Goal", current: "12.4K", target: "15K", percent: 83, color: "bg-purple-600" },
+    { label: "WhatsApp Subscribers", current: "3,842", target: "4,000", percent: 96, color: "bg-emerald-600" },
+    { label: "GMB Review Growth", current: "428", target: "500", percent: 86, color: "bg-amber-500" },
+  ];
+
+  return (
+    <Box title="Monthly Growth Goals" action="Manage targets">
+      <div className="p-3 space-y-3">
+        {goals.map((g) => (
+          <div key={g.label} className="space-y-1">
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className="text-slate-700 text-[11.5px]">{g.label}</span>
+              <span className="text-slate-900 font-extrabold text-[11.5px]">
+                {g.current} <span className="text-slate-400 font-medium">/ {g.target}</span> ({g.percent}%)
+              </span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+              <div className={cn("h-full rounded-full transition-all duration-500", g.color)} style={{ width: `${g.percent}%` }} />
+            </div>
           </div>
         ))}
       </div>
     </Box>
   );
 }
+
+function ActivityFeed() {
+  const activities = [
+    { text: "Rahul Verma submitted lead form via Meta Ads", time: "8m ago", type: "lead", color: "bg-blue-50 text-blue-700 border-blue-200" },
+    { text: "Earth Day Awareness WhatsApp Broadcast completed (2,480 sent)", time: "1h ago", type: "whatsapp", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    { text: "New 5-star review received on Google Business Profile", time: "3h ago", type: "gmb", color: "bg-amber-50 text-amber-700 border-amber-200" },
+    { text: "Template event_reminder_v2 approved by Meta WABA", time: "5h ago", type: "template", color: "bg-purple-50 text-purple-700 border-purple-200" },
+  ];
+
+  return (
+    <Box title="Live Activity Stream" action="View log">
+      <div className="p-2.5 divide-y divide-slate-100 max-h-[220px] overflow-y-auto scrollbar-thin">
+        {activities.map((act, i) => (
+          <div key={i} className="flex items-center justify-between gap-2.5 py-2 text-xs hover:bg-slate-50/80 px-1 rounded-lg">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={cn("size-2 rounded-full shrink-0", i === 0 ? "bg-blue-500 animate-pulse" : i === 1 ? "bg-emerald-500" : i === 2 ? "bg-amber-500" : "bg-purple-500")} />
+              <p className="font-semibold text-slate-800 text-[11.5px] truncate">{act.text}</p>
+            </div>
+            <span className="text-[10px] text-slate-400 font-semibold shrink-0">{act.time}</span>
+          </div>
+        ))}
+      </div>
+    </Box>
+  );
+}
+
 function SeoSnapshot() {
   return (
     <Box title="SEO Snapshot" action="View details">
-      <div className="grid grid-cols-4 divide-x divide-[#EDF1F5] px-1 py-2 text-center">
-        <Mini value="1,245" label="Keywords" trend="↑ 12%" />
-        <Mini value="18.4K" label="Clicks" trend="↑ 26%" />
-        <Mini value="320K" label="Impressions" trend="↑ 18%" />
-        <Mini value="12.6" label="Avg. Position" trend="↓ 2.4" negative />
-      </div>
-      <div className="mx-2 mb-2 rounded-sm border border-[#FFE1E4] bg-[#FFF0F1] p-2 text-[8px] leading-[14px] text-[#D91521]">
-        <b>⚠ 3 critical issues need attention</b>
-        <p className="mt-1">• 12 keywords dropped</p>
-        <p>• Missing meta descriptions</p>
-        <p>• Improve Core Web Vitals</p>
+      <div className="p-3 space-y-2.5">
+        <div className="grid grid-cols-2 gap-2">
+          <Mini value="1,245" label="Keywords" trend="↑ 12%" />
+          <Mini value="18.4K" label="Clicks" trend="↑ 26%" />
+          <Mini value="320K" label="Impressions" trend="↑ 18%" />
+          <Mini value="12.6" label="Avg. Position" trend="↓ 2.4" negative />
+        </div>
+
+        {/* Top Keywords Ranking */}
+        <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2 text-xs">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase border-b border-slate-200/60 pb-1">
+            <span>Top Keywords</span>
+            <span>Rank</span>
+            <span>Traffic</span>
+          </div>
+          <div className="divide-y divide-slate-100 space-y-1 pt-1">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-semibold text-slate-800 truncate max-w-[130px]">Clean Ganga NGO</span>
+              <span className="font-bold text-emerald-600">#1 <span className="text-[9px]">↑2</span></span>
+              <span className="text-slate-500 font-medium">4.2K</span>
+            </div>
+            <div className="flex items-center justify-between text-[11px] pt-1">
+              <span className="font-semibold text-slate-800 truncate max-w-[130px]">River Cleanup Delhi</span>
+              <span className="font-bold text-emerald-600">#2 <span className="text-[9px]">↑1</span></span>
+              <span className="text-slate-500 font-medium">2.8K</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-rose-200/80 bg-rose-50/60 p-2.5 text-xs text-rose-900 shadow-2xs">
+          <div className="flex items-center gap-2 font-bold text-rose-900">
+            <span className="grid size-5 place-items-center rounded-md bg-rose-100 text-rose-700">
+              <AlertTriangle className="size-3.5" />
+            </span>
+            <span>3 critical issues need attention</span>
+          </div>
+          <ul className="mt-1 space-y-0.5 text-rose-800 font-medium pl-1 text-[11px]">
+            <li className="flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-rose-500" />
+              12 keywords dropped position
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-rose-500" />
+              Missing meta descriptions on 4 pages
+            </li>
+          </ul>
+        </div>
       </div>
     </Box>
   );
 }
+
 function GmbSnapshot() {
   return (
     <Box title="Google Business Snapshot" action="View details">
-      <div className="flex items-center gap-2 px-2 py-1.5">
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white shadow-[0_1px_5px_rgb(31_50_81/0.14)]">
-          <ChannelLogo channel="Google Business" className="size-5" />
-        </span>
-        <b className="text-[18px] text-[#172044]">4.7</b>
-        <span className="text-[14px] text-[#F5A000]">★</span>
-        <span className="text-[8px] text-[#71809D]">428 reviews</span>
-        <span className="ml-auto rounded bg-[#E5F7EF] px-1.5 py-0.5 text-[8px] font-semibold text-[#078359]">↑ 0.2</span>
-      </div>
-      <div className="grid grid-cols-3 divide-x divide-[#EDF1F5] border-y border-[#EDF1F5] px-1 py-2 text-[8px]">
-        <p className="flex items-start gap-1.5 px-1">
-          <Phone className="mt-0.5 size-3 shrink-0 text-[#EA4335]" />
-          <span><b>1,248</b><br />Calls ↑18%</span>
-        </p>
-        <p className="flex items-start gap-1.5 px-1">
-          <MousePointerClick className="mt-0.5 size-3 shrink-0 text-[#4285F4]" />
-          <span><b>2,836</b><br />Clicks ↑24%</span>
-        </p>
-        <p className="flex items-start gap-1.5 px-1">
-          <Navigation className="mt-0.5 size-3 shrink-0 text-[#34A853]" />
-          <span><b>1,120</b><br />Directions</span>
-        </p>
-      </div>
-      <div className="m-2 rounded-sm border border-[#D8F2E7] bg-[#E8F8F1] p-2 text-[8px] leading-3 text-[#078359]">
-        ✓ You&apos;re doing great! Keep engaging with reviews.
+      <div className="p-3 space-y-2.5">
+        <div className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/60 p-2.5">
+          <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-white border border-slate-200/60 p-1.5 shadow-2xs">
+            <ChannelLogo channel="Google Business" className="size-5" />
+          </div>
+          <div className="flex items-baseline gap-1">
+            <b className="text-xl font-bold text-slate-900 tabular-nums">4.7</b>
+            <span className="text-amber-500 font-bold text-sm">★</span>
+          </div>
+          <span className="text-[11px] text-slate-500 font-medium">428 reviews</span>
+          <span className="ml-auto rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/60">
+            ↑ 0.2
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-1.5 text-xs">
+          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center">
+            <Phone className="mx-auto size-3.5 text-rose-500 mb-1" />
+            <b className="block text-slate-900 font-bold tabular-nums text-xs">1,248</b>
+            <span className="text-[10px] text-emerald-600 font-semibold">Calls ↑18%</span>
+          </div>
+          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center">
+            <MousePointerClick className="mx-auto size-3.5 text-blue-500 mb-1" />
+            <b className="block text-slate-900 font-bold tabular-nums text-xs">2,836</b>
+            <span className="text-[10px] text-emerald-600 font-semibold">Clicks ↑24%</span>
+          </div>
+          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center">
+            <Navigation className="mx-auto size-3.5 text-emerald-500 mb-1" />
+            <b className="block text-slate-900 font-bold tabular-nums text-xs">1,120</b>
+            <span className="text-[10px] text-slate-500 font-medium">Directions</span>
+          </div>
+        </div>
+
+        {/* Recent Review Card */}
+        <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 p-2 text-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1 text-amber-500 font-bold text-[10px]">
+              <span>★★★★★</span>
+              <span className="text-slate-800 font-bold ml-1 text-[11px]">Rajesh Kumar</span>
+            </div>
+            <span className="text-[9.5px] text-slate-400 font-semibold">2h ago</span>
+          </div>
+          <p className="mt-0.5 text-[10.5px] text-slate-600 italic line-clamp-1">
+            &ldquo;Great river cleanup initiative by Namo Gange! Well organized.&rdquo;
+          </p>
+          <div className="mt-1.5 flex items-center justify-between border-t border-amber-200/40 pt-1">
+            <span className="text-[10px] font-bold text-emerald-700">✓ Responded</span>
+            <button className="text-[10px] font-bold text-blue-600 hover:underline">View All Reviews →</button>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/60 p-2 text-[11px] font-semibold text-emerald-800 flex items-center gap-2 shadow-2xs">
+          <span className="grid size-5 shrink-0 place-items-center rounded-full bg-emerald-200/60 text-emerald-800 font-bold">
+            ✓
+          </span>
+          <span>You&apos;re doing great! Keep engaging with reviews.</span>
+        </div>
       </div>
     </Box>
   );
 }
+
 function QuickActions() {
   const actions = [
-    [Megaphone, "Create Campaign"],
-    [Plus, "Create Post"],
-    [SearchCheck, "Run SEO Audit"],
-    [UsersRound, "Add Lead"],
-    [Globe2, "Generate Report"],
-    [UsersRound, "Invite User"],
+    [Megaphone, "Create Campaign", "bg-rose-50 text-rose-600 border-rose-100"],
+    [Plus, "Create Post", "bg-blue-50 text-blue-600 border-blue-100"],
+    [SearchCheck, "Run SEO Audit", "bg-emerald-50 text-emerald-600 border-emerald-100"],
+    [UsersRound, "Add Lead", "bg-purple-50 text-purple-600 border-purple-100"],
+    [Globe2, "Generate Report", "bg-sky-50 text-sky-600 border-sky-100"],
+    [UsersRound, "Invite User", "bg-amber-50 text-amber-600 border-amber-100"],
   ] as const;
+
   return (
     <Box title="Quick Actions">
-      <div className="grid grid-cols-2 gap-1 p-2">
-        {actions.map(([Icon, label], index) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 p-3">
+        {actions.map(([Icon, label, colors]) => (
           <button
             key={label}
-            className="flex h-9 items-center gap-2 rounded-sm border border-[#E1E7EF] px-2 text-left text-[8px] font-semibold transition-colors hover:bg-[#F8FAFD]"
+            className="group flex min-h-[44px] items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-left text-xs font-semibold text-slate-800 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xs hover:bg-slate-50/60 cursor-pointer"
           >
-            <span className={cn("grid size-6 shrink-0 place-items-center rounded-full", ["bg-[#FFE8EA] text-[#EB0711]", "bg-[#E8F1FF] text-[#1769D2]", "bg-[#DCF8ED] text-[#0A9E70]", "bg-[#EEE7FF] text-[#7B3FE4]", "bg-[#E8F1FF] text-[#1769D2]", "bg-[#FFF0DC] text-[#F07C18]"][index])}>
+            <span className={cn("grid size-7 shrink-0 place-items-center rounded-lg border transition-transform group-hover:scale-105", colors)}>
               <Icon className="size-3.5" />
             </span>
-            {label}
+            <span className="truncate">{label}</span>
           </button>
         ))}
       </div>
     </Box>
   );
 }
+
 function Mini({ value, label, trend, negative = false }: { value: string; label: string; trend?: string; negative?: boolean }) {
   return (
-    <div className="flex min-w-0 flex-col items-center px-1">
-      <b className="block text-[10px] leading-4 text-[#172044]">{value}</b>
-      <span className="block min-h-4 whitespace-nowrap text-[7px] leading-4 text-[#71809D]">{label}</span>
-      {trend && <span className={cn("block text-[7.5px] font-semibold leading-3", negative ? "text-[#EB3342]" : "text-[#08A36D]")}>{trend}</span>}
+    <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center transition-colors hover:bg-slate-100/60">
+      <b className="block text-sm font-bold text-slate-900 tabular-nums">{value}</b>
+      <span className="block text-[11px] font-medium text-slate-500 mt-0.5">{label}</span>
+      {trend && (
+        <span className={cn("block text-[11px] font-bold mt-0.5", negative ? "text-rose-600" : "text-emerald-600")}>
+          {trend}
+        </span>
+      )}
     </div>
   );
 }
