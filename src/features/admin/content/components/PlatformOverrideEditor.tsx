@@ -92,9 +92,11 @@ export function PlatformOverrideEditor({
               return (
                 <div key={p} className="rounded-sm border border-[#E2E8F0] overflow-hidden">
                   {/* Header */}
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => toggleExpand(p)}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left transition hover:bg-slate-50"
+                    className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left transition hover:bg-slate-50"
                   >
                     {isExpanded ? <ChevronDown className="size-3.5 text-[#7A87A0]" /> : <ChevronRight className="size-3.5 text-[#7A87A0]" />}
                     <PlatformBadge platform={p} size="sm" />
@@ -117,7 +119,7 @@ export function PlatformOverrideEditor({
                         <Copy className="size-2.5" /> Use Master
                       </button>
                     )}
-                  </button>
+                  </div>
 
                   {/* Expanded content */}
                   {isExpanded && (
