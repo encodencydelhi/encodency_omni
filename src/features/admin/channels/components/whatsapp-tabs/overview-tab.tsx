@@ -34,6 +34,7 @@ import {
   UserMinus,
   ArrowUpRight,
   Pencil,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
@@ -66,23 +67,23 @@ const messageStats = [
 ];
 
 const performanceData30d = [
-  { d: "Mar 15", sent: 300, delivered: 280, read: 200, replied: 80 },
-  { d: "Mar 20", sent: 500, delivered: 480, read: 350, replied: 150 },
-  { d: "Mar 25", sent: 450, delivered: 420, read: 300, replied: 120 },
-  { d: "Mar 30", sent: 800, delivered: 760, read: 550, replied: 200 },
-  { d: "Apr 5", sent: 900, delivered: 880, read: 650, replied: 250 },
-  { d: "Apr 10", sent: 1100, delivered: 1050, read: 800, replied: 300 },
-  { d: "Apr 14", sent: 1200, delivered: 1150, read: 900, replied: 350 },
+  { d: "Mar 15", sent: 1250, delivered: 980, read: 640, replied: 190 },
+  { d: "Mar 20", sent: 1580, delivered: 1240, read: 820, replied: 260 },
+  { d: "Mar 25", sent: 1420, delivered: 1150, read: 780, replied: 230 },
+  { d: "Mar 30", sent: 2100, delivered: 1680, read: 1150, replied: 380 },
+  { d: "Apr 5", sent: 2450, delivered: 1960, read: 1380, replied: 460 },
+  { d: "Apr 10", sent: 2780, delivered: 2240, read: 1620, replied: 540 },
+  { d: "Apr 14", sent: 3100, delivered: 2520, read: 1850, replied: 620 },
 ];
 
 const performanceData7d = [
-  { d: "Apr 8", sent: 980, delivered: 940, read: 720, replied: 280 },
-  { d: "Apr 9", sent: 1050, delivered: 1010, read: 780, replied: 310 },
-  { d: "Apr 10", sent: 1100, delivered: 1050, read: 800, replied: 300 },
-  { d: "Apr 11", sent: 1120, delivered: 1070, read: 830, replied: 320 },
-  { d: "Apr 12", sent: 1150, delivered: 1100, read: 860, replied: 330 },
-  { d: "Apr 13", sent: 1180, delivered: 1130, read: 880, replied: 340 },
-  { d: "Apr 14", sent: 1200, delivered: 1150, read: 900, replied: 350 },
+  { d: "Apr 8", sent: 2300, delivered: 1850, read: 1280, replied: 410 },
+  { d: "Apr 9", sent: 2450, delivered: 1960, read: 1390, replied: 450 },
+  { d: "Apr 10", sent: 2600, delivered: 2100, read: 1520, replied: 490 },
+  { d: "Apr 11", sent: 2720, delivered: 2200, read: 1600, replied: 530 },
+  { d: "Apr 12", sent: 2850, delivered: 2320, read: 1690, replied: 560 },
+  { d: "Apr 13", sent: 2980, delivered: 2420, read: 1780, replied: 590 },
+  { d: "Apr 14", sent: 3100, delivered: 2520, read: 1850, replied: 620 },
 ];
 
 const breakdownData = [
@@ -101,11 +102,11 @@ const topCampaigns = [
 ];
 
 const recentCampaigns = [
-  { name: "Earth Day Awareness", type: "Marketing", audience: "2,480", status: "Completed", date: "Apr 14, 2025 10:00 AM" },
-  { name: "Volunteer Recruitment", type: "Marketing", audience: "1,920", status: "Completed", date: "Apr 12, 2025 02:30 PM" },
-  { name: "Event Reminder", type: "Utility", audience: "1,560", status: "Completed", date: "Apr 10, 2025 11:00 AM" },
-  { name: "Donation Appeal", type: "Marketing", audience: "1,240", status: "Completed", date: "Apr 8, 2025 05:00 PM" },
-  { name: "Thank You Message", type: "Utility", audience: "980", status: "Completed", date: "Apr 5, 2025 09:00 AM" },
+  { name: "Earth Day", type: "Marketing", audience: "2,480", status: "Completed", date: "Apr 14, 10:00 AM" },
+  { name: "Volunteer Drive", type: "Marketing", audience: "1,920", status: "Completed", date: "Apr 12, 02:30 PM" },
+  { name: "Event Reminder", type: "Utility", audience: "1,560", status: "Completed", date: "Apr 10, 11:00 AM" },
+  { name: "Donation Appeal", type: "Marketing", audience: "1,240", status: "Completed", date: "Apr 8, 05:00 PM" },
+  { name: "Thank You", type: "Utility", audience: "980", status: "Completed", date: "Apr 5, 09:00 AM" },
 ];
 
 const messageTemplates = [
@@ -259,15 +260,15 @@ export function OverviewTab({
             </div>
             <div className="ml-4 flex-1 space-y-2.5">
               {breakdownData.map((d, i) => (
-                <div key={d.name} className="flex items-center justify-between text-xs font-bold">
-                  <span className="flex items-center gap-1.5 text-slate-600">
+                <div key={d.name} className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5 text-slate-600 font-medium">
                     <i className="size-2.5 rounded-sm" style={{ backgroundColor: d.color }} />
                     {d.name}
                   </span>
-                  <div className="text-right">
-                    <span className="block text-slate-900 font-extrabold">{d.value.toLocaleString()}</span>
-                    <span className={cn("block text-[10px] font-bold", i === 3 ? "text-rose-600" : "text-emerald-600")}>
-                      {["96.5%", "77.6%", "26.2%", "3.5%"][i]}
+                  <div className="flex items-baseline gap-1.5 shrink-0">
+                    <b className="text-slate-900 font-bold text-xs">{d.value.toLocaleString()}</b>
+                    <span className={cn("text-[11px] font-medium", i === 3 ? "text-rose-600" : "text-emerald-600")}>
+                      {["(96.5%)", "(77.6%)", "(26.2%)", "(3.5%)"][i]}
                     </span>
                   </div>
                 </div>
@@ -308,21 +309,52 @@ export function OverviewTab({
         </Box>
       </div>
 
-      {/* Row 3: Recent Campaigns, Message Templates, Quick Actions */}
-      <div className="grid min-h-[310px] grid-cols-1 lg:grid-cols-3 gap-2">
+      {/* Quick Actions */}
+      <Box title="Quick Actions">
+        <div className="p-2.5 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+          {[
+            { icon: Send, label: "Create Campaign", desc: "Broadcast", modal: "create-campaign", color: "text-emerald-700 bg-emerald-50 border-emerald-200" },
+            { icon: Mail, label: "Send Template Message", desc: "Direct msg", modal: "send-template", color: "text-blue-700 bg-blue-50 border-blue-200" },
+            { icon: Edit3, label: "Manage Templates", desc: "All templates", tab: "Templates", color: "text-purple-700 bg-purple-50 border-purple-200" },
+            { icon: UsersRound, label: "Import Contacts", desc: "CSV sync", modal: "import-contacts", color: "text-indigo-700 bg-indigo-50 border-indigo-200" },
+            { icon: BarChart3, label: "View Reports", desc: "Analytics", tab: "Analytics", color: "text-amber-700 bg-amber-50 border-amber-200" },
+            { icon: Zap, label: "Automation Rules", desc: "Triggers", tab: "Automation", color: "text-teal-700 bg-teal-50 border-teal-200" },
+            { icon: Settings2, label: "WhatsApp Settings", desc: "WABA config", tab: "Settings", color: "text-slate-700 bg-slate-100 border-slate-200" },
+          ].map((a, i) => (
+            <button
+              key={i}
+              onClick={() => (a.modal ? onOpenModal?.(a.modal) : a.tab && onTabChange?.(a.tab))}
+              className="flex items-center gap-2.5 rounded-sm border border-slate-200/90 bg-white p-2.5 shadow-2xs hover:shadow-xs hover:border-emerald-400 hover:-translate-y-0.5 transition-all group cursor-pointer text-left"
+            >
+              <span className={cn("grid size-8.5 shrink-0 place-items-center rounded-sm border shadow-2xs transition-transform group-hover:scale-105", a.color)}>
+                <a.icon className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11.5px] font-bold text-slate-800 leading-tight group-hover:text-emerald-700 truncate">
+                  {a.label}
+                </p>
+                <p className="text-[9.5px] font-medium text-slate-400 truncate mt-0.5">{a.desc}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </Box>
+
+      {/* Row 3: Recent Campaigns, Message Templates */}
+      <div className="grid min-h-[300px] grid-cols-1 lg:grid-cols-2 gap-2">
         <Box
           title="Recent Campaigns"
           action={
             <button
-              onClick={() => onTabChange("Campaigns")}
-              className="text-emerald-600 hover:text-emerald-700 text-xs font-bold hover:underline flex items-center gap-0.5 transition-all"
+              onClick={() => onTabChange?.("Campaigns")}
+              className="text-emerald-600 hover:text-emerald-700 text-xs font-bold hover:underline flex items-center gap-0.5 transition-all cursor-pointer"
             >
               View All <ArrowUpRight className="size-3" />
             </button>
           }
         >
-          <div className="px-3 py-1">
-            <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr_1.4fr] gap-2 py-2 text-[10.5px] font-bold text-slate-400 uppercase border-b border-slate-100">
+          <div className="overflow-x-auto [scrollbar-width:thin] px-3 py-1">
+            <div className="grid min-w-[420px] grid-cols-[1.5fr_1fr_1fr_1fr_1.3fr] gap-2 py-2 text-[10.5px] font-bold text-slate-400 uppercase border-b border-slate-100">
               <span>Campaign</span>
               <span>Type</span>
               <span>Audience</span>
@@ -330,7 +362,7 @@ export function OverviewTab({
               <span>Sent On</span>
             </div>
             {recentCampaigns.map((c) => (
-              <div key={c.name} className="grid grid-cols-[1.6fr_1fr_1fr_1fr_1.4fr] gap-2 items-center border-b border-slate-50 py-2.5 text-xs hover:bg-slate-50/80 transition-colors">
+              <div key={c.name} className="grid min-w-[420px] grid-cols-[1.5fr_1fr_1fr_1fr_1.3fr] gap-2 items-center border-b border-slate-50 py-2.5 text-xs hover:bg-slate-50/80 transition-colors">
                 <span className="truncate font-bold text-slate-900">{c.name}</span>
                 <span>
                   <i className={cn("inline-flex items-center justify-center w-[74px] rounded-sm py-0.5 text-[10px] font-bold not-italic border text-center shrink-0", c.type === "Marketing" ? "bg-pink-50 text-pink-700 border-pink-200" : "bg-blue-50 text-blue-700 border-blue-200")}>
@@ -353,60 +385,33 @@ export function OverviewTab({
           title="Message Templates"
           action={
             <button
-              onClick={() => onOpenModal("create-template")}
-              className="flex h-7 items-center gap-1 rounded-sm bg-emerald-600 hover:bg-emerald-700 px-2.5 text-[11px] font-bold text-white shadow-xs transition-all"
+              onClick={() => onOpenModal?.("create-template")}
+              className="flex h-7 items-center gap-1 rounded-sm bg-emerald-600 hover:bg-emerald-700 px-2.5 text-[11px] font-bold text-white shadow-xs transition-all cursor-pointer"
             >
               <Plus className="size-3.5" /> Add Template
             </button>
           }
         >
-          <div className="px-3 py-1">
-            <div className="grid grid-cols-[1.8fr_1fr_1fr_1fr] gap-2 py-2 text-[10.5px] font-bold text-slate-400 uppercase border-b border-slate-100">
+          <div className="overflow-x-auto [scrollbar-width:thin] px-3 py-1">
+            <div className="grid min-w-[340px] grid-cols-[1.8fr_1.2fr_1fr] gap-2 py-2 text-[10.5px] font-bold text-slate-400 uppercase border-b border-slate-100">
               <span>Template Name</span>
               <span>Category</span>
-              <span>Language</span>
-              <span>Status</span>
+              <span className="text-right">Status</span>
             </div>
             {messageTemplates.map((t) => (
-              <div key={t.name} className="grid grid-cols-[1.8fr_1fr_1fr_1fr] gap-2 items-center border-b border-slate-50 py-2.5 text-xs hover:bg-slate-50/80 transition-colors">
+              <div key={t.name} className="grid min-w-[340px] grid-cols-[1.8fr_1.2fr_1fr] gap-2 items-center border-b border-slate-50 py-2.5 text-xs hover:bg-slate-50/80 transition-colors">
                 <span className="truncate font-bold text-slate-900">{t.name}</span>
                 <span>
-                  <i className={cn("inline-flex items-center justify-center w-[84px] rounded-sm py-0.5 text-[10px] font-bold not-italic border text-center shrink-0", t.category === "Marketing" ? "bg-pink-50 text-pink-700 border-pink-200" : t.category === "Utility" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-purple-50 text-purple-700 border-purple-200")}>
+                  <i className={cn("inline-flex items-center justify-center rounded-sm px-2 py-0.5 text-[10px] font-bold not-italic border text-center shrink-0", t.category === "Marketing" ? "bg-pink-50 text-pink-700 border-pink-200" : t.category === "Utility" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-purple-50 text-purple-700 border-purple-200")}>
                     {t.category}
                   </i>
                 </span>
-                <span className="text-slate-500 font-semibold">{t.lang}</span>
-                <span>
+                <span className="text-right">
                   <i className="inline-flex items-center justify-center w-[74px] rounded-sm bg-emerald-50 text-emerald-700 border border-emerald-200 py-0.5 text-[10px] font-bold not-italic text-center shrink-0">
                     {t.status}
                   </i>
                 </span>
               </div>
-            ))}
-          </div>
-        </Box>
-
-        <Box title="Quick Actions">
-          <div className="p-3 space-y-1.5">
-            {[
-              { icon: Send, label: "Create Campaign", modal: "create-campaign", color: "text-emerald-700 bg-emerald-50 border-emerald-200" },
-              { icon: Mail, label: "Send Template Message", modal: "send-template", color: "text-blue-700 bg-blue-50 border-blue-200" },
-              { icon: Edit3, label: "Manage Templates", tab: "Templates", color: "text-purple-700 bg-purple-50 border-purple-200" },
-              { icon: UsersRound, label: "Import Contacts", modal: "import-contacts", color: "text-indigo-700 bg-indigo-50 border-indigo-200" },
-              { icon: BarChart3, label: "View Reports", tab: "Analytics", color: "text-amber-700 bg-amber-50 border-amber-200" },
-              { icon: Settings2, label: "Automation Rules", tab: "Automation", color: "text-teal-700 bg-teal-50 border-teal-200" },
-              { icon: Settings2, label: "WhatsApp Settings", tab: "Settings", color: "text-slate-700 bg-slate-100 border-slate-200" },
-            ].map((a, i) => (
-              <button
-                key={i}
-                onClick={() => (a.modal ? onOpenModal(a.modal) : a.tab && onTabChange(a.tab))}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-bold text-slate-800 hover:bg-slate-100/80 transition-all border border-transparent hover:border-slate-200 group"
-              >
-                <span className={cn("p-1.5 rounded-lg border transition-transform group-hover:scale-105", a.color)}>
-                  <a.icon className="size-3.5" />
-                </span>
-                {a.label}
-              </button>
             ))}
           </div>
         </Box>
