@@ -567,9 +567,9 @@ function RecentComments() {
   const href = tab === "all" ? ytRoutes.comments : tab === "unanswered" ? `${ytRoutes.comments}?status=unanswered` : `${ytRoutes.comments}?status=held`;
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col h-[380px]">
       <CardHeader title="Recent comments" actions={<ViewLink href={href}>View all</ViewLink>} />
-      <div className="border-b border-[#EEF1F5] px-4">
+      <div className="border-b border-[#EEF1F5] px-4 shrink-0">
         <UnderlineTabs<CommentTab>
           label="Comment filter"
           size="sm"
@@ -585,8 +585,9 @@ function RecentComments() {
       {list.length === 0 ? (
         <EmptyState compact icon={MessageSquare} title={tab === "unanswered" ? "Every comment has a reply" : tab === "review" ? "Nothing to review" : "No comments yet"} description="Comments will appear here once viewers engage." />
       ) : (
-        <ul className="divide-y divide-[#EEF1F5]">
-          {list.map((c) => {
+        <div className="flex-1 overflow-y-auto scrollbar-thin">
+          <ul className="divide-y divide-[#EEF1F5]">
+            {list.map((c) => {
             const video = videos.find((v) => v.id === c.videoId);
             return (
               <li key={c.id} className="flex gap-3 px-4 py-2.5">
@@ -620,7 +621,8 @@ function RecentComments() {
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </div>
       )}
     </Card>
   );
@@ -645,7 +647,7 @@ function UpcomingContent() {
   }, [videos, liveEvents]);
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col h-[380px]">
       <CardHeader
         title="Upcoming YouTube content"
         actions={
@@ -658,8 +660,9 @@ function UpcomingContent() {
       {items.length === 0 ? (
         <EmptyState compact icon={CalendarDays} title="Nothing scheduled" description="Schedule uploads ahead to keep a consistent cadence." />
       ) : (
-        <ul className="divide-y divide-[#EEF1F5] border-t border-[#EEF1F5]">
-          {items.map((item) => {
+        <div className="flex-1 overflow-y-auto scrollbar-thin border-t border-[#EEF1F5]">
+          <ul className="divide-y divide-[#EEF1F5]">
+            {items.map((item) => {
             const d = item.when ? parseISO(item.when) : null;
             return (
               <li key={item.id}>
@@ -681,7 +684,8 @@ function UpcomingContent() {
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </div>
       )}
     </Card>
   );
