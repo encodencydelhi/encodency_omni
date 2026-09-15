@@ -687,38 +687,40 @@ function RecentLeads({
 
   return (
     <Box title="Recent Leads" action="View all">
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto p-3 scrollbar-thin">
-        <div className="sticky top-0 z-10 bg-white grid min-w-[580px] grid-cols-[140px_85px_115px_85px_105px_50px] gap-2 pb-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 px-1">
-          <span>Name</span>
-          <span>Source</span>
-          <span>Project</span>
-          <span>Stage</span>
-          <span>Assigned</span>
-          <span className="text-right">Date</span>
-        </div>
-        <div className="divide-y divide-slate-100">
-          {leads.map((l, i) => (
-            <div
-              key={l.id}
-              className="grid min-w-[580px] grid-cols-[140px_85px_115px_85px_105px_50px] items-center gap-2 py-2 px-1 text-xs transition-colors hover:bg-slate-50/80 rounded-sm"
-            >
-              <span className="flex items-center gap-1.5 min-w-0">
-                <span className={cn("grid size-5 shrink-0 place-items-center rounded-sm font-bold text-[10px] shadow-2xs", avatarColors[i % avatarColors.length])}>
-                  {l.name.charAt(0)}
+      <div className="flex flex-col h-full p-3">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto scrollbar-thin rounded-xl border border-slate-100 bg-white shadow-2xs">
+          <div className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur-md grid min-w-[580px] grid-cols-[140px_85px_115px_85px_105px_50px] gap-2 py-2 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+            <span>Name</span>
+            <span>Source</span>
+            <span>Project</span>
+            <span>Stage</span>
+            <span>Assigned</span>
+            <span className="text-right">Date</span>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {leads.map((l, i) => (
+              <div
+                key={l.id}
+                className="grid min-w-[580px] grid-cols-[140px_85px_115px_85px_105px_50px] items-center gap-2 py-2.5 px-3 text-xs transition-colors hover:bg-slate-50/50"
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <span className={cn("grid size-6 shrink-0 place-items-center rounded-lg font-bold text-[10px] shadow-2xs", avatarColors[i % avatarColors.length])}>
+                    {l.name.charAt(0)}
+                  </span>
+                  <b className="whitespace-nowrap font-semibold text-slate-900">{l.name}</b>
                 </span>
-                <b className="whitespace-nowrap font-semibold text-slate-900 text-xs">{l.name}</b>
-              </span>
-              <span className="text-slate-600 font-medium whitespace-nowrap">{l.source}</span>
-              <span className="whitespace-nowrap text-slate-600">{projects[i % projects.length]}</span>
-              <span>
-                <span className={cn("inline-flex items-center rounded-sm px-1.5 py-0.5 text-[10px] font-bold border", stageStyles[l.stage] || "bg-slate-50 text-slate-700 border-slate-200")}>
-                  {l.stage}
+                <span className="text-slate-600 font-medium whitespace-nowrap text-[11.5px]">{l.source}</span>
+                <span className="whitespace-nowrap text-slate-600 text-[11.5px]">{projects[i % projects.length]}</span>
+                <span>
+                  <span className={cn("inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold border", stageStyles[l.stage] || "bg-slate-50 text-slate-700 border-slate-200")}>
+                    {l.stage}
+                  </span>
                 </span>
-              </span>
-              <span className="whitespace-nowrap text-slate-600">{assignees[i % assignees.length]}</span>
-              <span className="text-slate-500 font-medium tabular-nums whitespace-nowrap text-[11px] text-right">Apr {14 - i}</span>
-            </div>
-          ))}
+                <span className="whitespace-nowrap text-slate-600 text-[11.5px]">{assignees[i % assignees.length]}</span>
+                <span className="text-slate-400 font-semibold tabular-nums whitespace-nowrap text-[10.5px] text-right">Apr {14 - i}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </Box>
@@ -834,28 +836,28 @@ function ActivityFeed() {
 function SeoSnapshot() {
   return (
     <Box title="SEO Snapshot" action="View details">
-      <div className="p-3 space-y-2.5">
-        <div className="grid grid-cols-2 gap-2">
+      <div className="p-3 flex flex-col gap-3 h-full">
+        <div className="grid grid-cols-4 gap-2">
           <Mini value="1,245" label="Keywords" trend="↑ 12%" />
           <Mini value="18.4K" label="Clicks" trend="↑ 26%" />
           <Mini value="320K" label="Impressions" trend="↑ 18%" />
-          <Mini value="12.6" label="Avg. Position" trend="↓ 2.4" negative />
+          <Mini value="12.6" label="Avg." trend="↓ 2.4" negative />
         </div>
 
         {/* Top Keywords Ranking */}
-        <div className="rounded-sm border border-slate-100 bg-slate-50/60 p-2 text-xs">
-          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase border-b border-slate-200/60 pb-1">
+        <div className="flex-1 rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 text-xs overflow-y-auto scrollbar-thin">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase border-b border-slate-200/60 pb-1.5 mb-1.5">
             <span>Top Keywords</span>
             <span>Rank</span>
             <span>Traffic</span>
           </div>
-          <div className="divide-y divide-slate-100 space-y-1 pt-1">
+          <div className="space-y-2">
             <div className="flex items-center justify-between text-[11px]">
               <span className="font-semibold text-slate-800 truncate max-w-[130px]">Clean Ganga NGO</span>
               <span className="font-bold text-emerald-600">#1 <span className="text-[9px]">↑2</span></span>
               <span className="text-slate-500 font-medium">4.2K</span>
             </div>
-            <div className="flex items-center justify-between text-[11px] pt-1">
+            <div className="flex items-center justify-between text-[11px]">
               <span className="font-semibold text-slate-800 truncate max-w-[130px]">River Cleanup Delhi</span>
               <span className="font-bold text-emerald-600">#2 <span className="text-[9px]">↑1</span></span>
               <span className="text-slate-500 font-medium">2.8K</span>
@@ -863,23 +865,13 @@ function SeoSnapshot() {
           </div>
         </div>
 
-        <div className="rounded-sm border border-rose-200/80 bg-rose-50/60 p-2.5 text-xs text-rose-900 shadow-2xs">
+        <div className="rounded-xl border border-rose-200/80 bg-rose-50/60 p-2 text-xs text-rose-900 shadow-2xs">
           <div className="flex items-center gap-2 font-bold text-rose-900">
-            <span className="grid size-5 place-items-center rounded-sm bg-rose-100 text-rose-700">
+            <span className="grid size-5 place-items-center rounded-md bg-rose-100 text-rose-700">
               <AlertTriangle className="size-3.5" />
             </span>
-            <span>3 critical issues need attention</span>
+            <span>3 critical issues</span>
           </div>
-          <ul className="mt-1 space-y-0.5 text-rose-800 font-medium pl-1 text-[11px]">
-            <li className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-sm bg-rose-500" />
-              12 keywords dropped position
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-sm bg-rose-500" />
-              Missing meta descriptions on 4 pages
-            </li>
-          </ul>
         </div>
       </div>
     </Box>
@@ -889,62 +881,60 @@ function SeoSnapshot() {
 function GmbSnapshot() {
   return (
     <Box title="Google Business Snapshot" action="View details">
-      <div className="p-3 space-y-2.5">
-        <div className="flex items-center gap-2.5 rounded-sm border border-slate-100 bg-slate-50/60 p-2.5">
-          <div className="grid size-9 shrink-0 place-items-center rounded-sm bg-white border border-slate-200/60 p-1.5 shadow-2xs">
-            <ChannelLogo channel="Google Business" className="size-5" />
+      <div className="p-3 flex flex-col gap-3 h-full">
+        <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-white border border-slate-200/60 p-1.5 shadow-2xs">
+              <ChannelLogo channel="Google Business" className="size-5" />
+            </div>
+            <div>
+              <div className="flex items-baseline gap-1">
+                <b className="text-lg font-bold text-slate-900 tabular-nums leading-none">4.7</b>
+                <span className="text-amber-500 font-bold text-xs">★</span>
+              </div>
+              <span className="text-[10px] text-slate-500 font-medium">428 reviews</span>
+            </div>
           </div>
-          <div className="flex items-baseline gap-1">
-            <b className="text-xl font-bold text-slate-900 tabular-nums">4.7</b>
-            <span className="text-amber-500 font-bold text-sm">★</span>
-          </div>
-          <span className="text-[11px] text-slate-500 font-medium">428 reviews</span>
-          <span className="ml-auto rounded-sm bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/60">
+          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/60">
             ↑ 0.2
           </span>
         </div>
 
-        <div className="grid grid-cols-3 gap-1.5 text-xs">
-          <div className="rounded-sm border border-slate-100 bg-slate-50/50 p-2 text-center">
-            <Phone className="mx-auto size-3.5 text-rose-500 mb-1" />
-            <b className="block text-slate-900 font-bold tabular-nums text-xs">1,248</b>
-            <span className="text-[10px] text-emerald-600 font-semibold">Calls ↑18%</span>
+        <div className="grid grid-cols-3 gap-2 text-xs">
+          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center flex flex-col items-center justify-center">
+            <Phone className="size-3.5 text-rose-500 mb-1" />
+            <b className="text-slate-900 font-bold tabular-nums text-xs leading-none">1,248</b>
+            <span className="text-[9px] text-emerald-600 font-semibold mt-0.5">Calls ↑18%</span>
           </div>
-          <div className="rounded-sm border border-slate-100 bg-slate-50/50 p-2 text-center">
-            <MousePointerClick className="mx-auto size-3.5 text-blue-500 mb-1" />
-            <b className="block text-slate-900 font-bold tabular-nums text-xs">2,836</b>
-            <span className="text-[10px] text-emerald-600 font-semibold">Clicks ↑24%</span>
+          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center flex flex-col items-center justify-center">
+            <MousePointerClick className="size-3.5 text-blue-500 mb-1" />
+            <b className="text-slate-900 font-bold tabular-nums text-xs leading-none">2,836</b>
+            <span className="text-[9px] text-emerald-600 font-semibold mt-0.5">Clicks ↑24%</span>
           </div>
-          <div className="rounded-sm border border-slate-100 bg-slate-50/50 p-2 text-center">
-            <Navigation className="mx-auto size-3.5 text-emerald-500 mb-1" />
-            <b className="block text-slate-900 font-bold tabular-nums text-xs">1,120</b>
-            <span className="text-[10px] text-slate-500 font-medium">Directions</span>
+          <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center flex flex-col items-center justify-center">
+            <Navigation className="size-3.5 text-emerald-500 mb-1" />
+            <b className="text-slate-900 font-bold tabular-nums text-xs leading-none">1,120</b>
+            <span className="text-[9px] text-slate-500 font-medium mt-0.5">Directions</span>
           </div>
         </div>
 
         {/* Recent Review Card */}
-        <div className="rounded-sm border border-amber-200/80 bg-amber-50/50 p-2 text-xs">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 text-amber-500 font-bold text-[10px]">
-              <span>★★★★★</span>
-              <span className="text-slate-800 font-bold ml-1 text-[11px]">Rajesh Kumar</span>
+        <div className="flex-1 rounded-xl border border-amber-200/80 bg-amber-50/50 p-2.5 text-xs flex flex-col justify-between min-h-0">
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5 text-amber-500 font-bold text-[10px]">
+                <span>★★★★★</span>
+                <span className="text-slate-800 font-bold text-[11px]">Rajesh Kumar</span>
+              </div>
+              <span className="text-[9.5px] text-slate-400 font-semibold">2h ago</span>
             </div>
-            <span className="text-[9.5px] text-slate-400 font-semibold">2h ago</span>
+            <p className="text-[11px] text-slate-700 italic line-clamp-2 leading-relaxed">
+              &ldquo;Great river cleanup initiative by Namo Gange! Well organized.&rdquo;
+            </p>
           </div>
-          <p className="mt-0.5 text-[10.5px] text-slate-600 italic line-clamp-1">
-            &ldquo;Great river cleanup initiative by Namo Gange! Well organized.&rdquo;
-          </p>
-          <div className="mt-1.5 flex items-center justify-between border-t border-amber-200/40 pt-1">
+          <div className="mt-2 pt-2 border-t border-amber-200/40 flex justify-between items-center">
             <span className="text-[10px] font-bold text-emerald-700">✓ Responded</span>
-            <button className="text-[10px] font-bold text-blue-600 hover:underline">View All Reviews →</button>
           </div>
-        </div>
-
-        <div className="rounded-sm border border-emerald-200/80 bg-emerald-50/60 p-2 text-[11px] font-semibold text-emerald-800 flex items-center gap-2 shadow-2xs">
-          <span className="grid size-5 shrink-0 place-items-center rounded-sm bg-emerald-200/60 text-emerald-800 font-bold">
-            ✓
-          </span>
-          <span>You&apos;re doing great! Keep engaging with reviews.</span>
         </div>
       </div>
     </Box>
@@ -963,7 +953,7 @@ function QuickActions() {
 
   return (
     <Box title="Quick Actions">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 p-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 p-2">
         {actions.map(([Icon, label, colors]) => (
           <button
             key={label}
