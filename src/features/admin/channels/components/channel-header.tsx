@@ -188,13 +188,13 @@ export function ChannelHeader({
                 )}
               >
                 {channel === "website" ? (
-                  <Image src="/website-logo.png" alt="Website Logo" width={64} height={64} className="size-16 object-contain drop-shadow-sm scale-[1.4]" />
+                  <Image src="/website-logo.png" alt="Website Logo" width={64} height={64} className="object-contain drop-shadow-sm scale-[1.4]" />
                 ) : channel === "linkedin" ? (
-                  <Image src="/linkedin-logo.png" alt="LinkedIn Logo" width={64} height={64} className="size-16 object-contain drop-shadow-sm scale-[1.4]" />
+                  <Image src="/linkedin-logo.png" alt="LinkedIn Logo" width={64} height={64} className="object-contain drop-shadow-sm scale-[1.4]" />
                 ) : channel === "whatsapp" ? (
-                  <Image src="/whatsapp-logo.png" alt="WhatsApp Logo" width={64} height={64} className="size-16 object-contain drop-shadow-sm scale-[1.4]" />
+                  <Image src="/whatsapp-logo.png" alt="WhatsApp Logo" width={64} height={64} className="object-contain drop-shadow-sm scale-[1.4]" />
                 ) : channel === "youtube" ? (
-                  <Image src="/youtube-logo.png" alt="YouTube Logo" width={64} height={64} className="size-16 object-contain drop-shadow-sm scale-[1.4]" />
+                  <Image src="/youtube-logo.png" alt="YouTube Logo" width={64} height={64} className="object-contain drop-shadow-sm scale-[1.4]" />
                 ) : (
                   <ChannelLogo
                     channel={channel === "google" ? "Google Business" : "Meta"}

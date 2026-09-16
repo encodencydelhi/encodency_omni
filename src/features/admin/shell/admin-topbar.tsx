@@ -76,7 +76,7 @@ export function AdminTopbar() {
                   alt={MOCK_ADMIN_USER.name}
                   width={32}
                   height={32}
-                  className="size-8 rounded-[8px] object-cover border border-slate-200 bg-slate-50 shadow-xs group-hover:border-slate-300 transition-colors"
+                  className="rounded-[8px] object-cover border border-slate-200 bg-slate-50 shadow-xs group-hover:border-slate-300 transition-colors"
                 />
               </div>
               <span className="hidden text-left xl:block">
