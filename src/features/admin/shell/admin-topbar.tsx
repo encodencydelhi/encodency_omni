@@ -68,16 +68,20 @@ export function AdminTopbar() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-sm p-1 hover:bg-[#F4F4F5] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E4E4E7]">
-              <span className="grid size-8 place-items-center rounded-sm bg-[#18181B] text-[12px] font-medium tracking-wide text-white shadow-sm">
-                {MOCK_ADMIN_USER.initials}
-              </span>
-              <span className="hidden text-left xl:block pl-1 pr-2">
-                <span className="block text-[12.5px] font-semibold text-[#18181B] leading-none">
+            <button className="flex items-center gap-2.5 rounded-[10px] p-1.5 pr-3 hover:bg-slate-100/80 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 group">
+              <div className="relative shrink-0">
+                <img
+                  src="/user-avatar.png"
+                  alt={MOCK_ADMIN_USER.name}
+                  className="size-8 rounded-[8px] object-cover border border-slate-200 bg-slate-50 shadow-xs group-hover:border-slate-300 transition-colors"
+                />
+              </div>
+              <span className="hidden text-left xl:block">
+                <span className="block text-[14px] font-semibold tracking-tight text-[#0f172a]">
                   {MOCK_ADMIN_USER.name}
                 </span>
               </span>
-              <ChevronDown className="hidden size-4 text-[#A1A1AA] xl:block mr-1" />
+              <ChevronDown className="hidden size-4 text-slate-400 group-hover:text-slate-600 transition-colors xl:block" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 rounded-sm">
