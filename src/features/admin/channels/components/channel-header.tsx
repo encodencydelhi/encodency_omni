@@ -5,7 +5,6 @@ import {
   CalendarDays,
   ChevronDown,
   Download,
-  Globe2,
   Plus,
   RefreshCw,
   Send,
@@ -58,8 +57,8 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
     accountHandle: "Namo Gange Trust",
     statusText: "",
     gradientBg: "bg-gradient-to-r from-[#EFF6FF]/90 via-[#F5F3FF]/50 to-white",
-    borderAccent: "border-[#BFDBFE]/60",
-    iconBg: "bg-[#0A66C2]",
+    borderAccent: "border-transparent",
+    iconBg: "bg-transparent",
     brandColor: "#0A66C2",
     externalUrl: "https://linkedin.com",
     primaryActionLabel: "Create Post",
@@ -182,27 +181,22 @@ export function ChannelHeader({
             <div className="relative shrink-0 mt-0.5">
               <div
                 className={cn(
-                  "grid size-10 place-items-center shadow-xs rounded-sm",
-                  channel === "whatsapp"
-                    ? "bg-[#DCFCE7]/80 backdrop-blur-sm border border-[#A7F3D0]/50"
-                    : config.iconBg || "bg-[#2563EB]"
+                  "grid place-items-center shadow-xs rounded-sm",
+                  channel === "linkedin" || channel === "whatsapp" || channel === "youtube" || channel === "website" ? "size-14 bg-transparent border-transparent shadow-none" : "size-10",
+                  channel !== "linkedin" && channel !== "whatsapp" && channel !== "youtube" && channel !== "website" ? config.iconBg || "bg-[#2563EB]" : ""
                 )}
               >
                 {channel === "website" ? (
-                  <Globe2 className="size-5 text-white" />
+                  <img src="/website-logo.png" alt="Website Logo" className="size-16 object-contain drop-shadow-sm scale-[1.4]" />
+                ) : channel === "linkedin" ? (
+                  <img src="/linkedin-logo.png" alt="LinkedIn Logo" className="size-16 object-contain drop-shadow-sm scale-[1.4]" />
+                ) : channel === "whatsapp" ? (
+                  <img src="/whatsapp-logo.png" alt="WhatsApp Logo" className="size-16 object-contain drop-shadow-sm scale-[1.4]" />
+                ) : channel === "youtube" ? (
+                  <img src="/youtube-logo.png" alt="YouTube Logo" className="size-16 object-contain drop-shadow-sm scale-[1.4]" />
                 ) : (
                   <ChannelLogo
-                    channel={
-                      channel === "linkedin"
-                        ? "LinkedIn"
-                        : channel === "google"
-                          ? "Google Business"
-                          : channel === "whatsapp"
-                            ? "WhatsApp"
-                            : channel === "youtube"
-                              ? "YouTube"
-                              : "Meta"
-                    }
+                    channel={channel === "google" ? "Google Business" : "Meta"}
                     className="size-6 bg-transparent"
                   />
                 )}
@@ -309,12 +303,12 @@ export function ChannelHeader({
                   channel === "whatsapp"
                     ? "bg-emerald-600 hover:bg-emerald-700"
                     : channel === "website"
-                    ? "bg-blue-600 hover:bg-blue-700"
-                    : channel === "meta"
-                    ? "bg-pink-600 hover:bg-pink-700"
-                    : channel === "linkedin"
-                    ? "bg-[#0A66C2] hover:bg-[#084e96]"
-                    : "bg-blue-600 hover:bg-blue-700"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : channel === "meta"
+                        ? "bg-pink-600 hover:bg-pink-700"
+                        : channel === "linkedin"
+                          ? "bg-[#0A66C2] hover:bg-[#084e96]"
+                          : "bg-blue-600 hover:bg-blue-700"
                 )}
               >
                 <PrimaryIcon className="size-3.5" />

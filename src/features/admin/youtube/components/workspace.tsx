@@ -130,8 +130,8 @@ function WorkspaceHeader({ tabLabel }: { tabLabel: string }) {
 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-[10px] bg-white shadow-[0_1px_2px_rgba(15,27,61,0.06)] ring-1 ring-[#E4E9F0]">
-            <FaYoutube className="size-6 text-[#FF0033]" aria-hidden="true" />
+          <span className="flex shrink-0 items-center justify-center">
+            <img src="/youtube-logo.png" alt="YouTube Logo" className="size-14 object-contain drop-shadow-sm scale-[1.2]" />
           </span>
           <div className="min-w-0">
             <h1 className="text-[20px] font-semibold leading-6 tracking-[-0.015em] text-[#0F1B3D]">YouTube</h1>

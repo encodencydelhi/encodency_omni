@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { FaGoogle } from "react-icons/fa6";
 import {
   AlertTriangle,
   Bell,
@@ -109,7 +108,7 @@ function WorkspaceHeader({ tabLabel }: { tabLabel: string }) {
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex shrink-0 items-center justify-center">
-            <FaGoogle className="size-8 text-[#4285F4]" aria-hidden="true" />
+            <img src="/gbp-logo.png" alt="Google Business Logo" className="size-14 object-contain drop-shadow-sm scale-[1.2]" />
           </span>
           <div className="min-w-0">
             <h1 className="text-[20px] font-medium leading-6 tracking-[-0.015em] text-[#202124]">Google Business</h1>
