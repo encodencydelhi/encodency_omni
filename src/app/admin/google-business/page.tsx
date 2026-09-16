@@ -1,5 +1,5 @@
-import { GoogleBusinessPage } from "@/features/admin/channels/components/google-business-page";
+import { OverviewPage } from "@/features/admin/google-business/pages/overview-page";
 
 export default function Page() {
-  return <GoogleBusinessPage />;
+  return <OverviewPage />;
 }
