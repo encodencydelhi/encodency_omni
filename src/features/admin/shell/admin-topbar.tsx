@@ -6,6 +6,7 @@ import { MOCK_ADMIN_USER } from "@/config/admin-permissions";
 import { Clientswitcher } from "./project-switcher";
 import { useAdminContext } from "./admin-context";
 import { useAuth } from "@/features/auth/components/auth-provider";
+import Image from "next/image";
 
 export function AdminTopbar() {
   const { setMobileNavOpen } = useAdminContext();
@@ -70,9 +71,11 @@ export function AdminTopbar() {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2.5 rounded-[10px] p-1.5 pr-3 hover:bg-slate-100/80 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 group">
               <div className="relative shrink-0">
-                <img
+                <Image
                   src="/user-avatar.png"
                   alt={MOCK_ADMIN_USER.name}
+                  width={32}
+                  height={32}
                   className="size-8 rounded-[8px] object-cover border border-slate-200 bg-slate-50 shadow-xs group-hover:border-slate-300 transition-colors"
                 />
               </div>
