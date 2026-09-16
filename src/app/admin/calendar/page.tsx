@@ -354,7 +354,7 @@ export default function ContentCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
   return (
-    <div className="box-border h-screen w-full overflow-hidden bg-[#f7f9fc] font-[Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif] text-[#13203e] max-[1200px]:h-auto max-[1200px]:min-h-screen max-[1200px]:overflow-auto max-[820px]:p-[10px]">
+    <div className="box-border min-h-screen w-full bg-[#f7f9fc] font-[Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif] text-[#13203e] max-[820px]:p-[10px]">
       {/* Header */}
       <header className="grid h-[96px] grid-cols-[minmax(0,1fr)_555px] items-start gap-[18px] max-[1200px]:grid-cols-[minmax(0,1fr)_420px] max-[820px]:h-auto max-[820px]:grid-cols-1">
         <div>
@@ -399,7 +399,7 @@ export default function ContentCalendar() {
       </header>
 
       {/* Main Layout */}
-      <div className="grid h-[calc(100vh-118px)] grid-cols-[minmax(0,1fr)_274px] gap-[10px] max-[1200px]:h-auto max-[1200px]:grid-cols-[minmax(0,1fr)_245px] max-[820px]:flex max-[820px]:flex-col">
+      <div className="grid grid-cols-[minmax(0,1fr)_274px] gap-[10px] max-[1200px]:grid-cols-[minmax(0,1fr)_245px] max-[820px]:flex max-[820px]:flex-col">
         {/* Left */}
         <section className="flex min-h-0 min-w-0 flex-col">
           {/* Toolbar */}
@@ -446,7 +446,7 @@ export default function ContentCalendar() {
           </div>
 
           {/* Calendar */}
-          <div className="grid min-h-0 flex-1 grid-rows-[29px_repeat(5,minmax(0,1fr))] overflow-hidden rounded-b-[7px] border border-t-0 border-[#e4e8ef] bg-white max-[1200px]:h-[650px] max-[1200px]:flex-none max-[820px]:h-[620px] max-[560px]:h-[570px]">
+          <div className="grid flex-1 grid-rows-[29px_repeat(5,minmax(0,1fr))] overflow-hidden rounded-b-[7px] border border-t-0 border-[#e4e8ef] bg-white">
             <div className="grid grid-cols-7">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
                 <div
@@ -467,7 +467,7 @@ export default function ContentCalendar() {
                     <div
                       key={cellIndex}
                       className={[
-                        "relative min-w-0 overflow-hidden border-b border-r border-[#e8ecf2] p-[5px_5px_3px] last:border-r-0 max-[560px]:p-[4px_2px]",
+                        "relative min-w-0 overflow-hidden border-b border-r border-[#e8ecf2] p-[5px_5px_4px] last:border-r-0 max-[560px]:p-[4px_2px]",
                         weekIndex === weeks.length - 1
                           ? "border-b-0"
                           : "",
@@ -477,35 +477,42 @@ export default function ContentCalendar() {
                           : "",
                       ].join(" ")}
                     >
-                      <span
-                        className={`mb-[3px] block text-[11px] ${cell.out
-                            ? "text-[#8792a5]"
-                            : "text-[#172440]"
+                      <div className="mb-[3px] flex items-center justify-between">
+                        <span
+                          className={`block text-[11px] leading-none ${
+                            cell.out ? "text-[#8792a5]" : "text-[#172440]"
                           } ${cell.selected ? "font-[750]" : ""}`}
-                      >
-                        {cell.d}
-                      </span>
+                        >
+                          {cell.d}
+                        </span>
+                        {list.length > 1 && (
+                          <span className="text-[9.5px] font-semibold text-[#8a94a6]">
+                            +{list.length - 1}
+                          </span>
+                        )}
+                      </div>
 
-                      <div className="scrollbar-thin flex max-h-[calc(100%-18px)] flex-col gap-[3px] overflow-y-auto">
+                      <div className="flex h-[51px] max-h-[51px] flex-col gap-[3px] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {list.map((evt, eventIndex) => (
                           <div
                             key={eventIndex}
                             onClick={() => setSelectedEvent(evt)}
-                            className={`grid min-w-0 shrink-0 cursor-pointer grid-cols-[14px_minmax(0,1fr)_8px] items-center gap-[8px] rounded-[4px] px-[4px] py-[2px] text-[#263754] transition-opacity hover:opacity-80 max-[560px]:grid-cols-[13px_minmax(0,1fr)_6px] max-[560px]:gap-[6px] max-[560px]:p-[2px] ${eventIndex % 3 === 2
+                            className={`grid h-[32px] min-w-0 shrink-0 cursor-pointer grid-cols-[14px_minmax(0,1fr)_8px] items-center gap-[6px] rounded-[4px] px-[5px] py-[2px] text-[#263754] transition-opacity hover:opacity-80 max-[560px]:grid-cols-[13px_minmax(0,1fr)_6px] max-[560px]:gap-[4px] max-[560px]:px-[3px] ${
+                              eventIndex % 3 === 2
                                 ? "bg-[#fff0f2]"
                                 : eventIndex % 4 === 3
                                   ? "bg-[#eaf8f3]"
                                   : "bg-[#edf5ff]"
-                              }`}
+                            }`}
                           >
                             <ChannelIcon type={evt.type} size={10} />
 
-                            <div className="min-w-0">
-                              <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] leading-[1.3] max-[560px]:text-[11px]">
+                            <div className="min-w-0 leading-tight">
+                              <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[10.5px] leading-[1.2]">
                                 {evt.name}
                               </b>
 
-                              <small className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[#637089] leading-[1.3] max-[560px]:text-[11px]">
+                              <small className="block overflow-hidden text-ellipsis whitespace-nowrap text-[10px] text-[#637089] leading-[1.2]">
                                 {evt.time}
                               </small>
                             </div>
@@ -626,13 +633,13 @@ export default function ContentCalendar() {
             </article>
 
             {/* Quick Actions */}
-            <article className="overflow-hidden rounded-[7px] border border-[#e4e8ef] bg-white pb-2">
-              <div className="flex h-[38px] items-start justify-between px-3 py-[9px]">
+            <article className="flex flex-col overflow-hidden rounded-[7px] border border-[#e4e8ef] bg-white">
+              <div className="flex h-[36px] shrink-0 items-center justify-between border-b border-[#f0f3f7] px-3">
                 <h2 className="m-0 text-[12px] font-[760]">Quick Actions</h2>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 px-[10px]">
-                <div className="flex items-center gap-2 rounded-[6px] bg-[#fff0f1] p-[9px]">
+              <div className="flex-1 overflow-y-auto [scrollbar-width:thin] p-[10px] max-h-[152px] space-y-2">
+                <div className="flex items-center gap-2 rounded-[6px] bg-[#fff0f1] p-[9px] hover:bg-[#ffe5e7] transition-colors cursor-pointer">
                   <Pencil className="h-5 w-5 shrink-0 text-[#e12630]" />
                   <div className="min-w-0">
                     <b className="block text-[11px]">Create Post</b>
@@ -642,7 +649,7 @@ export default function ContentCalendar() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 rounded-[6px] bg-[#eaf3ff] p-[9px]">
+                <div className="flex items-center gap-2 rounded-[6px] bg-[#eaf3ff] p-[9px] hover:bg-[#dceaff] transition-colors cursor-pointer">
                   <Megaphone className="h-5 w-5 shrink-0 text-[#287fd7]" />
                   <div className="min-w-0">
                     <b className="block text-[11px]">Plan Campaign</b>
@@ -652,7 +659,7 @@ export default function ContentCalendar() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 rounded-[6px] bg-[#e7f8f1] p-[9px]">
+                <div className="flex items-center gap-2 rounded-[6px] bg-[#e7f8f1] p-[9px] hover:bg-[#d6f4e7] transition-colors cursor-pointer">
                   <ImageIcon className="h-5 w-5 shrink-0 text-[#19a26e]" />
                   <div className="min-w-0">
                     <b className="block text-[11px]">Upload Media</b>
@@ -662,7 +669,7 @@ export default function ContentCalendar() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 rounded-[6px] bg-[#f0eaff] p-[9px]">
+                <div className="flex items-center gap-2 rounded-[6px] bg-[#f0eaff] p-[9px] hover:bg-[#e6dcff] transition-colors cursor-pointer">
                   <BarChart3 className="h-5 w-5 shrink-0 text-[#8055d2]" />
                   <div className="min-w-0">
                     <b className="block text-[11px]">View Reports</b>
@@ -677,7 +684,7 @@ export default function ContentCalendar() {
         </section>
 
         {/* Right Sidebar */}
-        <aside className="flex min-w-0 flex-col gap-[10px] overflow-hidden max-[820px]:order-[-1] max-[820px]:grid max-[820px]:grid-cols-2 max-[560px]:grid-cols-1">
+        <aside className="flex min-w-0 flex-col gap-[10px] max-[820px]:order-[-1] max-[820px]:grid max-[820px]:grid-cols-2 max-[560px]:grid-cols-1">
           {/* Mini Calendar */}
           <section className="rounded-[7px] border border-[#e4e8ef] bg-white p-[10px]">
             <h3 className="m-0 text-[13px]">
@@ -703,7 +710,8 @@ export default function ContentCalendar() {
                 ].map((day, index) => (
                   <span
                     key={index}
-                    className={`grid h-[20px] place-items-center rounded-sm text-[11px] ${index < 2 || index > 31
+                    className={`grid h-[20px] place-items-center rounded-sm text-[11px] ${
+                      index < 2 || index > 31
                         ? "text-[#a2aab8]"
                         : day === 14
                           ? "bg-[#e32630] text-white"
@@ -732,23 +740,23 @@ export default function ContentCalendar() {
               ["Status", "All Status"],
               ["Campaign", "All Campaigns"],
             ].map(([label, value]) => (
-              <div className="mt-2" key={label}>
-                <label className="mb-1 block text-[11px] text-[#657189]">
+              <div className="mt-1.5" key={label}>
+                <label className="mb-0.5 block text-[10.5px] text-[#657189]">
                   {label}
                 </label>
 
-                <div className="flex h-[28px] items-center justify-between rounded-[5px] border border-[#dfe5ec] px-2 text-[11px] text-[#39465f]">
+                <div className="flex h-[26px] items-center justify-between rounded-[5px] border border-[#dfe5ec] px-2 text-[11px] text-[#39465f]">
                   {value}
                   <ChevronDown size={11} />
                 </div>
               </div>
             ))}
 
-            <div className="mt-[10px] text-[11px] font-[750]">
+            <div className="mt-2 text-[11px] font-[750]">
               Content Status
             </div>
 
-            <div className="mt-[6px]">
+            <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-1">
               {[
                 ["Scheduled", "12", "#2d83df"],
                 ["Published", "28", "#16a56d"],
@@ -757,13 +765,13 @@ export default function ContentCalendar() {
               ].map(([label, count, dot]) => (
                 <div
                   key={label}
-                  className="flex h-[20px] items-center gap-2 text-[11px]"
+                  className="flex h-[18px] items-center gap-1.5 text-[11px]"
                 >
                   <i
-                    className="block h-2 w-2 rounded-sm"
+                    className="block h-2 w-2 shrink-0 rounded-sm"
                     style={{ backgroundColor: dot }}
                   />
-                  {label}
+                  <span className="truncate text-[#59677e]">{label}</span>
                   <b className="ml-auto">{count}</b>
                 </div>
               ))}
@@ -771,35 +779,37 @@ export default function ContentCalendar() {
           </section>
 
           {/* Upcoming */}
-          <section className="min-h-0 flex-1 rounded-[7px] border border-[#e4e8ef] bg-white p-[10px]">
-            <div className="flex items-center justify-between">
-              <h3 className="m-0 text-[13px]">
+          <section className="flex flex-col rounded-[7px] border border-[#e4e8ef] bg-white p-[10px]">
+            <div className="flex items-center justify-between pb-1.5 border-b border-[#eef1f5] shrink-0">
+              <h3 className="m-0 text-[13px] font-semibold">
                 Upcoming (Next 7 Days)
               </h3>
 
-              <button className="border-0 bg-transparent text-[11px] font-[700] text-[#e2262f]">
+              <button className="border-0 bg-transparent text-[11px] font-[700] text-[#e2262f] cursor-pointer hover:underline">
                 View all →
               </button>
             </div>
 
-            {upcoming.map(([name, meta, type]) => (
-              <div
-                key={name}
-                className="grid grid-cols-[24px_minmax(0,1fr)] gap-[7px] border-b border-[#eef1f5] py-2 last:border-0"
-              >
-                <ChannelIcon type={type} size={14} />
+            <div className="divide-y divide-[#eef1f5]">
+              {upcoming.map(([name, meta, type]) => (
+                <div
+                  key={name}
+                  className="grid grid-cols-[24px_minmax(0,1fr)] gap-[7px] py-1.5"
+                >
+                  <ChannelIcon type={type} size={14} />
 
-                <div className="min-w-0">
-                  <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px]">
-                    {name}
-                  </b>
+                  <div className="min-w-0">
+                    <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px]">
+                      {name}
+                    </b>
 
-                  <small className="mt-[2px] block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[#7e899c]">
-                    {meta}
-                  </small>
+                    <small className="mt-[1px] block overflow-hidden text-ellipsis whitespace-nowrap text-[10.5px] text-[#7e899c]">
+                      {meta}
+                    </small>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </section>
         </aside>
       </div>
