@@ -3,7 +3,6 @@
 import { Bell, ChevronDown, Menu, Plus, Search } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MOCK_ADMIN_USER } from "@/config/admin-permissions";
-import { Clientswitcher } from "./project-switcher";
 import { useAdminContext } from "./admin-context";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import Image from "next/image";
@@ -22,8 +21,33 @@ export function AdminTopbar() {
         <Menu className="size-5" />
       </button>
 
-      <div className="hidden flex-1 md:flex">
-        <label className="relative flex h-9 w-full max-w-[480px] items-center gap-2.5 rounded-sm bg-[#F4F4F5] px-4 transition-colors hover:bg-[#E4E4E7] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#E4E4E7] focus-within:hover:bg-white">
+      <div className="hidden flex-1 md:flex items-center gap-6">
+        <div className="flex items-center gap-3 border-r border-[#E2E8F0] pr-6">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8)] border border-blue-100">
+            <span className="text-[15px] drop-shadow-sm">
+              {(() => {
+                const hour = new Date().getHours();
+                if (hour < 12) return "☀️";
+                if (hour < 18) return "⛅";
+                return "🌙";
+              })()}
+            </span>
+          </div>
+          <div className="flex flex-col justify-center">
+            <span className="text-[13px] font-bold text-slate-800 leading-tight">
+              {(() => {
+                const hour = new Date().getHours();
+                if (hour < 12) return "Good morning";
+                if (hour < 18) return "Good afternoon";
+                return "Good evening";
+              })()}, <span className="text-blue-600">{MOCK_ADMIN_USER.name.split(' ')[0]}</span>
+            </span>
+            <span className="text-[11px] font-medium text-slate-500 leading-tight mt-0.5">
+              Ready to crush it today? 🚀
+            </span>
+          </div>
+        </div>
+        <label className="relative flex h-9 w-full max-w-[260px] items-center gap-2.5 rounded-sm bg-[#F4F4F5] px-4 transition-colors hover:bg-[#E4E4E7] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#E4E4E7] focus-within:hover:bg-white">
           <Search className="size-4 text-[#A1A1AA]" />
           <input
             className="min-w-0 flex-1 bg-transparent text-[13px] text-[#27272A] outline-none placeholder:text-[#A1A1AA]"
@@ -36,10 +60,6 @@ export function AdminTopbar() {
       </div>
 
       <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
-        <div className="hidden items-center gap-2 lg:flex mr-2">
-          <span className="text-[12px] font-semibold text-[#A1A1AA]">Project</span>
-          <Clientswitcher />
-        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -9,6 +9,7 @@ import { adminNavigation } from "@/config/admin-navigation";
 import { cn } from "@/lib/utils/cn";
 import { useAdminContext } from "./admin-context";
 import { ChannelLogo } from "../shared/channel-logo";
+import { Clientswitcher } from "./project-switcher";
 import logo from "@/assets/namogange.webp";
 
 const brandLabels = new Set([
@@ -102,7 +103,18 @@ export function AdminSidebar() {
             )}
           </div>
 
-          {/* Navigation */}
+          {/* Project Switcher */}
+          {!isSidebarCollapsed && (
+            <div className="px-3 pt-5 pb-3">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-[#7E8DA6] mb-2 px-1">
+                Project
+              </p>
+              <div className="text-black">
+                <Clientswitcher />
+              </div>
+            </div>
+          )}
+
           {/* Navigation */}
           <nav
             className="scrollbar-thin scrollbar-dark min-h-0 flex-1 overflow-y-auto px-3 py-4"

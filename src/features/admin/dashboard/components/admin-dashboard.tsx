@@ -260,10 +260,10 @@ function Header() {
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900">
-          Good Morning, Manish <span aria-hidden>👋</span>
+          Dashboard Overview
         </h1>
         <p className="mt-0.5 text-xs text-slate-500 font-medium">
-          Here&apos;s how your marketing is performing across all projects.
+          Track your marketing performance across all projects.
         </p>
       </div>
       <div className="flex items-center gap-4 shrink-0">
