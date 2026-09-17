@@ -22,8 +22,8 @@ export function SettingsPage() {
           { icon: <ShieldAlert className="size-4" />, label: "Safety Controls" },
         ].map((item, i) => (
           <div key={i} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${item.active
-              ? 'bg-blue-50 text-[#2563EB] font-bold'
-              : 'text-[#64748B] hover:bg-slate-50 hover:text-[#111C3A] font-medium'
+            ? 'bg-blue-50 text-[#2563EB] font-bold'
+            : 'text-[#64748B] hover:bg-slate-50 hover:text-[#111C3A] font-medium'
             }`}>
             {item.icon}
             <span className="text-[12px]">{item.label}</span>
