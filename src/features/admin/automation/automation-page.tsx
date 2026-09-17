@@ -1,28 +1,86 @@
 "use client";
 
-import { Activity, ArrowRight, Bot, CheckCircle2, Clock3, MessageCircle, Plus, UserRoundCheck, Zap, type LucideIcon } from "lucide-react";
+import { useUrlState } from "./components/use-url-state";
 import { AdminPageTitle } from "../shared/admin-page-title";
+import { SubTabs, WButton } from "../website/components/ui/kit";
+import { Plus } from "lucide-react";
 
-const workflows = [
-  { name: "New Meta Lead Follow-up", trigger: "New Meta lead", runs: "1,248", success: "98.4%", status: "Active" },
-  { name: "Google Review Alert", trigger: "New Google review", runs: "428", success: "100%", status: "Active" },
-  { name: "SEO Critical Issue", trigger: "Critical SEO issue", runs: "84", success: "96.2%", status: "Active" },
-  { name: "WhatsApp Re-engagement", trigger: "No reply for 24 hours", runs: "316", success: "91.8%", status: "Paused" },
+import { AutomationOverview } from "./components/pages/automation-overview";
+import { WorkflowsPage } from "./components/pages/workflows-page";
+import { TemplatesPage } from "./components/pages/templates-page";
+import { RunsPage } from "./components/pages/runs-page";
+import { SettingsPage } from "./components/pages/settings-page";
+
+type AutomationTab = "overview" | "workflows" | "templates" | "runs" | "settings";
+const TABS = [
+  { value: "overview", label: "Overview" },
+  { value: "workflows", label: "Workflows" },
+  { value: "templates", label: "Templates" },
+  { value: "runs", label: "Run History" },
+  { value: "settings", label: "Settings" }
 ];
-const workflowSteps: Array<{ icon: LucideIcon; label: string }> = [
-  { icon: Bot, label: "New Meta Lead" }, { icon: MessageCircle, label: "Send WhatsApp" },
-  { icon: Clock3, label: "Wait 2 hours" }, { icon: UserRoundCheck, label: "Assign user" },
-];
 
-export function AutomationPage({ logs = false }: { logs?: boolean }) {
-  return <div className="space-y-3">
-    <AdminPageTitle eyebrow="Automation / Workflows" title={logs ? "Execution Logs" : "Automation"} description="Automate lead follow-up, notifications and marketing operations." action={!logs ? <button className="flex h-8 items-center gap-1.5 rounded-sm bg-[#EB0711] px-3 text-[8.5px] font-semibold text-white"><Plus className="size-3.5" />Create Workflow</button> : undefined} />
-    {logs ? <section className="rounded-sm border border-[#DDE4ED] bg-white shadow-sm">{workflows.flatMap((workflow, index) => [1, 2].map((run) => <div key={`${index}-${run}`} className="flex items-center gap-3 border-b border-[#E8EDF3] px-3 py-2.5"><CheckCircle2 className="size-4 text-[#078359]" /><div className="flex-1"><p className="text-[8.5px] font-semibold text-[#27375D]">{workflow.name}</p><p className="text-[7px] text-[#75829D]">Run #{1248 - index * 42 - run} · Completed in {run + 1}.2s</p></div><span className="text-[7.5px] text-[#75829D]">{run * 18} min ago</span></div>))}</section> : <AutomationOverview />}
-  </div>;
+export function AutomationPage() {
+  const [activeTab, setActiveTab] = useUrlState<AutomationTab>("tab", "overview", ["overview", "workflows", "templates", "runs", "settings"]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between">
+        <AdminPageTitle
+          eyebrow="Operations"
+          title="Automation"
+          description="Automate lead follow-up, notifications and marketing operations."
+        />
+        <div className="flex items-center gap-3">
+          {activeTab === 'settings' ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-medium text-[#64748B]">Client</span>
+                <div className="flex items-center gap-1.5 border border-[#E2E8F0] bg-white rounded-md px-3 py-1.5 text-[12px] font-medium text-[#111C3A] cursor-pointer hover:bg-slate-50">
+                  All Clients <svg className="size-3.5 text-[#94A3B8]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] font-medium text-[#D97706] bg-[#FEF9C3] px-2 py-1 rounded">
+                <span className="size-1.5 rounded-full bg-[#D97706]"></span> You have unsaved changes
+              </div>
+              <button className="border border-[#E2E8F0] bg-white text-[#334155] rounded-lg px-4 py-1.5 text-[12px] font-bold hover:bg-slate-50">
+                Reset
+              </button>
+              <button className="bg-[#EF4444] hover:bg-[#DC2626] text-white rounded-lg px-4 py-1.5 text-[12px] font-bold flex items-center gap-1.5 shadow-sm shadow-red-500/20">
+                <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                Save Changes
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 border border-[#E2E8F0] bg-white rounded-lg px-3 py-1.5 shadow-sm text-[12px] text-[#111C3A] cursor-pointer hover:bg-slate-50 transition-colors">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-[#6B7A94] font-medium leading-tight">Last 30 days</span>
+                  <span className="font-semibold leading-tight">Mar 15, 2025 - Apr 14, 2025</span>
+                </div>
+              </div>
+              <WButton tone="primary" icon={Plus} className="bg-[#E11D48] hover:bg-[#BE123C] border-none shadow-md shadow-rose-500/20 rounded-lg px-4 py-2 text-[13px]">
+                Create Workflow
+              </WButton>
+            </>
+          )}
+        </div>
+      </div>
+      
+      <SubTabs
+        ariaLabel="Automation Sections"
+        options={TABS}
+        value={activeTab}
+        onChange={(val) => setActiveTab(val as AutomationTab)}
+      />
+
+      <div className="mt-4">
+        {activeTab === "overview" && <AutomationOverview />}
+        {activeTab === "workflows" && <WorkflowsPage />}
+        {activeTab === "templates" && <TemplatesPage />}
+        {activeTab === "runs" && <RunsPage />}
+        {activeTab === "settings" && <SettingsPage />}
+      </div>
+    </div>
+  );
 }
-
-function AutomationOverview() {
-  return <><div className="grid grid-cols-2 gap-2 lg:grid-cols-4"><Metric icon={Zap} label="Active Workflows" value="3" /><Metric icon={Activity} label="Runs this month" value="2,076" /><Metric icon={CheckCircle2} label="Success rate" value="97.1%" /><Metric icon={Clock3} label="Time saved" value="84 hrs" /></div><div className="grid gap-3 xl:grid-cols-[1.1fr_.9fr]"><section className="rounded-sm border border-[#DDE4ED] bg-white shadow-sm"><h2 className="border-b border-[#E8EDF3] px-3 py-2.5 text-[10px] font-semibold">Workflows</h2>{workflows.map((workflow) => <div key={workflow.name} className="grid grid-cols-[1fr_100px_70px_60px] items-center border-b border-[#E8EDF3] px-3 py-2.5 text-[8px]"><div><p className="font-semibold text-[#27375D]">{workflow.name}</p><p className="text-[7px] text-[#75829D]">Trigger: {workflow.trigger}</p></div><span>{workflow.runs} runs</span><span className="text-[#078359]">{workflow.success}</span><span>{workflow.status}</span></div>)}</section><section className="rounded-sm border border-[#DDE4ED] bg-white p-4 shadow-sm"><h2 className="text-[10px] font-semibold">Workflow preview</h2><div className="mt-4 flex flex-col items-center gap-2">{workflowSteps.map(({ icon: Icon, label }, index) => <div key={label} className="contents"><div className="flex w-full items-center gap-2 rounded-sm border border-[#DDE4ED] p-2.5"><Icon className="size-4 text-[#EB0711]" /><span className="text-[8.5px] font-semibold">{label}</span></div>{index < workflowSteps.length - 1 && <ArrowRight className="size-3 rotate-90 text-[#8D99AE]" />}</div>)}</div></section></div></>;
-}
-
-function Metric({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) { return <div className="rounded-sm border border-[#DDE4ED] bg-white p-3 shadow-sm"><Icon className="size-4 text-[#EB0711]" /><p className="mt-2 text-[7.5px] text-[#75829D]">{label}</p><p className="text-[17px] font-semibold text-[#172044]">{value}</p></div>; }

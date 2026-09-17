@@ -161,7 +161,7 @@ function CampaignThumb({ image, title }: { image?: string; title: string }) {
   if (image) {
     return (
       <div className="relative h-9 w-[45px] shrink-0 overflow-hidden rounded-[5px]">
-        <Image src={image} alt={title} fill className="object-cover" />
+        <Image src={image} alt={title} fill sizes="45px" className="object-cover" />
       </div>
     );
   }
