@@ -13,7 +13,7 @@ import { ChannelLogo } from "../../shared/channel-logo";
 import { cn } from "@/lib/utils/cn";
 import Image from "next/image";
 
-export type ChannelType = "meta" | "linkedin" | "google" | "whatsapp" | "youtube" | "website";
+export type ChannelType = "meta" | "linkedin" | "google" | "whatsapp" | "youtube";
 
 interface ChannelConfig {
   id: ChannelType;
@@ -112,22 +112,6 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
     primaryActionLabel: "Upload Video",
     primaryActionIcon: Plus,
   },
-  website: {
-    id: "website",
-    name: "Website",
-    href: "/admin/website",
-    badge: "Web Analytics & SEO",
-    tagline: "Manage website performance, traffic sources, landing pages, form conversions, bounce rate, and user behavior.",
-    accountHandle: "namogangetrust.org (Production SSL)",
-    statusText: "Tracking Active • 24.8K Monthly Visitors",
-    gradientBg: "bg-gradient-to-r from-[#EFF6FF]/90 via-[#F5F3FF]/50 to-white",
-    borderAccent: "border-[#C7D2FE]/60",
-    iconBg: "bg-[#2563EB]",
-    brandColor: "#2563EB",
-    externalUrl: "https://namogangetrust.org",
-    primaryActionLabel: "New Page",
-    primaryActionIcon: Plus,
-  },
 };
 
 interface ChannelHeaderProps {
@@ -183,13 +167,11 @@ export function ChannelHeader({
               <div
                 className={cn(
                   "grid place-items-center shadow-xs rounded-sm",
-                  channel === "linkedin" || channel === "whatsapp" || channel === "youtube" || channel === "website" ? "size-14 bg-transparent border-transparent shadow-none" : "size-10",
-                  channel !== "linkedin" && channel !== "whatsapp" && channel !== "youtube" && channel !== "website" ? config.iconBg || "bg-[#2563EB]" : ""
+                  channel === "linkedin" || channel === "whatsapp" || channel === "youtube" ? "size-14 bg-transparent border-transparent shadow-none" : "size-10",
+                  channel !== "linkedin" && channel !== "whatsapp" && channel !== "youtube" ? config.iconBg || "bg-[#2563EB]" : ""
                 )}
               >
-                {channel === "website" ? (
-                  <Image src="/website-logo.png" alt="Website Logo" width={64} height={64} className="object-contain drop-shadow-sm scale-[1.4]" />
-                ) : channel === "linkedin" ? (
+                {channel === "linkedin" ? (
                   <Image src="/linkedin-logo.png" alt="LinkedIn Logo" width={64} height={64} className="object-contain drop-shadow-sm scale-[1.4]" />
                 ) : channel === "whatsapp" ? (
                   <Image src="/whatsapp-logo.png" alt="WhatsApp Logo" width={64} height={64} className="object-contain drop-shadow-sm scale-[1.4]" />
@@ -243,13 +225,12 @@ export function ChannelHeader({
             {(() => {
               const statusPills: Record<ChannelType, { label: string; text: string; bg: string; border: string; dot: string }> = {
                 whatsapp: { label: "WABA Cloud API Connected", text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200/70", dot: "bg-emerald-500" },
-                website: { label: "Web Analytics & SSL Active", text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200/70", dot: "bg-blue-500" },
                 meta: { label: "Meta Graph API Connected", text: "text-pink-700", bg: "bg-pink-50", border: "border-pink-200/70", dot: "bg-pink-500" },
                 linkedin: { label: "LinkedIn Company API Active", text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200/70", dot: "bg-blue-600" },
                 google: { label: "Google Business Profile Verified", text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200/70", dot: "bg-blue-500" },
                 youtube: { label: "YouTube Partner API Active", text: "text-rose-700", bg: "bg-rose-50", border: "border-rose-200/70", dot: "bg-rose-500" },
               };
-              const pill = statusPills[channel] || statusPills.website;
+              const pill = statusPills[channel] ?? statusPills.meta;
               return (
                 <span className={cn("inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[11px] font-bold border", pill.bg, pill.text, pill.border)}>
                   <span className={cn("size-2 rounded-sm animate-pulse", pill.dot)} /> {pill.label}
@@ -303,9 +284,7 @@ export function ChannelHeader({
                   "flex h-[36px] items-center gap-1.5 rounded-sm px-3.5 text-[11.5px] font-bold text-white shadow-xs transition-all active:scale-98 cursor-pointer",
                   channel === "whatsapp"
                     ? "bg-emerald-600 hover:bg-emerald-700"
-                    : channel === "website"
-                      ? "bg-blue-600 hover:bg-blue-700"
-                      : channel === "meta"
+                    : channel === "meta"
                         ? "bg-pink-600 hover:bg-pink-700"
                         : channel === "linkedin"
                           ? "bg-[#0A66C2] hover:bg-[#084e96]"

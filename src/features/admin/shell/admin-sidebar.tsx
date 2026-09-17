@@ -106,9 +106,6 @@ export function AdminSidebar() {
           {/* Project Switcher */}
           {!isSidebarCollapsed && (
             <div className="px-3 pt-5 pb-3">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-[#7E8DA6] mb-2 px-1">
-                Project
-              </p>
               <div className="text-black">
                 <Clientswitcher />
               </div>
