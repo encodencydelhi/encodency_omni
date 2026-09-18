@@ -12,6 +12,8 @@ export type ChannelLogoName =
   | "Google"
   | "WhatsApp"
   | "YouTube"
+  | "X (Twitter)"
+  | "X"
   | "Website"
   | "Search Console"
   | string;
@@ -47,6 +49,18 @@ function YouTubeIcon() {
         d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"
       />
       <path fill="#FFFFFF" d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  );
+}
+
+function XIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-full">
+      <rect width="24" height="24" rx="4.5" fill="#0F1419" />
+      <path
+        fill="#FFFFFF"
+        d="M16.99 5.25h2.2l-4.81 5.5 5.66 7.48h-4.43l-3.47-4.54-3.97 4.54H5.96l5.14-5.88L5.67 5.25h4.54l3.14 4.15zm-.77 11.67h1.22L8.63 6.48H7.32z"
+      />
     </svg>
   );
 }
@@ -151,6 +165,9 @@ export function ChannelLogo({
     IconContent = <GoogleIcon />;
   } else if (norm.includes("youtube") || norm.includes("yt")) {
     IconContent = <YouTubeIcon />;
+    // Matched exactly, so an unrelated label containing the letter "x" never wins.
+  } else if (norm === "x" || norm.includes("twitter") || norm.startsWith("x (")) {
+    IconContent = <XIcon />;
   } else if (norm.includes("linkedin")) {
     IconContent = <LinkedInIcon />;
   } else if (norm.includes("whatsapp")) {

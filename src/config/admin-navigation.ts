@@ -1,6 +1,6 @@
 import {
   BarChart3, Blocks, Bot, BriefcaseBusiness, CalendarDays, ContactRound, FileChartColumn,
-  FolderKanban, Gauge, Globe2, Image, Landmark, ListChecks, Network,
+  FolderKanban, Gauge, Globe2, Hash, Image, Landmark, ListChecks, Network,
   Megaphone, MessageCircle, PanelsTopLeft, SearchCheck, Settings, ShieldCheck, Tags, Target,
   Share2, UsersRound, Video, WalletCards, type LucideIcon,
 } from "lucide-react";
@@ -30,6 +30,7 @@ export const adminNavigation: AdminNavSection[] = [
       { label: "Google Business", href: "/admin/google-business", icon: Landmark },
       { label: "WhatsApp", href: "/admin/whatsapp", icon: MessageCircle },
       { label: "YouTube", href: "/admin/youtube", icon: Video },
+      { label: "X (Twitter)", href: "/admin/x", icon: Hash },
       { label: "Website", href: "/admin/website", icon: Globe2 },
     ]
   },
