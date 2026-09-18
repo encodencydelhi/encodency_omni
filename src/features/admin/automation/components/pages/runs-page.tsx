@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
+import { toast } from "sonner";
 import { 
   Play, CheckCircle2, XCircle, Clock, ChevronDown, Download, Search, 
   MoreHorizontal, Activity, Calendar, MessageSquare, Globe, User, 
@@ -7,6 +10,25 @@ import {
 } from "lucide-react";
 
 export function RunsPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("All Statuses");
+
+  const handleExportLogs = () => {
+    const csvContent = "data:text/csv;charset=utf-8," + 
+      "Run ID,Workflow Name,Status,Trigger Source,Duration,Executed At\n" +
+      "run_9a3f6c7e,New Meta Lead Follow-up,Running,Meta Lead Ads,250ms,2026-09-18 10:34:12\n" +
+      "run_8f3a2c1e,New Meta Lead Follow-up,Successful,Meta Lead Ads,450ms,2026-09-18 10:34:08\n" +
+      "run_7c9d4b2a,Google Review Alert,Failed,Google Business,1.2s,2026-09-18 10:33:55\n";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `automation_runs_export_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Automation execution logs exported to CSV.");
+  };
+
   return (
     <div className="space-y-2 pb-12">
       
@@ -22,11 +44,23 @@ export function RunsPage() {
             <ChevronDown className="size-3.5 text-[#94A3B8] ml-1" />
           </div>
           
-          {['All Workflows', 'All Statuses', 'All Trigger Sources', 'All Channels'].map(f => (
-            <div key={f} className="flex items-center gap-1.5 border border-[#E2E8F0] bg-white rounded-md px-3 py-2 text-[12px] font-medium text-[#334155] cursor-pointer hover:bg-slate-50">
-              {f} <ChevronDown className="size-3.5 text-[#94A3B8]" />
-            </div>
-          ))}
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="border border-[#E2E8F0] bg-white rounded-md px-3 py-2 text-[12px] font-medium text-[#334155] cursor-pointer hover:bg-slate-50 focus:outline-none"
+          >
+            <option value="All Statuses">All Statuses</option>
+            <option value="Successful">Successful</option>
+            <option value="Failed">Failed</option>
+            <option value="Running">Running</option>
+          </select>
+
+          <Link
+            href="/admin/automation/logs"
+            className="flex items-center gap-1.5 border border-[#BFDBFE] bg-blue-50/50 rounded-md px-3 py-2 text-[12px] font-bold text-[#2563EB] hover:bg-blue-50 transition-colors"
+          >
+            <Activity className="size-3.5" /> Live Diagnostic Logs & DLQ →
+          </Link>
         </div>
 
         <div className="flex items-center gap-2">
@@ -35,10 +69,16 @@ export function RunsPage() {
             <input 
               type="text" 
               placeholder="Search runs, contacts, or messages..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 pr-4 py-2 bg-white border border-[#E2E8F0] rounded-md text-[12px] w-[260px] focus:outline-none focus:border-[#3B82F6]"
             />
           </div>
-          <button className="flex items-center gap-1.5 border border-[#E2E8F0] bg-white rounded-md px-3 py-2 text-[12px] font-bold text-[#2563EB] hover:bg-slate-50 transition-colors">
+          <button 
+            type="button"
+            onClick={handleExportLogs}
+            className="flex items-center gap-1.5 border border-[#E2E8F0] bg-white rounded-md px-3 py-2 text-[12px] font-bold text-[#2563EB] hover:bg-slate-50 transition-colors cursor-pointer"
+          >
             <Download className="size-3.5" /> Export Logs
           </button>
         </div>
@@ -251,36 +291,37 @@ export function RunsPage() {
             {/* Success vs Failure */}
             <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
               <h3 className="text-[13px] font-bold text-[#111C3A] mb-4">Success vs Failure</h3>
-              <div className="flex-1 flex items-center justify-center relative">
-                 {/* Donut Chart Mock */}
-                 <div className="size-24 rounded-full border-[12px] border-[#10B981] border-r-[#EF4444] border-b-[#EAB308] border-l-[#8B5CF6] flex items-center justify-center transform rotate-45">
+              <div className="flex-1 flex items-center justify-between gap-4 px-1">
+                 {/* Donut Chart Mock on Left */}
+                 <div className="size-24 rounded-full border-[12px] border-[#10B981] border-r-[#EF4444] border-b-[#EAB308] border-l-[#8B5CF6] flex items-center justify-center transform rotate-45 shrink-0">
                     <div className="transform -rotate-45 text-center">
                       <div className="text-[14px] font-bold text-[#111C3A]">2,076</div>
                       <div className="text-[8px] text-[#64748B]">Total Runs</div>
                     </div>
                  </div>
                  
-                 <div className="absolute right-0 flex flex-col gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <div className="size-2.5 rounded-full bg-[#10B981]" />
-                      <div>
-                        <div className="text-[11px] font-bold text-[#111C3A] leading-none mb-0.5">1,742</div>
-                        <div className="text-[9px] text-[#64748B] leading-none">Successful (84.0%)</div>
-                      </div>
+                 {/* Stats text on Right */}
+                 <div className="flex flex-col gap-2 min-w-0">
+                    <div className="flex items-center gap-2">
+                       <div className="size-2.5 rounded-full bg-[#10B981] shrink-0" />
+                       <div className="min-w-0">
+                         <div className="text-[11.5px] font-bold text-[#111C3A] leading-none mb-0.5">1,742</div>
+                         <div className="text-[9.5px] text-[#64748B] leading-none whitespace-nowrap">Successful (84.0%)</div>
+                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="size-2.5 rounded-full bg-[#EF4444]" />
-                      <div>
-                        <div className="text-[11px] font-bold text-[#111C3A] leading-none mb-0.5">186</div>
-                        <div className="text-[9px] text-[#64748B] leading-none">Failed (9.0%)</div>
-                      </div>
+                    <div className="flex items-center gap-2">
+                       <div className="size-2.5 rounded-full bg-[#EF4444] shrink-0" />
+                       <div className="min-w-0">
+                         <div className="text-[11.5px] font-bold text-[#111C3A] leading-none mb-0.5">186</div>
+                         <div className="text-[9.5px] text-[#64748B] leading-none whitespace-nowrap">Failed (9.0%)</div>
+                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="size-2.5 rounded-full bg-[#EAB308]" />
-                      <div>
-                        <div className="text-[11px] font-bold text-[#111C3A] leading-none mb-0.5">64</div>
-                        <div className="text-[9px] text-[#64748B] leading-none">Pending (3.1%)</div>
-                      </div>
+                    <div className="flex items-center gap-2">
+                       <div className="size-2.5 rounded-full bg-[#EAB308] shrink-0" />
+                       <div className="min-w-0">
+                         <div className="text-[11.5px] font-bold text-[#111C3A] leading-none mb-0.5">64</div>
+                         <div className="text-[9.5px] text-[#64748B] leading-none whitespace-nowrap">Pending (3.1%)</div>
+                       </div>
                     </div>
                  </div>
               </div>
@@ -296,7 +337,7 @@ export function RunsPage() {
                 <h3 className="text-[13px] font-bold text-[#111C3A]">Failure Reasons</h3>
                 <a href="#" className="text-[10px] font-medium text-[#2563EB] hover:underline">View all →</a>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {[
                   { lbl: "Invalid configuration", pct: 32, col: "bg-red-500" },
                   { lbl: "API rate limit", pct: 24, col: "bg-orange-500" },
@@ -305,11 +346,11 @@ export function RunsPage() {
                   { lbl: "Condition not met", pct: 8, col: "bg-cyan-500" },
                   { lbl: "Others", pct: 4, col: "bg-slate-400" },
                 ].map(r => (
-                  <div key={r.lbl} className="flex items-center gap-2 text-[10px]">
-                    <ShieldAlert className={`size-3 shrink-0 text-slate-400`} />
-                    <span className="text-[#334155] w-28 truncate">{r.lbl}</span>
-                    <span className="text-[#64748B] font-medium w-6">{r.pct}%</span>
-                    <div className="flex-1 h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden">
+                  <div key={r.lbl} className="flex items-center gap-2 text-[10.5px]">
+                    <ShieldAlert className="size-3.5 shrink-0 text-slate-400" />
+                    <span className="text-[#334155] font-medium flex-1 truncate">{r.lbl}</span>
+                    <span className="text-[#64748B] font-bold text-[10px] w-7 text-right shrink-0">{r.pct}%</span>
+                    <div className="w-24 sm:w-28 h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden shrink-0">
                       <div className={`h-full ${r.col} rounded-full`} style={{ width: `${r.pct}%` }} />
                     </div>
                   </div>
@@ -321,7 +362,7 @@ export function RunsPage() {
             <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[13px] font-bold text-[#111C3A]">Recent Incidents</h3>
-                <a href="#" className="text-[10px] font-medium text-[#2563EB] hover:underline">View all incidents →</a>
+                <Link href="/admin/automation/logs" className="text-[10px] font-medium text-[#2563EB] hover:underline">View all in DLQ →</Link>
               </div>
               <div className="flex-1 overflow-x-auto">
                 <table className="w-full text-left text-[10px] whitespace-nowrap">
@@ -338,13 +379,21 @@ export function RunsPage() {
                     {[
                       { time: "Apr 14, 09:19 AM", id: "run_7c9d...", wf: "WhatsApp Re-eng...", err: "Invalid wait duration format" },
                       { time: "Apr 14, 07:33 AM", id: "run_2e8f...", wf: "New Meta Lead F...", err: "WhatsApp API rate limit exceeded" },
+                      { time: "Apr 13, 11:42 PM", id: "run_4b8e...", wf: "Google Review...", err: "OAuth token expired (401)" },
+                      { time: "Apr 13, 05:15 PM", id: "run_9a3f...", wf: "Abandoned Cart...", err: "Invalid phone E.164 syntax" },
+                      { time: "Apr 13, 02:20 PM", id: "run_6d2b...", wf: "Website Down...", err: "TCP connection timeout (504)" },
+                      { time: "Apr 12, 10:05 AM", id: "run_3e9c...", wf: "Form Routing...", err: "Sales agent capacity saturated" },
                     ].map(inc => (
                       <tr key={inc.id} className="border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC]">
                         <td className="py-2 pr-2">{inc.time}</td>
                         <td className="py-2 px-2 font-mono text-[#64748B]">{inc.id}</td>
                         <td className="py-2 px-2">{inc.wf}</td>
                         <td className="py-2 px-2 text-[#EF4444]">{inc.err}</td>
-                        <td className="py-2 pl-2 text-right text-[#2563EB] font-bold cursor-pointer hover:underline">View Logs</td>
+                        <td className="py-2 pl-2 text-right">
+                          <Link href="/admin/automation/logs" className="text-[#2563EB] font-bold hover:underline">
+                            View Logs
+                          </Link>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -408,18 +457,18 @@ export function RunsPage() {
             <div className="p-4 bg-[#F8FAFC]">
               <h3 className="text-[11px] font-bold text-[#111C3A] mb-4">Execution Log</h3>
               
-              <div className="space-y-0 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+              <div className="space-y-0 relative before:absolute before:top-2 before:bottom-2 before:left-[11px] before:w-0.5 before:bg-slate-200">
                 
                 {/* Step 1 */}
-                <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active pb-4">
+                <div className="relative flex items-center group is-active pb-4">
                   <div className="flex items-start w-full">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-[#10B981] text-white shrink-0 z-10 mr-3">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-[#10B981] text-white shrink-0 z-10 mr-3 shadow-2xs">
                        <Check className="size-3" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-[11px] font-bold text-[#111C3A]">Trigger Received</h4>
-                        <span className="text-[9px] text-[#94A3B8]">09:18:12 AM</span>
+                        <h4 className="text-[11.5px] font-bold text-[#111C3A]">Trigger Received</h4>
+                        <span className="text-[9.5px] text-[#94A3B8]">09:18:12 AM</span>
                       </div>
                       <p className="text-[10px] text-[#64748B] mt-0.5">Manual trigger by Neha Verma</p>
                     </div>
@@ -427,15 +476,15 @@ export function RunsPage() {
                 </div>
 
                 {/* Step 2 */}
-                <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active pb-4">
+                <div className="relative flex items-center group is-active pb-4">
                   <div className="flex items-start w-full">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-[#10B981] text-white shrink-0 z-10 mr-3">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-[#10B981] text-white shrink-0 z-10 mr-3 shadow-2xs">
                        <Check className="size-3" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-[11px] font-bold text-[#111C3A]">Condition Check</h4>
-                        <span className="text-[9px] text-[#94A3B8]">09:18:14 AM</span>
+                        <h4 className="text-[11.5px] font-bold text-[#111C3A]">Condition Check</h4>
+                        <span className="text-[9.5px] text-[#94A3B8]">09:18:14 AM</span>
                       </div>
                       <p className="text-[10px] text-[#64748B] mt-0.5">Contact matches re-engagement criteria</p>
                     </div>
@@ -443,15 +492,15 @@ export function RunsPage() {
                 </div>
 
                 {/* Step 3 */}
-                <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active pb-4">
+                <div className="relative flex items-center group is-active pb-4">
                   <div className="flex items-start w-full">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-[#10B981] text-white shrink-0 z-10 mr-3">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-[#10B981] text-white shrink-0 z-10 mr-3 shadow-2xs">
                        <Check className="size-3" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-[11px] font-bold text-[#111C3A]">WhatsApp Message Sent</h4>
-                        <span className="text-[9px] text-[#94A3B8]">09:18:17 AM</span>
+                        <h4 className="text-[11.5px] font-bold text-[#111C3A]">WhatsApp Message Sent</h4>
+                        <span className="text-[9.5px] text-[#94A3B8]">09:18:17 AM</span>
                       </div>
                       <p className="text-[10px] text-[#64748B] mt-0.5">Message sent successfully via WhatsApp</p>
                     </div>
@@ -459,36 +508,43 @@ export function RunsPage() {
                 </div>
 
                 {/* Step 4 (Failed) */}
-                <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active pb-4">
+                <div className="relative flex items-center group is-active pb-4">
                   <div className="flex items-start w-full">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-[#EF4444] text-white shrink-0 z-10 mr-3">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-[#EF4444] text-white shrink-0 z-10 mr-3 shadow-2xs">
                        <XCircle className="size-3.5" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-[11px] font-bold text-[#EF4444]">Wait 2 Hours</h4>
-                        <span className="text-[9px] text-[#94A3B8]">09:19:42 AM</span>
+                        <h4 className="text-[11.5px] font-bold text-[#EF4444]">Wait 2 Hours</h4>
+                        <span className="text-[9.5px] text-[#94A3B8]">09:19:42 AM</span>
                       </div>
                       <p className="text-[10px] text-[#64748B] mt-0.5">Step failed due to invalid delay configuration</p>
-                      <div className="mt-2 bg-[#FEF2F2] border border-[#FECACA] rounded-md p-2 flex items-start justify-between">
-                         <div className="flex items-start gap-1.5 text-[9px] text-[#B91C1C] font-medium">
-                           <ShieldAlert className="size-3 shrink-0 mt-0.5" /> Error: Invalid wait duration format
+                      <div className="mt-2.5 bg-[#FEF2F2] border border-[#FECACA] rounded-lg p-2.5 flex items-center justify-between w-full shadow-2xs">
+                         <div className="flex items-center gap-1.5 text-[10px] text-[#B91C1C] font-semibold">
+                           <ShieldAlert className="size-3.5 shrink-0 text-red-500" />
+                           <span>Error: Invalid wait duration format</span>
                          </div>
-                         <button className="text-[9px] font-bold text-[#2563EB] bg-white px-1.5 py-0.5 rounded border border-[#BFDBFE]">Retry Step</button>
+                         <button 
+                           type="button"
+                           onClick={() => toast.success("Step retry scheduled for execution!")}
+                           className="text-[10px] font-bold text-[#2563EB] bg-white px-3 py-1 rounded-md border border-[#BFDBFE] hover:bg-blue-50 transition-colors cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
+                         >
+                           Retry Step
+                         </button>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Step 5 (Not executed) */}
-                <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <div className="relative flex items-center group is-active">
                   <div className="flex items-start w-full">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full border border-white bg-[#E2E8F0] text-[#94A3B8] shrink-0 z-10 mr-3">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-[#E2E8F0] text-[#94A3B8] shrink-0 z-10 mr-3 shadow-2xs">
                        <span className="text-[10px] font-bold">5</span>
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between opacity-50">
-                        <h4 className="text-[11px] font-bold text-[#111C3A]">Assign User</h4>
+                        <h4 className="text-[11.5px] font-bold text-[#111C3A]">Assign User</h4>
                       </div>
                       <p className="text-[10px] text-[#94A3B8] mt-0.5">Not executed</p>
                     </div>

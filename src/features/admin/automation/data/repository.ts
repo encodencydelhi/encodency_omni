@@ -1,4 +1,12 @@
-import { AutomationWorkflow, AutomationRun, AutomationTemplate, AutomationAnalytics } from "./types";
+import { 
+  AutomationWorkflow, 
+  AutomationRun, 
+  AutomationTemplate, 
+  AutomationAnalytics,
+  AutomationConsoleLog,
+  AutomationHealthMetrics
+} from "./types";
+import { AutomationSettingsState } from "./settings-types";
 
 export interface AutomationRepository {
   // Workflows
@@ -11,10 +19,23 @@ export interface AutomationRepository {
   // Runs
   getRuns(clientId: string, workflowId?: string): Promise<AutomationRun[]>;
   getRun(runId: string): Promise<AutomationRun | null>;
+  retryRun(runId: string): Promise<AutomationRun>;
+  bulkRetryRuns(runIds: string[]): Promise<AutomationRun[]>;
+  createTestWebhookRun(payload: { workflowId: string; eventType: string; payload: Record<string, any> }): Promise<AutomationRun>;
+
+  // Console Logs
+  getConsoleLogs(): Promise<AutomationConsoleLog[]>;
 
   // Templates
   getTemplates(): Promise<AutomationTemplate[]>;
 
-  // Analytics
+  // Analytics & Diagnostics
   getAnalytics(clientId: string): Promise<AutomationAnalytics>;
+  getHealthMetrics(): Promise<AutomationHealthMetrics>;
+
+  // Settings
+  getSettings(): Promise<AutomationSettingsState>;
+  updateSettings(settings: Partial<AutomationSettingsState>): Promise<AutomationSettingsState>;
+  resetSettings(): Promise<AutomationSettingsState>;
 }
+

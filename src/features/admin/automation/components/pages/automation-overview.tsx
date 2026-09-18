@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { toast } from "sonner";
 import { automationRepository } from "../../data/mock-provider";
 import { AutomationWorkflow, AutomationAnalytics } from "../../data/types";
 import {
@@ -17,16 +19,24 @@ export function AutomationOverview() {
   useEffect(() => {
     const clientId = "client_1";
     automationRepository.getAnalytics(clientId).then(setAnalytics);
-    automationRepository.getWorkflows(clientId).then(setWorkflows);
+    automationRepository.getWorkflows(clientId).then((wfs) => {
+      const extraWorkflows: AutomationWorkflow[] = [
+        { id: "wf_ex_1", clientId: "c1", name: "SEO Critical Issue Alert", status: "Active", version: 1, trigger: { type: "seo", label: "SEO Audit Warning" }, channels: ["google", "slack"], runs: 84, successRate: 96.2, failures: 3, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
+        { id: "wf_ex_2", clientId: "c1", name: "Form Submission Lead Routing", status: "Active", version: 1, trigger: { type: "form", label: "Website Form Submit" }, channels: ["web", "email"], runs: 210, successRate: 92.4, failures: 8, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
+        { id: "wf_ex_3", clientId: "c1", name: "Missed Call Instant Callback", status: "Paused", version: 1, trigger: { type: "call", label: "Missed Phone Call" }, channels: ["phone", "whatsapp"], runs: 175, successRate: 89.1, failures: 15, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
+        { id: "wf_ex_4", clientId: "c1", name: "Abandoned Cart Recovery", status: "Active", version: 1, trigger: { type: "webhook", label: "Cart Drop Trigger" }, channels: ["whatsapp", "email"], runs: 532, successRate: 97.8, failures: 6, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
+      ];
+      setWorkflows([...wfs, ...extraWorkflows]);
+    });
   }, []);
 
   if (!analytics) return <div className="flex h-64 items-center justify-center text-[13px] text-[#6B7A94] animate-pulse">Loading dashboard...</div>;
 
   return (
-    <div className="space-y-1 pb-12 text-[#111C3A]">
+    <div className="space-y-2 pb-12 text-[#111C3A]">
 
       {/* 1. KPI Cards Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-1">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
         <KpiCard
           icon={<div className="bg-[#EBF5FF] text-[#3B82F6] p-2.5 rounded-lg"><Play className="size-5" fill="currentColor" /></div>}
           title="Active Workflows"
@@ -66,19 +76,18 @@ export function AutomationOverview() {
       </div>
 
       {/* 2. Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-1">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
         {/* Automation Activity */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
             <div>
-              <h3 className="text-[14px] font-bold text-[#111C3A]">Automation Activity</h3>
-              <p className="text-[12px] text-[#6B7A94] mt-0.5">Workflow runs and success rate over time.</p>
+              <h3 className="text-[13.5px] font-bold text-[#111C3A]">Automation Activity</h3>
+              <p className="text-[11px] text-[#6B7A94]">30-day execution metrics</p>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#6B7A94]"><div className="size-2.5 rounded-sm bg-[#10B981]"></div>Successful Runs</div>
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#6B7A94]"><div className="size-2.5 rounded-sm bg-[#EF4444]"></div>Failed Runs</div>
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#6B7A94]"><div className="size-2.5 rounded-full bg-[#3B82F6]"></div>Success Rate</div>
-              <select className="text-[12px] border border-[#E2E8F0] rounded-md px-2 py-1 ml-2 bg-white"><option>Last 30 days</option></select>
+            <div className="flex items-center gap-2 text-[10.5px] font-medium text-[#6B7A94]">
+              <div className="flex items-center gap-1"><div className="size-2 rounded-sm bg-[#10B981]"></div>Success</div>
+              <div className="flex items-center gap-1"><div className="size-2 rounded-sm bg-[#EF4444]"></div>Failed</div>
+              <div className="flex items-center gap-1"><div className="size-2 rounded-full bg-[#3B82F6]"></div>Rate</div>
             </div>
           </div>
           <div className="h-[220px] w-full">
@@ -160,43 +169,43 @@ export function AutomationOverview() {
       </div>
 
       {/* 3. Management Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-1">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
 
         {/* Active Workflows Table */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[14px] font-bold text-[#111C3A]">Active Workflows</h3>
-            <a href="#" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all <ChevronRight className="size-3" /></a>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[13.5px] font-bold text-[#111C3A]">Active Workflows</h3>
+            <Link href="/admin/automation?tab=workflows" className="text-[11.5px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all <ChevronRight className="size-3" /></Link>
           </div>
 
-          <div className="-mx-5 overflow-x-auto flex-1">
-            <table className="w-full text-left text-[12px]">
+          <div className="overflow-x-auto flex-1 scrollbar-thin">
+            <table className="w-full min-w-[720px] text-left text-[11.5px]">
               <thead>
-                <tr className="border-b border-[#E2E8F0] text-[#64748B]">
-                  <th className="px-5 py-3 font-medium">Workflow</th>
-                  <th className="px-3 py-3 font-medium">Trigger</th>
-                  <th className="px-3 py-3 font-medium">Channels</th>
-                  <th className="px-3 py-3 font-medium">Runs</th>
-                  <th className="px-3 py-3 font-medium">Success</th>
-                  <th className="px-3 py-3 font-medium">Last Run</th>
-                  <th className="px-3 py-3 font-medium">Status</th>
-                  <th className="px-5 py-3 font-medium text-right">Actions</th>
+                <tr className="border-b border-[#E2E8F0] text-[#64748B] text-[10.5px] uppercase tracking-wider whitespace-nowrap">
+                  <th className="py-2.5 px-3 font-semibold">Workflow</th>
+                  <th className="py-2.5 px-3 font-semibold">Trigger</th>
+                  <th className="py-2.5 px-3 font-semibold">Channels</th>
+                  <th className="py-2.5 px-3 font-semibold">Runs</th>
+                  <th className="py-2.5 px-3 font-semibold">Success</th>
+                  <th className="py-2.5 px-3 font-semibold">Last Run</th>
+                  <th className="py-2.5 px-3 font-semibold">Status</th>
+                  <th className="py-2.5 px-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {workflows.slice(0, 5).map((wf) => (
-                  <tr key={wf.id} className="border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors">
-                    <td className="px-5 py-3 font-medium text-[#111C3A]">{wf.name}</td>
+              <tbody className="divide-y divide-[#F1F5F9]">
+                {workflows.slice(0, 8).map((wf) => (
+                  <tr key={wf.id} className="hover:bg-[#F8FAFC] transition-colors whitespace-nowrap">
+                    <td className="px-3 py-3 font-medium text-[#111C3A]">{wf.name}</td>
                     <td className="px-3 py-3 text-[#64748B]">{wf.trigger.label}</td>
                     <td className="px-3 py-3">
-                      <div className="flex -space-x-1">
+                      <div className="flex items-center -space-x-1 shrink-0">
                         <div className="size-5 rounded-full bg-blue-100 flex items-center justify-center border border-white text-blue-600 text-[9px] font-bold">M</div>
                         <div className="size-5 rounded-full bg-emerald-100 flex items-center justify-center border border-white text-emerald-600 text-[9px] font-bold">W</div>
                       </div>
                     </td>
                     <td className="px-3 py-3 text-[#111C3A] font-medium">{wf.runs.toLocaleString()}</td>
                     <td className="px-3 py-3">
-                      <span className={wf.successRate > 95 ? "text-[#10B981]" : "text-[#F59E0B]"}>{wf.successRate}%</span>
+                      <span className={wf.successRate > 95 ? "text-[#10B981] font-semibold" : "text-[#F59E0B] font-semibold"}>{wf.successRate}%</span>
                     </td>
                     <td className="px-3 py-3 text-[#64748B]">{wf.lastRunAt ? "12 min ago" : "-"}</td>
                     <td className="px-3 py-3">
@@ -208,8 +217,8 @@ export function AutomationOverview() {
                         {wf.status}
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-right">
-                      <button className="text-[#94A3B8] hover:text-[#111C3A]"><MoreVertical className="size-4 inline-block" /></button>
+                    <td className="px-3 py-3 text-right">
+                      <button className="text-[#94A3B8] hover:text-[#111C3A] cursor-pointer"><MoreVertical className="size-4 inline-block" /></button>
                     </td>
                   </tr>
                 ))}
@@ -243,14 +252,14 @@ export function AutomationOverview() {
               { icon: <Zap className="size-3.5 text-white" />, bg: "bg-[#F59E0B]", title: "Condition", desc: "Lead Replied?" },
               { icon: <Bot className="size-3.5 text-white" />, bg: "bg-[#EF4444]", title: "Action", desc: "Assign to Sales Team" },
             ].map((node, i) => (
-              <div key={i} className="relative z-10 w-full flex justify-center mb-3 last:mb-0">
-                <div className="bg-white border border-[#E2E8F0] shadow-sm rounded-lg p-2 flex items-center gap-3 w-56 hover:border-[#CBD5E1] transition-colors cursor-pointer">
-                  <div className={`grid size-7 place-items-center rounded-md ${node.bg}`}>
+              <div key={i} className="relative z-10 w-full flex justify-center mb-2.5 last:mb-0 px-2">
+                <div className="bg-white border border-[#E2E8F0] shadow-xs rounded-lg p-2.5 flex items-center gap-3 w-full max-w-[280px] hover:border-[#CBD5E1] transition-colors cursor-pointer">
+                  <div className={`grid size-7 place-items-center rounded-md ${node.bg} shrink-0`}>
                     {node.icon}
                   </div>
-                  <div>
-                    <div className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">{node.title}</div>
-                    <div className="text-[12px] font-medium text-[#111C3A] leading-tight">{node.desc}</div>
+                  <div className="truncate">
+                    <div className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">{node.title}</div>
+                    <div className="text-[11.5px] font-medium text-[#111C3A] leading-tight truncate">{node.desc}</div>
                   </div>
                 </div>
               </div>
@@ -292,7 +301,7 @@ export function AutomationOverview() {
       </div>
 
       {/* 4. Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-1">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
         {/* Recent Runs */}
         <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
           <div className="flex items-center justify-between mb-4">
@@ -326,10 +335,10 @@ export function AutomationOverview() {
                     <td className="px-3 py-2.5 text-[#64748B]">{r.dur}</td>
                     <td className="px-3 py-2.5 text-[#64748B]">{r.steps}</td>
                     <td className="px-5 py-2.5 text-right">
-                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${r.res === "Success" ? "bg-[#ECFDF5] text-[#10B981]" : "bg-[#FEF2F2] text-[#EF4444]"
+                      <span className={`w-[76px] justify-center inline-flex items-center gap-1 py-0.5 rounded-full text-[10px] font-bold ${r.res === "Success" ? "bg-[#ECFDF5] text-[#10B981]" : "bg-[#FEF2F2] text-[#EF4444]"
                         }`}>
-                        {r.res === "Success" ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
-                        {r.res}
+                        {r.res === "Success" ? <CheckCircle2 className="size-3 shrink-0" /> : <XCircle className="size-3 shrink-0" />}
+                        <span>{r.res}</span>
                       </span>
                     </td>
                   </tr>
@@ -345,35 +354,49 @@ export function AutomationOverview() {
             <h3 className="text-[14px] font-bold text-[#111C3A]">Popular Templates</h3>
             <a href="#" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all templates <ChevronRight className="size-3" /></a>
           </div>
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-2 gap-2.5 mb-3">
             {[
               { icon: <Bot className="size-4 text-blue-600" />, bg: "bg-blue-100", title: "New Lead Follow-up", desc: "Instantly follow up with new leads", badge: "Most Used" },
               { icon: <span className="text-orange-600 font-bold text-[12px]">G</span>, bg: "bg-orange-100", title: "Negative Review Alert", desc: "Get notified of negative reviews" },
               { icon: <Activity className="size-4 text-emerald-600" />, bg: "bg-emerald-100", title: "Website Down Alert", desc: "Alert when website is down" },
               { icon: <span className="text-emerald-500 font-bold text-[12px]">W</span>, bg: "bg-emerald-100/50", title: "WhatsApp Re-engagement", desc: "Re-engage inactive leads" }
             ].map((tpl, i) => (
-              <div key={i} className="border border-[#E2E8F0] rounded-lg p-3 hover:border-[#CBD5E1] hover:shadow-sm transition-all flex flex-col">
-                <div className="flex gap-1 mb-2">
-                  <div className={`grid size-7 place-items-center rounded-md ${tpl.bg}`}>
-                    {tpl.icon}
+              <div key={i} className="border border-[#E2E8F0] rounded-xl p-2.5 hover:border-[#CBD5E1] hover:shadow-xs transition-all flex flex-col bg-[#FAFBFD] hover:bg-white justify-between">
+                <div>
+                  <div className="flex gap-2 mb-1.5">
+                    <div className={`grid size-7 place-items-center rounded-md ${tpl.bg} shrink-0`}>
+                      {tpl.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[11px] font-bold text-[#111C3A] leading-tight mb-0.5 truncate">{tpl.title}</div>
+                      <div className="text-[9.5px] text-[#64748B] leading-tight line-clamp-2">{tpl.desc}</div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="text-[11px] font-bold text-[#111C3A] leading-tight mb-0.5">{tpl.title}</div>
-                    <div className="text-[10px] text-[#64748B] leading-tight">{tpl.desc}</div>
-                  </div>
+                  {tpl.badge && <div className="mb-2"><span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[8.5px] font-bold rounded uppercase tracking-wider border border-blue-100">{tpl.badge}</span></div>}
                 </div>
-                {tpl.badge && <div className="mb-2"><span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-bold rounded uppercase tracking-wider border border-blue-100">{tpl.badge}</span></div>}
-                <div className="mt-auto">
-                  <button className="w-full text-center text-[11px] font-semibold text-[#2563EB] hover:text-[#1D4ED8] hover:bg-[#F8FAFC] py-1 rounded transition-colors">Use Template</button>
+                <div className="mt-2">
+                  <button 
+                    type="button"
+                    onClick={() => toast.success(`Loaded blueprint: "${tpl.title}"`)}
+                    className="w-full text-center py-1.5 rounded-lg bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 text-[#2563EB] text-[10.5px] font-bold transition-all shadow-2xs cursor-pointer"
+                  >
+                    Use Template
+                  </button>
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-auto flex items-center justify-between text-[11px] bg-[#F8FAFC] px-3 py-2 rounded-lg border border-[#E2E8F0]">
+          <div className="mt-auto flex items-center justify-between text-[10.5px] bg-[#F8FAFC] px-3 py-2 rounded-lg border border-[#E2E8F0]">
             <div className="flex items-center gap-1.5 text-[#64748B]">
-              <Zap className="size-3.5 text-[#94A3B8]" /> Don't see what you need? Create a custom workflow or request a new template.
+              <Zap className="size-3 text-[#94A3B8]" /> Need a custom workflow?
             </div>
-            <a href="#" className="font-semibold text-[#2563EB] hover:underline">Request Template</a>
+            <button 
+              type="button" 
+              onClick={() => toast.info("Template request sent to support team")}
+              className="font-bold text-[#2563EB] hover:underline cursor-pointer"
+            >
+              Request Template
+            </button>
           </div>
         </div>
       </div>

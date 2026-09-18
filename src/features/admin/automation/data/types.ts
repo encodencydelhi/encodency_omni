@@ -46,6 +46,9 @@ export interface AutomationEdge {
 export interface AutomationRun {
   id: string;
   workflowId: string;
+  workflowName?: string;
+  channel?: IntegrationCapability | "whatsapp" | "email" | "system";
+  triggerSource?: string;
   status: AutomationRunStatus;
   startedAt: string;
   durationMs: number;
@@ -53,8 +56,54 @@ export interface AutomationRun {
     type: string;
     id: string;
     label: string;
+    subLabel?: string;
   };
   steps: AutomationRunStep[];
+  rawWebhookPayload?: Record<string, any>;
+  httpDumps?: Array<{
+    id: string;
+    service: string;
+    method: "GET" | "POST" | "PUT" | "DELETE";
+    endpoint: string;
+    statusCode: number;
+    durationMs: number;
+    requestHeaders?: Record<string, string>;
+    requestBody?: Record<string, any>;
+    responseBody?: Record<string, any>;
+  }>;
+  errorSummary?: {
+    code: string;
+    message: string;
+    stack?: string;
+    recommendation: string;
+  };
+  owner?: string;
+}
+
+export type AutomationLogLevel = "info" | "warn" | "error" | "debug";
+
+export interface AutomationConsoleLog {
+  id: string;
+  runId?: string;
+  workflowName?: string;
+  timestamp: string;
+  level: AutomationLogLevel;
+  source: string;
+  message: string;
+  details?: Record<string, any>;
+}
+
+export interface AutomationHealthMetrics {
+  totalExecutions: { value: number; trend: number };
+  successRate: { value: number; trend: number };
+  failedRuns: { value: number; trend: number };
+  activeQueue: { count: number; avgWaitTime: string; processingRate: number };
+  rateLimits: {
+    meta: { remaining: number; total: number; percentage: number; status: "Healthy" | "Warning" | "Critical" };
+    whatsapp: { remaining: number; total: number; percentage: number; status: "Healthy" | "Warning" | "Critical" };
+    google: { remaining: number; total: number; percentage: number; status: "Healthy" | "Warning" | "Critical" };
+  };
+  webhookIngestion: { eventsPerMin: number; uptime: number };
 }
 
 export interface AutomationRunStep {

@@ -53,5 +53,5 @@ next-env.d.ts
 .DS_Store
 
 # Logs
-logs
+/logs
 *.log
