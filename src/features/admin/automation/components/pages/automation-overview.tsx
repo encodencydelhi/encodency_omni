@@ -13,13 +13,51 @@ import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Respons
 import { ChannelLogo } from "@/features/admin/shared/channel-logo";
 
 
+const DEFAULT_ANALYTICS: AutomationAnalytics = {
+  activeWorkflows: { value: 12, trend: 33 },
+  totalRuns: { value: 2076, trend: 18 },
+  successRate: { value: 97.1, trend: 2.4 },
+  failedRuns: { value: 61, trend: -28 },
+  timeSavedHours: { value: 84, trend: 41 },
+  actionsExecuted: { value: 6842, trend: 26 },
+  activity: [
+    { date: "Mar 15", successfulRuns: 50, failedRuns: 5, successRate: 90 },
+    { date: "Mar 20", successfulRuns: 85, failedRuns: 2, successRate: 97 },
+    { date: "Mar 25", successfulRuns: 70, failedRuns: 3, successRate: 95 },
+    { date: "Mar 30", successfulRuns: 100, failedRuns: 3, successRate: 97 },
+    { date: "Apr 4", successfulRuns: 115, failedRuns: 2, successRate: 98 },
+    { date: "Apr 9", successfulRuns: 110, failedRuns: 4, successRate: 96 },
+    { date: "Apr 14", successfulRuns: 115, failedRuns: 2, successRate: 98 }
+  ],
+  health: [
+    { status: "Healthy", count: 24, color: "#10B981" },
+    { status: "Needs Attention", count: 4, color: "#F59E0B" },
+    { status: "Paused", count: 3, color: "#3B82F6" },
+    { status: "Error", count: 1, color: "#EF4444" }
+  ],
+  triggerSources: [
+    { source: "Meta Ads", percentage: 38, color: "#1877F2" },
+    { source: "Website", percentage: 24, color: "#10B981" },
+    { source: "Google Business", percentage: 16, color: "#F59E0B" },
+    { source: "Manual", percentage: 10, color: "#8B5CF6" },
+    { source: "Time Based", percentage: 8, color: "#EC4899" },
+    { source: "Others", percentage: 4, color: "#94A3B8" }
+  ],
+  alerts: [
+    { id: "a1", type: "error", title: "WhatsApp action failed 14 times", description: "New Meta Lead Follow-up", timeAgo: "2 hrs ago", actionLabel: "View Runs" },
+    { id: "a2", type: "warning", title: "Google connection expired", description: "Google Review Alert", timeAgo: "5 hrs ago", actionLabel: "Reconnect" },
+  ]
+};
+
 export function AutomationOverview() {
-  const [analytics, setAnalytics] = useState<AutomationAnalytics | null>(null);
+  const [analytics, setAnalytics] = useState<AutomationAnalytics>(DEFAULT_ANALYTICS);
   const [workflows, setWorkflows] = useState<AutomationWorkflow[]>([]);
 
   useEffect(() => {
     const clientId = "client_1";
-    automationRepository.getAnalytics(clientId).then(setAnalytics);
+    automationRepository.getAnalytics(clientId).then((res) => {
+      if (res) setAnalytics(res);
+    });
     automationRepository.getWorkflows(clientId).then((wfs) => {
       const extraWorkflows: AutomationWorkflow[] = [
         { id: "wf_ex_1", clientId: "c1", name: "SEO Critical Issue Alert", status: "Active", version: 1, trigger: { type: "seo", label: "SEO Audit Warning" }, channels: ["google", "slack"], runs: 84, successRate: 96.2, failures: 3, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
@@ -30,8 +68,6 @@ export function AutomationOverview() {
       setWorkflows([...wfs, ...extraWorkflows]);
     });
   }, []);
-
-  if (!analytics) return <div className="flex h-64 items-center justify-center text-[13px] text-[#6B7A94] animate-pulse">Loading dashboard...</div>;
 
   return (
     <div className="space-y-2 pb-12 text-[#111C3A]">
@@ -139,7 +175,7 @@ export function AutomationOverview() {
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-[#F1F5F9]">
-            <a href="#" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all workflows <ChevronRight className="size-3" /></a>
+            <Link href="/admin/automation?tab=workflows" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all workflows <ChevronRight className="size-3" /></Link>
           </div>
         </div>
 
@@ -237,7 +273,7 @@ export function AutomationOverview() {
         <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-[14px] font-bold text-[#111C3A]">Workflow Preview</h3>
-            <a href="#" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View full <ChevronRight className="size-3" /></a>
+            <Link href="/admin/automation?tab=workflows" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View full <ChevronRight className="size-3" /></Link>
           </div>
 
           <div className="mb-4">
@@ -277,7 +313,7 @@ export function AutomationOverview() {
         <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[14px] font-bold text-[#111C3A]">Needs Attention</h3>
-            <a href="#" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all <ChevronRight className="size-3" /></a>
+            <Link href="/admin/automation?tab=runs" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all <ChevronRight className="size-3" /></Link>
           </div>
 
           <div className="flex-1 space-y-4">
@@ -295,9 +331,9 @@ export function AutomationOverview() {
                   <div className="text-[10px] text-[#94A3B8] mt-1">{alert.timeAgo}</div>
                 </div>
                 <div>
-                  <button className="text-[11px] font-semibold text-[#2563EB] border border-[#BFDBFE] bg-[#EFF6FF] px-2 py-1 rounded-md hover:bg-[#DBEAFE] transition-colors">
+                  <Link href="/admin/automation?tab=runs" className="text-[11px] font-semibold text-[#2563EB] border border-[#BFDBFE] bg-[#EFF6FF] px-2 py-1 rounded-md hover:bg-[#DBEAFE] transition-colors inline-block">
                     {alert.actionLabel}
-                  </button>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -312,7 +348,7 @@ export function AutomationOverview() {
         <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[14px] font-bold text-[#111C3A]">Recent Runs</h3>
-            <a href="#" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all <ChevronRight className="size-3" /></a>
+            <Link href="/admin/automation?tab=runs" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all <ChevronRight className="size-3" /></Link>
           </div>
           <div className="-mx-5 overflow-x-auto">
             <table className="w-full text-left text-[12px]">
@@ -358,7 +394,7 @@ export function AutomationOverview() {
         <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[14px] font-bold text-[#111C3A]">Popular Templates</h3>
-            <a href="#" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all templates <ChevronRight className="size-3" /></a>
+            <Link href="/admin/automation?tab=templates" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all templates <ChevronRight className="size-3" /></Link>
           </div>
           <div className="grid grid-cols-2 gap-2.5 mb-3">
             {[

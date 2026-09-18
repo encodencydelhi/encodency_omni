@@ -20,6 +20,7 @@ interface TemplateItem {
   desc: string;
   category: string;
   tags: string[];
+  features?: string[];
   time: string;
   uses: string;
   c1?: React.ReactNode | string;
@@ -35,6 +36,7 @@ const ALL_TEMPLATES: TemplateItem[] = [
     desc: "Automatically follow up with new leads across multiple channels.",
     category: "Sales",
     tags: ["Sales", "Popular"],
+    features: ["Multi-channel", "Pre-built integrations", "Popular templates"],
     time: "12 min",
     uses: "1.2K",
     c1: "G",
@@ -48,6 +50,7 @@ const ALL_TEMPLATES: TemplateItem[] = [
     desc: "Get notified of negative reviews and respond quickly on Google Business.",
     category: "Reputation",
     tags: ["Reputation", "Essential"],
+    features: ["AI-powered", "Conditional logic", "Pre-built integrations", "Popular templates"],
     time: "8 min",
     uses: "856",
     c1: "G",
@@ -61,6 +64,7 @@ const ALL_TEMPLATES: TemplateItem[] = [
     desc: "Alert when your website is down and notify your team instantly via Slack/Email.",
     category: "Website",
     tags: ["Website", "Monitoring"],
+    features: ["Multi-channel", "Conditional logic", "Pre-built integrations"],
     time: "5 min",
     uses: "642",
     c1: <MessageSquare className="size-2.5" />,
@@ -74,6 +78,7 @@ const ALL_TEMPLATES: TemplateItem[] = [
     desc: "Re-engage inactive leads with personalized WhatsApp messages.",
     category: "Sales",
     tags: ["Sales", "Re-engagement"],
+    features: ["Multi-channel", "AI-powered", "Pre-built integrations", "Popular templates"],
     time: "10 min",
     uses: "934",
     c1: <MessageSquare className="size-2.5" fill="currentColor" />,
@@ -86,6 +91,7 @@ const ALL_TEMPLATES: TemplateItem[] = [
     desc: "Send automated appointment reminders to reduce no-shows.",
     category: "CRM",
     tags: ["CRM", "Engagement"],
+    features: ["Multi-channel", "Pre-built integrations"],
     time: "8 min",
     uses: "721",
     c1: <MessageSquare className="size-2.5" fill="currentColor" />,
@@ -98,6 +104,7 @@ const ALL_TEMPLATES: TemplateItem[] = [
     desc: "Automatically assign SEO ranking drops to your optimization team.",
     category: "SEO",
     tags: ["SEO", "Automation"],
+    features: ["AI-powered", "Conditional logic", "Pre-built integrations"],
     time: "10 min",
     uses: "512",
     c1: "G",
@@ -110,6 +117,7 @@ const ALL_TEMPLATES: TemplateItem[] = [
     desc: "Thank donors and send follow-up receipts automatically.",
     category: "Custom",
     tags: ["Custom", "Non-Profit"],
+    features: ["Multi-channel", "Conditional logic", "Pre-built integrations"],
     time: "7 min",
     uses: "423",
     c1: <MessageSquare className="size-2.5" />,
@@ -122,6 +130,7 @@ const ALL_TEMPLATES: TemplateItem[] = [
     desc: "Recover lost leads from abandoned landing page forms with automated SMS.",
     category: "Sales",
     tags: ["Sales", "Conversion"],
+    features: ["Multi-channel", "Conditional logic", "Pre-built integrations", "Popular templates"],
     time: "9 min",
     uses: "689",
     c1: <MessageSquare className="size-2.5" />,
@@ -134,6 +143,7 @@ const ALL_TEMPLATES: TemplateItem[] = [
     desc: "Detect important high-intent comments on Meta Ads and escalate to sales reps.",
     category: "Social",
     tags: ["Social", "Support"],
+    features: ["Multi-channel", "AI-powered", "Conditional logic", "Pre-built integrations"],
     time: "6 min",
     uses: "398",
     c1: "M",
@@ -146,6 +156,7 @@ const ALL_TEMPLATES: TemplateItem[] = [
     desc: "Instantly respond to missed calls with SMS or WhatsApp greeting.",
     category: "Support",
     tags: ["Support", "Response"],
+    features: ["Multi-channel", "Pre-built integrations", "Popular templates"],
     time: "8 min",
     uses: "476",
     c1: <MessageSquare className="size-2.5" fill="currentColor" />,
@@ -171,9 +182,20 @@ export function TemplatesPage({ onUseTemplate }: TemplatesPageProps) {
     { label: "Custom", icon: <Clock className="size-3.5" />, count: ALL_TEMPLATES.filter(t => t.category === "Custom").length },
   ], []);
 
+  const featureCounts = useMemo(() => ({
+    "Multi-channel": ALL_TEMPLATES.filter(t => t.features?.includes("Multi-channel")).length,
+    "AI-powered": ALL_TEMPLATES.filter(t => t.features?.includes("AI-powered")).length,
+    "Conditional logic": ALL_TEMPLATES.filter(t => t.features?.includes("Conditional logic")).length,
+    "Pre-built integrations": ALL_TEMPLATES.filter(t => t.features?.includes("Pre-built integrations")).length,
+    "Popular templates": ALL_TEMPLATES.filter(t => t.features?.includes("Popular templates")).length,
+  }), []);
+
   const filteredTemplates = useMemo(() => {
     return ALL_TEMPLATES.filter((tpl) => {
       if (selectedCategory !== "All Templates" && tpl.category !== selectedCategory) {
+        return false;
+      }
+      if (selectedFeatureFilter && !tpl.features?.includes(selectedFeatureFilter)) {
         return false;
       }
       if (searchQuery.trim()) {
@@ -185,7 +207,7 @@ export function TemplatesPage({ onUseTemplate }: TemplatesPageProps) {
       }
       return true;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, selectedFeatureFilter]);
 
   const handleUseTemplate = (tpl: TemplateItem) => {
     const workflow: AutomationWorkflow = {
@@ -303,11 +325,11 @@ export function TemplatesPage({ onUseTemplate }: TemplatesPageProps) {
             <h3 className="text-[13px] font-bold text-[#111C3A] mb-3">Template Features</h3>
             <div className="space-y-2">
               {[
-                { label: "Multi-channel", count: 8 },
-                { label: "AI-powered", count: 4 },
-                { label: "Conditional logic", count: 6 },
-                { label: "Pre-built integrations", count: 10 },
-                { label: "Popular templates", count: 5 },
+                { label: "Multi-channel" as const },
+                { label: "AI-powered" as const },
+                { label: "Conditional logic" as const },
+                { label: "Pre-built integrations" as const },
+                { label: "Popular templates" as const },
               ].map((feat) => {
                 const isChecked = selectedFeatureFilter === feat.label;
                 return (
@@ -327,7 +349,7 @@ export function TemplatesPage({ onUseTemplate }: TemplatesPageProps) {
                         {feat.label}
                       </span>
                     </div>
-                    <span className="text-[11px] text-[#94A3B8]">{feat.count}</span>
+                    <span className="text-[11px] text-[#94A3B8]">{featureCounts[feat.label]}</span>
                   </label>
                 );
               })}

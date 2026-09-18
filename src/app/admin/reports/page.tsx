@@ -1,1 +1,5 @@
-import { AdminManagementPage } from "@/features/admin/management/admin-management-page"; export default function Page(){return <AdminManagementPage view="reports"/>}
+import { ReportsPage } from "@/features/admin/reports/components/reports-page";
+
+export default function Page() {
+  return <ReportsPage />;
+}

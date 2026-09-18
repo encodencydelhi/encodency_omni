@@ -28,10 +28,15 @@ const MOCK_WORKFLOWS: AutomationWorkflow[] = [
     createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     nodes: [
-      { id: "node_1", type: "trigger", label: "New Meta Lead", status: "configured", config: { source: "Campaign A" } },
-      { id: "node_2", type: "action", actionId: "send_whatsapp", label: "Send WhatsApp", status: "configured", config: { template: "welcome_message" } },
-      { id: "node_3", type: "delay", label: "Wait 2 hours", status: "configured", config: { duration: 2, unit: "hours" } },
-      { id: "node_4", type: "action", actionId: "assign_user", label: "Assign User", status: "configured", config: { assignee: "sales_team" } }
+      { id: "node_1", type: "trigger", label: "Inbound Webhook", description: "Triggers when data is received via a webhook URL.", status: "configured", config: { name: "Inbound Webhook", method: "POST" } },
+      { id: "node_2", type: "action", label: "Parse Data", description: "Extract and map the incoming data fields.", status: "configured", config: {} },
+      { id: "node_3", type: "condition", label: "Filter Condition", description: "Check if the data meets the required criteria.", status: "configured", config: {} },
+      { id: "node_4", type: "action", actionId: "send_whatsapp", label: "WhatsApp Reply", description: "Send a template message to the user via WhatsApp.", status: "configured", config: {} },
+      { id: "node_5", type: "delay", label: "Wait / Delay", description: "Wait for a specific time before next step.", status: "configured", config: { duration: 2, unit: "hours" } },
+      { id: "node_6", type: "action", actionId: "assign_user", label: "Assign User", description: "Assign the lead to a team member.", status: "configured", config: { assignee: "sales_team" } },
+      { id: "node_7", type: "action", label: "Update Record", description: "Update lead information in the database.", status: "configured", config: {} },
+      { id: "node_8", type: "action", label: "Send Email", description: "Send a confirmation email to the user.", status: "configured", config: {} },
+      { id: "node_9", type: "action", label: "Create Task", description: "Create a follow-up task for the assigned user.", status: "configured", config: {} },
     ],
     edges: [
       { id: "e1", source: "node_1", target: "node_2" },
@@ -678,7 +683,7 @@ class MockAutomationRepository implements AutomationRepository {
   }
 
   async getAnalytics(_clientId: string): Promise<AutomationAnalytics> {
-    await delay(600);
+    await delay(0);
     return {
       activeWorkflows: { value: 12, trend: 33 },
       totalRuns: { value: 2076, trend: 18 },

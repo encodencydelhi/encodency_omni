@@ -66,10 +66,26 @@ export function AutomationPage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       nodes: [
-        { id: "node_1", type: "trigger", label: "Inbound Webhook", status: "idle", config: {} },
-        { id: "node_2", type: "action", actionId: "send_whatsapp", label: "WhatsApp Reply", status: "idle", config: {} }
+        { id: "node_1", type: "trigger", label: "Inbound Webhook", description: "Triggers when data is received via a webhook URL.", status: "idle", config: {} },
+        { id: "node_2", type: "action", label: "Parse Data", description: "Extract and map the incoming data fields.", status: "idle", config: {} },
+        { id: "node_3", type: "condition", label: "Filter Condition", description: "Check if the data meets the required criteria.", status: "idle", config: {} },
+        { id: "node_4", type: "action", actionId: "send_whatsapp", label: "WhatsApp Reply", description: "Send a template message to the user via WhatsApp.", status: "idle", config: {} },
+        { id: "node_5", type: "delay", label: "Wait / Delay", description: "Wait for a specific time before next step.", status: "idle", config: {} },
+        { id: "node_6", type: "action", label: "Assign User", description: "Assign the lead to a team member.", status: "idle", config: {} },
+        { id: "node_7", type: "action", label: "Update Record", description: "Update lead information in the database.", status: "idle", config: {} },
+        { id: "node_8", type: "action", label: "Send Email", description: "Send a confirmation email to the user.", status: "idle", config: {} },
+        { id: "node_9", type: "action", label: "Create Task", description: "Create a follow-up task for the assigned user.", status: "idle", config: {} },
       ],
-      edges: [{ id: "e1", source: "node_1", target: "node_2" }]
+      edges: [
+        { id: "e1", source: "node_1", target: "node_2" },
+        { id: "e2", source: "node_2", target: "node_3" },
+        { id: "e3", source: "node_3", target: "node_4" },
+        { id: "e4", source: "node_4", target: "node_5" },
+        { id: "e5", source: "node_5", target: "node_6" },
+        { id: "e6", source: "node_6", target: "node_7" },
+        { id: "e7", source: "node_7", target: "node_8" },
+        { id: "e8", source: "node_8", target: "node_9" },
+      ]
     };
     setEditingWorkflow(blankWorkflow);
     toast.success("Created new blank workflow. Welcome to Workflow Builder!");

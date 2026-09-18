@@ -3,6 +3,7 @@ import { authRoutes } from "./handlers/auth";
 import { commerceRoutes } from "./handlers/commerce";
 import { controlRoutes } from "./handlers/control";
 import { platformRoutes } from "./handlers/platform";
+import { reportsRoutes } from "./handlers/reports";
 import { tenantRoutes } from "./handlers/tenants";
 import { MockRouter } from "./lib/router";
 import { MockTransport } from "./transport";
@@ -22,6 +23,7 @@ export function createMockTransport(): Transport {
   router.register(commerceRoutes);
   router.register(platformRoutes);
   router.register(controlRoutes);
+  router.register(reportsRoutes);
 
   return new MockTransport(router);
 }

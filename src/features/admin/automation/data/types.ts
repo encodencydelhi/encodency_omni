@@ -150,4 +150,5 @@ export interface AutomationTemplate {
   requiredIntegrations: IntegrationCapability[];
   useCount: number;
   complexity: "Basic" | "Intermediate" | "Advanced";
+  features?: string[];
 }

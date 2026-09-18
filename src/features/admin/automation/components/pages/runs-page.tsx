@@ -219,7 +219,7 @@ export function RunsPage() {
                       <td className="px-2 py-2.5 text-[#334155]">{r.dur}</td>
                       <td className="px-2 py-2.5 text-[#64748B]">{r.steps}</td>
                       <td className="px-2 py-2.5">
-                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${r.resCol}`}>
+                        <span className={`w-[76px] inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${r.resCol}`}>
                            <div className={`size-1.5 rounded-full ${r.res === 'Success' ? 'bg-[#10B981]' : r.res === 'Failed' || r.res === 'Cancelled' ? 'bg-[#EF4444]' : r.res === 'Retried' ? 'bg-[#D97706]' : 'bg-[#94A3B8]'}`}></div>
                            {r.res}
                         </span>
@@ -239,8 +239,8 @@ export function RunsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             
             {/* Runs Over Time (Line + Bar mock) */}
-            <div className="md:col-span-2 bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
-              <div className="flex items-center justify-between mb-4">
+            <div className="md:col-span-2 bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col justify-between h-[320px]">
+              <div className="flex items-center justify-between mb-2">
                 <div>
                   <h3 className="text-[13px] font-bold text-[#111C3A]">Runs Over Time</h3>
                   <p className="text-[10px] text-[#64748B]">Total workflow runs and success rate over time.</p>
@@ -249,7 +249,7 @@ export function RunsPage() {
                   Last 30 days <ChevronDown className="size-3" />
                 </div>
               </div>
-              <div className="flex-1 flex items-end justify-between relative h-[120px] pb-4 px-2">
+              <div className="flex-1 flex items-end justify-between relative h-[230px] pb-6 px-2 overflow-hidden">
                  {/* Fake Chart Graphics */}
                  <div className="absolute inset-0 flex flex-col justify-between pt-2 pb-6">
                    <div className="border-t border-[#F1F5F9] w-full border-dashed" />
@@ -260,20 +260,20 @@ export function RunsPage() {
                  </div>
                  
                  {/* Fake Bars */}
-                 <div className="relative z-10 w-full h-full flex items-end justify-between gap-1 px-4">
+                 <div className="relative z-10 w-full h-full flex items-end justify-between gap-1 px-4 pb-2">
                    {[35, 42, 65, 80, 25, 45, 55, 70, 30, 50, 60, 75, 40, 58, 68, 85, 32, 48, 62, 78, 28, 52, 66, 82, 38].map((h, i) => (
-                     <div key={i} className="w-full bg-[#10B981] rounded-t-sm" style={{ height: `${h}%` }}>
-                       {i % 4 === 0 && <div className="w-full bg-[#EF4444]" style={{ height: `${h * 0.25}%` }} />}
+                     <div key={i} className="w-full bg-[#10B981] rounded-t-sm" style={{ height: `${h * 0.75}%` }}>
+                       {i % 4 === 0 && <div className="w-full bg-[#EF4444]" style={{ height: `${h * 0.2}%` }} />}
                      </div>
                    ))}
                  </div>
                  
-                 {/* Fake Line */}
-                 <svg className="absolute inset-0 h-full w-full pointer-events-none z-20" preserveAspectRatio="none">
-                    <path d="M 10,60 Q 40,70 80,40 T 150,50 T 220,30 T 290,40 T 360,20 T 430,30 T 500,10" fill="none" stroke="#3B82F6" strokeWidth="2" />
-                    <circle cx="150" cy="50" r="3" fill="#3B82F6" />
-                    <circle cx="290" cy="40" r="3" fill="#3B82F6" />
-                    <circle cx="430" cy="30" r="3" fill="#3B82F6" />
+                 {/* Fake Line SVG with ViewBox to prevent clipping */}
+                 <svg className="absolute inset-0 h-full w-full pointer-events-none z-20" viewBox="0 0 500 100" preserveAspectRatio="none">
+                    <path d="M 10,75 Q 40,85 80,55 T 150,65 T 220,35 T 290,45 T 360,25 T 430,35 T 490,20" fill="none" stroke="#3B82F6" strokeWidth="2.5" />
+                    <circle cx="150" cy="65" r="3.5" fill="#3B82F6" stroke="#FFFFFF" strokeWidth="1.5" />
+                    <circle cx="290" cy="45" r="3.5" fill="#3B82F6" stroke="#FFFFFF" strokeWidth="1.5" />
+                    <circle cx="430" cy="35" r="3.5" fill="#3B82F6" stroke="#FFFFFF" strokeWidth="1.5" />
                  </svg>
 
                  <div className="absolute bottom-0 left-0 right-0 flex justify-between text-[9px] text-[#94A3B8] px-4 font-medium">
@@ -289,8 +289,8 @@ export function RunsPage() {
             </div>
 
             {/* Success vs Failure */}
-            <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
-              <h3 className="text-[13px] font-bold text-[#111C3A] mb-4">Success vs Failure</h3>
+            <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col justify-between h-[320px]">
+              <h3 className="text-[13px] font-bold text-[#111C3A] mb-2">Success vs Failure</h3>
               <div className="flex-1 flex items-center justify-between gap-4 px-1">
                  {/* Donut Chart Mock on Left */}
                  <div className="size-24 rounded-full border-[12px] border-[#10B981] border-r-[#EF4444] border-b-[#EAB308] border-l-[#8B5CF6] flex items-center justify-center transform rotate-45 shrink-0">
@@ -339,12 +339,16 @@ export function RunsPage() {
               </div>
               <div className="space-y-2.5">
                 {[
-                  { lbl: "Invalid configuration", pct: 32, col: "bg-red-500" },
-                  { lbl: "API rate limit", pct: 24, col: "bg-orange-500" },
-                  { lbl: "Contact not found", pct: 18, col: "bg-amber-500" },
-                  { lbl: "Message delivery failed", pct: 14, col: "bg-blue-500" },
-                  { lbl: "Condition not met", pct: 8, col: "bg-cyan-500" },
-                  { lbl: "Others", pct: 4, col: "bg-slate-400" },
+                  { lbl: "Invalid workflow configuration", pct: 32, col: "bg-red-500" },
+                  { lbl: "API rate limit exceeded (429)", pct: 24, col: "bg-orange-500" },
+                  { lbl: "Contact phone / email invalid", pct: 18, col: "bg-amber-500" },
+                  { lbl: "WhatsApp auth token expired", pct: 14, col: "bg-purple-500" },
+                  { lbl: "Inbound webhook timeout", pct: 12, col: "bg-blue-500" },
+                  { lbl: "Database constraint failure", pct: 9, col: "bg-indigo-500" },
+                  { lbl: "Condition rule not satisfied", pct: 8, col: "bg-cyan-500" },
+                  { lbl: "Payload schema mismatch", pct: 6, col: "bg-teal-500" },
+                  { lbl: "DLQ max retries reached", pct: 4, col: "bg-emerald-500" },
+                  { lbl: "Uncaught system exception", pct: 2, col: "bg-slate-400" },
                 ].map(r => (
                   <div key={r.lbl} className="flex items-center gap-2 text-[10.5px]">
                     <ShieldAlert className="size-3.5 shrink-0 text-slate-400" />
@@ -555,45 +559,55 @@ export function RunsPage() {
             </div>
           </div>
 
+          {/* Queue Health with Uniform Equal-Width Card Items */}
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4">
             <div className="flex items-center justify-between mb-3">
                <h3 className="text-[11px] font-bold text-[#111C3A]">Queue Health</h3>
                <a href="#" className="text-[10px] font-medium text-[#2563EB] hover:underline">View all →</a>
             </div>
             <div className="grid grid-cols-2 gap-2">
-               <div className="flex gap-2 items-center">
-                 <div className="size-6 bg-[#FEF9C3] text-[#EAB308] rounded flex items-center justify-center"><Clock className="size-3" /></div>
-                 <div>
-                   <div className="text-[12px] font-bold text-[#111C3A] leading-tight">64</div>
-                   <div className="text-[9px] text-[#64748B]">Runs in Queue</div>
+               <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-2.5 flex items-center justify-between min-w-0 w-full">
+                 <div className="flex items-center gap-2 min-w-0">
+                   <div className="size-6 bg-[#FEF9C3] text-[#EAB308] rounded flex items-center justify-center shrink-0"><Clock className="size-3" /></div>
+                   <div className="min-w-0">
+                     <div className="text-[12px] font-bold text-[#111C3A] leading-tight">64</div>
+                     <div className="text-[9px] text-[#64748B] truncate">Runs in Queue</div>
+                   </div>
                  </div>
+                 <div className="text-[9px] font-bold text-[#10B981] shrink-0">↓ 12%</div>
                </div>
-               <div className="flex gap-2 items-center justify-between">
-                 <div className="flex gap-2 items-center">
-                   <div className="size-6 bg-[#F3E8FF] text-[#A855F7] rounded flex items-center justify-center"><RefreshCcw className="size-3" /></div>
-                   <div>
+
+               <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-2.5 flex items-center justify-between min-w-0 w-full">
+                 <div className="flex items-center gap-2 min-w-0">
+                   <div className="size-6 bg-[#F3E8FF] text-[#A855F7] rounded flex items-center justify-center shrink-0"><RefreshCcw className="size-3" /></div>
+                   <div className="min-w-0">
                      <div className="text-[12px] font-bold text-[#111C3A] leading-tight">124</div>
-                     <div className="text-[9px] text-[#64748B]">Runs Retried</div>
+                     <div className="text-[9px] text-[#64748B] truncate">Runs Retried</div>
                    </div>
                  </div>
-                 <div className="text-[9px] font-bold text-[#10B981]">↑ 40%</div>
+                 <div className="text-[9px] font-bold text-[#10B981] shrink-0">↑ 40%</div>
                </div>
-               <div className="flex gap-2 items-center mt-2">
-                 <div className="size-6 bg-[#ECFDF5] text-[#10B981] rounded flex items-center justify-center"><Clock className="size-3" /></div>
-                 <div>
-                   <div className="text-[12px] font-bold text-[#111C3A] leading-tight">~5 min</div>
-                   <div className="text-[9px] text-[#64748B]">Average Wait Time</div>
+
+               <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-2.5 flex items-center justify-between min-w-0 w-full">
+                 <div className="flex items-center gap-2 min-w-0">
+                   <div className="size-6 bg-[#ECFDF5] text-[#10B981] rounded flex items-center justify-center shrink-0"><Clock className="size-3" /></div>
+                   <div className="min-w-0">
+                     <div className="text-[12px] font-bold text-[#111C3A] leading-tight">~5 min</div>
+                     <div className="text-[9px] text-[#64748B] truncate">Average Wait Time</div>
+                   </div>
                  </div>
+                 <div className="text-[9px] font-bold text-[#10B981] shrink-0">↓ 18%</div>
                </div>
-               <div className="flex gap-2 items-center justify-between mt-2">
-                 <div className="flex gap-2 items-center">
-                   <div className="size-6 bg-[#EBF5FF] text-[#3B82F6] rounded flex items-center justify-center"><Activity className="size-3" /></div>
-                   <div>
+
+               <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-2.5 flex items-center justify-between min-w-0 w-full">
+                 <div className="flex items-center gap-2 min-w-0">
+                   <div className="size-6 bg-[#EBF5FF] text-[#3B82F6] rounded flex items-center justify-center shrink-0"><Activity className="size-3" /></div>
+                   <div className="min-w-0">
                      <div className="text-[12px] font-bold text-[#111C3A] leading-tight">98.2%</div>
-                     <div className="text-[9px] text-[#64748B]">Queue Processing Rate</div>
+                     <div className="text-[9px] text-[#64748B] truncate">Queue Processing Rate</div>
                    </div>
                  </div>
-                 <div className="text-[9px] font-bold text-[#10B981]">↑ 2%</div>
+                 <div className="text-[9px] font-bold text-[#10B981] shrink-0">↑ 2%</div>
                </div>
             </div>
           </div>
