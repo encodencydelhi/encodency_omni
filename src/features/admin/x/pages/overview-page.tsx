@@ -265,24 +265,35 @@ function HealthCard({ className }: { className?: string }) {
           </Button>
         }
       />
-      <div className="flex flex-1 flex-wrap items-center gap-4 px-4 pb-4">
-        <ScoreRing score={score} tone={scoreTone(score)} size={96} label="Account health" />
-        <ul className="min-w-[180px] flex-1 space-y-2">
+      <div className="flex flex-1 flex-col gap-5 px-5 pb-5">
+        <div className="flex items-center gap-5 rounded-lg border border-[#E4E9F0] bg-[#F8FAFC] p-4">
+          <ScoreRing score={score} tone={scoreTone(score)} size={80} label="Account health" />
+          <div>
+            <h4 className="text-[16px] font-bold text-[#0F1B3D]">
+              {score >= 80 ? "Healthy" : score >= 60 ? "Needs attention" : "At risk"}
+            </h4>
+            <p className="mt-1 text-[13px] leading-snug text-[#6B7890]">
+              Overall account performance
+            </p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-x-6 gap-y-4">
           {ranked.map((factor) => {
             const tone = scoreTone(factor.score);
             return (
-              <li key={factor.key}>
-                <div className="flex items-center justify-between gap-2 text-[12px]">
-                  <span className="truncate text-[#3C4A66]">{factor.label}</span>
-                  <b className={cn("shrink-0 font-semibold tabular-nums", tone === "green" ? "text-[#067647]" : tone === "amber" ? "text-[#B54708]" : "text-[#C81E2B]")}>
+              <div key={factor.key} className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between gap-1 text-[12px]">
+                  <span className="truncate font-medium text-[#3C4A66]">{factor.label}</span>
+                  <span className={cn("shrink-0 font-bold tabular-nums", tone === "green" ? "text-[#067647]" : tone === "amber" ? "text-[#B54708]" : "text-[#C81E2B]")}>
                     {factor.score}
-                  </b>
+                  </span>
                 </div>
-                <Meter value={factor.score} tone={tone === "green" ? "green" : tone === "amber" ? "amber" : "red"} className="mt-1" />
-              </li>
+                <Meter value={factor.score} tone={tone === "green" ? "green" : tone === "amber" ? "amber" : "red"} className="h-1.5" />
+              </div>
             );
           })}
-        </ul>
+        </div>
       </div>
       <HealthDetailSheet open={open} onOpenChange={setOpen} />
     </Card>
