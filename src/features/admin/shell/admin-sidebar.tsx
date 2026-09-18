@@ -105,7 +105,7 @@ export function AdminSidebar() {
 
           {/* Project Switcher */}
           {!isSidebarCollapsed && (
-            <div className="px-3 pt-5 pb-3">
+            <div className="px-3 pt-3 pb-1">
               <div className="text-black">
                 <Clientswitcher />
               </div>
@@ -114,22 +114,22 @@ export function AdminSidebar() {
 
           {/* Navigation */}
           <nav
-            className="scrollbar-thin scrollbar-dark min-h-0 flex-1 overflow-y-auto px-3 py-4"
+            className="scrollbar-thin scrollbar-dark min-h-0 flex-1 overflow-y-auto px-3 py-1"
             aria-label="Admin navigation"
           >
             {adminNavigation.map((section, index) => (
-              <div key={section.label} className={cn(index > 0 && "mt-5")}>
+              <div key={section.label} className={cn(index > 0 && "mt-1")}>
                 {!isSidebarCollapsed ? (
-                  <div className="flex items-center gap-3 px-2 mb-3">
+                  <div className="flex items-center gap-3 px-2 mb-0.5">
                     <p className="text-[12px] font-semibold uppercase tracking-widest text-[#7E8DA6]">
                       {section.label}
                     </p>
                     <div className="h-[1px] w-8 bg-[#1E293B]" />
                   </div>
                 ) : (
-                  index > 0 && <div className="mx-3 mb-3 border-t border-[#1E293B]" />
+                  index > 0 && <div className="mx-3 mb-0.5 border-t border-[#1E293B]" />
                 )}
-                <div className="space-y-1.5">
+                <div className="space-y-0.5">
                   {section.items.map((item) => {
                     const active = item.href === activeHref;
                     const Icon = item.icon;
