@@ -30,7 +30,7 @@ function KpiCard({ kpi, index }: { kpi: AnalyticsDashboardData["seo"]["kpis"][nu
       <div className="flex items-center justify-between">
         <p className="text-[12px] font-medium uppercase tracking-wider text-[#354568] truncate">{kpi.label}</p>
         <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-sm bg-gradient-to-br", colorClass)}>
-          <Icon className="size-2.5 text-white" />
+          {Icon && <Icon className="size-2.5 text-white" />}
         </span>
       </div>
       <p className="text-[16px] font-bold leading-none tracking-tight tabular text-[#101A3D]">{kpi.value}</p>

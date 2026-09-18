@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
 import { automationRepository } from "../../data/mock-provider";
 import { AutomationWorkflow, AutomationAnalytics } from "../../data/types";
@@ -49,7 +48,11 @@ const DEFAULT_ANALYTICS: AutomationAnalytics = {
   ]
 };
 
-export function AutomationOverview() {
+interface AutomationOverviewProps {
+  onNavigateTab?: (tab: "overview" | "workflows" | "templates" | "runs" | "settings") => void;
+}
+
+export function AutomationOverview({ onNavigateTab }: AutomationOverviewProps) {
   const [analytics, setAnalytics] = useState<AutomationAnalytics>(DEFAULT_ANALYTICS);
   const [workflows, setWorkflows] = useState<AutomationWorkflow[]>([]);
 
@@ -175,7 +178,13 @@ export function AutomationOverview() {
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-[#F1F5F9]">
-            <Link href="/admin/automation?tab=workflows" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all workflows <ChevronRight className="size-3" /></Link>
+            <button
+              type="button"
+              onClick={() => onNavigateTab?.("workflows")}
+              className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              View all workflows <ChevronRight className="size-3" />
+            </button>
           </div>
         </div>
 
@@ -212,7 +221,13 @@ export function AutomationOverview() {
         <div className="lg:col-span-2 bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[13.5px] font-bold text-[#111C3A]">Active Workflows</h3>
-            <Link href="/admin/automation?tab=workflows" className="text-[11.5px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all <ChevronRight className="size-3" /></Link>
+            <button
+              type="button"
+              onClick={() => onNavigateTab?.("workflows")}
+              className="text-[11.5px] font-medium text-[#2563EB] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              View all <ChevronRight className="size-3" />
+            </button>
           </div>
 
           <div className="overflow-x-auto flex-1 scrollbar-thin">
@@ -273,7 +288,13 @@ export function AutomationOverview() {
         <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-[14px] font-bold text-[#111C3A]">Workflow Preview</h3>
-            <Link href="/admin/automation?tab=workflows" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View full <ChevronRight className="size-3" /></Link>
+            <button
+              type="button"
+              onClick={() => onNavigateTab?.("workflows")}
+              className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              View full <ChevronRight className="size-3" />
+            </button>
           </div>
 
           <div className="mb-4">
@@ -313,7 +334,13 @@ export function AutomationOverview() {
         <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[14px] font-bold text-[#111C3A]">Needs Attention</h3>
-            <Link href="/admin/automation?tab=runs" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all <ChevronRight className="size-3" /></Link>
+            <button
+              type="button"
+              onClick={() => onNavigateTab?.("runs")}
+              className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              View all <ChevronRight className="size-3" />
+            </button>
           </div>
 
           <div className="flex-1 space-y-4">
@@ -331,9 +358,13 @@ export function AutomationOverview() {
                   <div className="text-[10px] text-[#94A3B8] mt-1">{alert.timeAgo}</div>
                 </div>
                 <div>
-                  <Link href="/admin/automation?tab=runs" className="text-[11px] font-semibold text-[#2563EB] border border-[#BFDBFE] bg-[#EFF6FF] px-2 py-1 rounded-md hover:bg-[#DBEAFE] transition-colors inline-block">
+                  <button
+                    type="button"
+                    onClick={() => onNavigateTab?.(alert.actionLabel === "Edit" ? "workflows" : "runs")}
+                    className="text-[11px] font-semibold text-[#2563EB] border border-[#BFDBFE] bg-[#EFF6FF] px-2 py-1 rounded-md hover:bg-[#DBEAFE] transition-colors inline-block cursor-pointer"
+                  >
                     {alert.actionLabel}
-                  </Link>
+                  </button>
                 </div>
               </div>
             ))}
@@ -348,7 +379,13 @@ export function AutomationOverview() {
         <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[14px] font-bold text-[#111C3A]">Recent Runs</h3>
-            <Link href="/admin/automation?tab=runs" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all <ChevronRight className="size-3" /></Link>
+            <button
+              type="button"
+              onClick={() => onNavigateTab?.("runs")}
+              className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              View all <ChevronRight className="size-3" />
+            </button>
           </div>
           <div className="-mx-5 overflow-x-auto">
             <table className="w-full text-left text-[12px]">
@@ -394,7 +431,13 @@ export function AutomationOverview() {
         <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[14px] font-bold text-[#111C3A]">Popular Templates</h3>
-            <Link href="/admin/automation?tab=templates" className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1">View all templates <ChevronRight className="size-3" /></Link>
+            <button
+              type="button"
+              onClick={() => onNavigateTab?.("templates")}
+              className="text-[12px] font-medium text-[#2563EB] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              View all templates <ChevronRight className="size-3" />
+            </button>
           </div>
           <div className="grid grid-cols-2 gap-2.5 mb-3">
             {[
@@ -419,7 +462,10 @@ export function AutomationOverview() {
                 <div className="mt-2">
                   <button 
                     type="button"
-                    onClick={() => toast.success(`Loaded blueprint: "${tpl.title}"`)}
+                    onClick={() => {
+                      onNavigateTab?.("templates");
+                      toast.success(`Loaded blueprint: "${tpl.title}"`);
+                    }}
                     className="w-full text-center py-1.5 rounded-lg bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-200 text-[#2563EB] text-[10.5px] font-bold transition-all shadow-2xs cursor-pointer"
                   >
                     Use Template

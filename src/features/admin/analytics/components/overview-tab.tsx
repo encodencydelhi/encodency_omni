@@ -71,35 +71,35 @@ export function OverviewTab({ data }: { data: AnalyticsDashboardData["overview"]
       </div>
 
       <div className="grid gap-2 lg:grid-cols-[1.3fr_.7fr]">
-        <section className="flex flex-col h-[340px] overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
+        <section className="flex flex-col h-[260px] overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
           <h2 className="border-b border-[#E8EDF3] px-3 py-2.5 text-[12px] font-semibold">
             Performance Trend
           </h2>
           <div className="p-3 flex-1 flex flex-col justify-between">
-            <TrendAreaChart series={data.trend} height={200} />
-            <div className="mt-2">
+            <TrendAreaChart series={data.trend} height={160} />
+            <div className="mt-1">
               <ChartLegend series={data.trend} />
             </div>
           </div>
         </section>
 
-        <section className="flex flex-col h-[340px] overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
+        <section className="flex flex-col h-[260px] overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
           <h2 className="border-b border-[#E8EDF3] px-3 py-2.5 text-[12px] font-semibold">
             Channel Contribution
           </h2>
-          <div className="flex items-center gap-3 p-4 flex-1">
+          <div className="flex items-center gap-3 p-3 flex-1">
             <DonutChart
               segments={data.channels}
               centerValue="86.5K"
               centerLabel="Total Reach"
-              size={140}
+              size={120}
             />
             <ul className="flex-1 space-y-1">
               {data.channels.map((ch) => (
-                <li key={ch.key} className="flex items-center gap-2 rounded-sm px-2 py-1.5">
+                <li key={ch.key} className="flex items-center gap-2 rounded-sm px-2 py-1">
                   <ChannelLogo channel={ch.label} className="size-4" />
-                  <span className="flex-1 text-[12px] font-medium">{ch.label}</span>
-                  <span className="text-[12px] font-semibold">{ch.value}%</span>
+                  <span className="flex-1 text-[11.5px] font-medium">{ch.label}</span>
+                  <span className="text-[11.5px] font-semibold">{ch.value}%</span>
                 </li>
               ))}
             </ul>

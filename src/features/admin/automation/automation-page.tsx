@@ -207,7 +207,7 @@ export function AutomationPage() {
       />
 
       <div className="mt-4">
-        {activeTab === "overview" && <AutomationOverview />}
+        {activeTab === "overview" && <AutomationOverview onNavigateTab={(val) => setActiveTab(val)} />}
         {activeTab === "workflows" && <WorkflowsPage />}
         {activeTab === "templates" && (
           <TemplatesPage onUseTemplate={(wf) => setEditingWorkflow(wf)} />

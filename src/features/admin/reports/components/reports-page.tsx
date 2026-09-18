@@ -139,7 +139,7 @@ export function ReportsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="scrollbar-thin flex items-center gap-6 overflow-x-auto border-b border-[#DDE4ED]">
+      <div className="flex items-center gap-6 border-b border-[#DDE4ED] ">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (

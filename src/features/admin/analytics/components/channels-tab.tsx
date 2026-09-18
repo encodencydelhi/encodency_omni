@@ -39,7 +39,7 @@ const ICON_COLORS: Record<string, string> = {
   website: "from-[#2563EB] to-[#93C5FD]",
 };
 
-function KpiCard({ kpi, index, channelKey }: { kpi: AnalyticsDashboardData["channels"][keyof AnalyticsDashboardData["channels"]]["kpis"][number]; index: number; channelKey: string }) {
+function KpiCard({ kpi, channelKey }: { kpi: AnalyticsDashboardData["channels"][keyof AnalyticsDashboardData["channels"]]["kpis"][number]; channelKey: string }) {
   const Icon = CHANNEL_ICONS[channelKey] ?? Share2;
   const colorClass = ICON_COLORS[channelKey] ?? ICON_COLORS.meta;
   const isUp = (kpi.delta?.changePercent ?? 0) >= 0;
@@ -92,8 +92,8 @@ export function ChannelsTab({ data }: { data: AnalyticsDashboardData["channels"]
       </div>
 
       <div className="grid grid-cols-3 gap-2 lg:grid-cols-6">
-        {channel.kpis.map((kpi, i) => (
-          <KpiCard key={kpi.label} kpi={kpi} index={i} channelKey={active} />
+        {channel.kpis.map((kpi) => (
+          <KpiCard key={kpi.label} kpi={kpi} channelKey={active} />
         ))}
       </div>
 
