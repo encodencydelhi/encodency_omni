@@ -409,7 +409,7 @@ export function TemplatesPage({ onUseTemplate }: TemplatesPageProps) {
         </div>
 
         {/* RIGHT COLUMN (Sidebar: Recently Deployed & Recommendations) */}
-        <div className="w-full lg:w-[240px] shrink-0 space-y-4">
+        <div className="w-full lg:w-[240px] shrink-0 space-y-2">
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4">
             <h3 className="text-[13px] font-bold text-[#111C3A] mb-3">Popular Blueprints</h3>
             <div className="space-y-2">
