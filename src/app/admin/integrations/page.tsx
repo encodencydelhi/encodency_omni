@@ -1,1 +1,5 @@
-import { AdminManagementPage } from "@/features/admin/management/admin-management-page"; export default function Page(){return <AdminManagementPage view="integrations"/>}
+import { OverviewPage } from "@/features/admin/integrations/pages/overview-page";
+
+export default function Page() {
+  return <OverviewPage />;
+}
