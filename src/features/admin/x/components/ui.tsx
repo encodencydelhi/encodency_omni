@@ -1045,7 +1045,7 @@ const AVATAR_TINTS = [
   "bg-[#ECFAFD] text-[#0E7490]",
 ];
 
-export function Avatar({ name, src, className }: { name: string; src?: string | null; className?: string }) {
+export function Avatar({ name, src, className, contain = false }: { name: string; src?: string | null; className?: string; contain?: boolean }) {
   const initials = name
     .replace("@", "")
     .split(/[\s_]/)
@@ -1058,8 +1058,8 @@ export function Avatar({ name, src, className }: { name: string; src?: string | 
 
   if (src) {
     return (
-      <span className={cn("relative block size-8 shrink-0 overflow-hidden rounded-full bg-[#E9EDF3]", className)}>
-        <Image src={src} alt="" fill sizes="48px" className="object-cover" />
+      <span className={cn("relative block size-8 shrink-0 overflow-hidden rounded-full", contain ? "bg-white" : "bg-[#E9EDF3]", className)}>
+        <Image src={src} alt="" fill sizes="48px" className={contain ? "object-contain" : "object-cover"} />
       </span>
     );
   }

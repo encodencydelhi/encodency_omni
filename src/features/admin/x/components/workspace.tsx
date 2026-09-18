@@ -307,7 +307,7 @@ function ConnectedAccount() {
   return (
     <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
       <span className="flex items-center gap-1.5">
-        <Avatar name={account.name} src={account.avatarUrl} className="size-6" />
+        <Avatar name={account.name} src={account.avatarUrl} className="size-6" contain={true} />
         <span className="flex items-center gap-1 text-[12.5px] font-semibold text-[#0F1B3D]">
           {account.name}
           <VerifiedMark kind={account.verified} className="[&_svg]:size-3.5" />

@@ -174,7 +174,7 @@ function AccountCard({ className }: { className?: string }) {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="flex min-w-0 items-end gap-3">
             <span className="relative -mt-8 size-[68px] shrink-0 overflow-hidden rounded-full border-4 border-white bg-white shadow-[0_2px_8px_rgba(15,27,61,0.15)]">
-              <Image src={account.avatarUrl} alt="" width={68} height={68} className="size-full object-cover" />
+              <Image src={account.avatarUrl} alt="" width={68} height={68} className="size-full object-contain bg-white" />
             </span>
             <div className="min-w-0 pt-2">
               <p className="flex items-center gap-1.5 text-[16px] font-semibold leading-5 text-[#0F1B3D]">
