@@ -10,6 +10,7 @@ import {
   Search, ChevronDown, MoreHorizontal, ArrowRight, User, Bell, LayoutDashboard,
   AlertCircle, Activity, TrendingUp, TrendingDown, Bot
 } from "lucide-react";
+import { ChannelLogo } from "@/features/admin/shared/channel-logo";
 
 // Helper components
 const StatusChip = ({ status }: { status: string }) => {
@@ -195,9 +196,11 @@ export function WorkflowsPage() {
                   <td className="px-3 py-2.5">
                     <div className="flex items-center -space-x-1 shrink-0">
                       {wf.channels.map((ch, i) => (
-                        <div key={i} className="size-5 rounded-full bg-blue-100 flex items-center justify-center border border-white text-blue-600 text-[8px] font-bold uppercase overflow-hidden" title={ch}>
-                          {ch === 'meta' ? 'M' : ch === 'whatsapp' ? 'W' : ch === 'google-business' ? 'G' : ch.substring(0,1)}
-                        </div>
+                        <ChannelLogo 
+                          key={i} 
+                          channel={ch === 'meta' ? 'Meta' : ch === 'whatsapp' ? 'WhatsApp' : ch === 'google-business' ? 'Google Business' : ch} 
+                          className="size-5 rounded-full border border-white shadow-2xs bg-white" 
+                        />
                       ))}
                     </div>
                   </td>

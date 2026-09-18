@@ -10,6 +10,7 @@ import {
   TrendingUp, TrendingDown, MoreVertical, ChevronRight, AlertCircle,
 } from "lucide-react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { ChannelLogo } from "@/features/admin/shared/channel-logo";
 
 
 export function AutomationOverview() {
@@ -199,8 +200,13 @@ export function AutomationOverview() {
                     <td className="px-3 py-3 text-[#64748B]">{wf.trigger.label}</td>
                     <td className="px-3 py-3">
                       <div className="flex items-center -space-x-1 shrink-0">
-                        <div className="size-5 rounded-full bg-blue-100 flex items-center justify-center border border-white text-blue-600 text-[9px] font-bold">M</div>
-                        <div className="size-5 rounded-full bg-emerald-100 flex items-center justify-center border border-white text-emerald-600 text-[9px] font-bold">W</div>
+                        {wf.channels.map((ch, i) => (
+                          <ChannelLogo 
+                            key={i} 
+                            channel={ch === 'meta' ? 'Meta' : ch === 'whatsapp' ? 'WhatsApp' : ch === 'google-business' ? 'Google Business' : ch === 'google' ? 'Google' : ch} 
+                            className="size-5 rounded-full border border-white shadow-2xs bg-white" 
+                          />
+                        ))}
                       </div>
                     </td>
                     <td className="px-3 py-3 text-[#111C3A] font-medium">{wf.runs.toLocaleString()}</td>

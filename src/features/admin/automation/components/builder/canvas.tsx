@@ -1,7 +1,7 @@
 "use client";
 
 import { AutomationNode } from "../../data/types";
-import { Bot, Clock3, Zap, ArrowDown, MoreVertical } from "lucide-react";
+import { Bot, Clock3, Zap, ArrowRight, MoreVertical } from "lucide-react";
 
 export function WorkflowCanvas({ 
   nodes, 
@@ -13,14 +13,14 @@ export function WorkflowCanvas({
   onSelectNode: (id: string) => void 
 }) {
   return (
-    <div className="flex min-h-full flex-col items-center p-12 relative overflow-hidden">
+    <div className="flex min-h-full w-full justify-center p-6 sm:p-10 relative overflow-y-auto overflow-x-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#94A3B8 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#F8FAFC]/50 to-[#F8FAFC] pointer-events-none"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#F8FAFC]/50 to-[#F8FAFC] pointer-events-none"></div>
 
-      <div className="relative z-10 w-full flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-5xl py-4 px-2 my-auto">
         {nodes.length === 0 ? (
-          <div className="mt-32 flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-4 duration-700 mx-auto">
              <div className="grid size-20 place-items-center rounded-2xl bg-white shadow-xl shadow-blue-900/5 ring-1 ring-black/5 mb-6 relative">
                <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-blue-100 to-transparent opacity-50 blur-md" />
                <Zap className="size-8 text-blue-500 relative z-10 drop-shadow-md" />
@@ -31,20 +31,21 @@ export function WorkflowCanvas({
              </p>
           </div>
         ) : (
-          <div className="flex flex-col items-center pb-32">
+          <div className="flex flex-wrap items-center gap-y-6">
             {nodes.map((node, index) => {
               const isSelected = node.id === selectedNodeId;
               
               return (
-                <div key={node.id} className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: `${index * 50}ms` }}>
+                <div key={node.id} className="flex items-center shrink-0 my-1 animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: `${index * 50}ms` }}>
                   {/* Node Card */}
                   <button
+                    type="button"
                     onClick={() => onSelectNode(node.id)}
                     className={`
-                      group relative flex w-[300px] items-start gap-4 rounded-2xl p-4 transition-all duration-300 text-left
+                      group relative flex w-[230px] sm:w-[250px] items-start gap-3 rounded-2xl p-4 transition-all duration-300 text-left cursor-pointer shrink-0
                       ${isSelected ? 
                         "bg-white shadow-2xl shadow-blue-900/10 ring-2 ring-blue-500 scale-[1.02]" : 
-                        "bg-white/90 backdrop-blur-sm shadow-md shadow-slate-200/50 ring-1 ring-slate-200 hover:shadow-lg hover:ring-slate-300 hover:-translate-y-1"}
+                        "bg-white/95 backdrop-blur-sm shadow-md shadow-slate-200/50 ring-1 ring-slate-200 hover:shadow-lg hover:ring-slate-300 hover:-translate-y-0.5"}
                     `}
                   >
                     {isSelected && <div className="absolute -inset-1 rounded-2xl bg-blue-500/10 blur-xl -z-10" />}
@@ -78,26 +79,23 @@ export function WorkflowCanvas({
                     )}
                   </button>
 
-                  {/* Connection Line */}
-                  {index < nodes.length - 1 && (
-                    <div className="my-2 flex flex-col items-center">
-                      <div className="h-6 w-px bg-gradient-to-b from-slate-300 to-transparent" />
-                      <div className="grid size-6 place-items-center rounded-full border border-slate-200 bg-white shadow-sm z-10 -my-1 transition-transform hover:scale-110 hover:bg-slate-50 cursor-pointer text-slate-400 hover:text-blue-500">
-                        <ArrowDown className="size-3" />
-                      </div>
-                      <div className="h-6 w-px bg-gradient-to-b from-transparent to-slate-300" />
+                  {/* Horizontal Connector Arrow */}
+                  <div className="mx-2 sm:mx-2.5 flex items-center shrink-0">
+                    <div className="w-4 sm:w-6 h-0.5 bg-gradient-to-r from-slate-300 to-transparent" />
+                    <div className="grid size-6 sm:size-7 place-items-center rounded-full border border-slate-200 bg-white shadow-xs z-10 -mx-1 transition-transform hover:scale-110 hover:bg-slate-50 cursor-pointer text-slate-400 hover:text-blue-500 shrink-0">
+                      <ArrowRight className="size-3 sm:size-3.5" />
                     </div>
-                  )}
+                    <div className="w-4 sm:w-6 h-0.5 bg-gradient-to-r from-transparent to-slate-300" />
+                  </div>
                 </div>
               );
             })}
             
-            {/* End Node */}
-            <div className="mt-2 flex flex-col items-center opacity-60 animate-in fade-in duration-700" style={{ animationDelay: `${nodes.length * 50}ms` }}>
-               <div className="h-8 w-px bg-gradient-to-b from-slate-300 to-transparent" />
-               <div className="px-4 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-semibold tracking-widest uppercase text-slate-500 mt-2">
-                 End Workflow
-               </div>
+            {/* End Node Terminal Pill */}
+            <div className="flex items-center shrink-0 animate-in fade-in duration-700 my-1" style={{ animationDelay: `${nodes.length * 50}ms` }}>
+              <div className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 shadow-xs text-[10.5px] font-bold tracking-widest uppercase text-slate-500 hover:border-slate-300 transition-colors shrink-0">
+                End Workflow
+              </div>
             </div>
           </div>
         )}
