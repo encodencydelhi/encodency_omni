@@ -16,7 +16,7 @@ const MOCK_CAPABILITIES: IntegrationStatus[] = [
   { capability: "omni-tracking", available: true, status: "connected", providerName: "Omni Tracking Snippet" },
 ];
 
-export const getClientCapabilities = async (clientId: string): Promise<IntegrationStatus[]> => {
+export const getClientCapabilities = async (_clientId: string): Promise<IntegrationStatus[]> => {
   // In a real app this would check the backend for active integrations scoped by client
   return MOCK_CAPABILITIES;
 };

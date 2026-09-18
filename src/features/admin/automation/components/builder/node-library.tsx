@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bot, MessageCircle, Clock3, Users, Zap, LayoutTemplate, Activity } from "lucide-react";
+import { MessageCircle, Clock3, Users, Zap, LayoutTemplate, Activity } from "lucide-react";
 
 interface LibraryItem {
   id: string;
@@ -32,8 +32,8 @@ export function NodeLibrary({ onAddNode }: { onAddNode: (type: string, label: st
     <div className="flex h-full flex-col">
       <div className="p-4 border-b border-[#E2E8F0]">
         <h2 className="text-[12.5px] font-semibold text-[#111C3A] mb-3">Add Step</h2>
-        <input 
-          type="text" 
+        <input
+          type="text"
           placeholder="Search steps..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}

@@ -37,9 +37,9 @@ export function AdminTopbar() {
             <span className="text-[13px] font-bold text-slate-800 leading-tight">
               {(() => {
                 const hour = new Date().getHours();
-                if (hour < 12) return "Good morning";
-                if (hour < 18) return "Good afternoon";
-                return "Good evening";
+                if (hour < 12) return "Good Morning";
+                if (hour < 18) return "Good Afternoon";
+                return "Good Evening";
               })()}, <span className="text-blue-600">{MOCK_ADMIN_USER.name.split(' ')[0]}</span>
             </span>
             <span className="text-[11px] font-medium text-slate-500 leading-tight mt-0.5">
