@@ -1,1 +1,5 @@
-import { AdminManagementPage } from "@/features/admin/management/admin-management-page"; export default function Page(){return <AdminManagementPage view="roles"/>}
+import { RolesPage } from "@/features/admin/roles/pages/roles-page";
+
+export default function Page() {
+  return <RolesPage />;
+}

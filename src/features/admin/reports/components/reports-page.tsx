@@ -176,7 +176,7 @@ function OverviewTab({ data }: { data: NonNullable<ReturnType<typeof useReportsD
   return (
     <>
       <div className="grid items-stretch gap-2 lg:grid-cols-[1.3fr_0.7fr]">
-        <Panel title="Performance Trend" action="15 days" className="h-[320px]">
+        <Panel title="Performance Trend" action="15 days" className="h-[360px]">
           <div className="h-full px-2 pb-2 pt-1">
             <ResponsiveContainer>
               <AreaChart data={data.performanceTrend} margin={{ top: 6, right: 4, left: -20, bottom: 0 }}>
@@ -193,7 +193,7 @@ function OverviewTab({ data }: { data: NonNullable<ReturnType<typeof useReportsD
           </div>
         </Panel>
 
-        <Panel title="Channel Contribution">
+        <Panel title="Channel Contribution" className="h-[360px]">
           <div className="divide-y divide-[#E8EDF3]">
             {data.channelPerformance.map((ch) => (
               <div key={ch.channel} className="flex items-center gap-2 px-3 py-2">
