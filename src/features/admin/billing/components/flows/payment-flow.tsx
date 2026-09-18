@@ -8,7 +8,7 @@ import { FlowShell, useFlowClose } from "../flow-shell";
 import { Button, FormField } from "../ui";
 
 export function PaymentFlow() {
-  const { flow, actions, closeFlow } = useBilling();
+  const { flow, closeFlow } = useBilling();
   const open = flow?.kind === "payment";
   const role = open ? flow.role : "primary";
 
@@ -42,13 +42,14 @@ function PaymentForm({ role }: { role: "primary" | "backup" }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    const [expMonth, expYear] = (expiry || "01/25").split("/").map(Number);
     const res = await actions.savePaymentMethod(
       {
-        name,
         type: "card",
-        brand: "visa",
-        last4: number.slice(-4) || "4242",
-        expiry,
+        holderName: name,
+        cardNumber: number,
+        expMonth,
+        expYear,
       },
       role
     );

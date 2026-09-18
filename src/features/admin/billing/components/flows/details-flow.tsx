@@ -9,7 +9,7 @@ import { FlowShell, useFlowClose } from "../flow-shell";
 import { Button, FormField } from "../ui";
 
 export function DetailsFlow() {
-  const { flow, actions, snapshot, closeFlow } = useBilling();
+  const { flow, snapshot, closeFlow } = useBilling();
   const open = flow?.kind === "details";
 
   if (!open || !snapshot) return null;
