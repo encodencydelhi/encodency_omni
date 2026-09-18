@@ -18,6 +18,7 @@ const brandLabels = new Set([
   "Google Business",
   "WhatsApp",
   "YouTube",
+  "X (Twitter)",
 ]);
 
 const iconColors: Record<string, string> = {

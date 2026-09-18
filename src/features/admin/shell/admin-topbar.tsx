@@ -43,7 +43,7 @@ export function AdminTopbar() {
               })()}, <span className="text-blue-600">{MOCK_ADMIN_USER.name.split(' ')[0]}</span>
             </span>
             <span className="text-[11px] font-medium text-slate-500 leading-tight mt-0.5">
-              Ready to crush it today? 🚀
+              Ready to Crush it Today? 🚀
             </span>
           </div>
         </div>
