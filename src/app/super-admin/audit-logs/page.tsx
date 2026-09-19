@@ -9,23 +9,19 @@ import {
   ClockIcon,
   DownloadIcon,
   EyeIcon,
-  FilterIcon,
-  GlobeIcon,
-  LayersIcon,
   RefreshCwIcon,
   SearchIcon,
   ServerIcon,
   ShieldAlertIcon,
   ShieldCheckIcon,
   UserCheckIcon,
-  UserIcon,
   XCircleIcon,
   XIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -55,13 +51,9 @@ import { ROUTES } from "@/config/routes";
 import { AUDIT_LOG } from "@/mocks/data/control";
 import {
   AUDIT_CATEGORY,
-  AUDIT_OUTCOME,
-  type AuditCategory,
   type AuditLogEntry,
-  type AuditOutcome,
 } from "@/types/domain/audit-log";
 import { formatDate, formatRelativeTime } from "@/lib/utils/format";
-import { cn } from "@/lib/utils/cn";
 
 export default function AuditLogsPage() {
   const [search, setSearch] = useState("");

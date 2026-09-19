@@ -16,7 +16,7 @@ export function ClientAccessPopover({
   const [open, setOpen] = useState(false);
 
   if (totalClients === 0) {
-    return <span className="text-xs text-slate-400">0 clients</span>;
+    return <span className="text-xs text-slate-400 whitespace-nowrap">0 clients</span>;
   }
 
   return (
@@ -24,10 +24,10 @@ export function ClientAccessPopover({
       <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
-          className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 hover:text-blue-600 hover:underline cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 hover:text-blue-600 hover:underline cursor-pointer whitespace-nowrap"
         >
-          <FolderIcon className="size-3 text-slate-400" />
-          <span>
+          <FolderIcon className="size-3.5 text-slate-400 shrink-0" />
+          <span className="whitespace-nowrap">
             {totalClients} {totalClients === 1 ? "Client" : "Clients"}
           </span>
         </button>

@@ -79,31 +79,32 @@ export function UsersTable({
   const isIndeterminate = selectedUsers.length > 0 && selectedUsers.length < users.length;
 
   return (
-    <div className={cn("rounded-lg border border-border bg-white overflow-hidden shadow-2xs", className)}>
-      <Table>
-        <TableHeader className="bg-slate-50 border-b border-border text-xs font-semibold tracking-wider text-slate-500 uppercase">
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="w-10 px-3">
-              <Checkbox
-                checked={isAllSelected || isIndeterminate}
-                onCheckedChange={onToggleSelectAll}
-                aria-label="Select all users"
-                className="translate-y-0.5"
-              />
-            </TableHead>
-            <TableHead className="min-w-[220px]">User</TableHead>
-            <TableHead className="min-w-[130px]">Companies</TableHead>
-            <TableHead className="min-w-[150px]">Access</TableHead>
-            <TableHead className="min-w-[90px]">Clients</TableHead>
-            <TableHead className="min-w-[110px]">2FA</TableHead>
-            <TableHead className="min-w-[95px]">Account</TableHead>
-            <TableHead className="min-w-[100px]">Last Active</TableHead>
-            <TableHead className="min-w-[95px] hidden md:table-cell">Joined</TableHead>
-            <TableHead className="w-12 text-right pr-3">
-              <span className="sr-only">Actions</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
+    <div className={cn("rounded-lg border border-border bg-white overflow-hidden shadow-2xs w-full max-w-full", className)}>
+      <div className="w-full overflow-x-auto">
+        <Table className="w-full">
+          <TableHeader className="bg-slate-50 border-b border-border text-xs font-semibold tracking-wider text-slate-500 uppercase">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-10 px-3">
+                <Checkbox
+                  checked={isAllSelected || isIndeterminate}
+                  onCheckedChange={onToggleSelectAll}
+                  aria-label="Select all users"
+                  className="translate-y-0.5"
+                />
+              </TableHead>
+              <TableHead className="min-w-[200px]">User</TableHead>
+              <TableHead className="min-w-[120px]">Companies</TableHead>
+              <TableHead className="min-w-[140px]">Access</TableHead>
+              <TableHead className="min-w-[100px] whitespace-nowrap">Clients</TableHead>
+              <TableHead className="min-w-[185px] whitespace-nowrap">2FA</TableHead>
+              <TableHead className="min-w-[95px] whitespace-nowrap">Account</TableHead>
+              <TableHead className="min-w-[100px] whitespace-nowrap">Last Active</TableHead>
+              <TableHead className="min-w-[95px] whitespace-nowrap hidden xl:table-cell">Joined</TableHead>
+              <TableHead className="w-12 text-right pr-3">
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
 
         <TableBody className="divide-y divide-border/60">
           {isLoading ? (
@@ -167,18 +168,18 @@ export function UsersTable({
                     />
                   </TableCell>
 
-                  <TableCell className="py-2">
+                  <TableCell className="py-2 whitespace-nowrap">
                     <ClientAccessPopover
                       memberships={u.memberships}
                       totalClients={u.totalClientsCount}
                     />
                   </TableCell>
 
-                  <TableCell className="py-2">
+                  <TableCell className="py-2 whitespace-nowrap min-w-[185px]">
                     <SecurityStatusBadge status={u.security.twoFactorStatus} />
                   </TableCell>
 
-                  <TableCell className="py-2">
+                  <TableCell className="py-2 whitespace-nowrap">
                     <UserStatusBadge status={u.identity.globalStatus} />
                   </TableCell>
 
@@ -188,7 +189,7 @@ export function UsersTable({
                       : "Never"}
                   </TableCell>
 
-                  <TableCell className="py-2 text-xs text-slate-500 whitespace-nowrap hidden md:table-cell">
+                  <TableCell className="py-2 text-xs text-slate-500 whitespace-nowrap hidden xl:table-cell">
                     {formatDate(u.identity.createdAt)}
                   </TableCell>
 
@@ -322,6 +323,7 @@ export function UsersTable({
           )}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

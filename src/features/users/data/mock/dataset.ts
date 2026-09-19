@@ -98,7 +98,7 @@ export function buildInitialUsersDataset(): UserDataset {
             ip: "103.25.14.1",
             lastActiveAt: "2026-09-19T09:30:00Z",
             status: "active",
-            isCurrent: true,
+            current: true,
           },
         ],
         securityWarnings: [],
@@ -111,6 +111,7 @@ export function buildInitialUsersDataset(): UserDataset {
           type: "workflow",
           title: "Automated Onboarding Sequence",
           status: "active",
+          assignedAt: "2024-01-01T00:00:00Z",
         },
       ],
       recentActivity: [

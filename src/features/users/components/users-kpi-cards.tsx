@@ -100,7 +100,7 @@ export function UsersKpiCards({
   ];
 
   return (
-    <div className={cn("grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1 items-stretch", className)}>
+    <div className={cn("grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-1 items-stretch", className)}>
       {cards.map((c) => {
         const isSelected = activeFilter === c.id;
         return (
@@ -109,7 +109,7 @@ export function UsersKpiCards({
             type="button"
             onClick={() => onSelectFilter?.(c.id)}
             className={cn(
-              "group relative flex flex-col justify-between p-3 rounded-lg border border-slate-200 bg-white text-left transition-all hover:border-slate-300 hover:shadow-2xs cursor-pointer h-full min-h-[96px]",
+              "group relative flex flex-col justify-between p-3 rounded-lg border border-slate-200 bg-white text-left transition-all hover:border-slate-300 hover:shadow-2xs cursor-pointer h-full min-h-[96px] min-w-0",
               isSelected && c.activeBg,
             )}
           >
