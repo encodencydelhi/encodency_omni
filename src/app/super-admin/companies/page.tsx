@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { CompaniesView } from "@/features/companies/components/companies-view";
+import { CompaniesListPage } from "@/features/companies/pages/companies-list";
 
 export const metadata: Metadata = {
   title: "Companies",
+  description: "Manage organizations, subscriptions, usage and tenant health across OmniPlatform.",
 };
 
 export default function CompaniesPage() {
-  // The view reads its state from the URL, so it needs a Suspense boundary.
+  // The list keeps its filters in the URL, which needs a Suspense boundary.
   return (
     <Suspense fallback={null}>
-      <CompaniesView />
+      <CompaniesListPage />
     </Suspense>
   );
 }

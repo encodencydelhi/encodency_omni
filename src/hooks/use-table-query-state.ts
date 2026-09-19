@@ -33,6 +33,8 @@ export interface TableQueryState<TFilterKey extends string> {
   setPageSize: (pageSize: number) => void;
   setSearch: (search: string) => void;
   toggleSort: (field: string) => void;
+  /** Sets an explicit sort, e.g. from a "Sort by" dropdown. */
+  setSort: (field: string, direction: "asc" | "desc") => void;
   setFilter: (key: TFilterKey, value: string | null) => void;
   clearFilters: () => void;
 }
@@ -158,6 +160,7 @@ export function useTableQueryState<TFilterKey extends string>(
     setPageSize: (next) => setParam("pageSize", String(next)),
     setSearch: setSearchDraft,
     toggleSort,
+    setSort: (field, direction) => setParam("sort", `${field}:${direction}`, { resetPage: false }),
     setFilter: (filterKey, value) => setParam(filterKey, value),
     clearFilters,
   };

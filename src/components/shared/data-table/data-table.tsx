@@ -26,6 +26,20 @@ import { ErrorState } from "../error-state";
 import { DataTablePagination } from "./data-table-pagination";
 import type { DataTableColumn, DataTableSelection } from "./types";
 
+const HIDE_BELOW = {
+  sm: "hidden sm:table-cell",
+  md: "hidden md:table-cell",
+  lg: "hidden lg:table-cell",
+  xl: "hidden xl:table-cell",
+  "2xl": "hidden 2xl:table-cell",
+  // Explicit pixel breakpoints for dense tables whose columns are tiered by priority.
+  1320: "hidden min-[1320px]:table-cell",
+  1400: "hidden min-[1400px]:table-cell",
+  1500: "hidden min-[1500px]:table-cell",
+  1600: "hidden min-[1600px]:table-cell",
+  1720: "hidden min-[1720px]:table-cell",
+} as const;
+
 export interface DataTableProps<TRow> {
   columns: Array<DataTableColumn<TRow>>;
   rows: TRow[];
@@ -158,7 +172,7 @@ export function DataTable<TRow>({
         </div>
       ) : null}
 
-      <div className="overflow-x-auto scrollbar-thin">
+      <div className="relative overflow-x-auto scrollbar-thin">
         <Table>
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <TableHeader>
@@ -181,7 +195,7 @@ export function DataTable<TRow>({
                 return (
                   <TableHead
                     key={column.id}
-                    className={cn(column.width, column.align === "right" && "text-right")}
+                    className={cn(column.width, column.align === "right" && "text-right", column.hideBelow && HIDE_BELOW[column.hideBelow], column.className)}
                     aria-sort={sortState === "asc" ? "ascending" : sortState === "desc" ? "descending" : undefined}
                   >
                     {sortField && onToggleSort ? (
@@ -241,7 +255,7 @@ export function DataTable<TRow>({
                     {visibleColumns.map((column) => (
                       <TableCell
                         key={column.id}
-                        className={cn(column.align === "right" && "text-right", column.className)}
+                        className={cn(column.align === "right" && "text-right", column.hideBelow && HIDE_BELOW[column.hideBelow], column.className)}
                       >
                         {column.cell(row)}
                       </TableCell>
