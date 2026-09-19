@@ -76,7 +76,13 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         permission: "companies:read",
         matchPrefixes: [ROUTES.superAdmin.companies],
       },
-      { label: "Users", href: ROUTES.superAdmin.users, icon: UsersIcon, permission: "users:read" },
+      {
+        label: "Users",
+        href: ROUTES.superAdmin.users,
+        icon: UsersIcon,
+        permission: "users:read",
+        matchPrefixes: [ROUTES.superAdmin.users],
+      },
       {
         label: "Clients",
         href: ROUTES.superAdmin.Clients,

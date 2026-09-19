@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { UsersView } from "@/features/users/components/users-view";
+import { UsersListPage } from "@/features/users/pages/users-list";
 
 export const metadata: Metadata = {
-  title: "Users",
-  description: "Every person with access to a customer organisation.",
+  title: "Users Management | OmniPlatform Super Admin",
+  description: "Platform-wide user identity, company membership, access management and security workspace.",
 };
 
 export default function UsersPage() {
   return (
     <Suspense fallback={null}>
-      <UsersView />
+      <UsersListPage />
     </Suspense>
   );
 }
