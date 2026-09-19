@@ -26,16 +26,18 @@ export function SidebarNav({ isCollapsed, onNavigate }: SidebarNavProps) {
   return (
     <nav
       aria-label="Super Admin sections"
-      className="flex-1 space-y-6 overflow-y-auto px-3 py-5 scrollbar-thin"
+      className="scrollbar-thin scrollbar-dark min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-2"
     >
       {groups.map((group) => (
         <div key={group.id} className="space-y-1">
           {isCollapsed ? (
-            <div className="mx-2 h-px bg-sidebar-border" aria-hidden />
+            <div className="mx-2 h-px bg-slate-800/50" aria-hidden />
           ) : (
-            <p className="px-3 pb-1.5 text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              {group.label}
-            </p>
+            <div className="flex items-center gap-3 px-3 mb-1 mt-2 first:mt-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                {group.label}
+              </p>
+            </div>
           )}
 
           <ul className="space-y-0.5">
@@ -48,17 +50,17 @@ export function SidebarNav({ isCollapsed, onNavigate }: SidebarNavProps) {
                   onClick={onNavigate}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "group flex items-center gap-3 rounded-sm px-3 py-2 text-[0.8125rem] font-medium transition-colors",
-                    isCollapsed && "justify-center px-0",
+                    "group flex h-[34px] items-center gap-3 rounded-md text-[13px] transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+                    isCollapsed ? "justify-center px-0 w-[34px] mx-auto" : "px-3",
                     isActive
-                      ? "bg-primary-subtle text-primary"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                      ? "bg-blue-900/40 text-blue-50 font-semibold shadow-sm border border-blue-800/50"
+                      : "bg-transparent font-medium text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent",
                   )}
                 >
                   <item.icon
                     className={cn(
-                      "size-4 shrink-0",
-                      isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                      "size-[16px] shrink-0 transition-colors",
+                      isActive ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300",
                     )}
                   />
                   {!isCollapsed ? <span className="truncate">{item.label}</span> : null}

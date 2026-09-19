@@ -1,13 +1,13 @@
 "use client";
 
-import { HeadphonesIcon, PanelLeftIcon } from "lucide-react";
+import { PanelLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { APP } from "@/config/app";
 import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils/cn";
-import { BrandGlyph, EnCodencyLogo } from "./brand-mark";
+import { EnCodencyLogo } from "./brand-mark";
 import { useSidebar } from "./sidebar-context";
 import { SidebarNav } from "./sidebar-nav";
 
@@ -19,49 +19,28 @@ function SidebarBrand({ isCollapsed, onNavigate }: { isCollapsed: boolean; onNav
       onClick={onNavigate}
       aria-label={`${APP.name} ${APP.panelName}`}
       className={cn(
-        "flex shrink-0 items-center bg-primary",
-        isCollapsed ? "justify-center py-3" : "px-2 py-2",
+        "flex h-[60px] shrink-0 items-center justify-center border-b border-slate-800/50",
+        isCollapsed ? "px-0" : "px-3",
       )}
     >
       {isCollapsed ? (
-        <BrandGlyph size="sm" className="bg-transparent" />
+        <span className="grid size-8 place-items-center rounded-sm bg-[#1E293B] text-[15px] font-semibold text-white shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+          e
+        </span>
       ) : (
-        <div className="relative h-[44px] w-full">
-          <EnCodencyLogo fill priority />
-        </div>
+        <EnCodencyLogo height={44} priority className="drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]" />
       )}
     </Link>
   );
 }
 
-/** Support entry point, pinned to the foot of the rail. */
-function SidebarHelpCard() {
-  return (
-    <div className="rounded-sm border border-border bg-card p-4">
-      <p className="flex items-center gap-2 text-[0.8125rem] font-semibold text-foreground">
-        <HeadphonesIcon className="size-4 text-primary" />
-        Need Help?
-      </p>
-      <p className="mt-1 text-2xs leading-relaxed text-muted-foreground">
-        Get support from our team
-      </p>
-      <Button variant="outline" size="sm" asChild className="mt-3 w-full">
-        <a href={`mailto:${APP.supportEmail}`}>Contact Support</a>
-      </Button>
-    </div>
-  );
-}
+
 
 function SidebarBody({ isCollapsed, onNavigate }: { isCollapsed: boolean; onNavigate?: () => void }) {
   return (
     <>
       <SidebarBrand isCollapsed={isCollapsed} onNavigate={onNavigate} />
       <SidebarNav isCollapsed={isCollapsed} onNavigate={onNavigate} />
-      {!isCollapsed ? (
-        <div className="p-3">
-          <SidebarHelpCard />
-        </div>
-      ) : null}
     </>
   );
 }
@@ -80,10 +59,14 @@ export function AppSidebar() {
       <aside
         data-collapsed={isCollapsed}
         className={cn(
-          "fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 lg:flex",
-          isCollapsed ? "w-(--sidebar-width-collapsed)" : "w-(--sidebar-width)",
+          "fixed inset-y-0 left-0 z-50 flex bg-[#0B1121] transition-[width,transform] duration-200 lg:translate-x-0",
+          "border-r border-[#1E293B] shadow-[1px_0_12px_rgb(0_0_0/0.5)] flex-col lg:flex",
+          !isMobileOpen && "hidden", // In app-sidebar logic, it hides unless mobile open or lg
+          isCollapsed ? "w-[64px]" : "w-[220px]",
         )}
       >
+        <div className="absolute top-0 left-0 right-0 h-[200px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent pointer-events-none" />
+        <div className="flex min-w-0 flex-1 flex-col relative z-10 min-h-0">
         <SidebarBody isCollapsed={isCollapsed} />
 
         <Button
@@ -96,6 +79,7 @@ export function AppSidebar() {
         >
           <PanelLeftIcon className={cn("size-3 transition-transform", isCollapsed && "rotate-180")} />
         </Button>
+        </div>
       </aside>
 
       <Sheet open={isMobileOpen} onOpenChange={setMobileOpen}>
