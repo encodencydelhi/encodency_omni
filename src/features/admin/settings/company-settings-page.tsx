@@ -1,12 +1,16 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import {
   Building2,
   ExternalLink,
   ShieldAlert,
   RotateCcw,
+  Users,
+  ShieldCheck,
+  CreditCard,
+  Share2,
+  FolderKanban,
 } from "lucide-react";
 import { CapabilityProvider } from "./settings-data/capability-provider";
 import { useSettings } from "./settings-data/hooks";
@@ -74,8 +78,7 @@ function CompanySettingsInner() {
   if (loading) {
     return (
       <div className="space-y-2 pb-12 animate-pulse">
-        {/* Header Skeleton */}
-        <div className="h-14 bg-white rounded-xl border border-[#E2E8F0] p-3 flex items-center justify-between">
+        <div className="h-14 bg-white rounded-xl border border-[#DDE4ED] p-3 flex items-center justify-between">
           <div className="space-y-1.5">
             <div className="h-4 w-32 bg-slate-200 rounded"></div>
             <div className="h-3 w-64 bg-slate-100 rounded"></div>
@@ -83,10 +86,9 @@ function CompanySettingsInner() {
           <div className="h-6 w-40 bg-slate-100 rounded"></div>
         </div>
 
-        {/* Main Grid Skeleton */}
         <div className="flex flex-col md:flex-row gap-2 items-start">
-          <div className="w-full md:w-[210px] h-[360px] bg-white rounded-xl border border-[#E2E8F0]"></div>
-          <div className="flex-1 h-[480px] bg-white rounded-xl border border-[#E2E8F0] w-full"></div>
+          <div className="w-full md:w-[210px] h-[360px] bg-white rounded-xl border border-[#DDE4ED]"></div>
+          <div className="flex-1 h-[480px] bg-white rounded-xl border border-[#DDE4ED] w-full"></div>
         </div>
       </div>
     );
@@ -94,12 +96,12 @@ function CompanySettingsInner() {
 
   if (error || !draftState) {
     return (
-      <div className="p-4 text-center bg-white rounded-xl border border-red-200 space-y-2 max-w-lg mx-auto my-4">
+      <div className="p-4 text-center bg-white rounded-xl border border-red-200 space-y-2 max-w-lg mx-auto my-4 shadow-sm">
         <div className="size-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto border border-red-200">
           <ShieldAlert className="size-5" />
         </div>
         <h3 className="text-[14px] font-bold text-[#111C3A]">Settings Service Unavailable</h3>
-        <p className="text-[11px] text-[#64748B]">{error || "Could not retrieve organization settings."}</p>
+        <p className="text-[11px] text-[#111C3A] font-semibold">{error || "Could not retrieve organization settings."}</p>
         <button
           type="button"
           onClick={refetch}
@@ -138,32 +140,38 @@ function CompanySettingsInner() {
 
   return (
     <div className="space-y-2 pb-16">
-      {/* PAGE HEADER */}
-      <header className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xs px-3.5 py-2.5 flex flex-col md:flex-row md:items-center justify-between gap-2">
+      {/* PAGE HEADER: ELEGANT OMNIPLATFORM STYLE */}
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-white rounded-xl border border-[#DDE4ED] p-3 shadow-xs">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-[14px] font-bold text-[#111C3A] tracking-tight">Settings</h1>
-            <span className="text-[9.5px] font-semibold text-[#10B981] bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-              Organization Admin
+          <p className="text-[9px] font-bold uppercase tracking-wider text-[#101A3D]">Management / Workspace</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <h1 className="text-[20px] font-bold tracking-tight text-[#101A3D]">Organization Settings</h1>
+            <span className="text-[9.5px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-300 shadow-2xs flex items-center gap-1">
+              <span className="size-1.5 rounded-full bg-emerald-600 animate-pulse"></span> Organization Admin
             </span>
           </div>
-          <p className="text-[10px] text-[#64748B]">
-            Manage organization details, workspace defaults, branding, notifications, security and preferences.
+          <p className="mt-0.5 text-[11px] font-semibold text-[#101A3D]">
+            Manage organizational identity, security policies, workspace defaults, branding, and team preferences.
           </p>
         </div>
 
-        {/* Right-Side Status Badges */}
-        <div className="flex items-center gap-1.5 self-start md:self-center">
-          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-2.5 py-1 text-[11px]">
+        {/* Executive Status Badges */}
+        <div className="flex flex-wrap items-center gap-1.5 self-start sm:self-center shrink-0">
+          <div className="flex items-center gap-1.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg px-2.5 py-1 text-[11px] shadow-2xs">
             <Building2 className="size-3.5 text-[#2563EB]" />
-            <span className="text-[#64748B] text-[10px]">Org:</span>
-            <span className="font-bold text-[#111C3A] text-[10.5px]">{draftState.organization.displayName}</span>
+            <span className="text-[#101A3D] font-bold text-[10px]">Org:</span>
+            <span className="font-bold text-[#101A3D] text-[10.5px]">{draftState.organization.displayName}</span>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-2.5 py-1 text-[11px]">
-            <span className="size-1.5 rounded-full bg-[#10B981]"></span>
-            <span className="text-[#64748B] text-[10px]">Client:</span>
-            <span className="font-bold text-[#111C3A] text-[10.5px]">{draftState.workspace.primaryClient}</span>
+          <div className="flex items-center gap-1.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg px-2.5 py-1 text-[11px] shadow-2xs">
+            <span className="size-2 rounded-full bg-[#10B981] animate-pulse"></span>
+            <span className="text-[#101A3D] font-bold text-[10px]">Tier:</span>
+            <span className="font-bold text-[#101A3D] text-[10.5px]">Enterprise</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg px-2.5 py-1 text-[11px] shadow-2xs">
+            <span className="text-[#101A3D] font-bold text-[10px]">Client:</span>
+            <span className="font-bold text-[#101A3D] text-[10.5px]">{draftState.workspace.primaryClient}</span>
           </div>
         </div>
       </header>
@@ -247,7 +255,7 @@ function CompanySettingsInner() {
         </main>
 
         {/* Right: Optional Context Panel (Appears conditionally where useful) */}
-        <aside className="w-full lg:w-[240px] shrink-0 space-y-2">
+        <aside className="w-full lg:w-[330px] xl:w-[350px] shrink-0 space-y-2">
           {activeSection === "organization" && (
             <OrganizationCompletenessPanel profile={draftState.organization} />
           )}
@@ -266,43 +274,96 @@ function CompanySettingsInner() {
           )}
 
           {/* Persistent Quick Links card */}
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-2xs p-2.5 space-y-1 text-[11px]">
-            <span className="text-[9.5px] font-bold uppercase tracking-wider text-[#94A3B8]">Quick Admin Links</span>
-            <div className="space-y-0.5">
+          <div className="bg-white rounded-xl border border-[#DDE4ED] shadow-xs p-3 space-y-1.5 text-[11px] hover:border-[#CBD5E1] transition-all">
+            <div className="flex items-center justify-between pb-1 border-b border-[#F1F5F9]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#101A3D]">Quick Admin Links</span>
+              <span className="text-[8.5px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded">Direct Access</span>
+            </div>
+
+            <div className="space-y-1">
               <Link
                 href="/admin/projects"
-                className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 text-[#334155] hover:text-[#2563EB] font-medium transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-2 rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] hover:bg-white hover:border-blue-400 hover:shadow-2xs transition-all group"
               >
-                <span>Clients Directory</span>
-                <ExternalLink className="size-3 text-slate-400" />
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="size-6 rounded-md bg-blue-50 text-[#2563EB] group-hover:bg-[#2563EB] group-hover:text-white flex items-center justify-center transition-colors shrink-0">
+                    <FolderKanban className="size-3.5" />
+                  </span>
+                  <span className="text-[11px] font-bold text-[#101A3D] group-hover:text-[#2563EB] truncate transition-colors">
+                    Clients Directory
+                  </span>
+                </div>
+                <ExternalLink className="size-3 text-[#101A3D] group-hover:text-[#2563EB] shrink-0 transition-colors" />
               </Link>
+
               <Link
                 href="/admin/team"
-                className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 text-[#334155] hover:text-[#2563EB] font-medium transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-2 rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] hover:bg-white hover:border-blue-400 hover:shadow-2xs transition-all group"
               >
-                <span>Team Members & Invites</span>
-                <ExternalLink className="size-3 text-slate-400" />
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="size-6 rounded-md bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center transition-colors shrink-0">
+                    <Users className="size-3.5" />
+                  </span>
+                  <span className="text-[11px] font-bold text-[#101A3D] group-hover:text-[#2563EB] truncate transition-colors">
+                    Team Members & Invites
+                  </span>
+                </div>
+                <ExternalLink className="size-3 text-[#101A3D] group-hover:text-[#2563EB] shrink-0 transition-colors" />
               </Link>
+
               <Link
                 href="/admin/roles"
-                className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 text-[#334155] hover:text-[#2563EB] font-medium transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-2 rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] hover:bg-white hover:border-blue-400 hover:shadow-2xs transition-all group"
               >
-                <span>Roles & Permissions</span>
-                <ExternalLink className="size-3 text-slate-400" />
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="size-6 rounded-md bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white flex items-center justify-center transition-colors shrink-0">
+                    <ShieldCheck className="size-3.5" />
+                  </span>
+                  <span className="text-[11px] font-bold text-[#101A3D] group-hover:text-[#2563EB] truncate transition-colors">
+                    Roles & Permissions
+                  </span>
+                </div>
+                <ExternalLink className="size-3 text-[#101A3D] group-hover:text-[#2563EB] shrink-0 transition-colors" />
               </Link>
+
               <Link
                 href="/admin/integrations"
-                className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 text-[#334155] hover:text-[#2563EB] font-medium transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-2 rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] hover:bg-white hover:border-blue-400 hover:shadow-2xs transition-all group"
               >
-                <span>Channel Integrations</span>
-                <ExternalLink className="size-3 text-slate-400" />
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="size-6 rounded-md bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-colors shrink-0">
+                    <Share2 className="size-3.5" />
+                  </span>
+                  <span className="text-[11px] font-bold text-[#101A3D] group-hover:text-[#2563EB] truncate transition-colors">
+                    Channel Integrations
+                  </span>
+                </div>
+                <ExternalLink className="size-3 text-[#101A3D] group-hover:text-[#2563EB] shrink-0 transition-colors" />
               </Link>
+
               <Link
                 href="/admin/billing"
-                className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 text-[#334155] hover:text-[#2563EB] font-medium transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-2 rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] hover:bg-white hover:border-blue-400 hover:shadow-2xs transition-all group"
               >
-                <span>Billing & Subscription</span>
-                <ExternalLink className="size-3 text-slate-400" />
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="size-6 rounded-md bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white flex items-center justify-center transition-colors shrink-0">
+                    <CreditCard className="size-3.5" />
+                  </span>
+                  <span className="text-[11px] font-bold text-[#101A3D] group-hover:text-[#2563EB] truncate transition-colors">
+                    Billing & Subscription
+                  </span>
+                </div>
+                <ExternalLink className="size-3 text-[#101A3D] group-hover:text-[#2563EB] shrink-0 transition-colors" />
               </Link>
             </div>
           </div>

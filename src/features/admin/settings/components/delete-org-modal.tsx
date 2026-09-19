@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Trash2, AlertTriangle, X, Loader2 } from "lucide-react";
 
 interface DeleteOrgModalProps {
@@ -38,13 +38,13 @@ export function DeleteOrgModal({ open, orgName, onClose, onConfirm }: DeleteOrgM
             </div>
             <div>
               <h3 className="text-[13px] font-bold text-[#111C3A]">Permanently Delete Organization</h3>
-              <p className="text-[10px] text-red-600 font-medium">Irreversible action • Organization Owner privilege only</p>
+              <p className="text-[10px] text-red-600 font-bold">Irreversible action • Organization Owner privilege only</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors p-1 cursor-pointer"
+            className="text-[#111C3A] hover:text-red-500 transition-colors p-1 cursor-pointer"
           >
             <X className="size-4" />
           </button>
@@ -54,7 +54,7 @@ export function DeleteOrgModal({ open, orgName, onClose, onConfirm }: DeleteOrgM
           <div className="font-bold flex items-center gap-1 text-red-800">
             <AlertTriangle className="size-3.5" /> All Data Will Be Erased Immediately:
           </div>
-          <ul className="list-disc list-inside space-y-0.5 text-red-900/90 pl-1">
+          <ul className="list-disc list-inside space-y-0.5 text-red-900/90 pl-1 font-medium">
             <li>12 team members will be permanently removed.</li>
             <li>4 client accounts, campaigns, and ad accounts unlinked.</li>
             <li>All scheduled posts, media studio assets, and CRM leads deleted.</li>
@@ -63,23 +63,23 @@ export function DeleteOrgModal({ open, orgName, onClose, onConfirm }: DeleteOrgM
         </div>
 
         <div className="space-y-1 pt-1">
-          <label className="block text-[10.5px] font-bold text-[#334155]">
-            Type <span className="font-mono text-red-600 font-bold select-all bg-red-50 px-1 py-0.2 rounded">{orgName}</span> to confirm:
+          <label className="block text-[10.5px] font-bold text-[#111C3A]">
+            Type <span className="font-mono text-red-600 font-bold select-all bg-red-50 px-1 py-0.2 rounded border border-red-200">{orgName}</span> to confirm:
           </label>
           <input
             type="text"
             value={typedConfirm}
             onChange={(e) => setTypedConfirm(e.target.value)}
             placeholder={orgName}
-            className="w-full h-8 px-2.5 rounded-md border border-[#CBD5E1] bg-white text-[11.5px] font-medium text-[#111C3A] focus:outline-none focus:border-red-500 font-mono"
+            className="w-full h-8 px-2.5 rounded-md border border-[#CBD5E1] bg-white text-[11.5px] font-bold text-[#111C3A] focus:outline-none focus:border-red-500 font-mono"
           />
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#F1F5F9]">
+        <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#CBD5E1]">
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-md border border-[#CBD5E1] text-[10.5px] font-semibold text-[#475569] hover:bg-slate-50 cursor-pointer"
+            className="px-3 py-1.5 rounded-md border border-[#CBD5E1] text-[10.5px] font-bold text-[#111C3A] hover:bg-slate-100 cursor-pointer"
           >
             Cancel
           </button>

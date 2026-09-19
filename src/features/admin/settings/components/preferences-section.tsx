@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Globe2, Table2, FileSpreadsheet } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { UserPreferences } from "../settings-data/types";
@@ -24,7 +23,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
           </div>
           <div>
             <h3 className="text-[13px] font-bold text-[#111C3A]">Locale & Regional Formatting</h3>
-            <p className="text-[10px] text-[#64748B]">
+            <p className="text-[10px] text-[#111C3A] font-semibold">
               Standardize dates, currencies, time offsets, and numerical grouping across all client reporting.
             </p>
           </div>
@@ -32,7 +31,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <div>
-            <label className="block text-[11px] font-bold text-[#334155] mb-1">
+            <label className="block text-[11px] font-bold text-[#111C3A] mb-1">
               Organization Default Timezone
             </label>
             <select
@@ -41,7 +40,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
                 onChange({ locale: { ...data.locale, timezone: e.target.value } })
               }
               disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
+              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-semibold focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
             >
               <option value="Asia/Kolkata (IST +5:30)">Asia/Kolkata (IST +5:30) - Indian Standard</option>
               <option value="UTC (GMT +0:00)">UTC (GMT +0:00) - Coordinated Universal</option>
@@ -51,13 +50,13 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
               <option value="America/Los_Angeles (PST -8:00)">America/Los_Angeles (PST -8:00)</option>
               <option value="Asia/Singapore (SGT +8:00)">Asia/Singapore (SGT +8:00)</option>
             </select>
-            <span className="text-[9.5px] text-[#94A3B8] mt-0.5 block">
+            <span className="text-[9.5px] text-[#111C3A] font-semibold mt-0.5 block">
               Automations, scheduled campaigns, and logs synchronize to this timezone.
             </span>
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-[#334155] mb-1">
+            <label className="block text-[11px] font-bold text-[#111C3A] mb-1">
               Default System Language
             </label>
             <select
@@ -66,18 +65,18 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
                 onChange({ locale: { ...data.locale, language: e.target.value } })
               }
               disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
+              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-semibold focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
             >
               <option value="English (United States)">English (United States)</option>
               <option value="English (India)">English (India)</option>
               <option value="English (United Kingdom)">English (United Kingdom)</option>
               <option value="Hindi (हिंदी)">Hindi (हिंदी)</option>
             </select>
-            <span className="text-[9.5px] text-[#94A3B8] mt-0.5 block">Primary language for standard email templates and system alerts.</span>
+            <span className="text-[9.5px] text-[#111C3A] font-semibold mt-0.5 block">Primary language for standard email templates and system alerts.</span>
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-[#334155] mb-1">
+            <label className="block text-[11px] font-bold text-[#111C3A] mb-1">
               Currency Representation
             </label>
             <select
@@ -86,7 +85,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
                 onChange({ locale: { ...data.locale, currency: e.target.value } })
               }
               disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
+              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-semibold focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
             >
               <option value="INR (₹) - Indian Rupee">INR (₹) - Indian Rupee</option>
               <option value="USD ($) - US Dollar">USD ($) - US Dollar</option>
@@ -97,7 +96,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-[#334155] mb-1">
+            <label className="block text-[11px] font-bold text-[#111C3A] mb-1">
               Date Format
             </label>
             <select
@@ -106,7 +105,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
                 onChange({ locale: { ...data.locale, dateFormat: e.target.value as any } })
               }
               disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
+              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-semibold focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
             >
               <option value="DD/MM/YYYY">DD/MM/YYYY (19/09/2026)</option>
               <option value="MM/DD/YYYY">MM/DD/YYYY (09/19/2026)</option>
@@ -115,7 +114,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-[#334155] mb-1">
+            <label className="block text-[11px] font-bold text-[#111C3A] mb-1">
               Clock Time Display
             </label>
             <select
@@ -124,7 +123,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
                 onChange({ locale: { ...data.locale, timeFormat: e.target.value as any } })
               }
               disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
+              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-semibold focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
             >
               <option value="12-hour">12-hour clock (04:15 PM)</option>
               <option value="24-hour">24-hour military clock (16:15)</option>
@@ -132,7 +131,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-[#334155] mb-1">
+            <label className="block text-[11px] font-bold text-[#111C3A] mb-1">
               Number & Lakhs Formatting
             </label>
             <select
@@ -141,7 +140,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
                 onChange({ locale: { ...data.locale, numberFormat: e.target.value as any } })
               }
               disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
+              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-semibold focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
             >
               <option value="Indian (1,00,000)">Indian Lacs/Crores (1,50,000)</option>
               <option value="International (100,000)">International Thousands/Millions (150,000)</option>
@@ -158,7 +157,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
           </div>
           <div>
             <h3 className="text-[13px] font-bold text-[#111C3A]">Data Grid & Table Presentation</h3>
-            <p className="text-[10px] text-[#64748B]">
+            <p className="text-[10px] text-[#111C3A] font-semibold">
               Configure default row pagination densities, sticky headers, and compact layout styles.
             </p>
           </div>
@@ -166,7 +165,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           <div>
-            <label className="block text-[11px] font-bold text-[#334155] mb-1">
+            <label className="block text-[11px] font-bold text-[#111C3A] mb-1">
               Default Rows Per Page
             </label>
             <select
@@ -177,7 +176,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
                 })
               }
               disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
+              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-semibold focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
             >
               <option value={10}>10 items per page</option>
               <option value={25}>25 items per page (Recommended)</option>
@@ -187,8 +186,8 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
           </div>
 
           <div className="md:col-span-2 flex flex-col sm:flex-row items-center gap-2 pt-1 sm:pt-4">
-            <div className="flex items-center justify-between p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] w-full">
-              <span className="text-[11.5px] font-semibold text-[#111C3A]">Compact Row Density</span>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-[#F8FAFC] border border-[#CBD5E1] w-full">
+              <span className="text-[11.5px] font-bold text-[#111C3A]">Compact Row Density</span>
               <Switch
                 checked={data.tables.compactDensity}
                 onCheckedChange={(val) =>
@@ -198,8 +197,8 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
               />
             </div>
 
-            <div className="flex items-center justify-between p-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] w-full">
-              <span className="text-[11.5px] font-semibold text-[#111C3A]">Sticky Table Headers</span>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-[#F8FAFC] border border-[#CBD5E1] w-full">
+              <span className="text-[11.5px] font-bold text-[#111C3A]">Sticky Table Headers</span>
               <Switch
                 checked={data.tables.stickyHeaders}
                 onCheckedChange={(val) =>
@@ -220,13 +219,13 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
           </div>
           <div>
             <h3 className="text-[13px] font-bold text-[#111C3A]">Export & Delimiter Standards</h3>
-            <p className="text-[10px] text-[#64748B]">Configure formatting for generated CSV and Excel downloads.</p>
+            <p className="text-[10px] text-[#111C3A] font-semibold">Configure formatting for generated CSV and Excel downloads.</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <div>
-            <label className="block text-[11px] font-bold text-[#334155] mb-1">
+            <label className="block text-[11px] font-bold text-[#111C3A] mb-1">
               CSV Field Separator
             </label>
             <select
@@ -237,7 +236,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
                 })
               }
               disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
+              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-semibold focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
             >
               <option value=",">Comma (,) - Standard</option>
               <option value=";">Semicolon (;) - European Excel Standard</option>
@@ -246,7 +245,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-[#334155] mb-1">
+            <label className="block text-[11px] font-bold text-[#111C3A] mb-1">
               Export Timestamp Representation
             </label>
             <select
@@ -257,7 +256,7 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
                 })
               }
               disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
+              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#111C3A] font-semibold focus:outline-none focus:border-[#2563EB] disabled:bg-slate-100 cursor-pointer"
             >
               <option value="ISO 8601">ISO 8601 (2026-09-19T10:00:00Z)</option>
               <option value="Locale Format">Locale Date String (19/09/2026 10:00 AM)</option>
@@ -266,12 +265,12 @@ export function PreferencesSection({ data, onChange }: PreferencesSectionProps) 
           </div>
 
           <div className="md:col-span-2">
-            <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]">
+            <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#F8FAFC] border border-[#CBD5E1]">
               <div className="space-y-0.5 pr-4">
-                <div className="text-[12px] font-semibold text-[#111C3A]">
+                <div className="text-[12px] font-bold text-[#111C3A]">
                   Include Organization & Plan Metadata in File Header
                 </div>
-                <p className="text-[10px] text-[#64748B]">
+                <p className="text-[10px] text-[#111C3A] font-medium">
                   Prepends first 2 rows of CSV exports with Organization Title, Generated By user, and Date.
                 </p>
               </div>

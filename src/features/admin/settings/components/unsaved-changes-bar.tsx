@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { AlertCircle, Check, Loader2, Undo2 } from "lucide-react";
 import { SettingsSectionId } from "../settings-data/types";
 
@@ -34,10 +33,10 @@ export function UnsavedChangesBar({ sectionId, isSaving, onSave, onDiscard }: Un
             <AlertCircle className="size-3.5" />
           </div>
           <div className="min-w-0">
-            <div className="text-[12px] font-semibold text-white truncate">
+            <div className="text-[12px] font-bold text-white truncate">
               Unsaved changes in <span className="text-amber-300 font-bold">{sectionName}</span>
             </div>
-            <div className="text-[10px] text-slate-400 truncate">
+            <div className="text-[10px] text-slate-200 font-medium truncate">
               Save changes to update organization policies and preferences.
             </div>
           </div>
@@ -48,7 +47,7 @@ export function UnsavedChangesBar({ sectionId, isSaving, onSave, onDiscard }: Un
             type="button"
             onClick={onDiscard}
             disabled={isSaving}
-            className="px-3 py-1.5 rounded-lg text-[11.5px] font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg text-[11.5px] font-bold text-slate-100 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
           >
             <Undo2 className="size-3" /> Discard
           </button>

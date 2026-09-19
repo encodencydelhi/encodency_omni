@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { PowerOff, AlertTriangle, X, Loader2 } from "lucide-react";
 
 interface DeactivateModalProps {
@@ -28,7 +28,7 @@ export function DeactivateModal({ open, onClose, onConfirm }: DeactivateModalPro
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="w-full max-w-md bg-white rounded-xl border border-[#E2E8F0] shadow-2xl p-4 space-y-2">
+      <div className="w-full max-w-md bg-white rounded-xl border border-[#CBD5E1] shadow-2xl p-4 space-y-2">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <div className="size-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-200 shrink-0">
@@ -36,30 +36,30 @@ export function DeactivateModal({ open, onClose, onConfirm }: DeactivateModalPro
             </div>
             <div>
               <h3 className="text-[13px] font-bold text-[#111C3A]">Deactivate Organization</h3>
-              <p className="text-[10px] text-[#64748B]">Temporarily suspend all organization operations and publishing.</p>
+              <p className="text-[10px] text-[#111C3A] font-semibold">Temporarily suspend all organization operations and publishing.</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition-colors p-1 cursor-pointer"
+            className="text-[#111C3A] hover:text-red-500 transition-colors p-1 cursor-pointer"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        <div className="bg-orange-50/70 border border-orange-200 rounded-lg p-2.5 text-[10.5px] text-orange-900 space-y-1">
-          <div className="font-bold flex items-center gap-1 text-orange-800">
+        <div className="bg-orange-50/70 border border-orange-200 rounded-lg p-2.5 text-[10.5px] text-orange-950 space-y-1">
+          <div className="font-bold flex items-center gap-1 text-orange-900">
             <AlertTriangle className="size-3.5" /> Consequence Checklist
           </div>
-          <ul className="list-disc list-inside space-y-0.5 text-orange-800/90 pl-1">
+          <ul className="list-disc list-inside space-y-0.5 text-orange-950 pl-1 font-medium">
             <li>All team members and clients will temporarily lose login access.</li>
             <li>All automated webhook executions and active workflows will pause immediately.</li>
             <li>All queued social media posts across Meta, LinkedIn, and YouTube will be halted.</li>
           </ul>
         </div>
 
-        <label className="flex items-start gap-2 p-2 bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] text-[10.5px] text-[#334155] cursor-pointer">
+        <label className="flex items-start gap-2 p-2 bg-[#F8FAFC] rounded-lg border border-[#CBD5E1] text-[10.5px] text-[#111C3A] font-medium cursor-pointer">
           <input
             type="checkbox"
             checked={agreed}
@@ -69,11 +69,11 @@ export function DeactivateModal({ open, onClose, onConfirm }: DeactivateModalPro
           <span>I understand the operational disruption and wish to proceed with organization suspension.</span>
         </label>
 
-        <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#F1F5F9]">
+        <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#CBD5E1]">
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-md border border-[#CBD5E1] text-[10.5px] font-semibold text-[#475569] hover:bg-slate-50 cursor-pointer"
+            className="px-3 py-1.5 rounded-md border border-[#CBD5E1] text-[10.5px] font-bold text-[#111C3A] hover:bg-slate-100 cursor-pointer"
           >
             Cancel
           </button>

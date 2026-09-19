@@ -48,7 +48,9 @@ function getStatusFilterValue(label: string): string {
   switch (label) {
     case "Successful": return "Success";
     case "Failed": return "Failed";
-    case "Running": return "Running";
+    case "Retried": return "Retried";
+    case "Queued": return "Queued";
+    case "Cancelled": return "Cancelled";
     default: return "All Statuses";
   }
 }
@@ -96,9 +98,7 @@ export function RunsPage() {
   const handleExportLogs = () => {
     const csvContent = "data:text/csv;charset=utf-8," + 
       "Run ID,Workflow Name,Status,Trigger Source,Duration,Executed At\n" +
-      "run_9a3f6c7e,New Meta Lead Follow-up,Running,Meta Lead Ads,250ms,2026-09-18 10:34:12\n" +
-      "run_8f3a2c1e,New Meta Lead Follow-up,Successful,Meta Lead Ads,450ms,2026-09-18 10:34:08\n" +
-      "run_7c9d4b2a,Google Review Alert,Failed,Google Business,1.2s,2026-09-18 10:33:55\n";
+      filteredRuns.map(r => `${r.id},${r.wf},${r.res},${r.trigLbl},${r.dur},${r.date}`).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -115,13 +115,43 @@ export function RunsPage() {
       {/* Top Filter Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 border border-[#E2E8F0] bg-white rounded-md px-3 py-1.5 text-[12px] font-medium text-[#111C3A] cursor-pointer hover:bg-slate-50">
-            <Calendar className="size-3.5 text-[#64748B]" />
-            <div className="flex flex-col text-left leading-none">
-              <span className="font-bold text-[#111C3A]">Last 30 days</span>
-              <span className="text-[9px] text-[#94A3B8]">Mar 15, 2025 - Apr 14, 2025</span>
-            </div>
-            <ChevronDown className="size-3.5 text-[#94A3B8] ml-1" />
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setPeriodDropdownOpen(!periodDropdownOpen)}
+              className="flex items-center gap-1.5 border border-[#E2E8F0] bg-white rounded-md px-3 py-1.5 text-[12px] font-medium text-[#111C3A] cursor-pointer hover:bg-slate-50"
+            >
+              <Calendar className="size-3.5 text-[#64748B]" />
+              <div className="flex flex-col text-left leading-none">
+                <span className="font-bold text-[#111C3A]">{selectedPeriod.label}</span>
+                <span className="text-[9px] text-[#94A3B8]">{selectedPeriod.dates}</span>
+              </div>
+              <ChevronDown className="size-3.5 text-[#94A3B8] ml-1" />
+            </button>
+
+            {periodDropdownOpen && (
+              <div className="absolute left-0 mt-1 w-56 bg-white border border-[#E2E8F0] rounded-xl shadow-xl z-30 py-1 text-[11.5px] animate-in fade-in zoom-in-95">
+                {DATE_RANGE_OPTIONS.map((p) => (
+                  <button
+                    key={p.label}
+                    type="button"
+                    onClick={() => {
+                      setSelectedPeriod(p);
+                      setPeriodDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-50 cursor-pointer"
+                  >
+                    <div>
+                      <div className={selectedPeriod.label === p.label ? "font-bold text-[#2563EB]" : "font-medium text-[#111C3A]"}>
+                        {p.label}
+                      </div>
+                      <div className="text-[10px] text-[#94A3B8]">{p.dates}</div>
+                    </div>
+                    {selectedPeriod.label === p.label && <Check className="size-3.5 text-[#2563EB]" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           
           <select
@@ -132,7 +162,9 @@ export function RunsPage() {
             <option value="All Statuses">All Statuses</option>
             <option value="Successful">Successful</option>
             <option value="Failed">Failed</option>
-            <option value="Running">Running</option>
+            <option value="Retried">Retried</option>
+            <option value="Queued">Queued</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
 
           <Link
@@ -250,7 +282,7 @@ export function RunsPage() {
             <div className="flex items-center justify-between p-3 border-b border-[#E2E8F0]">
               <h3 className="text-[13px] font-bold text-[#111C3A]">Workflow Runs</h3>
               <div className="flex items-center gap-2 text-[11px] text-[#64748B]">
-                <span>1-8 of 2,076 runs</span>
+                <span>{filteredRuns.length} of {ALL_RUNS.length} runs</span>
                 <div className="flex items-center gap-1">
                   <button className="size-6 flex items-center justify-center rounded border border-[#E2E8F0] hover:bg-slate-50">&lt;</button>
                   <button className="size-6 flex items-center justify-center rounded border border-[#E2E8F0] hover:bg-slate-50">&gt;</button>
@@ -275,41 +307,49 @@ export function RunsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    { id: "run_8f3a2c1e", wf: "New Meta Lead Follow-up", trigIcon: <Activity className="size-3.5 text-blue-500" />, trigLbl: "Meta Ads", date: "Apr 14, 2025, 10:24 AM", dur: "2m 14s", steps: "4/4", res: "Success", resCol: "bg-[#ECFDF5] text-[#10B981]", own: "Manish S.", sel: false },
-                    { id: "run_7c9d4b2a", wf: "WhatsApp Re-engagement", trigIcon: <MessageSquare className="size-3.5 text-emerald-500" fill="currentColor" />, trigLbl: "Manual", date: "Apr 14, 2025, 09:18 AM", dur: "1m 32s", steps: "3/4", res: "Failed", resCol: "bg-[#FEF2F2] text-[#EF4444]", own: "Neha V.", sel: true },
-                    { id: "run_5e2f8a9d", wf: "Google Review Alert", trigIcon: <span className="text-orange-500 font-bold text-[11px]">G</span>, trigLbl: "Website", date: "Apr 14, 2025, 08:44 AM", dur: "45s", steps: "3/3", res: "Success", resCol: "bg-[#ECFDF5] text-[#10B981]", own: "Rohit K.", sel: false },
-                    { id: "run_1d7c9e5b", wf: "SEO Critical Issue", trigIcon: <span className="text-orange-500 font-bold text-[11px]">G</span>, trigLbl: "System", date: "Apr 14, 2025, 07:12 AM", dur: "3m 21s", steps: "4/4", res: "Retried", resCol: "bg-[#FEF9C3] text-[#D97706]", own: "Manish S.", sel: false },
-                    { id: "run_4b8e2d1f", wf: "Website Down Alert", trigIcon: <Globe className="size-3.5 text-blue-500" />, trigLbl: "Website", date: "Apr 13, 2025, 11:03 PM", dur: "38s", steps: "2/2", res: "Success", resCol: "bg-[#ECFDF5] text-[#10B981]", own: "Priya M.", sel: false },
-                    { id: "run_9a3f6c7e", wf: "New Meta Lead Follow-up", trigIcon: <Activity className="size-3.5 text-blue-500" />, trigLbl: "Meta Ads", date: "Apr 13, 2025, 08:21 PM", dur: "-", steps: "0/4", res: "Queued", resCol: "bg-[#F1F5F9] text-[#64748B]", own: "Unassigned", sel: false },
-                    { id: "run_6d2b4e8f", wf: "WhatsApp Re-engagement", trigIcon: <Clock className="size-3.5 text-emerald-500" />, trigLbl: "Scheduled", date: "Apr 13, 2025, 05:44 PM", dur: "2m 08s", steps: "4/4", res: "Success", resCol: "bg-[#ECFDF5] text-[#10B981]", own: "Neha V.", sel: false },
-                    { id: "run_3e9c1a7d", wf: "Negative Review Alert", trigIcon: <span className="text-orange-500 font-bold text-[11px]">G</span>, trigLbl: "Google Business", date: "Apr 13, 2025, 03:12 PM", dur: "1m 14s", steps: "3/3", res: "Cancelled", resCol: "bg-[#FEF2F2] text-[#EF4444]", own: "Rohit K.", sel: false },
-                  ].map((r) => (
-                    <tr key={r.id} className={`border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors cursor-pointer ${r.sel ? 'bg-blue-50/30 border-l-2 border-l-blue-500' : 'border-l-2 border-l-transparent'}`}>
-                      <td className="pl-3 pr-2 py-2.5"><input type="checkbox" className="rounded border-gray-300" /></td>
-                      <td className="px-2 py-2.5 font-mono text-[#64748B]">{r.id}</td>
-                      <td className="px-2 py-2.5 font-semibold text-[#111C3A]">{r.wf}</td>
-                      <td className="px-2 py-2.5">
-                        <div className="flex items-center gap-1.5 text-[#334155]">
-                          <div className="w-4 flex justify-center">{r.trigIcon}</div>
-                          {r.trigLbl}
-                        </div>
-                      </td>
-                      <td className="px-2 py-2.5 text-[#334155]">{r.date}</td>
-                      <td className="px-2 py-2.5 text-[#334155]">{r.dur}</td>
-                      <td className="px-2 py-2.5 text-[#64748B]">{r.steps}</td>
-                      <td className="px-2 py-2.5">
-                        <span className={`w-[76px] inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${r.resCol}`}>
-                           <div className={`size-1.5 rounded-full ${r.res === 'Success' ? 'bg-[#10B981]' : r.res === 'Failed' || r.res === 'Cancelled' ? 'bg-[#EF4444]' : r.res === 'Retried' ? 'bg-[#D97706]' : 'bg-[#94A3B8]'}`}></div>
-                           {r.res}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2.5 text-[#64748B]">{r.own}</td>
-                      <td className="px-3 py-2.5 text-right">
-                        <button className="text-[#94A3B8] hover:text-[#111C3A]"><MoreHorizontal className="size-4" /></button>
+                  {filteredRuns.map((r) => {
+                    const resCol = r.res === "Success" ? "bg-[#ECFDF5] text-[#10B981]"
+                      : r.res === "Failed" || r.res === "Cancelled" ? "bg-[#FEF2F2] text-[#EF4444]"
+                      : r.res === "Retried" ? "bg-[#FEF9C3] text-[#D97706]"
+                      : "bg-[#F1F5F9] text-[#64748B]";
+                    const dotCol = r.res === "Success" ? "bg-[#10B981]"
+                      : r.res === "Failed" || r.res === "Cancelled" ? "bg-[#EF4444]"
+                      : r.res === "Retried" ? "bg-[#D97706]"
+                      : "bg-[#94A3B8]";
+                    return (
+                      <tr key={r.id} className="border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors cursor-pointer border-l-2 border-l-transparent">
+                        <td className="pl-3 pr-2 py-2.5"><input type="checkbox" className="rounded border-gray-300" /></td>
+                        <td className="px-2 py-2.5 font-mono text-[#64748B]">{r.id}</td>
+                        <td className="px-2 py-2.5 font-semibold text-[#111C3A]">{r.wf}</td>
+                        <td className="px-2 py-2.5">
+                          <div className="flex items-center gap-1.5 text-[#334155]">
+                            <div className="w-4 flex justify-center"><TrigIcon type={r.trigType} /></div>
+                            {r.trigLbl}
+                          </div>
+                        </td>
+                        <td className="px-2 py-2.5 text-[#334155]">{r.date}</td>
+                        <td className="px-2 py-2.5 text-[#334155]">{r.dur}</td>
+                        <td className="px-2 py-2.5 text-[#64748B]">{r.steps}</td>
+                        <td className="px-2 py-2.5">
+                          <span className={`w-[76px] inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${resCol}`}>
+                             <div className={`size-1.5 rounded-full ${dotCol}`}></div>
+                             {r.res}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2.5 text-[#64748B]">{r.own}</td>
+                        <td className="px-3 py-2.5 text-right">
+                          <button className="text-[#94A3B8] hover:text-[#111C3A]"><MoreHorizontal className="size-4" /></button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {filteredRuns.length === 0 && (
+                    <tr>
+                      <td colSpan={10} className="px-4 py-8 text-center text-[12px] text-[#94A3B8]">
+                        No runs match the current filters.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -411,7 +451,7 @@ export function RunsPage() {
                   <p className="text-[10px] text-[#64748B]">Total workflow runs and success rate over time.</p>
                 </div>
                 <div className="flex items-center gap-1.5 border border-[#E2E8F0] rounded-md px-2 py-1 text-[11px] font-medium text-[#334155] bg-white hover:bg-slate-50 cursor-pointer">
-                  Last 30 days <ChevronDown className="size-3" />
+                  {selectedPeriod.label} <ChevronDown className="size-3" />
                 </div>
               </div>
 

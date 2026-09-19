@@ -60,7 +60,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
             </div>
             <div>
               <h3 className="text-[13px] font-bold text-[#111C3A]">Visual Brand Identity</h3>
-              <p className="text-[10px] text-[#64748B]">
+              <p className="text-[10px] text-[#111C3A] font-semibold">
                 Configure logos, colors, and typography displayed across reports, emails, and exports.
               </p>
             </div>
@@ -70,16 +70,16 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
         {/* Upload Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {/* Main Logo */}
-          <div className="p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg space-y-1.5">
+          <div className="p-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg space-y-1.5">
             <div className="text-[11px] font-bold text-[#111C3A]">Header / Sidebar Logo</div>
             <div className="h-14 rounded-md bg-white border border-[#CBD5E1] flex items-center justify-center overflow-hidden p-1.5">
               {data.logo ? (
                 <img src={data.logo} alt="Logo" className="max-h-full max-w-full object-contain" />
               ) : (
-                <span className="text-[10px] text-slate-400">No logo uploaded</span>
+                <span className="text-[10px] text-[#111C3A] font-semibold">No logo uploaded</span>
               )}
             </div>
-            <p className="text-[9px] text-[#64748B]">SVG / PNG • Max 2MB</p>
+            <p className="text-[9px] text-[#111C3A] font-medium">SVG / PNG • Max 2MB</p>
             <input
               ref={logoRef}
               type="file"
@@ -92,7 +92,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                 type="button"
                 onClick={() => logoRef.current?.click()}
                 disabled={!capabilities.canEditBranding}
-                className="flex-1 py-1 px-2 bg-white border border-[#CBD5E1] rounded text-[10px] font-bold text-[#334155] hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                className="flex-1 py-1 px-2 bg-white border border-[#CBD5E1] rounded text-[10px] font-bold text-[#111C3A] hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
               >
                 <Upload className="size-3 text-[#2563EB]" /> Upload
               </button>
@@ -111,16 +111,16 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
           </div>
 
           {/* Favicon */}
-          <div className="p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg space-y-1.5">
+          <div className="p-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg space-y-1.5">
             <div className="text-[11px] font-bold text-[#111C3A]">Browser Favicon</div>
             <div className="h-14 rounded-md bg-white border border-[#CBD5E1] flex items-center justify-center overflow-hidden p-1.5">
               {data.favicon ? (
                 <img src={data.favicon} alt="Favicon" className="size-7 rounded object-cover" />
               ) : (
-                <span className="text-[10px] text-slate-400">No favicon</span>
+                <span className="text-[10px] text-[#111C3A] font-semibold">No favicon</span>
               )}
             </div>
-            <p className="text-[9px] text-[#64748B]">Square 64×64px • ICO / PNG</p>
+            <p className="text-[9px] text-[#111C3A] font-medium">Square 64×64px • ICO / PNG</p>
             <input
               ref={faviconRef}
               type="file"
@@ -133,7 +133,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                 type="button"
                 onClick={() => faviconRef.current?.click()}
                 disabled={!capabilities.canEditBranding}
-                className="flex-1 py-1 px-2 bg-white border border-[#CBD5E1] rounded text-[10px] font-bold text-[#334155] hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                className="flex-1 py-1 px-2 bg-white border border-[#CBD5E1] rounded text-[10px] font-bold text-[#111C3A] hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
               >
                 <Upload className="size-3 text-[#2563EB]" /> Upload
               </button>
@@ -152,16 +152,16 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
           </div>
 
           {/* Report / Email Header Logo */}
-          <div className="p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg space-y-1.5">
+          <div className="p-2.5 bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg space-y-1.5">
             <div className="text-[11px] font-bold text-[#111C3A]">PDF & Report Logo</div>
             <div className="h-14 rounded-md bg-white border border-[#CBD5E1] flex items-center justify-center overflow-hidden p-1.5">
               {data.reportLogo ? (
                 <img src={data.reportLogo} alt="Report Logo" className="max-h-full max-w-full object-contain" />
               ) : (
-                <span className="text-[10px] text-slate-400">Matches main logo</span>
+                <span className="text-[10px] text-[#111C3A] font-semibold">Matches main logo</span>
               )}
             </div>
-            <p className="text-[9px] text-[#64748B]">High-res horizontal • 300 DPI</p>
+            <p className="text-[9px] text-[#111C3A] font-medium">High-res horizontal • 300 DPI</p>
             <input
               ref={reportLogoRef}
               type="file"
@@ -174,7 +174,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                 type="button"
                 onClick={() => reportLogoRef.current?.click()}
                 disabled={!capabilities.canEditBranding}
-                className="flex-1 py-1 px-2 bg-white border border-[#CBD5E1] rounded text-[10px] font-bold text-[#334155] hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                className="flex-1 py-1 px-2 bg-white border border-[#CBD5E1] rounded text-[10px] font-bold text-[#111C3A] hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
               >
                 <Upload className="size-3 text-[#2563EB]" /> Upload
               </button>
@@ -196,7 +196,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
         {/* Color Controls */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
           <div>
-            <label className="block text-[10.5px] font-bold text-[#334155] mb-1">
+            <label className="block text-[10.5px] font-bold text-[#111C3A] mb-1">
               Primary Brand Color
             </label>
             <div className="flex items-center gap-2">
@@ -212,7 +212,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                 value={data.primaryColor}
                 onChange={(e) => onChange({ primaryColor: e.target.value })}
                 disabled={!capabilities.canEditBranding}
-                className="h-7 w-24 px-2 rounded-md border border-[#CBD5E1] bg-white text-[11px] font-mono text-[#111C3A] font-semibold uppercase"
+                className="h-7 w-24 px-2 rounded-md border border-[#CBD5E1] bg-white text-[11px] font-mono text-[#111C3A] font-bold uppercase"
               />
               <div className="flex items-center gap-1">
                 {PRESET_COLORS.map((c) => (
@@ -229,11 +229,11 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                 ))}
               </div>
             </div>
-            <span className="text-[9px] text-[#94A3B8] mt-0.5 block">Applied to buttons, badges, and primary report highlights.</span>
+            <span className="text-[9px] text-[#111C3A] font-medium mt-0.5 block">Applied to buttons, badges, and primary report highlights.</span>
           </div>
 
           <div>
-            <label className="block text-[10.5px] font-bold text-[#334155] mb-1">
+            <label className="block text-[10.5px] font-bold text-[#111C3A] mb-1">
               Secondary Brand Accent Color
             </label>
             <div className="flex items-center gap-2">
@@ -249,14 +249,14 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                 value={data.secondaryColor}
                 onChange={(e) => onChange({ secondaryColor: e.target.value })}
                 disabled={!capabilities.canEditBranding}
-                className="h-7 w-24 px-2 rounded-md border border-[#CBD5E1] bg-white text-[11px] font-mono text-[#111C3A] font-semibold uppercase"
+                className="h-7 w-24 px-2 rounded-md border border-[#CBD5E1] bg-white text-[11px] font-mono text-[#111C3A] font-bold uppercase"
               />
             </div>
-            <span className="text-[9px] text-[#94A3B8] mt-0.5 block">Used for table headers, dark cards, and chart baselines.</span>
+            <span className="text-[9px] text-[#111C3A] font-medium mt-0.5 block">Used for table headers, dark cards, and chart baselines.</span>
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-[10.5px] font-bold text-[#334155] mb-1">
+            <label className="block text-[10.5px] font-bold text-[#111C3A] mb-1">
               Custom Footer / Copyright Notice
             </label>
             <input
@@ -265,7 +265,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
               onChange={(e) => onChange({ footerText: e.target.value })}
               disabled={!capabilities.canEditBranding}
               placeholder="e.g. © 2026 Namo Gange Trust. All rights reserved."
-              className="w-full h-8 px-2.5 rounded-md border border-[#CBD5E1] bg-white text-[11.5px] text-[#111C3A] font-medium focus:outline-none focus:border-[#2563EB]"
+              className="w-full h-8 px-2.5 rounded-md border border-[#CBD5E1] bg-white text-[11.5px] text-[#111C3A] font-semibold focus:outline-none focus:border-[#2563EB]"
             />
           </div>
         </div>
@@ -280,7 +280,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
             </div>
             <div>
               <h3 className="text-[13px] font-bold text-[#111C3A]">Live Branding Preview</h3>
-              <p className="text-[10px] text-[#64748B]">Real-time preview of your brand elements applied to OmniPlatform outputs.</p>
+              <p className="text-[10px] text-[#111C3A] font-semibold">Real-time preview of your brand elements applied to OmniPlatform outputs.</p>
             </div>
           </div>
 
@@ -289,8 +289,8 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
               type="button"
               onClick={() => setActivePreview("sidebar")}
               className={cn(
-                "px-2 py-0.5 rounded font-semibold transition-all cursor-pointer",
-                activePreview === "sidebar" ? "bg-white text-[#111C3A] shadow-2xs" : "text-[#64748B] hover:text-[#111C3A]"
+                "px-2 py-0.5 rounded font-bold transition-all cursor-pointer",
+                activePreview === "sidebar" ? "bg-white text-[#111C3A] shadow-2xs" : "text-[#111C3A] hover:bg-white/60"
               )}
             >
               Sidebar
@@ -299,8 +299,8 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
               type="button"
               onClick={() => setActivePreview("report")}
               className={cn(
-                "px-2 py-0.5 rounded font-semibold transition-all cursor-pointer",
-                activePreview === "report" ? "bg-white text-[#111C3A] shadow-2xs" : "text-[#64748B] hover:text-[#111C3A]"
+                "px-2 py-0.5 rounded font-bold transition-all cursor-pointer",
+                activePreview === "report" ? "bg-white text-[#111C3A] shadow-2xs" : "text-[#111C3A] hover:bg-white/60"
               )}
             >
               Report PDF
@@ -309,8 +309,8 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
               type="button"
               onClick={() => setActivePreview("email")}
               className={cn(
-                "px-2 py-0.5 rounded font-semibold transition-all cursor-pointer",
-                activePreview === "email" ? "bg-white text-[#111C3A] shadow-2xs" : "text-[#64748B] hover:text-[#111C3A]"
+                "px-2 py-0.5 rounded font-bold transition-all cursor-pointer",
+                activePreview === "email" ? "bg-white text-[#111C3A] shadow-2xs" : "text-[#111C3A] hover:bg-white/60"
               )}
             >
               Email Notification
@@ -328,7 +328,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                 </div>
                 <div className="min-w-0">
                   <div className="text-[11px] font-bold truncate">{data.brandName || "Namo Gange"}</div>
-                  <div className="text-[8.5px] text-slate-400">OmniPlatform Workspace</div>
+                  <div className="text-[8.5px] text-slate-300 font-semibold">OmniPlatform Workspace</div>
                 </div>
               </div>
               <div className="space-y-1 text-[10px]">
@@ -339,8 +339,8 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                   <span>Dashboard Overview</span>
                   <Check className="size-3" />
                 </div>
-                <div className="px-2 py-1 text-slate-400 hover:text-white">Campaign Analytics</div>
-                <div className="px-2 py-1 text-slate-400 hover:text-white">Automation Studio</div>
+                <div className="px-2 py-1 text-slate-300 font-medium hover:text-white">Campaign Analytics</div>
+                <div className="px-2 py-1 text-slate-300 font-medium hover:text-white">Automation Studio</div>
               </div>
             </div>
           )}
@@ -353,12 +353,12 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                     {data.reportLogo || data.logo ? (
                       <img src={data.reportLogo || data.logo} alt="Logo" className="size-full object-contain" />
                     ) : (
-                      <FileText className="size-3.5 text-slate-400" />
+                      <FileText className="size-3.5 text-[#111C3A]" />
                     )}
                   </div>
                   <div>
                     <h4 className="text-[12px] font-bold text-[#111C3A]">{data.brandName || "Namo Gange"}</h4>
-                    <p className="text-[8.5px] text-slate-500">Executive Performance Audit</p>
+                    <p className="text-[8.5px] text-[#111C3A] font-semibold">Executive Performance Audit</p>
                   </div>
                 </div>
                 <span
@@ -370,19 +370,19 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
               </div>
               <div className="grid grid-cols-3 gap-1.5 py-1 text-center">
                 <div className="bg-slate-50 p-1.5 rounded">
-                  <div className="text-[8.5px] text-slate-500">Audited Runs</div>
+                  <div className="text-[8.5px] text-[#111C3A] font-bold">Audited Runs</div>
                   <div className="text-[12px] font-bold text-[#111C3A]">2,076</div>
                 </div>
                 <div className="bg-slate-50 p-1.5 rounded">
-                  <div className="text-[8.5px] text-slate-500">Success Rate</div>
+                  <div className="text-[8.5px] text-[#111C3A] font-bold">Success Rate</div>
                   <div className="text-[12px] font-bold" style={{ color: data.primaryColor }}>97.8%</div>
                 </div>
                 <div className="bg-slate-50 p-1.5 rounded">
-                  <div className="text-[8.5px] text-slate-500">Total Leads</div>
+                  <div className="text-[8.5px] text-[#111C3A] font-bold">Total Leads</div>
                   <div className="text-[12px] font-bold text-[#111C3A]">842</div>
                 </div>
               </div>
-              <div className="text-[8.5px] text-slate-400 pt-1 border-t text-center">{data.footerText}</div>
+              <div className="text-[8.5px] text-[#111C3A] font-semibold pt-1 border-t text-center">{data.footerText}</div>
             </div>
           )}
 
@@ -390,11 +390,11 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
             <div className="w-full max-w-sm mx-auto bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden text-[10.5px]">
               <div className="p-2 text-white flex items-center justify-between" style={{ backgroundColor: data.secondaryColor }}>
                 <span className="font-bold text-[11px]">{data.brandName} Notification</span>
-                <span className="text-[9px] opacity-80">Security Notice</span>
+                <span className="text-[9px] opacity-90 font-semibold">Security Notice</span>
               </div>
-              <div className="p-3 space-y-1.5 text-[#334155]">
-                <p className="text-[11px] font-medium">Hello Team Administrator,</p>
-                <p className="text-[10px] text-[#64748B]">
+              <div className="p-3 space-y-1.5 text-[#111C3A]">
+                <p className="text-[11px] font-bold">Hello Team Administrator,</p>
+                <p className="text-[10px] text-[#111C3A] font-medium">
                   A scheduled campaign report for Moksha Sewa has completed with 100% deliverability rate.
                 </p>
                 <button
@@ -405,7 +405,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                   View Performance Metrics
                 </button>
               </div>
-              <div className="bg-slate-50 p-2 text-[8.5px] text-slate-400 text-center border-t">
+              <div className="bg-slate-50 p-2 text-[8.5px] text-[#111C3A] font-semibold text-center border-t">
                 {data.footerText}
               </div>
             </div>
@@ -424,8 +424,8 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                 Enterprise Add-on
               </span>
             </div>
-            <p className="text-[9.5px] text-amber-800 mt-0.5 leading-snug">
-              Hosting OmniPlatform at a dedicated subdomain like <code className="bg-amber-100 px-1 rounded font-mono">portal.namogange.org</code> with custom SSL certificate requires an Enterprise Organization Tier license. Contact your EnCodency account rep to activate.
+            <p className="text-[9.5px] text-amber-900 mt-0.5 leading-snug font-medium">
+              Hosting OmniPlatform at a dedicated subdomain like <code className="bg-amber-100 px-1 rounded font-mono font-bold">portal.namogange.org</code> with custom SSL certificate requires an <span className="whitespace-nowrap font-bold">Enterprise Organization Tier</span> license. Contact your EnCodency account rep to activate.
             </p>
           </div>
         </div>

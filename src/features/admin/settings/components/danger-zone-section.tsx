@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { AlertTriangle, UserCheck, RotateCcw, PowerOff, Trash2, Lock } from "lucide-react";
 import { useSettingsCapability } from "../settings-data/capability-provider";
 import { TransferOwnershipModal } from "./transfer-ownership-modal";
@@ -42,7 +42,7 @@ export function DangerZoneSection({
             </div>
             <div>
               <h3 className="text-[13px] font-bold text-[#111C3A]">High-Risk Organization Actions</h3>
-              <p className="text-[10px] text-[#64748B]">
+              <p className="text-[10px] text-[#111C3A] font-semibold">
                 Actions here can affect entire team access, ownership hierarchy, or permanently erase workspace data.
               </p>
             </div>
@@ -55,13 +55,13 @@ export function DangerZoneSection({
         {/* 4 Action Cards */}
         <div className="space-y-1.5">
           {/* Action 1: Transfer Ownership */}
-          <div className="p-2.5 rounded-lg border border-[#E2E8F0] hover:border-slate-300 transition-colors bg-[#F8FAFC] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="p-2.5 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="space-y-0.5 min-w-0 pr-2">
               <div className="text-[11.5px] font-bold text-[#111C3A] flex items-center gap-1.5">
                 <UserCheck className="size-3.5 text-blue-600" />
                 Transfer Organization Ownership
               </div>
-              <p className="text-[10px] text-[#64748B] leading-snug">
+              <p className="text-[10px] text-[#111C3A] font-medium leading-snug">
                 Current Owner: <span className="font-bold text-[#111C3A]">{currentOwner}</span>. Transfer billing authority and root control to another verified admin.
               </p>
             </div>
@@ -70,25 +70,25 @@ export function DangerZoneSection({
               <button
                 type="button"
                 onClick={() => setTransferModalOpen(true)}
-                className="px-3 py-1.5 rounded-md bg-white border border-[#CBD5E1] hover:bg-slate-50 text-[#334155] text-[10.5px] font-bold shadow-2xs shrink-0 cursor-pointer"
+                className="px-3 py-1.5 rounded-md bg-white border border-[#CBD5E1] hover:bg-slate-50 text-[#111C3A] text-[10.5px] font-bold shadow-2xs shrink-0 cursor-pointer"
               >
                 Transfer Ownership...
               </button>
             ) : (
-              <div className="text-[10px] text-slate-400 font-semibold flex items-center gap-1 shrink-0 bg-slate-100 px-2 py-1 rounded">
+              <div className="text-[10px] text-[#111C3A] font-bold flex items-center gap-1 shrink-0 bg-slate-100 px-2 py-1 rounded border border-[#CBD5E1]">
                 <Lock className="size-3" /> Owner privilege required
               </div>
             )}
           </div>
 
           {/* Action 2: Reset Preferences */}
-          <div className="p-2.5 rounded-lg border border-[#E2E8F0] hover:border-slate-300 transition-colors bg-[#F8FAFC] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="p-2.5 rounded-lg border border-[#CBD5E1] bg-[#F8FAFC] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="space-y-0.5 min-w-0 pr-2">
               <div className="text-[11.5px] font-bold text-[#111C3A] flex items-center gap-1.5">
-                <RotateCcw className="size-3.5 text-slate-600" />
+                <RotateCcw className="size-3.5 text-[#111C3A]" />
                 Reset Workspace Preferences
               </div>
-              <p className="text-[10px] text-[#64748B] leading-snug">
+              <p className="text-[10px] text-[#111C3A] font-medium leading-snug">
                 Revert UI layout, pagination rows, and default date ranges to default factory values without affecting clients or campaigns.
               </p>
             </div>
@@ -96,7 +96,7 @@ export function DangerZoneSection({
             <button
               type="button"
               onClick={() => setResetModalOpen(true)}
-              className="px-3 py-1.5 rounded-md bg-white border border-[#CBD5E1] hover:bg-slate-50 text-[#334155] text-[10.5px] font-bold shadow-2xs shrink-0 cursor-pointer"
+              className="px-3 py-1.5 rounded-md bg-white border border-[#CBD5E1] hover:bg-slate-50 text-[#111C3A] text-[10.5px] font-bold shadow-2xs shrink-0 cursor-pointer"
             >
               Reset to Defaults...
             </button>
@@ -109,7 +109,7 @@ export function DangerZoneSection({
                 <PowerOff className="size-3.5 text-orange-600" />
                 Deactivate Organization
               </div>
-              <p className="text-[10px] text-orange-900/80 leading-snug">
+              <p className="text-[10px] text-orange-950 leading-snug font-medium">
                 Temporarily suspends workspace operations, blocks team login, and pauses all scheduled workflows and marketing posts.
               </p>
             </div>
@@ -118,12 +118,12 @@ export function DangerZoneSection({
               <button
                 type="button"
                 onClick={() => setDeactivateModalOpen(true)}
-                className="px-3 py-1.5 rounded-md bg-white border border-orange-300 hover:bg-orange-50 text-orange-700 text-[10.5px] font-bold shadow-2xs shrink-0 cursor-pointer"
+                className="px-3 py-1.5 rounded-md bg-white border border-orange-300 hover:bg-orange-50 text-orange-800 text-[10.5px] font-bold shadow-2xs shrink-0 cursor-pointer"
               >
                 Deactivate Workspace...
               </button>
             ) : (
-              <div className="text-[10px] text-slate-400 font-semibold flex items-center gap-1 shrink-0 bg-slate-100 px-2 py-1 rounded">
+              <div className="text-[10px] text-[#111C3A] font-bold flex items-center gap-1 shrink-0 bg-slate-100 px-2 py-1 rounded border border-[#CBD5E1]">
                 <Lock className="size-3" /> Owner only
               </div>
             )}
@@ -136,7 +136,7 @@ export function DangerZoneSection({
                 <Trash2 className="size-3.5 text-red-600" />
                 Permanently Delete Organization
               </div>
-              <p className="text-[10px] text-red-900/80 leading-snug">
+              <p className="text-[10px] text-red-950 leading-snug font-medium">
                 Irreversible. Immediately purges all client campaigns, media libraries, leads, and member configurations.
               </p>
             </div>
@@ -150,7 +150,7 @@ export function DangerZoneSection({
                 <Trash2 className="size-3" /> Delete Organization...
               </button>
             ) : (
-              <div className="text-[10px] text-slate-400 font-semibold flex items-center gap-1 shrink-0 bg-slate-100 px-2 py-1 rounded">
+              <div className="text-[10px] text-[#111C3A] font-bold flex items-center gap-1 shrink-0 bg-slate-100 px-2 py-1 rounded border border-[#CBD5E1]">
                 <Lock className="size-3" /> Owner only
               </div>
             )}
