@@ -2,6 +2,7 @@
 
 import { ArrowRightIcon, BanIcon, CircleCheckIcon, CreditCardIcon, GaugeIcon, SquareArrowOutUpRightIcon } from "lucide-react";
 import Link from "next/link";
+import { useRef } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -36,12 +37,22 @@ export function CompanyPreviewDrawer({
   onOpenFlow: (flow: CompanyFlow) => void;
   onClose: () => void;
 }) {
+  const contentRef = useRef<HTMLDivElement>(null);
   const query = useCompany(companyId ?? "");
   const summary = query.data ?? (fallback?.company.id === companyId ? fallback : undefined);
 
   return (
     <Sheet open={companyId !== null} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent
+        ref={contentRef}
+        className="sm:max-w-md"
+        // Land focus on the drawer itself, not on the first tooltip trigger in the header:
+        // otherwise the first Esc dismisses that tooltip instead of closing the drawer.
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          contentRef.current?.focus();
+        }}
+      >
         {query.error && !summary ? (
           <>
             <SheetHeader>
