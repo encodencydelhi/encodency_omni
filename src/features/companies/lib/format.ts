@@ -2,10 +2,10 @@ import { formatCompactNumber, formatCurrency, formatNumber } from "@/lib/utils/f
 import { USAGE_RESOURCE_BY_KEY } from "../data/config";
 import type { UsageResource } from "../data/types";
 
-/** "Unlimited" for plan-controlled resources with no cap; "Not plan-controlled" where no limit exists. */
+/** "Unlimited" for plan-controlled resources with no cap; "n/a" where the plan sets no limit at all. */
 export function formatLimit(limit: number | null, resource: UsageResource): string {
   if (limit !== null) return formatCompactNumber(limit);
-  return USAGE_RESOURCE_BY_KEY[resource].metric === null ? "Not plan-controlled" : "Unlimited";
+  return USAGE_RESOURCE_BY_KEY[resource].metric === null ? "n/a" : "Unlimited";
 }
 
 export function formatUsed(value: number, resource: UsageResource): string {

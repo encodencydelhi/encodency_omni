@@ -12,7 +12,7 @@ import type { CompanySummary } from "../data/types";
 import { AccountStatusBadge, SubscriptionStatusBadge } from "./status-badges";
 import { useCompanyActions } from "./use-company-actions";
 import { StatCard, StatGrid } from "./primitives";
-import { HealthBadge } from "./status-badges";
+import { HealthInline } from "./status-badges";
 import { relativeTime } from "../data/clock";
 import { formatMrr, formatPercent1 } from "../lib/format";
 import { USAGE_RESOURCE_BY_KEY } from "../data/config";
@@ -65,7 +65,7 @@ export function CompanyDetailHeader({ summary }: { summary: CompanySummary }) {
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <h1 className="truncate text-lg font-semibold tracking-tight text-foreground">{company.name}</h1>
               <AccountStatusBadge status={company.accountStatus} />
-              <SubscriptionStatusBadge status={summary.subscriptionStatus} />
+              <SubscriptionStatusBadge status={summary.subscriptionStatus} labelled />
               <Badge tone="brand">{summary.plan.name}</Badge>
             </div>
             <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-2xs text-muted-foreground">
@@ -168,7 +168,7 @@ export function CompanySummaryStrip({ summary }: { summary: CompanySummary }) {
         href={companySectionHref(id, "usage")}
         title="Highest limit utilisation across plan-controlled resources"
       />
-      <StatCard compact label="Tenant health" value={<HealthBadge health={summary.health} />} href={`${companySectionHref(id, "overview")}#needs-attention`} />
+      <StatCard compact label="Tenant health" value={<HealthInline health={summary.health} />} href={`${companySectionHref(id, "overview")}#needs-attention`} />
       <StatCard compact label="Last active" value={<span className="text-[0.8125rem]">{relativeTime(company.lastActiveAt)}</span>} href={companySectionHref(id, "activity")} />
     </StatGrid>
   );

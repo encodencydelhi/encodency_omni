@@ -44,8 +44,16 @@ export function AccountStatusBadge({ status }: { status: CompanyAccountStatus })
   return <StatusBadge registry={ACCOUNT_STATUS} status={status} withDot />;
 }
 
-export function SubscriptionStatusBadge({ status }: { status: CompanySubscriptionStatus }) {
-  return <StatusBadge registry={SUBSCRIPTION_STATUS_META} status={status} />;
+export function SubscriptionStatusBadge({ status, labelled = false }: { status: CompanySubscriptionStatus; labelled?: boolean }) {
+  // Next to the account badge both can read "Active"; the prefix says which axis this is.
+  return labelled ? (
+    <Badge tone={SUBSCRIPTION_STATUS_META[status].tone} title={SUBSCRIPTION_STATUS_META[status].description}>
+      <span className="font-normal opacity-70">Subscription</span>
+      {SUBSCRIPTION_STATUS_META[status].label}
+    </Badge>
+  ) : (
+    <StatusBadge registry={SUBSCRIPTION_STATUS_META} status={status} />
+  );
 }
 
 export function BillingStatusBadge({ status }: { status: CompanyBillingStatus }) {
@@ -86,6 +94,17 @@ export function FactorBadge({ status }: { status: FactorStatus }) {
 
 export function ResultBadge({ result }: { result: "success" | "failure" | "denied" }) {
   return <StatusBadge registry={RESULT_META} status={result} />;
+}
+
+/** Health as plain coloured text, for dense summary cards where a badge would clip. */
+export function HealthInline({ health }: { health: CompanyHealth }) {
+  const meta = HEALTH_META[health.status];
+  const tone = { success: "text-success", warning: "text-warning", danger: "text-danger", neutral: "text-neutral", info: "text-info", brand: "text-primary" }[meta.tone];
+  return (
+    <WithTooltip content={health.reason}>
+      <span className={cn("text-[0.8125rem] font-semibold", tone)}>{meta.label}</span>
+    </WithTooltip>
+  );
 }
 
 /** Health with its main reason available on hover and to assistive tech. */
