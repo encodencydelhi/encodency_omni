@@ -89,37 +89,37 @@ export function DashboardView() {
   return (
     <div className="-mx-4 -my-5 min-h-[calc(100dvh-60px)] px-4 py-4 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-1">
-      <DashboardHeader
-        generatedAt={data?.generatedAt}
-        range={range}
-        onRangeChange={setRange}
-        onRefresh={() => void refetch()}
-        isRefreshing={isFetching}
-      />
-
-      <DashboardMetrics metrics={snapshot.metrics} isLoading={isPending} />
-
-      <div className="grid gap-1 xl:grid-cols-3">
-        <CompanyGrowthChart growth={snapshot.companyGrowth} isLoading={isPending} />
-        <RevenueChart revenue={snapshot.revenue} isLoading={isPending} />
-        <SubscriptionDistribution
-          distribution={snapshot.subscriptionDistribution}
-          isLoading={isPending}
+        <DashboardHeader
+          generatedAt={data?.generatedAt}
+          range={range}
+          onRangeChange={setRange}
+          onRefresh={() => void refetch()}
+          isRefreshing={isFetching}
         />
-      </div>
 
-      <div className="grid gap-1 xl:grid-cols-4">
-        <PlanDistributionPanel distribution={snapshot.subscriptionDistribution} isLoading={isPending} />
-        <LatestSignupsPanel signups={snapshot.latestSignups} isLoading={isPending} />
-        <ApiUsagePanel usage={snapshot.apiUsage} isLoading={isPending} />
-        <IntegrationStatusPanel integrations={snapshot.integrationStatus} isLoading={isPending} />
-      </div>
+        <DashboardMetrics metrics={snapshot.metrics} isLoading={isPending} />
 
-      <div className="grid gap-1 xl:grid-cols-3">
-        <NeedsAttentionPanel items={snapshot.attention} isLoading={isPending} />
-        <RecentActivity entries={snapshot.recentActivity} isLoading={isPending} />
-        <PlatformHealth />
-      </div>
+        <div className="grid gap-1 xl:grid-cols-3">
+          <CompanyGrowthChart growth={snapshot.companyGrowth} isLoading={isPending} />
+          <RevenueChart revenue={snapshot.revenue} isLoading={isPending} />
+          <SubscriptionDistribution
+            distribution={snapshot.subscriptionDistribution}
+            isLoading={isPending}
+          />
+        </div>
+
+        <div className="grid gap-1 xl:grid-cols-4">
+          <PlanDistributionPanel distribution={snapshot.subscriptionDistribution} isLoading={isPending} />
+          <LatestSignupsPanel signups={snapshot.latestSignups} isLoading={isPending} />
+          <ApiUsagePanel usage={snapshot.apiUsage} isLoading={isPending} />
+          <IntegrationStatusPanel integrations={snapshot.integrationStatus} isLoading={isPending} />
+        </div>
+
+        <div className="grid gap-1 xl:grid-cols-3">
+          <NeedsAttentionPanel items={snapshot.attention} isLoading={isPending} />
+          <RecentActivity entries={snapshot.recentActivity} isLoading={isPending} />
+          <PlatformHealth />
+        </div>
       </div>
     </div>
   );
