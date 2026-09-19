@@ -66,6 +66,7 @@ export function TrendsPanel() {
 
   return (
     <Panel
+      className="h-full"
       title="Subscription Trends"
       description={flow ? `${formatNumber(total)} in this period` : `${formatNumber(data.at(-1)?.value ?? 0)} today`}
       action={
@@ -129,7 +130,7 @@ export function TrendsPanel() {
 
 export function AdoptionPanel({ rows }: { rows: PlanAdoptionRow[] | undefined }) {
   return (
-    <Panel title="Plan Adoption" description="Subscribers and recurring revenue by plan" flush>
+    <Panel className="h-full" title="Plan Adoption" description="Subscribers and recurring revenue by plan" flush>
       {rows === undefined ? (
         <div className="px-3 pb-3"><ChartSkeleton /></div>
       ) : (
@@ -236,6 +237,7 @@ export function AttentionPanel({ items }: { items: SubscriptionAttentionItem[] |
 export function UpcomingPanel({ items }: { items: ScheduledChangeView[] | undefined }) {
   return (
     <Panel
+      className="h-full"
       title="Upcoming Subscription Changes"
       description="Scheduled, not yet applied"
       action={<Button asChild variant="ghost" size="sm"><Link href={routes.changes("scheduled")}>View All Scheduled Changes<ArrowRightIcon /></Link></Button>}
@@ -269,6 +271,7 @@ export function UpcomingPanel({ items }: { items: ScheduledChangeView[] | undefi
 export function EndingTrialsPanel({ trials }: { trials: TrialRow[] | undefined }) {
   return (
     <Panel
+      className="h-full"
       title="Trials Ending Soon"
       description="Convert, extend or let them end"
       action={<Button asChild variant="ghost" size="sm"><Link href={routes.changes("trials")}>Manage Trials<ArrowRightIcon /></Link></Button>}
