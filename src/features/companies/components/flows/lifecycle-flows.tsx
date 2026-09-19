@@ -359,7 +359,7 @@ export function ArchiveFlow({ target, onClose }: { target: CompanySummary; onClo
       </dl>
       <div className="flex flex-wrap items-center gap-1.5 text-2xs text-muted-foreground">
         Current state: <AccountStatusBadge status={target.company.accountStatus} />
-        <SubscriptionStatusBadge status={target.subscriptionStatus} />
+        <SubscriptionStatusBadge status={target.subscriptionStatus} labelled />
       </div>
       {openInvoices.length > 0 ? (
         <AlertBanner tone="warning" title="Unpaid invoices remain">

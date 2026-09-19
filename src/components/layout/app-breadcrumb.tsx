@@ -31,7 +31,7 @@ export function AppBreadcrumb() {
 
   return (
     <div className="sticky top-[56px] z-20 flex h-7 items-center border-b border-[#E2E8F0] bg-gradient-to-r from-white via-[#F8FAFC] to-white px-4 sm:px-6 lg:px-8">
-      <nav className="flex text-[12px] font-medium text-slate-500 w-full" aria-label="Breadcrumb">
+      <nav className="flex min-w-0 w-full overflow-x-auto whitespace-nowrap text-[12px] font-medium text-slate-500 [scrollbar-width:none]" aria-label="Breadcrumb">
         <ol className="inline-flex items-center space-x-1.5 md:space-x-2.5 w-full">
           {activeSection && (
             <li className="inline-flex items-center">

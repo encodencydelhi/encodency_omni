@@ -253,7 +253,7 @@ function buildUsers(companyId: string, slug: string, clientIds: string[], rng: R
   return users;
 }
 
-function buildClients(companyId: string, slug: string): CompanyClient[] {
+function buildClients(companyId: string, slug: string, companyCreatedAt: string): CompanyClient[] {
   const failing = JOB_FAILURE_COMPANIES[slug] ?? 0;
   let remaining = failing;
 
@@ -266,14 +266,16 @@ function buildClients(companyId: string, slug: string): CompanyClient[] {
       id: client.id,
       companyId,
       name: client.name,
-      websiteUrl: client.websiteUrl,
+      // Not every client has a website; a deterministic minority have none configured.
+      websiteUrl: hash(client.id) % 7 === 0 ? null : client.websiteUrl,
       status: client.status,
       connectedChannels: client.connectedChannels,
       brokenChannels: client.disconnectedChannels,
       scheduledPosts: client.scheduledPosts,
       failedPosts: share,
       leadsLast30Days: client.leadsLast30Days,
-      createdAt: client.createdAt,
+      // A client cannot pre-date the company that owns it (trial companies are only days old).
+      createdAt: new Date(Math.max(Date.parse(client.createdAt), Date.parse(companyCreatedAt) + (hash(client.id) % 24) * 3_600_000)).toISOString(),
       lastActivityAt: client.lastActivityAt,
     };
   });
@@ -805,7 +807,7 @@ export function buildDataset(): Map<string, CompanyBundle> {
       seed.status === "suspended" ? "suspended" : seed.status === "churned" ? (slug === "marchetti-autoworks" ? "archived" : "deactivated") : "active";
     const retired = accountStatus === "deactivated" || accountStatus === "archived";
 
-    const clients = buildClients(source.id, slug);
+    const clients = buildClients(source.id, slug, source.createdAt);
     const users = buildUsers(source.id, slug, clients.map((client) => client.id), rng);
     const integrations = buildIntegrations(source.id, slug, clients, accountStatus === "active", retired);
     const subscription = buildSubscription(index, slug, source.id, source.createdAt, accountStatus);

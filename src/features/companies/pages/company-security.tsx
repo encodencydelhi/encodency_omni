@@ -38,7 +38,7 @@ export function CompanySecurityPage() {
     return (
       <div className="space-y-1">
         <StatGridSkeleton count={7} className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-7" />
-        <div className="grid gap-1 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-1 lg:grid-cols-2">
           <PanelSkeleton rows={4} />
           <PanelSkeleton rows={4} />
         </div>
@@ -109,7 +109,7 @@ function SecurityBody({ companyId, data }: { companyId: string; data: CompanySec
       ) : null}
       {!manage ? <AlertBanner tone="info" title="Read-only">Your role can view this company&apos;s security posture but not change it.</AlertBanner> : null}
 
-      <div className="grid gap-1 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
         <div className="space-y-1 lg:col-span-2">
           <Panel title="Security warnings" description={warnings.length > 0 ? `${warnings.length} to review` : undefined} flush>
             {warnings.length === 0 ? (

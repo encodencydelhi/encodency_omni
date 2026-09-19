@@ -26,7 +26,6 @@ import {
 
 const RANGE_PARAM = "range";
 
-/** Rendered while the first request is in flight, so the layout never jumps. */
 const EMPTY_SNAPSHOT: Omit<DashboardSnapshot, "generatedAt"> = {
   metrics: [],
   attention: [],
@@ -46,13 +45,6 @@ const EMPTY_SNAPSHOT: Omit<DashboardSnapshot, "generatedAt"> = {
   },
   integrationStatus: [],
 };
-
-/**
- * Answers one question: what is happening across the platform right now?
- *
- * The ordering is the argument — scale first, then the trends behind it, then
- * what needs a decision today.
- */
 export function DashboardView() {
   const router = useRouter();
   const pathname = usePathname();
@@ -63,7 +55,6 @@ export function DashboardView() {
 
   const { data, isPending, isFetching, error, refetch } = useDashboard(range);
 
-  // The range lives in the URL so a view can be shared or bookmarked.
   const setRange = useCallback(
     (next: DashboardRange) => {
       const params = new URLSearchParams(searchParams.toString());

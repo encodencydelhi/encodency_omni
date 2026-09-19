@@ -24,7 +24,8 @@ export const ROUTES = {
     userInvitations: "/super-admin/users/invitations",
     userSecurity: "/super-admin/users/security",
     userActivity: "/super-admin/users/activity",
-    Clients: "/super-admin/projects",
+    Clients: "/super-admin/clients",
+    client: (id: string) => `/super-admin/clients/${id}`,
     team: "/super-admin/team",
 
     plans: "/super-admin/plans",

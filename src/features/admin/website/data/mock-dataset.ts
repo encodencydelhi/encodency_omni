@@ -1,14 +1,3 @@
-/**
- * Deterministic mock dataset for the Website module.
- *
- * Nothing here is random at render time: every number is either hand-authored
- * or derived from a seeded PRNG and a fixed reference clock, so the server and
- * the client always agree and screenshots stay stable between reloads.
- *
- * This file is an implementation detail of `mock-provider.ts`. UI components
- * must never import it directly — they go through the repository.
- */
-
 import { WEBSITE_REFERENCE_NOW } from "./config";
 import type {
   AnalyticsData,
@@ -41,11 +30,6 @@ import type {
   WebsiteSummary,
   WebsiteTarget,
 } from "./types";
-
-/* ------------------------------------------------------------------ */
-/* Clock + deterministic helpers                                       */
-/* ------------------------------------------------------------------ */
-
 const NOW = new Date(WEBSITE_REFERENCE_NOW).getTime();
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -65,7 +49,6 @@ function seedFrom(text: string): number {
   return h >>> 0;
 }
 
-/** mulberry32 — small, fast, and identical on every platform. */
 function makeRng(text: string): () => number {
   let a = seedFrom(text);
   return () => {
@@ -1235,46 +1218,46 @@ function buildSeo(profile: ClientWebsiteProfile, domain: string, pages: PageReco
 
   const searchConsole: SeoData["searchConsole"] = hasSearchConsole
     ? {
-        totals: { clicks: 12482, impressions: 248914, ctr: 5.01, position: 14.6 },
-        deltas: { clicks: 18.4, impressions: 12.1, ctr: 0.6, position: -1.8 },
-        trend: Array.from({ length: 28 }, (_, i) => ({
-          date: daysAgo(27 - i),
-          clicks: Math.round(380 + i * 6 + scRng() * 90),
-          impressions: Math.round(7600 + i * 110 + scRng() * 1400),
-          position: round(16.4 - i * 0.07 + scRng() * 0.6, 1),
-        })),
-        queries: [
-          { query: "clean ganga ngo", clicks: 1842, impressions: 28410, ctr: 6.5, position: 4.2 },
-          { query: "river restoration india", clicks: 1204, impressions: 31280, ctr: 3.8, position: 8.1 },
-          { query: "donate for ganga cleaning", clicks: 986, impressions: 12480, ctr: 7.9, position: 3.4 },
-          { query: "volunteer river cleanup varanasi", clicks: 764, impressions: 9840, ctr: 7.8, position: 5.6 },
-          { query: "tree plantation ngo varanasi", clicks: 612, impressions: 18420, ctr: 3.3, position: 11.2 },
-          { query: "ganga aarti timings", clicks: 548, impressions: 42180, ctr: 1.3, position: 18.4 },
-          { query: "environmental ngo india 80g", clicks: 421, impressions: 8640, ctr: 4.9, position: 9.8 },
-          { query: "plastic free ghats campaign", clicks: 386, impressions: 6210, ctr: 6.2, position: 6.1 },
-          { query: "ngo impact report 2025", clicks: 294, impressions: 11420, ctr: 2.6, position: 14.7 },
-          { query: "water testing ganga river", clicks: 218, impressions: 9860, ctr: 2.2, position: 16.9 },
-        ],
-        pages: pages.slice(0, 8).map((page, index) => ({
-          page: page.path,
-          clicks: Math.round(2400 / (index + 1.2)),
-          impressions: Math.round(41000 / (index + 1.1)),
-          ctr: round(4.2 + scRng() * 3, 1),
-          position: round(6 + index * 1.6, 1),
-        })),
-        countries: [
-          { country: "India", clicks: 9284, impressions: 184210, ctr: 5.0 },
-          { country: "United States", clicks: 1420, impressions: 28640, ctr: 4.9 },
-          { country: "United Kingdom", clicks: 684, impressions: 14280, ctr: 4.8 },
-          { country: "Canada", clicks: 412, impressions: 9120, ctr: 4.5 },
-          { country: "Australia", clicks: 286, impressions: 6480, ctr: 4.4 },
-        ].map(({ country, clicks, impressions }) => ({ country, clicks, impressions })),
-        devices: [
-          { device: "Mobile", clicks: 8642, impressions: 176420 },
-          { device: "Desktop", clicks: 3128, impressions: 58240 },
-          { device: "Tablet", clicks: 712, impressions: 14254 },
-        ],
-      }
+      totals: { clicks: 12482, impressions: 248914, ctr: 5.01, position: 14.6 },
+      deltas: { clicks: 18.4, impressions: 12.1, ctr: 0.6, position: -1.8 },
+      trend: Array.from({ length: 28 }, (_, i) => ({
+        date: daysAgo(27 - i),
+        clicks: Math.round(380 + i * 6 + scRng() * 90),
+        impressions: Math.round(7600 + i * 110 + scRng() * 1400),
+        position: round(16.4 - i * 0.07 + scRng() * 0.6, 1),
+      })),
+      queries: [
+        { query: "clean ganga ngo", clicks: 1842, impressions: 28410, ctr: 6.5, position: 4.2 },
+        { query: "river restoration india", clicks: 1204, impressions: 31280, ctr: 3.8, position: 8.1 },
+        { query: "donate for ganga cleaning", clicks: 986, impressions: 12480, ctr: 7.9, position: 3.4 },
+        { query: "volunteer river cleanup varanasi", clicks: 764, impressions: 9840, ctr: 7.8, position: 5.6 },
+        { query: "tree plantation ngo varanasi", clicks: 612, impressions: 18420, ctr: 3.3, position: 11.2 },
+        { query: "ganga aarti timings", clicks: 548, impressions: 42180, ctr: 1.3, position: 18.4 },
+        { query: "environmental ngo india 80g", clicks: 421, impressions: 8640, ctr: 4.9, position: 9.8 },
+        { query: "plastic free ghats campaign", clicks: 386, impressions: 6210, ctr: 6.2, position: 6.1 },
+        { query: "ngo impact report 2025", clicks: 294, impressions: 11420, ctr: 2.6, position: 14.7 },
+        { query: "water testing ganga river", clicks: 218, impressions: 9860, ctr: 2.2, position: 16.9 },
+      ],
+      pages: pages.slice(0, 8).map((page, index) => ({
+        page: page.path,
+        clicks: Math.round(2400 / (index + 1.2)),
+        impressions: Math.round(41000 / (index + 1.1)),
+        ctr: round(4.2 + scRng() * 3, 1),
+        position: round(6 + index * 1.6, 1),
+      })),
+      countries: [
+        { country: "India", clicks: 9284, impressions: 184210, ctr: 5.0 },
+        { country: "United States", clicks: 1420, impressions: 28640, ctr: 4.9 },
+        { country: "United Kingdom", clicks: 684, impressions: 14280, ctr: 4.8 },
+        { country: "Canada", clicks: 412, impressions: 9120, ctr: 4.5 },
+        { country: "Australia", clicks: 286, impressions: 6480, ctr: 4.4 },
+      ].map(({ country, clicks, impressions }) => ({ country, clicks, impressions })),
+      devices: [
+        { device: "Mobile", clicks: 8642, impressions: 176420 },
+        { device: "Desktop", clicks: 3128, impressions: 58240 },
+        { device: "Tablet", clicks: 712, impressions: 14254 },
+      ],
+    }
     : null;
 
   return {
@@ -1591,101 +1574,101 @@ function buildForms(profile: ClientWebsiteProfile, pages: PageRecord[], issues: 
     fields: FormRecord["fields"];
     findings: string[];
   }[] = [
-    {
-      path: "/donate",
-      type: "Donation",
-      method: "POST",
-      action: "https://mokshasewa.org/wp-json/donations/v1/create",
-      secure: true,
-      consent: false,
-      captcha: true,
-      fields: [
-        { name: "donor_name", label: "Full name", type: "text", required: true, hasLabel: true, autocomplete: "name" },
-        { name: "email", label: "Email address", type: "email", required: true, hasLabel: true, autocomplete: "email" },
-        { name: "phone", label: "Mobile number", type: "tel", required: true, hasLabel: true, autocomplete: "tel" },
-        { name: "amount", label: "Amount (₹)", type: "number", required: true, hasLabel: true, autocomplete: null },
-        { name: "pan", label: "PAN (for 80G receipt)", type: "text", required: false, hasLabel: true, autocomplete: null },
-        { name: "message", label: "Message", type: "textarea", required: false, hasLabel: true, autocomplete: null },
-      ],
-      findings: ["No consent checkbox detected before submit"],
-    },
-    {
-      path: "/contact",
-      type: "Contact",
-      method: "POST",
-      action: "/wp-admin/admin-ajax.php?action=contact_submit",
-      secure: true,
-      consent: true,
-      captcha: true,
-      fields: [
-        { name: "name", label: "Your name", type: "text", required: true, hasLabel: true, autocomplete: "name" },
-        { name: "email", label: "Email", type: "email", required: true, hasLabel: true, autocomplete: "email" },
-        { name: "subject", label: "Subject", type: "text", required: false, hasLabel: true, autocomplete: null },
-        { name: "message", label: "How can we help?", type: "textarea", required: true, hasLabel: true, autocomplete: null },
-        { name: "consent", label: "I agree to the privacy policy", type: "checkbox", required: true, hasLabel: true, autocomplete: null },
-      ],
-      findings: [],
-    },
-    {
-      path: "/volunteer",
-      type: "Volunteer registration",
-      method: "POST",
-      action: "/volunteer/submit",
-      secure: true,
-      consent: true,
-      captcha: false,
-      fields: [
-        { name: "name", label: "Full name", type: "text", required: true, hasLabel: true, autocomplete: "name" },
-        { name: "email", label: "Email", type: "email", required: true, hasLabel: true, autocomplete: "email" },
-        { name: "phone", label: "Phone", type: "tel", required: true, hasLabel: true, autocomplete: "tel" },
-        { name: "city", label: "City", type: "text", required: true, hasLabel: true, autocomplete: "address-level2" },
-        { name: "availability", label: "Availability", type: "select", required: true, hasLabel: true, autocomplete: null },
-        { name: "skills", label: "Skills", type: "textarea", required: false, hasLabel: true, autocomplete: null },
-        { name: "consent", label: "I agree to be contacted", type: "checkbox", required: true, hasLabel: true, autocomplete: null },
-      ],
-      findings: ["No CAPTCHA on a public form that writes to the volunteer database"],
-    },
-    {
-      path: "/blog",
-      type: "Newsletter",
-      method: "POST",
-      action: "http://newsletter.mokshasewa.org/subscribe",
-      secure: false,
-      consent: false,
-      captcha: false,
-      fields: [
-        { name: "email", label: null, type: "email", required: true, hasLabel: false, autocomplete: null },
-      ],
-      findings: ["Form action is http:// — submitted data would leave the secure context", "Input has no associated label"],
-    },
-    {
-      path: "/campaigns/clean-ganga-2026",
-      type: "Lead capture",
-      method: "POST",
-      action: "/campaigns/lead",
-      secure: true,
-      consent: true,
-      captcha: false,
-      fields: [
-        { name: "name", label: "Name", type: "text", required: true, hasLabel: true, autocomplete: "name" },
-        { name: "email", label: "Email", type: "email", required: true, hasLabel: true, autocomplete: "email" },
-        { name: "pledge", label: "Pledge amount", type: "number", required: false, hasLabel: true, autocomplete: null },
-        { name: "consent", label: "Keep me updated", type: "checkbox", required: false, hasLabel: true, autocomplete: null },
-      ],
-      findings: [],
-    },
-    {
-      path: "/search",
-      type: "Site search",
-      method: "GET",
-      action: "/search",
-      secure: true,
-      consent: false,
-      captcha: false,
-      fields: [{ name: "s", label: null, type: "search", required: false, hasLabel: false, autocomplete: null }],
-      findings: ["Search input relies on placeholder text instead of a label"],
-    },
-  ];
+      {
+        path: "/donate",
+        type: "Donation",
+        method: "POST",
+        action: "https://mokshasewa.org/wp-json/donations/v1/create",
+        secure: true,
+        consent: false,
+        captcha: true,
+        fields: [
+          { name: "donor_name", label: "Full name", type: "text", required: true, hasLabel: true, autocomplete: "name" },
+          { name: "email", label: "Email address", type: "email", required: true, hasLabel: true, autocomplete: "email" },
+          { name: "phone", label: "Mobile number", type: "tel", required: true, hasLabel: true, autocomplete: "tel" },
+          { name: "amount", label: "Amount (₹)", type: "number", required: true, hasLabel: true, autocomplete: null },
+          { name: "pan", label: "PAN (for 80G receipt)", type: "text", required: false, hasLabel: true, autocomplete: null },
+          { name: "message", label: "Message", type: "textarea", required: false, hasLabel: true, autocomplete: null },
+        ],
+        findings: ["No consent checkbox detected before submit"],
+      },
+      {
+        path: "/contact",
+        type: "Contact",
+        method: "POST",
+        action: "/wp-admin/admin-ajax.php?action=contact_submit",
+        secure: true,
+        consent: true,
+        captcha: true,
+        fields: [
+          { name: "name", label: "Your name", type: "text", required: true, hasLabel: true, autocomplete: "name" },
+          { name: "email", label: "Email", type: "email", required: true, hasLabel: true, autocomplete: "email" },
+          { name: "subject", label: "Subject", type: "text", required: false, hasLabel: true, autocomplete: null },
+          { name: "message", label: "How can we help?", type: "textarea", required: true, hasLabel: true, autocomplete: null },
+          { name: "consent", label: "I agree to the privacy policy", type: "checkbox", required: true, hasLabel: true, autocomplete: null },
+        ],
+        findings: [],
+      },
+      {
+        path: "/volunteer",
+        type: "Volunteer registration",
+        method: "POST",
+        action: "/volunteer/submit",
+        secure: true,
+        consent: true,
+        captcha: false,
+        fields: [
+          { name: "name", label: "Full name", type: "text", required: true, hasLabel: true, autocomplete: "name" },
+          { name: "email", label: "Email", type: "email", required: true, hasLabel: true, autocomplete: "email" },
+          { name: "phone", label: "Phone", type: "tel", required: true, hasLabel: true, autocomplete: "tel" },
+          { name: "city", label: "City", type: "text", required: true, hasLabel: true, autocomplete: "address-level2" },
+          { name: "availability", label: "Availability", type: "select", required: true, hasLabel: true, autocomplete: null },
+          { name: "skills", label: "Skills", type: "textarea", required: false, hasLabel: true, autocomplete: null },
+          { name: "consent", label: "I agree to be contacted", type: "checkbox", required: true, hasLabel: true, autocomplete: null },
+        ],
+        findings: ["No CAPTCHA on a public form that writes to the volunteer database"],
+      },
+      {
+        path: "/blog",
+        type: "Newsletter",
+        method: "POST",
+        action: "http://newsletter.mokshasewa.org/subscribe",
+        secure: false,
+        consent: false,
+        captcha: false,
+        fields: [
+          { name: "email", label: null, type: "email", required: true, hasLabel: false, autocomplete: null },
+        ],
+        findings: ["Form action is http:// — submitted data would leave the secure context", "Input has no associated label"],
+      },
+      {
+        path: "/campaigns/clean-ganga-2026",
+        type: "Lead capture",
+        method: "POST",
+        action: "/campaigns/lead",
+        secure: true,
+        consent: true,
+        captcha: false,
+        fields: [
+          { name: "name", label: "Name", type: "text", required: true, hasLabel: true, autocomplete: "name" },
+          { name: "email", label: "Email", type: "email", required: true, hasLabel: true, autocomplete: "email" },
+          { name: "pledge", label: "Pledge amount", type: "number", required: false, hasLabel: true, autocomplete: null },
+          { name: "consent", label: "Keep me updated", type: "checkbox", required: false, hasLabel: true, autocomplete: null },
+        ],
+        findings: [],
+      },
+      {
+        path: "/search",
+        type: "Site search",
+        method: "GET",
+        action: "/search",
+        secure: true,
+        consent: false,
+        captcha: false,
+        fields: [{ name: "s", label: null, type: "search", required: false, hasLabel: false, autocomplete: null }],
+        findings: ["Search input relies on placeholder text instead of a label"],
+      },
+    ];
 
   const forms: FormRecord[] = formSeeds.flatMap((seed, index) => {
     const page = pageFor(seed.path);

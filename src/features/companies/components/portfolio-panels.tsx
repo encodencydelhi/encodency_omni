@@ -161,7 +161,7 @@ export function TenantHealthPanel({ portfolio }: { portfolio: PortfolioSummary |
             </p>
           ) : null}
         </div>
-        <div className="grid grid-cols-4 gap-1 lg:w-[26rem]">
+        <div className="grid grid-cols-2 gap-1 sm:grid-cols-4 lg:w-[26rem]">
           {tiles.map((tile) => (
             <Link key={tile.key} href={tile.href} className="rounded-sm border border-border px-2 py-1 transition-colors hover:bg-accent/50">
               <span className="block truncate text-2xs text-muted-foreground">{tile.label}</span>

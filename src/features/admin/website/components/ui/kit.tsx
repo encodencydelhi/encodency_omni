@@ -342,7 +342,7 @@ export function StatTile({
         bgGradient[tone],
         "group relative flex w-full flex-col justify-center overflow-hidden p-3.5 pl-4 text-left",
         onClick &&
-          "cursor-pointer transition-all hover:-translate-y-px hover:border-[#C9D6EA] hover:shadow-[0_1px_2px_rgba(16,24,40,0.05),0_16px_32px_-20px_rgba(16,24,40,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35",
+        "cursor-pointer transition-all hover:-translate-y-px hover:border-[#C9D6EA] hover:shadow-[0_1px_2px_rgba(16,24,40,0.05),0_16px_32px_-20px_rgba(16,24,40,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35",
         className,
       )}
     >
