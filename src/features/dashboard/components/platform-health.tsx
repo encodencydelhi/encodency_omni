@@ -15,7 +15,6 @@ import { CardSkeleton } from "@/components/shared/loading-state";
 import { SectionCard } from "@/components/shared/section-card";
 import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils/cn";
-import type { DashboardSnapshot } from "@/types/domain/dashboard";
 import { SERVICE_STATUS, type ServiceStatus } from "@/types/domain/system-health";
 
 const STATUS_STYLES: Record<ServiceStatus, { dot: string; text: string }> = {
@@ -26,7 +25,6 @@ const STATUS_STYLES: Record<ServiceStatus, { dot: string; text: string }> = {
   maintenance: { dot: "bg-info", text: "text-info" },
 };
 
-/** A recognisable icon per component, keyed by its service id. */
 const SERVICE_ICONS: Record<string, LucideIcon> = {
   svc_api: ServerIcon,
   svc_db: DatabaseIcon,
@@ -37,12 +35,10 @@ const SERVICE_ICONS: Record<string, LucideIcon> = {
   svc_webhooks: WebhookIcon,
 };
 
-interface PlatformHealthProps {
-  entries: DashboardSnapshot["platformHealth"];
-  isLoading: boolean;
-}
+import { useHealth } from "@/features/system-health/context/health-provider";
 
-export function PlatformHealth({ entries, isLoading }: PlatformHealthProps) {
+export function PlatformHealth() {
+  const { entries, isLoading } = useHealth();
   return (
     <SectionCard
       title="Platform Health"

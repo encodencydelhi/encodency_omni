@@ -55,7 +55,7 @@ export interface NavGroup {
 export const SUPER_ADMIN_NAV: NavGroup[] = [
   {
     id: "overview",
-    label: "Super Admin",
+    label: "Overview",
     items: [
       {
         label: "Dashboard",

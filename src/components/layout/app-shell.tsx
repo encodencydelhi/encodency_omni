@@ -2,38 +2,32 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { ROUTES } from "@/config/routes";
 import { RouteGuard } from "@/features/auth/components/route-guard";
 import { cn } from "@/lib/utils/cn";
 import { AppSidebar } from "./app-sidebar";
 import { AppFooter } from "./app-footer";
-import { BreadcrumbLabelProvider, Breadcrumbs } from "./breadcrumbs";
+import { AppBreadcrumb } from "./app-breadcrumb";
 import { SidebarProvider, useSidebar } from "./sidebar-context";
 import { Topbar } from "./topbar";
+import { HealthProvider } from "@/features/system-health/context/health-provider";
 
 function ShellFrame({ children }: { children: ReactNode }) {
   const { isCollapsed } = useSidebar();
-  const pathname = usePathname();
-
-  // The dashboard is the root of the panel, so a trail of one is just noise.
-  const showBreadcrumbs = pathname !== ROUTES.superAdmin.dashboard;
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-[#F5F8FC] text-[#172044]">
       <AppSidebar />
       <div
         className={cn(
           "flex min-h-dvh flex-col transition-[padding] duration-200",
-          isCollapsed ? "lg:pl-(--sidebar-width-collapsed)" : "lg:pl-(--sidebar-width)",
+          isCollapsed ? "lg:pl-[64px]" : "lg:pl-[220px]",
         )}
       >
         <Topbar />
+        <AppBreadcrumb />
 
-        <main className="page-gutter flex-1 py-5">
-          <div className="mx-auto w-full max-w-(--content-max-width) space-y-2">
-            {showBreadcrumbs ? <Breadcrumbs /> : null}
-            {children}
-          </div>
+        <main className="w-full flex-1 px-4 py-4 sm:px-5 xl:px-6">
+          {children}
         </main>
 
         <AppFooter />
@@ -54,9 +48,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <RouteGuard returnTo={pathname}>
       <SidebarProvider>
-        <BreadcrumbLabelProvider>
+        <HealthProvider>
           <ShellFrame>{children}</ShellFrame>
-        </BreadcrumbLabelProvider>
+        </HealthProvider>
       </SidebarProvider>
     </RouteGuard>
   );

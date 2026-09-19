@@ -16,12 +16,7 @@ import { DASHBOARD_RANGES, type DashboardRange } from "../services/dashboard-ser
 
 const RANGE_KEYS = Object.keys(DASHBOARD_RANGES) as DashboardRange[];
 
-function greeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good Morning";
-  if (hour < 18) return "Good Afternoon";
-  return "Good Evening";
-}
+
 
 function today(): string {
   return new Date().toLocaleDateString("en-GB", {
@@ -33,7 +28,6 @@ function today(): string {
 }
 
 interface DashboardHeaderProps {
-  firstName: string;
   generatedAt: string | undefined;
   range: DashboardRange;
   onRangeChange: (range: DashboardRange) => void;
@@ -42,7 +36,6 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({
-  firstName,
   generatedAt,
   range,
   onRangeChange,
@@ -53,10 +46,10 @@ export function DashboardHeader({
     <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {greeting()}, {firstName} <span aria-hidden>👋</span>
+          Platform Overview
         </h1>
         <p className="text-[0.8125rem] text-muted-foreground">
-          Here is what is happening across {APP.name}.
+          Real-time metrics and system health for {APP.name}.
         </p>
       </div>
 

@@ -3,7 +3,6 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { ErrorState } from "@/components/shared/error-state";
-import { useAuth } from "@/features/auth/components/auth-provider";
 import type { DashboardSnapshot } from "@/types/domain/dashboard";
 import { useDashboard } from "../hooks/use-dashboard";
 import {
@@ -55,7 +54,6 @@ const EMPTY_SNAPSHOT: Omit<DashboardSnapshot, "generatedAt"> = {
  * what needs a decision today.
  */
 export function DashboardView() {
-  const { user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -89,9 +87,9 @@ export function DashboardView() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="-mx-4 -my-5 min-h-[calc(100dvh-60px)] px-4 py-4 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-1">
       <DashboardHeader
-        firstName={user?.name.split(" ")[0] ?? "there"}
         generatedAt={data?.generatedAt}
         range={range}
         onRangeChange={setRange}
@@ -101,7 +99,7 @@ export function DashboardView() {
 
       <DashboardMetrics metrics={snapshot.metrics} isLoading={isPending} />
 
-      <div className="grid gap-2 xl:grid-cols-3">
+      <div className="grid gap-1 xl:grid-cols-3">
         <CompanyGrowthChart growth={snapshot.companyGrowth} isLoading={isPending} />
         <RevenueChart revenue={snapshot.revenue} isLoading={isPending} />
         <SubscriptionDistribution
@@ -110,17 +108,18 @@ export function DashboardView() {
         />
       </div>
 
-      <div className="grid gap-2 xl:grid-cols-4">
+      <div className="grid gap-1 xl:grid-cols-4">
         <PlanDistributionPanel distribution={snapshot.subscriptionDistribution} isLoading={isPending} />
         <LatestSignupsPanel signups={snapshot.latestSignups} isLoading={isPending} />
         <ApiUsagePanel usage={snapshot.apiUsage} isLoading={isPending} />
         <IntegrationStatusPanel integrations={snapshot.integrationStatus} isLoading={isPending} />
       </div>
 
-      <div className="grid gap-2 xl:grid-cols-3">
+      <div className="grid gap-1 xl:grid-cols-3">
         <NeedsAttentionPanel items={snapshot.attention} isLoading={isPending} />
         <RecentActivity entries={snapshot.recentActivity} isLoading={isPending} />
-        <PlatformHealth entries={snapshot.platformHealth} isLoading={isPending} />
+        <PlatformHealth />
+      </div>
       </div>
     </div>
   );

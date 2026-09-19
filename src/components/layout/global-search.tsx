@@ -1,31 +1,24 @@
 "use client";
 
-import { Building2Icon, SearchIcon } from "lucide-react";
+import { Building2Icon, SearchIcon, UserIcon, FolderIcon, ServerIcon, ReceiptIcon, HeadsetIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ROUTES } from "@/config/routes";
 import { useCompanies } from "@/features/companies/hooks/use-companies";
 import { COMPANY_STATUS } from "@/types/domain/company";
 import { PLAN_TIER } from "@/types/domain/plan";
 
-const MIN_QUERY_LENGTH = 2;
+const MIN_QUERY_LENGTH = 1;
 const DEBOUNCE_MS = 250;
 
-/**
- * Quick jump to a tenant.
- *
- * Companies are the spine of this panel — almost every investigation starts by
- * finding one — so the topbar search resolves them directly rather than
- * offering a generic, unfocused result list.
- */
 export function GlobalSearch() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("");
   const [debounced, setDebounced] = useState("");
 
@@ -34,12 +27,11 @@ export function GlobalSearch() {
     return () => clearTimeout(timer);
   }, [term]);
 
-  // Cmd/Ctrl+K focuses search from anywhere in the panel.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        inputRef.current?.focus();
+        setOpen(true);
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -55,81 +47,112 @@ export function GlobalSearch() {
   });
 
   const results = isActive ? (data?.data ?? []) : [];
-  const isOpen = isActive && (isFetching || results.length >= 0);
 
   const goTo = (href: string) => {
+    setOpen(false);
     setTerm("");
     setDebounced("");
-    inputRef.current?.blur();
     router.push(href);
   };
 
   return (
-    <Popover open={isOpen}>
-      <PopoverAnchor asChild>
-        <div className="relative w-full max-w-xl">
-          <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            ref={inputRef}
-            type="search"
-            value={term}
-            onChange={(event) => setTerm(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") setTerm("");
-              if (event.key === "Enter" && debounced) {
-                goTo(`${ROUTES.superAdmin.companies}?search=${encodeURIComponent(debounced)}`);
-              }
-            }}
-            placeholder="Search companies, users, Clients, tickets..."
-            aria-label="Search companies"
-            className="h-9 rounded-sm bg-surface-sunken pr-14 pl-9 [&::-webkit-search-cancel-button]:hidden"
-          />
-          <kbd className="pointer-events-none absolute top-1/2 right-2.5 hidden -translate-y-1/2 rounded border border-border bg-card px-1.5 py-0.5 font-mono text-[0.5625rem] text-muted-foreground sm:block">
-            ⌘ K
-          </kbd>
-        </div>
-      </PopoverAnchor>
-
-      <PopoverContent
-        align="start"
-        className="w-(--radix-popover-trigger-width) p-1"
-        onOpenAutoFocus={(event) => event.preventDefault()}
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="relative flex h-9 w-full max-w-[260px] items-center gap-2.5 rounded-sm bg-[#F4F4F5] px-4 transition-colors hover:bg-[#E4E4E7] focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-[#E4E4E7]"
       >
-        {isFetching && results.length === 0 ? (
-          <div className="space-y-2 p-2">
-            {Array.from({ length: 3 }, (_, index) => (
-              <Skeleton key={index} className="h-8 w-full" />
-            ))}
+        <SearchIcon className="size-4 text-[#A1A1AA]" />
+        <span className="flex-1 text-left text-[13px] text-[#A1A1AA]">Search...</span>
+        <kbd className="hidden sm:flex items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[12px] font-medium text-[#A1A1AA] shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#E4E4E7]">
+          <span>⌘</span>K
+        </kbd>
+      </button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl gap-0 p-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
+          <div className="flex items-center border-b border-slate-100 px-4">
+            <SearchIcon className="size-5 text-slate-400" />
+            <input
+              ref={inputRef}
+              className="flex h-14 w-full bg-transparent px-4 py-3 text-[15px] outline-none placeholder:text-slate-400 text-slate-800"
+              placeholder="Search companies, users, clients, invoices..."
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && debounced && results && results.length > 0) {
+                  const firstResult = results[0];
+                  if (firstResult) {
+                    goTo(ROUTES.superAdmin.company(firstResult.id));
+                  }
+                }
+              }}
+            />
           </div>
-        ) : results.length === 0 ? (
-          <p className="px-3 py-4 text-center text-2xs text-muted-foreground">
-            No companies match “{debounced}”
-          </p>
-        ) : (
-          <ul>
-            {results.map((company) => (
-              <li key={company.id}>
-                <button
-                  type="button"
-                  onClick={() => goTo(ROUTES.superAdmin.company(company.id))}
-                  className="flex w-full items-center gap-2.5 rounded-sm px-2 py-2 text-left transition-colors hover:bg-accent"
-                >
-                  <Building2Icon className="size-3.5 shrink-0 text-muted-foreground" />
-                  <span className="min-w-0 flex-1 truncate text-[0.8125rem] text-foreground">
-                    {company.name}
-                  </span>
-                  <Badge tone={PLAN_TIER[company.planTier].tone}>
-                    {PLAN_TIER[company.planTier].label}
-                  </Badge>
-                  <Badge tone={COMPANY_STATUS[company.status].tone}>
-                    {COMPANY_STATUS[company.status].label}
-                  </Badge>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </PopoverContent>
-    </Popover>
+
+          <div className="max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 p-2">
+            {!isActive && (
+              <div className="px-3 py-6 text-center text-sm text-slate-500">
+                <p>Type to search across the platform.</p>
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"><Building2Icon className="size-3" /> Companies</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"><UserIcon className="size-3" /> Users</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"><FolderIcon className="size-3" /> Clients</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"><ServerIcon className="size-3" /> Platform</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"><ReceiptIcon className="size-3" /> Billing</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"><HeadsetIcon className="size-3" /> Support</span>
+                </div>
+              </div>
+            )}
+
+            {isActive && isFetching && results.length === 0 && (
+              <div className="space-y-2 p-2">
+                {Array.from({ length: 3 }, (_, index) => (
+                  <Skeleton key={index} className="h-12 w-full rounded-md" />
+                ))}
+              </div>
+            )}
+
+            {isActive && !isFetching && results.length === 0 && (
+              <p className="px-3 py-10 text-center text-[13px] text-slate-500">
+                No results found for “{debounced}”
+              </p>
+            )}
+
+            {isActive && results.length > 0 && (
+              <div className="space-y-1">
+                <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Companies</div>
+                <ul>
+                  {results.map((company) => (
+                    <li key={company.id}>
+                      <button
+                        type="button"
+                        onClick={() => goTo(ROUTES.superAdmin.company(company.id))}
+                        className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
+                      >
+                        <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-white border border-slate-200 shadow-sm text-slate-600">
+                          <Building2Icon className="size-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[14px] font-medium text-slate-800 leading-tight">
+                            {company.name}
+                          </p>
+                          <p className="text-[12px] text-slate-500 leading-tight mt-0.5">
+                            Company • {PLAN_TIER[company.planTier].label} Plan
+                          </p>
+                        </div>
+                        <Badge tone={COMPANY_STATUS[company.status].tone} className="hidden sm:inline-flex">
+                          {COMPANY_STATUS[company.status].label}
+                        </Badge>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
