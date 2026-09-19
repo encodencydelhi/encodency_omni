@@ -56,9 +56,13 @@ function BillingPage() {
             <TableSkeleton rows={4} />
           </>
         ) : !can.canViewBilling.allowed ? (
-          <Card>
-            <EmptyState icon={ServerOff} title="Billing isn't visible to your role" description={can.canViewBilling.reason ?? "Ask an Organization Admin or Billing Admin for access."} />
-          </Card>
+          <>
+            <Card>
+              <EmptyState icon={ServerOff} title="Billing isn't visible to your role" description={can.canViewBilling.reason ?? "Ask an Organization Admin or Billing Admin for access."} />
+            </Card>
+            {/* Stays reachable even when the previewed role can't see billing, so "View as role" always has a way back. */}
+            {isMockMode && <PreviewPanel />}
+          </>
         ) : (
           <>
             <StateBanner />
