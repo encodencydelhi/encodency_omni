@@ -91,12 +91,12 @@ export function EditUserIdentityDrawer({
     <>
       <Sheet open={open} onOpenChange={(o) => (o ? onOpenChange(true) : requestClose())}>
         <SheetContent side="right" className="sm:max-w-md w-full p-0 flex flex-col">
-          <SheetHeader className="p-4 border-b border-border bg-slate-50/60 dark:bg-slate-900/60">
+          <SheetHeader className="p-4 border-b border-border bg-slate-50/60 dark:bg-slate-900">
             <SheetTitle className="text-base font-bold flex items-center gap-2">
               <UserCogIcon className="size-4.5 text-blue-600" />
-              <span>Edit User Identity</span>
+              <span className="text-blue-600">Edit User Identity</span>
             </SheetTitle>
-            <SheetDescription className="text-xs text-slate-500">
+            <SheetDescription className="text-xs text-white">
               Update personal identity attributes and system preferences for {user.identity.name}.
             </SheetDescription>
           </SheetHeader>
