@@ -9,7 +9,7 @@
 import type { PaginationMeta } from "@/types/api";
 import type { IntegrationProvider } from "@/types/domain/integration";
 import type { ClientDetailRecord } from "@/features/clients/data/types";
-import type { PlanTier } from "@/types/domain/plan";
+import type { PlanKey } from "@/types/domain/plan";
 import type { Clientstatus } from "@/types/domain/project";
 import type { InternalRole } from "@/types/domain/team";
 import type { OrganisationRole, UserStatus } from "@/types/domain/user";
@@ -179,7 +179,7 @@ export interface PaymentMethodSummary {
 export interface CompanySubscription {
   id: string;
   companyId: string;
-  planTier: PlanTier;
+  planTier: PlanKey;
   billingCycle: BillingCycle;
   status: CompanySubscriptionStatus;
   startedAt: string;
@@ -188,7 +188,9 @@ export interface CompanySubscription {
   trialEndsAt: string | null;
   scheduledCancellationAt: string | null;
   cancelledAt: string | null;
-  scheduledChange: { planTier: PlanTier; billingCycle: BillingCycle; effectiveAt: string } | null;
+  /** The plan version this subscription is pinned to. Absent means version 1. */
+  planVersion?: number;
+  scheduledChange: { planTier: PlanKey; billingCycle: BillingCycle; effectiveAt: string; planVersion?: number; createdAt?: string; createdBy?: string } | null;
   paymentMethod: PaymentMethodSummary | null;
 }
 
@@ -219,6 +221,10 @@ export interface CompanyUsageOverride {
   expiresAt: string;
   approvedBy: string;
   createdAt: string;
+  /** absolute (default) replaces the plan allowance; additive adds `delta` to it. */
+  rule?: "absolute" | "additive";
+  delta?: number;
+  revokedAt?: string | null;
 }
 
 /** Consumption for resources that are not simple counts of other records. */
@@ -553,7 +559,7 @@ export interface StaffRef {
 export interface CompanySummary {
   company: Company;
   owner: CompanyOwner;
-  plan: { tier: PlanTier; name: string; billingCycle: BillingCycle };
+  plan: { tier: PlanKey; name: string; billingCycle: BillingCycle };
   subscriptionStatus: CompanySubscriptionStatus;
   billingStatus: CompanyBillingStatus;
   mrrMinor: number;
@@ -658,7 +664,7 @@ export interface CreateCompanyInput {
     existingUserId?: string;
   };
   subscription: {
-    planTier: PlanTier;
+    planTier: PlanKey;
     billingCycle: BillingCycle;
     mode: "trial" | "paid";
     startDate: string;
@@ -685,15 +691,21 @@ export interface UpdateCompanyInput {
 }
 
 export interface ChangePlanInput {
-  planTier: PlanTier;
+  planTier: PlanKey;
   billingCycle: BillingCycle;
-  effective: "immediately" | "next_renewal";
+  effective: "immediately" | "next_renewal" | "custom_date";
+  /** Required for `custom_date`. */
+  effectiveAt?: string;
   reason: string;
 }
 
 export interface UsageOverrideInput {
   resource: UsageResource;
+  /** The resulting limit for `absolute`; ignored for `additive`, which uses `delta`. */
   overrideLimit: number;
+  rule?: "absolute" | "additive";
+  delta?: number;
+  approvedBy?: string;
   reason: string;
   startsAt: string;
   expiresAt: string;

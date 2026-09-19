@@ -11,7 +11,8 @@
  */
 import { APP } from "@/config/app";
 import type { PaginationMeta } from "@/types/api";
-import type { Plan, PlanTier } from "@/types/domain/plan";
+import type { Plan, PlanKey } from "@/types/domain/plan";
+import { activeOverrideAt, isInactiveStatus, overrideValueFor } from "@/features/plans-subscriptions/data/entitlements";
 import {
   ATTENTION_KIND_META,
   DORMANT_AFTER_DAYS,
@@ -55,13 +56,20 @@ const DAY_MS = 86_400_000;
 export interface DerivationContext {
   now: number;
   plans: readonly Plan[];
+  /** Resolves a plan as it read at a specific version, for subscriptions pinned to an older one. */
+  planVersions?: (key: string, version: number) => Plan | undefined;
   staff: readonly StaffRef[];
 }
 
-export function planFor(ctx: DerivationContext, tier: PlanTier): Plan {
+export function planFor(ctx: DerivationContext, tier: PlanKey): Plan {
   const plan = ctx.plans.find((item) => item.tier === tier);
   if (!plan) throw new Error(`Unknown plan tier: ${tier}`);
   return plan;
+}
+
+/** The plan a subscription is entitled to: its pinned version, else the current plan. */
+export function planForSubscription(ctx: DerivationContext, subscription: Pick<CompanySubscription, "planTier" | "planVersion">): Plan {
+  return ctx.planVersions?.(subscription.planTier, subscription.planVersion ?? 1) ?? planFor(ctx, subscription.planTier);
 }
 
 /* ------------------------------------------------------------------ */
@@ -110,7 +118,7 @@ export function monthlyEquivalent(plan: Plan, cycle: CompanySubscription["billin
 export function computeMrr(ctx: DerivationContext, bundle: CompanyBundle): number {
   if (bundle.company.accountStatus !== "active") return 0;
   if (!isPayingStatus(bundle.subscription.status)) return 0;
-  return monthlyEquivalent(planFor(ctx, bundle.subscription.planTier), bundle.subscription.billingCycle);
+  return monthlyEquivalent(planForSubscription(ctx, bundle.subscription), bundle.subscription.billingCycle);
 }
 
 export function computeBillingStatus(bundle: CompanyBundle): CompanyBillingStatus {
@@ -130,7 +138,7 @@ export function computeBillingStatus(bundle: CompanyBundle): CompanyBillingStatu
 
 export function computeBilling(ctx: DerivationContext, bundle: CompanyBundle): CompanyBillingSummary {
   const { subscription, invoices, payments } = bundle;
-  const plan = planFor(ctx, subscription.planTier);
+  const plan = planForSubscription(ctx, subscription);
 
   const outstandingMinor = invoices
     .filter((invoice) => invoice.status === "open" || invoice.status === "overdue")
@@ -257,13 +265,13 @@ function levelFromStatus(status: UsageResourceStatus): UsageLevel {
 }
 
 export function computeUsage(ctx: DerivationContext, bundle: CompanyBundle): CompanyUsageSummary {
-  const plan = planFor(ctx, bundle.subscription.planTier);
+  const plan = planForSubscription(ctx, bundle.subscription);
 
   const records: CompanyUsageRecord[] = USAGE_RESOURCES.map((def) => {
     const used = usedFor(bundle, def.key);
     const includedLimit = def.metric ? plan.limits[def.metric] : null;
-    const override = def.metric ? activeOverrideFor(bundle.overrides, def.key, ctx.now) : null;
-    const effectiveLimit = override ? override.overrideLimit : includedLimit;
+    const override = def.metric && !isInactiveStatus(bundle.subscription.status) ? activeOverrideAt(bundle.overrides, def.key, ctx.now, includedLimit) : null;
+    const effectiveLimit = override ? overrideValueFor(override, includedLimit) : includedLimit;
     const utilization =
       effectiveLimit === null ? null : effectiveLimit === 0 ? 0 : Number(((used / effectiveLimit) * 100).toFixed(1));
     const baseline = bundle.usageBaseline[def.key];
@@ -807,7 +815,7 @@ export function computeSummary(ctx: DerivationContext, bundle: CompanyBundle): C
   const health = computeHealth(ctx, bundle, usage, billingStatus, owner);
   const attention = computeAttention(bundle, usage, billingStatus, owner);
   const counts = countIntegrations(bundle.integrations);
-  const plan = planFor(ctx, bundle.subscription.planTier);
+  const plan = planForSubscription(ctx, bundle.subscription);
   const { internalOwners } = bundle.company;
 
   return {

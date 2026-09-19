@@ -8,6 +8,7 @@ import type {
   PlatformHealthEntry,
 } from "@/types/domain/dashboard";
 import { createRng, minutesAgo } from "../lib/random";
+import { platformMrr } from "@/features/plans-subscriptions/data/mock/platform-mrr";
 import { REVENUE_SUMMARY, SUBSCRIPTIONS } from "./commerce";
 import { AUDIT_LOG, SUPPORT_TICKETS } from "./control";
 import { SYSTEM_HEALTH } from "./platform-health";
@@ -251,7 +252,8 @@ function buildSnapshot(): DashboardSnapshot {
       },
       {
         key: "monthlyRevenue",
-        value: REVENUE_SUMMARY.mrrMinor,
+        // Derived from the subscription records, like Companies and Plans & Subscriptions.
+        value: platformMrr(REVENUE_SUMMARY.currency).mrrMinor,
         format: "currency",
         currency: REVENUE_SUMMARY.currency,
         delta: { changePercent: REVENUE_SUMMARY.mrrChangePercent, direction: "up-is-good" },
@@ -292,9 +294,9 @@ function buildSnapshot(): DashboardSnapshot {
     },
 
     revenue: {
-      mrrMinor: REVENUE_SUMMARY.mrrMinor,
+      mrrMinor: platformMrr(REVENUE_SUMMARY.currency).mrrMinor,
       currency: REVENUE_SUMMARY.currency,
-      series: buildMonthlySeries(Math.round(REVENUE_SUMMARY.mrrMinor / 100), 0.48),
+      series: buildMonthlySeries(Math.round(platformMrr(REVENUE_SUMMARY.currency).mrrMinor / 100), 0.48),
     },
 
     subscriptionDistribution: {

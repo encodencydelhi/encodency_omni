@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { PlansSubscriptionsWorkspace } from "@/features/plans-subscriptions/pages/workspace";
+import { SubscriptionsListPage } from "@/features/plans-subscriptions/pages/subscriptions-list";
 
 export const metadata: Metadata = {
-  title: "Subscriptions",
-  description: "Inspect and manage company subscriptions across OmniPlatform.",
+  title: "Company subscriptions",
+  description: "Monitor subscription status, plan assignments, renewals and trials.",
 };
 
-export default function SubscriptionsPage() {
+export default function Page() {
+  // Filters and sections live in the URL, which needs a Suspense boundary.
   return (
     <Suspense fallback={null}>
-      <PlansSubscriptionsWorkspace initialTab="subscriptions" />
+      <SubscriptionsListPage />
     </Suspense>
   );
 }
