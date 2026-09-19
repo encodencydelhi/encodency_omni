@@ -52,24 +52,24 @@ export function TransferOwnershipModal({
               <UserCheck className="size-4" />
             </div>
             <div>
-              <h3 className="text-[13px] font-bold text-[#111C3A]">Transfer Organization Ownership</h3>
-              <p className="text-[10px] text-[#111C3A] font-semibold">Assign another administrator as the primary Organization Owner.</p>
+              <h3 className="text-[13px] font-bold text-[#0F172A]">Transfer Organization Ownership</h3>
+              <p className="text-[10.5px] text-[#64748B] font-normal">Assign another administrator as the primary Organization Owner.</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-[#111C3A] hover:text-red-500 transition-colors p-1 cursor-pointer"
+            className="text-[#64748B] hover:text-red-500 transition-colors p-1 cursor-pointer"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        <div className="bg-amber-50/70 border border-amber-200 rounded-lg p-2.5 text-[10.5px] text-amber-950 space-y-1">
-          <div className="font-bold flex items-center gap-1 text-amber-900">
+        <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5 text-[10.5px] text-amber-950 space-y-1 shadow-2xs">
+          <div className="font-semibold flex items-center gap-1 text-amber-900">
             <AlertTriangle className="size-3.5" /> Transfer Impact Summary (Current Owner: {currentOwner})
           </div>
-          <ul className="list-disc list-inside space-y-0.5 text-[10px] text-amber-950 pl-1 font-medium">
+          <ul className="list-disc list-inside space-y-0.5 text-[10px] text-amber-950 pl-1 font-normal">
             <li>You will be downgraded to <strong>Organization Admin</strong>.</li>
             <li>The new owner gains exclusive rights to delete or transfer the organization.</li>
             <li>Billing liability and payment notifications shift to the new owner.</li>
@@ -77,22 +77,22 @@ export function TransferOwnershipModal({
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-[10.5px] font-bold text-[#111C3A]">
+          <label className="block text-[11px] font-semibold text-[#334155]">
             Select Successor Administrator
           </label>
           <div className="space-y-1">
             {ELIGIBLE_ADMINS.map((admin) => (
               <label
                 key={admin.email}
-                className={`flex items-center justify-between p-2 rounded-lg border transition-colors cursor-pointer text-[11px] ${
+                className={`flex items-center justify-between p-2 rounded-xl border transition-colors cursor-pointer text-[11px] shadow-2xs ${
                   selectedAdmin === admin.email
-                    ? "border-blue-500 bg-blue-50/40 font-bold text-[#111C3A]"
-                    : "border-[#CBD5E1] hover:bg-slate-50 text-[#111C3A] font-semibold"
+                    ? "border-blue-500 bg-blue-50/40 text-[#0F172A]"
+                    : "border-[#CBD5E1] hover:bg-slate-50 text-[#334155]"
                 }`}
               >
                 <div>
-                  <div className="font-bold text-[11px]">{admin.name}</div>
-                  <div className="text-[9.5px] text-[#111C3A] font-medium">{admin.email}</div>
+                  <div className="font-semibold text-[11.5px] text-[#0F172A]">{admin.name}</div>
+                  <div className="text-[9.5px] text-[#64748B] font-normal">{admin.email}</div>
                 </div>
                 <input
                   type="radio"
@@ -106,7 +106,7 @@ export function TransferOwnershipModal({
           </div>
         </div>
 
-        <label className="flex items-start gap-2 p-2 bg-slate-50 rounded-lg border border-[#CBD5E1] text-[10.5px] text-[#111C3A] font-medium cursor-pointer">
+        <label className="flex items-start gap-2 p-2.5 bg-slate-50 rounded-xl border border-[#CBD5E1] text-[10.5px] text-[#334155] font-normal cursor-pointer shadow-2xs">
           <input
             type="checkbox"
             checked={agreed}
@@ -116,11 +116,11 @@ export function TransferOwnershipModal({
           <span>I understand that I am relinquishing ultimate ownership authority over Namo Gange Trust.</span>
         </label>
 
-        <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#CBD5E1]">
+        <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#F1F5F9]">
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-md border border-[#CBD5E1] text-[10.5px] font-bold text-[#111C3A] hover:bg-slate-100 cursor-pointer"
+            className="px-3 py-1.5 rounded-lg border border-[#CBD5E1] text-[10.5px] font-semibold text-[#334155] hover:bg-slate-100 cursor-pointer shadow-2xs transition-colors"
           >
             Cancel
           </button>
@@ -128,7 +128,7 @@ export function TransferOwnershipModal({
             type="button"
             onClick={handleTransfer}
             disabled={!agreed || loading || !targetAdmin}
-            className="px-3 py-1.5 rounded-md bg-[#2563EB] hover:bg-blue-600 text-white text-[10.5px] font-bold shadow-2xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-1.5 rounded-lg bg-[#2563EB] hover:bg-blue-600 text-white text-[10.5px] font-semibold shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
           >
             {loading ? <Loader2 className="size-3 animate-spin" /> : <UserCheck className="size-3.5" />}
             Confirm Transfer

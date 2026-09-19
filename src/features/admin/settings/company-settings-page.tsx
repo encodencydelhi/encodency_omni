@@ -100,8 +100,8 @@ function CompanySettingsInner() {
         <div className="size-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto border border-red-200">
           <ShieldAlert className="size-5" />
         </div>
-        <h3 className="text-[14px] font-bold text-[#111C3A]">Settings Service Unavailable</h3>
-        <p className="text-[11px] text-[#111C3A] font-semibold">{error || "Could not retrieve organization settings."}</p>
+        <h3 className="text-[14px] font-bold text-[#0F172A]">Settings Service Unavailable</h3>
+        <p className="text-[11.5px] text-[#64748B] font-normal">{error || "Could not retrieve organization settings."}</p>
         <button
           type="button"
           onClick={refetch}
@@ -143,14 +143,14 @@ function CompanySettingsInner() {
       {/* PAGE HEADER: ELEGANT OMNIPLATFORM STYLE */}
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-white rounded-xl border border-[#DDE4ED] p-3 shadow-xs">
         <div>
-          <p className="text-[9px] font-bold uppercase tracking-wider text-[#101A3D]">Management / Workspace</p>
+          <p className="text-[9.5px] font-bold uppercase tracking-wider text-[#64748B]">Management / Workspace</p>
           <div className="flex items-center gap-2 mt-0.5">
-            <h1 className="text-[20px] font-bold tracking-tight text-[#101A3D]">Organization Settings</h1>
+            <h1 className="text-[20px] font-bold tracking-tight text-[#0F172A]">Organization Settings</h1>
             <span className="text-[9.5px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-300 shadow-2xs flex items-center gap-1">
               <span className="size-1.5 rounded-full bg-emerald-600 animate-pulse"></span> Organization Admin
             </span>
           </div>
-          <p className="mt-0.5 text-[11px] font-semibold text-[#101A3D]">
+          <p className="mt-0.5 text-[11.5px] font-normal text-[#64748B] leading-relaxed">
             Manage organizational identity, security policies, workspace defaults, branding, and team preferences.
           </p>
         </div>
@@ -159,19 +159,19 @@ function CompanySettingsInner() {
         <div className="flex flex-wrap items-center gap-1.5 self-start sm:self-center shrink-0">
           <div className="flex items-center gap-1.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg px-2.5 py-1 text-[11px] shadow-2xs">
             <Building2 className="size-3.5 text-[#2563EB]" />
-            <span className="text-[#101A3D] font-bold text-[10px]">Org:</span>
-            <span className="font-bold text-[#101A3D] text-[10.5px]">{draftState.organization.displayName}</span>
+            <span className="text-[#64748B] font-medium text-[10.5px]">Org:</span>
+            <span className="font-semibold text-[#0F172A] text-[10.5px]">{draftState.organization.displayName}</span>
           </div>
 
           <div className="flex items-center gap-1.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg px-2.5 py-1 text-[11px] shadow-2xs">
             <span className="size-2 rounded-full bg-[#10B981] animate-pulse"></span>
-            <span className="text-[#101A3D] font-bold text-[10px]">Tier:</span>
-            <span className="font-bold text-[#101A3D] text-[10.5px]">Enterprise</span>
+            <span className="text-[#64748B] font-medium text-[10.5px]">Tier:</span>
+            <span className="font-semibold text-[#0F172A] text-[10.5px]">Enterprise</span>
           </div>
 
           <div className="flex items-center gap-1.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg px-2.5 py-1 text-[11px] shadow-2xs">
-            <span className="text-[#101A3D] font-bold text-[10px]">Client:</span>
-            <span className="font-bold text-[#101A3D] text-[10.5px]">{draftState.workspace.primaryClient}</span>
+            <span className="text-[#64748B] font-medium text-[10.5px]">Client:</span>
+            <span className="font-semibold text-[#0F172A] text-[10.5px]">{draftState.workspace.primaryClient}</span>
           </div>
         </div>
       </header>
@@ -276,8 +276,8 @@ function CompanySettingsInner() {
           {/* Persistent Quick Links card */}
           <div className="bg-white rounded-xl border border-[#DDE4ED] shadow-xs p-3 space-y-1.5 text-[11px] hover:border-[#CBD5E1] transition-all">
             <div className="flex items-center justify-between pb-1 border-b border-[#F1F5F9]">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#101A3D]">Quick Admin Links</span>
-              <span className="text-[8.5px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded">Direct Access</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">Quick Admin Links</span>
+              <span className="text-[8.5px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">Direct Access</span>
             </div>
 
             <div className="space-y-1">
@@ -291,11 +291,11 @@ function CompanySettingsInner() {
                   <span className="size-6 rounded-md bg-blue-50 text-[#2563EB] group-hover:bg-[#2563EB] group-hover:text-white flex items-center justify-center transition-colors shrink-0">
                     <FolderKanban className="size-3.5" />
                   </span>
-                  <span className="text-[11px] font-bold text-[#101A3D] group-hover:text-[#2563EB] truncate transition-colors">
+                  <span className="text-[11px] font-semibold text-[#1E293B] group-hover:text-[#2563EB] truncate transition-colors">
                     Clients Directory
                   </span>
                 </div>
-                <ExternalLink className="size-3 text-[#101A3D] group-hover:text-[#2563EB] shrink-0 transition-colors" />
+                <ExternalLink className="size-3 text-[#94A3B8] group-hover:text-[#2563EB] shrink-0 transition-colors" />
               </Link>
 
               <Link
@@ -308,11 +308,11 @@ function CompanySettingsInner() {
                   <span className="size-6 rounded-md bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center transition-colors shrink-0">
                     <Users className="size-3.5" />
                   </span>
-                  <span className="text-[11px] font-bold text-[#101A3D] group-hover:text-[#2563EB] truncate transition-colors">
+                  <span className="text-[11px] font-semibold text-[#1E293B] group-hover:text-[#2563EB] truncate transition-colors">
                     Team Members & Invites
                   </span>
                 </div>
-                <ExternalLink className="size-3 text-[#101A3D] group-hover:text-[#2563EB] shrink-0 transition-colors" />
+                <ExternalLink className="size-3 text-[#94A3B8] group-hover:text-[#2563EB] shrink-0 transition-colors" />
               </Link>
 
               <Link
@@ -325,11 +325,11 @@ function CompanySettingsInner() {
                   <span className="size-6 rounded-md bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white flex items-center justify-center transition-colors shrink-0">
                     <ShieldCheck className="size-3.5" />
                   </span>
-                  <span className="text-[11px] font-bold text-[#101A3D] group-hover:text-[#2563EB] truncate transition-colors">
+                  <span className="text-[11px] font-semibold text-[#1E293B] group-hover:text-[#2563EB] truncate transition-colors">
                     Roles & Permissions
                   </span>
                 </div>
-                <ExternalLink className="size-3 text-[#101A3D] group-hover:text-[#2563EB] shrink-0 transition-colors" />
+                <ExternalLink className="size-3 text-[#94A3B8] group-hover:text-[#2563EB] shrink-0 transition-colors" />
               </Link>
 
               <Link
@@ -342,11 +342,11 @@ function CompanySettingsInner() {
                   <span className="size-6 rounded-md bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-colors shrink-0">
                     <Share2 className="size-3.5" />
                   </span>
-                  <span className="text-[11px] font-bold text-[#101A3D] group-hover:text-[#2563EB] truncate transition-colors">
+                  <span className="text-[11px] font-semibold text-[#1E293B] group-hover:text-[#2563EB] truncate transition-colors">
                     Channel Integrations
                   </span>
                 </div>
-                <ExternalLink className="size-3 text-[#101A3D] group-hover:text-[#2563EB] shrink-0 transition-colors" />
+                <ExternalLink className="size-3 text-[#94A3B8] group-hover:text-[#2563EB] shrink-0 transition-colors" />
               </Link>
 
               <Link
@@ -359,11 +359,11 @@ function CompanySettingsInner() {
                   <span className="size-6 rounded-md bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white flex items-center justify-center transition-colors shrink-0">
                     <CreditCard className="size-3.5" />
                   </span>
-                  <span className="text-[11px] font-bold text-[#101A3D] group-hover:text-[#2563EB] truncate transition-colors">
+                  <span className="text-[11px] font-semibold text-[#1E293B] group-hover:text-[#2563EB] truncate transition-colors">
                     Billing & Subscription
                   </span>
                 </div>
-                <ExternalLink className="size-3 text-[#101A3D] group-hover:text-[#2563EB] shrink-0 transition-colors" />
+                <ExternalLink className="size-3 text-[#94A3B8] group-hover:text-[#2563EB] shrink-0 transition-colors" />
               </Link>
             </div>
           </div>

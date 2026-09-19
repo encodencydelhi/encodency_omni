@@ -33,25 +33,25 @@ export function ResetPreferencesModal({ open, onClose, onConfirm }: ResetPrefere
               <RotateCcw className="size-4" />
             </div>
             <div>
-              <h3 className="text-[13px] font-bold text-[#111C3A]">Reset Workspace Preferences</h3>
-              <p className="text-[10px] text-[#111C3A] font-semibold">Restore default UI, table rows, and timezone settings.</p>
+              <h3 className="text-[13px] font-bold text-[#0F172A]">Reset Workspace Preferences</h3>
+              <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">Restore default UI, table rows, and timezone settings.</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-[#111C3A] hover:text-red-500 transition-colors p-1 cursor-pointer"
+            className="text-[#64748B] hover:text-[#0F172A] transition-colors p-1 cursor-pointer"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        <div className="bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg p-2.5 text-[10.5px] text-[#111C3A] space-y-1">
-          <div className="font-bold text-[#111C3A]">What this action does:</div>
-          <p className="text-[#111C3A] font-medium leading-snug">
+        <div className="bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg p-2.5 text-[10.5px] space-y-1">
+          <div className="font-semibold text-[#0F172A]">What this action does:</div>
+          <p className="text-[#64748B] font-normal leading-snug">
             Resets table row counts (25), density, default landing page (Dashboard), and date range filter (Last 30 days) back to factory presets.
           </p>
-          <div className="pt-1 text-[#10B981] font-bold flex items-center gap-1">
+          <div className="pt-1 text-[#10B981] font-medium flex items-center gap-1">
             <Check className="size-3" /> Business data, clients, campaigns, and team roles remain 100% untouched.
           </div>
         </div>
@@ -60,7 +60,7 @@ export function ResetPreferencesModal({ open, onClose, onConfirm }: ResetPrefere
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-md border border-[#CBD5E1] text-[10.5px] font-bold text-[#111C3A] hover:bg-slate-100 cursor-pointer"
+            className="px-3 py-1.5 rounded-lg border border-[#CBD5E1] text-[11px] font-semibold text-[#334155] hover:bg-slate-100 transition-colors cursor-pointer"
           >
             Cancel
           </button>
@@ -68,7 +68,7 @@ export function ResetPreferencesModal({ open, onClose, onConfirm }: ResetPrefere
             type="button"
             onClick={handleReset}
             disabled={loading}
-            className="px-3 py-1.5 rounded-md bg-[#2563EB] hover:bg-blue-600 text-white text-[10.5px] font-bold shadow-2xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-1.5 rounded-lg bg-[#2563EB] hover:bg-blue-600 text-white text-[11px] font-semibold shadow-2xs flex items-center gap-1 cursor-pointer disabled:opacity-50 transition-colors"
           >
             {loading ? <Loader2 className="size-3 animate-spin" /> : <RotateCcw className="size-3" />}
             Confirm Reset

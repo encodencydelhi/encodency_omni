@@ -50,7 +50,7 @@ export function SettingsNav({ activeSection, onSelectSection, isSectionDirty }: 
     <aside className="w-full md:w-[215px] lg:w-[225px] shrink-0 space-y-2">
       {/* Navigation Card */}
       <nav className="bg-white rounded-xl border border-[#DDE4ED] shadow-xs p-1.5 space-y-0.5 hover:border-[#CBD5E1] transition-all">
-        <div className="px-2.5 py-1.5 text-[9.5px] font-bold uppercase tracking-wider text-[#101A3D] flex items-center justify-between border-b border-[#F1F5F9] mb-1">
+        <div className="px-2.5 py-1.5 text-[9.5px] font-bold uppercase tracking-wider text-[#64748B] flex items-center justify-between border-b border-[#F1F5F9] mb-1">
           <span>Workspace Settings</span>
           <span className="size-1.5 rounded-full bg-blue-600"></span>
         </div>
@@ -72,8 +72,8 @@ export function SettingsNav({ activeSection, onSelectSection, isSectionDirty }: 
                     ? "bg-red-50 text-red-600 font-bold border border-red-200 shadow-2xs"
                     : "bg-gradient-to-r from-blue-50/90 to-indigo-50/40 text-[#2563EB] font-bold border border-blue-200/90 shadow-2xs relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-[#2563EB] before:rounded-r"
                   : item.isDanger
-                  ? "text-[#101A3D] font-semibold hover:text-red-600 hover:bg-red-50/50"
-                  : "text-[#101A3D] font-semibold hover:text-[#2563EB] hover:bg-[#F8FAFD]"
+                  ? "text-slate-600 font-medium hover:text-red-600 hover:bg-red-50/50"
+                  : "text-[#475569] font-medium hover:text-[#2563EB] hover:bg-[#F8FAFD]"
               )}
             >
               <div className="flex items-center gap-2 min-w-0">
@@ -84,7 +84,7 @@ export function SettingsNav({ activeSection, onSelectSection, isSectionDirty }: 
                       ? item.isDanger
                         ? "bg-white text-red-600 shadow-2xs"
                         : "bg-white text-[#2563EB] shadow-2xs"
-                      : "text-[#101A3D] group-hover:text-[#2563EB]"
+                      : "text-slate-400 group-hover:text-[#2563EB]"
                   )}
                 >
                   <Icon className="size-3.5" />
@@ -112,11 +112,11 @@ export function SettingsNav({ activeSection, onSelectSection, isSectionDirty }: 
 
       {/* Role / Capability Switcher Box */}
       <div className="bg-gradient-to-br from-[#F8FAFD] to-[#F1F5F9] border border-[#DDE4ED] rounded-xl p-2.5 text-[11px] space-y-1.5 shadow-2xs">
-        <div className="flex items-center justify-between text-[#101A3D]">
-          <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider">
+        <div className="flex items-center justify-between text-[#334155]">
+          <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
             <Shield className="size-3 text-blue-600" /> Active Role
           </span>
-          <span className="text-[9.5px] font-bold text-[#059669] bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-300">
+          <span className="text-[9.5px] font-semibold text-[#059669] bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-300">
             Verified
           </span>
         </div>
@@ -126,10 +126,10 @@ export function SettingsNav({ activeSection, onSelectSection, isSectionDirty }: 
             type="button"
             onClick={() => switchRole("Organization Owner")}
             className={cn(
-              "flex-1 py-1 px-1.5 rounded-md text-[10px] transition-all cursor-pointer border text-center font-bold",
+              "flex-1 py-1 px-1.5 rounded-md text-[10px] transition-all cursor-pointer border text-center font-semibold",
               currentRole === "Organization Owner"
-                ? "bg-white text-[#101A3D] border-[#CBD5E1] shadow-xs"
-                : "bg-transparent text-[#101A3D] border-transparent hover:bg-slate-200/70"
+                ? "bg-white text-[#0F172A] border-[#CBD5E1] shadow-xs"
+                : "bg-transparent text-[#64748B] border-transparent hover:bg-slate-200/70 hover:text-[#0F172A]"
             )}
           >
             Owner
@@ -138,16 +138,16 @@ export function SettingsNav({ activeSection, onSelectSection, isSectionDirty }: 
             type="button"
             onClick={() => switchRole("Organization Admin")}
             className={cn(
-              "flex-1 py-1 px-1.5 rounded-md text-[10px] transition-all cursor-pointer border text-center font-bold",
+              "flex-1 py-1 px-1.5 rounded-md text-[10px] transition-all cursor-pointer border text-center font-semibold",
               currentRole === "Organization Admin"
-                ? "bg-white text-[#101A3D] border-[#CBD5E1] shadow-xs"
-                : "bg-transparent text-[#101A3D] border-transparent hover:bg-slate-200/70"
+                ? "bg-white text-[#0F172A] border-[#CBD5E1] shadow-xs"
+                : "bg-transparent text-[#64748B] border-transparent hover:bg-slate-200/70 hover:text-[#0F172A]"
             )}
           >
             Admin
           </button>
         </div>
-        <p className="text-[9px] text-[#101A3D] font-semibold leading-tight pt-0.5">
+        <p className="text-[9.5px] text-[#64748B] font-normal leading-relaxed pt-0.5">
           {currentRole === "Organization Owner"
             ? "Full access including Transfer, Deactivation & Deletion."
             : "Admin access. High-risk danger actions are restricted to Owner."}

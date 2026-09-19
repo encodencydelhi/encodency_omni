@@ -67,31 +67,31 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
               <KeyRound className="size-3.5" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-[13px] font-bold text-[#111C3A]">Authentication & Two-Factor (2FA)</h3>
-              <p className="text-[10px] text-[#111C3A] font-semibold truncate sm:whitespace-normal">
+              <h3 className="text-[13px] font-bold text-[#0F172A]">Authentication & Two-Factor (2FA)</h3>
+              <p className="text-[10.5px] text-[#64748B] font-normal truncate sm:whitespace-normal">
                 Enforce multi-factor verification across administrative tiers and standard users.
               </p>
             </div>
           </div>
 
           {/* Clean Single-Line Timestamp Pill */}
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F8FAFD] border border-[#DDE4ED] text-[10.5px] text-[#111C3A] font-medium shrink-0 whitespace-nowrap shadow-2xs">
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F8FAFD] border border-[#DDE4ED] text-[10.5px] text-[#64748B] font-medium shrink-0 whitespace-nowrap shadow-2xs">
             <Clock className="size-3 text-[#2563EB] shrink-0" />
             <span>Modified {summary.lastSecurityPolicyChange}</span>
-            <span className="font-bold text-[#2563EB]">• {summary.lastChangedBy}</span>
+            <span className="font-semibold text-[#0F172A]">• {summary.lastChangedBy}</span>
           </div>
         </div>
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#F8FAFD] border border-[#DDE4ED] shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
             <div className="space-y-0.5 pr-2 min-w-0">
-              <div className="text-[11.5px] font-bold text-[#111C3A] flex items-center gap-1.5">
+              <div className="text-[11.5px] font-bold text-[#1E293B] flex items-center gap-1.5">
                 Require 2FA for Administrators
                 <span className="text-[8.5px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded border border-blue-200">
                   Recommended
                 </span>
               </div>
-              <p className="text-[9.5px] text-[#111C3A] font-medium">
+              <p className="text-[9.5px] text-[#64748B] font-normal">
                 Mandates Google Authenticator or SMS 2FA for Owners, Admins, and Project Managers.
               </p>
             </div>
@@ -108,10 +108,10 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
 
           <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#F8FAFD] border border-[#DDE4ED] shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
             <div className="space-y-0.5 pr-2 min-w-0">
-              <div className="text-[11.5px] font-bold text-[#111C3A]">
+              <div className="text-[11.5px] font-bold text-[#1E293B]">
                 Require 2FA for All Organization Members
               </div>
-              <p className="text-[9.5px] text-[#111C3A] font-medium">
+              <p className="text-[9.5px] text-[#64748B] font-normal">
                 Enforces 2FA setup upon login for 100% of staff, content creators, and external analysts.
               </p>
             </div>
@@ -128,10 +128,10 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
 
           <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#F8FAFD] border border-[#DDE4ED] shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
             <div className="space-y-0.5 pr-2 min-w-0">
-              <div className="text-[11.5px] font-bold text-[#111C3A]">
+              <div className="text-[11.5px] font-bold text-[#1E293B]">
                 Sensitive Action Re-authentication
               </div>
-              <p className="text-[9.5px] text-[#111C3A] font-medium">
+              <p className="text-[9.5px] text-[#64748B] font-normal">
                 Requires re-entering account password before high-risk changes (e.g. deleting webhooks or exporting data).
               </p>
             </div>
@@ -155,8 +155,8 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
             <Clock className="size-3.5" />
           </div>
           <div>
-            <h3 className="text-[13px] font-bold text-[#111C3A]">Session Lifecycle & Timeouts</h3>
-            <p className="text-[10px] text-[#111C3A] font-semibold">
+            <h3 className="text-[13px] font-bold text-[#0F172A]">Session Lifecycle & Timeouts</h3>
+            <p className="text-[10.5px] text-[#64748B] font-normal">
               Controls how long inactive sessions persist before expiring to mitigate device abandonment risks.
             </p>
           </div>
@@ -164,7 +164,7 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <div>
-            <label className="block text-[11px] font-bold text-[#111C3A] mb-1">
+            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
               Idle Session Inactivity Timeout
             </label>
             <select
@@ -178,7 +178,7 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
                 })
               }
               disabled={!capabilities.canManageSecurity}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] text-[11.5px] text-[#111C3A] font-semibold outline-none focus:bg-white focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
+              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
             >
               <option value={15}>15 minutes (High Security)</option>
               <option value={30}>30 minutes</option>
@@ -186,13 +186,13 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
               <option value={240}>4 hours</option>
               <option value={480}>8 hours (Full working day)</option>
             </select>
-            <span className="text-[9.5px] text-[#111C3A] font-medium mt-0.5 block">
+            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">
               Auto-locks workspace when no keyboard or mouse activity is detected.
             </span>
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-[#111C3A] mb-1">
+            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
               Maximum Absolute Session Duration
             </label>
             <select
@@ -206,14 +206,14 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
                 })
               }
               disabled={!capabilities.canManageSecurity}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] text-[11.5px] text-[#111C3A] font-semibold outline-none focus:bg-white focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
+              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
             >
               <option value={12}>12 hours</option>
               <option value={24}>24 hours (1 day)</option>
               <option value={168}>7 days</option>
               <option value={720}>30 days</option>
             </select>
-            <span className="text-[9.5px] text-[#111C3A] font-medium mt-0.5 block">
+            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">
               Forces complete credential re-authentication once max duration elapses.
             </span>
           </div>
@@ -221,10 +221,10 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
           <div className="md:col-span-2 pt-0.5">
             <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#F8FAFD] border border-[#DDE4ED] shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
               <div className="space-y-0.5 pr-2 min-w-0">
-                <div className="text-[11.5px] font-bold text-[#111C3A]">
+                <div className="text-[11.5px] font-bold text-[#1E293B]">
                   Revoke All Active Sessions on Password Change
                 </div>
-                <p className="text-[9.5px] text-[#111C3A] font-medium">
+                <p className="text-[9.5px] text-[#64748B] font-normal">
                   Instantly terminates mobile app and desktop web sessions if user password is reset.
                 </p>
               </div>
@@ -252,8 +252,8 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
             <Globe className="size-3.5" />
           </div>
           <div>
-            <h3 className="text-[13px] font-bold text-[#111C3A]">Access Control & Email Domain Whitelisting</h3>
-            <p className="text-[10px] text-[#111C3A] font-semibold">
+            <h3 className="text-[13px] font-bold text-[#0F172A]">Access Control & Email Domain Whitelisting</h3>
+            <p className="text-[10.5px] text-[#64748B] font-normal">
               Restrict organization invitation eligibility to verified corporate email domains.
             </p>
           </div>
@@ -261,21 +261,21 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
 
         {/* Domain Tag List */}
         <div className="space-y-1.5">
-          <label className="block text-[11px] font-bold text-[#111C3A]">
+          <label className="block text-[11px] font-semibold text-[#334155]">
             Allowed Corporate Email Domains
           </label>
           <div className="flex flex-wrap items-center gap-1.5 p-2.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-xl min-h-[38px] shadow-2xs">
             {policy.accessPolicy.allowedEmailDomains.map((dom) => (
               <span
                 key={dom}
-                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-white border border-[#CBD5E1] text-[11px] font-mono font-bold text-[#111C3A] shadow-2xs"
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-white border border-[#CBD5E1] text-[11px] font-mono font-semibold text-[#0F172A] shadow-2xs"
               >
                 {dom}
                 {capabilities.canManageSecurity && (
                   <button
                     type="button"
                     onClick={() => handleRemoveDomain(dom)}
-                    className="text-[#111C3A] hover:text-red-500 transition-colors ml-0.5 cursor-pointer"
+                    className="text-[#64748B] hover:text-red-500 transition-colors ml-0.5 cursor-pointer"
                     title={`Remove ${dom}`}
                   >
                     <X className="size-3" />
@@ -291,18 +291,18 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
                   placeholder="@company.org"
                   value={newDomain}
                   onChange={(e) => setNewDomain(e.target.value)}
-                  className="h-7 w-28 px-2 text-[10.5px] font-mono font-bold rounded-md border border-[#CBD5E1] bg-white text-[#111C3A] outline-none focus:border-[#2563EB] shadow-2xs"
+                  className="h-7 w-32 px-2 text-[11px] font-mono font-normal rounded-md border border-[#CBD5E1] bg-white text-[#0F172A] outline-none focus:border-[#2563EB] shadow-2xs placeholder:text-[#94A3B8]"
                 />
                 <button
                   type="submit"
-                  className="h-7 px-2.5 bg-white border border-[#CBD5E1] rounded-md text-[10px] font-bold text-[#2563EB] hover:bg-blue-50 flex items-center gap-1 cursor-pointer shadow-2xs"
+                  className="h-7 px-2.5 bg-white border border-[#CBD5E1] rounded-md text-[10.5px] font-semibold text-[#2563EB] hover:bg-blue-50 flex items-center gap-1 cursor-pointer shadow-2xs"
                 >
                   <Plus className="size-3" /> Add
                 </button>
               </form>
             )}
           </div>
-          <span className="text-[9.5px] text-[#111C3A] font-medium">
+          <span className="text-[9.5px] text-[#64748B] font-normal">
             Users with other domains cannot be invited unless added to the whitelisted roster above.
           </span>
         </div>
@@ -310,10 +310,10 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
         <div className="space-y-1.5 pt-0.5">
           <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#F8FAFD] border border-[#DDE4ED] shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
             <div className="space-y-0.5 pr-2 min-w-0">
-              <div className="text-[11.5px] font-bold text-[#111C3A]">
+              <div className="text-[11.5px] font-bold text-[#1E293B]">
                 Block Free / Personal Email Providers
               </div>
-              <p className="text-[9.5px] text-[#111C3A] font-medium">
+              <p className="text-[9.5px] text-[#64748B] font-normal">
                 Prevents invitations to @gmail.com, @yahoo.com, @outlook.com, and public email hosts.
               </p>
             </div>
@@ -333,10 +333,10 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
 
           <div className="flex items-center justify-between p-2.5 rounded-lg bg-[#F8FAFD] border border-[#DDE4ED] shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
             <div className="space-y-0.5 pr-2 min-w-0">
-              <div className="text-[11.5px] font-bold text-[#111C3A]">
+              <div className="text-[11.5px] font-bold text-[#1E293B]">
                 Require Verified Email Before First Access
               </div>
-              <p className="text-[9.5px] text-[#111C3A] font-medium">
+              <p className="text-[9.5px] text-[#64748B] font-normal">
                 Invited users must click confirmation link before gaining access to workspace data.
               </p>
             </div>
@@ -363,8 +363,8 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
             <AlertTriangle className="size-3.5" />
           </div>
           <div>
-            <h3 className="text-[13px] font-bold text-[#111C3A]">Sensitive Action Re-authentication Policies</h3>
-            <p className="text-[10px] text-[#111C3A] font-semibold">
+            <h3 className="text-[13px] font-bold text-[#0F172A]">Sensitive Action Re-authentication Policies</h3>
+            <p className="text-[10.5px] text-[#64748B] font-normal">
               Specify which administrative operations strictly require a secondary password prompt.
             </p>
           </div>
@@ -373,8 +373,8 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
           <div className="flex items-center justify-between p-2.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
             <div>
-              <div className="font-bold text-[#111C3A] text-[11.5px]">Remove Team Member</div>
-              <div className="text-[9.5px] text-[#111C3A] font-medium">Revoking access privileges</div>
+              <div className="font-bold text-[#1E293B] text-[11.5px]">Remove Team Member</div>
+              <div className="text-[9.5px] text-[#64748B] font-normal">Revoking access privileges</div>
             </div>
             <Switch
               checked={policy.sensitiveActionProtection.requireReauthRemoveMember}
@@ -392,8 +392,8 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
 
           <div className="flex items-center justify-between p-2.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
             <div>
-              <div className="font-bold text-[#111C3A] text-[11.5px]">Disconnect Channel / Integration</div>
-              <div className="text-[9.5px] text-[#111C3A] font-medium">Meta, WhatsApp, Google API drops</div>
+              <div className="font-bold text-[#1E293B] text-[11.5px]">Disconnect Channel / Integration</div>
+              <div className="text-[9.5px] text-[#64748B] font-normal">Meta, WhatsApp, Google API drops</div>
             </div>
             <Switch
               checked={policy.sensitiveActionProtection.requireReauthDisconnectIntegration}
@@ -411,8 +411,8 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
 
           <div className="flex items-center justify-between p-2.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
             <div>
-              <div className="font-bold text-[#111C3A] text-[11.5px]">Modify Billing or Invoices</div>
-              <div className="text-[9.5px] text-[#111C3A] font-medium">Upgrades, card changes, cancellations</div>
+              <div className="font-bold text-[#1E293B] text-[11.5px]">Modify Billing or Invoices</div>
+              <div className="text-[9.5px] text-[#64748B] font-normal">Upgrades, card changes, cancellations</div>
             </div>
             <Switch
               checked={policy.sensitiveActionProtection.requireReauthChangeBilling}
@@ -430,8 +430,8 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
 
           <div className="flex items-center justify-between p-2.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
             <div>
-              <div className="font-bold text-[#111C3A] text-[11.5px]">Export Sensitive CRM & Leads</div>
-              <div className="text-[9.5px] text-[#111C3A] font-medium">Raw bulk phone & email downloads</div>
+              <div className="font-bold text-[#1E293B] text-[11.5px]">Export Sensitive CRM & Leads</div>
+              <div className="text-[9.5px] text-[#64748B] font-normal">Raw bulk phone & email downloads</div>
             </div>
             <Switch
               checked={policy.sensitiveActionProtection.requireReauthExportData}

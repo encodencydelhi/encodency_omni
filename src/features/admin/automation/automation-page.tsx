@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useUrlState } from "./components/use-url-state";
 import { AdminPageTitle } from "../shared/admin-page-title";
-import { SubTabs, WButton } from "../website/components/ui/kit";
+import { SubTabs } from "../website/components/ui/kit";
 import { Plus, ChevronDown, Check } from "lucide-react";
 import { toast } from "sonner";
 import { AutomationWorkflow } from "./data/types";
@@ -110,22 +110,22 @@ export function AutomationPage() {
         />
         
         {/* Top Operations Controls */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           
           {/* Client Filter Dropdown */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setClientDropdownOpen(!clientDropdownOpen)}
-              className="flex items-center gap-2 border border-[#E2E8F0] bg-white rounded-lg px-3 py-1.5 shadow-2xs text-[12px] font-medium text-[#111C3A] cursor-pointer hover:bg-slate-50 transition-colors"
+              className="h-10 flex items-center gap-2 border border-[#CBD5E1] bg-white rounded-lg px-3.5 shadow-2xs text-[12px] font-normal text-[#0F172A] cursor-pointer hover:bg-slate-50 transition-colors"
             >
-              <span className="text-[10.5px] text-[#64748B]">Client:</span>
-              <span className="font-bold">{selectedClient}</span>
+              <span className="text-[11px] text-[#64748B] font-medium">Client:</span>
+              <span className="font-semibold text-[#0F172A]">{selectedClient}</span>
               <ChevronDown className="size-3.5 text-[#94A3B8]" />
             </button>
 
             {clientDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-48 bg-white border border-[#E2E8F0] rounded-xl shadow-xl z-30 py-1 text-[11.5px] animate-in fade-in zoom-in-95">
+              <div className="absolute right-0 mt-1 w-48 bg-white border border-[#CBD5E1] rounded-xl shadow-xl z-30 py-1 text-[11.5px] animate-in fade-in zoom-in-95">
                 {CLIENT_OPTIONS.map((client) => (
                   <button
                     key={client}
@@ -152,17 +152,17 @@ export function AutomationPage() {
             <button
               type="button"
               onClick={() => setPeriodDropdownOpen(!periodDropdownOpen)}
-              className="flex items-center gap-2 border border-[#E2E8F0] bg-white rounded-lg px-3 py-1.5 shadow-2xs text-[12px] text-[#111C3A] cursor-pointer hover:bg-slate-50 transition-colors"
+              className="h-10 flex items-center gap-2.5 border border-[#CBD5E1] bg-white rounded-lg px-3.5 shadow-2xs text-[12px] text-[#0F172A] cursor-pointer hover:bg-slate-50 transition-colors"
             >
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] text-[#6B7A94] font-medium leading-tight">{selectedPeriod.label}</span>
-                <span className="font-semibold leading-tight text-[11.5px]">{selectedPeriod.dates}</span>
+              <div className="flex flex-col text-left justify-center">
+                <span className="text-[10px] text-[#64748B] font-medium leading-tight">{selectedPeriod.label}</span>
+                <span className="font-semibold leading-tight text-[11px] text-[#0F172A]">{selectedPeriod.dates}</span>
               </div>
               <ChevronDown className="size-3.5 text-[#94A3B8]" />
             </button>
 
             {periodDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-56 bg-white border border-[#E2E8F0] rounded-xl shadow-xl z-30 py-1 text-[11.5px] animate-in fade-in zoom-in-95">
+              <div className="absolute right-0 mt-1 w-56 bg-white border border-[#CBD5E1] rounded-xl shadow-xl z-30 py-1 text-[11.5px] animate-in fade-in zoom-in-95">
                 {DATE_RANGE_OPTIONS.map((p) => (
                   <button
                     key={p.label}
@@ -188,14 +188,14 @@ export function AutomationPage() {
           </div>
 
           {/* Create Workflow Button */}
-          <WButton
-            tone="primary"
-            icon={Plus}
+          <button
+            type="button"
             onClick={handleCreateNewWorkflow}
-            className="bg-[#2563EB] hover:bg-[#1D4ED8] border-none shadow-md shadow-blue-500/20 rounded-lg px-4 py-2 text-[13px] font-bold cursor-pointer"
+            className="h-10 inline-flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-sm shadow-blue-500/20 rounded-lg px-4 text-[12.5px] font-semibold cursor-pointer transition-colors"
           >
-            Create Workflow
-          </WButton>
+            <Plus className="size-4" />
+            <span>Create Workflow</span>
+          </button>
         </div>
       </div>
       

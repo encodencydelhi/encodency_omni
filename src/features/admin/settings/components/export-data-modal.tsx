@@ -113,8 +113,8 @@ export function ExportDataModal({ open, onClose, onRequestExport }: ExportDataMo
               <FileArchive className="size-4" />
             </div>
             <div>
-              <h3 className="text-[13px] font-bold text-[#111C3A]">Export Organization Data</h3>
-              <p className="text-[10px] text-[#111C3A] font-semibold">
+              <h3 className="text-[13px] font-bold text-[#0F172A]">Export Organization Data</h3>
+              <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">
                 Generate a signed GDPR/SOC2 compliant archive of organization assets and configs.
               </p>
             </div>
@@ -122,7 +122,7 @@ export function ExportDataModal({ open, onClose, onRequestExport }: ExportDataMo
           <button
             type="button"
             onClick={onClose}
-            className="text-[#111C3A] hover:text-red-500 transition-colors p-1 cursor-pointer"
+            className="text-[#64748B] hover:text-red-500 transition-colors p-1 cursor-pointer"
           >
             <X className="size-3.5" />
           </button>
@@ -131,7 +131,7 @@ export function ExportDataModal({ open, onClose, onRequestExport }: ExportDataMo
         {status === "idle" && (
           <>
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-bold text-[#111C3A]">
+              <label className="block text-[11px] font-semibold text-[#334155]">
                 Select Data Categories to Include
               </label>
               <div className="space-y-1 max-h-[240px] overflow-y-auto pr-1">
@@ -140,11 +140,11 @@ export function ExportDataModal({ open, onClose, onRequestExport }: ExportDataMo
                   return (
                     <label
                       key={cat.id}
-                      className="flex items-center justify-between p-2 rounded-lg border border-[#CBD5E1] hover:bg-slate-50 cursor-pointer transition-colors"
+                      className="flex items-center justify-between p-2.5 rounded-xl border border-[#DDE4ED] hover:bg-slate-50 cursor-pointer transition-colors shadow-2xs"
                     >
                       <div className="pr-2">
-                        <div className="text-[11.5px] font-bold text-[#111C3A]">{cat.label}</div>
-                        <div className="text-[9.5px] text-[#111C3A] font-medium">{cat.desc}</div>
+                        <div className="text-[11.5px] font-semibold text-[#0F172A]">{cat.label}</div>
+                        <div className="text-[9.5px] text-[#64748B] font-normal">{cat.desc}</div>
                       </div>
                       <input
                         type="checkbox"
@@ -158,18 +158,18 @@ export function ExportDataModal({ open, onClose, onRequestExport }: ExportDataMo
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#CBD5E1]">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F1F5F9]">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-3 py-1.5 rounded-lg border border-[#CBD5E1] text-[11px] font-bold text-[#111C3A] hover:bg-slate-100 cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-[#CBD5E1] text-[10.5px] font-semibold text-[#334155] hover:bg-slate-100 cursor-pointer shadow-2xs transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleStartExport}
-                className="px-4 py-1.5 rounded-lg bg-[#2563EB] hover:bg-blue-600 text-white text-[11px] font-bold shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-1.5 rounded-lg bg-[#2563EB] hover:bg-blue-600 text-white text-[11px] font-semibold shadow-2xs flex items-center gap-1.5 cursor-pointer transition-colors"
               >
                 <Download className="size-3.5" /> Generate Archive Export
               </button>
@@ -181,13 +181,13 @@ export function ExportDataModal({ open, onClose, onRequestExport }: ExportDataMo
           <div className="py-3 text-center space-y-2">
             <Loader2 className="size-6 text-[#2563EB] animate-spin mx-auto" />
             <div>
-              <div className="text-[12.5px] font-bold text-[#111C3A]">Compiling Organization Archive...</div>
-              <p className="text-[10px] text-[#111C3A] font-semibold">Packaging selected database records and configurations.</p>
+              <div className="text-[12.5px] font-bold text-[#0F172A]">Compiling Organization Archive...</div>
+              <p className="text-[10px] text-[#64748B] font-normal">Packaging selected database records and configurations.</p>
             </div>
             <div className="w-48 mx-auto bg-slate-100 rounded-full h-1.5 overflow-hidden border border-[#CBD5E1]">
               <div className="bg-[#2563EB] h-full transition-all duration-300" style={{ width: `${progress}%` }} />
             </div>
-            <span className="text-[9.5px] font-mono font-bold text-[#111C3A]">{progress}% complete</span>
+            <span className="text-[9.5px] font-mono font-medium text-[#64748B]">{progress}% complete</span>
           </div>
         )}
 
@@ -197,8 +197,8 @@ export function ExportDataModal({ open, onClose, onRequestExport }: ExportDataMo
               <Check className="size-4" />
             </div>
             <div>
-              <div className="text-[12.5px] font-bold text-[#111C3A]">Archive Ready for Download</div>
-              <p className="text-[10px] text-[#111C3A] font-semibold">
+              <div className="text-[12.5px] font-bold text-[#0F172A]">Archive Ready for Download</div>
+              <p className="text-[10px] text-[#64748B] font-normal">
                 Your package contains {selectedCategories.length} data streams (~14.2 MB). Download link is valid for 14 days.
               </p>
             </div>
@@ -206,7 +206,7 @@ export function ExportDataModal({ open, onClose, onRequestExport }: ExportDataMo
               <button
                 type="button"
                 onClick={handleDownloadFile}
-                className="px-4 py-2 rounded-lg bg-[#10B981] hover:bg-emerald-600 text-white text-[11.5px] font-bold shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-[#10B981] hover:bg-emerald-600 text-white text-[11.5px] font-semibold shadow-2xs flex items-center gap-1.5 cursor-pointer transition-colors"
               >
                 <Download className="size-3.5" /> Download (.JSON / .ZIP)
               </button>

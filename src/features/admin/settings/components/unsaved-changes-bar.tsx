@@ -34,9 +34,9 @@ export function UnsavedChangesBar({ sectionId, isSaving, onSave, onDiscard }: Un
           </div>
           <div className="min-w-0">
             <div className="text-[12px] font-bold text-white truncate">
-              Unsaved changes in <span className="text-amber-300 font-bold">{sectionName}</span>
+              Unsaved changes in <span className="text-amber-300 font-semibold">{sectionName}</span>
             </div>
-            <div className="text-[10px] text-slate-200 font-medium truncate">
+            <div className="text-[10px] text-slate-300 font-normal truncate">
               Save changes to update organization policies and preferences.
             </div>
           </div>
@@ -47,7 +47,7 @@ export function UnsavedChangesBar({ sectionId, isSaving, onSave, onDiscard }: Un
             type="button"
             onClick={onDiscard}
             disabled={isSaving}
-            className="px-3 py-1.5 rounded-lg text-[11.5px] font-bold text-slate-100 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg text-[11.5px] font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
           >
             <Undo2 className="size-3" /> Discard
           </button>
@@ -55,7 +55,7 @@ export function UnsavedChangesBar({ sectionId, isSaving, onSave, onDiscard }: Un
             type="button"
             onClick={onSave}
             disabled={isSaving}
-            className="px-4 py-1.5 rounded-lg text-[11.5px] font-bold text-white bg-[#2563EB] hover:bg-blue-600 transition-colors shadow-2xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+            className="px-4 py-1.5 rounded-lg text-[11.5px] font-semibold text-white bg-[#2563EB] hover:bg-blue-600 transition-colors shadow-2xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
           >
             {isSaving ? (
               <>
