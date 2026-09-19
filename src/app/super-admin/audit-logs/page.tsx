@@ -564,18 +564,20 @@ export default function AuditLogsPage() {
       {/* 5. Detail Sheet Drawer */}
       <Sheet open={Boolean(selectedEvent)} onOpenChange={(open) => !open && setSelectedEvent(null)}>
         <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col bg-white">
-          <SheetHeader className="p-4 border-b border-slate-200 bg-slate-50/50">
-            <div className="flex items-center gap-2">
-              <span className="size-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
+          <SheetHeader className="p-4 border-b border-slate-200 bg-slate-50/70">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-full bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0 shadow-xs ring-2 ring-blue-100/60">
                 AUD
-              </span>
-              <SheetTitle className="text-sm font-bold text-slate-900">
-                Audit Event Inspector
-              </SheetTitle>
+              </div>
+              <div className="space-y-0.5 text-left">
+                <SheetTitle className="text-sm font-bold text-slate-900">
+                  Audit Event Inspector
+                </SheetTitle>
+                <SheetDescription className="text-xs text-slate-500 font-normal">
+                  Immutable forensic transaction record for <span className="font-mono text-slate-700 font-semibold">{selectedEvent?.id}</span>.
+                </SheetDescription>
+              </div>
             </div>
-            <SheetDescription className="text-xs text-slate-500">
-              Immutable forensic transaction record for {selectedEvent?.id}.
-            </SheetDescription>
           </SheetHeader>
 
           {selectedEvent && (
