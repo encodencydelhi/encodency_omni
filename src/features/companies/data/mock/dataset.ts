@@ -24,7 +24,7 @@ import {
 import { createRng, daysAgo, daysAhead, minutesAgo, type Rng } from "@/mocks/lib/random";
 import type { Plan } from "@/types/domain/plan";
 import { INTEGRATION_PROVIDER } from "@/types/domain/integration";
-import { activeOverrideFor, planFor, type DerivationContext } from "../selectors";
+import { activeOverrideFor, cyclePrice, planFor, type DerivationContext } from "../selectors";
 import type {
   ActivityModule,
   CompanyActivity,
@@ -439,7 +439,13 @@ function buildBilling(
     if (isRefund) status = "refunded";
     else if (status === "refunded") status = "paid";
 
-    const amountMinor = isRefund ? -Math.abs(txn.amountMinor) : Math.abs(txn.amountMinor);
+    // A failed renewal is the subscription charge itself, at the catalogue price.
+    const failedRenewal = isLatest && status === "failed";
+    const amountMinor = isRefund
+      ? -Math.abs(txn.amountMinor)
+      : failedRenewal
+        ? cyclePrice(plan, sub.billingCycle)
+        : Math.abs(txn.amountMinor);
     const number = `INV-2026-${txn.id.replace("txn_", "")}`;
     const invoiceId = `inv_${companyId}_${position}`;
     const paymentId = `pay_${companyId}_${position}`;
@@ -460,9 +466,9 @@ function buildBilling(
       status: invoiceStatus,
       paymentStatus: status,
       description:
-        txn.type === "overage"
+        !failedRenewal && txn.type === "overage"
           ? "Usage overage"
-          : txn.type === "addon"
+          : !failedRenewal && txn.type === "addon"
             ? "Add-on"
             : `${plan.name} plan - ${sub.billingCycle} subscription`,
       paymentId,
