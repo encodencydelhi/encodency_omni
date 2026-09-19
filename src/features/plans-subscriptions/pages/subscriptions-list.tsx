@@ -116,9 +116,9 @@ export function SubscriptionsListPage() {
         { key: "company" as const, label: "Company", options: (facets.data?.companies ?? []).map((item) => ({ value: item.id, label: item.name })) },
         { key: "plan" as const, label: "Plan", options: (facets.data?.plans ?? []).map((item) => ({ value: item.key, label: item.name })) },
         { key: "status" as const, label: "Status", options: STATUS_OPTIONS },
-        { key: "cycle" as const, label: "Cycle", options: CYCLE_OPTIONS },
       ],
       secondary: [
+        { key: "cycle" as const, label: "Cycle", options: CYCLE_OPTIONS },
         { key: "billing" as const, label: "Billing health", options: toStatusOptions(BILLING_STATUS_META) },
         { key: "trialEnding" as const, label: "Trial", options: TRIAL_OPTIONS },
         { key: "renewal" as const, label: "Renewal", options: RENEWAL_OPTIONS },
