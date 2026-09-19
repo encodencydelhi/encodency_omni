@@ -84,10 +84,10 @@ function useFilterDefs(): { primary: FilterDef[]; secondary: FilterDef[] } {
       primary: [
         { key: "company", label: "Parent company", options: companies },
         { key: "workspace", label: "Workspace", options: toStatusOptions(WORKSPACE_STATUS) },
-        { key: "onboarding", label: "Onboarding", options: ONBOARDING_FILTER_OPTIONS },
-        { key: "health", label: "Health", options: HEALTH_FILTER_OPTIONS },
       ],
       secondary: [
+        { key: "onboarding", label: "Onboarding", options: ONBOARDING_FILTER_OPTIONS },
+        { key: "health", label: "Health", options: HEALTH_FILTER_OPTIONS },
         { key: "provider", label: "Connected provider", options: providers },
         { key: "website", label: "Website", options: WEBSITE_FILTER_OPTIONS },
         { key: "team", label: "Assigned team", options: TEAM_FILTER_OPTIONS },
