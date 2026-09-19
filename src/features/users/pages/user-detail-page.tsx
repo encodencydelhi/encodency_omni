@@ -172,18 +172,23 @@ export function UserDetailPage() {
     return user.memberships[0]?.role ?? null;
   }, [user]);
 
+  const userActivities = useMemo(() => {
+    if (activities && activities.length > 0) return activities;
+    return user?.recentActivity ?? [];
+  }, [activities, user?.recentActivity]);
+
   const filteredActivities = useMemo(() => {
-    if (!activities) return [];
-    if (!activitySearch.trim()) return activities;
+    if (!userActivities) return [];
+    if (!activitySearch.trim()) return userActivities;
     const term = activitySearch.toLowerCase().trim();
-    return activities.filter(
+    return userActivities.filter(
       (a) =>
         a.action.toLowerCase().includes(term) ||
         a.summary.toLowerCase().includes(term) ||
         (a.companyName && a.companyName.toLowerCase().includes(term)) ||
         (a.entity && a.entity.toLowerCase().includes(term)),
     );
-  }, [activities, activitySearch]);
+  }, [userActivities, activitySearch]);
 
   const handleCopy = (text: string, label: string) => {
     if (navigator?.clipboard) {
@@ -607,7 +612,7 @@ export function UserDetailPage() {
             >
               <span>Activity Log</span>
               <Badge tone="neutral" className="px-1.5 py-0 text-xs font-semibold">
-                {activities.length}
+                {userActivities.length}
               </Badge>
             </TabsTrigger>
           </TabsList>

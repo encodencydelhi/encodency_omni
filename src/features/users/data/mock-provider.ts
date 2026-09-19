@@ -1119,7 +1119,7 @@ export const mockUsersProvider = {
     await sleep(100);
     let list = getAllActivities();
     if (query.userId) {
-      list = list.filter((a) => a.userId === query.userId);
+      list = list.filter((a) => a.userId === query.userId || a.actor?.id === query.userId);
     }
     if (query.companyId && query.companyId !== "all") {
       list = list.filter((a) => a.companyId === query.companyId);

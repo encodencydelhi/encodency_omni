@@ -16,7 +16,7 @@ export const USERS_MOCK_MODE = true;
 export const MOCK_REFERENCE_TIME = new Date("2026-09-19T12:00:00Z").getTime();
 
 export const SESSION_STORAGE_KEYS = {
-  usersStore: "encodency_users_workspace_v1",
+  usersStore: "encodency_users_workspace_v2",
 } as const;
 
 export const GLOBAL_USER_STATUS = {
