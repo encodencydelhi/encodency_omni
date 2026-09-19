@@ -40,9 +40,9 @@ export function NeedsAttention() {
           </div>
         }
       />
-      <ul className="grid border-t border-[#EEF1F5] md:grid-cols-2">
+      <ul className="grid border-t border-[#EEF1F5] md:grid-cols-3">
         {items.map((item, index) => (
-          <AttentionRow key={item.id} item={item} className={cn(index % 2 === 0 && "md:border-r", index >= 2 && "md:border-t", index >= 1 && "max-md:border-t")} />
+          <AttentionRow key={item.id} item={item} className={cn(index % 3 !== 2 && "md:border-r", index >= 3 && "md:border-t", index >= 1 && "max-md:border-t")} />
         ))}
       </ul>
     </Section>

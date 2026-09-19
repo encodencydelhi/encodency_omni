@@ -37,7 +37,7 @@ export function BillingHeader() {
     : [];
 
   return (
-    <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+    <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 mb-2">
       <div className="flex min-w-0 items-center gap-3">
         <span className="grid size-11 shrink-0 place-items-center rounded-[10px] bg-[#0F1B3D] text-white shadow-[0_2px_8px_rgba(15,27,61,0.2)]">
           <WalletCards className="size-5" />

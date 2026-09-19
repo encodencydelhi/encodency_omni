@@ -16,7 +16,7 @@ export function PaymentMethodCard() {
   const { gates, openFlow } = useBilling();
 
   return (
-    <Section id="payment-methods" className="flex flex-col">
+    <Section id="payment-methods" className="flex h-full flex-col">
       <SectionHeader
         id="payment-methods"
         icon={CreditCard}
@@ -191,7 +191,7 @@ export function NextPaymentCard() {
   const total = next.breakdown?.total ?? 0;
 
   return (
-    <Section id="next-payment" className="flex flex-col">
+    <Section id="next-payment" className="flex h-full flex-col">
       <SectionHeader id="next-payment" icon={CalendarClock} title="Next payment" badge={<Badge tone={state.tone}>{state.label}</Badge>} />
       <div className="flex flex-1 flex-col px-4 pb-4">
         {next.state === "none" ? (

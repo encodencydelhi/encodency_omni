@@ -31,7 +31,7 @@ export function BillingDetailsCard() {
   if (profile.taxId || profile.country !== "India") rows.push(["Tax ID", profile.taxId, true]);
 
   return (
-    <Section id="billing-details">
+    <Section id="billing-details" className="flex h-full flex-col">
       <SectionHeader
         id="billing-details"
         icon={Building}
@@ -63,7 +63,7 @@ export function ContactsCard() {
   const contacts = snapshot.contacts;
 
   return (
-    <Section id="billing-contacts" className="flex flex-col">
+    <Section id="billing-contacts" className="flex h-full flex-col">
       <SectionHeader
         id="billing-contacts"
         icon={UsersRound}

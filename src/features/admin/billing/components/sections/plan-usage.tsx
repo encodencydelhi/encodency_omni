@@ -54,7 +54,7 @@ export function CurrentPlanCard() {
   const date = flags.trial ? subscription.trialEndsAt : flags.cancelling ? subscription.cancelAt : flags.cancelled ? subscription.cancelledAt : subscription.currentPeriodEnd;
 
   return (
-    <Section id="current-plan" className="flex flex-col">
+    <Section id="current-plan" className="flex h-full flex-col">
       <SectionHeader id="current-plan" icon={Layers} title="Current plan" badge={<Badge tone="blue">Current plan</Badge>} />
       <div className="flex flex-1 flex-col px-4 pb-4">
         <div className="rounded-[8px] border border-[#E4E9F0] bg-[linear-gradient(180deg,#F8FAFF_0%,#FFFFFF_70%)] p-3.5">
@@ -113,22 +113,22 @@ export function CurrentPlanCard() {
           })}
         </ul>
 
-        <div className="mt-auto flex flex-wrap gap-1.5 pt-3.5">
+        <div className="mt-auto flex gap-1.5 pt-3.5 overflow-x-auto custom-scrollbar pb-1">
           {flags.trial || flags.cancelled ? (
-            <Button variant="primary" size="sm" icon={Sparkles} gate={can.canManageSubscription} onClick={() => openFlow({ kind: "upgrade", planId: flags.cancelled ? plan.id : undefined })}>
+            <Button className="flex-1" variant="primary" size="sm" icon={Sparkles} gate={can.canManageSubscription} onClick={() => openFlow({ kind: "upgrade", planId: flags.cancelled ? plan.id : undefined })}>
               {flags.trial ? "Choose plan" : "Reactivate"}
             </Button>
           ) : (
-            <Button variant="primary" size="sm" icon={ArrowUpRight} gate={gates?.upgrade} onClick={() => openFlow({ kind: "upgrade" })}>
-              Upgrade plan
+            <Button className="flex-1" variant="primary" size="sm" icon={ArrowUpRight} gate={gates?.upgrade} onClick={() => openFlow({ kind: "upgrade" })}>
+              Upgrade
             </Button>
           )}
-          <Button variant="secondary" size="sm" onClick={() => openFlow({ kind: "plan_details" })}>
-            View plan details
+          <Button className="flex-1" variant="secondary" size="sm" onClick={() => openFlow({ kind: "plan_details" })}>
+            Details
           </Button>
           {!flags.trial && !flags.cancelled && (
-            <Button variant="secondary" size="sm" icon={RefreshCcw} gate={gates?.changeCycle} onClick={() => openFlow({ kind: "cycle" })}>
-              Change billing cycle
+            <Button className="flex-1" variant="secondary" size="sm" icon={RefreshCcw} gate={gates?.changeCycle} onClick={() => openFlow({ kind: "cycle" })}>
+              Change cycle
             </Button>
           )}
         </div>
@@ -146,7 +146,7 @@ export function UsageCard() {
   const pressured = usage.filter((row) => row.state === "near" || row.state === "exhausted").length;
 
   return (
-    <Section id="usage">
+    <Section id="usage" className="flex h-full flex-col">
       <SectionHeader
         id="usage"
         icon={Gauge}
@@ -160,7 +160,7 @@ export function UsageCard() {
         <span>State</span>
         <span className="text-right">Action</span>
       </div>
-      <ul className="divide-y divide-[#EEF1F5] max-md:border-t max-md:border-[#EEF1F5]">
+      <ul className="flex-1 overflow-y-auto min-h-0 max-xl:max-h-[400px] divide-y divide-[#EEF1F5] max-md:border-t max-md:border-[#EEF1F5] custom-scrollbar">
         {usage.map((row) => (
           <UsageRowItem key={row.key} row={row} />
         ))}
