@@ -34,6 +34,13 @@ export const ROUTES = {
     usage: "/super-admin/usage",
 
     integrations: "/super-admin/integrations",
+    integrationsProviders: "/super-admin/integrations/providers",
+    integrationsProvider: (id: string) => `/super-admin/integrations/providers/${id}`,
+    integrationsConnections: "/super-admin/integrations/connections",
+    integrationsConnection: (id: string) => `/super-admin/integrations/connections/${id}`,
+    integrationsIssues: "/super-admin/integrations/issues",
+    integrationsActivity: "/super-admin/integrations/activity",
+    integrationsSettings: "/super-admin/integrations/settings",
     systemHealth: "/super-admin/system-health",
     jobs: "/super-admin/jobs",
     apiMonitoring: "/super-admin/api-monitoring",
