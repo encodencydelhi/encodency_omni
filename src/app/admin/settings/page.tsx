@@ -1,1 +1,5 @@
-import { AdminManagementPage } from "@/features/admin/management/admin-management-page"; export default function Page(){return <AdminManagementPage view="settings"/>}
+import { CompanySettingsPage } from "@/features/admin/settings/company-settings-page";
+
+export default function Page() {
+  return <CompanySettingsPage />;
+}

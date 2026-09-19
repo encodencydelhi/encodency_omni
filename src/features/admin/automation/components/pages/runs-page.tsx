@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { 
@@ -9,9 +9,89 @@ import {
   RotateCcw, RefreshCcw, ShieldAlert, Check
 } from "lucide-react";
 
+const DATE_RANGE_OPTIONS = [
+  { label: "Last 7 days", dates: "Apr 07, 2025 - Apr 14, 2025", days: 7 },
+  { label: "Last 30 days", dates: "Mar 15, 2025 - Apr 14, 2025", days: 30 },
+  { label: "Last 90 days", dates: "Jan 14, 2025 - Apr 14, 2025", days: 90 },
+  { label: "Year to date", dates: "Jan 01, 2025 - Apr 14, 2025", days: 365 },
+] as const;
+
+type DateRangeOption = (typeof DATE_RANGE_OPTIONS)[number];
+
+const ALL_RUNS = [
+  { id: "run_8f3a2c1e", wf: "New Meta Lead Follow-up", trigLbl: "Meta Ads", trigType: "activity" as const, date: "Apr 14, 2025, 10:24 AM", dur: "2m 14s", steps: "4/4", res: "Success", own: "Manish S." },
+  { id: "run_7c9d4b2a", wf: "WhatsApp Re-engagement", trigLbl: "Manual", trigType: "message" as const, date: "Apr 14, 2025, 09:18 AM", dur: "1m 32s", steps: "3/4", res: "Failed", own: "Neha V." },
+  { id: "run_5e2f8a9d", wf: "Google Review Alert", trigLbl: "Website", trigType: "google" as const, date: "Apr 14, 2025, 08:44 AM", dur: "45s", steps: "3/3", res: "Success", own: "Rohit K." },
+  { id: "run_1d7c9e5b", wf: "SEO Critical Issue", trigLbl: "System", trigType: "google" as const, date: "Apr 14, 2025, 07:12 AM", dur: "3m 21s", steps: "4/4", res: "Retried", own: "Manish S." },
+  { id: "run_4b8e2d1f", wf: "Website Down Alert", trigLbl: "Website", trigType: "globe" as const, date: "Apr 13, 2025, 11:03 PM", dur: "38s", steps: "2/2", res: "Success", own: "Priya M." },
+  { id: "run_9a3f6c7e", wf: "New Meta Lead Follow-up", trigLbl: "Meta Ads", trigType: "activity" as const, date: "Apr 13, 2025, 08:21 PM", dur: "-", steps: "0/4", res: "Queued", own: "Unassigned" },
+  { id: "run_6d2b4e8f", wf: "WhatsApp Re-engagement", trigLbl: "Scheduled", trigType: "clock" as const, date: "Apr 13, 2025, 05:44 PM", dur: "2m 08s", steps: "4/4", res: "Success", own: "Neha V." },
+  { id: "run_3e9c1a7d", wf: "Negative Review Alert", trigLbl: "Google Business", trigType: "google" as const, date: "Apr 13, 2025, 03:12 PM", dur: "1m 14s", steps: "3/3", res: "Cancelled", own: "Rohit K." },
+];
+
+function parseRunDate(dateStr: string): Date {
+  return new Date(dateStr.replace(",", ""));
+}
+
+function TrigIcon({ type }: { type: string }) {
+  switch (type) {
+    case "activity": return <Activity className="size-3.5 text-blue-500" />;
+    case "message": return <MessageSquare className="size-3.5 text-emerald-500" fill="currentColor" />;
+    case "google": return <span className="text-orange-500 font-bold text-[11px]">G</span>;
+    case "globe": return <Globe className="size-3.5 text-blue-500" />;
+    case "clock": return <Clock className="size-3.5 text-emerald-500" />;
+    default: return <Activity className="size-3.5 text-blue-500" />;
+  }
+}
+
+function getStatusFilterValue(label: string): string {
+  switch (label) {
+    case "Successful": return "Success";
+    case "Failed": return "Failed";
+    case "Running": return "Running";
+    default: return "All Statuses";
+  }
+}
+
 export function RunsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All Statuses");
+  const [selectedPeriod, setSelectedPeriod] = useState<DateRangeOption>(DATE_RANGE_OPTIONS[1]);
+  const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setPeriodDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredRuns = useMemo(() => {
+    const now = new Date("2025-04-14T23:59:59");
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() - selectedPeriod.days);
+    const filterVal = getStatusFilterValue(selectedStatus);
+
+    return ALL_RUNS.filter((run) => {
+      const runDate = parseRunDate(run.date);
+      if (runDate < cutoff) return false;
+      if (filterVal !== "All Statuses" && run.res !== filterVal) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          run.id.toLowerCase().includes(q) ||
+          run.wf.toLowerCase().includes(q) ||
+          run.trigLbl.toLowerCase().includes(q) ||
+          run.own.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [selectedPeriod, selectedStatus, searchQuery]);
 
   const handleExportLogs = () => {
     const csvContent = "data:text/csv;charset=utf-8," + 
@@ -235,100 +315,6 @@ export function RunsPage() {
             </div>
           </div>
 
-          {/* Bottom Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            
-            {/* Runs Over Time (Line + Bar mock) */}
-            <div className="md:col-span-2 bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col justify-between h-[320px]">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <h3 className="text-[13px] font-bold text-[#111C3A]">Runs Over Time</h3>
-                  <p className="text-[10px] text-[#64748B]">Total workflow runs and success rate over time.</p>
-                </div>
-                <div className="flex items-center gap-1.5 border border-[#E2E8F0] rounded-md px-2 py-1 text-[11px] font-medium text-[#334155]">
-                  Last 30 days <ChevronDown className="size-3" />
-                </div>
-              </div>
-              <div className="flex-1 flex items-end justify-between relative h-[230px] pb-6 px-2 overflow-hidden">
-                 {/* Fake Chart Graphics */}
-                 <div className="absolute inset-0 flex flex-col justify-between pt-2 pb-6">
-                   <div className="border-t border-[#F1F5F9] w-full border-dashed" />
-                   <div className="border-t border-[#F1F5F9] w-full border-dashed" />
-                   <div className="border-t border-[#F1F5F9] w-full border-dashed" />
-                   <div className="border-t border-[#F1F5F9] w-full border-dashed" />
-                   <div className="border-t border-[#E2E8F0] w-full" />
-                 </div>
-                 
-                 {/* Fake Bars */}
-                 <div className="relative z-10 w-full h-full flex items-end justify-between gap-1 px-4 pb-2">
-                   {[35, 42, 65, 80, 25, 45, 55, 70, 30, 50, 60, 75, 40, 58, 68, 85, 32, 48, 62, 78, 28, 52, 66, 82, 38].map((h, i) => (
-                     <div key={i} className="w-full bg-[#10B981] rounded-t-sm" style={{ height: `${h * 0.75}%` }}>
-                       {i % 4 === 0 && <div className="w-full bg-[#EF4444]" style={{ height: `${h * 0.2}%` }} />}
-                     </div>
-                   ))}
-                 </div>
-                 
-                 {/* Fake Line SVG with ViewBox to prevent clipping */}
-                 <svg className="absolute inset-0 h-full w-full pointer-events-none z-20" viewBox="0 0 500 100" preserveAspectRatio="none">
-                    <path d="M 10,75 Q 40,85 80,55 T 150,65 T 220,35 T 290,45 T 360,25 T 430,35 T 490,20" fill="none" stroke="#3B82F6" strokeWidth="2.5" />
-                    <circle cx="150" cy="65" r="3.5" fill="#3B82F6" stroke="#FFFFFF" strokeWidth="1.5" />
-                    <circle cx="290" cy="45" r="3.5" fill="#3B82F6" stroke="#FFFFFF" strokeWidth="1.5" />
-                    <circle cx="430" cy="35" r="3.5" fill="#3B82F6" stroke="#FFFFFF" strokeWidth="1.5" />
-                 </svg>
-
-                 <div className="absolute bottom-0 left-0 right-0 flex justify-between text-[9px] text-[#94A3B8] px-4 font-medium">
-                   <span>Mar 15</span>
-                   <span>Mar 20</span>
-                   <span>Mar 25</span>
-                   <span>Mar 30</span>
-                   <span>Apr 4</span>
-                   <span>Apr 9</span>
-                   <span>Apr 14</span>
-                 </div>
-              </div>
-            </div>
-
-            {/* Success vs Failure */}
-            <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col justify-between h-[320px]">
-              <h3 className="text-[13px] font-bold text-[#111C3A] mb-2">Success vs Failure</h3>
-              <div className="flex-1 flex items-center justify-between gap-4 px-1">
-                 {/* Donut Chart Mock on Left */}
-                 <div className="size-24 rounded-full border-[12px] border-[#10B981] border-r-[#EF4444] border-b-[#EAB308] border-l-[#8B5CF6] flex items-center justify-center transform rotate-45 shrink-0">
-                    <div className="transform -rotate-45 text-center">
-                      <div className="text-[14px] font-bold text-[#111C3A]">2,076</div>
-                      <div className="text-[8px] text-[#64748B]">Total Runs</div>
-                    </div>
-                 </div>
-                 
-                 {/* Stats text on Right */}
-                 <div className="flex flex-col gap-2 min-w-0">
-                    <div className="flex items-center gap-2">
-                       <div className="size-2.5 rounded-full bg-[#10B981] shrink-0" />
-                       <div className="min-w-0">
-                         <div className="text-[11.5px] font-bold text-[#111C3A] leading-none mb-0.5">1,742</div>
-                         <div className="text-[9.5px] text-[#64748B] leading-none whitespace-nowrap">Successful (84.0%)</div>
-                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       <div className="size-2.5 rounded-full bg-[#EF4444] shrink-0" />
-                       <div className="min-w-0">
-                         <div className="text-[11.5px] font-bold text-[#111C3A] leading-none mb-0.5">186</div>
-                         <div className="text-[9.5px] text-[#64748B] leading-none whitespace-nowrap">Failed (9.0%)</div>
-                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       <div className="size-2.5 rounded-full bg-[#EAB308] shrink-0" />
-                       <div className="min-w-0">
-                         <div className="text-[11.5px] font-bold text-[#111C3A] leading-none mb-0.5">64</div>
-                         <div className="text-[9.5px] text-[#64748B] leading-none whitespace-nowrap">Pending (3.1%)</div>
-                       </div>
-                    </div>
-                 </div>
-              </div>
-            </div>
-
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             
             {/* Failure Reasons */}
@@ -402,6 +388,132 @@ export function RunsPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Bottom Grid: Runs Over Time & Success vs Failure */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            
+            {/* Runs Over Time (Line + Bar mock) */}
+            <div className="md:col-span-2 bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col justify-between h-[215px]">
+              <div className="flex items-center justify-between mb-1.5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-[13px] font-bold text-[#111C3A]">Runs Over Time</h3>
+                    <div className="hidden sm:flex items-center gap-2.5 text-[10px] text-[#64748B] ml-2">
+                      <span className="flex items-center gap-1"><span className="size-2 rounded-[2px] bg-[#10B981]"></span>Runs</span>
+                      <span className="flex items-center gap-1"><span className="size-2 rounded-[2px] bg-[#EF4444]"></span>Failed</span>
+                      <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 rounded-full bg-[#3B82F6]"></span>Success Rate</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-[#64748B]">Total workflow runs and success rate over time.</p>
+                </div>
+                <div className="flex items-center gap-1.5 border border-[#E2E8F0] rounded-md px-2 py-1 text-[11px] font-medium text-[#334155] bg-white hover:bg-slate-50 cursor-pointer">
+                  Last 30 days <ChevronDown className="size-3" />
+                </div>
+              </div>
+
+              {/* Chart Graphics Container */}
+              <div className="flex-1 flex flex-col justify-end relative h-[135px] w-full pt-1 pb-5 overflow-hidden">
+                 {/* Horizontal Grid lines */}
+                 <div className="absolute inset-0 flex flex-col justify-between pt-1 pb-5 pointer-events-none">
+                   <div className="border-t border-[#F1F5F9] w-full border-dashed" />
+                   <div className="border-t border-[#F1F5F9] w-full border-dashed" />
+                   <div className="border-t border-[#F1F5F9] w-full border-dashed" />
+                   <div className="border-t border-[#E2E8F0] w-full" />
+                 </div>
+                 
+                 {/* Bars (sitting strictly on the baseline) */}
+                 <div className="relative z-10 w-full h-[100px] flex items-end justify-between gap-1 px-3">
+                   {[35, 42, 65, 78, 25, 45, 55, 68, 30, 50, 60, 72, 40, 58, 68, 80, 32, 48, 62, 75, 28, 52, 66, 78, 38].map((h, i) => (
+                     <div key={i} className="w-full bg-[#10B981] rounded-t-sm hover:brightness-105 transition-all" style={{ height: `${h * 0.72}%` }}>
+                       {i % 4 === 0 && <div className="w-full bg-[#EF4444] rounded-t-sm" style={{ height: `${Math.max(4, h * 0.2)}%` }} />}
+                     </div>
+                   ))}
+                 </div>
+                 
+                 {/* Smooth Line SVG strictly bounded within safe coordinates */}
+                 <svg className="absolute inset-x-0 top-0 h-[calc(100%-20px)] w-full pointer-events-none z-20" viewBox="0 0 500 100" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="runsTrendGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.16" />
+                        <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    
+                    {/* Area fill under curve */}
+                    <path 
+                      d="M 12,62 C 45,58 70,44 95,42 C 125,40 150,50 175,52 C 205,54 225,32 250,28 C 280,24 305,42 330,44 C 360,46 385,25 410,22 C 440,19 465,18 488,18 L 488,100 L 12,100 Z" 
+                      fill="url(#runsTrendGradient)" 
+                    />
+                    
+                    {/* Main Trend Line */}
+                    <path 
+                      d="M 12,62 C 45,58 70,44 95,42 C 125,40 150,50 175,52 C 205,54 225,32 250,28 C 280,24 305,42 330,44 C 360,46 385,25 410,22 C 440,19 465,18 488,18" 
+                      fill="none" 
+                      stroke="#3B82F6" 
+                      strokeWidth="2.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                    />
+
+                    {/* Milestone Dots */}
+                    <circle cx="175" cy="52" r="3.5" fill="#FFFFFF" stroke="#3B82F6" strokeWidth="2" />
+                    <circle cx="250" cy="28" r="3.5" fill="#FFFFFF" stroke="#3B82F6" strokeWidth="2" />
+                    <circle cx="410" cy="22" r="3.5" fill="#FFFFFF" stroke="#3B82F6" strokeWidth="2" />
+                 </svg>
+
+                 {/* Date Labels */}
+                 <div className="absolute bottom-0 left-0 right-0 flex justify-between text-[9px] text-[#94A3B8] px-3 font-medium">
+                   <span>Mar 15</span>
+                   <span>Mar 20</span>
+                   <span>Mar 25</span>
+                   <span>Mar 30</span>
+                   <span>Apr 4</span>
+                   <span>Apr 9</span>
+                   <span>Apr 14</span>
+                 </div>
+              </div>
+            </div>
+
+            {/* Success vs Failure */}
+            <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col justify-between h-[215px]">
+              <h3 className="text-[13px] font-bold text-[#111C3A] mb-1">Success vs Failure</h3>
+              <div className="flex-1 flex items-center justify-between gap-3 px-1">
+                 {/* Donut Chart Mock on Left */}
+                 <div className="size-20 rounded-full border-[10px] border-[#10B981] border-r-[#EF4444] border-b-[#EAB308] border-l-[#8B5CF6] flex items-center justify-center transform rotate-45 shrink-0">
+                    <div className="transform -rotate-45 text-center">
+                      <div className="text-[13px] font-bold text-[#111C3A] leading-tight">2,076</div>
+                      <div className="text-[8px] text-[#64748B]">Total Runs</div>
+                    </div>
+                 </div>
+                 
+                 {/* Stats text on Right */}
+                 <div className="flex flex-col gap-1.5 min-w-0">
+                    <div className="flex items-center gap-2">
+                       <div className="size-2 rounded-full bg-[#10B981] shrink-0" />
+                       <div className="min-w-0">
+                         <div className="text-[11px] font-bold text-[#111C3A] leading-none mb-0.5">1,742</div>
+                         <div className="text-[9px] text-[#64748B] leading-none whitespace-nowrap">Successful (84.0%)</div>
+                       </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <div className="size-2 rounded-full bg-[#EF4444] shrink-0" />
+                       <div className="min-w-0">
+                         <div className="text-[11px] font-bold text-[#111C3A] leading-none mb-0.5">186</div>
+                         <div className="text-[9px] text-[#64748B] leading-none whitespace-nowrap">Failed (9.0%)</div>
+                       </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <div className="size-2 rounded-full bg-[#EAB308] shrink-0" />
+                       <div className="min-w-0">
+                         <div className="text-[11px] font-bold text-[#111C3A] leading-none mb-0.5">64</div>
+                         <div className="text-[9px] text-[#64748B] leading-none whitespace-nowrap">Pending (3.1%)</div>
+                       </div>
+                    </div>
+                 </div>
               </div>
             </div>
 
