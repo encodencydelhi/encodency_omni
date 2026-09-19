@@ -145,7 +145,7 @@ function ScheduledView() {
             empty={<EmptyState icon={CalendarClockIcon} title="No scheduled changes" description={url.activeCount > 0 ? "None of this type is scheduled." : "Future-dated plan changes, cancellations and override expiries appear here."} action={url.activeCount > 0 ? <Button variant="outline" onClick={url.clear}>Clear Filters</Button> : undefined} />}
             columns={[
               { id: "company", header: "Company", cell: (item) => <Link href={routes.subscription(item.subscriptionId)} className="font-medium text-foreground hover:text-primary hover:underline">{item.company.name}</Link> },
-              { id: "type", header: "Change Type", cell: (item) => <ScheduledKindBadge kind={item.kind} /> },
+              { id: "type", header: "Change Type", cell: (item) => <span><ScheduledKindBadge kind={item.kind} /><span className="mt-0.5 block text-2xs text-muted-foreground">{item.label}</span></span> },
               { id: "current", header: "Current Value", hideBelow: "sm", cell: (item) => item.current },
               { id: "scheduled", header: "Scheduled Value", cell: (item) => <span className="font-medium text-foreground">{item.scheduled}</span> },
               { id: "date", header: "Effective Date", cell: (item) => <span className="whitespace-nowrap text-2xs tabular">{formatDate(item.effectiveAt)}</span> },
