@@ -95,7 +95,8 @@ export function SectionHeader({
           {description && <p className="mt-0.5 text-[12px] leading-4 text-[#6B7890]">{description}</p>}
         </div>
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-1.5">{actions}</div>}
+      {/* w-full at mobile lets a wide actions group (e.g. search + filters) wrap onto its own row instead of forcing overflow; shrink-0 from sm keeps a short action group inline with the title. */}
+      {actions && <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 sm:w-auto sm:shrink-0">{actions}</div>}
     </header>
   );
 }
