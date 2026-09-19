@@ -31,8 +31,10 @@ export function UsersKpiCards({
       value: kpis.totalUsers,
       sub: "Unique identities",
       icon: UsersIcon,
-      color: "text-slate-900",
-      activeBg: "border-blue-500 bg-blue-50/40",
+      valueColor: "text-slate-900",
+      iconBg: "bg-blue-50 text-blue-600 border-blue-100",
+      activeRing: "border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/30",
+      accentBar: "bg-blue-500",
     },
     {
       id: "active",
@@ -40,17 +42,21 @@ export function UsersKpiCards({
       value: kpis.activeUsers,
       sub: "In good standing",
       icon: CheckCircle2Icon,
-      color: "text-emerald-600",
-      activeBg: "border-emerald-500 bg-emerald-50/40",
+      valueColor: "text-emerald-700",
+      iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100",
+      activeRing: "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30",
+      accentBar: "bg-emerald-500",
     },
     {
       id: "pending_invites",
       label: "PENDING INVITES",
       value: kpis.pendingInvites,
-      sub: "Awaiting acceptance",
+      sub: "Awaiting join",
       icon: MailIcon,
-      color: "text-sky-600",
-      activeBg: "border-sky-500 bg-sky-50/40",
+      valueColor: "text-sky-700",
+      iconBg: "bg-sky-50 text-sky-600 border-sky-100",
+      activeRing: "border-sky-500 ring-2 ring-sky-500/20 bg-sky-50/30",
+      accentBar: "bg-sky-500",
     },
     {
       id: "suspended",
@@ -58,49 +64,59 @@ export function UsersKpiCards({
       value: kpis.suspendedUsers,
       sub: "Platform hold",
       icon: BanIcon,
-      color: "text-rose-600",
-      activeBg: "border-rose-500 bg-rose-50/40",
+      valueColor: "text-rose-700",
+      iconBg: "bg-rose-50 text-rose-600 border-rose-100",
+      activeRing: "border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30",
+      accentBar: "bg-rose-500",
     },
     {
       id: "two_factor",
       label: "2FA ENABLED",
-      value: `${kpis.twoFactorEnabled} / ${kpis.twoFactorTotal}`,
-      sub: `${Math.round((kpis.twoFactorEnabled / Math.max(1, kpis.twoFactorTotal)) * 100)}% compliance`,
+      value: `${kpis.twoFactorEnabled}/${kpis.twoFactorTotal}`,
+      sub: `${Math.round((kpis.twoFactorEnabled / Math.max(1, kpis.twoFactorTotal)) * 100)}% coverage`,
       icon: ShieldCheckIcon,
-      color: "text-indigo-600",
-      activeBg: "border-indigo-500 bg-indigo-50/40",
+      valueColor: "text-indigo-700",
+      iconBg: "bg-indigo-50 text-indigo-600 border-indigo-100",
+      activeRing: "border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/30",
+      accentBar: "bg-indigo-500",
     },
     {
       id: "inactive_30d",
-      label: "INACTIVE 30+ DAYS",
+      label: "INACTIVE 30D+",
       value: kpis.inactive30PlusDays,
-      sub: "No recent activity",
+      sub: "No recent login",
       icon: ClockIcon,
-      color: "text-amber-600",
-      activeBg: "border-amber-500 bg-amber-50/40",
+      valueColor: "text-amber-700",
+      iconBg: "bg-amber-50 text-amber-600 border-amber-100",
+      activeRing: "border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/30",
+      accentBar: "bg-amber-500",
     },
     {
       id: "multi_company",
       label: "MULTI-COMPANY",
       value: kpis.multiCompanyUsers,
-      sub: ">1 company access",
+      sub: ">1 membership",
       icon: LayersIcon,
-      color: "text-purple-600",
-      activeBg: "border-purple-500 bg-purple-50/40",
+      valueColor: "text-purple-700",
+      iconBg: "bg-purple-50 text-purple-600 border-purple-100",
+      activeRing: "border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/30",
+      accentBar: "bg-purple-500",
     },
     {
       id: "needs_attention",
-      label: "NEEDS ATTENTION",
+      label: "ATTENTION",
       value: kpis.needsAttentionCount,
       sub: "Action required",
       icon: AlertTriangleIcon,
-      color: kpis.needsAttentionCount > 0 ? "text-amber-600" : "text-slate-500",
-      activeBg: "border-amber-500 bg-amber-50/40",
+      valueColor: kpis.needsAttentionCount > 0 ? "text-amber-700" : "text-slate-600",
+      iconBg: "bg-amber-50 text-amber-600 border-amber-100",
+      activeRing: "border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/30",
+      accentBar: "bg-amber-500",
     },
   ];
 
   return (
-    <div className={cn("grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-1 items-stretch", className)}>
+    <div className={cn("grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-1 items-stretch", className)}>
       {cards.map((c) => {
         const isSelected = activeFilter === c.id;
         return (
@@ -109,23 +125,41 @@ export function UsersKpiCards({
             type="button"
             onClick={() => onSelectFilter?.(c.id)}
             className={cn(
-              "group relative flex flex-col justify-between p-3 rounded-lg border border-slate-200 bg-white text-left transition-all hover:border-slate-300 hover:shadow-2xs cursor-pointer h-full min-h-[96px] min-w-0",
-              isSelected && c.activeBg,
+              "group relative flex flex-col justify-between p-3 rounded-xl border bg-gradient-to-b from-white to-slate-50/60 text-left transition-all duration-200 cursor-pointer h-full min-h-[104px] min-w-0 shadow-2xs hover:shadow-md hover:border-slate-300 hover:-translate-y-0.5",
+              isSelected
+                ? cn(c.activeRing, "shadow-sm -translate-y-0.5")
+                : "border-slate-200/90",
             )}
           >
-            <div className="flex items-center justify-between w-full mb-1.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 truncate">
+            {/* Top Accent line indicator when active */}
+            {isSelected && (
+              <span className={cn("absolute top-0 inset-x-3 h-0.5 rounded-full", c.accentBar)} />
+            )}
+
+            {/* Header: Label + Stylish Icon Container */}
+            <div className="flex items-center justify-between w-full mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 truncate pr-1">
                 {c.label}
               </span>
-              <c.icon className={cn("size-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity", c.color)} />
+              <div
+                className={cn(
+                  "size-6 rounded-md border flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 shadow-2xs",
+                  c.iconBg,
+                )}
+              >
+                <c.icon className="size-3.5" />
+              </div>
             </div>
 
-            <div className={cn("text-lg font-bold tracking-tight leading-none mb-1", c.color)}>
+            {/* Value */}
+            <div className={cn("text-xl font-extrabold tracking-tight leading-tight my-0.5", c.valueColor)}>
               {c.value}
             </div>
 
-            <div className="text-xs text-slate-500 truncate">
-              {c.sub}
+            {/* Subtitle */}
+            <div className="text-xs text-slate-500 truncate flex items-center gap-1 font-medium">
+              <span className="size-1 rounded-full bg-slate-300 group-hover:bg-slate-400 transition-colors" />
+              <span className="truncate">{c.sub}</span>
             </div>
           </button>
         );
