@@ -19,7 +19,7 @@ export function CreditsCard() {
   const cheapest = [...creditPacks].sort((a, b) => a.price / a.credits - b.price / b.credits)[0];
 
   return (
-    <Section id="ai-credits" className="flex flex-col">
+    <Section id="ai-credits" className="flex h-full flex-col">
       <SectionHeader
         id="ai-credits"
         icon={Sparkles}
@@ -78,7 +78,7 @@ export function AddOnsCard() {
   const monthly = active.reduce((sum, addOn) => sum + addOn.quantity * (snapshot.addOnCatalog.find((item) => item.key === addOn.key)?.monthlyPrice ?? 0), 0);
 
   return (
-    <Section id="add-ons" className="flex flex-col">
+    <Section id="add-ons" className="flex h-full flex-col">
       <SectionHeader
         id="add-ons"
         icon={PackagePlus}

@@ -27,7 +27,7 @@ function BillingPage() {
 
   return (
     <div className="-mx-4 -my-5 min-h-[calc(100dvh-60px)] bg-[#F6F8FB] px-4 py-4 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-3">
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-1">
         <BillingHeader />
 
         {status === "error" ? (
@@ -70,28 +70,30 @@ function BillingPage() {
             <NeedsAttention />
 
             <div className="grid gap-1 xl:grid-cols-12">
-              <div className="xl:col-span-4">
+              <div className="xl:col-span-4 flex flex-col">
                 <CurrentPlanCard />
               </div>
-              <div className="xl:col-span-8">
-                <UsageCard />
+              <div className="xl:col-span-8 relative">
+                <div className="xl:absolute xl:inset-0 h-full flex flex-col">
+                  <UsageCard />
+                </div>
               </div>
             </div>
 
             <div className="grid gap-1 xl:grid-cols-12">
-              <div className="xl:col-span-7">
+              <div className="xl:col-span-7 flex flex-col">
                 <PaymentMethodCard />
               </div>
-              <div className="xl:col-span-5">
+              <div className="xl:col-span-5 flex flex-col">
                 <NextPaymentCard />
               </div>
             </div>
 
             <div className="grid gap-1 xl:grid-cols-12">
-              <div className="xl:col-span-7">
+              <div className="xl:col-span-7 flex flex-col">
                 <BillingDetailsCard />
               </div>
-              <div className="xl:col-span-5">
+              <div className="xl:col-span-5 flex flex-col">
                 <ContactsCard />
               </div>
             </div>
@@ -100,10 +102,10 @@ function BillingPage() {
             <PaymentHistoryCard />
 
             <div className="grid gap-1 xl:grid-cols-12">
-              <div className="xl:col-span-6">
+              <div className="xl:col-span-6 flex flex-col">
                 <CreditsCard />
               </div>
-              <div className="xl:col-span-6">
+              <div className="xl:col-span-6 flex flex-col">
                 <AddOnsCard />
               </div>
             </div>
