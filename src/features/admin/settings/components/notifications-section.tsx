@@ -36,11 +36,19 @@ export function NotificationsSection({ items, onToggle }: NotificationsSectionPr
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-[10px] font-bold text-[#111C3A] bg-[#F8FAFC] px-2 py-1 rounded-lg border border-[#CBD5E1]">
-            <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-blue-500"></span> In-App</span>
-            <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-indigo-500"></span> Email</span>
-            <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-emerald-500"></span> WhatsApp</span>
-            <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-purple-500"></span> Slack</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[10.5px] font-bold text-[#111C3A] bg-[#F8FAFC] p-1.5 rounded-xl border border-[#CBD5E1] min-w-[380px] shadow-2xs self-start sm:self-auto">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs">
+              <span className="size-2 rounded-full bg-blue-500"></span> In-App
+            </span>
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs">
+              <span className="size-2 rounded-full bg-indigo-500"></span> Email
+            </span>
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs">
+              <span className="size-2 rounded-full bg-emerald-500"></span> WhatsApp
+            </span>
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs">
+              <span className="size-2 rounded-full bg-purple-500"></span> Slack
+            </span>
           </div>
         </div>
 
@@ -59,77 +67,93 @@ export function NotificationsSection({ items, onToggle }: NotificationsSectionPr
                   </div>
                 </div>
 
-                {/* Table Header */}
-                <div className="bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl overflow-hidden shadow-2xs">
-                  <div className="grid grid-cols-12 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#111C3A] border-b border-[#CBD5E1] items-center">
-                    <div className="col-span-12 md:col-span-6">Trigger Event</div>
-                    <div className="hidden md:grid col-span-6 grid-cols-4 text-center">
-                      <span>In-App</span>
-                      <span>Email</span>
-                      <span>WhatsApp</span>
-                      <span>Slack</span>
-                    </div>
-                  </div>
-
-                  <div className="divide-y divide-[#F1F5F9]">
-                    {categoryItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="grid grid-cols-12 px-2.5 py-1.5 items-center hover:bg-slate-50/70 transition-colors gap-1.5 md:gap-0"
-                      >
-                        <div className="col-span-12 md:col-span-6 min-w-0 pr-2">
-                          <div className="text-[11.5px] font-bold text-[#111C3A] leading-tight">
-                            {item.title}
+                {/* Table Header & Rows */}
+                <div className="bg-[#F8FAFC] border border-[#CBD5E1] rounded-xl overflow-x-auto shadow-2xs">
+                  <table className="w-full text-left min-w-[820px]">
+                    <thead className="border-b border-[#CBD5E1] bg-[#F8FAFC]">
+                      <tr className="text-[10px] font-bold uppercase tracking-wider text-[#111C3A]">
+                        <th className="py-2.5 px-3.5 min-w-[220px]">Trigger Event</th>
+                        <th className="py-2 px-2 w-[145px] min-w-[135px] text-center whitespace-nowrap">
+                          <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs text-[10.5px] font-bold text-[#111C3A]">
+                            <span className="size-2 rounded-full bg-blue-500"></span> In-App
                           </div>
-                          <p className="text-[9.5px] text-[#111C3A] font-medium leading-snug mt-0.5 truncate">
-                            {item.description}
-                          </p>
-                        </div>
+                        </th>
+                        <th className="py-2 px-2 w-[145px] min-w-[135px] text-center whitespace-nowrap">
+                          <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs text-[10.5px] font-bold text-[#111C3A]">
+                            <span className="size-2 rounded-full bg-indigo-500"></span> Email
+                          </div>
+                        </th>
+                        <th className="py-2 px-2 w-[155px] min-w-[145px] text-center whitespace-nowrap">
+                          <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs text-[10.5px] font-bold text-[#111C3A]">
+                            <span className="size-2 rounded-full bg-emerald-500"></span> WhatsApp
+                          </div>
+                        </th>
+                        <th className="py-2 px-2 w-[145px] min-w-[135px] text-center whitespace-nowrap">
+                          <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs text-[10.5px] font-bold text-[#111C3A]">
+                            <span className="size-2 rounded-full bg-purple-500"></span> Slack
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F1F5F9] bg-white">
+                      {categoryItems.map((item) => (
+                        <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-2.5 px-3.5 min-w-[220px]">
+                            <div className="text-[11.5px] font-bold text-[#111C3A] leading-tight">
+                              {item.title}
+                            </div>
+                            <p className="text-[9.5px] text-[#111C3A] font-medium leading-snug mt-0.5">
+                              {item.description}
+                            </p>
+                          </td>
 
-                        <div className="col-span-12 md:col-span-6 grid grid-cols-4 text-center items-center py-1 md:py-0 border-t md:border-t-0 border-[#F1F5F9]">
                           {/* In-App */}
-                          <div className="flex flex-col md:flex-row items-center justify-center gap-1">
-                            <span className="md:hidden text-[9px] text-[#111C3A] font-semibold">In-App</span>
-                            <Switch
-                              checked={item.inApp}
-                              onCheckedChange={(val) => onToggle(item.id, "inApp", val)}
-                              disabled={!capabilities.canManageNotifications}
-                            />
-                          </div>
+                          <td className="py-2.5 px-2 text-center w-[145px] min-w-[135px]">
+                            <div className="flex items-center justify-center">
+                              <Switch
+                                checked={item.inApp}
+                                onCheckedChange={(val) => onToggle(item.id, "inApp", val)}
+                                disabled={!capabilities.canManageNotifications}
+                              />
+                            </div>
+                          </td>
 
                           {/* Email */}
-                          <div className="flex flex-col md:flex-row items-center justify-center gap-1">
-                            <span className="md:hidden text-[9px] text-[#111C3A] font-semibold">Email</span>
-                            <Switch
-                              checked={item.email}
-                              onCheckedChange={(val) => onToggle(item.id, "email", val)}
-                              disabled={!capabilities.canManageNotifications}
-                            />
-                          </div>
+                          <td className="py-2.5 px-2 text-center w-[145px] min-w-[135px]">
+                            <div className="flex items-center justify-center">
+                              <Switch
+                                checked={item.email}
+                                onCheckedChange={(val) => onToggle(item.id, "email", val)}
+                                disabled={!capabilities.canManageNotifications}
+                              />
+                            </div>
+                          </td>
 
                           {/* WhatsApp */}
-                          <div className="flex flex-col md:flex-row items-center justify-center gap-1">
-                            <span className="md:hidden text-[9px] text-[#111C3A] font-semibold">WhatsApp</span>
-                            <Switch
-                              checked={item.whatsapp}
-                              onCheckedChange={(val) => onToggle(item.id, "whatsapp", val)}
-                              disabled={!capabilities.canManageNotifications}
-                            />
-                          </div>
+                          <td className="py-2.5 px-2 text-center w-[155px] min-w-[145px]">
+                            <div className="flex items-center justify-center">
+                              <Switch
+                                checked={item.whatsapp}
+                                onCheckedChange={(val) => onToggle(item.id, "whatsapp", val)}
+                                disabled={!capabilities.canManageNotifications}
+                              />
+                            </div>
+                          </td>
 
                           {/* Slack */}
-                          <div className="flex flex-col md:flex-row items-center justify-center gap-1">
-                            <span className="md:hidden text-[9px] text-[#111C3A] font-semibold">Slack</span>
-                            <Switch
-                              checked={item.slack}
-                              onCheckedChange={(val) => onToggle(item.id, "slack", val)}
-                              disabled={!capabilities.canManageNotifications}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                          <td className="py-2.5 px-2 text-center w-[145px] min-w-[135px]">
+                            <div className="flex items-center justify-center">
+                              <Switch
+                                checked={item.slack}
+                                onCheckedChange={(val) => onToggle(item.id, "slack", val)}
+                                disabled={!capabilities.canManageNotifications}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             );

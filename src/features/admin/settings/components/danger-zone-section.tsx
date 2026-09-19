@@ -35,7 +35,7 @@ export function DangerZoneSection({
   return (
     <div className="space-y-2">
       <section className="bg-white rounded-xl border border-red-200/80 shadow-2xs p-3 space-y-2">
-        <div className="flex items-center justify-between border-b border-red-100 pb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-red-100 pb-2">
           <div className="flex items-center gap-2">
             <div className="size-6 rounded-lg bg-red-50 text-red-600 flex items-center justify-center border border-red-200 shrink-0">
               <AlertTriangle className="size-3.5" />
@@ -47,7 +47,8 @@ export function DangerZoneSection({
               </p>
             </div>
           </div>
-          <span className="text-[9.5px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-200">
+          <span className="text-[10px] font-bold text-red-700 bg-red-50 px-3.5 py-1 rounded-lg border border-red-200 whitespace-nowrap min-w-[175px] text-center shadow-2xs flex items-center justify-center gap-1.5 self-start sm:self-auto">
+            <span className="size-1.5 rounded-full bg-red-600 animate-pulse"></span>
             Owner Access Restricted
           </span>
         </div>

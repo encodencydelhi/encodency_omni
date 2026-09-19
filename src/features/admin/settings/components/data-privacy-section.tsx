@@ -133,33 +133,35 @@ export function DataPrivacySection({ data, onChange, onRequestExport }: DataPriv
             type="button"
             onClick={() => setExportModalOpen(true)}
             disabled={!capabilities.canManagePrivacy}
-            className="px-2.5 py-1 rounded-lg bg-[#2563EB] hover:bg-blue-600 text-white text-[11px] font-bold shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 self-start sm:self-auto"
+            className="px-4 py-1.5 min-w-[230px] rounded-lg bg-[#2563EB] hover:bg-blue-600 text-white text-[11px] font-bold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 self-start sm:self-auto whitespace-nowrap transition-all"
           >
-            <Download className="size-3" /> Request Organization Export
+            <Download className="size-3.5" /> Request Organization Export
           </button>
         </div>
 
         {/* Recent Exports Table */}
         <div className="space-y-1.5">
           <div className="text-[10px] font-bold uppercase tracking-wider text-[#111C3A]">Recent Export Packages</div>
-          <div className="border border-[#CBD5E1] rounded-xl overflow-hidden text-[11px]">
-            <table className="w-full text-left">
+          <div className="border border-[#CBD5E1] rounded-xl overflow-x-auto text-[11px]">
+            <table className="w-full text-left min-w-[640px]">
               <thead className="bg-[#F8FAFC] text-[9.5px] font-bold uppercase text-[#111C3A] border-b border-[#CBD5E1]">
                 <tr>
-                  <th className="py-2 px-3">Export ID</th>
-                  <th className="py-2 px-3">Date Requested</th>
-                  <th className="py-2 px-3">Categories</th>
-                  <th className="py-2 px-3">Status</th>
-                  <th className="py-2 px-3 text-right">Action</th>
+                  <th className="py-2 px-3 w-[130px] whitespace-nowrap">Export ID</th>
+                  <th className="py-2 px-3 w-[220px] min-w-[210px] whitespace-nowrap">Date Requested</th>
+                  <th className="py-2 px-3 min-w-[180px]">Categories</th>
+                  <th className="py-2 px-3 w-[110px] whitespace-nowrap">Status</th>
+                  <th className="py-2 px-3 w-[100px] text-right whitespace-nowrap">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F1F5F9] text-[#111C3A]">
                 {data.recentExports.map((exp) => (
                   <tr key={exp.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-2.5 px-3 font-mono text-[10.5px] font-bold text-[#111C3A]">
+                    <td className="py-2.5 px-3 font-mono text-[10.5px] font-bold text-[#111C3A] whitespace-nowrap">
                       {exp.id}
                     </td>
-                    <td className="py-2.5 px-3 text-[#111C3A] font-semibold">{exp.requestedAt}</td>
+                    <td className="py-2.5 px-3 text-[#111C3A] font-semibold whitespace-nowrap w-[220px] min-w-[210px]">
+                      {exp.requestedAt}
+                    </td>
                     <td className="py-2.5 px-3">
                       <div className="flex flex-wrap gap-1">
                         {exp.categories.map((c) => (

@@ -39,7 +39,7 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
               </p>
             </div>
           </div>
-          <span className="text-[9.5px] font-bold text-[#111C3A] bg-slate-100 px-2 py-0.5 rounded self-start sm:self-auto border border-[#CBD5E1]">
+          <span className="text-[10px] font-bold text-[#111C3A] bg-[#F1F5F9] px-3.5 py-1 rounded-lg self-start sm:self-auto border border-[#CBD5E1] whitespace-nowrap min-w-[115px] text-center shadow-2xs">
             {filteredLogs.length} audit entries
           </span>
         </div>
@@ -89,20 +89,20 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
           </div>
         </div>
 
-        {/* Audit Log Table */}
-        <div className="border border-[#CBD5E1] rounded-lg overflow-hidden">
-          <table className="w-full text-left text-[11px]">
-            <thead className="bg-[#F8FAFC] text-[9px] font-bold uppercase text-[#111C3A] border-b border-[#CBD5E1]">
+        {/* Audit Log Table with Horizontal Scroll */}
+        <div className="border border-[#CBD5E1] rounded-xl overflow-x-auto shadow-2xs">
+          <table className="w-full text-left text-[11px] min-w-[760px]">
+            <thead className="bg-[#F8FAFC] text-[9.5px] font-bold uppercase tracking-wider text-[#111C3A] border-b border-[#CBD5E1]">
               <tr>
-                <th className="py-2 px-2.5">Administrator</th>
-                <th className="py-2 px-2.5">Action Description</th>
-                <th className="py-2 px-2.5">Section</th>
-                <th className="py-2 px-2.5 hidden sm:table-cell">Key Modified</th>
-                <th className="py-2 px-2.5">Time</th>
-                <th className="py-2 px-2.5 text-right">Details</th>
+                <th className="py-2.5 px-3 w-[160px] min-w-[150px] whitespace-nowrap">Administrator</th>
+                <th className="py-2.5 px-3 min-w-[210px]">Action Description</th>
+                <th className="py-2.5 px-3 w-[115px] whitespace-nowrap">Section</th>
+                <th className="py-2.5 px-3 w-[170px] min-w-[160px] whitespace-nowrap">Key Modified</th>
+                <th className="py-2.5 px-3 w-[145px] min-w-[140px] whitespace-nowrap">Time</th>
+                <th className="py-2.5 px-3 w-[100px] text-right whitespace-nowrap">Details</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E2E8F0] text-[#111C3A]">
+            <tbody className="divide-y divide-[#E2E8F0] text-[#111C3A] bg-white">
               {filteredLogs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-6 text-center text-[#111C3A] font-semibold text-[10.5px]">
@@ -112,31 +112,33 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
               ) : (
                 filteredLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-2 px-2.5 font-bold text-[#111C3A] whitespace-nowrap">
+                    <td className="py-2.5 px-3 font-bold text-[#111C3A] whitespace-nowrap w-[160px] min-w-[150px]">
                       <div className="flex items-center gap-1.5">
                         <div className="size-5 rounded-full bg-slate-200 text-[#111C3A] font-bold text-[8.5px] flex items-center justify-center shrink-0">
                           {log.user.name.charAt(0)}
                         </div>
-                        <span className="truncate max-w-[120px]">{log.user.name}</span>
+                        <span className="truncate max-w-[125px]">{log.user.name}</span>
                       </div>
                     </td>
-                    <td className="py-2 px-2.5">
+                    <td className="py-2.5 px-3 min-w-[210px]">
                       <span className="font-semibold text-[#111C3A]">{log.action}</span>
                     </td>
-                    <td className="py-2 px-2.5">
-                      <span className="capitalize px-1.5 py-0.2 rounded bg-slate-100 text-[9px] font-bold text-[#111C3A] border border-[#CBD5E1]">
+                    <td className="py-2.5 px-3 whitespace-nowrap w-[115px]">
+                      <span className="capitalize px-1.5 py-0.5 rounded bg-slate-100 text-[9px] font-bold text-[#111C3A] border border-[#CBD5E1]">
                         {log.section}
                       </span>
                     </td>
-                    <td className="py-2 px-2.5 font-mono text-[9.5px] text-[#111C3A] font-medium hidden sm:table-cell truncate max-w-[140px]">
+                    <td className="py-2.5 px-3 font-mono text-[9.5px] text-[#111C3A] font-medium whitespace-nowrap w-[170px] min-w-[160px]">
                       {log.settingName}
                     </td>
-                    <td className="py-2 px-2.5 text-[#111C3A] font-medium whitespace-nowrap text-[10px]">{log.timestamp}</td>
-                    <td className="py-2 px-2.5 text-right">
+                    <td className="py-2.5 px-3 text-[#111C3A] font-medium whitespace-nowrap text-[10px] w-[145px] min-w-[140px]">
+                      {log.timestamp}
+                    </td>
+                    <td className="py-2.5 px-3 text-right whitespace-nowrap w-[100px]">
                       <button
                         type="button"
                         onClick={() => setActiveItem(log)}
-                        className="text-[#2563EB] hover:underline font-bold text-[10px] inline-flex items-center gap-1 cursor-pointer"
+                        className="text-[#2563EB] hover:underline font-bold text-[10.5px] inline-flex items-center gap-1 cursor-pointer"
                       >
                         <Eye className="size-3" /> View Diff
                       </button>
