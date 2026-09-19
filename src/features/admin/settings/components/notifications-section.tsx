@@ -36,17 +36,17 @@ export function NotificationsSection({ items, onToggle }: NotificationsSectionPr
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 text-[10.5px] font-bold text-[#111C3A] bg-[#F8FAFC] p-1.5 rounded-xl border border-[#CBD5E1] min-w-[380px] shadow-2xs self-start sm:self-auto">
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs">
+          <div className="flex items-center justify-between gap-2 text-[11px] font-bold text-[#111C3A] bg-[#F8FAFC] p-1.5 rounded-xl border border-[#CBD5E1] w-full sm:w-auto min-w-[460px] md:min-w-[490px] shadow-2xs self-start sm:self-auto">
+            <span className="flex-1 min-w-[105px] flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs whitespace-nowrap">
               <span className="size-2 rounded-full bg-blue-500"></span> In-App
             </span>
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs">
+            <span className="flex-1 min-w-[105px] flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs whitespace-nowrap">
               <span className="size-2 rounded-full bg-indigo-500"></span> Email
             </span>
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs">
+            <span className="flex-1 min-w-[115px] flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs whitespace-nowrap">
               <span className="size-2 rounded-full bg-emerald-500"></span> WhatsApp
             </span>
-            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs">
+            <span className="flex-1 min-w-[105px] flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg bg-white border border-[#CBD5E1] shadow-2xs whitespace-nowrap">
               <span className="size-2 rounded-full bg-purple-500"></span> Slack
             </span>
           </div>
