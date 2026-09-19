@@ -186,7 +186,12 @@ export interface CompaniesRepository {
   extendTrial(id: string, input: { days: number; reason: string }, actor: MutationActor): Promise<CompanySummary>;
   convertTrialToPaid(id: string, input: { billingCycle: "monthly" | "annual" }, actor: MutationActor): Promise<CompanySummary>;
   changeBillingCycle(id: string, input: { billingCycle: "monthly" | "annual"; reason: string }, actor: MutationActor): Promise<CompanySummary>;
-  scheduleCancellation(id: string, input: { reason: string }, actor: MutationActor): Promise<CompanySummary>;
+  scheduleCancellation(id: string, input: { reason: string; timing?: "end_of_term" | "immediate" }, actor: MutationActor): Promise<CompanySummary>;
+  endTrial(id: string, input: { reason: string }, actor: MutationActor): Promise<CompanySummary>;
+  cancelScheduledChange(id: string, input: { target: "plan_change" | "cancellation"; reason: string }, actor: MutationActor): Promise<CompanySummary>;
+  rescheduleChange(id: string, input: { effectiveAt: string; reason: string }, actor: MutationActor): Promise<CompanySummary>;
+  migratePlanVersion(id: string, input: { version: number; reason: string }, actor: MutationActor): Promise<CompanySummary>;
+  revokeOverride(id: string, overrideId: string, input: { reason: string }, actor: MutationActor): Promise<CompanySummary>;
   reactivateSubscription(id: string, actor: MutationActor): Promise<CompanySummary>;
   applyUsageOverride(id: string, input: UsageOverrideInput, actor: MutationActor): Promise<CompanySummary>;
 

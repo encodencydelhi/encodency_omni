@@ -1,4 +1,4 @@
-import type { Plan, PlanTier, QuotaLimits } from "@/types/domain/plan";
+import type { Plan, PlanKey, PlanTier, QuotaLimits } from "@/types/domain/plan";
 import { daysAgo } from "../lib/random";
 
 /**
@@ -142,9 +142,9 @@ export const PLANS: Plan[] = [
   },
 ];
 
-const PLANS_BY_TIER = new Map<PlanTier, Plan>(PLANS.map((plan) => [plan.tier, plan]));
+const PLANS_BY_TIER = new Map<string, Plan>(PLANS.map((plan) => [plan.tier, plan]));
 
-export function getPlanByTier(tier: PlanTier): Plan {
+export function getPlanByTier(tier: PlanKey): Plan {
   const plan = PLANS_BY_TIER.get(tier);
   if (!plan) throw new Error(`Unknown plan tier: ${tier}`);
   return plan;

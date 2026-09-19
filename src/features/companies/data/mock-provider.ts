@@ -15,7 +15,8 @@ import { ApiError } from "@/types/api";
 import type { Plan } from "@/types/domain/plan";
 import { OVERRIDABLE_RESOURCES, USAGE_RESOURCE_BY_KEY, USAGE_RESOURCES } from "./config";
 import { nowIso, platformNow } from "./clock";
-import { PLAN_CATALOGUE, STAFF } from "./mock/dataset";
+import { commercialContext, findPlan, selectablePlanViews, versionNumber } from "@/features/plans-subscriptions/data/mock/plan-store";
+import { STAFF } from "./mock/dataset";
 import { allBundles, findBundle, requireBundle, resetDemoState, writeBundle } from "./mock/store";
 import type {
   BulkResult,
@@ -46,7 +47,8 @@ import {
   cyclePrice,
   deriveOwner,
   filterSummaries,
-  planFor,
+  monthlyEquivalent,
+  planForSubscription,
   sortSummaries,
   type DerivationContext,
 } from "./selectors";
@@ -85,7 +87,7 @@ function wait(kind: "read" | "write"): Promise<void> {
 }
 
 function context(): DerivationContext {
-  return { now: platformNow(), plans: PLAN_CATALOGUE, staff: STAFF };
+  return { now: platformNow(), staff: STAFF, ...commercialContext() };
 }
 
 function summarize(bundle: CompanyBundle): CompanySummary {
@@ -371,7 +373,8 @@ export const mockCompaniesProvider: CompaniesRepository = {
 
   async listPlans() {
     await wait("read");
-    return [...PLAN_CATALOGUE];
+    // Plans a company may be created on today: published and open to new purchase.
+    return selectablePlanViews("new");
   },
 
   async listStaff() {
@@ -424,8 +427,8 @@ export const mockCompaniesProvider: CompaniesRepository = {
     const ctx = context();
     return {
       subscription: bundle.subscription,
-      plan: planFor(ctx, bundle.subscription.planTier),
-      plans: [...PLAN_CATALOGUE],
+      plan: planForSubscription(ctx, bundle.subscription),
+      plans: selectablePlanViews("any"),
       usage: computeUsage(ctx, bundle),
       billingStatus: computeBillingStatus(bundle),
       mrrMinor: computeSummary(ctx, bundle).mrrMinor,
@@ -443,7 +446,7 @@ export const mockCompaniesProvider: CompaniesRepository = {
       invoices: [...bundle.invoices].sort((a, b) => Date.parse(b.issuedAt) - Date.parse(a.issuedAt)),
       payments: [...bundle.payments].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
       billingNotes: bundle.notes.filter((note) => note.tags.includes("billing")),
-      plan: planFor(ctx, bundle.subscription.planTier),
+      plan: planForSubscription(ctx, bundle.subscription),
     };
   },
 
@@ -521,7 +524,7 @@ export const mockCompaniesProvider: CompaniesRepository = {
     if (!EMAIL_PATTERN.test(input.owner.email)) errors.ownerEmail = "Enter a valid owner email.";
     if (Object.keys(errors).length > 0) fail("VALIDATION_FAILED", "The company could not be created.", errors);
 
-    const plan = PLAN_CATALOGUE.find((item) => item.tier === input.subscription.planTier);
+    const plan = selectablePlanViews("new").find((item) => item.tier === input.subscription.planTier);
     if (!plan) fail("VALIDATION_FAILED", "Unknown plan.", { plan: "Select a plan from the catalogue." });
 
     let slug = slugify(input.name);
@@ -655,6 +658,7 @@ export const mockCompaniesProvider: CompaniesRepository = {
         id: `sub_${slug}`,
         companyId,
         planTier: plan.tier,
+        planVersion: versionNumber(plan.tier),
         billingCycle: input.subscription.billingCycle,
         status: trial ? "trialing" : "active",
         startedAt: start,
@@ -923,29 +927,54 @@ export const mockCompaniesProvider: CompaniesRepository = {
       fail("CONFLICT", "Reactivate the subscription before changing its plan.");
     }
 
-    const current = PLAN_CATALOGUE.find((item) => item.tier === subscription.planTier);
-    const next = PLAN_CATALOGUE.find((item) => item.tier === input.planTier);
-    if (!current || !next) fail("VALIDATION_FAILED", "Unknown plan.");
-    if (current.tier === next.tier && subscription.billingCycle === input.billingCycle) {
+    const ctx = context();
+    const current = planForSubscription(ctx, subscription);
+    const next = ctx.plans.find((item) => item.tier === input.planTier);
+    if (!next) fail("VALIDATION_FAILED", "Unknown plan.");
+    const samePlan = current.tier === next.tier;
+    const targetVersion = versionNumber(next.tier);
+    if (samePlan && subscription.billingCycle === input.billingCycle && (subscription.planVersion ?? 1) === targetVersion) {
       fail("VALIDATION_FAILED", "Choose a different plan or billing cycle.");
+    }
+
+    // The target must be open to the direction of the move. Staying on one's own plan is always allowed.
+    if (!samePlan) {
+      const target = findPlan(next.tier);
+      if (!target || target.status !== "published") fail("CONFLICT", `${next.name} is not available for plan changes.`, { planTier: "This plan is not available." });
+      const rising = monthlyEquivalent(next, input.billingCycle) >= monthlyEquivalent(current, subscription.billingCycle);
+      if (rising && !target.availability.upgrade) fail("CONFLICT", `${next.name} is not open for upgrades.`, { planTier: "Not open for upgrades." });
+      if (!rising && !target.availability.downgrade) fail("CONFLICT", `${next.name} is not open for downgrades.`, { planTier: "Not open for downgrades." });
     }
 
     const before = planLabel(current, subscription.billingCycle);
     const after = planLabel(next, input.billingCycle);
 
+    let effectiveAt = subscription.renewsAt;
+    if (input.effective === "custom_date") {
+      if (!input.effectiveAt || Number.isNaN(Date.parse(input.effectiveAt))) fail("VALIDATION_FAILED", "Choose an effective date.", { effectiveAt: "Choose an effective date." });
+      if (Date.parse(input.effectiveAt) <= platformNow()) fail("VALIDATION_FAILED", "The effective date must be in the future.", { effectiveAt: "The effective date must be in the future." });
+      effectiveAt = new Date(input.effectiveAt).toISOString();
+    }
+
     let updated: CompanyBundle;
     if (input.effective === "immediately") {
-      updated = { ...bundle, subscription: { ...subscription, planTier: next.tier, billingCycle: input.billingCycle, scheduledChange: null } };
+      updated = { ...bundle, subscription: { ...subscription, planTier: next.tier, planVersion: targetVersion, billingCycle: input.billingCycle, scheduledChange: null } };
     } else {
       updated = {
         ...bundle,
-        subscription: { ...subscription, scheduledChange: { planTier: next.tier, billingCycle: input.billingCycle, effectiveAt: subscription.renewsAt } },
+        subscription: {
+          ...subscription,
+          scheduledChange: { planTier: next.tier, planVersion: targetVersion, billingCycle: input.billingCycle, effectiveAt, createdAt: nowIso(), createdBy: actor.name },
+        },
       };
     }
 
     updated = withActivity(updated, actor, {
       action: input.effective === "immediately" ? "subscription.plan_changed" : "subscription.plan_change_scheduled",
-      summary: input.effective === "immediately" ? `Plan changed from ${current.name} to ${next.name}` : `Plan change to ${next.name} scheduled for the next renewal`,
+      summary:
+        input.effective === "immediately"
+          ? `Plan changed from ${current.name} to ${next.name}`
+          : `Plan change to ${next.name} scheduled for ${input.effective === "next_renewal" ? "the next renewal" : effectiveAt.slice(0, 10)}`,
       module: "subscription",
       entity: { type: "subscription", id: subscription.id, label: next.name },
       previousValue: before,
@@ -982,7 +1011,7 @@ export const mockCompaniesProvider: CompaniesRepository = {
     const { subscription } = bundle;
     if (subscription.status !== "trialing") fail("CONFLICT", "Only a trialing subscription can be converted.");
 
-    const plan = planFor(context(), subscription.planTier);
+    const plan = planForSubscription(context(), subscription);
     const now = nowIso();
     // No payment is taken: an invoice is issued and stays open until it is paid.
     const invoice: CompanyInvoice = {
@@ -1051,12 +1080,31 @@ export const mockCompaniesProvider: CompaniesRepository = {
     return commit(next);
   },
 
-  async scheduleCancellation(id, { reason }, actor) {
+  async scheduleCancellation(id, { reason, timing = "end_of_term" }, actor) {
     await wait("write");
     const bundle = requireBundle(id);
+    requireActiveOperating(bundle, "cancel subscription");
     const { subscription } = bundle;
     if (subscription.status !== "active" && subscription.status !== "trialing" && subscription.status !== "past_due") {
       fail("CONFLICT", "This subscription cannot be scheduled for cancellation.");
+    }
+    // Cancelling a subscription never changes the company account status.
+    if (timing === "immediate") {
+      let ended: CompanyBundle = {
+        ...bundle,
+        subscription: { ...subscription, status: "cancelled", scheduledCancellationAt: null, cancelledAt: nowIso(), scheduledChange: null },
+      };
+      ended = withActivity(ended, actor, {
+        action: "subscription.cancelled",
+        summary: "Subscription cancelled immediately (demo - no refund or charge was made)",
+        module: "subscription",
+        entity: { type: "subscription", id: subscription.id, label: "Cancellation" },
+        severity: "warning",
+        previousValue: subscription.status,
+        newValue: "cancelled",
+        reason,
+      });
+      return commit(ended);
     }
     const endsAt = subscription.trialEndsAt ?? subscription.renewsAt;
     let next: CompanyBundle = {
@@ -1084,7 +1132,7 @@ export const mockCompaniesProvider: CompaniesRepository = {
       fail("CONFLICT", "This subscription is already active.");
     }
 
-    const plan = planFor(context(), subscription.planTier);
+    const plan = planForSubscription(context(), subscription);
     const now = nowIso();
     const needsNewPeriod = subscription.status === "cancelled" || subscription.status === "expired";
 
@@ -1138,19 +1186,24 @@ export const mockCompaniesProvider: CompaniesRepository = {
     if (!input.reason.trim()) fail("VALIDATION_FAILED", "A reason is required.", { reason: "A reason is required for the audit trail." });
     if (Date.parse(input.expiresAt) <= Date.parse(input.startsAt)) fail("VALIDATION_FAILED", "The expiry must be after the start.", { expiresAt: "The expiry must be after the start." });
 
-    const plan = planFor(context(), bundle.subscription.planTier);
+    const plan = planForSubscription(context(), bundle.subscription);
     const def = USAGE_RESOURCE_BY_KEY[input.resource];
     const baseLimit = def.metric ? plan.limits[def.metric] : null;
+    const rule = input.rule ?? "absolute";
+    if (rule === "additive" && !(Number(input.delta) > 0)) fail("VALIDATION_FAILED", "Enter an increase above zero.", { overrideLimit: "Enter an increase above zero." });
+    const resulting = rule === "additive" ? (baseLimit === null ? input.overrideLimit : baseLimit + Number(input.delta)) : input.overrideLimit;
     const override: CompanyUsageOverride = {
       id: nextId("ovr"),
       companyId: id,
       resource: input.resource,
       baseLimit,
-      overrideLimit: input.overrideLimit,
+      overrideLimit: resulting,
+      rule,
+      delta: rule === "additive" ? Number(input.delta) : undefined,
       reason: input.reason.trim(),
       startsAt: new Date(input.startsAt).toISOString(),
       expiresAt: new Date(input.expiresAt).toISOString(),
-      approvedBy: actor.name,
+      approvedBy: input.approvedBy?.trim() || actor.name,
       createdAt: nowIso(),
     };
 
@@ -1161,8 +1214,129 @@ export const mockCompaniesProvider: CompaniesRepository = {
       module: "usage",
       entity: { type: "usage_override", id: override.id, label: def.label },
       previousValue: baseLimit === null ? "Unlimited" : String(baseLimit),
-      newValue: String(input.overrideLimit),
+      newValue: rule === "additive" ? "+" + String(input.delta) + " (" + String(resulting) + ")" : String(resulting),
       reason: override.reason,
+    });
+    return commit(next);
+  },
+
+  async revokeOverride(id, overrideId, { reason }, actor) {
+    await wait("write");
+    const bundle = requireBundle(id);
+    requireActiveOperating(bundle, "revoke an override");
+    const override = bundle.overrides.find((item) => item.id === overrideId);
+    if (!override) fail("NOT_FOUND", "That override does not belong to this company.");
+    if (override.revokedAt) fail("CONFLICT", "This override was already revoked.");
+    if (Date.parse(override.expiresAt) <= platformNow()) fail("CONFLICT", "This override has already expired.");
+    let next: CompanyBundle = { ...bundle, overrides: bundle.overrides.map((item) => (item.id === overrideId ? { ...item, revokedAt: nowIso() } : item)) };
+    next = withActivity(next, actor, {
+      action: "usage.override_revoked",
+      summary: "Temporary " + USAGE_RESOURCE_BY_KEY[override.resource].label + " override revoked early",
+      module: "usage",
+      entity: { type: "usage_override", id: override.id, label: USAGE_RESOURCE_BY_KEY[override.resource].label },
+      previousValue: String(override.overrideLimit),
+      newValue: override.baseLimit === null ? "Unlimited" : String(override.baseLimit),
+      reason,
+    });
+    return commit(next);
+  },
+
+  async endTrial(id, { reason }, actor) {
+    await wait("write");
+    const bundle = requireBundle(id);
+    requireActiveOperating(bundle, "end a trial");
+    const { subscription } = bundle;
+    if (subscription.status !== "trialing") fail("CONFLICT", "Only a trialing subscription can be ended.");
+    const now = nowIso();
+    let next: CompanyBundle = { ...bundle, subscription: { ...subscription, status: "expired", trialEndsAt: now, renewsAt: now, scheduledChange: null } };
+    next = withActivity(next, actor, {
+      action: "subscription.trial_ended",
+      summary: "Trial ended early. The subscription is Expired; the company account is unchanged.",
+      module: "subscription",
+      entity: { type: "subscription", id: subscription.id, label: "Trial" },
+      severity: "warning",
+      previousValue: "Trialing",
+      newValue: "Expired",
+      reason,
+    });
+    return commit(next);
+  },
+
+  async cancelScheduledChange(id, { target, reason }, actor) {
+    await wait("write");
+    const bundle = requireBundle(id);
+    requireActiveOperating(bundle, "cancel a scheduled change");
+    const { subscription } = bundle;
+    if (target === "plan_change") {
+      if (!subscription.scheduledChange) fail("CONFLICT", "There is no scheduled plan change to cancel.");
+      const scheduled = subscription.scheduledChange;
+      let next: CompanyBundle = { ...bundle, subscription: { ...subscription, scheduledChange: null } };
+      next = withActivity(next, actor, {
+        action: "subscription.scheduled_change_cancelled",
+        summary: "Scheduled plan change was cancelled; the current plan stays",
+        module: "subscription",
+        entity: { type: "subscription", id: subscription.id, label: "Scheduled change" },
+        previousValue: scheduled.planTier + " (" + scheduled.billingCycle + ") on " + scheduled.effectiveAt.slice(0, 10),
+        newValue: "No change scheduled",
+        reason,
+      });
+      return commit(next);
+    }
+    if (subscription.status !== "scheduled_cancellation") fail("CONFLICT", "There is no scheduled cancellation to undo.");
+    const trialing = subscription.trialEndsAt !== null && Date.parse(subscription.trialEndsAt) > platformNow();
+    let next: CompanyBundle = { ...bundle, subscription: { ...subscription, status: trialing ? "trialing" : "active", scheduledCancellationAt: null, cancelledAt: null } };
+    next = withActivity(next, actor, {
+      action: "subscription.cancellation_reversed",
+      summary: "Scheduled cancellation was undone",
+      module: "subscription",
+      entity: { type: "subscription", id: subscription.id, label: "Cancellation" },
+      previousValue: "scheduled_cancellation",
+      newValue: trialing ? "trialing" : "active",
+      reason,
+    });
+    return commit(next);
+  },
+
+  async rescheduleChange(id, { effectiveAt, reason }, actor) {
+    await wait("write");
+    const bundle = requireBundle(id);
+    requireActiveOperating(bundle, "reschedule a change");
+    const { subscription } = bundle;
+    if (!subscription.scheduledChange) fail("CONFLICT", "There is no scheduled plan change to reschedule.");
+    if (Number.isNaN(Date.parse(effectiveAt)) || Date.parse(effectiveAt) <= platformNow()) fail("VALIDATION_FAILED", "Choose a date in the future.", { effectiveAt: "Choose a date in the future." });
+    const previous = subscription.scheduledChange.effectiveAt;
+    const iso = new Date(effectiveAt).toISOString();
+    let next: CompanyBundle = { ...bundle, subscription: { ...subscription, scheduledChange: { ...subscription.scheduledChange, effectiveAt: iso } } };
+    next = withActivity(next, actor, {
+      action: "subscription.scheduled_change_rescheduled",
+      summary: "Scheduled plan change was rescheduled",
+      module: "subscription",
+      entity: { type: "subscription", id: subscription.id, label: "Scheduled change" },
+      previousValue: previous.slice(0, 10),
+      newValue: iso.slice(0, 10),
+      reason,
+    });
+    return commit(next);
+  },
+
+  async migratePlanVersion(id, { version, reason }, actor) {
+    await wait("write");
+    const bundle = requireBundle(id);
+    requireActiveOperating(bundle, "migrate plan version");
+    const { subscription } = bundle;
+    const target = findPlan(subscription.planTier)?.versions.find((item) => item.version === version && item.status !== "draft");
+    if (!target) fail("NOT_FOUND", "That plan version does not exist or is not published.");
+    if ((subscription.planVersion ?? 1) === version) fail("CONFLICT", "The subscription is already on this version.");
+    const before = subscription.planVersion ?? 1;
+    let next: CompanyBundle = { ...bundle, subscription: { ...subscription, planVersion: version } };
+    next = withActivity(next, actor, {
+      action: "subscription.version_migrated",
+      summary: "Subscription moved to plan version " + String(version),
+      module: "subscription",
+      entity: { type: "subscription", id: subscription.id, label: "Plan version" },
+      previousValue: "Version " + String(before),
+      newValue: "Version " + String(version),
+      reason,
     });
     return commit(next);
   },

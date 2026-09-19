@@ -9,6 +9,7 @@
 import { ApiError } from "@/types/api";
 import { SESSION_STORAGE_KEYS } from "../config";
 import type { CompanyBundle } from "../types";
+import { resetPlanState } from "@/features/plans-subscriptions/data/mock/plan-store";
 import { buildDataset } from "./dataset";
 
 interface Store {
@@ -99,6 +100,7 @@ export function resetDemoState(): void {
     }
   }
   store = null;
+  resetPlanState();
 }
 
 export function countDirty(): number {

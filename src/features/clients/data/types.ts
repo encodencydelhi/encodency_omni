@@ -18,7 +18,7 @@ import type {
   CompanySubscriptionStatus,
   StaffRef,
 } from "@/features/companies/data/types";
-import type { PlanTier } from "@/types/domain/plan";
+import type { PlanKey } from "@/types/domain/plan";
 
 /* ------------------------------------------------------------------ */
 /* Independent status dimensions                                       */
@@ -173,7 +173,7 @@ export interface ClientCompanyRef {
   id: string;
   name: string;
   slug: string;
-  planTier: PlanTier;
+  planTier: PlanKey;
   planName: string;
   accountStatus: CompanyAccountStatus;
   subscriptionStatus: CompanySubscriptionStatus;

@@ -8,6 +8,8 @@ export const PLAN_TIER = {
 } as const satisfies StatusRegistry<string>;
 
 export type PlanTier = keyof typeof PLAN_TIER;
+/** A plan key: a core tier or a plan created in the Plans & Subscriptions module. */
+export type PlanKey = PlanTier | (string & {});
 export const QUOTA_METRICS = {
   Clients: { label: "Clients", unit: "Clients" },
   users: { label: "Team Members", unit: "users" },
@@ -27,7 +29,8 @@ export type QuotaLimits = Record<QuotaMetric, number | null>;
 
 export interface Plan {
   id: string;
-  tier: PlanTier;
+  /** Stable plan key. The four core tiers keep their names; plans created later get their own. */
+  tier: PlanKey;
   name: string;
   description: string;
   isPublic: boolean;

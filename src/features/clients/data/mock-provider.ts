@@ -15,7 +15,8 @@
  */
 import { env } from "@/config/env";
 import { nowIso, platformNow } from "@/features/companies/data/clock";
-import { PLAN_CATALOGUE, STAFF } from "@/features/companies/data/mock/dataset";
+import { commercialContext } from "@/features/plans-subscriptions/data/mock/plan-store";
+import { STAFF } from "@/features/companies/data/mock/dataset";
 import { allBundles, findBundle, resetDemoState, writeBundle } from "@/features/companies/data/mock/store";
 import { computeUsage, type DerivationContext } from "@/features/companies/data/selectors";
 import type { CompanyActivity, CompanyBundle, CompanyClient, CompanyUser } from "@/features/companies/data/types";
@@ -63,7 +64,7 @@ function wait(kind: "read" | "write"): Promise<void> {
 }
 
 function context(): DerivationContext {
-  return { now: platformNow(), plans: PLAN_CATALOGUE, staff: STAFF };
+  return { now: platformNow(), staff: STAFF, ...commercialContext() };
 }
 
 function fail(code: ConstructorParameters<typeof ApiError>[0]["code"], message: string, fieldErrors?: Record<string, string>): never {

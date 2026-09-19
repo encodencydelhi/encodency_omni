@@ -17,7 +17,7 @@ import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils/cn";
 import { formatCurrency } from "@/lib/utils/format";
 import type { BillingCycle } from "@/types/domain/subscription";
-import type { PlanTier } from "@/types/domain/plan";
+import type { PlanKey } from "@/types/domain/plan";
 import { isoDaysFromNow, nowIso } from "../data/clock";
 import {
   COMPANY_SIZES,
@@ -59,7 +59,7 @@ interface WizardForm {
   ownerPhone: string;
   existingUserId: string | null;
 
-  planTier: PlanTier;
+  planTier: PlanKey;
   billingCycle: BillingCycle;
   mode: "trial" | "paid";
   startDate: string;

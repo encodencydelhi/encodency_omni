@@ -24,7 +24,8 @@ import {
 import { createRng, daysAgo, daysAhead, minutesAgo, type Rng } from "@/mocks/lib/random";
 import type { Plan } from "@/types/domain/plan";
 import { INTEGRATION_PROVIDER } from "@/types/domain/integration";
-import { activeOverrideFor, cyclePrice, planFor, type DerivationContext } from "../selectors";
+import { activeOverrideAt, overrideValueFor } from "@/features/plans-subscriptions/data/entitlements";
+import { cyclePrice, planFor, type DerivationContext } from "../selectors";
 import type {
   ActivityModule,
   CompanyActivity,
@@ -512,8 +513,8 @@ function buildBaseline(
     if (!def.metric || def.key === "users" || def.key === "clients" || def.key === "connectedAccounts") continue;
 
     const baseLimit = plan.limits[def.metric];
-    const override = activeOverrideFor(overrides, def.key, BUILD_CTX.now);
-    const limit = override ? override.overrideLimit : baseLimit;
+    const override = activeOverrideAt(overrides, def.key, BUILD_CTX.now, baseLimit);
+    const limit = override ? overrideValueFor(override, baseLimit) : baseLimit;
 
     const percent = scenario[def.key] ?? pressure * rng.float(0.3, 1);
     const used =

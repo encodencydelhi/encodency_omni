@@ -1,69 +1,129 @@
-import { QUOTA_METRICS, type Plan, type QuotaMetric } from "@/types/domain/plan";
-import type { EntitlementCatalogueItem, PlatformPlan, PlanFeature, PlanLimit, PlanPublicationStatus } from "./types";
+/**
+ * The one entitlement catalogue.
+ *
+ * Every screen that names a feature or a limit reads it from here: the plan
+ * editor, plan comparison, subscription entitlements, company usage and the
+ * client-creation check. Nothing else declares keys, units or reset periods.
+ */
+import { QUOTA_METRICS } from "@/types/domain/plan";
+import type { EntitlementCategory, FeatureDef, LimitKind, LimitRule, ResourceDef, ResourceKey } from "./types";
 
-export const ENTITLEMENT_CATALOGUE: EntitlementCatalogueItem[] = [
-  { key: "clients", displayName: "Max Clients", description: "Concurrent client workspaces a company may operate.", category: "Organization", valueType: "integer", unit: "clients", resetPeriod: "none", supportedLimits: ["Clients"], dependencies: [] },
-  { key: "users", displayName: "Max Users", description: "Company users that can be active at the same time.", category: "Team & Governance", valueType: "integer", unit: "users", resetPeriod: "none", supportedLimits: ["users"], dependencies: [] },
-  { key: "connectedAccounts", displayName: "Connected Accounts", description: "Social, website and messaging account connections.", category: "Marketing", valueType: "integer", unit: "accounts", resetPeriod: "none", supportedLimits: ["channels"], dependencies: [] },
-  { key: "aiCredits", displayName: "AI Credits", description: "AI generation and optimization credits.", category: "AI & Automation", valueType: "metered", unit: "credits", resetPeriod: "billing_cycle", supportedLimits: ["aiCredits"], dependencies: [] },
-  { key: "automationRuns", displayName: "Automation Runs", description: "Workflow executions included in the plan.", category: "AI & Automation", valueType: "metered", unit: "runs", resetPeriod: "billing_cycle", supportedLimits: ["automationRuns"], dependencies: [] },
-  { key: "scheduledPosts", displayName: "Scheduled Posts", description: "Publishing volume governed by automations and channels.", category: "Marketing", valueType: "metered", unit: "posts", resetPeriod: "monthly", supportedLimits: ["automationRuns"], dependencies: ["connectedAccounts"] },
-  { key: "website_monitoring", displayName: "Website Monitoring", description: "Website health and monitoring workspace.", category: "Website & SEO", valueType: "boolean", unit: "enabled", resetPeriod: "none", supportedLimits: ["seoPages"], dependencies: [] },
-  { key: "seo_audits", displayName: "SEO Audits", description: "Pages crawled and audited for SEO.", category: "Website & SEO", valueType: "metered", unit: "pages", resetPeriod: "monthly", supportedLimits: ["seoPages"], dependencies: ["website_monitoring"] },
-  { key: "api_access", displayName: "API Access", description: "Access to platform APIs.", category: "Platform/API", valueType: "boolean", unit: "enabled", resetPeriod: "none", supportedLimits: ["apiCalls"], dependencies: [] },
-  { key: "webhook_access", displayName: "Webhook Access", description: "Outbound webhook delivery.", category: "Platform/API", valueType: "boolean", unit: "enabled", resetPeriod: "none", supportedLimits: ["apiCalls"], dependencies: ["api_access"] },
+export const ENTITLEMENT_CATEGORIES: readonly EntitlementCategory[] = [
+  "Organization",
+  "Marketing",
+  "AI & Automation",
+  "Website & SEO",
+  "Team & Governance",
+  "Platform/API",
 ];
 
-export const FEATURE_LIBRARY: Array<Omit<PlanFeature, "enabled">> = [
-  { key: "publisher", label: "Omnichannel publisher", category: "Marketing" },
-  { key: "automation", label: "Automation engine", category: "AI & Automation" },
-  { key: "ai_assistant", label: "AI marketing assistant", category: "AI & Automation" },
-  { key: "seo", label: "SEO site audit", category: "Website & SEO" },
-  { key: "permissions", label: "Client-level permissions", category: "Team & Governance" },
-  { key: "api", label: "API access", category: "Platform/API" },
-  { key: "webhooks", label: "Webhook access", category: "Platform/API" },
-  { key: "sla", label: "Named success manager", category: "Team & Governance" },
+const CAPACITY: LimitKind[] = ["none", "fixed", "unlimited", "custom"];
+
+/**
+ * Measurable allowances. Only resources the platform can actually measure are
+ * listed - each one maps to a limit the company usage views already report on.
+ */
+export const RESOURCES: readonly ResourceDef[] = [
+  { key: "Clients", name: "Max Clients", description: "Client workspaces a company may operate at the same time.", category: "Organization", kind: "capacity", unit: "clients", resetPeriod: "none", usageResource: "clients", supportedKinds: CAPACITY },
+  { key: "users", name: "Max Users", description: "Company members who may be active at the same time.", category: "Team & Governance", kind: "capacity", unit: "users", resetPeriod: "none", usageResource: "users", supportedKinds: CAPACITY },
+  { key: "channels", name: "Connected Accounts", description: "Social, search and messaging accounts connected across all clients.", category: "Marketing", kind: "capacity", unit: "accounts", resetPeriod: "none", usageResource: "connectedAccounts", supportedKinds: CAPACITY },
+  { key: "storageGb", name: "Media Storage", description: "Stored media and files.", category: "Marketing", kind: "capacity", unit: "GB", resetPeriod: "none", usageResource: "storage", supportedKinds: CAPACITY },
+  { key: "reports", name: "Reports Generated", description: "Reports generated in the period.", category: "Marketing", kind: "metered", unit: "reports", resetPeriod: "billing_cycle", usageResource: "reports", supportedKinds: CAPACITY },
+  { key: "whatsappMessages", name: "WhatsApp Messages", description: "Business messages sent through the connected WhatsApp account.", category: "Marketing", kind: "metered", unit: "messages", resetPeriod: "monthly", usageResource: null, supportedKinds: CAPACITY },
+  { key: "aiCredits", name: "AI Credits", description: "Credits consumed by AI generation and optimisation.", category: "AI & Automation", kind: "metered", unit: "credits", resetPeriod: "billing_cycle", usageResource: "aiCredits", supportedKinds: CAPACITY },
+  { key: "automationRuns", name: "Automation Runs", description: "Workflow executions in the period.", category: "AI & Automation", kind: "metered", unit: "runs", resetPeriod: "billing_cycle", usageResource: "automationRuns", supportedKinds: CAPACITY },
+  { key: "seoPages", name: "SEO Pages Crawled", description: "Pages crawled and audited for SEO in the period.", category: "Website & SEO", kind: "metered", unit: "pages", resetPeriod: "monthly", usageResource: null, supportedKinds: CAPACITY },
+  { key: "apiCalls", name: "API Requests", description: "Requests made to the platform API in the period.", category: "Platform/API", kind: "metered", unit: "requests", resetPeriod: "billing_cycle", usageResource: "apiRequests", supportedKinds: CAPACITY },
 ];
 
-export function limitsFromPlan(plan: Plan): PlanLimit[] {
-  return (Object.keys(plan.limits) as QuotaMetric[]).map((key) => ({
-    key,
-    label: QUOTA_METRICS[key].label,
-    value: plan.limits[key],
-    unit: QUOTA_METRICS[key].unit,
-    resetPeriod: key === "Clients" || key === "users" || key === "channels" ? "none" : "billing_cycle",
-  }));
+export const RESOURCE_BY_KEY: Readonly<Record<ResourceKey, ResourceDef>> = Object.fromEntries(RESOURCES.map((item) => [item.key, item])) as Record<ResourceKey, ResourceDef>;
+
+/** Boolean capabilities. Only things the product actually ships are listed. */
+export const FEATURES: readonly FeatureDef[] = [
+  { key: "multiple_clients", name: "Multiple client workspaces", description: "Operate more than one client under the company.", category: "Organization", dependencies: [] },
+  { key: "custom_branding", name: "Custom branding", description: "White-label reports and workspaces.", category: "Organization", dependencies: [] },
+
+  { key: "omnichannel_publisher", name: "Omnichannel publisher", description: "Compose and schedule posts across connected channels.", category: "Marketing", dependencies: [] },
+  { key: "approval_workflows", name: "Approval workflows", description: "Review and approve content before it publishes.", category: "Marketing", dependencies: ["omnichannel_publisher"] },
+  { key: "campaign_attribution", name: "Campaign attribution", description: "Attribute leads and results to campaigns.", category: "Marketing", dependencies: [] },
+  { key: "lead_inbox", name: "Lead inbox", description: "Collect and triage inbound leads.", category: "Marketing", dependencies: [] },
+  { key: "channel_meta", name: "Meta / Instagram", description: "Facebook and Instagram connections.", category: "Marketing", dependencies: [] },
+  { key: "channel_linkedin", name: "LinkedIn", description: "LinkedIn page connections.", category: "Marketing", dependencies: [] },
+  { key: "channel_google_business", name: "Google Business Profile", description: "Google Business Profile connections.", category: "Marketing", dependencies: [] },
+  { key: "channel_whatsapp", name: "WhatsApp", description: "WhatsApp business messaging.", category: "Marketing", dependencies: [] },
+  { key: "channel_youtube", name: "YouTube", description: "YouTube channel connections.", category: "Marketing", dependencies: [] },
+
+  { key: "ai_assistant", name: "AI marketing assistant", description: "AI content and insight assistance.", category: "AI & Automation", dependencies: [] },
+  { key: "automation_engine", name: "Automation builder", description: "Build and run workflow automations.", category: "AI & Automation", dependencies: [] },
+  { key: "advanced_conditions", name: "Advanced automation conditions", description: "Branching, filters and multi-step conditions.", category: "AI & Automation", dependencies: ["automation_engine"] },
+
+  { key: "seo_audit", name: "SEO site audit", description: "Crawl and audit client websites.", category: "Website & SEO", dependencies: [] },
+  { key: "website_monitoring", name: "Website monitoring", description: "Uptime and health monitoring for client websites.", category: "Website & SEO", dependencies: [] },
+  { key: "keyword_tracking", name: "Keyword tracking", description: "Track keyword positions over time.", category: "Website & SEO", dependencies: ["seo_audit"] },
+  { key: "gsc_reporting", name: "Search Console reporting", description: "Reporting from Google Search Console.", category: "Website & SEO", dependencies: ["seo_audit"] },
+  { key: "ga4_reporting", name: "GA4 reporting", description: "Reporting from Google Analytics 4.", category: "Website & SEO", dependencies: [] },
+
+  { key: "client_permissions", name: "Client-level permissions", description: "Restrict members to specific clients.", category: "Team & Governance", dependencies: ["multiple_clients"] },
+  { key: "extended_audit", name: "Extended audit retention", description: "Longer retention of audit history.", category: "Team & Governance", dependencies: [] },
+  { key: "priority_support", name: "Priority support", description: "Faster support response.", category: "Team & Governance", dependencies: [] },
+  { key: "success_manager", name: "Named success manager", description: "A dedicated OmniPlatform contact.", category: "Team & Governance", dependencies: ["priority_support"] },
+
+  { key: "api_access", name: "API access", description: "Access to the platform API.", category: "Platform/API", dependencies: [] },
+  { key: "webhooks", name: "Webhooks", description: "Outbound webhook delivery.", category: "Platform/API", dependencies: ["api_access"] },
+];
+
+export const FEATURE_BY_KEY: Readonly<Record<string, FeatureDef>> = Object.fromEntries(FEATURES.map((item) => [item.key, item]));
+
+export function featuresIn(category: EntitlementCategory): FeatureDef[] {
+  return FEATURES.filter((item) => item.category === category);
+}
+export function resourcesIn(category: EntitlementCategory): ResourceDef[] {
+  return RESOURCES.filter((item) => item.category === category);
 }
 
-export function platformPlanFromPlan(plan: Plan): PlatformPlan {
-  const publicationStatus: PlanPublicationStatus = plan.isArchived ? "retired" : plan.isPublic ? "published" : "hidden";
-  const features = FEATURE_LIBRARY.map((feature) => ({
-    ...feature,
-    enabled: plan.features.some((item) => item.toLowerCase().includes(feature.label.toLowerCase().split(" ")[0] ?? feature.key)) || ["publisher", "seo"].includes(feature.key),
-  }));
-  return {
-    ...plan,
-    internalCode: plan.tier.toUpperCase(),
-    publicationStatus,
-    targetSegment: plan.tier === "enterprise" ? "Enterprise and strategic accounts" : plan.tier === "agency" ? "Marketing agencies" : plan.tier === "growth" ? "Growing brand teams" : "Starter tenants",
-    internalNotes: "Demo commercial configuration. Backend contract pending.",
-    availability: {
-      visibleToNewCustomers: plan.isPublic,
-      regions: ["India", "United States", "United Kingdom"],
-      signupModes: plan.tier === "enterprise" ? ["sales_assisted"] : ["self_serve", "sales_assisted"],
-    },
-    versions: [
-      {
-        id: `${plan.id}_v1`,
-        planId: plan.id,
-        version: 1,
-        status: "published",
-        publishedAt: plan.updatedAt,
-        prices: { currency: plan.currency, monthlyMinor: plan.monthlyPriceMinor, annualMinor: plan.annualPriceMinor, setupFeeMinor: 0, trialDays: plan.trialDays },
-        features,
-        limits: limitsFromPlan(plan),
-        note: "Published snapshot generated from the existing shared catalogue.",
-      },
-    ],
-  };
+/* ------------------------------------------------------------------ */
+/* Limit helpers                                                       */
+/* ------------------------------------------------------------------ */
+
+/** The numeric limit a rule stands for: null is unlimited, 0 is not available. */
+export function ruleToLimit(rule: LimitRule): number | null {
+  switch (rule.kind) {
+    case "none":
+      return 0;
+    case "unlimited":
+      return null;
+    default:
+      return rule.value ?? 0;
+  }
+}
+
+export function limitToRule(limit: number | null, kind?: LimitKind): LimitRule {
+  if (limit === null) return { kind: "unlimited", value: null };
+  if (limit === 0) return { kind: "none", value: null };
+  return { kind: kind === "custom" ? "custom" : "fixed", value: limit };
+}
+
+export function formatRule(rule: LimitRule, unit?: string): string {
+  switch (rule.kind) {
+    case "none":
+      return "Not available";
+    case "unlimited":
+      return "Unlimited";
+    default:
+      return `${new Intl.NumberFormat("en-IN").format(rule.value ?? 0)}${unit ? ` ${unit}` : ""}${rule.kind === "custom" ? " (custom)" : ""}`;
+  }
+}
+
+export function formatLimitValue(limit: number | null, unit?: string): string {
+  if (limit === null) return "Unlimited";
+  if (limit === 0) return "Not available";
+  return `${new Intl.NumberFormat("en-IN").format(limit)}${unit ? ` ${unit}` : ""}`;
+}
+
+export function rulesEqual(a: LimitRule, b: LimitRule): boolean {
+  return a.kind === b.kind && (a.value ?? null) === (b.value ?? null);
+}
+
+export function quotaLabel(key: ResourceKey): string {
+  return QUOTA_METRICS[key].label;
 }
