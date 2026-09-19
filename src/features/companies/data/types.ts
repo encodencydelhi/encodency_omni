@@ -8,6 +8,7 @@
  */
 import type { PaginationMeta } from "@/types/api";
 import type { IntegrationProvider } from "@/types/domain/integration";
+import type { ClientDetailRecord } from "@/features/clients/data/types";
 import type { PlanTier } from "@/types/domain/plan";
 import type { Clientstatus } from "@/types/domain/project";
 import type { InternalRole } from "@/types/domain/team";
@@ -457,6 +458,13 @@ export interface CompanyBundle {
   notes: CompanyInternalNote[];
   tickets: CompanyTicket[];
   jobs: CompanyJobHealth;
+  /**
+   * Client-specific extras (websites, assignments, onboarding, activity, lifecycle),
+   * keyed by client id. Owned by the Clients module; kept in the company bundle so
+   * there is a single store, persistence and reset for both modules. Absent until a
+   * client is first changed - reads fall back to a deterministic seed.
+   */
+  clientDetails?: Record<string, ClientDetailRecord>;
 }
 
 /* ------------------------------------------------------------------ */

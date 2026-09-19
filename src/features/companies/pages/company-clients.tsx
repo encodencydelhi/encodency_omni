@@ -18,7 +18,8 @@ import { toStatusOptions } from "@/types/common";
 import { ModuleLinkButton } from "../components/module-link";
 import { StatCard, StatGrid, WithTooltip } from "../components/primitives";
 import { SectionError, StatGridSkeleton, TableSkeleton } from "../components/states";
-import { companySectionHref, resolveModuleLink } from "../data/config";
+import { clientHref } from "@/features/clients/data/config";
+import { companySectionHref } from "../data/config";
 import { useCompanyClients } from "../data/hooks";
 import type { CompanyClientsData } from "../data/repository";
 import type { CompanyClient } from "../data/types";
@@ -69,11 +70,7 @@ function ClientsBody({ companyId, data }: { companyId: string; data: CompanyClie
 
   const menu = (client: CompanyClient): ActionMenuItem[] => {
     const items: ActionMenuItem[] = [];
-    // There is no client detail route yet, so "Open Client" lands on the global Clients list, filtered.
-    const global = resolveModuleLink("clients", { companyId, search: client.name });
-    if (global.available && global.href) {
-      items.push({ id: "open", label: "Open Client", icon: SquareArrowOutUpRightIcon, onSelect: () => router.push(global.href ?? "") });
-    }
+    items.push({ id: "open", label: "Open Client", icon: SquareArrowOutUpRightIcon, onSelect: () => router.push(clientHref(client.id)) });
     items.push({ id: "integrations", label: "View Integrations", icon: PlugIcon, onSelect: () => router.push(companySectionHref(companyId, "integrations", { client: client.name })) });
     items.push({ id: "usage", label: "View Usage", icon: GaugeIcon, onSelect: () => router.push(companySectionHref(companyId, "usage")) });
     return items;
@@ -165,8 +162,8 @@ function ClientsBody({ companyId, data }: { companyId: string; data: CompanyClie
             </Button>
           ) : null}
         </div>
-        <ModuleLinkButton module="clients" query={{ companyId }} variant="ghost">
-          Open in global Clients
+        <ModuleLinkButton module="clients" query={{ company: companyId }} variant="ghost">
+          Open in Super Admin Clients
         </ModuleLinkButton>
       </div>
 

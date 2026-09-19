@@ -23,11 +23,6 @@ import {
   USAGE_LEVEL_META,
 } from "../data/config";
 import type { AttentionKind, CompanyListQuery } from "../data/types";
-
-/**
- * Filter keys are URL parameters. `status` is accepted as an alias of
- * `accountStatus` so links like `?status=active&plan=growth` keep working.
- */
 export const FILTER_KEYS = [
   "plan",
   "accountStatus",
@@ -149,7 +144,6 @@ export function CompanyFilterBar({
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const valueOf = (key: CompanyFilterKey) => (key === "accountStatus" ? (table.filters.accountStatus ?? table.filters.status) : table.filters[key]);
-  // The legacy alias keeps its own parameter so changing it edits the URL the user arrived with.
   const change = (key: CompanyFilterKey, value: string | null) =>
     table.setFilter(key === "accountStatus" && table.filters.status !== undefined ? "status" : key, value);
 

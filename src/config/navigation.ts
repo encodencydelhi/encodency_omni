@@ -82,6 +82,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         href: ROUTES.superAdmin.Clients,
         icon: FolderIcon,
         permission: "Clients:read",
+        matchPrefixes: [ROUTES.superAdmin.Clients],
       },
       {
         label: "Internal Team",
