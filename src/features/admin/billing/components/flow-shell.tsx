@@ -8,14 +8,13 @@ import { useBeforeUnload } from "../billing-data/hooks";
 import { Button } from "./ui";
 
 interface Guard {
-  /** What the person was editing, e.g. "billing details". */
   label: string;
-  /** Resolves true when saved; false keeps the flow open (e.g. validation failed). */
   onSave?: () => Promise<boolean>;
   saveLabel?: string;
+  onDiscard?: () => void;
 }
 
-const FlowCloseContext = createContext<() => void>(() => {});
+const FlowCloseContext = createContext<() => void>(() => { });
 
 /** Close the surrounding flow, going through its unsaved-changes guard. */
 export function useFlowClose() {
@@ -141,6 +140,7 @@ export function FlowShell({
                       disabled={saving}
                       onClick={() => {
                         setConfirming(false);
+                        guard.onDiscard?.();
                         onOpenChange(false);
                       }}
                     >

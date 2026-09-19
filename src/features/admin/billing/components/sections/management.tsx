@@ -203,7 +203,7 @@ export function SubscriptionManagement() {
 export function PreviewPanel() {
   const { scenario, setScenario, role, setRole, simulation, simulate } = useBilling();
   return (
-    <section className={cn(x.card, "border-dashed")} aria-labelledby="billing-preview-title">
+    <section id="billing-preview" className={cn(x.card, "border-dashed")} aria-labelledby="billing-preview-title">
       <SectionHeader
         id="billing-preview"
         icon={FlaskConical}

@@ -8,7 +8,7 @@ import { ChannelLogo } from "../shared/channel-logo";
 import { cn } from "@/lib/utils/cn";
 import { AnalyticsPage } from "../analytics/components/analytics-page";
 
-type View = "analytics" | "reports" | "team" | "roles" | "integrations" | "billing" | "settings";
+type View = "analytics" | "reports" | "team" | "roles" | "integrations" | "settings";
 
 const team = [
   { name: "Manish Sirohi", email: "manishsirohi@encodency.com", role: "Organization Admin", Clients: "Moksha Sewa", status: "Active" },
@@ -32,7 +32,6 @@ export function AdminManagementPage({ view }: { view: View }) {
     team: "Team",
     roles: "Roles & Permissions",
     integrations: "Integrations",
-    billing: "Billing",
     settings: "Settings",
   };
   const title = titles[view] || "Management";
@@ -57,7 +56,6 @@ export function AdminManagementPage({ view }: { view: View }) {
       {view === "team" && <Team />}
       {view === "roles" && <Roles />}
       {view === "integrations" && <Integrations />}
-      {view === "billing" && <Billing />}
       {view === "settings" && <SettingsPage />}
     </div>
   );
@@ -174,53 +172,6 @@ function Integrations() {
         ))}
       </div>
     </Panel>
-  );
-}
-
-function Billing() {
-  return (
-    <div className="grid gap-3 lg:grid-cols-[1fr_.8fr]">
-      <Panel title="Current plan">
-        <div className="p-4">
-          <span className="rounded-sm bg-[#FFF0F1] px-2 py-1 text-[7px] font-semibold text-[#EB0711]">GROWTH PLAN</span>
-          <p className="mt-3 text-[24px] font-semibold">
-            ₹12,999 <small className="text-[9px] font-normal text-[#75829D]">/ month</small>
-          </p>
-          <p className="mt-1 text-[8px] text-[#75829D]">Renews on 15 October 2026</p>
-          <button className="mt-4 h-8 rounded-sm bg-[#EB0711] px-4 text-[8px] font-semibold text-white">Upgrade Plan</button>
-        </div>
-      </Panel>
-      <Panel title="Usage">
-        <div className="space-y-4 p-4">
-          {[
-            ["Clients", "1 of 5", 20],
-            ["Team members", "4 of 15", 27],
-            ["Connected channels", "7 of 20", 35],
-            ["AI credits", "6,420 of 10,000", 64],
-          ].map(([l, v, p]) => (
-            <div key={String(l)}>
-              <div className="flex justify-between text-[8px]">
-                <span>{l}</span>
-                <strong>{v}</strong>
-              </div>
-              <div className="mt-1 h-1.5 rounded-sm bg-[#E9EDF3]">
-                <div className="h-full rounded-sm bg-[#EB0711]" style={{ width: `${p}%` }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </Panel>
-      <Panel title="Invoices">
-        <Table
-          headers={["Invoice", "Date", "Amount", "Status"]}
-          rows={[
-            ["INV-2026-009", "15 Sep 2026", "₹12,999", "Paid"],
-            ["INV-2026-008", "15 Aug 2026", "₹12,999", "Paid"],
-            ["INV-2026-007", "15 Jul 2026", "₹12,999", "Paid"],
-          ]}
-        />
-      </Panel>
-    </div>
   );
 }
 
