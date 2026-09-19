@@ -37,12 +37,12 @@ export function Panel({
   return (
     <section className={cn("min-w-0 rounded-sm border border-border bg-card shadow-xs", className)}>
       {title || action ? (
-        <header className="flex items-start justify-between gap-3 px-3 pt-2.5 pb-2">
-          <div className="min-w-0">
+        <header className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-3 pt-2.5 pb-2">
+          <div className="min-w-0 flex-1">
             {title ? <h3 className="text-[13px] font-semibold tracking-tight text-foreground">{title}</h3> : null}
             {description ? <p className="mt-0.5 text-2xs text-muted-foreground">{description}</p> : null}
           </div>
-          {action ? <div className="flex shrink-0 items-center gap-1.5">{action}</div> : null}
+          {action ? <div className="flex flex-wrap items-center gap-1.5">{action}</div> : null}
         </header>
       ) : null}
       <div className={cn(flush ? "" : "px-3 pb-3", !title && !action && !flush && "pt-3", bodyClassName)}>{children}</div>

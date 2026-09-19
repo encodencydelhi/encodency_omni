@@ -1,20 +1,10 @@
 import { formatRelativeTime } from "@/lib/utils/format";
-import { MOCK_NOW } from "@/mocks/lib/random";
-import { COMPANIES_MOCK_MODE } from "./config";
+import { COMPANIES_MOCK_MODE, DEMO_CLOCK_ANCHOR } from "./config";
 
 const DAY_MS = 86_400_000;
 const LOADED_AT = Date.now();
-
-/**
- * The workspace clock.
- *
- * Demo timestamps are anchored to a fixed instant so the dataset is identical on
- * every load. The clock starts there and advances in real time, so a record
- * created during the session lands "just now" rather than ten days in the
- * future of the fixtures. A real backend replaces this with `Date.now()`.
- */
 export function platformNow(): number {
-  return COMPANIES_MOCK_MODE ? MOCK_NOW + (Date.now() - LOADED_AT) : Date.now();
+  return COMPANIES_MOCK_MODE ? DEMO_CLOCK_ANCHOR + (Date.now() - LOADED_AT) : Date.now();
 }
 
 export function nowIso(): string {

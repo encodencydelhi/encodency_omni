@@ -28,7 +28,7 @@ export function CompanySubscriptionPage() {
   if (!query.data) {
     return (
       <div className="space-y-1">
-        <div className="grid gap-1 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
           <PanelSkeleton rows={6} className="lg:col-span-2" />
           <PanelSkeleton rows={6} />
         </div>
@@ -71,7 +71,7 @@ function SubscriptionBody({ companyId, data }: { companyId: string; data: Compan
 
   return (
     <div className="space-y-1">
-      <div className="grid gap-1 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Panel
             title="Subscription"

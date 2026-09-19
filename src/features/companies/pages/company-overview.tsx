@@ -29,7 +29,7 @@ export function CompanyOverviewPage() {
   if (query.error) return <SectionError subject="Company overview" error={query.error} onRetry={() => void query.refetch()} />;
   if (!query.data) {
     return (
-      <div className="grid gap-1 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
         {Array.from({ length: 6 }, (_, index) => (
           <PanelSkeleton key={index} rows={5} className={index === 3 ? "lg:col-span-2" : undefined} />
         ))}
@@ -54,7 +54,7 @@ function OverviewBody({ data }: { data: CompanyOverviewData }) {
 
   return (
     <div className="space-y-1">
-      <div className="grid gap-1 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
         <Panel
           title="Company profile"
           action={
@@ -144,7 +144,7 @@ function OverviewBody({ data }: { data: CompanyOverviewData }) {
         </Panel>
       </div>
 
-      <div className="grid gap-1 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Panel
             title="Usage summary"
@@ -223,7 +223,7 @@ function OverviewBody({ data }: { data: CompanyOverviewData }) {
         </Panel>
       </div>
 
-      <div className="grid gap-1 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <CompanyNotesPanel companyId={id} notes={notes} canManage={capabilities.canManageInternalNotes} />
         </div>

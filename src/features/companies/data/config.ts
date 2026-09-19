@@ -26,21 +26,8 @@ import type {
   UsageResource,
   UsageResourceStatus,
 } from "./types";
-
-/**
- * Single switch for the tenant workspace's demo data. It reuses the app-wide
- * data-source setting (`NEXT_PUBLIC_DATA_SOURCE`), so there is one mock-mode
- * concept in the product rather than several that could disagree.
- *
- * When it is off, the repository resolves to the "not connected" provider and
- * every screen shows an honest unavailable state instead of demo records.
- */
 export const COMPANIES_MOCK_MODE = isMockMode;
-
-/* ------------------------------------------------------------------ */
-/* Status registries (label + tone, rendered by <StatusBadge>)         */
-/* ------------------------------------------------------------------ */
-
+export const DEMO_CLOCK_ANCHOR = Date.parse("2026-09-09T09:30:00.000Z");
 export const ACCOUNT_STATUS = {
   active: { label: "Active", tone: "success" },
   suspended: { label: "Suspended", tone: "danger", description: "Access restricted by a platform administrator" },

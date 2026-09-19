@@ -340,7 +340,7 @@ export function CompaniesListPage() {
             )}
           </div>
 
-          <div className="grid gap-1 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <NeedsAttentionPanel portfolio={portfolio.data} initialLimit={5} />
             </div>

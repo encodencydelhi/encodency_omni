@@ -114,7 +114,7 @@ function PreviewContent({
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <AccountStatusBadge status={company.accountStatus} />
-          <SubscriptionStatusBadge status={summary.subscriptionStatus} />
+          <SubscriptionStatusBadge status={summary.subscriptionStatus} labelled />
           <HealthBadge health={summary.health} />
         </div>
       </SheetHeader>
