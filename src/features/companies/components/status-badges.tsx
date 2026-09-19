@@ -3,6 +3,7 @@
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/cn";
+import type { StatusMeta } from "@/types/common";
 import {
   ACCOUNT_STATUS,
   BILLING_STATUS_META,
@@ -46,10 +47,11 @@ export function AccountStatusBadge({ status }: { status: CompanyAccountStatus })
 
 export function SubscriptionStatusBadge({ status, labelled = false }: { status: CompanySubscriptionStatus; labelled?: boolean }) {
   // Next to the account badge both can read "Active"; the prefix says which axis this is.
+  const meta: StatusMeta = SUBSCRIPTION_STATUS_META[status];
   return labelled ? (
-    <Badge tone={SUBSCRIPTION_STATUS_META[status].tone} title={SUBSCRIPTION_STATUS_META[status].description}>
+    <Badge tone={meta.tone} title={meta.description}>
       <span className="font-normal opacity-70">Subscription</span>
-      {SUBSCRIPTION_STATUS_META[status].label}
+      {meta.label}
     </Badge>
   ) : (
     <StatusBadge registry={SUBSCRIPTION_STATUS_META} status={status} />
