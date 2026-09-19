@@ -44,7 +44,7 @@ function PlanCell({ row }: { row: SubscriptionRow }) {
         {row.planName}
       </Link>
       <span className="flex items-center gap-1.5 text-2xs text-muted-foreground">
-        v{row.planVersion}
+        v{row.planVersion} · <span className="capitalize">{row.billingCycle}</span>
         {row.isLegacyVersion ? <LegacyVersionTag version={row.planVersion} current={row.currentVersion} /> : null}
         {row.planMissing ? <span className="text-danger">Plan missing</span> : null}
       </span>
@@ -74,7 +74,7 @@ export function buildSubscriptionColumns(rowMenu: (row: SubscriptionRow) => Acti
   return [
     { id: "company", header: "Company", sortField: "company", hideable: false, className: "px-3", cell: (row) => <CompanyCell row={row} /> },
     { id: "plan", header: "Plan / Version", className: "px-3", cell: (row) => <PlanCell row={row} /> },
-    { id: "cycle", header: "Billing Cycle", className: "px-3", hideBelow: 1320, cell: (row) => <span className="text-[0.8125rem] capitalize">{row.billingCycle}</span> },
+    { id: "cycle", header: "Billing Cycle", className: "px-3", hideBelow: 1600, cell: (row) => <span className="text-[0.8125rem] capitalize">{row.billingCycle}</span> },
     {
       id: "status",
       header: "Subscription Status",
@@ -99,7 +99,7 @@ export function buildSubscriptionColumns(rowMenu: (row: SubscriptionRow) => Acti
       id: "billing",
       header: "Billing Health",
       className: "px-3",
-      hideBelow: 1400,
+      hideBelow: 1500,
       cell: (row) => (
         <Link href={`${ROUTES.superAdmin.company(row.company.id)}/billing`} onClick={stop} className="inline-block">
           <BillingStatusBadge status={row.billingStatus} />

@@ -251,7 +251,7 @@ export function UpcomingPanel({ items }: { items: ScheduledChangeView[] | undefi
           empty={<p className="px-3 pb-4 text-[0.8125rem] text-muted-foreground">No changes are scheduled.</p>}
           columns={[
             { id: "company", header: "Company", cell: (item) => <span className="font-medium text-foreground">{item.company.name}</span> },
-            { id: "change", header: "Change", cell: (item) => <span><ScheduledKindBadge kind={item.kind} /><span className="mt-0.5 block text-2xs text-muted-foreground">{item.current} → {item.scheduled}</span></span> },
+            { id: "change", header: "Change", cell: (item) => <span><ScheduledKindBadge kind={item.kind} /><span className="mt-0.5 block text-[0.8125rem] text-foreground">{item.label}</span><span className="block text-2xs text-muted-foreground">{item.current} → {item.scheduled}</span></span> },
             { id: "date", header: "Effective", hideBelow: "sm", cell: (item) => <span className="whitespace-nowrap text-2xs tabular">{formatDate(item.effectiveAt)}</span> },
             { id: "status", header: "Status", hideBelow: "md", cell: (item) => <ScheduledStatusBadge status={item.status} /> },
             { id: "actions", header: <span className="sr-only">Actions</span>, align: "right", cell: (item) => <Button asChild variant="ghost" size="sm"><Link href={routes.subscription(item.subscriptionId)}>Open</Link></Button> },

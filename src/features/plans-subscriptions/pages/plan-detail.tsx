@@ -331,6 +331,7 @@ function VersionsSection({ summary, subscribersByVersion, activity }: { summary:
       {pair && pair[0] && pair[1] ? (
         <Panel title="Compare Versions" action={<Button variant="ghost" size="sm" onClick={() => { setLeft(null); setRight(null); }}>Close</Button>} flush>
           <ComparisonTable
+            highlightDifferences
             columns={[pair[1], pair[0]].map((version) => ({ id: version.id, title: `Version ${version.version}`, subtitle: version.status === "draft" ? "Draft" : version.publishedAt ? formatDate(version.publishedAt) : "", version }))}
           />
         </Panel>

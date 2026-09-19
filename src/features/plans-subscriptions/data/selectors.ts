@@ -280,7 +280,8 @@ export function sortSubscriptions(rows: readonly SubscriptionRow[], sort: Subscr
         return row.company.name.toLowerCase();
       case "renewsAt":
       default:
-        return Date.parse(periodEndOf(row));
+        // Ended subscriptions have nothing left to renew, so they always sort after running ones.
+        return isCurrentStatus(row.status) ? Date.parse(periodEndOf(row)) : order > 0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
     }
   };
   return [...rows].sort((a, b) => {

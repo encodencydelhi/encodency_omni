@@ -64,13 +64,7 @@ function buildRows(columns: readonly ComparisonColumn[]): Row[] {
   }
   return rows;
 }
-
-/**
- * Plans (or versions of one plan) side by side, grouped by category. Values come
- * straight from the plan versions - nothing here is typed in by hand - and the
- * header and first column stay in view while scrolling.
- */
-export function ComparisonTable({ columns, emptyMessage = "Nothing to compare." }: { columns: readonly ComparisonColumn[]; emptyMessage?: string }) {
+export function ComparisonTable({ columns, emptyMessage = "Nothing to compare.", highlightDifferences = false }: { columns: readonly ComparisonColumn[]; emptyMessage?: string; highlightDifferences?: boolean }) {
   const [onlyDifferences, setOnlyDifferences] = useState(false);
   const rows = useMemo(() => buildRows(columns), [columns]);
   const visible = onlyDifferences ? rows.filter((row) => row.differs) : rows;
@@ -104,7 +98,7 @@ export function ComparisonTable({ columns, emptyMessage = "Nothing to compare." 
           </thead>
           <tbody>
             {categories.map((category) => (
-              <CategoryRows key={category} category={category} rows={visible.filter((row) => row.category === category)} columns={columns.length} />
+              <CategoryRows key={category} category={category} rows={visible.filter((row) => row.category === category)} columns={columns.length} highlight={highlightDifferences} />
             ))}
             {visible.length === 0 ? (
               <tr><td colSpan={columns.length + 1} className="px-3 py-6 text-center text-muted-foreground">These versions are identical.</td></tr>
@@ -116,7 +110,7 @@ export function ComparisonTable({ columns, emptyMessage = "Nothing to compare." 
   );
 }
 
-function CategoryRows({ category, rows, columns }: { category: string; rows: Row[]; columns: number }) {
+function CategoryRows({ category, rows, columns, highlight }: { category: string; rows: Row[]; columns: number; highlight: boolean }) {
   return (
     <>
       <tr>
@@ -131,7 +125,7 @@ function CategoryRows({ category, rows, columns }: { category: string; rows: Row
             {row.hint ? <span className="block text-2xs text-muted-foreground">{row.hint}</span> : null}
           </th>
           {row.values.map((value, index) => (
-            <td key={index} className={cn("border-b border-border px-3 py-1.5 tabular group-hover:bg-accent", row.differs && "bg-primary-subtle/40")}>
+            <td key={index} className={cn("border-b border-border px-3 py-1.5 tabular group-hover:bg-accent", highlight && row.differs && "bg-primary-subtle/40")}>
               {value.enabled === undefined ? (
                 value.text
               ) : value.enabled ? (
