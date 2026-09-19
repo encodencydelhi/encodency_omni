@@ -35,7 +35,7 @@ export function NeedsAttentionSection({
     }
 
     if (item.actionType === "review_security") {
-      router.push(ROUTES.superAdmin.userSecurity);
+      router.push(`${ROUTES.superAdmin.user(item.userId)}?tab=security`);
     } else if (item.actionType === "open_user") {
       router.push(ROUTES.superAdmin.user(item.userId));
     } else if (item.actionType === "review_access") {

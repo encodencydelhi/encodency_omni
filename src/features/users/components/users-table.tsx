@@ -79,9 +79,9 @@ export function UsersTable({
   const isIndeterminate = selectedUsers.length > 0 && selectedUsers.length < users.length;
 
   return (
-    <div className={cn("rounded-lg border border-border bg-white shadow-2xs w-full", className)}>
-      <div className="w-full overflow-x-auto">
-        <Table className="w-full min-w-0">
+    <div className={cn("rounded-lg border border-border bg-white shadow-2xs w-full min-w-0 max-w-full overflow-hidden", className)}>
+      <div className="w-full overflow-x-auto min-w-0">
+        <Table className="w-full min-w-[860px]">
           <TableHeader className="bg-slate-50 border-b border-border text-xs font-semibold tracking-wider text-slate-500 uppercase">
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-10 px-3">

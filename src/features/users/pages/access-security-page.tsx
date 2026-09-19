@@ -206,7 +206,7 @@ function AccessSecurityContent() {
 
       {/* Security Attention Queue (Section 44) */}
       {attentionItems.length > 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 space-y-2 mt-3">
+        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 space-y-2">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-900">
             <ShieldAlertIcon className="size-4 text-amber-600" />
             <span>Security Attention Queue ({attentionItems.length})</span>

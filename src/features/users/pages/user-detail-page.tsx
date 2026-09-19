@@ -83,6 +83,7 @@ import {
   useUserActivities,
   useUserMutations,
 } from "../data/hooks";
+import { useUserCapabilities } from "../data/capability-provider";
 import type { CompanyMembership, UserSession } from "../data/types";
 
 export function UserDetailPage() {
@@ -90,6 +91,7 @@ export function UserDetailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = (params?.userId as string) || "";
+  const capabilities = useUserCapabilities();
 
   const tabQuery = searchParams.get("tab") as UserDetailTabId | null;
   const [activeTab, setActiveTab] = useState<UserDetailTabId>(
@@ -255,6 +257,17 @@ export function UserDetailPage() {
   const activeMemberships = user.memberships.filter((m) => m.status === "active");
   const primaryCompany = user.memberships.find((m) => m.role === "owner" && m.status === "active") || activeMemberships[0] || null;
 
+  const handleReviewSecurity = () => {
+    handleTabChange("security");
+    setTimeout(() => {
+      const el = document.getElementById("security-governance-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
+    toast.info(`Viewing security policies and sessions for ${user.identity.name}`);
+  };
+
   return (
     <div className="space-y-4 pb-12 min-w-0">
       {/* 1. Breadcrumb & Navigation Back */}
@@ -360,21 +373,23 @@ export function UserDetailPage() {
 
           {/* Header Action Buttons */}
           <div className="flex flex-wrap items-center gap-2 self-start lg:self-center">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setIsAddMembershipOpen(true)}
-              className="h-8 text-xs bg-blue-600 hover:bg-blue-700"
-            >
-              <PlusIcon className="size-3.5 mr-1.5" />
-              Add to Company
-            </Button>
+            {capabilities.canManageMemberships && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setIsAddMembershipOpen(true)}
+                className="h-8 text-xs bg-blue-600 hover:bg-blue-700"
+              >
+                <PlusIcon className="size-3.5 mr-1.5" />
+                Add to Company
+              </Button>
+            )}
 
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleTabChange("security")}
-              className="h-8 text-xs"
+              onClick={handleReviewSecurity}
+              className="h-8 text-xs font-medium text-slate-700 border-slate-200 hover:bg-slate-50"
             >
               <ShieldCheckIcon className="size-3.5 mr-1.5 text-slate-600" />
               Review Security
@@ -1105,7 +1120,7 @@ export function UserDetailPage() {
         {/* TAB 3: SECURITY & SESSIONS */}
         <TabsContent value="security" className="space-y-4 outline-hidden">
           {/* Security Summary Banner */}
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div id="security-governance-section" className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 scroll-mt-20">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <ShieldCheckIcon className="size-4.5 text-blue-600" />
