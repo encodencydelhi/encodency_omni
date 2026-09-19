@@ -8,6 +8,7 @@ import type {
   TransferOwnershipInput,
   UpdateClientAccessInput,
   UpdateUserIdentityInput,
+  UserAccountLifecycleEvent,
   UserActivity,
   UserAggregate,
   UserAttentionItem,
@@ -45,6 +46,7 @@ export interface UsersRepository {
   listSecurityEvents(): Promise<UserSecurityEvent[]>;
   listAttentionItems(): Promise<UserAttentionItem[]>;
   listActivities(query?: { userId?: string; companyId?: string; search?: string }): Promise<UserActivity[]>;
+  listLifecycleEvents(userId?: string): Promise<UserAccountLifecycleEvent[]>;
   bulkAction(
     action: "export" | "require_2fa" | "notify" | "suspend",
     userIds: string[],

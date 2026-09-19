@@ -176,7 +176,7 @@ function UsersListContent() {
   };
 
   return (
-    <div className="space-y-4 w-full min-w-0 max-w-7xl mx-auto pb-12 overflow-x-hidden">
+    <div className="space-y-4 w-full min-w-0 max-w-7xl mx-auto pb-12">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/80 pb-3">
         <div>

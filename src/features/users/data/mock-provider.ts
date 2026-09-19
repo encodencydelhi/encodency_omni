@@ -1,11 +1,13 @@
 import { ApiError } from "@/types/api";
 import { ORGANISATION_ROLE } from "@/types/domain/user";
+import { MOCK_REFERENCE_TIME } from "./config";
 import {
   addInvitation,
   computeUserKpis,
   getAllActivities,
   getAllAttentionItems,
   getAllInvitations,
+  getAllLifecycleEvents,
   getAllRawUsers,
   getAllSecurityEvents,
   getRawUser,
@@ -24,6 +26,7 @@ import type {
   TransferOwnershipInput,
   UpdateClientAccessInput,
   UpdateUserIdentityInput,
+  UserAccountLifecycleEvent,
   UserActivity,
   UserAggregate,
   UserAttentionItem,
@@ -105,7 +108,7 @@ export const mockUsersProvider = {
       }
 
       if (filters.lastActive) {
-        const now = new Date("2026-09-19T12:00:00Z").getTime();
+        const now = MOCK_REFERENCE_TIME;
         if (filters.lastActive === "never") {
           aggregates = aggregates.filter((u) => !u.identity.lastLoginAt);
         } else if (filters.lastActive === "inactive30d") {
@@ -224,7 +227,7 @@ export const mockUsersProvider = {
     }
 
     const companyName = getCompanyName(input.companyId);
-    const now = new Date("2026-09-19T12:00:00Z");
+    const now = new Date(MOCK_REFERENCE_TIME);
     const expiresAt = new Date(now.getTime() + input.expiryDays * 86400000).toISOString();
 
     const invitation: UserInvitation = {
@@ -279,7 +282,7 @@ export const mockUsersProvider = {
       throw new ApiError({ code: "NOT_FOUND", status: 404, message: "Invitation not found." });
     }
 
-    const now = new Date("2026-09-19T12:00:00Z");
+    const now = new Date(MOCK_REFERENCE_TIME);
     const existing = invitations[index];
     if (!existing) {
       throw new ApiError({ code: "NOT_FOUND", status: 404, message: "Invitation not found." });
@@ -352,7 +355,7 @@ export const mockUsersProvider = {
 
     recordActivity({
       id: `act_${Date.now().toString(36)}`,
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       userId: "usr_superadmin",
       userName: "Super Admin Ops",
       userEmail: "ops@encodency.com",
@@ -408,8 +411,8 @@ export const mockUsersProvider = {
         clientIds: input.clientAccessIds,
         clients,
       },
-      joinedAt: new Date("2026-09-19T12:00:00Z").toISOString(),
-      updatedAt: new Date("2026-09-19T12:00:00Z").toISOString(),
+      joinedAt: new Date(MOCK_REFERENCE_TIME).toISOString(),
+      updatedAt: new Date(MOCK_REFERENCE_TIME).toISOString(),
       isOwner: input.role === "owner",
     };
 
@@ -418,7 +421,7 @@ export const mockUsersProvider = {
 
     recordActivity({
       id: `act_${Date.now().toString(36)}`,
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       userId: user.identity.id,
       userName: user.identity.name,
       userEmail: user.identity.email,
@@ -453,13 +456,13 @@ export const mockUsersProvider = {
 
     membership.role = input.newRole;
     membership.isOwner = input.newRole === "owner";
-    membership.updatedAt = new Date("2026-09-19T12:00:00Z").toISOString();
+    membership.updatedAt = new Date(MOCK_REFERENCE_TIME).toISOString();
 
     setRawUser(targetUser);
 
     recordActivity({
       id: `act_${Date.now().toString(36)}`,
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       userId: targetUser.identity.id,
       userName: targetUser.identity.name,
       userEmail: targetUser.identity.email,
@@ -497,13 +500,13 @@ export const mockUsersProvider = {
       clientIds: input.clientAccessIds,
       clients,
     };
-    membership.updatedAt = new Date("2026-09-19T12:00:00Z").toISOString();
+    membership.updatedAt = new Date(MOCK_REFERENCE_TIME).toISOString();
 
     setRawUser(targetUser);
 
     recordActivity({
       id: `act_${Date.now().toString(36)}`,
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       userId: targetUser.identity.id,
       userName: targetUser.identity.name,
       userEmail: targetUser.identity.email,
@@ -554,12 +557,12 @@ export const mockUsersProvider = {
     }
 
     membership.status = "suspended";
-    membership.updatedAt = new Date("2026-09-19T12:00:00Z").toISOString();
+    membership.updatedAt = new Date(MOCK_REFERENCE_TIME).toISOString();
     setRawUser(targetUser);
 
     recordActivity({
       id: `act_${Date.now().toString(36)}`,
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       userId: targetUser.identity.id,
       userName: targetUser.identity.name,
       userEmail: targetUser.identity.email,
@@ -591,12 +594,12 @@ export const mockUsersProvider = {
 
     const membership = targetUser.memberships.find((m) => m.id === membershipId)!;
     membership.status = "active";
-    membership.updatedAt = new Date("2026-09-19T12:00:00Z").toISOString();
+    membership.updatedAt = new Date(MOCK_REFERENCE_TIME).toISOString();
     setRawUser(targetUser);
 
     recordActivity({
       id: `act_${Date.now().toString(36)}`,
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       userId: targetUser.identity.id,
       userName: targetUser.identity.name,
       userEmail: targetUser.identity.email,
@@ -662,7 +665,7 @@ export const mockUsersProvider = {
 
     recordActivity({
       id: `act_${Date.now().toString(36)}`,
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       userId: targetUser.identity.id,
       userName: targetUser.identity.name,
       userEmail: targetUser.identity.email,
@@ -707,12 +710,12 @@ export const mockUsersProvider = {
 
     currentMbr.role = "admin";
     currentMbr.isOwner = false;
-    currentMbr.updatedAt = new Date("2026-09-19T12:00:00Z").toISOString();
+    currentMbr.updatedAt = new Date(MOCK_REFERENCE_TIME).toISOString();
 
     newMbr.role = "owner";
     newMbr.isOwner = true;
     newMbr.status = "active";
-    newMbr.updatedAt = new Date("2026-09-19T12:00:00Z").toISOString();
+    newMbr.updatedAt = new Date(MOCK_REFERENCE_TIME).toISOString();
 
     setRawUser(currentOwner);
     setRawUser(newOwner);
@@ -725,7 +728,7 @@ export const mockUsersProvider = {
 
     recordActivity({
       id: `act_${Date.now().toString(36)}`,
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       userId: newOwner.identity.id,
       userName: newOwner.identity.name,
       userEmail: newOwner.identity.email,
@@ -787,7 +790,7 @@ export const mockUsersProvider = {
       id: `sec_${Date.now().toString(36)}`,
       userId,
       eventType: "account_suspended",
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       result: "warning",
       companyId: null,
       companyName: null,
@@ -800,7 +803,7 @@ export const mockUsersProvider = {
 
     recordActivity({
       id: `act_${Date.now().toString(36)}`,
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       userId,
       userName: user.identity.name,
       userEmail: user.identity.email,
@@ -840,7 +843,7 @@ export const mockUsersProvider = {
 
     recordActivity({
       id: `act_${Date.now().toString(36)}`,
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       userId,
       userName: user.identity.name,
       userEmail: user.identity.email,
@@ -886,7 +889,7 @@ export const mockUsersProvider = {
       id: `sec_${Date.now().toString(36)}`,
       userId,
       eventType: enforce ? "2fa_mandated" : "2fa_relaxed",
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       result: "success",
       companyId: null,
       companyName: null,
@@ -911,7 +914,7 @@ export const mockUsersProvider = {
       id: `sec_${Date.now().toString(36)}`,
       userId,
       eventType: "password_reset_demanded",
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       result: "warning",
       companyId: null,
       companyName: null,
@@ -924,7 +927,7 @@ export const mockUsersProvider = {
 
     recordActivity({
       id: `act_${Date.now().toString(36)}`,
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       userId,
       userName: user.identity.name,
       userEmail: user.identity.email,
@@ -962,7 +965,7 @@ export const mockUsersProvider = {
       id: `sec_${Date.now().toString(36)}`,
       userId,
       eventType: "session_revoked",
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       result: "warning",
       companyId: null,
       companyName: null,
@@ -994,7 +997,7 @@ export const mockUsersProvider = {
       id: `sec_${Date.now().toString(36)}`,
       userId,
       eventType: "all_sessions_revoked",
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       result: "warning",
       companyId: null,
       companyName: null,
@@ -1025,7 +1028,7 @@ export const mockUsersProvider = {
       id: `sec_${Date.now().toString(36)}`,
       userId,
       eventType: "account_unlocked",
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       result: "success",
       companyId: null,
       companyName: null,
@@ -1056,7 +1059,7 @@ export const mockUsersProvider = {
 
     recordActivity({
       id: `act_${Date.now().toString(36)}`,
-      timestamp: new Date("2026-09-19T12:00:00Z").toISOString(),
+      timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
       userId: user.identity.id,
       userName: user.identity.name,
       userEmail: user.identity.email,
@@ -1135,6 +1138,17 @@ export const mockUsersProvider = {
     return list;
   },
 
+  async listLifecycleEvents(userId?: string): Promise<UserAccountLifecycleEvent[]> {
+    await sleep(80);
+    let events = getAllLifecycleEvents();
+    if (userId) {
+      events = events.filter((e) => e.userId === userId);
+    }
+    return events.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
+  },
+
   async bulkAction(
     action: "export" | "require_2fa" | "notify" | "suspend",
     userIds: string[],
@@ -1186,6 +1200,85 @@ export const mockUsersProvider = {
       return {
         affectedCount: targets.length,
         message: `2FA requirement enforced for ${targets.length} accounts.`,
+      };
+    }
+
+    if (action === "export") {
+      const rows = targets.map((t) => ({
+        id: t.identity.id,
+        name: t.identity.name,
+        email: t.identity.email,
+        status: t.identity.globalStatus,
+        companies: t.memberships.map((m) => m.companyName).join("; "),
+        roles: t.memberships.map((m) => m.role).join("; "),
+      }));
+      const csvHeaders = ["ID", "Name", "Email", "Status", "Companies", "Roles"];
+      const csvRows = rows.map((r) => [r.id, `"${r.name}"`, r.email, r.status, `"${r.companies}"`, `"${r.roles}"`].join(","));
+      const csv = [csvHeaders.join(","), ...csvRows].join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `omniplatform-users-export-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      recordActivity({
+        id: `act_${Date.now().toString(36)}`,
+        timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
+        userId: "usr_superadmin",
+        userName: "Super Admin Ops",
+        userEmail: "ops@encodency.com",
+        action: "Exported User Data",
+        companyId: "cmp_namo-gange-trust",
+        companyName: "Platform",
+        clientId: null,
+        clientName: null,
+        module: "Identity",
+        entity: "User Export",
+        result: "successful",
+        actor: { id: "usr_superadmin", name: "Super Admin Ops" },
+        summary: `Exported ${targets.length} user records to CSV.`,
+        previousValue: null,
+        newValue: "exported",
+        relatedAuditId: null,
+      });
+
+      return {
+        affectedCount: targets.length,
+        message: `Exported ${targets.length} user records to CSV.`,
+      };
+    }
+
+    if (action === "notify") {
+      targets.forEach((t) => {
+        recordActivity({
+          id: `act_${Date.now().toString(36)}_${t.identity.id}`,
+          timestamp: new Date(MOCK_REFERENCE_TIME).toISOString(),
+          userId: t.identity.id,
+          userName: t.identity.name,
+          userEmail: t.identity.email,
+          action: "Account Notification Sent",
+          companyId: t.memberships[0]?.companyId ?? "platform",
+          companyName: t.memberships[0]?.companyName ?? "Platform",
+          clientId: null,
+          clientName: null,
+          module: "Identity",
+          entity: "Account Notification",
+          result: "successful",
+          actor: { id: "usr_superadmin", name: "Super Admin Ops" },
+          summary: `Platform notification sent to ${t.identity.name} (${t.identity.email}).`,
+          previousValue: null,
+          newValue: "notified",
+          relatedAuditId: null,
+        });
+      });
+
+      return {
+        affectedCount: targets.length,
+        message: `Notifications sent to ${targets.length} users.`,
       };
     }
 

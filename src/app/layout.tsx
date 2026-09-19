@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable}>
       {/* Extensions inject attributes onto <body> before hydration. */}
-      <body className="min-h-dvh bg-background font-sans antialiased" suppressHydrationWarning>
+      <body className="min-h-dvh bg-background font-sans antialiased overflow-x-hidden" suppressHydrationWarning>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

@@ -26,7 +26,7 @@ function ShellFrame({ children }: { children: ReactNode }) {
         <Topbar />
         <AppBreadcrumb />
 
-        <main className="w-full flex-1 px-4 py-4 sm:px-5 xl:px-6">
+        <main className="w-full flex-1 min-w-0 px-4 py-4 sm:px-5 xl:px-6">
           {children}
         </main>
 

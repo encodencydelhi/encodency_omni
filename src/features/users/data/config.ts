@@ -12,6 +12,9 @@ import type {
 
 export const USERS_MOCK_MODE = true;
 
+/** Shared reference time for mock data. Ensures consistency across selectors, store, and provider. */
+export const MOCK_REFERENCE_TIME = new Date("2026-09-19T12:00:00Z").getTime();
+
 export const SESSION_STORAGE_KEYS = {
   usersStore: "encodency_users_workspace_v1",
 } as const;

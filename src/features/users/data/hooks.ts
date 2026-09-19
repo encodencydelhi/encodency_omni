@@ -88,6 +88,13 @@ export function useUserActivities(query?: { userId?: string; companyId?: string;
   });
 }
 
+export function useLifecycleEvents(userId?: string) {
+  return useQuery({
+    queryKey: [...userKeys.all, "lifecycle", userId ?? "all"] as const,
+    queryFn: () => usersRepository.listLifecycleEvents(userId),
+  });
+}
+
 /** Mutations */
 export function useUserMutations() {
   const queryClient = useQueryClient();

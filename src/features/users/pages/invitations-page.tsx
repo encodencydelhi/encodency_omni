@@ -105,7 +105,7 @@ function InvitationsContent() {
   };
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto pb-12">
+    <div className="space-y-4 max-w-7xl mx-auto pb-12 min-w-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/80 pb-3">
         <div>
@@ -211,7 +211,7 @@ function InvitationsContent() {
 
       {/* Filter Bar */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="relative flex-1 min-w-[240px] max-w-sm">
+        <div className="relative flex-1 min-w-[180px] max-w-sm">
           <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
           <Input
             value={search}

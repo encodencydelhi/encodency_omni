@@ -2,6 +2,7 @@ import type {
   UserAggregate,
   UserActivity,
   UserFilters,
+  UserInvitation,
   UserKpis,
   UserSecurityEvent,
   UserSortField,
@@ -118,7 +119,7 @@ export function filterUsers(
 
     if (filters.adminOnly && !u.hasAdminAccess) return false;
 
-    if (filters.noActiveMembership && u.memberships.length === 0) return false;
+    if (filters.noActiveMembership && !u.memberships.some((m) => m.status === "active")) return false;
 
     if (filters.accessIssues) {
       if (u.securityPosture === "healthy") return false;
@@ -344,12 +345,26 @@ export function filterSecurityEvents(
 // ---------------------------------------------------------------------------
 
 export function filterInvitations(
-  invitations: UserAggregate["recentActivity"][0][],
-  _search: string,
-  _status: string,
-) {
-  // This is a placeholder — real filtering is done in the hook.
-  return invitations;
+  invitations: UserInvitation[],
+  search: string,
+  status: string,
+): UserInvitation[] {
+  const q = search?.trim().toLowerCase();
+
+  return invitations.filter((inv) => {
+    if (q) {
+      const matchesSearch =
+        inv.name.toLowerCase().includes(q) ||
+        inv.email.toLowerCase().includes(q) ||
+        inv.companyName.toLowerCase().includes(q) ||
+        inv.role.toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+    }
+
+    if (status && status !== "all" && inv.status !== status) return false;
+
+    return true;
+  });
 }
 
 // ---------------------------------------------------------------------------

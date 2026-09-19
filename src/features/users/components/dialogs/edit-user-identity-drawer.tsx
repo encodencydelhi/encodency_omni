@@ -90,14 +90,16 @@ export function EditUserIdentityDrawer({
   return (
     <>
       <Sheet open={open} onOpenChange={(o) => (o ? onOpenChange(true) : requestClose())}>
-        <SheetContent side="right" className="sm:max-w-md w-full p-0 flex flex-col">
-          <SheetHeader className="p-4 border-b border-border bg-slate-50/60 dark:bg-slate-900">
-            <SheetTitle className="text-base font-bold flex items-center gap-2">
-              <UserCogIcon className="size-4.5 text-blue-600" />
-              <span className="text-blue-600">Edit User Identity</span>
+        <SheetContent side="right" className="sm:max-w-md w-full p-0 flex flex-col bg-white text-slate-900 shadow-2xl border-l border-slate-200">
+          <SheetHeader className="p-5 border-b border-slate-200 bg-white space-y-1.5 text-left">
+            <SheetTitle className="text-base font-bold flex items-center gap-2 text-slate-900">
+              <div className="size-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+                <UserCogIcon className="size-4.5" />
+              </div>
+              <span>Edit User Identity</span>
             </SheetTitle>
-            <SheetDescription className="text-xs text-white">
-              Update personal identity attributes and system preferences for {user.identity.name}.
+            <SheetDescription className="text-xs text-slate-600 font-normal leading-relaxed">
+              Update personal identity attributes and system preferences for <strong className="text-slate-800 font-medium">{user.identity.name}</strong>.
             </SheetDescription>
           </SheetHeader>
 
@@ -125,7 +127,7 @@ export function EditUserIdentityDrawer({
               disabled
               className="h-8.5 text-xs bg-slate-100 text-slate-500"
             />
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 leading-normal">
               Email address changes require a multi-party identity verification workflow and cannot be altered directly.
             </p>
           </div>

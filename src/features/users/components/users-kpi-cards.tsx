@@ -100,7 +100,7 @@ export function UsersKpiCards({
   ];
 
   return (
-    <div className={cn("grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-1 items-stretch", className)}>
+    <div className={cn("grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-1 items-stretch", className)}>
       {cards.map((c) => {
         const isSelected = activeFilter === c.id;
         return (

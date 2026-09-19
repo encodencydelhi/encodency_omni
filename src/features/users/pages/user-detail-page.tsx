@@ -256,7 +256,7 @@ export function UserDetailPage() {
   const primaryCompany = user.memberships.find((m) => m.role === "owner" && m.status === "active") || activeMemberships[0] || null;
 
   return (
-    <div className="space-y-4 pb-12">
+    <div className="space-y-4 pb-12 min-w-0">
       {/* 1. Breadcrumb & Navigation Back */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs text-slate-500">

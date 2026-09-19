@@ -1,7 +1,8 @@
-import { SESSION_STORAGE_KEYS } from "../config";
+import { MOCK_REFERENCE_TIME, SESSION_STORAGE_KEYS } from "../config";
 import type {
   SecurityPosture,
   TwoFactorStatus,
+  UserAccountLifecycleEvent,
   UserAggregate,
   UserAttentionItem,
   UserInvitation,
@@ -17,6 +18,7 @@ interface UsersStoreState {
   activities: UserActivity[];
   attentionItems: UserAttentionItem[];
   securityEvents: UserSecurityEvent[];
+  lifecycleEvents: UserAccountLifecycleEvent[];
   dirty: boolean;
 }
 
@@ -84,6 +86,7 @@ function writeSessionStorage(state: UsersStoreState): void {
       activities: state.activities,
       attentionItems: state.attentionItems,
       securityEvents: state.securityEvents,
+      lifecycleEvents: state.lifecycleEvents,
     };
     window.sessionStorage.setItem(SESSION_STORAGE_KEYS.usersStore, JSON.stringify(payload));
   } catch {
@@ -106,6 +109,7 @@ function getStore(): UsersStoreState {
     activities: dataset.activities,
     attentionItems: dataset.attentionItems,
     securityEvents: dataset.securityEvents,
+    lifecycleEvents: dataset.lifecycleEvents ?? [],
     dirty: false,
   };
 
@@ -182,12 +186,22 @@ export function recordSecurityEvent(event: UserSecurityEvent): void {
   commitStore();
 }
 
+export function getAllLifecycleEvents(): UserAccountLifecycleEvent[] {
+  return [...getStore().lifecycleEvents];
+}
+
+export function recordLifecycleEvent(event: UserAccountLifecycleEvent): void {
+  const store = getStore();
+  store.lifecycleEvents = [event, ...store.lifecycleEvents];
+  commitStore();
+}
+
 export function computeUserKpis(): UserKpis {
   const all = getAllRawUsers();
   const invitations = getAllInvitations();
   const attention = getAllAttentionItems();
 
-  const now = new Date("2026-09-19T12:00:00Z").getTime();
+  const now = MOCK_REFERENCE_TIME;
   const thirtyDaysMs = 30 * 86400 * 1000;
 
   const totalUsers = all.length;

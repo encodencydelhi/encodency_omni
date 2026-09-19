@@ -1,6 +1,7 @@
 import type {
   CompanyMembership,
   OwnedResource,
+  UserAccountLifecycleEvent,
   UserActivity,
   UserAttentionItem,
   UserIdentity,
@@ -23,6 +24,7 @@ export interface UserDataset {
   activities: UserActivity[];
   attentionItems: UserAttentionItem[];
   securityEvents: UserSecurityEvent[];
+  lifecycleEvents: UserAccountLifecycleEvent[];
 }
 
 export function buildInitialUsersDataset(): UserDataset {
@@ -1518,5 +1520,97 @@ export function buildInitialUsersDataset(): UserDataset {
     },
   ];
 
-  return { users, invitations, activities, attentionItems, securityEvents };
+  const lifecycleEvents: UserAccountLifecycleEvent[] = [
+    {
+      id: "lc_001",
+      userId: "usr_amit_sharma",
+      eventType: "created",
+      timestamp: "2024-03-12T10:30:00Z",
+      actor: { id: "usr_superadmin", name: "Super Admin Ops" },
+      companyId: "cmp_namo-gange-trust",
+      companyName: "Namo Gange Trust",
+      details: "User account created and added to Namo Gange Trust.",
+      newValue: "active",
+    },
+    {
+      id: "lc_002",
+      userId: "usr_amit_sharma",
+      eventType: "membership_added",
+      timestamp: "2025-01-15T09:00:00Z",
+      actor: { id: "usr_manish_gupta", name: "Manish Gupta" },
+      companyId: "cmp_citycalls",
+      companyName: "CityCalls Pvt Ltd",
+      details: "Added to CityCalls Pvt Ltd as SEO Manager.",
+      newValue: "seo_manager",
+    },
+    {
+      id: "lc_003",
+      userId: "usr_vikram_malhotra",
+      eventType: "suspended",
+      timestamp: "2026-08-15T09:00:00Z",
+      actor: { id: "usr_superadmin", name: "Super Admin Ops" },
+      companyId: "cmp_nordwind-studios",
+      companyName: "Nordwind Studios",
+      details: "Global account suspended due to policy violation.",
+      previousValue: "active",
+      newValue: "suspended",
+    },
+    {
+      id: "lc_004",
+      userId: "usr_dev_archived",
+      eventType: "deactivated",
+      timestamp: "2026-06-01T10:00:00Z",
+      actor: { id: "usr_superadmin", name: "Super Admin Ops" },
+      details: "Former employee account deactivated per tenant request.",
+      previousValue: "active",
+      newValue: "deactivated",
+    },
+    {
+      id: "lc_005",
+      userId: "usr_priya_sharma",
+      eventType: "created",
+      timestamp: "2023-11-01T08:00:00Z",
+      actor: { id: "usr_superadmin", name: "Super Admin Ops" },
+      companyId: "cmp_meridian-digital",
+      companyName: "Meridian Digital",
+      details: "User account created as Organization Owner of Meridian Digital.",
+      newValue: "active",
+    },
+    {
+      id: "lc_006",
+      userId: "usr_manish_gupta",
+      eventType: "membership_added",
+      timestamp: "2024-06-20T14:00:00Z",
+      actor: { id: "usr_superadmin", name: "Super Admin Ops" },
+      companyId: "cmp_citycalls",
+      companyName: "CityCalls Pvt Ltd",
+      details: "User promoted to Organization Owner.",
+      previousValue: "admin",
+      newValue: "owner",
+    },
+    {
+      id: "lc_007",
+      userId: "usr_meera_iyer",
+      eventType: "suspended",
+      timestamp: "2026-09-18T15:30:00Z",
+      actor: { id: "usr_superadmin", name: "Super Admin Ops" },
+      companyId: "cmp_blue-harbour-logistics",
+      companyName: "Blue Harbour Logistics",
+      details: "Account locked after 6 failed login attempts.",
+      newValue: "locked",
+    },
+    {
+      id: "lc_008",
+      userId: "usr_sophie_martin",
+      eventType: "membership_added",
+      timestamp: "2025-08-10T11:00:00Z",
+      actor: { id: "usr_superadmin", name: "Super Admin Ops" },
+      companyId: "cmp_amberline-cosmetics",
+      companyName: "Amberline Cosmetics",
+      details: "Added to Amberline Cosmetics as Marketing Manager.",
+      newValue: "marketing_manager",
+    },
+  ];
+
+  return { users, invitations, activities, attentionItems, securityEvents, lifecycleEvents };
 }

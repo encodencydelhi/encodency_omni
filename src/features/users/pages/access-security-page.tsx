@@ -114,7 +114,7 @@ function AccessSecurityContent() {
   const suspendedAccounts = securityUsers.filter((u) => u.identity.globalStatus === "suspended").length;
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto pb-12">
+    <div className="space-y-4 max-w-7xl mx-auto pb-12 min-w-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/80 pb-3">
         <div>
@@ -206,7 +206,7 @@ function AccessSecurityContent() {
 
       {/* Security Attention Queue (Section 44) */}
       {attentionItems.length > 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 space-y-2">
+        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 space-y-2 mt-3">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-900">
             <ShieldAlertIcon className="size-4 text-amber-600" />
             <span>Security Attention Queue ({attentionItems.length})</span>
@@ -248,7 +248,7 @@ function AccessSecurityContent() {
 
       {/* Filter Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="relative flex-1 min-w-[240px] max-w-sm">
+        <div className="relative flex-1 min-w-[180px] max-w-sm">
           <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
           <Input
             value={search}
