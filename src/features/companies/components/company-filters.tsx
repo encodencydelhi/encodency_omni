@@ -91,11 +91,11 @@ function useFilterDefs(extraTags: string[]): { primary: FilterDef[]; secondary: 
       primary: [
         { key: "plan", label: "Plan", options: toStatusOptions(PLAN_TIER) },
         { key: "accountStatus", label: "Account", options: toStatusOptions(ACCOUNT_STATUS) },
-        { key: "subscriptionStatus", label: "Subscription", options: toStatusOptions(SUBSCRIPTION_STATUS_META) },
-        { key: "billingStatus", label: "Billing", options: toStatusOptions(BILLING_STATUS_META) },
         { key: "health", label: "Health", options: HEALTH_FILTER_OPTIONS },
       ],
       secondary: [
+        { key: "subscriptionStatus", label: "Subscription", options: toStatusOptions(SUBSCRIPTION_STATUS_META) },
+        { key: "billingStatus", label: "Billing", options: toStatusOptions(BILLING_STATUS_META) },
         { key: "usageLevel", label: "Usage", options: toStatusOptions(USAGE_LEVEL_META).filter((option) => option.value !== "not_metered") },
         { key: "created", label: "Created", options: CREATED_OPTIONS },
         { key: "lastActive", label: "Last active", options: LAST_ACTIVE_OPTIONS },
