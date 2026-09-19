@@ -289,12 +289,12 @@ export function SubscriptionDetailPage() {
               <span className="rounded-sm border border-border-strong bg-neutral-subtle px-1.5 py-px text-[11px] font-medium capitalize text-neutral">{row.billingCycle}</span>
               {PLANS_MOCK_MODE ? <DemoTag>Demo data</DemoTag> : null}
             </div>
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-2xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-2xs text-muted-foreground">
               <span className="font-mono">{row.id}</span>
               <span>{row.planName} v{row.planVersion}</span>
               <span>Started {formatDate(row.startedAt)}</span>
               <span className="inline-flex items-center gap-1">{row.status === "trialing" ? "Trial ends" : row.status === "cancelled" || row.status === "expired" ? "" : "Renews"} <PeriodCell row={row} /></span>
-            </p>
+            </div>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-1.5">
             {allowed.changePlan ? <Button size="sm" onClick={() => actions.openFlow({ kind: "change", row })}><RepeatIcon />Change Plan</Button> : null}

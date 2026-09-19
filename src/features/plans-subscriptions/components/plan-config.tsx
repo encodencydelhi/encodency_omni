@@ -261,7 +261,7 @@ function LimitRow({ def, rule, error, onChange, idPrefix }: { def: ResourceDef; 
           inputMode="numeric"
           disabled={!numeric}
           value={numeric ? (rule.value === null ? "" : String(rule.value)) : ""}
-          placeholder={rule.kind === "unlimited" ? "Unlimited" : rule.kind === "none" ? "Not available" : "Value"}
+          placeholder={numeric ? "Value" : "-"}
           onChange={(event) => {
             const digits = event.target.value.replace(/\D/g, "");
             onChange({ ...rule, value: digits === "" ? null : Number(digits) });
