@@ -8,20 +8,34 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
+  ActivityIcon,
   AlertTriangleIcon,
   ArrowLeftIcon,
   Building2Icon,
   CheckCircle2Icon,
+  FlagIcon,
+  ListChecksIcon,
   MailIcon,
+  MoreVerticalIcon,
+  WebhookIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
 import { formatDate, formatDateTime } from "@/lib/utils/format";
 import {
   useConnection,
   useConnectionResources,
   useIntegrationActivities,
+  useProvider,
 } from "../data/hooks";
 import {
   ConnectionHealthBadge,
@@ -44,6 +58,8 @@ export function ConnectionDetailPage({
   const params = useParams();
   const effectiveId = connectionId || (params?.connectionId as string) || "";
   const { data: connection, isLoading: connectionLoading } = useConnection(effectiveId);
+  const { data: provider } = useProvider(connection?.providerId || "");
+  const providerDisplayName = provider?.name || connection?.providerId?.toUpperCase() || "Provider";
   const { data: resources = [] } = useConnectionResources(effectiveId);
   const { data: activities = [] } = useIntegrationActivities();
 
@@ -144,6 +160,49 @@ export function ConnectionDetailPage({
               <span>Company Profile</span>
             </Link>
           </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-8 w-8 p-0 bg-white border-slate-200"
+                aria-label="More actions"
+              >
+                <MoreVerticalIcon className="size-4 text-slate-500" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="text-xs w-52">
+              <DropdownMenuItem
+                onClick={() => {
+                  toast.success(`Flagged ${connection.authorizationLabel} for super-admin review`);
+                }}
+                className="text-xs cursor-pointer"
+              >
+                <FlagIcon className="size-3.5 mr-2 text-amber-600" />
+                <span>Flag for Platform Review</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild className="text-xs cursor-pointer">
+                <Link href={`/super-admin/api-monitoring?provider=${connection.providerId}`}>
+                  <ActivityIcon className="size-3.5 mr-2 text-blue-600" />
+                  <span>Open API Monitoring</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="text-xs cursor-pointer">
+                <Link href="/super-admin/jobs">
+                  <ListChecksIcon className="size-3.5 mr-2 text-slate-600" />
+                  <span>View Related Sync Jobs</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="text-xs cursor-pointer">
+                <Link href="/super-admin/webhooks">
+                  <WebhookIcon className="size-3.5 mr-2 text-purple-600" />
+                  <span>View Webhook Events</span>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -461,6 +520,71 @@ export function ConnectionDetailPage({
                     : "Normal / Unrestricted"}
                 </span>
               </div>
+            </div>
+          </div>
+
+          {/* Diagnostic Cross-Module Deep Links */}
+          <div className="rounded-xl border border-slate-200/90 bg-white p-4 space-y-3 shadow-2xs">
+            <div className="border-b border-slate-100 pb-2">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                Platform Telemetry & Operational Deep Links
+              </h2>
+              <p className="text-xs text-slate-500">
+                Cross-module observability into raw request logs, background queues, and inbound webhooks for this connection.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Link
+                href={`/super-admin/api-monitoring?provider=${connection.providerId}`}
+                className="p-3 rounded-lg border border-slate-200 hover:border-blue-300 bg-slate-50/50 hover:bg-blue-50/30 transition-colors flex items-start gap-2.5 group"
+              >
+                <div className="p-2 rounded-lg bg-blue-100/60 text-blue-700 shrink-0 group-hover:bg-blue-200/70 transition-colors">
+                  <ActivityIcon className="size-4" />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="font-bold text-slate-900 text-xs flex items-center gap-1">
+                    <span>Live API Monitoring</span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Filter request throughput, error codes, and P95 latency for {providerDisplayName}.
+                  </p>
+                </div>
+              </Link>
+
+              <Link
+                href="/super-admin/jobs"
+                className="p-3 rounded-lg border border-slate-200 hover:border-indigo-300 bg-slate-50/50 hover:bg-indigo-50/30 transition-colors flex items-start gap-2.5 group"
+              >
+                <div className="p-2 rounded-lg bg-indigo-100/60 text-indigo-700 shrink-0 group-hover:bg-indigo-200/70 transition-colors">
+                  <ListChecksIcon className="size-4" />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="font-bold text-slate-900 text-xs flex items-center gap-1">
+                    <span>Background Sync Jobs</span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Inspect BullMQ queues, cron workers, and retry states across tenants.
+                  </p>
+                </div>
+              </Link>
+
+              <Link
+                href="/super-admin/webhooks"
+                className="p-3 rounded-lg border border-slate-200 hover:border-purple-300 bg-slate-50/50 hover:bg-purple-50/30 transition-colors flex items-start gap-2.5 group"
+              >
+                <div className="p-2 rounded-lg bg-purple-100/60 text-purple-700 shrink-0 group-hover:bg-purple-200/70 transition-colors">
+                  <WebhookIcon className="size-4" />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="font-bold text-slate-900 text-xs flex items-center gap-1">
+                    <span>Inbound Webhooks</span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Verify HMAC signatures and payloads delivered by {providerDisplayName}.
+                  </p>
+                </div>
+              </Link>
             </div>
           </div>
         </TabsContent>

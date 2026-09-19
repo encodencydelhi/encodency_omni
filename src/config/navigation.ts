@@ -132,6 +132,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         href: ROUTES.superAdmin.integrations,
         icon: PlugIcon,
         permission: "platform:read",
+        matchPrefixes: [ROUTES.superAdmin.integrations],
       },
       {
         label: "System Health",
@@ -150,6 +151,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         href: ROUTES.superAdmin.apiMonitoring,
         icon: ActivityIcon,
         permission: "platform:read",
+        matchPrefixes: [ROUTES.superAdmin.apiMonitoring],
       },
       {
         label: "Webhooks",

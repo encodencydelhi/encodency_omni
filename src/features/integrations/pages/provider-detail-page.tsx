@@ -8,16 +8,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
+  ActivityIcon,
   AlertTriangleIcon,
   ArrowLeftIcon,
   BanIcon,
   CheckCircle2Icon,
   ExternalLinkIcon,
   LayersIcon,
+  ListChecksIcon,
   MoreVerticalIcon,
   RadioIcon,
   ServerIcon,
   SlidersHorizontalIcon,
+  WebhookIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -658,6 +661,40 @@ export function ProviderDetailPage({ providerId }: ProviderDetailPageProps) {
                   : "None Recorded"}
               </div>
               <span className="text-xs text-slate-400 truncate">Latest API response</span>
+            </div>
+          </div>
+
+          {/* Diagnostic & Telemetry Deep Links */}
+          <div className="rounded-xl border border-slate-200/90 bg-white p-4 space-y-2 shadow-2xs">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                  Telemetry & Diagnostic Systems
+                </h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Inspect real-time API logs, job execution queues, and webhook delivery diagnostics for {provider.name}.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button variant="outline" size="sm" asChild className="text-xs h-8 font-semibold text-slate-700 bg-white hover:bg-slate-50">
+                  <Link href="/super-admin/api-monitoring">
+                    <ActivityIcon className="size-3.5 mr-1.5 text-blue-600" />
+                    <span>Open API Monitoring</span>
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild className="text-xs h-8 font-semibold text-slate-700 bg-white hover:bg-slate-50">
+                  <Link href="/super-admin/jobs">
+                    <ListChecksIcon className="size-3.5 mr-1.5 text-indigo-600" />
+                    <span>Related Jobs & Queues</span>
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild className="text-xs h-8 font-semibold text-slate-700 bg-white hover:bg-slate-50">
+                  <Link href="/super-admin/webhooks">
+                    <WebhookIcon className="size-3.5 mr-1.5 text-emerald-600" />
+                    <span>Webhooks Diagnostics</span>
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
 

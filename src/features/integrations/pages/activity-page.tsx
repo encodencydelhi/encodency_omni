@@ -12,14 +12,19 @@ import { useIntegrationActivities } from "../data/hooks";
 import {
   IntegrationActivityTable,
   IntegrationsNav,
+  ActivityPageSkeleton,
 } from "../components";
 
 export function ActivityPage() {
-  const { data: activities = [] } = useIntegrationActivities();
+  const { data: activities = [], isLoading: activitiesLoading } = useIntegrationActivities();
 
   const handleExport = () => {
     exportActivitiesToCsv(activities);
   };
+
+  if (activitiesLoading && activities.length === 0) {
+    return <ActivityPageSkeleton />;
+  }
 
   return (
     <div className="space-y-4 max-w-full">

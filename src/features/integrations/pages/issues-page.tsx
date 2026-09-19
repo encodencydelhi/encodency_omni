@@ -14,11 +14,12 @@ import { useIntegrationIssues, useProviders } from "../data/hooks";
 import {
   IntegrationIssuesTable,
   IntegrationsNav,
+  IssuesQueueSkeleton,
 } from "../components";
 
 export function IssuesPage() {
-  const { data: issues = [] } = useIntegrationIssues();
-  const { data: providers = [] } = useProviders();
+  const { data: issues = [], isLoading: issuesLoading } = useIntegrationIssues();
+  const { data: providers = [], isLoading: providersLoading } = useProviders();
 
   const openProviderIncidents = issues.filter(
     (i) => i.scope === "provider_incident" && i.status !== "resolved"
@@ -49,6 +50,10 @@ export function IssuesPage() {
   const handleExport = () => {
     exportIssuesToCsv(issues);
   };
+
+  if ((issuesLoading && issues.length === 0) || (providersLoading && providers.length === 0)) {
+    return <IssuesQueueSkeleton />;
+  }
 
   return (
     <div className="space-y-4 max-w-full">

@@ -33,10 +33,11 @@ import {
   ProviderCard,
   ProviderConfigModal,
   ProviderImpactDialog,
+  ProvidersCatalogueSkeleton,
 } from "../components";
 
 export function ProvidersPage() {
-  const { data: providers = [] } = useProviders();
+  const { data: providers = [], isLoading: providersLoading } = useProviders();
 
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -73,6 +74,10 @@ export function ProvidersPage() {
   const handleExport = () => {
     exportProvidersToCsv(filteredProviders);
   };
+
+  if (providersLoading && providers.length === 0) {
+    return <ProvidersCatalogueSkeleton />;
+  }
 
   return (
     <div className="space-y-4 max-w-full">

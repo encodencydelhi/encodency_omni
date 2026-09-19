@@ -13,11 +13,12 @@ import { useConnections, useConnectionResources } from "../data/hooks";
 import {
   ConnectionsTable,
   IntegrationsNav,
+  ConnectionsDirectorySkeleton,
 } from "../components";
 
 export function ConnectionsPage() {
-  const { data: connections = [] } = useConnections();
-  const { data: allResources = [] } = useConnectionResources();
+  const { data: connections = [], isLoading: connectionsLoading } = useConnections();
+  const { data: allResources = [], isLoading: resourcesLoading } = useConnectionResources();
 
   const totalAuthorizations = connections.length;
   const activeAuthorizations = connections.filter((c) => c.status === "active").length;
@@ -30,6 +31,10 @@ export function ConnectionsPage() {
   const handleExport = () => {
     exportConnectionsToCsv(connections);
   };
+
+  if ((connectionsLoading && connections.length === 0) || (resourcesLoading && allResources.length === 0)) {
+    return <ConnectionsDirectorySkeleton />;
+  }
 
   return (
     <div className="space-y-4 max-w-full">

@@ -74,7 +74,7 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
                     {" "}
                     {act.message}
                   </p>
-                  <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400">
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
                     <span>{formatDateTime(act.timestamp)}</span>
                     <span>·</span>
                     <span className="capitalize">{act.provider}</span>

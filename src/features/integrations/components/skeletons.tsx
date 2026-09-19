@@ -158,3 +158,21 @@ export function IssuesQueueSkeleton() {
     </div>
   );
 }
+
+export function ActivityPageSkeleton() {
+  return (
+    <div className="space-y-4 max-w-full animate-pulse">
+      <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+        <div className="space-y-1.5">
+          <div className="h-6 w-48 bg-slate-200 rounded" />
+          <div className="h-3.5 w-80 bg-slate-100 rounded" />
+        </div>
+        <div className="h-8 w-32 bg-slate-200 rounded-lg" />
+      </div>
+
+      <div className="h-9 w-full bg-slate-100 rounded-lg" />
+
+      <div className="h-96 w-full bg-slate-100 rounded-xl border border-slate-200/60 p-4" />
+    </div>
+  );
+}

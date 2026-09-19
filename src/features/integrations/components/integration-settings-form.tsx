@@ -37,7 +37,18 @@ export function IntegrationSettingsForm() {
     }
   }, [settings]);
 
-  if (!formState) return null;
+  if (!formState) {
+    return (
+      <div className="space-y-4 max-w-full animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="h-64 bg-slate-100 rounded-xl border border-slate-200/60 p-5" />
+          <div className="h-64 bg-slate-100 rounded-xl border border-slate-200/60 p-5" />
+          <div className="h-64 bg-slate-100 rounded-xl border border-slate-200/60 p-5" />
+          <div className="h-64 bg-slate-100 rounded-xl border border-slate-200/60 p-5" />
+        </div>
+      </div>
+    );
+  }
 
   const handleChange = (updater: (prev: IntegrationSettings) => IntegrationSettings) => {
     setFormState((prev) => {
