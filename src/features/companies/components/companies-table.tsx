@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatDate, formatNumber, formatRelativeTime, getInitials } from "@/lib/utils/format";
 import type { PaginationMeta } from "@/types/api";
 import { platformNow } from "../data/clock";
-import { OWNER_STATE_LABEL, SUBSCRIPTION_STATUS_META, USAGE_LEVEL_META, USAGE_RESOURCE_BY_KEY, USAGE_METHOD, companySectionHref } from "../data/config";
+import { ACCOUNT_STATUS, OWNER_STATE_LABEL, SUBSCRIPTION_STATUS_META, USAGE_LEVEL_META, USAGE_RESOURCE_BY_KEY, USAGE_METHOD, companySectionHref } from "../data/config";
 import type { CompanySummary } from "../data/types";
 import { formatMrr, formatPercent1 } from "../lib/format";
 import { WithTooltip } from "./primitives";
@@ -45,7 +45,16 @@ function CompanyCell({ summary }: { summary: CompanySummary }) {
           >
             {company.name}
           </Link>
-          {company.accountStatus !== "active" ? <AccountStatusBadge status={company.accountStatus} /> : null}
+          {company.accountStatus !== "active" ? (
+            <span
+              className={cn(
+                "shrink-0 rounded-sm border px-1 text-[10px] font-medium leading-4",
+                ACCOUNT_STATUS[company.accountStatus].tone === "danger" ? "border-danger/20 bg-danger-subtle text-danger" : "border-border-strong bg-neutral-subtle text-neutral",
+              )}
+            >
+              {ACCOUNT_STATUS[company.accountStatus].label}
+            </span>
+          ) : null}
         </div>
         <p className="truncate text-2xs text-muted-foreground">
           {company.domain ?? "No domain"} <span aria-hidden>·</span> {company.displayId}
