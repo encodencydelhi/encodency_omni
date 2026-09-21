@@ -54,9 +54,14 @@ function InvitationsContent() {
       {kpis && (
         <div className="grid grid-cols-5 gap-2">
           {kpiCards.map((k) => (
-            <div key={k.label} className="rounded-sm border border-border bg-white p-3 shadow-2xs">
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">{k.label}</p>
-              <p className="text-xl font-extrabold text-slate-900">{k.value}</p>
+            <div key={k.label} className="rounded-sm border border-border bg-white p-3 shadow-2xs flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">{k.label}</p>
+                <p className={`text-xl font-extrabold ${k.color}`}>{k.value}</p>
+              </div>
+              <div className={`size-7 rounded-sm border border-white/80 flex items-center justify-center shrink-0 ${k.iconBg}`}>
+                <k.icon className="size-3.5" />
+              </div>
             </div>
           ))}
         </div>

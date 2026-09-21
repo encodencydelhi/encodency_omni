@@ -1,3 +1,4 @@
+export {};
 process.env.NEXT_PUBLIC_MOCK_LATENCY_MS = "0";
 const { auditRepository: repo } = await import("../data/repository");
 const { resolveWindow } = await import("../data/filters");

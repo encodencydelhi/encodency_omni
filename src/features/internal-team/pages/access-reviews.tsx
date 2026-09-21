@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardCheckIcon } from "lucide-react";
+import { ClipboardCheckIcon, ClockIcon, AlertTriangleIcon, ShieldCheckIcon, ShieldAlertIcon, UserXIcon, TimerIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StaffCapabilitiesProvider } from "../data/capability-provider";
@@ -45,16 +45,21 @@ function AccessReviewsContent() {
       {kpis && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
           {[
-            { label: "DUE", value: kpis.reviewsDue, color: "text-amber-700" },
-            { label: "OVERDUE", value: kpis.overdueReviews, color: kpis.overdueReviews > 0 ? "text-rose-700" : "text-slate-600" },
-            { label: "PRIVILEGED", value: kpis.privilegedStaff, color: "text-violet-700" },
-            { label: "MFA ACTION", value: kpis.mfaActionRequired, color: "text-amber-700" },
-            { label: "SUSPENDED+ASSIGNED", value: kpis.suspendedWithAssignments, color: kpis.suspendedWithAssignments > 0 ? "text-rose-700" : "text-slate-600" },
-            { label: "TEMP EXPIRING", value: kpis.tempAccessExpiring, color: "text-slate-600" },
+            { label: "DUE", value: kpis.reviewsDue, color: "text-amber-700", icon: ClockIcon, iconBg: "bg-amber-50 text-amber-600" },
+            { label: "OVERDUE", value: kpis.overdueReviews, color: kpis.overdueReviews > 0 ? "text-rose-700" : "text-slate-600", icon: AlertTriangleIcon, iconBg: kpis.overdueReviews > 0 ? "bg-rose-50 text-rose-600" : "bg-slate-50 text-slate-500" },
+            { label: "PRIVILEGED", value: kpis.privilegedStaff, color: "text-violet-700", icon: ShieldCheckIcon, iconBg: "bg-violet-50 text-violet-600" },
+            { label: "MFA ACTION", value: kpis.mfaActionRequired, color: "text-amber-700", icon: ShieldAlertIcon, iconBg: "bg-amber-50 text-amber-600" },
+            { label: "SUSPENDED+ASSIGNED", value: kpis.suspendedWithAssignments, color: kpis.suspendedWithAssignments > 0 ? "text-rose-700" : "text-slate-600", icon: UserXIcon, iconBg: kpis.suspendedWithAssignments > 0 ? "bg-rose-50 text-rose-600" : "bg-slate-50 text-slate-500" },
+            { label: "TEMP EXPIRING", value: kpis.tempAccessExpiring, color: "text-slate-600", icon: TimerIcon, iconBg: "bg-slate-50 text-slate-500" },
           ].map((k) => (
-            <div key={k.label} className="rounded-sm border border-border bg-white p-3 shadow-2xs">
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">{k.label}</p>
-              <p className={`text-xl font-extrabold ${k.color}`}>{k.value}</p>
+            <div key={k.label} className="rounded-sm border border-border bg-white p-3 shadow-2xs flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">{k.label}</p>
+                <p className={`text-xl font-extrabold ${k.color}`}>{k.value}</p>
+              </div>
+              <div className={`size-7 rounded-sm border border-white/80 flex items-center justify-center shrink-0 ${k.iconBg}`}>
+                <k.icon className="size-3.5" />
+              </div>
             </div>
           ))}
         </div>

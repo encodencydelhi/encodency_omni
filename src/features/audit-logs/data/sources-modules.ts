@@ -127,7 +127,7 @@ export function settingsEvents(changes: readonly ConfigurationChange[]): AuditEv
       events.push(makeEvent({ ...common, id: `aud_set_${change.id}`, occurredAt: change.at, actionKey: requestKey, outcome: "cancelled", workflowStage: "requested", summary: `A pending change to ${change.settingName} was withdrawn.` }));
       continue;
     }
-    const governed = security && change.sensitivity !== "standard";
+    const governed = security && change.sensitivity !== "low";
     if (governed) {
       events.push(makeEvent({ ...common, id: `aud_set_${change.id}_req`, occurredAt: change.at, actionKey: "global_settings.security_change_requested", workflowStage: "requested", summary: `${change.actorName} requested a change to ${change.settingName}.` }));
     }
