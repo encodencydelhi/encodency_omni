@@ -33,6 +33,7 @@ import {
   useUpdateIssueStatus,
 } from "../data/hooks";
 import { IssueSeverityBadge } from "./status-badges";
+import { ProviderLogo, getPlatformName } from "./provider-logo";
 
 interface IssueDetailDrawerProps {
   issue: IntegrationIssue | null;
@@ -93,11 +94,30 @@ export function IssueDetailDrawer({
       >
         <div className="p-5 overflow-y-auto space-y-4">
           <SheetHeader className="text-left space-y-1 pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="font-mono font-bold text-xs text-slate-500">
                 {issue.issueNumber}
               </span>
               <IssueSeverityBadge value={issue.severity} />
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-800 text-xs font-semibold">
+                <ProviderLogo
+                  providerId={
+                    issue.title.toLowerCase().includes("instagram")
+                      ? "instagram"
+                      : issue.title.toLowerCase().includes("facebook")
+                      ? "facebook"
+                      : issue.providerId
+                  }
+                  size="xs"
+                />
+                <span>
+                  {issue.title.toLowerCase().includes("instagram")
+                    ? "Instagram"
+                    : issue.title.toLowerCase().includes("facebook")
+                    ? "Facebook"
+                    : getPlatformName(issue.providerId)}
+                </span>
+              </div>
               <span className="text-xs text-slate-400 capitalize">• {issue.scope.replace("_", " ")}</span>
             </div>
             <SheetTitle className="text-base font-bold text-slate-900">

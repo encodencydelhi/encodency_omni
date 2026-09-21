@@ -95,6 +95,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         href: ROUTES.superAdmin.team,
         icon: UserCogIcon,
         permission: "users:read",
+        matchPrefixes: [ROUTES.superAdmin.team],
       },
     ],
   },
@@ -114,6 +115,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         href: ROUTES.superAdmin.billing,
         icon: ReceiptIcon,
         permission: "billing:read",
+        matchPrefixes: [ROUTES.superAdmin.billing],
       },
       {
         label: "Usage & Limits",

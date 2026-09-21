@@ -28,7 +28,7 @@ import { formatDateTime } from "@/lib/utils/format";
 import { exportActivitiesToCsv } from "../data/export-utils";
 import { filterActivities } from "../data/selectors";
 import type { IntegrationActivity } from "../data/types";
-import { ProviderLogo } from "./provider-logo";
+import { ProviderLogo, getPlatformName } from "./provider-logo";
 
 interface IntegrationActivityTableProps {
   activities: IntegrationActivity[];
@@ -120,7 +120,10 @@ export function IntegrationActivityTable({
               <SelectItem value="all">All Providers</SelectItem>
               {providers.map((p) => (
                 <SelectItem key={p} value={p}>
-                  {p}
+                  <div className="flex items-center gap-1.5">
+                    <ProviderLogo providerId={p} size="xs" />
+                    <span>{getPlatformName(p)}</span>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -194,12 +197,26 @@ export function IntegrationActivityTable({
                       </td>
 
                       <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <ProviderLogo providerId={act.providerId} size="sm" />
-                          <span className="capitalize font-bold text-slate-800">
-                            {act.providerId}
-                          </span>
-                        </div>
+                        {(() => {
+                          const channelId = act.description.toLowerCase().includes("instagram")
+                            ? "instagram"
+                            : act.description.toLowerCase().includes("facebook")
+                            ? "facebook"
+                            : act.providerId;
+                          const channelLabel = act.description.toLowerCase().includes("instagram")
+                            ? "Instagram"
+                            : act.description.toLowerCase().includes("facebook")
+                            ? "Facebook"
+                            : getPlatformName(act.providerId);
+                          return (
+                            <div className="flex items-center gap-2">
+                              <ProviderLogo providerId={channelId} size="sm" />
+                              <span className="font-bold text-slate-800">
+                                {channelLabel}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </td>
 
                       <td className="py-3 px-4 text-slate-700">

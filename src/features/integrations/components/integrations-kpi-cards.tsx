@@ -31,9 +31,10 @@ export function IntegrationsKpiCards({
   const cards = [
     {
       id: "total_providers",
-      label: "TOTAL PROVIDERS",
+      label: "PROVIDERS",
+      tooltip: "Total Providers in Platform Catalog",
       value: kpis.totalProviders,
-      sub: "Platform catalog",
+      sub: "Catalog",
       icon: PlugIcon,
       valueColor: "text-slate-900",
       iconBg: "bg-blue-50 text-blue-600 border-blue-100",
@@ -42,9 +43,10 @@ export function IntegrationsKpiCards({
     },
     {
       id: "live_providers",
-      label: "LIVE PROVIDERS",
+      label: "LIVE",
+      tooltip: "Live Providers Enabled for Tenants",
       value: kpis.liveProviders,
-      sub: "Enabled for tenants",
+      sub: "Available",
       icon: CheckCircle2Icon,
       valueColor: "text-emerald-700",
       iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100",
@@ -53,9 +55,10 @@ export function IntegrationsKpiCards({
     },
     {
       id: "approval_pending",
-      label: "APPROVAL PENDING",
+      label: "IN REVIEW",
+      tooltip: "Approval Pending / App Review Ongoing",
       value: kpis.approvalPendingProviders,
-      sub: "App review ongoing",
+      sub: "Pending",
       icon: ClockIcon,
       valueColor: kpis.approvalPendingProviders > 0 ? "text-amber-700" : "text-slate-700",
       iconBg: "bg-amber-50 text-amber-600 border-amber-100",
@@ -64,9 +67,10 @@ export function IntegrationsKpiCards({
     },
     {
       id: "active_connections",
-      label: "ACTIVE CONNECTIONS",
+      label: "CONNECTED",
+      tooltip: "Active Connections / Tenant Authorizations",
       value: kpis.activeConnections,
-      sub: "Tenant authorizations",
+      sub: "Tenants",
       icon: LayersIcon,
       valueColor: "text-indigo-700",
       iconBg: "bg-indigo-50 text-indigo-600 border-indigo-100",
@@ -75,9 +79,10 @@ export function IntegrationsKpiCards({
     },
     {
       id: "healthy_connections",
-      label: "HEALTHY CONNS",
+      label: "HEALTHY",
+      tooltip: "Healthy Connections in Good Standing",
       value: kpis.healthyConnections,
-      sub: `${kpis.activeConnections > 0 ? Math.round((kpis.healthyConnections / kpis.activeConnections) * 100) : 100}% operational`,
+      sub: `${kpis.activeConnections > 0 ? Math.round((kpis.healthyConnections / kpis.activeConnections) * 100) : 100}% uptime`,
       icon: CheckCircle2Icon,
       valueColor: "text-emerald-700",
       iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100",
@@ -86,9 +91,10 @@ export function IntegrationsKpiCards({
     },
     {
       id: "reconnect_required",
-      label: "RECONNECT REQ",
+      label: "RECONNECT",
+      tooltip: "Reconnect Required / Tokens Expired or Revoked",
       value: kpis.reconnectRequiredConnections,
-      sub: "Tokens expired/revoked",
+      sub: "Expired",
       icon: AlertTriangleIcon,
       valueColor: kpis.reconnectRequiredConnections > 0 ? "text-amber-700" : "text-slate-600",
       iconBg: "bg-amber-50 text-amber-600 border-amber-100",
@@ -97,9 +103,10 @@ export function IntegrationsKpiCards({
     },
     {
       id: "degraded_providers",
-      label: "DEGRADED PROVIDERS",
+      label: "DEGRADED",
+      tooltip: "Degraded Providers / Service Throttled",
       value: kpis.degradedProviders,
-      sub: "Service throttled",
+      sub: "Throttled",
       icon: ShieldAlertIcon,
       valueColor: kpis.degradedProviders > 0 ? "text-rose-700" : "text-slate-600",
       iconBg: "bg-rose-50 text-rose-600 border-rose-100",
@@ -108,9 +115,10 @@ export function IntegrationsKpiCards({
     },
     {
       id: "affected_companies",
-      label: "AFFECTED TENANTS",
+      label: "AFFECTED",
+      tooltip: "Affected Tenants Requiring Attention",
       value: kpis.affectedCompanies,
-      sub: "Require attention",
+      sub: "Tenants",
       icon: Building2Icon,
       valueColor: kpis.affectedCompanies > 0 ? "text-purple-700" : "text-slate-600",
       iconBg: "bg-purple-50 text-purple-600 border-purple-100",
@@ -133,6 +141,7 @@ export function IntegrationsKpiCards({
             key={c.id}
             type="button"
             onClick={() => onSelectFilter?.(c.id)}
+            title={c.tooltip}
             className={cn(
               "group relative flex flex-col justify-between p-3 rounded-xl border bg-gradient-to-b from-white to-slate-50/60 text-left transition-all duration-200 cursor-pointer h-full min-h-[104px] min-w-0 shadow-2xs hover:shadow-md hover:border-slate-300 hover:-translate-y-0.5",
               isSelected
@@ -146,8 +155,8 @@ export function IntegrationsKpiCards({
             )}
 
             {/* Header: Label + Stylish Icon Container */}
-            <div className="flex items-center justify-between w-full mb-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 truncate pr-1">
+            <div className="flex items-center justify-between w-full mb-1 min-w-0">
+              <span className="text-xs font-bold uppercase tracking-normal text-slate-500 truncate pr-1">
                 {c.label}
               </span>
               <div
@@ -171,8 +180,8 @@ export function IntegrationsKpiCards({
             </div>
 
             {/* Subtitle */}
-            <div className="text-xs text-slate-500 truncate flex items-center gap-1 font-medium">
-              <span className="size-1 rounded-full bg-slate-300 group-hover:bg-slate-400 transition-colors" />
+            <div className="text-xs text-slate-500 truncate flex items-center gap-1 font-medium min-w-0">
+              <span className="size-1 rounded-full bg-slate-300 group-hover:bg-slate-400 transition-colors shrink-0" />
               <span className="truncate">{c.sub}</span>
             </div>
           </button>

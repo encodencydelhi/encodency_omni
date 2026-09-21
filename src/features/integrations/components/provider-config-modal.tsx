@@ -10,7 +10,6 @@ import { useState, useEffect } from "react";
 import {
   CheckCircle2Icon,
   ShieldCheckIcon,
-  SlidersHorizontalIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +38,7 @@ import type {
   ProviderConfiguration,
 } from "../data/types";
 import { useUpdateProviderConfig } from "../data/hooks";
+import { ProviderLogo, getPlatformName } from "./provider-logo";
 
 interface ProviderConfigModalProps {
   config: ProviderConfiguration | null;
@@ -87,13 +87,11 @@ export function ProviderConfigModal({
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-slate-200">
         <DialogHeader>
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
-                <SlidersHorizontalIcon className="size-4" />
-              </div>
+            <div className="flex items-center gap-2.5">
+              <ProviderLogo providerId={formData.providerId} size="md" />
               <div>
                 <DialogTitle className="text-sm font-bold text-slate-900">
-                  Configure Provider: {formData.providerCode.toUpperCase()}
+                  Configure Provider: {getPlatformName(formData.providerId)}
                 </DialogTitle>
                 <DialogDescription className="text-xs text-slate-500">
                   Manage app credentials references, authorization endpoints and operational flags.

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/sheet";
 import { formatDate, formatDateTime } from "@/lib/utils/format";
 import { ConnectionHealthBadge } from "./status-badges";
-import { ProviderLogo } from "./provider-logo";
+import { ProviderLogo, getPlatformName } from "./provider-logo";
 import type { ProviderAuthorization } from "../data/types";
 
 interface ConnectionPreviewDrawerProps {
@@ -49,12 +49,26 @@ export function ConnectionPreviewDrawer({
       >
         <div className="p-5 overflow-y-auto space-y-4">
           <SheetHeader className="text-left space-y-1 pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-2 mb-1">
-              <ProviderLogo providerId={authorization.providerId} size="md" />
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 uppercase tracking-wider font-bold">
-                <span>{authorization.providerId}</span>
-                <span>•</span>
-                <span className="font-mono text-slate-400">{authorization.id}</span>
+            <div className="flex items-start gap-2.5 mb-1">
+              <ProviderLogo providerId={authorization.providerId} size="md" className="mt-0.5" />
+              <div>
+                <div className="flex items-center gap-1.5 text-xs text-slate-800 font-bold">
+                  <span>{getPlatformName(authorization.providerId)}</span>
+                  <span>•</span>
+                  <span className="font-mono text-slate-400 font-normal">{authorization.id}</span>
+                </div>
+                {authorization.providerId === "meta" && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                      <ProviderLogo providerId="facebook" size="xs" />
+                      Facebook
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-pink-50 border border-pink-200 text-pink-700 text-xs font-semibold">
+                      <ProviderLogo providerId="instagram" size="xs" />
+                      Instagram
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             <SheetTitle className="text-base font-bold text-slate-900">

@@ -7,7 +7,7 @@
 "use client";
 
 import { useState } from "react";
-import { BanIcon, CheckCircle2Icon, ShieldAlertIcon } from "lucide-react";
+import { ShieldAlertIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,6 +20,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import type { IntegrationProvider, PlatformAvailability } from "../data/types";
 import { useUpdateProviderAvailability } from "../data/hooks";
+import { ProviderLogo } from "./provider-logo";
 
 interface ProviderImpactDialogProps {
   provider: IntegrationProvider | null;
@@ -76,27 +77,17 @@ export function ProviderImpactDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-lg bg-white border-slate-200">
         <DialogHeader>
-          <div className="flex items-center gap-2 mb-1">
-            <div
-              className={`size-8 rounded-lg flex items-center justify-center ${
-                isDisabling
-                  ? "bg-rose-100 text-rose-700"
-                  : "bg-emerald-100 text-emerald-700"
-              }`}
-            >
-              {isDisabling ? (
-                <BanIcon className="size-4" />
-              ) : (
-                <CheckCircle2Icon className="size-4" />
-              )}
+          <div className="flex items-center gap-2.5 mb-1">
+            <ProviderLogo providerId={provider.id} size="md" />
+            <div>
+              <DialogTitle className="text-sm font-bold text-slate-900">
+                {title}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-600">
+                {description}
+              </DialogDescription>
             </div>
-            <DialogTitle className="text-sm font-bold text-slate-900">
-              {title}
-            </DialogTitle>
           </div>
-          <DialogDescription className="text-xs text-slate-600">
-            {description}
-          </DialogDescription>
         </DialogHeader>
 
         {/* Operational Blast Radius Impact Preview */}

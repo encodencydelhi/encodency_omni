@@ -92,7 +92,7 @@ export function IssuesPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 items-stretch">
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
           <span className="text-xs font-bold uppercase text-slate-500 truncate">
-            PROVIDER INCIDENTS
+            PROVIDERS
           </span>
           <div
             className={cn(
@@ -102,12 +102,12 @@ export function IssuesPage() {
           >
             {openProviderIncidents}
           </div>
-          <span className="text-xs text-slate-400 truncate">Upstream API</span>
+          <span className="text-xs text-slate-400 truncate">Upstream</span>
         </div>
 
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
           <span className="text-xs font-bold uppercase text-slate-500 truncate">
-            CONNECTION ISSUES
+            CONNECTIONS
           </span>
           <div
             className={cn(
@@ -117,12 +117,12 @@ export function IssuesPage() {
           >
             {openConnectionIssues}
           </div>
-          <span className="text-xs text-slate-400 truncate">Token & Scope</span>
+          <span className="text-xs text-slate-400 truncate">Auth & Scope</span>
         </div>
 
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
           <span className="text-xs font-bold uppercase text-slate-500 truncate">
-            CRITICAL SEVERITY
+            CRITICAL
           </span>
           <div
             className={cn(
@@ -132,12 +132,12 @@ export function IssuesPage() {
           >
             {criticalCount}
           </div>
-          <span className="text-xs text-slate-400 truncate">Immediate action</span>
+          <span className="text-xs text-slate-400 truncate">Urgent</span>
         </div>
 
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
           <span className="text-xs font-bold uppercase text-slate-500 truncate">
-            DEGRADED PROVIDERS
+            DEGRADED
           </span>
           <div
             className={cn(
@@ -147,12 +147,12 @@ export function IssuesPage() {
           >
             {degradedProvidersCount}
           </div>
-          <span className="text-xs text-slate-400 truncate">Service warnings</span>
+          <span className="text-xs text-slate-400 truncate">Throttled</span>
         </div>
 
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
           <span className="text-xs font-bold uppercase text-slate-500 truncate">
-            AFFECTED TENANTS
+            AFFECTED
           </span>
           <div
             className={cn(
@@ -162,17 +162,17 @@ export function IssuesPage() {
           >
             {affectedCompaniesCount}
           </div>
-          <span className="text-xs text-slate-400 truncate">Unique companies</span>
+          <span className="text-xs text-slate-400 truncate">Tenants</span>
         </div>
 
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
           <span className="text-xs font-bold uppercase text-slate-500 truncate">
-            RESOLVED ISSUES
+            RESOLVED
           </span>
           <div className="text-lg font-extrabold text-emerald-700">
             {resolvedCount}
           </div>
-          <span className="text-xs text-slate-400 truncate">Closed items</span>
+          <span className="text-xs text-slate-400 truncate">Closed</span>
         </div>
       </div>
 

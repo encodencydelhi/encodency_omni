@@ -73,7 +73,7 @@ export function ConnectionsPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1 items-stretch">
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
           <span className="text-xs font-bold uppercase text-slate-500 truncate">
-            TOTAL AUTHS
+            TOTAL
           </span>
           <div className="text-lg font-extrabold text-slate-900">
             {totalAuthorizations}
@@ -83,22 +83,22 @@ export function ConnectionsPage() {
 
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
           <span className="text-xs font-bold uppercase text-slate-500 truncate">
-            ACTIVE AUTHS
+            ACTIVE
           </span>
           <div className="text-lg font-extrabold text-indigo-700">
             {activeAuthorizations}
           </div>
-          <span className="text-xs text-slate-400 truncate">Active sessions</span>
+          <span className="text-xs text-slate-400 truncate">Sessions</span>
         </div>
 
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
           <span className="text-xs font-bold uppercase text-slate-500 truncate">
-            CONNECTED RESOURCES
+            RESOURCES
           </span>
           <div className="text-lg font-extrabold text-slate-900">
             {connectedResourcesCount}
           </div>
-          <span className="text-xs text-slate-400 truncate">Pages / Locations</span>
+          <span className="text-xs text-slate-400 truncate">Discovered</span>
         </div>
 
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
@@ -108,12 +108,12 @@ export function ConnectionsPage() {
           <div className="text-lg font-extrabold text-emerald-700">
             {healthyCount}
           </div>
-          <span className="text-xs text-slate-400 truncate">In good standing</span>
+          <span className="text-xs text-slate-400 truncate">Normal</span>
         </div>
 
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
           <span className="text-xs font-bold uppercase text-slate-500 truncate">
-            NEEDS RECONNECT
+            RECONNECT
           </span>
           <div
             className={cn(
@@ -123,12 +123,12 @@ export function ConnectionsPage() {
           >
             {reconnectCount}
           </div>
-          <span className="text-xs text-slate-400 truncate">Expired tokens</span>
+          <span className="text-xs text-slate-400 truncate">Expired</span>
         </div>
 
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
           <span className="text-xs font-bold uppercase text-slate-500 truncate">
-            SCOPE ISSUES
+            PERMISSIONS
           </span>
           <div
             className={cn(
@@ -138,17 +138,17 @@ export function ConnectionsPage() {
           >
             {permissionCount}
           </div>
-          <span className="text-xs text-slate-400 truncate">Missing permissions</span>
+          <span className="text-xs text-slate-400 truncate">Missing</span>
         </div>
 
         <div className="p-3 rounded-xl border border-slate-200/90 bg-white text-left h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
           <span className="text-xs font-bold uppercase text-slate-500 truncate">
-            DISCONNECTED
+            REVOKED
           </span>
           <div className="text-lg font-extrabold text-slate-600">
             {disconnectedCount}
           </div>
-          <span className="text-xs text-slate-400 truncate">Revoked access</span>
+          <span className="text-xs text-slate-400 truncate">Disconnected</span>
         </div>
       </div>
 
