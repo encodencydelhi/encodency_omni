@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatDateTime, formatDuration } from "@/lib/utils/format";
 import { JOB_LIFECYCLE_META, JOB_PRIORITY_META } from "../data/config";
 import type { JobRecord } from "../data/types";
+import { toast } from "sonner";
 
 interface JobsTableProps {
   jobs: JobRecord[];
@@ -55,6 +56,7 @@ export function JobsTable({ jobs, onOpenJob, onQuickPreview, isLoading }: JobsTa
   const handleCopyId = async (id: string) => {
     await navigator.clipboard.writeText(id);
     setCopiedId(id);
+    toast.success(`Job ID copied: ${id}`);
     setTimeout(() => setCopiedId(null), 2000);
   };
 

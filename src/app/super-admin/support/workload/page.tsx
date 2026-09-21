@@ -56,53 +56,55 @@ export default function TeamWorkloadPage() {
 
       <div className="flex flex-col gap-4">
         <h3 className="text-[14px] font-semibold text-[#0F172A]">Team Distribution</h3>
-        {workload.map(({ team, activeTickets, unassigned, highUrgent }) => {
-          const capacityPercent = Math.min((activeTickets / 10) * 100, 100);
-          const isOverloaded = activeTickets > 8;
-          return (
-            <Card key={team.id} className="p-5 border-[#E2E8F0] shadow-sm rounded-sm hover:border-[#CBD5E1] transition-colors">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
-                  <div className={cn("w-10 h-10 rounded-sm flex items-center justify-center shrink-0",
-                    isOverloaded ? "bg-[#FEF2F2]" : "bg-[#D1FAE5]"
-                  )}>
-                    <Users size={18} className={isOverloaded ? "text-[#EF4444]" : "text-[#10B981]"} />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <h4 className="text-[13px] font-semibold text-[#0F172A]">{team.name}</h4>
-                    <p className="text-[12px] text-[#64748B]">{team.description}</p>
-                    <div className="flex items-center gap-4 mt-1">
-                      <span className="text-[12px] text-[#475569] flex items-center gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#3B82F6]" />{activeTickets} active
-                      </span>
-                      {unassigned > 0 && (
-                        <span className="text-[12px] text-[#EAB308] flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#EAB308]" />{unassigned} unassigned
-                        </span>
-                      )}
-                      {highUrgent > 0 && (
-                        <span className="text-[12px] text-[#EF4444] flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" />{highUrgent} high/urgent
-                        </span>
-                      )}
+        <div className="grid grid-cols-3 gap-3">
+          {workload.map(({ team, activeTickets, unassigned, highUrgent }) => {
+            const capacityPercent = Math.min((activeTickets / 10) * 100, 100);
+            const isOverloaded = activeTickets > 8;
+            return (
+              <Card key={team.id} className="p-4 border-[#E2E8F0] shadow-sm rounded-sm hover:border-[#CBD5E1] transition-colors flex flex-col">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className={cn("w-9 h-9 rounded-sm flex items-center justify-center shrink-0",
+                      isOverloaded ? "bg-[#FEF2F2]" : "bg-[#D1FAE5]"
+                    )}>
+                      <Users size={16} className={isOverloaded ? "text-[#EF4444]" : "text-[#10B981]"} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <h4 className="text-[13px] font-semibold text-[#0F172A]">{team.name}</h4>
+                      <p className="text-[11px] text-[#64748B] leading-snug">{team.description}</p>
                     </div>
                   </div>
+                  <span className={cn("text-[11px] font-medium px-2 py-0.5 rounded-sm shrink-0",
+                    isOverloaded ? "text-[#EF4444] bg-[#FEE2E2]" : "text-[#10B981] bg-[#D1FAE5]"
+                  )}>{isOverloaded ? "Overloaded" : "Normal Load"}</span>
                 </div>
-                <span className={cn("text-[12px] font-medium px-2 py-0.5 rounded-sm shrink-0",
-                  isOverloaded ? "text-[#EF4444] bg-[#FEE2E2]" : "text-[#10B981] bg-[#D1FAE5]"
-                )}>{isOverloaded ? "Overloaded" : "Normal Load"}</span>
-              </div>
-              <div className="mt-4">
-                <div className="flex items-center justify-between text-[12px] text-[#64748B] mb-1.5">
-                  <span>Capacity</span><span>{activeTickets}/10 tickets</span>
+                <div className="flex items-center gap-3 mt-3">
+                  <span className="text-[12px] text-[#475569] flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#3B82F6]" />{activeTickets} active
+                  </span>
+                  {unassigned > 0 && (
+                    <span className="text-[12px] text-[#EAB308] flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#EAB308]" />{unassigned} unassigned
+                    </span>
+                  )}
+                  {highUrgent > 0 && (
+                    <span className="text-[12px] text-[#EF4444] flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" />{highUrgent} high/urgent
+                    </span>
+                  )}
                 </div>
-                <div className="w-full h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden">
-                  <div className={cn("h-full rounded-full transition-all", isOverloaded ? "bg-[#EF4444]" : "bg-[#10B981]")} style={{ width: `${capacityPercent}%` }} />
+                <div className="mt-3">
+                  <div className="flex items-center justify-between text-[11px] text-[#64748B] mb-1">
+                    <span>Capacity</span><span>{activeTickets}/10 tickets</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden">
+                    <div className={cn("h-full rounded-full transition-all", isOverloaded ? "bg-[#EF4444]" : "bg-[#10B981]")} style={{ width: `${capacityPercent}%` }} />
+                  </div>
                 </div>
-              </div>
-            </Card>
-          );
-        })}
+              </Card>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

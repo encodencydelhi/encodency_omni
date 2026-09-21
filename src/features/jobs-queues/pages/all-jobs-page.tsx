@@ -353,19 +353,20 @@ export function AllJobsPage() {
         </div>
 
         {/* Quick Filter Pills */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap border-b border-[#E2E8F0] pb-0">
           {QUICK_FILTERS.map((pf) => (
             <button
               key={pf.value}
               onClick={() => handleQuickFilter(pf.value)}
               className={cn(
-                "px-2.5 py-1 rounded-sm text-xs font-semibold transition-colors border",
+                "px-2.5 py-2 text-xs font-semibold transition-colors relative whitespace-nowrap",
                 filters.lifecycleState === pf.value
-                  ? "bg-slate-900 text-white border-slate-900"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                  ? "text-[#2563EB]"
+                  : "text-[#64748B] hover:text-[#2563EB]"
               )}
             >
               {pf.label}
+              {filters.lifecycleState === pf.value && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2563EB]" />}
             </button>
           ))}
         </div>

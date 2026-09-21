@@ -168,20 +168,20 @@ export function JobDetailPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="h-9 bg-white border border-slate-200/90 rounded-sm p-0.5">
-          <TabsTrigger value="overview" className="text-xs h-7 rounded-sm data-[state=active]:bg-slate-900 data-[state=active]:text-white font-semibold">
+        <TabsList className="h-9 bg-white border-b border-[#E2E8F0] rounded-none p-0 gap-0">
+          <TabsTrigger value="overview" className="text-xs h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-[#2563EB] data-[state=active]:text-[#2563EB] font-semibold px-4">
             Overview
           </TabsTrigger>
-          <TabsTrigger value="attempts" className="text-xs h-7 rounded-sm data-[state=active]:bg-slate-900 data-[state=active]:text-white font-semibold">
+          <TabsTrigger value="attempts" className="text-xs h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-[#2563EB] data-[state=active]:text-[#2563EB] font-semibold px-4">
             Attempts & Errors
           </TabsTrigger>
-          <TabsTrigger value="workflow" className="text-xs h-7 rounded-sm data-[state=active]:bg-slate-900 data-[state=active]:text-white font-semibold">
+          <TabsTrigger value="workflow" className="text-xs h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-[#2563EB] data-[state=active]:text-[#2563EB] font-semibold px-4">
             Workflow & Dependencies
           </TabsTrigger>
-          <TabsTrigger value="timeline" className="text-xs h-7 rounded-sm data-[state=active]:bg-slate-900 data-[state=active]:text-white font-semibold">
+          <TabsTrigger value="timeline" className="text-xs h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-[#2563EB] data-[state=active]:text-[#2563EB] font-semibold px-4">
             Timeline
           </TabsTrigger>
-          <TabsTrigger value="technical" className="text-xs h-7 rounded-sm data-[state=active]:bg-slate-900 data-[state=active]:text-white font-semibold">
+          <TabsTrigger value="technical" className="text-xs h-8 rounded-none border-b-2 border-transparent data-[state=active]:border-[#2563EB] data-[state=active]:text-[#2563EB] font-semibold px-4">
             Technical Context
           </TabsTrigger>
         </TabsList>

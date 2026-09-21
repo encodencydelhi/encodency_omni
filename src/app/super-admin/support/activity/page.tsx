@@ -4,16 +4,38 @@ import React, { useState } from "react";
 import { useSupport } from "@/features/support-tickets/data/mock-provider";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils/cn";
 import { formatDistanceToNow } from "date-fns";
-import { 
-  Activity, Clock, Settings, Bell, Users, 
-  Shield, Palette, Mail, Save, RotateCcw 
-} from "lucide-react";
+import { Activity, Settings, Bell, Save, RotateCcw, CheckCircle } from "lucide-react";
 
 export default function ActivitySettingsPage() {
   const { activities, tickets } = useSupport();
   const [activeTab, setActiveTab] = useState<"activity" | "settings">("activity");
+  const [saved, setSaved] = useState(false);
+
+  const [autoAssign, setAutoAssign] = useState(true);
+  const [slaBreachNotif, setSlaBreachNotif] = useState(true);
+  const [csatSurvey, setCsatSurvey] = useState(true);
+  const [autoClose, setAutoClose] = useState(false);
+  const [emailNotif, setEmailNotif] = useState(true);
+  const [escalationAlerts, setEscalationAlerts] = useState(true);
+  const [weeklyDigest, setWeeklyDigest] = useState(false);
+
+  const handleSave = () => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleReset = () => {
+    setAutoAssign(true);
+    setSlaBreachNotif(true);
+    setCsatSurvey(true);
+    setAutoClose(false);
+    setEmailNotif(true);
+    setEscalationAlerts(true);
+    setWeeklyDigest(false);
+  };
 
   const getActorIcon = (actorType: string) => {
     switch (actorType) {
@@ -42,12 +64,12 @@ export default function ActivitySettingsPage() {
             onClick={() => setActiveTab(tab.id)}
             className={cn(
               "px-4 py-2.5 text-[13px] font-medium transition-colors relative",
-              activeTab === tab.id ? "text-[#0F172A]" : "text-[#64748B] hover:text-[#0F172A]"
+              activeTab === tab.id ? "text-[#EB0711]" : "text-[#64748B] hover:text-[#EB0711]"
             )}
           >
             {tab.label}
             {activeTab === tab.id && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#5B1F1F]" />
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#EB0711]" />
             )}
           </button>
         ))}
@@ -60,36 +82,33 @@ export default function ActivitySettingsPage() {
             {activities.length === 0 ? (
               <p className="text-[13px] text-[#64748B] text-center py-8">No activity recorded yet.</p>
             ) : (
-              activities.map((activity, idx) => {
-                const ticket = tickets.find(t => t.id === activity.ticketId);
-                return (
-                  <div key={activity.id} className="flex items-start gap-3 py-3 border-b border-[#F1F5F9] last:border-0">
-                    {getActorIcon(activity.actorType)}
-                    <div className="flex flex-col gap-1 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-medium text-[#0F172A]">{activity.actorName}</span>
-                        <span className="text-[12px] text-[#64748B]">{activity.actionType}</span>
-                        {activity.ticketId && (
-                          <span className="text-[12px] text-[#2563EB] font-medium">{activity.ticketId}</span>
-                        )}
-                      </div>
-                      {activity.previousValue && activity.newValue && (
-                        <div className="flex items-center gap-2 text-[12px]">
-                          <span className="text-[#94A3B8] line-through">{activity.previousValue}</span>
-                          <span className="text-[#64748B]">→</span>
-                          <span className="text-[#0F172A] font-medium">{activity.newValue}</span>
-                        </div>
-                      )}
-                      {activity.reason && (
-                        <p className="text-[12px] text-[#64748B] italic">&quot;{activity.reason}&quot;</p>
+              activities.map((activity) => (
+                <div key={activity.id} className="flex items-start gap-3 py-3 border-b border-[#F1F5F9] last:border-0">
+                  {getActorIcon(activity.actorType)}
+                  <div className="flex flex-col gap-1 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] font-medium text-[#0F172A]">{activity.actorName}</span>
+                      <span className="text-[12px] text-[#64748B]">{activity.actionType}</span>
+                      {activity.ticketId && (
+                        <span className="text-[12px] text-[#2563EB] font-medium">{activity.ticketId}</span>
                       )}
                     </div>
-                    <span className="text-[11px] text-[#94A3B8] whitespace-nowrap">
-                      {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
-                    </span>
+                    {activity.previousValue && activity.newValue && (
+                      <div className="flex items-center gap-2 text-[12px]">
+                        <span className="text-[#94A3B8] line-through">{activity.previousValue}</span>
+                        <span className="text-[#64748B]">→</span>
+                        <span className="text-[#0F172A] font-medium">{activity.newValue}</span>
+                      </div>
+                    )}
+                    {activity.reason && (
+                      <p className="text-[12px] text-[#64748B] italic">&quot;{activity.reason}&quot;</p>
+                    )}
                   </div>
-                );
-              })
+                  <span className="text-[11px] text-[#94A3B8] whitespace-nowrap">
+                    {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                  </span>
+                </div>
+              ))
             )}
           </div>
         </Card>
@@ -108,36 +127,28 @@ export default function ActivitySettingsPage() {
                   <span className="text-[13px] font-medium text-[#0F172A]">Auto-assign new tickets</span>
                   <span className="text-[11px] text-[#64748B]">Automatically route tickets to available teams</span>
                 </div>
-                <div className="w-10 h-5 bg-[#10B981] rounded-full relative cursor-pointer">
-                  <div className="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" />
-                </div>
+                <Switch checked={autoAssign} onCheckedChange={setAutoAssign} />
               </div>
               <div className="flex items-center justify-between py-2 border-b border-[#F1F5F9]">
                 <div className="flex flex-col">
                   <span className="text-[13px] font-medium text-[#0F172A]">SLA breach notifications</span>
                   <span className="text-[11px] text-[#64748B]">Send alerts when SLA deadlines are missed</span>
                 </div>
-                <div className="w-10 h-5 bg-[#10B981] rounded-full relative cursor-pointer">
-                  <div className="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" />
-                </div>
+                <Switch checked={slaBreachNotif} onCheckedChange={setSlaBreachNotif} />
               </div>
               <div className="flex items-center justify-between py-2 border-b border-[#F1F5F9]">
                 <div className="flex flex-col">
                   <span className="text-[13px] font-medium text-[#0F172A]">Customer satisfaction survey</span>
                   <span className="text-[11px] text-[#64748B]">Send CSAT survey after ticket resolution</span>
                 </div>
-                <div className="w-10 h-5 bg-[#10B981] rounded-full relative cursor-pointer">
-                  <div className="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" />
-                </div>
+                <Switch checked={csatSurvey} onCheckedChange={setCsatSurvey} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <div className="flex flex-col">
                   <span className="text-[13px] font-medium text-[#0F172A]">Auto-close resolved tickets</span>
                   <span className="text-[11px] text-[#64748B]">Close tickets after 7 days of resolution</span>
                 </div>
-                <div className="w-10 h-5 bg-[#E2E8F0] rounded-full relative cursor-pointer">
-                  <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" />
-                </div>
+                <Switch checked={autoClose} onCheckedChange={setAutoClose} />
               </div>
             </div>
           </Card>
@@ -155,37 +166,36 @@ export default function ActivitySettingsPage() {
                   <span className="text-[13px] font-medium text-[#0F172A]">Email notifications</span>
                   <span className="text-[11px] text-[#64748B]">Receive email for new ticket assignments</span>
                 </div>
-                <div className="w-10 h-5 bg-[#10B981] rounded-full relative cursor-pointer">
-                  <div className="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" />
-                </div>
+                <Switch checked={emailNotif} onCheckedChange={setEmailNotif} />
               </div>
               <div className="flex items-center justify-between py-2 border-b border-[#F1F5F9]">
                 <div className="flex flex-col">
                   <span className="text-[13px] font-medium text-[#0F172A]">Escalation alerts</span>
                   <span className="text-[11px] text-[#64748B]">Notify when tickets are escalated</span>
                 </div>
-                <div className="w-10 h-5 bg-[#10B981] rounded-full relative cursor-pointer">
-                  <div className="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" />
-                </div>
+                <Switch checked={escalationAlerts} onCheckedChange={setEscalationAlerts} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <div className="flex flex-col">
                   <span className="text-[13px] font-medium text-[#0F172A]">Weekly digest</span>
                   <span className="text-[11px] text-[#64748B]">Send weekly support summary report</span>
                 </div>
-                <div className="w-10 h-5 bg-[#E2E8F0] rounded-full relative cursor-pointer">
-                  <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm" />
-                </div>
+                <Switch checked={weeklyDigest} onCheckedChange={setWeeklyDigest} />
               </div>
             </div>
           </Card>
 
           <div className="flex items-center justify-end gap-2 mt-2">
-            <Button size="sm" variant="outline" className="h-8 gap-2 border-[#E2E8F0] text-[#475569]">
+            {saved && (
+              <span className="flex items-center gap-1.5 text-[12px] text-[#10B981] font-medium">
+                <CheckCircle size={14} /> Settings saved
+              </span>
+            )}
+            <Button size="sm" variant="outline" className="h-8 gap-2 border-[#E2E8F0] text-[#475569]" onClick={handleReset}>
               <RotateCcw size={14} />
               Reset Defaults
             </Button>
-            <Button size="sm" className="h-8 gap-2 bg-[#5B1F1F] hover:bg-[#7A2C2C] text-white">
+            <Button size="sm" className="h-8 gap-2 bg-[#EB0711] hover:bg-[#D60811] text-white" onClick={handleSave}>
               <Save size={14} />
               Save Settings
             </Button>

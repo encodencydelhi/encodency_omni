@@ -203,7 +203,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ ticketI
                   <tab.icon size={12} />
                   {tab.label}
                   <span className="text-[10px] text-[#94A3B8]">({tab.count})</span>
-                  {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#5B1F1F]" />}
+                  {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#EB0711]" />}
                 </button>
               ))}
             </div>
@@ -254,7 +254,7 @@ export default function TicketDetailPage({ params }: { params: Promise<{ ticketI
                       </Button>
                       <span className="text-[10px] text-[#94A3B8]">Demo Reply — Not Sent</span>
                     </div>
-                    <Button size="sm" className="h-7 gap-1 bg-[#5B1F1F] hover:bg-[#7A2C2C] text-white text-[11px]" onClick={handleSendReply} disabled={!replyBody.trim()}>
+                    <Button size="sm" className="h-7 gap-1 bg-[#EB0711] hover:bg-[#D60811] text-white text-[11px]" onClick={handleSendReply} disabled={!replyBody.trim()}>
                       <Send size={10} />
                       Add Demo Reply
                     </Button>
