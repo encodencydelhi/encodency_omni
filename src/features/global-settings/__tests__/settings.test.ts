@@ -207,7 +207,7 @@ describe("validation", () => {
   });
 
   it("checks rules that span settings", () => {
-    const values = { ...defaultValues(), "maintenance.announcement.ends_at": "2026-09-13T19:00:00.000Z" };
+    const values = { ...defaultValues(), "maintenance.announcement.ends_at": "2026-09-11T19:00:00.000Z" };
     assert.match(validateValues(values, ["maintenance.announcement.ends_at"])["maintenance.announcement.ends_at"] ?? "", /after the start/i);
     const methods = { ...defaultValues(), "security.mfa.allowed_methods": ["webauthn"] };
     assert.ok(validateValues(methods, ["security.mfa.allowed_methods"])["security.mfa.allowed_methods"]);
@@ -560,7 +560,7 @@ describe("maintenance", () => {
 
   it("rejects an end before the start", async () => {
     await rejects(
-      repo.saveSection({ section: "maintenance", values: { "maintenance.announcement.ends_at": "2026-09-13T19:00:00.000Z" }, reason: "x" }, actor),
+      repo.saveSection({ section: "maintenance", values: { "maintenance.announcement.ends_at": "2026-09-11T19:00:00.000Z" }, reason: "x" }, actor),
       "VALIDATION_FAILED",
     );
   });

@@ -51,9 +51,16 @@ export function SettingsGuardProvider({ children }: { children: ReactNode }) {
         router.push(target);
       }
     },
-    label: "This Settings Section",
+    label: "this settings section",
   });
   const { requestClose } = guard;
+
+  // `navigate` must keep one identity: sections register in an effect that depends on this API, so a changing
+  // identity would re-register on every render and loop. The latest values are read from refs instead.
+  const latest = useRef({ dirty, requestClose });
+  useEffect(() => {
+    latest.current = { dirty, requestClose };
+  });
 
   useEffect(() => {
     if (!dirty) return;
@@ -74,14 +81,14 @@ export function SettingsGuardProvider({ children }: { children: ReactNode }) {
   const navigate = useCallback(
     (href: string) => {
       const target = new URL(href, window.location.origin);
-      if (dirty && target.pathname !== window.location.pathname) {
+      if (latest.current.dirty && target.pathname !== window.location.pathname) {
         leaveTo.current = target.pathname + target.search + target.hash;
-        requestClose();
+        latest.current.requestClose();
       } else {
         router.push(href);
       }
     },
-    [dirty, requestClose, router],
+    [router],
   );
   const api = useMemo(() => ({ register, navigate }), [register, navigate]);
 
