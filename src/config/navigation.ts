@@ -171,6 +171,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         href: ROUTES.superAdmin.featureFlags,
         icon: FlagIcon,
         permission: "platform:read",
+        matchPrefixes: [ROUTES.superAdmin.featureFlags],
       },
       {
         label: "Audit Logs",
