@@ -100,7 +100,8 @@ export function AuditOverviewPage() {
 
           <div className="grid grid-cols-1 gap-1 xl:grid-cols-3">
             <Panel
-              className="xl:col-span-2"
+              className="xl:col-span-2 flex flex-col"
+              bodyClassName="flex flex-col flex-1 min-h-[220px]"
               title="Audit Event Activity"
               description={`Recorded events per ${activity.data?.unit ?? "day"}, by when they occurred. Empty periods are zero; nothing is added to fill them.`}
               action={
