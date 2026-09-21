@@ -1,7 +1,7 @@
 import { ROUTES } from "@/config/routes";
 import { STAFF } from "@/features/companies/data/mock/dataset";
 import type { CompanyActivity, CompanyBundle } from "@/features/companies/data/types";
-import { canonicalKey, actionDef, fallbackLabel } from "./action-catalogue";
+import { canonicalKey, actionDef } from "./action-catalogue";
 import { makeEvent, type RawChange } from "./build";
 import type { ActorSnapshot, AuditCategory, AuditEvent, AuditOutcome, RelatedRef, TargetSnapshot } from "./types";
 

@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { AuditOverviewPage } from "@/features/audit-logs/pages/overview";
+import { AccessSecurityPage } from "@/features/audit-logs/pages/access-security";
 
 export const metadata: Metadata = {
-  title: "Audit Logs",
-  description: "Review platform actions, security events and configuration changes across OmniPlatform.",
+  title: "Access & Security",
+  description: "Authentication, user access, platform staff and security policy events.",
 };
 
 export default function Page() {
   // Filters and the date range live in the URL, which needs a Suspense boundary.
   return (
     <Suspense fallback={null}>
-      <AuditOverviewPage />
+      <AccessSecurityPage />
     </Suspense>
   );
 }

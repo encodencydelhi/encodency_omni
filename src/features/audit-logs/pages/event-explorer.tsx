@@ -87,7 +87,7 @@ export function EventExplorerPage() {
         </Panel>
       )}
 
-      <EventPreviewDrawer eventId={values.open || null} onClose={() => filters.set({ open: null })} back={backString.replace(/(^|&)open=[^&]*/, "").replace(/^&/, "")} />
+      <EventPreviewDrawer eventId={values.open || null} onClose={() => filters.set({ open: null })} back={backString} />
       {actions.nodes}
       {exporting ? <ExportDialog query={query} subject={`${data?.total ?? 0} matching events`} onClose={() => setExporting(false)} /> : null}
     </div>

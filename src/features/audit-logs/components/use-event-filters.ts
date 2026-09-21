@@ -21,6 +21,8 @@ export function useEventFilters(base: Partial<EventQuery> = {}, pageSize = PAGE_
   const capabilities = useAuditCapabilities();
   const v = url.values;
   const baseKey = JSON.stringify(base);
+  const back = new URLSearchParams(params.toString());
+  back.delete("open");
 
   const query: EventQuery = useMemo(
     () => ({
@@ -68,7 +70,7 @@ export function useEventFilters(base: Partial<EventQuery> = {}, pageSize = PAGE_
     from,
     to,
     /** The current query string, carried to a detail page so Back restores exactly these filters. */
-    backString: params.toString(),
+    backString: back.toString(),
   };
 }
 

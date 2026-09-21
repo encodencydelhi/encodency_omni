@@ -142,6 +142,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         href: ROUTES.superAdmin.systemHealth,
         icon: HeartPulseIcon,
         permission: "platform:read",
+        matchPrefixes: [ROUTES.superAdmin.systemHealth],
       },
       {
         label: "Jobs & Queues",

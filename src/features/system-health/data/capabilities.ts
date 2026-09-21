@@ -1,0 +1,16 @@
+export const SYSTEM_HEALTH_CAPABILITIES = {
+  canViewSystemHealth: true,
+  canViewServiceHealth: true,
+  canViewInfrastructureDependencies: true,
+  canViewOperationalIncidents: true,
+  canCreateIncident: true,
+  canUpdateIncident: true,
+  canAssignIncidentOwner: true,
+  canResolveIncident: true,
+  canViewCompanyImpact: true,
+  canViewAvailabilityReports: true,
+  canViewMaintenance: true,
+  canViewMonitoringCoverage: true,
+  canManageMonitoringConfiguration: false,
+  canExportHealthReports: true,
+} as const;

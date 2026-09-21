@@ -3,8 +3,8 @@
 import { BotIcon, GlobeIcon, ShieldQuestionIcon, UserIcon, UserRoundCogIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
-import { ACTOR_TYPE, CATEGORY, INTEGRITY, OUTCOME, PRIORITY, SENSITIVE, WORKFLOW_STAGE } from "../data/config";
-import type { ActorType, AuditCategory, AuditOutcome, IntegrityStatus, ReviewPriority, SensitiveCategory, WorkflowStage } from "../data/types";
+import { ACTOR_TYPE, CATEGORY, INTEGRITY, INVESTIGATION_PRIORITY, INVESTIGATION_STATUS, OUTCOME, PRIORITY, SENSITIVE, WORKFLOW_STAGE } from "../data/config";
+import type { ActorType, AuditCategory, AuditOutcome, IntegrityStatus, InvestigationPriority, InvestigationStatus, ReviewPriority, SensitiveCategory, WorkflowStage } from "../data/types";
 
 /** Marks records that exist only in this frontend demo. */
 export function DemoTag({ children = "Demo Audit Data" }: { children?: ReactNode }) {
@@ -35,3 +35,6 @@ export function ActorIcon({ type, className }: { type: ActorType; className?: st
     </span>
   );
 }
+
+export const StatusBadge = ({ status }: { status: InvestigationStatus }) => <Badge tone={INVESTIGATION_STATUS[status].tone}>{INVESTIGATION_STATUS[status].label}</Badge>;
+export const CasePriorityBadge = ({ priority }: { priority: InvestigationPriority }) => <Badge tone={INVESTIGATION_PRIORITY[priority].tone}>{INVESTIGATION_PRIORITY[priority].label}</Badge>;
