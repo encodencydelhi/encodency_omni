@@ -31,7 +31,6 @@ export const queryKeys = {
   jobs: entityKeys("jobs"),
   apiMonitoring: entityKeys("api-monitoring"),
   webhooks: entityKeys("webhooks"),
-  featureFlags: entityKeys("feature-flags"),
   auditLogs: entityKeys("audit-logs"),
   support: entityKeys("support"),
   notifications: entityKeys("notifications"),

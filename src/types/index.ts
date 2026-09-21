@@ -6,7 +6,6 @@ export * from "./domain/auth";
 export * from "./domain/billing";
 export * from "./domain/company";
 export * from "./domain/dashboard";
-export * from "./domain/feature-flag";
 export * from "./domain/integration";
 export * from "./domain/job";
 export * from "./domain/notification";
