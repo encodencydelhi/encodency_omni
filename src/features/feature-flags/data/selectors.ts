@@ -166,7 +166,7 @@ export function buildAttention(rows: readonly FlagRow[], changes: readonly FlagC
     if (isCleanupCandidate(flag, now)) push({ severity: "info", flagKey: flag.key, flagName: flag.name, environment, kind: "cleanup", issue: "Cleanup candidate: review whether the flag can be retired.", scope: "Platform", detectedAt: flag.updatedAt, changeId: null });
   }
   for (const change of changes.filter((item) => item.environment === environment && item.status === "pending_approval")) {
-    push({ severity: "warning", flagKey: change.flagKey, flagName: change.flagName, environment, kind: "awaiting_approval", issue: "A production change is waiting for approval.", scope: `${change.impact?.newlyEnabled.length ?? "Unknown"} newly enabled`, detectedAt: change.requestedAt, changeId: change.id });
+    push({ severity: "warning", flagKey: change.flagKey, flagName: change.flagName, environment, kind: "awaiting_approval", issue: `A ${environment} change is waiting for approval.`, scope: change.impact ? `${change.impact.newlyEnabled.length} newly enabled` : "Impact was not recorded", detectedAt: change.requestedAt, changeId: change.id });
   }
   const rank = { critical: 0, warning: 1, info: 2 } as const;
   return items.sort((a, b) => rank[a.severity] - rank[b.severity] || Date.parse(b.detectedAt) - Date.parse(a.detectedAt));

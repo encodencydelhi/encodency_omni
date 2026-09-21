@@ -84,10 +84,10 @@ export function FlagsOverviewPage() {
       {query.error && !data ? (
         <FlagsError subject="Feature Flag Overview" error={query.error} onRetry={() => void query.refetch()} />
       ) : !data ? (
-        <div className="space-y-1"><StatGridSkeleton count={8} className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-8" /><PanelSkeleton rows={6} /></div>
+        <div className="space-y-1"><StatGridSkeleton count={8} className="grid-cols-2 sm:grid-cols-4 min-[1600px]:grid-cols-8" /><PanelSkeleton rows={6} /></div>
       ) : (
         <>
-          <StatGrid className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-8">
+          <StatGrid className="grid-cols-2 sm:grid-cols-4 min-[1600px]:grid-cols-8">
             <StatCard compact label="Total Flags" value={data.kpis.total} hint="Not archived" href={flagRoutes.all(environment)} />
             <StatCard compact label="Globally Enabled" value={data.kpis.globallyEnabled} hint="All eligible companies" href={flagRoutes.all(environment, { state: "enabled", strategy: "all" })} />
             <StatCard compact label="Disabled" value={data.kpis.disabled} hint="Switched off" href={flagRoutes.all(environment, { state: "disabled" })} />
