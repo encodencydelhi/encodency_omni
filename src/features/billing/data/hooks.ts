@@ -8,16 +8,7 @@
 import { useSyncExternalStore, useMemo } from "react";
 import { billingStore } from "./store";
 import { calculateOverviewKpis } from "./selectors";
-import type {
-  Invoice,
-  Payment,
-  CreditNote,
-  Refund,
-  BillingAccount,
-  ReconciliationException,
-  BillingPolicies,
-  BillingOverviewKpis,
-} from "./types";
+import type { BillingOverviewKpis } from "./types";
 
 export function useBillingOverview(options: { periodDays?: number; currency?: string } = {}) {
   const periodDays = options.periodDays ?? 30;
