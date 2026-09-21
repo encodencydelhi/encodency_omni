@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { SUPER_ADMIN_NAV } from "@/config/navigation";
+import { ROUTES } from "@/config/routes";
 import { ChevronRight, LayoutGrid } from "lucide-react";
 import Link from "next/link";
 
@@ -27,7 +28,16 @@ export function AppBreadcrumb() {
   const nestedSegments = pathSegments.slice(baseLength);
 
   /** "cmp_namo-gange-trust" -> "namo gange trust"; record-id prefixes are not for people. */
-  const toLabel = (segment: string) => decodeURIComponent(segment).replace(/^(cmp|prj|usr)_/, "").replace(/[-_]/g, " ");
+  // Sub-pages of Feature Flags have names of their own; "all" alone would not say what it lists.
+  const featureFlagPages: Record<string, string> = { all: "All Flags", rollouts: "Rollouts & Targeting", "company-access": "Company Access", changes: "Changes & Activity", settings: "Settings & Governance" };
+  const inFeatureFlags = activeItem?.href === ROUTES.superAdmin.featureFlags;
+  // A dotted feature key such as seo.advanced_audit stays exactly as written.
+  const toLabel = (segment: string, index = 0) => {
+    const decoded = decodeURIComponent(segment);
+    if (inFeatureFlags && index === 0 && featureFlagPages[decoded]) return featureFlagPages[decoded];
+    if (inFeatureFlags && decoded.includes(".")) return decoded;
+    return decoded.replace(/^(cmp|prj|usr)_/, "").replace(/[-_]/g, " ");
+  };
 
   return (
     <div className="sticky top-[56px] z-20 flex h-7 items-center border-b border-[#E2E8F0] bg-gradient-to-r from-white via-[#F8FAFC] to-white px-4 sm:px-6 lg:px-8">
@@ -70,14 +80,14 @@ export function AppBreadcrumb() {
                     <ChevronRight className="size-3.5 mx-0.5 text-slate-300" />
                     {isLast ? (
                       <span className="rounded-md px-2 py-1 text-slate-800 font-semibold capitalize bg-blue-50/50 shadow-sm border border-blue-100/50">
-                        {toLabel(segment)}
+                        {toLabel(segment, index)}
                       </span>
                     ) : (
                       <Link
                         href={href}
                         className="rounded-md px-2 py-1 capitalize hover:bg-slate-100 hover:text-blue-600 transition-all duration-200"
                       >
-                        {toLabel(segment)}
+                        {toLabel(segment, index)}
                       </Link>
                     )}
                   </div>
