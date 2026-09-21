@@ -5,10 +5,10 @@ import { CHART_AXIS_PROPS, CHART_COLORS, CHART_GRID_PROPS, CHART_TOOLTIP_LABEL_S
 import type { ActivityPoint } from "../data/types";
 
 /** Real event counts per bucket. Empty buckets are zero; no event is invented to fill them. */
-export function ActivityChart({ points, unit, height = 220, name = "Events" }: { points: readonly ActivityPoint[]; unit: "hour" | "day" | "week"; height?: number; name?: string }) {
+export function ActivityChart({ points, unit, height = "100%", name = "Events" }: { points: readonly ActivityPoint[]; unit: "hour" | "day" | "week"; height?: number | string; name?: string }) {
   const interval = Math.max(0, Math.ceil(points.length / 8) - 1);
   return (
-    <div style={{ height }} role="img" aria-label={`${name} per ${unit}`}>
+    <div style={{ height, minHeight: 220 }} className="w-full flex-1" role="img" aria-label={`${name} per ${unit}`}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={points.map((point) => ({ ...point }))} margin={{ top: 4, right: 8, bottom: 0, left: -18 }}>
           <CartesianGrid {...CHART_GRID_PROPS} />
