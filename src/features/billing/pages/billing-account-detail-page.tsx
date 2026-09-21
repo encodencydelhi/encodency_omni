@@ -16,18 +16,14 @@ import { EditAccountModal } from "../components/accounts/edit-account-modal";
 import {
   DocumentStateBadge,
   CollectionStateBadge,
-  TimingStateBadge,
   PaymentAttemptBadge,
 } from "../components/status-badges";
 import {
   ArrowLeftIcon,
-  Building2Icon,
   EditIcon,
   ReceiptIcon,
-  WalletCardsIcon,
   CoinsIcon,
   ClockIcon,
-  CheckCircle2Icon,
   AlertTriangleIcon,
 } from "lucide-react";
 
@@ -118,49 +114,49 @@ export function BillingAccountDetailPage({ accountId: propAccountId }: BillingAc
       {/* Financial KPIs (gap-2, rounded-sm, equal height) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-stretch">
         <BillingKpiCard
-          label="Current Outstanding"
+          label="OUTSTANDING"
           value={formatMoney(account.currentOutstandingMinor, account.currency)}
-          hint="Total open balance"
-          badge={account.currentOutstandingMinor > 0 ? "Receivable" : "Cleared"}
+          hint="Open balance"
+          badge={account.currentOutstandingMinor > 0 ? "Due" : "Paid"}
           badgeTone={account.currentOutstandingMinor > 0 ? "warning" : "success"}
           icon={ClockIcon}
         />
         <BillingKpiCard
-          label="Overdue Amount"
+          label="OVERDUE"
           value={formatMoney(account.overdueMinor, account.currency)}
-          hint="Past scheduled due date"
-          badge={account.overdueMinor > 0 ? "Delinquent" : "Normal"}
+          hint="Past due"
+          badge={account.overdueMinor > 0 ? "Overdue" : "Clean"}
           badgeTone={account.overdueMinor > 0 ? "danger" : "neutral"}
           icon={AlertTriangleIcon}
         />
         <BillingKpiCard
-          label="Available Credit"
+          label="CREDITS"
           value={formatMoney(account.availableCreditMinor, account.currency)}
-          hint="Ledger credit balance"
-          badge="Credit Balance"
+          hint="Available"
+          badge="Credit"
           badgeTone="info"
           icon={CoinsIcon}
         />
         <BillingKpiCard
-          label="Unpaid Invoices"
+          label="UNPAID"
           value={account.unpaidInvoiceCount}
-          hint="Awaiting payment"
-          badge={`${account.unpaidInvoiceCount} Invoices`}
+          hint="Invoices"
+          badge="Due"
           badgeTone="neutral"
           icon={ReceiptIcon}
         />
         <BillingKpiCard
-          label="Subscription Tier"
+          label="PLAN"
           value={account.subscriptionTier.toUpperCase()}
-          hint="Current platform tier"
-          badge="Commercial Plan"
+          hint="Tier level"
+          badge="Plan"
           badgeTone="neutral"
         />
         <BillingKpiCard
-          label="Next Renewal"
+          label="RENEWAL"
           value={account.renewsAt ? formatDate(account.renewsAt) : "N/A"}
-          hint="Scheduled cycle renew"
-          badge="Auto-Renew"
+          hint="Next cycle"
+          badge="Auto"
           badgeTone="neutral"
         />
       </div>

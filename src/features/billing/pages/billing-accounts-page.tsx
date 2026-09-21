@@ -6,7 +6,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,6 @@ import {
   MoreHorizontalIcon,
   ReceiptIcon,
   WalletCardsIcon,
-  CoinsIcon,
   ClockIcon,
   CheckCircle2Icon,
   AlertTriangleIcon,
@@ -135,34 +133,34 @@ export function BillingAccountsPage() {
       {/* KPI Cards (gap-2, rounded-sm, equal height) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 items-stretch">
         <BillingKpiCard
-          label="Total Accounts"
+          label="ACCOUNTS"
           value={accounts.length}
-          hint="Subscribed tenants"
-          badge="Directory"
+          hint="Total tenants"
+          badge="Total"
           badgeTone="info"
           icon={Building2Icon}
         />
         <BillingKpiCard
-          label="Active In Good Standing"
+          label="ACTIVE"
           value={accounts.filter((a) => a.accountStatus === "active").length}
-          hint="Compliant with terms"
-          badge="Healthy"
+          hint="Good standing"
+          badge="Active"
           badgeTone="success"
           icon={CheckCircle2Icon}
         />
         <BillingKpiCard
-          label="Past Due / Delinquent"
+          label="DELINQUENT"
           value={accounts.filter((a) => a.accountStatus === "delinquent").length}
-          hint="Dunning grace periods"
-          badge="Delinquent"
+          hint="Past due"
+          badge="Overdue"
           badgeTone="danger"
           icon={AlertTriangleIcon}
         />
         <BillingKpiCard
-          label="Suspended Accounts"
+          label="SUSPENDED"
           value={accounts.filter((a) => a.accountStatus === "suspended").length}
-          hint="Non-payment holds"
-          badge="Suspended"
+          hint="Billing hold"
+          badge="Hold"
           badgeTone="warning"
           icon={ClockIcon}
         />

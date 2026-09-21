@@ -85,7 +85,7 @@ function AssignmentsContent() {
       {/* Coverage Table */}
       <CoverageTable
         coverage={coverage}
-        onAssignOwner={(companyId, companyName) => {
+        onAssignOwner={() => {
           setSelectedStaffId(staff[0]?.id || null);
           setAssignDrawerOpen(true);
         }}

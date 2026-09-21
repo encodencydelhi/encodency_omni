@@ -13,7 +13,7 @@ export function UsersNav() {
   return (
     <nav
       aria-label="Users module sections"
-      className="border-b border-border/80 pb-0 mb-3 overflow-x-auto scrollbar-none"
+      className="w-full max-w-full min-w-0 border-b border-border/80 pb-0 mb-3 overflow-x-auto scrollbar-none"
     >
       <ul className="flex items-center gap-1 min-w-max">
         {USERS_MODULE_NAV.map((item) => {

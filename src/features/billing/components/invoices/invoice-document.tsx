@@ -51,7 +51,7 @@ export function InvoiceDocumentModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl w-full p-0 overflow-hidden rounded-sm bg-white text-slate-900 border-border">
         {/* Controls Toolbar (Hidden during print) */}
-        <div className="p-3 bg-slate-100 border-b border-border flex items-center justify-between print:hidden">
+        <div className="p-3 pr-12 bg-slate-100 border-b border-border flex items-center justify-between print:hidden">
           <div className="flex items-center gap-2">
             <span className="font-mono text-xs font-semibold text-slate-700">
               DOCUMENT PREVIEW: {invoice.number}
@@ -61,7 +61,7 @@ export function InvoiceDocumentModal({
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mr-1">
             <Button
               variant="outline"
               size="sm"

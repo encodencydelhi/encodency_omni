@@ -13,10 +13,8 @@ import { formatDateTime } from "@/lib/utils/format";
 import { exportToCsv } from "../data/export";
 import { useFinancialActivity } from "../data/hooks";
 import {
-  HistoryIcon,
   SearchIcon,
   DownloadIcon,
-  ShieldCheckIcon,
 } from "lucide-react";
 
 export function FinancialActivityPage() {

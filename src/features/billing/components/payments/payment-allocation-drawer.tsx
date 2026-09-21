@@ -12,7 +12,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +21,7 @@ import { formatMoney, parseAmountToMinor, minorToInputValue } from "../../data/m
 import { useInvoices, usePayments } from "../../data/hooks";
 import type { Payment, Invoice } from "../../data/types";
 import { toast } from "sonner";
-import { SplitIcon, CheckIcon, AlertCircleIcon, ArrowRightIcon } from "lucide-react";
+import { CheckIcon, AlertCircleIcon } from "lucide-react";
 
 interface PaymentAllocationDrawerProps {
   payment: Payment | null;

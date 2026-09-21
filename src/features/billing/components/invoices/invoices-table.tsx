@@ -6,7 +6,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -204,57 +203,57 @@ export function InvoicesTable({ initialQuickFilter }: InvoicesTableProps) {
       {/* KPI Cards Grid (gap-2, rounded-sm, equal height) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 items-stretch">
         <BillingKpiCard
-          label="Issued Invoices"
+          label="ISSUED"
           value={kpis.issuedCount}
-          hint="Total issued active"
-          badge={`${kpis.issuedCount} Total`}
+          hint="Active docs"
+          badge="Total"
           badgeTone="info"
           icon={FileTextIcon}
         />
         <BillingKpiCard
-          label="Open Invoices"
+          label="OPEN"
           value={kpis.openCount}
-          hint="Unpaid not overdue"
+          hint="Unpaid"
           badge="Pending"
           badgeTone="warning"
           icon={ClockIcon}
         />
         <BillingKpiCard
-          label="Partially Paid"
+          label="PARTIAL"
           value={kpis.partiallyPaidCount}
-          hint="Partial allocations"
+          hint="Part paid"
           badge="Partial"
           badgeTone="info"
           icon={CreditCardIcon}
         />
         <BillingKpiCard
-          label="Paid Invoices"
+          label="PAID"
           value={kpis.paidCount}
-          hint="Fully settled"
+          hint="Settled"
           badge="Cleared"
           badgeTone="success"
           icon={CheckCircle2Icon}
         />
         <BillingKpiCard
-          label="Overdue Invoices"
+          label="OVERDUE"
           value={kpis.overdueCount}
-          hint="Past scheduled due date"
-          badge="Delinquent"
+          hint="Past due"
+          badge={kpis.overdueCount > 0 ? "Action" : "None"}
           badgeTone={kpis.overdueCount > 0 ? "danger" : "neutral"}
           icon={AlertTriangleIcon}
         />
         <BillingKpiCard
-          label="Drafts"
+          label="DRAFTS"
           value={kpis.draftCount}
-          hint="Unpublished drafts"
-          badge="Drafts"
+          hint="Unissued"
+          badge="Draft"
           badgeTone="neutral"
         />
         <BillingKpiCard
-          label="Outstanding"
+          label="BALANCE"
           value={formatMoney(kpis.outstandingMinor, currencyFilter === "ALL" ? "INR" : currencyFilter, { compact: true })}
-          hint="Remaining balance"
-          badge="Receivable"
+          hint="Receivable"
+          badge="Due"
           badgeTone="warning"
         />
       </div>

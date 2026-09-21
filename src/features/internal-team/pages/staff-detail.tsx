@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeftIcon, BanIcon, CheckCircle2Icon, Building2Icon, ClockIcon, Trash2Icon } from "lucide-react";
+import { ArrowLeftIcon, BanIcon, CheckCircle2Icon, Building2Icon, ClockIcon, Trash2Icon, ShieldCheckIcon, ShieldAlertIcon, BriefcaseIcon, KeyRoundIcon, ClipboardCheckIcon } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -112,29 +112,34 @@ function StaffDetailContent() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         {[
-          { label: "ROLE", value: roleMeta?.label || member.role, color: "text-blue-700" },
-          { label: "STATUS", value: member.status, color: member.status === "active" ? "text-emerald-700" : "text-rose-700" },
-          { label: "COMPANIES", value: activeAssignments.length, color: "text-violet-700" },
-          { label: "MFA", value: member.mfaState === "enrolled" ? "Enrolled" : "Required", color: member.mfaState === "enrolled" ? "text-emerald-700" : "text-amber-700" },
-          { label: "ACCESS REVIEW", value: member.accessReviewStatus.replace(/_/g, " "), color: "text-slate-700" },
-          { label: "LAST ACTIVE", value: member.lastActiveAt ? formatRelativeTime(member.lastActiveAt) : "Never", color: "text-slate-600" },
+          { label: "ROLE", value: roleMeta?.label || member.role, color: "text-blue-700", icon: BriefcaseIcon, iconBg: "bg-blue-50 text-blue-600" },
+          { label: "STATUS", value: member.status, color: member.status === "active" ? "text-emerald-700" : "text-rose-700", icon: member.status === "active" ? CheckCircle2Icon : BanIcon, iconBg: member.status === "active" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600" },
+          { label: "COMPANIES", value: activeAssignments.length, color: "text-violet-700", icon: Building2Icon, iconBg: "bg-violet-50 text-violet-600" },
+          { label: "MFA", value: member.mfaState === "enrolled" ? "Enrolled" : "Required", color: member.mfaState === "enrolled" ? "text-emerald-700" : "text-amber-700", icon: KeyRoundIcon, iconBg: member.mfaState === "enrolled" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600" },
+          { label: "ACCESS REVIEW", value: member.accessReviewStatus.replace(/_/g, " "), color: "text-slate-700", icon: ClipboardCheckIcon, iconBg: "bg-slate-50 text-slate-600" },
+          { label: "LAST ACTIVE", value: member.lastActiveAt ? formatRelativeTime(member.lastActiveAt) : "Never", color: "text-slate-600", icon: ClockIcon, iconBg: "bg-slate-50 text-slate-500" },
         ].map((k) => (
-          <div key={k.label} className="rounded-sm border border-border bg-white p-3 shadow-2xs">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">{k.label}</p>
-            <p className={`text-sm font-bold ${k.color} capitalize`}>{k.value}</p>
+          <div key={k.label} className="rounded-sm border border-border bg-white p-3 shadow-2xs flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">{k.label}</p>
+              <p className={`text-sm font-bold ${k.color} capitalize truncate`}>{k.value}</p>
+            </div>
+            <div className={`size-7 rounded-sm border border-white/80 flex items-center justify-center shrink-0 ${k.iconBg}`}>
+              <k.icon className="size-3.5" />
+            </div>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="h-9 bg-white border border-border rounded-sm">
-          <TabsTrigger value="overview" className="text-xs h-7 px-3">Overview</TabsTrigger>
-          <TabsTrigger value="access" className="text-xs h-7 px-3">Access & Roles</TabsTrigger>
-          <TabsTrigger value="assignments" className="text-xs h-7 px-3">Assignments</TabsTrigger>
-          <TabsTrigger value="security" className="text-xs h-7 px-3">Security</TabsTrigger>
-          <TabsTrigger value="activity" className="text-xs h-7 px-3">Activity</TabsTrigger>
-          <TabsTrigger value="lifecycle" className="text-xs h-7 px-3">Settings & Lifecycle</TabsTrigger>
+      <Tabs value={tab} onValueChange={setTab} className="w-full">
+        <TabsList className="h-10 w-full bg-transparent border-b border-border rounded-none p-0 gap-0">
+          <TabsTrigger value="overview" className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent text-slate-500 font-medium data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-slate-700">Overview</TabsTrigger>
+          <TabsTrigger value="access" className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent text-slate-500 font-medium data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-slate-700">Access & Roles</TabsTrigger>
+          <TabsTrigger value="assignments" className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent text-slate-500 font-medium data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-slate-700">Assignments</TabsTrigger>
+          <TabsTrigger value="security" className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent text-slate-500 font-medium data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-slate-700">Security</TabsTrigger>
+          <TabsTrigger value="activity" className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent text-slate-500 font-medium data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-slate-700">Activity</TabsTrigger>
+          <TabsTrigger value="lifecycle" className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent text-slate-500 font-medium data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-slate-700">Settings & Lifecycle</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
