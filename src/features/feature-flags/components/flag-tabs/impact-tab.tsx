@@ -35,7 +35,7 @@ export function ImpactTab({ detail, environment }: { detail: FlagDetail; environ
   return (
     <div className="space-y-1">
       {data ? (
-        <StatGrid className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-8">
+        <StatGrid className="grid-cols-2 sm:grid-cols-4 min-[1600px]:grid-cols-8">
           <StatCard compact label="Total Companies" value={data.stats.totalCompanies} />
           <StatCard compact label="Eligible" value={data.stats.eligible} hint="Plan and subscription" />
           <StatCard compact label="Targeting Matched" value={data.stats.targetingMatched} hint="Before eligibility" />
@@ -46,7 +46,7 @@ export function ImpactTab({ detail, environment }: { detail: FlagDetail; environ
           <StatCard compact label="Integration" value={data.stats.blockedByIntegration} hint="Blocked by integration" />
         </StatGrid>
       ) : query.error ? null : (
-        <StatGridSkeleton count={8} className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-8" />
+        <StatGridSkeleton count={8} className="grid-cols-2 sm:grid-cols-4 min-[1600px]:grid-cols-8" />
       )}
       <p className="px-0.5 text-2xs text-muted-foreground">Reasons are independent, not exclusive: a company can be blocked by more than one, so the reason counts need not add up to the blocked total.</p>
 
@@ -78,7 +78,7 @@ export function ImpactTab({ detail, environment }: { detail: FlagDetail; environ
               { id: "targeted", header: "Targeting", hideBelow: "md", cell: (row) => (row.targeted ? "Matched" : "Not Matched") },
               { id: "availability", header: "Availability", cell: (row) => <AvailabilityBadge availability={row.availability} /> },
               { id: "reasons", header: "Also Blocked By", hideBelow: "lg", cell: (row) => <span className="text-2xs text-muted-foreground">{row.reasons.slice(1).map((reason: BlockReason) => AVAILABILITY[reason].label).join(", ") || "-"}</span> },
-              { id: "action", header: "Actions", hideBelow: "lg", cell: (row) => <span className="text-2xs text-muted-foreground">{row.action.state === "limited" ? "Limited By Usage" : row.action.state === "ok" ? "Within Limits" : "Not Metered"}</span> },
+              { id: "action", header: "Metered Actions", hideBelow: "lg", cell: (row) => <span className="text-2xs text-muted-foreground">{row.action.state === "limited" ? "Limited By Usage" : row.action.state === "ok" ? "Within Limits" : "Not Metered"}</span> },
               { id: "explain", header: <span className="sr-only">Explain</span>, align: "right", cell: (row) => <Button variant="ghost" size="sm" onClick={(event) => { event.stopPropagation(); url.set({ company: row.companyId }); }}>Explain</Button> },
             ]}
           />

@@ -20,7 +20,7 @@ export function OverviewTab({ detail, environment }: { detail: FlagDetail; envir
       {flag.implementation === "not_implemented" ? <AlertBanner tone="danger" title="Feature Not Implemented">{IMPLEMENTATION.not_implemented.description} It cannot be enabled until the implementation status changes in the feature registry.</AlertBanner> : null}
       {flag.lifecycle === "deprecated" ? <AlertBanner tone="warning" title="Deprecated">This flag is marked for retirement. It still runs where it is enabled.</AlertBanner> : null}
 
-      <StatGrid className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-7">
+      <StatGrid className="grid-cols-2 sm:grid-cols-4 min-[1600px]:grid-cols-7">
         <StatCard compact label="Eligible" value={stats.eligible} hint="Plan and subscription" />
         <StatCard compact label="Targeting Matched" value={stats.targetingMatched} hint="Before eligibility" />
         <StatCard compact label="Effective" value={`${stats.effective} / ${stats.totalCompanies}`} hint="Available now" tone={stats.effective > 0 ? "success" : "neutral"} />
