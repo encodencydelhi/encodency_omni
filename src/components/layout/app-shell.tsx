@@ -16,11 +16,11 @@ function ShellFrame({ children }: { children: ReactNode }) {
   const { isCollapsed } = useSidebar();
 
   return (
-    <div className="min-h-dvh bg-[#F5F8FC] text-[#172044] overflow-x-clip max-w-full">
+    <div className="min-h-dvh bg-[#F5F8FC] text-[#172044] overflow-x-hidden max-w-full">
       <AppSidebar />
       <div
         className={cn(
-          "flex min-h-dvh flex-col transition-[padding] duration-200 min-w-0 max-w-full overflow-x-clip",
+          "flex min-h-dvh flex-col transition-[padding] duration-200 min-w-0 max-w-full overflow-x-hidden",
           isCollapsed ? "lg:pl-[64px]" : "lg:pl-[220px]",
         )}
       >

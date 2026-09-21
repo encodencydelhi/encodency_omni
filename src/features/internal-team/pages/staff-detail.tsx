@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeftIcon, BanIcon, CheckCircle2Icon, Building2Icon, ClockIcon, Trash2Icon } from "lucide-react";
+import { ArrowLeftIcon, BanIcon, CheckCircle2Icon, Building2Icon, ClockIcon, Trash2Icon, ShieldCheckIcon, ShieldAlertIcon, BriefcaseIcon, KeyRoundIcon, ClipboardCheckIcon } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,14 +127,14 @@ function StaffDetailContent() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="h-9 bg-white border border-border rounded-sm">
-          <TabsTrigger value="overview" className="text-xs h-7 px-3">Overview</TabsTrigger>
-          <TabsTrigger value="access" className="text-xs h-7 px-3">Access & Roles</TabsTrigger>
-          <TabsTrigger value="assignments" className="text-xs h-7 px-3">Assignments</TabsTrigger>
-          <TabsTrigger value="security" className="text-xs h-7 px-3">Security</TabsTrigger>
-          <TabsTrigger value="activity" className="text-xs h-7 px-3">Activity</TabsTrigger>
-          <TabsTrigger value="lifecycle" className="text-xs h-7 px-3">Settings & Lifecycle</TabsTrigger>
+      <Tabs value={tab} onValueChange={setTab} className="w-full">
+        <TabsList className="h-10 w-full bg-transparent border-b border-border rounded-none p-0 gap-0">
+          <TabsTrigger value="overview" className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent text-slate-500 font-medium data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-slate-700">Overview</TabsTrigger>
+          <TabsTrigger value="access" className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent text-slate-500 font-medium data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-slate-700">Access & Roles</TabsTrigger>
+          <TabsTrigger value="assignments" className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent text-slate-500 font-medium data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-slate-700">Assignments</TabsTrigger>
+          <TabsTrigger value="security" className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent text-slate-500 font-medium data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-slate-700">Security</TabsTrigger>
+          <TabsTrigger value="activity" className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent text-slate-500 font-medium data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-slate-700">Activity</TabsTrigger>
+          <TabsTrigger value="lifecycle" className="text-xs h-9 px-4 rounded-none border-b-2 border-transparent text-slate-500 font-medium data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-slate-700">Settings & Lifecycle</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}

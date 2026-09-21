@@ -6,7 +6,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -208,64 +207,64 @@ export function PaymentsTable({ initialQuickFilter }: PaymentsTableProps) {
       {/* KPI Cards Grid (gap-2, rounded-sm, equal height) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 items-stretch">
         <BillingKpiCard
-          label="Succeeded"
+          label="SUCCESS"
           value={kpis.succeededCount}
-          hint="Captured payments"
-          badge="Success"
+          hint="Captured"
+          badge="Paid"
           badgeTone="success"
           icon={CheckCircle2Icon}
         />
         <BillingKpiCard
-          label="Pending"
+          label="PENDING"
           value={kpis.pendingCount}
-          hint="Awaiting verification"
-          badge="In Flight"
+          hint="In flight"
+          badge="Queue"
           badgeTone="warning"
           icon={ClockIcon}
         />
         <BillingKpiCard
-          label="Failed"
+          label="FAILED"
           value={kpis.failedCount}
-          hint="Gateway declines"
-          badge="Declined"
+          hint="Declined"
+          badge={kpis.failedCount > 0 ? "Failed" : "Zero"}
           badgeTone={kpis.failedCount > 0 ? "danger" : "neutral"}
           icon={XCircleIcon}
         />
         <BillingKpiCard
-          label="Collected"
+          label="COLLECTED"
           value={formatMoney(kpis.collectedMinor, currencyFilter === "ALL" ? "INR" : currencyFilter, { compact: true })}
-          hint="Total cash collected"
+          hint="Cash in"
           badge="Settled"
           badgeTone="success"
         />
         <BillingKpiCard
-          label="Unallocated"
+          label="UNLINKED"
           value={kpis.unallocatedCount}
-          hint="Available for invoice"
-          badge="Open Cash"
+          hint="Available"
+          badge="Open"
           badgeTone="info"
           icon={SplitIcon}
         />
         <BillingKpiCard
-          label="Pending Settlement"
+          label="SETTLING"
           value={kpis.pendingSettlementCount}
-          hint="Bank batch pending"
-          badge="Settlement"
+          hint="In batch"
+          badge="Transit"
           badgeTone="neutral"
         />
         <BillingKpiCard
-          label="Recon Issues"
+          label="RECON"
           value={kpis.reconciliationCount}
-          hint="Discrepancy review"
-          badge="Audit"
+          hint="Alerts"
+          badge={kpis.reconciliationCount > 0 ? "Alert" : "Clean"}
           badgeTone={kpis.reconciliationCount > 0 ? "danger" : "neutral"}
           icon={ScaleIcon}
         />
         <BillingKpiCard
-          label="Refunded"
+          label="REFUNDED"
           value={formatMoney(kpis.refundedMinor, currencyFilter === "ALL" ? "INR" : currencyFilter, { compact: true })}
-          hint="Returned money"
-          badge="Refunds"
+          hint="Returned"
+          badge="Refund"
           badgeTone="neutral"
           icon={RotateCcwIcon}
         />

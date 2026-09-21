@@ -13,11 +13,10 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useBillingPolicies } from "../data/hooks";
-import { formatMoney, parseAmountToMinor, minorToInputValue } from "../data/money";
+import { parseAmountToMinor, minorToInputValue } from "../data/money";
 import type { BillingPolicies } from "../data/types";
 import { toast } from "sonner";
 import {
-  SettingsIcon,
   CheckIcon,
   ReceiptIcon,
   WalletCardsIcon,

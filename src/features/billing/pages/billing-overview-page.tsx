@@ -50,37 +50,37 @@ export function BillingOverviewPage() {
       {/* KPI Cards Grid - Row 1 (Money metrics) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 items-stretch">
         <BillingKpiCard
-          label="Issued Invoice Amount"
+          label="GROSS"
           value={formatMoney(kpis.issuedInvoiceMinor, kpis.currency)}
-          hint={`Issued in selected ${selectedPeriod}D period`}
-          badge={selectedPeriod === 30 ? "Last 30D" : `${selectedPeriod}D`}
+          hint="Period total"
+          badge={`${selectedPeriod}D`}
           badgeTone="info"
           icon={FileTextIcon}
           href="/super-admin/billing/invoices"
         />
         <BillingKpiCard
-          label="Collected Payments"
+          label="COLLECTED"
           value={formatMoney(kpis.collectedPaymentsMinor, kpis.currency)}
-          hint="Settled & verified collections"
+          hint="Received"
           badge="Settled"
           badgeTone="success"
           icon={CheckCircle2Icon}
           href="/super-admin/billing/payments"
         />
         <BillingKpiCard
-          label="Outstanding Balance"
+          label="OUTSTANDING"
           value={formatMoney(kpis.outstandingBalanceMinor, kpis.currency)}
-          hint="Remaining receivables as of today"
-          badge={kpis.outstandingBalanceMinor > 0 ? "Open" : "Cleared"}
+          hint="Receivable"
+          badge={kpis.outstandingBalanceMinor > 0 ? "Due" : "Zero"}
           badgeTone={kpis.outstandingBalanceMinor > 0 ? "warning" : "success"}
           icon={ClockIcon}
           href="/super-admin/billing/invoices?quick=open"
         />
         <BillingKpiCard
-          label="Overdue Amount"
+          label="OVERDUE"
           value={formatMoney(kpis.overdueAmountMinor, kpis.currency)}
-          hint="Receivables past scheduled due date"
-          badge={kpis.overdueAmountMinor > 0 ? "Action Required" : "No Delinquency"}
+          hint="Past due"
+          badge={kpis.overdueAmountMinor > 0 ? "Urgent" : "None"}
           badgeTone={kpis.overdueAmountMinor > 0 ? "danger" : "neutral"}
           icon={AlertTriangleIcon}
           href="/super-admin/billing/invoices?quick=overdue"
@@ -90,37 +90,37 @@ export function BillingOverviewPage() {
       {/* KPI Cards Grid - Row 2 (Counts & Operational metrics) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 items-stretch">
         <BillingKpiCard
-          label="Unpaid Invoices"
+          label="UNPAID"
           value={kpis.unpaidInvoicesCount}
-          hint="Invoices awaiting full payment"
-          badge={`${kpis.unpaidInvoicesCount} Invoices`}
+          hint="Invoices"
+          badge="Due"
           badgeTone="warning"
           icon={FileQuestionIcon}
           href="/super-admin/billing/invoices?quick=open"
         />
         <BillingKpiCard
-          label="Partially Paid Invoices"
+          label="PARTIAL"
           value={kpis.partiallyPaidCount}
-          hint="Invoices with partial payments applied"
-          badge={`${kpis.partiallyPaidCount} Invoices`}
+          hint="Part-paid"
+          badge="Partial"
           badgeTone="info"
           icon={SplitIcon}
           href="/super-admin/billing/invoices?quick=partially_paid"
         />
         <BillingKpiCard
-          label="Failed Payment Attempts"
+          label="FAILED"
           value={kpis.failedPaymentsCount}
-          hint="Payment gateway card / bank declines"
+          hint="Declines"
           badge={kpis.failedPaymentsCount > 0 ? "Failed" : "Zero"}
           badgeTone={kpis.failedPaymentsCount > 0 ? "danger" : "neutral"}
           icon={XCircleIcon}
           href="/super-admin/billing/payments?quick=failed"
         />
         <BillingKpiCard
-          label="Pending Refunds"
+          label="REFUNDS"
           value={kpis.pendingRefundsCount}
-          hint="Refund requests awaiting approval"
-          badge={`${kpis.pendingRefundsCount} Pending`}
+          hint="In review"
+          badge="Queue"
           badgeTone="info"
           icon={RotateCcwIcon}
           href="/super-admin/billing/credits-refunds?tab=refunds"

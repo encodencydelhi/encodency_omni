@@ -139,50 +139,50 @@ export function ReconciliationPage() {
       {/* KPI Cards (gap-2, rounded-sm, equal height) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-stretch">
         <BillingKpiCard
-          label="Open Exceptions"
+          label="EXCEPTIONS"
           value={kpis.openCount}
-          hint="Uninvestigated items"
-          badge="Action Needed"
+          hint="Action required"
+          badge="Action"
           badgeTone={kpis.openCount > 0 ? "danger" : "neutral"}
           icon={AlertCircleIcon}
         />
         <BillingKpiCard
-          label="Investigating"
+          label="REVIEW"
           value={kpis.investigatingCount}
-          hint="Under staff review"
-          badge="In Progress"
+          hint="In progress"
+          badge="Active"
           badgeTone="warning"
           icon={ClockIcon}
         />
         <BillingKpiCard
-          label="Amount Mismatches"
+          label="MISMATCH"
           value={kpis.mismatchesCount}
-          hint="Lump sum discrepancies"
-          badge="Variance"
+          hint="Variance"
+          badge="Discrepancy"
           badgeTone="info"
           icon={ScaleIcon}
         />
         <BillingKpiCard
-          label="Unallocated Funds"
+          label="UNASSIGNED"
           value={kpis.unallocatedCount}
-          hint="Settled unassigned cash"
-          badge="Unallocated"
+          hint="Unallocated"
+          badge="Open"
           badgeTone="info"
           icon={SplitIcon}
         />
         <BillingKpiCard
-          label="High Severity"
+          label="CRITICAL"
           value={kpis.criticalCount}
-          hint="Escalated items"
-          badge="Escalated"
+          hint="Escalated"
+          badge="Urgent"
           badgeTone={kpis.criticalCount > 0 ? "danger" : "neutral"}
           icon={ShieldAlertIcon}
         />
         <BillingKpiCard
-          label="Resolved Exceptions"
+          label="RESOLVED"
           value={kpis.resolvedCount}
-          hint="Closed investigations"
-          badge="Closed"
+          hint="Closed"
+          badge="Settled"
           badgeTone="success"
           icon={CheckCircle2Icon}
         />

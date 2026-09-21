@@ -1,5 +1,4 @@
 import type {
-  AccessReviewStatus,
   AssignCompanyInput,
   ChangeStaffRoleInput,
   CompleteAccessReviewInput,
@@ -71,26 +70,29 @@ function computeSensitiveCapabilities(role: string): string[] {
   return sensitiveMap[role] || [];
 }
 
-function buildStaffMember(overrides: Partial<StaffMember> & Pick<StaffMember, "id" | "name" | "email" | "role">): StaffMember {
-  const role = overrides.role;
-  const defaults: Omit<StaffMember, "id" | "name" | "email" | "role"> = {
-    avatarUrl: null,
-    jobTitle: "Staff",
-    department: "Operations",
-    status: "active",
-    mfaState: "enrolled",
-    lastActiveAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    assignments: [],
-    effectiveCapabilities: computeEffectiveCapabilities(role),
-    sensitiveCapabilities: computeSensitiveCapabilities(role),
-    privilegedAccess: role === "super_admin" || role === "technical_admin",
-    nextReviewDate: new Date(Date.now() + 90 * 86400000).toISOString(),
-    accessReviewStatus: "approved",
-    lastReviewDate: new Date(Date.now() - 30 * 86400000).toISOString(),
+function cloneStaffMember(original: StaffMember, overrides?: Partial<StaffMember>): StaffMember {
+  const base: StaffMember = {
+    id: original.id,
+    name: original.name,
+    email: original.email,
+    avatarUrl: original.avatarUrl,
+    jobTitle: original.jobTitle,
+    department: original.department,
+    role: original.role,
+    status: original.status,
+    mfaEnabled: original.mfaEnabled,
+    mfaState: original.mfaState,
+    lastActiveAt: original.lastActiveAt,
+    createdAt: original.createdAt,
+    globalUserId: original.globalUserId,
+    assignments: [...original.assignments.map((a) => ({ ...a }))],
+    accessReviewStatus: original.accessReviewStatus,
+    nextReviewDate: original.nextReviewDate,
+    privilegedAccess: original.privilegedAccess,
+    effectiveCapabilities: [...original.effectiveCapabilities],
+    sensitiveCapabilities: [...original.sensitiveCapabilities],
   };
-  return { ...defaults, ...overrides };
+  return overrides ? { ...base, ...overrides } : base;
 }
 
 export const internalTeamRepository: InternalTeamRepository = {
@@ -107,7 +109,8 @@ export const internalTeamRepository: InternalTeamRepository = {
 
   async getStaff(id) {
     await sleep(100);
-    return staffStore.find((s) => s.id === id) || null;
+    const found = staffStore.find((s) => s.id === id);
+    return found ? cloneStaffMember(found) : null;
   },
 
   async getStaffKpis() {
@@ -145,6 +148,7 @@ export const internalTeamRepository: InternalTeamRepository = {
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 14 * 86400000).toISOString(),
       status: "pending",
+      companyAssignments: input.companyAssignments ?? [],
       acceptedUserId: null,
     };
     invitationStore.unshift(newInvitation);
@@ -167,6 +171,7 @@ export const internalTeamRepository: InternalTeamRepository = {
       createdAt: original.createdAt,
       expiresAt: original.expiresAt,
       status: "revoked",
+      companyAssignments: original.companyAssignments,
       acceptedUserId: original.acceptedUserId,
     };
     invitationStore[idx] = revoked;
@@ -199,13 +204,13 @@ export const internalTeamRepository: InternalTeamRepository = {
       staffId: original.staffId,
       staffName: original.staffName,
       staffEmail: original.staffEmail,
-      staffRole: original.staffRole,
+      role: original.role,
+      department: original.department,
+      mfaState: original.mfaState,
       reviewer: original.reviewer,
-      status: "completed" as AccessReviewStatus,
+      status: "completed",
       outcome: input.outcome,
       notes: input.notes,
-      privilegedAccess: original.privilegedAccess,
-      sensitiveCapabilities: original.sensitiveCapabilities,
       lastReviewDate: new Date().toISOString(),
       nextReviewDate: original.nextReviewDate,
     };
@@ -217,30 +222,14 @@ export const internalTeamRepository: InternalTeamRepository = {
     await sleep(200);
     const idx = staffStore.findIndex((s) => s.id === input.staffId);
     if (idx === -1) throw new Error("Staff member not found");
-    const original = staffStore[idx]!;
-    const updated: StaffMember = {
-      id: original.id,
-      name: original.name,
-      email: original.email,
+    const updated = cloneStaffMember(staffStore[idx]!, {
       role: input.newRole,
-      avatarUrl: original.avatarUrl,
-      jobTitle: original.jobTitle,
-      department: original.department,
-      status: original.status,
-      mfaState: original.mfaState,
-      lastActiveAt: original.lastActiveAt,
-      createdAt: original.createdAt,
-      updatedAt: new Date().toISOString(),
-      assignments: original.assignments,
       effectiveCapabilities: computeEffectiveCapabilities(input.newRole),
       sensitiveCapabilities: computeSensitiveCapabilities(input.newRole),
       privilegedAccess: input.newRole === "super_admin" || input.newRole === "technical_admin",
-      nextReviewDate: original.nextReviewDate,
-      accessReviewStatus: original.accessReviewStatus,
-      lastReviewDate: original.lastReviewDate,
-    };
+    });
     staffStore[idx] = updated;
-    return updated;
+    return cloneStaffMember(updated);
   },
 
   async assignCompany(input) {
@@ -258,29 +247,11 @@ export const internalTeamRepository: InternalTeamRepository = {
       assignedBy: "stf_001",
       status: "active" as const,
     };
-    const updated: StaffMember = {
-      id: original.id,
-      name: original.name,
-      email: original.email,
-      role: original.role,
-      avatarUrl: original.avatarUrl,
-      jobTitle: original.jobTitle,
-      department: original.department,
-      status: original.status,
-      mfaState: original.mfaState,
-      lastActiveAt: original.lastActiveAt,
-      createdAt: original.createdAt,
-      updatedAt: new Date().toISOString(),
+    const updated = cloneStaffMember(original, {
       assignments: [...original.assignments, newAssignment],
-      effectiveCapabilities: original.effectiveCapabilities,
-      sensitiveCapabilities: original.sensitiveCapabilities,
-      privilegedAccess: original.privilegedAccess,
-      nextReviewDate: original.nextReviewDate,
-      accessReviewStatus: original.accessReviewStatus,
-      lastReviewDate: original.lastReviewDate,
-    };
+    });
     staffStore[idx] = updated;
-    return updated;
+    return cloneStaffMember(updated);
   },
 
   async reassignCompany(input) {
@@ -294,27 +265,7 @@ export const internalTeamRepository: InternalTeamRepository = {
     const updatedAssignments = original.assignments.map((a) =>
       a.id === input.assignmentId ? { ...a, status: "inactive" as const } : a,
     );
-    const sourceUpdated: StaffMember = {
-      id: original.id,
-      name: original.name,
-      email: original.email,
-      role: original.role,
-      avatarUrl: original.avatarUrl,
-      jobTitle: original.jobTitle,
-      department: original.department,
-      status: original.status,
-      mfaState: original.mfaState,
-      lastActiveAt: original.lastActiveAt,
-      createdAt: original.createdAt,
-      updatedAt: new Date().toISOString(),
-      assignments: updatedAssignments,
-      effectiveCapabilities: original.effectiveCapabilities,
-      sensitiveCapabilities: original.sensitiveCapabilities,
-      privilegedAccess: original.privilegedAccess,
-      nextReviewDate: original.nextReviewDate,
-      accessReviewStatus: original.accessReviewStatus,
-      lastReviewDate: original.lastReviewDate,
-    };
+    const sourceUpdated = cloneStaffMember(original, { assignments: updatedAssignments });
     staffStore[staffIdx] = sourceUpdated;
 
     const targetIdx = staffStore.findIndex((s) => s.id === input.newStaffId);
@@ -330,91 +281,34 @@ export const internalTeamRepository: InternalTeamRepository = {
         assignedBy: "stf_001",
         status: "active" as const,
       };
-      const targetUpdated: StaffMember = {
-        id: target.id,
-        name: target.name,
-        email: target.email,
-        role: target.role,
-        avatarUrl: target.avatarUrl,
-        jobTitle: target.jobTitle,
-        department: target.department,
-        status: target.status,
-        mfaState: target.mfaState,
-        lastActiveAt: target.lastActiveAt,
-        createdAt: target.createdAt,
-        updatedAt: new Date().toISOString(),
+      const targetUpdated = cloneStaffMember(target, {
         assignments: [...target.assignments, newAsgn],
-        effectiveCapabilities: target.effectiveCapabilities,
-        sensitiveCapabilities: target.sensitiveCapabilities,
-        privilegedAccess: target.privilegedAccess,
-        nextReviewDate: target.nextReviewDate,
-        accessReviewStatus: target.accessReviewStatus,
-        lastReviewDate: target.lastReviewDate,
-      };
+      });
       staffStore[targetIdx] = targetUpdated;
-      return targetUpdated;
+      return cloneStaffMember(targetUpdated);
     }
-    return sourceUpdated;
+    return cloneStaffMember(sourceUpdated);
   },
 
   async suspendStaff(input) {
     await sleep(200);
     const idx = staffStore.findIndex((s) => s.id === input.staffId);
     if (idx === -1) throw new Error("Staff member not found");
-    const original = staffStore[idx]!;
-    const updated: StaffMember = {
-      id: original.id,
-      name: original.name,
-      email: original.email,
-      role: original.role,
-      avatarUrl: original.avatarUrl,
-      jobTitle: original.jobTitle,
-      department: original.department,
-      status: "suspended",
-      mfaState: original.mfaState,
-      lastActiveAt: original.lastActiveAt,
-      createdAt: original.createdAt,
-      updatedAt: new Date().toISOString(),
-      assignments: original.assignments,
-      effectiveCapabilities: original.effectiveCapabilities,
-      sensitiveCapabilities: original.sensitiveCapabilities,
-      privilegedAccess: original.privilegedAccess,
-      nextReviewDate: original.nextReviewDate,
-      accessReviewStatus: original.accessReviewStatus,
-      lastReviewDate: original.lastReviewDate,
-    };
+    const updated = cloneStaffMember(staffStore[idx]!, { status: "suspended" });
     staffStore[idx] = updated;
-    return updated;
+    return cloneStaffMember(updated);
   },
 
   async reactivateStaff(input) {
     await sleep(200);
     const idx = staffStore.findIndex((s) => s.id === input.staffId);
     if (idx === -1) throw new Error("Staff member not found");
-    const original = staffStore[idx]!;
-    const updated: StaffMember = {
-      id: original.id,
-      name: original.name,
-      email: original.email,
-      role: original.role,
-      avatarUrl: original.avatarUrl,
-      jobTitle: original.jobTitle,
-      department: original.department,
+    const updated = cloneStaffMember(staffStore[idx]!, {
       status: "active",
-      mfaState: original.mfaState,
       lastActiveAt: new Date().toISOString(),
-      createdAt: original.createdAt,
-      updatedAt: new Date().toISOString(),
-      assignments: original.assignments,
-      effectiveCapabilities: original.effectiveCapabilities,
-      sensitiveCapabilities: original.sensitiveCapabilities,
-      privilegedAccess: original.privilegedAccess,
-      nextReviewDate: original.nextReviewDate,
-      accessReviewStatus: original.accessReviewStatus,
-      lastReviewDate: original.lastReviewDate,
-    };
+    });
     staffStore[idx] = updated;
-    return updated;
+    return cloneStaffMember(updated);
   },
 
   async deactivateStaff(input) {
@@ -426,29 +320,12 @@ export const internalTeamRepository: InternalTeamRepository = {
     const updatedAssignments = original.assignments.map((a) =>
       reassignmentIds.has(a.companyId) ? { ...a, status: "inactive" as const } : a,
     );
-    const updated: StaffMember = {
-      id: original.id,
-      name: original.name,
-      email: original.email,
-      role: original.role,
-      avatarUrl: original.avatarUrl,
-      jobTitle: original.jobTitle,
-      department: original.department,
+    const updated = cloneStaffMember(original, {
       status: "suspended",
-      mfaState: original.mfaState,
-      lastActiveAt: original.lastActiveAt,
-      createdAt: original.createdAt,
-      updatedAt: new Date().toISOString(),
       assignments: updatedAssignments,
-      effectiveCapabilities: original.effectiveCapabilities,
-      sensitiveCapabilities: original.sensitiveCapabilities,
-      privilegedAccess: original.privilegedAccess,
-      nextReviewDate: original.nextReviewDate,
-      accessReviewStatus: original.accessReviewStatus,
-      lastReviewDate: original.lastReviewDate,
-    };
+    });
     staffStore[idx] = updated;
-    return updated;
+    return cloneStaffMember(updated);
   },
 
   async getStaffActivity(staffId) {

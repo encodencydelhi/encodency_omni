@@ -12,25 +12,20 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatDate, formatDateTime } from "@/lib/utils/format";
+import { formatDate } from "@/lib/utils/format";
 import { formatMoney } from "../../data/money";
 import { ReconciliationStatusBadge } from "../status-badges";
 import { useReconciliation } from "../../data/hooks";
 import type { ReconciliationException, ReconciliationStatus } from "../../data/types";
 import { toast } from "sonner";
 import {
-  ScaleIcon,
-  PlusIcon,
   CheckIcon,
   Building2Icon,
-  AlertCircleIcon,
-  ClockIcon,
 } from "lucide-react";
 
 interface ExceptionDetailDrawerProps {

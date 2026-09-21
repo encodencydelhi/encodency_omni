@@ -48,30 +48,37 @@ export function BillingKpiCard({
       )}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0">
-          {Icon && <Icon className="size-4 text-muted-foreground shrink-0" />}
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground truncate">
+      <div className="flex items-start justify-between gap-1.5 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0" title={label}>
+          {Icon && <Icon className="size-3.5 text-muted-foreground shrink-0" />}
+          <span className="text-xs font-semibold uppercase tracking-tight text-muted-foreground truncate">
             {label}
           </span>
         </div>
         {badge ? (
           <span
             className={cn(
-              "shrink-0 px-1.5 py-0.5 rounded-sm border text-xs font-semibold",
+              "shrink-0 px-1.5 py-0.5 rounded-sm border text-[11px] font-medium leading-none whitespace-nowrap",
               badgeStyles[badgeTone],
             )}
+            title={badge}
           >
             {badge}
           </span>
         ) : href ? (
-          <ArrowUpRightIcon className="size-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          <ArrowUpRightIcon className="size-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
         ) : null}
       </div>
 
-      <div className="mt-2 space-y-0.5">
-        <div className="text-xl font-bold tracking-tight text-foreground">{value}</div>
-        {hint && <div className="text-xs text-muted-foreground line-clamp-1">{hint}</div>}
+      <div className="mt-2 space-y-0.5 min-w-0">
+        <div className="text-lg sm:text-xl font-bold tracking-tight text-foreground truncate" title={String(value)}>
+          {value}
+        </div>
+        {hint && (
+          <div className="text-xs text-muted-foreground truncate" title={hint}>
+            {hint}
+          </div>
+        )}
       </div>
     </div>
   );

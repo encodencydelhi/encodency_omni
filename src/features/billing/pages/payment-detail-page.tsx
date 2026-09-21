@@ -24,10 +24,8 @@ import {
   Building2Icon,
   SplitIcon,
   RotateCcwIcon,
-  ScaleIcon,
   CheckCircle2Icon,
   AlertCircleIcon,
-  ClockIcon,
 } from "lucide-react";
 
 import { useParams } from "next/navigation";
@@ -136,44 +134,44 @@ export function PaymentDetailPage({ paymentId: propPaymentId }: PaymentDetailPag
       {/* Financial KPIs (gap-2, rounded-sm, equal-height) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-stretch">
         <BillingKpiCard
-          label="Gross Payment"
+          label="GROSS"
           value={formatMoney(payment.grossAmountMinor, payment.currency)}
-          hint="Total transaction amount"
+          hint="Gross payment"
           badge="Gross"
           badgeTone="neutral"
         />
         <BillingKpiCard
-          label="Gateway Fee"
+          label="FEE"
           value={formatMoney(payment.feeMinor, payment.currency)}
-          hint="Provider processing charge"
+          hint="Gateway fee"
           badge="Fee"
           badgeTone="neutral"
         />
         <BillingKpiCard
-          label="Net Settlement"
+          label="NET CASH"
           value={formatMoney(payment.netAmountMinor, payment.currency)}
-          hint="Net credited to treasury"
-          badge="Net Cash"
+          hint="Treasury net"
+          badge="Net"
           badgeTone="success"
         />
         <BillingKpiCard
-          label="Allocated to Invoices"
+          label="ALLOCATED"
           value={formatMoney(payment.allocatedAmountMinor, payment.currency)}
-          hint="Applied to open balances"
+          hint="To invoices"
           badge="Applied"
           badgeTone="info"
         />
         <BillingKpiCard
-          label="Unallocated Balance"
+          label="UNLINKED"
           value={formatMoney(payment.unallocatedBalanceMinor, payment.currency)}
-          hint="Funds available for invoices"
-          badge={payment.unallocatedBalanceMinor > 0 ? "Available" : "Exhausted"}
+          hint="Available cash"
+          badge={payment.unallocatedBalanceMinor > 0 ? "Open" : "Zero"}
           badgeTone={payment.unallocatedBalanceMinor > 0 ? "warning" : "success"}
         />
         <BillingKpiCard
-          label="Settlement State"
+          label="SETTLED"
           value={payment.settlementStatus.toUpperCase()}
-          hint={payment.settledAt ? `Settled on ${formatDate(payment.settledAt)}` : "Pending bank transfer"}
+          hint={payment.settledAt ? formatDate(payment.settledAt) : "Pending"}
           badge={payment.settlementStatus}
           badgeTone={payment.settlementStatus === "settled" ? "success" : "warning"}
           icon={CheckCircle2Icon}

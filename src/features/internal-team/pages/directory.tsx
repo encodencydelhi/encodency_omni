@@ -97,13 +97,13 @@ function DirectoryContent() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 text-xs">
-              <DropdownMenuItem onClick={() => router.push(`${ROUTES.superAdmin.team}/invitations`)} className="cursor-pointer gap-2">
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); router.push(`${ROUTES.superAdmin.team}/invitations`); }} className="cursor-pointer gap-2">
                 <MailIcon className="size-3.5 text-slate-500" /> <span>View Pending Invitations</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push(`${ROUTES.superAdmin.team}/assignments`)} className="cursor-pointer gap-2">
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); router.push(`${ROUTES.superAdmin.team}/assignments`); }} className="cursor-pointer gap-2">
                 <UserCogIcon className="size-3.5 text-slate-500" /> <span>Review Unassigned Companies</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setQuery((q) => ({ ...q, status: "suspended", page: 1 }))} className="cursor-pointer gap-2">
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setQuery((q) => ({ ...q, status: "suspended", page: 1 })); }} className="cursor-pointer gap-2">
                 <ShieldCheckIcon className="size-3.5 text-slate-500" /> <span>View Deactivated Staff</span>
               </DropdownMenuItem>
             </DropdownMenuContent>

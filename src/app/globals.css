@@ -206,9 +206,13 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   body {
+    max-width: 100%;
+    overflow-x: hidden;
     background-color: var(--background);
     color: var(--foreground);
     font-feature-settings: "cv11", "ss01";

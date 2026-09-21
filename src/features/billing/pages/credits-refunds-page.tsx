@@ -8,7 +8,7 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { formatDate, formatDateTime } from "@/lib/utils/format";
+import { formatDate } from "@/lib/utils/format";
 import { formatMoney } from "../data/money";
 import { exportToCsv } from "../data/export";
 import {
@@ -192,57 +192,57 @@ export function CreditsRefundsPage() {
       {/* KPI Cards Grid (gap-2, rounded-sm, equal height) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 items-stretch">
         <BillingKpiCard
-          label="Credit Notes Issued"
+          label="ISSUED"
           value={kpis.issuedCnCount}
-          hint="Active concessions"
-          badge="Issued"
+          hint="Credit notes"
+          badge="Active"
           badgeTone="success"
           icon={ReceiptIcon}
         />
         <BillingKpiCard
-          label="Pending Credit Notes"
+          label="PENDING"
           value={kpis.pendingCnCount}
-          hint="Awaiting finance approval"
+          hint="In review"
           badge="Review"
           badgeTone="warning"
           icon={ClockIcon}
         />
         <BillingKpiCard
-          label="Available Credit"
+          label="CREDITS"
           value={formatMoney(kpis.availableCreditMinor, "INR", { compact: true })}
-          hint="Unapplied company balances"
-          badge="Available"
+          hint="Available"
+          badge="Ledger"
           badgeTone="info"
           icon={CoinsIcon}
         />
         <BillingKpiCard
-          label="Applied Credit"
+          label="APPLIED"
           value={formatMoney(kpis.appliedCreditMinor, "INR", { compact: true })}
-          hint="Deducted from invoices"
-          badge="Applied"
+          hint="Utilized"
+          badge="Used"
           badgeTone="neutral"
         />
         <BillingKpiCard
-          label="Pending Refunds"
+          label="REFUNDS"
           value={kpis.pendingRefundsCount}
-          hint="Queued for decision"
+          hint="In review"
           badge="Pending"
           badgeTone="warning"
           icon={RotateCcwIcon}
         />
         <BillingKpiCard
-          label="Completed Refunds"
+          label="SETTLED"
           value={formatMoney(kpis.succeededRefundsMinor, "INR", { compact: true })}
-          hint="Returned money"
-          badge="Settled"
+          hint="Completed"
+          badge="Refund"
           badgeTone="neutral"
           icon={CheckCircle2Icon}
         />
         <BillingKpiCard
-          label="Failed Refunds"
+          label="FAILED"
           value={kpis.failedRefundsCount}
-          hint="Declined by gateway"
-          badge="Failed"
+          hint="Declined"
+          badge={kpis.failedRefundsCount > 0 ? "Failed" : "Zero"}
           badgeTone={kpis.failedRefundsCount > 0 ? "danger" : "neutral"}
           icon={XCircleIcon}
         />

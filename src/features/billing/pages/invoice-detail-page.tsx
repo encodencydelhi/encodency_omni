@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils/format";
 import { formatMoney } from "../data/money";
@@ -26,9 +26,7 @@ import {
   Building2Icon,
   CreditCardIcon,
   RotateCcwIcon,
-  LayersIcon,
   BanIcon,
-  FileCheckIcon,
   ClockIcon,
   AlertCircleIcon,
 } from "lucide-react";
@@ -38,7 +36,6 @@ interface InvoiceDetailPageProps {
 }
 
 export function InvoiceDetailPage({ invoiceId: propInvoiceId }: InvoiceDetailPageProps) {
-  const router = useRouter();
   const params = useParams();
   const invoiceId = propInvoiceId ?? (params?.invoiceId as string) ?? "";
   const { invoice, relatedAllocations, relatedCreditNotes, voidInvoice } = useInvoiceDetail(invoiceId);
@@ -140,44 +137,44 @@ export function InvoiceDetailPage({ invoiceId: propInvoiceId }: InvoiceDetailPag
       {/* Financial Breakdown KPIs (gap-2, rounded-sm, equal height) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-stretch">
         <BillingKpiCard
-          label="Original Total"
+          label="GROSS"
           value={formatMoney(invoice.totalMinor, invoice.currency)}
-          hint="Gross invoice amount"
-          badge="Issued Total"
+          hint="Gross total"
+          badge="Total"
           badgeTone="neutral"
         />
         <BillingKpiCard
-          label="Adjusted Receivable"
+          label="NET DUE"
           value={formatMoney(invoice.adjustedReceivableMinor, invoice.currency)}
-          hint="Net after credit notes"
-          badge="Net Amount"
+          hint="Net amount"
+          badge="Net"
           badgeTone="info"
         />
         <BillingKpiCard
-          label="Allocated Payments"
+          label="PAID"
           value={formatMoney(invoice.allocatedPaymentsMinor, invoice.currency)}
-          hint="Applied payment transactions"
-          badge="Cash Applied"
+          hint="Cash applied"
+          badge="Paid"
           badgeTone="success"
         />
         <BillingKpiCard
-          label="Account Credit"
+          label="CREDITS"
           value={formatMoney(invoice.accountCreditAppliedMinor, invoice.currency)}
-          hint="From available ledger"
-          badge="Credits Applied"
+          hint="From ledger"
+          badge="Credit"
           badgeTone="info"
         />
         <BillingKpiCard
-          label="Outstanding Balance"
+          label="BALANCE"
           value={formatMoney(invoice.outstandingBalanceMinor, invoice.currency)}
-          hint="Remaining balance due"
-          badge={invoice.outstandingBalanceMinor > 0 ? "Receivable" : "Cleared"}
+          hint="Remaining"
+          badge={invoice.outstandingBalanceMinor > 0 ? "Due" : "Cleared"}
           badgeTone={invoice.outstandingBalanceMinor > 0 ? "warning" : "success"}
         />
         <BillingKpiCard
-          label="Scheduled Due Date"
+          label="DUE DATE"
           value={formatDate(invoice.dueAt)}
-          hint={invoice.timingState === "overdue" ? "Past Due Date" : "Normal cycle"}
+          hint={invoice.timingState === "overdue" ? "Past due" : "Normal"}
           badge={invoice.timingState === "overdue" ? "Overdue" : "On Track"}
           badgeTone={invoice.timingState === "overdue" ? "danger" : "neutral"}
           icon={ClockIcon}

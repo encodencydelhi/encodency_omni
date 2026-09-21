@@ -125,7 +125,7 @@ export function UsersKpiCards({
             type="button"
             onClick={() => onSelectFilter?.(c.id)}
             className={cn(
-              "group relative flex flex-col justify-between p-3 rounded-xl border bg-gradient-to-b from-white to-slate-50/60 text-left transition-all duration-200 cursor-pointer h-full min-h-[104px] min-w-0 shadow-2xs hover:shadow-md hover:border-slate-300 hover:-translate-y-0.5",
+              "group relative flex flex-col justify-between p-3 rounded-xl border bg-gradient-to-b from-white to-slate-50/60 text-left transition-all duration-200 cursor-pointer h-full min-h-[104px] min-w-0 overflow-hidden shadow-2xs hover:shadow-md hover:border-slate-300 hover:-translate-y-0.5",
               isSelected
                 ? cn(c.activeRing, "shadow-sm -translate-y-0.5")
                 : "border-slate-200/90",

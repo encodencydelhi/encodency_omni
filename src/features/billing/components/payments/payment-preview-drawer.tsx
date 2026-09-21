@@ -28,7 +28,6 @@ import {
   CalendarIcon,
   SplitIcon,
   ExternalLinkIcon,
-  CheckCircle2Icon,
   AlertCircleIcon,
 } from "lucide-react";
 
