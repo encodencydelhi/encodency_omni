@@ -46,8 +46,23 @@ import {
   IssueSeverityBadge,
   IssueStatusBadge,
   ProviderLogo,
+  getPlatformName,
   IntegrationsOverviewSkeleton,
 } from "../components";
+
+const ECOSYSTEM_CHANNELS = [
+  { id: "meta", name: "Meta", sub: "Graph API", providerId: "meta" },
+  { id: "instagram", name: "Instagram", sub: "Reels & Feed", providerId: "meta" },
+  { id: "facebook", name: "Facebook", sub: "Pages & Groups", providerId: "meta" },
+  { id: "linkedin", name: "LinkedIn", sub: "Company Pages", providerId: "linkedin" },
+  { id: "whatsapp", name: "WhatsApp", sub: "AiSensy Cloud", providerId: "whatsapp" },
+  { id: "google_business", name: "Google Business", sub: "Locations", providerId: "google_business" },
+  { id: "youtube", name: "YouTube", sub: "Video & Shorts", providerId: "youtube" },
+  { id: "x", name: "X (Twitter)", sub: "v2 Endpoints", providerId: "x_twitter" },
+  { id: "ga4", name: "Analytics 4", sub: "Data API", providerId: "ga4" },
+  { id: "gsc", name: "Search Console", sub: "Sitemaps", providerId: "gsc" },
+  { id: "cloudinary", name: "Cloudinary", sub: "Media Pipeline", providerId: "cloudinary" },
+];
 
 export function IntegrationsOverviewPage() {
   const router = useRouter();
@@ -182,6 +197,40 @@ export function IntegrationsOverviewPage() {
         <div className="h-24 rounded-xl bg-slate-100 animate-pulse" />
       )}
 
+      {/* Connected Ecosystem Platforms Showcase */}
+      <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-2xs space-y-2.5">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
+              Supported Platforms & Channels
+            </span>
+            <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
+              11 Official Connectors
+            </span>
+          </div>
+          <span className="text-xs text-slate-500">
+            Native integrations with direct Graph, REST & webhook protocols
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-1.5">
+          {ECOSYSTEM_CHANNELS.map((ch) => (
+            <Link
+              key={ch.id}
+              href={`/super-admin/integrations/providers/${ch.providerId}`}
+              className="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200/80 hover:border-blue-300 bg-slate-50/50 hover:bg-blue-50/40 transition-all group text-center"
+            >
+              <ProviderLogo providerId={ch.id} size="md" className="group-hover:scale-105 transition-transform" />
+              <span className="font-bold text-xs text-slate-800 mt-1.5 truncate max-w-full group-hover:text-blue-600">
+                {ch.name}
+              </span>
+              <span className="text-xs text-slate-500 truncate max-w-full">
+                {ch.sub}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* 4. Provider Status Overview Grid & Needs Attention Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Left 2 Cols: Compact Provider Status Table */}
@@ -229,7 +278,7 @@ export function IntegrationsOverviewPage() {
                   >
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2.5">
-                        <ProviderLogo providerId={provider.id} size="sm" />
+                        <ProviderLogo providerId={provider.id} size="md" />
                         <div>
                           <Link
                             href={`/super-admin/integrations/providers/${provider.id}`}
@@ -237,9 +286,69 @@ export function IntegrationsOverviewPage() {
                           >
                             {provider.name}
                           </Link>
-                          <span className="text-xs text-slate-400 capitalize">
-                            {provider.category}
-                          </span>
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            <span className="text-xs text-slate-500 capitalize">
+                              {provider.category}
+                            </span>
+                            {provider.id === "meta" && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-300">•</span>
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                                  <ProviderLogo providerId="facebook" size="xs" />
+                                  Facebook
+                                </span>
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-pink-50 border border-pink-200 text-pink-700 text-xs font-semibold">
+                                  <ProviderLogo providerId="instagram" size="xs" />
+                                  Instagram
+                                </span>
+                              </div>
+                            )}
+                            {provider.id === "google_business" && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-300">•</span>
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
+                                  <ProviderLogo providerId="google" size="xs" />
+                                  Maps & Search
+                                </span>
+                              </div>
+                            )}
+                            {provider.id === "whatsapp" && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-300">•</span>
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+                                  <ProviderLogo providerId="whatsapp" size="xs" />
+                                  Business API
+                                </span>
+                              </div>
+                            )}
+                            {provider.id === "youtube" && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-300">•</span>
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
+                                  <ProviderLogo providerId="youtube" size="xs" />
+                                  Channels & Shorts
+                                </span>
+                              </div>
+                            )}
+                            {provider.id === "linkedin" && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-300">•</span>
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-sky-50 border border-sky-200 text-sky-800 text-xs font-semibold">
+                                  <ProviderLogo providerId="linkedin" size="xs" />
+                                  Company Pages
+                                </span>
+                              </div>
+                            )}
+                            {provider.id === "x_twitter" && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-300">•</span>
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-800 text-xs font-semibold">
+                                  <ProviderLogo providerId="x" size="xs" />
+                                  Posts & Feeds
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -309,11 +418,27 @@ export function IntegrationsOverviewPage() {
                     className="p-2.5 rounded-lg border border-slate-200/80 bg-slate-50/60 hover:bg-slate-100/80 hover:border-slate-300 transition-all block space-y-1"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2">
                         <IssueSeverityBadge value={iss.severity} />
-                        <span className="font-bold text-slate-800 text-xs truncate max-w-[140px]">
-                          {iss.providerId.toUpperCase()}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <ProviderLogo
+                            providerId={
+                              iss.title.toLowerCase().includes("instagram")
+                                ? "instagram"
+                                : iss.title.toLowerCase().includes("facebook")
+                                ? "facebook"
+                                : iss.providerId
+                            }
+                            size="xs"
+                          />
+                          <span className="font-bold text-slate-800 text-xs">
+                            {iss.title.toLowerCase().includes("instagram")
+                              ? "Instagram"
+                              : iss.title.toLowerCase().includes("facebook")
+                              ? "Facebook"
+                              : getPlatformName(iss.providerId)}
+                          </span>
+                        </div>
                       </div>
                       <IssueStatusBadge value={iss.status} />
                     </div>
@@ -368,36 +493,55 @@ export function IntegrationsOverviewPage() {
         </div>
 
         <div className="divide-y divide-slate-100 text-xs">
-          {recentActivities.map((act) => (
-            <div
-              key={act.id}
-              className="py-2.5 flex items-start justify-between gap-2 hover:bg-slate-50/60 px-1 rounded transition-colors"
-            >
-              <div className="flex items-start gap-2.5 min-w-0">
-                <div className="size-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                <div className="min-w-0">
-                  <div className="font-semibold text-slate-900 truncate">
-                    {act.eventType.replace(/_/g, " ").toUpperCase()} •{" "}
-                    <span className="capitalize font-bold text-slate-700">
-                      {act.providerId}
-                    </span>
-                    {act.companyName && (
-                      <span className="text-slate-500 font-normal">
-                        {" "}
-                        ({act.companyName})
+          {recentActivities.map((act) => {
+            const channelId = act.description.toLowerCase().includes("instagram")
+              ? "instagram"
+              : act.description.toLowerCase().includes("facebook")
+              ? "facebook"
+              : act.providerId;
+
+            const channelLabel = act.description.toLowerCase().includes("instagram")
+              ? "Instagram"
+              : act.description.toLowerCase().includes("facebook")
+              ? "Facebook"
+              : getPlatformName(act.providerId);
+
+            return (
+              <div
+                key={act.id}
+                className="py-2.5 flex items-start justify-between gap-3 hover:bg-slate-50/60 px-1 rounded transition-colors"
+              >
+                <div className="flex items-start gap-2.5 min-w-0">
+                  <ProviderLogo
+                    providerId={channelId}
+                    size="sm"
+                    className="mt-0.5 shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <div className="font-semibold text-slate-900 truncate flex items-center gap-1.5 flex-wrap">
+                      <span>{act.eventType.replace(/_/g, " ").toUpperCase()}</span>
+                      <span className="text-slate-300">•</span>
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-800 font-semibold text-xs">
+                        <ProviderLogo providerId={channelId} size="xs" />
+                        <span>{channelLabel}</span>
                       </span>
-                    )}
+                      {act.companyName && (
+                        <span className="text-slate-500 font-normal">
+                          ({act.companyName})
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-slate-600 line-clamp-1 mt-0.5">
+                      {act.description}
+                    </p>
                   </div>
-                  <p className="text-slate-600 line-clamp-1 mt-0.5">
-                    {act.description}
-                  </p>
                 </div>
+                <span className="text-slate-400 whitespace-nowrap shrink-0 text-xs">
+                  {formatDateTime(act.timestamp)}
+                </span>
               </div>
-              <span className="text-slate-400 whitespace-nowrap shrink-0 text-xs">
-                {formatDateTime(act.timestamp)}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

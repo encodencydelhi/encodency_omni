@@ -40,7 +40,7 @@ import { filterConnections, type ConnectionFilters } from "../data/selectors";
 import { ConnectionHealthBadge } from "./status-badges";
 import { ConnectionPreviewDrawer } from "./connection-preview-drawer";
 import { ReauthorizationRequestModal } from "./reauthorization-request-modal";
-import { ProviderLogo } from "./provider-logo";
+import { ProviderLogo, getPlatformName } from "./provider-logo";
 import type { ProviderAuthorization, ConnectionHealthStatus } from "../data/types";
 
 interface ConnectionsTableProps {
@@ -127,7 +127,10 @@ export function ConnectionsTable({
               <SelectItem value="all">All Providers</SelectItem>
               {providerOptions.map((p) => (
                 <SelectItem key={p} value={p}>
-                  {p}
+                  <div className="flex items-center gap-1.5">
+                    <ProviderLogo providerId={p} size="xs" />
+                    <span>{getPlatformName(p)}</span>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -236,9 +239,23 @@ export function ConnectionsTable({
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <ProviderLogo providerId={c.providerId} size="sm" />
-                          <span className="font-bold text-slate-900 capitalize">
-                            {c.providerId}
-                          </span>
+                          <div>
+                            <span className="font-bold text-slate-900 block">
+                              {getPlatformName(c.providerId)}
+                            </span>
+                            {c.providerId === "meta" && (
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-blue-50 text-blue-700 text-xs font-semibold">
+                                  <ProviderLogo providerId="facebook" size="xs" />
+                                  FB
+                                </span>
+                                <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-pink-50 text-pink-700 text-xs font-semibold">
+                                  <ProviderLogo providerId="instagram" size="xs" />
+                                  IG
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
 

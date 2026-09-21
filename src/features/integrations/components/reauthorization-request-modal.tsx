@@ -28,6 +28,7 @@ import {
 import { Label } from "@/components/ui/label";
 import type { ProviderAuthorization } from "../data/types";
 import { useCreateReauthorizationRequest } from "../data/hooks";
+import { ProviderLogo } from "./provider-logo";
 
 interface ReauthorizationRequestModalProps {
   authorization: ProviderAuthorization | null;
@@ -102,9 +103,12 @@ export function ReauthorizationRequestModal({
           <div className="grid grid-cols-2 gap-2">
             <div>
               <span className="text-slate-500 block font-medium">Provider & Account</span>
-              <span className="font-bold text-slate-900 truncate block">
-                {authorization.authorizationLabel}
-              </span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <ProviderLogo providerId={authorization.providerId} size="xs" />
+                <span className="font-bold text-slate-900 truncate">
+                  {authorization.authorizationLabel}
+                </span>
+              </div>
             </div>
             <div>
               <span className="text-slate-500 block font-medium">Tenant Organization</span>

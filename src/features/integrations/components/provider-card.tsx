@@ -66,6 +66,58 @@ export function ProviderCard({
                 <span>•</span>
                 <span className="font-mono text-slate-400">{provider.id}</span>
               </div>
+              {provider.id === "meta" && (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                    <ProviderLogo providerId="facebook" size="xs" />
+                    Facebook
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-pink-50 border border-pink-200 text-pink-700 text-xs font-semibold">
+                    <ProviderLogo providerId="instagram" size="xs" />
+                    Instagram
+                  </span>
+                </div>
+              )}
+              {provider.id === "google_business" && (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
+                    <ProviderLogo providerId="google" size="xs" />
+                    Maps & Search
+                  </span>
+                </div>
+              )}
+              {provider.id === "whatsapp" && (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+                    <ProviderLogo providerId="whatsapp" size="xs" />
+                    Cloud API
+                  </span>
+                </div>
+              )}
+              {provider.id === "youtube" && (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
+                    <ProviderLogo providerId="youtube" size="xs" />
+                    Channels
+                  </span>
+                </div>
+              )}
+              {provider.id === "linkedin" && (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-sky-50 border border-sky-200 text-sky-800 text-xs font-semibold">
+                    <ProviderLogo providerId="linkedin" size="xs" />
+                    Pages
+                  </span>
+                </div>
+              )}
+              {provider.id === "x_twitter" && (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-800 text-xs font-semibold">
+                    <ProviderLogo providerId="x" size="xs" />
+                    v2 Feeds
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

@@ -7,6 +7,7 @@
 "use client";
 
 import { cn } from "@/lib/utils/cn";
+import { ProviderLogo } from "./provider-logo";
 import type { ExternalResource } from "../data/types";
 
 interface ResourceMappingTableProps {
@@ -46,11 +47,35 @@ export function ResourceMappingTable({
                     <tr key={res.id} className="hover:bg-slate-50/70 transition-colors">
                       {/* Resource Name */}
                       <td className="py-3 px-4">
-                        <div className="font-bold text-slate-900">
-                          {res.resourceName}
-                        </div>
-                        <div className="text-xs text-slate-400 font-mono">
-                          {res.id}
+                        <div className="flex items-center gap-2.5">
+                          <ProviderLogo
+                            providerId={
+                              res.resourceType.includes("instagram")
+                                ? "instagram"
+                                : res.resourceType.includes("facebook")
+                                ? "facebook"
+                                : res.resourceType.includes("linkedin")
+                                ? "linkedin"
+                                : res.resourceType.includes("google")
+                                ? "google_business"
+                                : res.resourceType.includes("youtube")
+                                ? "youtube"
+                                : res.resourceType.includes("whatsapp")
+                                ? "whatsapp"
+                                : res.resourceType.includes("x_")
+                                ? "x"
+                                : res.providerId
+                            }
+                            size="sm"
+                          />
+                          <div>
+                            <div className="font-bold text-slate-900">
+                              {res.resourceName}
+                            </div>
+                            <div className="text-xs text-slate-400 font-mono">
+                              {res.id}
+                            </div>
+                          </div>
                         </div>
                       </td>
 

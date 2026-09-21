@@ -27,7 +27,7 @@ import type {
 } from "../data/types";
 import { IssueDetailDrawer } from "./issue-detail-drawer";
 import { IssueSeverityBadge, IssueStatusBadge } from "./status-badges";
-import { ProviderLogo } from "./provider-logo";
+import { ProviderLogo, getPlatformName } from "./provider-logo";
 
 interface IntegrationIssuesTableProps {
   issues: IntegrationIssue[];
@@ -113,7 +113,10 @@ export function IntegrationIssuesTable({
               <SelectItem value="all">All Providers</SelectItem>
               {providers.map((p) => (
                 <SelectItem key={p} value={p}>
-                  {p}
+                  <div className="flex items-center gap-1.5">
+                    <ProviderLogo providerId={p} size="xs" />
+                    <span>{getPlatformName(p)}</span>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -212,12 +215,26 @@ export function IntegrationIssuesTable({
 
                       {/* Provider */}
                       <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <ProviderLogo providerId={iss.providerId} size="sm" />
-                          <span className="capitalize font-bold text-slate-800">
-                            {iss.providerId}
-                          </span>
-                        </div>
+                        {(() => {
+                          const channelId = iss.title.toLowerCase().includes("instagram")
+                            ? "instagram"
+                            : iss.title.toLowerCase().includes("facebook")
+                            ? "facebook"
+                            : iss.providerId;
+                          const channelName = iss.title.toLowerCase().includes("instagram")
+                            ? "Instagram"
+                            : iss.title.toLowerCase().includes("facebook")
+                            ? "Facebook"
+                            : getPlatformName(iss.providerId);
+                          return (
+                            <div className="flex items-center gap-2">
+                              <ProviderLogo providerId={channelId} size="sm" />
+                              <span className="font-bold text-slate-800">
+                                {channelName}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </td>
 
                       {/* Affected Tenants */}
