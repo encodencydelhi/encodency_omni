@@ -108,7 +108,7 @@ export function EvaluationDrawer({ flagKey, companyId, environment, onClose }: {
 
               <dl className="divide-y divide-border rounded-sm border border-border px-3">
                 <KeyValue label="Plan">{evaluation.planName}</KeyValue>
-                <KeyValue label="Subscription">{evaluation.subscriptionStatus.replace(/_/g, " ")}</KeyValue>
+                <KeyValue label="Subscription"><span className="capitalize">{evaluation.subscriptionStatus.replace(/_/g, " ")}</span></KeyValue>
                 <KeyValue label="Plan Entitlement Key">{detail.flag.entitlement ?? "None Required"}</KeyValue>
                 <KeyValue label="Action Limits">{evaluation.action.state === "not_applicable" ? "Not Metered" : evaluation.action.state === "limited" ? "Limited" : "Within Limits"}</KeyValue>
               </dl>

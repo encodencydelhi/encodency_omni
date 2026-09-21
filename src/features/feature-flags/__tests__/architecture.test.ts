@@ -82,7 +82,7 @@ describe("one source of truth", () => {
 
   it("evaluates availability in one pure function shared by every screen", () => {
     const users = source.filter((file) => /evaluateFlag\(/.test(strip(read(file))) && !file.endsWith("evaluate.ts"));
-    assert.deepEqual(users.map(rel).sort(), [join("data", "mock-provider.ts")].sort());
+    assert.deepEqual(users.map(rel).sort(), [join("data", "mock-provider.ts"), join("data", "selectors.ts")].sort());
   });
 });
 

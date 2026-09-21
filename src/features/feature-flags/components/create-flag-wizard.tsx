@@ -104,7 +104,7 @@ export function CreateFlagWizard({ onClose }: { onClose: () => void }) {
   return (
     <>
       <Sheet open onOpenChange={(open) => !open && !busy && guard.requestClose()}>
-        <SheetContent className="w-full max-w-none sm:max-w-2xl" showClose={!busy}>
+        <SheetContent className="w-full max-w-none sm:max-w-3xl" showClose={!busy}>
           <SheetHeader className="gap-2">
             <SheetTitle>Create Feature Flag</SheetTitle>
             <SheetDescription>Register a flag for a feature. The flag controls availability and rollout only. It does not build the feature, grant an entitlement or change any company.</SheetDescription>
