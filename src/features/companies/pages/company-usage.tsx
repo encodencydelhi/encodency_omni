@@ -2,7 +2,11 @@
 
 import { ArrowRightIcon, DownloadIcon, GaugeIcon, LineChartIcon, SlidersHorizontalIcon, TriangleAlertIcon } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
+import { ResourceDrawer } from "@/features/usage-limits/components/resource-drawer";
+import { StateBadge } from "@/features/usage-limits/components/badges";
+import { useCompanyUsageDetail } from "@/features/usage-limits/data/hooks";
+import { usageRoutes } from "@/features/usage-limits/data/config";
 import { EmptyState } from "@/components/shared/empty-state";
 import { CHART_COLORS } from "@/components/shared/charts/chart-theme";
 import { TrendAreaChart } from "@/components/shared/charts/trend-area-chart";
@@ -54,6 +58,9 @@ function UsageBody({ companyId, usage }: { companyId: string; usage: CompanyUsag
   const { capabilities, openFlow, dialogs } = useCompanyActions();
   const chartRef = useRef<HTMLDivElement>(null);
   const url = useUrlParams(URL_KEYS);
+  // Usage & Limits reads the same records: its state, client attribution and resource drawer complement this workspace.
+  const limits = useCompanyUsageDetail(companyId);
+  const [drawerResource, setDrawerResource] = useState<UsageResource | null>(null);
 
   const resource = (USAGE_RESOURCES.some((def) => def.key === url.values.metric) ? url.values.metric : "aiCredits") as UsageResource;
   const rangeKey = RANGES.some((item) => item.value === url.values.range) ? url.values.range : "30";
@@ -137,6 +144,12 @@ function UsageBody({ companyId, usage }: { companyId: string; usage: CompanyUsag
               Export usage
             </Button>
             <Button asChild variant="outline" size="sm">
+              <Link href={`${usageRoutes.companies}?company=${companyId}`}>
+                Open in Usage &amp; Limits
+                <ArrowRightIcon />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
               <Link href={companySectionHref(companyId, "subscription")}>
                 Open subscription
                 <ArrowRightIcon />
@@ -184,7 +197,10 @@ function UsageBody({ companyId, usage }: { companyId: string; usage: CompanyUsag
                     </td>
                     <td className="px-3 py-2"><ResourceStatusBadge status={record.status} /></td>
                     <td className="whitespace-nowrap px-3 py-2 text-2xs text-muted-foreground">{relativeTime(record.updatedAt)}</td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="whitespace-nowrap px-3 py-2 text-right">
+                      <Button variant="ghost" size="sm" onClick={() => setDrawerResource(record.resource)} aria-label={`Details for ${item.label}`}>
+                        Details
+                      </Button>
                       {item.metric && canOverride && attention ? (
                         <Button variant="ghost" size="sm" onClick={() => openFlow({ kind: "override", companyId, resource: record.resource })}>
                           <SlidersHorizontalIcon />
@@ -280,6 +296,46 @@ function UsageBody({ companyId, usage }: { companyId: string; usage: CompanyUsag
           )}
         </Panel>
       </div>
+      <Panel
+        title="Client-wise contribution"
+        description="Consumption by client for the resources that can be attributed. Seats are never split by client, because one user can reach several clients. Anything not tied to a client is company-level."
+        flush
+      >
+        {limits.data ? (
+          <div className="overflow-x-auto border-t border-border">
+            <table className="w-full min-w-[36rem] text-[0.8125rem]">
+              <caption className="sr-only">Client-wise usage contribution</caption>
+              <thead className="bg-surface-sunken text-left text-2xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2 font-semibold">Client</th>
+                  <th className="px-3 py-2 text-right font-semibold">AI Credits</th>
+                  <th className="px-3 py-2 text-right font-semibold">Automation Runs</th>
+                  <th className="px-3 py-2 text-right font-semibold">Reports</th>
+                  <th className="px-3 py-2 text-right font-semibold">Scheduled Posts</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {limits.data.contributions.map((item) => (
+                  <tr key={item.clientId ?? "company"}>
+                    <td className="px-3 py-2 font-medium text-foreground">{item.clientName}</td>
+                    {(["aiCredits", "automationRuns", "reports", "scheduledPosts"] as const).map((key) => (
+                      <td key={key} className="px-3 py-2 text-right tabular text-muted-foreground">{item.values[key] === undefined ? "-" : formatNumber(item.values[key] ?? 0)}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="border-t border-border px-3 py-6 text-center text-[0.8125rem] text-muted-foreground">{limits.error ? "Client attribution is unavailable right now." : "Loading client attribution..."}</div>
+        )}
+      </Panel>
+      {limits.data ? (
+        <p className="text-2xs text-muted-foreground">
+          Usage &amp; Limits attention state: <StateBadge state={limits.data.summary.attention === "unknown" ? "unknown" : limits.data.summary.attention} /> - the company&apos;s worst resource, never an average.
+        </p>
+      ) : null}
+      <ResourceDrawer companyId={drawerResource ? companyId : null} resource={drawerResource} onClose={() => setDrawerResource(null)} />
       {dialogs}
     </div>
   );

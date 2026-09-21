@@ -1,18 +1,29 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { UsageLimitsWorkspace } from "@/features/usage-limits/pages/workspace";
+import { usageRoutes } from "@/features/usage-limits/data/config";
+import { UsageOverviewPage } from "@/features/usage-limits/pages/overview";
 
 export const metadata: Metadata = {
   title: "Usage & Limits",
-  description: "Monitor platform usage, quota health, overages and company-specific usage overrides.",
+  description: "Monitor resource consumption, quota utilization, company limits and metering health.",
 };
 
-export default async function UsagePage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
-  const params = await searchParams;
-  const tab = params.tab === "companies" || params.tab === "resources" || params.tab === "alerts" || params.tab === "overrides" || params.tab === "activity" ? params.tab : "overview";
+const LEGACY_TABS: Record<string, string> = {
+  companies: usageRoutes.companies,
+  resources: usageRoutes.resources,
+  alerts: usageRoutes.alerts,
+  overrides: usageRoutes.overrides,
+  activity: usageRoutes.metering,
+};
+
+export default async function Page({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  // Older links used ?tab=; every tab is now its own route.
+  const legacy = LEGACY_TABS[(await searchParams).tab ?? ""];
+  if (legacy) redirect(legacy);
   return (
     <Suspense fallback={null}>
-      <UsageLimitsWorkspace initialTab={tab} />
+      <UsageOverviewPage />
     </Suspense>
   );
 }
