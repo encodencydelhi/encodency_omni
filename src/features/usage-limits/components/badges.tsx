@@ -35,11 +35,11 @@ const BAR: Record<UtilizationState, string> = {
 };
 
 /** A thin utilisation bar. Only drawn when there is a percentage: unlimited and unknown show none. */
-export function UtilizationBar({ percent, state, label }: { percent: number | null; state: UtilizationState; label: string }) {
+export function UtilizationBar({ percent, state, label, compact = false }: { percent: number | null; state: UtilizationState; label: string; compact?: boolean }) {
   if (percent === null) return <span className="text-2xs text-muted-foreground">-</span>;
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 w-20 overflow-hidden rounded-sm bg-muted" role="progressbar" aria-label={`${label} utilization`} aria-valuenow={Math.min(100, percent)} aria-valuemin={0} aria-valuemax={100}>
+      <div className={cn("h-1.5 overflow-hidden rounded-sm bg-muted", compact ? "w-12" : "w-20")} role="progressbar" aria-label={`${label} utilization`} aria-valuenow={Math.min(100, percent)} aria-valuemin={0} aria-valuemax={100}>
         <div className={cn("h-full rounded-sm", BAR[state])} style={{ width: `${Math.min(100, percent)}%` }} />
       </div>
       <span className="w-11 text-right text-2xs tabular text-foreground">{percent}%</span>

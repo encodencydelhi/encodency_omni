@@ -29,6 +29,7 @@ import { DemoTag, SeverityBadge, StateBadge, UtilizationBar } from "../component
 import { UsageError } from "../components/states";
 import { AlertTypeLabel } from "../components/badges";
 
+// Panels that list many rows scroll inside a fixed height so the overview stays compact.
 const KEYS = ["period", "metric", "top", "sort"] as const;
 const DISTRIBUTION: UtilizationState[] = ["within", "near", "at_limit", "exceeded", "unlimited", "not_entitled", "unknown"];
 const SEGMENT: Record<UtilizationState, string> = {
@@ -179,7 +180,9 @@ export function UsageOverviewPage() {
 
           <div className="grid grid-cols-1 gap-1 xl:grid-cols-2">
             <Panel title="Resource-Wise Quota Health" description="Companies by state for each resource. Select a resource to open Company Usage filtered to it." flush>
+              <div className="h-[22rem] overflow-y-auto scrollbar-thin">
               <MiniTable
+                dense
                 caption="Resource-wise quota health"
                 rows={data.resourceHealth}
                 getKey={(row) => row.resource}
@@ -193,6 +196,7 @@ export function UsageOverviewPage() {
                   { id: "unknown", header: "Unknown", align: "right", cell: (row) => <span className="tabular">{row.unknown}</span> },
                 ]}
               />
+              </div>
             </Panel>
 
             <Panel
@@ -214,20 +218,23 @@ export function UsageOverviewPage() {
               ) : !top.data ? (
                 <div className="p-3"><TableSkeleton rows={5} columns={5} /></div>
               ) : (
+                <div className="h-[22rem] overflow-y-auto scrollbar-thin">
                 <MiniTable
+                  dense
                   caption="Top resource consumers"
                   rows={top.data}
                   getKey={(row) => row.key}
                   empty={<EmptyState icon={CheckCircle2Icon} size="sm" title="No Usage Data" description="No company has a reading for this resource." />}
                   columns={[
-                    { id: "company", header: "Company", cell: (row) => <Link href={usageRoutes.company(row.companyId)} className="font-medium text-foreground hover:text-primary hover:underline">{row.companyName}</Link> },
+                    { id: "company", header: "Company", cell: (row) => <Link href={usageRoutes.company(row.companyId)} className="block max-w-[11rem] truncate whitespace-nowrap font-medium text-foreground hover:text-primary hover:underline" title={row.companyName}>{row.companyName}</Link> },
                     { id: "used", header: "Consumed", align: "right", cell: (row) => <span className="tabular">{number(row.used ?? 0)}</span> },
                     { id: "limit", header: "Effective Limit", align: "right", hideBelow: "md", cell: (row) => <span className="tabular text-muted-foreground">{row.effective === null ? "Unlimited" : row.effective === 0 ? "Not Entitled" : number(row.effective)}</span> },
-                    { id: "pct", header: "Utilization", hideBelow: "md", cell: (row) => <UtilizationBar percent={row.resolved.percent} state={row.resolved.state} label={row.companyName} /> },
+                    { id: "pct", header: "Utilization", hideBelow: "md", cell: (row) => <UtilizationBar compact percent={row.resolved.percent} state={row.resolved.state} label={row.companyName} /> },
                     { id: "state", header: "Status", cell: (row) => <StateBadge state={row.resolved.state} /> },
                     { id: "action", header: <span className="sr-only">Action</span>, align: "right", cell: (row) => <Button asChild variant="ghost" size="sm"><Link href={usageRoutes.companyUsage(row.companyId, row.resource)}>Inspect</Link></Button> },
                   ]}
                 />
+                </div>
               )}
             </Panel>
           </div>

@@ -24,6 +24,7 @@ export function MiniTable<T>({
   caption,
   onRowClick,
   empty,
+  dense = false,
 }: {
   columns: Array<MiniColumn<T>>;
   rows: readonly T[];
@@ -31,6 +32,8 @@ export function MiniTable<T>({
   caption: string;
   onRowClick?: (row: T) => void;
   empty?: ReactNode;
+  /** Tighter cells and a sticky header, for tables that scroll inside a fixed-height panel. */
+  dense?: boolean;
 }) {
   if (rows.length === 0 && empty) return <>{empty}</>;
 
@@ -41,7 +44,7 @@ export function MiniTable<T>({
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             {columns.map((column) => (
-              <TableHead key={column.id} className={cn("h-8 px-3", column.align === "right" && "text-right", column.hideBelow && HIDE[column.hideBelow])}>
+              <TableHead key={column.id} className={cn("h-8", dense ? "sticky top-0 z-[1] bg-surface-sunken px-2" : "px-3", column.align === "right" && "text-right", column.hideBelow && HIDE[column.hideBelow])}>
                 {column.header}
               </TableHead>
             ))}
@@ -51,7 +54,7 @@ export function MiniTable<T>({
           {rows.map((row) => (
             <TableRow key={getKey(row)} onClick={onRowClick ? () => onRowClick(row) : undefined} className={cn(onRowClick && "cursor-pointer")}>
               {columns.map((column) => (
-                <TableCell key={column.id} className={cn("px-3 py-2 align-middle text-[0.8125rem]", column.align === "right" && "text-right", column.hideBelow && HIDE[column.hideBelow], column.className)}>
+                <TableCell key={column.id} className={cn(dense ? "px-2 py-1.5" : "px-3 py-2", "align-middle text-[0.8125rem]", column.align === "right" && "text-right", column.hideBelow && HIDE[column.hideBelow], column.className)}>
                   {column.cell(row)}
                 </TableCell>
               ))}

@@ -128,7 +128,7 @@ describe("honest demo behaviour", () => {
   });
 
   it("labels demo data", () => {
-    assert.match(read(resolve(FEATURE, "pages", "usage-overview.tsx")), /Demo usage data/);
+    assert.match(read(resolve(FEATURE, "pages", "overview.tsx")), /Demo usage data/);
     assert.match(read(resolve(FEATURE, "pages", "metering-activity.tsx")), /Demo Operational Data/);
   });
 
@@ -142,7 +142,7 @@ describe("layout and states", () => {
   it("uses gap-1 between related cards and never gap-4/6/8 between them", () => {
     const offenders = ui.filter((file) => /(?<![\w-])gap-(4|6|8)(?![\w-])/.test(read(file)));
     assert.deepEqual(offenders.map(rel), []);
-    for (const page of ["usage-overview", "company-usage", "alerts-overages", "overrides"]) assert.match(read(resolve(FEATURE, "pages", `${page}.tsx`)), /StatGrid/, page);
+    for (const page of ["overview", "company-usage", "alerts-overages", "overrides"]) assert.match(read(resolve(FEATURE, "pages", `${page}.tsx`)), /StatGrid/, page);
   });
 
   it("gives every table a caption", () => {
@@ -152,7 +152,7 @@ describe("layout and states", () => {
 
   it("has loading, error and empty states, and protects unsaved forms", () => {
     assert.match(read(resolve(FEATURE, "components", "states.tsx")), /SERVICE_UNAVAILABLE/);
-    for (const page of ["usage-overview", "company-usage", "alerts-overages", "overrides", "metering-activity"]) assert.match(read(resolve(FEATURE, "pages", `${page}.tsx`)), /Skeleton/, page);
+    for (const page of ["overview", "company-usage", "alerts-overages", "overrides", "metering-activity"]) assert.match(read(resolve(FEATURE, "pages", `${page}.tsx`)), /Skeleton/, page);
     for (const file of ["alert-drawer.tsx", "override-actions.tsx"]) assert.match(read(resolve(FEATURE, "components", file)), /useUnsavedGuard/, file);
     assert.match(read(resolve(FEATURE, "pages", "resource-detail.tsx")), /useUnsavedGuard/);
   });

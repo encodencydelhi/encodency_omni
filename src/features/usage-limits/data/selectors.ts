@@ -256,7 +256,7 @@ export function computeResourceHealth(rows: readonly UsageRow[]): ResourceHealth
   });
 }
 
-export function topConsumers(rows: readonly UsageRow[], resource: ResourceKey, sort: "consumption" | "utilization", limit = 8): UsageRow[] {
+export function topConsumers(rows: readonly UsageRow[], resource: ResourceKey, sort: "consumption" | "utilization", limit = 12): UsageRow[] {
   return rows
     .filter((row) => row.resource === resource && row.used !== null)
     .sort((a, b) => (sort === "utilization" ? (b.resolved.percent ?? -1) - (a.resolved.percent ?? -1) : (b.used ?? 0) - (a.used ?? 0)) || a.companyName.localeCompare(b.companyName))

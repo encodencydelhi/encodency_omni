@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { usageRoutes } from "@/features/usage-limits/data/config";
-import { UsageOverviewPage } from "@/features/usage-limits/pages/usage-overview";
+import { UsageOverviewPage } from "@/features/usage-limits/pages/overview";
 
 export const metadata: Metadata = {
   title: "Usage & Limits",
