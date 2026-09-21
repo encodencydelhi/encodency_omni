@@ -1,62 +1,118 @@
-"use client";
+/**
+ * The one seam between the Usage & Limits UI and wherever its data lives.
+ *
+ *   Today:  UI -> hooks -> usageRepository -> shared mock provider (company bundles + plan store)
+ *   Later:  UI -> hooks -> usageRepository -> backend usage & metering service
+ *
+ * Components never import a provider. When mock mode is off the repository
+ * resolves to a provider that refuses to invent usage.
+ */
+import { USAGE_MOCK_MODE } from "./config";
+import { mockUsageProvider } from "./mock-provider";
+import { unavailableUsageProvider } from "./unavailable-provider";
+import type {
+  AlertQuery,
+  AttentionItem,
+  ClientContribution,
+  CompanyUsageQuery,
+  CompanyUsageResult,
+  CompanyUsageSummary,
+  EventQuery,
+  EventResult,
+  MeteringHealth,
+  MutationActor,
+  OverrideQuery,
+  OverrideRow,
+  OverviewData,
+  Period,
+  ResourceDefinition,
+  ResourceKey,
+  ThresholdPolicy,
+  TrendPoint,
+  UsageActivity,
+  UsageAlert,
+  UsageEvent,
+  UsageOverageRow,
+  UsageRow,
+} from "./types";
 
-import { PLAN_CATALOGUE, STAFF } from "@/features/companies/data/mock/dataset";
-import { allBundles, writeBundle } from "@/features/companies/data/mock/store";
-import { nowIso, platformNow } from "@/features/companies/data/clock";
-import { computeSummary, computeUsage, type DerivationContext } from "@/features/companies/data/selectors";
-import type { CompanyBundle, CompanyUsageOverride, UsageResource } from "@/features/companies/data/types";
-
-export interface UsageCompanySnapshot {
-  bundle: CompanyBundle;
-  summary: ReturnType<typeof computeSummary>;
-  usage: ReturnType<typeof computeUsage>;
+export interface OverviewResult extends OverviewData {
+  attention: AttentionItem[];
 }
 
-export interface OverrideDraft {
-  resource: UsageResource;
-  overrideLimit: number;
-  days: number;
-  reason: string;
+export interface AlertsResult {
+  alerts: UsageAlert[];
+  all: UsageAlert[];
+  counts: { open: number; warning: number; critical: number; atLimit: number; exceeded: number; expiring: number; metering: number };
+  overages: UsageOverageRow[];
+  facets: { companies: Array<{ id: string; name: string; subscriptionId: string }> };
 }
 
-const DAY_MS = 86_400_000;
-const ACTOR = { id: "stf_001", name: "Ananya Rao" };
-
-function context(): DerivationContext {
-  return { now: platformNow(), plans: PLAN_CATALOGUE, staff: STAFF };
+export interface AlertDetail {
+  alert: UsageAlert;
+  events: UsageEvent[];
+  override: OverrideRow | null;
+  activity: UsageActivity[];
 }
 
-export const usageLimitsRepository = {
-  mode: "mock" as const,
+export interface OverridesResult {
+  rows: OverrideRow[];
+  counts: { active: number; scheduled: number; expiringSoon: number; expired: number; revoked: number; companies: number; needsReview: number };
+  facets: { companies: Array<{ id: string; name: string; subscriptionId: string }>; approvers: string[] };
+}
 
-  listCompanyUsage(): UsageCompanySnapshot[] {
-    const ctx = context();
-    return allBundles().map((bundle) => ({ bundle, summary: computeSummary(ctx, bundle), usage: computeUsage(ctx, bundle) }));
-  },
+export interface CompanyUsageDetail {
+  summary: CompanyUsageSummary;
+  contributions: ClientContribution[];
+  overrides: OverrideRow[];
+  companyName: string;
+}
 
-  createOverride(companyId: string, input: OverrideDraft): boolean {
-    const bundle = allBundles().find((item) => item.company.id === companyId);
-    if (!bundle) return false;
-    const override: CompanyUsageOverride = {
-      id: `ovr_usage_${Date.now().toString(36)}`,
-      companyId,
-      resource: input.resource,
-      baseLimit: null,
-      overrideLimit: input.overrideLimit,
-      reason: input.reason,
-      startsAt: nowIso(),
-      expiresAt: new Date(Date.now() + input.days * DAY_MS).toISOString(),
-      approvedBy: ACTOR.name,
-      createdAt: nowIso(),
-    };
-    writeBundle({ ...bundle, overrides: [override, ...bundle.overrides] });
-    return true;
-  },
+export interface ResourceListItem {
+  definition: ResourceDefinition;
+  thresholds: ThresholdPolicy;
+  edited: boolean;
+  companies: { within: number; near: number; atLimit: number; exceeded: number; unknown: number };
+}
 
-  revokeOverride(companyId: string, overrideId: string): boolean {
-    const bundle = allBundles().find((item) => item.company.id === companyId);
-    if (!bundle) return false;
-    writeBundle({ ...bundle, overrides: bundle.overrides.filter((override) => override.id !== overrideId) });
-    return true;
-  },
-};
+export interface ResourceDetail extends ResourceListItem {
+  planEntitlements: Array<{ plan: string; limit: number | null }>;
+  activity: UsageActivity[];
+}
+
+export interface MeteringResult {
+  health: MeteringHealth;
+  activity: UsageActivity[];
+}
+
+export interface TrendResult {
+  points: TrendPoint[] | null;
+  /** Why there is no series, when there is not. */
+  unavailable: string | null;
+  total: number;
+  peak: number;
+  previousTotal: number | null;
+}
+
+export interface UsageRepository {
+  readonly mode: "mock" | "unavailable";
+  getOverview(period: Period): Promise<OverviewResult>;
+  getTrend(resource: ResourceKey, period: Period, scope?: { companyId?: string; clientId?: string }): Promise<TrendResult>;
+  getTopConsumers(resource: ResourceKey, sort: "consumption" | "utilization"): Promise<UsageRow[]>;
+  listCompanyUsage(query: CompanyUsageQuery): Promise<CompanyUsageResult>;
+  getCompanyUsage(companyId: string): Promise<CompanyUsageDetail>;
+  listResources(): Promise<ResourceListItem[]>;
+  getResource(key: string): Promise<ResourceDetail>;
+  updateResourcePolicy(key: ResourceKey, thresholds: ThresholdPolicy, reason: string, actor: MutationActor): Promise<ResourceDetail>;
+  listAlerts(query: AlertQuery): Promise<AlertsResult>;
+  getAlert(id: string): Promise<AlertDetail>;
+  acknowledgeAlert(id: string, note: string, actor: MutationActor): Promise<UsageAlert>;
+  listOverrides(query: OverrideQuery): Promise<OverridesResult>;
+  getOverride(id: string): Promise<OverrideRow>;
+  getMetering(): Promise<MeteringResult>;
+  listEvents(query: EventQuery): Promise<EventResult>;
+  getEvent(id: string): Promise<UsageEvent>;
+  resetDemoData?(): Promise<void>;
+}
+
+export const usageRepository: UsageRepository = USAGE_MOCK_MODE ? mockUsageProvider : unavailableUsageProvider;

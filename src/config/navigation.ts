@@ -119,6 +119,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Usage & Limits",
         href: ROUTES.superAdmin.usage,
         icon: GaugeIcon,
+        matchPrefixes: [ROUTES.superAdmin.usage],
         permission: "companies:read",
       },
     ],

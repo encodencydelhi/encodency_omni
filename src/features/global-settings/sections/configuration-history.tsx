@@ -95,7 +95,7 @@ function ChangeDrawer({ id, onClose }: { id: string | null; onClose: () => void 
                 <KeyValue label="Category">{SECTION_BY_KEY[change.section].label}</KeyValue>
                 <KeyValue label="Setting key"><code className="break-all text-[11px]">{change.key}</code></KeyValue>
                 <KeyValue label="Affected scope">{SCOPE_LABEL[change.scope].label}</KeyValue>
-                <KeyValue label="Takes effect">{change.effectiveAt ? formatDateTime(change.effectiveAt) : "On Approval"}{definition ? <span className="block text-2xs text-muted-foreground">{TIMING_LABEL[definition.timing].label}</span> : null}</KeyValue>
+                <KeyValue label="Takes effect">{change.effectiveAt ? formatDateTime(change.effectiveAt) : "On Approval"}{definition && change.result === "applied" ? <span className="block text-2xs text-muted-foreground">{TIMING_LABEL[definition.timing].label}</span> : null}</KeyValue>
                 <KeyValue label="Reason">{change.reason || <span className="text-muted-foreground">Not Required</span>}</KeyValue>
                 <KeyValue label="Approval">{change.approvalNote}</KeyValue>
                 <KeyValue label="Audit event">
