@@ -261,7 +261,7 @@ export function InvoicesTable({ initialQuickFilter }: InvoicesTableProps) {
       {/* Filter and Search Controls */}
       <div className="bg-card rounded-sm border border-border p-2.5 flex flex-wrap items-center justify-between gap-2 shadow-2xs">
         {/* Search */}
-        <div className="relative min-w-[240px] max-w-sm flex-1">
+        <div className="relative min-w-60 max-w-sm flex-1">
           <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
           <Input
             value={search}
@@ -285,10 +285,10 @@ export function InvoicesTable({ initialQuickFilter }: InvoicesTableProps) {
             <button
               key={pill.id}
               onClick={() => setQuickFilter(pill.id)}
-              className={`px-2 py-1 text-xs rounded-sm font-medium transition-colors ${
+              className={`px-2.5 py-1 text-xs rounded-sm font-medium transition-colors border ${
                 quickFilter === pill.id
-                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
+                  ? "border-blue-600 text-blue-600 bg-blue-50"
+                  : "border-transparent text-slate-500 hover:text-slate-700 bg-slate-50"
               }`}
             >
               {pill.label}

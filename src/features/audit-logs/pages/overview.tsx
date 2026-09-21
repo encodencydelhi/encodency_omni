@@ -76,7 +76,7 @@ export function AuditOverviewPage() {
           <RefreshCwIcon className={cn(refreshing && "animate-spin")} />Refresh
         </Button>
       </div>
-      <p className="text-2xs text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         {data ? `Last recorded event ${data.lastRecordedAt ? `${utcShort(data.lastRecordedAt)} (${ago(data.lastRecordedAt)})` : "not available"}. ` : "Loading... "}
         Source: {data?.source.dataSource ?? "Demo Records"}. Period counts cover the selected window; Open Investigations and Collection Issues are current state, not period totals.
       </p>
@@ -148,8 +148,8 @@ export function AuditOverviewPage() {
                     {data.attention.map((item) => (
                       <li key={item.id}>
                         <Link href={item.href} className="block px-3 py-2 hover:bg-accent/40">
-                          <div className="flex items-center gap-1.5"><Badge tone={LABEL_TONE[item.label]}>{item.label}</Badge><span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-foreground">{item.title}</span><span className="shrink-0 text-2xs text-muted-foreground">{ago(item.at)}</span></div>
-                          <p className="mt-0.5 line-clamp-2 text-2xs text-muted-foreground">{item.detail}</p>
+                          <div className="flex items-center gap-1.5"><Badge tone={LABEL_TONE[item.label]}>{item.label}</Badge><span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-foreground">{item.title}</span><span className="shrink-0 text-xs text-muted-foreground">{ago(item.at)}</span></div>
+                          <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{item.detail}</p>
                         </Link>
                       </li>
                     ))}
@@ -165,17 +165,17 @@ export function AuditOverviewPage() {
                 ) : (
                   <table className="w-full text-[0.8125rem]">
                     <caption className="sr-only">Recent sensitive events</caption>
-                    <thead className="sticky top-0 bg-surface-sunken text-left text-2xs uppercase tracking-wide text-muted-foreground"><tr><th className="px-2 py-1.5 font-medium">Timestamp</th><th className="px-2 py-1.5 font-medium">Actor</th><th className="px-2 py-1.5 font-medium">Action</th><th className="hidden px-2 py-1.5 font-medium md:table-cell">Target</th><th className="hidden px-2 py-1.5 font-medium lg:table-cell">Scope</th><th className="px-2 py-1.5 font-medium">Result</th><th className="px-2 py-1.5 font-medium"><span className="sr-only">Open</span></th></tr></thead>
+                    <thead className="sticky top-0 bg-surface-sunken text-left text-xs uppercase tracking-wide text-muted-foreground"><tr><th className="px-2 py-1.5 font-medium">Timestamp</th><th className="px-2 py-1.5 font-medium">Actor</th><th className="px-2 py-1.5 font-medium">Action</th><th className="hidden px-2 py-1.5 font-medium md:table-cell">Target</th><th className="hidden px-2 py-1.5 font-medium lg:table-cell">Scope</th><th className="px-2 py-1.5 font-medium">Result</th><th className="px-2 py-1.5 font-medium"><span className="sr-only">Open</span></th></tr></thead>
                     <tbody className="divide-y divide-border">
                       {data.recentSensitive.map((event) => (
                         <tr key={event.id} className="cursor-pointer hover:bg-accent/40" onClick={() => router.push(auditRoutes.event(event.id))}>
-                          <td className="whitespace-nowrap px-2 py-1.5 text-2xs tabular">{utcShort(event.occurredAt)}</td>
+                          <td className="whitespace-nowrap px-2 py-1.5 text-xs tabular">{utcShort(event.occurredAt)}</td>
                           <td className="max-w-32 truncate px-2 py-1.5">{event.actor.displayName}</td>
                           <td className="px-2 py-1.5 font-medium text-foreground"><span className="block max-w-48 truncate">{event.actionLabel}</span></td>
                           <td className="hidden max-w-40 truncate px-2 py-1.5 md:table-cell">{event.target.displayName}</td>
                           <td className="hidden max-w-36 truncate px-2 py-1.5 lg:table-cell">{scopeText(event.scope)}</td>
                           <td className="px-2 py-1.5"><div className="flex flex-wrap items-center gap-1"><OutcomeBadge outcome={event.outcome} />{event.priority !== "informational" ? <span className="hidden xl:inline"><PriorityBadge priority={event.priority} /></span> : null}</div></td>
-                          <td className="px-2 py-1.5 text-right"><Link href={auditRoutes.event(event.id)} onClick={(click) => click.stopPropagation()} className="text-2xs font-medium text-primary hover:underline">Open</Link></td>
+                          <td className="px-2 py-1.5 text-right"><Link href={auditRoutes.event(event.id)} onClick={(click) => click.stopPropagation()} className="text-xs font-medium text-primary hover:underline">Open</Link></td>
                         </tr>
                       ))}
                     </tbody>
@@ -192,9 +192,9 @@ export function AuditOverviewPage() {
                 ["Backend Ingestion", data.source.ingestion],
                 ["Integrity Verification", data.source.integrity],
                 ["Production Coverage", data.source.productionCoverage],
-              ].map(([label, value]) => <div key={label}><dt className="text-2xs text-muted-foreground">{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>)}
+              ].map(([label, value]) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="font-medium text-foreground">{value}</dd></div>)}
             </dl>
-            <p className="mt-2 text-2xs text-muted-foreground">{plural(data.source.knownGaps, "known collection gap")}. <Link href={auditRoutes.settings()} className="text-primary hover:underline">Review coverage and retention</Link></p>
+            <p className="mt-2 text-xs text-muted-foreground">{plural(data.source.knownGaps, "known collection gap")}. <Link href={auditRoutes.settings()} className="text-primary hover:underline">Review coverage and retention</Link></p>
           </Panel>
         </>
       )}

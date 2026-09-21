@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeftIcon, BanIcon, CheckCircle2Icon, Building2Icon, ClockIcon, Trash2Icon, BriefcaseIcon, KeyRoundIcon, ClipboardCheckIcon } from "lucide-react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -24,6 +24,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 function StaffDetailContent() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const staffId = (params?.staffId as string) || "";
   const caps = useStaffCapabilities();
   const mutations = useTeamMutations();
@@ -32,7 +33,14 @@ function StaffDetailContent() {
   const { data: activities = [] } = useStaffActivity(staffId);
   const { data: lifecycle = [] } = useStaffLifecycle(staffId);
 
-  const [tab, setTab] = useState("overview");
+  const urlTab = searchParams?.get("tab");
+  const [tab, setTab] = useState(urlTab || "overview");
+
+  useEffect(() => {
+    if (urlTab) {
+      setTab(urlTab);
+    }
+  }, [urlTab]);
   const [roleChangeOpen, setRoleChangeOpen] = useState(false);
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [reactivateOpen, setReactivateOpen] = useState(false);

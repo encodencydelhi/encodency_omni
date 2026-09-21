@@ -236,33 +236,33 @@ export function BillingAccountDetailPage({ accountId: propAccountId }: BillingAc
 
       {/* Scoped Tables Section */}
       <div className="bg-card rounded-sm border border-border overflow-hidden shadow-2xs">
-        <div className="flex items-center gap-1 border-b border-border bg-muted/20 px-3 py-1.5">
+        <div className="flex items-center gap-0 border-b border-border bg-transparent px-3 py-0">
           <button
             onClick={() => setActiveTab("invoices")}
-            className={`px-3 py-1 text-xs rounded-sm font-medium transition-colors ${
+            className={`px-4 py-2.5 text-xs font-medium transition-colors border-b-2 ${
               activeTab === "invoices"
-                ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
             Invoices ({companyInvoices.length})
           </button>
           <button
             onClick={() => setActiveTab("payments")}
-            className={`px-3 py-1 text-xs rounded-sm font-medium transition-colors ${
+            className={`px-4 py-2.5 text-xs font-medium transition-colors border-b-2 ${
               activeTab === "payments"
-                ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
             Payments ({companyPayments.length})
           </button>
           <button
             onClick={() => setActiveTab("ledger")}
-            className={`px-3 py-1 text-xs rounded-sm font-medium transition-colors ${
+            className={`px-4 py-2.5 text-xs font-medium transition-colors border-b-2 ${
               activeTab === "ledger"
-                ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
             Credit Ledger ({companyLedger.length})
