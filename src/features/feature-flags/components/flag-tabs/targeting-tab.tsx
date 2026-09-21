@@ -141,7 +141,7 @@ export function TargetingTab({ detail, environment }: { detail: FlagDetail; envi
         </Panel>
       ) : null}
 
-      <ChangeReviewDrawer request={request} onClose={() => setRequest(null)} />
+      <ChangeReviewDrawer request={request} onClose={() => setRequest(null)} onDone={reset} />
     </div>
   );
 }
