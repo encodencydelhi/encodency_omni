@@ -32,9 +32,9 @@ export function RangeControl({ className }: { className?: string }) {
       </div>
       {range === "custom" ? (
         <div className="flex flex-wrap items-center gap-1.5">
-          <Input type="date" aria-label="From date" value={draftFrom} max={draftTo} onChange={(event) => setDraftFrom(event.target.value)} className="h-8 w-36" />
+          <Input type="date" aria-label="From date" value={draftFrom} max={draftTo} onChange={(event) => setDraftFrom(event.target.value)} className="h-8 w-[9.75rem] min-w-[9.75rem] pr-8 [&::-webkit-calendar-picker-indicator]:opacity-100" />
           <span className="text-2xs text-muted-foreground">to</span>
-          <Input type="date" aria-label="To date" value={draftTo} min={draftFrom} onChange={(event) => setDraftTo(event.target.value)} className="h-8 w-36" />
+          <Input type="date" aria-label="To date" value={draftTo} min={draftFrom} onChange={(event) => setDraftTo(event.target.value)} className="h-8 w-[9.75rem] min-w-[9.75rem] pr-8 [&::-webkit-calendar-picker-indicator]:opacity-100" />
           <Button size="sm" variant="outline" disabled={!draftFrom || !draftTo || reversed} onClick={() => setCustom(draftFrom, draftTo)}>Apply</Button>
           {reversed ? <span role="alert" className="text-2xs text-danger">The start date is after the end date.</span> : null}
           {invalidCustom && !reversed ? <span className="text-2xs text-warning">Choose both dates. Showing the last 30 days.</span> : null}

@@ -4,7 +4,7 @@ import React from "react";
 import { SupportProvider } from "@/features/support-tickets/data/mock-provider";
 import { Topbar } from "@/components/layout/topbar";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Search, Filter } from "lucide-react";
+import { PlusCircle, Search, Filter, Download } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
@@ -31,23 +31,23 @@ export default function SupportLayout({ children }: { children: React.ReactNode 
           <div className="bg-white border-b border-[#E2E8F0] px-6 pt-6 pb-0 flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Button size="sm" className="h-8 gap-2 bg-[#0F172A] hover:bg-[#1E293B] text-white">
+                <Button size="sm" className="h-8 gap-2 bg-[#EB0711] hover:bg-[#D60811] text-white text-[12px] font-medium rounded-sm">
                   <PlusCircle size={14} />
                   Create Ticket
                 </Button>
-                <Button size="sm" variant="outline" className="h-8 gap-2 border-[#E2E8F0] text-[#475569]">
+                <Button size="sm" variant="outline" className="h-8 gap-2 border-[#E2E8F0] text-[#475569] text-[12px] font-medium rounded-sm">
                   <Search size={14} />
                   Search
                 </Button>
-                <Button size="sm" variant="outline" className="h-8 gap-2 border-[#E2E8F0] text-[#475569]">
+                <Button size="sm" variant="outline" className="h-8 gap-2 border-[#E2E8F0] text-[#475569] text-[12px] font-medium rounded-sm">
                   <Filter size={14} />
                   Filters
                 </Button>
               </div>
               
-              <div className="flex items-center gap-2 text-[12px] text-[#64748B] bg-[#F1F5F9] px-3 py-1.5 rounded-sm font-medium border border-[#E2E8F0]">
+              <div className="flex items-center gap-2 text-[12px] text-[#64748B] bg-[#FEF2F2] px-3 py-1.5 rounded-sm font-medium border border-[#FECACA]">
                 <span className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#EAB308]"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#EF4444]"></div>
                   Demo Support Data
                 </span>
               </div>
@@ -64,13 +64,13 @@ export default function SupportLayout({ children }: { children: React.ReactNode 
                     key={tab.href} 
                     href={tab.href}
                     className={cn(
-                      "pb-3 text-[13px] font-medium whitespace-nowrap transition-colors relative",
-                      isActive ? "text-[#0F172A]" : "text-[#64748B] hover:text-[#0F172A]"
+                      "pb-3 text-[12px] font-medium whitespace-nowrap transition-colors relative",
+                      isActive ? "text-[#2563EB]" : "text-[#64748B] hover:text-[#2563EB]"
                     )}
                   >
                     {tab.name}
                     {isActive && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0F172A] rounded-t-sm" />
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2563EB] rounded-t-sm" />
                     )}
                   </Link>
                 );

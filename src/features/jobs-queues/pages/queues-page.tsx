@@ -3,7 +3,17 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRightIcon, RefreshCwIcon, SearchIcon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  RefreshCwIcon,
+  SearchIcon,
+  Layers3Icon,
+  PlayCircleIcon,
+  PauseCircleIcon,
+  CircleAlertIcon,
+  UsersIcon,
+  CircleXIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
@@ -43,12 +53,12 @@ export function QueuesPage() {
     const withFailures = queues.filter((q) => q.failed > 0).length;
     const withoutWorkers = queues.filter((q) => q.registeredWorkers === 0).length;
     return [
-      { label: "Registered Queues", value: queues.length, tone: "info" },
-      { label: "Running Queues", value: running, tone: "success" },
-      { label: "Paused Queues", value: paused, tone: "warning" },
-      { label: "With Backlog", value: withBacklog, tone: "warning" },
-      { label: "With Failures", value: withFailures, tone: "danger" },
-      { label: "No Active Workers", value: withoutWorkers, tone: "danger" },
+      { label: "Registered Queues", value: queues.length, tone: "info", icon: Layers3Icon },
+      { label: "Running Queues", value: running, tone: "success", icon: PlayCircleIcon },
+      { label: "Paused Queues", value: paused, tone: "warning", icon: PauseCircleIcon },
+      { label: "With Backlog", value: withBacklog, tone: "warning", icon: CircleAlertIcon },
+      { label: "With Failures", value: withFailures, tone: "danger", icon: CircleXIcon },
+      { label: "No Active Workers", value: withoutWorkers, tone: "danger", icon: UsersIcon },
     ];
   }, [queues]);
 
@@ -113,20 +123,34 @@ export function QueuesPage() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-stretch">
-        {kpis.map((kpi) => (
-          <div key={kpi.label} className="rounded-sm border border-slate-200/90 bg-white p-3 shadow-2xs">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{kpi.label}</p>
-            <p className={cn(
-              "text-xl font-extrabold tabular-nums mt-0.5",
-              kpi.tone === "success" && "text-emerald-600",
-              kpi.tone === "warning" && "text-amber-600",
-              kpi.tone === "danger" && "text-red-600",
-              kpi.tone === "info" && "text-slate-900"
-            )}>
-              {formatNumber(kpi.value)}
-            </p>
-          </div>
-        ))}
+        {kpis.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <div key={kpi.label} className="rounded-sm border border-slate-200/90 bg-white p-3 shadow-2xs">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{kpi.label}</p>
+                <span className={cn(
+                  "flex size-6 items-center justify-center rounded-sm border",
+                  kpi.tone === "success" && "bg-emerald-50 text-emerald-600 border-emerald-200",
+                  kpi.tone === "warning" && "bg-amber-50 text-amber-600 border-amber-200",
+                  kpi.tone === "danger" && "bg-red-50 text-red-600 border-red-200",
+                  kpi.tone === "info" && "bg-blue-50 text-blue-600 border-blue-200"
+                )}>
+                  <Icon className="size-3.5" />
+                </span>
+              </div>
+              <p className={cn(
+                "text-xl font-extrabold tabular-nums mt-0.5",
+                kpi.tone === "success" && "text-emerald-600",
+                kpi.tone === "warning" && "text-amber-600",
+                kpi.tone === "danger" && "text-red-600",
+                kpi.tone === "info" && "text-slate-900"
+              )}>
+                {formatNumber(kpi.value)}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       <div className="flex items-center gap-2">

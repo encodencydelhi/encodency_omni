@@ -2,7 +2,14 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { SearchIcon, ClipboardListIcon } from "lucide-react";
+import {
+  SearchIcon,
+  ClipboardListIcon,
+  CircleAlertIcon,
+  TimerResetIcon,
+  MailboxIcon,
+  ShieldAlertIcon,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
 import { formatNumber } from "@/lib/utils/format";
@@ -37,10 +44,10 @@ export function FailuresDeadLettersPage() {
 
   const kpis = useMemo(() => {
     return [
-      { label: "Failed Jobs", value: failures.filter((j) => j.lifecycleState === "failed").length, tone: "danger" },
-      { label: "Retry Waiting", value: failures.filter((j) => j.lifecycleState === "retry_waiting").length, tone: "warning" },
-      { label: "Dead Lettered", value: failures.filter((j) => j.lifecycleState === "dead_lettered").length, tone: "danger" },
-      { label: "Recovery Pending", value: 0, tone: "info" }, // Mocked value based on recovery requests
+      { label: "Failed Jobs", value: failures.filter((j) => j.lifecycleState === "failed").length, tone: "danger", icon: CircleAlertIcon },
+      { label: "Retry Waiting", value: failures.filter((j) => j.lifecycleState === "retry_waiting").length, tone: "warning", icon: TimerResetIcon },
+      { label: "Dead Lettered", value: failures.filter((j) => j.lifecycleState === "dead_lettered").length, tone: "danger", icon: MailboxIcon },
+      { label: "Recovery Pending", value: 0, tone: "info", icon: ShieldAlertIcon }, // Mocked value based on recovery requests
     ];
   }, [failures]);
 
@@ -75,20 +82,34 @@ export function FailuresDeadLettersPage() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 items-stretch">
-        {kpis.map((kpi) => (
-          <div key={kpi.label} className="rounded-sm border border-slate-200/90 bg-white p-3 shadow-2xs">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{kpi.label}</p>
-            <p className={cn(
-              "text-xl font-extrabold tabular-nums mt-0.5",
-              kpi.tone === "success" && "text-emerald-600",
-              kpi.tone === "warning" && "text-amber-600",
-              kpi.tone === "danger" && "text-red-600",
-              kpi.tone === "info" && "text-slate-900"
-            )}>
-              {formatNumber(kpi.value)}
-            </p>
-          </div>
-        ))}
+        {kpis.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <div key={kpi.label} className="rounded-sm border border-slate-200/90 bg-white p-3 shadow-2xs">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{kpi.label}</p>
+                <span className={cn(
+                  "flex size-6 items-center justify-center rounded-sm border",
+                  kpi.tone === "success" && "bg-emerald-50 text-emerald-600 border-emerald-200",
+                  kpi.tone === "warning" && "bg-amber-50 text-amber-600 border-amber-200",
+                  kpi.tone === "danger" && "bg-red-50 text-red-600 border-red-200",
+                  kpi.tone === "info" && "bg-blue-50 text-blue-600 border-blue-200"
+                )}>
+                  <Icon className="size-3.5" />
+                </span>
+              </div>
+              <p className={cn(
+                "text-xl font-extrabold tabular-nums mt-0.5",
+                kpi.tone === "success" && "text-emerald-600",
+                kpi.tone === "warning" && "text-amber-600",
+                kpi.tone === "danger" && "text-red-600",
+                kpi.tone === "info" && "text-slate-900"
+              )}>
+                {formatNumber(kpi.value)}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       <div className="flex items-center gap-2">

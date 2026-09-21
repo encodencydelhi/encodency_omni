@@ -2,7 +2,21 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { SearchIcon, DownloadIcon, FilterXIcon, RefreshCwIcon, EyeIcon, MoreVerticalIcon } from "lucide-react";
+import {
+  SearchIcon,
+  DownloadIcon,
+  FilterXIcon,
+  RefreshCwIcon,
+  EyeIcon,
+  MoreVerticalIcon,
+  ListTodoIcon,
+  Clock3Icon,
+  ZapIcon,
+  RefreshCcwIcon,
+  CheckCircle2Icon,
+  XCircleIcon,
+  AlertTriangleIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -182,47 +196,62 @@ export function AllJobsPage() {
       {/* KPI Strip */}
       <div className="flex items-center gap-2 flex-wrap">
         {[
-          { label: "Total", value: stateCounts.total, color: "slate" },
-          { label: "Waiting", value: stateCounts.waiting, color: "amber" },
-          { label: "Running", value: stateCounts.running, color: "emerald" },
-          { label: "Retry Waiting", value: stateCounts.retry_waiting, color: "orange" },
-          { label: "Succeeded", value: stateCounts.succeeded, color: "green" },
-          { label: "Failed", value: stateCounts.failed, color: "red" },
-          { label: "Dead Lettered", value: stateCounts.dead_lettered, color: "rose" },
-        ].map((item) => (
-          <div
-            key={item.label}
-            className="flex items-center gap-2 py-1.5 px-2.5 rounded-sm border border-slate-200/90 bg-white text-xs"
-          >
-            <span className="font-medium text-slate-500">{item.label}</span>
-            <span className={cn("font-bold tabular-nums",
-              item.color === "slate" && "text-slate-900",
-              item.color === "amber" && "text-amber-700",
-              item.color === "emerald" && "text-emerald-700",
-              item.color === "orange" && "text-orange-700",
-              item.color === "green" && "text-green-700",
-              item.color === "red" && "text-red-700",
-              item.color === "rose" && "text-rose-700"
-            )}>
-              {formatNumber(item.value ?? 0)}
-            </span>
-            {item.label !== "Total" && (stateCounts.total ?? 0) > 0 && (
-              <div className="w-12 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                <div
-                  className={cn("h-full rounded-full",
-                    item.color === "amber" && "bg-amber-400",
-                    item.color === "emerald" && "bg-emerald-400",
-                    item.color === "orange" && "bg-orange-400",
-                    item.color === "green" && "bg-green-400",
-                    item.color === "red" && "bg-red-400",
-                    item.color === "rose" && "bg-rose-400"
-                  )}
-                  style={{ width: `${Math.min(((item.value ?? 0) / (stateCounts.total ?? 1)) * 100, 100)}%` }}
-                />
-              </div>
-            )}
-          </div>
-        ))}
+          { label: "Total", value: stateCounts.total, color: "slate", icon: ListTodoIcon },
+          { label: "Waiting", value: stateCounts.waiting, color: "amber", icon: Clock3Icon },
+          { label: "Running", value: stateCounts.running, color: "emerald", icon: ZapIcon },
+          { label: "Retry Waiting", value: stateCounts.retry_waiting, color: "orange", icon: RefreshCcwIcon },
+          { label: "Succeeded", value: stateCounts.succeeded, color: "green", icon: CheckCircle2Icon },
+          { label: "Failed", value: stateCounts.failed, color: "red", icon: XCircleIcon },
+          { label: "Dead Lettered", value: stateCounts.dead_lettered, color: "rose", icon: AlertTriangleIcon },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <div
+              key={item.label}
+              className="flex items-center gap-2 py-1.5 px-2.5 rounded-sm border border-slate-200/90 bg-white text-xs"
+            >
+              <span className={cn(
+                "flex size-6 items-center justify-center rounded-sm border",
+                item.color === "slate" && "bg-slate-50 text-slate-700 border-slate-200",
+                item.color === "amber" && "bg-amber-50 text-amber-700 border-amber-200",
+                item.color === "emerald" && "bg-emerald-50 text-emerald-700 border-emerald-200",
+                item.color === "orange" && "bg-orange-50 text-orange-700 border-orange-200",
+                item.color === "green" && "bg-green-50 text-green-700 border-green-200",
+                item.color === "red" && "bg-red-50 text-red-700 border-red-200",
+                item.color === "rose" && "bg-rose-50 text-rose-700 border-rose-200"
+              )}>
+                <Icon className="size-3.5" />
+              </span>
+              <span className="font-medium text-slate-500">{item.label}</span>
+              <span className={cn("font-bold tabular-nums",
+                item.color === "slate" && "text-slate-900",
+                item.color === "amber" && "text-amber-700",
+                item.color === "emerald" && "text-emerald-700",
+                item.color === "orange" && "text-orange-700",
+                item.color === "green" && "text-green-700",
+                item.color === "red" && "text-red-700",
+                item.color === "rose" && "text-rose-700"
+              )}>
+                {formatNumber(item.value ?? 0)}
+              </span>
+              {item.label !== "Total" && (stateCounts.total ?? 0) > 0 && (
+                <div className="w-12 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className={cn("h-full rounded-full",
+                      item.color === "amber" && "bg-amber-400",
+                      item.color === "emerald" && "bg-emerald-400",
+                      item.color === "orange" && "bg-orange-400",
+                      item.color === "green" && "bg-green-400",
+                      item.color === "red" && "bg-red-400",
+                      item.color === "rose" && "bg-rose-400"
+                    )}
+                    style={{ width: `${Math.min(((item.value ?? 0) / (stateCounts.total ?? 1)) * 100, 100)}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Filters Bar */}

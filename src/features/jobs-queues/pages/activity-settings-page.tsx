@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { SettingsIcon, ActivityIcon, ShieldIcon, DatabaseIcon } from "lucide-react";
+import { ActivityIcon, ArchiveIcon, DatabaseIcon, HardDriveIcon, SettingsIcon, ShieldIcon } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatDateTime, formatRelativeTime } from "@/lib/utils/format";
 import { useJobsOverview } from "../data/hooks";
@@ -121,14 +120,20 @@ export function ActivitySettingsPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
                <div className="p-3 bg-slate-50 rounded-sm border border-slate-100">
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Redis Memory</p>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Redis Memory</p>
+                    <HardDriveIcon className="size-4 text-blue-600" />
+                  </div>
                   <p className="text-lg font-bold text-slate-900">1.2 GB <span className="text-xs font-normal text-slate-500">/ 4 GB</span></p>
                   <div className="w-full bg-slate-200 h-1.5 mt-2 rounded-full overflow-hidden">
                     <div className="bg-blue-500 h-full w-[30%]" />
                   </div>
                </div>
                <div className="p-3 bg-slate-50 rounded-sm border border-slate-100">
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Postgres Archive</p>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Postgres Archive</p>
+                    <ArchiveIcon className="size-4 text-slate-600" />
+                  </div>
                   <p className="text-lg font-bold text-slate-900">45 GB</p>
                   <p className="text-xs text-slate-500 mt-1">2.4M archived jobs</p>
                </div>

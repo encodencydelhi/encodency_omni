@@ -40,20 +40,44 @@ export function useEscalatedTickets() {
 
 export function useTeamWorkload() {
   const { tickets, teams } = useSupport();
-  
   return useMemo(() => {
-    const workload = teams.map(team => {
+    return teams.map(team => {
       const teamTickets = tickets.filter(t => t.assignedTeamId === team.id && t.status !== "Resolved" && t.status !== "Closed");
       const unassigned = teamTickets.filter(t => !t.assignedStaffId).length;
       const highUrgent = teamTickets.filter(t => t.priority === "High" || t.priority === "Urgent").length;
-      
-      return {
-        team,
-        activeTickets: teamTickets.length,
-        unassigned,
-        highUrgent
-      };
+      return { team, activeTickets: teamTickets.length, unassigned, highUrgent };
     });
-    return workload;
   }, [tickets, teams]);
+}
+
+export function useTicketsByCompany(companyId: string) {
+  const { tickets } = useSupport();
+  return useMemo(() => tickets.filter(t => t.companyId === companyId), [tickets, companyId]);
+}
+
+export function useAwaitingSupport() {
+  const { tickets } = useSupport();
+  return useMemo(() => {
+    return tickets.filter(t => 
+      t.status !== "Resolved" && 
+      t.status !== "Closed" && 
+      t.assignedStaffId
+    );
+  }, [tickets]);
+}
+
+export function useAwaitingCustomer() {
+  const { tickets } = useSupport();
+  return useMemo(() => {
+    return tickets.filter(t => t.status === "Waiting for Customer" || t.status === "Waiting for Internal Team");
+  }, [tickets]);
+}
+
+export function useBreachedTickets() {
+  const { tickets } = useSupport();
+  return useMemo(() => {
+    return tickets.filter(t => 
+      t.slaInstance?.firstResponseState === "Breached" || t.slaInstance?.resolutionState === "Breached"
+    );
+  }, [tickets]);
 }
