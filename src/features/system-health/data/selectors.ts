@@ -76,5 +76,5 @@ export function sortServicesByAttention(snapshot: SystemHealthSnapshotV2) {
 }
 
 export function environmentLabel(environment: HealthEnvironment) {
-  return environment[0].toUpperCase() + environment.slice(1);
+  return environment.charAt(0).toUpperCase() + environment.slice(1);
 }

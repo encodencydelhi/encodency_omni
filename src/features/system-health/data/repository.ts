@@ -48,5 +48,5 @@ export function makeIncident(input: CreateIncidentInput, index: number): Inciden
 }
 
 export function transitionLabel(state: IncidentState) {
-  return state === "monitoring_recovery" ? "Monitoring Recovery" : state[0].toUpperCase() + state.slice(1);
+  return state === "monitoring_recovery" ? "Monitoring Recovery" : state.charAt(0).toUpperCase() + state.slice(1);
 }

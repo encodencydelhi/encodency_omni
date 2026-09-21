@@ -7,22 +7,14 @@ import {
   Activity,
   AlertTriangle,
   ArrowLeft,
-  CalendarClock,
-  CheckCircle2,
-  ChevronDown,
-  ClipboardList,
   Download,
   Eye,
-  FileJson,
-  Filter,
   HeartPulse,
-  Info,
   Layers3,
   MoreHorizontal,
   Plus,
   Search,
   ShieldAlert,
-  SlidersHorizontal,
   Wrench,
   X,
 } from "lucide-react";
@@ -36,7 +28,6 @@ import {
   activeIncidents,
   dependenciesForService,
   derivePlatformState,
-  environmentLabel,
   incidentsForService,
   observationFor,
   serviceHealth,
@@ -316,17 +307,17 @@ function Overview({ snapshot, openPreview }: { snapshot: SystemHealthSnapshotV2;
   const services = sortServicesByAttention(snapshot).slice(0, 6);
   const impacts = snapshot.impacts.filter((impact) => impact.incidentId && active.some((incident) => incident.id === impact.incidentId));
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       <Kpis snapshot={snapshot} />
-      <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+      <div className="grid gap-1 xl:grid-cols-[1.4fr_1fr]">
         <Card><CardTitle title="Service Health Overview" subtitle="Registered services and their latest demo observations." action={<ButtonLink href={`${BASE}/services`}>View All</ButtonLink>} /><ServiceTable snapshot={snapshot} services={services} onPreview={openPreview} /></Card>
         <Card><CardTitle title="Active Incidents" subtitle="Managed incident records, separate from raw health state." action={<ButtonLink href={`${BASE}/incidents`}>View All</ButtonLink>} /><IncidentList snapshot={snapshot} incidents={active} compact /></Card>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-1 xl:grid-cols-2">
         <Card><CardTitle title="Operational Impact" subtitle="Confirmed, potential and unknown impact records." /><ImpactTable snapshot={snapshot} impacts={impacts.slice(0, 5)} /></Card>
         <Card><CardTitle title="Dependency Attention" subtitle="Dependencies with degraded, unknown or stale observations." /><DependencyList snapshot={snapshot} dependencies={dependencies.slice(0, 6)} /></Card>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-1 xl:grid-cols-2">
         <AvailabilityPanel snapshot={snapshot} />
         <Card><CardTitle title="Recent Health Events" subtitle="Health activity, incident updates and freshness changes." /><ActivityTable snapshot={snapshot} activity={snapshot.activity.slice(0, 6)} /></Card>
       </div>
@@ -337,9 +328,36 @@ function Overview({ snapshot, openPreview }: { snapshot: SystemHealthSnapshotV2;
 
 function IncidentList({ snapshot, incidents, compact = false }: { snapshot: SystemHealthSnapshotV2; incidents: IncidentRecord[]; compact?: boolean }) {
   if (!incidents.length) return <div className="p-4"><Empty title="No Active Incidents" body="Resolved records remain available in the incident directory." /></div>;
+  if (compact) {
+    return (
+      <div className="divide-y divide-slate-100">
+        {incidents.map((incident) => {
+          const service = snapshot.services.find((item) => item.id === incident.primaryServiceId);
+          return (
+            <Link key={incident.id} href={`${BASE}/incidents/${incident.id}`} className="block px-4 py-3 hover:bg-slate-50">
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-[#111C3A]">{incident.reference}</p>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-slate-600">{incident.title}</p>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <Badge className={priorityTone[incident.priority]}>{label(incident.priority)}</Badge>
+                  <Badge className={stateTone[incident.state]}>{transitionLabel(incident.state)}</Badge>
+                </div>
+              </div>
+              <div className="mt-2 grid gap-1 text-[11px] text-slate-500 sm:grid-cols-2">
+                <span className="truncate">Service: {service?.name ?? "Unknown"}</span>
+                <span className="truncate sm:text-right">Owner: {incident.ownerName ?? "Unassigned"}</span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
   return (
     <div className="overflow-x-auto">
-      <table className={cn("w-full text-left", !compact && "min-w-[920px]")}>
+      <table className="w-full min-w-[920px] text-left">
         <thead className="bg-slate-50 text-[11px] uppercase text-slate-500">
           <tr><th className="px-3 py-2">Incident</th><th className="px-3 py-2">Priority</th><th className="px-3 py-2">State</th><th className="px-3 py-2">Primary Service</th><th className="px-3 py-2">Owner</th><th className="px-3 py-2 text-right">Action</th></tr>
         </thead>
@@ -438,7 +456,7 @@ function ServicePreview({ snapshot, service, onClose }: { snapshot: SystemHealth
   const freshness = sourceFreshness(snapshot, observation);
   return (
     <Drawer title={service?.name ?? "Service Preview"} open={Boolean(service)} onClose={onClose}>
-      {service ? <div className="space-y-4">
+      {service ? <div className="space-y-1">
         <div className="grid gap-1 sm:grid-cols-3">
           <MiniMetric label="Observed Health" value={label(health)} />
           <MiniMetric label="Freshness" value={label(freshness)} />
@@ -483,7 +501,7 @@ function ServiceDetailPage({ snapshot, serviceId }: { snapshot: SystemHealthSnap
   const incidents = incidentsForService(snapshot, service.id);
   const impacts = snapshot.impacts.filter((impact) => impact.serviceId === service.id);
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       <Link href={`${BASE}/services`} className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-[#111C3A]"><ArrowLeft className="size-4" />Back to Services</Link>
       <Card className="p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -497,11 +515,11 @@ function ServiceDetailPage({ snapshot, serviceId }: { snapshot: SystemHealthSnap
           <MiniMetric label="Operational Control" value={label(observation?.operationalControl ?? "unknown")} />
         </div>
       </Card>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-1 xl:grid-cols-2">
         <Card><CardTitle title="Health & Metrics" subtitle={observation?.summary ?? "No observation available."} /><div className="p-4"><MiniMetric label={observation?.metricLabel ?? "Metric"} value={observation?.metricValue ?? "Unknown"} /></div></Card>
         <Card><CardTitle title="Service Dependencies" subtitle="Dependency health is shown without expanding it into confirmed company impact." /><DependencyList snapshot={snapshot} dependencies={dependencies} /></Card>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-1 xl:grid-cols-2">
         <Card><CardTitle title="Service Incidents" /><IncidentList snapshot={snapshot} incidents={incidents} /></Card>
         <Card><CardTitle title="Service Activity" /><ActivityTable snapshot={snapshot} activity={snapshot.activity.filter((item) => item.serviceId === service.id)} /></Card>
       </div>
@@ -518,7 +536,7 @@ function DependenciesPage({ snapshot }: { snapshot: SystemHealthSnapshotV2 }) {
   const selectedId = useSearchParams().get("dependency") ?? snapshot.dependencies[0]?.id;
   const selected = snapshot.dependencies.find((dependency) => dependency.id === selectedId);
   return (
-    <div className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
+    <div className="grid gap-1 xl:grid-cols-[1fr_0.9fr]">
       <Card><CardTitle title="Dependencies Directory" subtitle="Infrastructure and external dependencies with source-aware freshness." /><DependencyList snapshot={snapshot} dependencies={snapshot.dependencies} /></Card>
       <Card><CardTitle title="Dependency Detail" subtitle="Potential impact is not presented as confirmed without evidence." />{selected ? <div className="space-y-3 p-4"><div className="grid gap-1 sm:grid-cols-2"><MiniMetric label="Observed Health" value={label(selected.observedHealth)} /><MiniMetric label="Freshness" value={label(selected.freshness)} /></div><p className="text-sm font-bold text-[#111C3A]">{selected.name}</p><p className="text-xs text-slate-600">{selected.impactSummary}</p><div className="grid gap-2">{snapshot.services.filter((service) => service.dependencyIds.includes(selected.id)).map((service) => <Link key={service.id} href={`${BASE}/services/${service.id}`} className="rounded-md border border-slate-200 p-2 text-xs font-semibold hover:bg-slate-50">{service.name}<span className="block text-[11px] font-normal text-slate-500">{service.category}</span></Link>)}</div></div> : <Empty title="No Dependencies" body="No dependencies are registered." />}</Card>
     </div>
@@ -562,25 +580,26 @@ function IncidentDetailPage({ snapshot, incidents, setIncidents, incidentId }: {
   const [note, setNote] = useState("");
   const [resolution, setResolution] = useState("");
   if (!incident) return <NotFound title="Incident Not Found" body="The incident reference is not present in the shared demo state." href={`${BASE}/incidents`} />;
-  const service = snapshot.services.find((item) => item.id === incident.primaryServiceId);
-  const update = (next: IncidentRecord) => setIncidents(incidents.map((item) => item.id === incident.id ? next : item));
+  const currentIncident = incident;
+  const service = snapshot.services.find((item) => item.id === currentIncident.primaryServiceId);
+  const update = (next: IncidentRecord) => setIncidents(incidents.map((item) => item.id === currentIncident.id ? next : item));
   function addNote() {
     if (!note.trim()) return;
-    update({ ...incident, timeline: [{ id: `${incident.id}-${Date.now()}`, at: new Date().toISOString(), actor: incident.ownerName ?? "Super Admin", type: "update", note }, ...incident.timeline], currentFindings: note });
+    update({ ...currentIncident, timeline: [{ id: `${currentIncident.id}-${Date.now()}`, at: new Date().toISOString(), actor: currentIncident.ownerName ?? "Super Admin", type: "update", note }, ...currentIncident.timeline], currentFindings: note });
     setNote("");
   }
   function changeState(state: IncidentState) {
-    update({ ...incident, state, resolvedAt: state === "resolved" ? new Date().toISOString() : incident.resolvedAt, recoveryEvidence: state === "resolved" ? resolution || "Resolved in frontend demo workflow after evidence review." : incident.recoveryEvidence, timeline: [{ id: `${incident.id}-${Date.now()}`, at: new Date().toISOString(), actor: incident.ownerName ?? "Super Admin", type: state === "resolved" ? "resolution" : "state_change", note: `State changed to ${transitionLabel(state)}. Service health was not automatically changed.` }, ...incident.timeline] });
+    update({ ...currentIncident, state, resolvedAt: state === "resolved" ? new Date().toISOString() : currentIncident.resolvedAt, recoveryEvidence: state === "resolved" ? resolution || "Resolved in frontend demo workflow after evidence review." : currentIncident.recoveryEvidence, timeline: [{ id: `${currentIncident.id}-${Date.now()}`, at: new Date().toISOString(), actor: currentIncident.ownerName ?? "Super Admin", type: state === "resolved" ? "resolution" : "state_change", note: `State changed to ${transitionLabel(state)}. Service health was not automatically changed.` }, ...currentIncident.timeline] });
   }
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       <Link href={`${BASE}/incidents`} className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-[#111C3A]"><ArrowLeft className="size-4" />Back to Incidents</Link>
-      <Card className="p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-slate-500">{incident.reference}</p><h2 className="text-xl font-bold text-[#111C3A]">{incident.title}</h2><p className="mt-1 max-w-3xl text-sm text-slate-600">{incident.summary}</p></div><div className="flex gap-1"><Badge className={priorityTone[incident.priority]}>{label(incident.priority)}</Badge><Badge className={stateTone[incident.state]}>{transitionLabel(incident.state)}</Badge></div></div><div className="mt-4 grid gap-1 sm:grid-cols-4"><MiniMetric label="Primary Service" value={service?.name ?? "Unknown"} /><MiniMetric label="Owner" value={incident.ownerName ?? "Unassigned"} /><MiniMetric label="Detected" value={formatDate(incident.detectedAt)} /><MiniMetric label="Resolved" value={formatDate(incident.resolvedAt)} /></div></Card>
-      <div className="grid gap-4 xl:grid-cols-[1fr_0.85fr]">
-        <Card><CardTitle title="Incident Timeline" subtitle="Chronological updates recorded in frontend demo state." /><div className="space-y-2 p-4">{incident.timeline.map((entry) => <div key={entry.id} className="rounded-md border border-slate-200 p-3"><p className="text-xs font-bold text-[#111C3A]">{label(entry.type)} · {entry.actor}</p><p className="mt-1 text-xs text-slate-600">{entry.note}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(entry.at)}</p></div>)}</div></Card>
-        <Card><CardTitle title="Incident Workflow" subtitle="Updates never imply infrastructure repair." /><div className="space-y-3 p-4"><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Add investigation update" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><button type="button" onClick={addNote} className="w-full rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">Add Incident Update</button><select value={incident.state} onChange={(event) => changeState(event.target.value as IncidentState)} className="w-full rounded-md border border-slate-200 px-2 py-2 text-sm"><option value="investigating">Investigating</option><option value="identified">Identified</option><option value="monitoring_recovery">Monitoring Recovery</option><option value="resolved">Resolved</option></select><textarea value={resolution} onChange={(event) => setResolution(event.target.value)} placeholder="Recovery evidence for resolution review" className="min-h-20 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><p className="text-[11px] text-slate-500">Resolving this incident changes only the incident workflow. It does not mark any service healthy.</p></div></Card>
+      <Card className="p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-slate-500">{currentIncident.reference}</p><h2 className="text-xl font-bold text-[#111C3A]">{currentIncident.title}</h2><p className="mt-1 max-w-3xl text-sm text-slate-600">{currentIncident.summary}</p></div><div className="flex gap-1"><Badge className={priorityTone[currentIncident.priority]}>{label(currentIncident.priority)}</Badge><Badge className={stateTone[currentIncident.state]}>{transitionLabel(currentIncident.state)}</Badge></div></div><div className="mt-4 grid gap-1 sm:grid-cols-4"><MiniMetric label="Primary Service" value={service?.name ?? "Unknown"} /><MiniMetric label="Owner" value={currentIncident.ownerName ?? "Unassigned"} /><MiniMetric label="Detected" value={formatDate(currentIncident.detectedAt)} /><MiniMetric label="Resolved" value={formatDate(currentIncident.resolvedAt)} /></div></Card>
+      <div className="grid gap-1 xl:grid-cols-[1fr_0.85fr]">
+        <Card><CardTitle title="Incident Timeline" subtitle="Chronological updates recorded in frontend demo state." /><div className="space-y-2 p-4">{currentIncident.timeline.map((entry) => <div key={entry.id} className="rounded-md border border-slate-200 p-3"><p className="text-xs font-bold text-[#111C3A]">{label(entry.type)} - {entry.actor}</p><p className="mt-1 text-xs text-slate-600">{entry.note}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(entry.at)}</p></div>)}</div></Card>
+        <Card><CardTitle title="Incident Workflow" subtitle="Updates never imply infrastructure repair." /><div className="space-y-3 p-4"><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Add investigation update" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><button type="button" onClick={addNote} className="w-full rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">Add Incident Update</button><select value={currentIncident.state} onChange={(event) => changeState(event.target.value as IncidentState)} className="w-full rounded-md border border-slate-200 px-2 py-2 text-sm"><option value="investigating">Investigating</option><option value="identified">Identified</option><option value="monitoring_recovery">Monitoring Recovery</option><option value="resolved">Resolved</option></select><textarea value={resolution} onChange={(event) => setResolution(event.target.value)} placeholder="Recovery evidence for resolution review" className="min-h-20 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><p className="text-[11px] text-slate-500">Resolving this incident changes only the incident workflow. It does not mark any service healthy.</p></div></Card>
       </div>
-      <Card><CardTitle title="Incident Impact" /><ImpactTable snapshot={snapshot} impacts={snapshot.impacts.filter((impact) => incident.impactIds.includes(impact.id))} /></Card>
+      <Card><CardTitle title="Incident Impact" /><ImpactTable snapshot={snapshot} impacts={snapshot.impacts.filter((impact) => currentIncident.impactIds.includes(impact.id))} /></Card>
     </div>
   );
 }
@@ -589,7 +608,7 @@ function ImpactAvailabilityPage({ snapshot }: { snapshot: SystemHealthSnapshotV2
   const [serviceId, setServiceId] = useState("all");
   const points = snapshot.availability.filter((point) => serviceId === "all" || point.serviceId === serviceId);
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       <Card><CardTitle title="Impact & Availability" subtitle="Availability reporting separates observed, degraded, unavailable and unknown intervals." action={<select value={serviceId} onChange={(event) => setServiceId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-xs"><option value="all">All services</option>{snapshot.services.map((service) => <option key={service.id} value={service.id}>{service.name}</option>)}</select>} /><div className="p-4"><AvailabilityPanel snapshot={{ ...snapshot, availability: points }} /></div></Card>
       <Card><CardTitle title="Company Impact Table" /><ImpactTable snapshot={snapshot} impacts={snapshot.impacts} /></Card>
     </div>
@@ -598,13 +617,13 @@ function ImpactAvailabilityPage({ snapshot }: { snapshot: SystemHealthSnapshotV2
 
 function MaintenancePage({ snapshot, compact = false }: { snapshot: SystemHealthSnapshotV2; compact?: boolean }) {
   return (
-    <Card><CardTitle title={compact ? "Upcoming Maintenance" : "Maintenance"} subtitle="Maintenance visibility reads the Global Settings-owned schedule." action={!compact ? <ButtonLink href={`${ROUTES.superAdmin.settings}/maintenance`}><Wrench className="size-4" />Open Global Settings</ButtonLink> : <ButtonLink href={`${BASE}/maintenance`}>View</ButtonLink>} /><div className="divide-y divide-slate-100">{snapshot.maintenance.map((item) => <div key={item.id} className="px-4 py-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{item.title}</p><Badge className={item.state === "in_progress" ? freshnessTone.stale : healthTone.unknown}>{label(item.state)}</Badge></div><p className="mt-1 text-xs text-slate-600">{item.scope}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(item.startsAt)} to {formatDate(item.endsAt)} · Source: Global Settings</p></div>)}</div></Card>
+    <Card><CardTitle title={compact ? "Upcoming Maintenance" : "Maintenance"} subtitle="Maintenance visibility reads the Global Settings-owned schedule." action={!compact ? <ButtonLink href={`${ROUTES.superAdmin.settings}/maintenance`}><Wrench className="size-4" />Open Global Settings</ButtonLink> : <ButtonLink href={`${BASE}/maintenance`}>View</ButtonLink>} /><div className="divide-y divide-slate-100">{snapshot.maintenance.map((item) => <div key={item.id} className="px-4 py-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{item.title}</p><Badge className={item.state === "in_progress" ? freshnessTone.stale : healthTone.unknown}>{label(item.state)}</Badge></div><p className="mt-1 text-xs text-slate-600">{item.scope}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(item.startsAt)} to {formatDate(item.endsAt)} - Source: Global Settings</p></div>)}</div></Card>
   );
 }
 
 function ActivityMonitoringPage({ snapshot }: { snapshot: SystemHealthSnapshotV2 }) {
   return (
-    <div className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
+    <div className="grid gap-1 xl:grid-cols-[1fr_0.9fr]">
       <Card><CardTitle title="Health Activity" subtitle="Monitoring events stay in System Health activity, not high-impact audit history." /><ActivityTable snapshot={snapshot} activity={snapshot.activity} /></Card>
       <Card><CardTitle title="Monitoring Coverage" subtitle="Every source is clearly labelled as demo-backed until backend telemetry is connected." /><div className="divide-y divide-slate-100">{snapshot.sources.map((source) => <div key={source.id} className="px-4 py-3"><div className="flex items-center justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{source.name}</p><Badge className={source.backendConnected ? healthTone.healthy : freshnessTone.stale}>{source.backendConnected ? "Backend Connected" : "Demo Only"}</Badge></div><p className="mt-1 text-xs text-slate-600">{label(source.kind)} · freshness threshold {source.freshnessThresholdMinutes} min</p></div>)}</div></Card>
     </div>
@@ -631,7 +650,7 @@ export function SystemHealthOperationsCenter({ page, serviceId, incidentId }: { 
     downloadFile(`system-health-${environment}.json`, JSON.stringify({ ...workingSnapshot, limitation: "Demo Monitoring Data - Production Telemetry Not Connected" }, null, 2), "application/json");
   }
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       <Header snapshot={workingSnapshot} setEnvironment={setEnvironment} exportJson={exportJson} />
       <Tabs />
       {!SYSTEM_HEALTH_CAPABILITIES.canViewSystemHealth ? <NotFound title="Insufficient Capability" body="Your role cannot view System Health." href={ROUTES.superAdmin.dashboard} /> : null}

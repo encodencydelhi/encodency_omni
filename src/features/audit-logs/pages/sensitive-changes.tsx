@@ -8,7 +8,7 @@ import { FilterSelect } from "@/components/shared/filter-select";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Panel, StatCard, StatGrid } from "@/features/companies/components/primitives";
+import { Panel, StatGrid } from "@/features/companies/components/primitives";
 import { StatGridSkeleton } from "@/features/companies/components/states";
 import { cn } from "@/lib/utils/cn";
 import { DemoTag } from "../components/badges";
