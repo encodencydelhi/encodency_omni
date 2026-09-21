@@ -199,6 +199,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Global Settings",
         href: ROUTES.superAdmin.settings,
         icon: SettingsIcon,
+        matchPrefixes: [ROUTES.superAdmin.settings],
         permission: "companies:read",
       },
     ],

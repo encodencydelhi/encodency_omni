@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { APP } from "@/config/app";
+import { usePlatformIdentity } from "@/features/global-settings/data/hooks";
 import { cn } from "@/lib/utils/cn";
 import { formatTime } from "@/lib/utils/format";
 import { DASHBOARD_RANGES, type DashboardRange } from "../services/dashboard-service";
@@ -42,6 +42,7 @@ export function DashboardHeader({
   onRefresh,
   isRefreshing,
 }: DashboardHeaderProps) {
+  const identity = usePlatformIdentity();
   return (
     <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div className="space-y-1">
@@ -49,7 +50,7 @@ export function DashboardHeader({
           Platform Overview
         </h1>
         <p className="text-[0.8125rem] text-muted-foreground">
-          Real-time metrics and system health for {APP.name}.
+          Real-time metrics and system health for {identity.name}.
         </p>
       </div>
 

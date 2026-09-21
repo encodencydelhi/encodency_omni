@@ -10,6 +10,7 @@ import { AppBreadcrumb } from "./app-breadcrumb";
 import { SidebarProvider, useSidebar } from "./sidebar-context";
 import { Topbar } from "./topbar";
 import { HealthProvider } from "@/features/system-health/context/health-provider";
+import { MaintenanceBannerHost } from "@/features/global-settings/components/maintenance-banner-host";
 
 function ShellFrame({ children }: { children: ReactNode }) {
   const { isCollapsed } = useSidebar();
@@ -25,6 +26,7 @@ function ShellFrame({ children }: { children: ReactNode }) {
       >
         <Topbar />
         <AppBreadcrumb />
+        <MaintenanceBannerHost />
 
         <main className="w-full flex-1 min-w-0 max-w-full px-4 py-4 sm:px-5 xl:px-6">
           {children}

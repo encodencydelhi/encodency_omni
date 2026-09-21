@@ -12,14 +12,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { APP } from "@/config/app";
 import { ROUTES } from "@/config/routes";
 import { useAuth } from "@/features/auth/components/auth-provider";
+import { usePlatformIdentity } from "@/features/global-settings/data/hooks";
 import { getInitials } from "@/lib/utils/format";
 import { INTERNAL_ROLE } from "@/types/domain/team";
 
 export function UserMenu() {
   const { user, logout } = useAuth();
+  const identity = usePlatformIdentity();
   if (!user) return null;
 
   const role = INTERNAL_ROLE[user.role];
@@ -66,7 +67,7 @@ export function UserMenu() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <a href={`mailto:${APP.supportEmail}`}>
+          <a href={`mailto:${identity.supportEmail}`}>
             <LifeBuoyIcon />
             Contact platform ops
           </a>

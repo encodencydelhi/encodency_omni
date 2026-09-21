@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils/cn";
 import { formatCurrency } from "@/lib/utils/format";
 import type { BillingCycle } from "@/types/domain/subscription";
 import type { PlanKey } from "@/types/domain/plan";
+import { useNewCompanyDefaults } from "@/features/global-settings/data/hooks";
+import type { NewCompanyDefaults } from "@/features/global-settings/data/types";
 import { isoDaysFromNow, nowIso } from "../data/clock";
 import {
   COMPANY_SIZES,
@@ -80,7 +82,8 @@ interface WizardForm {
   clientWebsite: string;
 }
 
-function initialForm(): WizardForm {
+/** `defaults` are the platform new-company defaults (Global Settings); they only ever seed a company being created now. */
+function initialForm(defaults?: NewCompanyDefaults): WizardForm {
   return {
     name: "",
     legalName: "",
@@ -105,10 +108,10 @@ function initialForm(): WizardForm {
     overrideExpiry: toDateInput(isoDaysFromNow(30)),
     overrideReason: "",
     internalNotes: "",
-    timezone: "Asia/Kolkata",
-    currency: "INR",
-    language: "English",
-    region: "India (Mumbai)",
+    timezone: defaults?.timezone ?? "Asia/Kolkata",
+    currency: defaults?.currency ?? "INR",
+    language: defaults?.language ?? "English",
+    region: defaults?.region ?? "India (Mumbai)",
     createClient: false,
     clientName: "",
     clientWebsite: "",
@@ -167,16 +170,21 @@ function writeDraft(form: WizardForm | null): void {
 }
 
 export function CreateCompanyWizard({ open, onClose }: { open: boolean; onClose: () => void }) {
+  // The platform new-company defaults (Global Settings) seed the form, so wait for them: a form that
+  // filled in after opening would overwrite what someone had already started typing. If the
+  // configuration cannot be read, the built-in defaults are used instead of blocking company creation.
+  const defaults = useNewCompanyDefaults();
   // Remount on each opening so state never leaks between sessions of the wizard.
-  return open ? <WizardBody onClose={onClose} /> : null;
+  return open && !defaults.isPending ? <WizardBody onClose={onClose} newDefaults={defaults.data} /> : null;
 }
 
-function WizardBody({ onClose }: { onClose: () => void }) {
+function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults?: NewCompanyDefaults }) {
   const mutations = useCompanyMutations();
   const plansQuery = usePlans();
   const directory = useDirectory();
 
-  const [form, setForm] = useState<WizardForm>(initialForm);
+  const baseline = useMemo(() => initialForm(newDefaults), [newDefaults]);
+  const [form, setForm] = useState<WizardForm>(baseline);
   const [step, setStep] = useState(0);
   const [attempted, setAttempted] = useState<number[]>([]);
   const [pending, setPending] = useState(false);
@@ -192,7 +200,7 @@ function WizardBody({ onClose }: { onClose: () => void }) {
   const plan = plans.find((item) => item.tier === form.planTier);
   const effectiveTrialEnd = form.trialEndsAt || (plan ? toDateInput(new Date(Date.parse(form.startDate || nowIso()) + plan.trialDays * 86_400_000).toISOString()) : "");
 
-  const dirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initialForm()), [form]) && !created;
+  const dirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(baseline), [form, baseline]) && !created;
 
   const stepErrors = (index: number) => validateStep(index, form);
   const allErrors = useMemo(() => STEPS.map((_, index) => validateStep(index, form)), [form]);
@@ -562,7 +570,7 @@ function WizardBody({ onClose }: { onClose: () => void }) {
                   <div className="space-y-3">
                     <Panel title="Workspace defaults" description="Regional settings the organisation starts with. They can be changed later.">
                       <div className="grid gap-3 sm:grid-cols-2">
-                        {select("timezone", "Timezone", TIMEZONES)}
+                        {select("timezone", "Timezone", TIMEZONES.includes(form.timezone as (typeof TIMEZONES)[number]) ? TIMEZONES : [form.timezone, ...TIMEZONES])}
                         {select("currency", "Currency", CURRENCIES)}
                         {select("language", "Language", LANGUAGES)}
                         {select("region", "Organisation region", REGIONS)}

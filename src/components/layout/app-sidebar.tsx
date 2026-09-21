@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { APP } from "@/config/app";
 import { ROUTES } from "@/config/routes";
+import { usePlatformIdentity } from "@/features/global-settings/data/hooks";
 import { cn } from "@/lib/utils/cn";
 import { EnCodencyLogo } from "./brand-mark";
 import { useSidebar } from "./sidebar-context";
@@ -13,11 +14,12 @@ import { SidebarNav } from "./sidebar-nav";
 
 /** The red logo block that heads the rail, as on the corporate mark. */
 function SidebarBrand({ isCollapsed, onNavigate }: { isCollapsed: boolean; onNavigate?: () => void }) {
+  const identity = usePlatformIdentity();
   return (
     <Link
       href={ROUTES.superAdmin.dashboard}
       onClick={onNavigate}
-      aria-label={`${APP.name} ${APP.panelName}`}
+      aria-label={`${identity.name} ${APP.panelName}`}
       className={cn(
         "flex h-[60px] shrink-0 items-center justify-center border-b border-slate-800/50",
         isCollapsed ? "px-0" : "px-3",

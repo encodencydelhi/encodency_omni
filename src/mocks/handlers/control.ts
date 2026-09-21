@@ -3,11 +3,9 @@ import type { AuditLogEntry } from "@/types/domain/audit-log";
 import { DASHBOARD_SNAPSHOT } from "../data/dashboard";
 import type { FeatureFlag, ToggleFeatureFlagInput } from "@/types/domain/feature-flag";
 import type { AdminNotification } from "@/types/domain/notification";
-import type { PlatformSettings, SettingsSectionKey } from "@/types/domain/settings";
 import type { SupportTicket } from "@/types/domain/support";
 import { AUDIT_LOG, FEATURE_FLAGS, FLAG_CATEGORIES, NOTIFICATIONS, SUPPORT_TICKETS } from "../data/control";
 import { SUPPORT_AGENTS } from "../data/internal-team";
-import { PLATFORM_SETTINGS } from "../data/settings";
 import { compare, dateAtOrAfter, dateAtOrBefore, equals, queryCollection } from "../lib/collection";
 import type { MockRoutes } from "../lib/router";
 
@@ -163,17 +161,5 @@ export const controlRoutes: MockRoutes = {
   "PATCH /notifications/:id/read": ({ params }) => {
     readNotifications.add(params.id ?? "");
     return { success: true };
-  },
-
-  "GET /settings": () => PLATFORM_SETTINGS,
-
-  "PATCH /settings/:section": ({ params, body }) => {
-    const section = (params.section ?? "") as SettingsSectionKey;
-    if (!(section in PLATFORM_SETTINGS)) {
-      throw new ApiError({ code: "NOT_FOUND", status: 404, message: "Unknown settings section." });
-    }
-
-    Object.assign(PLATFORM_SETTINGS[section], body as Partial<PlatformSettings[SettingsSectionKey]>);
-    return PLATFORM_SETTINGS;
   },
 };

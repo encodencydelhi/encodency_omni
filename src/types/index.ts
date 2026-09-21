@@ -12,7 +12,6 @@ export * from "./domain/job";
 export * from "./domain/notification";
 export * from "./domain/plan";
 export * from "./domain/project";
-export * from "./domain/settings";
 export * from "./domain/subscription";
 export * from "./domain/support";
 export * from "./domain/system-health";

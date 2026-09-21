@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useHealth } from "@/features/system-health/context/health-provider";
 import { ROUTES } from "@/config/routes";
+import { usePlatformIdentity } from "@/features/global-settings/data/hooks";
 import { cn } from "@/lib/utils/cn";
 
 export function AppFooter() {
   const { globalStatus, isLoading } = useHealth();
+  const identity = usePlatformIdentity();
 
   const isUp = globalStatus === "operational";
   const isPending = isLoading;
@@ -16,7 +18,7 @@ export function AppFooter() {
       <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
         <span className="flex items-center gap-1.5">
           <span className="bg-gradient-to-r from-red-500 to-rose-400 bg-clip-text font-bold tracking-wide text-transparent">
-            OmniPlatform
+            {identity.shortName}
           </span>
         </span>
         <span className="h-3 w-px bg-slate-700" />
