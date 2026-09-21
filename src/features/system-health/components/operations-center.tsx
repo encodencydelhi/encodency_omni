@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -38,6 +38,8 @@ import {
 import type {
   DependencyRecord,
   HealthEnvironment,
+  ImpactConfidence,
+  ImpactRecord,
   IncidentPriority,
   IncidentRecord,
   IncidentState,
@@ -93,7 +95,7 @@ function ButtonLink({ href, children, className }: { href: string; children: Rea
   return <Link href={href} className={cn("inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50", className)}>{children}</Link>;
 }
 
-function Card({ children, className }: { children: React.ReactNode; className?: string }) {
+function Card({ children, className }: { children?: React.ReactNode; className?: string }) {
   return <section className={cn("rounded-lg border border-slate-200 bg-white shadow-sm", className)}>{children}</section>;
 }
 
@@ -134,13 +136,23 @@ function toCsv(rows: Array<Record<string, string | number | null>>) {
 }
 
 function Drawer({ title, open, onClose, children }: { title: string; open: boolean; onClose: () => void; children: React.ReactNode }) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    closeRef.current?.focus();
+    const handler = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, onClose]);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/30" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="h-full w-full max-w-xl overflow-y-auto bg-white shadow-xl" onClick={(event) => event.stopPropagation()}>
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
           <h2 className="text-sm font-bold text-[#111C3A]">{title}</h2>
-          <button type="button" onClick={onClose} className="rounded-md p-2 text-slate-500 hover:bg-slate-100" aria-label="Close"><X className="size-4" /></button>
+          <button ref={closeRef} type="button" onClick={onClose} className="rounded-md p-2 text-slate-500 hover:bg-slate-100" aria-label="Close"><X className="size-4" /></button>
         </div>
         <div className="p-4">{children}</div>
       </div>
@@ -149,18 +161,40 @@ function Drawer({ title, open, onClose, children }: { title: string; open: boole
 }
 
 function Modal({ title, open, onClose, children }: { title: string; open: boolean; onClose: () => void; children: React.ReactNode }) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    closeRef.current?.focus();
+    const handler = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, onClose]);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/30 p-4" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-xl" onClick={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <h2 className="text-sm font-bold text-[#111C3A]">{title}</h2>
-          <button type="button" onClick={onClose} className="rounded-md p-2 text-slate-500 hover:bg-slate-100" aria-label="Close"><X className="size-4" /></button>
+          <button ref={closeRef} type="button" onClick={onClose} className="rounded-md p-2 text-slate-500 hover:bg-slate-100" aria-label="Close"><X className="size-4" /></button>
         </div>
         <div className="p-4">{children}</div>
       </div>
     </div>
   );
+}
+
+function useBeforeUnload(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return undefined;
+    const handler = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [enabled]);
 }
 
 function Header({ snapshot, setEnvironment, exportJson }: { snapshot: SystemHealthSnapshotV2; setEnvironment: (env: HealthEnvironment) => void; exportJson: () => void }) {
@@ -193,7 +227,7 @@ function Header({ snapshot, setEnvironment, exportJson }: { snapshot: SystemHeal
             <Badge className={state === "Partial Outage" ? healthTone.unavailable : state === "Degraded" ? healthTone.degraded : state === "Unknown" ? healthTone.unknown : healthTone.healthy}><HeartPulse className="mr-1 size-3" />{state}</Badge>
             <Badge className="border-indigo-200 bg-indigo-50 text-indigo-700">Demo Monitoring Data</Badge>
             <Badge className="border-slate-200 bg-slate-50 text-slate-700">Production Telemetry Not Connected</Badge>
-            <span className="text-xs text-slate-500">Last observation context: {formatDate(snapshot.generatedAt)} · {snapshot.timezone}</span>
+            <span className="text-xs text-slate-500">Last observation context: {formatDate(snapshot.generatedAt)} - {snapshot.timezone}</span>
           </div>
           <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
             Environment
@@ -301,6 +335,25 @@ function Empty({ title, body }: { title: string; body: string }) {
   return <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center"><p className="text-sm font-bold text-[#111C3A]">{title}</p><p className="mt-1 text-xs text-slate-500">{body}</p></div>;
 }
 
+function PageSkeleton({ title = "Loading System Health" }: { title?: string }) {
+  return (
+    <div className="space-y-1" aria-live="polite" aria-busy="true">
+      <Card className="p-4">
+        <div className="h-4 w-44 animate-pulse rounded bg-slate-200" />
+        <div className="mt-2 h-3 w-72 animate-pulse rounded bg-slate-100" />
+      </Card>
+      <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 8 }, (_, index) => <Card key={index} className="h-24 animate-pulse bg-slate-50" />)}
+      </div>
+      <div className="grid gap-1 xl:grid-cols-2">
+        <Card className="h-72 animate-pulse bg-slate-50" />
+        <Card className="h-72 animate-pulse bg-slate-50" />
+      </div>
+      <span className="sr-only">{title}</span>
+    </div>
+  );
+}
+
 function Overview({ snapshot, openPreview }: { snapshot: SystemHealthSnapshotV2; openPreview: (service: ServiceRecord) => void }) {
   const active = activeIncidents(snapshot);
   const dependencies = snapshot.dependencies.filter((dependency) => dependency.observedHealth !== "healthy" || dependency.freshness !== "fresh");
@@ -388,7 +441,7 @@ function DependencyList({ snapshot, dependencies }: { snapshot: SystemHealthSnap
         return (
           <Link key={dependency.id} href={`${BASE}/dependencies?dependency=${dependency.id}`} className="block px-4 py-3 hover:bg-slate-50">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div><p className="text-xs font-bold text-[#111C3A]">{dependency.name}</p><p className="text-[11px] text-slate-500">{dependency.type} · {services.length} dependent services</p></div>
+              <div><p className="text-xs font-bold text-[#111C3A]">{dependency.name}</p><p className="text-[11px] text-slate-500">{dependency.type} - {services.length} dependent services</p></div>
               <div className="flex gap-1"><Badge className={healthTone[dependency.observedHealth]}>{label(dependency.observedHealth)}</Badge><Badge className={freshnessTone[dependency.freshness]}>{label(dependency.freshness)}</Badge></div>
             </div>
             <p className="mt-1 text-xs text-slate-600">{dependency.impactSummary}</p>
@@ -407,7 +460,7 @@ function ImpactTable({ snapshot, impacts }: { snapshot: SystemHealthSnapshotV2; 
         <thead className="bg-slate-50 text-[11px] uppercase text-slate-500"><tr><th className="px-3 py-2">Area</th><th className="px-3 py-2">Scope</th><th className="px-3 py-2">Evidence</th><th className="px-3 py-2">Service</th><th className="px-3 py-2">Incident</th></tr></thead>
         <tbody>{impacts.map((impact) => {
           const service = snapshot.services.find((item) => item.id === impact.serviceId);
-          return <tr key={impact.id} className="border-b border-slate-100"><td className="px-3 py-2"><Badge className={impact.confidence === "confirmed" ? healthTone.degraded : impact.confidence === "potential" ? freshnessTone.stale : healthTone.unknown}>{label(impact.confidence)}</Badge><p className="mt-1 text-xs font-semibold text-[#111C3A]">{impact.area}</p></td><td className="px-3 py-2 text-xs text-slate-600">{impact.companyName ?? "Impact Unknown"}{impact.clientName ? ` · ${impact.clientName}` : ""}</td><td className="px-3 py-2 text-xs text-slate-600">{impact.evidence}</td><td className="px-3 py-2 text-xs text-slate-600">{service?.name ?? "Unknown"}</td><td className="px-3 py-2 text-xs text-slate-600">{impact.incidentId ?? "Not linked"}</td></tr>;
+          return <tr key={impact.id} className="border-b border-slate-100"><td className="px-3 py-2"><Badge className={impact.confidence === "confirmed" ? healthTone.degraded : impact.confidence === "potential" ? freshnessTone.stale : healthTone.unknown}>{label(impact.confidence)}</Badge><p className="mt-1 text-xs font-semibold text-[#111C3A]">{impact.area}</p></td><td className="px-3 py-2 text-xs text-slate-600">{impact.companyName ?? "Impact Unknown"}{impact.clientName ? ` - ${impact.clientName}` : ""}</td><td className="px-3 py-2 text-xs text-slate-600">{impact.evidence}</td><td className="px-3 py-2 text-xs text-slate-600">{service?.name ?? "Unknown"}</td><td className="px-3 py-2 text-xs text-slate-600">{impact.incidentId ?? "Not linked"}</td></tr>;
         })}</tbody>
       </table>
     </div>
@@ -447,7 +500,7 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
 
 function ActivityTable({ snapshot, activity }: { snapshot: SystemHealthSnapshotV2; activity: typeof snapshot.activity }) {
   if (!activity.length) return <div className="p-4"><Empty title="No Health Activity" body="No health events match the current view." /></div>;
-  return <div className="divide-y divide-slate-100">{activity.map((item) => <div key={item.id} className="px-4 py-3"><p className="text-xs font-bold text-[#111C3A]">{item.type}</p><p className="text-xs text-slate-600">{item.summary}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(item.at)} · {item.source}</p></div>)}</div>;
+  return <div className="divide-y divide-slate-100">{activity.map((item) => <div key={item.id} className="px-4 py-3"><p className="text-xs font-bold text-[#111C3A]">{item.type}</p><p className="text-xs text-slate-600">{item.summary}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(item.at)} - {item.source}</p></div>)}</div>;
 }
 
 function ServicePreview({ snapshot, service, onClose }: { snapshot: SystemHealthSnapshotV2; service: ServiceRecord | null; onClose: () => void }) {
@@ -551,6 +604,12 @@ function CreateIncidentModal({ snapshot, open, onClose, onCreate }: { snapshot: 
   const [ownerId, setOwnerId] = useState(owners[0]?.id ?? "");
   const [summary, setSummary] = useState("");
   const [error, setError] = useState("");
+  const dirty = title.trim().length > 0 || summary.trim().length > 0;
+  useBeforeUnload(open && dirty);
+  function closeWithGuard() {
+    if (dirty && !window.confirm("Discard this incident draft?")) return;
+    setTitle(""); setSummary(""); setError(""); onClose();
+  }
   function submit() {
     if (!title.trim() || !serviceId || !ownerId || !summary.trim()) {
       setError("Title, service, owner and summary are required.");
@@ -560,7 +619,7 @@ function CreateIncidentModal({ snapshot, open, onClose, onCreate }: { snapshot: 
     onCreate(makeIncident({ title, primaryServiceId: serviceId, affectedServiceIds: [], priority, ownerId, ownerName: owner?.name ?? "Unassigned", summary }, Date.now() % 1000));
     setTitle(""); setSummary(""); setError(""); onClose();
   }
-  return <Modal title="Create Demo Incident" open={open} onClose={onClose}><div className="space-y-3"><p className="text-xs text-slate-600">Creates a frontend demo incident record. It does not change service health or trigger production notifications.</p>{error ? <div className="rounded-md border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">{error}</div> : null}<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Incident title" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><textarea value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="Known symptoms and investigation context" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><div className="grid gap-2 sm:grid-cols-3"><select value={serviceId} onChange={(event) => setServiceId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">{snapshot.services.map((service) => <option value={service.id} key={service.id}>{service.name}</option>)}</select><select value={priority} onChange={(event) => setPriority(event.target.value as IncidentPriority)} className="rounded-md border border-slate-200 px-2 py-2 text-sm"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select><select value={ownerId} onChange={(event) => setOwnerId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">{owners.map((owner) => <option value={owner.id} key={owner.id}>{owner.name}</option>)}</select></div><div className="flex justify-end gap-2"><button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold">Cancel</button><button type="button" onClick={submit} className="rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">Create Incident</button></div></div></Modal>;
+  return <Modal title="Create Demo Incident" open={open} onClose={closeWithGuard}><div className="space-y-3"><p className="text-xs text-slate-600">Creates a frontend demo incident record. It does not change service health or trigger production notifications.</p>{error ? <div className="rounded-md border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">{error}</div> : null}<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Incident title" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><textarea value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="Known symptoms and investigation context" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><div className="grid gap-2 sm:grid-cols-3"><select value={serviceId} onChange={(event) => setServiceId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">{snapshot.services.map((service) => <option value={service.id} key={service.id}>{service.name}</option>)}</select><select value={priority} onChange={(event) => setPriority(event.target.value as IncidentPriority)} className="rounded-md border border-slate-200 px-2 py-2 text-sm"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select><select value={ownerId} onChange={(event) => setOwnerId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">{owners.map((owner) => <option value={owner.id} key={owner.id}>{owner.name}</option>)}</select></div><div className="flex justify-end gap-2"><button type="button" onClick={closeWithGuard} className="rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold">Cancel</button><button type="button" onClick={submit} className="rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">Create Incident</button></div></div></Modal>;
 }
 
 function IncidentsPage({ snapshot, incidents, setIncidents }: { snapshot: SystemHealthSnapshotV2; incidents: IncidentRecord[]; setIncidents: (incidents: IncidentRecord[]) => void }) {
@@ -575,13 +634,80 @@ function IncidentsPage({ snapshot, incidents, setIncidents }: { snapshot: System
   );
 }
 
-function IncidentDetailPage({ snapshot, incidents, setIncidents, incidentId }: { snapshot: SystemHealthSnapshotV2; incidents: IncidentRecord[]; setIncidents: (incidents: IncidentRecord[]) => void; incidentId: string }) {
+function AddImpactModal({ snapshot, incident, open, onClose, onAdd }: { snapshot: SystemHealthSnapshotV2; incident: IncidentRecord; open: boolean; onClose: () => void; onAdd: (impact: ImpactRecord) => void }) {
+  const [confidence, setConfidence] = useState<ImpactConfidence>("potential");
+  const [area, setArea] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [workflow, setWorkflow] = useState("");
+  const [evidence, setEvidence] = useState("");
+  const [error, setError] = useState("");
+  const dirty = [area, companyName, clientName, workflow, evidence].some((value) => value.trim().length > 0);
+  useBeforeUnload(open && dirty);
+  function closeWithGuard() {
+    if (dirty && !window.confirm("Discard this impact draft?")) return;
+    setArea(""); setCompanyName(""); setClientName(""); setWorkflow(""); setEvidence(""); setError(""); onClose();
+  }
+  function submit() {
+    if (!area.trim() || !workflow.trim() || !evidence.trim()) {
+      setError("Affected area, workflow and evidence source are required.");
+      return;
+    }
+    onAdd({
+      id: `imp-demo-${Date.now()}`,
+      confidence,
+      area,
+      companyId: companyName.trim() ? `cmp_demo_${companyName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}` : null,
+      companyName: companyName.trim() || null,
+      clientName: clientName.trim() || null,
+      workflow,
+      evidence,
+      serviceId: incident.primaryServiceId,
+      incidentId: incident.id,
+    });
+    setArea(""); setCompanyName(""); setClientName(""); setWorkflow(""); setEvidence(""); setError(""); onClose();
+  }
+  return (
+    <Modal title="Add Incident Impact" open={open} onClose={closeWithGuard}>
+      <div className="space-y-3">
+        <p className="text-xs text-slate-600">Adds a frontend impact record for {incident.reference}. Confirmed impact requires a concrete evidence source.</p>
+        {error ? <div className="rounded-md border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">{error}</div> : null}
+        <div className="grid gap-2 sm:grid-cols-2">
+          <select value={confidence} onChange={(event) => setConfidence(event.target.value as ImpactConfidence)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">
+            <option value="confirmed">Confirmed Impact</option>
+            <option value="potential">Potential Impact</option>
+            <option value="unknown">Impact Unknown</option>
+          </select>
+          <select value={incident.primaryServiceId} disabled className="rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-slate-500">
+            {snapshot.services.map((service) => <option value={service.id} key={service.id}>{service.name}</option>)}
+          </select>
+        </div>
+        <input value={area} onChange={(event) => setArea(event.target.value)} placeholder="Affected area" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+        <div className="grid gap-2 sm:grid-cols-2">
+          <input value={companyName} onChange={(event) => setCompanyName(event.target.value)} placeholder="Company name, if known" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
+          <input value={clientName} onChange={(event) => setClientName(event.target.value)} placeholder="Client name, if known" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
+        </div>
+        <input value={workflow} onChange={(event) => setWorkflow(event.target.value)} placeholder="Workflow, e.g. Scheduled publishing" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+        <textarea value={evidence} onChange={(event) => setEvidence(event.target.value)} placeholder="Evidence source, not speculation" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={closeWithGuard} className="rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold">Cancel</button>
+          <button type="button" onClick={submit} className="rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">Add Impact</button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function IncidentDetailPage({ snapshot, incidents, setIncidents, setImpacts, incidentId }: { snapshot: SystemHealthSnapshotV2; incidents: IncidentRecord[]; setIncidents: (incidents: IncidentRecord[]) => void; setImpacts: (impacts: ImpactRecord[]) => void; incidentId: string }) {
   const incident = incidents.find((item) => item.id === incidentId);
   const [note, setNote] = useState("");
   const [resolution, setResolution] = useState("");
+  const [impactOpen, setImpactOpen] = useState(false);
   if (!incident) return <NotFound title="Incident Not Found" body="The incident reference is not present in the shared demo state." href={`${BASE}/incidents`} />;
   const currentIncident = incident;
   const service = snapshot.services.find((item) => item.id === currentIncident.primaryServiceId);
+  const dirty = note.trim().length > 0 || resolution.trim().length > 0;
+  useBeforeUnload(dirty);
   const update = (next: IncidentRecord) => setIncidents(incidents.map((item) => item.id === currentIncident.id ? next : item));
   function addNote() {
     if (!note.trim()) return;
@@ -590,6 +716,12 @@ function IncidentDetailPage({ snapshot, incidents, setIncidents, incidentId }: {
   }
   function changeState(state: IncidentState) {
     update({ ...currentIncident, state, resolvedAt: state === "resolved" ? new Date().toISOString() : currentIncident.resolvedAt, recoveryEvidence: state === "resolved" ? resolution || "Resolved in frontend demo workflow after evidence review." : currentIncident.recoveryEvidence, timeline: [{ id: `${currentIncident.id}-${Date.now()}`, at: new Date().toISOString(), actor: currentIncident.ownerName ?? "Super Admin", type: state === "resolved" ? "resolution" : "state_change", note: `State changed to ${transitionLabel(state)}. Service health was not automatically changed.` }, ...currentIncident.timeline] });
+    setResolution("");
+  }
+  function addImpact(impact: ImpactRecord) {
+    const next = { ...currentIncident, impactIds: [...currentIncident.impactIds, impact.id], timeline: [{ id: `${currentIncident.id}-${Date.now()}`, at: new Date().toISOString(), actor: currentIncident.ownerName ?? "Super Admin", type: "impact_update" as const, note: `${label(impact.confidence)} recorded for ${impact.area}.` }, ...currentIncident.timeline] };
+    setImpacts([impact, ...snapshot.impacts]);
+    update(next);
   }
   return (
     <div className="space-y-1">
@@ -599,7 +731,8 @@ function IncidentDetailPage({ snapshot, incidents, setIncidents, incidentId }: {
         <Card><CardTitle title="Incident Timeline" subtitle="Chronological updates recorded in frontend demo state." /><div className="space-y-2 p-4">{currentIncident.timeline.map((entry) => <div key={entry.id} className="rounded-md border border-slate-200 p-3"><p className="text-xs font-bold text-[#111C3A]">{label(entry.type)} - {entry.actor}</p><p className="mt-1 text-xs text-slate-600">{entry.note}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(entry.at)}</p></div>)}</div></Card>
         <Card><CardTitle title="Incident Workflow" subtitle="Updates never imply infrastructure repair." /><div className="space-y-3 p-4"><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Add investigation update" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><button type="button" onClick={addNote} className="w-full rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">Add Incident Update</button><select value={currentIncident.state} onChange={(event) => changeState(event.target.value as IncidentState)} className="w-full rounded-md border border-slate-200 px-2 py-2 text-sm"><option value="investigating">Investigating</option><option value="identified">Identified</option><option value="monitoring_recovery">Monitoring Recovery</option><option value="resolved">Resolved</option></select><textarea value={resolution} onChange={(event) => setResolution(event.target.value)} placeholder="Recovery evidence for resolution review" className="min-h-20 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><p className="text-[11px] text-slate-500">Resolving this incident changes only the incident workflow. It does not mark any service healthy.</p></div></Card>
       </div>
-      <Card><CardTitle title="Incident Impact" /><ImpactTable snapshot={snapshot} impacts={snapshot.impacts.filter((impact) => currentIncident.impactIds.includes(impact.id))} /></Card>
+      <Card><CardTitle title="Incident Impact" action={<button type="button" onClick={() => setImpactOpen(true)} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold"><Plus className="size-4" />Add Impact</button>} /><ImpactTable snapshot={snapshot} impacts={snapshot.impacts.filter((impact) => currentIncident.impactIds.includes(impact.id))} /></Card>
+      <AddImpactModal snapshot={snapshot} incident={currentIncident} open={impactOpen} onClose={() => setImpactOpen(false)} onAdd={addImpact} />
     </div>
   );
 }
@@ -610,7 +743,7 @@ function ImpactAvailabilityPage({ snapshot }: { snapshot: SystemHealthSnapshotV2
   return (
     <div className="space-y-1">
       <Card><CardTitle title="Impact & Availability" subtitle="Availability reporting separates observed, degraded, unavailable and unknown intervals." action={<select value={serviceId} onChange={(event) => setServiceId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-xs"><option value="all">All services</option>{snapshot.services.map((service) => <option key={service.id} value={service.id}>{service.name}</option>)}</select>} /><div className="p-4"><AvailabilityPanel snapshot={{ ...snapshot, availability: points }} /></div></Card>
-      <Card><CardTitle title="Company Impact Table" /><ImpactTable snapshot={snapshot} impacts={snapshot.impacts} /></Card>
+      <Card><CardTitle title="Company Impact Table" action={<button type="button" onClick={() => downloadFile("system-health-impact.csv", toCsv(snapshot.impacts.map((impact) => ({ confidence: impact.confidence, area: impact.area, company: impact.companyName, client: impact.clientName, workflow: impact.workflow, evidence: impact.evidence, incidentId: impact.incidentId }))), "text/csv")} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold"><Download className="size-4" />Export</button>} /><ImpactTable snapshot={snapshot} impacts={snapshot.impacts} /></Card>
     </div>
   );
 }
@@ -625,7 +758,7 @@ function ActivityMonitoringPage({ snapshot }: { snapshot: SystemHealthSnapshotV2
   return (
     <div className="grid gap-1 xl:grid-cols-[1fr_0.9fr]">
       <Card><CardTitle title="Health Activity" subtitle="Monitoring events stay in System Health activity, not high-impact audit history." /><ActivityTable snapshot={snapshot} activity={snapshot.activity} /></Card>
-      <Card><CardTitle title="Monitoring Coverage" subtitle="Every source is clearly labelled as demo-backed until backend telemetry is connected." /><div className="divide-y divide-slate-100">{snapshot.sources.map((source) => <div key={source.id} className="px-4 py-3"><div className="flex items-center justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{source.name}</p><Badge className={source.backendConnected ? healthTone.healthy : freshnessTone.stale}>{source.backendConnected ? "Backend Connected" : "Demo Only"}</Badge></div><p className="mt-1 text-xs text-slate-600">{label(source.kind)} · freshness threshold {source.freshnessThresholdMinutes} min</p></div>)}</div></Card>
+      <Card><CardTitle title="Monitoring Coverage" subtitle="Every source is clearly labelled as demo-backed until backend telemetry is connected." /><div className="divide-y divide-slate-100">{snapshot.sources.map((source) => <div key={source.id} className="px-4 py-3"><div className="flex items-center justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{source.name}</p><Badge className={source.backendConnected ? healthTone.healthy : freshnessTone.stale}>{source.backendConnected ? "Backend Connected" : "Demo Only"}</Badge></div><p className="mt-1 text-xs text-slate-600">{label(source.kind)} - freshness threshold {source.freshnessThresholdMinutes} min</p></div>)}</div></Card>
     </div>
   );
 }
@@ -635,11 +768,22 @@ export function SystemHealthOperationsCenter({ page, serviceId, incidentId }: { 
   const search = useSearchParams();
   const initialEnv = (search.get("env") as HealthEnvironment | null) ?? "production";
   const [environment, setEnvironmentState] = useState<HealthEnvironment>(["development", "staging", "production"].includes(initialEnv) ? initialEnv : "production");
+  const [loading, setLoading] = useState(true);
   const [preview, setPreview] = useState<ServiceRecord | null>(null);
   const snapshot = useMemo(() => buildSystemHealthSnapshot(environment), [environment]);
   const [incidents, setIncidents] = useState<IncidentRecord[]>(snapshot.incidents);
-  useEffect(() => setIncidents(buildSystemHealthSnapshot(environment).incidents), [environment]);
-  const workingSnapshot = { ...snapshot, incidents };
+  const [impacts, setImpacts] = useState<ImpactRecord[]>(snapshot.impacts);
+  useEffect(() => {
+    const next = buildSystemHealthSnapshot(environment);
+    setIncidents(next.incidents);
+    setImpacts(next.impacts);
+  }, [environment]);
+  useEffect(() => {
+    setLoading(true);
+    const timer = window.setTimeout(() => setLoading(false), 180);
+    return () => window.clearTimeout(timer);
+  }, [environment, page, serviceId, incidentId]);
+  const workingSnapshot = { ...snapshot, incidents, impacts };
   function setEnvironment(env: HealthEnvironment) {
     setEnvironmentState(env);
     const params = new URLSearchParams(search.toString());
@@ -654,15 +798,16 @@ export function SystemHealthOperationsCenter({ page, serviceId, incidentId }: { 
       <Header snapshot={workingSnapshot} setEnvironment={setEnvironment} exportJson={exportJson} />
       <Tabs />
       {!SYSTEM_HEALTH_CAPABILITIES.canViewSystemHealth ? <NotFound title="Insufficient Capability" body="Your role cannot view System Health." href={ROUTES.superAdmin.dashboard} /> : null}
-      {page === "services" ? <ServicesPage snapshot={workingSnapshot} openPreview={setPreview} /> : null}
-      {page === "service-detail" && serviceId ? <ServiceDetailPage snapshot={workingSnapshot} serviceId={serviceId} /> : null}
-      {page === "dependencies" ? <DependenciesPage snapshot={workingSnapshot} /> : null}
-      {page === "incidents" ? <IncidentsPage snapshot={workingSnapshot} incidents={incidents} setIncidents={setIncidents} /> : null}
-      {page === "incident-detail" && incidentId ? <IncidentDetailPage snapshot={workingSnapshot} incidents={incidents} setIncidents={setIncidents} incidentId={incidentId} /> : null}
-      {page === "impact" ? <ImpactAvailabilityPage snapshot={workingSnapshot} /> : null}
-      {page === "maintenance" ? <MaintenancePage snapshot={workingSnapshot} /> : null}
-      {page === "activity" ? <ActivityMonitoringPage snapshot={workingSnapshot} /> : null}
-      {!page || page === "overview" ? <Overview snapshot={workingSnapshot} openPreview={setPreview} /> : null}
+      {loading ? <PageSkeleton title={`Loading ${page ?? "overview"}`} /> : null}
+      {!loading && page === "services" ? <ServicesPage snapshot={workingSnapshot} openPreview={setPreview} /> : null}
+      {!loading && page === "service-detail" && serviceId ? <ServiceDetailPage snapshot={workingSnapshot} serviceId={serviceId} /> : null}
+      {!loading && page === "dependencies" ? <DependenciesPage snapshot={workingSnapshot} /> : null}
+      {!loading && page === "incidents" ? <IncidentsPage snapshot={workingSnapshot} incidents={incidents} setIncidents={setIncidents} /> : null}
+      {!loading && page === "incident-detail" && incidentId ? <IncidentDetailPage snapshot={workingSnapshot} incidents={incidents} setIncidents={setIncidents} setImpacts={setImpacts} incidentId={incidentId} /> : null}
+      {!loading && page === "impact" ? <ImpactAvailabilityPage snapshot={workingSnapshot} /> : null}
+      {!loading && page === "maintenance" ? <MaintenancePage snapshot={workingSnapshot} /> : null}
+      {!loading && page === "activity" ? <ActivityMonitoringPage snapshot={workingSnapshot} /> : null}
+      {!loading && (!page || page === "overview") ? <Overview snapshot={workingSnapshot} openPreview={setPreview} /> : null}
       <ServicePreview snapshot={workingSnapshot} service={preview} onClose={() => setPreview(null)} />
     </div>
   );

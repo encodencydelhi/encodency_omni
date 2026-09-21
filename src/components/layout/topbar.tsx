@@ -7,13 +7,17 @@ import { useAuth } from "@/features/auth/components/auth-provider";
 import { NotificationsMenu } from "./notifications-menu";
 import { GlobalSearch } from "./global-search";
 import Image from "next/image";
+import { cn } from "@/lib/utils/cn";
 
 export function Topbar() {
-  const { setMobileOpen, toggleCollapsed } = useSidebar();
+  const { setMobileOpen, toggleCollapsed, isCollapsed } = useSidebar();
   const { user, logout } = useAuth();
 
   return (
-    <header className="sticky top-0 z-30 flex h-[56px] items-center gap-4 border-b border-[#E2E8F0] bg-white px-4 sm:px-6 lg:px-8">
+    <header className={cn(
+      "fixed top-0 right-0 z-40 flex h-[56px] items-center gap-4 border-b border-[#E2E8F0] bg-white px-4 sm:px-6 lg:px-8 transition-[left] duration-200",
+      isCollapsed ? "left-0 lg:left-[64px]" : "left-0 lg:left-[220px]"
+    )}>
       <button
         className="grid size-9 place-items-center rounded-sm text-[#64748B] hover:bg-[#F1F5F9] transition-colors lg:hidden"
         onClick={() => setMobileOpen(true)}

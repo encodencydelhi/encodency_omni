@@ -20,7 +20,7 @@ function ShellFrame({ children }: { children: ReactNode }) {
       <AppSidebar />
       <div
         className={cn(
-          "flex min-h-dvh flex-col transition-[padding] duration-200 min-w-0 max-w-full overflow-x-hidden",
+          "flex min-h-dvh flex-col transition-[padding] duration-200 min-w-0 max-w-full overflow-x-hidden pt-[84px]",
           isCollapsed ? "lg:pl-[64px]" : "lg:pl-[220px]",
         )}
       >
@@ -28,7 +28,7 @@ function ShellFrame({ children }: { children: ReactNode }) {
         <AppBreadcrumb />
         <MaintenanceBannerHost />
 
-        <main className="w-full flex-1 min-w-0 max-w-full px-4 py-4 sm:px-5 xl:px-6">
+        <main className="w-full flex-1 min-w-0 max-w-full px-4 py-4 sm:px-5 xl:px-6 pb-14">
           {children}
         </main>
 

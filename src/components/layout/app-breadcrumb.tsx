@@ -5,9 +5,12 @@ import { SUPER_ADMIN_NAV } from "@/config/navigation";
 import { ROUTES } from "@/config/routes";
 import { ChevronRight, LayoutGrid } from "lucide-react";
 import Link from "next/link";
+import { useSidebar } from "./sidebar-context";
+import { cn } from "@/lib/utils/cn";
 
 export function AppBreadcrumb() {
   const pathname = usePathname();
+  const { isCollapsed } = useSidebar();
   let activeSection = null;
   let activeItem = null;
 
@@ -40,7 +43,10 @@ export function AppBreadcrumb() {
   };
 
   return (
-    <div className="sticky top-[56px] z-20 flex h-7 items-center border-b border-[#E2E8F0] bg-gradient-to-r from-white via-[#F8FAFC] to-white px-4 sm:px-6 lg:px-8">
+    <div className={cn(
+      "fixed top-[56px] right-0 z-20 flex h-7 items-center border-b border-[#E2E8F0] bg-gradient-to-r from-white via-[#F8FAFC] to-white px-4 sm:px-6 lg:px-8 transition-[left] duration-200",
+      isCollapsed ? "left-0 lg:left-[64px]" : "left-0 lg:left-[220px]"
+    )}>
       <nav className="flex min-w-0 w-full overflow-x-auto whitespace-nowrap text-[12px] font-medium text-slate-500 [scrollbar-width:none]" aria-label="Breadcrumb">
         <ol className="inline-flex items-center space-x-1.5 md:space-x-2.5 w-full">
           {activeSection && (
