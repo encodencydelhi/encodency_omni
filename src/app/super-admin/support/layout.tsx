@@ -25,11 +25,7 @@ export default function SupportLayout({ children }: { children: React.ReactNode 
   return (
     <SupportProvider>
       <div className="flex-1 flex flex-col min-h-0 bg-[#F8FAFC]">
-        <Topbar 
-          title="Support & Tickets" 
-          subtitle="Manage customer requests, support conversations, ticket ownership and resolution across OmniPlatform." 
-          breadcrumbs={[{ label: "Super Admin", href: "/super-admin" }, { label: "Support & Tickets" }]}
-        />
+        <Topbar />
         
         <div className="flex-1 flex flex-col min-h-0">
           <div className="bg-white border-b border-[#E2E8F0] px-6 pt-6 pb-0 flex flex-col gap-4">

@@ -194,8 +194,9 @@ function buildJobs(): JobRecord[] {
         : null;
 
       const resIdx = Math.floor(rng.float(0, RELATED_RESOURCES.length));
-      const resType = RELATED_RESOURCES[resIdx].type;
-      const resName = rng.pick(RELATED_RESOURCES[resIdx].names);
+      const resource = RELATED_RESOURCES[resIdx] ?? RELATED_RESOURCES[0]!;
+      const resType = resource.type;
+      const resName = rng.pick(resource.names);
 
       const durationMs = isTerminal
         ? rng.int(800, 120_000)
@@ -376,8 +377,8 @@ function buildDependencies(jobs: JobRecord[], workflows: JobWorkflow[]): JobDepe
         }
       })();
       deps.push({
-        jobId: wf.jobIds[i],
-        dependsOnJobId: wf.jobIds[i - 1],
+        jobId: wf.jobIds[i]!,
+        dependsOnJobId: wf.jobIds[i - 1]!,
         dependsOnType: "predecessor",
         status: depStatus,
       });
@@ -393,7 +394,7 @@ function buildQueues(jobs: JobRecord[]): QueueDefinition[] {
     const byState = (s: JobLifecycleState) => qJobs.filter((j) => j.lifecycleState === s).length;
     const waitingJobs = qJobs.filter((j) => j.lifecycleState === "waiting" || j.lifecycleState === "ready");
     const oldestWaiting = waitingJobs.length > 0
-      ? waitingJobs.sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt))[0].createdAt
+      ? waitingJobs.sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt))[0]!.createdAt
       : null;
 
     const workerCount = rng.int(1, 4);
@@ -438,17 +439,17 @@ function buildWorkers(jobs: JobRecord[]): WorkerRecord[] {
       : heartbeatMinutes <= 10 ? "stale" as const
       : "offline" as const;
 
-    const qIndex = i % 7;
     const queues = [
       "scheduled_posts", "seo_crawls", "analytics_sync", "reports",
       "whatsapp_campaigns", "webhook_processing", "notifications",
     ];
+    const assignedQueue = queues[i % queues.length]!;
 
     return {
       id: wId,
-      group: `group_${queues[qIndex]}`,
+      group: `group_${assignedQueue}`,
       environment: "development",
-      assignedQueues: [queues[qIndex]],
+      assignedQueues: [assignedQueue],
       liveness,
       lastHeartbeat: minutesAgo(heartbeatMinutes),
       registeredAt: minutesAgo(rng.int(1000, 4000)),
@@ -522,7 +523,7 @@ function buildTrendData(): ProcessingTrendPoint[] {
     const date = new Date();
     date.setDate(date.getDate() - i);
     points.push({
-      date: date.toISOString().split("T")[0],
+      date: date.toISOString().split("T")[0]!,
       completed: rng.int(40, 120),
       failed: rng.int(2, 18),
       started: rng.int(50, 140),

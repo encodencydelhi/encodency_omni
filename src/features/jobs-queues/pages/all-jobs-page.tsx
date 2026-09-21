@@ -64,7 +64,7 @@ export function AllJobsPage() {
     };
     for (const j of jobs) {
       if (j.lifecycleState in counts) {
-        counts[j.lifecycleState]++;
+        counts[j.lifecycleState] = (counts[j.lifecycleState] ?? 0) + 1;
       }
     }
     return counts;
@@ -204,9 +204,9 @@ export function AllJobsPage() {
               item.color === "red" && "text-red-700",
               item.color === "rose" && "text-rose-700"
             )}>
-              {formatNumber(item.value)}
+              {formatNumber(item.value ?? 0)}
             </span>
-            {item.label !== "Total" && stateCounts.total > 0 && (
+            {item.label !== "Total" && (stateCounts.total ?? 0) > 0 && (
               <div className="w-12 h-1.5 rounded-full bg-slate-100 overflow-hidden">
                 <div
                   className={cn("h-full rounded-full",
@@ -217,7 +217,7 @@ export function AllJobsPage() {
                     item.color === "red" && "bg-red-400",
                     item.color === "rose" && "bg-rose-400"
                   )}
-                  style={{ width: `${Math.min((item.value / stateCounts.total) * 100, 100)}%` }}
+                  style={{ width: `${Math.min(((item.value ?? 0) / (stateCounts.total ?? 1)) * 100, 100)}%` }}
                 />
               </div>
             )}
