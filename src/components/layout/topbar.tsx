@@ -4,9 +4,9 @@ import { ChevronDown, Menu, Plus } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useSidebar } from "./sidebar-context";
 import { useAuth } from "@/features/auth/components/auth-provider";
-import { getInitials } from "@/lib/utils/format";
 import { NotificationsMenu } from "./notifications-menu";
 import { GlobalSearch } from "./global-search";
+import Image from "next/image";
 
 export function Topbar() {
   const { setMobileOpen, toggleCollapsed } = useSidebar();
@@ -93,8 +93,14 @@ export function Topbar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2.5 rounded-[10px] p-1.5 pr-3 hover:bg-slate-100/80 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 group">
-              <div className="relative flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-slate-200 text-slate-600 font-semibold text-sm border border-slate-200 shadow-xs group-hover:border-slate-300 transition-colors overflow-hidden">
-                {user?.name ? getInitials(user.name) : "U"}
+              <div className="relative shrink-0">
+                <Image
+                  src={user?.avatarUrl || "/user-avatar.png"}
+                  alt={user?.name ?? 'Admin'}
+                  width={32}
+                  height={32}
+                  className="rounded-[8px] object-cover border border-slate-200 bg-slate-50 shadow-xs group-hover:border-slate-300 transition-colors"
+                />
               </div>
               <span className="hidden text-left xl:block">
                 <span className="block text-[14px] font-semibold tracking-tight text-[#0f172a]">

@@ -1,21 +1,15 @@
 import { ApiError } from "@/types/api";
 import type { AuditLogEntry } from "@/types/domain/audit-log";
 import { DASHBOARD_SNAPSHOT } from "../data/dashboard";
-import type { FeatureFlag, ToggleFeatureFlagInput } from "@/types/domain/feature-flag";
 import type { AdminNotification } from "@/types/domain/notification";
 import type { SupportTicket } from "@/types/domain/support";
-import { AUDIT_LOG, FEATURE_FLAGS, FLAG_CATEGORIES, NOTIFICATIONS, SUPPORT_TICKETS } from "../data/control";
+import { AUDIT_LOG, NOTIFICATIONS, SUPPORT_TICKETS } from "../data/control";
 import { SUPPORT_AGENTS } from "../data/internal-team";
 import { compare, dateAtOrAfter, dateAtOrBefore, equals, queryCollection } from "../lib/collection";
 import type { MockRoutes } from "../lib/router";
 
-const flagOverrides = new Map<string, Partial<FeatureFlag>>();
 const ticketOverrides = new Map<string, Partial<SupportTicket>>();
 const readNotifications = new Set<string>();
-
-function resolveFlags(): FeatureFlag[] {
-  return FEATURE_FLAGS.map((flag) => ({ ...flag, ...flagOverrides.get(flag.id) }));
-}
 
 function resolveTickets(): SupportTicket[] {
   return SUPPORT_TICKETS.map((ticket) => ({ ...ticket, ...ticketOverrides.get(ticket.id) }));
@@ -83,42 +77,6 @@ const ticketQueryConfig = {
 
 export const controlRoutes: MockRoutes = {
   "GET /dashboard": () => DASHBOARD_SNAPSHOT,
-
-  "GET /feature-flags/categories": () => FLAG_CATEGORIES,
-
-  "GET /feature-flags": ({ query }) =>
-    queryCollection(resolveFlags(), query, {
-      searchable: (flag: FeatureFlag) => [flag.name, flag.key, flag.description, flag.category],
-      filters: {
-        scope: equals<FeatureFlag>((flag) => flag.scope),
-        state: equals<FeatureFlag>((flag) => flag.state),
-        category: equals<FeatureFlag>((flag) => flag.category),
-      },
-      sorters: {
-        name: compare.text<FeatureFlag>((flag) => flag.name),
-        updatedAt: compare.date<FeatureFlag>((flag) => flag.updatedAt),
-      },
-      defaultSort: { field: "name", direction: "asc" },
-      // Flags are reviewed as a whole board rather than paged through.
-    }),
-
-  "PATCH /feature-flags/:id": ({ params, body }) => {
-    const id = params.id ?? "";
-    const flag = resolveFlags().find((item) => item.id === id);
-    if (!flag) {
-      throw new ApiError({ code: "NOT_FOUND", status: 404, message: "Feature flag not found." });
-    }
-
-    const { state } = (body ?? {}) as ToggleFeatureFlagInput;
-    const next: Partial<FeatureFlag> = {
-      state,
-      rolloutPercent: state === "enabled" ? 100 : state === "disabled" ? 0 : flag.rolloutPercent,
-      updatedAt: new Date().toISOString(),
-    };
-
-    flagOverrides.set(id, { ...flagOverrides.get(id), ...next });
-    return { ...flag, ...next };
-  },
 
   "GET /audit-logs": ({ query }) => queryCollection(AUDIT_LOG, query, auditQueryConfig),
 

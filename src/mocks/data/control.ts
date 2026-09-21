@@ -1,63 +1,11 @@
 import { ROUTES } from "@/config/routes";
 import type { AuditCategory, AuditLogEntry, AuditOutcome } from "@/types/domain/audit-log";
-import type { FeatureFlag, FlagScope, FlagState } from "@/types/domain/feature-flag";
 import type { AdminNotification, NotificationCategory, NotificationSeverity } from "@/types/domain/notification";
-import type { PlanTier } from "@/types/domain/plan";
 import type { SupportTicket, TicketPriority, TicketStatus } from "@/types/domain/support";
-import { createRng, daysAgo, minutesAgo } from "../lib/random";
+import { createRng, minutesAgo } from "../lib/random";
 import { AUDIT_ACTIONS, SUPPORT_SUBJECTS } from "./catalog";
 import { INTERNAL_TEAM, SUPPORT_AGENTS } from "./internal-team";
 import { COMPANIES, PLATFORM_USERS } from "./tenants";
-
-/* -------------------------------------------------------------------------
- * Feature flags
- * ---------------------------------------------------------------------- */
-
-interface FlagSeed {
-  key: string;
-  name: string;
-  description: string;
-  scope: FlagScope;
-  state: FlagState;
-  rolloutPercent: number;
-  enabledPlans: PlanTier[];
-  category: string;
-}
-
-const FLAG_SEEDS: FlagSeed[] = [
-  { key: "ai_assistant", name: "AI Marketing Assistant", description: "Caption, blog and recommendation generation backed by platform data.", scope: "plan", state: "enabled", rolloutPercent: 100, enabledPlans: ["growth", "agency", "enterprise"], category: "Intelligence" },
-  { key: "seo_crawler_v2", name: "SEO Crawler v2", description: "Playwright-backed crawler for JavaScript-heavy sites.", scope: "global", state: "partial", rolloutPercent: 35, enabledPlans: [], category: "SEO" },
-  { key: "linkedin_integration", name: "LinkedIn Integration", description: "Company page publishing, analytics and lead retrieval.", scope: "plan", state: "enabled", rolloutPercent: 100, enabledPlans: ["starter", "growth", "agency", "enterprise"], category: "Channels" },
-  { key: "automation_builder", name: "Automation Builder", description: "Visual workflow canvas for triggers, conditions and actions.", scope: "plan", state: "enabled", rolloutPercent: 100, enabledPlans: ["growth", "agency", "enterprise"], category: "Automation" },
-  { key: "advanced_analytics", name: "Advanced Analytics", description: "Multi-touch attribution and cohort reporting.", scope: "plan", state: "partial", rolloutPercent: 60, enabledPlans: ["agency", "enterprise"], category: "Analytics" },
-  { key: "white_label", name: "White Label", description: "Custom domain, logo and colour scheme for agency clients.", scope: "organization", state: "partial", rolloutPercent: 12, enabledPlans: ["enterprise"], category: "Agency" },
-  { key: "whatsapp_broadcasts", name: "WhatsApp Broadcasts", description: "Bulk template campaigns with per-recipient status tracking.", scope: "plan", state: "enabled", rolloutPercent: 100, enabledPlans: ["growth", "agency", "enterprise"], category: "Channels" },
-  { key: "youtube_optimizer", name: "YouTube Content Optimizer", description: "AI title, description and thumbnail suggestions.", scope: "global", state: "partial", rolloutPercent: 25, enabledPlans: [], category: "Intelligence" },
-  { key: "realtime_job_stream", name: "Realtime Job Stream", description: "Server-sent job status updates in the admin console.", scope: "global", state: "disabled", rolloutPercent: 0, enabledPlans: [], category: "Platform" },
-  { key: "saml_sso", name: "SAML Single Sign-On", description: "Enterprise identity provider federation.", scope: "plan", state: "enabled", rolloutPercent: 100, enabledPlans: ["enterprise"], category: "Security" },
-  { key: "usage_overage_billing", name: "Usage Overage Billing", description: "Bill metered overage instead of hard-blocking at the quota.", scope: "global", state: "disabled", rolloutPercent: 0, enabledPlans: [], category: "Billing" },
-  { key: "agency_client_portal", name: "Agency Client Portal", description: "Read-only client-facing reporting portal.", scope: "organization", state: "partial", rolloutPercent: 8, enabledPlans: ["agency", "enterprise"], category: "Agency" },
-];
-
-export const FEATURE_FLAGS: FeatureFlag[] = FLAG_SEEDS.map((seed, index) => {
-  const rng = createRng(91000 + index * 5);
-  const editor = rng.pick(INTERNAL_TEAM);
-
-  return {
-    id: `flag_${seed.key}`,
-    ...seed,
-    enabledCompanyCount:
-      seed.scope === "organization"
-        ? Math.max(1, Math.round(COMPANIES.length * (seed.rolloutPercent / 100)))
-        : seed.state === "disabled"
-          ? 0
-          : COMPANIES.filter((company) => seed.enabledPlans.length === 0 || seed.enabledPlans.includes(company.planTier)).length,
-    updatedBy: editor.name,
-    updatedAt: daysAgo(rng.float(0.2, 90, 2)),
-  } satisfies FeatureFlag;
-});
-
-export const FLAG_CATEGORIES: string[] = [...new Set(FLAG_SEEDS.map((seed) => seed.category))].sort();
 
 /* -------------------------------------------------------------------------
  * Audit log
@@ -201,7 +149,7 @@ const NOTIFICATION_SEEDS: NotificationSeed[] = [
   { title: "Analytics replica latency elevated", body: "p95 read latency has stayed above 60 ms for 45 minutes.", category: "system", severity: "warning", href: ROUTES.superAdmin.systemHealth, source: "Infrastructure", minutesAgo: 190, isRead: true },
   { title: "Sierra Nutrition Labs exceeded its AI credit quota", body: "Consumption is at 118% of the Growth allowance for this cycle.", category: "billing", severity: "warning", href: ROUTES.superAdmin.usage, source: "Metering", minutesAgo: 260, isRead: true },
   { title: "Meta webhook signature failures", body: "9 inbound events failed verification in the last hour.", category: "integration", severity: "warning", href: ROUTES.superAdmin.webhooks, source: "Webhook Receiver", minutesAgo: 320, isRead: true },
-  { title: "Feature flag seo_crawler_v2 rolled out to 35%", body: "Changed by Farhan Qureshi. No error-rate regression detected so far.", category: "system", severity: "info", href: ROUTES.superAdmin.featureFlags, source: "Feature Flags", minutesAgo: 480, isRead: true },
+  { title: "Feature flag seo.advanced_audit rolled out to 25%", body: "Changed by Farhan Qureshi. No error-rate regression detected so far.", category: "system", severity: "info", href: ROUTES.superAdmin.featureFlags, source: "Feature Flags", minutesAgo: 480, isRead: true },
   { title: "Monthly revenue report is ready", body: "August recurring revenue closed 6.4% above July.", category: "billing", severity: "info", href: ROUTES.superAdmin.billing, source: "Billing", minutesAgo: 700, isRead: true },
   { title: "Two companies completed onboarding", body: "Peak & Pine Outdoors and Solace Home Decor connected their first channels.", category: "system", severity: "info", href: ROUTES.superAdmin.companies, source: "Onboarding", minutesAgo: 900, isRead: true },
   { title: "Auric Jewels suspended", body: "Suspended by Ishita Nair following a chargeback dispute.", category: "security", severity: "info", href: ROUTES.superAdmin.companies, source: "Operations", minutesAgo: 1_400, isRead: true },
