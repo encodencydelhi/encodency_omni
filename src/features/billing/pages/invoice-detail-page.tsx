@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils/format";
 import { formatMoney } from "../data/money";
@@ -20,11 +20,6 @@ import {
 import { BillingKpiCard } from "../components/billing-kpi-card";
 import { InvoiceDocumentModal } from "../components/invoices/invoice-document";
 import { VoidInvoiceDialog } from "../components/invoices/void-invoice-dialog";
-import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils/format";
-import { formatMoney } from "../data/money";
-import { useInvoiceDetail } from "../data/hooks";
 import {
   ArrowLeftIcon,
   PrinterIcon,

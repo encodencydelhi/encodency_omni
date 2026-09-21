@@ -8,15 +8,12 @@
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils/format";
 import { formatMoney } from "../../data/money";
 import type { Invoice } from "../../data/types";
-import { PrinterIcon, DownloadIcon, Building2Icon } from "lucide-react";
+import { PrinterIcon, DownloadIcon } from "lucide-react";
 import { exportToCsv } from "../../data/export";
 
 interface InvoiceDocumentModalProps {

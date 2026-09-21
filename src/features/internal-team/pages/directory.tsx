@@ -6,7 +6,6 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ROUTES } from "@/config/routes";
-import { useCompanyRefs } from "@/features/companies/hooks/use-companies";
 import { StaffCapabilitiesProvider, useStaffCapabilities } from "../data/capability-provider";
 import { useStaffList, useStaffKpis, useTeamMutations } from "../data/hooks";
 import type { StaffMember, StaffListQuery } from "../data/types";

@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import type { AccessReviewStatus, InvitationStatus, MfaState } from "../data/types";
-import { ACCESS_REVIEW_STATUS, INVITATION_STATUS_CONFIG, MFA_STATE_CONFIG, TEAM_MEMBER_STATUS_CONFIG } from "../data/config";
+import { ACCESS_REVIEW_STATUS, INVITATION_STATUS_CONFIG, MFA_STATE_CONFIG } from "../data/config";
 import { INTERNAL_ROLE, TEAM_MEMBER_STATUS, type TeamMemberStatus } from "@/types/domain/team";
 
 export function StaffStatusBadge({ status }: { status: TeamMemberStatus }) {

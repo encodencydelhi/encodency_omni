@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { ROUTES } from "@/config/routes";
 import { formatRelativeTime, getInitials } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
-import { INTERNAL_ROLE } from "@/types/domain/team";
 import { getStaffAvatarColor } from "../data/config";
 import { StaffStatusBadge, StaffRoleBadge, MfaStateBadge, AccessReviewStatusBadge } from "./staff-status-badges";
 import type { StaffMember } from "../data/types";
@@ -18,15 +17,12 @@ interface StaffQuickPreviewProps {
   member: StaffMember | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onChangeRole?: (member: StaffMember) => void;
-  onSuspend?: (member: StaffMember) => void;
 }
 
-export function StaffQuickPreview({ member, open, onOpenChange, onChangeRole, onSuspend }: StaffQuickPreviewProps) {
+export function StaffQuickPreview({ member, open, onOpenChange }: StaffQuickPreviewProps) {
   const router = useRouter();
   if (!member) return null;
   const activeAssignments = member.assignments.filter((a) => a.status === "active");
-  const roleMeta = INTERNAL_ROLE[member.role];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

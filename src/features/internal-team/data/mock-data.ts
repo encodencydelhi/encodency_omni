@@ -4,7 +4,6 @@ import type {
   AccessReviewStatus,
   AssignmentResponsibility,
   InvitationStatus,
-  MfaState,
   StaffAccessReview,
   StaffActivity,
   StaffAssignment,
@@ -90,7 +89,6 @@ export const STAFF_MEMBERS: StaffMember[] = STAFF_SEEDS.map((seed, index) => {
   const staffId = `stf_${String(index + 1).padStart(3, "0")}`;
   const assignments = buildAssignments(staffId, rng, seed.status);
   const mfaEnabled = seed.status === "invited" ? false : rng.bool(0.85);
-  const { accessReviewStatus, nextReviewDate } = buildReviewStatus(rng, seed.status);
   const review = buildReviewStatus(rng, seed.status);
   const privileged = seed.role === "super_admin" || seed.role === "technical_admin";
 
@@ -173,7 +171,8 @@ export const STAFF_ACCESS_REVIEWS: StaffAccessReview[] = STAFF_MEMBERS.filter((s
 });
 
 export const STAFF_ACTIVITIES: StaffActivity[] = STAFF_MEMBERS.flatMap((member) => {
-  const rng = createRng(33000 + parseInt(member.id.split("_")[1]) * 23);
+  const seedNum = parseInt(member.id.split("_")[1] || "0", 10);
+  const rng = createRng(33000 + seedNum * 23);
   const events: StaffActivity[] = [];
   const eventTypes = ["staff_invited", "invitation_accepted", "role_assigned", "company_assigned", "access_review_completed"];
   const count = member.status === "invited" ? 1 : rng.int(2, 5);
@@ -196,7 +195,8 @@ export const STAFF_ACTIVITIES: StaffActivity[] = STAFF_MEMBERS.flatMap((member) 
 }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
 export const STAFF_LIFECYCLE_EVENTS: StaffLifecycleEvent[] = STAFF_MEMBERS.flatMap((member) => {
-  const rng = createRng(44000 + parseInt(member.id.split("_")[1]) * 31);
+  const seedNum = parseInt(member.id.split("_")[1] || "0", 10);
+  const rng = createRng(44000 + seedNum * 31);
   const events: StaffLifecycleEvent[] = [];
   events.push({
     id: `lc_${member.id}_0`,

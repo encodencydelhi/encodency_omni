@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontalIcon, CheckCircle2Icon, AlertTriangleIcon, ShieldCheckIcon, EyeIcon } from "lucide-react";
+import { MoreHorizontalIcon, CheckCircle2Icon, EyeIcon, ShieldCheckIcon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";

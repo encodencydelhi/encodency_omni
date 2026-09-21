@@ -1,7 +1,7 @@
 import { ROUTES } from "@/config/routes";
 import type { StatusRegistry } from "@/types/common";
 import type { TeamMemberStatus } from "@/types/domain/team";
-import type { AccessReviewStatus, AssignmentResponsibility, InvitationStatus, MfaState, StaffMember } from "./types";
+import type { AccessReviewStatus, AssignmentResponsibility, InvitationStatus, MfaState } from "./types";
 
 export const COMPANY_POOL_EXPORT = [
   { id: "cmp_namo-gange-trust", name: "Namo Gange Trust" },
@@ -106,10 +106,22 @@ const AVATAR_COLORS = [
 export function getStaffAvatarColor(name: string): string {
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]!;
 }
 
-export function exportStaffToCsv(staff: StaffMember[], filename: string) {
+type StaffForExport = {
+  id: string;
+  name: string;
+  email: string;
+  department: string;
+  role: string;
+  status: string;
+  mfaEnabled: boolean;
+  lastActiveAt: string | null;
+  assignments: Array<{ status: string }>;
+};
+
+export function exportStaffToCsv(staff: StaffForExport[], filename = "internal-team-export.csv") {
   const headers = ["Staff ID", "Name", "Email", "Department", "Role", "Status", "MFA", "Companies", "Last Active"];
   const rows = staff.map((s) => [
     s.id, s.name, s.email, s.department, s.role, s.status,

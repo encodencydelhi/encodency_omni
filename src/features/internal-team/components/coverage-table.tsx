@@ -1,11 +1,10 @@
 "use client";
 
-import { Building2Icon, MoreHorizontalIcon, UserPlusIcon } from "lucide-react";
+import { MoreHorizontalIcon, UserPlusIcon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils/cn";
-import type { StaffAssignment, StaffMember } from "../data/types";
+import type { StaffMember } from "../data/types";
 
 interface CompanyCoverage {
   companyId: string;
@@ -18,12 +17,11 @@ interface CompanyCoverage {
 
 interface CoverageTableProps {
   coverage: CompanyCoverage[];
-  staff: StaffMember[];
   isLoading?: boolean;
   onAssignOwner?: (companyId: string, companyName: string) => void;
 }
 
-export function CoverageTable({ coverage, staff, isLoading, onAssignOwner }: CoverageTableProps) {
+export function CoverageTable({ coverage, isLoading, onAssignOwner }: CoverageTableProps) {
   const getStatusBadge = (status: CompanyCoverage["status"]) => {
     switch (status) {
       case "complete": return <Badge tone="success" className="text-2xs">Complete</Badge>;

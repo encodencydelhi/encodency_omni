@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeftIcon, BanIcon, CheckCircle2Icon, Building2Icon, ShieldCheckIcon, ClockIcon, FileTextIcon, SettingsIcon, Trash2Icon, UserCogIcon } from "lucide-react";
+import { ArrowLeftIcon, BanIcon, CheckCircle2Icon, Building2Icon, ClockIcon, Trash2Icon } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ROUTES } from "@/config/routes";
 import { INTERNAL_ROLE, ROLE_PERMISSIONS } from "@/types/domain/team";
 import { cn } from "@/lib/utils/cn";
@@ -19,7 +18,6 @@ import { StaffStatusBadge, StaffRoleBadge, MfaStateBadge, AccessReviewStatusBadg
 import { RoleChangeDrawer } from "../components/role-change-drawer";
 import { SuspendStaffDialog, ReactivateStaffDialog, DeactivateStaffDialog } from "../components/lifecycle-dialogs";
 import { AssignmentDrawer } from "../components/assignment-drawer";
-import { CapabilityMatrix } from "../components/capability-matrix";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/shared/empty-state";
 
@@ -117,7 +115,7 @@ function StaffDetailContent() {
           { label: "ROLE", value: roleMeta?.label || member.role, color: "text-blue-700" },
           { label: "STATUS", value: member.status, color: member.status === "active" ? "text-emerald-700" : "text-rose-700" },
           { label: "COMPANIES", value: activeAssignments.length, color: "text-violet-700" },
-          { label: "MFA", value: member.mfaEnabled ? "Enrolled" : "Required", color: member.mfaEnabled ? "text-emerald-700" : "text-amber-700" },
+          { label: "MFA", value: member.mfaState === "enrolled" ? "Enrolled" : "Required", color: member.mfaState === "enrolled" ? "text-emerald-700" : "text-amber-700" },
           { label: "ACCESS REVIEW", value: member.accessReviewStatus.replace(/_/g, " "), color: "text-slate-700" },
           { label: "LAST ACTIVE", value: member.lastActiveAt ? formatRelativeTime(member.lastActiveAt) : "Never", color: "text-slate-600" },
         ].map((k) => (

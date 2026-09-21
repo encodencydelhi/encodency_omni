@@ -15,7 +15,6 @@ import type {
   Refund,
   BillingAccount,
   ReconciliationException,
-  FinancialActivity,
   BillingPolicies,
   BillingOverviewKpis,
 } from "./types";
@@ -90,11 +89,6 @@ export function useInvoiceDetail(id: string) {
   const creditNotes = useSyncExternalStore(
     (onStoreChange) => billingStore.subscribe(onStoreChange),
     () => billingStore.getCreditNotes(),
-  );
-
-  const ledger = useSyncExternalStore(
-    (onStoreChange) => billingStore.subscribe(onStoreChange),
-    () => billingStore.getLedgerEntries(),
   );
 
   const invoice = useMemo(() => {

@@ -1,5 +1,4 @@
-import type { InternalRole, TeamMemberStatus } from "@/types/domain/team";
-import type { AccessReviewStatus, MfaState, StaffAssignment, StaffInvitation, StaffKpis, StaffListQuery, StaffListResult, StaffMember, InvitationKpis, CoverageKpi, AccessReviewKpis } from "./types";
+import type { StaffAccessReview, StaffAssignment, StaffInvitation, StaffKpis, StaffListQuery, StaffMember, InvitationKpis, CoverageKpi, AccessReviewKpis } from "./types";
 
 export function filterStaff(staff: StaffMember[], query: StaffListQuery): StaffMember[] {
   let result = [...staff];
@@ -94,7 +93,7 @@ export function computeCoverageKpi(staff: StaffMember[], companies: Array<{ id: 
   let unassignedCompanies = 0;
   let assignmentsNeedingReassignment = 0;
   const staffWithAssignments = new Set<string>();
-  companyMap.forEach((assignments, companyId) => {
+  companyMap.forEach((assignments) => {
     const primary = assignments.find((a) => a.responsibility === "primary_owner");
     const backup = assignments.find((a) => a.responsibility === "backup_owner");
     if (!primary) {

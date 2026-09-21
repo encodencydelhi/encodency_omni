@@ -1,13 +1,12 @@
 "use client";
 
-import { FilterIcon, SearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { INTERNAL_ROLE, type InternalRole, type TeamMemberStatus } from "@/types/domain/team";
 import { DEPARTMENTS, TEAM_SORT_OPTIONS } from "../data/config";
-import type { AccessReviewStatus, MfaState, StaffListQuery } from "../data/types";
+import type { StaffListQuery } from "../data/types";
 
 interface StaffFilterToolbarProps {
   query: StaffListQuery;

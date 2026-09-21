@@ -1,10 +1,9 @@
 "use client";
 
-import { MoreHorizontalIcon, EyeIcon, RotateCwIcon, XCircleIcon, MailIcon } from "lucide-react";
+import { MoreHorizontalIcon, RotateCwIcon, XCircleIcon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { formatDate, getInitials } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import { getStaffAvatarColor } from "../data/config";

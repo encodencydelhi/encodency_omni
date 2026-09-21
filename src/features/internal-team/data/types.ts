@@ -1,5 +1,4 @@
-import type { EntityRef } from "@/types/common";
-import type { InternalRole, Permission, TeamMemberStatus } from "@/types/domain/team";
+import type { InternalRole, TeamMemberStatus } from "@/types/domain/team";
 
 export type AccessReviewStatus = "not_scheduled" | "upcoming" | "due" | "overdue" | "completed";
 export type InvitationStatus = "pending" | "accepted" | "expired" | "revoked";

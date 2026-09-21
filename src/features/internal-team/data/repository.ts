@@ -24,15 +24,9 @@ import { filterStaff, sortStaff, paginateStaff, computeStaffKpis, computeInvitat
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-let staffStore: StaffMember[] = [...STAFF_MEMBERS];
-let invitationStore: StaffInvitation[] = [...STAFF_INVITATIONS];
-let reviewStore: StaffAccessReview[] = [...STAFF_ACCESS_REVIEWS];
-
-function resetStores() {
-  staffStore = [...STAFF_MEMBERS];
-  invitationStore = [...STAFF_INVITATIONS];
-  reviewStore = [...STAFF_ACCESS_REVIEWS];
-}
+const staffStore: StaffMember[] = [...STAFF_MEMBERS];
+const invitationStore: StaffInvitation[] = [...STAFF_INVITATIONS];
+const reviewStore: StaffAccessReview[] = [...STAFF_ACCESS_REVIEWS];
 
 export interface InternalTeamRepository {
   listStaff(query: StaffListQuery): Promise<StaffListResult>;
@@ -42,7 +36,7 @@ export interface InternalTeamRepository {
   getInvitationKpis(): Promise<InvitationKpis>;
   createInvitation(input: CreateStaffInvitationInput): Promise<StaffInvitation>;
   revokeInvitation(id: string): Promise<StaffInvitation>;
-  listAccessReviews(query?: { search?: string; status?: AccessReviewStatus }): Promise<StaffAccessReview[]>;
+  listAccessReviews(query?: { search?: string; status?: string }): Promise<StaffAccessReview[]>;
   getAccessReviewKpis(): Promise<AccessReviewKpis>;
   completeAccessReview(input: CompleteAccessReviewInput): Promise<StaffAccessReview>;
   changeRole(input: ChangeStaffRoleInput): Promise<StaffMember>;
@@ -75,6 +69,28 @@ function computeSensitiveCapabilities(role: string): string[] {
     operations: ["companies:write", "users:write"],
   };
   return sensitiveMap[role] || [];
+}
+
+function buildStaffMember(overrides: Partial<StaffMember> & Pick<StaffMember, "id" | "name" | "email" | "role">): StaffMember {
+  const role = overrides.role;
+  const defaults: Omit<StaffMember, "id" | "name" | "email" | "role"> = {
+    avatarUrl: null,
+    jobTitle: "Staff",
+    department: "Operations",
+    status: "active",
+    mfaState: "enrolled",
+    lastActiveAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    assignments: [],
+    effectiveCapabilities: computeEffectiveCapabilities(role),
+    sensitiveCapabilities: computeSensitiveCapabilities(role),
+    privilegedAccess: role === "super_admin" || role === "technical_admin",
+    nextReviewDate: new Date(Date.now() + 90 * 86400000).toISOString(),
+    accessReviewStatus: "approved",
+    lastReviewDate: new Date(Date.now() - 30 * 86400000).toISOString(),
+  };
+  return { ...defaults, ...overrides };
 }
 
 export const internalTeamRepository: InternalTeamRepository = {
@@ -117,16 +133,21 @@ export const internalTeamRepository: InternalTeamRepository = {
 
   async createInvitation(input) {
     await sleep(200);
+    const id = `inv_${String(invitationStore.length + 1).padStart(3, "0")}`;
     const newInvitation: StaffInvitation = {
-      id: `inv_${String(invitationStore.length + 1).padStart(3, "0")}`,
-      ...input,
+      id,
+      email: input.email,
+      name: input.name,
+      department: input.department,
+      jobTitle: input.jobTitle,
+      role: input.role,
       invitedBy: { id: "stf_001", name: "Aditya Raghunath" },
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 14 * 86400000).toISOString(),
       status: "pending",
       acceptedUserId: null,
     };
-    invitationStore = [newInvitation, ...invitationStore];
+    invitationStore.unshift(newInvitation);
     return newInvitation;
   },
 
@@ -134,8 +155,22 @@ export const internalTeamRepository: InternalTeamRepository = {
     await sleep(150);
     const idx = invitationStore.findIndex((i) => i.id === id);
     if (idx === -1) throw new Error("Invitation not found");
-    invitationStore[idx] = { ...invitationStore[idx], status: "revoked" };
-    return invitationStore[idx];
+    const original = invitationStore[idx]!;
+    const revoked: StaffInvitation = {
+      id: original.id,
+      email: original.email,
+      name: original.name,
+      department: original.department,
+      jobTitle: original.jobTitle,
+      role: original.role,
+      invitedBy: original.invitedBy,
+      createdAt: original.createdAt,
+      expiresAt: original.expiresAt,
+      status: "revoked",
+      acceptedUserId: original.acceptedUserId,
+    };
+    invitationStore[idx] = revoked;
+    return revoked;
   },
 
   async listAccessReviews(query) {
@@ -158,88 +193,262 @@ export const internalTeamRepository: InternalTeamRepository = {
     await sleep(200);
     const idx = reviewStore.findIndex((r) => r.id === input.reviewId);
     if (idx === -1) throw new Error("Review not found");
-    reviewStore[idx] = { ...reviewStore[idx], status: "completed" as AccessReviewStatus, outcome: input.outcome, notes: input.notes, lastReviewDate: new Date().toISOString() };
-    return reviewStore[idx];
+    const original = reviewStore[idx]!;
+    const updated: StaffAccessReview = {
+      id: original.id,
+      staffId: original.staffId,
+      staffName: original.staffName,
+      staffEmail: original.staffEmail,
+      staffRole: original.staffRole,
+      reviewer: original.reviewer,
+      status: "completed" as AccessReviewStatus,
+      outcome: input.outcome,
+      notes: input.notes,
+      privilegedAccess: original.privilegedAccess,
+      sensitiveCapabilities: original.sensitiveCapabilities,
+      lastReviewDate: new Date().toISOString(),
+      nextReviewDate: original.nextReviewDate,
+    };
+    reviewStore[idx] = updated;
+    return updated;
   },
 
   async changeRole(input) {
     await sleep(200);
     const idx = staffStore.findIndex((s) => s.id === input.staffId);
     if (idx === -1) throw new Error("Staff member not found");
-    staffStore[idx] = {
-      ...staffStore[idx],
+    const original = staffStore[idx]!;
+    const updated: StaffMember = {
+      id: original.id,
+      name: original.name,
+      email: original.email,
       role: input.newRole,
+      avatarUrl: original.avatarUrl,
+      jobTitle: original.jobTitle,
+      department: original.department,
+      status: original.status,
+      mfaState: original.mfaState,
+      lastActiveAt: original.lastActiveAt,
+      createdAt: original.createdAt,
+      updatedAt: new Date().toISOString(),
+      assignments: original.assignments,
       effectiveCapabilities: computeEffectiveCapabilities(input.newRole),
       sensitiveCapabilities: computeSensitiveCapabilities(input.newRole),
       privilegedAccess: input.newRole === "super_admin" || input.newRole === "technical_admin",
+      nextReviewDate: original.nextReviewDate,
+      accessReviewStatus: original.accessReviewStatus,
+      lastReviewDate: original.lastReviewDate,
     };
-    return staffStore[idx];
+    staffStore[idx] = updated;
+    return updated;
   },
 
   async assignCompany(input) {
     await sleep(200);
     const idx = staffStore.findIndex((s) => s.id === input.staffId);
     if (idx === -1) throw new Error("Staff member not found");
+    const original = staffStore[idx]!;
     const newAssignment = {
       id: `asgn_${input.staffId}_${Date.now()}`,
-      ...input,
+      staffId: input.staffId,
+      companyId: input.companyId,
+      companyName: input.companyName,
+      responsibility: input.responsibility,
       assignedAt: new Date().toISOString(),
       assignedBy: "stf_001",
       status: "active" as const,
     };
-    staffStore[idx] = { ...staffStore[idx], assignments: [...staffStore[idx].assignments, newAssignment] };
-    return staffStore[idx];
+    const updated: StaffMember = {
+      id: original.id,
+      name: original.name,
+      email: original.email,
+      role: original.role,
+      avatarUrl: original.avatarUrl,
+      jobTitle: original.jobTitle,
+      department: original.department,
+      status: original.status,
+      mfaState: original.mfaState,
+      lastActiveAt: original.lastActiveAt,
+      createdAt: original.createdAt,
+      updatedAt: new Date().toISOString(),
+      assignments: [...original.assignments, newAssignment],
+      effectiveCapabilities: original.effectiveCapabilities,
+      sensitiveCapabilities: original.sensitiveCapabilities,
+      privilegedAccess: original.privilegedAccess,
+      nextReviewDate: original.nextReviewDate,
+      accessReviewStatus: original.accessReviewStatus,
+      lastReviewDate: original.lastReviewDate,
+    };
+    staffStore[idx] = updated;
+    return updated;
   },
 
   async reassignCompany(input) {
     await sleep(200);
     const staffIdx = staffStore.findIndex((s) => s.assignments.some((a) => a.id === input.assignmentId));
     if (staffIdx === -1) throw new Error("Assignment not found");
-    const assignment = staffStore[staffIdx].assignments.find((a) => a.id === input.assignmentId);
+    const original = staffStore[staffIdx]!;
+    const assignment = original.assignments.find((a) => a.id === input.assignmentId);
     if (!assignment) throw new Error("Assignment not found");
-    staffStore[staffIdx] = {
-      ...staffStore[staffIdx],
-      assignments: staffStore[staffIdx].assignments.map((a) =>
-        a.id === input.assignmentId ? { ...a, status: "inactive" as const } : a,
-      ),
+
+    const updatedAssignments = original.assignments.map((a) =>
+      a.id === input.assignmentId ? { ...a, status: "inactive" as const } : a,
+    );
+    const sourceUpdated: StaffMember = {
+      id: original.id,
+      name: original.name,
+      email: original.email,
+      role: original.role,
+      avatarUrl: original.avatarUrl,
+      jobTitle: original.jobTitle,
+      department: original.department,
+      status: original.status,
+      mfaState: original.mfaState,
+      lastActiveAt: original.lastActiveAt,
+      createdAt: original.createdAt,
+      updatedAt: new Date().toISOString(),
+      assignments: updatedAssignments,
+      effectiveCapabilities: original.effectiveCapabilities,
+      sensitiveCapabilities: original.sensitiveCapabilities,
+      privilegedAccess: original.privilegedAccess,
+      nextReviewDate: original.nextReviewDate,
+      accessReviewStatus: original.accessReviewStatus,
+      lastReviewDate: original.lastReviewDate,
     };
+    staffStore[staffIdx] = sourceUpdated;
+
     const targetIdx = staffStore.findIndex((s) => s.id === input.newStaffId);
     if (targetIdx !== -1) {
-      const newAsgn = { ...assignment, id: `asgn_${input.newStaffId}_${Date.now()}`, staffId: input.newStaffId, assignedAt: new Date().toISOString() };
-      staffStore[targetIdx] = { ...staffStore[targetIdx], assignments: [...staffStore[targetIdx].assignments, newAsgn] };
-      return staffStore[targetIdx];
+      const target = staffStore[targetIdx]!;
+      const newAsgn = {
+        id: `asgn_${input.newStaffId}_${Date.now()}`,
+        staffId: input.newStaffId,
+        companyId: assignment.companyId,
+        companyName: assignment.companyName,
+        responsibility: assignment.responsibility,
+        assignedAt: new Date().toISOString(),
+        assignedBy: "stf_001",
+        status: "active" as const,
+      };
+      const targetUpdated: StaffMember = {
+        id: target.id,
+        name: target.name,
+        email: target.email,
+        role: target.role,
+        avatarUrl: target.avatarUrl,
+        jobTitle: target.jobTitle,
+        department: target.department,
+        status: target.status,
+        mfaState: target.mfaState,
+        lastActiveAt: target.lastActiveAt,
+        createdAt: target.createdAt,
+        updatedAt: new Date().toISOString(),
+        assignments: [...target.assignments, newAsgn],
+        effectiveCapabilities: target.effectiveCapabilities,
+        sensitiveCapabilities: target.sensitiveCapabilities,
+        privilegedAccess: target.privilegedAccess,
+        nextReviewDate: target.nextReviewDate,
+        accessReviewStatus: target.accessReviewStatus,
+        lastReviewDate: target.lastReviewDate,
+      };
+      staffStore[targetIdx] = targetUpdated;
+      return targetUpdated;
     }
-    return staffStore[staffIdx];
+    return sourceUpdated;
   },
 
   async suspendStaff(input) {
     await sleep(200);
     const idx = staffStore.findIndex((s) => s.id === input.staffId);
     if (idx === -1) throw new Error("Staff member not found");
-    staffStore[idx] = { ...staffStore[idx], status: "suspended" };
-    return staffStore[idx];
+    const original = staffStore[idx]!;
+    const updated: StaffMember = {
+      id: original.id,
+      name: original.name,
+      email: original.email,
+      role: original.role,
+      avatarUrl: original.avatarUrl,
+      jobTitle: original.jobTitle,
+      department: original.department,
+      status: "suspended",
+      mfaState: original.mfaState,
+      lastActiveAt: original.lastActiveAt,
+      createdAt: original.createdAt,
+      updatedAt: new Date().toISOString(),
+      assignments: original.assignments,
+      effectiveCapabilities: original.effectiveCapabilities,
+      sensitiveCapabilities: original.sensitiveCapabilities,
+      privilegedAccess: original.privilegedAccess,
+      nextReviewDate: original.nextReviewDate,
+      accessReviewStatus: original.accessReviewStatus,
+      lastReviewDate: original.lastReviewDate,
+    };
+    staffStore[idx] = updated;
+    return updated;
   },
 
   async reactivateStaff(input) {
     await sleep(200);
     const idx = staffStore.findIndex((s) => s.id === input.staffId);
     if (idx === -1) throw new Error("Staff member not found");
-    staffStore[idx] = { ...staffStore[idx], status: "active", lastActiveAt: new Date().toISOString() };
-    return staffStore[idx];
+    const original = staffStore[idx]!;
+    const updated: StaffMember = {
+      id: original.id,
+      name: original.name,
+      email: original.email,
+      role: original.role,
+      avatarUrl: original.avatarUrl,
+      jobTitle: original.jobTitle,
+      department: original.department,
+      status: "active",
+      mfaState: original.mfaState,
+      lastActiveAt: new Date().toISOString(),
+      createdAt: original.createdAt,
+      updatedAt: new Date().toISOString(),
+      assignments: original.assignments,
+      effectiveCapabilities: original.effectiveCapabilities,
+      sensitiveCapabilities: original.sensitiveCapabilities,
+      privilegedAccess: original.privilegedAccess,
+      nextReviewDate: original.nextReviewDate,
+      accessReviewStatus: original.accessReviewStatus,
+      lastReviewDate: original.lastReviewDate,
+    };
+    staffStore[idx] = updated;
+    return updated;
   },
 
   async deactivateStaff(input) {
     await sleep(250);
     const idx = staffStore.findIndex((s) => s.id === input.staffId);
     if (idx === -1) throw new Error("Staff member not found");
-    input.reassignmentPlan.forEach((plan) => {
-      const asgnIdx = staffStore[idx].assignments.findIndex((a) => a.companyId === plan.companyId && a.status === "active");
-      if (asgnIdx !== -1) {
-        staffStore[idx].assignments[asgnIdx] = { ...staffStore[idx].assignments[asgnIdx], status: "inactive" };
-      }
-    });
-    staffStore[idx] = { ...staffStore[idx], status: "suspended" };
-    return staffStore[idx];
+    const original = staffStore[idx]!;
+    const reassignmentIds = new Set(input.reassignmentPlan.map((r) => r.companyId));
+    const updatedAssignments = original.assignments.map((a) =>
+      reassignmentIds.has(a.companyId) ? { ...a, status: "inactive" as const } : a,
+    );
+    const updated: StaffMember = {
+      id: original.id,
+      name: original.name,
+      email: original.email,
+      role: original.role,
+      avatarUrl: original.avatarUrl,
+      jobTitle: original.jobTitle,
+      department: original.department,
+      status: "suspended",
+      mfaState: original.mfaState,
+      lastActiveAt: original.lastActiveAt,
+      createdAt: original.createdAt,
+      updatedAt: new Date().toISOString(),
+      assignments: updatedAssignments,
+      effectiveCapabilities: original.effectiveCapabilities,
+      sensitiveCapabilities: original.sensitiveCapabilities,
+      privilegedAccess: original.privilegedAccess,
+      nextReviewDate: original.nextReviewDate,
+      accessReviewStatus: original.accessReviewStatus,
+      lastReviewDate: original.lastReviewDate,
+    };
+    staffStore[idx] = updated;
+    return updated;
   },
 
   async getStaffActivity(staffId) {

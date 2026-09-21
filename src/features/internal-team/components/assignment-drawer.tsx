@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Building2Icon, XIcon } from "lucide-react";
+import { Building2Icon } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

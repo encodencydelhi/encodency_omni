@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRightIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

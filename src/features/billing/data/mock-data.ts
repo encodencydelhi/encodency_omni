@@ -14,7 +14,6 @@ import type {
   FinancialActivity,
   BillingPolicies,
 } from "./types";
-import { deriveInvoiceCollectionState, deriveInvoiceTimingState } from "./selectors";
 
 export const INITIAL_BILLING_POLICIES: BillingPolicies = {
   invoicePrefix: "INV-2026",
@@ -275,7 +274,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       },
     ],
     notes: "Auto-charged via UPI AutoPay. Payment reference PAY-2026-9011.",
-    billingAddress: INITIAL_BILLING_ACCOUNTS[0].address,
+    billingAddress: INITIAL_BILLING_ACCOUNTS[0]!.address,
     issuerLegalName: INITIAL_BILLING_POLICIES.issuerEntity,
     issuerAddress: {
       line1: "Prestige Cyber Tech Park",
@@ -285,7 +284,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       country: "India",
     },
     issuerTaxId: INITIAL_BILLING_POLICIES.issuerTaxId,
-    clientTaxId: INITIAL_BILLING_ACCOUNTS[0].taxId ?? undefined,
+    clientTaxId: INITIAL_BILLING_ACCOUNTS[0]!.taxId ?? undefined,
   },
   {
     id: "inv_2026_0102",
@@ -323,7 +322,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       },
     ],
     notes: "Partial payment of ₹6,800 received via NEFT. Remainder due on Sep 25.",
-    billingAddress: INITIAL_BILLING_ACCOUNTS[1].address,
+    billingAddress: INITIAL_BILLING_ACCOUNTS[1]!.address,
     issuerLegalName: INITIAL_BILLING_POLICIES.issuerEntity,
     issuerAddress: {
       line1: "Prestige Cyber Tech Park",
@@ -333,7 +332,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       country: "India",
     },
     issuerTaxId: INITIAL_BILLING_POLICIES.issuerTaxId,
-    clientTaxId: INITIAL_BILLING_ACCOUNTS[1].taxId ?? undefined,
+    clientTaxId: INITIAL_BILLING_ACCOUNTS[1]!.taxId ?? undefined,
   },
   {
     id: "inv_2026_0103",
@@ -371,7 +370,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       },
     ],
     notes: "Pending wire transfer settlement from Barclays UK.",
-    billingAddress: INITIAL_BILLING_ACCOUNTS[2].address,
+    billingAddress: INITIAL_BILLING_ACCOUNTS[2]!.address,
     issuerLegalName: INITIAL_BILLING_POLICIES.issuerEntity,
     issuerAddress: {
       line1: "Prestige Cyber Tech Park",
@@ -381,7 +380,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       country: "India",
     },
     issuerTaxId: INITIAL_BILLING_POLICIES.issuerTaxId,
-    clientTaxId: INITIAL_BILLING_ACCOUNTS[2].taxId ?? undefined,
+    clientTaxId: INITIAL_BILLING_ACCOUNTS[2]!.taxId ?? undefined,
   },
   {
     id: "inv_2026_0104",
@@ -419,7 +418,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       },
     ],
     notes: "Payment card declined by issuing bank (insufficient balance). Dunning cycle step 2.",
-    billingAddress: INITIAL_BILLING_ACCOUNTS[3].address,
+    billingAddress: INITIAL_BILLING_ACCOUNTS[3]!.address,
     issuerLegalName: INITIAL_BILLING_POLICIES.issuerEntity,
     issuerAddress: {
       line1: "Prestige Cyber Tech Park",
@@ -429,7 +428,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       country: "India",
     },
     issuerTaxId: INITIAL_BILLING_POLICIES.issuerTaxId,
-    clientTaxId: INITIAL_BILLING_ACCOUNTS[3].taxId ?? undefined,
+    clientTaxId: INITIAL_BILLING_ACCOUNTS[3]!.taxId ?? undefined,
   },
   {
     id: "inv_2026_0105",
@@ -467,7 +466,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       },
     ],
     notes: "Account currently suspended due to non-payment.",
-    billingAddress: INITIAL_BILLING_ACCOUNTS[4].address,
+    billingAddress: INITIAL_BILLING_ACCOUNTS[4]!.address,
     issuerLegalName: INITIAL_BILLING_POLICIES.issuerEntity,
     issuerAddress: {
       line1: "Prestige Cyber Tech Park",
@@ -477,7 +476,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       country: "India",
     },
     issuerTaxId: INITIAL_BILLING_POLICIES.issuerTaxId,
-    clientTaxId: INITIAL_BILLING_ACCOUNTS[4].taxId ?? undefined,
+    clientTaxId: INITIAL_BILLING_ACCOUNTS[4]!.taxId ?? undefined,
   },
   {
     id: "inv_2026_0106",
@@ -515,7 +514,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       },
     ],
     notes: "Measured consumption for marketing campaigns run in Sep 2026.",
-    billingAddress: INITIAL_BILLING_ACCOUNTS[6].address,
+    billingAddress: INITIAL_BILLING_ACCOUNTS[6]!.address,
     issuerLegalName: INITIAL_BILLING_POLICIES.issuerEntity,
     issuerAddress: {
       line1: "Prestige Cyber Tech Park",
@@ -525,7 +524,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       country: "India",
     },
     issuerTaxId: INITIAL_BILLING_POLICIES.issuerTaxId,
-    clientTaxId: INITIAL_BILLING_ACCOUNTS[6].taxId ?? undefined,
+    clientTaxId: INITIAL_BILLING_ACCOUNTS[6]!.taxId ?? undefined,
   },
   {
     id: "inv_2026_0107",
@@ -563,7 +562,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       },
     ],
     notes: "Draft invoice awaiting finance approval before issuance.",
-    billingAddress: INITIAL_BILLING_ACCOUNTS[5].address,
+    billingAddress: INITIAL_BILLING_ACCOUNTS[5]!.address,
     issuerLegalName: INITIAL_BILLING_POLICIES.issuerEntity,
     issuerAddress: {
       line1: "Prestige Cyber Tech Park",
@@ -573,7 +572,7 @@ export const INITIAL_INVOICES: Invoice[] = [
       country: "India",
     },
     issuerTaxId: INITIAL_BILLING_POLICIES.issuerTaxId,
-    clientTaxId: INITIAL_BILLING_ACCOUNTS[5].taxId ?? undefined,
+    clientTaxId: INITIAL_BILLING_ACCOUNTS[5]!.taxId ?? undefined,
   },
 ];
 

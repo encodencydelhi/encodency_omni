@@ -8,12 +8,9 @@ import { StaffNav } from "../components/staff-nav";
 import { CoverageTable } from "../components/coverage-table";
 import { AssignmentDrawer } from "../components/assignment-drawer";
 import { COMPANY_POOL_EXPORT } from "../data/config";
-import type { StaffMember, AssignmentResponsibility } from "../data/types";
 
 function AssignmentsContent() {
   const [assignDrawerOpen, setAssignDrawerOpen] = useState(false);
-  const [assignCompanyId, setAssignCompanyId] = useState("");
-  const [assignCompanyName, setAssignCompanyName] = useState("");
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const mutations = useTeamMutations();
 
@@ -88,10 +85,7 @@ function AssignmentsContent() {
       {/* Coverage Table */}
       <CoverageTable
         coverage={coverage}
-        staff={staff}
         onAssignOwner={(companyId, companyName) => {
-          setAssignCompanyId(companyId);
-          setAssignCompanyName(companyName);
           setSelectedStaffId(staff[0]?.id || null);
           setAssignDrawerOpen(true);
         }}

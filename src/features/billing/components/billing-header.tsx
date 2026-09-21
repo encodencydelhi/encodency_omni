@@ -43,7 +43,7 @@ export function BillingHeader({
   onCurrencyChange,
 }: BillingHeaderProps) {
   const router = useRouter();
-  const { kpis, invoices, payments } = useBillingOverview({
+  const { kpis } = useBillingOverview({
     periodDays: selectedPeriod,
     currency: selectedCurrency,
   });

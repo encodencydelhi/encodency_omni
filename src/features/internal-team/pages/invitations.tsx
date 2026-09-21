@@ -1,17 +1,15 @@
 "use client";
 
-import { DownloadIcon, MailIcon, PlusIcon, XCircleIcon } from "lucide-react";
+import { MailIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { StaffCapabilitiesProvider, useStaffCapabilities } from "../data/capability-provider";
 import { useStaffInvitations, useInvitationKpis, useTeamMutations } from "../data/hooks";
 import { StaffNav } from "../components/staff-nav";
 import { InvitationTable } from "../components/invitation-table";
 import { InviteStaffWizard } from "../components/invite-staff-wizard";
-import { INVITATION_STATUS_CONFIG } from "../data/config";
 
 function InvitationsContent() {
   const caps = useStaffCapabilities();
