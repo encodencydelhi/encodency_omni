@@ -3,6 +3,21 @@ import type { StatusRegistry } from "@/types/common";
 import type { TeamMemberStatus } from "@/types/domain/team";
 import type { AccessReviewStatus, AssignmentResponsibility, InvitationStatus, MfaState, StaffMember } from "./types";
 
+export const COMPANY_POOL_EXPORT = [
+  { id: "cmp_namo-gange-trust", name: "Namo Gange Trust" },
+  { id: "cmp_citycalls", name: "CityCalls Pvt Ltd" },
+  { id: "cmp_meridian-digital", name: "Meridian Digital" },
+  { id: "cmp_bharat-organic-foods", name: "Bharat Organic Foods" },
+  { id: "cmp_sattva-wellness", name: "Sattva Wellness Group" },
+  { id: "cmp_craftline-interiors", name: "Craftline Interiors" },
+  { id: "cmp_blue-harbour-logistics", name: "Blue Harbour Logistics" },
+  { id: "cmp_auric-jewels", name: "Auric Jewels" },
+  { id: "cmp_nordwind-studios", name: "Nordwind Studios" },
+  { id: "cmp_peak-and-pine", name: "Peak & Pine Outdoors" },
+  { id: "cmp_lumen-health", name: "Lumen Health Systems" },
+  { id: "cmp_amberline-cosmetics", name: "Amberline Cosmetics" },
+] as const;
+
 export const TEAM_MOCK_MODE = true;
 export const MOCK_REFERENCE_TIME = new Date("2026-09-19T12:00:00Z").getTime();
 export const SESSION_STORAGE_KEYS = { internalTeamStore: "encodency_internal_team_v1" } as const;
