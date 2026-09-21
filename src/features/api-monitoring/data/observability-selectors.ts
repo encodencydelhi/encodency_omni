@@ -1,11 +1,11 @@
 import type { ApiEndpoint, ApiMonitoringSnapshot, ApiRequest, ApiTimeRange } from "./observability-types";
 
 export function rangeMinutes(range: ApiTimeRange) {
-  return range === "15m" ? 15 : range === "1h" ? 60 : range === "24h" ? 1440 : range === "7d" ? 10080 : 43200;
+  return range === "15m" ? 15 : range === "1h" ? 60 : range === "24h" ? 1440 : range === "7d" ? 10080 : range === "30d" ? 43200 : 1440;
 }
 
-export function requestsInRange(snapshot: ApiMonitoringSnapshot, range: ApiTimeRange, serviceId = "all") {
-  const floor = Date.parse(snapshot.generatedAt) - rangeMinutes(range) * 60_000;
+export function requestsInRange(snapshot: ApiMonitoringSnapshot, range: ApiTimeRange, serviceId = "all", customMinutes?: number) {
+  const floor = Date.parse(snapshot.generatedAt) - (range === "custom" ? customMinutes ?? 1440 : rangeMinutes(range)) * 60_000;
   return snapshot.requests.filter((request) => Date.parse(request.startedAt) >= floor && (serviceId === "all" || request.serviceId === serviceId));
 }
 
@@ -24,8 +24,8 @@ export function statusClass(statusCode: number) {
   return "success";
 }
 
-export function kpis(snapshot: ApiMonitoringSnapshot, range: ApiTimeRange, serviceId = "all") {
-  const rows = requestsInRange(snapshot, range, serviceId);
+export function kpis(snapshot: ApiMonitoringSnapshot, range: ApiTimeRange, serviceId = "all", customMinutes?: number) {
+  const rows = requestsInRange(snapshot, range, serviceId, customMinutes);
   const total = rows.length;
   const success = rows.filter((row) => row.statusCode >= 200 && row.statusCode < 300).length;
   const serverErrors = rows.filter((row) => row.statusCode >= 500).length;

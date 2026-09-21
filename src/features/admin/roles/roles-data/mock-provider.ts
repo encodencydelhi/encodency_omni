@@ -2,16 +2,16 @@ import { MODULES, PERMISSION_LABELS } from "./config";
 import type { AccessLevel, AdminRole, RoleMember } from "./types";
 
 const members: RoleMember[] = [
-  { id: "mem-1", name: "Manish Sirohi", email: "manishsirohi@encodency.com", clients: ["Moksha Sewa", "CityCalls"], status: "active", lastActiveAt: "2026-09-18T08:15:00.000Z" },
+  { id: "mem-1", name: "Manish Sirohi", email: "manishsirohi@encodency.com", clients: ["Moksha Sewa", "CityInida"], status: "active", lastActiveAt: "2026-09-18T08:15:00.000Z" },
   { id: "mem-2", name: "Priya Sharma", email: "priya@namogange.org", clients: ["Moksha Sewa"], status: "active", lastActiveAt: "2026-09-17T13:20:00.000Z" },
   { id: "mem-3", name: "Amit Singh", email: "amit@namogange.org", clients: ["Moksha Sewa"], status: "active", lastActiveAt: "2026-09-16T11:10:00.000Z" },
   { id: "mem-4", name: "Neha Verma", email: "neha@namogange.org", clients: ["Moksha Sewa", "EnCodency"], status: "invited", lastActiveAt: null },
   { id: "mem-5", name: "Rahul Mehta", email: "rahul@encodency.com", clients: ["EnCodency"], status: "active", lastActiveAt: "2026-09-15T15:45:00.000Z" },
   { id: "mem-6", name: "Sarita Chauhan", email: "sarita@namogange.org", clients: ["Moksha Sewa"], status: "active", lastActiveAt: "2026-09-18T06:30:00.000Z" },
-  { id: "mem-7", name: "Aditya Rao", email: "aditya@encodency.com", clients: ["CityCalls"], status: "active", lastActiveAt: "2026-09-14T10:00:00.000Z" },
+  { id: "mem-7", name: "Aditya Rao", email: "aditya@encodency.com", clients: ["CityInida"], status: "active", lastActiveAt: "2026-09-14T10:00:00.000Z" },
   { id: "mem-8", name: "Kavya Nair", email: "kavya@encodency.com", clients: ["Moksha Sewa"], status: "active", lastActiveAt: "2026-09-13T12:40:00.000Z" },
-  { id: "mem-9", name: "Rina Devi", email: "rina@namogange.org", clients: ["Moksha Sewa", "CityCalls", "EnCodency"], status: "active", lastActiveAt: "2026-09-12T08:00:00.000Z" },
-  { id: "mem-10", name: "Arjun Kapoor", email: "arjun@encodency.com", clients: ["CityCalls"], status: "suspended", lastActiveAt: "2026-09-03T08:00:00.000Z" },
+  { id: "mem-9", name: "Rina Devi", email: "rina@namogange.org", clients: ["Moksha Sewa", "CityInida", "EnCodency"], status: "active", lastActiveAt: "2026-09-12T08:00:00.000Z" },
+  { id: "mem-10", name: "Arjun Kapoor", email: "arjun@encodency.com", clients: ["CityInida"], status: "suspended", lastActiveAt: "2026-09-03T08:00:00.000Z" },
 ];
 
 function moduleAccess(levels: Partial<Record<(typeof MODULES)[number], AccessLevel>>) {

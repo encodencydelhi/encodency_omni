@@ -1292,7 +1292,7 @@ export const mockUsersProvider = {
 function getCompanyName(companyId: string): string {
   const map: Record<string, string> = {
     "cmp_namo-gange-trust": "Namo Gange Trust",
-    "cmp_citycalls": "CityCalls Pvt Ltd",
+    "cmp_CityInida": "CityInida Pvt Ltd",
     "cmp_meridian-digital": "Meridian Digital",
     "cmp_bharat-organic-foods": "Bharat Organic Foods",
     "cmp_sattva-wellness": "Sattva Wellness Group",
@@ -1313,9 +1313,9 @@ function getMockClientsForCompany(companyId: string, clientIds: string[]): Array
       { id: "prj_namo-gange-trust_1", name: "Moksha Sewa" },
       { id: "prj_namo-gange-trust_2", name: "Ganga Aarti Live" },
     ],
-    "cmp_citycalls": [
-      { id: "prj_citycalls_1", name: "CityCalls Services" },
-      { id: "prj_citycalls_2", name: "CityCalls Support" },
+    "cmp_CityInida": [
+      { id: "prj_CityInida_1", name: "CityInida Services" },
+      { id: "prj_CityInida_2", name: "CityInida Support" },
     ],
     "cmp_meridian-digital": [
       { id: "prj_meridian_1", name: "Northstar Bank" },

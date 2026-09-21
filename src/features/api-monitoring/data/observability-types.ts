@@ -1,5 +1,5 @@
 export type ApiEnvironment = "development" | "staging" | "production";
-export type ApiTimeRange = "15m" | "1h" | "24h" | "7d" | "30d";
+export type ApiTimeRange = "15m" | "1h" | "24h" | "7d" | "30d" | "custom";
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type ApiFreshness = "fresh" | "stale" | "missing";
 export type ApiServiceCategory = "Core Application API" | "Authentication API" | "Content API" | "Publishing API" | "Billing API" | "External Provider API" | "Platform Operations API";

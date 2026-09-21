@@ -184,7 +184,7 @@ export function exportUsersToJson(users: UserAggregate[], filename = "omniplatfo
 
 export const PLATFORM_COMPANY_OPTIONS = [
   { id: "cmp_namo-gange-trust", name: "Namo Gange Trust" },
-  { id: "cmp_citycalls", name: "CityCalls Pvt Ltd" },
+  { id: "cmp_CityInida", name: "CityInida Pvt Ltd" },
   { id: "cmp_meridian-digital", name: "Meridian Digital" },
   { id: "cmp_bharat-organic-foods", name: "Bharat Organic Foods" },
   { id: "cmp_sattva-wellness", name: "Sattva Wellness Group" },

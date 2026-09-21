@@ -67,7 +67,7 @@ export const MOCK_MEMBERS: Member[] = [
     groups: [{ id: "grp-1", name: "Marketing" }],
     clientAccess: [
       { clientId: "c-1", clientName: "Moksha Sewa", accessLevel: "full", grantedAt: iso(subDays(NOW, 300)) },
-      { clientId: "c-2", clientName: "CityCalls", accessLevel: "full", grantedAt: iso(subDays(NOW, 300)) },
+      { clientId: "c-2", clientName: "CityInida", accessLevel: "full", grantedAt: iso(subDays(NOW, 300)) },
     ],
     workload: { status: "normal", openTasks: 5, overdueTasks: 0, pendingApprovals: 3, campaigns: 2, workflows: 1 },
     ownedResources: [{ type: "campaign", count: 2 }, { type: "workflow", count: 1 }],
@@ -107,7 +107,7 @@ export const MOCK_MEMBERS: Member[] = [
     groups: [{ id: "grp-3", name: "SEO Team" }],
     clientAccess: [
       { clientId: "c-1", clientName: "Moksha Sewa", accessLevel: "full", grantedAt: iso(subDays(NOW, 150)) },
-      { clientId: "c-2", clientName: "CityCalls", accessLevel: "full", grantedAt: iso(subDays(NOW, 150)) },
+      { clientId: "c-2", clientName: "CityInida", accessLevel: "full", grantedAt: iso(subDays(NOW, 150)) },
     ],
     workload: { status: "overloaded", openTasks: 28, overdueTasks: 5, pendingApprovals: 0, campaigns: 0, workflows: 0 },
     ownedResources: [{ type: "task", count: 28 }],
@@ -173,7 +173,7 @@ export const MOCK_INVITATIONS: Invitation[] = [
     name: "Sanjay Kumar",
     roleId: "analyst",
     roleName: "Analyst",
-    clients: [{ id: "c-1", name: "Moksha Sewa" }, { id: "c-2", name: "CityCalls" }],
+    clients: [{ id: "c-1", name: "Moksha Sewa" }, { id: "c-2", name: "CityInida" }],
     accessLevel: "read_only",
     groups: [],
     invitedBy: { id: "mem-1", name: "Manish Sirohi" },
@@ -186,7 +186,7 @@ export const MOCK_INVITATIONS: Invitation[] = [
 export const MOCK_ACTIVITY: MemberActivity[] = [
   { id: "act-1", memberId: "mem-2", memberName: "Priya Sharma", action: "Published Post", entityName: "Summer Sale Announcement", module: "X", clientId: "c-1", clientName: "Moksha Sewa", timestamp: iso(subHours(NOW, 1)) },
   { id: "act-2", memberId: "mem-1", memberName: "Manish Sirohi", action: "Approved Campaign", entityName: "Diwali Special", module: "Campaigns", clientId: "c-1", clientName: "Moksha Sewa", timestamp: iso(subHours(NOW, 2)) },
-  { id: "act-3", memberId: "mem-3", memberName: "Amit Singh", action: "Resolved SEO Issue", entityName: "Missing Meta Descriptions", module: "SEO", clientId: "c-2", clientName: "CityCalls", timestamp: iso(subHours(NOW, 5)) },
+  { id: "act-3", memberId: "mem-3", memberName: "Amit Singh", action: "Resolved SEO Issue", entityName: "Missing Meta Descriptions", module: "SEO", clientId: "c-2", clientName: "CityInida", timestamp: iso(subHours(NOW, 5)) },
   { id: "act-4", memberId: "mem-1", memberName: "Manish Sirohi", action: "Invited Member", entityName: "neha@encodency.com", module: "Team", timestamp: iso(subDays(NOW, 2)) },
   { id: "act-5", memberId: "mem-2", memberName: "Priya Sharma", action: "Scheduled Post", entityName: "Weekly Tips", module: "LinkedIn", clientId: "c-1", clientName: "Moksha Sewa", timestamp: iso(subDays(NOW, 2)) },
 ];
