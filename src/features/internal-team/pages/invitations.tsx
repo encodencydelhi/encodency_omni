@@ -1,6 +1,6 @@
 "use client";
 
-import { MailIcon, PlusIcon } from "lucide-react";
+import { ClockIcon, CheckCircle2Icon, AlertTriangleIcon, XCircleIcon, MailIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,11 +22,11 @@ function InvitationsContent() {
   const { data: kpis } = useInvitationKpis();
 
   const kpiCards = kpis ? [
-    { label: "Pending", value: kpis.pending, tone: "info" as const },
-    { label: "Accepted", value: kpis.accepted, tone: "success" as const },
-    { label: "Expired", value: kpis.expired, tone: "warning" as const },
-    { label: "Revoked", value: kpis.revoked, tone: "neutral" as const },
-    { label: "Expiring Soon", value: kpis.expiringSoon, tone: "danger" as const },
+    { label: "Pending", value: kpis.pending, color: "text-blue-700", icon: ClockIcon, iconBg: "bg-blue-50 text-blue-600" },
+    { label: "Accepted", value: kpis.accepted, color: "text-emerald-700", icon: CheckCircle2Icon, iconBg: "bg-emerald-50 text-emerald-600" },
+    { label: "Expired", value: kpis.expired, color: "text-amber-700", icon: AlertTriangleIcon, iconBg: "bg-amber-50 text-amber-600" },
+    { label: "Revoked", value: kpis.revoked, color: "text-slate-600", icon: XCircleIcon, iconBg: "bg-slate-50 text-slate-500" },
+    { label: "Expiring Soon", value: kpis.expiringSoon, color: "text-rose-700", icon: AlertTriangleIcon, iconBg: "bg-rose-50 text-rose-600" },
   ] : [];
 
   return (
