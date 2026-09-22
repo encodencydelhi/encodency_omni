@@ -56,7 +56,7 @@ export function MetricCard({
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[12px] font-medium text-muted-foreground">{label}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{label}</p>
         {Icon ? (
           <span
             className="flex size-8 shrink-0 items-center justify-center rounded-sm"
@@ -67,10 +67,12 @@ export function MetricCard({
         ) : null}
       </div>
 
-      <p className="text-lg font-semibold leading-none tracking-tight tabular text-foreground">{value}</p>
+      <p className="text-lg font-bold leading-none tracking-tight tabular text-black">{value}</p>
 
       {delta ? <TrendIndicator delta={delta} comparisonLabel={comparisonLabel} /> : null}
-      {hint ? <p className="text-[12px] text-muted-foreground">{hint}</p> : null}
+      {hint ? (
+        <p className="text-[11px] font-normal text-slate-400">{hint}</p>
+      ) : null}
     </div>
   );
 }

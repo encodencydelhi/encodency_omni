@@ -50,8 +50,8 @@ export function SidebarNav({ isCollapsed, onNavigate }: SidebarNavProps) {
                   onClick={onNavigate}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "group flex h-[34px] items-center gap-3 rounded-md text-[13px] transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
-                    isCollapsed ? "justify-center px-0 w-[34px] mx-auto" : "px-3",
+                    "group flex h-[28px] items-center gap-3 rounded-md text-[13px] transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+                    isCollapsed ? "justify-center px-0 w-[28px] mx-auto" : "px-3",
                     isActive
                       ? "bg-blue-900/40 text-blue-50 font-semibold shadow-sm border border-blue-800/50"
                       : "bg-transparent font-medium text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent",

@@ -142,7 +142,7 @@ export function AdminSidebar() {
                         title={isSidebarCollapsed ? item.label : undefined}
                         onClick={() => setMobileNavOpen(false)}
                         className={cn(
-                          "group flex h-[36px] items-center gap-3 rounded-sm border text-[12px] transition-all duration-200",
+                          "group flex h-[30px] items-center gap-3 rounded-sm border text-[12px] transition-all duration-200",
                           isSidebarCollapsed ? "justify-center px-0" : "px-3",
                           active
                             ? "border-[#2563EB]/40 bg-[#1E3A8A]/50 text-white shadow-[0_0_20px_rgba(59,130,246,0.25)]"
