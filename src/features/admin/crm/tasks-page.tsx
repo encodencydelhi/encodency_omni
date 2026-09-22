@@ -23,10 +23,14 @@ import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ActivityTimeline } from "@/components/shared/activity-timeline";
 import { DonutChart } from "@/components/shared/charts/donut-chart";
+import { TrendAreaChart, ChartLegend } from "@/components/shared/charts/trend-area-chart";
+import { MonthlyBarChart } from "@/components/shared/charts/monthly-bar-chart";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
 import type { DataTableColumn, DataTableSelection } from "@/components/shared/data-table/types";
 import type { PaginationMeta, SortSpec } from "@/types/api";
 import type { DonutSegment } from "@/components/shared/charts/donut-chart";
+import type { TrendSeries } from "@/components/shared/charts/trend-area-chart";
+import type { MonthlyPoint } from "@/types/domain/dashboard";
 import { TaskMetricCards } from "./components/crm-metric-cards";
 import { tasks as initialTasks, activities } from "./data/crm-data";
 import type { CrmTask, TaskStatus, TaskPriority, TaskType, TaskViewMode } from "./types";
@@ -86,6 +90,55 @@ function computeTypeDistribution(tasks: CrmTask[]): DonutSegment[] {
   }));
 }
 
+function computePriorityDistribution(tasks: CrmTask[]): DonutSegment[] {
+  const counts: Record<string, number> = {};
+  tasks.forEach((t) => { counts[t.priority] = (counts[t.priority] || 0) + 1; });
+  const colors: Record<string, string> = { high: "#DC2626", medium: "#F59E0B", low: "#6B7280" };
+  return Object.entries(counts).map(([key, value]) => ({
+    key, label: key.charAt(0).toUpperCase() + key.slice(1), value, color: colors[key] ?? "#AAB5C6",
+  }));
+}
+
+function computeAssigneeDistribution(tasks: CrmTask[]): DonutSegment[] {
+  const counts: Record<string, number> = {};
+  tasks.forEach((t) => { counts[t.assigneeName] = (counts[t.assigneeName] || 0) + 1; });
+  const colors = ["#2563EB", "#059669", "#7C3AED", "#D97706", "#DC2626", "#0891B2"];
+  return Object.entries(counts).map(([key, value], i) => ({
+    key, label: key, value, color: colors[i % colors.length] ?? "#AAB5C6",
+  }));
+}
+
+function computeTasksTrend(tasks: CrmTask[]): TrendSeries[] {
+  const byDate: Record<string, { created: number; completed: number }> = {};
+  tasks.forEach((t) => {
+    const cd = t.createdAt.split("T")[0] ?? "";
+    if (!byDate[cd]) byDate[cd] = { created: 0, completed: 0 };
+    byDate[cd].created++;
+    if (t.completedAt) {
+      const compd = t.completedAt.split("T")[0] ?? "";
+      if (!byDate[compd]) byDate[compd] = { created: 0, completed: 0 };
+      byDate[compd].completed++;
+    }
+  });
+  const pts = Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b));
+  return [
+    { key: "created", label: "Created", color: "#2563EB", data: pts.map(([date, v]) => ({ date, value: v.created })) },
+    { key: "completed", label: "Completed", color: "#059669", data: pts.map(([date, v]) => ({ date, value: v.completed })) },
+  ];
+}
+
+function computeMonthlyTasks(tasks: CrmTask[]): MonthlyPoint[] {
+  const counts: Record<string, number> = {};
+  tasks.forEach((t) => {
+    const d = new Date(t.createdAt);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  return Object.entries(counts)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, count]) => ({ month, value: count }));
+}
+
 /* ------------------------------------------------------------------ */
 /* Main Page                                                            */
 /* ------------------------------------------------------------------ */
@@ -135,6 +188,10 @@ export default function TasksPage() {
   }), [page, pageSize, filtered.length]);
 
   const typeDistribution = useMemo(() => computeTypeDistribution(tasks), [tasks]);
+  const priorityDistribution = useMemo(() => computePriorityDistribution(tasks), [tasks]);
+  const assigneeDistribution = useMemo(() => computeAssigneeDistribution(tasks), [tasks]);
+  const tasksTrend = useMemo(() => computeTasksTrend(tasks), [tasks]);
+  const monthlyTasks = useMemo(() => computeMonthlyTasks(tasks), [tasks]);
 
   /* ---- Actions ---- */
   const handleSort = useCallback((field: string) => {
@@ -411,21 +468,67 @@ export default function TasksPage() {
       )}
 
       {/* ---- Analytics Section ---- */}
-      <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
-        <h2 className="border-b border-[#E8EDF3] px-3 py-2.5 text-[12px] font-semibold">Task Type Distribution</h2>
-        <div className="flex items-center gap-3 p-4">
-          <DonutChart segments={typeDistribution} centerValue={String(tasks.length)} centerLabel="Total Tasks" size={140} />
-          <ul className="flex-1 space-y-1">
-            {typeDistribution.map((src) => (
-              <li key={src.key} className="flex items-center gap-2 rounded-sm px-2 py-1">
-                <span className="size-2 rounded-sm" style={{ backgroundColor: src.color }} />
-                <span className="flex-1 text-[12px]">{src.label}</span>
-                <span className="text-[12px] font-semibold">{src.value}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      <div className="grid gap-2 lg:grid-cols-3">
+        <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
+          <h2 className="border-b border-[#E8EDF3] px-3 py-2 text-[12px] font-semibold">Tasks Over Time</h2>
+          <div className="p-2">
+            {tasksTrend[0]?.data.length > 0 ? <><TrendAreaChart series={tasksTrend} height={160} /><div className="mt-1"><ChartLegend series={tasksTrend} /></div></> : <p className="text-[12px] text-[#75829D] py-6 text-center">No data yet</p>}
+          </div>
+        </section>
+        <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
+          <h2 className="border-b border-[#E8EDF3] px-3 py-2 text-[12px] font-semibold">Task Type Distribution</h2>
+          <div className="flex items-center gap-3 p-4">
+            <DonutChart segments={typeDistribution} centerValue={String(tasks.length)} centerLabel="Total Tasks" size={130} />
+            <ul className="flex-1 space-y-0.5">
+              {typeDistribution.map((src) => (
+                <li key={src.key} className="flex items-center gap-2 rounded-sm px-2 py-0.5">
+                  <span className="size-2 rounded-sm" style={{ backgroundColor: src.color }} />
+                  <span className="flex-1 text-[12px]">{src.label}</span>
+                  <span className="text-[12px] font-semibold">{src.value}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+        <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
+          <h2 className="border-b border-[#E8EDF3] px-3 py-2 text-[12px] font-semibold">Priority Distribution</h2>
+          <div className="flex items-center gap-3 p-4">
+            <DonutChart segments={priorityDistribution} centerValue={String(tasks.length)} centerLabel="Total Tasks" size={130} />
+            <ul className="flex-1 space-y-0.5">
+              {priorityDistribution.map((src) => (
+                <li key={src.key} className="flex items-center gap-2 rounded-sm px-2 py-0.5">
+                  <span className="size-2 rounded-sm" style={{ backgroundColor: src.color }} />
+                  <span className="flex-1 text-[12px]">{src.label}</span>
+                  <span className="text-[12px] font-semibold">{src.value}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      </div>
+      <div className="grid gap-2 lg:grid-cols-2">
+        <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
+          <h2 className="border-b border-[#E8EDF3] px-3 py-2 text-[12px] font-semibold">Tasks per Month</h2>
+          <div className="p-3">
+            {monthlyTasks.length > 0 ? <MonthlyBarChart data={monthlyTasks} color="#2563EB" height={160} valueLabel="Tasks" /> : <p className="text-[12px] text-[#75829D] py-6 text-center">No data yet</p>}
+          </div>
+        </section>
+        <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
+          <h2 className="border-b border-[#E8EDF3] px-3 py-2 text-[12px] font-semibold">Assignee Breakdown</h2>
+          <div className="flex items-center gap-3 p-4">
+            <DonutChart segments={assigneeDistribution} centerValue={String(assigneeDistribution.length)} centerLabel="Members" size={130} />
+            <ul className="flex-1 space-y-0.5">
+              {assigneeDistribution.map((src) => (
+                <li key={src.key} className="flex items-center gap-2 rounded-sm px-2 py-0.5">
+                  <span className="size-2 rounded-sm" style={{ backgroundColor: src.color }} />
+                  <span className="flex-1 text-[12px]">{src.label}</span>
+                  <span className="text-[12px] font-semibold">{src.value}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      </div>
 
       {/* ---- Task Detail Sheet ---- */}
       <Sheet open={!!detailTask} onOpenChange={() => setDetailTask(null)}>

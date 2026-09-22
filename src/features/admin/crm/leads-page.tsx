@@ -108,7 +108,7 @@ export default function LeadsPage() {
 
   const trendSeries: TrendSeries[] = useMemo(() => {
     const byDate: Record<string, { created: number; won: number }> = {};
-    leads.forEach((l) => { const d = l.createdAt.split("T")[0]; if (!byDate[d]) byDate[d] = { created: 0, won: 0 }; byDate[d].created++; if (l.stage === "won") byDate[d].won++; });
+    leads.forEach((l) => { const d = l.createdAt.split("T")[0] ?? ""; if (!byDate[d]) byDate[d] = { created: 0, won: 0 }; byDate[d].created++; if (l.stage === "won") byDate[d].won++; });
     const pts = Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b));
     return [
       { key: "created", label: "Created", color: "#EB0711", data: pts.map(([date, v]) => ({ date, value: v.created })) },

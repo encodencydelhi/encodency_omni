@@ -3,9 +3,11 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, MessageSquareText, NotebookPen, AlertTriangle, CheckCircle2, Send, Paperclip, User2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, MessageSquareText, NotebookPen, AlertTriangle, CheckCircle2, Send, Paperclip, User2, ShieldCheck, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAdminSupport } from "@/features/admin/support/data/provider";
 
 export default function AdminSupportDetailPage() {
@@ -62,14 +64,13 @@ export default function AdminSupportDetailPage() {
 
   return (
     <div className="mx-auto flex max-w-[1500px] flex-col gap-2">
+      <Link href="/admin/support/inbox" className="inline-flex items-center gap-1 text-[12px] text-slate-600 hover:text-slate-900"><ArrowLeft className="size-3.5" /> Back to Inbox</Link>
+
       <div className="rounded-sm border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/admin/support/inbox" className="inline-flex items-center gap-1 text-[12px] text-slate-600"><ArrowLeft className="size-3.5" /> Back to Inbox</Link>
-            <div>
-              <div className="text-[11px] uppercase tracking-[0.08em] text-slate-500">{ticket.id}</div>
-              <h2 className="text-[18px] font-bold tracking-[-0.03em] text-slate-900">{ticket.subject}</h2>
-            </div>
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.08em] text-slate-500">{ticket.id}</div>
+            <h2 className="text-[18px] font-bold tracking-[-0.03em] text-slate-900">{ticket.subject}</h2>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-sm bg-red-50 px-2 py-1 text-[10px] font-medium text-red-700">{ticket.priority}</span>
@@ -186,10 +187,30 @@ export default function AdminSupportDetailPage() {
           <Card className="rounded-sm border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
             <h3 className="text-[13px] font-semibold text-slate-900">Actions</h3>
             <div className="mt-3 flex flex-wrap gap-2">
-              <button onClick={() => assignTicket(ticket.id, assignment.teamId, assignment.staffId, "Rahul Sharma")} className="rounded-sm border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-700">Assign</button>
-              <button onClick={() => updateTicketPriority(ticket.id, "Urgent")} className="rounded-sm border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-700">Priority</button>
-              <button onClick={() => updateTicketStatus(ticket.id, "Waiting for Customer")} className="rounded-sm border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-700">Status</button>
-              <button onClick={() => updateTicketStatus(ticket.id, "Resolved")} className="rounded-sm bg-emerald-600 px-2 py-1.5 text-[11px] font-medium text-white">Resolve</button>
+              <button onClick={() => { assignTicket(ticket.id, assignment.teamId, assignment.staffId, "Rahul Sharma"); toast.success("Ticket assigned successfully"); }} className="rounded-sm border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-700">Assign</button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="inline-flex items-center gap-1 rounded-sm border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-700">Priority <ChevronDown className="size-3" /></button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => { updateTicketPriority(ticket.id, "Low"); toast.success("Priority set to Low"); }}>Low</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { updateTicketPriority(ticket.id, "Medium"); toast.success("Priority set to Medium"); }}>Medium</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { updateTicketPriority(ticket.id, "High"); toast.success("Priority set to High"); }}>High</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { updateTicketPriority(ticket.id, "Urgent"); toast.success("Priority set to Urgent"); }}>Urgent</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="inline-flex items-center gap-1 rounded-sm border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-700">Status <ChevronDown className="size-3" /></button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => { updateTicketStatus(ticket.id, "Open"); toast.success("Status set to Open"); }}>Open</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { updateTicketStatus(ticket.id, "In Progress"); toast.success("Status set to In Progress"); }}>In Progress</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { updateTicketStatus(ticket.id, "Waiting for Customer"); toast.success("Status set to Waiting for Customer"); }}>Waiting for Customer</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { updateTicketStatus(ticket.id, "Resolved"); toast.success("Ticket resolved"); }}>Resolved</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <button onClick={() => { updateTicketStatus(ticket.id, "Resolved"); toast.success("Ticket resolved"); }} className="rounded-sm bg-emerald-600 px-2 py-1.5 text-[11px] font-medium text-white">Resolve</button>
             </div>
             <div className="mt-3 space-y-2 text-[12px] text-slate-600">
               <label className="block">

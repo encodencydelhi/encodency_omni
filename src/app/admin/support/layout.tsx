@@ -121,7 +121,7 @@ export default function AdminSupportLayout({ children }: { children: React.React
     <AdminSupportProvider>
       <div className="flex min-h-full flex-col bg-[#f8fafc]">
         <SupportToolbar />
-        <div className="flex-1 p-3 sm:p-4">{children}</div>
+        <div className="flex-1 py-2">{children}</div>
       </div>
     </AdminSupportProvider>
   );
