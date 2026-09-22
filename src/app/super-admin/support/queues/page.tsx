@@ -37,6 +37,23 @@ export default function QueuesPage() {
     return tickets.filter(t => t.assignedTeamId === teamId && t.status !== "Resolved" && t.status !== "Closed").length;
   };
 
+  const getQueueHealth = (teamId: string | null) => {
+    const queueTickets = tickets.filter(t =>
+      (teamId ? t.assignedTeamId === teamId : t.escalationId) &&
+      t.status !== "Resolved" && t.status !== "Closed"
+    );
+
+    if (queueTickets.length === 0) return "green";
+
+    const now = Date.now();
+    const hasOldTickets = queueTickets.some(t => now - new Date(t.createdAt).getTime() > 86400000); // > 24h
+    const hasMediumTickets = queueTickets.some(t => now - new Date(t.createdAt).getTime() > 14400000); // > 4h
+
+    if (hasOldTickets) return "red";
+    if (hasMediumTickets) return "amber";
+    return "green";
+  };
+
   return (
     <div className="flex flex-col gap-2 max-w-[1600px] mx-auto">
       <div className="flex items-center justify-between">
@@ -73,12 +90,17 @@ export default function QueuesPage() {
         <div className="grid grid-cols-2 gap-2">
           {QUEUES.map(queue => {
             const count = getQueueCount(queue.teamId);
+            const health = getQueueHealth(queue.teamId);
             return (
               <Card key={queue.id} className="p-5 border-[#E2E8F0] shadow-sm rounded-sm hover:border-[#CBD5E1] transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
                       <h3 className="text-[13px] font-semibold text-[#0F172A]">{queue.name}</h3>
+                      <div className={cn("w-2 h-2 rounded-full",
+                        health === "green" ? "bg-emerald-500" :
+                        health === "amber" ? "bg-amber-500" : "bg-red-500"
+                      )} title={`Queue Health: ${health.toUpperCase()}`} />
                       {queue.autoAssign && (
                         <span className="text-[12px] font-medium px-1.5 py-0.5 rounded-sm bg-[#DBEAFE] text-[#2563EB]">AUTO</span>
                       )}

@@ -119,7 +119,7 @@ export function IntegrationsOverviewPage() {
             type="button"
             size="sm"
             asChild
-            className="text-xs h-8 font-semibold bg-slate-900 hover:bg-slate-800 text-white"
+            className="text-xs h-8 font-semibold bg-[#EB0711] hover:bg-[#EB0711]/90 text-white"
           >
             <Link href="/super-admin/integrations/connections">
               <LayersIcon className="size-3.5 mr-1.5" />
