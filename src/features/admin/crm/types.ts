@@ -45,7 +45,7 @@ export const DEAL_STAGE_REGISTRY: StatusRegistry<DealStage> = {
 
 export const TASK_STATUS_REGISTRY: StatusRegistry<TaskStatus> = {
   pending:     { label: "Pending",     tone: "neutral",  description: "Not started" },
-  in_progress: { label: "In Progress", tone: "info",     description: "Currently working" },
+  in_progress: { label: "In-progress", tone: "info",     description: "Currently working" },
   completed:   { label: "Completed",   tone: "success",  description: "Done" },
   cancelled:   { label: "Cancelled",   tone: "neutral",  description: "Cancelled" },
 };

@@ -352,6 +352,48 @@ function ChannelIcon({
 
 export default function ContentCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [view, setView] = useState<"Month" | "Week" | "List">("Month");
+
+  const selectedWeek = weeks.find((week) => week.some((cell) => cell.selected)) ?? weeks[0]!;
+
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [channelFilter, setChannelFilter] = useState("All Channels");
+  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [campaignFilter, setCampaignFilter] = useState("All Campaigns");
+
+  const channelTypeMap: Record<string, EventType> = {
+    Facebook: "fb",
+    Instagram: "ig",
+    LinkedIn: "li",
+    YouTube: "yt",
+    WhatsApp: "wa",
+    "Google Business": "gmb",
+    "Blog / Link": "link",
+  };
+
+  const applyFilters = (list: CalendarEvent[]) =>
+    list.filter(
+      (evt) =>
+        (channelFilter === "All Channels" || channelTypeMap[channelFilter] === evt.type) &&
+        (statusFilter === "All Status" || evt.status === statusFilter) &&
+        (campaignFilter === "All Campaigns" || evt.campaign === campaignFilter)
+    );
+
+  const activeFilterCount = [
+    channelFilter !== "All Channels",
+    statusFilter !== "All Status",
+    campaignFilter !== "All Campaigns",
+  ].filter(Boolean).length;
+
+  const listRows = Object.entries(events)
+    .flatMap(([day, list]) => applyFilters(list).map((evt) => ({ day: Number(day), evt })))
+    .sort((a, b) => a.day - b.day);
+
+  const filterFields = [
+    { label: "Channel", value: channelFilter, setValue: setChannelFilter, options: ["All Channels", "Facebook", "Instagram", "LinkedIn", "YouTube", "WhatsApp", "Google Business", "Blog / Link"] },
+    { label: "Status", value: statusFilter, setValue: setStatusFilter, options: ["All Status", "Scheduled", "Draft", "Pending", "Published"] },
+    { label: "Campaign", value: campaignFilter, setValue: setCampaignFilter, options: ["All Campaigns", ...campaigns] },
+  ];
 
   return (
     <div className="box-border min-h-screen w-full bg-[#f7f9fc] font-[Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif] text-[#13203e] max-[820px]:p-[10px]">
@@ -426,26 +468,96 @@ export default function ContentCalendar() {
             </div>
 
             <div className="flex justify-end">
-              <button className="h-[31px] w-[61px] rounded-l-[6px] border border-[#e51f29] bg-[#e51f29] text-[11px] font-[650] text-white max-[560px]:w-[48px] max-[560px]:text-[11px]">
-                Month
-              </button>
+              {(["Month", "Week", "List"] as const).map((v, i) => (
+                <button
+                  key={v}
+                  onClick={() => setView(v)}
+                  className={[
+                    "h-[31px] w-[61px] text-[11px] font-[650] max-[560px]:w-[48px]",
+                    i === 0 ? "rounded-l-[6px]" : "-ml-px",
+                    i === 2 ? "rounded-r-[6px]" : "",
+                    view === v
+                      ? "relative z-[1] border border-[#e51f29] bg-[#e51f29] text-white"
+                      : "border border-[#dfe5ec] bg-white text-[#29354f] hover:bg-[#f8fafc]",
+                  ].join(" ")}
+                >
+                  {v}
+                </button>
+              ))}
 
-              <button className="h-[31px] w-[61px] border-y border-[#dfe5ec] bg-white text-[11px] font-[650] text-[#29354f] max-[560px]:w-[48px] max-[560px]:text-[11px]">
-                Week
-              </button>
+              <div className="relative ml-[10px] max-[560px]:ml-[5px]">
+                <button
+                  onClick={() => setFiltersOpen((open) => !open)}
+                  className={[
+                    "flex h-[31px] items-center justify-center gap-[6px] rounded-[6px] border px-[11px] text-[11px] font-[650] max-[560px]:px-[7px]",
+                    filtersOpen || activeFilterCount > 0
+                      ? "relative z-[1] border-[#e51f29] bg-[#e51f29] text-white"
+                      : "border-[#dfe5ec] bg-white text-[#29354f] hover:bg-[#f8fafc]",
+                  ].join(" ")}
+                >
+                  <SlidersHorizontal size={12} />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className="grid h-[14px] min-w-[14px] place-items-center rounded-full bg-white px-[3px] text-[9px] font-bold text-[#e51f29]">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
 
-              <button className="h-[31px] w-[61px] rounded-r-[6px] border border-[#dfe5ec] bg-white text-[11px] font-[650] text-[#29354f] max-[560px]:w-[48px] max-[560px]:text-[11px]">
-                List
-              </button>
+                {filtersOpen && (
+                  <>
+                    <div className="fixed inset-0 z-[20]" onClick={() => setFiltersOpen(false)} />
+                    <div className="absolute right-0 top-[38px] z-[30] w-[220px] rounded-[7px] border border-[#e4e8ef] bg-white p-3 shadow-[0_8px_24px_rgba(19,32,62,0.14)]">
+                      <div className="mb-2 flex items-center justify-between">
+                        <b className="text-[12px] text-[#17223e]">Filters</b>
+                        <button
+                          onClick={() => {
+                            setChannelFilter("All Channels");
+                            setStatusFilter("All Status");
+                            setCampaignFilter("All Campaigns");
+                          }}
+                          className="border-0 bg-transparent text-[11px] font-[700] text-[#e2262f] hover:underline"
+                        >
+                          Reset
+                        </button>
+                      </div>
 
-              <button className="ml-[10px] flex h-[31px] items-center justify-center gap-[6px] rounded-[6px] border border-[#dfe5ec] bg-white px-[11px] text-[11px] font-[650] text-[#29354f] max-[560px]:ml-[5px] max-[560px]:px-[7px]">
-                <SlidersHorizontal size={12} />
-                Filters
-              </button>
+                      <div className="space-y-2">
+                        {filterFields.map((field) => (
+                          <div key={field.label}>
+                            <label className="mb-0.5 block text-[10.5px] text-[#657189]">
+                              {field.label}
+                            </label>
+                            <select
+                              value={field.value}
+                              onChange={(e) => field.setValue(e.target.value)}
+                              className="h-[28px] w-full rounded-[5px] border border-[#dfe5ec] bg-white px-2 text-[11px] text-[#39465f] outline-none focus:border-[#e51f29]"
+                            >
+                              {field.options.map((option) => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={() => setFiltersOpen(false)}
+                        className="mt-3 h-[28px] w-full rounded-[5px] border border-[#e51f29] bg-[#e51f29] text-[11px] font-[650] text-white"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Calendar */}
+          {view === "Month" && (
           <div className="grid flex-1 grid-rows-[29px_repeat(5,minmax(0,1fr))] overflow-hidden rounded-b-[7px] border border-t-0 border-[#e4e8ef] bg-white">
             <div className="grid grid-cols-7">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
@@ -461,7 +573,7 @@ export default function ContentCalendar() {
             {weeks.map((week, weekIndex) => (
               <div className="grid min-h-0 grid-cols-7" key={weekIndex}>
                 {week.map((cell, cellIndex) => {
-                  const list = events[cell.d] || [];
+                  const list = applyFilters(events[cell.d] || []);
 
                   return (
                     <div
@@ -527,6 +639,165 @@ export default function ContentCalendar() {
               </div>
             ))}
           </div>
+          )}
+
+          {/* Week View */}
+          {view === "Week" && (
+            <div className="flex flex-1 flex-col overflow-hidden rounded-b-[7px] border border-t-0 border-[#e4e8ef] bg-white">
+              <div className="grid grid-cols-7">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                  <div
+                    key={day}
+                    className="grid place-items-center border-b border-r border-[#e8ecf2] bg-[#f8fafc] py-[7px] text-[11px] font-[700] text-[#24304b] last:border-r-0"
+                  >
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid min-h-0 flex-1 grid-cols-7">
+                {selectedWeek.map((cell, cellIndex) => {
+                  const list = applyFilters(events[cell.d] || []);
+
+                  return (
+                    <div
+                      key={cellIndex}
+                      className={[
+                        "min-w-0 overflow-hidden border-r border-[#e8ecf2] p-[6px] last:border-r-0",
+                        cell.selected
+                          ? "z-[2] outline-[1.5px] outline-[#e22a34] outline-offset-[-1px]"
+                          : "",
+                      ].join(" ")}
+                    >
+                      <div className="mb-1.5 flex items-center justify-between px-1">
+                        <span
+                          className={`block text-[11px] leading-none ${
+                            cell.selected ? "font-[750] text-[#172440]" : "text-[#172440]"
+                          }`}
+                        >
+                          {cell.d}
+                        </span>
+                        <span className="text-[9.5px] font-semibold text-[#8a94a6]">
+                          {list.length} {list.length === 1 ? "post" : "posts"}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        {list.length === 0 && (
+                          <div className="rounded-[4px] border border-dashed border-[#e8ecf2] p-3 text-center text-[10px] text-[#a2aab8]">
+                            No posts
+                          </div>
+                        )}
+                        {list.map((evt, eventIndex) => (
+                          <div
+                            key={eventIndex}
+                            onClick={() => setSelectedEvent(evt)}
+                            className={`grid min-w-0 cursor-pointer grid-cols-[14px_minmax(0,1fr)_8px] items-center gap-[6px] rounded-[4px] px-[5px] py-[5px] text-[#263754] transition-opacity hover:opacity-80 ${
+                              eventIndex % 3 === 2
+                                ? "bg-[#fff0f2]"
+                                : eventIndex % 4 === 3
+                                  ? "bg-[#eaf8f3]"
+                                  : "bg-[#edf5ff]"
+                            }`}
+                          >
+                            <ChannelIcon type={evt.type} size={10} />
+
+                            <div className="min-w-0 leading-tight">
+                              <b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[10.5px] leading-[1.2]">
+                                {evt.name}
+                              </b>
+
+                              <small className="block overflow-hidden text-ellipsis whitespace-nowrap text-[10px] text-[#637089] leading-[1.2]">
+                                {evt.time}
+                              </small>
+                            </div>
+
+                            <span className="text-[11px] text-[#59677e]">⋮</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* List View */}
+          {view === "List" && (
+            <div className="flex-1 overflow-y-auto rounded-b-[7px] border border-t-0 border-[#e4e8ef] bg-white">
+              <table className="w-full border-collapse text-left">
+                <thead className="sticky top-0 z-[1]">
+                  <tr className="bg-[#f8fafc] text-[11px] font-[700] text-[#24304b]">
+                    <th className="border-b border-[#e8ecf2] px-3 py-2.5">Date</th>
+                    <th className="border-b border-[#e8ecf2] px-3 py-2.5">Time</th>
+                    <th className="border-b border-[#e8ecf2] px-3 py-2.5">Content</th>
+                    <th className="border-b border-[#e8ecf2] px-3 py-2.5">Channel</th>
+                    <th className="border-b border-[#e8ecf2] px-3 py-2.5">Campaign</th>
+                    <th className="border-b border-[#e8ecf2] px-3 py-2.5">Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {listRows.map(({ day, evt }, index) => (
+                    <tr
+                      key={`${day}-${index}`}
+                      onClick={() => setSelectedEvent(evt)}
+                      className="cursor-pointer border-b border-[#eef1f5] text-[11px] transition-colors hover:bg-[#f8fafc]"
+                    >
+                      <td className="whitespace-nowrap px-3 py-2.5 text-[#44516b]">
+                        Apr {day}, 2025
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2.5 text-[#44516b]">
+                        {evt.time}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <ChannelIcon type={evt.type} size={11} />
+                          <b className="overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[#172440]">
+                            {evt.name}
+                          </b>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2.5 text-[#44516b]">
+                        {evt.type === "fb"
+                          ? "Facebook"
+                          : evt.type === "ig"
+                            ? "Instagram"
+                            : evt.type === "li"
+                              ? "LinkedIn"
+                              : evt.type === "yt"
+                                ? "YouTube"
+                                : evt.type === "wa"
+                                  ? "WhatsApp"
+                                  : evt.type === "gmb"
+                                    ? "Google Business"
+                                    : "Blog / Link"}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2.5 text-[#44516b]">
+                        {evt.campaign}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <span
+                          className={`rounded-[7px] px-[7px] py-1 text-[11px] ${
+                            evt.status === "Draft"
+                              ? "bg-[#eef1f5] text-[#65738a]"
+                              : evt.status === "Pending"
+                                ? "bg-[#fff7e8] text-[#b7791f]"
+                                : evt.status === "Published"
+                                  ? "bg-[#e7f8f1] text-[#19a26e]"
+                                  : "bg-[#e9f3ff] text-[#2874cc]"
+                          }`}
+                        >
+                          {evt.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Bottom Area */}
           <div className="mt-[10px] grid h-[196px] grid-cols-[1.65fr_.78fr] gap-[10px] max-[1200px]:h-auto max-[1200px]:grid-cols-2 max-[820px]:grid-cols-1 max-[560px]:mt-2">

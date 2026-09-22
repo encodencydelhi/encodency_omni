@@ -258,7 +258,7 @@ function ActivityView() {
           <div className="mb-2 flex items-center gap-2">
             <div className="min-w-0"><b className="text-[12px] font-semibold tracking-[-.2px] text-[#182443]">Activity Timeline</b><p className="mt-0.5 text-[11px] font-semibold text-[#8792a7]">Track all important actions, updates and progress for this client.</p></div>
             <div className="flex items-center gap-2 ml-auto">
-              {["Last 30 Days", "All Actions", "All Team Members"].map(x => <button key={x} className="flex h-7 items-center gap-2 rounded-sm border border-[#dfe5ed] bg-white px-2.5 text-[11px] font-semibold text-[#4c5871]"><CalendarDays size={12} />{x}<ChevronDown size={11} /></button>)}
+              {[{ label: "Last 30 Days", width: "min-w-[140px]" }, { label: "All Actions", width: "min-w-[130px]" }, { label: "All Team Members", width: "min-w-[210px]" }].map(x => <button key={x.label} className={`flex h-7 items-center justify-between gap-2 rounded-sm border border-[#dfe5ed] bg-white px-2.5 text-[11px] font-semibold text-[#4c5871] ${x.width}`}><span className="flex items-center gap-2"><CalendarDays size={12} />{x.label}</span><ChevronDown size={11} /></button>)}
               <button className="flex h-7 items-center gap-1.5 rounded-sm border border-[#dfe5ed] bg-white px-3 text-[11px] font-semibold text-[#35415c]">Export</button>
             </div>
           </div>

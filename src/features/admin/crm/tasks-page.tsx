@@ -9,7 +9,6 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -26,7 +25,7 @@ import { DonutChart } from "@/components/shared/charts/donut-chart";
 import { TrendAreaChart, ChartLegend } from "@/components/shared/charts/trend-area-chart";
 import { MonthlyBarChart } from "@/components/shared/charts/monthly-bar-chart";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
-import type { DataTableColumn, DataTableSelection } from "@/components/shared/data-table/types";
+import type { DataTableColumn } from "@/components/shared/data-table/types";
 import type { PaginationMeta, SortSpec } from "@/types/api";
 import type { DonutSegment } from "@/components/shared/charts/donut-chart";
 import type { TrendSeries } from "@/components/shared/charts/trend-area-chart";
@@ -42,7 +41,7 @@ import { formatDate } from "@/lib/utils/format";
 /* ------------------------------------------------------------------ */
 
 const STATUS_OPTIONS: TaskStatus[] = ["pending", "in_progress", "completed", "cancelled"];
-const STATUS_LABELS: Record<TaskStatus, string> = { pending: "Pending", in_progress: "In Progress", completed: "Completed", cancelled: "Cancelled" };
+const STATUS_LABELS: Record<TaskStatus, string> = { pending: "Pending", in_progress: "In-progress", completed: "Completed", cancelled: "Cancelled" };
 const STATUS_BADGE: Record<string, string> = {
   todo: "bg-slate-50 text-slate-700 border border-slate-200/50 shadow-sm",
   pending: "bg-slate-50 text-slate-700 border border-slate-200/50 shadow-sm",
@@ -73,7 +72,7 @@ const TYPE_ICON: Record<TaskType, typeof Phone> = {
 
 const BOARD_COLUMNS: { status: TaskStatus; label: string }[] = [
   { status: "pending", label: "To Do" },
-  { status: "in_progress", label: "In Progress" },
+  { status: "in_progress", label: "In-progress" },
   { status: "completed", label: "Completed" },
 ];
 
@@ -154,7 +153,6 @@ export default function TasksPage() {
   const [sort, setSort] = useState<SortSpec | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [selected, setSelected] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<TaskViewMode>("list");
   const [detailTask, setDetailTask] = useState<CrmTask | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -335,8 +333,6 @@ export default function TasksPage() {
     },
   ], [tasks]);
 
-  const selection: DataTableSelection = { selectedIds: selected, onChange: setSelected };
-
   /* ---- Board View ---- */
   const tasksByStatus = useMemo(() => {
     const map: Record<string, CrmTask[]> = {};
@@ -405,7 +401,6 @@ export default function TasksPage() {
           pagination={pagination}
           onPageChange={setPage}
           onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
-          selection={selection}
           onRowClick={(r) => setDetailTask(r)}
           enableColumnVisibility
           emptyState={

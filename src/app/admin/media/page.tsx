@@ -1,14 +1,50 @@
 "use client";
-import React from "react";
+import React, { useRef, useState } from "react";
 import {
   Search, ChevronDown, ChevronLeft, ChevronRight, Upload, Grid3X3,
   List, Image as ImageIcon, Video, FileText,
   Palette, Boxes, MoreVertical, Play, FileType2, Folder, CalendarDays,
-  ArrowDownUp, ArrowUpRight
+  ArrowDownUp, ArrowUpRight, Eye, Copy, Download, Trash2
 } from "lucide-react";
 
+type MediaFile = {
+  name: string;
+  meta: string;
+  type: string;
+  src: string;
+  overlay?: string;
+  logo?: boolean;
+  duration?: string;
+};
+
+const sortOptions = ["Newest first", "Oldest first", "Name (A–Z)", "Name (Z–A)", "Largest first", "Smallest first"];
+
+function parseSizeMB(meta: string) {
+  const match = meta.match(/([\d.]+)\s*(KB|MB|GB)/i);
+  if (!match) return 0;
+  const value = Number.parseFloat(match[1]!);
+  const unit = match[2]!.toUpperCase();
+  return unit === "GB" ? value * 1024 : unit === "MB" ? value : value / 1024;
+}
+
+function parseMetaDate(meta: string) {
+  const part = meta.split("•")[1]?.trim() ?? "";
+  const time = Date.parse(part);
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function extToType(name: string) {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  if (["jpg", "jpeg", "png", "gif", "webp", "svg", "avif"].includes(ext)) return "image";
+  if (["mp4", "webm", "mov", "avi", "mkv"].includes(ext)) return "video";
+  if (ext === "pdf") return "pdf";
+  if (["doc", "docx", "txt", "xls", "xlsx", "ppt", "pptx"].includes(ext)) return "doc";
+  if (["psd", "ai", "fig", "sketch"].includes(ext)) return "design";
+  return "other";
+}
+
 export default function MediaLibrary() {
-  const files = [
+  const [files, setFiles] = useState<MediaFile[]>([
     { name: "ganga-river-hero.jpg", meta: "2.4 MB • Apr 14, 2025", type: "image", src: "https://images.unsplash.com/photo-1774177612601-e283e2f2cbd3?auto=format&fit=crop&fm=jpg&q=85&w=900" },
     { name: "campaign-banner.png", meta: "1.8 MB • Apr 12, 2025", type: "image", src: "https://images.unsplash.com/photo-1758599668509-60f367e8fa16?auto=format&fit=crop&fm=jpg&q=85&w=900", overlay: "CLEANER\\nRIVERS\\nBRIGHTER\\nTOMORROW" },
     { name: "sustainability.jpg", meta: "1.2 MB • Apr 10, 2025", type: "image", src: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&fm=jpg&q=85&w=900" },
@@ -27,7 +63,7 @@ export default function MediaLibrary() {
     { name: "drone-ganga.mp4", meta: "48.2 MB • Mar 22, 2025", type: "video", src: "https://images.unsplash.com/photo-1774177612601-e283e2f2cbd3?auto=format&fit=crop&fm=jpg&q=85&w=900", duration: "01:20" },
     { name: "team-volunteers.jpg", meta: "2.3 MB • Mar 20, 2025", type: "image", src: "https://images.unsplash.com/photo-1593113630400-ea4288922497?auto=format&fit=crop&fm=jpg&q=85&w=900" },
     { name: "press-release.docx", meta: "420 KB • Mar 18, 2025", type: "doc", src: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&fm=jpg&q=85&w=900" },
-  ];
+  ]);
 
   const tabs: [string, string, string, React.ComponentType<{ size?: number }>][] = [
     ["All Files", "248", "all", Boxes],
@@ -37,6 +73,120 @@ export default function MediaLibrary() {
     ["Designs", "8", "design", Palette],
     ["Other", "4", "other", Boxes],
   ];
+
+  const [activeTab, setActiveTab] = useState("all");
+  const [layout, setLayout] = useState<"grid" | "list">("grid");
+  const [sort, setSort] = useState("Newest first");
+  const [sortOpen, setSortOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const matchesTab = (type: string, tabKey: string) => {
+    if (tabKey === "all") return true;
+    if (tabKey === "document") return type === "pdf" || type === "doc";
+    if (tabKey === "other") return !["image", "video", "pdf", "doc", "design"].includes(type);
+    return type === tabKey;
+  };
+
+  const filteredFiles = files.filter((file) => matchesTab(file.type, activeTab));
+  const activeCount = tabs.find(([, , key]) => key === activeTab)?.[1] ?? String(files.length);
+
+  const sortedFiles = [...filteredFiles].sort((a, b) => {
+    switch (sort) {
+      case "Oldest first":
+        return parseMetaDate(a.meta) - parseMetaDate(b.meta);
+      case "Name (A–Z)":
+        return a.name.localeCompare(b.name);
+      case "Name (Z–A)":
+        return b.name.localeCompare(a.name);
+      case "Largest first":
+        return parseSizeMB(b.meta) - parseSizeMB(a.meta);
+      case "Smallest first":
+        return parseSizeMB(a.meta) - parseSizeMB(b.meta);
+      default:
+        return parseMetaDate(b.meta) - parseMetaDate(a.meta);
+    }
+  });
+
+  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const chosen = Array.from(event.target.files ?? []);
+    if (chosen.length === 0) return;
+
+    const uploaded: MediaFile[] = chosen.map((file) => {
+      const type = extToType(file.name);
+      const previewable = type === "image" || type === "video" || type === "design";
+      return {
+        name: file.name,
+        meta: `${(file.size / (1024 * 1024)).toFixed(1)} MB • ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`,
+        type,
+        src: previewable ? URL.createObjectURL(file) : "",
+        duration: type === "video" ? "--:--" : undefined,
+      };
+    });
+
+    setFiles((current) => [...uploaded, ...current]);
+    event.target.value = "";
+  };
+
+  const [cardMenu, setCardMenu] = useState<{ key: string; anchor: "image" | "footer" } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyLink = async (file: MediaFile) => {
+    try {
+      await navigator.clipboard.writeText(file.src || `${window.location.origin}/media/${encodeURIComponent(file.name)}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  const deleteFile = (file: MediaFile) => {
+    setFiles((current) => current.filter((item) => item !== file));
+    setCardMenu(null);
+  };
+
+  const menuItemClass =
+    "flex w-full items-center gap-2 rounded-[5px] px-2.5 py-[7px] text-left text-[11px] text-[#34415b] hover:bg-[#f8fafc]";
+
+  const renderFileMenu = (file: MediaFile, anchor: "image" | "footer") => (
+    <>
+      <div className="fixed inset-0 z-[40]" onClick={() => setCardMenu(null)} />
+      <div
+        className={`absolute right-[8px] z-[50] w-[152px] rounded-[7px] border border-[#e4e8ef] bg-white p-1 shadow-[0_8px_24px_rgba(19,32,62,0.16)] ${
+          anchor === "image" ? "top-[34px]" : "bottom-[36px]"
+        }`}
+      >
+        <button
+          onClick={() => {
+            if (file.src) window.open(file.src, "_blank", "noopener");
+            setCardMenu(null);
+          }}
+          className={menuItemClass}
+        >
+          <Eye size={12} /> Preview
+        </button>
+        <button onClick={() => copyLink(file)} className={menuItemClass}>
+          <Copy size={12} /> {copied ? "Copied!" : "Copy link"}
+        </button>
+        <a
+          href={file.src || undefined}
+          download={file.name}
+          target="_blank"
+          rel="noreferrer"
+          onClick={() => setCardMenu(null)}
+          className={`${menuItemClass} ${file.src ? "" : "pointer-events-none opacity-50"}`}
+        >
+          <Download size={12} /> Download
+        </a>
+        <button
+          onClick={() => deleteFile(file)}
+          className="flex w-full items-center gap-2 rounded-[5px] px-2.5 py-[7px] text-left text-[11px] text-[#e12630] hover:bg-[#fff0f1]"
+        >
+          <Trash2 size={12} /> Delete
+        </button>
+      </div>
+    </>
+  );
 
   const tags = ["Ganga", "Volunteer", "Awareness", "Donation", "Event", "Social Media", "Banner", "Video", "Website", "Press"];
 
@@ -62,32 +212,110 @@ export default function MediaLibrary() {
 
       <div className="flex h-[53px] items-center gap-[9px] rounded-t-[7px] border border-[#e4e8ef] bg-white px-[10px] max-[820px]:overflow-x-auto">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          {tabs.map(([label, count, tabKey, Icon], i) => (
-            <button className={`flex h-[38px] items-center gap-[7px] whitespace-nowrap rounded-[6px] border border-[#e2e7ee] bg-white px-3 text-[10px] font-[650] text-[#34415b] ${i === 0 ? "border-0 border-b-2 border-[#e2252f] rounded-none text-[#df252e] [&_svg]:text-[#e2252f]" : ""}`} key={tabKey}>
-              <Icon size={15} /><span>{label}</span><span className="bg-[#eef2f8] text-[#394761] rounded-[10px] px-[7px] py-[3px] text-[9px]">{count}</span>
+          {tabs.map(([label, count, tabKey, Icon]) => (
+            <button
+              onClick={() => setActiveTab(tabKey)}
+              key={tabKey}
+              className={`flex h-[38px] items-center gap-[7px] whitespace-nowrap rounded-[6px] border px-3 text-[10px] font-[650] ${
+                activeTab === tabKey
+                  ? "border-0 border-b-2 border-[#e2252f] rounded-none bg-white text-[#df252e] [&_svg]:text-[#e2252f]"
+                  : "border-[#e2e7ee] bg-white text-[#34415b] hover:bg-[#f8fafc]"
+              }`}
+            >
+              <Icon size={15} /><span>{label}</span>
+              <span className={`rounded-[10px] px-[7px] py-[3px] text-[9px] ${activeTab === tabKey ? "bg-[#fdeced] text-[#df252e]" : "bg-[#eef2f8] text-[#394761]"}`}>{count}</span>
             </button>
           ))}
         </div>
         <div className="flex gap-[5px] ml-auto">
-          <button className="flex h-[38px] w-[39px] items-center justify-center gap-[7px] rounded-[6px] border border-[#e41f28] bg-[#e41f28] text-[#fff]"><Grid3X3 size={15} /></button>
-          <button className="flex h-[38px] w-[39px] items-center justify-center gap-[7px] rounded-[6px] border border-[#e1e6ed] bg-white text-[#293650]"><List size={16} /></button>
-          <button className="h-[38px] border border-[#e1e6ed] bg-white rounded-sm flex items-center justify-center gap-[7px] text-[#293650] px-3 text-[10px] font-[650]"><ArrowDownUp size={12} /> Sort <ChevronDown size={12} /></button>
-          <button className="h-[38px] bg-[#e41f28] border border-[#e41f28] text-white rounded-sm flex items-center justify-center gap-[7px] px-[18px] text-[10px] font-semibold"><Upload size={15} /> Upload</button>
+          <button
+            onClick={() => setLayout("grid")}
+            title="Grid view"
+            className={`flex h-[38px] w-[39px] items-center justify-center gap-[7px] rounded-[6px] border ${layout === "grid" ? "border-[#e41f28] bg-[#e41f28] text-[#fff]" : "border-[#e1e6ed] bg-white text-[#293650] hover:bg-[#f8fafc]"}`}
+          >
+            <Grid3X3 size={15} />
+          </button>
+          <button
+            onClick={() => setLayout("list")}
+            title="List view"
+            className={`flex h-[38px] w-[39px] items-center justify-center gap-[7px] rounded-[6px] border ${layout === "list" ? "border-[#e41f28] bg-[#e41f28] text-[#fff]" : "border-[#e1e6ed] bg-white text-[#293650] hover:bg-[#f8fafc]"}`}
+          >
+            <List size={16} />
+          </button>
+
+          <div className="relative">
+            <button
+              onClick={() => setSortOpen((open) => !open)}
+              className={`h-[38px] rounded-sm border flex items-center justify-center gap-[7px] px-3 text-[10px] font-[650] ${sortOpen ? "border-[#e41f28] text-[#e41f28] bg-white" : "border-[#e1e6ed] bg-white text-[#293650] hover:bg-[#f8fafc]"}`}
+            >
+              <ArrowDownUp size={12} /> Sort <ChevronDown size={12} />
+            </button>
+
+            {sortOpen && (
+              <>
+                <div className="fixed inset-0 z-[20]" onClick={() => setSortOpen(false)} />
+                <div className="absolute right-0 top-[42px] z-[30] w-[170px] rounded-[7px] border border-[#e4e8ef] bg-white p-1 shadow-[0_8px_24px_rgba(19,32,62,0.14)]">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => {
+                        setSort(option);
+                        setSortOpen(false);
+                      }}
+                      className={`block w-full rounded-[5px] px-2.5 py-[7px] text-left text-[11px] ${sort === option ? "bg-[#fdeced] font-[650] text-[#df252e]" : "text-[#34415b] hover:bg-[#f8fafc]"}`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="h-[38px] bg-[#e41f28] border border-[#e41f28] text-white rounded-sm flex items-center justify-center gap-[7px] px-[18px] text-[10px] font-semibold hover:bg-[#c91b24] transition-colors"
+          >
+            <Upload size={15} /> Upload
+          </button>
+          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleUpload} />
         </div>
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_258px] gap-[10px] max-[1200px]:grid-cols-[minmax(0,1fr)_230px] max-[820px]:grid-cols-1">
         <main className="flex min-h-0 min-w-0 flex-col rounded-b-[7px] border border-t-0 border-[#e4e8ef] bg-white px-[10px] pb-2 pt-[10px]">
+          {layout === "grid" && (
           <div className="grid min-h-0 flex-1 grid-cols-4 content-start gap-[10px] overflow-y-auto [grid-auto-rows:min-content] max-[1200px]:grid-cols-3 max-[820px]:grid-cols-2 max-[480px]:gap-[7px]">
-            <div className="relative min-w-0 overflow-hidden rounded-[6px] border border-dashed border-[#e0e5ec] bg-white shadow-[0_1px_3px_rgba(20,35,60,.025)] flex min-h-[180px] items-center justify-center text-center">
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="relative min-w-0 overflow-hidden rounded-[6px] border border-dashed border-[#e0e5ec] bg-white shadow-[0_1px_3px_rgba(20,35,60,.025)] flex min-h-[180px] items-center justify-center text-center cursor-pointer hover:border-[#e5222d] transition-colors"
+            >
               <div className="flex flex-col items-center gap-[5px]"><Upload className="text-[#e5222d]" size={29} /><b className="text-[11px]">Upload Files</b><span className="text-[9px] text-[#718098] leading-[1.45]">Drag & drop files here<br />or click to browse</span><small className="text-[9px] text-[#758198] mt-1">Supports: JPG, PNG, MP4, PDF etc.</small></div>
             </div>
 
-            {files.slice(0, 17).map((file) => (
-              <article className="relative min-w-0 overflow-hidden rounded-[6px] border border-[#e0e5ec] bg-white shadow-[0_1px_3px_rgba(20,35,60,.025)]" key={file.name}>
-                <div className="relative h-[130px] overflow-hidden bg-[#e8edf2]">
+            {filteredFiles.length === 0 && (
+              <div className="col-span-full flex min-h-[180px] flex-col items-center justify-center gap-1.5 rounded-[6px] border border-dashed border-[#e0e5ec] bg-white text-center">
+                <Boxes className="text-[#a5b0c2]" size={28} />
+                <b className="text-[12px] text-[#34405a]">No files in this category</b>
+                <span className="text-[10px] text-[#718098]">Try another tab or upload new files.</span>
+              </div>
+            )}
+
+            {sortedFiles.map((file, index) => {
+              const menuKey = `${file.name}::${index}`;
+              const menuOpen = cardMenu?.key === menuKey;
+
+              return (
+              <article className="relative min-w-0 rounded-[6px] border border-[#e0e5ec] bg-white shadow-[0_1px_3px_rgba(20,35,60,.025)]" key={menuKey}>
+                <div className="relative h-[130px] overflow-hidden rounded-t-[6px] bg-[#e8edf2]">
                   <span className="absolute left-[7px] top-[7px] z-[4] h-[14px] w-[14px] rounded-[3px] border border-[#d4dbe5] bg-white/90"></span>
-                  <button className="absolute right-[6px] top-[6px] z-[4] grid h-[23px] w-[23px] place-items-center rounded-[4px] border-0 bg-black/35 text-white"><MoreVertical size={14} /></button>
+                  <button
+                    onClick={() => setCardMenu(menuOpen && cardMenu?.anchor === "image" ? null : { key: menuKey, anchor: "image" })}
+                    aria-label="File actions"
+                    className="absolute right-[6px] top-[6px] z-[4] grid h-[23px] w-[23px] place-items-center rounded-[4px] border-0 bg-black/35 text-white hover:bg-black/55"
+                  >
+                    <MoreVertical size={14} />
+                  </button>
                   <div className="relative h-full w-full overflow-hidden bg-[#e8edf2]">
                     <img
                       src={file.src}
@@ -105,13 +333,101 @@ export default function MediaLibrary() {
                 <div className="flex items-center gap-2 p-2.5 flex-row">
                   <span className="grid h-[17px] w-[17px] shrink-0 place-items-center rounded-[3px] bg-[#e7f3ff] text-[#2a85d9]">{file.type === "video" ? <Video size={11} /> : file.type === "pdf" ? <FileText size={11} /> : file.type === "doc" ? <FileType2 size={11} /> : <ImageIcon size={11} />}</span>
                   <div className="min-w-0 flex-1"><b className="block text-[9px] text-[#34405a] whitespace-nowrap overflow-hidden text-ellipsis">{file.name}</b><small className="block text-[9px] text-[#8791a3] mt-0.5">{file.meta}</small></div>
-                  <button className="border-0 bg-transparent text-[#68748a] p-0 shrink-0"><MoreVertical size={13} /></button>
+                  <button
+                    onClick={() => setCardMenu(menuOpen && cardMenu?.anchor === "footer" ? null : { key: menuKey, anchor: "footer" })}
+                    aria-label="File actions"
+                    className="border-0 bg-transparent text-[#68748a] p-0 shrink-0 hover:text-[#e12630]"
+                  >
+                    <MoreVertical size={13} />
+                  </button>
                 </div>
+
+                {menuOpen && renderFileMenu(file, cardMenu!.anchor)}
               </article>
-            ))}
+              );
+            })}
           </div>
+          )}
+
+          {layout === "list" && (
+            <div className="min-h-0 flex-1 overflow-y-auto rounded-[6px] border border-[#e0e5ec]">
+              <table className="w-full border-collapse text-left">
+                <thead className="sticky top-0 z-[1]">
+                  <tr className="bg-[#f8fafc] text-[10px] font-[700] text-[#24304b]">
+                    <th className="border-b border-[#e8ecf2] px-3 py-2">File</th>
+                    <th className="border-b border-[#e8ecf2] px-3 py-2">Type</th>
+                    <th className="border-b border-[#e8ecf2] px-3 py-2">Info</th>
+                    <th className="border-b border-[#e8ecf2] px-3 py-2">Duration</th>
+                    <th className="w-[50px] border-b border-[#e8ecf2] px-3 py-2" />
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    onClick={() => fileInputRef.current?.click()}
+                    className="cursor-pointer border-b border-[#eef1f5] hover:bg-[#f8fafc]"
+                  >
+                    <td colSpan={5} className="px-3 py-3 text-center text-[10px] font-[650] text-[#e5222d]">
+                      <span className="inline-flex items-center gap-1.5"><Upload size={13} /> Upload files</span>
+                    </td>
+                  </tr>
+
+                  {sortedFiles.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-3 py-10 text-center text-[11px] text-[#718098]">
+                        No files in this category. Try another tab or upload new files.
+                      </td>
+                    </tr>
+                  )}
+
+                  {sortedFiles.map((file, index) => (
+                    <tr key={`${file.name}::${index}`} className="border-b border-[#eef1f5] text-[11px] hover:bg-[#f8fafc]">
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-[4px] border border-[#e0e5ec] bg-[#e8edf2]">
+                            {file.src && ["image", "video", "design"].includes(file.type) ? (
+                              <img
+                                src={file.src}
+                                alt=""
+                                className="h-full w-full object-cover"
+                                onError={(e) => { e.currentTarget.style.opacity = "0"; }}
+                              />
+                            ) : (
+                              <FileText size={14} className="text-[#7a869c]" />
+                            )}
+                          </span>
+                          <b className="overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[#34405a]">{file.name}</b>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <span className="rounded-[9px] bg-[#eef2f8] px-2 py-[3px] text-[9px] font-[650] uppercase text-[#394761]">{file.type}</span>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 text-[#526079]">{file.meta}</td>
+                      <td className="px-3 py-2 text-[#526079]">{file.duration ?? "—"}</td>
+                      <td className="relative px-3 py-2 text-right">
+                        <button
+                          onClick={() =>
+                            setCardMenu(
+                              cardMenu?.key === `${file.name}::${index}`
+                                ? null
+                                : { key: `${file.name}::${index}`, anchor: "image" }
+                            )
+                          }
+                          aria-label="File actions"
+                          className="border-0 bg-transparent text-[#68748a] p-0 hover:text-[#e12630]"
+                        >
+                          <MoreVertical size={13} />
+                        </button>
+                        {cardMenu?.key === `${file.name}::${index}` && renderFileMenu(file, "image")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           <div className="h-[31px] flex items-center justify-end gap-1 mt-[5px]">
-            <span className="mr-auto text-[9px] text-[#526079]">Showing 1–16 of 248 files</span>
+            <span className="mr-auto text-[9px] text-[#526079]">Showing {filteredFiles.length ? 1 : 0}–{filteredFiles.length} of {activeCount} files</span>
             <button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a]"><ChevronLeft size={12} /></button>
             <button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e4232c] bg-[#e4232c] text-[9px] text-white">1</button><button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a]">2</button><button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a]">3</button><button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a]">…</button><button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a]">16</button>
             <button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a]"><ChevronRight size={12} /></button>

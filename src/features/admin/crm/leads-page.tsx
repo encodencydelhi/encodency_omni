@@ -233,9 +233,9 @@ export default function LeadsPage() {
           <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-3">
             <h2 className="text-[13px] font-semibold text-slate-800">Source Distribution</h2>
           </div>
-          <div className="flex flex-col items-center gap-4 p-4">
-            <DonutChart segments={sourceDonut} centerValue={String(leads.length)} centerLabel="Total Leads" size={160} />
-            <ul className="w-full space-y-1.5 mt-2">{sourceDonut.map((src) => (<li key={src.key} className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-slate-50 transition-colors"><span className="size-2 rounded-full shadow-sm" style={{ backgroundColor: src.color }} /><span className="flex-1 text-[13px] text-slate-600 font-medium">{src.label}</span><span className="text-[13px] font-bold text-slate-800">{src.value}%</span></li>))}</ul>
+          <div className="flex items-center gap-4 p-4">
+            <DonutChart segments={sourceDonut} centerValue={String(leads.length)} centerLabel="Total Leads" size={150} />
+            <ul className="min-w-0 flex-1 space-y-0">{sourceDonut.map((src) => (<li key={src.key} className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-slate-50 transition-colors"><span className="size-2 shrink-0 rounded-full shadow-sm" style={{ backgroundColor: src.color }} /><span className="min-w-0 flex-1 truncate text-[13px] text-slate-600 font-medium">{src.label}</span><span className="text-[13px] font-bold text-slate-800">{src.value}%</span></li>))}</ul>
           </div>
         </section>
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-300">
