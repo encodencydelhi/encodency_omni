@@ -32,7 +32,10 @@ import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
 import type { DataTableColumn, DataTableSelection } from "@/components/shared/data-table/types";
 import type { PaginationMeta, SortSpec } from "@/types/api";
 import { ContactMetricCards } from "./components/crm-metric-cards";
+import { CrmImportDialog } from "./components/crm-import-dialog";
+import { MergeContactsDialog } from "./components/merge-contacts-dialog";
 import { contacts as initialContacts, activities, contactGroups, teamMembers } from "./data/crm-data";
+import { exportContactsCsv, listValues } from "./lib/csv";
 import type { Contact, ContactStatus, ContactViewMode } from "./types";
 import { formatDate } from "@/lib/utils/format";
 
@@ -66,6 +69,8 @@ export default function ContactsPage() {
   const [viewMode, setViewMode] = useState<ContactViewMode>("list");
   const [detailContact, setDetailContact] = useState<Contact | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [mergePair, setMergePair] = useState<[Contact, Contact] | null>(null);
 
   /* ---- Derived data ---- */
   const filtered = useMemo(() => {
@@ -116,6 +121,80 @@ export default function ContactsPage() {
     setContacts((prev) => prev.filter((c) => c.id !== id));
     toast.success("Contact deleted");
     setDetailContact(null);
+  };
+
+  const handleExport = () => {
+    const rows = selected.length > 0
+      ? contacts.filter((c) => selected.includes(c.id))
+      : filtered;
+    if (rows.length === 0) {
+      toast.error("Nothing to export");
+      return;
+    }
+    exportContactsCsv(rows, selected.length > 0 ? "contacts-selected.csv" : "contacts.csv");
+    toast.success(`Exported ${rows.length} contact${rows.length === 1 ? "" : "s"}`);
+  };
+
+  const openMerge = () => {
+    if (selected.length !== 2) {
+      toast.error("Select exactly 2 contacts to merge");
+      return;
+    }
+    const pair = selected
+      .map((id) => contacts.find((c) => c.id === id))
+      .filter((c): c is Contact => Boolean(c));
+    const [first, second] = pair;
+    if (!first || !second) {
+      toast.error("Selected contacts not found");
+      return;
+    }
+    setMergePair([first, second]);
+  };
+
+  const handleMerge = (merged: Contact, secondaryId: string) => {
+    setContacts((prev) =>
+      prev
+        .filter((c) => c.id !== secondaryId)
+        .map((c) => (c.id === merged.id ? merged : c))
+    );
+    setSelected([]);
+    setMergePair(null);
+    setDetailContact(null);
+    toast.success(`Merged into ${merged.firstName} ${merged.lastName}`);
+  };
+
+  const handleImport = (rows: Record<string, string>[]) => {
+    const now = new Date().toISOString();
+    const imported: Contact[] = rows.map((r, index) => ({
+      id: `c${Date.now()}_${index}`,
+      firstName: r.firstname || "Imported",
+      lastName: r.lastname || "",
+      email: r.email || "",
+      phone: r.phone || "",
+      company: r.company || "",
+      companyId: "co_imported",
+      role: r.role || "",
+      department: r.department || "",
+      website: r.website || "",
+      linkedIn: r.linkedin || "",
+      location: r.location || "",
+      streetAddress: r.streetaddress || "",
+      city: r.city || "",
+      state: r.state || "",
+      zipCode: r.zipcode || "",
+      country: r.country || "",
+      ownerId: "u1",
+      ownerName: r.ownername || "Priya Sharma",
+      tags: listValues(r.tags || ""),
+      groups: listValues(r.groups || ""),
+      status: (STATUS_OPTIONS.includes(r.status as ContactStatus) ? r.status : "lead") as ContactStatus,
+      lastContacted: "",
+      nextFollowUp: "",
+      createdAt: now,
+      updatedAt: now,
+    }));
+    setContacts((prev) => [...imported, ...prev]);
+    toast.success(`Imported ${imported.length} contact${imported.length === 1 ? "" : "s"}`);
   };
 
   /* ---- Table columns ---- */
@@ -226,9 +305,9 @@ export default function ContactsPage() {
         description="Manage customer relationships, communication history and contact segments."
         action={
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm"><Upload className="size-3.5" /> Import</Button>
-            <Button variant="outline" size="sm"><Download className="size-3.5" /> Export</Button>
-            <Button variant="outline" size="sm"><Merge className="size-3.5" /> Merge</Button>
+            <Button variant="outline" size="sm" onClick={() => setShowImport(true)}><Upload className="size-3.5" /> Import</Button>
+            <Button variant="outline" size="sm" onClick={handleExport}><Download className="size-3.5" /> Export</Button>
+            <Button variant="outline" size="sm" onClick={openMerge} disabled={selected.length > 0 && selected.length !== 2}><Merge className="size-3.5" /> Merge</Button>
             <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="size-3.5" /> Create Contact</Button>
           </div>
         }
@@ -401,6 +480,32 @@ export default function ContactsPage() {
           </SheetBody>
         </SheetContent>
       </Sheet>
+
+      {/* ---- Import Contacts ---- */}
+      <CrmImportDialog
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        entityLabel="contacts"
+        requiredColumns={["firstname", "lastname", "email"]}
+        validate={(values) => {
+          const errors: string[] = [];
+          if (values.status && !STATUS_OPTIONS.includes(values.status as ContactStatus)) {
+            errors.push(`Unknown status "${values.status}"`);
+          }
+          return errors;
+        }}
+        columnsHint="Required: firstName, lastName, email. Optional: phone, company, role, department, status, tags, groups, ownerName, location, city, state, country, website, linkedIn. Separate multiple tags/groups with ;"
+        sample={"firstName,lastName,email,phone,company,role,status,tags,groups\nJohn,Doe,john@example.com,+91 90000 00000,Acme Corp,Manager,lead,imported;vip,Enterprise"}
+        onImport={handleImport}
+      />
+
+      {/* ---- Merge Contacts ---- */}
+      <MergeContactsDialog
+        open={!!mergePair}
+        onClose={() => setMergePair(null)}
+        pair={mergePair}
+        onMerge={handleMerge}
+      />
 
       {/* ---- Create Contact Modal ---- */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>

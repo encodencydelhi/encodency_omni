@@ -31,7 +31,9 @@ import type { TrendSeries } from "@/components/shared/charts/trend-area-chart";
 import type { DonutSegment } from "@/components/shared/charts/donut-chart";
 import { LeadMetricCards } from "./components/crm-metric-cards";
 import { FunnelChart } from "./components/crm-funnel-chart";
+import { CrmImportDialog } from "./components/crm-import-dialog";
 import { leads as seedLeads, activities as seedActivities, teamMembers } from "./data/crm-data";
+import { exportLeadsCsv, listValues } from "./lib/csv";
 import type { Lead, LeadStage, LeadSource, CrmActivity } from "./types";
 
 const STAGE_OPTIONS = ["new", "contacted", "qualified", "proposal", "won", "lost"] as const;
@@ -67,6 +69,7 @@ export default function LeadsPage() {
   const [bulkStage, setBulkStage] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Lead | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => { const t = setTimeout(() => setIsLoading(false), 600); return () => clearTimeout(t); }, []);
@@ -156,6 +159,56 @@ export default function LeadsPage() {
     setDetailLead(null);
   };
 
+  const handleExport = () => {
+    const rows = selected.length > 0 ? leads.filter((l) => selected.includes(l.id)) : filtered;
+    if (rows.length === 0) {
+      toast.error("Nothing to export");
+      return;
+    }
+    exportLeadsCsv(rows, selected.length > 0 ? "leads-selected.csv" : "leads.csv");
+    toast.success(`Exported ${rows.length} lead${rows.length === 1 ? "" : "s"}`);
+  };
+
+  const handleImport = (rows: Record<string, string>[]) => {
+    const imported: Lead[] = rows.map((r, index) => ({
+      id: `l${Date.now()}_${index}`,
+      firstName: r.firstname || "Imported",
+      lastName: r.lastname || "Lead",
+      email: r.email || "",
+      phone: r.phone || "",
+      company: r.company || "",
+      jobTitle: r.jobtitle || "",
+      industry: r.industry || "",
+      website: "",
+      location: r.location || "",
+      streetAddress: "",
+      city: r.city || "",
+      state: r.state || "",
+      zipCode: "",
+      country: r.country || "",
+      source: (SOURCE_OPTIONS as readonly string[]).includes(r.source ?? "") ? (r.source as LeadSource) : "import",
+      campaign: "",
+      stage: (STAGE_OPTIONS as readonly string[]).includes(r.stage ?? "") ? (r.stage as LeadStage) : "new",
+      leadScore: 50,
+      scoreClassification: "warm",
+      priority: "medium",
+      ownerId: "u1",
+      ownerName: r.ownername || "Priya Sharma",
+      estimatedDealValue: Number(r.estimateddealvalue) || 0,
+      probability: 30,
+      expectedCloseDate: "",
+      tags: listValues(r.tags || ""),
+      notes: r.notes || "",
+      nextFollowUp: r.nextfollowup || "",
+      lastContacted: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+    setLeads((p) => [...imported, ...p]);
+    imported.forEach((l) => addActivity("lead_created", `Imported lead ${l.firstName} ${l.lastName}`, l.id));
+    toast.success(`Imported ${imported.length} lead${imported.length === 1 ? "" : "s"}`);
+  };
+
   const columns: DataTableColumn<Lead>[] = useMemo(() => [
     { id: "lead", header: "Lead", cell: (row) => (<div className="flex items-center gap-3"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-blue-100 text-[13px] font-bold text-indigo-700 shadow-sm border border-indigo-100/50">{row.firstName[0]}{row.lastName[0]}</span><div className="min-w-0"><p className="text-[13px] font-semibold text-slate-800 truncate">{row.firstName} {row.lastName}</p><p className="text-[12px] text-slate-500 truncate">{row.email}</p></div></div>), sortField: "lastName", width: "min-w-[180px]" },
     { id: "company", header: "Company", cell: (row) => (<div><p className="text-[12px] text-[#354568]">{row.company}</p><p className="text-[12px] text-[#75829D]">{row.industry}</p></div>), hideBelow: "lg" },
@@ -187,8 +240,8 @@ export default function LeadsPage() {
     <div className="space-y-4">
       <AdminPageTitle eyebrow="CRM / Leads" title="Leads" description="Manage, qualify, assign and convert your sales leads."
         action={<div className="flex items-center gap-2">
-          <Button variant="outline" size="sm"><Upload className="size-3.5" /> Import</Button>
-          <Button variant="outline" size="sm"><Download className="size-3.5" /> Export</Button>
+          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}><Upload className="size-3.5" /> Import</Button>
+          <Button variant="outline" size="sm" onClick={handleExport}><Download className="size-3.5" /> Export</Button>
           <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="size-3.5" /> Create Lead</Button>
         </div>}
       />
@@ -294,6 +347,27 @@ export default function LeadsPage() {
           </Tabs>)}</SheetBody>
         </SheetContent>
       </Sheet>
+
+      {/* ---- Import Leads ---- */}
+      <CrmImportDialog
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        entityLabel="leads"
+        requiredColumns={["firstname", "lastname", "email"]}
+        validate={(values) => {
+          const errors: string[] = [];
+          if (values.source && !(SOURCE_OPTIONS as readonly string[]).includes(values.source)) {
+            errors.push(`Unknown source "${values.source}"`);
+          }
+          if (values.stage && !(STAGE_OPTIONS as readonly string[]).includes(values.stage)) {
+            errors.push(`Unknown stage "${values.stage}"`);
+          }
+          return errors;
+        }}
+        columnsHint="Required: firstName, lastName, email. Optional: phone, company, jobTitle, industry, source, stage, ownerName, estimatedDealValue, tags, location, city, state, country, notes, nextFollowUp. Separate tags with ;"
+        sample={"firstName,lastName,email,phone,company,jobTitle,source,stage\nJohn,Doe,john@example.com,+91 90000 00000,Acme Corp,Manager,website,new"}
+        onImport={handleImport}
+      />
 
       {/* ---- Create Lead ---- */}
       <LeadFormModal open={showCreate} onOpenChange={setShowCreate} onSubmit={handleCreateLead} title="Create Lead" submitLabel="Save Lead" />
