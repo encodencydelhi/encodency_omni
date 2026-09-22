@@ -244,11 +244,11 @@ export default function TasksPage() {
       header: "Task",
       cell: (row) => (
         <div className="flex items-start gap-3 py-1">
-          <button onClick={() => handleToggleComplete(row.id)} className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border shadow-sm transition-colors ${row.status === "completed" || row.status === "done" ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 bg-white hover:border-emerald-500"}`}>
-            {(row.status === "completed" || row.status === "done") && <Check className="size-3.5" />}
+          <button onClick={() => handleToggleComplete(row.id)} className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border shadow-sm transition-colors ${row.status === "completed" ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 bg-white hover:border-emerald-500"}`}>
+            {row.status === "completed" && <Check className="size-3.5" />}
           </button>
           <div className="min-w-0">
-            <p className={`text-[14px] font-semibold truncate transition-colors ${row.status === "completed" || row.status === "done" ? "text-slate-400 line-through" : "text-slate-800"}`}>{row.title}</p>
+            <p className={`text-[14px] font-semibold truncate transition-colors ${row.status === "completed" ? "text-slate-400 line-through" : "text-slate-800"}`}>{row.title}</p>
             <p className="text-[12px] text-slate-500 truncate mt-0.5">{row.description}</p>
           </div>
         </div>
@@ -466,7 +466,7 @@ export default function TasksPage() {
         <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
           <h2 className="border-b border-[#E8EDF3] px-3 py-2 text-[12px] font-semibold">Tasks Over Time</h2>
           <div className="p-2">
-            {tasksTrend[0]?.data.length > 0 ? <><TrendAreaChart series={tasksTrend} height={160} /><div className="mt-1"><ChartLegend series={tasksTrend} /></div></> : <p className="text-[12px] text-[#75829D] py-6 text-center">No data yet</p>}
+            {(tasksTrend[0]?.data.length ?? 0) > 0 ? <><TrendAreaChart series={tasksTrend} height={160} /><div className="mt-1"><ChartLegend series={tasksTrend} /></div></> : <p className="text-[12px] text-[#75829D] py-6 text-center">No data yet</p>}
           </div>
         </section>
         <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">

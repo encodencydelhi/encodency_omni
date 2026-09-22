@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Download, Plus, Search, SlidersHorizontal, ArrowUpRight } from "lucide-react";
@@ -27,7 +27,16 @@ function sortByStatusPriority(ticket: AdminSupportTicket) {
   return rank[ticket.status] ?? 99;
 }
 
+// useSearchParams() needs a Suspense boundary to avoid CSR bailout at build time.
 export default function AdminSupportInboxPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminSupportInboxView />
+    </Suspense>
+  );
+}
+
+function AdminSupportInboxView() {
   const router = useRouter();
   const params = useSearchParams();
   const { tickets, addTicket, company } = useAdminSupport();

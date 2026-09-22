@@ -279,7 +279,7 @@ export default function LeadsPage() {
             <h2 className="text-[13px] font-semibold text-slate-800">Leads Over Time</h2>
           </div>
           <div className="p-4">
-            {trendSeries[0]?.data.length > 0 ? <><TrendAreaChart series={trendSeries} height={180} /><div className="mt-2"><ChartLegend series={trendSeries} /></div></> : <p className="text-[13px] text-slate-500 py-8 text-center">No data yet</p>}
+            {(trendSeries[0]?.data.length ?? 0) > 0 ? <><TrendAreaChart series={trendSeries} height={180} /><div className="mt-2"><ChartLegend series={trendSeries} /></div></> : <p className="text-[13px] text-slate-500 py-8 text-center">No data yet</p>}
           </div>
         </section>
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-300">
