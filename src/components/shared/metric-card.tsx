@@ -8,6 +8,8 @@ interface MetricCardProps {
   label: string;
   value: string;
   icon?: LucideIcon;
+  iconColor?: string;
+  iconBg?: string;
   delta?: MetricDelta | null;
   comparisonLabel?: string;
   /** Small supporting line, e.g. "4 awaiting review". */
@@ -37,6 +39,8 @@ export function MetricCard({
   label,
   value,
   icon: Icon,
+  iconColor,
+  iconBg,
   delta,
   comparisonLabel = "vs. last 30 days",
   hint,
@@ -46,24 +50,27 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-sm border border-border bg-card p-4 shadow-xs",
+        "flex flex-col gap-1.5 rounded-sm border border-border bg-card p-3 shadow-xs",
         EMPHASIS_STYLES[emphasis],
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[12px] font-medium text-muted-foreground">{label}</p>
         {Icon ? (
-          <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-sm", ICON_STYLES[emphasis])}>
-            <Icon className="size-3.5" />
+          <span
+            className="flex size-8 shrink-0 items-center justify-center rounded-sm"
+            style={{ backgroundColor: iconBg, color: iconColor }}
+          >
+            <Icon className="size-4" />
           </span>
         ) : null}
       </div>
 
-      <p className="text-2xl font-semibold leading-none tracking-tight tabular text-foreground">{value}</p>
+      <p className="text-lg font-semibold leading-none tracking-tight tabular text-foreground">{value}</p>
 
       {delta ? <TrendIndicator delta={delta} comparisonLabel={comparisonLabel} /> : null}
-      {hint ? <p className="text-2xs text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="text-[12px] text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }

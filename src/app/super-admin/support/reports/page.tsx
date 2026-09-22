@@ -114,7 +114,7 @@ export default function ReportsInsightsPage() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <Card className="p-5 border-[#E2E8F0] shadow-sm rounded-sm h-[280px] flex flex-col">
+        <Card className="p-5 border-[#E2E8F0] shadow-sm rounded-sm flex flex-col">
           <h3 className="text-[14px] font-semibold text-[#0F172A] mb-4">By Category</h3>
           <div className="flex flex-col gap-3 flex-1">
             {topCategories.map(([category, count]) => (
@@ -134,7 +134,7 @@ export default function ReportsInsightsPage() {
           </div>
         </Card>
 
-        <Card className="p-5 border-[#E2E8F0] shadow-sm rounded-sm h-[280px] flex flex-col">
+        <Card className="p-5 border-[#E2E8F0] shadow-sm rounded-sm flex flex-col">
           <h3 className="text-[14px] font-semibold text-[#0F172A] mb-4">By Priority</h3>
           <div className="flex flex-col gap-3 flex-1">
             {priorityList.map(([priority, count]) => {
@@ -165,7 +165,7 @@ export default function ReportsInsightsPage() {
           </div>
         </Card>
 
-        <Card className="p-5 border-[#E2E8F0] shadow-sm rounded-sm h-[280px] flex flex-col">
+        <Card className="p-5 border-[#E2E8F0] shadow-sm rounded-sm flex flex-col">
           <h3 className="text-[14px] font-semibold text-[#0F172A] mb-4">By Source Channel</h3>
           <div className="flex flex-col gap-3 flex-1">
             {topSources.map(([source, count]) => (

@@ -57,6 +57,7 @@ export const adminNavigation: AdminNavSection[] = [
       { label: "Automation Logs", href: "/admin/automation/logs", icon: ListChecks },
       { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
       { label: "Reports", href: "/admin/reports", icon: FileChartColumn },
+      { label: "Support & Tickets", href: "/admin/support", icon: MessageCircle },
     ]
   },
   {

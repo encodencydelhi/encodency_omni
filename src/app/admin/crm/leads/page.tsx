@@ -1,1 +1,2 @@
-import { CrmPage } from "@/features/admin/crm/crm-page"; export default function Page(){return <CrmPage view="leads"/>}
+import LeadsPage from "@/features/admin/crm/leads-page";
+export default function Page() { return <LeadsPage />; }

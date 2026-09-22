@@ -1,1 +1,2 @@
-import { CrmPage } from "@/features/admin/crm/crm-page"; export default function Page(){return <CrmPage view="pipeline"/>}
+import PipelinePage from "@/features/admin/crm/pipeline-page";
+export default function Page() { return <PipelinePage />; }

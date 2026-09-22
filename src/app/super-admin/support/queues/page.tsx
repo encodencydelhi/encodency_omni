@@ -5,8 +5,12 @@ import { useSupport } from "@/features/support-tickets/data/mock-provider";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
-import { Plus, Clock, Users, AlertTriangle, Inbox, MoreHorizontal, ArrowRight, Eye, Pencil, Trash2, Copy } from "lucide-react";
+import { Plus, Clock, Users, AlertTriangle, Inbox, MoreHorizontal, ArrowRight, Eye, Pencil, Trash2, Copy, Activity, TrendingDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { useSupportActions } from "@/features/support-tickets/context/support-actions-context";
 import { toast } from "sonner";
@@ -30,6 +34,12 @@ export default function QueuesPage() {
   const { tickets, teams } = useSupport();
   const { openFiltersDrawer } = useSupportActions();
   const [activeTab, setActiveTab] = useState<"queues" | "views">("queues");
+  const [isRoutingRulesOpen, setIsRoutingRulesOpen] = useState(false);
+  const [isCreateQueueOpen, setIsCreateQueueOpen] = useState(false);
+  const [rules, setRules] = useState([
+    { id: 1, title: 'Rule 1: High Priority Billing', description: 'IF tag contains "billing" AND priority is "High" THEN route to "Billing Queue"' },
+    { id: 2, title: 'Rule 2: Default Triage', description: 'IF unassigned THEN route to "Triage Queue"' }
+  ]);
   const router = useRouter();
 
   const getQueueCount = (teamId: string | null) => {
@@ -61,10 +71,49 @@ export default function QueuesPage() {
           <h2 className="text-[18px] font-bold text-[#0F172A]">Queues & Saved Views</h2>
           <p className="text-[12px] text-[#64748B] mt-1">Manage ticket queues and create custom views for your team</p>
         </div>
-        <Button size="sm" className="h-8 gap-2 bg-[#EB0711] hover:bg-[#D60811] text-white text-[12px] font-medium rounded-sm">
-          <Plus size={14} />
-          Create Queue
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="h-8 gap-2 text-[#64748B] text-[12px] font-medium rounded-sm" onClick={() => setIsRoutingRulesOpen(true)}>
+             <Activity size={14} />
+             Routing Rules
+          </Button>
+          <Button size="sm" className="h-8 gap-2 bg-[#EB0711] hover:bg-[#D60811] text-white text-[12px] font-medium rounded-sm" onClick={() => setIsCreateQueueOpen(true)}>
+            <Plus size={14} />
+            Create Queue
+          </Button>
+        </div>
+      </div>
+      
+      {/* Top Metrics */}
+      <div className="grid grid-cols-4 gap-3 mb-2">
+          <Card className="p-4 border-[#E2E8F0] shadow-sm rounded-sm flex flex-col gap-1">
+              <span className="text-[12px] text-[#64748B] font-medium uppercase tracking-wider">Total in Queues</span>
+              <div className="flex items-end gap-2 mt-1">
+                  <span className="text-[24px] font-bold text-[#0F172A]">{tickets.filter(t => t.status !== "Resolved" && t.status !== "Closed").length}</span>
+                  <span className="text-[12px] text-[#10B981] flex items-center mb-1"><TrendingDown size={14} className="mr-0.5" /> 12% vs last week</span>
+              </div>
+          </Card>
+          <Card className="p-4 border-[#E2E8F0] shadow-sm rounded-sm flex flex-col gap-1">
+              <span className="text-[12px] text-[#64748B] font-medium uppercase tracking-wider">Avg Wait Time</span>
+              <div className="flex items-end gap-2 mt-1">
+                  <span className="text-[24px] font-bold text-[#0F172A]">1h 45m</span>
+                  <span className="text-[12px] text-[#EF4444] flex items-center mb-1">↑ 15m vs last week</span>
+              </div>
+          </Card>
+          <Card className="p-4 border-[#E2E8F0] shadow-sm rounded-sm flex flex-col gap-1">
+              <span className="text-[12px] text-[#64748B] font-medium uppercase tracking-wider">Unassigned Tickets</span>
+              <div className="flex items-end gap-2 mt-1">
+                  <span className="text-[24px] font-bold text-[#0F172A]">{tickets.filter(t => !t.assignedStaffId && !t.assignedTeamId && t.status !== "Resolved" && t.status !== "Closed").length}</span>
+              </div>
+          </Card>
+          <Card className="p-4 border-[#E2E8F0] shadow-sm rounded-sm flex flex-col gap-1 bg-gradient-to-br from-rose-50 to-white">
+              <span className="text-[12px] text-rose-700 font-medium uppercase tracking-wider flex items-center gap-1.5">
+                  <AlertTriangle size={14} /> SLA Breaches
+              </span>
+              <div className="flex items-end gap-2 mt-1">
+                  <span className="text-[24px] font-bold text-rose-700">3</span>
+                  <span className="text-[12px] text-rose-600 font-medium mb-1">Requires immediate action</span>
+              </div>
+          </Card>
       </div>
 
       <div className="flex items-center gap-1 border-b border-[#E2E8F0] pb-0">
@@ -178,6 +227,82 @@ export default function QueuesPage() {
           })}
         </div>
       )}
+
+      {/* Routing Rules Modal */}
+      <Dialog open={isRoutingRulesOpen} onOpenChange={setIsRoutingRulesOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Routing Rules</DialogTitle>
+            <DialogDescription>
+              Configure how incoming tickets are automatically routed to queues.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4 max-h-[60vh] overflow-y-auto">
+            {rules.map((rule) => (
+                <div key={rule.id} className="flex flex-col gap-2 p-3 border border-[#E2E8F0] rounded-md relative group">
+                    <span className="text-[13px] font-semibold text-[#0F172A]">{rule.title}</span>
+                    <span className="text-[12px] text-[#64748B]">{rule.description}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-[#EF4444]"
+                      onClick={() => setRules(rules.filter(r => r.id !== rule.id))}
+                    >
+                        <Trash2 size={12} />
+                    </Button>
+                </div>
+            ))}
+            <Button 
+              variant="outline" 
+              className="w-full border-dashed border-[#CBD5E1] text-[#64748B]"
+              onClick={() => {
+                setRules([...rules, { 
+                  id: Date.now(), 
+                  title: `Rule ${rules.length + 1}: New Custom Rule`, 
+                  description: 'IF condition is met THEN route to Selected Queue' 
+                }]);
+              }}
+            >
+                <Plus size={14} className="mr-2" /> Add New Rule
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRoutingRulesOpen(false)}>Close</Button>
+            <Button className="bg-[#EB0711] hover:bg-[#D60811] text-white" onClick={() => { toast.success("Routing rules saved"); setIsRoutingRulesOpen(false); }}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Queue Modal */}
+      <Dialog open={isCreateQueueOpen} onOpenChange={setIsCreateQueueOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create New Queue</DialogTitle>
+            <DialogDescription>
+              Create a new ticket queue and assign a default team to handle it.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Queue Name</Label>
+              <Input id="name" placeholder="e.g. L2 Support Backlog" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea id="description" placeholder="Briefly describe what tickets belong here..." />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="team">Assign Default Team</Label>
+              <Input id="team" placeholder="Select Team..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateQueueOpen(false)}>Cancel</Button>
+            <Button className="bg-[#EB0711] hover:bg-[#D60811] text-white" onClick={() => { toast.success("Queue created successfully"); setIsCreateQueueOpen(false); }}>Create Queue</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
