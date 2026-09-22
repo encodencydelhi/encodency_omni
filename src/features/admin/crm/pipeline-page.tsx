@@ -244,12 +244,12 @@ export default function PipelinePage() {
             <h2 className="text-[13px] font-semibold text-slate-800">Stage Breakdown</h2>
           </div>
           <div className="p-4">
-            <div className="space-y-3">
+            <div className="space-y-1.5">
               {displayStages.filter((s) => s !== "lost").map((stage) => {
                 const stageDeals = dealsByStage[stage] ?? [];
                 const totalVal = stageDeals.reduce((sum, d) => sum + d.value, 0);
                 return (
-                  <div key={stage} className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50 p-3 hover:bg-slate-100 transition-colors">
+                  <div key={stage} className="flex items-center gap-4 rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 hover:bg-slate-100 transition-colors">
                     <span className={`size-3 rounded-full shadow-sm ${STAGE_COLORS[stage]?.replace("border-t-", "bg-")}`} />
                     <span className="flex-1 text-[13px] font-bold text-slate-800">{STAGE_LABELS[stage]}</span>
                     <span className="text-[13px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200">{stageDeals.length} deals</span>
