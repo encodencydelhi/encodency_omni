@@ -40,19 +40,19 @@ const STAGE_COLORS: Record<DealStage, string> = {
 };
 
 const STAGE_BADGE: Record<DealStage, string> = {
-  new: "bg-[#E8F0FE] text-[#2563EB]",
-  qualified: "bg-[#DBEAFE] text-[#1D4ED8]",
-  discovery: "bg-[#FEF3CD] text-[#92700C]",
-  proposal: "bg-[#F3E8FF] text-[#8B5CF6]",
-  negotiation: "bg-[#FFF7ED] text-[#EA580C]",
-  won: "bg-[#E5F7EF] text-[#078359]",
-  lost: "bg-[#FEE2E2] text-[#DC2626]",
+  new: "bg-blue-50 text-blue-700 border border-blue-200/50 shadow-sm",
+  qualified: "bg-indigo-50 text-indigo-700 border border-indigo-200/50 shadow-sm",
+  discovery: "bg-amber-50 text-amber-700 border border-amber-200/50 shadow-sm",
+  proposal: "bg-purple-50 text-purple-700 border border-purple-200/50 shadow-sm",
+  negotiation: "bg-orange-50 text-orange-700 border border-orange-200/50 shadow-sm",
+  won: "bg-emerald-50 text-emerald-700 border border-emerald-200/50 shadow-sm",
+  lost: "bg-red-50 text-red-700 border border-red-200/50 shadow-sm",
 };
 
 const PRIORITY_BADGE: Record<string, string> = {
-  high: "bg-[#FEE2E2] text-[#DC2626]",
-  medium: "bg-[#FEF3CD] text-[#92700C]",
-  low: "bg-[#F3F4F6] text-[#6B7280]",
+  high: "bg-red-50 text-red-700 border border-red-200/50 shadow-sm",
+  medium: "bg-amber-50 text-amber-700 border border-amber-200/50 shadow-sm",
+  low: "bg-slate-50 text-slate-600 border border-slate-200/50 shadow-sm",
 };
 
 /* ------------------------------------------------------------------ */
@@ -175,16 +175,16 @@ export default function PipelinePage() {
             return (
               <div
                 key={stage}
-                className={`flex-1 min-w-[200px] rounded-sm border border-[#DDE4ED] bg-[#F8FAFD] border-t-2 ${STAGE_COLORS[stage]}`}
+                className={`flex-1 min-w-[280px] rounded-2xl border border-slate-200 bg-slate-50/80 backdrop-blur-sm border-t-[3px] shadow-sm ${STAGE_COLORS[stage]}`}
                 onDragOver={handleDragOver}
                 onDrop={() => handleDrop(stage)}
               >
-                <div className="flex items-center justify-between px-3 py-2 border-b border-[#E8EDF3]">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white/50 rounded-t-xl">
                   <div>
-                    <h3 className="text-[12px] font-semibold text-[#27375D]">{STAGE_LABELS[stage]}</h3>
-                    <p className="text-[12px] text-[#75829D]">{stageDeals.length} deals · ₹{format(totalValue)}</p>
+                    <h3 className="text-[13px] font-bold text-slate-800">{STAGE_LABELS[stage]}</h3>
+                    <p className="text-[12px] text-slate-500 font-medium">{stageDeals.length} deals · ₹{format(totalValue)}</p>
                   </div>
-                  <span className="flex size-6 items-center justify-center rounded-sm bg-white text-[12px] font-semibold text-[#27375D] border border-[#E8EDF3]">
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-white text-[12px] font-bold text-slate-700 shadow-sm border border-slate-200">
                     {stageDeals.length}
                   </span>
                 </div>
@@ -199,27 +199,27 @@ export default function PipelinePage() {
                         draggable
                         onDragStart={() => handleDragStart(deal.id)}
                         onClick={() => setDetailDeal(deal)}
-                        className="rounded-sm border border-[#DDE4ED] bg-white p-2.5 shadow-xs cursor-grab active:cursor-grabbing hover:shadow-sm transition-shadow"
+                        className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-1 transition-all duration-300"
                       >
-                        <div className="flex items-start justify-between mb-1.5">
-                          <p className="text-[12px] font-semibold text-[#172044] leading-tight">{deal.name}</p>
-                          <GripVertical className="size-3 text-[#AAB5C6] shrink-0" />
+                        <div className="flex items-start justify-between mb-2">
+                          <p className="text-[14px] font-semibold text-slate-800 leading-tight">{deal.name}</p>
+                          <GripVertical className="size-4 text-slate-300 shrink-0" />
                         </div>
-                        <p className="text-[12px] text-[#75829D] mb-2">{deal.companyName}</p>
+                        <p className="text-[12px] text-slate-500 font-medium mb-3">{deal.companyName}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-[12px] font-semibold text-[#27375D]">₹{format(deal.value)}</span>
-                          <span className="text-[12px] text-[#75829D]">{deal.probability}%</span>
+                          <span className="text-[14px] font-bold text-emerald-600">₹{format(deal.value)}</span>
+                          <span className="text-[12px] font-medium text-slate-600">{deal.probability}%</span>
                         </div>
                         {deal.priority && (
-                          <div className="mt-1.5">
-                            <span className={`inline-block rounded-sm px-1.5 py-0.5 text-[12px] font-semibold ${PRIORITY_BADGE[deal.priority]}`}>
-                              {deal.priority}
+                          <div className="mt-2.5">
+                            <span className={`inline-block rounded-md px-2 py-0.5 text-[11px] font-medium tracking-wide ${PRIORITY_BADGE[deal.priority]}`}>
+                              {deal.priority.toUpperCase()}
                             </span>
                           </div>
                         )}
-                        <div className="mt-2 flex items-center justify-between">
-                          <span className="text-[12px] text-[#75829D]">{deal.ownerName.split(" ")[0]}</span>
-                          <span className="text-[12px] text-[#75829D]">Close: {new Date(deal.expectedCloseDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                        <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+                          <span className="text-[12px] font-medium text-slate-600">{deal.ownerName.split(" ")[0]}</span>
+                          <span className="text-[11px] text-slate-500">Close: {new Date(deal.expectedCloseDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                         </div>
                       </div>
                     ))
@@ -232,24 +232,28 @@ export default function PipelinePage() {
       </div>
 
       {/* ---- Analytics Section ---- */}
-      <div className="grid gap-2 lg:grid-cols-[1fr_1fr]">
-        <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
-          <h2 className="border-b border-[#E8EDF3] px-3 py-2.5 text-[12px] font-semibold">Pipeline Funnel</h2>
-          <div className="p-4"><FunnelChart stages={funnel} /></div>
+      <div className="grid gap-4 lg:grid-cols-[1fr_1fr] mt-6">
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-3">
+            <h2 className="text-[13px] font-semibold text-slate-800">Pipeline Funnel</h2>
+          </div>
+          <div className="p-6"><FunnelChart stages={funnel} /></div>
         </section>
-        <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
-          <h2 className="border-b border-[#E8EDF3] px-3 py-2.5 text-[12px] font-semibold">Stage Breakdown</h2>
-          <div className="p-3">
-            <div className="space-y-2">
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-3">
+            <h2 className="text-[13px] font-semibold text-slate-800">Stage Breakdown</h2>
+          </div>
+          <div className="p-4">
+            <div className="space-y-3">
               {displayStages.filter((s) => s !== "lost").map((stage) => {
                 const stageDeals = dealsByStage[stage] ?? [];
                 const totalVal = stageDeals.reduce((sum, d) => sum + d.value, 0);
                 return (
-                  <div key={stage} className="flex items-center gap-3 rounded-sm border border-[#E8EDF3] p-2">
-                    <span className={`size-2 rounded-sm ${STAGE_COLORS[stage]?.replace("border-t-", "bg-")}`} />
-                    <span className="flex-1 text-[12px] font-medium text-[#27375D]">{STAGE_LABELS[stage]}</span>
-                    <span className="text-[12px] text-[#75829D]">{stageDeals.length} deals</span>
-                    <span className="text-[12px] font-semibold text-[#27375D]">₹{format(totalVal)}</span>
+                  <div key={stage} className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50 p-3 hover:bg-slate-100 transition-colors">
+                    <span className={`size-3 rounded-full shadow-sm ${STAGE_COLORS[stage]?.replace("border-t-", "bg-")}`} />
+                    <span className="flex-1 text-[13px] font-bold text-slate-800">{STAGE_LABELS[stage]}</span>
+                    <span className="text-[13px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200">{stageDeals.length} deals</span>
+                    <span className="text-[14px] font-bold text-slate-800">₹{format(totalVal)}</span>
                   </div>
                 );
               })}
@@ -338,27 +342,27 @@ export default function PipelinePage() {
 
       {/* ---- Create Deal Modal ---- */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Create Deal</DialogTitle>
+        <DialogContent className="sm:max-w-md sm:rounded-2xl">
+          <DialogHeader className="pb-4 border-b border-slate-100">
+            <DialogTitle className="text-xl font-semibold text-slate-800">Create Deal</DialogTitle>
             <DialogDescription>Add a new deal to your pipeline.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <Input placeholder="Deal Name" />
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="Company" />
-              <Input placeholder="Contact" />
+          <div className="space-y-4 py-4">
+            <Input placeholder="Deal Name" className="h-10 rounded-lg" />
+            <div className="grid grid-cols-2 gap-4">
+              <Input placeholder="Company" className="h-10 rounded-lg" />
+              <Input placeholder="Contact" className="h-10 rounded-lg" />
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="Value (₹)" type="number" />
-              <Input placeholder="Probability (%)" type="number" />
+            <div className="grid grid-cols-2 gap-4">
+              <Input placeholder="Value (₹)" type="number" className="h-10 rounded-lg" />
+              <Input placeholder="Probability (%)" type="number" className="h-10 rounded-lg" />
             </div>
-            <Input placeholder="Expected Close Date" type="date" />
-            <Textarea placeholder="Notes" rows={2} />
+            <Input placeholder="Expected Close Date" type="date" className="h-10 rounded-lg" />
+            <Textarea placeholder="Notes" rows={3} className="rounded-lg resize-none" />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-            <Button onClick={() => { toast.success("Deal created"); setShowCreate(false); }}>Save Deal</Button>
+          <DialogFooter className="pt-4 border-t border-slate-100">
+            <Button variant="outline" onClick={() => setShowCreate(false)} className="rounded-lg">Cancel</Button>
+            <Button onClick={() => { toast.success("Deal created"); setShowCreate(false); }} className="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">Save Deal</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

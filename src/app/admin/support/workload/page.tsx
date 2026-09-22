@@ -9,7 +9,7 @@ export default function AdminSupportWorkloadPage() {
   const workload = getTeamWorkload(tickets);
 
   return (
-    <div className="mx-auto max-w-[1200px]">
+    <div className="">
       <Card className="rounded-sm border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
         <h2 className="mb-3 text-[13px] font-semibold text-slate-900">Team workload</h2>
         <div className="overflow-x-auto">

@@ -194,7 +194,7 @@ export default function AdminSupportDetailPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
                   <DropdownMenuItem onClick={() => { updateTicketPriority(ticket.id, "Low"); toast.success("Priority set to Low"); }}>Low</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { updateTicketPriority(ticket.id, "Medium"); toast.success("Priority set to Medium"); }}>Medium</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { updateTicketPriority(ticket.id, "Normal"); toast.success("Priority set to Normal"); }}>Normal</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => { updateTicketPriority(ticket.id, "High"); toast.success("Priority set to High"); }}>High</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => { updateTicketPriority(ticket.id, "Urgent"); toast.success("Priority set to Urgent"); }}>Urgent</DropdownMenuItem>
                 </DropdownMenuContent>

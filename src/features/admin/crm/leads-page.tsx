@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Plus, Download, Upload, Eye, Pencil, Trash2, MoreHorizontal,
-  Phone, Mail, Calendar, UserPlus, ArrowRightLeft, Users,
+  Phone, Mail, Calendar, UserPlus, ArrowRightLeft, Users, Target,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -39,9 +39,12 @@ const SOURCE_OPTIONS = ["website", "google", "facebook", "instagram", "linkedin"
 const STAGE_LABELS: Record<LeadStage, string> = { new: "New", contacted: "Contacted", qualified: "Qualified", proposal: "Proposal", won: "Won", lost: "Lost" };
 const SOURCE_LABELS: Record<LeadSource, string> = { website: "Website", google: "Google", facebook: "Facebook", instagram: "Instagram", linkedin: "LinkedIn", referral: "Referral", campaign: "Campaign", import: "Import", manual: "Manual", other: "Other" };
 const STAGE_BADGE: Record<LeadStage, string> = {
-  new: "bg-[#E8F0FE] text-[#2563EB]", contacted: "bg-[#FEF3CD] text-[#92700C]",
-  qualified: "bg-[#E5F7EF] text-[#078359]", proposal: "bg-[#F3E8FF] text-[#8B5CF6]",
-  won: "bg-[#E5F7EF] text-[#078359]", lost: "bg-[#FEE2E2] text-[#DC2626]",
+  new: "bg-blue-50 text-blue-700 border border-blue-200/50 shadow-sm", 
+  contacted: "bg-amber-50 text-amber-700 border border-amber-200/50 shadow-sm",
+  qualified: "bg-emerald-50 text-emerald-700 border border-emerald-200/50 shadow-sm", 
+  proposal: "bg-purple-50 text-purple-700 border border-purple-200/50 shadow-sm",
+  won: "bg-emerald-50 text-emerald-700 border border-emerald-200/50 shadow-sm", 
+  lost: "bg-red-50 text-red-700 border border-red-200/50 shadow-sm",
 };
 
 function uid() { return `l${Date.now()}_${Math.random().toString(36).slice(2, 7)}`; }
@@ -154,11 +157,11 @@ export default function LeadsPage() {
   };
 
   const columns: DataTableColumn<Lead>[] = useMemo(() => [
-    { id: "lead", header: "Lead", cell: (row) => (<div className="flex items-center gap-2"><span className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-[#EEF2F7] text-[12px] font-semibold text-[#27375D]">{row.firstName[0]}{row.lastName[0]}</span><div className="min-w-0"><p className="text-[12px] font-medium text-[#172044] truncate">{row.firstName} {row.lastName}</p><p className="text-[12px] text-[#75829D] truncate">{row.email}</p></div></div>), sortField: "lastName", width: "min-w-[180px]" },
+    { id: "lead", header: "Lead", cell: (row) => (<div className="flex items-center gap-3"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-blue-100 text-[13px] font-bold text-indigo-700 shadow-sm border border-indigo-100/50">{row.firstName[0]}{row.lastName[0]}</span><div className="min-w-0"><p className="text-[13px] font-semibold text-slate-800 truncate">{row.firstName} {row.lastName}</p><p className="text-[12px] text-slate-500 truncate">{row.email}</p></div></div>), sortField: "lastName", width: "min-w-[180px]" },
     { id: "company", header: "Company", cell: (row) => (<div><p className="text-[12px] text-[#354568]">{row.company}</p><p className="text-[12px] text-[#75829D]">{row.industry}</p></div>), hideBelow: "lg" },
     { id: "phone", header: "Phone", cell: (row) => <span className="text-[12px] text-[#354568]">{row.phone}</span>, hideBelow: "xl" },
     { id: "source", header: "Source", cell: (row) => <span className="text-[12px] text-[#354568]">{SOURCE_LABELS[row.source]}</span>, sortField: "source", hideBelow: "lg" },
-    { id: "stage", header: "Stage", cell: (row) => (<span className={`inline-block w-[90px] text-center rounded-sm px-1.5 py-0.5 text-[12px] font-semibold ${STAGE_BADGE[row.stage]}`}>{STAGE_LABELS[row.stage]}</span>), sortField: "stage" },
+    { id: "stage", header: "Stage", cell: (row) => (<span className={`inline-block w-[90px] text-center rounded-lg px-2 py-0.5 text-[12px] font-medium tracking-wide ${STAGE_BADGE[row.stage]}`}>{STAGE_LABELS[row.stage]}</span>), sortField: "stage" },
     { id: "score", header: "Score", cell: (row) => <span className={`text-[12px] font-semibold ${row.leadScore >= 70 ? "text-[#078359]" : row.leadScore >= 40 ? "text-[#92700C]" : "text-[#75829D]"}`}>{row.leadScore}</span>, sortField: "leadScore", hideBelow: "md" },
     { id: "assignee", header: "Assignee", cell: (row) => <span className="text-[12px] text-[#354568]">{row.ownerName}</span>, sortField: "ownerName", hideBelow: "lg" },
     { id: "lastContacted", header: "Last Contact", cell: (row) => <span className="text-[12px] text-[#75829D]">{row.lastContacted ? new Date(row.lastContacted).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}</span>, sortField: "lastContacted", hideBelow: "xl" },
@@ -181,7 +184,7 @@ export default function LeadsPage() {
   const selection: DataTableSelection = { selectedIds: selected, onChange: setSelected };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <AdminPageTitle eyebrow="CRM / Leads" title="Leads" description="Manage, qualify, assign and convert your sales leads."
         action={<div className="flex items-center gap-2">
           <Button variant="outline" size="sm"><Upload className="size-3.5" /> Import</Button>
@@ -217,23 +220,29 @@ export default function LeadsPage() {
         emptyState={<EmptyState icon={Users} title="No leads found" description="Create your first lead or adjust filters." action={<Button size="sm" onClick={() => setShowCreate(true)}><Plus className="size-3.5" /> Create Lead</Button>} />}
       />
 
-      <div className="grid gap-2 lg:grid-cols-3">
-        <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
-          <h2 className="border-b border-[#E8EDF3] px-3 py-2 text-[12px] font-semibold">Leads Over Time</h2>
-          <div className="p-2">
-            {trendSeries[0].data.length > 0 ? <><TrendAreaChart series={trendSeries} height={160} /><div className="mt-1"><ChartLegend series={trendSeries} /></div></> : <p className="text-[12px] text-[#75829D] py-6 text-center">No data yet</p>}
+      <div className="grid gap-4 lg:grid-cols-3 mt-4">
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-3">
+            <h2 className="text-[13px] font-semibold text-slate-800">Leads Over Time</h2>
+          </div>
+          <div className="p-4">
+            {trendSeries[0]?.data.length > 0 ? <><TrendAreaChart series={trendSeries} height={180} /><div className="mt-2"><ChartLegend series={trendSeries} /></div></> : <p className="text-[13px] text-slate-500 py-8 text-center">No data yet</p>}
           </div>
         </section>
-        <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
-          <h2 className="border-b border-[#E8EDF3] px-3 py-2 text-[12px] font-semibold">Source Distribution</h2>
-          <div className="flex items-center gap-2 p-3">
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-3">
+            <h2 className="text-[13px] font-semibold text-slate-800">Source Distribution</h2>
+          </div>
+          <div className="flex flex-col items-center gap-4 p-4">
             <DonutChart segments={sourceDonut} centerValue={String(leads.length)} centerLabel="Total Leads" size={160} />
-            <ul className="flex-1 space-y-0.5">{sourceDonut.map((src) => (<li key={src.key} className="flex items-center gap-1.5 rounded-sm px-1.5 py-0.5"><span className="size-1.5 rounded-sm" style={{ backgroundColor: src.color }} /><span className="flex-1 text-[12px]">{src.label}</span><span className="text-[12px] font-semibold">{src.value}%</span></li>))}</ul>
+            <ul className="w-full space-y-1.5 mt-2">{sourceDonut.map((src) => (<li key={src.key} className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-slate-50 transition-colors"><span className="size-2 rounded-full shadow-sm" style={{ backgroundColor: src.color }} /><span className="flex-1 text-[13px] text-slate-600 font-medium">{src.label}</span><span className="text-[13px] font-bold text-slate-800">{src.value}%</span></li>))}</ul>
           </div>
         </section>
-        <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
-          <h2 className="border-b border-[#E8EDF3] px-3 py-2 text-[12px] font-semibold">Lead Funnel</h2>
-          <div className="p-3"><FunnelChart stages={funnel} /></div>
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-3">
+            <h2 className="text-[13px] font-semibold text-slate-800">Lead Funnel</h2>
+          </div>
+          <div className="p-5"><FunnelChart stages={funnel} /></div>
         </section>
       </div>
 
@@ -244,34 +253,35 @@ export default function LeadsPage() {
           <SheetBody>{detailLead && (<Tabs defaultValue="overview" className="w-full">
             <TabsList className="w-full"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="activity">Activity</TabsTrigger></TabsList>
             <TabsContent value="overview" className="space-y-3 mt-3">
-              <div className="flex items-center gap-2">
-                <span className={`inline-block w-[90px] text-center rounded-sm px-1.5 py-0.5 text-[12px] font-semibold ${STAGE_BADGE[detailLead.stage]}`}>{STAGE_LABELS[detailLead.stage]}</span>
-                <span className="text-[12px] text-[#75829D]">Score: {detailLead.leadScore}</span>
+              <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                <span className={`inline-block text-center rounded-lg px-2.5 py-1 text-[13px] font-medium tracking-wide ${STAGE_BADGE[detailLead.stage]}`}>{STAGE_LABELS[detailLead.stage]}</span>
+                <div className="h-6 w-px bg-slate-200"></div>
+                <span className="text-[13px] font-medium text-slate-600">Score: <span className="font-bold text-slate-800">{detailLead.leadScore}</span></span>
               </div>
-              <div className="rounded-sm border border-[#DDE4ED] p-3 space-y-2">
-                <h3 className="text-[12px] font-semibold text-[#27375D]">Contact Information</h3>
-                <div className="grid grid-cols-2 gap-2 text-[12px]">
-                  <div><span className="text-[#75829D]">Email:</span> <span className="text-[#354568]">{detailLead.email}</span></div>
-                  <div><span className="text-[#75829D]">Phone:</span> <span className="text-[#354568]">{detailLead.phone}</span></div>
-                  <div><span className="text-[#75829D]">Company:</span> <span className="text-[#354568]">{detailLead.company}</span></div>
-                  <div><span className="text-[#75829D]">Title:</span> <span className="text-[#354568]">{detailLead.jobTitle}</span></div>
-                  <div><span className="text-[#75829D]">Location:</span> <span className="text-[#354568]">{detailLead.location}</span></div>
-                  <div><span className="text-[#75829D]">Source:</span> <span className="text-[#354568]">{SOURCE_LABELS[detailLead.source]}</span></div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                <h3 className="text-[14px] font-semibold text-slate-800 mb-3 flex items-center gap-2"><UserPlus className="size-4 text-indigo-500" /> Contact Information</h3>
+                <div className="grid grid-cols-2 gap-4 text-[13px]">
+                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Email</span> <span className="text-slate-800 font-medium">{detailLead.email}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Phone</span> <span className="text-slate-800 font-medium">{detailLead.phone}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Company</span> <span className="text-slate-800 font-medium">{detailLead.company}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Title</span> <span className="text-slate-800 font-medium">{detailLead.jobTitle}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Location</span> <span className="text-slate-800 font-medium">{detailLead.location}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Source</span> <span className="text-slate-800 font-medium">{SOURCE_LABELS[detailLead.source]}</span></div>
                 </div>
               </div>
-              <div className="rounded-sm border border-[#DDE4ED] p-3 space-y-2">
-                <h3 className="text-[12px] font-semibold text-[#27375D]">Lead Details</h3>
-                <div className="grid grid-cols-2 gap-2 text-[12px]">
-                  <div><span className="text-[#75829D]">Owner:</span> <span className="text-[#354568]">{detailLead.ownerName}</span></div>
-                  <div><span className="text-[#75829D]">Priority:</span> <span className="text-[#354568]">{detailLead.priority}</span></div>
-                  <div><span className="text-[#75829D]">Deal Value:</span> <span className="text-[#354568]">₹{detailLead.estimatedDealValue.toLocaleString()}</span></div>
-                  <div><span className="text-[#75829D]">Probability:</span> <span className="text-[#354568]">{detailLead.probability}%</span></div>
-                  <div><span className="text-[#75829D]">Next Follow-up:</span> <span className="text-[#354568]">{detailLead.nextFollowUp || "—"}</span></div>
-                  <div><span className="text-[#75829D]">Created:</span> <span className="text-[#354568]">{new Date(detailLead.createdAt).toLocaleDateString()}</span></div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                <h3 className="text-[14px] font-semibold text-slate-800 mb-3 flex items-center gap-2"><Target className="size-4 text-emerald-500" /> Lead Details</h3>
+                <div className="grid grid-cols-2 gap-4 text-[13px]">
+                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Owner</span> <span className="text-slate-800 font-medium">{detailLead.ownerName}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Priority</span> <span className="text-slate-800 font-medium">{detailLead.priority}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Deal Value</span> <span className="text-emerald-600 font-bold">₹{detailLead.estimatedDealValue.toLocaleString()}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Probability</span> <span className="text-slate-800 font-medium">{detailLead.probability}%</span></div>
+                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Next Follow-up</span> <span className="text-slate-800 font-medium">{detailLead.nextFollowUp || "—"}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Created</span> <span className="text-slate-800 font-medium">{new Date(detailLead.createdAt).toLocaleDateString()}</span></div>
                 </div>
               </div>
-              {detailLead.tags.length > 0 && <div className="flex flex-wrap gap-1">{detailLead.tags.map((t) => <Badge key={t} tone="info">{t}</Badge>)}</div>}
-              {detailLead.notes && <div className="rounded-sm border border-[#DDE4ED] p-3"><h3 className="text-[12px] font-semibold text-[#27375D] mb-1">Notes</h3><p className="text-[12px] text-[#354568]">{detailLead.notes}</p></div>}
+              {detailLead.tags.length > 0 && <div className="flex flex-wrap gap-2 pt-1">{detailLead.tags.map((t) => <Badge key={t} tone="info" className="rounded-md font-medium">{t}</Badge>)}</div>}
+              {detailLead.notes && <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4"><h3 className="text-[13px] font-semibold text-slate-800 mb-2">Notes</h3><p className="text-[13px] text-slate-600 leading-relaxed">{detailLead.notes}</p></div>}
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => { setShowEdit(detailLead); setDetailLead(null); }}>Edit</Button>
                 <Button size="sm" variant="outline" onClick={() => handleStageChange(detailLead.id, detailLead.stage === "new" ? "contacted" : detailLead.stage === "contacted" ? "qualified" : detailLead.stage === "qualified" ? "proposal" : "won")}>Advance Stage</Button>
@@ -325,23 +335,28 @@ function LeadFormModal({ open, onOpenChange, onSubmit, title, submitLabel, initi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2"><Input placeholder="First Name" value={form.firstName ?? ""} onChange={set("firstName")} /><Input placeholder="Last Name" value={form.lastName ?? ""} onChange={set("lastName")} /></div>
-          <Input placeholder="Email" type="email" value={form.email ?? ""} onChange={set("email")} />
-          <Input placeholder="Phone" value={form.phone ?? ""} onChange={set("phone")} />
-          <div className="grid grid-cols-2 gap-2"><Input placeholder="Company" value={form.company ?? ""} onChange={set("company")} /><Input placeholder="Job Title" value={form.jobTitle ?? ""} onChange={set("jobTitle")} /></div>
-          <Input placeholder="Street Address" value={form.streetAddress ?? ""} onChange={set("streetAddress")} />
-          <div className="grid grid-cols-2 gap-2"><Input placeholder="City" value={form.city ?? ""} onChange={set("city")} /><Input placeholder="State" value={form.state ?? ""} onChange={set("state")} /></div>
-          <div className="grid grid-cols-2 gap-2"><Input placeholder="Zip Code" value={form.zipCode ?? ""} onChange={set("zipCode")} /><Input placeholder="Country" value={form.country ?? ""} onChange={set("country")} /></div>
-          <div className="grid grid-cols-2 gap-2">
-            <Select value={form.source ?? ""} onValueChange={sets("source")}><SelectTrigger><SelectValue placeholder="Source" /></SelectTrigger><SelectContent>{SOURCE_OPTIONS.map((s) => <SelectItem key={s} value={s}>{SOURCE_LABELS[s]}</SelectItem>)}</SelectContent></Select>
-            <Select value={form.stage ?? ""} onValueChange={sets("stage")}><SelectTrigger><SelectValue placeholder="Stage" /></SelectTrigger><SelectContent>{STAGE_OPTIONS.map((s) => <SelectItem key={s} value={s}>{STAGE_LABELS[s]}</SelectItem>)}</SelectContent></Select>
+      <DialogContent className="sm:max-w-xl sm:rounded-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-4 border-b border-slate-100">
+          <DialogTitle className="text-xl font-semibold text-slate-800">{title}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4"><Input placeholder="First Name" value={form.firstName ?? ""} onChange={set("firstName")} className="h-10 rounded-lg" /><Input placeholder="Last Name" value={form.lastName ?? ""} onChange={set("lastName")} className="h-10 rounded-lg" /></div>
+          <Input placeholder="Email" type="email" value={form.email ?? ""} onChange={set("email")} className="h-10 rounded-lg" />
+          <Input placeholder="Phone" value={form.phone ?? ""} onChange={set("phone")} className="h-10 rounded-lg" />
+          <div className="grid grid-cols-2 gap-4"><Input placeholder="Company" value={form.company ?? ""} onChange={set("company")} className="h-10 rounded-lg" /><Input placeholder="Job Title" value={form.jobTitle ?? ""} onChange={set("jobTitle")} className="h-10 rounded-lg" /></div>
+          <Input placeholder="Street Address" value={form.streetAddress ?? ""} onChange={set("streetAddress")} className="h-10 rounded-lg" />
+          <div className="grid grid-cols-2 gap-4"><Input placeholder="City" value={form.city ?? ""} onChange={set("city")} className="h-10 rounded-lg" /><Input placeholder="State" value={form.state ?? ""} onChange={set("state")} className="h-10 rounded-lg" /></div>
+          <div className="grid grid-cols-2 gap-4"><Input placeholder="Zip Code" value={form.zipCode ?? ""} onChange={set("zipCode")} className="h-10 rounded-lg" /><Input placeholder="Country" value={form.country ?? ""} onChange={set("country")} className="h-10 rounded-lg" /></div>
+          <div className="grid grid-cols-2 gap-4">
+            <Select value={form.source ?? ""} onValueChange={sets("source")}><SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Source" /></SelectTrigger><SelectContent>{SOURCE_OPTIONS.map((s) => <SelectItem key={s} value={s}>{SOURCE_LABELS[s]}</SelectItem>)}</SelectContent></Select>
+            <Select value={form.stage ?? ""} onValueChange={sets("stage")}><SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Stage" /></SelectTrigger><SelectContent>{STAGE_OPTIONS.map((s) => <SelectItem key={s} value={s}>{STAGE_LABELS[s]}</SelectItem>)}</SelectContent></Select>
           </div>
-          <Textarea placeholder="Notes" rows={2} value={form.notes ?? ""} onChange={set("notes")} />
+          <Textarea placeholder="Notes" rows={3} value={form.notes ?? ""} onChange={set("notes")} className="rounded-lg resize-none" />
         </div>
-        <DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button><Button onClick={() => onSubmit(form)}>{submitLabel}</Button></DialogFooter>
+        <DialogFooter className="pt-4 border-t border-slate-100">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-lg">Cancel</Button>
+          <Button onClick={() => onSubmit(form)} className="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">{submitLabel}</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

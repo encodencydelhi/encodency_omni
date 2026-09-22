@@ -70,7 +70,7 @@ export default function AdminSupportQueuesPage() {
               View name
               <input value={viewName} onChange={(event) => setViewName(event.target.value)} className="mt-1 w-full rounded-sm border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] text-slate-700 outline-none" placeholder="New saved view" />
             </label>
-            <button onClick={saveView} className="rounded-sm bg-red-600 px-3 py-2 text-[12px] font-medium text-white">Save View</button>
+            <button onClick={saveView} disabled={!viewName.trim()} className="rounded-sm bg-red-600 px-3 py-2 text-[12px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-50">Save View</button>
           </div>
         </Card>
       </div>

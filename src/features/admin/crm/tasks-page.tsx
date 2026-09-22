@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import {
   Plus, MoreHorizontal, Eye, Pencil, Trash2, CheckCircle2, Clock,
   Calendar, Phone, Mail, Users, AlertCircle, ListTodo, CalendarDays,
-  Columns3, GripVertical,
+  Columns3, GripVertical, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -43,19 +43,22 @@ import { formatDate } from "@/lib/utils/format";
 
 const STATUS_OPTIONS: TaskStatus[] = ["pending", "in_progress", "completed", "cancelled"];
 const STATUS_LABELS: Record<TaskStatus, string> = { pending: "Pending", in_progress: "In Progress", completed: "Completed", cancelled: "Cancelled" };
-const STATUS_BADGE: Record<TaskStatus, string> = {
-  pending: "bg-[#F3F4F6] text-[#6B7280]",
-  in_progress: "bg-[#E8F0FE] text-[#2563EB]",
-  completed: "bg-[#E5F7EF] text-[#078359]",
-  cancelled: "bg-[#F3F4F6] text-[#9CA3AF]",
+const STATUS_BADGE: Record<string, string> = {
+  todo: "bg-slate-50 text-slate-700 border border-slate-200/50 shadow-sm",
+  pending: "bg-slate-50 text-slate-700 border border-slate-200/50 shadow-sm",
+  in_progress: "bg-blue-50 text-blue-700 border border-blue-200/50 shadow-sm",
+  review: "bg-amber-50 text-amber-700 border border-amber-200/50 shadow-sm",
+  completed: "bg-emerald-50 text-emerald-700 border border-emerald-200/50 shadow-sm",
+  done: "bg-emerald-50 text-emerald-700 border border-emerald-200/50 shadow-sm",
+  cancelled: "bg-slate-50 text-slate-400 border border-slate-200/50 shadow-sm",
 };
 
 const PRIORITY_OPTIONS: TaskPriority[] = ["high", "medium", "low"];
 const PRIORITY_LABELS: Record<TaskPriority, string> = { high: "High", medium: "Medium", low: "Low" };
-const PRIORITY_BADGE: Record<TaskPriority, string> = {
-  high: "bg-[#FEE2E2] text-[#DC2626]",
-  medium: "bg-[#FEF3CD] text-[#92700C]",
-  low: "bg-[#F3F4F6] text-[#6B7280]",
+const PRIORITY_BADGE: Record<string, string> = {
+  high: "bg-red-50 text-red-700 border border-red-200/50 shadow-sm",
+  medium: "bg-amber-50 text-amber-700 border border-amber-200/50 shadow-sm",
+  low: "bg-slate-50 text-slate-600 border border-slate-200/50 shadow-sm",
 };
 
 const TYPE_OPTIONS: TaskType[] = ["call", "email", "meeting", "follow_up", "demo", "proposal", "internal", "other"];
@@ -242,11 +245,13 @@ export default function TasksPage() {
       id: "task",
       header: "Task",
       cell: (row) => (
-        <div className="flex items-center gap-2">
-          <Checkbox checked={row.status === "completed"} onCheckedChange={() => handleToggleComplete(row.id)} onClick={(e) => e.stopPropagation()} />
+        <div className="flex items-start gap-3 py-1">
+          <button onClick={() => handleToggleComplete(row.id)} className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border shadow-sm transition-colors ${row.status === "completed" || row.status === "done" ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 bg-white hover:border-emerald-500"}`}>
+            {(row.status === "completed" || row.status === "done") && <Check className="size-3.5" />}
+          </button>
           <div className="min-w-0">
-            <p className={`text-[12px] font-medium ${row.status === "completed" ? "line-through text-[#75829D]" : "text-[#172044]"}`}>{row.title}</p>
-            <p className="text-[12px] text-[#75829D] truncate">{row.description}</p>
+            <p className={`text-[14px] font-semibold truncate transition-colors ${row.status === "completed" || row.status === "done" ? "text-slate-400 line-through" : "text-slate-800"}`}>{row.title}</p>
+            <p className="text-[12px] text-slate-500 truncate mt-0.5">{row.description}</p>
           </div>
         </div>
       ),
@@ -265,12 +270,9 @@ export default function TasksPage() {
     {
       id: "priority",
       header: "Priority",
-      cell: (row) => (
-        <span className={`inline-block w-[60px] text-center rounded-sm px-1.5 py-0.5 text-[12px] font-semibold ${PRIORITY_BADGE[row.priority]}`}>
-          {PRIORITY_LABELS[row.priority]}
-        </span>
-      ),
+      cell: (row) => <span className={`inline-block rounded-md px-2 py-0.5 text-[11px] font-medium tracking-wide ${PRIORITY_BADGE[row.priority]}`}>{row.priority.toUpperCase()}</span>,
       sortField: "priority",
+      hideBelow: "md",
     },
     {
       id: "relatedTo",
@@ -305,12 +307,9 @@ export default function TasksPage() {
     {
       id: "status",
       header: "Status",
-      cell: (row) => (
-        <span className={`inline-block w-[80px] text-center rounded-sm px-1.5 py-0.5 text-[12px] font-semibold ${STATUS_BADGE[row.status]}`}>
-          {STATUS_LABELS[row.status]}
-        </span>
-      ),
+      cell: (row) => <span className={`inline-block rounded-md px-2 py-0.5 text-[11px] font-medium tracking-wide ${STATUS_BADGE[row.status]}`}>{STATUS_LABELS[row.status] || row.status}</span>,
       sortField: "status",
+      hideBelow: "sm",
     },
     {
       id: "actions",
@@ -581,28 +580,26 @@ export default function TasksPage() {
 
       {/* ---- Create Task Modal ---- */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create Task</DialogTitle>
-            <DialogDescription>Add a new task to your pipeline.</DialogDescription>
+            <DialogDescription>Add a new task to your list.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <Input placeholder="Task Title" />
             <Textarea placeholder="Description" rows={2} />
-            <div className="grid grid-cols-2 gap-2">
-              <Select>
-                <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
-                <SelectContent>
-                  {TYPE_OPTIONS.map((t) => <SelectItem key={t} value={t}>{TYPE_LABELS[t]}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select>
-                <SelectTrigger><SelectValue placeholder="Priority" /></SelectTrigger>
-                <SelectContent>
-                  {PRIORITY_OPTIONS.map((p) => <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select>
+              <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+              <SelectContent>
+                {TYPE_OPTIONS.map((t) => <SelectItem key={t} value={t}>{TYPE_LABELS[t as TaskType]}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select>
+              <SelectTrigger><SelectValue placeholder="Priority" /></SelectTrigger>
+              <SelectContent>
+                {PRIORITY_OPTIONS.map((p) => <SelectItem key={p} value={p}>{PRIORITY_LABELS[p as TaskPriority]}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <div className="grid grid-cols-2 gap-2">
               <Input type="date" placeholder="Due Date" />
               <Input type="time" placeholder="Due Time" />

@@ -43,11 +43,11 @@ import { formatDate } from "@/lib/utils/format";
 const STATUS_OPTIONS: ContactStatus[] = ["active", "inactive", "lead", "customer", "prospect"];
 const STATUS_LABELS: Record<ContactStatus, string> = { active: "Active", inactive: "Inactive", lead: "Lead", customer: "Customer", prospect: "Prospect" };
 const STATUS_BADGE: Record<ContactStatus, string> = {
-  active: "bg-[#E5F7EF] text-[#078359]",
-  inactive: "bg-[#F3F4F6] text-[#6B7280]",
-  lead: "bg-[#E8F0FE] text-[#2563EB]",
-  customer: "bg-[#E5F7EF] text-[#078359]",
-  prospect: "bg-[#FEF3CD] text-[#92700C]",
+  active: "bg-emerald-50 text-emerald-700 border border-emerald-200/50 shadow-sm",
+  inactive: "bg-slate-50 text-slate-600 border border-slate-200/50 shadow-sm",
+  lead: "bg-blue-50 text-blue-700 border border-blue-200/50 shadow-sm",
+  customer: "bg-indigo-50 text-indigo-700 border border-indigo-200/50 shadow-sm",
+  prospect: "bg-amber-50 text-amber-700 border border-amber-200/50 shadow-sm",
 };
 
 /* ------------------------------------------------------------------ */
@@ -124,13 +124,13 @@ export default function ContactsPage() {
       id: "contact",
       header: "Contact",
       cell: (row) => (
-        <div className="flex items-center gap-2">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-[#EEF2F7] text-[12px] font-semibold text-[#27375D]">
+        <div className="flex items-center gap-3">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-blue-100 text-[13px] font-bold text-indigo-700 shadow-sm border border-indigo-100/50">
             {row.firstName[0]}{row.lastName[0]}
           </span>
           <div className="min-w-0">
-            <p className="text-[12px] font-medium text-[#172044] truncate">{row.firstName} {row.lastName}</p>
-            <p className="text-[12px] text-[#75829D] truncate">{row.email}</p>
+            <p className="text-[13px] font-semibold text-slate-800 truncate">{row.firstName} {row.lastName}</p>
+            <p className="text-[12px] text-slate-500 truncate">{row.email}</p>
           </div>
         </div>
       ),
@@ -176,7 +176,7 @@ export default function ContactsPage() {
       id: "status",
       header: "Status",
       cell: (row) => (
-        <span className={`inline-block w-[80px] text-center rounded-sm px-1.5 py-0.5 text-[12px] font-semibold ${STATUS_BADGE[row.status]}`}>
+        <span className={`inline-block w-[80px] text-center rounded-lg px-2 py-0.5 text-[12px] font-medium tracking-wide ${STATUS_BADGE[row.status]}`}>
           {STATUS_LABELS[row.status]}
         </span>
       ),
@@ -219,7 +219,7 @@ export default function ContactsPage() {
   const selection: DataTableSelection = { selectedIds: selected, onChange: setSelected };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <AdminPageTitle
         eyebrow="CRM / Contacts"
         title="Contacts"
@@ -290,26 +290,26 @@ export default function ContactsPage() {
           }
         />
       ) : (
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4">
           {paginated.map((c) => (
-            <div key={c.id} className="flex flex-col rounded-sm border border-[#DDE4ED] bg-white p-3 shadow-xs hover:shadow-sm transition-shadow cursor-pointer" onClick={() => setDetailContact(c)}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-[#EEF2F7] text-[12px] font-semibold text-[#27375D]">
+            <div key={c.id} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => setDetailContact(c)}>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-blue-100 text-[14px] font-bold text-indigo-700 shadow-sm border border-indigo-100/50">
                   {c.firstName[0]}{c.lastName[0]}
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[12px] font-medium text-[#172044] truncate">{c.firstName} {c.lastName}</p>
-                  <p className="text-[12px] text-[#75829D] truncate">{c.role} · {c.company}</p>
+                  <p className="text-[14px] font-semibold text-slate-800 truncate">{c.firstName} {c.lastName}</p>
+                  <p className="text-[12px] text-slate-500 truncate">{c.role} · {c.company}</p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-1 mb-2">
-                {c.tags.slice(0, 3).map((t) => <Badge key={t} tone="info">{t}</Badge>)}
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {c.tags.slice(0, 3).map((t) => <Badge key={t} tone="info" className="rounded-md font-medium text-[11px]">{t}</Badge>)}
               </div>
-              <div className="mt-auto flex items-center gap-2">
-                <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); toast.info("Calling..."); }}><Phone className="size-3.5" /></Button>
-                <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); toast.info("Emailing..."); }}><Mail className="size-3.5" /></Button>
-                <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); toast.info("Messaging..."); }}><MessageSquare className="size-3.5" /></Button>
-                <span className={`ml-auto inline-block rounded-sm px-1.5 py-0.5 text-[12px] font-semibold ${STATUS_BADGE[c.status]}`}>{STATUS_LABELS[c.status]}</span>
+              <div className="mt-auto flex items-center gap-1.5 pt-3 border-t border-slate-100">
+                <Button variant="ghost" size="icon-sm" className="h-8 w-8 rounded-lg hover:bg-indigo-50 hover:text-indigo-600" onClick={(e) => { e.stopPropagation(); toast.info("Calling..."); }}><Phone className="size-3.5" /></Button>
+                <Button variant="ghost" size="icon-sm" className="h-8 w-8 rounded-lg hover:bg-indigo-50 hover:text-indigo-600" onClick={(e) => { e.stopPropagation(); toast.info("Emailing..."); }}><Mail className="size-3.5" /></Button>
+                <Button variant="ghost" size="icon-sm" className="h-8 w-8 rounded-lg hover:bg-indigo-50 hover:text-indigo-600" onClick={(e) => { e.stopPropagation(); toast.info("Messaging..."); }}><MessageSquare className="size-3.5" /></Button>
+                <span className={`ml-auto inline-block rounded-lg px-2 py-0.5 text-[11px] font-medium tracking-wide ${STATUS_BADGE[c.status]}`}>{STATUS_LABELS[c.status]}</span>
               </div>
             </div>
           ))}
@@ -404,36 +404,36 @@ export default function ContactsPage() {
 
       {/* ---- Create Contact Modal ---- */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Create Contact</DialogTitle>
+        <DialogContent className="sm:max-w-xl sm:rounded-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-4 border-b border-slate-100">
+            <DialogTitle className="text-xl font-semibold text-slate-800">Create Contact</DialogTitle>
             <DialogDescription>Add a new contact to your address book.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="First Name" />
-              <Input placeholder="Last Name" />
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input placeholder="First Name" className="h-10 rounded-lg" />
+              <Input placeholder="Last Name" className="h-10 rounded-lg" />
             </div>
-            <Input placeholder="Email" type="email" />
-            <Input placeholder="Phone" />
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="Company" />
-              <Input placeholder="Role" />
+            <Input placeholder="Email" type="email" className="h-10 rounded-lg" />
+            <Input placeholder="Phone" className="h-10 rounded-lg" />
+            <div className="grid grid-cols-2 gap-4">
+              <Input placeholder="Company" className="h-10 rounded-lg" />
+              <Input placeholder="Role" className="h-10 rounded-lg" />
             </div>
-            <Input placeholder="Street Address" />
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="City" />
-              <Input placeholder="State" />
+            <Input placeholder="Street Address" className="h-10 rounded-lg" />
+            <div className="grid grid-cols-2 gap-4">
+              <Input placeholder="City" className="h-10 rounded-lg" />
+              <Input placeholder="State" className="h-10 rounded-lg" />
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="Zip Code" />
-              <Input placeholder="Country" />
+            <div className="grid grid-cols-2 gap-4">
+              <Input placeholder="Zip Code" className="h-10 rounded-lg" />
+              <Input placeholder="Country" className="h-10 rounded-lg" />
             </div>
-            <Textarea placeholder="Notes" rows={2} />
+            <Textarea placeholder="Notes" rows={3} className="rounded-lg resize-none" />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-            <Button onClick={() => { toast.success("Contact created"); setShowCreate(false); }}>Save Contact</Button>
+          <DialogFooter className="pt-4 border-t border-slate-100">
+            <Button variant="outline" onClick={() => setShowCreate(false)} className="rounded-lg">Cancel</Button>
+            <Button onClick={() => { toast.success("Contact created"); setShowCreate(false); }} className="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">Save Contact</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
