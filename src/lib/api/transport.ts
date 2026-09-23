@@ -9,6 +9,7 @@ export interface RequestSpec {
   method: HttpMethod;
   path: string;
   query?: QueryParams;
+  headers?: Record<string, string>;
   body?: unknown;
   signal?: AbortSignal;
 }

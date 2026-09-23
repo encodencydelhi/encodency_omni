@@ -1,5 +1,13 @@
 import { MOCK_ACTIVITY, MOCK_GROUPS, MOCK_INVITATIONS, MOCK_MEMBERS } from "./mock-provider";
 import { Invitation, Member, MemberActivity, TeamGroup } from "./types";
+import { apiClient } from "@/lib/api/client";
+
+function getCompanyIdHeader() {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("omni_active_company_id") ?? "development-company-id";
+  }
+  return "development-company-id";
+}
 
 /**
  * Repository for Team Management operations.
@@ -14,7 +22,18 @@ let activity = [...MOCK_ACTIVITY];
 
 export const teamRepository = {
   async getMembers(): Promise<Member[]> {
-    return [...members];
+    try {
+      const response = await apiClient.request<any[]>({
+        method: "GET",
+        path: "/team/members",
+        headers: { "x-company-id": getCompanyIdHeader() },
+      });
+      // Map backend shape to frontend if necessary, for now return directly if matched
+      return response as any;
+    } catch (error) {
+      console.error("Failed to fetch team members", error);
+      return [...members]; // Fallback to mock
+    }
   },
 
   async getGroups(): Promise<TeamGroup[]> {
@@ -84,6 +103,14 @@ export const teamRepository = {
   },
 
   async updateMember(id: string, patch: Partial<Member>): Promise<void> {
+    if (patch.roleId) {
+      await apiClient.request({
+        method: "PUT",
+        path: `/team/members/${id}/role`,
+        body: { role: patch.roleId },
+        headers: { "x-company-id": getCompanyIdHeader() },
+      });
+    }
     members = members.map((member) => member.id === id ? { ...member, ...patch } : member);
   },
 

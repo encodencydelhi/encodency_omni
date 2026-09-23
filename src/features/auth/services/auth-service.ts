@@ -5,6 +5,7 @@ import type {
   LoginCredentials,
   LoginResult,
   TotpVerification,
+  TotpSetupResponse,
 } from "@/types/domain/auth";
 import { sessionStore } from "./session-store";
 
@@ -17,23 +18,65 @@ import { sessionStore } from "./session-store";
  * tokens is contained to this file.
  */
 export const authService = {
-  login(credentials: LoginCredentials): Promise<LoginResult> {
-    return apiClient.request<LoginResult>({
+  async login({ rememberMe, ...credentials }: LoginCredentials): Promise<LoginResult> {
+    const response = await apiClient.request<any>({
       method: "POST",
       path: "/auth/login",
       body: credentials,
     });
+
+    if (response.status === "challenge") {
+      return {
+        status: "challenge",
+        challenge: {
+          type: response.challengeType || "totp",
+          challengeToken: response.challengeToken,
+          maskedEmail: credentials.email,
+          expiresAt: response.expiresAt,
+        },
+      };
+    }
+    return response;
   },
 
-  async verifyTotp(verification: TotpVerification): Promise<AuthSession> {
+  async verifyTotp({ rememberMe, ...verification }: TotpVerification): Promise<AuthSession> {
     const session = await apiClient.request<AuthSession>({
       method: "POST",
       path: "/auth/verify-totp",
-      body: verification,
+      body: { code: verification.code },
+      headers: {
+        Authorization: `Bearer ${verification.challengeToken}`,
+      },
     });
 
-    sessionStore.persist(session.accessToken, { remember: verification.rememberMe });
+    sessionStore.persist(session.accessToken, { remember: rememberMe });
     return session;
+  },
+
+  async setupTotp(challengeToken: string): Promise<TotpSetupResponse> {
+    return apiClient.request<TotpSetupResponse>({
+      method: "POST",
+      path: "/auth/totp/setup",
+      headers: {
+        Authorization: `Bearer ${challengeToken}`,
+      },
+    });
+  },
+
+  async verifyTotpSetup({ rememberMe, ...verification }: TotpVerification): Promise<AuthSession> {
+    // The backend returns { status: 'authenticated', user, recoveryCodes } but we only care about
+    // the fact that it sets the httpOnly cookie.
+    const response = await apiClient.request<AuthSession>({
+      method: "POST",
+      path: "/auth/totp/verify-setup",
+      body: { code: verification.code },
+      headers: {
+        Authorization: `Bearer ${verification.challengeToken}`,
+      },
+    });
+
+    sessionStore.persist(response.accessToken, { remember: rememberMe });
+    return response;
   },
 
   /**
@@ -41,18 +84,13 @@ export const authService = {
    * when there is simply nobody signed in.
    */
   async restore(): Promise<AuthSession | null> {
-    const token = sessionStore.read();
-    if (!token) return null;
-
     try {
       return await apiClient.request<AuthSession>({
         method: "GET",
-        path: "/auth/session",
-        query: { token },
+        path: "/auth/me",
       });
     } catch (error) {
       if (ApiError.isApiError(error) && error.isAuthError) {
-        sessionStore.clear();
         return null;
       }
       throw error;

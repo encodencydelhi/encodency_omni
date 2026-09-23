@@ -19,6 +19,7 @@ import type {
   LoginCredentials,
   LoginResult,
   TotpVerification,
+  TotpSetupResponse,
 } from "@/types/domain/auth";
 import type { Permission } from "@/types/domain/team";
 
@@ -29,6 +30,8 @@ interface AuthContextValue {
   login: (credentials: LoginCredentials) => Promise<LoginResult>;
   /** Step two. Exchanges a verified code for a session. */
   verifyTotp: (verification: TotpVerification) => Promise<AuthSession>;
+  setupTotp: (challengeToken: string) => Promise<TotpSetupResponse>;
+  verifyTotpSetup: (verification: TotpVerification) => Promise<AuthSession>;
   logout: () => Promise<void>;
   /** RBAC check used by guards and by conditional UI. */
   can: (permission: Permission) => boolean;
@@ -87,6 +90,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return session;
   }, []);
 
+  const setupTotp = useCallback(async (challengeToken: string) => {
+    return authService.setupTotp(challengeToken);
+  }, []);
+
+  const verifyTotpSetup = useCallback(async (verification: TotpVerification) => {
+    const session = await authService.verifyTotpSetup(verification);
+    setUser(session.user);
+    setStatus("authenticated");
+    return session;
+  }, []);
+
   const logout = useCallback(async () => {
     await authService.logout();
     setUser(null);
@@ -100,8 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, login, verifyTotp, logout, can }),
-    [can, login, logout, status, user, verifyTotp],
+    () => ({ status, user, login, verifyTotp, setupTotp, verifyTotpSetup, logout, can }),
+    [can, login, logout, status, user, verifyTotp, setupTotp, verifyTotpSetup],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -33,6 +33,7 @@ export class HttpTransport implements Transport {
         headers: {
           Accept: "application/json",
           ...(spec.body ? { "Content-Type": "application/json" } : {}),
+          ...spec.headers,
         },
         body: spec.body ? JSON.stringify(spec.body) : undefined,
       });

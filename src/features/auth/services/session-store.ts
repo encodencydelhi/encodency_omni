@@ -7,37 +7,20 @@
  * auth layer does not change.
  */
 
-export const SESSION_COOKIE = "enc_session";
-
-const MAX_AGE_SECONDS = 60 * 60 * 24 * 14;
+export const SESSION_COOKIE = "omni_session";
 
 export const sessionStore = {
   read(): string | null {
-    if (typeof document === "undefined") return null;
-
-    const match = document.cookie
-      .split("; ")
-      .find((entry) => entry.startsWith(`${SESSION_COOKIE}=`));
-
-    return match ? decodeURIComponent(match.slice(SESSION_COOKIE.length + 1)) : null;
+    // The backend uses an HttpOnly cookie (omni_session) which is inaccessible via JS.
+    // Auth state is verified by calling the backend API (e.g., /auth/me).
+    return null;
   },
 
   persist(token: string, { remember }: { remember: boolean }): void {
-    if (typeof document === "undefined") return;
-
-    const attributes = [
-      `${SESSION_COOKIE}=${encodeURIComponent(token)}`,
-      "path=/",
-      "SameSite=Lax",
-      remember ? `max-age=${MAX_AGE_SECONDS}` : "",
-      window.location.protocol === "https:" ? "Secure" : "",
-    ].filter(Boolean);
-
-    document.cookie = attributes.join("; ");
+    // No-op: The backend handles setting the HttpOnly cookie.
   },
 
   clear(): void {
-    if (typeof document === "undefined") return;
-    document.cookie = `${SESSION_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
+    // No-op: The backend's /auth/logout endpoint clears the cookie.
   },
 };

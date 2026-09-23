@@ -9,6 +9,7 @@ import type { InternalRole } from "@/types/domain/team";
 import { AuthCard, AuthPanelFooter } from "./auth-card";
 import { CredentialsStep } from "./credentials-step";
 import { TotpStep } from "./totp-step";
+import { TotpSetupStep } from "./totp-setup-step";
 
 interface ChallengeState {
   challenge: TotpChallenge;
@@ -51,12 +52,21 @@ export function LoginView() {
     <>
       <AuthCard>
         {challengeState ? (
-          <TotpStep
-            challenge={challengeState.challenge}
-            rememberMe={challengeState.rememberMe}
-            onVerified={completeSignIn}
-            onBack={() => setChallengeState(null)}
-          />
+          challengeState.challenge.type === "enrollment" ? (
+            <TotpSetupStep
+              challenge={challengeState.challenge}
+              rememberMe={challengeState.rememberMe}
+              onVerified={completeSignIn}
+              onBack={() => setChallengeState(null)}
+            />
+          ) : (
+            <TotpStep
+              challenge={challengeState.challenge}
+              rememberMe={challengeState.rememberMe}
+              onVerified={completeSignIn}
+              onBack={() => setChallengeState(null)}
+            />
+          )
         ) : (
           <CredentialsStep
             onChallenge={(result, rememberMe) =>

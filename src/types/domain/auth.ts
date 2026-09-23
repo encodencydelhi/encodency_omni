@@ -41,7 +41,7 @@ export interface LoginCredentials {
  * means the real backend can enforce MFA without the UI changing.
  */
 export interface TotpChallenge {
-  type: "totp";
+  type: "totp" | "enrollment";
   challengeToken: string;
   /** Shown on the verification step, e.g. "a•••a@encodency.com". */
   maskedEmail: string;
@@ -56,4 +56,10 @@ export interface TotpVerification {
   challengeToken: string;
   code: string;
   rememberMe: boolean;
+}
+
+export interface TotpSetupResponse {
+  otpauthUri: string;
+  qrDataUrl: string;
+  expiresAt: number;
 }
