@@ -5,14 +5,18 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { MOCK_ADMIN_USER } from "@/config/admin-permissions";
 import { useAdminContext } from "./admin-context";
 import { useAuth } from "@/features/auth/components/auth-provider";
+import { cn } from "@/lib/utils/cn";
 import Image from "next/image";
 
 export function AdminTopbar() {
-  const { setMobileNavOpen } = useAdminContext();
+  const { setMobileNavOpen, isSidebarCollapsed } = useAdminContext();
   const { logout } = useAuth();
 
   return (
-    <header className="sticky top-0 z-30 flex h-[60px] items-center gap-4 border-b border-[#E2E8F0] bg-white px-4 sm:px-6 lg:px-8">
+    <header className={cn(
+      "fixed top-0 right-0 z-30 flex h-[60px] items-center gap-4 border-b border-[#E2E8F0] bg-white px-4 sm:px-6 lg:px-8 transition-[left] duration-200",
+      isSidebarCollapsed ? "left-0 lg:left-[64px]" : "left-0 lg:left-[220px]"
+    )}>
       <button
         className="grid size-9 place-items-center rounded-sm text-[#64748B] hover:bg-[#F1F5F9] transition-colors lg:hidden"
         onClick={() => setMobileNavOpen(true)}

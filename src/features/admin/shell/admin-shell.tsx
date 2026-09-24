@@ -40,12 +40,12 @@ function Shell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="admin-shell min-h-dvh bg-[#F5F8FC] text-[#172044]">
+    <div className="admin-shell min-h-dvh bg-[#F5F8FC] text-[#172044] overflow-x-hidden max-w-full">
       <AdminSidebar />
-      <div className={cn("flex min-h-dvh flex-col transition-[padding] duration-200", isSidebarCollapsed ? "lg:pl-[64px]" : "lg:pl-[220px]")}>
+      <div className={cn("flex min-h-dvh flex-col transition-[padding] duration-200 min-w-0 max-w-full overflow-x-hidden pt-[92px]", isSidebarCollapsed ? "lg:pl-[64px]" : "lg:pl-[220px]")}>
         <AdminTopbar />
         <AdminBreadcrumb />
-        <main className="w-full flex-1 px-4 py-5 sm:px-5 xl:px-6">{children}</main>
+        <main className="w-full flex-1 min-w-0 max-w-full px-4 py-5 sm:px-5 xl:px-6 pb-16">{children}</main>
         <AdminFooter />
       </div>
     </div>

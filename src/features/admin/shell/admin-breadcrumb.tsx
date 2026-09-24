@@ -4,9 +4,12 @@ import { usePathname } from "next/navigation";
 import { adminNavigation } from "@/config/admin-navigation";
 import { ChevronRight, LayoutGrid } from "lucide-react";
 import Link from "next/link";
+import { useAdminContext } from "./admin-context";
+import { cn } from "@/lib/utils/cn";
 
 export function AdminBreadcrumb() {
   const pathname = usePathname();
+  const { isSidebarCollapsed } = useAdminContext();
   let activeSection = null;
   let activeItem = null;
 
@@ -25,7 +28,10 @@ export function AdminBreadcrumb() {
   const lastSegment = pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : "";
 
   return (
-    <div className="sticky top-[60px] z-20 flex h-8 items-center border-b border-[#E2E8F0] bg-gradient-to-r from-white via-[#F8FAFC] to-white px-4 sm:px-6 lg:px-8">
+    <div className={cn(
+      "fixed top-[60px] right-0 z-20 flex h-8 items-center border-b border-[#E2E8F0] bg-gradient-to-r from-white via-[#F8FAFC] to-white px-4 sm:px-6 lg:px-8 transition-[left] duration-200",
+      isSidebarCollapsed ? "left-0 lg:left-[64px]" : "left-0 lg:left-[220px]"
+    )}>
       <nav className="flex text-[12px] font-medium text-slate-500 w-full" aria-label="Breadcrumb">
         <ol className="inline-flex items-center space-x-1.5 md:space-x-2.5 w-full">
           {activeSection && (
