@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { ActionMenu, type ActionMenuItem } from "@/components/shared/action-menu";
 import type { DataTableColumn } from "@/components/shared/data-table/types";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ROUTES } from "@/config/routes";
@@ -34,6 +34,7 @@ function CompanyCell({ summary }: { summary: CompanySummary }) {
   return (
     <div className="flex min-w-0 max-w-[15rem] items-center gap-2.5">
       <Avatar className="size-8 shrink-0 rounded-sm">
+        {company.logoUrl ? <AvatarImage src={company.logoUrl} alt={company.name} /> : null}
         <AvatarFallback className="rounded-sm text-[11px] font-semibold">{getInitials(company.name)}</AvatarFallback>
       </Avatar>
       <div className="min-w-0">

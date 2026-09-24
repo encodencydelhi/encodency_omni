@@ -611,7 +611,7 @@ export const mockCompaniesProvider: CompaniesRepository = {
       slug,
       name: input.name.trim(),
       domain: domainOf(website),
-      logoUrl: null,
+      logoUrl: input.logoUrl ?? null,
       profile: {
         legalName: input.legalName?.trim() || null,
         website,

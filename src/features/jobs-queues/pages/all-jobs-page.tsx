@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils/cn";
 import { formatNumber } from "@/lib/utils/format";
 import { useJobs, useQueues, useRequestJobRetry } from "../data/hooks";
-import { JOB_LIFECYCLE_META, MOCK_ENVIRONMENT, MOCK_DATA_SOURCE } from "../data/config";
+import { JOB_LIFECYCLE_META, MOCK_ENVIRONMENT, JOBS_DATA_SOURCE } from "../data/config";
 import { filterJobs, getDistinctQueues, getDistinctCompanies, paginate, DEFAULT_JOB_FILTERS, type JobFilters } from "../data/selectors";
 import type { JobRecord } from "../data/types";
 import { JobsTable, JobPreviewDrawer, RetryReviewDrawer } from "../components";
@@ -187,7 +187,7 @@ export function AllJobsPage() {
         <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Job Data Source:</span>
-        <span>{MOCK_DATA_SOURCE}</span>
+        <span>{JOBS_DATA_SOURCE}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Last Updated:</span>
         <span>{now}</span>

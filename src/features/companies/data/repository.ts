@@ -1,19 +1,21 @@
 /**
  * The one seam between the tenant workspace UI and wherever its data lives.
  *
- *   Today:  UI -> hooks -> companiesRepository -> mock provider (in-memory, demo)
- *   Later:  UI -> hooks -> companiesRepository -> backend tenant service
+ *   Mock mode:   UI -> hooks -> companiesRepository -> mock provider (in-memory, demo)
+ *   API mode:    UI -> hooks -> companiesRepository -> api provider (GET /super-admin/companies[/:id])
+ *                ... with an injected demo fallback for everything the backend
+ *                does not serve yet (portfolio, overview, mutations, ...)
  *
- * Components never import a provider. Connecting the backend means implementing
- * `CompaniesRepository` once; no page, hook or component changes. When mock mode
- * is off the repository resolves to a provider that refuses to invent data.
+ * Components never import a provider. Connecting more backend endpoints means
+ * implementing them once inside `api-provider.ts`; no page, hook or component
+ * changes.
  */
 import type { Plan } from "@/types/domain/plan";
 import type { OrganisationRole } from "@/types/domain/user";
 import type { IntegrationCounts } from "./selectors";
+import { createApiCompaniesProvider } from "./api-provider";
 import { COMPANIES_MOCK_MODE } from "./config";
 import { mockCompaniesProvider } from "./mock-provider";
-import { unavailableCompaniesProvider } from "./unavailable-provider";
 import type {
   ActivityFilter,
   ChangePlanInput,
@@ -147,7 +149,7 @@ export interface BulkResult {
 /* ------------------------------------------------------------------ */
 
 export interface CompaniesRepository {
-  readonly mode: "mock" | "unavailable";
+  readonly mode: "mock" | "unavailable" | "api";
 
   /* Reads */
   listCompanies(query: CompanyListQuery): Promise<CompanyListResult>;
@@ -216,4 +218,4 @@ export interface CompaniesRepository {
 
 export const companiesRepository: CompaniesRepository = COMPANIES_MOCK_MODE
   ? mockCompaniesProvider
-  : unavailableCompaniesProvider;
+  : createApiCompaniesProvider(mockCompaniesProvider);

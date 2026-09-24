@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowLeftIcon, ArrowRightIcon, BuildingIcon, CheckCircle2Icon, InfoIcon, Loader2Icon, SaveIcon } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, BuildingIcon, CheckCircle2Icon, ImageUpIcon, InfoIcon, Loader2Icon, SaveIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AlertBanner } from "@/components/shared/alert-banner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils/cn";
-import { formatCurrency } from "@/lib/utils/format";
+import { formatCurrency, getInitials } from "@/lib/utils/format";
 import type { BillingCycle } from "@/types/domain/subscription";
 import type { PlanKey } from "@/types/domain/plan";
 import { useNewCompanyDefaults } from "@/features/global-settings/data/hooks";
@@ -48,6 +49,7 @@ const STEPS = ["Company", "Owner", "Subscription", "Workspace", "Review"] as con
 
 interface WizardForm {
   name: string;
+  logoUrl: string | null;
   legalName: string;
   website: string;
   industry: string;
@@ -86,6 +88,7 @@ interface WizardForm {
 function initialForm(defaults?: NewCompanyDefaults): WizardForm {
   return {
     name: "",
+    logoUrl: null,
     legalName: "",
     website: "",
     industry: "Marketing Agency",
@@ -196,6 +199,52 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
 
   const update = (patch: Partial<WizardForm>) => setForm((current) => ({ ...current, ...patch }));
 
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = (file: File | undefined) => {
+    if (!file) return;
+    const accepted = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+    if (!accepted.includes(file.type)) {
+      setLogoError("Please upload a PNG, JPG, WebP, or SVG image.");
+      toast.error("Invalid image format", { description: "Use PNG, JPG, WebP, or SVG." });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setLogoError("The image must be 2MB or smaller.");
+      toast.error("Image too large", { description: "Maximum image size is 2MB." });
+      return;
+    }
+
+    setLogoError(null);
+    setUploadingLogo(true);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      // Simulate realistic upload progress with loading indicator
+      setTimeout(() => {
+        const result = typeof reader.result === "string" ? reader.result : null;
+        update({ logoUrl: result });
+        setUploadingLogo(false);
+        toast.success("Company logo uploaded");
+      }, 750);
+    };
+    reader.onerror = () => {
+      setUploadingLogo(false);
+      setLogoError("Failed to read the image file.");
+      toast.error("Image upload failed");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeLogo = () => {
+    update({ logoUrl: null });
+    setLogoError(null);
+    if (logoInputRef.current) logoInputRef.current.value = "";
+    toast.info("Company logo removed");
+  };
+
   const plans = plansQuery.data ?? [];
   const plan = plans.find((item) => item.tier === form.planTier);
   const effectiveTrialEnd = form.trialEndsAt || (plan ? toDateInput(new Date(Date.parse(form.startDate || nowIso()) + plan.trialDays * 86_400_000).toISOString()) : "");
@@ -252,6 +301,7 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
 
     const input: CreateCompanyInput = {
       name: form.name.trim(),
+      logoUrl: form.logoUrl || undefined,
       legalName: form.legalName.trim() || undefined,
       website: form.website.trim() || undefined,
       industry: form.industry,
@@ -371,8 +421,90 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
                 <ErrorBanner message={error} />
 
                 {step === 0 ? (
-                  <Panel title="Company information" description="Only the company name and country are required.">
+                  <Panel title="Company information" description="Company name, logo, and country details.">
                     <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="sm:col-span-2">
+                        <div className="rounded-sm border border-border bg-surface-sunken/40 p-3.5">
+                          <Label className="mb-2.5 block text-2xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Company Logo / Image
+                          </Label>
+                          <div className="flex items-center gap-4">
+                            <div className="relative">
+                              <Avatar className="size-16 shrink-0 rounded-sm border border-border shadow-xs">
+                                {form.logoUrl ? (
+                                  <AvatarImage src={form.logoUrl} alt={form.name || "Company"} className="object-cover" />
+                                ) : null}
+                                <AvatarFallback className="rounded-sm bg-primary/10 text-base font-semibold text-primary">
+                                  {form.name ? getInitials(form.name) : <BuildingIcon className="size-6 text-muted-foreground" />}
+                                </AvatarFallback>
+                              </Avatar>
+                              {uploadingLogo ? (
+                                <div className="absolute inset-0 flex items-center justify-center rounded-sm bg-background/80 backdrop-blur-xs">
+                                  <Loader2Icon className="size-5 animate-spin text-primary" />
+                                </div>
+                              ) : null}
+                            </div>
+
+                            <div className="flex flex-col gap-1.5 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={uploadingLogo}
+                                  onClick={() => logoInputRef.current?.click()}
+                                >
+                                  {uploadingLogo ? (
+                                    <>
+                                      <Loader2Icon className="animate-spin" />
+                                      Uploading logo...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ImageUpIcon />
+                                      {form.logoUrl ? "Replace image" : "Select image"}
+                                    </>
+                                  )}
+                                </Button>
+                                {form.logoUrl && !uploadingLogo ? (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-danger hover:bg-danger-subtle hover:text-danger"
+                                    onClick={removeLogo}
+                                  >
+                                    <Trash2Icon />
+                                    Remove
+                                  </Button>
+                                ) : null}
+                              </div>
+                              <p className="text-2xs text-muted-foreground">
+                                PNG, JPG, WebP or SVG up to 2MB. Square ratio recommended.
+                              </p>
+                              {logoError ? (
+                                <p role="alert" className="text-2xs font-medium text-danger">
+                                  {logoError}
+                                </p>
+                              ) : null}
+                            </div>
+
+                            <input
+                              ref={logoInputRef}
+                              type="file"
+                              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                              className="sr-only"
+                              tabIndex={-1}
+                              aria-label="Upload company logo"
+                              onChange={(event) => {
+                                handleLogoUpload(event.target.files?.[0]);
+                                event.target.value = "";
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="sm:col-span-2">{input("name", "Company name", { required: true, placeholder: "Acme Foods Pvt Ltd", maxLength: 80 })}</div>
                       {input("legalName", "Legal name", { placeholder: "As registered" })}
                       {input("website", "Website", { placeholder: "acme.com" })}
@@ -699,14 +831,45 @@ function ReviewStep({
           Review the details below, then create the company in the demo workspace.
         </AlertBanner>
       )}
-      {section("Company information", 0, [
-        ["Name", form.name],
-        ["Legal name", form.legalName],
-        ["Website", form.website],
-        ["Industry", form.industry],
-        ["Country", form.country],
-        ["Contact", form.contactEmail || form.contactPhone],
-      ])}
+      <Panel
+        title="Company information"
+        action={
+          <Button variant="ghost" size="sm" onClick={() => onJump(0)}>
+            Edit
+          </Button>
+        }
+      >
+        <div className="mb-3 flex items-center gap-3 border-b border-border pb-3">
+          <Avatar className="size-12 shrink-0 rounded-sm border border-border shadow-xs">
+            {form.logoUrl ? (
+              <AvatarImage src={form.logoUrl} alt={form.name} className="object-cover" />
+            ) : null}
+            <AvatarFallback className="rounded-sm bg-primary/10 text-sm font-semibold text-primary">
+              {form.name ? getInitials(form.name) : <BuildingIcon className="size-5 text-muted-foreground" />}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">{form.name || "Company"}</p>
+            <p className="truncate text-2xs text-muted-foreground">
+              {form.logoUrl ? "Custom logo uploaded" : "No logo uploaded (Default initials)"}
+            </p>
+          </div>
+        </div>
+        <dl className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
+          {[
+            ["Legal name", form.legalName],
+            ["Website", form.website],
+            ["Industry", form.industry],
+            ["Country", form.country],
+            ["Contact", form.contactEmail || form.contactPhone],
+          ].map(([label, value]) => (
+            <div key={label} className="flex justify-between gap-3 text-[0.8125rem]">
+              <dt className="text-muted-foreground">{label}</dt>
+              <dd className="min-w-0 truncate text-right text-foreground">{value || "-"}</dd>
+            </div>
+          ))}
+        </dl>
+      </Panel>
       {section("Owner", 1, [
         ["Name", form.ownerName],
         ["Email", form.ownerEmail],

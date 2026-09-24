@@ -9,6 +9,9 @@ import type {
   LoginChallengeResponse,
   LoginCredentials,
   LoginResult,
+  TotpReplacementAuthorization,
+  TotpReplacementCompletedResponse,
+  TotpReplacementPendingResponse,
   TotpSetupResponse,
 } from "@/types/domain/auth";
 import { toAuthenticatedUser, toChallenge } from "./auth-mapping";
@@ -85,6 +88,36 @@ export const authService = {
       skipSessionExpiry: true,
     });
     return fetchCurrentUser();
+  },
+
+  /**
+   * Step 1 of MFA rotation (signed-in). Authorises with the CURRENT TOTP or a
+   * recovery code; returns a pending challenge + QR for the NEW secret. The
+   * active factor is unchanged until verifyTotpReplacement succeeds.
+   * 401 here means "code rejected", not a lost session — skipSessionExpiry.
+   */
+  async requestTotpReplacement(authorization: TotpReplacementAuthorization): Promise<TotpReplacementPendingResponse> {
+    return apiClient.request<TotpReplacementPendingResponse>({
+      method: "POST",
+      path: "/auth/totp/replace",
+      body: authorization.recoveryCode !== undefined ? { recoveryCode: authorization.recoveryCode } : { code: authorization.code },
+      skipSessionExpiry: true,
+    });
+  },
+
+  /**
+   * Step 2 of MFA rotation: confirm a code from the NEW authenticator entry.
+   * On success the server swaps the secret, invalidates unused recovery codes,
+   * issues a fresh set and revokes every other session (this one is kept).
+   */
+  async verifyTotpReplacement({ challengeToken, code }: ChallengeVerification): Promise<TotpReplacementCompletedResponse> {
+    return apiClient.request<TotpReplacementCompletedResponse>({
+      method: "POST",
+      path: "/auth/totp/verify-replacement",
+      body: { code },
+      headers: bearer(challengeToken),
+      skipSessionExpiry: true,
+    });
   },
 
   /** Re-reads the signed-in user (e.g. after memberships change). */

@@ -14,6 +14,7 @@ export const JOBS_QUERY_KEYS = {
   workflow: (id: string) => [...JOBS_QUERY_KEYS.all, "workflow", id] as const,
   queues: () => [...JOBS_QUERY_KEYS.all, "queues"] as const,
   queue: (id: string) => [...JOBS_QUERY_KEYS.all, "queue", id] as const,
+  queueStats: () => [...JOBS_QUERY_KEYS.all, "queue-stats"] as const,
   workers: () => [...JOBS_QUERY_KEYS.all, "workers"] as const,
   worker: (id: string) => [...JOBS_QUERY_KEYS.all, "worker", id] as const,
   recoveryRequests: () => [...JOBS_QUERY_KEYS.all, "recovery-requests"] as const,
@@ -65,6 +66,10 @@ export function useQueues() {
 
 export function useQueue(id: string) {
   return useQuery({ queryKey: JOBS_QUERY_KEYS.queue(id), queryFn: () => jobsQueuesRepository.getQueueById(id), enabled: Boolean(id) });
+}
+
+export function useQueueStats() {
+  return useQuery({ queryKey: JOBS_QUERY_KEYS.queueStats(), queryFn: () => jobsQueuesRepository.getQueueStats() });
 }
 
 export function useWorkers() {
@@ -134,6 +139,7 @@ export function usePauseQueue() {
     mutationFn: (queueId: string) => jobsQueuesRepository.pauseQueue(queueId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.queues() });
+      qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.queueStats() });
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.overview() });
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.queueOperationalControls() });
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.activity() });
@@ -147,6 +153,7 @@ export function useResumeQueue() {
     mutationFn: (queueId: string) => jobsQueuesRepository.resumeQueue(queueId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.queues() });
+      qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.queueStats() });
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.overview() });
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.queueOperationalControls() });
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.activity() });

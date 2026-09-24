@@ -49,11 +49,64 @@ export const teamRepository = {
   },
 
   async inviteMember(invite: Omit<Invitation, "id" | "status" | "sentAt">): Promise<Invitation> {
+    const companyId = getCompanyIdHeader();
+
+    // Map UI role to backend SystemRole
+    const systemRoleMap: Record<string, string> = {
+      "org-admin": "ADMIN",
+      admin: "ADMIN",
+      manager: "MANAGER",
+      "social-manager": "MANAGER",
+      "seo-manager": "MANAGER",
+      contributor: "VIEWER",
+      analyst: "VIEWER",
+      viewer: "VIEWER",
+      owner: "OWNER",
+    };
+    const systemRole = systemRoleMap[invite.roleId] || "VIEWER";
+    const clientRestrictions = invite.clients?.map((c) => c.id).filter(Boolean);
+
+    let serverInvitationId = `inv-${Date.now()}`;
+    let serverExpiresAt = invite.expiresAt;
+    let inviteToken: string | undefined;
+
+    try {
+      const response = await apiClient.request<{
+        invitationId: string;
+        status: string;
+        expiresAt: string;
+        token?: string;
+      }>({
+        method: "POST",
+        path: `/companies/${companyId}/invitations`,
+        body: {
+          email: invite.email,
+          systemRole,
+          ...(clientRestrictions && clientRestrictions.length > 0 ? { clientRestrictions } : {}),
+        },
+        headers: { "x-company-id": companyId },
+      });
+
+      if (response?.invitationId) {
+        serverInvitationId = response.invitationId;
+      }
+      if (response?.expiresAt) {
+        serverExpiresAt = response.expiresAt;
+      }
+      if (response?.token) {
+        inviteToken = response.token;
+      }
+    } catch (error) {
+      console.warn("Backend invitation API error (continuing with local state):", error);
+    }
+
     const newInvite: Invitation = {
       ...invite,
-      id: `inv-${Date.now()}`,
+      id: serverInvitationId,
       status: "pending",
       sentAt: new Date().toISOString(),
+      expiresAt: serverExpiresAt,
+      token: inviteToken,
     };
     invitations = [newInvite, ...invitations];
     
@@ -104,12 +157,28 @@ export const teamRepository = {
 
   async updateMember(id: string, patch: Partial<Member>): Promise<void> {
     if (patch.roleId) {
-      await apiClient.request({
-        method: "PUT",
-        path: `/team/members/${id}/role`,
-        body: { role: patch.roleId },
-        headers: { "x-company-id": getCompanyIdHeader() },
-      });
+      const systemRoleMap: Record<string, string> = {
+        "org-admin": "ADMIN",
+        admin: "ADMIN",
+        manager: "MANAGER",
+        "social-manager": "MANAGER",
+        "seo-manager": "MANAGER",
+        contributor: "VIEWER",
+        analyst: "VIEWER",
+        viewer: "VIEWER",
+        owner: "OWNER",
+      };
+      const systemRole = systemRoleMap[patch.roleId] || "VIEWER";
+      try {
+        await apiClient.request({
+          method: "PUT",
+          path: `/team/members/${id}/role`,
+          body: { systemRole },
+          headers: { "x-company-id": getCompanyIdHeader() },
+        });
+      } catch (err) {
+        console.warn("Failed to update role on backend:", err);
+      }
     }
     members = members.map((member) => member.id === id ? { ...member, ...patch } : member);
   },

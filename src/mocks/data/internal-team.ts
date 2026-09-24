@@ -19,6 +19,7 @@ const MEMBER_SEEDS: MemberSeed[] = [
   { name: "Aditya Raghunath", email: "aditya.raghunath@encodency.com", role: "super_admin", department: "Platform Engineering", status: "active" },
   { name: "Renu Balakrishnan", email: "renu.balakrishnan@encodency.com", role: "super_admin", department: "Platform Engineering", status: "active" },
   { name: "Manish Sirohi", email: "manishsirohi@encodency.com", role: "technical_admin", department: "Platform Engineering", status: "active" },
+  { name: "Manish Sirohi", email: "manishsirohi023@gmail.com", role: "technical_admin", department: "Platform Engineering", status: "active" },
   { name: "Elena Marsh", email: "elena.marsh@encodency.com", role: "technical_admin", department: "Trust & Safety", status: "active" },
   { name: "Sanjana Kulkarni", email: "sanjana.kulkarni@encodency.com", role: "support", department: "Support", status: "active" },
   { name: "Tomas Novak", email: "tomas.novak@encodency.com", role: "support", department: "Support", status: "active" },

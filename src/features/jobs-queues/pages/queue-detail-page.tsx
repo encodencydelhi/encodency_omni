@@ -18,6 +18,7 @@ import { useQueue, useJobs, usePauseQueue, useResumeQueue } from "../data/hooks"
 import { QUEUE_STATE_META, MOCK_ENVIRONMENT } from "../data/config";
 import type { JobRecord } from "../data/types";
 import { JobsTable, JobPreviewDrawer } from "../components";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 
 const STATE_TONE_MAP: Record<string, string> = {
@@ -33,7 +34,7 @@ export function QueueDetailPage() {
   const router = useRouter();
   const queueId = searchParams.get("queueId");
 
-  const { data: queue, isLoading: queueLoading } = useQueue(queueId ?? "");
+  const { data: queue, isLoading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(queueId ?? "");
   const { data: allJobs = [], isLoading: jobsLoading } = useJobs();
   const pauseMutation = usePauseQueue();
   const resumeMutation = useResumeQueue();
@@ -58,6 +59,10 @@ export function QueueDetailPage() {
         </Button>
       </div>
     );
+  }
+
+  if (queueError && !queue) {
+    return <ErrorState error={queueError} onRetry={() => refetchQueue()} />;
   }
 
   if (queueLoading || !queue) {

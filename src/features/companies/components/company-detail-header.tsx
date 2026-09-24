@@ -3,7 +3,7 @@
 import { BellIcon, CircleCheckIcon, ExternalLinkIcon, PencilIcon } from "lucide-react";
 import { ActionMenu } from "@/components/shared/action-menu";
 import { AlertBanner } from "@/components/shared/alert-banner";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate, getInitials } from "@/lib/utils/format";
@@ -59,6 +59,7 @@ export function CompanyDetailHeader({ summary }: { summary: CompanySummary }) {
       <div className="flex flex-col gap-3 rounded-sm border border-border bg-card p-3.5 shadow-xs sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <Avatar className="size-12 shrink-0 rounded-sm">
+            {company.logoUrl ? <AvatarImage src={company.logoUrl} alt={company.name} /> : null}
             <AvatarFallback className="rounded-sm text-sm font-semibold">{getInitials(company.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 space-y-1.5">

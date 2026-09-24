@@ -649,6 +649,7 @@ export interface MutationActor {
 
 export interface CreateCompanyInput {
   name: string;
+  logoUrl?: string | null;
   legalName?: string;
   website?: string;
   industry: string;

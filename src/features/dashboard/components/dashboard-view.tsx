@@ -1,9 +1,9 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
-import { ErrorState } from "@/components/shared/error-state";
+import { useCallback, useMemo } from "react";
 import type { DashboardSnapshot } from "@/types/domain/dashboard";
+import { DASHBOARD_SNAPSHOT } from "@/mocks/data/dashboard";
 import { useDashboard } from "../hooks/use-dashboard";
 import {
   DEFAULT_DASHBOARD_RANGE,
@@ -26,25 +26,6 @@ import {
 
 const RANGE_PARAM = "range";
 
-const EMPTY_SNAPSHOT: Omit<DashboardSnapshot, "generatedAt"> = {
-  metrics: [],
-  attention: [],
-  companyGrowth: { total: 0, series: [] },
-  revenue: { mrrMinor: 0, currency: "INR", series: [] },
-  subscriptionDistribution: { activeTotal: 0, segments: [] },
-  recentActivity: [],
-  platformHealth: [],
-  latestSignups: [],
-  apiUsage: {
-    totalRequests: 0,
-    requestDelta: { changePercent: 0, direction: "up-is-good" },
-    successRate: 0,
-    failedRequests: 0,
-    avgResponseMs: 0,
-    series: [],
-  },
-  integrationStatus: [],
-};
 export function DashboardView() {
   const router = useRouter();
   const pathname = usePathname();
@@ -67,21 +48,18 @@ export function DashboardView() {
     [pathname, router, searchParams],
   );
 
-  const snapshot = data ?? EMPTY_SNAPSHOT;
-
-  if (error) {
-    return (
-      <div className="rounded-sm border border-border bg-card">
-        <ErrorState error={error} onRetry={() => void refetch()} />
-      </div>
-    );
-  }
+  const snapshot = useMemo(() => {
+    if (data && Array.isArray(data.metrics) && data.metrics.length > 0) {
+      return data;
+    }
+    return DASHBOARD_SNAPSHOT;
+  }, [data]);
 
   return (
     <div className="-mx-4 -my-5 min-h-[calc(100dvh-60px)] px-4 py-4 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-1">
         <DashboardHeader
-          generatedAt={data?.generatedAt}
+          generatedAt={snapshot.generatedAt || data?.generatedAt}
           range={range}
           onRangeChange={setRange}
           onRefresh={() => void refetch()}

@@ -215,4 +215,30 @@ export const tenantRoutes: MockRoutes = {
   },
 
   "GET /projects": ({ query }) => queryCollection(Clients, query, projectQueryConfig),
+
+  "POST /companies/:companyId/invitations": ({ params, body }) => {
+    const { email, systemRole, clientRestrictions } = (body ?? {}) as {
+      email: string;
+      systemRole: string;
+      clientRestrictions?: string[];
+    };
+    if (!email || !email.includes("@")) {
+      throw new ApiError({ code: "BAD_REQUEST", status: 400, message: "Valid email is required." });
+    }
+    return {
+      invitationId: `inv_${Date.now().toString(36)}`,
+      status: "pending",
+      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+      token: `mock_inv_token_${Math.random().toString(36).substring(2)}`,
+    };
+  },
+
+  "PUT /team/members/:membershipId/role": ({ params, body }) => {
+    const { systemRole } = (body ?? {}) as { systemRole: string };
+    return {
+      id: params.membershipId,
+      systemRole,
+      updatedAt: new Date().toISOString(),
+    };
+  },
 };

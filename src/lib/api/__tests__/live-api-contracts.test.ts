@@ -170,6 +170,34 @@ describe("authService (real contract)", () => {
     assert.deepEqual(body(calls[0]!), { code: "aaaa-bbbb-cccc-dddd-eeee" });
   });
 
+  it("TOTP rotation step 1 posts { code } (or recoveryCode) to totp/replace without a Bearer", async () => {
+    responses.push({
+      status: 200,
+      body: { status: "replacement_pending", challengeToken: "rp", otpauthUri: "otpauth://totp/x?secret=ABC", qrDataUrl: "data:image/png;base64,x", expiresAt: "2026-01-01T00:05:00.000Z" },
+    });
+    const pending = await authService.requestTotpReplacement({ code: "123456" });
+    assert.equal(calls[0]!.url, "/api/v1/auth/totp/replace");
+    assert.equal(calls[0]!.init.headers.Authorization, undefined);
+    assert.deepEqual(body(calls[0]!), { code: "123456" });
+    assert.equal(pending.status, "replacement_pending");
+
+    responses.push({
+      status: 200,
+      body: { status: "replacement_pending", challengeToken: "rp2", otpauthUri: "otpauth://totp/x?secret=ABC", qrDataUrl: "data:image/png;base64,x", expiresAt: "2026-01-01T00:05:00.000Z" },
+    });
+    await authService.requestTotpReplacement({ recoveryCode: "aaaa-bbbb-cccc-dddd-eeee" });
+    assert.deepEqual(body(calls[1]!), { recoveryCode: "aaaa-bbbb-cccc-dddd-eeee" });
+  });
+
+  it("TOTP rotation step 2 posts { code } with the replacement challenge as Bearer", async () => {
+    responses.push({ status: 200, body: { status: "replacement_completed", recoveryCodes: ["aaaa-bbbb"] } });
+    const result = await authService.verifyTotpReplacement({ challengeToken: "rp", code: "654321" });
+    assert.equal(calls[0]!.url, "/api/v1/auth/totp/verify-replacement");
+    assert.equal(calls[0]!.init.headers.Authorization, "Bearer rp");
+    assert.deepEqual(body(calls[0]!), { code: "654321" });
+    assert.deepEqual(result.recoveryCodes, ["aaaa-bbbb"]);
+  });
+
   it("restore returns null (not an error) when nobody is signed in", async () => {
     responses.push({ status: 401, body: { message: "Not authenticated" } });
     assert.equal(await authService.restore(), null);

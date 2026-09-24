@@ -228,3 +228,32 @@ export interface JobsOverviewData {
   workers: WorkerRecord[];
   recentActivity: JobActivity[];
 }
+
+/** Mirrors `QueueStats` from the backend's `super-admin-jobs.service.ts`. */
+export interface QueueStatsCounts {
+  waiting: number;
+  active: number;
+  completed: number;
+  failed: number;
+  delayed: number;
+}
+
+export interface QueueStatsRecentFailed {
+  id: string;
+  name: string;
+  attemptsMade: number;
+  failedReason: string | null;
+}
+
+export interface QueueStats {
+  queue: string;
+  reachable: boolean;
+  counts?: QueueStatsCounts;
+  recentFailed?: QueueStatsRecentFailed[];
+  error?: string;
+}
+
+/** Wire shape of `GET /super-admin/jobs/stats` (`{ queues: QueueStats[] }`). */
+export interface QueueStatsResponse {
+  queues: QueueStats[];
+}

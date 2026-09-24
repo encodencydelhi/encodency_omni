@@ -19,14 +19,15 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
 import { formatNumber } from "@/lib/utils/format";
 import { useQueues, usePauseQueue, useResumeQueue, useResetJobsDemo } from "../data/hooks";
-import { QUEUE_STATE_META, MOCK_ENVIRONMENT, MOCK_DATA_SOURCE } from "../data/config";
+import { QUEUE_STATE_META, MOCK_ENVIRONMENT, JOBS_DATA_SOURCE } from "../data/config";
 import type { QueueDefinition } from "../data/types";
 import { JobsKpiCards, QueueTable, QueuePreviewDrawer } from "../components";
+import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 
 export function QueuesPage() {
   const router = useRouter();
-  const { data: queues = [], isLoading } = useQueues();
+  const { data: queues = [], isLoading, error, refetch } = useQueues();
   const pauseMutation = usePauseQueue();
   const resumeMutation = useResumeQueue();
   const resetDemo = useResetJobsDemo();
@@ -85,6 +86,10 @@ export function QueuesPage() {
     }
   };
 
+  if (error && !isLoading) {
+    return <ErrorState error={error} onRetry={() => refetch()} />;
+  }
+
   return (
     <div className="space-y-4 max-w-full pb-12">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/80">
@@ -116,7 +121,7 @@ export function QueuesPage() {
         <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Data Source:</span>
-        <span>{MOCK_DATA_SOURCE}</span>
+        <span>{JOBS_DATA_SOURCE}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Total Queues:</span>
         <span className="font-semibold">{formatNumber(queues.length)}</span>

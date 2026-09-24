@@ -5,6 +5,7 @@ import type {
   JobWorkflow,
   JobDependency,
   QueueDefinition,
+  QueueStats,
   WorkerRecord,
   RecoveryRequest,
   QueueOperationalControl,
@@ -130,6 +131,28 @@ export function getQueues(): Promise<QueueDefinition[]> {
 
 export function getQueueById(id: string): Promise<QueueDefinition | null> {
   return Promise.resolve(ds().queues.find((q) => q.id === id) ?? null);
+}
+
+/** Derive the stats-API shape from the demo queues so fallback consumers see the same counts. */
+export function getQueueStats(): Promise<QueueStats[]> {
+  const d = ds();
+  return Promise.resolve(
+    d.queues.map((q) => ({
+      queue: q.id,
+      reachable: q.operationalState !== "unknown",
+      counts: {
+        waiting: q.waiting,
+        active: q.running,
+        completed: q.succeededLast24h,
+        failed: q.failed,
+        delayed: q.delayed,
+      },
+      recentFailed: d.jobs
+        .filter((j) => j.queue === q.id && (j.lifecycleState === "failed" || j.lifecycleState === "dead_lettered"))
+        .slice(0, 10)
+        .map((j) => ({ id: j.id, name: j.type, attemptsMade: j.attempts, failedReason: j.errorMessage })),
+    }))
+  );
 }
 
 export function getWorkers(): Promise<WorkerRecord[]> {

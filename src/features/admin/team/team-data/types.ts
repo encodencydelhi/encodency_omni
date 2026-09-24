@@ -90,6 +90,7 @@ export interface Invitation {
   sentAt: ISODate;
   expiresAt: ISODate;
   status: "pending" | "accepted" | "expired" | "cancelled";
+  token?: string;
 }
 
 export interface MemberActivity {

@@ -4,10 +4,16 @@ import { ActivityIcon, ArchiveIcon, DatabaseIcon, HardDriveIcon, SettingsIcon, S
 import { cn } from "@/lib/utils/cn";
 import { formatDateTime, formatRelativeTime } from "@/lib/utils/format";
 import { useJobsOverview } from "../data/hooks";
-import { MOCK_ENVIRONMENT, MOCK_DATA_SOURCE } from "../data/config";
+import { ErrorState } from "@/components/shared/error-state";
+import { MOCK_ENVIRONMENT, JOBS_DATA_SOURCE } from "../data/config";
 
 export function ActivitySettingsPage() {
-  const { data: overview, isLoading } = useJobsOverview();
+  const { data: overview, isLoading, error, refetch } = useJobsOverview();
+
+  if (error && !overview) {
+    return <ErrorState error={error} onRetry={() => refetch()} />;
+  }
+
 
   return (
     <div className="space-y-4 max-w-full pb-12">
@@ -28,7 +34,7 @@ export function ActivitySettingsPage() {
         <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Data Source:</span>
-        <span>{MOCK_DATA_SOURCE}</span>
+        <span>{JOBS_DATA_SOURCE}</span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">

@@ -21,13 +21,18 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { formatNumber, formatDateTime, formatRelativeTime, formatDuration } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import { useJobsOverview, useResetJobsDemo } from "../data/hooks";
-import { JOB_LIFECYCLE_META, MOCK_ENVIRONMENT, MOCK_DATA_SOURCE, MOCK_WORKER_STATUS } from "../data/config";
+import { JOB_LIFECYCLE_META, MOCK_ENVIRONMENT, JOBS_DATA_SOURCE, JOBS_WORKER_STATUS, QUEUE_STATE_META } from "../data/config";
 import { JobsKpiCards } from "../components";
+import { ErrorState } from "@/components/shared/error-state";
 
 export function OverviewPage() {
-  const { data: overview, isLoading } = useJobsOverview();
+  const { data: overview, isLoading, error, refetch } = useJobsOverview();
   const resetDemo = useResetJobsDemo();
   const now = new Date().toLocaleString();
+
+  if (error && !overview) {
+    return <ErrorState error={error} onRetry={() => refetch()} />;
+  }
 
   if (isLoading || !overview) {
     return (
@@ -78,10 +83,10 @@ export function OverviewPage() {
         <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Job Data Source:</span>
-        <span>{MOCK_DATA_SOURCE}</span>
+        <span>{JOBS_DATA_SOURCE}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Worker Backend:</span>
-        <span className="text-amber-600">{MOCK_WORKER_STATUS}</span>
+        <span className="text-amber-600">{JOBS_WORKER_STATUS}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Last Updated:</span>
         <span>{now}</span>
@@ -161,7 +166,7 @@ export function OverviewPage() {
                   <span className="text-blue-600 font-medium" title="Running">{q.running} running</span>
                   <span className={cn("px-1.5 py-0.5 rounded-sm text-xs font-semibold",
                     q.operationalState === "running" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
-                  )}>{q.operationalState === "running" ? "Running" : "Paused"}</span>
+                  )}>{QUEUE_STATE_META[q.operationalState]?.label ?? q.operationalState}</span>
                 </div>
               </div>
             ))}

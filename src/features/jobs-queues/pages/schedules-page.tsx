@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
 import { formatNumber, formatDateTime, formatRelativeTime } from "@/lib/utils/format";
 import { useSchedules, useJobs } from "../data/hooks";
-import { SCHEDULE_STATE_META, MOCK_ENVIRONMENT, MOCK_DATA_SOURCE } from "../data/config";
+import { SCHEDULE_STATE_META, MOCK_ENVIRONMENT, JOBS_DATA_SOURCE } from "../data/config";
 import type { JobSchedule } from "../data/types";
 
 const STATE_TONE_MAP: Record<string, string> = {
@@ -75,7 +75,7 @@ export function SchedulesPage() {
         <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Data Source:</span>
-        <span>{MOCK_DATA_SOURCE}</span>
+        <span>{JOBS_DATA_SOURCE}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Total Schedules:</span>
         <span className="font-semibold">{formatNumber(schedules.length)}</span>

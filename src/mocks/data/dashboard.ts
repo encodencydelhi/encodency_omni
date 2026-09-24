@@ -190,7 +190,7 @@ function buildPlatformHealth(): PlatformHealthEntry[] {
   });
 }
 
-function buildSnapshot(): DashboardSnapshot {
+export function buildSnapshot(): DashboardSnapshot {
   const activeSubscriptions = SUBSCRIPTIONS.filter(
     (subscription) => subscription.status === "active" || subscription.status === "trial",
   );

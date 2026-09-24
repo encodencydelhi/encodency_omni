@@ -47,6 +47,26 @@ export interface EnrollmentVerifiedResponse {
   recoveryCodes: string[];
 }
 
+/** POST /api/v1/auth/totp/replace — authorise rotation with the CURRENT factor. */
+export type TotpReplacementAuthorization =
+  | { code: string; recoveryCode?: undefined }
+  | { code?: undefined; recoveryCode: string };
+
+/** Pending response: new secret is not active until verify-replacement succeeds. */
+export interface TotpReplacementPendingResponse {
+  status: "replacement_pending";
+  challengeToken: string;
+  otpauthUri: string;
+  qrDataUrl: string;
+  expiresAt: string;
+}
+
+/** POST /api/v1/auth/totp/verify-replacement — activates the new factor and issues fresh recovery codes. */
+export interface TotpReplacementCompletedResponse {
+  status: "replacement_completed";
+  recoveryCodes: string[];
+}
+
 /* ------------------------------------------------------------------ */
 /* Frontend model                                                      */
 /* ------------------------------------------------------------------ */

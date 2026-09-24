@@ -3,7 +3,7 @@
 import { ArrowRightIcon, BanIcon, CircleCheckIcon, CreditCardIcon, GaugeIcon, SquareArrowOutUpRightIcon } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -103,6 +103,7 @@ function PreviewContent({
       <SheetHeader className="gap-2.5">
         <div className="flex items-center gap-3">
           <Avatar className="size-11 rounded-sm">
+            {company.logoUrl ? <AvatarImage src={company.logoUrl} alt={company.name} /> : null}
             <AvatarFallback className="rounded-sm text-sm font-semibold">{getInitials(company.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">

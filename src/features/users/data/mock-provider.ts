@@ -1,4 +1,5 @@
 import { ApiError } from "@/types/api";
+import { apiClient } from "@/lib/api/client";
 import { ORGANISATION_ROLE } from "@/types/domain/user";
 import { MOCK_REFERENCE_TIME } from "./config";
 import {
@@ -228,10 +229,39 @@ export const mockUsersProvider = {
 
     const companyName = getCompanyName(input.companyId);
     const now = new Date(MOCK_REFERENCE_TIME);
-    const expiresAt = new Date(now.getTime() + input.expiryDays * 86400000).toISOString();
+    let backendInvitationId: string | undefined;
+    let backendExpiresAt: string | undefined;
+
+    try {
+      const systemRoleMap: Record<string, string> = {
+        owner: "OWNER",
+        admin: "ADMIN",
+        marketing_manager: "MANAGER",
+        content_creator: "VIEWER",
+        analyst: "VIEWER",
+        viewer: "VIEWER",
+      };
+      const systemRole = systemRoleMap[input.role] || "VIEWER";
+      const clientRestrictions = input.clientAccessScope === "selected" ? input.clientAccessIds : undefined;
+
+      const response = await apiClient.request<{ invitationId: string; status: string; expiresAt: string }>({
+        method: "POST",
+        path: `/companies/${input.companyId}/invitations`,
+        body: {
+          email: input.email.toLowerCase(),
+          systemRole,
+          ...(clientRestrictions && clientRestrictions.length > 0 ? { clientRestrictions } : {}),
+        },
+        headers: { "x-company-id": input.companyId },
+      });
+      if (response?.invitationId) backendInvitationId = response.invitationId;
+      if (response?.expiresAt) backendExpiresAt = response.expiresAt;
+    } catch (err) {
+      console.warn("Backend invitation call bypassed or unavailable:", err);
+    }
 
     const invitation: UserInvitation = {
-      id: `inv_${Date.now().toString(36)}`,
+      id: backendInvitationId || `inv_${Date.now().toString(36)}`,
       email: input.email.toLowerCase(),
       name: input.name,
       companyId: input.companyId,
@@ -241,7 +271,7 @@ export const mockUsersProvider = {
       clientAccessIds: input.clientAccessIds,
       invitedBy: { id: "usr_superadmin", name: "Super Admin Ops", email: "ops@encodency.com" },
       sentAt: now.toISOString(),
-      expiresAt,
+      expiresAt: backendExpiresAt || new Date(now.getTime() + 7 * 86400000).toISOString(),
       status: "pending",
       requires2fa: input.requires2fa,
       note: input.note ?? null,

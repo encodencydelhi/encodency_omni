@@ -5,7 +5,7 @@ import { ServerIcon, CheckCircle2Icon, ClockIcon, XCircleIcon, UsersIcon } from 
 import { cn } from "@/lib/utils/cn";
 import { formatNumber } from "@/lib/utils/format";
 import { useWorkers, useJobs } from "../data/hooks";
-import { WORKER_LIVENESS_META, MOCK_ENVIRONMENT, MOCK_DATA_SOURCE } from "../data/config";
+import { WORKER_LIVENESS_META, MOCK_ENVIRONMENT, JOBS_DATA_SOURCE } from "../data/config";
 import type { WorkerRecord } from "../data/types";
 import { WorkerTable, WorkerDetailDrawer } from "../components";
 
@@ -42,7 +42,7 @@ export function WorkersProcessingPage() {
         <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Data Source:</span>
-        <span>{MOCK_DATA_SOURCE}</span>
+        <span>{JOBS_DATA_SOURCE}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Total Workers:</span>
         <span className="font-semibold">{formatNumber(workers.length)}</span>

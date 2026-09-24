@@ -1,3 +1,5 @@
+import { createApiJobsQueuesProvider } from "./api-provider";
+import { JOBS_MOCK_MODE } from "./config";
 import type {
   JobRecord,
   JobAttempt,
@@ -5,6 +7,7 @@ import type {
   JobWorkflow,
   JobDependency,
   QueueDefinition,
+  QueueStats,
   WorkerRecord,
   RecoveryRequest,
   QueueOperationalControl,
@@ -16,6 +19,7 @@ import type {
 import * as store from "./mock/store";
 
 export interface JobsQueuesRepository {
+  readonly mode: "mock" | "api";
   getJobs(): Promise<JobRecord[]>;
   getJobById(id: string): Promise<JobRecord | null>;
   getAttempts(jobId: string): Promise<JobAttempt[]>;
@@ -27,6 +31,7 @@ export interface JobsQueuesRepository {
   getDependencies(jobId: string): Promise<JobDependency[]>;
   getQueues(): Promise<QueueDefinition[]>;
   getQueueById(id: string): Promise<QueueDefinition | null>;
+  getQueueStats(): Promise<QueueStats[]>;
   getWorkers(): Promise<WorkerRecord[]>;
   getWorkerById(id: string): Promise<WorkerRecord | null>;
   getRecoveryRequests(): Promise<RecoveryRequest[]>;
@@ -42,7 +47,8 @@ export interface JobsQueuesRepository {
   resetDemo(): Promise<void>;
 }
 
-export const jobsQueuesRepository: JobsQueuesRepository = {
+const mockJobsQueuesProvider: JobsQueuesRepository = {
+  mode: "mock",
   getJobs: () => store.getJobs(),
   getJobById: (id) => store.getJobById(id),
   getAttempts: (jobId) => store.getAttempts(jobId),
@@ -54,6 +60,7 @@ export const jobsQueuesRepository: JobsQueuesRepository = {
   getDependencies: (jobId) => store.getDependencies(jobId),
   getQueues: () => store.getQueues(),
   getQueueById: (id) => store.getQueueById(id),
+  getQueueStats: () => store.getQueueStats(),
   getWorkers: () => store.getWorkers(),
   getWorkerById: (id) => store.getWorkerById(id),
   getRecoveryRequests: () => store.getRecoveryRequests(),
@@ -68,3 +75,7 @@ export const jobsQueuesRepository: JobsQueuesRepository = {
   resumeQueue: (queueId) => store.resumeQueue(queueId),
   resetDemo: () => store.resetDemo(),
 };
+
+export const jobsQueuesRepository: JobsQueuesRepository = JOBS_MOCK_MODE
+  ? mockJobsQueuesProvider
+  : createApiJobsQueuesProvider(mockJobsQueuesProvider);
