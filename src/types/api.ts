@@ -43,6 +43,8 @@ export type ApiErrorCode =
   | "SERVICE_UNAVAILABLE"
   | "NETWORK_ERROR"
   | "NO_COMPANY_SELECTED"
+  | "NO_CLIENT_SELECTED"
+  | "MEDIA_NOT_SUPPORTED"
   | "UNKNOWN";
 export class ApiError extends Error {
   readonly code: ApiErrorCode;

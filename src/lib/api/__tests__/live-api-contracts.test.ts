@@ -440,18 +440,23 @@ describe("campaignsApi (TASK-11A contracts)", () => {
   it("GET /campaigns includes x-company-id and x-client-id headers", async () => {
     responses.push({
       status: 200,
-      body: [
-        {
-          id: "cmp-1",
-          companyId,
-          clientId,
-          name: "Q4 Product Launch",
-          budget: { amount: "10000.00", currency: "INR" },
-          revision: 1,
-          createdAt: "2026-09-24T00:00:00.000Z",
-          updatedAt: "2026-09-24T00:00:00.000Z",
-        },
-      ],
+      body: {
+        items: [
+          {
+            id: "cmp-1",
+            companyId,
+            clientId,
+            name: "Q4 Product Launch",
+            budget: { amount: "10000.00", currency: "INR" },
+            revision: 1,
+            createdAt: "2026-09-24T00:00:00.000Z",
+            updatedAt: "2026-09-24T00:00:00.000Z",
+          },
+        ],
+        total: 1,
+        page: 1,
+        limit: 10,
+      },
     });
 
     const list = await campaignsApi.list(companyId, clientId);
@@ -459,8 +464,8 @@ describe("campaignsApi (TASK-11A contracts)", () => {
     assert.equal(calls[0]!.init.method, "GET");
     assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
     assert.equal(calls[0]!.init.headers["x-client-id"], clientId);
-    assert.equal(list.length, 1);
-    assert.equal(list[0]!.revision, 1);
+    assert.equal(list.items.length, 1);
+    assert.equal(list.items[0]!.revision, 1);
   });
 
   it("POST /campaigns sends validated payload and returns revision", async () => {
@@ -552,23 +557,24 @@ describe("draftsApi (TASK-11A contracts)", () => {
   it("GET /content/drafts includes x-company-id and x-client-id headers", async () => {
     responses.push({
       status: 200,
-      body: [
-        {
-          id: "draft-1",
-          companyId,
-          clientId,
-          campaignId: null,
-          title: "Product teaser",
-          content: "Exciting announcement coming soon!",
-          variants: {
-            LINKEDIN_ORGANIZATION: { content: "Professional teaser text" },
+      body: {
+        items: [
+          {
+            id: "draft-1",
+            companyId,
+            clientId,
+            campaignId: null,
+            title: "Product teaser",
+            contentPreview: "Exciting announcement coming soon!",
+            channels: ["LINKEDIN_ORGANIZATION"],
+            revision: 1,
+            updatedAt: "2026-09-24T00:00:00.000Z",
           },
-          assetIds: [],
-          revision: 1,
-          createdAt: "2026-09-24T00:00:00.000Z",
-          updatedAt: "2026-09-24T00:00:00.000Z",
-        },
-      ],
+        ],
+        total: 1,
+        page: 1,
+        limit: 10,
+      },
     });
 
     const drafts = await draftsApi.list(companyId, clientId);
@@ -576,8 +582,8 @@ describe("draftsApi (TASK-11A contracts)", () => {
     assert.equal(calls[0]!.init.method, "GET");
     assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
     assert.equal(calls[0]!.init.headers["x-client-id"], clientId);
-    assert.equal(drafts.length, 1);
-    assert.equal(drafts[0]!.revision, 1);
+    assert.equal(drafts.items.length, 1);
+    assert.equal(drafts.items[0]!.revision, 1);
   });
 
   it("POST /content/drafts validates assetIds and sends expected draft fields", async () => {
@@ -585,6 +591,7 @@ describe("draftsApi (TASK-11A contracts)", () => {
     await assert.rejects(
       draftsApi.create(companyId, clientId, {
         content: "Draft with image",
+        variants: {},
         assetIds: ["asset-123"],
       }),
       (err: unknown) =>

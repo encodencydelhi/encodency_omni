@@ -36,8 +36,10 @@ export interface DraftSummaryRecord {
   campaignId: string | null;
   title: string | null;
   contentPreview: string;
+  content?: string;
   channels: DraftChannel[];
   revision: number;
+  createdAt?: string;
   updatedAt: string;
 }
 

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ChevronRight, Eye, Rocket, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronRight, Eye, Rocket, Save, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useAdminContext } from "../../shell/admin-context";
 import { CAMPAIGN_STEPS, STEP_NAV, initialCampaign, type CampaignDraft } from "./draft";
 import { CampaignRail } from "./rail";
@@ -16,11 +17,16 @@ import { StepTracking } from "./steps/step-6-tracking";
 import { StepAutomation } from "./steps/step-7-automation";
 import { StepReview } from "./steps/step-8-review";
 import { cn } from "@/lib/utils/cn";
+import { campaignsApi } from "../live/campaigns-api";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
+import { ApiError } from "@/types/api";
 
 export function CreateCampaignPage() {
   const router = useRouter();
+  const { companyId, clientId } = useTenancyContext();
   const [step, setStep] = useState(1);
   const [draft, setDraft] = useState<CampaignDraft>(initialCampaign);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const set = useCallback(
     <K extends keyof CampaignDraft>(key: K, value: CampaignDraft[K]) =>
@@ -32,6 +38,60 @@ export function CreateCampaignPage() {
     setStep(Math.min(Math.max(next, 1), 8));
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
+
+  const handleSubmit = useCallback(async (isDraft: boolean) => {
+    if (!companyId || !clientId) {
+      toast.error("Verified Company and Client context are required.");
+      return;
+    }
+
+    const name = draft.name?.trim() || (isDraft ? "Untitled Draft Campaign" : "New Campaign");
+
+    let budget: { amount: string; currency: string } | undefined = undefined;
+    const rawBudget = draft.totalBudget || draft.dailyBudget || draft.monthlyBudget;
+    if (rawBudget) {
+      const parsed = parseFloat(rawBudget.replace(/[^0-9.]/g, ""));
+      if (!Number.isNaN(parsed) && parsed > 0) {
+        budget = {
+          amount: parsed.toFixed(2),
+          currency: "INR",
+        };
+      }
+    }
+
+    let startDate: string | undefined = undefined;
+    if (draft.startDate) {
+      try {
+        startDate = new Date(draft.startDate).toISOString();
+      } catch {}
+    }
+    let endDate: string | undefined = undefined;
+    if (draft.endDate) {
+      try {
+        endDate = new Date(draft.endDate).toISOString();
+      } catch {}
+    }
+
+    setIsSubmitting(true);
+    try {
+      const created = await campaignsApi.create(companyId, clientId, {
+        name,
+        budget,
+        startDate,
+        endDate,
+      });
+      toast.success(`Campaign "${created.name}" created (Revision ${created.revision})`);
+      router.push("/admin/campaigns");
+    } catch (err: unknown) {
+      if (ApiError.isApiError(err)) {
+        toast.error(`Failed to create campaign: ${err.message}`);
+      } else {
+        toast.error("An unexpected error occurred while creating the campaign.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [companyId, clientId, draft, router]);
 
   const hideRail = step === 5;
 
@@ -57,9 +117,11 @@ export function CreateCampaignPage() {
 
       <FooterBar
         step={step}
+        isSubmitting={isSubmitting}
         onBack={() => goTo(step - 1)}
         onNext={() => goTo(step + 1)}
-        onExit={() => router.push("/admin/campaigns")}
+        onSaveDraft={() => handleSubmit(true)}
+        onLaunch={() => handleSubmit(false)}
       />
     </div>
   );
@@ -152,14 +214,18 @@ function Stepper({ current, onSelect }: { current: number; onSelect: (next: numb
 
 function FooterBar({
   step,
+  isSubmitting,
   onBack,
   onNext,
-  onExit,
+  onSaveDraft,
+  onLaunch,
 }: {
   step: number;
+  isSubmitting: boolean;
   onBack: () => void;
   onNext: () => void;
-  onExit: () => void;
+  onSaveDraft: () => void;
+  onLaunch: () => void;
 }) {
   const { isSidebarCollapsed } = useAdminContext();
   const nav = STEP_NAV[step]!;
@@ -177,16 +243,18 @@ function FooterBar({
         <div className="flex items-center gap-2">
           {showDraft ? (
             <button
-              onClick={onExit}
-              className="flex h-8 items-center gap-1.5 rounded-sm border border-[#DFE4EB] px-3 text-[11px] font-semibold text-[#29354E] transition-colors hover:bg-[#F8FAFC]"
+              onClick={onSaveDraft}
+              disabled={isSubmitting}
+              className="flex h-8 items-center gap-1.5 rounded-sm border border-[#DFE4EB] px-3 text-[11px] font-semibold text-[#29354E] transition-colors hover:bg-[#F8FAFC] disabled:opacity-50"
             >
-              <Save className="size-3.5" />
+              {isSubmitting ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
               Save as Draft
             </button>
           ) : nav.back ? (
             <button
               onClick={onBack}
-              className="flex h-8 items-center gap-1.5 rounded-sm px-2 text-[11px] font-semibold text-[#1975E7] transition-colors hover:bg-[#F4F9FF]"
+              disabled={isSubmitting}
+              className="flex h-8 items-center gap-1.5 rounded-sm px-2 text-[11px] font-semibold text-[#1975E7] transition-colors hover:bg-[#F4F9FF] disabled:opacity-50"
             >
               <ArrowLeft className="size-3.5" />
               {nav.back}
@@ -206,19 +274,22 @@ function FooterBar({
           {nav.back && (
             <button
               onClick={onBack}
-              className="flex h-8 items-center gap-1.5 rounded-sm border border-[#DFE4EB] bg-white px-5 text-[11px] font-semibold text-[#29354E] transition-colors hover:bg-[#F8FAFC]"
+              disabled={isSubmitting}
+              className="flex h-8 items-center gap-1.5 rounded-sm border border-[#DFE4EB] bg-white px-5 text-[11px] font-semibold text-[#29354E] transition-colors hover:bg-[#F8FAFC] disabled:opacity-50"
             >
               <ArrowLeft className="size-3.5" />
               {nav.back}
             </button>
           )}
           <button
-            onClick={isLast ? onExit : onNext}
-            className="flex h-8 items-center gap-1.5 rounded-sm bg-[#E11D28] px-5 text-[11px] font-semibold text-white transition-colors hover:bg-[#C3161F]"
+            onClick={isLast ? onLaunch : onNext}
+            disabled={isSubmitting}
+            className="flex h-8 items-center gap-1.5 rounded-sm bg-[#E11D28] px-5 text-[11px] font-semibold text-white transition-colors hover:bg-[#C3161F] disabled:opacity-50"
           >
-            {isLast && <Rocket className="size-3.5" />}
+            {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
+            {!isSubmitting && isLast && <Rocket className="size-3.5" />}
             {nav.next}
-            {!isLast && <ArrowRight className="size-3.5" />}
+            {!isSubmitting && !isLast && <ArrowRight className="size-3.5" />}
           </button>
         </div>
       </div>

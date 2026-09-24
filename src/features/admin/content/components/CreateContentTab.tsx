@@ -1,12 +1,17 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   Check, ChevronDown, ChevronRight, Download, Plus, Send, Sparkles, MoreHorizontal,
+  Loader2, AlertCircle, RefreshCw
 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
 import { SelectField } from "./ui-fields";
 import { PlatformBadge } from "./ui-platform";
+import { draftsApi, isRevisionConflict } from "../live/drafts-api";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
+import { ApiError } from "@/types/api";
 import type {
   Platform, ContentType, MediaRatio, MasterContent, PlatformOverride,
   PlatformSchedule, PlatformValidation, UTMConfig, AutoAdaptOptions,
@@ -66,6 +71,99 @@ export function CreateContentTab() {
   const [previewPlatform, setPreviewPlatform] = useState<Platform>("instagram");
   const [channelsOpen, setChannelsOpen] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
+
+  /* ── Tenancy & Live Draft State (TASK-11A) ── */
+  const { companyId, clientId } = useTenancyContext();
+  const [savedDraftId, setSavedDraftId] = useState<string | null>(null);
+  const [currentRevision, setCurrentRevision] = useState<number | null>(null);
+  const [isSavingDraft, setIsSavingDraft] = useState<boolean>(false);
+  const [conflictNotice, setConflictNotice] = useState<string | null>(null);
+
+  const reloadLatestDraft = useCallback(async () => {
+    if (!companyId || !clientId || !savedDraftId) return;
+    try {
+      const latest = await draftsApi.get(companyId, clientId, savedDraftId);
+      setCurrentRevision(latest.revision);
+      setMasterContent((prev) => ({
+        ...prev,
+        caption: latest.content,
+        headline: latest.title || prev.headline,
+      }));
+      setConflictNotice(null);
+      toast.success(`Reloaded draft (Revision ${latest.revision})`);
+    } catch {
+      toast.error("Failed to reload draft.");
+    }
+  }, [companyId, clientId, savedDraftId]);
+
+  const handleSaveDraft = useCallback(async () => {
+    if (!companyId || !clientId) {
+      toast.error("Verified Company and Client context are required.");
+      return;
+    }
+    if (!masterContent.caption.trim()) {
+      toast.error("Please enter a caption before saving draft.");
+      return;
+    }
+
+    // Map supported channels (FACEBOOK_PAGE, INSTAGRAM_ACCOUNT, LINKEDIN_ORGANIZATION)
+    const variants: Record<string, { content?: string | null }> = {};
+    if (channels.includes("facebook")) {
+      variants.FACEBOOK_PAGE = {
+        content: platformOverrides.facebook?.caption || masterContent.caption,
+      };
+    }
+    if (channels.includes("instagram")) {
+      variants.INSTAGRAM_ACCOUNT = {
+        content: platformOverrides.instagram?.caption || masterContent.caption,
+      };
+    }
+    if (channels.includes("linkedin")) {
+      variants.LINKEDIN_ORGANIZATION = {
+        content: platformOverrides.linkedin?.caption || masterContent.caption,
+      };
+    }
+
+    const title = masterContent.headline?.trim() || masterContent.caption.slice(0, 45).trim() || "Untitled Draft";
+
+    setIsSavingDraft(true);
+    setConflictNotice(null);
+
+    try {
+      if (savedDraftId && currentRevision !== null) {
+        // Optimistic concurrency: send expectedRevision
+        const updated = await draftsApi.update(companyId, clientId, savedDraftId, {
+          expectedRevision: currentRevision,
+          title,
+          content: masterContent.caption,
+          variants,
+        });
+        setCurrentRevision(updated.revision);
+        toast.success(`Draft updated successfully (Revision ${updated.revision})`);
+      } else {
+        // Create new draft
+        const created = await draftsApi.create(companyId, clientId, {
+          title,
+          content: masterContent.caption,
+          variants,
+        });
+        setSavedDraftId(created.id);
+        setCurrentRevision(created.revision);
+        toast.success(`Draft saved successfully (Revision ${created.revision})`);
+      }
+    } catch (err: unknown) {
+      if (draftsApi.isRevisionConflict(err)) {
+        setConflictNotice("This draft was modified by another session (409 Conflict). Reload to view latest changes.");
+        toast.error("Revision conflict: draft has been modified by another request.");
+      } else if (ApiError.isApiError(err)) {
+        toast.error(`Failed to save draft: ${err.message}`);
+      } else {
+        toast.error("An unexpected error occurred while saving draft.");
+      }
+    } finally {
+      setIsSavingDraft(false);
+    }
+  }, [companyId, clientId, masterContent, channels, platformOverrides, savedDraftId, currentRevision]);
 
   /* ── Derived ── */
   const connectedPlatforms = useMemo(() =>
@@ -297,12 +395,38 @@ export function CreateContentTab() {
           onChange={setSchedules}
         />
 
+        {/* Revision Conflict Notice Banner (TASK-11A Concurrency) */}
+        {conflictNotice && (
+          <div className="rounded-sm border border-[#f5c6cb] bg-[#f8d7da] p-2.5 text-[11px] text-[#721c24]">
+            <div className="flex items-center gap-1.5 font-semibold">
+              <AlertCircle size={14} className="shrink-0 text-[#721c24]" />
+              <span>Revision Conflict (409)</span>
+            </div>
+            <p className="mt-1">{conflictNotice}</p>
+            <button
+              onClick={reloadLatestDraft}
+              className="mt-2 flex items-center gap-1 rounded bg-[#721c24] px-2 py-1 text-[10px] font-semibold text-white hover:bg-[#501319]"
+            >
+              <RefreshCw size={10} /> Reload Latest Revision
+            </button>
+          </div>
+        )}
+
         {/* Approval */}
         <Card>
           <SelectField label="Approver" value="Content Team" />
           <div className="mt-1.5 flex gap-1">
-            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm border border-[#E2E8F0] text-[10.5px] font-semibold text-[#687797] hover:bg-slate-50">Save Draft</button>
-            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm bg-[#1769DF] text-[10.5px] font-semibold text-white hover:bg-[#1259BD]">Send for Review</button>
+            <button
+              onClick={handleSaveDraft}
+              disabled={isSavingDraft}
+              className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm border border-[#E2E8F0] text-[10.5px] font-semibold text-[#687797] hover:bg-slate-50 disabled:opacity-50"
+            >
+              {isSavingDraft ? <Loader2 className="size-3 animate-spin" /> : null}
+              {savedDraftId && currentRevision !== null ? `Save Draft (r${currentRevision})` : "Save Draft"}
+            </button>
+            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm bg-[#1769DF] text-[10.5px] font-semibold text-white hover:bg-[#1259BD]">
+              Send for Review
+            </button>
           </div>
         </Card>
       </div>

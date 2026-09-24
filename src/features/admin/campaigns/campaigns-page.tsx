@@ -1,15 +1,18 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Megaphone, Play, CalendarDays, CheckCircle2, Users, Database,
   Search, SlidersHorizontal, ArrowDownUp, Plus, MoreVertical,
   ArrowUpRight, Copy, Link2, BarChart3, ChevronDown,
-  ChevronLeft, ChevronRight, Target
+  ChevronLeft, ChevronRight, Target, AlertCircle, RefreshCw, Loader2
 } from "lucide-react";
 import { ChannelLogo } from "@/features/admin/shared/channel-logo";
+import { campaignsApi, type CampaignRecord, isRevisionConflict } from "./live/campaigns-api";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
+import { ApiError } from "@/types/api";
 const stats = [
   { icon: Megaphone, title: "Total Campaigns", value: "24", trend: "33%", note: "+6 new this month", tone: "red" },
   { icon: Play, title: "Active Campaigns", value: "8", trend: "14%", note: "33% of total", tone: "green" },
@@ -185,11 +188,73 @@ type TabFilter = typeof tabs[number]["filter"];
 
 export function CampaignsPage() {
   const router = useRouter();
+  const { companyId, clientId, isReady } = useTenancyContext();
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [liveCampaigns, setLiveCampaigns] = useState<CampaignRecord[] | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [conflictNotice, setConflictNotice] = useState<string | null>(null);
+
+  const fetchLiveCampaigns = useCallback(async () => {
+    if (!companyId || !clientId) return;
+    setIsLoading(true);
+    setErrorMessage(null);
+    setConflictNotice(null);
+    try {
+      const res = await campaignsApi.list(companyId, clientId);
+      setLiveCampaigns(res.items);
+    } catch (err: unknown) {
+      if (ApiError.isApiError(err)) {
+        setErrorMessage(err.message || `Failed to fetch campaigns (HTTP ${err.status})`);
+      } else {
+        setErrorMessage("Unable to connect to campaigns API. Please verify backend service.");
+      }
+      setLiveCampaigns(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [companyId, clientId]);
+
+  useEffect(() => {
+    if (isReady) {
+      fetchLiveCampaigns();
+    }
+  }, [isReady, fetchLiveCampaigns]);
+
+  const allDisplayCampaigns = useMemo(() => {
+    if (liveCampaigns !== null) {
+      return liveCampaigns.map((c) => ({
+        id: c.id,
+        title: c.name,
+        desc: c.budget ? `${c.budget.currency} ${Number(c.budget.amount).toLocaleString()} budget` : "Multi-channel campaign",
+        project: "Active Client",
+        channels: ["Facebook", "Instagram", "LinkedIn"],
+        extra: "",
+        image: "",
+        status: "Active",
+        statusTone: "active",
+        dates: [
+          c.startDate ? new Date(c.startDate).toLocaleDateString() : "Immediate",
+          c.endDate ? new Date(c.endDate).toLocaleDateString() : "Ongoing"
+        ],
+        leads: "—",
+        leadGrowth: "",
+        spend: c.budget ? `${c.budget.currency} ${Number(c.budget.amount).toLocaleString()}` : "—",
+        conversions: "—",
+        conversionGrowth: "",
+        score: "—",
+        scoreTone: "empty",
+        updated: [`Rev ${c.revision}`, `Updated ${new Date(c.updatedAt).toLocaleDateString()}`],
+        revision: c.revision,
+      }));
+    }
+    return campaigns;
+  }, [liveCampaigns]);
+
   const filteredCampaigns = useMemo(() => {
-    let result = campaigns;
+    let result = allDisplayCampaigns;
     if (activeTab !== "all") {
       result = result.filter((c) => c.statusTone === activeTab);
     }
@@ -203,11 +268,27 @@ export function CampaignsPage() {
       );
     }
     return result;
-  }, [activeTab, searchQuery]);
+  }, [allDisplayCampaigns, activeTab, searchQuery]);
 
   return (
     <div className="w-full bg-[#f6f8fb] font-sans text-[#13203e]">
       <div className="mx-auto w-full max-w-[1500px]">
+        {/* Revision Conflict Notice Banner (TASK-11A Concurrency) */}
+        {conflictNotice && (
+          <div className="mb-3 flex items-center justify-between rounded-[7px] border border-[#f5c6cb] bg-[#f8d7da] px-4 py-2.5 text-[12px] text-[#721c24]">
+            <div className="flex items-center gap-2">
+              <AlertCircle size={16} className="shrink-0 text-[#721c24]" />
+              <span>{conflictNotice}</span>
+            </div>
+            <button
+              onClick={fetchLiveCampaigns}
+              className="flex items-center gap-1 rounded bg-[#721c24] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#501319]"
+            >
+              <RefreshCw size={11} /> Reload Latest
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <header className="mb-2.5 grid grid-cols-1 items-center gap-3 lg:h-16 lg:grid-cols-[minmax(0,1fr)_580px]">
           <div>
@@ -245,10 +326,18 @@ export function CampaignsPage() {
                 : "text-[#5f6c83] hover:text-[#29354e]"
                 }`}
             >
-              {tab.label} ({tab.count})
+              {tab.label} {liveCampaigns ? `(${allDisplayCampaigns.length})` : `(${tab.count})`}
             </button>
           ))}
           <div className="ml-auto hidden shrink-0 items-center gap-2 lg:flex">
+            <button
+              onClick={fetchLiveCampaigns}
+              title="Refresh campaigns from live API"
+              disabled={isLoading}
+              className="flex h-[29px] items-center gap-1 rounded-[6px] border border-[#dfe4eb] bg-white px-2 text-[12px] font-semibold text-[#29354e] hover:bg-[#f8fafc] disabled:opacity-50"
+            >
+              <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} />
+            </button>
             <label className="flex h-[29px] w-[198px] items-center gap-1.5 rounded-[6px] border border-[#e0e5ec] bg-[#fbfcfe] px-2.5 text-[#8791a4]">
               <Search size={13} />
               <input
@@ -281,7 +370,34 @@ export function CampaignsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#edf0f4]">
-                {filteredCampaigns.length === 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={12} className="px-2.5 py-12 text-center text-[12px] text-[#8a94a6]">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Loader2 className="size-5 animate-spin text-[#e62c36]" />
+                        <span>Loading live campaigns...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : errorMessage ? (
+                  <tr>
+                    <td colSpan={12} className="px-4 py-8 text-center text-[12px]">
+                      <div className="mx-auto flex max-w-md flex-col items-center gap-2 text-red-600">
+                        <AlertCircle className="size-5" />
+                        <span className="font-semibold">{errorMessage}</span>
+                        <p className="text-[11px] text-[#69758b]">
+                          Unable to retrieve campaigns from the running backend.
+                        </p>
+                        <button
+                          onClick={fetchLiveCampaigns}
+                          className="mt-2 flex items-center gap-1.5 rounded-sm bg-[#e62c36] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#c91d26]"
+                        >
+                          <RefreshCw size={11} /> Retry Connection
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredCampaigns.length === 0 ? (
                   <tr>
                     <td colSpan={12} className="px-2.5 py-8 text-center text-[12px] text-[#8a94a6]">
                       No campaigns found matching your criteria.
