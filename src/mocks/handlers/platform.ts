@@ -253,6 +253,37 @@ export const platformRoutes: MockRoutes = {
     };
   },
 
+  "GET /integrations/:id/resources": ({ headers, params }) => {
+    const companyId = headers?.["x-company-id"];
+    if (!companyId) {
+      throw new ApiError({ code: "BAD_REQUEST", status: 400, message: "Company context required" });
+    }
+    const integrationId = params?.id;
+    return [
+      { externalResourceId: "109823471029384", name: "Official Facebook Page", resourceType: "FACEBOOK_PAGE" },
+      { externalResourceId: "178414002348921", name: "Instagram Business Profile", resourceType: "INSTAGRAM_ACCOUNT" },
+    ];
+  },
+
+  "POST /integrations/:id/map": ({ headers, params, body }) => {
+    const companyId = headers?.["x-company-id"];
+    if (!companyId) {
+      throw new ApiError({ code: "BAD_REQUEST", status: 400, message: "Company context required" });
+    }
+    const payload = (body ?? {}) as { clientId?: string; externalResourceId?: string; resourceType?: string };
+    if (!payload.clientId || !payload.externalResourceId || !payload.resourceType) {
+      throw new ApiError({ code: "BAD_REQUEST", status: 400, message: "clientId, externalResourceId, and resourceType required" });
+    }
+    return {
+      id: `map_${Date.now().toString(36)}`,
+      integrationId: params?.id ?? "int-1",
+      clientId: payload.clientId,
+      resourceType: payload.resourceType,
+      externalResourceId: payload.externalResourceId,
+      createdAt: new Date().toISOString(),
+    };
+  },
+
   "GET /integrations/health": () => INTEGRATION_HEALTH,
 
   "GET /system-health": () => SYSTEM_HEALTH,

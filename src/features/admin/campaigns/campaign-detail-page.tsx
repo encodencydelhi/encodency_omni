@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import IndiaMap from "./components/india-map";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
+import { campaignsApi, type CampaignRecord } from "./live/campaigns-api";
+import { ApiError } from "@/types/api";
 import {
   Activity,
   AlertCircle,
@@ -13,6 +16,8 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronLeft,
+  Loader2,
+  RefreshCw,
   ChevronRight,
   Clock3,
   Copy,
@@ -371,14 +376,24 @@ function BarList({
   );
 }
 
-function TopHeader() {
+function TopHeader({ campaign }: { campaign?: CampaignRecord | null }) {
+  const title = campaign?.name || "Save Rivers, Save Lives 2025";
+  const desc = campaign
+    ? campaign.budget
+      ? `${campaign.budget.currency} ${(Number(campaign.budget.amountMinor) / 100).toLocaleString()} budget • Status: ${campaign.status}`
+      : `Campaign Status: ${campaign.status}`
+    : "A nationwide awareness campaign to promote river conservation, inspire community action and drive support for a cleaner, healthier India.";
+  const dateRange = campaign
+    ? `${campaign.startDate ? new Date(campaign.startDate).toLocaleDateString() : "Immediate"} – ${campaign.endDate ? new Date(campaign.endDate).toLocaleDateString() : "Ongoing"}`
+    : "Mar 15, 2025 – Apr 30, 2025";
+
   return (
     <>
       <div className="flex items-center justify-between gap-3 border-b border-[#edf1f5] pb-2.5">
         <div className="flex min-w-0 items-center gap-2 text-[11px] text-[#7d899d]">
           <span>Dashboard</span><ChevronRight size={11} />
           <span>Campaigns</span><ChevronRight size={11} />
-          <span className="font-semibold text-[#263a61]">Save Rivers, Save Lives 2025</span>
+          <span className="font-semibold text-[#263a61]">{title}</span>
         </div>
         <div className="hidden items-center gap-1.5 lg:flex">
           <button className="action-btn"><Pencil size={13} /> Edit Campaign</button>
@@ -393,18 +408,23 @@ function TopHeader() {
         <img src={campaignImage} alt="" className="h-[102px] w-[126px] rounded-[8px] object-cover shadow-sm" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-[22px] font-semibold tracking-[-0.03em] text-[#0f204b]">Save Rivers, Save Lives 2025</h1>
-            <StatusPill tone="green"><span className="mr-1 h-1.5 w-1.5 rounded-sm bg-[#16b86d]" />Active</StatusPill>
+            <h1 className="text-[22px] font-semibold tracking-[-0.03em] text-[#0f204b]">{title}</h1>
+            <StatusPill tone="green"><span className="mr-1 h-1.5 w-1.5 rounded-sm bg-[#16b86d]" />{campaign?.status || "Active"}</StatusPill>
+            {campaign?.revision ? (
+              <span className="rounded-sm bg-[#eef2f7] px-2 py-0.5 text-[11px] font-mono font-semibold text-[#485671]">
+                Rev {campaign.revision}
+              </span>
+            ) : null}
           </div>
           <p className="mt-1 max-w-[620px] text-[11.5px] leading-[1.4] text-[#7a879b]">
-            A nationwide awareness campaign to promote river conservation, inspire community action and drive support for a cleaner, healthier India.
+            {desc}
           </p>
 
           <div className="mt-2.5 flex flex-wrap gap-2">
             <InfoChip icon={Heart} label="Campaign Type" value="Awareness" tone="red" />
-            <InfoChip icon={FolderKanban} label="Project" value="Moksha Sewa" tone="purple" />
-            <InfoChip icon={CalendarDays} label="Date Range" value="Mar 15, 2025 – Apr 30, 2025" note="46 days left" tone="blue" />
-            <InfoChip icon={User} label="Campaign Owner" value="Manish Sirohi" note="Campaign Owner" tone="blue" />
+            <InfoChip icon={FolderKanban} label="Project" value="Active Client" tone="purple" />
+            <InfoChip icon={CalendarDays} label="Date Range" value={dateRange} note={campaign ? "Live schedule" : "46 days left"} tone="blue" />
+            <InfoChip icon={User} label="Campaign Owner" value="Campaign Manager" note="Campaign Owner" tone="blue" />
           </div>
         </div>
 
@@ -441,7 +461,20 @@ function InfoChip({
   );
 }
 
-function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { showPerformanceScore?: boolean; activeTab?: string }) {
+function RightRail({
+  showPerformanceScore = false,
+  activeTab = "Overview",
+  campaign,
+}: {
+  showPerformanceScore?: boolean;
+  activeTab?: string;
+  campaign?: CampaignRecord | null;
+}) {
+  const title = campaign?.name || "Save Rivers,\nSave Lives 2025";
+  const startDate = campaign?.startDate ? new Date(campaign.startDate).toLocaleDateString() : "Mar 15, 2025";
+  const endDate = campaign?.endDate ? new Date(campaign.endDate).toLocaleDateString() : "Apr 30, 2025";
+  const totalBudget = campaign?.budget ? `${campaign.budget.currency} ${(Number(campaign.budget.amountMinor) / 100).toLocaleString()}` : "₹50,000";
+
   return (
     <aside className="space-y-2.5">
       <Card className="overflow-hidden">
@@ -452,25 +485,25 @@ function RightRail({ showPerformanceScore = false, activeTab = "Overview" }: { s
         <div className="flex gap-2.5 px-3 pb-3">
           <img src={campaignImage} className="h-[86px] w-[73px] rounded-[6px] object-cover" alt="" />
           <div className="min-w-0 flex-1">
-            <div className="text-[11.5px] font-semibold leading-[1.2] text-[#182951]">Save Rivers,<br />Save Lives 2025</div>
-            <StatusPill tone="green">● Active</StatusPill>
+            <div className="text-[11.5px] font-semibold leading-[1.2] text-[#182951] whitespace-pre-line">{title}</div>
+            <StatusPill tone="green">● {campaign?.status || "Active"}</StatusPill>
             <div className="mt-2 space-y-1 text-[11px] text-[#748197]">
-              <div className="flex justify-between gap-2"><span>Project</span><b className="text-[#4d5c76] font-semibold">Moksha Sewa</b></div>
+              <div className="flex justify-between gap-2"><span>Project</span><b className="text-[#4d5c76] font-semibold">Active Client</b></div>
               <div className="flex justify-between gap-2"><span>Type</span><b className="text-[#4d5c76] font-semibold">Awareness</b></div>
-              <div className="flex justify-between gap-2"><span>Start Date</span><b className="text-[#4d5c76] font-semibold">Mar 15, 2025</b></div>
-              <div className="flex justify-between gap-2"><span>End Date</span><b className="text-[#4d5c76] font-semibold">Apr 30, 2025</b></div>
+              <div className="flex justify-between gap-2"><span>Start Date</span><b className="text-[#4d5c76] font-semibold">{startDate}</b></div>
+              <div className="flex justify-between gap-2"><span>End Date</span><b className="text-[#4d5c76] font-semibold">{endDate}</b></div>
               {activeTab === "Budget" ? (
                 <>
-                  <div className="flex justify-between gap-2"><span>Total</span><b className="text-[#4d5c76] font-semibold">₹48,250</b></div>
+                  <div className="flex justify-between gap-2"><span>Total</span><b className="text-[#4d5c76] font-semibold">{totalBudget}</b></div>
                   <div className="flex justify-between gap-2"><span>Spent</span><b className="text-[#4d5c76] font-semibold">₹42,830 (88.7%)</b></div>
                 </>
               ) : (
                 <>
-                  <div className="flex justify-between gap-2"><span>Total Budget</span><b className="text-[#4d5c76] font-semibold">₹50,000</b></div>
+                  <div className="flex justify-between gap-2"><span>Total Budget</span><b className="text-[#4d5c76] font-semibold">{totalBudget}</b></div>
                   <div className="flex justify-between gap-2"><span>Spent</span><b className="text-[#4d5c76] font-semibold">₹48,250 (96%)</b></div>
                 </>
               )}
-              <div className="flex justify-between gap-2"><span>Owner</span><b className="text-[#4d5c76] font-semibold">Manish Sirohi</b></div>
+              <div className="flex justify-between gap-2"><span>Owner</span><b className="text-[#4d5c76] font-semibold">Campaign Manager</b></div>
             </div>
           </div>
         </div>
@@ -1625,8 +1658,37 @@ function ActivityRows() {
   </div>;
 }
 
-function CampaignPage({ }: { id?: string }) {
+function CampaignPage({ id }: { id?: string }) {
+  const { companyId, clientId, isReady } = useTenancyContext();
+  const [liveCampaign, setLiveCampaign] = useState<CampaignRecord | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(Boolean(id));
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
+
+  const fetchCampaign = useCallback(async () => {
+    if (!id || !companyId || !clientId) return;
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await campaignsApi.get(companyId, clientId, id);
+      setLiveCampaign(data);
+    } catch (err) {
+      if (ApiError.isApiError(err)) {
+        setErrorMessage(err.message || `Failed to fetch campaign (HTTP ${err.status})`);
+      } else {
+        setErrorMessage("Unable to connect to campaigns API. Please verify backend service.");
+      }
+      setLiveCampaign(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id, companyId, clientId]);
+
+  useEffect(() => {
+    if (isReady && id && companyId && clientId) {
+      fetchCampaign();
+    }
+  }, [isReady, id, companyId, clientId, fetchCampaign]);
 
   const content = useMemo(() => {
     switch (activeTab) {
@@ -1655,28 +1717,55 @@ function CampaignPage({ }: { id?: string }) {
         }
       `}</style>
 
-      <TopHeader />
-
-      <div className="mt-2.5">
-        <div className="mb-2.5 flex flex-nowrap items-center gap-1 overflow-x-auto border-b border-[#e0e7ef] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`relative whitespace-nowrap px-3 py-2 text-[12px] font-semibold transition-colors ${activeTab === tab ? "text-[#1d2d55]" : "text-[#738098] hover:text-[#2b4169]"
-                }`}
-            >
-              {tab}
-              {activeTab === tab && <span className="absolute inset-x-2 bottom-[-1px] h-[2px] rounded-sm bg-[#ef3f50]" />}
-            </button>
-          ))}
+      {isLoading ? (
+        <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 py-16 text-center text-[12px] text-[#78859d]">
+          <Loader2 className="size-6 animate-spin text-[#e62c36]" />
+          <span>Loading live campaign details...</span>
         </div>
-
-        <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[minmax(0,1fr)_250px]">
-          <main className="min-w-0 overflow-hidden">{content}</main>
-          <div className="hidden xl:block"><RightRail showPerformanceScore={activeTab === "Performance"} activeTab={activeTab} /></div>
+      ) : errorMessage ? (
+        <div className="my-8 mx-auto max-w-lg rounded-[8px] border border-red-200 bg-red-50 p-6 text-center text-[12px]">
+          <AlertCircle className="mx-auto size-6 text-red-600 mb-2" />
+          <h2 className="text-sm font-semibold text-red-900 mb-1">Failed to Load Campaign</h2>
+          <p className="text-[#64748b] mb-4">{errorMessage}</p>
+          <button
+            onClick={fetchCampaign}
+            className="inline-flex items-center gap-1.5 rounded-sm bg-[#e62c36] px-3.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[#c91d26]"
+          >
+            <RefreshCw size={12} /> Retry
+          </button>
         </div>
-      </div>
+      ) : (
+        <>
+          <TopHeader campaign={liveCampaign} />
+
+          <div className="mt-2.5">
+            <div className="mb-2.5 flex flex-nowrap items-center gap-1 overflow-x-auto border-b border-[#e0e7ef] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`relative whitespace-nowrap px-3 py-2 text-[12px] font-semibold transition-colors ${activeTab === tab ? "text-[#1d2d55]" : "text-[#738098] hover:text-[#2b4169]"
+                    }`}
+                >
+                  {tab}
+                  {activeTab === tab && <span className="absolute inset-x-2 bottom-[-1px] h-[2px] rounded-sm bg-[#ef3f50]" />}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-[minmax(0,1fr)_250px]">
+              <main className="min-w-0 overflow-hidden">{content}</main>
+              <div className="hidden xl:block">
+                <RightRail
+                  campaign={liveCampaign}
+                  showPerformanceScore={activeTab === "Performance"}
+                  activeTab={activeTab}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

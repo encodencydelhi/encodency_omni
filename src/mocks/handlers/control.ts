@@ -76,6 +76,15 @@ const ticketQueryConfig = {
 };
 
 export const controlRoutes: MockRoutes = {
+  "GET /super-admin/jobs/stats": () => ({
+    queues: [
+      { queue: "notifications", reachable: true, counts: { waiting: 2, active: 1, completed: 1420, failed: 0, delayed: 0 } },
+      { queue: "publishing", reachable: true, counts: { waiting: 5, active: 3, completed: 890, failed: 1, delayed: 4 } },
+      { queue: "crawler", reachable: true, counts: { waiting: 0, active: 0, completed: 320, failed: 0, delayed: 0 } },
+      { queue: "billing-events", reachable: true, counts: { waiting: 0, active: 0, completed: 410, failed: 0, delayed: 0 } },
+    ],
+  }),
+
   "GET /dashboard": () => DASHBOARD_SNAPSHOT,
 
   "GET /audit-logs": ({ query }) => queryCollection(AUDIT_LOG, query, auditQueryConfig),

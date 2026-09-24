@@ -3,10 +3,12 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import type { DashboardSnapshot } from "@/types/domain/dashboard";
-import { DASHBOARD_SNAPSHOT } from "@/mocks/data/dashboard";
+import { AlertBanner } from "@/components/shared/alert-banner";
+import { ErrorState } from "@/components/shared/error-state";
 import { useDashboard } from "../hooks/use-dashboard";
 import {
   DEFAULT_DASHBOARD_RANGE,
+  getMockDashboardSnapshot,
   isDashboardRange,
   type DashboardRange,
 } from "../services/dashboard-service";
@@ -52,8 +54,27 @@ export function DashboardView() {
     if (data && Array.isArray(data.metrics) && data.metrics.length > 0) {
       return data;
     }
-    return DASHBOARD_SNAPSHOT;
+    return getMockDashboardSnapshot();
   }, [data]);
+
+  if (error) {
+    return (
+      <div className="-mx-4 -my-5 min-h-[calc(100dvh-60px)] px-4 py-4 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
+        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
+          <DashboardHeader
+            generatedAt={new Date().toISOString()}
+            range={range}
+            onRangeChange={setRange}
+            onRefresh={() => void refetch()}
+            isRefreshing={isFetching}
+          />
+          <div className="rounded-sm border border-border bg-card p-6 shadow-xs">
+            <ErrorState error={error} onRetry={() => void refetch()} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="-mx-4 -my-5 min-h-[calc(100dvh-60px)] px-4 py-4 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
@@ -65,6 +86,15 @@ export function DashboardView() {
           onRefresh={() => void refetch()}
           isRefreshing={isFetching}
         />
+
+        <AlertBanner tone="info" className="my-1">
+          <span>
+            <strong>Data Integrity Notice:</strong> Platform overview aggregation (
+            <code className="text-2xs font-mono">/dashboard</code>) is pending backend implementation. Scale and
+            revenue metrics are displayed in demo/simulated mode. Jobs &amp; Queues statistics are wired to the live
+            BullMQ/Redis backend.
+          </span>
+        </AlertBanner>
 
         <DashboardMetrics metrics={snapshot.metrics} isLoading={isPending} />
 

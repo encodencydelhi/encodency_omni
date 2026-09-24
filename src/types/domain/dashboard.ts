@@ -26,6 +26,8 @@ export interface DashboardMetric {
   hint: string;
   /** Optional sparkline series data for the metric. */
   series?: number[];
+  /** Whether this metric is populated from a verified live backend endpoint. */
+  isLive?: boolean;
 }
 
 /** A single actionable item in the "Needs Attention" panel. */

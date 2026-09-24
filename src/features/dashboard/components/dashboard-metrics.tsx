@@ -65,7 +65,19 @@ function MetricTile({ metric }: { metric: DashboardMetric }) {
       </span>
 
       <div className="min-w-0 flex-1 flex flex-col">
-        <p className="truncate text-[0.8125rem] font-medium leading-none text-muted-foreground mb-1.5">{label}</p>
+        <div className="mb-1.5 flex items-center justify-between gap-1">
+          <p className="truncate text-[0.8125rem] font-medium leading-none text-muted-foreground">{label}</p>
+          {metric.isLive ? (
+            <span className="inline-flex items-center gap-1 rounded-[3px] bg-success-subtle px-1.5 py-0.5 text-[10px] font-semibold leading-none text-success">
+              <span className="size-1.5 rounded-full bg-success animate-pulse" />
+              Live
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-[3px] bg-muted px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
+              Demo
+            </span>
+          )}
+        </div>
 
         <div className="flex items-end justify-between gap-2">
           <div className="flex flex-wrap items-baseline gap-2">

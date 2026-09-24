@@ -19,6 +19,7 @@ const { tenancyHarnessService } = await import("@/features/system-health/service
 const { integrationsApi } = await import("@/features/admin/integrations/live/integrations-api");
 const { campaignsApi } = await import("@/features/admin/campaigns/live/campaigns-api");
 const { draftsApi } = await import("@/features/admin/content/live/drafts-api");
+const { dashboardService } = await import("@/features/dashboard/services/dashboard-service");
 const { ApiError } = await import("@/types/api");
 
 interface Call {
@@ -672,3 +673,133 @@ describe("draftsApi (TASK-11A contracts)", () => {
     });
   });
 });
+
+describe("dashboardService (Data Integrity & Super Admin Jobs)", () => {
+  it("GET /super-admin/jobs/stats is called and live vs unsupported metrics are clearly separated", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        queues: [
+          { queue: "notifications", reachable: true, counts: { waiting: 1, active: 2, completed: 50, failed: 0, delayed: 0 } },
+          { queue: "publishing", reachable: true, counts: { waiting: 3, active: 4, completed: 80, failed: 1, delayed: 2 } },
+          { queue: "crawler", reachable: false, error: "Redis timeout" },
+        ],
+      },
+    });
+
+    const snapshot = await dashboardService.getSnapshot("30d");
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/jobs/stats");
+    assert.equal(calls[0]!.init.method, "GET");
+
+    const runningJobsMetric = snapshot.metrics.find((m) => m.key === "runningJobs");
+    assert.ok(runningJobsMetric, "runningJobs metric must be present");
+    assert.equal(runningJobsMetric.value, 6, "Total active jobs should sum active counts from reachable queues (2 + 4 = 6)");
+    assert.equal(runningJobsMetric.isLive, true, "runningJobs must be marked isLive: true");
+
+    const unsupportedMetric = snapshot.metrics.find((m) => m.key === "totalCompanies");
+    assert.ok(unsupportedMetric, "totalCompanies metric must be present");
+    assert.equal(unsupportedMetric.isLive, false, "Unsupported metric must be marked isLive: false");
+  });
+
+  it("dashboardService propagates API failure without silent mock fallback", async () => {
+    responses.push({
+      status: 500,
+      body: { message: "Internal server error", code: "INTERNAL_ERROR" },
+    });
+
+    await assert.rejects(
+      dashboardService.getSnapshot("30d"),
+      (err: unknown) => {
+        if (!ApiError.isApiError(err)) return false;
+        assert.equal(err.status, 500);
+        return true;
+      },
+    );
+  });
+});
+
+describe("integrationsApi (TASK-10 contracts)", () => {
+  const companyId = "cmp-omega";
+  const integrationId = "00000000-0000-0000-0000-000000000001";
+  const clientId = "00000000-0000-0000-0000-000000000002";
+
+  it("GET /integrations/:id/resources sends company context and returns discovered resources", async () => {
+    responses.push({
+      status: 200,
+      body: [
+        { externalResourceId: "109823471029384", name: "Official Facebook Page", resourceType: "FACEBOOK_PAGE" },
+      ],
+    });
+
+    const resources = await integrationsApi.discoverResources(companyId, integrationId);
+
+    assert.equal(calls[0]!.url, `/api/v1/integrations/${integrationId}/resources`);
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.equal(resources.length, 1);
+    assert.equal(resources[0]!.resourceType, "FACEBOOK_PAGE");
+  });
+
+  it("POST /integrations/:id/map sends company context, client id, and canonical resource identity", async () => {
+    responses.push({
+      status: 201,
+      body: {
+        id: "map-1",
+        integrationId,
+        clientId,
+        resourceType: "FACEBOOK_PAGE",
+        externalResourceId: "109823471029384",
+        createdAt: new Date().toISOString(),
+      },
+    });
+
+    const mapped = await integrationsApi.mapResource(companyId, integrationId, {
+      clientId,
+      externalResourceId: "109823471029384",
+      resourceType: "FACEBOOK_PAGE",
+    });
+
+    assert.equal(calls[0]!.url, `/api/v1/integrations/${integrationId}/map`);
+    assert.equal(calls[0]!.init.method, "POST");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.deepEqual(body(calls[0]!), {
+      clientId,
+      externalResourceId: "109823471029384",
+      resourceType: "FACEBOOK_PAGE",
+    });
+    assert.equal(mapped.id, "map-1");
+  });
+});
+
+describe("campaignsApi.get (TASK-11A contract)", () => {
+  const companyId = "cmp-1";
+  const clientId = "client-1";
+  const campaignId = "cmp-100";
+
+  it("GET /campaigns/:id sends verified company and client headers", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        id: campaignId,
+        name: "Q4 Growth Drive",
+        objective: "Awareness",
+        budget: { amount: "50000", currency: "INR" },
+        status: "ACTIVE",
+        revision: 3,
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-15T00:00:00.000Z",
+      },
+    });
+
+    const record = await campaignsApi.get(companyId, clientId, campaignId);
+
+    assert.equal(calls[0]!.url, `/api/v1/campaigns/${campaignId}`);
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.equal(calls[0]!.init.headers["x-client-id"], clientId);
+    assert.equal(record.name, "Q4 Growth Drive");
+    assert.equal(record.revision, 3);
+  });
+});
+

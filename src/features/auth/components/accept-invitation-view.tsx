@@ -31,7 +31,7 @@ type Outcome = { kind: "accepted" } | { kind: "invalid" } | { kind: "existing-ac
  */
 export function AcceptInvitationView() {
   const searchParams = useSearchParams();
-  const { status, user } = useAuth();
+  const { status, user, refreshUser } = useAuth();
   const token = searchParams.get("token");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -58,6 +58,13 @@ export function AcceptInvitationView() {
     setIsPending(true);
     try {
       await teamApi.acceptInvitation(token, parsed.data.password);
+      if (status === "authenticated") {
+        try {
+          await refreshUser();
+        } catch {
+          // ignore session refresh error if session expired
+        }
+      }
       setOutcome({ kind: "accepted" });
     } catch (error) {
       if (ApiError.isApiError(error) && error.status === 403) {

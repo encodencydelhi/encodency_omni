@@ -46,6 +46,33 @@ export interface OAuthInitPayload {
   provider: BackendOAuthProvider;
 }
 
+export type BackendResourceType =
+  | "FACEBOOK_PAGE"
+  | "INSTAGRAM_ACCOUNT"
+  | "GOOGLE_BUSINESS_LOCATION"
+  | "LINKEDIN_ORGANIZATION";
+
+export interface DiscoveredResource {
+  externalResourceId: string;
+  name: string;
+  resourceType: BackendResourceType;
+}
+
+export interface MapResourcePayload {
+  clientId: string;
+  externalResourceId: string;
+  resourceType: BackendResourceType;
+}
+
+export interface ResourceMappingResponse {
+  id: string;
+  integrationId: string;
+  clientId: string;
+  resourceType: BackendResourceType;
+  externalResourceId: string;
+  createdAt: string;
+}
+
 export const integrationsApi = {
   /**
    * GET /integrations/registry
@@ -80,6 +107,44 @@ export const integrationsApi = {
       body: { provider } satisfies OAuthInitPayload,
       signal,
       skipSessionExpiry: false,
+    });
+  },
+
+  /**
+   * GET /integrations/:id/resources (TASK-10)
+   * Business Purpose: Discover external resources reachable by this connection (Facebook Pages, GBP locations, etc.).
+   * Auth: @CompanyContextRoute() + integrations:read
+   */
+  async discoverResources(
+    companyId: string,
+    integrationId: string,
+    signal?: AbortSignal,
+  ): Promise<DiscoveredResource[]> {
+    return apiClient.request<DiscoveredResource[]>({
+      method: "GET",
+      path: `/integrations/${encodeURIComponent(integrationId)}/resources`,
+      headers: companyScopeHeaders(companyId),
+      signal,
+    });
+  },
+
+  /**
+   * POST /integrations/:id/map (TASK-10)
+   * Business Purpose: Map a discovered external resource to a specific Client of this Company.
+   * Auth: @CompanyContextRoute() + integrations:write (OWNER, ADMIN)
+   */
+  async mapResource(
+    companyId: string,
+    integrationId: string,
+    payload: MapResourcePayload,
+    signal?: AbortSignal,
+  ): Promise<ResourceMappingResponse> {
+    return apiClient.request<ResourceMappingResponse>({
+      method: "POST",
+      path: `/integrations/${encodeURIComponent(integrationId)}/map`,
+      headers: companyScopeHeaders(companyId),
+      body: payload,
+      signal,
     });
   },
 };

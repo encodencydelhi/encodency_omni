@@ -26,56 +26,80 @@ export function getMockDashboardSnapshot(): DashboardSnapshot {
   }
 }
 
+export interface QueueStatsItem {
+  queue: string;
+  reachable: boolean;
+  counts?: {
+    waiting: number;
+    active: number;
+    completed: number;
+    failed: number;
+    delayed: number;
+  };
+}
+
+export interface JobsStatsResponse {
+  queues: QueueStatsItem[];
+}
+
 export const dashboardService = {
   /**
-   * The dashboard is a single aggregated read rather than a dozen parallel
-   * requests, matching how the backend will expose it. The range travels as a
-   * query parameter so the server can do the windowing.
+   * Verified Backend Audit:
+   * The current backend does NOT serve a `/dashboard` aggregation endpoint.
+   * The verified live monitoring endpoint is:
+   *   GET /api/v1/super-admin/jobs/stats (Platform Super Admin BullMQ/Redis statistics)
    *
-   * If the API fails, is unreachable, or returns empty/invalid data, we gracefully
-   * fall back to the rich mock dashboard snapshot so the superadmin can always see
-   * the dashboard.
+   * Data Integrity Policy:
+   * - Call the real live jobs endpoint.
+   * - On failure, propagate errors to React Query so loading and error states with retry actions are rendered.
+   * - Never silently swallow errors into mock data.
+   * - Clearly separate verified live Jobs statistics from unsupported dashboard statistics.
    */
-  async getSnapshot(range: DashboardRange, signal?: AbortSignal): Promise<DashboardSnapshot> {
-    const mockFallback = getMockDashboardSnapshot();
-    try {
-      const data = await apiClient.request<DashboardSnapshot>({
-        method: "GET",
-        path: "/dashboard",
-        query: { range },
-        signal,
-      });
+  async getSnapshot(_range: DashboardRange, signal?: AbortSignal): Promise<DashboardSnapshot> {
+    // 1. Fetch verified live Jobs & Queues statistics from real backend endpoint
+    const statsResponse = await apiClient.request<JobsStatsResponse>({
+      method: "GET",
+      path: "/super-admin/jobs/stats",
+      signal,
+    });
 
-      // If data is returned from API, check if it's non-empty and has metrics
-      if (
-        data &&
-        typeof data === "object" &&
-        Array.isArray(data.metrics) &&
-        data.metrics.length > 0
-      ) {
+    const queues = Array.isArray(statsResponse?.queues) ? statsResponse.queues : [];
+    let totalActiveJobs = 0;
+    let reachableQueuesCount = 0;
+
+    for (const q of queues) {
+      if (q.reachable) {
+        reachableQueuesCount++;
+        if (q.counts) {
+          totalActiveJobs += q.counts.active ?? 0;
+        }
+      }
+    }
+
+    // 2. Base dataset for unsupported platform statistics (companies, revenue, etc.)
+    const baseSnapshot = getMockDashboardSnapshot();
+
+    // 3. Mark live vs unsupported metrics explicitly to maintain data integrity
+    const metrics = baseSnapshot.metrics.map((m) => {
+      if (m.key === "runningJobs") {
         return {
-          ...mockFallback,
-          ...data,
-          metrics: data.metrics,
-          companyGrowth: data.companyGrowth?.series?.length ? data.companyGrowth : mockFallback.companyGrowth,
-          revenue: data.revenue?.series?.length ? data.revenue : mockFallback.revenue,
-          subscriptionDistribution: data.subscriptionDistribution?.segments?.length
-            ? data.subscriptionDistribution
-            : mockFallback.subscriptionDistribution,
-          attention: Array.isArray(data.attention) && data.attention.length > 0 ? data.attention : mockFallback.attention,
-          recentActivity: Array.isArray(data.recentActivity) && data.recentActivity.length > 0 ? data.recentActivity : mockFallback.recentActivity,
-          latestSignups: Array.isArray(data.latestSignups) && data.latestSignups.length > 0 ? data.latestSignups : mockFallback.latestSignups,
-          apiUsage: data.apiUsage?.totalRequests ? data.apiUsage : mockFallback.apiUsage,
-          integrationStatus: Array.isArray(data.integrationStatus) && data.integrationStatus.length > 0 ? data.integrationStatus : mockFallback.integrationStatus,
-          platformHealth: Array.isArray(data.platformHealth) && data.platformHealth.length > 0 ? data.platformHealth : mockFallback.platformHealth,
+          ...m,
+          value: totalActiveJobs,
+          isLive: true,
+          hint: `${totalActiveJobs} active across ${reachableQueuesCount} BullMQ queues (Live)`,
         };
       }
+      return {
+        ...m,
+        isLive: false,
+        hint: `${m.hint} • Demo`,
+      };
+    });
 
-      console.warn("[dashboardService] API returned empty dashboard data. Falling back to mock data.");
-      return mockFallback;
-    } catch (error) {
-      console.warn("[dashboardService] Dashboard API request failed. Falling back to mock data.", error);
-      return mockFallback;
-    }
+    return {
+      ...baseSnapshot,
+      generatedAt: new Date().toISOString(),
+      metrics,
+    };
   },
 };
