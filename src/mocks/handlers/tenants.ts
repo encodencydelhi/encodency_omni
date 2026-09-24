@@ -28,6 +28,8 @@ import type { MockRoutes } from "../lib/router";
  */
 const companyOverrides = new Map<string, Partial<Company>>();
 const userOverrides = new Map<string, Partial<PlatformUser>>();
+/** Pending invitation tokens for demo accept flow (token → email). */
+const pendingInvitations = new Map<string, { email: string; companyId: string; expiresAt: number }>();
 
 function resolveCompany(company: Company): Company {
   const override = companyOverrides.get(company.id);
@@ -217,6 +219,7 @@ export const tenantRoutes: MockRoutes = {
   "GET /projects": ({ query }) => queryCollection(Clients, query, projectQueryConfig),
 
   "POST /companies/:companyId/invitations": ({ params, body }) => {
+    const companyId = params.companyId ?? "";
     const { email, systemRole, clientRestrictions } = (body ?? {}) as {
       email: string;
       systemRole: string;
@@ -225,12 +228,28 @@ export const tenantRoutes: MockRoutes = {
     if (!email || !email.includes("@")) {
       throw new ApiError({ code: "BAD_REQUEST", status: 400, message: "Valid email is required." });
     }
+    const token = `mock_inv_token_${Math.random().toString(36).substring(2)}`;
+    const expiresAt = Date.now() + 48 * 60 * 60 * 1000;
+    pendingInvitations.set(token, { email, companyId, expiresAt });
     return {
       invitationId: `inv_${Date.now().toString(36)}`,
       status: "pending",
-      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-      token: `mock_inv_token_${Math.random().toString(36).substring(2)}`,
+      expiresAt: new Date(expiresAt).toISOString(),
+      token,
     };
+  },
+
+  "POST /invitations/accept": ({ body }) => {
+    const { token, password } = (body ?? {}) as { token?: string; password?: string };
+    if (!token || typeof password !== "string" || password.length < 8) {
+      throw new ApiError({ code: "BAD_REQUEST", status: 400, message: "Token and an 8+ character password are required." });
+    }
+    const pending = pendingInvitations.get(token);
+    if (!pending || pending.expiresAt < Date.now()) {
+      throw new ApiError({ code: "FORBIDDEN", status: 403, message: "Invalid or expired invitation" });
+    }
+    pendingInvitations.delete(token);
+    return { status: "accepted", membershipId: `mship_${Date.now().toString(36)}` };
   },
 
   "PUT /team/members/:membershipId/role": ({ params, body }) => {

@@ -19,6 +19,9 @@ import {
   X,
 } from "lucide-react";
 import { STAFF_MEMBERS } from "@/features/internal-team/data/mock-data";
+import { ApiError } from "@/types/api";
+import { systemHealthService } from "../services/system-health-service";
+import type { HealthCheckResponse } from "@/types/domain/system-health";
 import { cn } from "@/lib/utils/cn";
 import { ROUTES } from "@/config/routes";
 import { SYSTEM_HEALTH_CAPABILITIES } from "../data/capabilities";
@@ -756,10 +759,110 @@ function MaintenancePage({ snapshot, compact = false }: { snapshot: SystemHealth
 
 function ActivityMonitoringPage({ snapshot }: { snapshot: SystemHealthSnapshotV2 }) {
   return (
-    <div className="grid gap-1 xl:grid-cols-[1fr_0.9fr]">
-      <Card><CardTitle title="Health Activity" subtitle="Monitoring events stay in System Health activity, not high-impact audit history." /><ActivityTable snapshot={snapshot} activity={snapshot.activity} /></Card>
-      <Card><CardTitle title="Monitoring Coverage" subtitle="Every source is clearly labelled as demo-backed until backend telemetry is connected." /><div className="divide-y divide-slate-100">{snapshot.sources.map((source) => <div key={source.id} className="px-4 py-3"><div className="flex items-center justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{source.name}</p><Badge className={source.backendConnected ? healthTone.healthy : freshnessTone.stale}>{source.backendConnected ? "Backend Connected" : "Demo Only"}</Badge></div><p className="mt-1 text-xs text-slate-600">{label(source.kind)} - freshness threshold {source.freshnessThresholdMinutes} min</p></div>)}</div></Card>
+    <div className="space-y-1">
+      <ApiProbesCard />
+      <div className="grid gap-1 xl:grid-cols-[1fr_0.9fr]">
+        <Card><CardTitle title="Health Activity" subtitle="Monitoring events stay in System Health activity, not high-impact audit history." /><ActivityTable snapshot={snapshot} activity={snapshot.activity} /></Card>
+        <Card><CardTitle title="Monitoring Coverage" subtitle="Every source is clearly labelled as demo-backed until backend telemetry is connected." /><div className="divide-y divide-slate-100">{snapshot.sources.map((source) => <div key={source.id} className="px-4 py-3"><div className="flex items-center justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{source.name}</p><Badge className={source.backendConnected ? healthTone.healthy : freshnessTone.stale}>{source.backendConnected ? "Backend Connected" : "Demo Only"}</Badge></div><p className="mt-1 text-xs text-slate-600">{label(source.kind)} - freshness threshold {source.freshnessThresholdMinutes} min</p></div>)}</div></Card>
+      </div>
     </div>
+  );
+}
+
+/** Live `GET /health` result + deliberate `GET /health/error` logging probe. */
+function ApiProbesCard() {
+  const [checking, setChecking] = useState(false);
+  const [health, setHealth] = useState<HealthCheckResponse | null>(null);
+  const [healthError, setHealthError] = useState<string | null>(null);
+  const [probing, setProbing] = useState(false);
+  const [probeResult, setProbeResult] = useState<string | null>(null);
+
+  async function runHealthCheck() {
+    setChecking(true);
+    setHealthError(null);
+    try {
+      setHealth(await systemHealthService.check());
+    } catch (error) {
+      setHealth(null);
+      setHealthError(ApiError.isApiError(error) ? error.message : "Unable to reach the health endpoint.");
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  async function runErrorProbe() {
+    setProbing(true);
+    setProbeResult(null);
+    try {
+      await systemHealthService.triggerError();
+      setProbeResult("Endpoint returned success — expected a 500 error response.");
+    } catch (error) {
+      if (ApiError.isApiError(error)) {
+        setProbeResult(`Got expected error — status ${error.status}: ${error.message}`);
+      } else {
+        setProbeResult("Unexpected non-API failure while calling the probe.");
+      }
+    } finally {
+      setProbing(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardTitle
+        title="API Health Probes"
+        subtitle="Live GET /health for liveness; GET /health/error deliberately fails so backend logging can be verified."
+      />
+      <div className="grid gap-3 p-4 lg:grid-cols-2">
+        <div className="rounded-md border border-slate-200 p-3">
+          <p className="text-xs font-bold text-[#111C3A]">GET /health</p>
+          <p className="mt-1 text-[11px] text-slate-500">Public — checks API process and database reachability.</p>
+          <button
+            type="button"
+            onClick={runHealthCheck}
+            disabled={checking}
+            className="mt-2 rounded-md bg-[#111C3A] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+          >
+            {checking ? "Checking…" : "Run health check"}
+          </button>
+          {health ? (
+            <div className="mt-2 space-y-1 text-xs">
+              <p>
+                Status:{" "}
+                <Badge className={health.status === "ok" ? healthTone.healthy : healthTone.unavailable}>
+                  {health.status}
+                </Badge>
+              </p>
+              <p>
+                Database:{" "}
+                <Badge className={health.database === "connected" ? healthTone.healthy : healthTone.unavailable}>
+                  {health.database}
+                </Badge>
+              </p>
+              <p className="text-[11px] text-slate-500">Observed {formatDate(health.timestamp)}</p>
+            </div>
+          ) : null}
+          {healthError ? (
+            <p className="mt-2 rounded-md border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">{healthError}</p>
+          ) : null}
+        </div>
+        <div className="rounded-md border border-slate-200 p-3">
+          <p className="text-xs font-bold text-[#111C3A]">GET /health/error</p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            Deliberate failure — verifies the backend logs the error without leaking secrets. In production the backend answers 404.
+          </p>
+          <button
+            type="button"
+            onClick={runErrorProbe}
+            disabled={probing}
+            className="mt-2 rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+          >
+            {probing ? "Probing…" : "Trigger test error"}
+          </button>
+          {probeResult ? <p className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-2 text-xs text-slate-700">{probeResult}</p> : null}
+        </div>
+      </div>
+    </Card>
   );
 }
 

@@ -1,52 +1,43 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { DashboardSnapshot } from "@/types/domain/dashboard";
-
-/** Global system health state extracted for use in the shell (e.g. footer). */
-interface HealthState {
-  globalStatus: "operational" | "degraded" | "outage" | "maintenance";
-  entries: DashboardSnapshot["platformHealth"];
-  isLoading: boolean;
-}
+import { createContext, useContext, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ApiError } from "@/types/api";
+import { queryKeys } from "@/lib/query/keys";
+import { systemHealthService } from "../services/system-health-service";
+import { toApiHealthView, toHealthState, type HealthState } from "./health-mapping";
 
 const HealthContext = createContext<HealthState | undefined>(undefined);
 
 /**
- * Provides live platform health data.
- * In a real app this would poll an endpoint or subscribe to a websocket,
- * but for this mock we provide static but realistic data.
+ * Live platform health from `GET /health` (poll every 30s).
+ * Unreachable backend → outage (honest), never a silent mock swap for this probe.
  */
 export function HealthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<HealthState>({
-    globalStatus: "operational",
-    entries: [],
-    isLoading: true,
+  const query = useQuery({
+    queryKey: queryKeys.systemHealth.summary("api-probe"),
+    queryFn: async ({ signal }) => {
+      try {
+        const body = await systemHealthService.check(signal);
+        return { ok: true as const, body };
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") throw error;
+        return { ok: false as const, error };
+      }
+    },
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+    retry: (failureCount, error) => {
+      if (ApiError.isApiError(error) && error.status >= 400 && error.status < 500) return false;
+      return failureCount < 1;
+    },
   });
 
-  useEffect(() => {
-    // Mock fetching health
-    const timer = setTimeout(() => {
-      setState({
-        globalStatus: "operational",
-        entries: [
-          { id: "svc_api", label: "Core API", status: "operational" },
-          { id: "svc_db", label: "Primary Database", status: "operational" },
-          { id: "svc_redis", label: "Cache Layer", status: "operational" },
-          { id: "svc_workers", label: "Background Workers", status: "operational" },
-          { id: "svc_crawler", label: "Data Pipeline", status: "operational" },
-        ],
-        isLoading: false,
-      });
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+  const state = query.isPending
+    ? toHealthState("checking")
+    : toHealthState(toApiHealthView(query.data ?? { ok: false, error: new Error("no data") }));
 
-  return (
-    <HealthContext.Provider value={state}>
-      {children}
-    </HealthContext.Provider>
-  );
+  return <HealthContext.Provider value={state}>{children}</HealthContext.Provider>;
 }
 
 export function useHealth() {

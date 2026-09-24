@@ -14,6 +14,7 @@ const { onSessionExpired } = await import("../session-events");
 const { clientsApi, toCreateClientPayload } = await import("@/features/admin/projects/live/clients-api");
 const { teamApi, invitationLink } = await import("@/features/admin/team/live/team-api");
 const { authService } = await import("@/features/auth/services/auth-service");
+const { systemHealthService } = await import("@/features/system-health/services/system-health-service");
 const { ApiError } = await import("@/types/api");
 
 interface Call {
@@ -201,5 +202,51 @@ describe("authService (real contract)", () => {
   it("restore returns null (not an error) when nobody is signed in", async () => {
     responses.push({ status: 401, body: { message: "Not authenticated" } });
     assert.equal(await authService.restore(), null);
+  });
+
+  it("getAuthMe calls GET /auth/me and returns userId", async () => {
+    responses.push({ status: 200, body: { userId: "user-123" } });
+    const result = await authService.getAuthMe();
+    assert.equal(calls[0]!.url, "/api/v1/auth/me");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.deepEqual(result, { userId: "user-123" });
+  });
+});
+
+describe("healthService (real contract)", () => {
+  it("GET /health is public and returns status + database", async () => {
+    responses.push({ status: 200, body: { status: "ok", timestamp: "2026-01-01T00:00:00.000Z", database: "connected" } });
+    const result = await systemHealthService.check();
+    assert.equal(calls[0]!.url, "/api/v1/health");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(calls[0]!.init.headers.Authorization, undefined);
+    assert.equal(result.status, "ok");
+    assert.equal(result.database, "connected");
+  });
+
+  it("GET /health marks database error without inventing a success status", async () => {
+    responses.push({ status: 200, body: { status: "error", timestamp: "2026-01-01T00:00:00.000Z", database: "error" } });
+    const result = await systemHealthService.check();
+    assert.equal(result.status, "error");
+    assert.equal(result.database, "error");
+  });
+
+  it("GET /health/error rejects with the deliberate 500 (no session-expiry signal)", async () => {
+    let expired = 0;
+    const stop = onSessionExpired(() => expired++);
+    responses.push({
+      status: 500,
+      body: { message: "This is a deliberate test error for verifying logging behavior" },
+    });
+    await assert.rejects(
+      systemHealthService.triggerError(),
+      (error: unknown) =>
+        ApiError.isApiError(error) &&
+        error.status === 500 &&
+        error.message.includes("deliberate test error"),
+    );
+    stop();
+    assert.equal(calls[0]!.url, "/api/v1/health/error");
+    assert.equal(expired, 0, "a probe 500 must not sign the operator out");
   });
 });

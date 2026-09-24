@@ -1,12 +1,31 @@
 import { MOCK_ACTIVITY, MOCK_GROUPS, MOCK_INVITATIONS, MOCK_MEMBERS } from "./mock-provider";
 import { Invitation, Member, MemberActivity, TeamGroup } from "./types";
 import { apiClient } from "@/lib/api/client";
+import { companyScopeHeaders } from "@/lib/api/company-scope";
+import { ApiError } from "@/types/api";
 
-function getCompanyIdHeader() {
+function getCompanyId() {
   if (typeof window !== "undefined") {
     return localStorage.getItem("omni_active_company_id") ?? "development-company-id";
   }
   return "development-company-id";
+}
+
+/** Backend CreateInvitationDto requires UUID v4 client ids — demo ids like `c-1` are omitted. */
+function toBackendClientRestrictions(clients: { id: string }[] | undefined): string[] | undefined {
+  const ids = (clients ?? []).map((client) => client.id).filter(Boolean);
+  const uuidV4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const valid = ids.filter((id) => uuidV4.test(id));
+  return valid.length > 0 && valid.length === ids.length ? valid : undefined;
+}
+
+/** Owner fallback policy: network / 5xx / 404 fall back; auth/validation/conflict stay loud. */
+function shouldFallBack(error: unknown): boolean {
+  if (!ApiError.isApiError(error)) return true;
+  if (error.status === 0) return true;
+  if (error.status >= 500) return true;
+  if (error.status === 404) return true;
+  return false;
 }
 
 /**
@@ -26,12 +45,13 @@ export const teamRepository = {
       const response = await apiClient.request<any[]>({
         method: "GET",
         path: "/team/members",
-        headers: { "x-company-id": getCompanyIdHeader() },
+        headers: companyScopeHeaders(getCompanyId()),
       });
       // Map backend shape to frontend if necessary, for now return directly if matched
       return response as any;
     } catch (error) {
-      console.error("Failed to fetch team members", error);
+      if (!shouldFallBack(error)) throw error;
+      console.warn("Failed to fetch team members — mock fallback:", error);
       return [...members]; // Fallback to mock
     }
   },
@@ -49,7 +69,7 @@ export const teamRepository = {
   },
 
   async inviteMember(invite: Omit<Invitation, "id" | "status" | "sentAt">): Promise<Invitation> {
-    const companyId = getCompanyIdHeader();
+    const companyId = getCompanyId();
 
     // Map UI role to backend SystemRole
     const systemRoleMap: Record<string, string> = {
@@ -64,13 +84,14 @@ export const teamRepository = {
       owner: "OWNER",
     };
     const systemRole = systemRoleMap[invite.roleId] || "VIEWER";
-    const clientRestrictions = invite.clients?.map((c) => c.id).filter(Boolean);
+    const clientRestrictions = toBackendClientRestrictions(invite.clients);
 
     let serverInvitationId = `inv-${Date.now()}`;
     let serverExpiresAt = invite.expiresAt;
     let inviteToken: string | undefined;
 
     try {
+      // POST /companies/:companyId/invitations — same contract as teamApi.createInvitation
       const response = await apiClient.request<{
         invitationId: string;
         status: string;
@@ -78,13 +99,13 @@ export const teamRepository = {
         token?: string;
       }>({
         method: "POST",
-        path: `/companies/${companyId}/invitations`,
+        path: `/companies/${encodeURIComponent(companyId)}/invitations`,
         body: {
           email: invite.email,
           systemRole,
-          ...(clientRestrictions && clientRestrictions.length > 0 ? { clientRestrictions } : {}),
+          ...(clientRestrictions ? { clientRestrictions } : {}),
         },
-        headers: { "x-company-id": companyId },
+        headers: companyScopeHeaders(companyId),
       });
 
       if (response?.invitationId) {
@@ -97,7 +118,9 @@ export const teamRepository = {
         inviteToken = response.token;
       }
     } catch (error) {
-      console.warn("Backend invitation API error (continuing with local state):", error);
+      // 401/403/400/409 must reach the modal (wrong role, bad client ids, pending duplicate…)
+      if (!shouldFallBack(error)) throw error;
+      console.warn("Backend invitation API unreachable — mock fallback:", error);
     }
 
     const newInvite: Invitation = {
@@ -172,11 +195,12 @@ export const teamRepository = {
       try {
         await apiClient.request({
           method: "PUT",
-          path: `/team/members/${id}/role`,
+          path: `/team/members/${encodeURIComponent(id)}/role`,
           body: { systemRole },
-          headers: { "x-company-id": getCompanyIdHeader() },
+          headers: companyScopeHeaders(getCompanyId()),
         });
       } catch (err) {
+        if (!shouldFallBack(err)) throw err;
         console.warn("Failed to update role on backend:", err);
       }
     }

@@ -148,6 +148,11 @@ export const authRoutes: MockRoutes = {
     } satisfies CurrentUserResponse;
   },
 
+  "GET /auth/me": () => {
+    if (!signedInUserId) unauthorized("Not authenticated");
+    return { userId: signedInUserId };
+  },
+
   "POST /auth/logout": () => {
     signedInUserId = null;
     pendingReplacement = null;

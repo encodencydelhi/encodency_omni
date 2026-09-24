@@ -15,7 +15,7 @@ interface TeamState {
 
 interface TeamContextType extends TeamState {
   refresh: () => Promise<void>;
-  inviteMember: (invite: Omit<Invitation, "id" | "status" | "sentAt">) => Promise<void>;
+  inviteMember: (invite: Omit<Invitation, "id" | "status" | "sentAt">) => Promise<Invitation>;
   suspendMember: (id: string) => Promise<void>;
   reactivateMember: (id: string) => Promise<void>;
   deactivateMember: (id: string) => Promise<void>;
@@ -59,8 +59,9 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const inviteMember = useCallback(async (invite: Omit<Invitation, "id" | "status" | "sentAt">) => {
-    await teamRepository.inviteMember(invite);
+    const created = await teamRepository.inviteMember(invite);
     await refresh();
+    return created;
   }, [refresh]);
 
   const suspendMember = useCallback(async (id: string) => {

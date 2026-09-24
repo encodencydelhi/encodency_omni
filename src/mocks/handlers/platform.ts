@@ -81,6 +81,21 @@ const webhookQueryConfig = {
 };
 
 export const platformRoutes: MockRoutes = {
+  /* Mirrors backend HealthController: public liveness + deliberate error probe. */
+  "GET /health": () => ({
+    status: "ok" as const,
+    timestamp: new Date().toISOString(),
+    database: "connected" as const,
+  }),
+
+  "GET /health/error": () => {
+    throw new ApiError({
+      code: "UNKNOWN",
+      status: 500,
+      message: "This is a deliberate test error for verifying logging behavior",
+    });
+  },
+
   "GET /integrations/health": () => INTEGRATION_HEALTH,
 
   "GET /system-health": () => SYSTEM_HEALTH,

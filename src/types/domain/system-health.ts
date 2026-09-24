@@ -1,5 +1,12 @@
 import type { StatusRegistry, TrendPoint } from "@/types/common";
 
+/** Wire shape of backend `GET /health` (`HealthController.check`). */
+export interface HealthCheckResponse {
+  status: "ok" | "error";
+  timestamp: string;
+  database: "connected" | "error";
+}
+
 export const SERVICE_STATUS = {
   operational: { label: "Operational", tone: "success" },
   degraded: { label: "Degraded", tone: "warning" },

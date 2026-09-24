@@ -1,13 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, ChevronLeft, Plus, Users } from "lucide-react";
+import { Check, ChevronLeft, Link2, Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { invitationLink } from "../live/team-api";
 import { useTeam } from "../team-data/team-store";
+import type { Invitation } from "../team-data/types";
 import type { AccessLevel } from "../team-data/types";
+import { ApiError } from "@/types/api";
 
 const CLIENTS = [{ id: "c-1", name: "Moksha Sewa" }, { id: "c-2", name: "CityInida" }, { id: "c-3", name: "EnCodency" }];
 const ROLES = [{ id: "org-admin", name: "Organization Admin" }, { id: "social-manager", name: "Social Media Manager" }, { id: "seo-manager", name: "SEO Manager" }, { id: "contributor", name: "Contributor" }, { id: "analyst", name: "Analyst" }];
@@ -18,6 +21,9 @@ export function InviteMemberButton({ compact = false }: { compact?: boolean }) {
   const [step, setStep] = useState(1);
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [created, setCreated] = useState<Invitation | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [form, setForm] = useState({ email: "", name: "", jobTitle: "", roleId: "contributor", clientIds: ["c-1"], accessLevel: "full" as AccessLevel, groupIds: [] as string[] });
   const role = ROLES.find((item) => item.id === form.roleId)!;
   const error = useMemo(() => {
@@ -26,11 +32,28 @@ export function InviteMemberButton({ compact = false }: { compact?: boolean }) {
     if (invitations.some((item) => item.status === "pending" && item.email.toLowerCase() === form.email.toLowerCase())) return "A pending invitation already exists.";
     return "";
   }, [form.email, invitations, members]);
-  const reset = () => { setStep(1); setSent(false); setForm({ email: "", name: "", jobTitle: "", roleId: "contributor", clientIds: ["c-1"], accessLevel: "full", groupIds: [] }); };
+  const reset = () => { setStep(1); setSent(false); setSubmitError(""); setCreated(null); setLinkCopied(false); setForm({ email: "", name: "", jobTitle: "", roleId: "contributor", clientIds: ["c-1"], accessLevel: "full", groupIds: [] }); };
   const send = async () => {
     setBusy(true);
-    await inviteMember({ email: form.email, name: form.name, jobTitle: form.jobTitle, roleId: role.id, roleName: role.name, clients: CLIENTS.filter((item) => form.clientIds.includes(item.id)), accessLevel: form.accessLevel, groups: groups.filter((item) => form.groupIds.includes(item.id)).map(({ id, name }) => ({ id, name })), invitedBy: { id: "mem-1", name: "Manish Sirohi" }, expiresAt: new Date(Date.now() + 7 * 86400000).toISOString() });
-    setBusy(false); setSent(true);
+    setSubmitError("");
+    try {
+      const result = await inviteMember({ email: form.email, name: form.name, jobTitle: form.jobTitle, roleId: role.id, roleName: role.name, clients: CLIENTS.filter((item) => form.clientIds.includes(item.id)), accessLevel: form.accessLevel, groups: groups.filter((item) => form.groupIds.includes(item.id)).map(({ id, name }) => ({ id, name })), invitedBy: { id: "mem-1", name: "Manish Sirohi" }, expiresAt: new Date(Date.now() + 7 * 86400000).toISOString() });
+      setCreated(result);
+      setSent(true);
+    } catch (err) {
+      setSubmitError(ApiError.isApiError(err) ? err.message : "The invitation could not be sent. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const copyLink = async () => {
+    if (!created?.token) return;
+    try {
+      await navigator.clipboard.writeText(invitationLink(window.location.origin, created.token));
+      setLinkCopied(true);
+    } catch {
+      setLinkCopied(false);
+    }
   };
   return <>
     <Button size="sm" onClick={() => setOpen(true)}><Plus />{compact ? "Invite" : "Invite Member"}</Button>
@@ -38,11 +61,12 @@ export function InviteMemberButton({ compact = false }: { compact?: boolean }) {
       <SheetContent className="max-w-xl sm:max-w-xl">
         <SheetHeader><SheetTitle>{sent ? "Invitation sent" : "Invite a team member"}</SheetTitle><SheetDescription>{sent ? `${form.email} has been added to pending invitations.` : "Set their identity, client access and groups."}</SheetDescription></SheetHeader>
         <SheetBody>
-          {sent ? <div className="grid min-h-[360px] place-items-center text-center"><div><div className="mx-auto grid size-12 place-items-center rounded-full bg-emerald-50 text-emerald-600"><Check /></div><h3 className="mt-4 font-semibold">Invitation is on its way</h3><p className="mt-1 max-w-sm text-sm text-muted-foreground">The invitation expires in 7 days. You can resend or edit it from Invitations.</p></div></div> : <>
+          {sent ? <div className="grid min-h-[360px] place-items-center text-center"><div><div className="mx-auto grid size-12 place-items-center rounded-full bg-emerald-50 text-emerald-600"><Check /></div><h3 className="mt-4 font-semibold">Invitation is on its way</h3><p className="mt-1 max-w-sm text-sm text-muted-foreground">The invitation expires in 48 hours. You can resend or edit it from Invitations.</p>{created?.token ? <div className="mx-auto mt-4 max-w-sm rounded-md border border-slate-200 bg-slate-50 p-3 text-left"><p className="flex items-center gap-1.5 text-xs font-semibold text-slate-700"><Link2 className="size-3.5" />Manual relay link (single-use)</p><p className="mt-1 break-all text-[11px] text-slate-500">If the email does not arrive, share this link directly. It is shown once.</p><Button type="button" size="sm" variant="outline" className="mt-2 h-8 text-xs" onClick={copyLink}>{linkCopied ? "Copied" : "Copy invite link"}</Button></div> : null}</div></div> : <>
             <div className="mb-5 grid grid-cols-3 gap-1">{["Member", "Access", "Review"].map((label, index) => <div key={label} className={`border-b-2 pb-2 text-xs font-medium ${step === index + 1 ? "border-primary text-primary" : step > index + 1 ? "border-emerald-500 text-emerald-700" : "border-border text-muted-foreground"}`}>{index + 1}. {label}</div>)}</div>
             {step === 1 && <div className="space-y-4"><Field label="Email"><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="name@company.com" /></Field><Field label="Full name"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field><Field label="Job title"><Input value={form.jobTitle} onChange={(e) => setForm({ ...form, jobTitle: e.target.value })} /></Field>{form.email && error && <p className="text-xs text-red-600">{error}</p>}</div>}
             {step === 2 && <div className="space-y-5"><Field label="Role"><NativeSelect value={form.roleId} onChange={(value) => setForm({ ...form, roleId: value })} options={ROLES.map((item) => [item.id, item.name])} /></Field><ChoiceList label="Client access" items={CLIENTS} selected={form.clientIds} onChange={(clientIds) => setForm({ ...form, clientIds })} /><Field label="Access level"><NativeSelect value={form.accessLevel} onChange={(value) => setForm({ ...form, accessLevel: value as AccessLevel })} options={[["full", "Full Client Access"], ["module_restricted", "Module Restricted"], ["read_only", "Read Only"]]} /></Field><ChoiceList label="Groups" items={groups} selected={form.groupIds} onChange={(groupIds) => setForm({ ...form, groupIds })} /></div>}
-            {step === 3 && <div className="divide-y rounded-sm border text-sm">{[["Member", `${form.name} · ${form.email}`], ["Role", role.name], ["Clients", CLIENTS.filter((item) => form.clientIds.includes(item.id)).map((item) => item.name).join(", ") || "None"], ["Access", form.accessLevel.replaceAll("_", " ")], ["Groups", groups.filter((item) => form.groupIds.includes(item.id)).map((item) => item.name).join(", ") || "None"], ["Expires", "7 days after sending"]].map(([label, value]) => <div key={label} className="grid grid-cols-[110px_1fr] gap-3 px-4 py-3"><span className="text-muted-foreground">{label}</span><span className="font-medium capitalize">{value}</span></div>)}</div>}
+            {step === 3 && <div className="divide-y rounded-sm border text-sm">{[["Member", `${form.name} · ${form.email}`], ["Role", role.name], ["Clients", CLIENTS.filter((item) => form.clientIds.includes(item.id)).map((item) => item.name).join(", ") || "None"], ["Access", form.accessLevel.replaceAll("_", " ")], ["Groups", groups.filter((item) => form.groupIds.includes(item.id)).map((item) => item.name).join(", ") || "None"], ["Expires", "48 hours after sending"]].map(([label, value]) => <div key={label} className="grid grid-cols-[110px_1fr] gap-3 px-4 py-3"><span className="text-muted-foreground">{label}</span><span className="font-medium capitalize">{value}</span></div>)}</div>}
+            {submitError ? <p className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700">{submitError}</p> : null}
           </>}
         </SheetBody>
         <SheetFooter>{sent ? <><Button variant="outline" onClick={reset}>Invite another</Button><Button onClick={() => setOpen(false)}>Done</Button></> : <><Button variant="ghost" onClick={() => step === 1 ? setOpen(false) : setStep(step - 1)}>{step > 1 && <ChevronLeft />} {step === 1 ? "Cancel" : "Back"}</Button><Button disabled={(step === 1 && (!!error || !form.name)) || busy} onClick={() => step < 3 ? setStep(step + 1) : send()}>{busy ? "Sending…" : step === 3 ? "Send invitation" : "Continue"}</Button></>}</SheetFooter>
@@ -64,4 +88,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function NativeSelect({ value, onChange, options }: { value: string; onChange: (value: string) => void; options: string[][] }) { return <select className="h-9 w-full rounded-sm border bg-card px-3 text-sm outline-none focus:border-primary" value={value} onChange={(e) => onChange(e.target.value)}>{options.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select>; }
 function ChoiceList({ label, items, selected, onChange }: { label: string; items: { id: string; name: string }[]; selected: string[]; onChange: (ids: string[]) => void }) { return <div><Label>{label}</Label><div className="mt-1.5 grid grid-cols-2 gap-1">{items.map((item) => <button type="button" key={item.id} onClick={() => onChange(selected.includes(item.id) ? selected.filter((id) => id !== item.id) : [...selected, item.id])} className={`flex items-center gap-2 rounded-sm border px-3 py-2 text-left text-xs transition ${selected.includes(item.id) ? "border-primary bg-primary/5 text-primary" : "hover:bg-muted"}`}><span className={`grid size-4 place-items-center rounded-sm border ${selected.includes(item.id) ? "border-primary bg-primary text-white" : ""}`}>{selected.includes(item.id) && <Check className="size-3" />}</span>{item.name}</button>)}</div></div>; }
 
-export function copyInviteLink(idOrToken: string) { return navigator.clipboard.writeText(`${location.origin}/join/${idOrToken}`); }
+/** Manual-relay link into /accept-invitation?token=… (same helper the email uses). */
+export function copyInviteLink(token: string) {
+  return navigator.clipboard.writeText(invitationLink(window.location.origin, token));
+}
