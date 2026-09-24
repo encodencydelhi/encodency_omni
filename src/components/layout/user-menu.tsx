@@ -23,7 +23,8 @@ export function UserMenu() {
   const identity = usePlatformIdentity();
   if (!user) return null;
 
-  const role = INTERNAL_ROLE[user.role];
+  // Only Platform Super Admins carry a staff role; the Super Admin shell is closed to everyone else.
+  const role = user.role ? INTERNAL_ROLE[user.role] : { label: "Member", tone: "neutral" as const };
 
   return (
     <DropdownMenu>

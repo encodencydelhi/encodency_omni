@@ -1,24 +1,28 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { ROUTES } from "@/config/routes";
+import { toast } from "sonner";
+import { REDIRECT_PARAM, ROUTES } from "@/config/routes";
+import { onSessionExpired } from "@/lib/api/session-events";
 import { authService } from "@/features/auth/services/auth-service";
 import type {
-  AuthSession,
   AuthStatus,
   AuthenticatedUser,
+  ChallengeVerification,
+  EnrollmentResult,
   LoginCredentials,
   LoginResult,
-  TotpVerification,
   TotpSetupResponse,
 } from "@/types/domain/auth";
 import type { Permission } from "@/types/domain/team";
@@ -26,14 +30,19 @@ import type { Permission } from "@/types/domain/team";
 interface AuthContextValue {
   status: AuthStatus;
   user: AuthenticatedUser | null;
-  /** Step one. Returns a challenge; it does not by itself sign anyone in. */
+  /** Step one. Returns a challenge; it never signs anyone in by itself. */
   login: (credentials: LoginCredentials) => Promise<LoginResult>;
-  /** Step two. Exchanges a verified code for a session. */
-  verifyTotp: (verification: TotpVerification) => Promise<AuthSession>;
   setupTotp: (challengeToken: string) => Promise<TotpSetupResponse>;
-  verifyTotpSetup: (verification: TotpVerification) => Promise<AuthSession>;
+  /** First-time enrollment. Does NOT enter the app: the recovery codes must be acknowledged first. */
+  verifyTotpSetup: (verification: ChallengeVerification) => Promise<EnrollmentResult>;
+  verifyTotp: (verification: ChallengeVerification) => Promise<AuthenticatedUser>;
+  verifyRecoveryCode: (verification: ChallengeVerification) => Promise<AuthenticatedUser>;
+  /** Enters the app with a user returned by a completed sign-in. */
+  acceptSession: (user: AuthenticatedUser) => void;
+  /** Re-reads GET /users/me (e.g. after a membership change). */
+  refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
-  /** RBAC check used by guards and by conditional UI. */
+  /** Presentation-only check for Super Admin navigation. The API authorises every request. */
   can: (permission: Permission) => boolean;
 }
 
@@ -42,80 +51,114 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 /**
  * Holds the session for the whole application.
  *
- * Auth state is deliberately centralised: no component reads a cookie, and no
- * component decides on its own what "signed in" means.
+ * Auth state is derived from the server only: GET /users/me on load, and after
+ * every completed sign-in. No component reads a cookie (it is HttpOnly), and no
+ * token is ever stored in browser storage.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
+  const statusRef = useRef<AuthStatus>("loading");
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
+  /** Drops everything user-specific held in memory: profile, cached (Company-scoped) query data. */
+  const clearLocalSession = useCallback(() => {
+    setUser(null);
+    setStatus("unauthenticated");
+    queryClient.clear();
+  }, [queryClient]);
 
   useEffect(() => {
     let cancelled = false;
-
     void authService
       .restore()
-      .then((session) => {
+      .then((restored) => {
         if (cancelled) return;
-        setUser(session?.user ?? null);
-        setStatus(session ? "authenticated" : "unauthenticated");
+        setUser(restored);
+        setStatus(restored ? "authenticated" : "unauthenticated");
       })
       .catch(() => {
         if (cancelled) return;
         setUser(null);
         setStatus("unauthenticated");
       });
-
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    const result = await authService.login(credentials);
+  // Any 401 from an authenticated request means the server no longer
+  // recognises this session (expired, revoked, logged out elsewhere).
+  useEffect(
+    () =>
+      onSessionExpired(() => {
+        if (statusRef.current !== "authenticated") return;
+        clearLocalSession();
+        toast.error("Your session has ended. Please sign in again.");
+        const next = pathname && pathname !== ROUTES.login ? `?${REDIRECT_PARAM}=${encodeURIComponent(pathname)}` : "";
+        router.replace(`${ROUTES.login}${next}`);
+      }),
+    [clearLocalSession, pathname, router],
+  );
 
-    // A backend that decides MFA is not required can return a session here.
-    if (result.status === "authenticated") {
-      setUser(result.session.user);
+  const acceptSession = useCallback(
+    (nextUser: AuthenticatedUser) => {
+      // A different person signing in on the same tab must never see the previous user's cached data.
+      queryClient.clear();
+      setUser(nextUser);
       setStatus("authenticated");
-    }
+    },
+    [queryClient],
+  );
 
-    return result;
-  }, []);
+  const login = useCallback((credentials: LoginCredentials) => authService.login(credentials), []);
+  const setupTotp = useCallback((challengeToken: string) => authService.setupTotp(challengeToken), []);
+  const verifyTotpSetup = useCallback((verification: ChallengeVerification) => authService.verifyTotpSetup(verification), []);
 
-  const verifyTotp = useCallback(async (verification: TotpVerification) => {
-    const session = await authService.verifyTotp(verification);
-    setUser(session.user);
-    setStatus("authenticated");
-    return session;
-  }, []);
+  const verifyTotp = useCallback(
+    async (verification: ChallengeVerification) => {
+      const signedIn = await authService.verifyTotp(verification);
+      acceptSession(signedIn);
+      return signedIn;
+    },
+    [acceptSession],
+  );
 
-  const setupTotp = useCallback(async (challengeToken: string) => {
-    return authService.setupTotp(challengeToken);
-  }, []);
+  const verifyRecoveryCode = useCallback(
+    async (verification: ChallengeVerification) => {
+      const signedIn = await authService.verifyRecoveryCode(verification);
+      acceptSession(signedIn);
+      return signedIn;
+    },
+    [acceptSession],
+  );
 
-  const verifyTotpSetup = useCallback(async (verification: TotpVerification) => {
-    const session = await authService.verifyTotpSetup(verification);
-    setUser(session.user);
-    setStatus("authenticated");
-    return session;
+  const refreshUser = useCallback(async () => {
+    const refreshed = await authService.fetchCurrentUser();
+    setUser(refreshed);
   }, []);
 
   const logout = useCallback(async () => {
-    await authService.logout();
-    setUser(null);
-    setStatus("unauthenticated");
-    router.replace(ROUTES.login);
-  }, [router]);
+    try {
+      await authService.logout();
+    } catch {
+      // The local session is cleared even if the server call fails, so nobody is left appearing signed in.
+    } finally {
+      clearLocalSession();
+      router.replace(ROUTES.login);
+    }
+  }, [clearLocalSession, router]);
 
-  const can = useCallback(
-    (permission: Permission) => user?.permissions.includes(permission) ?? false,
-    [user],
-  );
+  const can = useCallback((permission: Permission) => user?.permissions?.includes(permission) ?? false, [user]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, login, verifyTotp, setupTotp, verifyTotpSetup, logout, can }),
-    [can, login, logout, status, user, verifyTotp, setupTotp, verifyTotpSetup],
+    () => ({ status, user, login, setupTotp, verifyTotpSetup, verifyTotp, verifyRecoveryCode, acceptSession, refreshUser, logout, can }),
+    [status, user, login, setupTotp, verifyTotpSetup, verifyTotp, verifyRecoveryCode, acceptSession, refreshUser, logout, can],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

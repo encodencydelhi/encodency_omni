@@ -17,10 +17,15 @@ function delay(ms: number): Promise<void> {
  * loading and error states are exercised for real during development.
  */
 export class MockTransport implements Transport {
-  constructor(
-    private readonly router: MockRouter,
-    private readonly latencyMs: number = env.mockLatencyMs,
-  ) {}
+  // Explicit fields rather than constructor parameter properties: Node's
+  // type-stripping test runner (npm test) cannot load parameter properties.
+  private readonly router: MockRouter;
+  private readonly latencyMs: number;
+
+  constructor(router: MockRouter, latencyMs: number = env.mockLatencyMs) {
+    this.router = router;
+    this.latencyMs = latencyMs;
+  }
 
   async request<TResult>(spec: RequestSpec): Promise<TResult> {
     const match = this.router.match(spec.method, spec.path);

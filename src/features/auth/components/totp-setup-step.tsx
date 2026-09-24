@@ -5,35 +5,48 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { TOTP_LENGTH, totpSchema } from "@/features/auth/schemas/login-schema";
 import { ApiError } from "@/types/api";
-import type { TotpChallenge, TotpSetupResponse } from "@/types/domain/auth";
-import type { InternalRole } from "@/types/domain/team";
+import type { EnrollmentResult, TotpChallenge, TotpSetupResponse } from "@/types/domain/auth";
 import { AuthErrorMessage } from "./auth-message";
 import { AuthSubmitButton } from "./auth-submit-button";
 
 interface TotpSetupStepProps {
   challenge: TotpChallenge;
-  rememberMe: boolean;
-  onVerified: (role: InternalRole) => void;
+  /** Enrollment succeeded; the one-time recovery codes must be shown before the user enters the app. */
+  onEnrolled: (result: EnrollmentResult) => void;
   onBack: () => void;
 }
 
 const EMPTY_CODE = Array.from({ length: TOTP_LENGTH }, () => "");
 
-export function TotpSetupStep({ challenge, rememberMe, onVerified, onBack }: TotpSetupStepProps) {
+function manualKeyFrom(otpauthUri: string): string | null {
+  try {
+    return new URL(otpauthUri).searchParams.get("secret");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * First-time authenticator enrollment (mandatory MFA). The QR code and key come
+ * from the backend's POST /auth/totp/setup response and are only held in
+ * component state while this step is open.
+ */
+export function TotpSetupStep({ challenge, onEnrolled, onBack }: TotpSetupStepProps) {
   const { setupTotp, verifyTotpSetup } = useAuth();
 
   const [setupData, setSetupData] = useState<TotpSetupResponse | null>(null);
-  const [isFetching, setIsFetching] = useState(true);
-  
+  const [setupError, setSetupError] = useState("");
+  const [showKey, setShowKey] = useState(false);
+
   const [digits, setDigits] = useState<string[]>(EMPTY_CODE);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState("");
 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const isFetching = !setupData && !setupError;
 
   useEffect(() => {
     let cancelled = false;
-    setIsFetching(true);
 
     setupTotp(challenge.challengeToken)
       .then((data) => {
@@ -41,13 +54,14 @@ export function TotpSetupStep({ challenge, rememberMe, onVerified, onBack }: Tot
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(
-            ApiError.isApiError(err) ? err.message : "Failed to generate QR code."
+          setSetupError(
+            ApiError.isApiError(err) && err.status === 401
+              ? "This setup session has expired. Go back and sign in again."
+              : ApiError.isApiError(err)
+                ? err.message
+                : "Failed to generate the QR code.",
           );
         }
-      })
-      .finally(() => {
-        if (!cancelled) setIsFetching(false);
       });
 
     return () => {
@@ -101,17 +115,14 @@ export function TotpSetupStep({ challenge, rememberMe, onVerified, onBack }: Tot
 
     setIsPending(true);
     try {
-      const session = await verifyTotpSetup({
-        challengeToken: challenge.challengeToken,
-        code: parsed.data.code,
-        rememberMe,
-      });
-      onVerified(session.user.role);
+      onEnrolled(await verifyTotpSetup({ challengeToken: challenge.challengeToken, code: parsed.data.code }));
     } catch (caught) {
       setError(
-        ApiError.isApiError(caught)
-          ? caught.message
-          : "Invalid authentication code. Please try again."
+        ApiError.isApiError(caught) && caught.status === 401
+          ? "That code was not accepted. Check the time on your phone, wait for a new code and try again."
+          : ApiError.isApiError(caught)
+            ? caught.message
+            : "Invalid authentication code. Please try again.",
       );
       setDigits(EMPTY_CODE);
       focusInput(0);
@@ -119,6 +130,8 @@ export function TotpSetupStep({ challenge, rememberMe, onVerified, onBack }: Tot
       setIsPending(false);
     }
   };
+
+  const manualKey = setupData ? manualKeyFrom(setupData.otpauthUri) : null;
 
   return (
     <>
@@ -143,10 +156,23 @@ export function TotpSetupStep({ challenge, rememberMe, onVerified, onBack }: Tot
           <p className="text-sm text-muted-foreground animate-pulse">Generating QR Code...</p>
         </div>
       ) : setupData?.qrDataUrl ? (
-        <div className="mt-6 flex justify-center rounded-sm border border-border bg-white p-4">
-          <img src={setupData.qrDataUrl} alt="Authenticator QR Code" className="w-[180px] h-[180px]" />
+        <div className="mt-6 flex flex-col items-center rounded-sm border border-border bg-white p-4">
+          {/* A data: URL from the API; next/image adds nothing for an inline, never-cached QR code. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={setupData.qrDataUrl} alt="Authenticator QR code" className="h-[180px] w-[180px]" />
+          {manualKey ? (
+            showKey ? (
+              <p className="mt-3 break-all text-center font-mono text-xs text-foreground">{manualKey}</p>
+            ) : (
+              <button type="button" onClick={() => setShowKey(true)} className="mt-3 text-xs font-medium text-primary hover:text-primary-hover">
+                Can&apos;t scan? Show setup key
+              </button>
+            )
+          ) : null}
         </div>
       ) : null}
+
+      {setupError ? <AuthErrorMessage message={setupError} /> : null}
 
       <form onSubmit={onSubmit} className="mt-7">
         <fieldset disabled={isFetching || !setupData}>

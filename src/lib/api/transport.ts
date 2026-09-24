@@ -12,6 +12,7 @@ export interface RequestSpec {
   headers?: Record<string, string>;
   body?: unknown;
   signal?: AbortSignal;
+  skipSessionExpiry?: boolean;
 }
 export interface Transport {
   request<TResult>(spec: RequestSpec): Promise<TResult>;

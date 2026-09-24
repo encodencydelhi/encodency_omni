@@ -1,5 +1,16 @@
 # Frontend Integration Report (TASK-01 to TASK-07)
 
+> **Status superseded 2026-09-23.** An independent review
+> (`docs/09-handoffs/frontend-task-01-to-07-claude-independent-review.md`)
+> found that several statuses below were overstated. In particular, session
+> and cookie handling was not verified, and the wizard did not submit the
+> four backend fields. The integration was then corrected and completed.
+> The **current, verified status** of every workflow is in
+> `docs/09-handoffs/frontend-backend-integration-recovery-report.md`, and the
+> updated contracts are in
+> `docs/09-handoffs/frontend-integration-api-handoff-for-sompal.md`.
+> The original text below is kept unchanged as a record of what was reported.
+
 ## 1. Existing Frontend Inventory
 - **Next.js Version:** App Router, React 19, Next 16
 - **Architecture:** Feature-based structure (`src/features/*`)

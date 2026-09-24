@@ -1,5 +1,6 @@
 import { env } from "@/config/env";
 import { ApiError, type ApiErrorCode } from "@/types/api";
+import { notifySessionExpired } from "./session-events";
 import { buildSearchParams, type RequestSpec, type Transport } from "./transport";
 
 const STATUS_TO_CODE: Record<number, ApiErrorCode> = {
@@ -13,13 +14,23 @@ const STATUS_TO_CODE: Record<number, ApiErrorCode> = {
   503: "SERVICE_UNAVAILABLE",
 };
 
+/** NestJS errors carry `message` as a string, or an array of validation messages. */
 interface ErrorBody {
-  message?: string;
+  message?: string | string[];
   code?: ApiErrorCode;
   fieldErrors?: Record<string, string>;
 }
+
+function errorMessage(body: ErrorBody): string {
+  if (Array.isArray(body.message)) return body.message.join(" ");
+  return body.message ?? "The request could not be completed.";
+}
 export class HttpTransport implements Transport {
-  constructor(private readonly baseUrl: string = env.apiBaseUrl) { }
+  private readonly baseUrl: string;
+
+  constructor(baseUrl: string = env.apiBaseUrl) {
+    this.baseUrl = baseUrl;
+  }
 
   async request<TResult>(spec: RequestSpec): Promise<TResult> {
     const url = `${this.baseUrl}${spec.path}${buildSearchParams(spec.query)}`;
@@ -37,7 +48,8 @@ export class HttpTransport implements Transport {
         },
         body: spec.body ? JSON.stringify(spec.body) : undefined,
       });
-    } catch {
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") throw error;
       throw new ApiError({
         code: "NETWORK_ERROR",
         message: "Unable to reach the platform API.",
@@ -47,9 +59,12 @@ export class HttpTransport implements Transport {
 
     if (!response.ok) {
       const body = (await response.json().catch(() => ({}))) as ErrorBody;
+      if (response.status === 401 && !spec.skipSessionExpiry) {
+        notifySessionExpired();
+      }
       throw new ApiError({
         code: body.code ?? STATUS_TO_CODE[response.status] ?? "UNKNOWN",
-        message: body.message ?? "The request could not be completed.",
+        message: errorMessage(body),
         status: response.status,
         fieldErrors: body.fieldErrors,
       });

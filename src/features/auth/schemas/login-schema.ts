@@ -7,7 +7,6 @@ import { z } from "zod";
 export const loginSchema = z.object({
   email: z.string().min(1, "Please enter your email address.").email("Please enter a valid email address."),
   password: z.string().min(1, "Please enter your password."),
-  rememberMe: z.boolean(),
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
@@ -22,6 +21,28 @@ export const totpSchema = z.object({
 });
 
 export type TotpFormValues = z.infer<typeof totpSchema>;
+
+/** Recovery codes look like "ab12-cd34-ef56-7890-abcd"; the server normalises case and separators. */
+export const recoveryCodeSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(8, "Please enter a complete recovery code.")
+    .max(64, "That does not look like a recovery code."),
+});
+
+/** Invitation acceptance: the backend requires at least 8 characters. */
+export const acceptInvitationSchema = z
+  .object({
+    password: z.string().min(8, "Use at least 8 characters.").max(256, "Use at most 256 characters."),
+    confirmPassword: z.string(),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: "The passwords do not match.",
+    path: ["confirmPassword"],
+  });
+
+export type AcceptInvitationFormValues = z.infer<typeof acceptInvitationSchema>;
 
 export const forgotPasswordSchema = z.object({
   email: z.string().min(1, "Please enter your email address.").email("Please enter a valid email address."),

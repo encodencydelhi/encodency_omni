@@ -1,60 +1,41 @@
 import { ApiError } from "@/types/api";
-import type {
-  AuthSession,
-  LoginCredentials,
-  LoginResult,
-  TotpVerification,
-} from "@/types/domain/auth";
+import type { CurrentUserResponse, LoginChallengeResponse, LoginCredentials } from "@/types/domain/auth";
 import { MOCK_ACCOUNTS } from "../data/internal-team";
 import type { MockRoutes } from "../lib/router";
 
 /**
- * Any password of sufficient length is accepted for a known internal account,
- * and any six-digit code passes the second factor. The fixture exists to
- * exercise the real flow — success, failure, suspension, session restore — not
- * to model a credential store.
+ * DEMO MODE ONLY (NEXT_PUBLIC_DATA_SOURCE=mock).
+ *
+ * Mirrors the real backend's auth contract so the same frontend code runs in
+ * both modes: POST /auth/login → challenge, POST /auth/verify-totp → session,
+ * GET /users/me → profile. Any password of 8+ characters is accepted for a
+ * known demo account and any six-digit code passes. The mock transport has no
+ * cookies, so the "session" lives in memory and ends on a page reload.
  */
 const MIN_PASSWORD_LENGTH = 8;
-const TOTP_LENGTH = 6;
-
-const SESSION_TTL_MS = 60 * 60 * 1000;
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
 
-function issueToken(prefix: string, userId: string, expiresAt: number): string {
-  return `${prefix}.${userId}.${expiresAt}`;
-}
-
-function parseToken(prefix: string, token: string): { userId: string; expiresAt: number } | null {
-  const [tokenPrefix, userId, expiry] = token.split(".");
-  if (tokenPrefix !== prefix || !userId || !expiry) return null;
-  const expiresAt = Number(expiry);
-  return Number.isFinite(expiresAt) ? { userId, expiresAt } : null;
-}
+let pendingChallenge: { userId: string; expiresAt: number } | null = null;
+let signedInUserId: string | null = null;
 
 function findAccountById(userId: string) {
   return [...MOCK_ACCOUNTS.values()].find((account) => account.id === userId);
 }
 
-/** "aditya.raghunath@encodency.com" -> "a•••••••••••••h@encodency.com" */
-function maskEmail(email: string): string {
-  const [local = "", domain = ""] = email.split("@");
-  if (local.length <= 2) return email;
-  return `${local[0]}${"•".repeat(Math.max(local.length - 2, 3))}${local.at(-1)}@${domain}`;
+function unauthorized(message: string): never {
+  throw new ApiError({ code: "UNAUTHORIZED", status: 401, message });
 }
 
-function buildSession(userId: string, rememberMe: boolean): AuthSession {
-  const account = findAccountById(userId);
-
-  if (!account || account.status === "suspended") {
-    throw new ApiError({
-      code: "UNAUTHORIZED",
-      status: 401,
-      message: "This account is no longer able to sign in.",
-    });
+function completeSecondFactor(): { status: "authenticated"; user: { id: string; email: string } } {
+  if (!pendingChallenge || pendingChallenge.expiresAt < Date.now()) {
+    pendingChallenge = null;
+    unauthorized("This verification request has expired. Please sign in again.");
   }
-
-  const expiresAt = Date.now() + SESSION_TTL_MS * (rememberMe ? 24 * 14 : 1);
-  return { user: account, accessToken: issueToken("mock", account.id, expiresAt), expiresAt };
+  const account = findAccountById(pendingChallenge.userId);
+  pendingChallenge = null;
+  if (!account || account.status === "suspended") unauthorized("This account is no longer able to sign in.");
+  signedInUserId = account.id;
+  return { status: "authenticated", user: { id: account.id, email: account.email } };
 }
 
 export const authRoutes: MockRoutes = {
@@ -63,11 +44,7 @@ export const authRoutes: MockRoutes = {
     const account = MOCK_ACCOUNTS.get(email?.trim().toLowerCase() ?? "");
 
     if (!account || !password || password.length < MIN_PASSWORD_LENGTH) {
-      throw new ApiError({
-        code: "UNAUTHORIZED",
-        status: 401,
-        message: "Unable to sign in. Please check your credentials.",
-      });
+      unauthorized("Unable to sign in. Please check your credentials.");
     }
 
     if (account.status === "suspended") {
@@ -79,61 +56,43 @@ export const authRoutes: MockRoutes = {
     }
 
     const expiresAt = Date.now() + CHALLENGE_TTL_MS;
-
+    pendingChallenge = { userId: account.id, expiresAt };
     return {
       status: "challenge",
-      challenge: {
-        type: "totp",
-        challengeToken: issueToken("challenge", account.id, expiresAt),
-        maskedEmail: maskEmail(account.email),
-        expiresAt,
-      },
-    } satisfies LoginResult;
+      challengeType: "totp",
+      challengeToken: `demo-challenge.${account.id}`,
+      expiresAt: new Date(expiresAt).toISOString(),
+    } satisfies LoginChallengeResponse;
   },
 
   "POST /auth/verify-totp": ({ body }) => {
-    const { challengeToken, code, rememberMe } = (body ?? {}) as TotpVerification;
-    const parsed = parseToken("challenge", challengeToken ?? "");
-
-    if (!parsed || parsed.expiresAt < Date.now()) {
-      throw new ApiError({
-        code: "UNAUTHORIZED",
-        status: 401,
-        message: "This verification request has expired. Please sign in again.",
-      });
-    }
-
-    if (!/^\d{6}$/.test(code ?? "") || code.length !== TOTP_LENGTH) {
-      throw new ApiError({
-        code: "UNAUTHORIZED",
-        status: 401,
-        message: "Invalid authentication code. Please try again.",
-      });
-    }
-
-    return buildSession(parsed.userId, Boolean(rememberMe));
+    const { code } = (body ?? {}) as { code?: string };
+    if (!/^\d{6}$/.test(code ?? "")) unauthorized("Invalid authentication code. Please try again.");
+    return completeSecondFactor();
   },
 
-  "GET /auth/session": ({ query }) => {
-    const parsed = parseToken("mock", String(query.token ?? ""));
-
-    if (!parsed || parsed.expiresAt < Date.now()) {
-      throw new ApiError({
-        code: "UNAUTHORIZED",
-        status: 401,
-        message: "Your session has expired. Please sign in again.",
-      });
-    }
-
-    const account = findAccountById(parsed.userId);
-    if (!account || account.status === "suspended") {
-      throw new ApiError({ code: "UNAUTHORIZED", status: 401, message: "This session is no longer valid." });
-    }
-
-    return { user: account, accessToken: String(query.token), expiresAt: parsed.expiresAt } satisfies AuthSession;
+  "POST /auth/verify-recovery-code": ({ body }) => {
+    const { code } = (body ?? {}) as { code?: string };
+    if (!code || code.trim().length < 8) unauthorized("That recovery code was not accepted.");
+    return completeSecondFactor();
   },
 
-  "POST /auth/logout": () => ({ success: true }),
+  "GET /users/me": () => {
+    const account = signedInUserId ? findAccountById(signedInUserId) : undefined;
+    if (!account || account.status === "suspended") unauthorized("Not authenticated");
+    return {
+      id: account.id,
+      email: account.email,
+      totpEnabled: true,
+      platformRole: account.role === "super_admin" ? "SUPER_ADMIN" : null,
+      memberships: [],
+    } satisfies CurrentUserResponse;
+  },
+
+  "POST /auth/logout": () => {
+    signedInUserId = null;
+    return { status: "logged_out" };
+  },
 
   "POST /auth/forgot-password": ({ body }) => {
     const { email } = (body ?? {}) as { email?: string };

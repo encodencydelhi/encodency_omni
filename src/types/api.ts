@@ -42,6 +42,7 @@ export type ApiErrorCode =
   | "VALIDATION_FAILED"
   | "SERVICE_UNAVAILABLE"
   | "NETWORK_ERROR"
+  | "NO_COMPANY_SELECTED"
   | "UNKNOWN";
 export class ApiError extends Error {
   readonly code: ApiErrorCode;

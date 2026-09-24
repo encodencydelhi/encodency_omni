@@ -61,9 +61,6 @@ export const ROUTES = {
   },
 } as const;
 
-/** Every path that requires a session. */
-export const PROTECTED_ROUTE_ROOTS = [ROUTES.superAdmin.root, ROUTES.admin.root] as const;
-
 /**
  * Where each staff role lands after signing in.
  *
@@ -78,12 +75,13 @@ const LANDING_ROUTE_BY_ROLE: Record<InternalRole, string> = {
   operations: ROUTES.admin.dashboard,
 };
 
-export function resolveLandingRoute(role: InternalRole | undefined): string {
+/** Company users have no staff role (null) and land in the Company Admin panel. */
+export function resolveLandingRoute(role: InternalRole | null | undefined): string {
   return role ? LANDING_ROUTE_BY_ROLE[role] : ROUTES.admin.dashboard;
 }
 
 /** True when a role may open the Super Admin panel at all. */
-export function canAccessSuperAdmin(role: InternalRole | undefined): boolean {
+export function canAccessSuperAdmin(role: InternalRole | null | undefined): boolean {
   return role === "super_admin";
 }
 

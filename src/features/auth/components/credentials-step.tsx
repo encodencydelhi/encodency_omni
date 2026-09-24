@@ -11,19 +11,16 @@ import { useAuth } from "@/features/auth/components/auth-provider";
 import { loginSchema, type LoginFormValues } from "@/features/auth/schemas/login-schema";
 import { ApiError } from "@/types/api";
 import type { LoginResult } from "@/types/domain/auth";
-import type { InternalRole } from "@/types/domain/team";
 import { AUTH_INPUT_CLASS, AuthField } from "./auth-field";
 import { AuthErrorMessage } from "./auth-message";
 import { AuthSubmitButton } from "./auth-submit-button";
 
 interface CredentialsStepProps {
-  /** Called when credentials are accepted and a second factor is required. */
-  onChallenge: (result: Extract<LoginResult, { status: "challenge" }>, rememberMe: boolean) => void;
-  /** Called when the backend decides no second factor is needed. */
-  onAuthenticated: (role: InternalRole) => void;
+  /** Called when credentials are accepted. MFA is mandatory, so a second factor always follows. */
+  onChallenge: (result: LoginResult) => void;
 }
 
-export function CredentialsStep({ onChallenge, onAuthenticated }: CredentialsStepProps) {
+export function CredentialsStep({ onChallenge }: CredentialsStepProps) {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -34,24 +31,21 @@ export function CredentialsStep({ onChallenge, onAuthenticated }: CredentialsSte
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "", rememberMe: true },
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError("");
     try {
-      const result = await login(values);
-      if (result.status === "challenge") {
-        onChallenge(result, values.rememberMe);
-      } else {
-        onAuthenticated(result.session.user.role);
-      }
+      onChallenge(await login({ email: values.email, password: values.password }));
     } catch (error) {
-      setSubmitError(
-        ApiError.isApiError(error)
-          ? error.message
-          : "Unable to sign in. Please check your credentials.",
-      );
+      if (ApiError.isApiError(error) && error.status === 429) {
+        setSubmitError("Too many sign-in attempts. Please wait 15 minutes and try again.");
+      } else if (ApiError.isApiError(error) && error.status === 401) {
+        setSubmitError("Unable to sign in. Please check your email and password.");
+      } else {
+        setSubmitError(ApiError.isApiError(error) ? error.message : "Unable to sign in. Please try again.");
+      }
     }
   });
 
@@ -113,17 +107,7 @@ export function CredentialsStep({ onChallenge, onAuthenticated }: CredentialsSte
           />
         </AuthField>
 
-        <div className="mt-4 flex items-center justify-between gap-4">
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-            <input
-              type="checkbox"
-              disabled={isSubmitting}
-              className="size-4 accent-primary"
-              {...register("rememberMe")}
-            />
-            Remember me
-          </label>
-
+        <div className="mt-4 flex items-center justify-end gap-4">
           <Link
             href={ROUTES.forgotPassword}
             className="text-sm font-medium text-primary transition hover:text-primary-hover"

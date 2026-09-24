@@ -1,4 +1,4 @@
-import type { AuthenticatedUser } from "@/types/domain/auth";
+import type { StaffProfile } from "@/types/domain/auth";
 import { ROLE_PERMISSIONS, type InternalRole, type InternalTeamMember } from "@/types/domain/team";
 import { createRng, daysAgo, minutesAgo } from "../lib/random";
 
@@ -46,7 +46,7 @@ export const INTERNAL_TEAM: readonly InternalTeamMember[] = MEMBER_SEEDS.map((se
   } satisfies InternalTeamMember;
 });
 
-function toAuthenticatedUser(member: InternalTeamMember): AuthenticatedUser {
+function toStaffProfile(member: InternalTeamMember): StaffProfile {
   return {
     id: member.id,
     name: member.name,
@@ -61,10 +61,10 @@ function toAuthenticatedUser(member: InternalTeamMember): AuthenticatedUser {
 }
 
 /** Accounts the mock auth adapter accepts, keyed by email. */
-export const MOCK_ACCOUNTS: ReadonlyMap<string, AuthenticatedUser> = new Map(
+export const MOCK_ACCOUNTS: ReadonlyMap<string, StaffProfile> = new Map(
   INTERNAL_TEAM.filter((member) => member.status !== "invited").map((member) => [
     member.email.toLowerCase(),
-    toAuthenticatedUser(member),
+    toStaffProfile(member),
   ]),
 );
 
