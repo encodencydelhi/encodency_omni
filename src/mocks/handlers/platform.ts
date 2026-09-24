@@ -96,6 +96,138 @@ export const platformRoutes: MockRoutes = {
     });
   },
 
+  /* ------------------------------------------------------------------ */
+  /* Manual Tenancy Dev Harness (GET /_manual/tenancy/*)                */
+  /* ------------------------------------------------------------------ */
+  "GET /_manual/tenancy/platform": () => ({
+    tenantContext: {
+      userId: "usr-super-admin-01",
+      sessionId: "sess-platform-01",
+      platformRole: "SUPER_ADMIN",
+    },
+  }),
+
+  "GET /_manual/tenancy/company": ({ headers }) => {
+    const companyId = headers?.["x-company-id"];
+    if (!companyId) {
+      throw new ApiError({
+        code: "FORBIDDEN",
+        status: 403,
+        message: "No active membership for this company",
+      });
+    }
+    return {
+      tenantContext: {
+        userId: "usr-company-admin-01",
+        sessionId: "sess-company-01",
+        platformRole: "USER",
+        companyId,
+        membershipId: `mem-${companyId}`,
+        systemRole: "ADMIN",
+        companyStatus: "ACTIVE",
+      },
+    };
+  },
+
+  "GET /_manual/tenancy/client": ({ headers }) => {
+    const companyId = headers?.["x-company-id"];
+    const clientId = headers?.["x-client-id"];
+    if (!companyId) {
+      throw new ApiError({
+        code: "FORBIDDEN",
+        status: 403,
+        message: "No active membership for this company",
+      });
+    }
+    if (!clientId) {
+      throw new ApiError({
+        code: "BAD_REQUEST",
+        status: 400,
+        message: "Client context required",
+      });
+    }
+    return {
+      tenantContext: {
+        userId: "usr-company-admin-01",
+        sessionId: "sess-client-01",
+        platformRole: "USER",
+        companyId,
+        membershipId: `mem-${companyId}`,
+        systemRole: "ADMIN",
+        companyStatus: "ACTIVE",
+        clientId,
+      },
+    };
+  },
+
+  "GET /_manual/tenancy/client-optional": ({ headers }) => {
+    const companyId = headers?.["x-company-id"];
+    if (!companyId) {
+      throw new ApiError({
+        code: "FORBIDDEN",
+        status: 403,
+        message: "No active membership for this company",
+      });
+    }
+    return {
+      tenantContext: {
+        userId: "usr-company-admin-01",
+        sessionId: "sess-optional-01",
+        platformRole: "USER",
+        companyId,
+        membershipId: `mem-${companyId}`,
+        systemRole: "ADMIN",
+        companyStatus: "ACTIVE",
+        clientId: headers?.["x-client-id"],
+      },
+    };
+  },
+
+  "GET /_manual/tenancy/campaigns-read": ({ headers }) => {
+    const companyId = headers?.["x-company-id"];
+    if (!companyId) {
+      throw new ApiError({
+        code: "FORBIDDEN",
+        status: 403,
+        message: "No active membership for this company",
+      });
+    }
+    return {
+      tenantContext: {
+        userId: "usr-company-admin-01",
+        sessionId: "sess-campaigns-read",
+        platformRole: "USER",
+        companyId,
+        membershipId: `mem-${companyId}`,
+        systemRole: "ADMIN",
+        companyStatus: "ACTIVE",
+      },
+    };
+  },
+
+  "GET /_manual/tenancy/campaigns-write": ({ headers }) => {
+    const companyId = headers?.["x-company-id"];
+    if (!companyId) {
+      throw new ApiError({
+        code: "FORBIDDEN",
+        status: 403,
+        message: "No active membership for this company",
+      });
+    }
+    return {
+      tenantContext: {
+        userId: "usr-company-admin-01",
+        sessionId: "sess-campaigns-write",
+        platformRole: "USER",
+        companyId,
+        membershipId: `mem-${companyId}`,
+        systemRole: "ADMIN",
+        companyStatus: "ACTIVE",
+        clientId: headers?.["x-client-id"],
+      },
+    };
+  },
+
   "GET /integrations/health": () => INTEGRATION_HEALTH,
 
   "GET /system-health": () => SYSTEM_HEALTH,

@@ -50,6 +50,7 @@ export class MockTransport implements Transport {
       params: match.params,
       query: spec.query ?? {},
       body: spec.body,
+      headers: spec.headers ?? {},
     });
 
     return result as TResult;

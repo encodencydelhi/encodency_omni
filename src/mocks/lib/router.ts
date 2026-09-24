@@ -5,6 +5,7 @@ export interface MockRequestContext {
   params: Record<string, string>;
   query: QueryParams;
   body: unknown;
+  headers?: Record<string, string>;
 }
 
 export type MockHandler = (context: MockRequestContext) => unknown | Promise<unknown>;

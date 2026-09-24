@@ -21,6 +21,7 @@ import {
 import { STAFF_MEMBERS } from "@/features/internal-team/data/mock-data";
 import { ApiError } from "@/types/api";
 import { systemHealthService } from "../services/system-health-service";
+import { TenancyHarnessCard } from "./tenancy-harness-card";
 import type { HealthCheckResponse } from "@/types/domain/system-health";
 import { cn } from "@/lib/utils/cn";
 import { ROUTES } from "@/config/routes";
@@ -761,6 +762,7 @@ function ActivityMonitoringPage({ snapshot }: { snapshot: SystemHealthSnapshotV2
   return (
     <div className="space-y-1">
       <ApiProbesCard />
+      <TenancyHarnessCard />
       <div className="grid gap-1 xl:grid-cols-[1fr_0.9fr]">
         <Card><CardTitle title="Health Activity" subtitle="Monitoring events stay in System Health activity, not high-impact audit history." /><ActivityTable snapshot={snapshot} activity={snapshot.activity} /></Card>
         <Card><CardTitle title="Monitoring Coverage" subtitle="Every source is clearly labelled as demo-backed until backend telemetry is connected." /><div className="divide-y divide-slate-100">{snapshot.sources.map((source) => <div key={source.id} className="px-4 py-3"><div className="flex items-center justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{source.name}</p><Badge className={source.backendConnected ? healthTone.healthy : freshnessTone.stale}>{source.backendConnected ? "Backend Connected" : "Demo Only"}</Badge></div><p className="mt-1 text-xs text-slate-600">{label(source.kind)} - freshness threshold {source.freshnessThresholdMinutes} min</p></div>)}</div></Card>

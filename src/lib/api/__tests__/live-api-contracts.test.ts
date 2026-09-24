@@ -15,6 +15,7 @@ const { clientsApi, toCreateClientPayload } = await import("@/features/admin/pro
 const { teamApi, invitationLink } = await import("@/features/admin/team/live/team-api");
 const { authService } = await import("@/features/auth/services/auth-service");
 const { systemHealthService } = await import("@/features/system-health/services/system-health-service");
+const { tenancyHarnessService } = await import("@/features/system-health/services/tenancy-harness-service");
 const { ApiError } = await import("@/types/api");
 
 interface Call {
@@ -248,5 +249,134 @@ describe("healthService (real contract)", () => {
     stop();
     assert.equal(calls[0]!.url, "/api/v1/health/error");
     assert.equal(expired, 0, "a probe 500 must not sign the operator out");
+  });
+});
+
+describe("tenancyHarnessService (6 manual harness routes)", () => {
+  it("GET /_manual/tenancy/platform checks platform Super Admin", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        tenantContext: {
+          userId: "usr-admin-1",
+          sessionId: "sess-1",
+          platformRole: "SUPER_ADMIN",
+        },
+      },
+    });
+    const result = await tenancyHarnessService.testRoute("platform");
+    assert.equal(calls[0]!.url, "/api/v1/_manual/tenancy/platform");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(result.tenantContext.platformRole, "SUPER_ADMIN");
+  });
+
+  it("GET /_manual/tenancy/company sends x-company-id header", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        tenantContext: {
+          userId: "usr-1",
+          sessionId: "sess-1",
+          platformRole: "USER",
+          companyId: "c-100",
+          systemRole: "ADMIN",
+        },
+      },
+    });
+    const result = await tenancyHarnessService.testRoute("company", { companyId: "c-100" });
+    assert.equal(calls[0]!.url, "/api/v1/_manual/tenancy/company");
+    assert.equal(calls[0]!.init.headers["x-company-id"], "c-100");
+    assert.equal(result.tenantContext.companyId, "c-100");
+  });
+
+  it("GET /_manual/tenancy/client sends both x-company-id and x-client-id", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        tenantContext: {
+          userId: "usr-1",
+          sessionId: "sess-1",
+          platformRole: "USER",
+          companyId: "c-100",
+          clientId: "cl-50",
+        },
+      },
+    });
+    const result = await tenancyHarnessService.testRoute("client", { companyId: "c-100", clientId: "cl-50" });
+    assert.equal(calls[0]!.url, "/api/v1/_manual/tenancy/client");
+    assert.equal(calls[0]!.init.headers["x-company-id"], "c-100");
+    assert.equal(calls[0]!.init.headers["x-client-id"], "cl-50");
+    assert.equal(result.tenantContext.clientId, "cl-50");
+  });
+
+  it("GET /_manual/tenancy/client-optional sends optional client context", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        tenantContext: {
+          userId: "usr-1",
+          sessionId: "sess-1",
+          platformRole: "USER",
+          companyId: "c-100",
+          clientId: "cl-50",
+        },
+      },
+    });
+    const result = await tenancyHarnessService.testRoute("client-optional", { companyId: "c-100", clientId: "cl-50" });
+    assert.equal(calls[0]!.url, "/api/v1/_manual/tenancy/client-optional");
+    assert.equal(calls[0]!.init.headers["x-company-id"], "c-100");
+    assert.equal(calls[0]!.init.headers["x-client-id"], "cl-50");
+    assert.equal(result.tenantContext.clientId, "cl-50");
+  });
+
+  it("GET /_manual/tenancy/campaigns-read tests campaigns:read capability", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        tenantContext: {
+          userId: "usr-1",
+          sessionId: "sess-1",
+          platformRole: "USER",
+          companyId: "c-100",
+          systemRole: "VIEWER",
+        },
+      },
+    });
+    const result = await tenancyHarnessService.testRoute("campaigns-read", { companyId: "c-100" });
+    assert.equal(calls[0]!.url, "/api/v1/_manual/tenancy/campaigns-read");
+    assert.equal(calls[0]!.init.headers["x-company-id"], "c-100");
+    assert.equal(result.tenantContext.systemRole, "VIEWER");
+  });
+
+  it("GET /_manual/tenancy/campaigns-write tests campaigns:write capability", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        tenantContext: {
+          userId: "usr-1",
+          sessionId: "sess-1",
+          platformRole: "USER",
+          companyId: "c-100",
+          systemRole: "MANAGER",
+        },
+      },
+    });
+    const result = await tenancyHarnessService.testRoute("campaigns-write", { companyId: "c-100" });
+    assert.equal(calls[0]!.url, "/api/v1/_manual/tenancy/campaigns-write");
+    assert.equal(calls[0]!.init.headers["x-company-id"], "c-100");
+    assert.equal(result.tenantContext.systemRole, "MANAGER");
+  });
+
+  it("rejection (e.g. 403) from harness does NOT trigger session expiry", async () => {
+    let expired = 0;
+    const stop = onSessionExpired(() => expired++);
+    responses.push({ status: 403, body: { message: "Capability campaigns:write missing" } });
+
+    await assert.rejects(
+      tenancyHarnessService.testRoute("campaigns-write", { companyId: "c-100" }),
+      (err: unknown) => ApiError.isApiError(err) && err.status === 403,
+    );
+    stop();
+    assert.equal(expired, 0, "harness route failure must not sign operator out");
   });
 });
