@@ -228,6 +228,31 @@ export const platformRoutes: MockRoutes = {
     };
   },
 
+  "GET /integrations/registry": () => ["META", "GOOGLE_BUSINESS", "LINKEDIN"],
+
+  "POST /integrations/oauth/init": ({ headers, body }) => {
+    const companyId = headers?.["x-company-id"];
+    if (!companyId) {
+      throw new ApiError({
+        code: "BAD_REQUEST",
+        status: 400,
+        message: "Company context required",
+      });
+    }
+    const payload = (body ?? {}) as { provider?: string };
+    if (!payload.provider || !["META", "GOOGLE_BUSINESS", "LINKEDIN"].includes(payload.provider)) {
+      throw new ApiError({
+        code: "BAD_REQUEST",
+        status: 400,
+        message: "Invalid or unsupported provider",
+      });
+    }
+
+    return {
+      authUrl: `https://mock-oauth.local/authorize?provider=${payload.provider}&companyId=${companyId}&state=mock_state_${Date.now()}`,
+    };
+  },
+
   "GET /integrations/health": () => INTEGRATION_HEALTH,
 
   "GET /system-health": () => SYSTEM_HEALTH,

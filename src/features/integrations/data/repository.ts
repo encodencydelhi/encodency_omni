@@ -1,8 +1,19 @@
 /**
  * EnCodency OmniPlatform - Super Admin Integrations Module
  * Integrations Repository Interface & Async Implementation
+ *
+ *   Mock mode:   UI → hooks → integrationsRepository → mock store (in-memory, demo)
+ *   API mode:    UI → hooks → integrationsRepository → api provider (GET /integrations/registry)
+ *                ... with an injected demo fallback for everything the backend
+ *                does not serve yet (configs, connections, issues, mutations, ...)
+ *
+ * Components never import a provider. Connecting more backend endpoints means
+ * implementing them once inside `api-provider.ts`; no page, hook or component
+ * changes.
  */
 
+import { createApiIntegrationsProvider } from "./api-provider";
+import { INTEGRATIONS_MOCK_MODE } from "./config";
 import * as store from "./mock/store";
 import type {
   IntegrationActivity,
@@ -21,6 +32,8 @@ import type {
 } from "./types";
 
 export interface IntegrationsRepository {
+  readonly mode: "mock" | "api";
+
   // Read
   getOverviewKpis(): Promise<IntegrationsKpis>;
   getProviders(): Promise<IntegrationProvider[]>;
@@ -77,7 +90,9 @@ export interface IntegrationsRepository {
   resetDemo(): Promise<void>;
 }
 
-export const integrationsRepository: IntegrationsRepository = {
+const mockIntegrationsProvider: IntegrationsRepository = {
+  mode: "mock",
+
   async getOverviewKpis(): Promise<IntegrationsKpis> {
     return store.computeIntegrationsKpis();
   },
@@ -202,3 +217,7 @@ export const integrationsRepository: IntegrationsRepository = {
     store.resetDemoStore();
   },
 };
+
+export const integrationsRepository: IntegrationsRepository = INTEGRATIONS_MOCK_MODE
+  ? mockIntegrationsProvider
+  : createApiIntegrationsProvider(mockIntegrationsProvider);

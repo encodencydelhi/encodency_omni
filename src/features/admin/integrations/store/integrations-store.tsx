@@ -94,6 +94,8 @@ interface IntegrationsStore {
   disconnectResource: (connectionId: string, resourceId: string) => Promise<boolean>;
   updateSettings: (patch: Partial<IntegrationSettings>, summary: string) => Promise<boolean>;
   retryLoad: () => void;
+  /** Reload without flashing the empty skeleton — used after an OAuth return. */
+  reload: () => void;
   simulate: {
     setRole: (role: OrgRole) => void;
     setFailNextSync: (fail: boolean) => void;
@@ -173,6 +175,13 @@ export function IntegrationsProvider({ children }: { children: ReactNode }) {
     setSnapshot(null);
     setServiceError(null);
     setSyncJobs({});
+    setSimulation((current) => ({ ...current, loadError: false }));
+    setReloadToken((token) => token + 1);
+  }, []);
+
+  // Keeps the current data on screen while the next snapshot loads (OAuth return).
+  const reload = useCallback(() => {
+    setServiceError(null);
     setSimulation((current) => ({ ...current, loadError: false }));
     setReloadToken((token) => token + 1);
   }, []);
@@ -340,7 +349,13 @@ export function IntegrationsProvider({ children }: { children: ReactNode }) {
   const authorize = useCallback<IntegrationsStore["authorize"]>(
     async (providerId) => {
       try {
-        await repository.authorize(providerId);
+        const result = await repository.authorize(providerId);
+        if (result && typeof result === "object" && "authUrl" in result && result.authUrl) {
+          if (!result.authUrl.includes("mock-oauth.local") && typeof window !== "undefined") {
+            window.location.assign(result.authUrl);
+            return true;
+          }
+        }
         return true;
       } catch (error) {
         fail(error, "Authorization didn't complete.");
@@ -595,6 +610,7 @@ export function IntegrationsProvider({ children }: { children: ReactNode }) {
     disconnectResource,
     updateSettings,
     retryLoad,
+    reload,
     simulate,
     registerGuard,
     guardRef,

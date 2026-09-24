@@ -23,6 +23,8 @@ import {
   mockSyncRuns,
   seeded,
 } from "./mock-provider";
+import { integrationsApi, toBackendProvider } from "../live/integrations-api";
+import { ApiError } from "@/types/api";
 import type {
   IntegrationConnection,
   IntegrationProvider,
@@ -80,7 +82,7 @@ export interface IntegrationsRepository {
   isAvailable(): boolean;
   loadSnapshot(): Promise<IntegrationsSnapshot>;
   /** Stands in for the provider's consent screen. Resolves once the admin approves. */
-  authorize(providerId: ProviderId): Promise<void>;
+  authorize(providerId: ProviderId): Promise<{ authUrl?: string } | void>;
   discoverResources(providerId: ProviderId, clientName: string): Promise<DiscoveredResource[]>;
   connect(input: ConnectInput): Promise<IntegrationConnection>;
   reconnect(connection: IntegrationConnection): Promise<Partial<IntegrationConnection>>;
@@ -124,10 +126,33 @@ class MockIntegrationsRepository implements IntegrationsRepository {
     });
   }
 
-  async authorize() {
-    // Production: open the backend's authorise URL in a popup and wait for
-    // the callback. The backend exchanges the code; nothing secret comes here.
-    await wait(1400);
+  async authorize(providerId: ProviderId): Promise<{ authUrl?: string } | void> {
+    const backendProvider = toBackendProvider(providerId);
+    if (!backendProvider) {
+      throw new IntegrationServiceError(
+        "provider_error",
+        `Provider "${providerId}" does not support OAuth connection in this version.`,
+        "Only Meta, Google Business, and LinkedIn are supported by the platform backend.",
+      );
+    }
+    const companyId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
+        : "development-company-id";
+
+    try {
+      const response = await integrationsApi.initOAuth(companyId, backendProvider);
+      return response;
+    } catch (error) {
+      if (ApiError.isApiError(error)) {
+        throw new IntegrationServiceError(
+          error.status === 403 ? "authorization_cancelled" : "provider_error",
+          error.message,
+          "Verify company membership and ensure your account holds the integrations:write capability.",
+        );
+      }
+      throw error;
+    }
   }
 
   async discoverResources(providerId: ProviderId, clientName: string) {
@@ -272,8 +297,32 @@ class UnavailableIntegrationsRepository implements IntegrationsRepository {
   async loadSnapshot(): Promise<IntegrationsSnapshot> {
     throw unavailable();
   }
-  async authorize(): Promise<void> {
-    throw unavailable();
+  async authorize(providerId: ProviderId): Promise<{ authUrl?: string } | void> {
+    const backendProvider = toBackendProvider(providerId);
+    if (!backendProvider) {
+      throw new IntegrationServiceError(
+        "provider_error",
+        `Provider "${providerId}" does not support OAuth connection in this version.`,
+        "Only Meta, Google Business, and LinkedIn are supported by the platform backend.",
+      );
+    }
+    const companyId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
+        : "development-company-id";
+
+    try {
+      return await integrationsApi.initOAuth(companyId, backendProvider);
+    } catch (error) {
+      if (ApiError.isApiError(error)) {
+        throw new IntegrationServiceError(
+          error.status === 403 ? "authorization_cancelled" : "provider_error",
+          error.message,
+          "Verify company membership and ensure your account holds the integrations:write capability.",
+        );
+      }
+      throw error;
+    }
   }
   async discoverResources(): Promise<DiscoveredResource[]> {
     throw unavailable();

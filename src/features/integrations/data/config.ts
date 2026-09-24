@@ -3,6 +3,7 @@
  * Module Constants, Navigations, Badges and Configurations
  */
 
+import { isMockMode } from "@/config/env";
 import {
   ActivityIcon,
   AlertTriangleIcon,
@@ -26,6 +27,8 @@ import type {
   IntegrationSettings,
 } from "./types";
 
+/** Single mock flag for this feature, same pattern as `COMPANIES_MOCK_MODE`. */
+export const INTEGRATIONS_MOCK_MODE = isMockMode;
 export const MOCK_REFERENCE_TIME = new Date("2026-09-19T12:00:00Z").getTime();
 
 export const SESSION_STORAGE_KEYS = {

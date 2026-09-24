@@ -12,6 +12,7 @@ import { ALL_CLIENTS, clientName, downloadFile, isActive, toCsv } from "../integ
 import { syncCapability } from "../integrations-data/capability-provider";
 import { useIntegrations } from "../store/integrations-store";
 import { ConnectFlow } from "./connect-flow";
+import { OAuthCallbackHandler } from "./oauth-callback";
 import { SyncAllDialog } from "./dialogs";
 import { ActionMenu, Button, Card, EmptyState, SelectMenu, buttonClass, x } from "./ui";
 
@@ -72,6 +73,7 @@ export function IntegrationsWorkspace({ children }: { children: ReactNode }) {
           )}
         </main>
       </div>
+      <OAuthCallbackHandler />
       <ConnectFlow />
       <UnsavedChangesDialog />
     </div>

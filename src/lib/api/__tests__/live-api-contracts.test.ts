@@ -16,6 +16,9 @@ const { teamApi, invitationLink } = await import("@/features/admin/team/live/tea
 const { authService } = await import("@/features/auth/services/auth-service");
 const { systemHealthService } = await import("@/features/system-health/services/system-health-service");
 const { tenancyHarnessService } = await import("@/features/system-health/services/tenancy-harness-service");
+const { integrationsApi } = await import("@/features/admin/integrations/live/integrations-api");
+const { campaignsApi } = await import("@/features/admin/campaigns/live/campaigns-api");
+const { draftsApi } = await import("@/features/admin/content/live/drafts-api");
 const { ApiError } = await import("@/types/api");
 
 interface Call {
@@ -378,5 +381,287 @@ describe("tenancyHarnessService (6 manual harness routes)", () => {
     );
     stop();
     assert.equal(expired, 0, "harness route failure must not sign operator out");
+  });
+});
+
+describe("integrationsApi (TASK-09 OAuth contracts)", () => {
+  it("GET /integrations/registry returns configured providers", async () => {
+    responses.push({
+      status: 200,
+      body: ["META", "GOOGLE_BUSINESS", "LINKEDIN"],
+    });
+    const registry = await integrationsApi.getRegistry();
+    assert.equal(calls[0]!.url, "/api/v1/integrations/registry");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.deepEqual(registry, ["META", "GOOGLE_BUSINESS", "LINKEDIN"]);
+  });
+
+  it("POST /integrations/oauth/init sends verified Company header and provider", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        authUrl: "https://www.facebook.com/v21.0/dialog/oauth?client_id=123&state=abc",
+      },
+    });
+    const result = await integrationsApi.initOAuth("company-uuid-1", "META");
+    assert.equal(calls[0]!.url, "/api/v1/integrations/oauth/init");
+    assert.equal(calls[0]!.init.method, "POST");
+    assert.equal(calls[0]!.init.headers["x-company-id"], "company-uuid-1");
+    assert.deepEqual(body(calls[0]!), { provider: "META" });
+    assert.equal(result.authUrl, "https://www.facebook.com/v21.0/dialog/oauth?client_id=123&state=abc");
+  });
+
+  it("POST /integrations/oauth/init rejects without company header", async () => {
+    await assert.rejects(
+      integrationsApi.initOAuth("", "META"),
+      (err: unknown) => ApiError.isApiError(err) && err.code === "NO_COMPANY_SELECTED",
+    );
+  });
+
+  it("POST /integrations/oauth/init surfaces 403 on missing capability", async () => {
+    responses.push({
+      status: 403,
+      body: { message: "Capability integrations:write required" },
+    });
+    await assert.rejects(
+      integrationsApi.initOAuth("company-uuid-1", "GOOGLE_BUSINESS"),
+      (err: unknown) =>
+        ApiError.isApiError(err) &&
+        err.status === 403 &&
+        err.message.includes("integrations:write"),
+    );
+  });
+});
+
+describe("campaignsApi (TASK-11A contracts)", () => {
+  const companyId = "cmp-100";
+  const clientId = "cli-200";
+
+  it("GET /campaigns includes x-company-id and x-client-id headers", async () => {
+    responses.push({
+      status: 200,
+      body: [
+        {
+          id: "cmp-1",
+          companyId,
+          clientId,
+          name: "Q4 Product Launch",
+          budget: { amount: "10000.00", currency: "INR" },
+          revision: 1,
+          createdAt: "2026-09-24T00:00:00.000Z",
+          updatedAt: "2026-09-24T00:00:00.000Z",
+        },
+      ],
+    });
+
+    const list = await campaignsApi.list(companyId, clientId);
+    assert.equal(calls[0]!.url, "/api/v1/campaigns");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.equal(calls[0]!.init.headers["x-client-id"], clientId);
+    assert.equal(list.length, 1);
+    assert.equal(list[0]!.revision, 1);
+  });
+
+  it("POST /campaigns sends validated payload and returns revision", async () => {
+    responses.push({
+      status: 201,
+      body: {
+        id: "cmp-2",
+        companyId,
+        clientId,
+        name: "Spring Sale",
+        budget: { amount: "25000.00", currency: "USD" },
+        startDate: "2026-10-01T00:00:00.000Z",
+        endDate: "2026-10-31T00:00:00.000Z",
+        revision: 1,
+        createdAt: "2026-09-24T00:00:00.000Z",
+        updatedAt: "2026-09-24T00:00:00.000Z",
+      },
+    });
+
+    const created = await campaignsApi.create(companyId, clientId, {
+      name: "Spring Sale",
+      budget: { amount: "25000.00", currency: "USD" },
+      startDate: "2026-10-01T00:00:00.000Z",
+      endDate: "2026-10-31T00:00:00.000Z",
+    });
+
+    assert.equal(calls[0]!.url, "/api/v1/campaigns");
+    assert.equal(calls[0]!.init.method, "POST");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.equal(calls[0]!.init.headers["x-client-id"], clientId);
+    assert.deepEqual(body(calls[0]!), {
+      name: "Spring Sale",
+      budget: { amount: "25000.00", currency: "USD" },
+      startDate: "2026-10-01T00:00:00.000Z",
+      endDate: "2026-10-31T00:00:00.000Z",
+    });
+    assert.equal(created.id, "cmp-2");
+    assert.equal(created.revision, 1);
+  });
+
+  it("PATCH /campaigns/:id sends expectedRevision and handles 409 revision_conflict", async () => {
+    responses.push({
+      status: 409,
+      body: {
+        message: "Resource was modified by another request. Please reload.",
+        reason: "revision_conflict",
+        currentRevision: 3,
+      },
+    });
+
+    await assert.rejects(
+      campaignsApi.update(companyId, clientId, "cmp-1", {
+        expectedRevision: 2,
+        name: "Conflicted Name",
+      }),
+      (err: unknown) => {
+        if (!ApiError.isApiError(err)) return false;
+        assert.equal(err.status, 409);
+        assert.equal(campaignsApi.isRevisionConflict(err), true);
+        return true;
+      },
+    );
+
+    assert.equal(calls[0]!.url, "/api/v1/campaigns/cmp-1");
+    assert.equal(calls[0]!.init.method, "PATCH");
+    assert.deepEqual(body(calls[0]!), {
+      expectedRevision: 2,
+      name: "Conflicted Name",
+    });
+  });
+
+  it("campaignsApi rejects missing company or client headers before network call", async () => {
+    await assert.rejects(
+      campaignsApi.list("", clientId),
+      (err: unknown) => ApiError.isApiError(err) && err.code === "NO_COMPANY_SELECTED",
+    );
+    await assert.rejects(
+      campaignsApi.list(companyId, ""),
+      (err: unknown) => ApiError.isApiError(err) && err.code === "NO_CLIENT_SELECTED",
+    );
+    assert.equal(calls.length, 0);
+  });
+});
+
+describe("draftsApi (TASK-11A contracts)", () => {
+  const companyId = "cmp-100";
+  const clientId = "cli-200";
+
+  it("GET /content/drafts includes x-company-id and x-client-id headers", async () => {
+    responses.push({
+      status: 200,
+      body: [
+        {
+          id: "draft-1",
+          companyId,
+          clientId,
+          campaignId: null,
+          title: "Product teaser",
+          content: "Exciting announcement coming soon!",
+          variants: {
+            LINKEDIN_ORGANIZATION: { content: "Professional teaser text" },
+          },
+          assetIds: [],
+          revision: 1,
+          createdAt: "2026-09-24T00:00:00.000Z",
+          updatedAt: "2026-09-24T00:00:00.000Z",
+        },
+      ],
+    });
+
+    const drafts = await draftsApi.list(companyId, clientId);
+    assert.equal(calls[0]!.url, "/api/v1/content/drafts");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.equal(calls[0]!.init.headers["x-client-id"], clientId);
+    assert.equal(drafts.length, 1);
+    assert.equal(drafts[0]!.revision, 1);
+  });
+
+  it("POST /content/drafts validates assetIds and sends expected draft fields", async () => {
+    // If caller sends assetIds when unsupported, client throws PRECONDITION_FAILED
+    await assert.rejects(
+      draftsApi.create(companyId, clientId, {
+        content: "Draft with image",
+        assetIds: ["asset-123"],
+      }),
+      (err: unknown) =>
+        ApiError.isApiError(err) &&
+        err.code === "MEDIA_NOT_SUPPORTED",
+    );
+
+    responses.push({
+      status: 201,
+      body: {
+        id: "draft-new",
+        companyId,
+        clientId,
+        campaignId: "cmp-100",
+        title: "New Year Offer",
+        content: "Save 20% this weekend",
+        variants: {
+          FACEBOOK_PAGE: { content: "FB: Save 20% this weekend!" },
+        },
+        assetIds: [],
+        revision: 1,
+        createdAt: "2026-09-24T00:00:00.000Z",
+        updatedAt: "2026-09-24T00:00:00.000Z",
+      },
+    });
+
+    const created = await draftsApi.create(companyId, clientId, {
+      campaignId: "cmp-100",
+      title: "New Year Offer",
+      content: "Save 20% this weekend",
+      variants: {
+        FACEBOOK_PAGE: { content: "FB: Save 20% this weekend!" },
+      },
+    });
+
+    assert.equal(calls[0]!.url, "/api/v1/content/drafts");
+    assert.equal(calls[0]!.init.method, "POST");
+    assert.deepEqual(body(calls[0]!), {
+      campaignId: "cmp-100",
+      title: "New Year Offer",
+      content: "Save 20% this weekend",
+      variants: {
+        FACEBOOK_PAGE: { content: "FB: Save 20% this weekend!" },
+      },
+    });
+    assert.equal(created.id, "draft-new");
+    assert.equal(created.revision, 1);
+  });
+
+  it("PATCH /content/drafts/:id enforces expectedRevision and handles 409 conflict", async () => {
+    responses.push({
+      status: 409,
+      body: {
+        message: "Resource was modified by another request. Please reload.",
+        reason: "revision_conflict",
+        currentRevision: 4,
+      },
+    });
+
+    await assert.rejects(
+      draftsApi.update(companyId, clientId, "draft-new", {
+        expectedRevision: 1,
+        content: "Conflicted update",
+      }),
+      (err: unknown) => {
+        if (!ApiError.isApiError(err)) return false;
+        assert.equal(err.status, 409);
+        assert.equal(draftsApi.isRevisionConflict(err), true);
+        return true;
+      },
+    );
+
+    assert.equal(calls[0]!.url, "/api/v1/content/drafts/draft-new");
+    assert.equal(calls[0]!.init.method, "PATCH");
+    assert.deepEqual(body(calls[0]!), {
+      expectedRevision: 1,
+      content: "Conflicted update",
+    });
   });
 });
