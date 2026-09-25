@@ -39,11 +39,10 @@ import type { ClientSummary } from "../data/types";
 import { exportClientRows } from "../lib/csv-export";
 import { rememberListQuery } from "../lib/list-query";
 
-/** The client register: portfolio KPIs and every client across every company. */
-export function ClientsListPage() {
+export function ClientsListPage({ basePath: propBasePath }: { basePath?: string } = {}) {
   const router = useRouter();
   const pathname = usePathname();
-  const basePath = resolveClientBasePath(pathname);
+  const basePath = propBasePath ?? resolveClientBasePath(pathname);
   const searchParams = useSearchParams();
   const mutations = useClientMutations();
   const { capabilities, openFlow, rowMenu, dialogs } = useClientActions();

@@ -278,8 +278,20 @@ export function CampaignsPage() {
         };
       });
     }
-    return campaigns;
+    return [];
   }, [liveCampaigns]);
+
+  const tabCounts = useMemo(() => {
+    const list = allDisplayCampaigns;
+    return {
+      all: list.length,
+      active: list.filter((c) => c.statusTone === "active").length,
+      scheduled: list.filter((c) => c.statusTone === "scheduled").length,
+      completed: list.filter((c) => c.statusTone === "completed").length,
+      draft: list.filter((c) => c.statusTone === "draft").length,
+      archived: 0,
+    };
+  }, [allDisplayCampaigns]);
 
   const filteredCampaigns = useMemo(() => {
     let result = allDisplayCampaigns;
@@ -299,11 +311,11 @@ export function CampaignsPage() {
   }, [allDisplayCampaigns, activeTab, searchQuery]);
 
   const dynamicStats = useMemo(() => {
-    if (!liveCampaigns) return stats;
-    const total = liveCampaigns.length;
-    const active = liveCampaigns.filter((c) => c.status === "ACTIVE").length;
-    const completed = liveCampaigns.filter((c) => c.status === "COMPLETED").length;
-    const scheduled = liveCampaigns.filter((c) => c.status === "PAUSED" || c.status === "DRAFT").length;
+    const list = liveCampaigns ?? [];
+    const total = list.length;
+    const active = list.filter((c) => c.status === "ACTIVE").length;
+    const completed = list.filter((c) => c.status === "COMPLETED").length;
+    const scheduled = list.filter((c) => c.status === "PAUSED" || c.status === "DRAFT").length;
     return [
       { icon: Megaphone, title: "Total Campaigns", value: String(total), trend: "Live", note: `${total} in workspace`, tone: "red" },
       { icon: Play, title: "Active Campaigns", value: String(active), trend: `${total ? Math.round((active / total) * 100) : 0}%`, note: "Of total campaigns", tone: "green" },
@@ -370,7 +382,7 @@ export function CampaignsPage() {
                 : "text-[#5f6c83] hover:text-[#29354e]"
                 }`}
             >
-              {tab.label} {liveCampaigns ? `(${allDisplayCampaigns.length})` : `(${tab.count})`}
+              {tab.label} ({tabCounts[tab.filter]})
             </button>
           ))}
           <div className="ml-auto hidden shrink-0 items-center gap-2 lg:flex">

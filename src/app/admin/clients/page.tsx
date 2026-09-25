@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function AdminClientsPage() {
   return (
     <Suspense fallback={null}>
-      <ClientsListPage />
+      <ClientsListPage basePath="/admin/clients" />
     </Suspense>
   );
 }

@@ -136,11 +136,18 @@ export const campaignsApi = {
     payload: CreateCampaignPayload,
     signal?: AbortSignal,
   ): Promise<CampaignRecord> {
+    const backendPayload: Record<string, unknown> = {
+      name: payload.name.trim(),
+    };
+    if (payload.budget !== undefined) backendPayload.budget = payload.budget;
+    if (payload.startDate !== undefined) backendPayload.startDate = payload.startDate;
+    if (payload.endDate !== undefined) backendPayload.endDate = payload.endDate;
+
     return apiClient.request<CampaignRecord>({
       method: "POST",
       path: "/campaigns",
       headers: clientScopeHeaders(companyId, clientId),
-      body: payload,
+      body: backendPayload,
       signal,
     });
   },

@@ -56,6 +56,11 @@ export function useTenancyContext(): TenancyContextState {
       return;
     }
 
+    if (!resolvedCompany) {
+      setIsReady(true);
+      return;
+    }
+
     // Try fetching available clients for this company
     let cancelled = false;
     clientsApi

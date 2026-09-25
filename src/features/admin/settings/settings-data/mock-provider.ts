@@ -22,8 +22,8 @@ export const INITIAL_SETTINGS_STATE: AllSettingsState = {
     metadata: {
       id: "org_namogange_9942a",
       createdAt: "Jan 12, 2024",
-      owner: "Manish Sirohi",
-      ownerEmail: "manishsirohi@encodency.com",
+      owner: "Workspace Administrator",
+      ownerEmail: "admin@organization.com",
       currentPlan: "Enterprise Organization Tier",
       planStatus: "Active",
       totalMembers: 12,

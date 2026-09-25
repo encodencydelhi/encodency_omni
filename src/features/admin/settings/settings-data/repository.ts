@@ -143,7 +143,7 @@ export class SettingsRepository {
         ...current.securitySummary,
         securityScore: Math.min(100, score),
         lastSecurityPolicyChange: "Just now",
-        lastChangedBy: "Manish Sirohi",
+        lastChangedBy: updated.organization.metadata.owner || "Administrator",
       };
     }
 
@@ -152,9 +152,9 @@ export class SettingsRepository {
       const newActivity: SettingsActivityItem = {
         id: `act_${Date.now()}`,
         user: {
-          name: "Manish Sirohi",
-          email: "manishsirohi@encodency.com",
-          role: "Organization Owner",
+          name: updated.organization.metadata.owner || "Workspace Admin",
+          email: updated.organization.metadata.ownerEmail || "admin@workspace.com",
+          role: "Organization Admin",
         },
         action: activityNote.action,
         section: activityNote.section,
@@ -162,7 +162,7 @@ export class SettingsRepository {
         previousValue: "Previous configuration",
         newValue: "Updated configuration",
         timestamp: "Just now",
-        ipAddress: "103.21.144.92 (New Delhi, IN)",
+        ipAddress: "Verified Session",
       };
       updated.activity = [newActivity, ...updated.activity.slice(0, 19)];
     }
