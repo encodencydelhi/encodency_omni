@@ -983,10 +983,10 @@ describe("schedulingApi (TASK-11B contracts)", () => {
       limit: 10,
     });
 
-    assert.equal(calls[0]!.url, "/api/v1/content/scheduled-posts");
+    const url = new URL(calls[0]!.url, "http://localhost");
+    assert.equal(url.pathname, "/api/v1/content/scheduled-posts");
     assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
     assert.equal(calls[0]!.init.headers["x-client-id"], clientId);
-    const url = new URL(calls[0]!.url, "http://localhost");
     assert.equal(url.searchParams.get("status"), "SCHEDULED");
     assert.equal(url.searchParams.get("draftId"), draftId);
     assert.equal(url.searchParams.get("from"), "2026-10-01T00:00:00Z");

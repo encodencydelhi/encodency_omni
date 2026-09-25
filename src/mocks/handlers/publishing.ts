@@ -184,8 +184,16 @@ function toTargetResponse(target: MockTarget) {
     : target.connectionStatus !== "ACTIVE"
       ? "integration_reconnect_required"
       : null;
-  const { supported: _supported, tokenExpiresAt: _tokenExpiresAt, canRefreshToken: _canRefreshToken, ...rest } = target;
-  return { ...rest, publishable: reason === null, reason };
+  return {
+    resourceMappingId: target.resourceMappingId,
+    resourceType: target.resourceType,
+    externalResourceId: target.externalResourceId,
+    integrationId: target.integrationId,
+    provider: target.provider,
+    connectionStatus: target.connectionStatus,
+    publishable: reason === null,
+    reason,
+  };
 }
 
 function parseInstant(value: unknown, field: string): Date {
