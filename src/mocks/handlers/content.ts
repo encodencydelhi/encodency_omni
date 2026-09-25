@@ -63,7 +63,7 @@ const mockCampaigns: MockCampaign[] = [
   },
 ];
 
-const mockDrafts: MockDraft[] = [
+export const mockDrafts: MockDraft[] = [
   {
     id: "draft-001",
     companyId: "development-company-id",

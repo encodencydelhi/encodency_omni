@@ -19,6 +19,9 @@ const { tenancyHarnessService } = await import("@/features/system-health/service
 const { integrationsApi } = await import("@/features/admin/integrations/live/integrations-api");
 const { campaignsApi } = await import("@/features/admin/campaigns/live/campaigns-api");
 const { draftsApi } = await import("@/features/admin/content/live/drafts-api");
+const { schedulingApi, QUEUE_RECOVERY_WARNING, TOKEN_EXPIRY_WARNING } = await import(
+  "@/features/admin/content/live/scheduling-api"
+);
 const { dashboardService } = await import("@/features/dashboard/services/dashboard-service");
 const { ApiError } = await import("@/types/api");
 
@@ -800,6 +803,257 @@ describe("campaignsApi.get (TASK-11A contract)", () => {
     assert.equal(calls[0]!.init.headers["x-client-id"], clientId);
     assert.equal(record.name, "Q4 Growth Drive");
     assert.equal(record.revision, 3);
+  });
+});
+
+describe("schedulingApi (TASK-11B contracts)", () => {
+  const companyId = "cmp-100";
+  const clientId = "cli-200";
+  const draftId = "11111111-1111-4111-8111-111111111111";
+  const variantId = "22222222-2222-4222-8222-222222222222";
+  const postId = "33333333-3333-4333-8333-333333333333";
+
+  it("GET .../targets sends client scope and reads publishable/reason", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        items: [
+          {
+            resourceMappingId: "map-1",
+            resourceType: "FACEBOOK_PAGE",
+            externalResourceId: "104857600000001",
+            integrationId: "int-1",
+            provider: "META",
+            connectionStatus: "ACTIVE",
+            publishable: true,
+            reason: null,
+          },
+          {
+            resourceMappingId: "map-2",
+            resourceType: "FACEBOOK_PAGE",
+            externalResourceId: "104857600000002",
+            integrationId: "int-2",
+            provider: "META",
+            connectionStatus: "EXPIRED",
+            publishable: false,
+            reason: "integration_reconnect_required",
+          },
+        ],
+      },
+    });
+
+    const targets = await schedulingApi.targets(companyId, clientId, draftId, variantId);
+
+    assert.equal(calls[0]!.url, `/api/v1/content/drafts/${draftId}/variants/${variantId}/targets`);
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.equal(calls[0]!.init.headers["x-client-id"], clientId);
+    assert.equal(targets.items.length, 2);
+    assert.equal(targets.items[0]!.publishable, true);
+    assert.equal(targets.items[1]!.reason, "integration_reconnect_required");
+  });
+
+  it("POST .../schedule sends exactly the three contract fields and returns warnings", async () => {
+    responses.push({
+      status: 201,
+      body: {
+        id: postId,
+        status: "SCHEDULED",
+        scheduledFor: "2026-10-01T09:30:00.000Z",
+        draftRevision: 3,
+        warnings: [QUEUE_RECOVERY_WARNING],
+      },
+    });
+
+    const created = await schedulingApi.schedule(companyId, clientId, draftId, variantId, {
+      resourceMappingId: "map-1",
+      scheduledFor: "2026-10-01T09:30:00+05:30",
+      expectedDraftRevision: 3,
+    });
+
+    assert.equal(calls[0]!.url, `/api/v1/content/drafts/${draftId}/variants/${variantId}/schedule`);
+    assert.equal(calls[0]!.init.method, "POST");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.equal(calls[0]!.init.headers["x-client-id"], clientId);
+    assert.deepEqual(body(calls[0]!), {
+      resourceMappingId: "map-1",
+      scheduledFor: "2026-10-01T09:30:00+05:30",
+      expectedDraftRevision: 3,
+    });
+    assert.deepEqual(created.warnings, [QUEUE_RECOVERY_WARNING]);
+    assert.equal(schedulingApi.describeScheduleWarning(QUEUE_RECOVERY_WARNING).includes("queue recovery"), true);
+    assert.equal(schedulingApi.describeScheduleWarning(TOKEN_EXPIRY_WARNING).length > 0, true);
+  });
+
+  it("409 revision_conflict exposes currentRevision for the reload path", async () => {
+    responses.push({
+      status: 409,
+      body: {
+        message: "This draft was changed by someone else. Reload it before scheduling.",
+        reason: "revision_conflict",
+        currentRevision: 5,
+      },
+    });
+
+    await assert.rejects(
+      schedulingApi.schedule(companyId, clientId, draftId, variantId, {
+        resourceMappingId: "map-1",
+        scheduledFor: "2026-10-01T09:30:00Z",
+        expectedDraftRevision: 3,
+      }),
+      (err: unknown) => {
+        if (!ApiError.isApiError(err)) return false;
+        assert.equal(err.status, 409);
+        assert.equal(err.reason, "revision_conflict");
+        assert.equal(schedulingApi.isRevisionConflict(err), true);
+        assert.equal(schedulingApi.conflictingRevision(err), 5);
+        return true;
+      },
+    );
+  });
+
+  it("409 already_scheduled exposes the duplicate's scheduledPostId", async () => {
+    responses.push({
+      status: 409,
+      body: { message: "This variant is already scheduled to this target.", reason: "already_scheduled", scheduledPostId: postId },
+    });
+
+    await assert.rejects(
+      schedulingApi.schedule(companyId, clientId, draftId, variantId, {
+        resourceMappingId: "map-1",
+        scheduledFor: "2026-10-01T09:30:00Z",
+        expectedDraftRevision: 3,
+      }),
+      (err: unknown) => {
+        if (!ApiError.isApiError(err)) return false;
+        assert.equal(schedulingApi.isAlreadyScheduled(err), true);
+        assert.equal(schedulingApi.existingScheduledPostId(err), postId);
+        return true;
+      },
+    );
+  });
+
+  it("409 integration_reconnect_required is detected on schedule", async () => {
+    responses.push({
+      status: 409,
+      body: { message: "The connection for this target must be reconnected first.", reason: "integration_reconnect_required" },
+    });
+
+    await assert.rejects(
+      schedulingApi.schedule(companyId, clientId, draftId, variantId, {
+        resourceMappingId: "map-2",
+        scheduledFor: "2026-10-01T09:30:00Z",
+        expectedDraftRevision: 3,
+      }),
+      (err: unknown) => ApiError.isApiError(err) && schedulingApi.isReconnectRequired(err),
+    );
+  });
+
+  it("400 channel guards keep their reason discriminators", async () => {
+    responses.push(
+      { status: 400, body: { message: "Publishing to INSTAGRAM_ACCOUNT is not available yet.", reason: "channel_not_supported_yet" } },
+      { status: 400, body: { message: "This target does not match the variant’s channel.", reason: "channel_mismatch" } },
+      { status: 400, body: { message: "Content is too long for LINKEDIN_ORGANIZATION (max 3000 characters).", reason: "content_too_long_for_channel" } },
+      { status: 400, body: { message: "scheduledFor must be at least 2 minutes from now." } },
+    );
+
+    const attempt = () =>
+      schedulingApi.schedule(companyId, clientId, draftId, variantId, {
+        resourceMappingId: "map-1",
+        scheduledFor: "2026-10-01T09:30:00Z",
+        expectedDraftRevision: 3,
+      });
+
+    await assert.rejects(attempt(), (err: unknown) => ApiError.isApiError(err) && schedulingApi.isChannelNotSupported(err) && err.status === 400);
+    await assert.rejects(attempt(), (err: unknown) => ApiError.isApiError(err) && schedulingApi.isChannelMismatch(err));
+    await assert.rejects(attempt(), (err: unknown) => ApiError.isApiError(err) && schedulingApi.isContentTooLong(err));
+    await assert.rejects(attempt(), (err: unknown) => ApiError.isApiError(err) && err.status === 400 && !err.reason && err.message.includes("2 minutes"));
+  });
+
+  it("GET /content/scheduled-posts forwards list filters", async () => {
+    responses.push({ status: 200, body: { items: [], total: 0, page: 2, limit: 10 } });
+
+    const list = await schedulingApi.list(companyId, clientId, {
+      status: "SCHEDULED",
+      draftId,
+      from: "2026-10-01T00:00:00Z",
+      to: "2026-11-01T00:00:00Z",
+      search: "ganga",
+      page: 2,
+      limit: 10,
+    });
+
+    assert.equal(calls[0]!.url, "/api/v1/content/scheduled-posts");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.equal(calls[0]!.init.headers["x-client-id"], clientId);
+    const url = new URL(calls[0]!.url, "http://localhost");
+    assert.equal(url.searchParams.get("status"), "SCHEDULED");
+    assert.equal(url.searchParams.get("draftId"), draftId);
+    assert.equal(url.searchParams.get("from"), "2026-10-01T00:00:00Z");
+    assert.equal(url.searchParams.get("to"), "2026-11-01T00:00:00Z");
+    assert.equal(url.searchParams.get("search"), "ganga");
+    assert.equal(url.searchParams.get("page"), "2");
+    assert.equal(url.searchParams.get("limit"), "10");
+    assert.equal(list.total, 0);
+  });
+
+  it("GET /content/scheduled-posts/:id returns the publishing status incl. OUTCOME_UNKNOWN", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        id: postId,
+        status: "OUTCOME_UNKNOWN",
+        failureCode: "missing_post_id",
+        attemptCount: 1,
+        draftRevision: 3,
+        draftChangedSinceScheduled: true,
+        scheduledFor: "2026-10-01T09:30:00.000Z",
+        channel: "FACEBOOK_PAGE",
+        target: { resourceType: "FACEBOOK_PAGE", externalResourceId: "104857600000001" },
+      },
+    });
+
+    const post = await schedulingApi.get(companyId, clientId, postId);
+
+    assert.equal(calls[0]!.url, `/api/v1/content/scheduled-posts/${postId}`);
+    assert.equal(post.status, "OUTCOME_UNKNOWN");
+    assert.equal(post.failureCode, "missing_post_id");
+    assert.equal(post.draftChangedSinceScheduled, true);
+  });
+
+  it("POST /content/scheduled-posts/:id/cancel is body-less and handles not_cancellable", async () => {
+    responses.push(
+      { status: 200, body: { id: postId, status: "CANCELLED", cancelledAt: "2026-09-25T10:00:00.000Z" } },
+      { status: 409, body: { message: "Only a scheduled post that has not started publishing can be cancelled.", reason: "not_cancellable", status: "PUBLISHING" } },
+    );
+
+    const cancelled = await schedulingApi.cancel(companyId, clientId, postId);
+    assert.equal(calls[0]!.url, `/api/v1/content/scheduled-posts/${postId}/cancel`);
+    assert.equal(calls[0]!.init.method, "POST");
+    assert.equal(calls[0]!.init.body, undefined, "cancel takes no body");
+    assert.equal(cancelled.status, "CANCELLED");
+
+    await assert.rejects(
+      schedulingApi.cancel(companyId, clientId, postId),
+      (err: unknown) => {
+        if (!ApiError.isApiError(err)) return false;
+        assert.equal(schedulingApi.isNotCancellable(err), true);
+        assert.equal(err.detail<string>("status"), "PUBLISHING");
+        return true;
+      },
+    );
+  });
+
+  it("rejects a missing Client scope before any network call", async () => {
+    await assert.rejects(
+      schedulingApi.list(companyId, ""),
+      (err: unknown) => ApiError.isApiError(err) && err.code === "NO_CLIENT_SELECTED",
+    );
+    await assert.rejects(
+      schedulingApi.targets("", clientId, draftId, variantId),
+      (err: unknown) => ApiError.isApiError(err) && err.code === "NO_COMPANY_SELECTED",
+    );
+    assert.equal(calls.length, 0);
   });
 });
 

@@ -28,8 +28,28 @@ import { ContentTypeSelectorInline } from "./ContentTypeSelector";
 import { PlatformOverrideEditor } from "./PlatformOverrideEditor";
 import { RatioSelector } from "./RatioSelector";
 import { ScheduleBuilder } from "./ScheduleBuilder";
+import { ScheduledPostsPanel } from "./ScheduledPostsPanel";
 import { UTMBuilder } from "./UTMBuilder";
 import { PlatformValidationPanel } from "./PlatformValidation";
+
+/** Backend draft-variant channel → the composer's platform key. */
+const CHANNEL_TO_PLATFORM: Record<string, Platform> = {
+  FACEBOOK_PAGE: "facebook",
+  INSTAGRAM_ACCOUNT: "instagram",
+  LINKEDIN_ORGANIZATION: "linkedin",
+  GOOGLE_BUSINESS_LOCATION: "google-business",
+};
+
+function variantsToPlatformMap(
+  variants: { id: string; channel: string }[],
+): Partial<Record<Platform, string>> {
+  const map: Partial<Record<Platform, string>> = {};
+  for (const variant of variants) {
+    const platform = CHANNEL_TO_PLATFORM[variant.channel];
+    if (platform) map[platform] = variant.id;
+  }
+  return map;
+}
 
 export function CreateContentTab() {
   /* ── State ── */
@@ -76,6 +96,7 @@ export function CreateContentTab() {
   const { companyId, clientId } = useTenancyContext();
   const [savedDraftId, setSavedDraftId] = useState<string | null>(null);
   const [currentRevision, setCurrentRevision] = useState<number | null>(null);
+  const [variantIds, setVariantIds] = useState<Partial<Record<Platform, string>>>({});
   const [isSavingDraft, setIsSavingDraft] = useState<boolean>(false);
   const [conflictNotice, setConflictNotice] = useState<string | null>(null);
 
@@ -84,6 +105,7 @@ export function CreateContentTab() {
     try {
       const latest = await draftsApi.get(companyId, clientId, savedDraftId);
       setCurrentRevision(latest.revision);
+      setVariantIds(variantsToPlatformMap(latest.variants));
       setMasterContent((prev) => ({
         ...prev,
         caption: latest.content,
@@ -139,6 +161,7 @@ export function CreateContentTab() {
           variants,
         });
         setCurrentRevision(updated.revision);
+        setVariantIds(variantsToPlatformMap(updated.variants));
         toast.success(`Draft updated successfully (Revision ${updated.revision})`);
       } else {
         // Create new draft
@@ -149,6 +172,7 @@ export function CreateContentTab() {
         });
         setSavedDraftId(created.id);
         setCurrentRevision(created.revision);
+        setVariantIds(variantsToPlatformMap(created.variants));
         toast.success(`Draft saved successfully (Revision ${created.revision})`);
       }
     } catch (err: unknown) {
@@ -411,6 +435,16 @@ export function CreateContentTab() {
             </button>
           </div>
         )}
+
+        {/* Publishing targets, schedule creation, scheduled-post list (TASK-11B) */}
+        <ScheduledPostsPanel
+          draftId={savedDraftId}
+          revision={currentRevision}
+          channels={channels}
+          schedules={schedules}
+          variantIds={variantIds}
+          onReloadDraft={() => void reloadLatestDraft()}
+        />
 
         {/* Approval */}
         <Card>

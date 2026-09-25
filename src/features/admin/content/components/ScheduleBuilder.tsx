@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Clock3, Calendar, Zap, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
@@ -7,6 +7,7 @@ import { SelectField } from "./ui-fields";
 import { PlatformBadge } from "./ui-platform";
 import type { Platform, PlatformSchedule, ScheduleOption } from "../types/content.types";
 import { PLATFORM_META } from "../config/platform-config";
+import { timeLabels, upcomingDateLabels } from "../live/schedule-datetime";
 
 type Props = {
   platforms: Platform[];
@@ -17,6 +18,13 @@ type Props = {
 export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
   const [expanded, setExpanded] = useState<Platform | null>(null);
   const [bulkSchedule, setBulkSchedule] = useState<ScheduleOption>("now");
+
+  // Real, forward-looking options so a chosen slot maps to a valid
+  // ISO-with-offset value (the backend rejects a bare date or a past slot).
+  const dateOptions = useMemo(() => upcomingDateLabels(), []);
+  const timeOptions = useMemo(() => timeLabels(), []);
+  const defaultDate = dateOptions[1] ?? dateOptions[0] ?? "";
+  const defaultTime = "10:00 AM";
 
   const getSchedule = (p: Platform): PlatformSchedule => {
     return schedules.find(s => s.platform === p) ?? { platform: p, schedule: "now" };
@@ -34,8 +42,8 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
     onChange(platforms.map(p => ({
       platform: p,
       schedule: bulkSchedule,
-      date: bulkSchedule === "later" ? "Sep 14, 2026" : undefined,
-      time: bulkSchedule === "later" ? "10:00 AM" : undefined,
+      date: bulkSchedule === "later" ? defaultDate : undefined,
+      time: bulkSchedule === "later" ? defaultTime : undefined,
     })));
   };
 
@@ -93,8 +101,8 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
                         key={val}
                         onClick={() => updateSchedule(p, {
                           schedule: val as ScheduleOption,
-                          date: val === "later" ? sched.date ?? "Sep 14, 2026" : undefined,
-                          time: val === "later" ? sched.time ?? "10:00 AM" : undefined,
+                          date: val === "later" ? sched.date ?? defaultDate : undefined,
+                          time: val === "later" ? sched.time ?? defaultTime : undefined,
                         })}
                         className={cn(
                           "flex items-center justify-center gap-1 rounded-sm border py-1.5 text-[10.5px] font-semibold transition",
@@ -114,14 +122,14 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
                     <div className="mt-2 grid grid-cols-2 gap-1.5">
                       <SelectField
                         label="Date"
-                        value={sched.date ?? "Sep 14, 2026"}
-                        options={["Sep 13, 2026", "Sep 14, 2026", "Sep 15, 2026", "Sep 16, 2026", "Sep 17, 2026"]}
+                        value={sched.date ?? defaultDate}
+                        options={dateOptions}
                         onChange={(v) => updateSchedule(p, { date: v })}
                       />
                       <SelectField
                         label="Time"
-                        value={sched.time ?? "10:00 AM"}
-                        options={["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM"]}
+                        value={sched.time ?? defaultTime}
+                        options={timeOptions}
                         onChange={(v) => updateSchedule(p, { time: v })}
                       />
                     </div>

@@ -6,6 +6,7 @@ import { platformRoutes } from "./handlers/platform";
 import { reportsRoutes } from "./handlers/reports";
 import { tenantRoutes } from "./handlers/tenants";
 import { contentRoutes } from "./handlers/content";
+import { publishingRoutes } from "./handlers/publishing";
 import { MockRouter } from "./lib/router";
 import { MockTransport } from "./transport";
 
@@ -26,6 +27,7 @@ export function createMockTransport(): Transport {
   router.register(controlRoutes);
   router.register(reportsRoutes);
   router.register(contentRoutes);
+  router.register(publishingRoutes);
 
   return new MockTransport(router);
 }
