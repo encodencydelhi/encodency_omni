@@ -15,6 +15,7 @@ import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHea
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ROUTES } from "@/config/routes";
+import { brandingApi, BRANDING_UPLOAD_LIMITS, describeBrandingError } from "@/features/admin/settings/live/branding-api";
 import { cn } from "@/lib/utils/cn";
 import { formatCurrency, getInitials } from "@/lib/utils/format";
 import type { BillingCycle } from "@/types/domain/subscription";
@@ -201,19 +202,22 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
 
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
+  // The Company has no id yet, so the chosen file waits here and is uploaded
+  // through the Super Admin logo route right after creation succeeds.
+  const [pendingLogoFile, setPendingLogoFile] = useState<File | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const handleLogoUpload = (file: File | undefined) => {
     if (!file) return;
-    const accepted = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
-    if (!accepted.includes(file.type)) {
-      setLogoError("Please upload a PNG, JPG, WebP, or SVG image.");
-      toast.error("Invalid image format", { description: "Use PNG, JPG, WebP, or SVG." });
+    const limits = BRANDING_UPLOAD_LIMITS.logo;
+    if (!limits.mimeTypes.includes(file.type)) {
+      setLogoError("Please upload a PNG, JPG or WebP image.");
+      toast.error("Invalid image format", { description: "Use PNG, JPG or WebP." });
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      setLogoError("The image must be 2MB or smaller.");
-      toast.error("Image too large", { description: "Maximum image size is 2MB." });
+    if (file.size > limits.maxBytes) {
+      setLogoError("The image must be 5MB or smaller.");
+      toast.error("Image too large", { description: "Maximum image size is 5MB." });
       return;
     }
 
@@ -222,13 +226,10 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
 
     const reader = new FileReader();
     reader.onload = () => {
-      // Simulate realistic upload progress with loading indicator
-      setTimeout(() => {
-        const result = typeof reader.result === "string" ? reader.result : null;
-        update({ logoUrl: result });
-        setUploadingLogo(false);
-        toast.success("Company logo uploaded");
-      }, 750);
+      update({ logoUrl: typeof reader.result === "string" ? reader.result : null });
+      setPendingLogoFile(file);
+      setUploadingLogo(false);
+      toast.info("Logo selected — it uploads once the Company is created.");
     };
     reader.onerror = () => {
       setUploadingLogo(false);
@@ -240,6 +241,7 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
 
   const removeLogo = () => {
     update({ logoUrl: null });
+    setPendingLogoFile(null);
     setLogoError(null);
     if (logoInputRef.current) logoInputRef.current.value = "";
     toast.info("Company logo removed");
@@ -301,7 +303,9 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
 
     const input: CreateCompanyInput = {
       name: form.name.trim(),
-      logoUrl: form.logoUrl || undefined,
+      // `form.logoUrl` is only a local preview data URL; the real asset is
+      // uploaded through the Super Admin logo route after the Company exists.
+      logoUrl: undefined,
       legalName: form.legalName.trim() || undefined,
       website: form.website.trim() || undefined,
       industry: form.industry,
@@ -333,7 +337,20 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
     try {
       const summary = await mutations.createCompany(input);
       writeDraft(null);
-      setCreated(summary);
+      if (pendingLogoFile) {
+        try {
+          const branding = await brandingApi.uploadSuperAdminLogo(summary.company.id, pendingLogoFile);
+          setCreated({ ...summary, company: { ...summary.company, logoUrl: branding.logo?.url ?? null } });
+          toast.success("Company logo uploaded");
+        } catch (failure) {
+          setCreated(summary);
+          toast.warning("Company created, but the logo could not be uploaded", {
+            description: describeBrandingError(failure),
+          });
+        }
+      } else {
+        setCreated(summary);
+      }
     } catch (failure) {
       const described = describeError(failure);
       setError(described.message);
@@ -350,6 +367,8 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
     setCreated(null);
     setError(null);
     setServerErrors({});
+    setPendingLogoFile(null);
+    setLogoError(null);
   };
 
   const input = (id: keyof WizardForm, label: string, opts: { required?: boolean; type?: string; placeholder?: string; hint?: string; maxLength?: number } = {}) => (
@@ -485,7 +504,7 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
                                 ) : null}
                               </div>
                               <p className="text-2xs text-muted-foreground">
-                                PNG, JPG, WebP or SVG up to 2MB. Square ratio recommended.
+                                PNG, JPG or WebP up to 5MB. Square ratio recommended.
                               </p>
                               {logoError ? (
                                 <p role="alert" className="text-2xs font-medium text-danger">
@@ -497,7 +516,7 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
                             <input
                               ref={logoInputRef}
                               type="file"
-                              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                              accept={BRANDING_UPLOAD_LIMITS.logo.mimeTypes.join(",")}
                               className="sr-only"
                               tabIndex={-1}
                               aria-label="Upload company logo"

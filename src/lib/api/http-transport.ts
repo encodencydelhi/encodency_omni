@@ -39,6 +39,7 @@ export class HttpTransport implements Transport {
   async request<TResult>(spec: RequestSpec): Promise<TResult> {
     const url = `${this.baseUrl}${spec.path}${buildSearchParams(spec.query)}`;
 
+    const isFormData = typeof FormData !== "undefined" && spec.body instanceof FormData;
     let response: Response;
     try {
       response = await fetch(url, {
@@ -47,10 +48,10 @@ export class HttpTransport implements Transport {
         signal: spec.signal,
         headers: {
           Accept: "application/json",
-          ...(spec.body ? { "Content-Type": "application/json" } : {}),
+          ...(spec.body && !isFormData ? { "Content-Type": "application/json" } : {}),
           ...spec.headers,
         },
-        body: spec.body ? JSON.stringify(spec.body) : undefined,
+        body: isFormData ? (spec.body as BodyInit) : spec.body ? JSON.stringify(spec.body) : undefined,
       });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") throw error;
@@ -70,6 +71,9 @@ export class HttpTransport implements Transport {
       for (const [key, value] of Object.entries(body)) {
         if (!RESERVED_ERROR_KEYS.has(key)) details[key] = value;
       }
+      // Domain error codes (`asset_conflict`, `file_too_large`, …) are not part
+      // of ApiErrorCode, so they are surfaced here instead of being dropped.
+      if (typeof body.code === "string") details.serverCode = body.code;
       throw new ApiError({
         code: body.code ?? STATUS_TO_CODE[response.status] ?? "UNKNOWN",
         message: errorMessage(body),

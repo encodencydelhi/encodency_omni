@@ -1,10 +1,11 @@
 "use client";
 
-import { Loader2Icon, PlusIcon, XIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Loader2Icon, PlusIcon, UploadIcon, Trash2Icon, XIcon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils/cn";
@@ -15,6 +16,7 @@ import { useUnsavedGuard } from "../hooks/use-unsaved-guard";
 import { isValidEmail, isValidPhone, isValidWebsite } from "../lib/validation";
 import { ErrorBanner } from "./flows/flow-kit";
 import { Field, Panel } from "./primitives";
+import { brandingApi, BRANDING_UPLOAD_LIMITS, describeBrandingError } from "@/features/admin/settings/live/branding-api";
 
 const NONE = "__none__";
 
@@ -56,11 +58,71 @@ export function CompanyEditDrawer({ summary, onClose }: { summary: CompanySummar
   const staff = useStaff();
   const initial = useMemo(() => toForm(summary), [summary]);
   const [form, setForm] = useState<EditForm>(initial);
+  const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(summary.company.logoUrl);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoDeleting, setLogoDeleting] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [customTag, setCustomTag] = useState("");
   const [attempted, setAttempted] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
+
+  // The company summary carries no logo, so the stored asset is read from the
+  // branding API whenever this Company is opened.
+  useEffect(() => {
+    let active = true;
+    brandingApi
+      .get(summary.company.id)
+      .then((res) => {
+        if (active) setCurrentLogoUrl(res.logo?.url ?? null);
+      })
+      .catch(() => {
+        // Keep whatever the summary provided; branding is non-blocking here.
+      });
+    return () => {
+      active = false;
+    };
+  }, [summary.company.id]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const limits = BRANDING_UPLOAD_LIMITS.logo;
+    if (!limits.mimeTypes.includes(file.type)) {
+      toast.error("Invalid image format", { description: "Use PNG, JPG or WebP." });
+      return;
+    }
+    if (file.size > limits.maxBytes) {
+      toast.error("File is too large", { description: "Maximum logo size is 5MB." });
+      return;
+    }
+
+    setLogoUploading(true);
+    try {
+      const res = await brandingApi.uploadSuperAdminLogo(summary.company.id, file);
+      setCurrentLogoUrl(res.logo?.url || null);
+      toast.success("Company logo updated successfully.");
+    } catch (err: unknown) {
+      toast.error("Logo upload failed", { description: describeBrandingError(err) });
+    } finally {
+      setLogoUploading(false);
+      if (logoInputRef.current) logoInputRef.current.value = "";
+    }
+  };
+
+  const handleLogoDelete = async () => {
+    setLogoDeleting(true);
+    try {
+      await brandingApi.removeSuperAdminLogo(summary.company.id);
+      setCurrentLogoUrl(null);
+      toast.success("Company logo removed.");
+    } catch (err: unknown) {
+      toast.error("Failed to remove logo", { description: describeBrandingError(err) });
+    } finally {
+      setLogoDeleting(false);
+    }
+  };
 
   const update = (patch: Partial<EditForm>) => setForm((current) => ({ ...current, ...patch }));
   const dirty = JSON.stringify(form) !== JSON.stringify(initial);
@@ -169,6 +231,64 @@ export function CompanyEditDrawer({ summary, onClose }: { summary: CompanySummar
                 <div className="sm:col-span-2">{text("name", "Company name", { required: true })}</div>
                 {text("legalName", "Legal name")}
                 {text("website", "Website")}
+                <div className="sm:col-span-2 pt-2 border-t border-border/50">
+                  <Label className="text-xs font-medium text-muted-foreground block mb-2">Company logo</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-lg border border-border bg-muted/40 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {currentLogoUrl ? (
+                        <img src={currentLogoUrl} alt="Company logo" className="h-full w-full object-contain p-1" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground text-center px-1 font-medium">No logo</span>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <input
+                          ref={logoInputRef}
+                          type="file"
+                          accept={BRANDING_UPLOAD_LIMITS.logo.mimeTypes.join(",")}
+                          className="hidden"
+                          onChange={handleLogoUpload}
+                          disabled={logoUploading || logoDeleting}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={logoUploading || logoDeleting}
+                          onClick={() => logoInputRef.current?.click()}
+                        >
+                          {logoUploading ? (
+                            <Loader2Icon className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <UploadIcon className="mr-1.5 h-3.5 w-3.5" />
+                          )}
+                          {currentLogoUrl ? "Replace logo" : "Upload logo"}
+                        </Button>
+                        {currentLogoUrl && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            disabled={logoUploading || logoDeleting}
+                            onClick={handleLogoDelete}
+                          >
+                            {logoDeleting ? (
+                              <Loader2Icon className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2Icon className="mr-1.5 h-3.5 w-3.5" />
+                            )}
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        PNG, JPG or WEBP up to 5MB. Updates the primary company logo.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </Panel>
 

@@ -7,6 +7,7 @@ import { reportsRoutes } from "./handlers/reports";
 import { tenantRoutes } from "./handlers/tenants";
 import { contentRoutes } from "./handlers/content";
 import { publishingRoutes } from "./handlers/publishing";
+import { brandingRoutes } from "./handlers/branding";
 import { MockRouter } from "./lib/router";
 import { MockTransport } from "./transport";
 
@@ -28,6 +29,7 @@ export function createMockTransport(): Transport {
   router.register(reportsRoutes);
   router.register(contentRoutes);
   router.register(publishingRoutes);
+  router.register(brandingRoutes);
 
   return new MockTransport(router);
 }

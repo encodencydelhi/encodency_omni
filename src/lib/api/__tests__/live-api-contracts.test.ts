@@ -24,6 +24,8 @@ const { schedulingApi, QUEUE_RECOVERY_WARNING, TOKEN_EXPIRY_WARNING } = await im
 );
 const { dashboardService } = await import("@/features/dashboard/services/dashboard-service");
 const { ApiError } = await import("@/types/api");
+const { brandingApi, BRANDING_UPLOAD_LIMITS, describeBrandingError, isAssetConflict, isCompanyInactive, isFileTooLarge, isStorageUnavailable } =
+  await import("@/features/admin/settings/live/branding-api");
 
 interface Call {
   url: string;
@@ -76,6 +78,16 @@ describe("HttpTransport", () => {
     await assert.rejects(new HttpTransport("/api/v1").request({ method: "GET", path: "/clients" }), (error: unknown) => ApiError.isApiError(error) && error.code === "FORBIDDEN" && error.message === "Company access denied");
     stop();
     assert.equal(expired, 0, "403 is access-denied, not a lost session");
+  });
+
+  it("keeps domain error codes (asset_conflict, file_too_large) reachable via details.serverCode", async () => {
+    responses.push({ status: 409, body: { message: "Slot changed", code: "asset_conflict", reason: "asset_conflict" } });
+    await assert.rejects(new HttpTransport("/api/v1").request({ method: "GET", path: "/settings/branding" }), (error: unknown) => {
+      if (!ApiError.isApiError(error)) return false;
+      assert.equal(error.detail<string>("serverCode"), "asset_conflict");
+      assert.equal(error.reason, "asset_conflict");
+      return true;
+    });
   });
 
   it("joins NestJS validation message arrays into readable text", async () => {
@@ -1054,6 +1066,182 @@ describe("schedulingApi (TASK-11B contracts)", () => {
       (err: unknown) => ApiError.isApiError(err) && err.code === "NO_COMPANY_SELECTED",
     );
     assert.equal(calls.length, 0);
+  });
+});
+
+describe("brandingApi (IMAGE-01 Phase 2 contracts)", () => {
+  const companyId = "c-branding-1";
+
+  it("GET /settings/branding forwards x-company-id and parses slots", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        logo: { id: "a-1", purpose: "logo", url: "https://res.cloudinary.com/logo.png", mimeType: "image/png", format: "png", bytes: 1024, width: 200, height: 50, uploadedAt: "2026-09-25T10:00:00Z" },
+        favicon: null,
+        reportLogo: null,
+        emailLogo: null,
+      },
+    });
+
+    const result = await brandingApi.get(companyId);
+    assert.equal(calls[0]!.url, "/api/v1/settings/branding");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.equal(result.logo?.id, "a-1");
+    assert.equal(result.favicon, null);
+  });
+
+  it("PUT /settings/branding/:purpose sends multipart FormData and replacesAssetId", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        logo: null,
+        favicon: { id: "a-fav", purpose: "favicon", url: "https://res.cloudinary.com/fav.png", mimeType: "image/png", format: "png", bytes: 512, width: 32, height: 32, uploadedAt: "2026-09-25T10:00:00Z" },
+        reportLogo: null,
+        emailLogo: null,
+      },
+    });
+
+    const file = new Blob(["fake favicon"], { type: "image/png" });
+    const result = await brandingApi.upload("favicon", file, { replacesAssetId: "old-asset-1", companyId });
+
+    assert.equal(calls[0]!.url, "/api/v1/settings/branding/favicon");
+    assert.equal(calls[0]!.init.method, "PUT");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.ok(calls[0]!.init.body instanceof FormData);
+    const form = calls[0]!.init.body as FormData;
+    assert.ok(form.has("file"));
+    assert.equal(form.get("replacesAssetId"), "old-asset-1");
+    assert.equal(result.favicon?.id, "a-fav");
+  });
+
+  it("DELETE /settings/branding/:purpose sends x-company-id and clears slot safely", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        logo: null,
+        favicon: null,
+        reportLogo: null,
+        emailLogo: null,
+      },
+    });
+
+    const result = await brandingApi.remove("report-logo", companyId);
+    assert.equal(calls[0]!.url, "/api/v1/settings/branding/report-logo");
+    assert.equal(calls[0]!.init.method, "DELETE");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.equal(result.reportLogo, null);
+  });
+
+  it("PUT and DELETE /super-admin/companies/:companyId/logo operate on Super Admin primary logo route", async () => {
+    responses.push(
+      {
+        status: 200,
+        body: {
+          logo: { id: "a-sa-logo", purpose: "logo", url: "https://res.cloudinary.com/sa.png", mimeType: "image/png", format: "png", bytes: 2048, width: 400, height: 100, uploadedAt: "2026-09-25T10:00:00Z" },
+          favicon: null,
+          reportLogo: null,
+          emailLogo: null,
+        },
+      },
+      {
+        status: 200,
+        body: { logo: null, favicon: null, reportLogo: null, emailLogo: null },
+      },
+    );
+
+    const file = new Blob(["logo data"], { type: "image/png" });
+    const uploaded = await brandingApi.uploadSuperAdminLogo("c-target-1", file);
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/companies/c-target-1/logo");
+    assert.equal(calls[0]!.init.method, "PUT");
+    assert.equal(uploaded.logo?.id, "a-sa-logo");
+
+    const removed = await brandingApi.removeSuperAdminLogo("c-target-1");
+    assert.equal(calls[1]!.url, "/api/v1/super-admin/companies/c-target-1/logo");
+    assert.equal(calls[1]!.init.method, "DELETE");
+    assert.equal(removed.logo, null);
+  });
+
+  it("identifies 409 asset_conflict, 413 file_too_large, 503 storage_not_configured, and 502 storage_unavailable", async () => {
+    responses.push(
+      { status: 409, body: { code: "asset_conflict", message: "Asset has been modified concurrently" } },
+      { status: 413, body: { code: "PAYLOAD_TOO_LARGE", message: "File exceeds 2MB limit" } },
+      { status: 503, body: { code: "storage_not_configured", message: "Cloudinary credentials missing" } },
+      { status: 502, body: { code: "storage_unavailable", message: "Cloudinary unreachable" } },
+    );
+
+    await assert.rejects(brandingApi.get(companyId), (err: unknown) => isAssetConflict(err) === true);
+    await assert.rejects(brandingApi.get(companyId), (err: unknown) => isFileTooLarge(err) === true);
+    await assert.rejects(brandingApi.get(companyId), (err: unknown) => isStorageUnavailable(err) === true);
+    await assert.rejects(brandingApi.get(companyId), (err: unknown) => isStorageUnavailable(err) === true);
+  });
+
+  it("lets the browser build the multipart boundary (no forced Content-Type)", async () => {
+    responses.push({ status: 200, body: { logo: null, favicon: null, reportLogo: null, emailLogo: null } });
+
+    await brandingApi.upload("logo", new Blob(["logo"], { type: "image/png" }), { companyId });
+
+    const headers = calls[0]!.init.headers;
+    assert.equal("Content-Type" in headers, false, "FormData must supply its own boundary");
+    assert.equal(headers["x-company-id"], companyId);
+  });
+
+  it("distinguishes 409 asset_conflict from 409 company_not_active", async () => {
+    responses.push(
+      { status: 409, body: { message: "This branding slot was changed by someone else. Reload and try again.", code: "asset_conflict" } },
+      { status: 409, body: { message: "The Company is not active.", code: "company_not_active" } },
+    );
+
+    await assert.rejects(brandingApi.get(companyId), (err: unknown) => {
+      assert.equal(isAssetConflict(err), true);
+      assert.equal(isCompanyInactive(err), false);
+      return true;
+    });
+    await assert.rejects(brandingApi.get(companyId), (err: unknown) => {
+      assert.equal(isAssetConflict(err), false, "a suspended Company is not a slot conflict");
+      assert.equal(isCompanyInactive(err), true);
+      return true;
+    });
+  });
+
+  it("recognises the backend's 400 file_too_large (policy limit, not just 413)", async () => {
+    responses.push({ status: 400, body: { message: "The uploaded image was rejected.", code: "file_too_large" } });
+
+    await assert.rejects(brandingApi.get(companyId), (err: unknown) => isFileTooLarge(err) === true);
+  });
+
+  it("turns image-validation and storage codes into readable copy", async () => {
+    responses.push(
+      { status: 400, body: { message: "The uploaded image was rejected.", code: "unsupported_format" } },
+      { status: 400, body: { message: "The uploaded image was rejected.", code: "not_square" } },
+      { status: 503, body: { message: "The upload could not be completed. Try again.", code: "upload_interrupted" } },
+    );
+
+    const messages: string[] = [];
+    await assert.rejects(brandingApi.get(companyId), (err: unknown) => {
+      messages.push(describeBrandingError(err));
+      return true;
+    });
+    await assert.rejects(brandingApi.get(companyId), (err: unknown) => {
+      messages.push(describeBrandingError(err));
+      return true;
+    });
+    await assert.rejects(brandingApi.get(companyId), (err: unknown) => {
+      messages.push(describeBrandingError(err));
+      return isStorageUnavailable(err);
+    });
+
+    assert.equal(messages[0], "Unsupported image format for this slot.");
+    assert.equal(messages[1], "This slot requires a square image.");
+    assert.equal(messages[2], "The upload could not be completed. Please try again.");
+  });
+
+  it("mirrors the backend upload policies per slot", () => {
+    assert.equal(BRANDING_UPLOAD_LIMITS.logo.maxBytes, 5 * 1024 * 1024);
+    assert.equal(BRANDING_UPLOAD_LIMITS.favicon.maxBytes, 512 * 1024);
+    assert.equal(BRANDING_UPLOAD_LIMITS.favicon.square, true);
+    assert.deepEqual(BRANDING_UPLOAD_LIMITS.logo.mimeTypes, ["image/png", "image/jpeg", "image/webp"]);
+    assert.deepEqual(BRANDING_UPLOAD_LIMITS.favicon.mimeTypes, ["image/png", "image/webp"]);
   });
 });
 

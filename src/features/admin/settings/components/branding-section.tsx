@@ -1,6 +1,4 @@
-"use client";
-
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Palette,
   Upload,
@@ -10,10 +8,25 @@ import {
   FileText,
   Check,
   Sparkles,
+  Loader2,
+  Mail,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BrandingSettings } from "../settings-data/types";
 import { useSettingsCapability } from "../settings-data/capability-provider";
+import { useAuth } from "@/features/auth/components/auth-provider";
+import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
+import {
+  brandingApi,
+  BRANDING_UPLOAD_LIMITS,
+  describeBrandingError,
+  isAssetConflict,
+  isCompanyInactive,
+  isFileTooLarge,
+  isStorageUnavailable,
+  type BrandingPurpose,
+} from "../live/branding-api";
 import { cn } from "@/lib/utils/cn";
 
 interface BrandingSectionProps {
@@ -23,28 +36,183 @@ interface BrandingSectionProps {
 
 type PreviewTab = "sidebar" | "report" | "email";
 
+const PURPOSE_LABEL_MAP: Record<BrandingPurpose, string> = {
+  logo: "Header / Sidebar Logo",
+  favicon: "Browser Favicon",
+  "report-logo": "PDF & Report Logo",
+  "email-logo": "Email Header Logo",
+};
+
+function formatMaxBytes(bytes: number): string {
+  return bytes >= 1024 * 1024 ? `${Math.round((bytes / (1024 * 1024)) * 10) / 10}MB` : `${Math.round(bytes / 1024)}KB`;
+}
+
 export function BrandingSection({ data, onChange }: BrandingSectionProps) {
   const { capabilities } = useSettingsCapability();
+  const { user } = useAuth();
   const [activePreview, setActivePreview] = useState<PreviewTab>("sidebar");
 
   const logoRef = useRef<HTMLInputElement>(null);
   const faviconRef = useRef<HTMLInputElement>(null);
   const reportLogoRef = useRef<HTMLInputElement>(null);
+  const emailLogoRef = useRef<HTMLInputElement>(null);
 
-  const handleAssetUpload = (key: keyof BrandingSettings, file?: File) => {
+  const [assetIds, setAssetIds] = useState<{
+    logo?: string;
+    favicon?: string;
+    reportLogo?: string;
+    emailLogo?: string;
+  }>({});
+
+  const [uploadingPurpose, setUploadingPurpose] = useState<BrandingPurpose | null>(null);
+  const [deletingPurpose, setDeletingPurpose] = useState<BrandingPurpose | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // RBAC: OWNER / ADMIN have write access; MANAGER / VIEWER are read-only
+  const activeCompanyId = getStoredCompanyId();
+  const activeMembership = user?.memberships?.find((m) => m.companyId === activeCompanyId) ?? user?.memberships?.[0];
+  const systemRole = activeMembership?.systemRole;
+  const isReadOnly = (systemRole && systemRole !== "OWNER" && systemRole !== "ADMIN") || !capabilities.canEditBranding;
+
+  // Initial load from live backend API
+  useEffect(() => {
+    let active = true;
+
+    brandingApi
+      .get()
+      .then((res) => {
+        if (!active) return;
+        onChange({
+          logo: res.logo?.url || "",
+          favicon: res.favicon?.url || "",
+          reportLogo: res.reportLogo?.url || "",
+          emailLogo: res.emailLogo?.url || "",
+        });
+        setAssetIds({
+          logo: res.logo?.id,
+          favicon: res.favicon?.id,
+          reportLogo: res.reportLogo?.id,
+          emailLogo: res.emailLogo?.id,
+        });
+      })
+      .catch((err: unknown) => {
+        if (!active) return;
+        setLoadError(describeBrandingError(err));
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleAssetUpload = async (purpose: BrandingPurpose, file?: File) => {
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Asset size exceeds 2MB limit.");
+
+    const limits = BRANDING_UPLOAD_LIMITS[purpose];
+    if (file.size > limits.maxBytes) {
+      toast.error("File is too large", {
+        description: `This slot accepts images up to ${formatMaxBytes(limits.maxBytes)}.`,
+      });
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        onChange({ [key]: reader.result });
-        toast.success(`Branding ${key} updated.`);
+
+    if (file.type && !limits.mimeTypes.includes(file.type)) {
+      toast.error("Unsupported format", {
+        description: `Use ${limits.mimeTypes.map((mime) => mime.replace("image/", "").toUpperCase()).join(" / ")} for this slot.`,
+      });
+      return;
+    }
+
+    const fieldKey =
+      purpose === "report-logo"
+        ? "reportLogo"
+        : purpose === "email-logo"
+          ? "emailLogo"
+          : purpose;
+
+    const currentAssetId = assetIds[fieldKey];
+
+    setUploadingPurpose(purpose);
+    try {
+      const res = await brandingApi.upload(purpose, file, {
+        replacesAssetId: currentAssetId,
+      });
+
+      const updated = res[fieldKey];
+      onChange({ [fieldKey]: updated?.url || "" });
+      setAssetIds((prev) => ({ ...prev, [fieldKey]: updated?.id }));
+      toast.success(`${PURPOSE_LABEL_MAP[purpose]} updated successfully.`);
+    } catch (err: unknown) {
+      if (isAssetConflict(err)) {
+        toast.error("Branding Slot Modified", {
+          description: "This branding slot was changed by someone else. Reloading latest...",
+        });
+        try {
+          const latest = await brandingApi.get();
+          onChange({
+            logo: latest.logo?.url || "",
+            favicon: latest.favicon?.url || "",
+            reportLogo: latest.reportLogo?.url || "",
+            emailLogo: latest.emailLogo?.url || "",
+          });
+          setAssetIds({
+            logo: latest.logo?.id,
+            favicon: latest.favicon?.id,
+            reportLogo: latest.reportLogo?.id,
+            emailLogo: latest.emailLogo?.id,
+          });
+        } catch {
+          // ignore secondary failure
+        }
+      } else if (isFileTooLarge(err)) {
+        toast.error("File Too Large", {
+          description: `This slot accepts images up to ${formatMaxBytes(limits.maxBytes)}.`,
+        });
+      } else if (isStorageUnavailable(err)) {
+        toast.error("Storage Unavailable", {
+          description: "Image storage is temporarily unavailable. Please try again.",
+        });
+      } else if (isCompanyInactive(err)) {
+        toast.error("Company Inactive", {
+          description: describeBrandingError(err),
+        });
+      } else {
+        toast.error("Upload Failed", { description: describeBrandingError(err) });
       }
-    };
-    reader.readAsDataURL(file);
+    } finally {
+      setUploadingPurpose(null);
+    }
+  };
+
+  const handleAssetRemove = async (purpose: BrandingPurpose) => {
+    const fieldKey =
+      purpose === "report-logo"
+        ? "reportLogo"
+        : purpose === "email-logo"
+          ? "emailLogo"
+          : purpose;
+
+    setDeletingPurpose(purpose);
+    try {
+      await brandingApi.remove(purpose);
+      onChange({ [fieldKey]: "" });
+      setAssetIds((prev) => ({ ...prev, [fieldKey]: undefined }));
+      toast.success(`${PURPOSE_LABEL_MAP[purpose]} removed.`);
+    } catch (err: unknown) {
+      if (isStorageUnavailable(err)) {
+        toast.error("Storage Unavailable", {
+          description: "Image storage is temporarily unavailable. Please try again.",
+        });
+      } else {
+        toast.error("Remove Failed", { description: describeBrandingError(err) });
+      }
+    } finally {
+      setDeletingPurpose(null);
+    }
   };
 
   const PRESET_COLORS = ["#10B981", "#2563EB", "#7C3AED", "#EA580C", "#0891B2", "#E11D48", "#111C3A"];
@@ -65,128 +233,225 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
               </p>
             </div>
           </div>
+          {isReadOnly && (
+            <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+              View Only
+            </span>
+          )}
         </div>
 
-        {/* Upload Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          {/* Main Logo */}
+        {loadError && (
+          <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-lg text-[11px] text-red-700">
+            <AlertCircle className="size-3.5 shrink-0" />
+            <span>{loadError}</span>
+          </div>
+        )}
+
+        {/* Upload Cards Grid: 4 slots */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          {/* 1. Main Logo */}
           <div className="p-2.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-xl space-y-1.5 shadow-2xs">
             <div className="text-[11.5px] font-bold text-[#1E293B]">Header / Sidebar Logo</div>
             <div className="h-14 rounded-lg bg-white border border-[#DDE4ED] flex items-center justify-center overflow-hidden p-1.5 shadow-2xs">
-              {data.logo ? (
+              {loading ? (
+                <Loader2 className="size-4 animate-spin text-slate-400" />
+              ) : data.logo ? (
                 <img src={data.logo} alt="Logo" className="max-h-full max-w-full object-contain" />
               ) : (
                 <span className="text-[10px] text-[#94A3B8] font-normal">No logo uploaded</span>
               )}
             </div>
-            <p className="text-[9.5px] text-[#64748B] font-normal">SVG / PNG • Max 2MB</p>
+            <p className="text-[9.5px] text-[#64748B] font-normal">PNG / JPEG / WebP • Max 5MB</p>
             <input
               ref={logoRef}
               type="file"
-              accept="image/*"
+              accept={BRANDING_UPLOAD_LIMITS.logo.mimeTypes.join(",")}
               className="hidden"
-              onChange={(e) => handleAssetUpload("logo", e.target.files?.[0])}
+              onChange={(e) => void handleAssetUpload("logo", e.target.files?.[0])}
             />
             <div className="flex items-center gap-1 pt-0.5">
               <button
                 type="button"
                 onClick={() => logoRef.current?.click()}
-                disabled={!capabilities.canEditBranding}
+                disabled={isReadOnly || uploadingPurpose === "logo"}
                 className="flex-1 py-1 px-2 bg-white border border-[#CBD5E1] rounded-md text-[10.5px] font-semibold text-[#1E293B] hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 shadow-2xs transition-colors"
               >
-                <Upload className="size-3 text-[#2563EB]" /> Upload
+                {uploadingPurpose === "logo" ? (
+                  <Loader2 className="size-3 animate-spin text-[#2563EB]" />
+                ) : (
+                  <Upload className="size-3 text-[#2563EB]" />
+                )}
+                {uploadingPurpose === "logo" ? "Uploading..." : "Upload"}
               </button>
               {data.logo && (
                 <button
                   type="button"
-                  onClick={() => onChange({ logo: "" })}
-                  disabled={!capabilities.canEditBranding}
+                  onClick={() => void handleAssetRemove("logo")}
+                  disabled={isReadOnly || deletingPurpose === "logo"}
                   className="p-1 text-red-500 hover:bg-red-50 rounded-md cursor-pointer disabled:opacity-50 transition-colors"
                   title="Remove logo"
                 >
-                  <Trash2 className="size-3" />
+                  {deletingPurpose === "logo" ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-3" />
+                  )}
                 </button>
               )}
             </div>
           </div>
 
-          {/* Favicon */}
+          {/* 2. Favicon */}
           <div className="p-2.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-xl space-y-1.5 shadow-2xs">
             <div className="text-[11.5px] font-bold text-[#1E293B]">Browser Favicon</div>
             <div className="h-14 rounded-lg bg-white border border-[#DDE4ED] flex items-center justify-center overflow-hidden p-1.5 shadow-2xs">
-              {data.favicon ? (
+              {loading ? (
+                <Loader2 className="size-4 animate-spin text-slate-400" />
+              ) : data.favicon ? (
                 <img src={data.favicon} alt="Favicon" className="size-7 rounded object-cover" />
               ) : (
                 <span className="text-[10px] text-[#94A3B8] font-normal">No favicon</span>
               )}
             </div>
-            <p className="text-[9.5px] text-[#64748B] font-normal">Square 64×64px • ICO / PNG</p>
+            <p className="text-[9.5px] text-[#64748B] font-normal">Square • PNG / WebP • Max 512KB</p>
             <input
               ref={faviconRef}
               type="file"
-              accept="image/*"
+              accept={BRANDING_UPLOAD_LIMITS.favicon.mimeTypes.join(",")}
               className="hidden"
-              onChange={(e) => handleAssetUpload("favicon", e.target.files?.[0])}
+              onChange={(e) => void handleAssetUpload("favicon", e.target.files?.[0])}
             />
             <div className="flex items-center gap-1 pt-0.5">
               <button
                 type="button"
                 onClick={() => faviconRef.current?.click()}
-                disabled={!capabilities.canEditBranding}
+                disabled={isReadOnly || uploadingPurpose === "favicon"}
                 className="flex-1 py-1 px-2 bg-white border border-[#CBD5E1] rounded-md text-[10.5px] font-semibold text-[#1E293B] hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 shadow-2xs transition-colors"
               >
-                <Upload className="size-3 text-[#2563EB]" /> Upload
+                {uploadingPurpose === "favicon" ? (
+                  <Loader2 className="size-3 animate-spin text-[#2563EB]" />
+                ) : (
+                  <Upload className="size-3 text-[#2563EB]" />
+                )}
+                {uploadingPurpose === "favicon" ? "Uploading..." : "Upload"}
               </button>
               {data.favicon && (
                 <button
                   type="button"
-                  onClick={() => onChange({ favicon: "" })}
-                  disabled={!capabilities.canEditBranding}
+                  onClick={() => void handleAssetRemove("favicon")}
+                  disabled={isReadOnly || deletingPurpose === "favicon"}
                   className="p-1 text-red-500 hover:bg-red-50 rounded-md cursor-pointer disabled:opacity-50 transition-colors"
                   title="Remove favicon"
                 >
-                  <Trash2 className="size-3" />
+                  {deletingPurpose === "favicon" ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-3" />
+                  )}
                 </button>
               )}
             </div>
           </div>
 
-          {/* Report / Email Header Logo */}
+          {/* 3. Report Logo */}
           <div className="p-2.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-xl space-y-1.5 shadow-2xs">
             <div className="text-[11.5px] font-bold text-[#1E293B]">PDF & Report Logo</div>
             <div className="h-14 rounded-lg bg-white border border-[#DDE4ED] flex items-center justify-center overflow-hidden p-1.5 shadow-2xs">
-              {data.reportLogo ? (
+              {loading ? (
+                <Loader2 className="size-4 animate-spin text-slate-400" />
+              ) : data.reportLogo ? (
                 <img src={data.reportLogo} alt="Report Logo" className="max-h-full max-w-full object-contain" />
               ) : (
                 <span className="text-[10px] text-[#94A3B8] font-normal">Matches main logo</span>
               )}
             </div>
-            <p className="text-[9.5px] text-[#64748B] font-normal">High-res horizontal • 300 DPI</p>
+            <p className="text-[9.5px] text-[#64748B] font-normal">PNG / JPEG / WebP • Max 5MB</p>
             <input
               ref={reportLogoRef}
               type="file"
-              accept="image/*"
+              accept={BRANDING_UPLOAD_LIMITS["report-logo"].mimeTypes.join(",")}
               className="hidden"
-              onChange={(e) => handleAssetUpload("reportLogo", e.target.files?.[0])}
+              onChange={(e) => void handleAssetUpload("report-logo", e.target.files?.[0])}
             />
             <div className="flex items-center gap-1 pt-0.5">
               <button
                 type="button"
                 onClick={() => reportLogoRef.current?.click()}
-                disabled={!capabilities.canEditBranding}
+                disabled={isReadOnly || uploadingPurpose === "report-logo"}
                 className="flex-1 py-1 px-2 bg-white border border-[#CBD5E1] rounded-md text-[10.5px] font-semibold text-[#1E293B] hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 shadow-2xs transition-colors"
               >
-                <Upload className="size-3 text-[#2563EB]" /> Upload
+                {uploadingPurpose === "report-logo" ? (
+                  <Loader2 className="size-3 animate-spin text-[#2563EB]" />
+                ) : (
+                  <Upload className="size-3 text-[#2563EB]" />
+                )}
+                {uploadingPurpose === "report-logo" ? "Uploading..." : "Upload"}
               </button>
               {data.reportLogo && (
                 <button
                   type="button"
-                  onClick={() => onChange({ reportLogo: "" })}
-                  disabled={!capabilities.canEditBranding}
+                  onClick={() => void handleAssetRemove("report-logo")}
+                  disabled={isReadOnly || deletingPurpose === "report-logo"}
                   className="p-1 text-red-500 hover:bg-red-50 rounded-md cursor-pointer disabled:opacity-50 transition-colors"
-                  title="Remove"
+                  title="Remove report logo"
                 >
-                  <Trash2 className="size-3" />
+                  {deletingPurpose === "report-logo" ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-3" />
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 4. Email Header Logo */}
+          <div className="p-2.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-xl space-y-1.5 shadow-2xs">
+            <div className="text-[11.5px] font-bold text-[#1E293B]">Email Header Logo</div>
+            <div className="h-14 rounded-lg bg-white border border-[#DDE4ED] flex items-center justify-center overflow-hidden p-1.5 shadow-2xs">
+              {loading ? (
+                <Loader2 className="size-4 animate-spin text-slate-400" />
+              ) : data.emailLogo ? (
+                <img src={data.emailLogo} alt="Email Logo" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <span className="text-[10px] text-[#94A3B8] font-normal">Matches main logo</span>
+              )}
+            </div>
+            <p className="text-[9.5px] text-[#64748B] font-normal">PNG / JPEG / WebP • Max 5MB</p>
+            <input
+              ref={emailLogoRef}
+              type="file"
+              accept={BRANDING_UPLOAD_LIMITS["email-logo"].mimeTypes.join(",")}
+              className="hidden"
+              onChange={(e) => void handleAssetUpload("email-logo", e.target.files?.[0])}
+            />
+            <div className="flex items-center gap-1 pt-0.5">
+              <button
+                type="button"
+                onClick={() => emailLogoRef.current?.click()}
+                disabled={isReadOnly || uploadingPurpose === "email-logo"}
+                className="flex-1 py-1 px-2 bg-white border border-[#CBD5E1] rounded-md text-[10.5px] font-semibold text-[#1E293B] hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50 shadow-2xs transition-colors"
+              >
+                {uploadingPurpose === "email-logo" ? (
+                  <Loader2 className="size-3 animate-spin text-[#2563EB]" />
+                ) : (
+                  <Upload className="size-3 text-[#2563EB]" />
+                )}
+                {uploadingPurpose === "email-logo" ? "Uploading..." : "Upload"}
+              </button>
+              {data.emailLogo && (
+                <button
+                  type="button"
+                  onClick={() => void handleAssetRemove("email-logo")}
+                  disabled={isReadOnly || deletingPurpose === "email-logo"}
+                  className="p-1 text-red-500 hover:bg-red-50 rounded-md cursor-pointer disabled:opacity-50 transition-colors"
+                  title="Remove email logo"
+                >
+                  {deletingPurpose === "email-logo" ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-3" />
+                  )}
                 </button>
               )}
             </div>
@@ -389,7 +654,16 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
           {activePreview === "email" && (
             <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden text-[10.5px]">
               <div className="p-2 text-white flex items-center justify-between" style={{ backgroundColor: data.secondaryColor }}>
-                <span className="font-bold text-[11px]">{data.brandName} Notification</span>
+                <div className="flex items-center gap-1.5">
+                  {data.emailLogo || data.logo ? (
+                    <div className="h-5 max-w-[80px] bg-white/10 rounded px-1 flex items-center justify-center overflow-hidden">
+                      <img src={data.emailLogo || data.logo} alt="Logo" className="max-h-full max-w-full object-contain" />
+                    </div>
+                  ) : (
+                    <Mail className="size-3.5 text-white/80" />
+                  )}
+                  <span className="font-bold text-[11px]">{data.brandName} Notification</span>
+                </div>
                 <span className="text-[9px] opacity-90 font-semibold">Security Notice</span>
               </div>
               <div className="p-3 space-y-1.5 text-[#111C3A]">

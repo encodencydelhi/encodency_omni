@@ -1,4 +1,4 @@
-import { AllSettingsState, SettingsCapabilities } from "./types";
+import type { AllSettingsState, SettingsCapabilities } from "./types";
 
 export const INITIAL_SETTINGS_STATE: AllSettingsState = {
   organization: {
@@ -41,13 +41,15 @@ export const INITIAL_SETTINGS_STATE: AllSettingsState = {
     clearLocalWorkspaceState: false,
   },
   branding: {
-    logo: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=200&q=80",
-    favicon: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=64&q=80",
+    // Branding image slots are backed by the live /settings/branding API and
+    // are intentionally empty here — no placeholder asset data.
+    logo: "",
+    favicon: "",
     brandName: "Namo Gange",
     primaryColor: "#10B981",
     secondaryColor: "#111C3A",
-    reportLogo: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=200&q=80",
-    emailLogo: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=200&q=80",
+    reportLogo: "",
+    emailLogo: "",
     footerText: "© 2026 Namo Gange Trust. Powered by EnCodency OmniPlatform.",
     customDomain: "portal.namogange.org",
     isWhiteLabelEnabled: false,
