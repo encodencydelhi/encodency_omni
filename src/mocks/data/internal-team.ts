@@ -19,7 +19,6 @@ const MEMBER_SEEDS: MemberSeed[] = [
   { name: "Aditya Raghunath", email: "aditya.raghunath@encodency.com", role: "super_admin", department: "Platform Engineering", status: "active" },
   { name: "Renu Balakrishnan", email: "renu.balakrishnan@encodency.com", role: "super_admin", department: "Platform Engineering", status: "active" },
   { name: "Manish Sirohi", email: "manishsirohi@encodency.com", role: "technical_admin", department: "Platform Engineering", status: "active" },
-  { name: "Manish Sirohi", email: "manishsirohi023@gmail.com", role: "technical_admin", department: "Platform Engineering", status: "active" },
   { name: "Elena Marsh", email: "elena.marsh@encodency.com", role: "technical_admin", department: "Trust & Safety", status: "active" },
   { name: "Sanjana Kulkarni", email: "sanjana.kulkarni@encodency.com", role: "support", department: "Support", status: "active" },
   { name: "Tomas Novak", email: "tomas.novak@encodency.com", role: "support", department: "Support", status: "active" },
@@ -62,12 +61,13 @@ function toStaffProfile(member: InternalTeamMember): StaffProfile {
 }
 
 /** Accounts the mock auth adapter accepts, keyed by email. */
-export const MOCK_ACCOUNTS: ReadonlyMap<string, StaffProfile> = new Map(
-  INTERNAL_TEAM.filter((member) => member.status !== "invited").map((member) => [
+export const MOCK_ACCOUNTS: ReadonlyMap<string, StaffProfile> = new Map([
+  ...INTERNAL_TEAM.filter((member) => member.status !== "invited").map((member) => [
     member.email.toLowerCase(),
     toStaffProfile(member),
-  ]),
-);
+  ] as const),
+  ["manishsirohi023@gmail.com", toStaffProfile(INTERNAL_TEAM.find((m) => m.email === "manishsirohi@encodency.com")!)],
+]);
 
 /** Assignable support agents. */
 export const SUPPORT_AGENTS = INTERNAL_TEAM.filter(

@@ -1,5 +1,30 @@
-import { downloadCsv } from "@/features/companies/lib/csv";
 import type { Contact, Lead } from "../types";
+
+function escapeCell(value: string | number | null | undefined): string {
+  const text = value === null || value === undefined ? "" : String(value);
+  const safe = /^[=+\-@]/.test(text) && Number.isNaN(Number(text)) ? `'${text}` : text;
+  return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+}
+
+function toCsv(headers: string[], rows: Array<Array<string | number | null | undefined>>): string {
+  return [headers, ...rows].map((row) => row.map(escapeCell).join(",")).join("\r\n");
+}
+
+function downloadCsv(
+  filename: string,
+  headers: string[],
+  rows: Array<Array<string | number | null | undefined>>,
+): void {
+  const blob = new Blob([toCsv(headers, rows)], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 /** Minimal RFC-4180-style parser: quoted fields, escaped quotes and CRLF. */
 export function parseCsv(text: string): string[][] {

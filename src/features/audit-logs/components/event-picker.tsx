@@ -6,11 +6,11 @@ import { SearchInput } from "@/components/shared/search-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils/cn";
 import { useEvents } from "../data/hooks";
+import { ALL_TIME } from "../data/filters";
 import type { AuditEvent, DateWindow } from "../data/types";
 import { utcShort } from "../lib/format";
 
-/** Every recorded event, whatever its date: an investigation is not limited to the explorer's window. */
-export const ALL_TIME: DateWindow = { from: "2000-01-01T00:00:00.000Z", to: "2100-01-01T00:00:00.000Z" };
+export { ALL_TIME };
 
 /**
  * Chooses audit events to link to an investigation. Linking is a separate record: choosing an

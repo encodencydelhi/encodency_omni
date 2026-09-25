@@ -111,7 +111,12 @@ function WorkspaceHeader({ tabLabel }: { tabLabel: string }) {
             <img src="/gbp-logo.png" alt="Google Business Logo" className="size-14 object-contain drop-shadow-sm scale-[1.2]" />
           </span>
           <div className="min-w-0">
-            <h1 className="text-[20px] font-medium leading-6 tracking-[-0.015em] text-[#202124]">Google Business</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-[20px] font-medium leading-6 tracking-[-0.015em] text-[#202124]">Google Business</h1>
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                Reviews · Insights · Profile — Preview Mode
+              </span>
+            </div>
             <p className="truncate text-[12.5px] text-[#5F6368]">Manage locations, reviews, posts, insights and local visibility.</p>
           </div>
         </div>

@@ -175,7 +175,8 @@ function changesText(event: AuditEvent, includeSensitive: boolean): string {
   if (event.changes.length === 0) return "";
   // Values of a sensitive event are withheld unless the exporter may include sensitive fields.
   if (event.sensitiveCategory && !includeSensitive) return event.changes.map((change) => `${change.label}: value not included`).join("; ");
-  return event.changes.map((change) => `${change.label}: ${change.before ?? "Not recorded"} -> ${change.after ?? "Not recorded"}`).join("; ");
+  const text = event.changes.map((change) => `${change.label}: ${change.before ?? "Not recorded"} -> ${change.after ?? "Not recorded"}`).join("; ");
+  return includeSensitive ? text : text.replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, "[REDACTED]");
 }
 
 function exportRow(event: AuditEvent, includeSensitive: boolean): Array<string | number | null> {
@@ -401,7 +402,7 @@ export const mockAuditProvider: AuditRepository = {
       for (const ref of event.related) related.set(`${ref.type}:${ref.id}`, ref);
       if (event.target.href) related.set(`${event.target.type}:${event.target.id}`, { type: event.target.type, id: event.target.id, label: event.target.displayName, href: event.target.href });
     }
-    return { investigation, events, related: [...related.values()] };
+    return { investigation: structuredClone(investigation), events, related: [...related.values()] };
   },
 
   async listOwners() {

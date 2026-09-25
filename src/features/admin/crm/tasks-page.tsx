@@ -349,6 +349,11 @@ export default function TasksPage() {
       <AdminPageTitle
         eyebrow="CRM / Tasks"
         title="Tasks"
+        badge={
+          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+            Preview / Mock Mode
+          </span>
+        }
         description="Manage sales activities, follow-ups and team productivity."
         action={
           <div className="flex items-center gap-2">

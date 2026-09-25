@@ -19,6 +19,9 @@ import type {
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
+/** Every recorded event, whatever its date: an investigation is not limited to the explorer's window. */
+export const ALL_TIME: DateWindow = { from: "2000-01-01T00:00:00.000Z", to: "2100-01-01T00:00:00.000Z" };
+
 /** The window for a named range, ending at the demo clock's "now". A custom range uses whole UTC days. */
 export function resolveWindow(range: RangeKey, now: number, from?: string, to?: string): DateWindow {
   if (range === "custom" && from && to && !Number.isNaN(Date.parse(from)) && !Number.isNaN(Date.parse(to))) {

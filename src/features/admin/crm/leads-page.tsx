@@ -238,7 +238,15 @@ export default function LeadsPage() {
 
   return (
     <div className="space-y-4">
-      <AdminPageTitle eyebrow="CRM / Leads" title="Leads" description="Manage, qualify, assign and convert your sales leads."
+      <AdminPageTitle
+        eyebrow="CRM / Leads"
+        title="Leads"
+        badge={
+          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+            Preview / Mock Mode
+          </span>
+        }
+        description="Manage, qualify, assign and convert your sales leads."
         action={<div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowImport(true)}><Upload className="size-3.5" /> Import</Button>
           <Button variant="outline" size="sm" onClick={handleExport}><Download className="size-3.5" /> Export</Button>

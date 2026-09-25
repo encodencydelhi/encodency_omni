@@ -195,9 +195,6 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
           },
         });
 
-        // Owner decision: no real rows → show the demo dataset, not an empty table.
-        if (response.items.length === 0) return fallback.listCompanies(query);
-
         const pagination: PaginationMeta = {
           page: response.page,
           pageSize: response.limit,
@@ -213,27 +210,21 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
           matchingIds: response.items.map((row) => row.id),
         };
       } catch (error) {
-        if (shouldFallBack(error)) return fallback.listCompanies(query);
         throw error;
       }
     },
 
     async getCompany(id: string): Promise<CompanySummary> {
-      // Demo ids (cmp_*) are never valid backend ids — the backend's Company.id
-      // is a UUID and ParseUUIDPipe would reject them with a 400, so route
-      // them straight to the fallback instead of making a doomed request.
-      if (!UUID_PATTERN.test(id)) return fallback.getCompany(id);
-
-      try {
-        const detail = await apiClient.request<SuperAdminCompanyDetailResponse>({
-          method: "GET",
-          path: `/super-admin/companies/${encodeURIComponent(id)}`,
-        });
-        return toCompanySummary(detail);
-      } catch (error) {
-        if (shouldFallBack(error)) return fallback.getCompany(id);
-        throw error;
+      // Demo ids (cmp_*) are handled by fallback only when explicitly in mock mode
+      if (!UUID_PATTERN.test(id)) {
+        return fallback.getCompany(id);
       }
+
+      const detail = await apiClient.request<SuperAdminCompanyDetailResponse>({
+        method: "GET",
+        path: `/super-admin/companies/${encodeURIComponent(id)}`,
+      });
+      return toCompanySummary(detail);
     },
   };
 }

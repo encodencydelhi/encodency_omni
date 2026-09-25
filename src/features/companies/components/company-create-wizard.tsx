@@ -390,8 +390,13 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
       <Sheet open onOpenChange={(open) => !open && !pending && guard.requestClose()}>
         <SheetContent className="w-full max-w-none sm:max-w-3xl" showClose={!pending}>
           <SheetHeader className="gap-2">
-            <SheetTitle>Create company</SheetTitle>
-            <SheetDescription>Set up a new tenant on OmniPlatform. Nothing here contacts a real system in demo mode.</SheetDescription>
+            <SheetTitle className="flex items-center gap-2">
+              Create company
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                Preview / Mock Mode
+              </span>
+            </SheetTitle>
+            <SheetDescription>Set up a new tenant on OmniPlatform. Company write APIs are pending backend implementation.</SheetDescription>
             {!created ? <Stepper steps={[...STEPS]} current={step} className="pt-1" /> : null}
           </SheetHeader>
 

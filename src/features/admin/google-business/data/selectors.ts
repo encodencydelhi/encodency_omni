@@ -153,8 +153,10 @@ export function filterReviews(reviews: Review[], filters: Partial<ReviewFilters>
     if (tab === "policy" && review.policyStatus === null) return false;
     if (filters.rating && filters.rating !== "all" && review.starRating !== Number(filters.rating)) return false;
     if (filters.date && filters.date !== "all") {
+      const reviewDate = parseISO(review.createTime);
+      if (reviewDate > now) return false;
       const days = Number(filters.date.replace("d", ""));
-      if (differenceInDays(now, parseISO(review.createTime)) > days) return false;
+      if (differenceInDays(now, reviewDate) > days) return false;
     }
     if (q && !review.comment.toLowerCase().includes(q) && !review.reviewer.displayName.toLowerCase().includes(q)) return false;
     return true;

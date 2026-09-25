@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   ADMIN_SUPPORT_COMPANY,
   buildAdminSupportSnapshot,
-} from "../data/provider";
+} from "../data/snapshot";
 
 test("admin support data stays scoped to the authenticated company", () => {
   const snapshot = buildAdminSupportSnapshot();

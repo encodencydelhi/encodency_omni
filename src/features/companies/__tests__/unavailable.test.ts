@@ -22,12 +22,13 @@ describe("api mode", () => {
     assert.equal(companiesRepository.mode, "api");
   });
 
-  it("falls back to demo data for the list when the backend is unreachable", async () => {
-    const list = await companiesRepository.listCompanies({});
-    assert.ok(Array.isArray(list.data));
-    assert.ok(list.data.length > 0, "expected the mock fallback to supply rows");
-    assert.ok(list.matchingIds.length > 0);
-    assert.ok(list.pagination.total >= list.data.length);
+  it("propagates network error when backend is unreachable instead of silent mock fallback", async () => {
+    await assert.rejects(
+      async () => {
+        await companiesRepository.listCompanies({});
+      },
+      (err: any) => err.code === "NETWORK_ERROR" || err.status === 0
+    );
   });
 
   it("routes non-UUID demo ids straight to the fallback detail reader", async () => {

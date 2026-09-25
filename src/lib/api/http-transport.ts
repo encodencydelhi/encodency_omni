@@ -19,7 +19,11 @@ interface ErrorBody {
   message?: string | string[];
   code?: ApiErrorCode;
   fieldErrors?: Record<string, string>;
+  reason?: string;
 }
+
+/** Keys consumed by the transport; everything else is business detail worth keeping. */
+const RESERVED_ERROR_KEYS = new Set(["message", "code", "fieldErrors", "statusCode", "error"]);
 
 function errorMessage(body: ErrorBody): string {
   if (Array.isArray(body.message)) return body.message.join(" ");
@@ -58,15 +62,21 @@ export class HttpTransport implements Transport {
     }
 
     if (!response.ok) {
-      const body = (await response.json().catch(() => ({}))) as ErrorBody;
+      const body = (await response.json().catch(() => ({}))) as ErrorBody & Record<string, unknown>;
       if (response.status === 401 && !spec.skipSessionExpiry) {
         notifySessionExpired();
+      }
+      const details: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(body)) {
+        if (!RESERVED_ERROR_KEYS.has(key)) details[key] = value;
       }
       throw new ApiError({
         code: body.code ?? STATUS_TO_CODE[response.status] ?? "UNKNOWN",
         message: errorMessage(body),
         status: response.status,
         fieldErrors: body.fieldErrors,
+        reason: typeof body.reason === "string" ? body.reason : undefined,
+        details,
       });
     }
 

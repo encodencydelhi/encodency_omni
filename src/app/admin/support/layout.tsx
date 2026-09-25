@@ -35,7 +35,12 @@ function SupportToolbar() {
     <div className="flex w-full flex-col gap-4 border-b border-slate-200/80 bg-white px-5 py-4 shadow-[0_1px_0_rgba(15,23,42,0.02)] sm:px-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-[16px] font-bold tracking-[-0.02em] text-slate-900">Support & Tickets</h1>
+          <h1 className="text-[16px] font-bold tracking-[-0.02em] text-slate-900">
+            Support & Tickets
+            <span className="ml-2 align-middle rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+              Preview / Mock Mode
+            </span>
+          </h1>
           <p className="mt-1 text-[12px] text-slate-600">Manage customer requests, support conversations and ticket resolution for your company.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

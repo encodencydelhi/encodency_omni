@@ -473,6 +473,7 @@ export interface CreateClientInput {
   contactPhone?: string;
   logoDataUrl?: string | null;
   description?: string;
+  targetAudience?: string;
   timezone: string;
   language: string;
   leadUserId?: string | null;

@@ -39,6 +39,54 @@ let groups = [...MOCK_GROUPS];
 let invitations = [...MOCK_INVITATIONS];
 let activity = [...MOCK_ACTIVITY];
 
+function toMember(raw: any): Member {
+  if (raw && raw.roleName && raw.workload && raw.security) {
+    return raw as Member;
+  }
+  const email: string = raw?.user?.email || raw?.email || "user@example.com";
+  const name: string = raw?.user?.name || raw?.name || email.split("@")[0] || "Team Member";
+  const roleId: string = (raw?.systemRole || raw?.roleId || "VIEWER").toLowerCase();
+  const roleNameMap: Record<string, string> = {
+    owner: "Organization Owner",
+    admin: "Organization Admin",
+    manager: "Social Media Manager",
+    viewer: "Viewer",
+  };
+  const roleName = roleNameMap[roleId] || "Team Member";
+
+  return {
+    id: raw?.id ?? `mem-${Date.now()}`,
+    name,
+    email,
+    jobTitle: raw?.jobTitle || (roleId === "admin" ? "Administrator" : "Team Member"),
+    avatarUrl: raw?.avatarUrl || null,
+    roleId,
+    roleName,
+    status: raw?.status || "active",
+    joinedAt: raw?.createdAt || new Date().toISOString(),
+    lastActiveAt: raw?.lastActiveAt || raw?.createdAt || new Date().toISOString(),
+    groups: raw?.groups || [],
+    clientAccess: raw?.clientAccess || [],
+    workload: raw?.workload || {
+      status: "available",
+      openTasks: 0,
+      overdueTasks: 0,
+      pendingApprovals: 0,
+      campaigns: 0,
+      workflows: 0,
+    },
+    ownedResources: raw?.ownedResources || [],
+    security: raw?.security || {
+      has2FA: false,
+      lastLogin: null,
+      passwordLastChanged: null,
+      activeSessions: 1,
+      inviteAcceptedAt: raw?.createdAt || null,
+    },
+    isOrgAdmin: roleId === "admin" || roleId === "owner",
+  };
+}
+
 export const teamRepository = {
   async getMembers(): Promise<Member[]> {
     try {
@@ -47,12 +95,15 @@ export const teamRepository = {
         path: "/team/members",
         headers: companyScopeHeaders(getCompanyId()),
       });
-      // Map backend shape to frontend if necessary, for now return directly if matched
-      return response as any;
+      if (Array.isArray(response)) {
+        return response.map(toMember);
+      }
+      return [];
     } catch (error) {
-      if (!shouldFallBack(error)) throw error;
-      console.warn("Failed to fetch team members — mock fallback:", error);
-      return [...members]; // Fallback to mock
+      if (process.env.NEXT_PUBLIC_DATA_SOURCE === "mock") {
+        return [...members];
+      }
+      throw error;
     }
   },
 
@@ -86,50 +137,42 @@ export const teamRepository = {
     const systemRole = systemRoleMap[invite.roleId] || "VIEWER";
     const clientRestrictions = toBackendClientRestrictions(invite.clients);
 
-    let serverInvitationId = `inv-${Date.now()}`;
-    let serverExpiresAt = invite.expiresAt;
-    let inviteToken: string | undefined;
-
-    try {
-      // POST /companies/:companyId/invitations — same contract as teamApi.createInvitation
-      const response = await apiClient.request<{
-        invitationId: string;
-        status: string;
-        expiresAt: string;
-        token?: string;
-      }>({
-        method: "POST",
-        path: `/companies/${encodeURIComponent(companyId)}/invitations`,
-        body: {
-          email: invite.email,
-          systemRole,
-          ...(clientRestrictions ? { clientRestrictions } : {}),
-        },
-        headers: companyScopeHeaders(companyId),
-      });
-
-      if (response?.invitationId) {
-        serverInvitationId = response.invitationId;
-      }
-      if (response?.expiresAt) {
-        serverExpiresAt = response.expiresAt;
-      }
-      if (response?.token) {
-        inviteToken = response.token;
-      }
-    } catch (error) {
-      // 401/403/400/409 must reach the modal (wrong role, bad client ids, pending duplicate…)
-      if (!shouldFallBack(error)) throw error;
-      console.warn("Backend invitation API unreachable — mock fallback:", error);
+    if (process.env.NEXT_PUBLIC_DATA_SOURCE === "mock") {
+      const newInvite: Invitation = {
+        ...invite,
+        id: `inv-${Date.now()}`,
+        status: "pending",
+        sentAt: new Date().toISOString(),
+        expiresAt: invite.expiresAt,
+        token: `mock-token-${Date.now()}`,
+      };
+      invitations = [newInvite, ...invitations];
+      return newInvite;
     }
+
+    const response = await apiClient.request<{
+      invitationId: string;
+      status: string;
+      expiresAt: string;
+      token?: string;
+    }>({
+      method: "POST",
+      path: `/companies/${encodeURIComponent(companyId)}/invitations`,
+      body: {
+        email: invite.email,
+        systemRole,
+        ...(clientRestrictions ? { clientRestrictions } : {}),
+      },
+      headers: companyScopeHeaders(companyId),
+    });
 
     const newInvite: Invitation = {
       ...invite,
-      id: serverInvitationId,
+      id: response.invitationId,
       status: "pending",
       sentAt: new Date().toISOString(),
-      expiresAt: serverExpiresAt,
-      token: inviteToken,
+      expiresAt: response.expiresAt || invite.expiresAt,
+      token: response.token,
     };
     invitations = [newInvite, ...invitations];
     

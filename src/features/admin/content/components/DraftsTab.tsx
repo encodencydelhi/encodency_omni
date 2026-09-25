@@ -75,7 +75,7 @@ export function DraftsTab() {
           ctaUrl: "",
           hashtags: [],
           mentions: [],
-          media: [],
+          media: [] as Array<{ id?: string; url: string }>,
           link: "",
           location: "",
           altText: "",
@@ -85,7 +85,7 @@ export function DraftsTab() {
         },
       }));
     }
-    return MOCK_DRAFTS;
+    return [];
   }, [liveDrafts]);
 
   const campaignCount = allDrafts.filter((d) => !!d.campaign).length;

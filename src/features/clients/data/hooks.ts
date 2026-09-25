@@ -111,7 +111,26 @@ export interface DescribedError {
 }
 
 export function describeError(error: unknown, fallback = "Something went wrong. Nothing was changed."): DescribedError {
-  if (ApiError.isApiError(error)) return { message: error.message, fieldErrors: error.fieldErrors ?? {} };
+  if (ApiError.isApiError(error)) {
+    let msg = error.message;
+    if (error.status === 400 && (!msg || msg === "Bad Request")) {
+      msg = "Please verify all required client details and try again.";
+    } else if (error.status === 401) {
+      msg = "Your session has expired. Please log in again.";
+    } else if (error.status === 403) {
+      msg = "You do not have permission to manage clients in this company.";
+    } else if (error.status === 404) {
+      msg = "The requested resource could not be found.";
+    } else if (error.status === 409) {
+      msg = "A client with this name or details already exists.";
+    } else if (error.status === 429) {
+      msg = "Too many requests. Please wait a moment and try again.";
+    } else if (error.status >= 500) {
+      msg = "The server encountered an error processing your request. Please try again shortly.";
+    }
+    return { message: msg || fallback, fieldErrors: error.fieldErrors ?? {} };
+  }
+  if (error instanceof Error) return { message: error.message, fieldErrors: {} };
   return { message: fallback, fieldErrors: {} };
 }
 

@@ -20,7 +20,7 @@ const { buildChanges } = await import("../data/build");
 const { deriveAuditCapabilities } = await import("../data/capabilities");
 const { ROLE_PERMISSIONS } = await import("@/types/domain/team");
 const { platformNow } = await import("@/features/companies/data/clock");
-const { ALL_TIME } = await import("../components/event-picker");
+const { ALL_TIME } = await import("../data/filters");
 type Event = Awaited<ReturnType<typeof repo.getEvent>>["event"];
 
 const actor = { id: "stf_001", name: "Aditya Raghunath" };

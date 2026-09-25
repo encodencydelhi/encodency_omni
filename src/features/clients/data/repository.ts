@@ -42,7 +42,7 @@ export type LifecycleAction =
   | { kind: "archive"; note: string };
 
 export interface ClientsRepository {
-  readonly mode: "mock" | "unavailable";
+  readonly mode: "mock" | "unavailable" | "api";
 
   /* Reads */
   listClients(query: ClientListQuery): Promise<ClientListResult>;

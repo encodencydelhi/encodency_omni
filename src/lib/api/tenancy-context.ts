@@ -4,38 +4,21 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { clientsApi } from "@/features/admin/projects/live/clients-api";
 
-const STORAGE_KEY_COMPANY = "omni_active_company_id";
-const STORAGE_KEY_CLIENT = "omni_active_client_id";
+import {
+  DEFAULT_FALLBACK_COMPANY_ID,
+  DEFAULT_FALLBACK_CLIENT_ID,
+  getStoredCompanyId,
+  getStoredClientId,
+  setStoredTenancy,
+} from "./tenancy-storage";
 
-// Safe fallbacks for local/demo/harness environments when not logged into a specific tenant
-export const DEFAULT_FALLBACK_COMPANY_ID = "development-company-id";
-export const DEFAULT_FALLBACK_CLIENT_ID = "development-client-id";
-
-export function getStoredCompanyId(): string {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem(STORAGE_KEY_COMPANY);
-    if (stored && stored.trim()) return stored.trim();
-  }
-  return DEFAULT_FALLBACK_COMPANY_ID;
-}
-
-export function getStoredClientId(): string {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem(STORAGE_KEY_CLIENT);
-    if (stored && stored.trim()) return stored.trim();
-  }
-  return DEFAULT_FALLBACK_CLIENT_ID;
-}
-
-export function setStoredTenancy(companyId: string, clientId?: string): void {
-  if (typeof window === "undefined") return;
-  if (companyId) {
-    localStorage.setItem(STORAGE_KEY_COMPANY, companyId);
-  }
-  if (clientId) {
-    localStorage.setItem(STORAGE_KEY_CLIENT, clientId);
-  }
-}
+export {
+  DEFAULT_FALLBACK_COMPANY_ID,
+  DEFAULT_FALLBACK_CLIENT_ID,
+  getStoredCompanyId,
+  getStoredClientId,
+  setStoredTenancy,
+};
 
 export interface TenancyContextState {
   companyId: string;
@@ -59,9 +42,7 @@ export function useTenancyContext(): TenancyContextState {
       const activeMembership = user.memberships.find((m) => m.companyId === resolvedCompany) ?? user.memberships[0];
       if (activeMembership) {
         resolvedCompany = activeMembership.companyId;
-        if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY_COMPANY, resolvedCompany);
-        }
+        setStoredTenancy(resolvedCompany);
       }
     }
 
@@ -84,9 +65,7 @@ export function useTenancyContext(): TenancyContextState {
         if (clients.length > 0 && clients[0]) {
           const firstClientId = clients[0].id;
           setClientState(firstClientId);
-          if (typeof window !== "undefined") {
-            localStorage.setItem(STORAGE_KEY_CLIENT, firstClientId);
-          }
+          setStoredTenancy(getStoredCompanyId(), firstClientId);
         }
       })
       .catch(() => {
@@ -103,16 +82,12 @@ export function useTenancyContext(): TenancyContextState {
 
   const setCompanyId = useCallback((id: string) => {
     setCompanyState(id);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY_COMPANY, id);
-    }
+    setStoredTenancy(id);
   }, []);
 
   const setClientId = useCallback((id: string) => {
     setClientState(id);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY_CLIENT, id);
-    }
+    setStoredTenancy(getStoredCompanyId(), id);
   }, []);
 
   return {

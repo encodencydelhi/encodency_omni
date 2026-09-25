@@ -379,7 +379,12 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
 
   const errors: Record<string, string> = {};
   if (step >= 1) {
-    if (!draft.name.trim()) errors.name = "Client name is required.";
+    const trimmedName = draft.name.trim().replace(/\s+/g, " ");
+    if (!trimmedName) {
+      errors.name = "Client name is required.";
+    } else if (trimmedName.length < 3) {
+      errors.name = "Client name must be at least 3 characters.";
+    }
     if (draft.website.trim() && !isValidWebsite(draft.website)) errors.website = "Enter a valid website, e.g. example.com.";
     if (draft.contactEmail.trim() && !isValidEmail(draft.contactEmail)) errors.contactEmail = "Enter a valid email address.";
     if (draft.contactPhone.trim() && !isValidPhone(draft.contactPhone)) errors.contactPhone = "Enter a valid phone number.";
@@ -412,19 +417,27 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
   };
 
   const submit = async () => {
+    const normalizedName = draft.name.trim().replace(/\s+/g, " ");
+    if (!normalizedName || normalizedName.length < 3) {
+      setStep(1);
+      setAttempted(true);
+      return;
+    }
+
     setPending(true);
     setError(null);
     setServerErrors({});
     const input: CreateClientInput = {
       companyId: draft.companyId,
-      name: draft.name.trim(),
-      displayName: draft.displayName.trim() || undefined,
+      name: normalizedName,
+      displayName: draft.displayName.trim().replace(/\s+/g, " ") || undefined,
       industry: draft.industry,
       website: draft.website.trim() || undefined,
       contactEmail: draft.contactEmail.trim() || undefined,
       contactPhone: draft.contactPhone.trim() || undefined,
       logoDataUrl: draft.logoDataUrl,
       description: draft.description.trim() || undefined,
+      targetAudience: draft.description.trim() || undefined,
       timezone: draft.timezone,
       language: draft.language,
       leadUserId: draft.leadUserId === NONE ? null : draft.leadUserId,
@@ -504,13 +517,13 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
             </Button>
           ) : null}
           {step < 3 ? (
-            <Button onClick={next} disabled={blocked}>
+            <Button onClick={next} disabled={blocked || pending}>
               Next
               <ArrowRightIcon />
             </Button>
           ) : (
-            <SubmitButton pending={pending} onClick={() => void submit()}>
-              Create Client
+            <SubmitButton pending={pending} disabled={pending} onClick={() => void submit()}>
+              {pending ? "Saving..." : "Create Client"}
             </SubmitButton>
           )}
         </>

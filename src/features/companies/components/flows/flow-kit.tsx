@@ -48,6 +48,11 @@ export function FlowDialog({
   footer,
   size = "md",
   showClose = true,
+  badge = (
+    <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 shrink-0">
+      Preview Mode
+    </span>
+  ),
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -57,6 +62,7 @@ export function FlowDialog({
   footer: ReactNode;
   size?: "md" | "lg" | "xl";
   showClose?: boolean;
+  badge?: ReactNode;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,7 +76,10 @@ export function FlowDialog({
         )}
       >
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <div className="flex items-center gap-2">
+            <DialogTitle className="flex-1">{title}</DialogTitle>
+            {badge}
+          </div>
           {description ? <DialogDescription>{description}</DialogDescription> : null}
         </DialogHeader>
         <div className="min-h-0 space-y-3 overflow-y-auto pr-0.5 scrollbar-thin">{children}</div>

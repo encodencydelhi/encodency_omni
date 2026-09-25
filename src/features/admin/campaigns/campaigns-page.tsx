@@ -250,7 +250,7 @@ export function CampaignsPage() {
         revision: c.revision,
       }));
     }
-    return campaigns;
+    return [];
   }, [liveCampaigns]);
 
   const filteredCampaigns = useMemo(() => {
@@ -269,6 +269,22 @@ export function CampaignsPage() {
     }
     return result;
   }, [allDisplayCampaigns, activeTab, searchQuery]);
+
+  const dynamicStats = useMemo(() => {
+    if (!liveCampaigns) return stats;
+    const total = liveCampaigns.length;
+    const active = liveCampaigns.filter((c) => c.status === "ACTIVE").length;
+    const completed = liveCampaigns.filter((c) => c.status === "COMPLETED").length;
+    const scheduled = liveCampaigns.filter((c) => c.status === "PAUSED" || c.status === "DRAFT").length;
+    return [
+      { icon: Megaphone, title: "Total Campaigns", value: String(total), trend: "Live", note: `${total} in workspace`, tone: "red" },
+      { icon: Play, title: "Active Campaigns", value: String(active), trend: `${total ? Math.round((active / total) * 100) : 0}%`, note: "Of total campaigns", tone: "green" },
+      { icon: CalendarDays, title: "Scheduled", value: String(scheduled), trend: "Planned", note: `${scheduled} upcoming`, tone: "purple" },
+      { icon: CheckCircle2, title: "Completed", value: String(completed), trend: "Archived", note: `${completed} delivered`, tone: "green" },
+      { icon: Users, title: "Total Leads", value: "—", trend: "CRM", note: "Integrated with CRM", tone: "blue" },
+      { icon: Database, title: "Total Spend", value: "—", trend: "Budget", note: "Tracked per campaign", tone: "orange" },
+    ];
+  }, [liveCampaigns]);
 
   return (
     <div className="w-full bg-[#f6f8fb] font-sans text-[#13203e]">
@@ -312,7 +328,7 @@ export function CampaignsPage() {
 
         {/* Stats */}
         <section className="mb-2.5 grid grid-cols-2 gap-[9px] lg:grid-cols-6">
-          {stats.map(item => <StatCard key={item.title} item={item} />)}
+          {dynamicStats.map((item) => <StatCard key={item.title} item={item} />)}
         </section>
 
         {/* Tabs / toolbar */}
