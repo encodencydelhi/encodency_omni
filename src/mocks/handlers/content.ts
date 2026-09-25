@@ -117,7 +117,9 @@ export const contentRoutes: MockRoutes = {
   /* ── Campaigns ── */
   "GET /campaigns": ({ headers, query }) => {
     const { companyId, clientId } = requireClientScope(headers);
-    let items = mockCampaigns.filter((c) => c.companyId === companyId && c.clientId === clientId);
+    let items = mockCampaigns.filter(
+      (c) => c.companyId === companyId && (c.clientId === clientId || c.clientId === "moksha-sewa" || c.clientId === "development-client-id")
+    );
 
     const search = query.search ? String(query.search).toLowerCase() : "";
     if (search) {
@@ -141,7 +143,7 @@ export const contentRoutes: MockRoutes = {
 
   "GET /campaigns/:id": ({ headers, params }) => {
     const { companyId, clientId } = requireClientScope(headers);
-    const campaign = mockCampaigns.find((c) => c.id === params.id && c.companyId === companyId && c.clientId === clientId);
+    const campaign = mockCampaigns.find((c) => c.id === params.id && c.companyId === companyId);
     if (!campaign) {
       throw new ApiError({ code: "NOT_FOUND", status: 404, message: "Campaign not found" });
     }
@@ -155,6 +157,7 @@ export const contentRoutes: MockRoutes = {
       budget?: { amount: string; currency: string } | null;
       startDate?: string | null;
       endDate?: string | null;
+      [key: string]: any;
     };
 
     if (!payload.name || payload.name.trim().length === 0) {
@@ -179,6 +182,7 @@ export const contentRoutes: MockRoutes = {
       revision: 1,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      ...(payload as any),
     };
 
     mockCampaigns.unshift(newCampaign);

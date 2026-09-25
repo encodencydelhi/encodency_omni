@@ -50,6 +50,8 @@ function toClientSummary(raw: any): ClientSummary {
       }
     : null;
 
+  const rawLogo = raw.logo ?? null;
+
   const companyClient: CompanyClient = {
     id,
     companyId,
@@ -63,6 +65,7 @@ function toClientSummary(raw: any): ClientSummary {
     leadsLast30Days: 0,
     createdAt,
     lastActivityAt: updatedAt,
+    logo: rawLogo,
   };
 
   return {
@@ -83,7 +86,8 @@ function toClientSummary(raw: any): ClientSummary {
       description: targetAudience,
       contactEmail: null,
       contactPhone: null,
-      logoDataUrl: null,
+      logoDataUrl: rawLogo?.url ?? null,
+      logo: rawLogo,
       timezone: "Asia/Kolkata",
       language: "English",
       reportingPeriod: "30d",
@@ -129,89 +133,122 @@ function toClientSummary(raw: any): ClientSummary {
   };
 }
 
-export const apiClientsProvider: ClientsRepository = {
-  mode: "api",
-  
-  async listClients(query: ClientListQuery): Promise<ClientListResult> {
-    const rawClients = await apiClient.request<any[]>({
-      method: "GET",
-      path: "/clients",
-      query: toListQuery(query),
-      headers: { "x-company-id": getCompanyIdHeader() }
-    });
-    const clients = (Array.isArray(rawClients) ? rawClients : []).map(toClientSummary);
-    const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
-    const totalPages = Math.max(1, Math.ceil(clients.length / pageSize));
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function createApiClientsProvider(fallback: ClientsRepository): ClientsRepository {
+  return {
+    ...fallback,
+    mode: "api",
     
-    return {
-      data: clients,
-      matchingIds: clients.map(c => c.displayId ?? c.client.id),
-      pagination: { 
-        total: clients.length, 
-        page, 
-        pageSize,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1
+    async listClients(query: ClientListQuery): Promise<ClientListResult> {
+      const companyId = getCompanyIdHeader();
+      // If there is no valid company ID selected (e.g. at /super-admin/clients where no cross-company Super Admin API exists yet),
+      // gracefully fall back to the demo/preview repository so the Super Admin Clients directory stays functional.
+      if (!companyId || !UUID_PATTERN.test(companyId)) {
+        return fallback.listClients(query);
       }
-    };
-  },
 
-  async createClient(input: CreateClientInput, actor): Promise<ClientSummary> {
-    const name = input.name.trim().replace(/\s+/g, " ");
-    const website = input.website?.trim() || undefined;
-    const industry = input.industry?.trim() || undefined;
-    const targetAudience = (input.targetAudience ?? input.description)?.trim() || undefined;
-
-    const created = await apiClient.request<any>({
-      method: "POST",
-      path: "/clients",
-      body: {
-        name,
-        ...(industry ? { industry } : {}),
-        ...(website ? { website } : {}),
-        ...(targetAudience ? { targetAudience } : {}),
-      },
-      headers: { "x-company-id": getCompanyIdHeader() }
-    });
-    return toClientSummary(created);
-  },
-
-  async getClient(id: string): Promise<ClientSummary> {
-    const raw = await apiClient.request<any>({
-      method: "GET",
-      path: `/clients/${id}`,
-      headers: { 
-        "x-company-id": getCompanyIdHeader(),
-        "x-client-id": id
+      try {
+        const rawClients = await apiClient.request<any[]>({
+          method: "GET",
+          path: "/clients",
+          query: toListQuery(query),
+          headers: { "x-company-id": companyId }
+        });
+        const clients = (Array.isArray(rawClients) ? rawClients : []).map(toClientSummary);
+        const page = query.page ?? 1;
+        const pageSize = query.pageSize ?? 10;
+        const totalPages = Math.max(1, Math.ceil(clients.length / pageSize));
+        
+        return {
+          data: clients,
+          matchingIds: clients.map(c => c.displayId ?? c.client.id),
+          pagination: { 
+            total: clients.length, 
+            page, 
+            pageSize, 
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1
+          }
+        };
+      } catch (err) {
+        if (ApiError.isApiError(err) && (err.status === 400 || err.status === 404)) {
+          return fallback.listClients(query);
+        }
+        throw err;
       }
-    });
-    return toClientSummary(raw);
-  },
+    },
 
-  exportClients: unavailableClientsProvider.exportClients,
-  getPortfolio: unavailableClientsProvider.getPortfolio,
-  getFacets: unavailableClientsProvider.getFacets,
-  listCreationCompanies: unavailableClientsProvider.listCreationCompanies,
-  listEligibleMembers: unavailableClientsProvider.listEligibleMembers,
-  getOverview: unavailableClientsProvider.getOverview,
-  getTeam: unavailableClientsProvider.getTeam,
-  getChannels: unavailableClientsProvider.getChannels,
-  getWebsiteSeo: unavailableClientsProvider.getWebsiteSeo,
-  getActivity: unavailableClientsProvider.getActivity,
-  getSettings: unavailableClientsProvider.getSettings,
-  updateClient: unavailableClientsProvider.updateClient,
-  changeLifecycle: unavailableClientsProvider.changeLifecycle,
-  assignMember: unavailableClientsProvider.assignMember,
-  changeAccess: unavailableClientsProvider.changeAccess,
-  removeAccess: unavailableClientsProvider.removeAccess,
-  setLead: unavailableClientsProvider.setLead,
-  addWebsite: unavailableClientsProvider.addWebsite,
-  setPrimaryWebsite: unavailableClientsProvider.setPrimaryWebsite,
-  removeWebsite: unavailableClientsProvider.removeWebsite,
-  setOnboardingRequirements: unavailableClientsProvider.setOnboardingRequirements,
-  markAccessReviewed: unavailableClientsProvider.markAccessReviewed,
-  setPlatformReviewer: unavailableClientsProvider.setPlatformReviewer,
-  requestReconnection: unavailableClientsProvider.requestReconnection
-};
+    async createClient(input: CreateClientInput, actor): Promise<ClientSummary> {
+      const companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId)) {
+        return fallback.createClient(input, actor);
+      }
+
+      const name = input.name.trim().replace(/\s+/g, " ");
+      const website = input.website?.trim() || undefined;
+      const industry = input.industry?.trim() || undefined;
+      const targetAudience = (input.targetAudience ?? input.description)?.trim() || undefined;
+
+      const created = await apiClient.request<any>({
+        method: "POST",
+        path: "/clients",
+        body: {
+          name,
+          ...(industry ? { industry } : {}),
+          ...(website ? { website } : {}),
+          ...(targetAudience ? { targetAudience } : {}),
+        },
+        headers: { "x-company-id": companyId }
+      });
+      return toClientSummary(created);
+    },
+
+    async getClient(id: string): Promise<ClientSummary> {
+      const companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) {
+        return fallback.getClient(id);
+      }
+
+      const raw = await apiClient.request<any>({
+        method: "GET",
+        path: `/clients/${id}`,
+        headers: { 
+          "x-company-id": companyId,
+          "x-client-id": id
+        }
+      });
+      return toClientSummary(raw);
+    },
+
+    exportClients: fallback.exportClients,
+    getPortfolio: fallback.getPortfolio,
+    getFacets: fallback.getFacets,
+    listCreationCompanies: fallback.listCreationCompanies,
+    listEligibleMembers: fallback.listEligibleMembers,
+    getOverview: fallback.getOverview,
+    getTeam: fallback.getTeam,
+    getChannels: fallback.getChannels,
+    getWebsiteSeo: fallback.getWebsiteSeo,
+    getActivity: fallback.getActivity,
+    getSettings: fallback.getSettings,
+
+    // Blocked lifecycle mutations keep returning 503 from unavailableClientsProvider
+    updateClient: unavailableClientsProvider.updateClient,
+    changeLifecycle: unavailableClientsProvider.changeLifecycle,
+    assignMember: unavailableClientsProvider.assignMember,
+    changeAccess: unavailableClientsProvider.changeAccess,
+    removeAccess: unavailableClientsProvider.removeAccess,
+    setLead: unavailableClientsProvider.setLead,
+    addWebsite: unavailableClientsProvider.addWebsite,
+    setPrimaryWebsite: unavailableClientsProvider.setPrimaryWebsite,
+    removeWebsite: unavailableClientsProvider.removeWebsite,
+    setOnboardingRequirements: unavailableClientsProvider.setOnboardingRequirements,
+    markAccessReviewed: unavailableClientsProvider.markAccessReviewed,
+    setPlatformReviewer: unavailableClientsProvider.setPlatformReviewer,
+    requestReconnection: unavailableClientsProvider.requestReconnection
+  };
+}
+
+export const apiClientsProvider: ClientsRepository = createApiClientsProvider(unavailableClientsProvider);

@@ -2,6 +2,7 @@
 
 import { ArrowRightIcon, CheckIcon, CircleIcon } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { INTEGRATION_PROVIDER } from "@/types/domain/integration";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,18 +15,21 @@ import { ROUTES } from "@/config/routes";
 import { getInitials, formatNumber } from "@/lib/utils/format";
 import { ClientError, PanelSkeleton } from "../components/states";
 import { AccessLevelBadge, DemoTag, FactorBadge, OnboardingBadge, SeverityBadge } from "../components/status-badges";
-import { ANALYTICS_LINK_META, HEALTH_AREA_LABEL, MONITORING_META, clientSectionHref } from "../data/config";
+import { ANALYTICS_LINK_META, HEALTH_AREA_LABEL, MONITORING_META, clientSectionHref, resolveClientBasePath } from "../data/config";
 import { useClientOverview } from "../data/hooks";
 import type { ClientOverviewData } from "../data/types";
 import { useClientId } from "./client-shell";
 
-function ProfilePanel({ data }: { data: ClientOverviewData }) {
+function ProfilePanel({ data, basePath }: { data: ClientOverviewData; basePath?: string }) {
   const { summary } = data;
   const { profile, company } = summary;
+  const isAdmin = (basePath ?? "").startsWith(ROUTES.admin.root);
+  const companyHref = isAdmin ? ROUTES.admin.settings : ROUTES.superAdmin.company(company.id);
+
   return (
-    <Panel title="Client profile" action={<Button asChild variant="ghost" size="sm"><Link href={clientSectionHref(summary.client.id, "settings")}>Settings</Link></Button>}>
+    <Panel title="Client profile" action={<Button asChild variant="ghost" size="sm"><Link href={clientSectionHref(summary.client.id, "settings", undefined, basePath)}>Settings</Link></Button>}>
       <dl className="divide-y divide-border">
-        <KeyValue label="Parent company"><Link href={ROUTES.superAdmin.company(company.id)} className="hover:underline">{company.name}</Link></KeyValue>
+        <KeyValue label="Parent company"><Link href={companyHref} className="hover:underline">{company.name}</Link></KeyValue>
         <KeyValue label="Industry">{profile.industry}</KeyValue>
         <KeyValue label="Contact">{profile.contactEmail ?? <span className="text-muted-foreground">Not set</span>}</KeyValue>
         <KeyValue label="Timezone">{profile.timezone}</KeyValue>
@@ -225,13 +229,16 @@ function WebsitePanel({ data }: { data: ClientOverviewData }) {
   );
 }
 
-function UsagePanel({ data }: { data: ClientOverviewData }) {
+function UsagePanel({ data, basePath }: { data: ClientOverviewData; basePath?: string }) {
   const { summary, usage } = data;
+  const isAdmin = (basePath ?? "").startsWith(ROUTES.admin.root);
+  const usageHref = isAdmin ? ROUTES.admin.billing : companySectionHref(summary.company.id, "usage");
+
   return (
     <Panel
       title="Client usage"
       description={usage.attributableNote}
-      action={<Button asChild variant="ghost" size="sm"><Link href={companySectionHref(summary.company.id, "usage")}>Open Company Usage</Link></Button>}
+      action={<Button asChild variant="ghost" size="sm"><Link href={usageHref}>Open Company Usage</Link></Button>}
     >
       <ul className="divide-y divide-border">
         {usage.rows.map((row) => (
@@ -252,10 +259,10 @@ function UsagePanel({ data }: { data: ClientOverviewData }) {
   );
 }
 
-function RecentActivityPanel({ data }: { data: ClientOverviewData }) {
+function RecentActivityPanel({ data, basePath }: { data: ClientOverviewData; basePath?: string }) {
   const id = data.summary.client.id;
   return (
-    <Panel title="Recent activity" action={<Button asChild variant="ghost" size="sm"><Link href={clientSectionHref(id, "activity")}>View all</Link></Button>}>
+    <Panel title="Recent activity" action={<Button asChild variant="ghost" size="sm"><Link href={clientSectionHref(id, "activity", undefined, basePath)}>View all</Link></Button>}>
       {data.recentActivity.length === 0 ? (
         <p className="text-[0.8125rem] text-muted-foreground">No activity recorded yet.</p>
       ) : (
@@ -276,6 +283,8 @@ function RecentActivityPanel({ data }: { data: ClientOverviewData }) {
 }
 
 export function ClientOverviewPage() {
+  const pathname = usePathname();
+  const basePath = resolveClientBasePath(pathname);
   const clientId = useClientId();
   const query = useClientOverview(clientId);
 
@@ -293,7 +302,7 @@ export function ClientOverviewPage() {
   const data = query.data;
   return (
     <div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
-      <ProfilePanel data={data} />
+      <ProfilePanel data={data} basePath={basePath} />
       <HealthPanel data={data} />
       <OnboardingPanel data={data} />
       <div className="lg:col-span-2">
@@ -303,9 +312,9 @@ export function ClientOverviewPage() {
       <ChannelsPanel data={data} />
       <PublishingPanel data={data} />
       <WebsitePanel data={data} />
-      <UsagePanel data={data} />
+      <UsagePanel data={data} basePath={basePath} />
       <div className="lg:col-span-2">
-        <RecentActivityPanel data={data} />
+        <RecentActivityPanel data={data} basePath={basePath} />
       </div>
     </div>
   );

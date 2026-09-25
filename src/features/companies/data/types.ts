@@ -164,6 +164,7 @@ export interface CompanyClient {
   leadsLast30Days: number;
   createdAt: string;
   lastActivityAt: string;
+  logo?: import("@/features/admin/projects/live/clients-api").SafeAsset | null;
 }
 
 /* ------------------------------------------------------------------ */

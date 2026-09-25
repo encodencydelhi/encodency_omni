@@ -226,7 +226,7 @@ export type UTMConfig = {
 };
 
 /* ── Campaign / Client ── */
-export type ClientRef = { id: string; name: string; logo: string };
+export type ClientRef = { id: string; name: string; logo?: string | import("@/features/admin/projects/live/clients-api").SafeAsset | null };
 export type CampaignRef = { id: string; name: string; objective: string } | null;
 
 /* ── Content Variant ── */

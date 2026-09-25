@@ -144,7 +144,7 @@ export function LifecycleFlow({ kind, targets, onClose }: { kind: LifecycleKind;
               {valid.map((target) => (
                 <li key={target.client.id} className="flex items-center justify-between gap-3 px-3 py-1.5">
                   <span className="flex min-w-0 items-center gap-2">
-                    <ClientAvatar name={target.client.name} logo={target.profile.logoDataUrl} className="size-6" />
+                    <ClientAvatar name={target.client.name} logo={target.client.logo?.url ?? target.profile.logo?.url ?? target.profile.logoDataUrl} className="size-6" />
                     <span className="min-w-0">
                       <span className="block truncate text-[0.8125rem] font-medium text-foreground">{target.client.name}</span>
                       <span className="block truncate text-2xs text-muted-foreground">{target.company.name}</span>

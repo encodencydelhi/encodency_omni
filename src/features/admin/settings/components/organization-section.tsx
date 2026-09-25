@@ -11,10 +11,12 @@ import {
   Copy,
   ExternalLink,
   Check,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { OrganizationProfile } from "../settings-data/types";
 import { useSettingsCapability } from "../settings-data/capability-provider";
+import { brandingApi, describeBrandingError } from "../live/branding-api";
 
 interface OrganizationSectionProps {
   data: OrganizationProfile;
@@ -25,6 +27,7 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
   const { capabilities } = useSettingsCapability();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [copiedId, setCopiedId] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   const handleCopyId = () => {
     navigator.clipboard.writeText(data.metadata.id);
@@ -33,27 +36,49 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
     setTimeout(() => setCopiedId(false), 2000);
   };
 
-  const handleLogoUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Logo file size exceeds 2MB limit.");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Logo file size exceeds 5MB limit.");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        onChange({ logo: reader.result });
-        toast.success("Organization logo updated locally.");
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      setIsUploadingLogo(true);
+      const res = await brandingApi.upload("logo", file);
+      const newUrl = res.logo?.url || "";
+      onChange({ logo: newUrl });
+      toast.success("Organization logo updated successfully.");
+    } catch (err: unknown) {
+      console.warn("Failed to upload logo to backend, falling back to local preview", err);
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          onChange({ logo: reader.result });
+          toast.success("Organization logo updated locally.");
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsUploadingLogo(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
-  const handleRemoveLogo = () => {
-    onChange({ logo: "" });
-    toast.info("Logo removed. Default placeholder will be used.");
+  const handleRemoveLogo = async () => {
+    try {
+      setIsUploadingLogo(true);
+      await brandingApi.remove("logo");
+      onChange({ logo: "" });
+      toast.info("Logo removed.");
+    } catch (err: unknown) {
+      console.warn("Failed to delete logo from backend", err);
+      onChange({ logo: "" });
+      toast.info("Logo removed locally.");
+    } finally {
+      setIsUploadingLogo(false);
+    }
   };
 
   return (
@@ -103,16 +128,24 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={!capabilities.canEditOrganization}
+                disabled={!capabilities.canEditOrganization || isUploadingLogo}
                 className="px-3 py-1 bg-white border border-[#CBD5E1] rounded-md text-[10.5px] font-semibold text-[#1E293B] hover:bg-slate-100 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                <Upload className="size-3 text-[#2563EB]" /> Replace Logo
+                {isUploadingLogo ? (
+                  <>
+                    <Loader2 className="size-3 animate-spin text-[#2563EB]" /> Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="size-3 text-[#2563EB]" /> Replace Logo
+                  </>
+                )}
               </button>
               {data.logo && (
                 <button
                   type="button"
                   onClick={handleRemoveLogo}
-                  disabled={!capabilities.canEditOrganization}
+                  disabled={!capabilities.canEditOrganization || isUploadingLogo}
                   className="px-2 py-1 text-[10.5px] font-semibold text-red-600 hover:bg-red-50 rounded-md transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 >
                   <Trash2 className="size-3" /> Remove

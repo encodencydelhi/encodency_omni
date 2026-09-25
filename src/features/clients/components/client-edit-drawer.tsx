@@ -2,6 +2,7 @@
 
 import { Loader2Icon } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,10 +15,16 @@ import { Field, Panel } from "@/features/companies/components/primitives";
 import { useUnsavedGuard } from "@/features/companies/hooks/use-unsaved-guard";
 import { isValidEmail, isValidPhone, isValidWebsite } from "@/features/companies/lib/validation";
 import { ROUTES } from "@/config/routes";
-import { INDUSTRIES, LANGUAGES, REPORTING_PERIODS, TIMEZONES } from "../data/config";
+import { INDUSTRIES, LANGUAGES, REPORTING_PERIODS, TIMEZONES, resolveClientBasePath } from "../data/config";
 import { describeError, useClientMutations, useClientTeam } from "../data/hooks";
 import type { ClientSummary, ReportingPeriod, UpdateClientInput } from "../data/types";
 import { LogoPicker } from "./logo-picker";
+import {
+  clientsApi,
+  describeClientLogoError,
+  isAssetConflict,
+  type SafeAsset,
+} from "@/features/admin/projects/live/clients-api";
 
 const NONE = "__none__";
 
@@ -61,14 +68,65 @@ const withCurrent = (options: readonly string[], current: string) => [...new Set
  * moving a client between companies is not part of this release.
  */
 export function ClientEditDrawer({ summary, onClose }: { summary: ClientSummary; onClose: () => void }) {
+  const pathname = usePathname();
+  const basePath = resolveClientBasePath(pathname);
+  const isAdmin = basePath.startsWith(ROUTES.admin.root);
+  const companyHref = isAdmin ? ROUTES.admin.settings : ROUTES.superAdmin.company(summary.company.id);
   const mutations = useClientMutations();
   const team = useClientTeam(summary.client.id);
   const initial = useMemo(() => toForm(summary), [summary]);
   const [form, setForm] = useState<EditForm>(initial);
   const [attempted, setAttempted] = useState(false);
   const [pending, setPending] = useState(false);
+  const [currentLogo, setCurrentLogo] = useState<SafeAsset | null>(summary.client.logo ?? summary.profile.logo ?? null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoRemoving, setLogoRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
+
+  const handleUploadLogo = async (file: File) => {
+    setLogoUploading(true);
+    setError(null);
+    try {
+      const res = await clientsApi.uploadLogo(summary.company.id, summary.client.id, file, {
+        replacesAssetId: currentLogo?.id,
+      });
+      setCurrentLogo(res.logo);
+      update({ logoDataUrl: res.logo?.url ?? null });
+      toast.success("Client logo updated");
+    } catch (err: unknown) {
+      if (isAssetConflict(err)) {
+        try {
+          const fresh = await clientsApi.get(summary.company.id, summary.client.id);
+          if (fresh.logo) setCurrentLogo(fresh.logo);
+        } catch {
+          // ignore refetch failure
+        }
+      }
+      toast.error("Failed to upload client logo", {
+        description: describeClientLogoError(err),
+      });
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    setLogoRemoving(true);
+    setError(null);
+    try {
+      await clientsApi.removeLogo(summary.company.id, summary.client.id);
+      setCurrentLogo(null);
+      update({ logoDataUrl: null });
+      toast.success("Client logo removed");
+    } catch (err: unknown) {
+      toast.error("Failed to remove logo", {
+        description: describeClientLogoError(err),
+      });
+    } finally {
+      setLogoRemoving(false);
+    }
+  };
 
   const update = (patch: Partial<EditForm>) => setForm((current) => ({ ...current, ...patch }));
   const dirty = JSON.stringify(form) !== JSON.stringify(initial);
@@ -111,6 +169,9 @@ export function ClientEditDrawer({ summary, onClose }: { summary: ClientSummary;
       const described = describeError(failure);
       setError(described.message);
       setServerErrors(described.fieldErrors);
+      toast.error("Failed to update client", {
+        description: described.message,
+      });
       return false;
     } finally {
       setPending(false);
@@ -151,14 +212,22 @@ export function ClientEditDrawer({ summary, onClose }: { summary: ClientSummary;
                   <p className="text-2xs text-muted-foreground">{summary.company.planName}</p>
                 </div>
                 <Button asChild variant="ghost" size="sm">
-                  <Link href={ROUTES.superAdmin.company(summary.company.id)}>Open company</Link>
+                  <Link href={companyHref}>Open company</Link>
                 </Button>
               </div>
             </Panel>
 
             <Panel title="Identity">
               <div className="space-y-3">
-                <LogoPicker name={form.name} value={form.logoDataUrl} onChange={(logoDataUrl) => update({ logoDataUrl })} />
+                <LogoPicker
+                  name={form.name}
+                  value={currentLogo?.url ?? form.logoDataUrl}
+                  onUpload={handleUploadLogo}
+                  onRemove={handleRemoveLogo}
+                  isUploading={logoUploading}
+                  isRemoving={logoRemoving}
+                  disabled={pending}
+                />
                 <div className="grid gap-3 sm:grid-cols-2">
                   {text("name", "Client name", { required: true })}
                   {text("displayName", "Display name", { hint: "Shown in reports. Defaults to the client name." })}

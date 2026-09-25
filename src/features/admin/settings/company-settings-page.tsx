@@ -27,6 +27,7 @@ import { OrganizationSection } from "./components/organization-section";
 import { WorkspaceSection } from "./components/workspace-section";
 import { BrandingSection } from "./components/branding-section";
 import { NotificationsSection } from "./components/notifications-section";
+import { Suspense } from "react";
 import { SecuritySection } from "./components/security-section";
 import { PreferencesSection } from "./components/preferences-section";
 import { DataPrivacySection } from "./components/data-privacy-section";
@@ -35,9 +36,17 @@ import { DangerZoneSection } from "./components/danger-zone-section";
 
 export function CompanySettingsPage() {
   return (
-    <CapabilityProvider>
-      <CompanySettingsInner />
-    </CapabilityProvider>
+    <Suspense
+      fallback={
+        <div className="space-y-2 pb-12 animate-pulse">
+          <div className="h-14 bg-white rounded-xl border border-[#DDE4ED] p-3 flex items-center justify-between" />
+        </div>
+      }
+    >
+      <CapabilityProvider>
+        <CompanySettingsInner />
+      </CapabilityProvider>
+    </Suspense>
   );
 }
 

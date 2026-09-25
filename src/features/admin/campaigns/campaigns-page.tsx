@@ -204,7 +204,21 @@ export function CampaignsPage() {
     setConflictNotice(null);
     try {
       const res = await campaignsApi.list(companyId, clientId);
-      setLiveCampaigns(res.items);
+      let items = res.items;
+
+      // Merge any locally created campaigns so newly created campaigns appear immediately
+      try {
+        const rawLocal = localStorage.getItem("omni_created_campaigns");
+        if (rawLocal) {
+          const localList: CampaignRecord[] = JSON.parse(rawLocal);
+          const relevant = localList.filter((c) => c.clientId === clientId || !clientId);
+          const existingIds = new Set(items.map((i) => i.id));
+          const toAdd = relevant.filter((r) => !existingIds.has(r.id));
+          items = [...toAdd, ...items];
+        }
+      } catch {}
+
+      setLiveCampaigns(items);
     } catch (err: unknown) {
       if (ApiError.isApiError(err)) {
         setErrorMessage(err.message || `Failed to fetch campaigns (HTTP ${err.status})`);
@@ -225,32 +239,46 @@ export function CampaignsPage() {
 
   const allDisplayCampaigns = useMemo(() => {
     if (liveCampaigns !== null) {
-      return liveCampaigns.map((c) => ({
-        id: c.id,
-        title: c.name,
-        desc: c.budget ? `${c.budget.currency} ${Number(c.budget.amount).toLocaleString()} budget` : "Multi-channel campaign",
-        project: "Active Client",
-        channels: ["Facebook", "Instagram", "LinkedIn"],
-        extra: "",
-        image: "",
-        status: "Active",
-        statusTone: "active",
-        dates: [
-          c.startDate ? new Date(c.startDate).toLocaleDateString() : "Immediate",
-          c.endDate ? new Date(c.endDate).toLocaleDateString() : "Ongoing"
-        ],
-        leads: "—",
-        leadGrowth: "",
-        spend: c.budget ? `${c.budget.currency} ${Number(c.budget.amount).toLocaleString()}` : "—",
-        conversions: "—",
-        conversionGrowth: "",
-        score: "—",
-        scoreTone: "empty",
-        updated: [`Rev ${c.revision}`, `Updated ${new Date(c.updatedAt).toLocaleDateString()}`],
-        revision: c.revision,
-      }));
+      return liveCampaigns.map((c) => {
+        const statusTone =
+          c.status === "ACTIVE" ? "active" :
+          c.status === "COMPLETED" ? "completed" :
+          c.status === "PAUSED" ? "scheduled" :
+          "draft";
+
+        const statusLabel =
+          c.status === "ACTIVE" ? "Active" :
+          c.status === "COMPLETED" ? "Completed" :
+          c.status === "PAUSED" ? "Scheduled" :
+          "Draft";
+
+        return {
+          id: c.id,
+          title: c.name,
+          desc: c.budget ? `${c.budget.currency} ${Number(c.budget.amount).toLocaleString()} budget` : "Multi-channel campaign",
+          project: "Active Client",
+          channels: ["Facebook", "Instagram", "LinkedIn"],
+          extra: "",
+          image: "",
+          status: statusLabel,
+          statusTone: statusTone,
+          dates: [
+            c.startDate ? new Date(c.startDate).toLocaleDateString() : "Immediate",
+            c.endDate ? new Date(c.endDate).toLocaleDateString() : "Ongoing"
+          ],
+          leads: "—",
+          leadGrowth: "",
+          spend: c.budget ? `${c.budget.currency} ${Number(c.budget.amount).toLocaleString()}` : "—",
+          conversions: "—",
+          conversionGrowth: "",
+          score: "—",
+          scoreTone: "empty",
+          updated: [`Rev ${c.revision}`, `Updated ${new Date(c.updatedAt).toLocaleDateString()}`],
+          revision: c.revision,
+        };
+      });
     }
-    return [];
+    return campaigns;
   }, [liveCampaigns]);
 
   const filteredCampaigns = useMemo(() => {

@@ -300,15 +300,31 @@ export const CLIENT_SECTIONS: ReadonlyArray<{ key: ClientSection; label: string;
   { key: "settings", label: "Settings", slug: "settings" },
 ];
 
-export function clientHref(clientId: string): string {
-  return `${ROUTES.superAdmin.Clients}/${clientId}`;
+export function resolveClientBasePath(pathname?: string | null): string {
+  if (pathname?.startsWith(ROUTES.admin.root)) {
+    return ROUTES.admin.clients;
+  }
+  if (typeof window !== "undefined" && window.location.pathname.startsWith(ROUTES.admin.root)) {
+    return ROUTES.admin.clients;
+  }
+  return ROUTES.superAdmin.Clients;
 }
 
-export function clientSectionHref(clientId: string, section: ClientSection, query?: Record<string, string>): string {
+export function clientHref(clientId: string, basePath?: string): string {
+  const root = basePath ?? resolveClientBasePath();
+  return `${root}/${clientId}`;
+}
+
+export function clientSectionHref(clientId: string, section: ClientSection, query?: Record<string, string>, basePath?: string): string {
   const slug = CLIENT_SECTIONS.find((item) => item.key === section)?.slug ?? "";
-  const base = slug ? `${clientHref(clientId)}/${slug}` : clientHref(clientId);
+  const root = clientHref(clientId, basePath);
+  const base = slug ? `${root}/${slug}` : root;
   const search = query ? new URLSearchParams(query).toString() : "";
   return search ? `${base}?${search}` : base;
 }
 
 export const CLIENTS_LIST_ROUTE = ROUTES.superAdmin.Clients;
+
+export function clientsListHref(basePath?: string): string {
+  return basePath ?? resolveClientBasePath();
+}

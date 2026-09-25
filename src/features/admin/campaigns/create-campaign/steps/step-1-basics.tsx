@@ -46,7 +46,15 @@ const OBJECTIVE_ICONS: Record<string, typeof Target> = {
   "Re-engagement": Megaphone,
 };
 
-export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }) {
+export function StepBasics({
+  draft,
+  set,
+  clientOptions,
+}: {
+  draft: CampaignDraft;
+  set: Setter;
+  clientOptions?: string[];
+}) {
   return (
     <div className="overflow-hidden rounded-sm border border-[#DDE6F1] bg-white shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
       <StepSection
@@ -193,7 +201,7 @@ export function StepBasics({ draft, set }: { draft: CampaignDraft; set: Setter }
               icon={Building2}
               value={draft.client}
               onChange={(v) => set("client", v)}
-              options={["Moksha Sewa", "Namo Gange Trust", "Ganga Explorer"]}
+              options={clientOptions && clientOptions.length > 0 ? clientOptions : ["Moksha Sewa", "Namo Gange Trust", "Ganga Explorer"]}
             />
           </Field>
           <Field label="Campaign Owner" required>

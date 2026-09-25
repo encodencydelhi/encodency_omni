@@ -32,7 +32,7 @@ import { ClientKpiStrip } from "../components/kpi-strip";
 import { ClientError, TableSkeleton } from "../components/states";
 import { DemoTag } from "../components/status-badges";
 import { useClientActions } from "../components/use-client-actions";
-import { CLIENTS_MOCK_MODE } from "../data/config";
+import { CLIENTS_MOCK_MODE, resolveClientBasePath } from "../data/config";
 import { describeError, useClientMutations, useClientPortfolio, useClientsList } from "../data/hooks";
 import { clientsRepository } from "../data/repository";
 import type { ClientSummary } from "../data/types";
@@ -43,6 +43,7 @@ import { rememberListQuery } from "../lib/list-query";
 export function ClientsListPage() {
   const router = useRouter();
   const pathname = usePathname();
+  const basePath = resolveClientBasePath(pathname);
   const searchParams = useSearchParams();
   const mutations = useClientMutations();
   const { capabilities, openFlow, rowMenu, dialogs } = useClientActions();
@@ -106,7 +107,7 @@ export function ClientsListPage() {
 
   const selectedSummaries = rows.filter((row) => selectedIds.includes(row.client.id));
   const menu = useCallback((summary: ClientSummary) => rowMenu(summary, { onPreview: (item) => setPreview(item.client.id) }), [rowMenu, setPreview]);
-  const columns = useMemo(() => buildClientColumns(menu), [menu]);
+  const columns = useMemo(() => buildClientColumns(menu, basePath), [menu, basePath]);
 
   const runExport = async (scope: { query?: typeof query; ids?: string[] }, filename: string) => {
     setExporting(true);
@@ -297,6 +298,7 @@ export function ClientsListPage() {
                     onPageChange={table.setPage}
                     onPageSizeChange={table.setPageSize}
                     emptyState={emptyState}
+                    basePath={basePath}
                   />
                 </div>
               </>

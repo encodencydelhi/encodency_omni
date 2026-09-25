@@ -58,6 +58,11 @@ export const ROUTES = {
   admin: {
     root: "/admin",
     dashboard: "/admin",
+    clients: "/admin/clients",
+    client: (id: string) => `/admin/clients/${id}`,
+    settings: "/admin/settings",
+    team: "/admin/team",
+    billing: "/admin/billing",
   },
 } as const;
 

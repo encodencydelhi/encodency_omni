@@ -47,8 +47,9 @@ export interface ClientProfile {
   description: string;
   contactEmail: string | null;
   contactPhone: string | null;
-  /** A local preview (data URL). Nothing is uploaded in frontend-only mode. */
+  /** A local preview (data URL) or image URL string. */
   logoDataUrl: string | null;
+  logo?: import("@/features/admin/projects/live/clients-api").SafeAsset | null;
   timezone: string;
   language: string;
   reportingPeriod: ReportingPeriod;

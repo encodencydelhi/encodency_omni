@@ -11,7 +11,15 @@ process.env.NEXT_PUBLIC_API_BASE_URL = "/api/v1";
 
 const { HttpTransport } = await import("../http-transport");
 const { onSessionExpired } = await import("../session-events");
-const { clientsApi, toCreateClientPayload } = await import("@/features/admin/projects/live/clients-api");
+const {
+  clientsApi,
+  toCreateClientPayload,
+  CLIENT_LOGO_UPLOAD_LIMITS,
+  describeClientLogoError,
+  isAssetConflict: isClientLogoAssetConflict,
+  isFileTooLarge: isClientLogoFileTooLarge,
+  isStorageUnavailable: isClientLogoStorageUnavailable,
+} = await import("@/features/admin/projects/live/clients-api");
 const { teamApi, invitationLink } = await import("@/features/admin/team/live/team-api");
 const { authService } = await import("@/features/auth/services/auth-service");
 const { systemHealthService } = await import("@/features/system-health/services/system-health-service");
@@ -121,6 +129,78 @@ describe("Clients API (Company Admin)", () => {
     assert.equal(calls[0]!.url, "/api/v1/clients/k-9");
     assert.equal(calls[0]!.init.headers["x-client-id"], "k-9");
     assert.equal(calls[0]!.init.headers["x-company-id"], "c-1");
+  });
+
+  it("PUT /clients/:id/logo sends multipart FormData, replacesAssetId and context headers", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        clientId: "cl-1",
+        logo: {
+          id: "asset-1",
+          purpose: "CLIENT_LOGO",
+          url: "https://res.cloudinary.com/demo/image/upload/v1/logo.png",
+          mimeType: "image/png",
+          format: "png",
+          bytes: 1024,
+          width: 100,
+          height: 100,
+          uploadedAt: "2026-09-25T10:00:00Z",
+        },
+      },
+    });
+
+    const file = new Blob(["fake client logo"], { type: "image/png" });
+    const result = await clientsApi.uploadLogo("c-1", "cl-1", file, { replacesAssetId: "old-asset-0" });
+
+    assert.equal(calls[0]!.url, "/api/v1/clients/cl-1/logo");
+    assert.equal(calls[0]!.init.method, "PUT");
+    assert.equal(calls[0]!.init.headers["x-company-id"], "c-1");
+    assert.equal(calls[0]!.init.headers["x-client-id"], "cl-1");
+    assert.ok(calls[0]!.init.body instanceof FormData);
+    const form = calls[0]!.init.body as FormData;
+    assert.ok(form.has("file"));
+    assert.equal(form.get("replacesAssetId"), "old-asset-0");
+    assert.equal(result.clientId, "cl-1");
+    assert.equal(result.logo?.id, "asset-1");
+    assert.equal(result.logo?.url, "https://res.cloudinary.com/demo/image/upload/v1/logo.png");
+  });
+
+  it("DELETE /clients/:id/logo sends context headers and returns logo: null", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        clientId: "cl-1",
+        logo: null,
+      },
+    });
+
+    const result = await clientsApi.removeLogo("c-1", "cl-1");
+    assert.equal(calls[0]!.url, "/api/v1/clients/cl-1/logo");
+    assert.equal(calls[0]!.init.method, "DELETE");
+    assert.equal(calls[0]!.init.headers["x-company-id"], "c-1");
+    assert.equal(calls[0]!.init.headers["x-client-id"], "cl-1");
+    assert.equal(result.clientId, "cl-1");
+    assert.equal(result.logo, null);
+  });
+
+  it("validates client logo limits and error messages", () => {
+    assert.equal(CLIENT_LOGO_UPLOAD_LIMITS.maxBytes, 5 * 1024 * 1024);
+    assert.deepEqual(CLIENT_LOGO_UPLOAD_LIMITS.mimeTypes, ["image/png", "image/jpeg", "image/webp"]);
+
+    const err401 = new ApiError({ code: "UNAUTHORIZED", message: "Unauthorized", status: 401 });
+    const err403 = new ApiError({ code: "FORBIDDEN", message: "Forbidden", status: 403 });
+    const err409 = new ApiError({ code: "CONFLICT", message: "Conflict", status: 409, details: { serverCode: "asset_conflict" } });
+    const err413 = new ApiError({ code: "VALIDATION_FAILED", message: "Payload too large", status: 413, details: { serverCode: "file_too_large" } });
+    const err502 = new ApiError({ code: "SERVICE_UNAVAILABLE", message: "Storage unavailable", status: 502, details: { serverCode: "storage_unavailable" } });
+    const err503 = new ApiError({ code: "SERVICE_UNAVAILABLE", message: "Storage not configured", status: 503, details: { serverCode: "storage_not_configured" } });
+
+    assert.equal(describeClientLogoError(err401), "You must be signed in to manage the client logo.");
+    assert.equal(describeClientLogoError(err403), "You do not have permission to manage this client's logo.");
+    assert.equal(isClientLogoAssetConflict(err409), true);
+    assert.equal(isClientLogoFileTooLarge(err413), true);
+    assert.equal(isClientLogoStorageUnavailable(err502), true);
+    assert.equal(isClientLogoStorageUnavailable(err503), true);
   });
 });
 

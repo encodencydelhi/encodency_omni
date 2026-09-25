@@ -1,11 +1,29 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { AllSettingsState, SettingsSectionId, NotificationChannel } from "./types";
 import { SettingsRepository } from "./repository";
 
+const VALID_SECTIONS: SettingsSectionId[] = [
+  "organization",
+  "workspace",
+  "branding",
+  "notifications",
+  "security",
+  "preferences",
+  "data-privacy",
+  "audit",
+  "danger",
+];
+
 export function useSettings() {
+  const searchParams = useSearchParams();
+  const querySection = (searchParams?.get("tab") || searchParams?.get("section")) as SettingsSectionId | null;
+  const initialSection: SettingsSectionId =
+    querySection && VALID_SECTIONS.includes(querySection) ? querySection : "organization";
+
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,7 +34,23 @@ export function useSettings() {
   const [draftState, setDraftState] = useState<AllSettingsState | null>(null);
 
   // Active section
-  const [activeSection, setActiveSection] = useState<SettingsSectionId>("organization");
+  const [activeSection, setActiveSection] = useState<SettingsSectionId>(initialSection);
+
+  // Sync with URL query parameter changes
+  useEffect(() => {
+    if (querySection && VALID_SECTIONS.includes(querySection) && querySection !== activeSection) {
+      setActiveSection(querySection);
+    }
+  }, [querySection, activeSection]);
+
+  const changeSection = useCallback((target: SettingsSectionId) => {
+    setActiveSection(target);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("section", target);
+      window.history.replaceState(null, "", url.toString());
+    }
+  }, []);
 
   // Navigation guard state
   const [pendingSection, setPendingSection] = useState<SettingsSectionId | null>(null);
@@ -97,14 +131,14 @@ export function useSettings() {
       setPendingSection(target);
       setGuardDialogOpen(true);
     } else {
-      setActiveSection(target);
+      changeSection(target);
     }
   };
 
   const confirmDiscardAndNavigate = () => {
     if (savedState && pendingSection) {
       setDraftState(JSON.parse(JSON.stringify(savedState)));
-      setActiveSection(pendingSection);
+      changeSection(pendingSection);
       setPendingSection(null);
       setGuardDialogOpen(false);
       toast.info("Unsaved changes discarded.");
@@ -115,7 +149,7 @@ export function useSettings() {
     if (pendingSection) {
       const success = await saveChanges();
       if (success) {
-        setActiveSection(pendingSection);
+        changeSection(pendingSection);
         setPendingSection(null);
         setGuardDialogOpen(false);
       }

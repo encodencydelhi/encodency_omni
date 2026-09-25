@@ -1,16 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { Bell, ChevronDown, Menu, Plus, Search } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MOCK_ADMIN_USER } from "@/config/admin-permissions";
 import { useAdminContext } from "./admin-context";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { cn } from "@/lib/utils/cn";
+import { getUserDisplay } from "@/lib/utils/user-display";
 import Image from "next/image";
 
 export function AdminTopbar() {
   const { setMobileNavOpen, isSidebarCollapsed } = useAdminContext();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
+  const { fullName, firstName, email: userEmail, initials } = getUserDisplay(user);
 
   return (
     <header className={cn(
@@ -44,7 +46,7 @@ export function AdminTopbar() {
                 if (hour < 12) return "Good Morning";
                 if (hour < 18) return "Good Afternoon";
                 return "Good Evening";
-              })()}, <span className="text-blue-600">{MOCK_ADMIN_USER.name.split(' ')[0]}</span>
+              })()}, <span className="text-blue-600">{firstName}</span>
             </span>
             <span className="text-[11px] font-medium text-slate-500 leading-tight mt-0.5">
               Ready to Crush it Today? 🚀
@@ -95,17 +97,23 @@ export function AdminTopbar() {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2.5 rounded-[10px] p-1.5 pr-3 hover:bg-slate-100/80 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 group">
               <div className="relative shrink-0">
-                <Image
-                  src="/user-avatar.png"
-                  alt={MOCK_ADMIN_USER.name}
-                  width={32}
-                  height={32}
-                  className="rounded-[8px] object-cover border border-slate-200 bg-slate-50 shadow-xs group-hover:border-slate-300 transition-colors"
-                />
+                {user?.avatarUrl ? (
+                  <Image
+                    src={user.avatarUrl}
+                    alt={fullName}
+                    width={32}
+                    height={32}
+                    className="rounded-[8px] object-cover border border-slate-200 bg-slate-50 shadow-xs group-hover:border-slate-300 transition-colors"
+                  />
+                ) : (
+                  <div className="size-8 rounded-[8px] bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white flex items-center justify-center font-bold text-[12px] shadow-xs border border-blue-600">
+                    {initials}
+                  </div>
+                )}
               </div>
               <span className="hidden text-left xl:block">
                 <span className="block text-[14px] font-semibold tracking-tight text-[#0f172a]">
-                  {MOCK_ADMIN_USER.name}
+                  {fullName}
                 </span>
               </span>
               <ChevronDown className="hidden size-4 text-slate-400 group-hover:text-slate-600 transition-colors xl:block" />
@@ -114,13 +122,17 @@ export function AdminTopbar() {
           <DropdownMenuContent align="end" className="w-56 rounded-sm">
             <DropdownMenuLabel className="font-normal p-2 normal-case tracking-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none text-[#18181B]">{MOCK_ADMIN_USER.name}</p>
-                <p className="text-xs leading-none text-[#A1A1AA]">{MOCK_ADMIN_USER.email}</p>
+                <p className="text-sm font-medium leading-none text-[#18181B]">{fullName}</p>
+                <p className="text-xs leading-none text-[#A1A1AA]">{userEmail}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="rounded-sm cursor-pointer">Profile settings</DropdownMenuItem>
-            <DropdownMenuItem className="rounded-sm cursor-pointer">Organization settings</DropdownMenuItem>
+            <DropdownMenuItem asChild className="rounded-sm cursor-pointer">
+              <Link href="/admin/settings">Profile settings</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild className="rounded-sm cursor-pointer">
+              <Link href="/admin/settings">Organization settings</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="rounded-sm cursor-pointer text-red-600 focus:text-red-600" onSelect={() => void logout()}>Sign out</DropdownMenuItem>
           </DropdownMenuContent>

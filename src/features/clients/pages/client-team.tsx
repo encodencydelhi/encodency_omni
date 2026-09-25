@@ -15,10 +15,11 @@ import { relativeTime } from "@/features/companies/data/clock";
 import { ROUTES } from "@/config/routes";
 import { getInitials } from "@/lib/utils/format";
 import { ORGANISATION_ROLE, USER_STATUS } from "@/types/domain/user";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AssignMemberFlow, ChangeAccessFlow, RemoveAccessFlow } from "../components/flows/team-flows";
 import { ClientError, StatGridSkeleton, TableSkeleton } from "../components/states";
 import { AccessLevelBadge } from "../components/status-badges";
+import { resolveClientBasePath } from "../data/config";
 import { useClientCapabilities, useClientTeam } from "../data/hooks";
 import type { ClientAssignmentView, ClientTeamData } from "../data/types";
 import { useClientId } from "./client-shell";
@@ -27,6 +28,9 @@ type Flow = { kind: "assign" } | { kind: "change"; member: ClientAssignmentView 
 
 function TeamBody({ data }: { data: ClientTeamData }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const basePath = resolveClientBasePath(pathname);
+  const isAdmin = basePath.startsWith(ROUTES.admin.root);
   const capabilities = useClientCapabilities();
   const [flow, setFlow] = useState<Flow | null>(null);
   const { summary, assignments, eligibleMembers } = data;
@@ -36,8 +40,18 @@ function TeamBody({ data }: { data: ClientTeamData }) {
 
   const menu = (member: ClientAssignmentView): ActionMenuItem[] => {
     const items: ActionMenuItem[] = [
-      { id: "user", label: "View User", icon: UserRoundIcon, onSelect: () => router.push(`${ROUTES.superAdmin.users}?search=${encodeURIComponent(member.email)}`) },
-      { id: "membership", label: "View Company Membership", icon: BuildingIcon, onSelect: () => router.push(companySectionHref(summary.company.id, "users", { q: member.email })) },
+      {
+        id: "user",
+        label: "View User",
+        icon: UserRoundIcon,
+        onSelect: () => router.push(isAdmin ? `${ROUTES.admin.team}?search=${encodeURIComponent(member.email)}` : `${ROUTES.superAdmin.users}?search=${encodeURIComponent(member.email)}`),
+      },
+      {
+        id: "membership",
+        label: "View Company Membership",
+        icon: BuildingIcon,
+        onSelect: () => router.push(isAdmin ? `${ROUTES.admin.team}?search=${encodeURIComponent(member.email)}` : companySectionHref(summary.company.id, "users", { q: member.email })),
+      },
     ];
     if (canManage && member.membershipStatus === "active") {
       items.push({ id: "change", label: "Change Client Access", icon: ArrowRightLeftIcon, separatorBefore: true, onSelect: () => setFlow({ kind: "change", member }) });

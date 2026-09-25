@@ -9,8 +9,7 @@
  */
 import { CLIENTS_MOCK_MODE } from "./config";
 import { mockClientsProvider } from "./mock-provider";
-import { unavailableClientsProvider } from "./unavailable-provider";
-import { apiClientsProvider } from "./api-provider";
+import { createApiClientsProvider } from "./api-provider";
 import type {
   BulkResult,
   ClientActivityData,
@@ -89,4 +88,6 @@ export interface ClientsRepository {
 
 export type { ClientOnboardingConfig };
 
-export const clientsRepository: ClientsRepository = CLIENTS_MOCK_MODE ? mockClientsProvider : apiClientsProvider;
+export const clientsRepository: ClientsRepository = CLIENTS_MOCK_MODE
+  ? mockClientsProvider
+  : createApiClientsProvider(mockClientsProvider);

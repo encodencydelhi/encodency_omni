@@ -180,9 +180,17 @@ export function CreateContentTab() {
         setConflictNotice("This draft was modified by another session (409 Conflict). Reload to view latest changes.");
         toast.error("Revision conflict: draft has been modified by another request.");
       } else if (ApiError.isApiError(err)) {
-        toast.error(`Failed to save draft: ${err.message}`);
+        const detailsList: string[] = [];
+        if (err.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
+          Object.entries(err.fieldErrors).forEach(([field, msg]) => detailsList.push(`${field}: ${msg}`));
+        }
+        if (err.reason) detailsList.push(`Reason: ${err.reason}`);
+        const description = detailsList.length > 0 ? detailsList.join(" | ") : (err.status ? `Status HTTP ${err.status}` : undefined);
+        toast.error(`Failed to save draft: ${err.message}`, { description, duration: 6000 });
+      } else if (err instanceof Error) {
+        toast.error(`Failed to save draft: ${err.message}`, { duration: 6000 });
       } else {
-        toast.error("An unexpected error occurred while saving draft.");
+        toast.error("An unexpected error occurred while saving draft.", { duration: 6000 });
       }
     } finally {
       setIsSavingDraft(false);

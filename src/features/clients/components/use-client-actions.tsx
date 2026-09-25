@@ -13,11 +13,11 @@ import {
   SquareArrowOutUpRightIcon,
   UsersIcon,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import type { ActionMenuItem } from "@/components/shared/action-menu";
 import { ROUTES } from "@/config/routes";
-import { clientHref, clientSectionHref } from "../data/config";
+import { clientHref, clientSectionHref, resolveClientBasePath } from "../data/config";
 import { useClientCapabilities } from "../data/hooks";
 import type { ClientSection, ClientSummary } from "../data/types";
 import { ClientEditDrawer } from "./client-edit-drawer";
@@ -40,6 +40,9 @@ const VIEWS: ReadonlyArray<{ id: ClientSection; label: string; icon: typeof User
  */
 export function useClientActions() {
   const router = useRouter();
+  const pathname = usePathname();
+  const basePath = resolveClientBasePath(pathname);
+  const isAdmin = basePath.startsWith(ROUTES.admin.root);
   const capabilities = useClientCapabilities();
   const [flow, setFlow] = useState<ClientFlow | null>(null);
   const closeFlow = useCallback(() => setFlow(null), []);
@@ -70,17 +73,22 @@ export function useClientActions() {
     (summary: ClientSummary, options: { onPreview?: (summary: ClientSummary) => void } = {}): ActionMenuItem[] => {
       const id = summary.client.id;
       const archived = summary.workspace === "archived";
-      const items: ActionMenuItem[] = [{ id: "open", label: "Open Client", icon: SquareArrowOutUpRightIcon, onSelect: () => router.push(clientHref(id)) }];
+      const items: ActionMenuItem[] = [{ id: "open", label: "Open Client", icon: SquareArrowOutUpRightIcon, onSelect: () => router.push(clientHref(id, basePath)) }];
       if (options.onPreview) items.push({ id: "preview", label: "Quick Preview", icon: EyeIcon, onSelect: () => options.onPreview?.(summary) });
       if (capabilities.canEditClient && !archived) items.push({ id: "edit", label: "Edit Client", icon: PencilIcon, onSelect: () => setFlow({ kind: "edit", summary }) });
-      items.push({ id: "company", label: "Open Parent Company", icon: BuildingIcon, onSelect: () => router.push(ROUTES.superAdmin.company(summary.company.id)) });
+      items.push({
+        id: "company",
+        label: "Open Parent Company",
+        icon: BuildingIcon,
+        onSelect: () => router.push(isAdmin ? ROUTES.admin.settings : ROUTES.superAdmin.company(summary.company.id)),
+      });
       VIEWS.forEach((view, index) => {
         if (!capabilities[view.capability]) return;
-        items.push({ id: view.id, label: view.label, icon: view.icon, separatorBefore: index === 0, onSelect: () => router.push(clientSectionHref(id, view.id)) });
+        items.push({ id: view.id, label: view.label, icon: view.icon, separatorBefore: index === 0, onSelect: () => router.push(clientSectionHref(id, view.id, undefined, basePath)) });
       });
       return [...items, ...lifecycleItems(summary, true)];
     },
-    [capabilities, lifecycleItems, router],
+    [basePath, capabilities, isAdmin, lifecycleItems, router],
   );
 
   /** The "More" menu on the detail header. */
@@ -89,14 +97,14 @@ export function useClientActions() {
       const id = summary.client.id;
       const items: ActionMenuItem[] = [];
       if (summary.attention.length > 0) {
-        items.push({ id: "issues", label: "Review Issues", icon: EyeIcon, onSelect: () => router.push(`${clientHref(id)}#needs-attention`) });
+        items.push({ id: "issues", label: "Review Issues", icon: EyeIcon, onSelect: () => router.push(`${clientHref(id, basePath)}#needs-attention`) });
       }
       if (capabilities.canViewClientActivity) {
-        items.push({ id: "activity", label: "View Activity", icon: ActivityIcon, onSelect: () => router.push(clientSectionHref(id, "activity")) });
+        items.push({ id: "activity", label: "View Activity", icon: ActivityIcon, onSelect: () => router.push(clientSectionHref(id, "activity", undefined, basePath)) });
       }
       return [...items, ...lifecycleItems(summary, items.length > 0)];
     },
-    [capabilities, lifecycleItems, router],
+    [basePath, capabilities, lifecycleItems, router],
   );
 
   const dialogs: ReactNode = useMemo(() => {

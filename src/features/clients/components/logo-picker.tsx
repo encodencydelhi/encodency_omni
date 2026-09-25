@@ -1,65 +1,129 @@
 "use client";
 
-import { ImageUpIcon, Trash2Icon } from "lucide-react";
+import { ImageUpIcon, Loader2Icon, Trash2Icon } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ClientAvatar } from "./client-avatar";
+import { CLIENT_LOGO_UPLOAD_LIMITS } from "@/features/admin/projects/live/clients-api";
 
-const MAX_BYTES = 512 * 1024;
-const ACCEPTED = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+interface LogoPickerProps {
+  name: string;
+  value: string | { url?: string | null; id?: string } | null;
+  onChange?: (value: string | null) => void;
+  onFileSelect?: (file: File | null) => void;
+  onUpload?: (file: File) => Promise<void>;
+  onRemove?: () => Promise<void>;
+  isUploading?: boolean;
+  isRemoving?: boolean;
+  disabled?: boolean;
+}
 
 /**
- * A logo chosen from the operator's device, previewed locally. Nothing is
- * uploaded: in this phase the image is kept as a data URL with the client.
+ * Client logo picker supporting direct upload/replacement/deletion (IMAGE-01 Phase 3)
+ * or local preview selection during client creation.
+ * Supported formats: PNG, JPG, WebP up to 5 MB.
  */
-export function LogoPicker({ name, value, onChange }: { name: string; value: string | null; onChange: (value: string | null) => void }) {
+export function LogoPicker({
+  name,
+  value,
+  onChange,
+  onFileSelect,
+  onUpload,
+  onRemove,
+  isUploading = false,
+  isRemoving = false,
+  disabled = false,
+}: LogoPickerProps) {
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const pick = (file: File | undefined) => {
+  const busy = isUploading || isRemoving || disabled;
+
+  const pick = async (file: File | undefined) => {
     if (!file) return;
-    if (!ACCEPTED.includes(file.type)) {
-      setError("Use a PNG, JPG, WebP or SVG image.");
+    const limits = CLIENT_LOGO_UPLOAD_LIMITS;
+    if (!limits.mimeTypes.includes(file.type)) {
+      setError("Use a PNG, JPG or WebP image.");
       return;
     }
-    if (file.size > MAX_BYTES) {
-      setError("The logo must be 512 KB or smaller.");
+    if (file.size > limits.maxBytes) {
+      setError("The logo must be 5 MB or smaller.");
       return;
     }
+
+    setError(null);
+
+    // If an async onUpload handler is supplied (e.g. for existing clients), call it directly
+    if (onUpload) {
+      try {
+        await onUpload(file);
+      } catch (err) {
+        // onUpload caller handles toast / error state
+      }
+      return;
+    }
+
+    // Otherwise, generate local preview (e.g. for Add Client wizard before client creation)
+    onFileSelect?.(file);
     const reader = new FileReader();
     reader.onload = () => {
       setError(null);
-      onChange(typeof reader.result === "string" ? reader.result : null);
+      onChange?.(typeof reader.result === "string" ? reader.result : null);
     };
     reader.onerror = () => setError("The image could not be read.");
     reader.readAsDataURL(file);
   };
+
+  const handleRemove = async () => {
+    setError(null);
+    if (onRemove) {
+      await onRemove();
+    }
+    onChange?.(null);
+    onFileSelect?.(null);
+    if (input.current) input.current.value = "";
+  };
+
+  const hasLogo = Boolean(typeof value === "string" ? value : value?.url);
 
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-3">
         <ClientAvatar name={name || "Client"} logo={value} className="size-12" />
         <div className="flex flex-wrap items-center gap-1.5">
-          <Button type="button" variant="outline" size="sm" onClick={() => input.current?.click()}>
-            <ImageUpIcon />
-            {value ? "Replace logo" : "Choose logo"}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={busy}
+            onClick={() => input.current?.click()}
+          >
+            {isUploading ? <Loader2Icon className="animate-spin" /> : <ImageUpIcon />}
+            {isUploading ? "Uploading..." : hasLogo ? "Replace logo" : "Choose logo"}
           </Button>
-          {value ? (
-            <Button type="button" variant="ghost" size="sm" onClick={() => { setError(null); onChange(null); if (input.current) input.current.value = ""; }}>
-              <Trash2Icon />
-              Remove
+          {hasLogo ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={busy}
+              onClick={handleRemove}
+            >
+              {isRemoving ? <Loader2Icon className="animate-spin" /> : <Trash2Icon />}
+              {isRemoving ? "Removing..." : "Remove"}
             </Button>
           ) : null}
         </div>
         <input
           ref={input}
           type="file"
-          accept={ACCEPTED.join(",")}
+          accept={CLIENT_LOGO_UPLOAD_LIMITS.mimeTypes.join(",")}
           className="sr-only"
           aria-label="Client logo file"
           tabIndex={-1}
+          disabled={busy}
           onChange={(event) => {
-            pick(event.target.files?.[0]);
+            void pick(event.target.files?.[0]);
             event.target.value = "";
           }}
         />
@@ -69,8 +133,9 @@ export function LogoPicker({ name, value, onChange }: { name: string; value: str
           {error}
         </p>
       ) : (
-        <p className="text-2xs text-muted-foreground">Preview only - the file stays in this browser. PNG, JPG, WebP or SVG up to 512 KB.</p>
+        <p className="text-2xs text-muted-foreground">PNG, JPG or WebP up to 5 MB.</p>
       )}
     </div>
   );
 }
+

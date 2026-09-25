@@ -179,9 +179,14 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
         setReconnectForced(true);
         toast.error(error.message, { duration: 8000 });
       } else if (ApiError.isApiError(error)) {
-        toast.error(error.message);
+        toast.error(`Scheduling failed: ${error.message}`, {
+          description: error.reason ? `Reason: ${error.reason}` : (error.status ? `Status HTTP ${error.status}` : undefined),
+          duration: 6000,
+        });
+      } else if (error instanceof Error) {
+        toast.error(`Scheduling failed: ${error.message}`, { duration: 6000 });
       } else {
-        toast.error("Unexpected error while scheduling.");
+        toast.error("Unexpected error while scheduling.", { duration: 6000 });
       }
     } finally {
       setScheduling(false);
@@ -207,9 +212,14 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
         toast.error(status ? `Cannot cancel: this post is already ${status}.` : error.message);
         refreshPosts();
       } else if (ApiError.isApiError(error)) {
-        toast.error(error.message);
+        toast.error(`Cancellation failed: ${error.message}`, {
+          description: error.reason ? `Reason: ${error.reason}` : (error.status ? `Status HTTP ${error.status}` : undefined),
+          duration: 6000,
+        });
+      } else if (error instanceof Error) {
+        toast.error(`Cancellation failed: ${error.message}`, { duration: 6000 });
       } else {
-        toast.error("Could not cancel this schedule.");
+        toast.error("Could not cancel this schedule.", { duration: 6000 });
       }
     }
   };
@@ -282,6 +292,8 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
             const unsupported = items.length === 0 && !targetsPending;
             const composed = composeScheduledFor(sched?.date, sched?.time);
 
+            const isGoogle = platform === "google-business";
+
             return (
               <div key={platform} className="rounded-sm border border-[#E2E8F0] p-2">
                 <div className="flex items-center gap-2">
@@ -294,7 +306,11 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
                 </div>
 
                 <div className="mt-1.5 flex items-center gap-1.5">
-                  {targetsPending && items.length === 0 ? (
+                  {isGoogle ? (
+                    <span className="flex-1 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] text-amber-800">
+                      Google publishing is not supported in TASK-11B (Meta Pages & LinkedIn Organizations supported).
+                    </span>
+                  ) : targetsPending && items.length === 0 ? (
                     <span className="flex items-center gap-1 text-[10px] text-[#7A87A0]">
                       <Loader2 className="size-3 animate-spin" /> Discovering targets…
                     </span>
@@ -323,16 +339,18 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
                     </select>
                   )}
 
-                  <button
-                    disabled={!scheduleReady || scheduling || !selected || "error" in composed}
-                    onClick={() => {
-                      if ("error" in composed) return toast.error(composed.error);
-                      setPendingConfirm({ platform, scheduledFor: composed.scheduledFor });
-                    }}
-                    className="flex h-7 shrink-0 items-center gap-1 rounded-sm bg-[#1769DF] px-2.5 text-[10px] font-semibold text-white transition hover:bg-[#1259BD] disabled:cursor-not-allowed disabled:bg-gray-400"
-                  >
-                    <Calendar className="size-3" /> Schedule
-                  </button>
+                  {!isGoogle && (
+                    <button
+                      disabled={!scheduleReady || scheduling || !selected || "error" in composed}
+                      onClick={() => {
+                        if ("error" in composed) return toast.error(composed.error);
+                        setPendingConfirm({ platform, scheduledFor: composed.scheduledFor });
+                      }}
+                      className="flex h-7 shrink-0 items-center gap-1 rounded-sm bg-[#1769DF] px-2.5 text-[10px] font-semibold text-white transition hover:bg-[#1259BD] disabled:cursor-not-allowed disabled:bg-gray-400"
+                    >
+                      <Calendar className="size-3" /> Schedule
+                    </button>
+                  )}
                 </div>
 
                 {"error" in composed && <p className="mt-1 text-[10px] text-red-500">{composed.error}</p>}

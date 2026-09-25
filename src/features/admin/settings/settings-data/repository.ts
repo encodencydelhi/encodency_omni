@@ -1,6 +1,10 @@
 import { AllSettingsState, DataExportRequest, SettingsActivityItem, UserPreferences } from "./types";
 import { INITIAL_SETTINGS_STATE } from "./mock-provider";
 import { SETTINGS_MOCK_MODE, SETTINGS_STORAGE_KEY } from "./config";
+import { apiClient } from "@/lib/api/client";
+import { getStoredCompanyId, setStoredTenancy, DEFAULT_FALLBACK_COMPANY_ID } from "@/lib/api/tenancy-storage";
+import { brandingApi } from "../live/branding-api";
+import type { CurrentUserResponse } from "@/types/domain/auth";
 
 export class SettingsRepository {
   private static isBrowser(): boolean {
@@ -8,22 +12,106 @@ export class SettingsRepository {
   }
 
   public static async getSettings(): Promise<AllSettingsState> {
-    if (!SETTINGS_MOCK_MODE) {
-      throw new Error("SETTINGS_SERVICE_UNAVAILABLE: Real backend settings service is not yet connected.");
-    }
+    let base: AllSettingsState = INITIAL_SETTINGS_STATE;
 
     if (this.isBrowser()) {
       try {
         const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
         if (stored) {
-          return JSON.parse(stored);
+          base = JSON.parse(stored);
         }
       } catch (err) {
         console.warn("Failed to read settings from localStorage, falling back to initial mock", err);
       }
     }
 
-    return INITIAL_SETTINGS_STATE;
+    if (this.isBrowser()) {
+      try {
+        let activeCompanyId = getStoredCompanyId();
+
+        // 1. Fetch current authenticated user & company context from /users/me
+        try {
+          const user = await apiClient.request<CurrentUserResponse>({
+            method: "GET",
+            path: "/users/me",
+          });
+
+          if (user?.memberships && user.memberships.length > 0) {
+            const activeMembership =
+              user.memberships.find((m) => m.companyId === activeCompanyId) ?? user.memberships[0];
+
+            if (activeMembership) {
+              activeCompanyId = activeMembership.companyId;
+              setStoredTenancy(activeCompanyId);
+
+              base.organization = {
+                ...base.organization,
+                name: activeMembership.companyName || base.organization.name,
+                displayName: activeMembership.companyName || base.organization.displayName,
+                metadata: {
+                  ...base.organization.metadata,
+                  id: activeMembership.companyId,
+                  owner: user.email.split("@")[0] || base.organization.metadata.owner,
+                  ownerEmail: user.email || base.organization.metadata.ownerEmail,
+                  planStatus:
+                    activeMembership.companyStatus === "ACTIVE"
+                      ? "Active"
+                      : base.organization.metadata.planStatus,
+                },
+              };
+            }
+          }
+        } catch (uErr) {
+          console.warn("Could not fetch live /users/me for settings:", uErr);
+        }
+
+        // 2. Fetch live branding from /settings/branding if we have a valid companyId
+        if (activeCompanyId && activeCompanyId !== DEFAULT_FALLBACK_COMPANY_ID) {
+          try {
+            const brandingRes = await brandingApi.get(activeCompanyId);
+            if (brandingRes) {
+              base.branding = {
+                ...base.branding,
+                logo: brandingRes.logo?.url || base.branding.logo,
+                favicon: brandingRes.favicon?.url || base.branding.favicon,
+                reportLogo: brandingRes.reportLogo?.url || base.branding.reportLogo,
+                emailLogo: brandingRes.emailLogo?.url || base.branding.emailLogo,
+              };
+              if (brandingRes.logo?.url) {
+                base.organization.logo = brandingRes.logo.url;
+              }
+            }
+          } catch (bErr) {
+            console.warn("Could not fetch live branding for settings:", bErr);
+          }
+
+          // 3. Fetch live team members to sync totalMembers count
+          try {
+            const teamMembers = await apiClient.request<any[]>({
+              method: "GET",
+              path: "/team/members",
+              headers: { "x-company-id": activeCompanyId },
+            });
+            if (Array.isArray(teamMembers)) {
+              base.organization.metadata.totalMembers = teamMembers.length;
+            }
+          } catch (tErr) {
+            console.warn("Could not fetch live team members for settings:", tErr);
+          }
+        }
+
+        // Cache synced data to localStorage for instant re-renders
+        try {
+          localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(base));
+        } catch {
+          // ignore
+        }
+      } catch (err) {
+        console.warn("Live settings sync encountered an error, falling back to local state", err);
+      }
+    }
+
+    return base;
   }
 
   public static async saveSettings(partial: Partial<AllSettingsState>, activityNote?: { action: string; section: any; setting: string }): Promise<AllSettingsState> {

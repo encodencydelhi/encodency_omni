@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { ActionMenu, type ActionMenuItem } from "@/components/shared/action-menu";
 import type { DataTableColumn } from "@/components/shared/data-table/types";
@@ -12,7 +13,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatDate, formatRelativeTime } from "@/lib/utils/format";
 import { ROUTES } from "@/config/routes";
 import type { PaginationMeta } from "@/types/api";
-import { clientHref, clientSectionHref } from "../data/config";
+import { clientHref, clientSectionHref, resolveClientBasePath } from "../data/config";
 import type { ClientSummary } from "../data/types";
 import { ClientAvatar } from "./client-avatar";
 import { HealthBadge, OnboardingBadge, WorkspaceBadge } from "./status-badges";
@@ -27,12 +28,14 @@ function relative(iso: string): string {
 /* Cells                                                               */
 /* ------------------------------------------------------------------ */
 
-export function ClientCell({ summary }: { summary: ClientSummary }) {
+export function ClientCell({ summary, basePath }: { summary: ClientSummary; basePath?: string }) {
+  const pathname = usePathname();
+  const effectiveBasePath = basePath ?? resolveClientBasePath(pathname);
   return (
     <div className="flex min-w-0 max-w-[15rem] items-center gap-2.5">
-      <ClientAvatar name={summary.client.name} logo={summary.profile.logoDataUrl} />
+      <ClientAvatar name={summary.client.name} logo={summary.client.logo?.url ?? summary.profile.logo?.url ?? summary.profile.logoDataUrl} />
       <div className="min-w-0">
-        <Link href={clientHref(summary.client.id)} onClick={stop} className="block truncate text-[0.8125rem] font-semibold text-foreground hover:text-primary hover:underline">
+        <Link href={clientHref(summary.client.id, effectiveBasePath)} onClick={stop} className="block truncate text-[0.8125rem] font-semibold text-foreground hover:text-primary hover:underline">
           {summary.client.name}
         </Link>
         <p className="truncate text-2xs text-muted-foreground">{summary.displayId}</p>
@@ -41,10 +44,14 @@ export function ClientCell({ summary }: { summary: ClientSummary }) {
   );
 }
 
-function CompanyCell({ summary }: { summary: ClientSummary }) {
+function CompanyCell({ summary, basePath }: { summary: ClientSummary; basePath?: string }) {
+  const pathname = usePathname();
+  const isAdmin = (basePath ?? pathname)?.startsWith(ROUTES.admin.root);
+  const companyHref = isAdmin ? ROUTES.admin.settings : ROUTES.superAdmin.company(summary.company.id);
+
   return (
     <div className="min-w-0 max-w-[12rem]">
-      <Link href={ROUTES.superAdmin.company(summary.company.id)} onClick={stop} className="block truncate text-[0.8125rem] font-medium text-foreground hover:text-primary hover:underline">
+      <Link href={companyHref} onClick={stop} className="block truncate text-[0.8125rem] font-medium text-foreground hover:text-primary hover:underline">
         {summary.company.name}
       </Link>
       <p className="truncate text-2xs text-muted-foreground">{summary.company.planName}</p>
@@ -52,29 +59,33 @@ function CompanyCell({ summary }: { summary: ClientSummary }) {
   );
 }
 
-function WebsiteCell({ summary }: { summary: ClientSummary }) {
+function WebsiteCell({ summary, basePath }: { summary: ClientSummary; basePath?: string }) {
+  const pathname = usePathname();
+  const effectiveBasePath = basePath ?? resolveClientBasePath(pathname);
   const { primaryWebsite, websites } = summary;
   if (!primaryWebsite) return <span className="text-2xs text-muted-foreground">Not configured</span>;
   const extra = websites.length - 1;
   return (
-    <Link href={clientSectionHref(summary.client.id, "website-seo")} onClick={stop} className="block min-w-0 max-w-[11rem] rounded-sm hover:underline">
+    <Link href={clientSectionHref(summary.client.id, "website-seo", undefined, effectiveBasePath)} onClick={stop} className="block min-w-0 max-w-[11rem] rounded-sm hover:underline">
       <span className="block truncate text-[0.8125rem] text-foreground">{primaryWebsite.domain}</span>
       {extra > 0 ? <span className="block text-2xs text-muted-foreground">+{extra} {extra === 1 ? "website" : "websites"}</span> : null}
     </Link>
   );
 }
 
-function AccountsCell({ summary }: { summary: ClientSummary }) {
+function AccountsCell({ summary, basePath }: { summary: ClientSummary; basePath?: string }) {
+  const pathname = usePathname();
+  const effectiveBasePath = basePath ?? resolveClientBasePath(pathname);
   const { counts } = summary;
   if (counts.connections === 0) {
     return (
-      <Link href={clientSectionHref(summary.client.id, "channels")} onClick={stop} className="text-2xs text-muted-foreground hover:underline">
+      <Link href={clientSectionHref(summary.client.id, "channels", undefined, effectiveBasePath)} onClick={stop} className="text-2xs text-muted-foreground hover:underline">
         No channels connected
       </Link>
     );
   }
   return (
-    <Link href={clientSectionHref(summary.client.id, "channels")} onClick={stop} className="block rounded-sm hover:underline">
+    <Link href={clientSectionHref(summary.client.id, "channels", undefined, effectiveBasePath)} onClick={stop} className="block rounded-sm hover:underline">
       <span className="block whitespace-nowrap text-[0.8125rem] tabular text-foreground">
         {counts.healthyConnections} / {counts.connections} <span className="text-muted-foreground">Healthy</span>
       </span>
@@ -83,10 +94,12 @@ function AccountsCell({ summary }: { summary: ClientSummary }) {
   );
 }
 
-function TeamCell({ summary }: { summary: ClientSummary }) {
+function TeamCell({ summary, basePath }: { summary: ClientSummary; basePath?: string }) {
+  const pathname = usePathname();
+  const effectiveBasePath = basePath ?? resolveClientBasePath(pathname);
   const { counts, lead } = summary;
   return (
-    <Link href={clientSectionHref(summary.client.id, "team")} onClick={stop} className="block rounded-sm hover:underline">
+    <Link href={clientSectionHref(summary.client.id, "team", undefined, effectiveBasePath)} onClick={stop} className="block rounded-sm hover:underline">
       {counts.activeMembers === 0 ? (
         <span className="text-2xs text-warning">No active members</span>
       ) : (
@@ -105,22 +118,25 @@ function TeamCell({ summary }: { summary: ClientSummary }) {
 /* Columns                                                             */
 /* ------------------------------------------------------------------ */
 
-export function buildClientColumns(rowMenu: (summary: ClientSummary) => ActionMenuItem[]): Array<DataTableColumn<ClientSummary>> {
+export function buildClientColumns(
+  rowMenu: (summary: ClientSummary) => ActionMenuItem[],
+  basePath?: string,
+): Array<DataTableColumn<ClientSummary>> {
   return [
-    { id: "client", header: "Client", sortField: "name", hideable: false, className: "px-3", cell: (summary) => <ClientCell summary={summary} /> },
-    { id: "company", header: "Parent Company", sortField: "company", className: "px-3", cell: (summary) => <CompanyCell summary={summary} /> },
-    { id: "website", header: "Primary Website", className: "px-3", hideBelow: 1320, cell: (summary) => <WebsiteCell summary={summary} /> },
+    { id: "client", header: "Client", sortField: "name", hideable: false, className: "px-3", cell: (summary) => <ClientCell summary={summary} basePath={basePath} /> },
+    { id: "company", header: "Parent Company", sortField: "company", className: "px-3", cell: (summary) => <CompanyCell summary={summary} basePath={basePath} /> },
+    { id: "website", header: "Primary Website", className: "px-3", hideBelow: 1320, cell: (summary) => <WebsiteCell summary={summary} basePath={basePath} /> },
     { id: "workspace", header: "Workspace", className: "px-3", cell: (summary) => <WorkspaceBadge status={summary.workspace} /> },
     { id: "onboarding", header: "Onboarding", className: "px-3", hideBelow: 1400, cell: (summary) => <OnboardingBadge status={summary.onboarding.status} /> },
-    { id: "accounts", header: "Connected Accounts", sortField: "connections", className: "px-3", hideBelow: 1500, cell: (summary) => <AccountsCell summary={summary} /> },
-    { id: "team", header: "Assigned Team", className: "px-3", hideBelow: 1600, cell: (summary) => <TeamCell summary={summary} /> },
+    { id: "accounts", header: "Connected Accounts", sortField: "connections", className: "px-3", hideBelow: 1500, cell: (summary) => <AccountsCell summary={summary} basePath={basePath} /> },
+    { id: "team", header: "Assigned Team", className: "px-3", hideBelow: 1600, cell: (summary) => <TeamCell summary={summary} basePath={basePath} /> },
     {
       id: "health",
       header: "Health",
       sortField: "issues",
       className: "px-3",
       cell: (summary) => (
-        <Link href={`${clientHref(summary.client.id)}#needs-attention`} onClick={stop} className="inline-block">
+        <Link href={`${clientHref(summary.client.id, basePath)}#needs-attention`} onClick={stop} className="inline-block">
           <HealthBadge health={summary.health} />
         </Link>
       ),
@@ -161,6 +177,7 @@ export function ClientCards({
   onPageChange,
   onPageSizeChange,
   emptyState,
+  basePath,
 }: {
   rows: ClientSummary[];
   isLoading: boolean;
@@ -172,7 +189,12 @@ export function ClientCards({
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
   emptyState: ReactNode;
+  basePath?: string;
 }) {
+  const pathname = usePathname();
+  const effectiveBasePath = basePath ?? resolveClientBasePath(pathname);
+  const isAdmin = effectiveBasePath.startsWith(ROUTES.admin.root);
+
   if (isLoading) {
     return (
       <div className="space-y-1">
@@ -203,12 +225,12 @@ export function ClientCards({
                 className="mt-1"
               />
               <button type="button" onClick={() => onOpen(summary)} className="min-w-0 flex-1 text-left">
-                <ClientCell summary={summary} />
+                <ClientCell summary={summary} basePath={effectiveBasePath} />
               </button>
               <ActionMenu items={rowMenu(summary)} label={`Actions for ${summary.client.name}`} />
             </div>
             <p className="mt-1.5 truncate text-2xs text-muted-foreground">
-              <Link href={ROUTES.superAdmin.company(summary.company.id)} className="hover:underline">{summary.company.name}</Link>
+              <Link href={isAdmin ? ROUTES.admin.settings : ROUTES.superAdmin.company(summary.company.id)} className="hover:underline">{summary.company.name}</Link>
               {summary.primaryWebsite ? ` · ${summary.primaryWebsite.domain}` : " · No website"}
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-1.5">

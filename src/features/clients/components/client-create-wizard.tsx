@@ -2,7 +2,7 @@
 
 import { ArrowLeftIcon, ArrowRightIcon, CircleCheckIcon, SearchIcon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AlertBanner } from "@/components/shared/alert-banner";
@@ -18,11 +18,12 @@ import { companySectionHref } from "@/features/companies/data/config";
 import { isValidEmail, isValidPhone, isValidWebsite } from "@/features/companies/lib/validation";
 import { ORGANISATION_ROLE } from "@/types/domain/user";
 import { cn } from "@/lib/utils/cn";
-import { INDUSTRIES, LANGUAGES, SESSION_STORAGE_KEYS, TIMEZONES, clientHref } from "../data/config";
+import { INDUSTRIES, LANGUAGES, SESSION_STORAGE_KEYS, TIMEZONES, clientHref, resolveClientBasePath } from "../data/config";
 import { describeError, useClientMutations, useClientsList, useCreationCompanies, useEligibleMembers } from "../data/hooks";
 import type { ClientCreationCompany, ClientSummary, CreateClientInput } from "../data/types";
 import { ClientAvatar } from "./client-avatar";
 import { LogoPicker } from "./logo-picker";
+import { clientsApi, describeClientLogoError } from "@/features/admin/projects/live/clients-api";
 
 const STEPS = ["Parent company", "Client identity", "Defaults & team", "Review"];
 const NONE = "__none__";
@@ -174,14 +175,29 @@ function CompanyStep({ draft, update }: { draft: Draft; update: (patch: Partial<
 /* Step 2 - identity                                                   */
 /* ------------------------------------------------------------------ */
 
-function IdentityStep({ draft, update, errors }: { draft: Draft; update: (patch: Partial<Draft>) => void; errors: Record<string, string> }) {
+function IdentityStep({
+  draft,
+  update,
+  errors,
+  onFileSelect,
+}: {
+  draft: Draft;
+  update: (patch: Partial<Draft>) => void;
+  errors: Record<string, string>;
+  onFileSelect: (file: File | null) => void;
+}) {
   // Duplicates only matter inside one company: two companies can each have a "Northwind".
   const siblings = useClientsList({ company: draft.companyId, pageSize: 100 });
   const duplicate = draft.name.trim() && (siblings.data?.data ?? []).find((client) => client.client.name.trim().toLowerCase() === draft.name.trim().toLowerCase());
 
   return (
     <div className="space-y-3">
-      <LogoPicker name={draft.name} value={draft.logoDataUrl} onChange={(logoDataUrl) => update({ logoDataUrl })} />
+      <LogoPicker
+        name={draft.name}
+        value={draft.logoDataUrl}
+        onChange={(logoDataUrl) => update({ logoDataUrl })}
+        onFileSelect={onFileSelect}
+      />
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Client name" htmlFor="create-name" required error={errors.name}>
           <Input id="create-name" value={draft.name} onChange={(event) => update({ name: event.target.value })} aria-invalid={Boolean(errors.name)} autoFocus />
@@ -356,6 +372,8 @@ export function CreateClientWizard({ open, initialCompanyId, onClose }: { open: 
 
 function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; onClose: () => void }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const basePath = resolveClientBasePath(pathname);
   const mutations = useClientMutations();
   const companies = useCreationCompanies();
   const [draft, setDraft] = useState<Draft>(() => {
@@ -366,6 +384,7 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
   const [step, setStep] = useState(0);
   const [attempted, setAttempted] = useState(false);
   const [pending, setPending] = useState(false);
+  const [pendingLogoFile, setPendingLogoFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
   const [created, setCreated] = useState<ClientSummary | null>(null);
@@ -413,6 +432,7 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
 
   const discard = () => {
     writeDraft(null);
+    setPendingLogoFile(null);
     onClose();
   };
 
@@ -435,7 +455,8 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
       website: draft.website.trim() || undefined,
       contactEmail: draft.contactEmail.trim() || undefined,
       contactPhone: draft.contactPhone.trim() || undefined,
-      logoDataUrl: draft.logoDataUrl,
+      // IMAGE-01 Phase 3: POST /clients remains JSON-only; do NOT send logoDataUrl or file
+      logoDataUrl: null,
       description: draft.description.trim() || undefined,
       targetAudience: draft.description.trim() || undefined,
       timezone: draft.timezone,
@@ -444,14 +465,46 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
       memberIds: draft.memberIds,
     };
     try {
-      const summary = await mutations.createClient(input);
+      // Step 1 & 2: Create client first and receive created Client ID
+      let summary = await mutations.createClient(input);
+
+      // Step 3: If user selected a logo, upload it to PUT /api/v1/clients/:id/logo
+      if (pendingLogoFile && summary?.client?.id) {
+        try {
+          const uploadRes = await clientsApi.uploadLogo(
+            summary.company.id || draft.companyId,
+            summary.client.id,
+            pendingLogoFile,
+          );
+          if (uploadRes?.logo) {
+            summary = {
+              ...summary,
+              client: { ...summary.client, logo: uploadRes.logo },
+              profile: {
+                ...summary.profile,
+                logo: uploadRes.logo,
+                logoDataUrl: uploadRes.logo.url,
+              },
+            };
+          }
+        } catch (uploadErr) {
+          toast.error("Client created, but logo upload failed", {
+            description: describeClientLogoError(uploadErr),
+          });
+        }
+      }
+
       writeDraft(null);
+      setPendingLogoFile(null);
       setCreated(summary);
       toast.success(`${summary.client.name} created`);
     } catch (failure) {
       const described = describeError(failure);
       setError(described.message);
       setServerErrors(described.fieldErrors);
+      toast.error("Failed to create client", {
+        description: described.message,
+      });
       // Send the operator back to the step that holds the problem.
       if (described.fieldErrors.members) setStep(2);
       else if (Object.keys(described.fieldErrors).length > 0) setStep(1);
@@ -462,6 +515,7 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
 
   const another = () => {
     setCreated(null);
+    setPendingLogoFile(null);
     setDraft({ ...EMPTY, companyId: draft.companyId });
     setStep(1);
     setAttempted(false);
@@ -481,7 +535,7 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
             <Button variant="outline" onClick={another}>
               Create Another
             </Button>
-            <Button onClick={() => router.push(clientHref(created.client.id))}>Open Client</Button>
+            <Button onClick={() => router.push(clientHref(created.client.id, basePath))}>Open Client</Button>
           </>
         }
       >
@@ -535,7 +589,7 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
       ) : null}
       <ErrorBanner message={error} />
       {step === 0 ? <CompanyStep draft={draft} update={update} /> : null}
-      {step === 1 ? <IdentityStep draft={draft} update={update} errors={shown} /> : null}
+      {step === 1 ? <IdentityStep draft={draft} update={update} errors={shown} onFileSelect={setPendingLogoFile} /> : null}
       {step === 2 ? <TeamStep draft={draft} update={update} errors={shown} /> : null}
       {step === 3 ? <ReviewStep draft={draft} company={company} /> : null}
     </FlowDialog>

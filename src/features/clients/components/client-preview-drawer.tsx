@@ -2,6 +2,7 @@
 
 import { ArrowRightIcon, BuildingIcon, SquareArrowOutUpRightIcon, TriangleAlertIcon } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -10,8 +11,7 @@ import { KeyValue, Panel, StatCard, StatGrid } from "@/features/companies/compon
 import { relativeTime } from "@/features/companies/data/clock";
 import { ROUTES } from "@/config/routes";
 import { formatDate } from "@/lib/utils/format";
-import { PAUSE_REASON_LABEL } from "../data/config";
-import { clientHref, clientSectionHref } from "../data/config";
+import { PAUSE_REASON_LABEL, clientHref, clientSectionHref, resolveClientBasePath } from "../data/config";
 import { useClient } from "../data/hooks";
 import type { ClientSummary } from "../data/types";
 import { ClientAvatar } from "./client-avatar";
@@ -69,7 +69,11 @@ export function ClientPreviewDrawer({ clientId, fallback, onClose }: { clientId:
 }
 
 function PreviewContent({ summary }: { summary: ClientSummary }) {
+  const pathname = usePathname();
+  const basePath = resolveClientBasePath(pathname);
+  const isAdmin = basePath.startsWith(ROUTES.admin.root);
   const { client, counts, operations, company } = summary;
+  const companyHref = isAdmin ? ROUTES.admin.settings : (company ? ROUTES.superAdmin.company(company.id) : "#");
   const id = client.id;
   const attention = summary.attention.filter((item) => item.severity !== "info");
 
@@ -77,7 +81,7 @@ function PreviewContent({ summary }: { summary: ClientSummary }) {
     <>
       <SheetHeader className="gap-2.5">
         <div className="flex items-center gap-3">
-          <ClientAvatar name={client.name} logo={summary.profile.logoDataUrl} className="size-11" />
+          <ClientAvatar name={client.name} logo={client.logo?.url ?? summary.profile.logo?.url ?? summary.profile.logoDataUrl} className="size-11" />
           <div className="min-w-0">
             <SheetTitle className="truncate">{client.name}</SheetTitle>
             <SheetDescription className="truncate">
@@ -100,19 +104,19 @@ function PreviewContent({ summary }: { summary: ClientSummary }) {
             label="Connected accounts"
             value={counts.connections}
             hint={counts.connections === 0 ? "None connected" : counts.attentionConnections > 0 ? `${counts.attentionConnections} need attention` : "All healthy"}
-            href={clientSectionHref(id, "channels")}
+            href={clientSectionHref(id, "channels", undefined, basePath)}
           />
-          <StatCard label="Active members" value={counts.activeMembers} hint={summary.lead ? `Lead: ${summary.lead.name}` : "No lead"} href={clientSectionHref(id, "team")} />
+          <StatCard label="Active members" value={counts.activeMembers} hint={summary.lead ? `Lead: ${summary.lead.name}` : "No lead"} href={clientSectionHref(id, "team", undefined, basePath)} />
         </StatGrid>
 
         <Panel title="Identity">
           <dl className="divide-y divide-border">
             <KeyValue label="Parent company">
-              <Link href={ROUTES.superAdmin.company(company.id)} className="hover:underline">{company.name}</Link>
-              <span className="block text-2xs text-muted-foreground">{company.planName}</span>
+              <Link href={companyHref} className="hover:underline">{company?.name}</Link>
+              <span className="block text-2xs text-muted-foreground">{company?.planName}</span>
             </KeyValue>
             <KeyValue label="Primary website">
-              {summary.primaryWebsite ? <Link href={clientSectionHref(id, "website-seo")} className="hover:underline">{summary.primaryWebsite.domain}</Link> : <span className="text-muted-foreground">Not configured</span>}
+              {summary.primaryWebsite ? <Link href={clientSectionHref(id, "website-seo", undefined, basePath)} className="hover:underline">{summary.primaryWebsite.domain}</Link> : <span className="text-muted-foreground">Not configured</span>}
             </KeyValue>
             <KeyValue label="Industry">{summary.profile.industry}</KeyValue>
             <KeyValue label="Onboarding">{summary.onboarding.requiredDone} / {summary.onboarding.requiredTotal} required steps</KeyValue>
@@ -139,7 +143,7 @@ function PreviewContent({ summary }: { summary: ClientSummary }) {
                     <p className="mt-0.5 truncate text-2xs text-muted-foreground">{item.description}</p>
                   </div>
                   <Button asChild variant="ghost" size="icon-sm" aria-label={item.actionLabel}>
-                    <Link href={clientSectionHref(id, item.section, item.query)}>
+                    <Link href={clientSectionHref(id, item.section, item.query, basePath)}>
                       <ArrowRightIcon />
                     </Link>
                   </Button>
@@ -153,14 +157,14 @@ function PreviewContent({ summary }: { summary: ClientSummary }) {
       <SheetFooter className="flex-wrap justify-between">
         <div className="flex flex-wrap gap-1.5">
           <Button asChild variant="outline" size="sm">
-            <Link href={ROUTES.superAdmin.company(company.id)}>
+            <Link href={companyHref}>
               <BuildingIcon />
               Open Parent Company
             </Link>
           </Button>
           {attention.length > 0 ? (
             <Button asChild variant="outline" size="sm">
-              <Link href={`${clientHref(id)}#needs-attention`}>
+              <Link href={`${clientHref(id, basePath)}#needs-attention`}>
                 <TriangleAlertIcon />
                 Review Issues
               </Link>
@@ -168,7 +172,7 @@ function PreviewContent({ summary }: { summary: ClientSummary }) {
           ) : null}
         </div>
         <Button asChild size="sm">
-          <Link href={clientHref(id)}>
+          <Link href={clientHref(id, basePath)}>
             <SquareArrowOutUpRightIcon />
             Open Full Client
           </Link>

@@ -169,6 +169,7 @@ export function CompanyEditDrawer({ summary, onClose }: { summary: CompanySummar
       const described = describeError(failure);
       setError(described.message);
       setServerErrors(described.fieldErrors);
+      toast.error("Failed to update company", { description: described.message });
       return false;
     } finally {
       setPending(false);

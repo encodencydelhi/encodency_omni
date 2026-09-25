@@ -34,6 +34,7 @@ export interface CreateCampaignPayload {
   budget?: BudgetInput | null;
   startDate?: string | null;
   endDate?: string | null;
+  [key: string]: unknown;
 }
 
 export interface UpdateCampaignPayload {

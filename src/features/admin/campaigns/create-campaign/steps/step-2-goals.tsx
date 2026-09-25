@@ -1,7 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import {
+  AlertCircle,
   BarChart3,
   CalendarDays,
   Clock,
@@ -19,6 +20,7 @@ import type { CampaignDraft } from "../draft";
 import { ChannelLogo } from "../../../shared/channel-logo";
 import { Field, Segmented, SelectInput, Slider, TextInput } from "../ui";
 import { cn } from "@/lib/utils/cn";
+import { calculateCampaignDuration, toCalendarDateString } from "../date-utils";
 
 type Setter = <K extends keyof CampaignDraft>(key: K, value: CampaignDraft[K]) => void;
 
@@ -55,6 +57,29 @@ function format(value: number) {
 export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter }) {
   const total = toNumber(draft.totalBudget);
   const reserve = toNumber(draft.contingency);
+
+  const handleStartDate = (v: string) => {
+    set("startDate", v);
+    const dur = calculateCampaignDuration(v, draft.endDate);
+    if (dur && dur !== "Invalid range") {
+      set("campaignDuration", dur);
+    }
+  };
+
+  const handleEndDate = (v: string) => {
+    set("endDate", v);
+    const dur = calculateCampaignDuration(draft.startDate, v);
+    if (dur && dur !== "Invalid range") {
+      set("campaignDuration", dur);
+    }
+  };
+
+  const dateOrderWarning = useMemo(() => {
+    const s = toCalendarDateString(draft.startDate);
+    const e = toCalendarDateString(draft.endDate);
+    if (s && e && e < s) return "End date must be on or after start date.";
+    return null;
+  }, [draft.startDate, draft.endDate]);
 
   return (
     <div className="overflow-hidden rounded-sm border border-[#DDE6F1] bg-white shadow-[0_1px_4px_rgb(15_23_42/0.05)]">
@@ -146,16 +171,22 @@ export function StepGoals({ draft, set }: { draft: CampaignDraft; set: Setter })
               <TextInput value={draft.monthlyBudget} onChange={(v) => set("monthlyBudget", v)} prefix="₹" spellCheck={false} />
             </Field>
           )}
-          <Field label="Start Date" required>
-            <TextInput icon={CalendarDays} value={draft.startDate} onChange={(v) => set("startDate", v)} spellCheck={false} />
+          <Field label="Start Date" required hint="YYYY-MM-DD">
+            <TextInput icon={CalendarDays} value={draft.startDate} onChange={handleStartDate} placeholder="YYYY-MM-DD" spellCheck={false} />
           </Field>
-          <Field label="End Date" required>
-            <TextInput icon={CalendarDays} value={draft.endDate} onChange={(v) => set("endDate", v)} spellCheck={false} />
+          <Field label="End Date" required hint="YYYY-MM-DD">
+            <TextInput icon={CalendarDays} value={draft.endDate} onChange={handleEndDate} placeholder="YYYY-MM-DD" spellCheck={false} />
           </Field>
           <Field label="Duration">
             <TextInput icon={Clock} value={draft.campaignDuration} disabled spellCheck={false} />
           </Field>
         </div>
+        {dateOrderWarning && (
+          <div className="mt-2.5 flex items-center gap-1.5 rounded-sm bg-red-50 px-2.5 py-1.5 text-[11px] font-medium text-red-700">
+            <AlertCircle className="size-3.5 shrink-0 text-red-600" />
+            <span>{dateOrderWarning}</span>
+          </div>
+        )}
       </StepSection>
 
       <StepSection letter="D" title="Bid Strategy & Optimization" caption="Configure bidding and optimization for paid campaigns.">

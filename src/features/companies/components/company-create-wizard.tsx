@@ -355,6 +355,9 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
       const described = describeError(failure);
       setError(described.message);
       setServerErrors(described.fieldErrors);
+      toast.error("Failed to create company", {
+        description: described.message,
+      });
     } finally {
       setPending(false);
     }

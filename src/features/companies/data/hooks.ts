@@ -139,6 +139,7 @@ export interface DescribedError {
 
 export function describeError(error: unknown, fallback = "Something went wrong. Nothing was changed."): DescribedError {
   if (ApiError.isApiError(error)) return { message: error.message, fieldErrors: error.fieldErrors ?? {} };
+  if (error instanceof Error) return { message: error.message, fieldErrors: {} };
   return { message: fallback, fieldErrors: {} };
 }
 

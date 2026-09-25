@@ -17,7 +17,7 @@ import { ClientAvatar } from "../components/client-avatar";
 import { ClientError } from "../components/states";
 import { HealthInline, OnboardingBadge, WorkspaceBadge, HealthBadge } from "../components/status-badges";
 import { useClientActions } from "../components/use-client-actions";
-import { CLIENTS_LIST_ROUTE, CLIENT_SECTIONS, MONITORING_META, PAUSE_REASON_LABEL, clientHref, clientSectionHref } from "../data/config";
+import { CLIENTS_LIST_ROUTE, CLIENT_SECTIONS, MONITORING_META, PAUSE_REASON_LABEL, clientHref, clientSectionHref, clientsListHref, resolveClientBasePath } from "../data/config";
 import { useClient } from "../data/hooks";
 import type { ClientSection, ClientSummary } from "../data/types";
 import { recallListQuery } from "../lib/list-query";
@@ -28,8 +28,8 @@ export function useClientId(): string {
   return decodeURIComponent(params.clientId ?? "");
 }
 
-function activeSection(pathname: string, clientId: string): ClientSection {
-  const base = clientHref(clientId);
+function activeSection(pathname: string, clientId: string, basePath?: string): ClientSection {
+  const base = clientHref(clientId, basePath);
   const rest = pathname.startsWith(base) ? pathname.slice(base.length).replace(/^\/+/, "").split("/")[0] : "";
   return CLIENT_SECTIONS.find((section) => section.slug === rest)?.key ?? "overview";
 }
@@ -56,8 +56,9 @@ function HeaderSkeleton() {
   );
 }
 
-function BackToClients() {
+function BackToClients({ basePath }: { basePath?: string }) {
   const router = useRouter();
+  const listRoute = clientsListHref(basePath);
   return (
     <Button
       variant="ghost"
@@ -66,7 +67,7 @@ function BackToClients() {
       onClick={() => {
         // Return to the list exactly as it was left: same filters, sort and page.
         const saved = recallListQuery();
-        router.push(saved ? `${CLIENTS_LIST_ROUTE}?${saved}` : CLIENTS_LIST_ROUTE);
+        router.push(saved ? `${listRoute}?${saved}` : listRoute);
       }}
     >
       <ArrowLeftIcon />
@@ -75,18 +76,20 @@ function BackToClients() {
   );
 }
 
-function ClientHeader({ summary }: { summary: ClientSummary }) {
+function ClientHeader({ summary, basePath }: { summary: ClientSummary; basePath?: string }) {
   const { client, company } = summary;
   const { capabilities, openFlow, detailMenu, dialogs } = useClientActions();
   const archived = summary.workspace === "archived";
   const menu = detailMenu(summary);
   const website = summary.primaryWebsite;
+  const isAdmin = (basePath ?? "").startsWith(ROUTES.admin.root);
+  const companyHref = isAdmin ? ROUTES.admin.settings : ROUTES.superAdmin.company(company.id);
 
   return (
     <header className="space-y-1">
       <div className="flex flex-col gap-3 rounded-sm border border-border bg-card p-3.5 shadow-xs sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <ClientAvatar name={client.name} logo={summary.profile.logoDataUrl} className="size-12 text-sm" />
+          <ClientAvatar name={client.name} logo={client.logo?.url ?? summary.profile.logo?.url ?? summary.profile.logoDataUrl} className="size-12 text-sm" />
           <div className="min-w-0 space-y-1.5">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <h1 className="truncate text-lg font-semibold tracking-tight text-foreground">{client.name}</h1>
@@ -95,7 +98,7 @@ function ClientHeader({ summary }: { summary: ClientSummary }) {
               <HealthBadge health={summary.health} />
             </div>
             <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-2xs text-muted-foreground">
-              <Link href={ROUTES.superAdmin.company(company.id)} className="inline-flex items-center gap-1 hover:text-foreground hover:underline">
+              <Link href={companyHref} className="inline-flex items-center gap-1 hover:text-foreground hover:underline">
                 <BuildingIcon className="size-3" aria-hidden />
                 {company.name}
               </Link>
@@ -121,7 +124,7 @@ function ClientHeader({ summary }: { summary: ClientSummary }) {
             </Button>
           ) : null}
           <Button asChild variant="outline" size="sm">
-            <Link href={ROUTES.superAdmin.company(company.id)}>
+            <Link href={companyHref}>
               <BuildingIcon />
               Open Parent Company
             </Link>
@@ -159,40 +162,42 @@ function ClientHeader({ summary }: { summary: ClientSummary }) {
 }
 
 /** The at-a-glance strip under the header. Every card opens the section that explains it. */
-function ClientSummaryStrip({ summary }: { summary: ClientSummary }) {
+function ClientSummaryStrip({ summary, basePath }: { summary: ClientSummary; basePath?: string }) {
   const { company, counts, operations, primaryWebsite } = summary;
   const id = summary.client.id;
   const monitoring = primaryWebsite ? MONITORING_META[primaryWebsite.monitoring].label : null;
+  const isAdmin = (basePath ?? "").startsWith(ROUTES.admin.root);
+  const companyHref = isAdmin ? ROUTES.admin.settings : ROUTES.superAdmin.company(company.id);
 
   return (
     <StatGrid className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-8">
-      <StatCard compact label="Parent company" value={<span className="text-[0.8125rem]">{company.name}</span>} hint={company.planName} href={ROUTES.superAdmin.company(company.id)} />
-      <StatCard compact label="Assigned members" value={counts.activeMembers} hint={summary.lead ? `Lead: ${summary.lead.name}` : "No lead"} href={clientSectionHref(id, "team")} />
+      <StatCard compact label="Parent company" value={<span className="text-[0.8125rem]">{company.name}</span>} hint={company.planName} href={companyHref} />
+      <StatCard compact label="Assigned members" value={counts.activeMembers} hint={summary.lead ? `Lead: ${summary.lead.name}` : "No lead"} href={clientSectionHref(id, "team", undefined, basePath)} />
       <StatCard
         compact
         label="Channel connections"
         value={counts.connections}
         hint={counts.connections === 0 ? "None connected" : counts.attentionConnections > 0 ? `${counts.attentionConnections} need attention` : "All healthy"}
-        href={clientSectionHref(id, "channels")}
+        href={clientSectionHref(id, "channels", undefined, basePath)}
       />
       <StatCard
         compact
         label="Website status"
         value={<span className="text-[0.8125rem]">{primaryWebsite ? (primaryWebsite.availability === "down" ? "Down" : primaryWebsite.availability === "up" ? "Up" : "Unknown") : "Not configured"}</span>}
         hint={monitoring ?? "Add a website"}
-        href={clientSectionHref(id, "website-seo")}
+        href={clientSectionHref(id, "website-seo", undefined, basePath)}
       />
-      <StatCard compact label="Scheduled posts" value={operations.scheduledPosts} hint="Upcoming" href={`${clientHref(id)}#publishing`} />
-      <StatCard compact label="Failed operations" value={operations.failedPosts} hint={operations.failedPosts > 0 ? "Need review" : "None"} href={`${clientHref(id)}#publishing`} />
-      <StatCard compact label="Health" value={<HealthInline health={summary.health} />} href={`${clientHref(id)}#needs-attention`} />
-      <StatCard compact label="Last active" value={<span className="text-[0.8125rem]">{relativeTime(summary.lastActiveAt)}</span>} href={clientSectionHref(id, "activity")} />
+      <StatCard compact label="Scheduled posts" value={operations.scheduledPosts} hint="Upcoming" href={`${clientHref(id, basePath)}#publishing`} />
+      <StatCard compact label="Failed operations" value={operations.failedPosts} hint={operations.failedPosts > 0 ? "Need review" : "None"} href={`${clientHref(id, basePath)}#publishing`} />
+      <StatCard compact label="Health" value={<HealthInline health={summary.health} />} href={`${clientHref(id, basePath)}#needs-attention`} />
+      <StatCard compact label="Last active" value={<span className="text-[0.8125rem]">{relativeTime(summary.lastActiveAt)}</span>} href={clientSectionHref(id, "activity", undefined, basePath)} />
     </StatGrid>
   );
 }
 
-function SectionNav({ summary }: { summary: ClientSummary }) {
+function SectionNav({ summary, basePath }: { summary: ClientSummary; basePath?: string }) {
   const pathname = usePathname();
-  const current = activeSection(pathname, summary.client.id);
+  const current = activeSection(pathname, summary.client.id, basePath);
   const counts: Partial<Record<ClientSection, number>> = { team: summary.counts.assigned, channels: summary.counts.connections };
 
   return (
@@ -204,7 +209,7 @@ function SectionNav({ summary }: { summary: ClientSummary }) {
           return (
             <li key={section.key}>
               <Link
-                href={clientSectionHref(summary.client.id, section.key)}
+                href={clientSectionHref(summary.client.id, section.key, undefined, basePath)}
                 aria-current={active ? "page" : undefined}
                 className={cn("relative inline-flex items-center gap-1.5 px-3 py-2 text-[0.8125rem] font-medium transition-colors", active ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
               >
@@ -226,13 +231,15 @@ function SectionNav({ summary }: { summary: ClientSummary }) {
  * keyed by client id, so nothing from another client can leak in.
  */
 export function ClientShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const basePath = resolveClientBasePath(pathname);
   const clientId = useClientId();
   const query = useClient(clientId);
 
   if (query.error && !query.data) {
     return (
       <div className="space-y-2">
-        <BackToClients />
+        <BackToClients basePath={basePath} />
         <ClientError subject="Client" error={query.error} onRetry={() => void query.refetch()} />
       </div>
     );
@@ -242,10 +249,10 @@ export function ClientShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="space-y-2">
-      <BackToClients />
-      <ClientHeader summary={query.data} />
-      <ClientSummaryStrip summary={query.data} />
-      <SectionNav summary={query.data} />
+      <BackToClients basePath={basePath} />
+      <ClientHeader summary={query.data} basePath={basePath} />
+      <ClientSummaryStrip summary={query.data} basePath={basePath} />
+      <SectionNav summary={query.data} basePath={basePath} />
       <div className="pt-1">{children}</div>
     </div>
   );

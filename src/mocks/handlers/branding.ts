@@ -150,4 +150,31 @@ export const brandingRoutes: MockRoutes = {
     state.logo = null;
     return { ...state };
   },
+
+  "PUT /clients/:id/logo": ({ params, headers, body }) => {
+    const clientId = params.id ?? "";
+    if (!clientId) {
+      throw new ApiError({ code: "NOT_FOUND", message: "Client ID is required.", status: 404 });
+    }
+    const asset = {
+      id: `asset_logo_${clientId}`,
+      purpose: "CLIENT_LOGO",
+      url: `https://res.cloudinary.com/demo/image/upload/v1/client_logo_${clientId}.png`,
+      mimeType: "image/png",
+      format: "png",
+      bytes: 2048,
+      width: 200,
+      height: 200,
+      uploadedAt: new Date().toISOString(),
+    };
+    return { clientId, logo: asset };
+  },
+
+  "DELETE /clients/:id/logo": ({ params }) => {
+    const clientId = params.id ?? "";
+    if (!clientId) {
+      throw new ApiError({ code: "NOT_FOUND", message: "Client ID is required.", status: 404 });
+    }
+    return { clientId, logo: null };
+  },
 };

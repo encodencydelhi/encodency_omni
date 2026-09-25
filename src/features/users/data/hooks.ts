@@ -2,7 +2,19 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { ApiError } from "@/types/api";
 import { usersRepository } from "./repository";
+
+function notifyMutationError(fallback: string, err: unknown) {
+  if (ApiError.isApiError(err)) {
+    const details = err.reason || (err.status ? `Status HTTP ${err.status}` : undefined);
+    toast.error(err.message || fallback, { description: details, duration: 6000 });
+  } else if (err instanceof Error) {
+    toast.error(err.message || fallback, { duration: 6000 });
+  } else {
+    toast.error(fallback, { duration: 6000 });
+  }
+}
 import type {
   AddMembershipInput,
   ChangeRoleInput,
@@ -109,9 +121,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success(`Demo invitation created for ${res.name} (${res.email})`);
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to create invitation.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to create invitation.", err),
   });
 
   const resendInvitation = useMutation({
@@ -120,9 +130,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success(`Invitation resent to ${res.email}`);
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to resend invitation.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to resend invitation.", err),
   });
 
   const revokeInvitation = useMutation({
@@ -131,9 +139,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success(`Invitation for ${res.email} revoked.`);
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to revoke invitation.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to revoke invitation.", err),
   });
 
   const addCompanyMembership = useMutation({
@@ -142,9 +148,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success(`Added ${res.identity.name} to company membership.`);
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to add company membership.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to add company membership.", err),
   });
 
   const changeMembershipRole = useMutation({
@@ -153,9 +157,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success(`Role updated successfully for ${res.identity.name}.`);
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to change company role.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to change company role.", err),
   });
 
   const updateClientAccess = useMutation({
@@ -164,9 +166,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success("Client access updated successfully.");
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to update client access.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to update client access.", err),
   });
 
   const suspendMembership = useMutation({
@@ -176,9 +176,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success("Company membership suspended.");
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to suspend membership.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to suspend membership.", err),
   });
 
   const reactivateMembership = useMutation({
@@ -187,9 +185,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success("Company membership reactivated.");
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to reactivate membership.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to reactivate membership.", err),
   });
 
   const removeMembership = useMutation({
@@ -198,9 +194,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success("Company membership removed and resources reassigned.");
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to remove membership.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to remove membership.", err),
   });
 
   const transferOwnership = useMutation({
@@ -209,9 +203,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success("Company ownership transferred successfully.");
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to transfer company ownership.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to transfer company ownership.", err),
   });
 
   const suspendGlobalAccount = useMutation({
@@ -221,9 +213,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success(`Global account for ${res.identity.name} suspended.`);
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to suspend global account.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to suspend global account.", err),
   });
 
   const reactivateGlobalAccount = useMutation({
@@ -232,9 +222,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success(`Global account for ${res.identity.name} reactivated.`);
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to reactivate global account.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to reactivate global account.", err),
   });
 
   const require2FA = useMutation({
@@ -244,9 +232,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success("2FA requirement policy updated.");
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to update 2FA policy.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to update 2FA policy.", err),
   });
 
   const requirePasswordReset = useMutation({
@@ -255,9 +241,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success("Password reset demand recorded for next login.");
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to send password reset.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to send password reset.", err),
   });
 
   const revokeSession = useMutation({
@@ -267,9 +251,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success("Session revoked.");
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to revoke session.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to revoke session.", err),
   });
 
   const revokeAllSessions = useMutation({
@@ -278,9 +260,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success("All active sessions revoked.");
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to revoke all sessions.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to revoke all sessions.", err),
   });
 
   const unlockAccount = useMutation({
@@ -289,9 +269,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success("Account unlocked successfully.");
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to unlock account.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to unlock account.", err),
   });
 
   const updateUserIdentity = useMutation({
@@ -300,9 +278,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success(`Identity profile updated for ${res.identity.name}.`);
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to update identity profile.");
-    },
+    onError: (err: unknown) => notifyMutationError("Failed to update identity profile.", err),
   });
 
   const bulkAction = useMutation({
@@ -319,9 +295,7 @@ export function useUserMutations() {
       invalidateAll();
       toast.success(res.message);
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "Bulk operation failed.");
-    },
+    onError: (err: unknown) => notifyMutationError("Bulk operation failed.", err),
   });
 
   return {
