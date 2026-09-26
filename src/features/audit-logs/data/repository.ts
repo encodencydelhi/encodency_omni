@@ -10,6 +10,7 @@
  */
 import { AUDIT_MOCK_MODE } from "./config";
 import { mockAuditProvider } from "./mock-provider";
+import { apiAuditProvider } from "./api-provider";
 import { unavailableAuditProvider } from "./unavailable-provider";
 import type {
   ActivityPoint,
@@ -62,7 +63,7 @@ export interface SecurityCounts {
 }
 
 export interface AuditRepository {
-  readonly mode: "mock" | "unavailable";
+  readonly mode: "live" | "mock" | "unavailable";
   getOverview(window: DateWindow, environment: Environment | null): Promise<AuditOverview>;
   getActivity(window: DateWindow, metric: string, environment: Environment | null): Promise<{ unit: "hour" | "day" | "week"; points: ActivityPoint[] }>;
   listEvents(query: EventQuery): Promise<EventPage>;
@@ -91,4 +92,4 @@ export interface AuditRepository {
 }
 
 export type { AuditEvent };
-export const auditRepository: AuditRepository = AUDIT_MOCK_MODE ? mockAuditProvider : unavailableAuditProvider;
+export const auditRepository: AuditRepository = AUDIT_MOCK_MODE ? mockAuditProvider : apiAuditProvider;

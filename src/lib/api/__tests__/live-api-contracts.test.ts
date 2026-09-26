@@ -36,6 +36,9 @@ const { brandingApi, BRANDING_UPLOAD_LIMITS, describeBrandingError, isAssetConfl
   await import("@/features/admin/settings/live/branding-api");
 const { userAvatarApi, USER_AVATAR_LIMITS, isAvatarAssetConflict, isAvatarFileTooLarge, isAvatarStorageUnavailable } =
   await import("@/features/auth/services/user-avatar-api");
+const { superAdminAuditLogsApi } = await import(
+  "@/features/audit-logs/live/super-admin-audit-logs-api"
+);
 
 interface Call {
   url: string;
@@ -1375,6 +1378,112 @@ describe("userAvatarApi (IMAGE-01 Phase 4 contracts)", () => {
     await assert.rejects(userAvatarApi.upload(file), (err: unknown) => isAvatarAssetConflict(err) === true);
     await assert.rejects(userAvatarApi.upload(file), (err: unknown) => isAvatarFileTooLarge(err) === true);
     await assert.rejects(userAvatarApi.upload(file), (err: unknown) => isAvatarStorageUnavailable(err) === true);
+  });
+});
+
+describe("superAdminAuditLogsApi (TASK-17 persisted audit logs contracts)", () => {
+  it("GET /super-admin/audit-logs passes query parameters and parses paginated response", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        items: [
+          {
+            id: "al-1",
+            createdAt: "2026-09-26T12:00:00Z",
+            action: "company.created",
+            resourceType: "COMPANY",
+            resourceId: "comp-1",
+            outcome: "SUCCESS",
+            actor: {
+              type: "USER",
+              userId: "u-1",
+              platformRole: "SUPER_ADMIN",
+              membershipId: null,
+              name: "Super Admin",
+              email: "admin@omi.test",
+            },
+            companyId: "comp-1",
+            companyName: "Acme Media",
+            clientId: null,
+            clientName: null,
+            metadata: { name: "Acme Media" },
+            requestId: "req-1",
+            ipAddress: "127.0.0.1",
+            userAgent: "Mozilla/5.0",
+          },
+        ],
+        total: 1,
+        page: 1,
+        limit: 25,
+      },
+    });
+
+    const result = await superAdminAuditLogsApi.list({
+      page: 1,
+      limit: 25,
+      action: "company.created",
+      resourceType: "COMPANY",
+      outcome: "SUCCESS",
+      companyId: "comp-1",
+      from: "2026-09-01T00:00:00Z",
+      to: "2026-09-26T12:00:00Z",
+    });
+
+    assert.equal(calls.length, 1);
+    const callUrl = new URL(calls[0]!.url, "http://localhost");
+    assert.equal(callUrl.pathname, "/api/v1/super-admin/audit-logs");
+    assert.equal(callUrl.searchParams.get("page"), "1");
+    assert.equal(callUrl.searchParams.get("limit"), "25");
+    assert.equal(callUrl.searchParams.get("action"), "company.created");
+    assert.equal(callUrl.searchParams.get("resourceType"), "COMPANY");
+    assert.equal(callUrl.searchParams.get("outcome"), "SUCCESS");
+    assert.equal(callUrl.searchParams.get("companyId"), "comp-1");
+    assert.equal(callUrl.searchParams.get("from"), "2026-09-01T00:00:00Z");
+    assert.equal(callUrl.searchParams.get("to"), "2026-09-26T12:00:00Z");
+    assert.equal(calls[0]!.init.method, "GET");
+
+    assert.equal(result.total, 1);
+    assert.equal(result.items.length, 1);
+    assert.equal(result.items[0]!.id, "al-1");
+    assert.equal(result.items[0]!.actor.name, "Super Admin");
+  });
+
+  it("GET /super-admin/audit-logs/:id fetches single record by id", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        id: "al-123",
+        createdAt: "2026-09-26T12:00:00Z",
+        action: "client.created",
+        resourceType: "CLIENT",
+        resourceId: "cli-1",
+        outcome: "SUCCESS",
+        actor: {
+          type: "USER",
+          userId: "u-2",
+          platformRole: null,
+          membershipId: "m-1",
+          name: "Team Lead",
+          email: "lead@acme.test",
+        },
+        companyId: "comp-1",
+        companyName: "Acme Media",
+        clientId: "cli-1",
+        clientName: "Alpha Brand",
+        metadata: null,
+        requestId: null,
+        ipAddress: null,
+        userAgent: null,
+      },
+    });
+
+    const result = await superAdminAuditLogsApi.get("al-123");
+
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/audit-logs/al-123");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(result.id, "al-123");
+    assert.equal(result.resourceType, "CLIENT");
   });
 });
 
