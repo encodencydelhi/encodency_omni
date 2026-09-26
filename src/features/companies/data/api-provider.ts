@@ -36,6 +36,7 @@ import type {
   CreateCompanyInput,
 } from "./types";
 import { ensureBundle, writeBundle } from "./mock/store";
+import { organizationApi, type UpdateOrganizationPayload } from "@/features/admin/settings/live/organization-api";
 
 /* ------------------------------------------------------------------ */
 /* Backend DTO shapes (mirrors super-admin-companies.types.ts)         */
@@ -263,6 +264,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       // Required: Idempotency-Key header per user intent
       const idempotencyKey = crypto.randomUUID();
 
+      // Step 1: POST /super-admin/companies with minimal core fields
       const created = await apiClient.request<SuperAdminCompanyDetailResponse>({
         method: "POST",
         path: "/super-admin/companies",
@@ -274,6 +276,40 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
           ownerEmail,
         },
       });
+
+      // Step 2 (Option B): In returned real company context, populate organization profile fields
+      const hasOrgFields = Boolean(
+        input.legalName?.trim() ||
+        input.industry ||
+        input.website?.trim() ||
+        input.contactPhone?.trim() ||
+        input.contactEmail?.trim() ||
+        input.country ||
+        input.workspace?.timezone ||
+        input.workspace?.currency
+      );
+
+      if (hasOrgFields && created.id) {
+        try {
+          const org = await organizationApi.get(created.id);
+          const updatePayload: UpdateOrganizationPayload = {
+            expectedRevision: org.revision,
+            ...(input.legalName ? { legalName: input.legalName.trim() } : {}),
+            ...(input.industry ? { industry: input.industry } : {}),
+            ...(input.website ? { website: input.website.trim() } : {}),
+            ...(input.contactPhone ? { contactPhone: input.contactPhone.trim() } : {}),
+            ...(input.contactEmail ? { contactEmail: input.contactEmail.trim() } : {}),
+            ...(input.country ? { address: { country: input.country } } : {}),
+            ...(input.workspace?.timezone ? { timezone: input.workspace.timezone } : {}),
+            ...(input.workspace?.currency ? { currency: input.workspace.currency } : {}),
+          };
+          await organizationApi.update(created.id, updatePayload);
+        } catch (orgErr) {
+          // If the caller lacks company tenant membership in this session,
+          // the company creation remains successful; organization settings will be updated by the owner
+          console.warn("Option B: /settings/organization populate step skipped or deferred:", orgErr);
+        }
+      }
 
       const summary = toCompanySummary(created);
       try {
