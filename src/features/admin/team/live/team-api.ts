@@ -6,8 +6,25 @@ import type { CompanySystemRole } from "@/types/domain/auth";
 export interface TeamMemberRecord {
   id: string;
   systemRole: CompanySystemRole;
+  jobTitle?: string | null;
+  department?: string | null;
   createdAt: string;
-  user: { id: string; email: string };
+  user: {
+    id: string;
+    email: string;
+    name?: string | null;
+    avatarUrl?: string | null;
+  };
+}
+
+/** Validation response from POST /invitations/validate */
+export interface InvitationValidationResponse {
+  valid: boolean;
+  email: string;
+  companyName: string;
+  systemRole: CompanySystemRole;
+  expiresAt: string;
+  accountExists: boolean;
 }
 
 /** POST /companies/:companyId/invitations request (backend CreateInvitationDto). */
@@ -44,6 +61,20 @@ export const teamApi = {
     });
   },
 
+  /** PATCH /team/members/:membershipId/profile — updates jobTitle and department. */
+  updateMemberProfile(
+    companyId: string,
+    membershipId: string,
+    payload: { jobTitle?: string | null; department?: string | null },
+  ): Promise<TeamMemberRecord> {
+    return apiClient.request<TeamMemberRecord>({
+      method: "PATCH",
+      path: `/team/members/${encodeURIComponent(membershipId)}/profile`,
+      body: payload,
+      headers: companyScopeHeaders(companyId),
+    });
+  },
+
   /** Creates the invitation and queues the invitation email (TASK-08 notifications queue). */
   createInvitation(companyId: string, payload: CreateInvitationPayload): Promise<InvitationCreatedResponse> {
     return apiClient.request<InvitationCreatedResponse>({
@@ -54,9 +85,33 @@ export const teamApi = {
     });
   },
 
-  /** Public: the invitee has no account or session yet. Does not sign anyone in. */
+  /** Public step 1: read-only validate invitation token, checking if account exists. */
+  validateInvitation(token: string): Promise<InvitationValidationResponse> {
+    return apiClient.request({
+      method: "POST",
+      path: "/invitations/validate",
+      body: { token },
+      skipSessionExpiry: true,
+    });
+  },
+
+  /** Public step 2 (Path A - new user): accepts with password and creates account. */
   acceptInvitation(token: string, password: string): Promise<{ status: "accepted"; membershipId: string }> {
-    return apiClient.request({ method: "POST", path: "/invitations/accept", body: { token, password }, skipSessionExpiry: true });
+    return apiClient.request({
+      method: "POST",
+      path: "/invitations/accept",
+      body: { token, password },
+      skipSessionExpiry: true,
+    });
+  },
+
+  /** Authenticated step 2 (Path B - existing account): consumes token for logged-in user. */
+  finalizeInvitation(token: string): Promise<{ status: "accepted"; membershipId: string; companyId: string }> {
+    return apiClient.request({
+      method: "POST",
+      path: "/invitations/finalize",
+      body: { token },
+    });
   },
 };
 

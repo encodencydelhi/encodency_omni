@@ -394,7 +394,9 @@ export const mockClientsProvider: ClientsRepository = {
     if (!input.name.trim()) errors.name = "Client name is required.";
     if (input.website && !isValidUrl(input.website)) errors.website = "Enter a valid website URL.";
     if (input.contactEmail && !EMAIL_PATTERN.test(input.contactEmail)) errors.contactEmail = "Enter a valid email address.";
-    const members = [...new Set([...input.memberIds, ...(input.leadUserId ? [input.leadUserId] : [])])];
+    const membershipIds = input.membershipIds ?? input.memberIds ?? [];
+    const leadMembershipId = input.leadMembershipId !== undefined ? input.leadMembershipId : (input.leadUserId ?? null);
+    const members = [...new Set([...membershipIds, ...(leadMembershipId ? [leadMembershipId] : [])])];
     for (const memberId of members) {
       const user = bundle.users.find((item) => item.id === memberId);
       if (!user) errors.members = "A selected member does not belong to this company.";
@@ -442,7 +444,8 @@ export const mockClientsProvider: ClientsRepository = {
       websites: site ? [site] : [],
       primaryWebsiteId: site?.id ?? null,
       searchConfig: { gscProperty: null, ga4MeasurementId: null },
-      leadUserId: input.leadUserId ?? null,
+      leadMembershipId,
+      leadUserId: leadMembershipId,
       assignments: Object.fromEntries(
         members.map((memberId) => {
           const user = bundle.users.find((item) => item.id === memberId)!;
@@ -530,14 +533,16 @@ export const mockClientsProvider: ClientsRepository = {
     // Lead: a member may lead only while assigned; assigning is part of naming them lead.
     let users = bundle.users;
     let assignments = detail.assignments;
-    if ((input.leadUserId ?? null) !== detail.leadUserId) {
-      const lead = input.leadUserId ? bundle.users.find((user) => user.id === input.leadUserId) : undefined;
+    const targetLeadId = input.leadMembershipId !== undefined ? input.leadMembershipId : (input.leadUserId ?? null);
+    const currentLeadId = detail.leadMembershipId ?? detail.leadUserId ?? null;
+    if (targetLeadId !== currentLeadId) {
+      const lead = targetLeadId ? bundle.users.find((user) => user.id === targetLeadId) : undefined;
       if (lead && !lead.clientAccessIds.includes(client.id)) {
         users = users.map((user) => (user.id === lead.id ? { ...user, clientAccessIds: [...user.clientAccessIds, client.id] } : user));
         assignments = { ...assignments, [lead.id]: { level: defaultAccessLevel(lead.role), assignedAt: nowIso(), assignedBy: actor.name } };
         drafts.push({ action: "team.member_assigned", summary: `${lead.name} was assigned to the client`, module: "team", entity: { type: "membership", id: lead.id, label: lead.name } });
       }
-      const previousLead = bundle.users.find((user) => user.id === detail.leadUserId);
+      const previousLead = bundle.users.find((user) => user.id === currentLeadId);
       drafts.push({ action: "client.lead_changed", summary: lead ? `${lead.name} was set as client lead` : "Client lead was cleared", module: "team", previous: previousLead?.name ?? "None", next: lead?.name ?? "None" });
     }
 
@@ -563,7 +568,8 @@ export const mockClientsProvider: ClientsRepository = {
       },
       websites,
       primaryWebsiteId,
-      leadUserId: input.leadUserId ?? null,
+      leadMembershipId: targetLeadId,
+      leadUserId: targetLeadId,
       assignments,
     };
     return persist(located, actor, drafts, { client: nextClient, detail: nextDetail, users, integrations });

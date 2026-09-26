@@ -17,7 +17,7 @@ export const INITIAL_SETTINGS_STATE: AllSettingsState = {
       state: "Delhi",
       city: "New Delhi",
       address: "12/4, Institutional Area, Lodhi Road",
-      pinCode: "110003",
+      postalCode: "110003",
     },
     metadata: {
       id: "org_namogange_9942a",

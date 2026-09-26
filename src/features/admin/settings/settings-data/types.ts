@@ -14,7 +14,7 @@ export interface OrganizationAddress {
   state: string;
   city: string;
   address: string;
-  pinCode: string;
+  postalCode: string;
 }
 
 export interface OrganizationMetadata {

@@ -239,6 +239,68 @@ export const tenantRoutes: MockRoutes = {
     };
   },
 
+  "POST /super-admin/companies": ({ headers, body }) => {
+    const idempotencyKey = headers?.["idempotency-key"];
+    if (!idempotencyKey) {
+      throw new ApiError({
+        code: "BAD_REQUEST",
+        status: 400,
+        message: "idempotency_key_required",
+      });
+    }
+    const { name, ownerEmail } = (body ?? {}) as { name?: string; ownerEmail?: string };
+    if (!name || name.trim().length < 2 || !ownerEmail || !ownerEmail.includes("@")) {
+      throw new ApiError({
+        code: "BAD_REQUEST",
+        status: 400,
+        message: "name and ownerEmail are required",
+      });
+    }
+    const id = `cmp_${Date.now().toString(36)}`;
+    const expiresAt = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+    return {
+      id,
+      name: name.trim(),
+      status: "ACTIVE",
+      archivedAt: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      memberCount: 0,
+      clientCount: 0,
+      ownerEmail: null,
+      ownerOnboarding: {
+        state: "invited",
+        ownerEmail: ownerEmail.trim().toLowerCase(),
+        invitationExpiresAt: expiresAt,
+        emailQueued: true,
+      },
+      logo: null,
+    };
+  },
+
+  "POST /super-admin/companies/:companyId/owner-invitation/resend": ({ params, body }) => {
+    const { ownerEmail } = (body ?? {}) as { ownerEmail?: string };
+    const expiresAt = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+    return {
+      id: params.companyId,
+      name: "Acme Media",
+      status: "ACTIVE",
+      archivedAt: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      memberCount: 0,
+      clientCount: 0,
+      ownerEmail: null,
+      ownerOnboarding: {
+        state: "invited",
+        ownerEmail: ownerEmail?.trim().toLowerCase() ?? "owner@example.com",
+        invitationExpiresAt: expiresAt,
+        emailQueued: true,
+      },
+      logo: null,
+    };
+  },
+
   "POST /invitations/accept": ({ body }) => {
     const { token, password } = (body ?? {}) as { token?: string; password?: string };
     if (!token || typeof password !== "string" || password.length < 8) {
@@ -250,6 +312,192 @@ export const tenantRoutes: MockRoutes = {
     }
     pendingInvitations.delete(token);
     return { status: "accepted", membershipId: `mship_${Date.now().toString(36)}` };
+  },
+
+  "POST /invitations/validate": ({ body }) => {
+    const { token } = (body ?? {}) as { token?: string };
+    if (!token) {
+      throw new ApiError({ code: "BAD_REQUEST", status: 400, message: "token is required" });
+    }
+    const pending = pendingInvitations.get(token);
+    return {
+      valid: true,
+      email: pending?.email ?? "invitee@example.com",
+      companyName: "Acme Media",
+      systemRole: "OWNER",
+      expiresAt: new Date(Date.now() + 48 * 3600 * 1000).toISOString(),
+      accountExists: false,
+    };
+  },
+
+  "POST /invitations/finalize": ({ body }) => {
+    const { token } = (body ?? {}) as { token?: string };
+    if (!token) {
+      throw new ApiError({ code: "BAD_REQUEST", status: 400, message: "token is required" });
+    }
+    return {
+      status: "accepted",
+      membershipId: `mship_${Date.now().toString(36)}`,
+      companyId: "cmp_demo_1",
+    };
+  },
+
+  "GET /settings/organization": () => {
+    return {
+      id: "cmp_demo_1",
+      name: "Acme Media",
+      displayName: "Acme Media",
+      legalName: "Acme Media Global Inc.",
+      industry: "Marketing",
+      website: "https://acme.test",
+      contactEmail: "contact@acme.test",
+      contactPhone: "+919876543210",
+      description: "Full service growth agency.",
+      address: {
+        street: "123 MG Road",
+        city: "Bengaluru",
+        state: "Karnataka",
+        country: "IN",
+        postalCode: "560001",
+      },
+      taxId: "GSTIN29AAACA0000A1Z5",
+      timezone: "Asia/Kolkata",
+      currency: "INR",
+      revision: 1,
+      updatedAt: new Date().toISOString(),
+    };
+  },
+
+  "PATCH /settings/organization": ({ body }) => {
+    const payload = (body ?? {}) as any;
+    return {
+      id: "cmp_demo_1",
+      name: payload.displayName || "Acme Media",
+      displayName: payload.displayName || "Acme Media",
+      legalName: payload.legalName ?? null,
+      industry: payload.industry ?? null,
+      website: payload.website ?? null,
+      contactEmail: payload.contactEmail ?? null,
+      contactPhone: payload.contactPhone ?? null,
+      description: payload.description ?? null,
+      address: payload.address ?? null,
+      taxId: payload.taxId ?? null,
+      timezone: payload.timezone ?? "Asia/Kolkata",
+      currency: payload.currency ?? "INR",
+      revision: (payload.expectedRevision ?? 1) + 1,
+      updatedAt: new Date().toISOString(),
+    };
+  },
+
+  "PATCH /users/me": ({ body }) => {
+    const payload = (body ?? {}) as { name?: string; phone?: string | null };
+    return {
+      id: "usr_me",
+      email: "user@example.com",
+      name: payload.name ?? "Current User",
+      phone: payload.phone ?? null,
+      avatarUrl: null,
+      systemRole: "OWNER",
+      memberships: [],
+    };
+  },
+
+  "PATCH /team/members/:membershipId/profile": ({ params, body }) => {
+    const payload = (body ?? {}) as { jobTitle?: string | null; department?: string | null };
+    return {
+      id: params.membershipId,
+      systemRole: "MEMBER",
+      jobTitle: payload.jobTitle ?? null,
+      department: payload.department ?? null,
+      createdAt: new Date().toISOString(),
+      user: {
+        id: `usr_${params.membershipId}`,
+        email: "member@example.com",
+        name: "Team Member",
+        avatarUrl: null,
+      },
+    };
+  },
+
+  "GET /super-admin/clients": ({ query }) => {
+    const page = Math.max(1, Number(query?.page) || 1);
+    const limit = Math.max(1, Number(query?.limit) || 25);
+    const search = typeof query?.search === "string" ? query.search.toLowerCase() : "";
+    const companyId = typeof query?.companyId === "string" ? query.companyId : undefined;
+
+    const filtered = Clients.filter((c) => {
+      if (companyId && c.company.id !== companyId) return false;
+      if (search && !c.name.toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    const start = (page - 1) * limit;
+    const items = filtered.slice(start, start + limit).map((c) => ({
+      id: c.id,
+      name: c.name,
+      displayName: c.name,
+      companyId: c.company.id,
+      companyName: c.company.name,
+      industry: "Retail",
+      website: c.websiteUrl,
+      timezone: "Asia/Kolkata",
+      language: "en",
+      lead: null,
+      logo: null,
+      revision: 1,
+      createdAt: c.createdAt,
+      updatedAt: c.createdAt,
+    }));
+
+    return {
+      items,
+      total: filtered.length,
+      page,
+      limit,
+    };
+  },
+
+  "PUT /clients/:id/lead": ({ params, body }) => {
+    const payload = (body ?? {}) as { leadMembershipId?: string | null };
+    return {
+      id: params.id,
+      companyId: "cmp_demo_1",
+      name: "Updated Client",
+      displayName: "Updated Client",
+      industry: "Retail",
+      website: "https://example.com",
+      targetAudience: null,
+      contactEmail: null,
+      contactPhone: null,
+      description: null,
+      timezone: "Asia/Kolkata",
+      language: "en",
+      revision: 2,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      logo: null,
+      lead: payload.leadMembershipId
+        ? {
+            membershipId: payload.leadMembershipId,
+            userId: `usr_${payload.leadMembershipId}`,
+            name: "Assigned Lead",
+            email: "lead@example.com",
+            avatarUrl: null,
+          }
+        : null,
+    };
+  },
+
+  "GET /clients/:id/members": () => {
+    return [];
+  },
+
+  "POST /clients/:id/members": () => {
+    return [];
+  },
+
+  "DELETE /clients/:id/members/:membershipId": () => {
+    return { removed: true };
   },
 
   "PUT /team/members/:membershipId/role": ({ params, body }) => {

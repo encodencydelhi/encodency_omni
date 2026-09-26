@@ -33,13 +33,22 @@ import type {
   CompanyListResult,
   CompanyOwner,
   CompanySummary,
+  CreateCompanyInput,
 } from "./types";
+import { ensureBundle, writeBundle } from "./mock/store";
 
 /* ------------------------------------------------------------------ */
 /* Backend DTO shapes (mirrors super-admin-companies.types.ts)         */
 /* ------------------------------------------------------------------ */
 
 type BackendCompanyStatus = "ACTIVE" | "ARCHIVED";
+
+interface OwnerOnboarding {
+  state: "invited" | "invitation_expired" | "none" | "active";
+  ownerEmail: string | null;
+  invitationExpiresAt?: string | null;
+  emailQueued?: boolean;
+}
 
 interface SuperAdminCompanySummary {
   id: string;
@@ -50,6 +59,8 @@ interface SuperAdminCompanySummary {
   memberCount: number;
   clientCount: number;
   ownerEmail: string | null;
+  ownerOnboarding?: OwnerOnboarding | null;
+  logo?: { id: string; url: string } | null;
 }
 
 interface SuperAdminCompanyListResponse {
@@ -76,10 +87,11 @@ function toAccountStatus(status: BackendCompanyStatus): CompanyAccountStatus {
   return status === "ARCHIVED" ? "archived" : "active";
 }
 
-function toOwner(ownerEmail: string | null): CompanyOwner {
-  if (!ownerEmail) return { userId: null, name: "", email: "", phone: null, state: "none" };
-  const local = ownerEmail.split("@")[0] ?? ownerEmail;
-  return { userId: null, name: local, email: ownerEmail, phone: null, state: "active" };
+function toOwner(ownerEmail: string | null, onboarding?: OwnerOnboarding | null): CompanyOwner {
+  const state = onboarding?.state ?? (ownerEmail ? "active" : "none");
+  const effectiveEmail = onboarding?.ownerEmail || ownerEmail || "";
+  const local = effectiveEmail.split("@")[0] ?? effectiveEmail;
+  return { userId: null, name: local, email: effectiveEmail, phone: null, state };
 }
 
 function toSlug(name: string): string {
@@ -98,7 +110,7 @@ function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
       slug: toSlug(row.name),
       name: row.name,
       domain: null,
-      logoUrl: null,
+      logoUrl: row.logo?.url ?? null,
       profile: {
         legalName: null,
         website: null,
@@ -124,7 +136,6 @@ function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
       lastActiveAt: row.createdAt,
       isDemoCreated: false,
     },
-    owner: toOwner(row.ownerEmail),
     plan: { tier: "starter", name: "Starter", billingCycle: "monthly" },
     subscriptionStatus: "active",
     billingStatus: "no_payment_method",
@@ -146,7 +157,8 @@ function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
       factors: [],
     },
     attention: [],
-    onboarding: row.ownerEmail ? "completed" : "awaiting_owner",
+    onboarding: row.ownerOnboarding?.state === "active" || (!row.ownerOnboarding && row.ownerEmail) ? "completed" : "awaiting_owner",
+    owner: toOwner(row.ownerEmail, row.ownerOnboarding),
     internalOwners: { accountManager: null, supportOwner: null, technicalOwner: null },
   };
 }
@@ -242,6 +254,33 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         path: `/super-admin/companies/${encodeURIComponent(id)}`,
       });
       return toCompanySummary(detail);
+    },
+
+    async createCompany(input: CreateCompanyInput, actor): Promise<CompanySummary> {
+      const name = input.name.trim();
+      const ownerEmail = (input.owner?.email || "").trim().toLowerCase();
+
+      // Required: Idempotency-Key header per user intent
+      const idempotencyKey = crypto.randomUUID();
+
+      const created = await apiClient.request<SuperAdminCompanyDetailResponse>({
+        method: "POST",
+        path: "/super-admin/companies",
+        headers: {
+          "Idempotency-Key": idempotencyKey,
+        },
+        body: {
+          name,
+          ownerEmail,
+        },
+      });
+
+      const summary = toCompanySummary(created);
+      try {
+        const bundle = ensureBundle(summary.company.id, summary.company.name);
+        writeBundle(bundle);
+      } catch {}
+      return summary;
     },
   };
 }

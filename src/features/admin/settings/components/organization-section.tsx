@@ -340,12 +340,12 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
 
           <div>
             <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Postal PIN Code
+              Postal Code
             </label>
             <input
               type="text"
-              value={data.address.pinCode}
-              onChange={(e) => onChange({ address: { ...data.address, pinCode: e.target.value } })}
+              value={data.address.postalCode}
+              onChange={(e) => onChange({ address: { ...data.address, postalCode: e.target.value } })}
               disabled={!capabilities.canEditOrganization}
               placeholder="e.g. 110003"
               className="w-full h-8 px-3 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 shadow-2xs placeholder:text-[#94A3B8]"

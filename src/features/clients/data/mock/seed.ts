@@ -123,6 +123,7 @@ export function seedClientDetail(bundle: CompanyBundle, client: CompanyClient): 
       gscProperty: primaryDomain && h % 3 === 0 ? `sc-domain:${primaryDomain}` : null,
       ga4MeasurementId: primaryDomain && h % 4 === 0 ? `G-${(h % 9_000_000) + 1_000_000}` : null,
     },
+    leadMembershipId: leadUserId,
     leadUserId,
     assignments: {},
     onboarding: {

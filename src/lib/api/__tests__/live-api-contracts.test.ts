@@ -684,19 +684,7 @@ describe("draftsApi (TASK-11A contracts)", () => {
     assert.equal(drafts.items[0]!.revision, 1);
   });
 
-  it("POST /content/drafts validates assetIds and sends expected draft fields", async () => {
-    // If caller sends assetIds when unsupported, client throws PRECONDITION_FAILED
-    await assert.rejects(
-      draftsApi.create(companyId, clientId, {
-        content: "Draft with image",
-        variants: {},
-        assetIds: ["asset-123"],
-      }),
-      (err: unknown) =>
-        ApiError.isApiError(err) &&
-        err.code === "MEDIA_NOT_SUPPORTED",
-    );
-
+  it("POST /content/drafts sends expected draft fields including assetIds", async () => {
     responses.push({
       status: 201,
       body: {
@@ -709,7 +697,7 @@ describe("draftsApi (TASK-11A contracts)", () => {
         variants: {
           FACEBOOK_PAGE: { content: "FB: Save 20% this weekend!" },
         },
-        assetIds: [],
+        assetIds: ["asset-123"],
         revision: 1,
         createdAt: "2026-09-24T00:00:00.000Z",
         updatedAt: "2026-09-24T00:00:00.000Z",
@@ -723,6 +711,7 @@ describe("draftsApi (TASK-11A contracts)", () => {
       variants: {
         FACEBOOK_PAGE: { content: "FB: Save 20% this weekend!" },
       },
+      assetIds: ["asset-123"],
     });
 
     assert.equal(calls[0]!.url, "/api/v1/content/drafts");
@@ -734,6 +723,7 @@ describe("draftsApi (TASK-11A contracts)", () => {
       variants: {
         FACEBOOK_PAGE: { content: "FB: Save 20% this weekend!" },
       },
+      assetIds: ["asset-123"],
     });
     assert.equal(created.id, "draft-new");
     assert.equal(created.revision, 1);

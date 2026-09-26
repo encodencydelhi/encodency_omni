@@ -18,6 +18,24 @@ export interface DraftVariantRecord {
   updatedAt: string;
 }
 
+export type DraftReviewStatus = "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+
+export interface DraftMediaAttachment {
+  position: number;
+  asset: {
+    id: string;
+    kind: "IMAGE" | "VIDEO";
+    url: string;
+    mimeType: string;
+    format: string;
+    bytes: number;
+    width: number | null;
+    height: number | null;
+    durationMs: number | null;
+    uploadedAt: string;
+  };
+}
+
 export interface DraftRecord {
   id: string;
   clientId: string;
@@ -26,6 +44,11 @@ export interface DraftRecord {
   content: string;
   revision: number;
   variants: DraftVariantRecord[];
+  reviewStatus: DraftReviewStatus;
+  reviewedAt: string | null;
+  reviewedBy: { id: string; name: string | null; email: string } | null;
+  reviewNote: string | null;
+  media: DraftMediaAttachment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -39,6 +62,8 @@ export interface DraftSummaryRecord {
   content?: string;
   channels: DraftChannel[];
   revision: number;
+  reviewStatus: DraftReviewStatus;
+  mediaCount: number;
   createdAt?: string;
   updatedAt: string;
 }
@@ -48,7 +73,7 @@ export interface CreateDraftPayload {
   campaignId?: string | null;
   content: string;
   variants: Record<string, { content?: string | null }>;
-  assetIds?: unknown[];
+  assetIds?: string[];
 }
 
 export interface UpdateDraftPayload {
@@ -65,6 +90,7 @@ export interface ListDraftsQuery {
   limit?: number;
   search?: string;
   campaignId?: string;
+  reviewStatus?: DraftReviewStatus;
 }
 
 export interface ListDraftsResult {
@@ -106,6 +132,7 @@ export const draftsApi = {
     if (query?.limit) q.limit = query.limit;
     if (query?.search) q.search = query.search;
     if (query?.campaignId) q.campaignId = query.campaignId;
+    if (query?.reviewStatus) q.reviewStatus = query.reviewStatus;
 
     return apiClient.request<ListDraftsResult>({
       method: "GET",
@@ -144,14 +171,6 @@ export const draftsApi = {
     payload: CreateDraftPayload,
     signal?: AbortSignal,
   ): Promise<DraftRecord> {
-    if (payload.assetIds && payload.assetIds.length > 0) {
-      throw new ApiError({
-        code: "MEDIA_NOT_SUPPORTED",
-        message: "Media assets are not supported in TASK-11A",
-        status: 400,
-      });
-    }
-
     return apiClient.request<DraftRecord>({
       method: "POST",
       path: "/content/drafts",
@@ -178,6 +197,74 @@ export const draftsApi = {
       path: `/content/drafts/${encodeURIComponent(id)}`,
       headers: clientScopeHeaders(companyId, clientId),
       body: payload,
+      signal,
+    });
+  },
+
+  /**
+   * POST /content/drafts/:id/submit-review
+   * Transition: DRAFT or REJECTED -> PENDING_REVIEW
+   * Capability: content:write
+   */
+  async submitReview(
+    companyId: string,
+    clientId: string,
+    id: string,
+    expectedRevision: number,
+    signal?: AbortSignal,
+  ): Promise<DraftRecord> {
+    return apiClient.request<DraftRecord>({
+      method: "POST",
+      path: `/content/drafts/${encodeURIComponent(id)}/submit-review`,
+      headers: clientScopeHeaders(companyId, clientId),
+      body: { expectedRevision },
+      signal,
+    });
+  },
+
+  /**
+   * POST /content/drafts/:id/approve
+   * Transition: PENDING_REVIEW -> APPROVED
+   * Capability: content:publish (OWNER / ADMIN)
+   */
+  async approveReview(
+    companyId: string,
+    clientId: string,
+    id: string,
+    expectedRevision: number,
+    reviewNote?: string,
+    signal?: AbortSignal,
+  ): Promise<DraftRecord> {
+    const body: { expectedRevision: number; reviewNote?: string } = { expectedRevision };
+    if (reviewNote?.trim()) body.reviewNote = reviewNote.trim();
+    return apiClient.request<DraftRecord>({
+      method: "POST",
+      path: `/content/drafts/${encodeURIComponent(id)}/approve`,
+      headers: clientScopeHeaders(companyId, clientId),
+      body,
+      signal,
+    });
+  },
+
+  /**
+   * POST /content/drafts/:id/reject
+   * Transition: PENDING_REVIEW -> REJECTED
+   * Capability: content:publish
+   * reviewNote is required (1-1000 chars)
+   */
+  async rejectReview(
+    companyId: string,
+    clientId: string,
+    id: string,
+    expectedRevision: number,
+    reviewNote: string,
+    signal?: AbortSignal,
+  ): Promise<DraftRecord> {
+    return apiClient.request<DraftRecord>({
+      method: "POST",
+      path: `/content/drafts/${encodeURIComponent(id)}/reject`,
+      headers: clientScopeHeaders(companyId, clientId),
+      body: { expectedRevision, reviewNote: reviewNote.trim() },
       signal,
     });
   },

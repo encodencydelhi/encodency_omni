@@ -81,6 +81,23 @@ export interface ScheduledPost {
   cancelledAt: string | null;
   createdByUserId: string;
   cancelledByUserId: string | null;
+  media?: Array<{
+    position: number;
+    assetId: string;
+    available: boolean;
+    asset: {
+      id: string;
+      kind: "IMAGE" | "VIDEO";
+      url: string;
+      mimeType: string;
+      format: string;
+      bytes: number;
+      width: number | null;
+      height: number | null;
+      durationMs: number | null;
+      uploadedAt: string;
+    } | null;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -168,6 +185,53 @@ export function isChannelMismatch(error: unknown): error is ApiError {
 /** 400 `{ reason: 'content_too_long_for_channel' }` — 3000 LI / 10000 FB. */
 export function isContentTooLong(error: unknown): error is ApiError {
   return reasonIs(error, "content_too_long_for_channel");
+}
+
+/** 400 `{ reason: 'media_not_supported_for_channel' }` — LinkedIn/Instagram media publishing is not supported yet. */
+export function isMediaNotSupportedForChannel(error: unknown): error is ApiError {
+  return reasonIs(error, "media_not_supported_for_channel");
+}
+
+/** 400 `{ reason: 'media_combination_not_supported' }` — invalid mix of photos/videos. */
+export function isMediaCombinationNotSupported(error: unknown): error is ApiError {
+  return reasonIs(error, "media_combination_not_supported");
+}
+
+/** 400 `{ reason: 'media_unavailable' }` — referenced asset is no longer available. */
+export function isMediaUnavailable(error: unknown): error is ApiError {
+  return reasonIs(error, "media_unavailable");
+}
+
+/** Human-readable explanation for scheduling error codes/reasons */
+export function describeScheduleError(error: unknown): string {
+  if (isMediaNotSupportedForChannel(error)) {
+    return "Media publishing is not supported for this channel (LinkedIn/Instagram). Please detach media from the draft before scheduling.";
+  }
+  if (isMediaCombinationNotSupported(error)) {
+    return "This media combination is not supported. Use 1-10 photos or exactly one video, never a mix.";
+  }
+  if (isMediaUnavailable(error)) {
+    return "One or more media assets attached to this draft are no longer available.";
+  }
+  if (isReconnectRequired(error)) {
+    return "The social media connection expired. Please reconnect the account first.";
+  }
+  if (isChannelNotSupported(error)) {
+    return "This publishing channel is not yet supported.";
+  }
+  if (isContentTooLong(error)) {
+    return "Post content exceeds the character limit for this channel.";
+  }
+  if (isAlreadyScheduled(error)) {
+    return "This draft variant has already been scheduled.";
+  }
+  if (isRevisionConflict(error)) {
+    return "The draft was updated by someone else. Please refresh and try again.";
+  }
+  if (ApiError.isApiError(error)) {
+    return error.message;
+  }
+  return error instanceof Error ? error.message : "Failed to schedule post.";
 }
 
 /** Current revision from a `revision_conflict` body, when the backend supplied one. */

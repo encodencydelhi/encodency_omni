@@ -23,6 +23,11 @@ interface MockDraft {
   title: string | null;
   content: string;
   revision: number;
+  reviewStatus: "DRAFT" | "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+  reviewedAt: string | null;
+  reviewedBy: { id: string; name: string | null; email: string } | null;
+  reviewNote: string | null;
+  media: Array<{ position: number; asset: any }>;
   variants: {
     id: string;
     channel: "FACEBOOK_PAGE" | "INSTAGRAM_ACCOUNT" | "LINKEDIN_ORGANIZATION";
@@ -72,6 +77,11 @@ export const mockDrafts: MockDraft[] = [
     title: "Ganga Clean Drive - Community Kickoff",
     content: "Small actions create a cleaner tomorrow. Join us this Saturday at Assi Ghat!",
     revision: 1,
+    reviewStatus: "DRAFT",
+    reviewedAt: null,
+    reviewedBy: null,
+    reviewNote: null,
+    media: [],
     variants: [
       {
         id: "var-001-fb",
@@ -261,6 +271,8 @@ export const contentRoutes: MockRoutes = {
       contentPreview: d.content.slice(0, 200),
       channels: d.variants.map((v) => v.channel),
       revision: d.revision,
+      reviewStatus: d.reviewStatus ?? "DRAFT",
+      mediaCount: d.media?.length ?? 0,
       updatedAt: d.updatedAt,
     }));
 
@@ -288,16 +300,8 @@ export const contentRoutes: MockRoutes = {
       campaignId?: string | null;
       content?: string;
       variants?: Record<string, { content?: string | null }>;
-      assetIds?: unknown[];
+      assetIds?: string[];
     };
-
-    if (payload.assetIds && payload.assetIds.length > 0) {
-      throw new ApiError({
-        code: "BAD_REQUEST",
-        status: 400,
-        message: "Media attachments are not available yet.",
-      });
-    }
 
     if (!payload.content || payload.content.trim().length === 0) {
       throw new ApiError({ code: "BAD_REQUEST", status: 400, message: "content must be non-blank text" });
@@ -309,6 +313,22 @@ export const contentRoutes: MockRoutes = {
       throw new ApiError({ code: "BAD_REQUEST", status: 400, message: "Select at least one channel in variants." });
     }
 
+    const initialMedia = (payload.assetIds ?? []).map((id, index) => ({
+      position: index,
+      asset: {
+        id,
+        kind: "IMAGE",
+        url: `https://mock.storage/asset-${id}.png`,
+        mimeType: "image/png",
+        format: "png",
+        bytes: 102400,
+        width: 800,
+        height: 600,
+        durationMs: null,
+        uploadedAt: new Date().toISOString(),
+      },
+    }));
+
     const newDraft: MockDraft = {
       id: `draft-${Date.now().toString(36)}`,
       companyId,
@@ -317,6 +337,11 @@ export const contentRoutes: MockRoutes = {
       title: payload.title ?? null,
       content: payload.content,
       revision: 1,
+      reviewStatus: "DRAFT",
+      reviewedAt: null,
+      reviewedBy: null,
+      reviewNote: null,
+      media: initialMedia,
       variants: channels.map((channel, i) => {
         const c = variantsMap[channel]?.content ?? null;
         return {
@@ -387,8 +412,144 @@ export const contentRoutes: MockRoutes = {
     }
 
     draft.revision += 1;
+    // Any edit resets review to DRAFT
+    draft.reviewStatus = "DRAFT";
     draft.updatedAt = new Date().toISOString();
 
     return draft;
+  },
+
+  "POST /content/drafts/:id/submit-review": ({ headers, params, body }) => {
+    const { companyId, clientId } = requireClientScope(headers);
+    const draft = mockDrafts.find((d) => d.id === params.id && d.companyId === companyId && d.clientId === clientId);
+    if (!draft) {
+      throw new ApiError({ code: "NOT_FOUND", status: 404, message: "Draft not found" });
+    }
+    const payload = (body ?? {}) as { expectedRevision: number };
+    if (payload.expectedRevision !== draft.revision) {
+      throw new ApiError({ code: "CONFLICT", status: 409, message: "revision_conflict" });
+    }
+    draft.reviewStatus = "PENDING_REVIEW";
+    draft.revision += 1;
+    draft.updatedAt = new Date().toISOString();
+    return draft;
+  },
+
+  "POST /content/drafts/:id/approve": ({ headers, params, body }) => {
+    const { companyId, clientId } = requireClientScope(headers);
+    const draft = mockDrafts.find((d) => d.id === params.id && d.companyId === companyId && d.clientId === clientId);
+    if (!draft) {
+      throw new ApiError({ code: "NOT_FOUND", status: 404, message: "Draft not found" });
+    }
+    const payload = (body ?? {}) as { expectedRevision: number; reviewNote?: string };
+    if (payload.expectedRevision !== draft.revision) {
+      throw new ApiError({ code: "CONFLICT", status: 409, message: "revision_conflict" });
+    }
+    draft.reviewStatus = "APPROVED";
+    draft.reviewNote = payload.reviewNote ?? null;
+    draft.reviewedAt = new Date().toISOString();
+    draft.reviewedBy = { id: "usr_reviewer", name: "Approver", email: "approver@example.com" };
+    draft.revision += 1;
+    draft.updatedAt = new Date().toISOString();
+    return draft;
+  },
+
+  "POST /content/drafts/:id/reject": ({ headers, params, body }) => {
+    const { companyId, clientId } = requireClientScope(headers);
+    const draft = mockDrafts.find((d) => d.id === params.id && d.companyId === companyId && d.clientId === clientId);
+    if (!draft) {
+      throw new ApiError({ code: "NOT_FOUND", status: 404, message: "Draft not found" });
+    }
+    const payload = (body ?? {}) as { expectedRevision: number; reviewNote: string };
+    if (!payload.reviewNote || !payload.reviewNote.trim()) {
+      throw new ApiError({ code: "BAD_REQUEST", status: 400, message: "reviewNote is required" });
+    }
+    if (payload.expectedRevision !== draft.revision) {
+      throw new ApiError({ code: "CONFLICT", status: 409, message: "revision_conflict" });
+    }
+    draft.reviewStatus = "REJECTED";
+    draft.reviewNote = payload.reviewNote.trim();
+    draft.reviewedAt = new Date().toISOString();
+    draft.reviewedBy = { id: "usr_reviewer", name: "Reviewer", email: "reviewer@example.com" };
+    draft.revision += 1;
+    draft.updatedAt = new Date().toISOString();
+    return draft;
+  },
+
+  "PUT /content/drafts/:id/media": ({ headers, params, body }) => {
+    const { companyId, clientId } = requireClientScope(headers);
+    const draft = mockDrafts.find((d) => d.id === params.id && d.companyId === companyId && d.clientId === clientId);
+    if (!draft) {
+      throw new ApiError({ code: "NOT_FOUND", status: 404, message: "Draft not found" });
+    }
+    const payload = (body ?? {}) as { expectedRevision: number; assetIds: string[] };
+    if (payload.expectedRevision !== draft.revision) {
+      throw new ApiError({ code: "CONFLICT", status: 409, message: "revision_conflict" });
+    }
+    draft.media = (payload.assetIds ?? []).map((id, index) => ({
+      position: index,
+      asset: {
+        id,
+        kind: "IMAGE",
+        url: `https://mock.storage/asset-${id}.png`,
+        mimeType: "image/png",
+        format: "png",
+        bytes: 102400,
+        width: 800,
+        height: 600,
+        durationMs: null,
+        uploadedAt: new Date().toISOString(),
+      },
+    }));
+    draft.reviewStatus = "DRAFT";
+    draft.revision += 1;
+    draft.updatedAt = new Date().toISOString();
+    return draft;
+  },
+
+  "POST /media/upload": () => {
+    const id = `asset_${Date.now().toString(36)}`;
+    return {
+      id,
+      kind: "IMAGE",
+      url: `https://mock.storage/asset-${id}.png`,
+      mimeType: "image/png",
+      format: "png",
+      bytes: 102400,
+      width: 1024,
+      height: 768,
+      durationMs: null,
+      uploadedAt: new Date().toISOString(),
+      usage: { drafts: 0, scheduledPosts: 0 },
+    };
+  },
+
+  "GET /media": () => {
+    return {
+      items: [],
+      total: 0,
+      page: 1,
+      limit: 25,
+    };
+  },
+
+  "GET /media/:id": ({ params }) => {
+    return {
+      id: params.id,
+      kind: "IMAGE",
+      url: `https://mock.storage/asset-${params.id}.png`,
+      mimeType: "image/png",
+      format: "png",
+      bytes: 102400,
+      width: 1024,
+      height: 768,
+      durationMs: null,
+      uploadedAt: new Date().toISOString(),
+      usage: { drafts: 0, scheduledPosts: 0 },
+    };
+  },
+
+  "DELETE /media/:id": () => {
+    return { removed: true };
   },
 };

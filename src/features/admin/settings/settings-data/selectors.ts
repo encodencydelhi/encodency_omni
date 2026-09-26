@@ -14,7 +14,7 @@ export function calculateOrganizationCompleteness(profile: OrganizationProfile):
     { label: "Support Email", done: !!profile.contactEmail && profile.contactEmail.includes("@") },
     { label: "Contact Phone", done: !!profile.contactPhone && profile.contactPhone.length >= 8 },
     { label: "Official Brand Logo", done: !!profile.logo && profile.logo.length > 5 },
-    { label: "Registered Address & PIN", done: !!profile.address.address && !!profile.address.pinCode },
+    { label: "Registered Address & Postal Code", done: !!profile.address.address && !!profile.address.postalCode },
     { label: "Organization Mission / Description", done: !!profile.description && profile.description.length > 15 },
   ];
 

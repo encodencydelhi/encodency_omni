@@ -18,17 +18,47 @@ export interface SafeAsset {
   uploadedAt: string;
 }
 
+export interface ClientLeadSummary {
+  membershipId: string;
+  userId: string;
+  name: string | null;
+  email: string;
+  avatarUrl: string | null;
+}
+
 /** A Client row exactly as the backend returns it (backend/prisma/schema.prisma, model Client). */
 export interface ClientRecord {
   id: string;
   companyId: string;
   name: string;
+  displayName: string | null;
   industry: string | null;
   website: string | null;
   targetAudience: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  description: string | null;
+  timezone: string | null;
+  language: string | null;
+  revision: number;
   createdAt: string;
   updatedAt: string;
   logo: SafeAsset | null;
+  lead: ClientLeadSummary | null;
+}
+
+export interface ClientMemberSummary {
+  membershipId: string;
+  systemRole: string;
+  jobTitle: string | null;
+  department: string | null;
+  isLead: boolean;
+  user: {
+    id: string;
+    email: string;
+    name: string | null;
+    avatarUrl: string | null;
+  };
 }
 
 export interface ClientLogoResponse {
@@ -36,30 +66,66 @@ export interface ClientLogoResponse {
   logo: SafeAsset | null;
 }
 
-/** The only fields POST /clients accepts (backend CreateClientDto); anything else is rejected with 400. */
+/** Body for POST /clients */
 export interface CreateClientPayload {
   name: string;
+  displayName?: string;
   industry?: string;
   website?: string;
   targetAudience?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  description?: string;
+  timezone?: string;
+  language?: string;
+  membershipIds?: string[];
+  leadMembershipId?: string | null;
+}
+
+/** Body for PATCH /clients/:id */
+export interface UpdateClientPayload {
+  expectedRevision: number;
+  name?: string;
+  displayName?: string | null;
+  industry?: string | null;
+  website?: string | null;
+  targetAudience?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  description?: string | null;
+  timezone?: string | null;
+  language?: string | null;
 }
 
 export interface CreateClientFormValues {
   name: string;
+  displayName?: string;
   industry: string;
   website: string;
   targetAudience: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  description?: string;
+  timezone?: string;
+  language?: string;
+  membershipIds?: string[];
+  leadMembershipId?: string | null;
 }
 
-/** Trims the form and omits empty optional fields — never sends anything outside the backend DTO. */
+/** Trims the form and omits empty optional fields */
 export function toCreateClientPayload(values: CreateClientFormValues): CreateClientPayload {
   const payload: CreateClientPayload = { name: values.name.trim() };
-  const industry = values.industry.trim();
-  const website = values.website.trim();
-  const targetAudience = values.targetAudience.trim();
-  if (industry) payload.industry = industry;
-  if (website) payload.website = website;
-  if (targetAudience) payload.targetAudience = targetAudience;
+  if (values.displayName?.trim()) payload.displayName = values.displayName.trim();
+  if (values.industry?.trim()) payload.industry = values.industry.trim();
+  if (values.website?.trim()) payload.website = values.website.trim();
+  if (values.targetAudience?.trim()) payload.targetAudience = values.targetAudience.trim();
+  if (values.contactEmail?.trim()) payload.contactEmail = values.contactEmail.trim();
+  if (values.contactPhone?.trim()) payload.contactPhone = values.contactPhone.trim();
+  if (values.description?.trim()) payload.description = values.description.trim();
+  if (values.timezone?.trim()) payload.timezone = values.timezone.trim();
+  if (values.language?.trim()) payload.language = values.language.trim();
+  if (values.membershipIds && values.membershipIds.length > 0) payload.membershipIds = values.membershipIds;
+  if (values.leadMembershipId !== undefined) payload.leadMembershipId = values.leadMembershipId;
   return payload;
 }
 
@@ -183,6 +249,70 @@ export const clientsApi = {
       method: "DELETE",
       path: `/clients/${encodeURIComponent(clientId)}/logo`,
       headers: companyScopeHeaders(companyId, { "x-client-id": clientId }),
+    });
+  },
+
+  /**
+   * PATCH /clients/:id — update a Client's profile.
+   * Requires `clients:write` for this Client.
+   * Optimistic concurrency: payload must include expectedRevision.
+   */
+  update(companyId: string, clientId: string, payload: UpdateClientPayload): Promise<ClientRecord> {
+    return apiClient.request<ClientRecord>({
+      method: "PATCH",
+      path: `/clients/${encodeURIComponent(clientId)}`,
+      headers: companyScopeHeaders(companyId, { "x-client-id": clientId }),
+      body: payload,
+    });
+  },
+
+  /**
+   * GET /clients/:id/members — list members assigned to this client.
+   * Company context (no x-client-id required). Capability: clients:read.
+   */
+  listMembers(companyId: string, clientId: string): Promise<ClientMemberSummary[]> {
+    return apiClient.request<ClientMemberSummary[]>({
+      method: "GET",
+      path: `/clients/${encodeURIComponent(clientId)}/members`,
+      headers: companyScopeHeaders(companyId),
+    });
+  },
+
+  /**
+   * POST /clients/:id/members — assign company members to this client.
+   * Company context. Capability: team:manage.
+   */
+  addMembers(companyId: string, clientId: string, membershipIds: string[]): Promise<ClientMemberSummary[]> {
+    return apiClient.request<ClientMemberSummary[]>({
+      method: "POST",
+      path: `/clients/${encodeURIComponent(clientId)}/members`,
+      headers: companyScopeHeaders(companyId),
+      body: { membershipIds },
+    });
+  },
+
+  /**
+   * DELETE /clients/:id/members/:membershipId — remove a member's client access.
+   * Company context. Capability: team:manage.
+   */
+  removeMember(companyId: string, clientId: string, membershipId: string): Promise<{ removed: boolean }> {
+    return apiClient.request<{ removed: boolean }>({
+      method: "DELETE",
+      path: `/clients/${encodeURIComponent(clientId)}/members/${encodeURIComponent(membershipId)}`,
+      headers: companyScopeHeaders(companyId),
+    });
+  },
+
+  /**
+   * PUT /clients/:id/lead — assign or clear the designated client lead.
+   * Company context. Capability: team:manage.
+   */
+  setLead(companyId: string, clientId: string, leadMembershipId: string | null): Promise<ClientRecord> {
+    return apiClient.request<ClientRecord>({
+      method: "PUT",
+      path: `/clients/${encodeURIComponent(clientId)}/lead`,
+      headers: companyScopeHeaders(companyId),
+      body: { leadMembershipId },
     });
   },
 };

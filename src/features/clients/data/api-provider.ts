@@ -1,15 +1,44 @@
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/types/api";
 import type { ClientsRepository, LifecycleAction } from "./repository";
-import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCreationCompany, EligibleMember } from "./types";
+import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCreationCompany, EligibleMember, MutationActor } from "./types";
 import type { CompanyClient } from "@/features/companies/data/types";
 import { unavailableClientsProvider } from "./unavailable-provider";
 import { toListQuery } from "@/lib/api/transport";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { ensureBundle, writeBundle } from "@/features/companies/data/mock/store";
+import { clientsApi, type ClientRecord } from "@/features/admin/projects/live/clients-api";
+import { superAdminCompaniesApi } from "@/features/companies/live/super-admin-companies-api";
 
 function getCompanyIdHeader(): string {
   return getStoredCompanyId();
+}
+
+const LANGUAGE_NAME_TO_CODE: Record<string, string> = {
+  english: "en",
+  hindi: "hi",
+  bengali: "bn",
+  tamil: "ta",
+  telugu: "te",
+  marathi: "mr",
+  gujarati: "gu",
+  kannada: "kn",
+  malayalam: "ml",
+  punjabi: "pa",
+  urdu: "ur",
+  arabic: "ar",
+  french: "fr",
+  german: "de",
+  spanish: "es",
+  portuguese: "pt",
+};
+
+export function normalizeLanguageCode(lang?: string | null): string | undefined {
+  if (!lang) return undefined;
+  const trimmed = lang.trim().toLowerCase();
+  if (LANGUAGE_NAME_TO_CODE[trimmed]) return LANGUAGE_NAME_TO_CODE[trimmed];
+  if (/^[a-z]{2}$/.test(trimmed)) return trimmed;
+  return undefined;
 }
 
 /** Converts backend ClientRecord into the full ClientSummary structure expected by the UI. */
@@ -83,18 +112,19 @@ function toClientSummary(raw: any, companyInfo?: { id: string; name: string }): 
       subscriptionStatus: "active",
     },
     profile: {
-      displayName: name,
+      displayName: raw.displayName || name,
       industry,
       description: targetAudience,
-      contactEmail: null,
-      contactPhone: null,
+      contactEmail: raw.contactEmail ?? null,
+      contactPhone: raw.contactPhone ?? null,
       logoDataUrl: rawLogo?.url ?? null,
       logo: rawLogo,
-      timezone: "Asia/Kolkata",
-      language: "English",
+      timezone: raw.timezone ?? "Asia/Kolkata",
+      language: raw.language ?? "English",
       reportingPeriod: "30d",
       createdBy: "System",
-    },
+      revision: raw.revision ?? 1,
+    } as any,
     websites: websiteObj ? [websiteObj] : [],
     primaryWebsite: websiteObj,
     workspace: "active",
@@ -111,7 +141,12 @@ function toClientSummary(raw: any, companyInfo?: { id: string; name: string }): 
       factors: [],
     },
     attention: [],
-    lead: null,
+    lead: raw.lead
+      ? {
+          membershipId: raw.lead.membershipId,
+          name: raw.lead.name || raw.lead.email || "Client Lead",
+        }
+      : null,
     counts: {
       connections: 0,
       healthyConnections: 0,
@@ -187,62 +222,35 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
         }
       }
 
-      // In Super Admin cross-company view, fetch live companies and their clients from backend
-      let liveClients: ClientSummary[] = [];
+      // In Super Admin cross-company view, fetch from GET /super-admin/clients
       try {
-        const companiesRes = await apiClient.request<any>({
-          method: "GET",
-          path: "/super-admin/companies",
-          query: { page: 1, limit: 100, status: "ACTIVE" },
+        const directory = await superAdminCompaniesApi.listClients({
+          page: query.page ?? 1,
+          limit: query.pageSize ?? 25,
+          search: query.search || undefined,
+          companyId: query.company && UUID_PATTERN.test(query.company) ? query.company : undefined,
         });
-        const companiesWithClients = (companiesRes.items ?? []).filter((c: any) => c.clientCount > 0);
-        const detailPromises = companiesWithClients.map((c: any) =>
-          apiClient.request<any>({
-            method: "GET",
-            path: `/super-admin/companies/${c.id}`,
-          }).then((detail: any) =>
-            (detail.clients ?? []).map((client: any) => {
-              const summary = toClientSummary(client, { id: c.id, name: c.name });
-              try {
-                const bundle = ensureBundle(c.id, c.name);
-                if (!bundle.clients.some((item) => item.id === summary.client.id)) {
-                  bundle.clients.push(summary.client);
-                  writeBundle(bundle);
-                }
-              } catch {}
-              return summary;
-            })
-          ).catch(() => [])
+        const liveClients = (directory.items ?? []).map((item) =>
+          toClientSummary(item, { id: item.companyId, name: item.companyName }),
         );
-        const clientArrays = await Promise.all(detailPromises);
-        liveClients = clientArrays.flat();
+        return {
+          data: liveClients,
+          matchingIds: liveClients.map((c) => c.displayId ?? c.client.id),
+          pagination: {
+            total: directory.total,
+            page: directory.page,
+            pageSize: directory.limit,
+            totalPages: Math.max(1, Math.ceil(directory.total / (directory.limit || 25))),
+            hasNextPage: directory.page < Math.ceil(directory.total / (directory.limit || 25)),
+            hasPreviousPage: directory.page > 1,
+          },
+        };
       } catch {
-        // ignore if not super admin or offline
+        // fallback if not super admin or offline
       }
 
       const fallbackResult = await fallback.listClients(query);
-      const combined = [
-        ...liveClients,
-        ...fallbackResult.data.filter((fc) => !liveClients.some((lc) => lc.client.id === fc.client.id)),
-      ];
-
-      const page = query.page ?? 1;
-      const pageSize = query.pageSize ?? 10;
-      const totalPages = Math.max(1, Math.ceil(combined.length / pageSize));
-      const paged = combined.slice((page - 1) * pageSize, page * pageSize);
-
-      return {
-        data: paged,
-        matchingIds: combined.map((c) => c.displayId ?? c.client.id),
-        pagination: {
-          total: combined.length,
-          page,
-          pageSize,
-          totalPages,
-          hasNextPage: page < totalPages,
-          hasPreviousPage: page > 1,
-        },
-      };
+      return fallbackResult;
     },
 
     async createClient(input: CreateClientInput, actor): Promise<ClientSummary> {
@@ -252,21 +260,43 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
       }
 
       const name = input.name.trim().replace(/\s+/g, " ");
+      const displayName = input.displayName?.trim() || undefined;
       const website = input.website?.trim() || undefined;
       const industry = input.industry?.trim() || undefined;
       const targetAudience = (input.targetAudience ?? input.description)?.trim() || undefined;
+      const description = input.description?.trim() || undefined;
+      const contactEmail = input.contactEmail?.trim() || undefined;
+      const contactPhone = input.contactPhone?.trim() || undefined;
+      const timezone = input.timezone?.trim() || undefined;
+      const language = normalizeLanguageCode(input.language);
+      const membershipIds = input.membershipIds && input.membershipIds.length > 0
+        ? input.membershipIds
+        : (input.memberIds && input.memberIds.length > 0 ? input.memberIds : undefined);
+      const leadMembershipId = input.leadMembershipId !== undefined
+        ? input.leadMembershipId
+        : (input.leadUserId !== undefined ? input.leadUserId : undefined);
+
+      const payload: Record<string, any> = {
+        name,
+        ...(displayName ? { displayName } : {}),
+        ...(industry ? { industry } : {}),
+        ...(website ? { website } : {}),
+        ...(targetAudience ? { targetAudience } : {}),
+        ...(description ? { description } : {}),
+        ...(contactEmail ? { contactEmail } : {}),
+        ...(contactPhone ? { contactPhone } : {}),
+        ...(timezone ? { timezone } : {}),
+        ...(language ? { language } : {}),
+        ...(membershipIds && membershipIds.length > 0 ? { membershipIds } : {}),
+        ...(leadMembershipId ? { leadMembershipId } : {}),
+      };
 
       try {
         const created = await apiClient.request<any>({
           method: "POST",
           path: "/clients",
-          body: {
-            name,
-            ...(industry ? { industry } : {}),
-            ...(website ? { website } : {}),
-            ...(targetAudience ? { targetAudience } : {}),
-          },
-          headers: { "x-company-id": companyId }
+          body: payload,
+          headers: { "x-company-id": companyId },
         });
         const summary = toClientSummary(created);
         try {
@@ -278,10 +308,10 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
         } catch {}
         return summary;
       } catch (err) {
-        if (ApiError.isApiError(err) && (err.status === 400 || err.status === 404)) {
-          return fallback.createClient(input, actor);
+        if (ApiError.isApiError(err) && (err.status === 400 || err.status === 403 || err.status === 404)) {
+          throw err;
         }
-        throw err;
+        return fallback.createClient(input, actor);
       }
     },
 
@@ -375,20 +405,91 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     getActivity: fallback.getActivity,
     getSettings: fallback.getSettings,
 
-    // Blocked lifecycle mutations keep returning 503 from unavailableClientsProvider
-    updateClient: unavailableClientsProvider.updateClient,
+    async updateClient(id: string, input: UpdateClientInput, actor): Promise<ClientSummary> {
+      const companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) {
+        return unavailableClientsProvider.updateClient(id, input, actor);
+      }
+      try {
+        let expectedRevision = input.expectedRevision;
+        if (expectedRevision === undefined) {
+          const current = await clientsApi.get(companyId, id);
+          expectedRevision = current.revision;
+        }
+
+        const language = normalizeLanguageCode(input.language);
+        const updated = await clientsApi.update(companyId, id, {
+          expectedRevision,
+          name: input.name?.trim(),
+          displayName: input.displayName?.trim() || null,
+          industry: input.industry?.trim() || null,
+          website: input.website?.trim() || null,
+          targetAudience: input.description?.trim() || null,
+          contactEmail: input.contactEmail?.trim() || null,
+          contactPhone: input.contactPhone?.trim() || null,
+          description: input.description?.trim() || null,
+          timezone: input.timezone?.trim() || null,
+          language: language || null,
+        });
+
+        const leadMembershipId = input.leadMembershipId !== undefined
+          ? input.leadMembershipId
+          : (input.leadUserId !== undefined ? input.leadUserId : undefined);
+        if (leadMembershipId !== undefined) {
+          const withLead = await clientsApi.setLead(companyId, id, leadMembershipId);
+          return toClientSummary(withLead);
+        }
+
+        return toClientSummary(updated);
+      } catch (err) {
+        if (ApiError.isApiError(err) && (err.status === 400 || err.status === 403 || err.status === 404 || err.status === 409)) {
+          throw err;
+        }
+        return unavailableClientsProvider.updateClient(id, input, actor);
+      }
+    },
+
+    async setLead(clientId: string, leadMembershipId: string | null, actor: MutationActor): Promise<ClientSummary> {
+      const companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
+        return unavailableClientsProvider.setLead(clientId, leadMembershipId, actor);
+      }
+      const updated = await clientsApi.setLead(companyId, clientId, leadMembershipId);
+      return toClientSummary(updated);
+    },
+
+    async assignMember(clientId: string, input: { membershipId: string; level: any }, actor: MutationActor): Promise<ClientSummary> {
+      const companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
+        return unavailableClientsProvider.assignMember(clientId, input, actor);
+      }
+      await clientsApi.addMembers(companyId, clientId, [input.membershipId]);
+      const current = await clientsApi.get(companyId, clientId);
+      return toClientSummary(current);
+    },
+
+    async removeAccess(clientId: string, input: { membershipId: string; newLeadId?: string | null; note: string }, actor: MutationActor): Promise<ClientSummary> {
+      const companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
+        return unavailableClientsProvider.removeAccess(clientId, input, actor);
+      }
+      if (input.newLeadId) {
+        await clientsApi.setLead(companyId, clientId, input.newLeadId);
+      }
+      await clientsApi.removeMember(companyId, clientId, input.membershipId);
+      const current = await clientsApi.get(companyId, clientId);
+      return toClientSummary(current);
+    },
+
     changeLifecycle: unavailableClientsProvider.changeLifecycle,
-    assignMember: unavailableClientsProvider.assignMember,
     changeAccess: unavailableClientsProvider.changeAccess,
-    removeAccess: unavailableClientsProvider.removeAccess,
-    setLead: unavailableClientsProvider.setLead,
     addWebsite: unavailableClientsProvider.addWebsite,
     setPrimaryWebsite: unavailableClientsProvider.setPrimaryWebsite,
     removeWebsite: unavailableClientsProvider.removeWebsite,
     setOnboardingRequirements: unavailableClientsProvider.setOnboardingRequirements,
     markAccessReviewed: unavailableClientsProvider.markAccessReviewed,
     setPlatformReviewer: unavailableClientsProvider.setPlatformReviewer,
-    requestReconnection: unavailableClientsProvider.requestReconnection
+    requestReconnection: unavailableClientsProvider.requestReconnection,
   };
 }
 

@@ -158,8 +158,10 @@ export function ClientEditDrawer({ summary, onClose }: { summary: ClientSummary;
       timezone: form.timezone,
       language: form.language,
       reportingPeriod: form.reportingPeriod,
+      leadMembershipId: form.leadUserId === NONE ? null : form.leadUserId,
       leadUserId: form.leadUserId === NONE ? null : form.leadUserId,
       primaryWebsite: form.primaryWebsite.trim() || null,
+      expectedRevision: (summary as any).revision ?? (summary.profile as any)?.revision ?? 1,
     };
     try {
       await mutations.updateClient(summary.client.id, input);

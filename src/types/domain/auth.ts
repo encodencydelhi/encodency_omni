@@ -14,6 +14,8 @@ export interface CompanyMembershipSummary {
   companyName: string;
   companyStatus: MembershipCompanyStatus;
   systemRole: CompanySystemRole;
+  jobTitle?: string | null;
+  department?: string | null;
 }
 
 export interface SafeAssetSummary {
@@ -32,6 +34,8 @@ export interface SafeAssetSummary {
 export interface CurrentUserResponse {
   id: string;
   email: string;
+  name?: string | null;
+  phone?: string | null;
   totpEnabled: boolean;
   platformRole: "SUPER_ADMIN" | null;
   avatar?: SafeAssetSummary | null;

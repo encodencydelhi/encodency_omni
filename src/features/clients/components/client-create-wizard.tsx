@@ -461,6 +461,8 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
       targetAudience: draft.description.trim() || undefined,
       timezone: draft.timezone,
       language: draft.language,
+      leadMembershipId: draft.leadUserId === NONE ? null : draft.leadUserId,
+      membershipIds: draft.memberIds,
       leadUserId: draft.leadUserId === NONE ? null : draft.leadUserId,
       memberIds: draft.memberIds,
     };

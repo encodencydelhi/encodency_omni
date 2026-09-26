@@ -155,7 +155,9 @@ export interface ClientDetailRecord {
   primaryWebsiteId: string | null;
   searchConfig: ClientSearchConfig;
   /** Membership id of the company member acting as client lead. */
-  leadUserId: string | null;
+  leadMembershipId: string | null;
+  /** Deprecated alias for leadMembershipId */
+  leadUserId?: string | null;
   /** Client-level access for each assigned membership id. Who is assigned lives on `CompanyUser.clientAccessIds`. */
   assignments: Record<string, ClientAssignmentMeta>;
   onboarding: ClientOnboardingConfig;
@@ -477,8 +479,12 @@ export interface CreateClientInput {
   targetAudience?: string;
   timezone: string;
   language: string;
+  leadMembershipId?: string | null;
+  membershipIds?: string[];
+  /** Deprecated alias */
   leadUserId?: string | null;
-  memberIds: string[];
+  /** Deprecated alias */
+  memberIds?: string[];
 }
 
 export interface UpdateClientInput {
@@ -492,8 +498,12 @@ export interface UpdateClientInput {
   timezone: string;
   language: string;
   reportingPeriod: ReportingPeriod;
-  leadUserId: string | null;
+  leadMembershipId?: string | null;
+  /** Deprecated alias */
+  leadUserId?: string | null;
   primaryWebsite: string | null;
+  website?: string | null;
+  expectedRevision?: number;
 }
 
 export interface BulkResult {
