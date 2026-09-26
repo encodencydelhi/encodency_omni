@@ -366,21 +366,26 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
           : `https://${input.website}`
         : null;
 
-      const patched = await apiClient.request<SuperAdminCompanyDetailResponse>({
-        method: "PATCH",
-        path: `/super-admin/companies/${encodeURIComponent(id)}`,
-        body: {
-          name: input.name.trim(),
-          legalName: input.legalName ?? null,
-          website,
-          industry: input.industry ?? null,
-          address: input.country ? { country: input.country } : undefined,
-          contactEmail: input.contactEmail ?? null,
-          contactPhone: input.contactPhone ?? null,
-        },
-      });
+      let patched: SuperAdminCompanyDetailResponse | null = null;
+      try {
+        patched = await apiClient.request<SuperAdminCompanyDetailResponse>({
+          method: "PATCH",
+          path: `/super-admin/companies/${encodeURIComponent(id)}`,
+          body: {
+            name: input.name.trim(),
+            legalName: input.legalName ?? null,
+            website,
+            industry: input.industry ?? null,
+            address: input.country ? { country: input.country } : undefined,
+            contactEmail: input.contactEmail ?? null,
+            contactPhone: input.contactPhone ?? null,
+          },
+        });
+      } catch (err) {
+        console.warn("Backend PATCH /super-admin/companies/:id not available or failed, falling back to local bundle", err);
+      }
 
-      const summary = toCompanySummary(patched);
+      const summary = patched ? toCompanySummary(patched) : await fallback.getCompany(id);
       try {
         const bundle = ensureBundle(id, summary.company.name);
         bundle.company = {
