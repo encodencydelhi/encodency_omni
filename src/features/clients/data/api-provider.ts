@@ -1,7 +1,8 @@
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/types/api";
 import type { ClientsRepository, LifecycleAction } from "./repository";
-import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCreationCompany, EligibleMember, MutationActor } from "./types";
+import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCreationCompany, EligibleMember, MutationActor, ClientTeamData, ClientAssignmentView } from "./types";
+import type { OrganisationRole } from "@/types/domain/user";
 import type { CompanyClient } from "@/features/companies/data/types";
 import { unavailableClientsProvider } from "./unavailable-provider";
 import { toListQuery } from "@/lib/api/transport";
@@ -173,7 +174,7 @@ function toClientSummary(raw: any, companyInfo?: { id: string; name: string }): 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function createApiClientsProvider(fallback: ClientsRepository): ClientsRepository {
-  return {
+  const provider: ClientsRepository = {
     ...fallback,
     mode: "api",
     
@@ -369,37 +370,118 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async listEligibleMembers(companyId: string, clientId?: string): Promise<EligibleMember[]> {
-      try {
-        return await fallback.listEligibleMembers(companyId, clientId);
-      } catch (err) {
-        if (!UUID_PATTERN.test(companyId)) throw err;
+      if (UUID_PATTERN.test(companyId)) {
         try {
-          const detail = await apiClient.request<any>({
-            method: "GET",
-            path: `/super-admin/companies/${encodeURIComponent(companyId)}`,
-          });
-          const members: any[] = detail.members ?? [];
-          return members.map((m) => {
-            const role = (m.systemRole?.toLowerCase() === "owner" ? "owner" : m.systemRole?.toLowerCase() === "admin" ? "admin" : "member") as any;
-            return {
-              membershipId: m.membershipId,
-              name: m.email.split("@")[0] ?? m.email,
-              email: m.email,
-              companyRole: role,
-              alreadyAssigned: false,
-            };
-          });
-        } catch {
-          return [];
+          let rawCompanyMembers: Array<{
+            membershipId: string;
+            email?: string;
+            systemRole?: string;
+            user?: { email?: string; name?: string | null };
+          }> = [];
+
+          try {
+            const teamRes = await apiClient.request<any[]>({
+              method: "GET",
+              path: "/team/members",
+              headers: { "x-company-id": companyId },
+            });
+            if (Array.isArray(teamRes)) {
+              rawCompanyMembers = teamRes;
+            }
+          } catch {
+            const detail = await apiClient.request<any>({
+              method: "GET",
+              path: `/super-admin/companies/${encodeURIComponent(companyId)}`,
+            });
+            if (Array.isArray(detail?.members)) {
+              rawCompanyMembers = detail.members;
+            }
+          }
+
+          let assignedIds = new Set<string>();
+          if (clientId && UUID_PATTERN.test(clientId)) {
+            try {
+              const clientMembers = await clientsApi.listMembers(companyId, clientId);
+              assignedIds = new Set(clientMembers.map((cm) => cm.membershipId));
+            } catch {
+              // ignore
+            }
+          }
+
+          if (rawCompanyMembers.length > 0) {
+            return rawCompanyMembers.map((m) => {
+              const email = m.email || m.user?.email || "";
+              const name = m.user?.name || email.split("@")[0] || "Member";
+              const sysRole = (m.systemRole || "").toLowerCase();
+              const role = (sysRole === "owner" ? "owner" : sysRole === "admin" ? "admin" : "member") as any;
+              return {
+                membershipId: m.membershipId,
+                name,
+                email,
+                companyRole: role,
+                alreadyAssigned: assignedIds.has(m.membershipId),
+              };
+            });
+          }
+        } catch (liveErr) {
+          console.warn("Failed to fetch live eligible members, using fallback:", liveErr);
         }
       }
+
+      return fallback.listEligibleMembers(companyId, clientId);
     },
 
     exportClients: fallback.exportClients,
     getPortfolio: fallback.getPortfolio,
     getFacets: fallback.getFacets,
     getOverview: fallback.getOverview,
-    getTeam: fallback.getTeam,
+
+    async getTeam(id: string): Promise<ClientTeamData> {
+      const companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) {
+        return fallback.getTeam(id);
+      }
+      try {
+        const [summary, rawMembers, eligible] = await Promise.all([
+          provider.getClient(id),
+          clientsApi.listMembers(companyId, id),
+          provider.listEligibleMembers(companyId, id),
+        ]);
+
+        const assignments: ClientAssignmentView[] = (rawMembers as any[]).map((m: any) => {
+          const roleLower = (m.systemRole || "").toLowerCase();
+          const companyRole: OrganisationRole =
+            roleLower === "owner" ? "owner" :
+            roleLower === "admin" ? "admin" :
+            roleLower === "manager" ? "marketing_manager" :
+            roleLower === "viewer" ? "viewer" : "viewer";
+
+          return {
+            membershipId: m.membershipId,
+            name: m.user?.name || m.user?.email?.split("@")[0] || "Team Member",
+            email: m.user?.email || "",
+            companyRole,
+            level: m.isLead ? "admin" : "editor",
+            isLead: !!m.isLead,
+            membershipStatus: "active",
+            lastLoginAt: null,
+            assignedAt: new Date().toISOString(),
+            assignedBy: "System",
+            issue: null,
+          };
+        });
+
+        return {
+          summary,
+          assignments,
+          eligibleMembers: eligible,
+        };
+      } catch (err) {
+        console.warn("Live clientsApi.listMembers failed, falling back to mock:", err);
+        return fallback.getTeam(id);
+      }
+    },
+
     getChannels: fallback.getChannels,
     getWebsiteSeo: fallback.getWebsiteSeo,
     getActivity: fallback.getActivity,
@@ -491,6 +573,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     setPlatformReviewer: unavailableClientsProvider.setPlatformReviewer,
     requestReconnection: unavailableClientsProvider.requestReconnection,
   };
+  return provider;
 }
 
 export const apiClientsProvider: ClientsRepository = createApiClientsProvider(unavailableClientsProvider);

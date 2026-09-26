@@ -4,6 +4,7 @@ import { SETTINGS_MOCK_MODE, SETTINGS_STORAGE_KEY } from "./config";
 import { apiClient } from "@/lib/api/client";
 import { getStoredCompanyId, setStoredTenancy, DEFAULT_FALLBACK_COMPANY_ID } from "@/lib/api/tenancy-storage";
 import { brandingApi } from "../live/branding-api";
+import { organizationApi } from "../live/organization-api";
 import type { CurrentUserResponse } from "@/types/domain/auth";
 
 export class SettingsRepository {
@@ -98,6 +99,42 @@ export class SettingsRepository {
           } catch (tErr) {
             console.warn("Could not fetch live team members for settings:", tErr);
           }
+
+          // 4. Fetch live organization record from /settings/organization
+          try {
+            const orgRecord = await organizationApi.get(activeCompanyId);
+            if (orgRecord) {
+              base.organization = {
+                ...base.organization,
+                name: orgRecord.name || base.organization.name,
+                displayName: orgRecord.displayName || base.organization.displayName,
+                legalName: orgRecord.legalName ?? base.organization.legalName,
+                industry: orgRecord.industry ?? base.organization.industry,
+                website: orgRecord.website ?? base.organization.website,
+                contactEmail: orgRecord.contactEmail ?? base.organization.contactEmail,
+                contactPhone: orgRecord.contactPhone ?? base.organization.contactPhone,
+                description: orgRecord.description ?? (base.organization as any).description,
+                timezone: orgRecord.timezone ?? base.organization.timezone,
+                currency: orgRecord.currency ?? base.organization.currency,
+                address: orgRecord.address
+                  ? {
+                      address: orgRecord.address.street ?? base.organization.address.address,
+                      street: orgRecord.address.street ?? base.organization.address.street,
+                      city: orgRecord.address.city ?? base.organization.address.city,
+                      state: orgRecord.address.state ?? base.organization.address.state,
+                      country: orgRecord.address.country ?? base.organization.address.country,
+                      postalCode: orgRecord.address.postalCode ?? base.organization.address.postalCode,
+                    }
+                  : base.organization.address,
+                metadata: {
+                  ...base.organization.metadata,
+                  revision: orgRecord.revision,
+                },
+              };
+            }
+          } catch (oErr) {
+            console.warn("Could not fetch live organization record for settings:", oErr);
+          }
         }
 
         // Cache synced data to localStorage for instant re-renders
@@ -115,11 +152,49 @@ export class SettingsRepository {
   }
 
   public static async saveSettings(partial: Partial<AllSettingsState>, activityNote?: { action: string; section: any; setting: string }): Promise<AllSettingsState> {
-    if (!SETTINGS_MOCK_MODE) {
-      throw new Error("SETTINGS_SERVICE_UNAVAILABLE: Real backend settings service is not yet connected.");
+    const current = await this.getSettings();
+    let activeCompanyId = getStoredCompanyId();
+
+    // If organization details changed and we have a valid company, save to live backend
+    if (partial.organization && activeCompanyId && activeCompanyId !== DEFAULT_FALLBACK_COMPANY_ID) {
+      try {
+        const expectedRevision = (current.organization.metadata as any)?.revision ?? 1;
+        const orgPatch = partial.organization;
+        const updatedOrg = await organizationApi.update(activeCompanyId, {
+          expectedRevision,
+          displayName: orgPatch.displayName || orgPatch.name,
+          legalName: orgPatch.legalName ?? null,
+          industry: orgPatch.industry ?? null,
+          website: orgPatch.website ?? null,
+          contactEmail: orgPatch.contactEmail ?? null,
+          contactPhone: orgPatch.contactPhone ?? null,
+          description: (orgPatch as any).description ?? null,
+          timezone: orgPatch.timezone ?? null,
+          currency: orgPatch.currency ?? null,
+          address: orgPatch.address
+            ? {
+                street: orgPatch.address.street ?? orgPatch.address.address ?? null,
+                city: orgPatch.address.city ?? null,
+                state: orgPatch.address.state ?? null,
+                country: orgPatch.address.country ?? null,
+                postalCode: orgPatch.address.postalCode ?? (orgPatch.address as any).zip ?? null,
+              }
+            : undefined,
+        });
+
+        if (updatedOrg) {
+          if (!partial.organization.metadata) {
+            partial.organization.metadata = { ...current.organization.metadata, revision: updatedOrg.revision };
+          } else {
+            (partial.organization.metadata as any).revision = updatedOrg.revision;
+          }
+        }
+      } catch (orgErr) {
+        console.error("Failed to save organization to backend:", orgErr);
+        throw orgErr;
+      }
     }
 
-    const current = await this.getSettings();
     const updated: AllSettingsState = {
       ...current,
       ...partial,

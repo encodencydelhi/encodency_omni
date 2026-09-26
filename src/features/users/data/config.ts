@@ -10,7 +10,7 @@ import type {
   UserAggregate,
 } from "./types";
 
-export const USERS_MOCK_MODE = true;
+export const USERS_MOCK_MODE = process.env.NEXT_PUBLIC_DATA_SOURCE === "mock";
 
 /** Shared reference time for mock data. Ensures consistency across selectors, store, and provider. */
 export const MOCK_REFERENCE_TIME = new Date("2026-09-19T12:00:00Z").getTime();

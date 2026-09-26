@@ -3,6 +3,7 @@ import { Invitation, Member, MemberActivity, TeamGroup } from "./types";
 import { apiClient } from "@/lib/api/client";
 import { companyScopeHeaders } from "@/lib/api/company-scope";
 import { ApiError } from "@/types/api";
+import { teamApi } from "../live/team-api";
 
 function getCompanyId() {
   if (typeof window !== "undefined") {
@@ -247,6 +248,19 @@ export const teamRepository = {
         console.warn("Failed to update role on backend:", err);
       }
     }
+
+    if (patch.jobTitle !== undefined || patch.department !== undefined) {
+      try {
+        await teamApi.updateMemberProfile(getCompanyId(), id, {
+          jobTitle: patch.jobTitle ?? null,
+          department: patch.department ?? null,
+        });
+      } catch (err) {
+        if (!shouldFallBack(err)) throw err;
+        console.warn("Failed to update member profile on backend:", err);
+      }
+    }
+
     members = members.map((member) => member.id === id ? { ...member, ...patch } : member);
   },
 

@@ -1,13 +1,18 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Search, ChevronDown, ChevronLeft, ChevronRight, Upload, Grid3X3,
   List, Image as ImageIcon, Video, FileText,
   Palette, Boxes, MoreVertical, Play, FileType2, Folder, CalendarDays,
-  ArrowDownUp, ArrowUpRight, Eye, Copy, Download, Trash2
+  ArrowDownUp, ArrowUpRight, Eye, Copy, Download, Trash2, Loader2
 } from "lucide-react";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
+import { mediaApi } from "@/features/admin/content/live/media-api";
+import { toast } from "sonner";
+import { ApiError } from "@/types/api";
 
 type MediaFile = {
+  id?: string;
   name: string;
   meta: string;
   type: string;
@@ -107,9 +112,78 @@ export default function MediaLibrary() {
     }
   });
 
-  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const { companyId, clientId } = useTenancyContext();
+  const [isUploading, setIsUploading] = useState(false);
+  const [isLoadingMedia, setIsLoadingMedia] = useState(false);
+
+  useEffect(() => {
+    if (!companyId || !clientId) return;
+    let cancelled = false;
+
+    async function loadLiveMedia() {
+      setIsLoadingMedia(true);
+      try {
+        const res = await mediaApi.list(companyId, clientId);
+        if (!cancelled && res?.items && res.items.length > 0) {
+          const liveFiles: MediaFile[] = res.items.map((asset) => {
+            const isImg = asset.kind === "IMAGE";
+            const ext = asset.format?.toLowerCase() || (isImg ? "jpg" : "mp4");
+            return {
+              id: asset.id,
+              name: `asset-${asset.id.slice(0, 8)}.${ext}`,
+              meta: `${(asset.bytes / (1024 * 1024)).toFixed(1)} MB • ${new Date(asset.uploadedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`,
+              type: isImg ? "image" : "video",
+              src: asset.url,
+              duration: asset.durationMs ? `${Math.floor(asset.durationMs / 60000)}:${Math.floor((asset.durationMs % 60000) / 1000).toString().padStart(2, "0")}` : undefined,
+            };
+          });
+          setFiles((prev) => {
+            const liveIds = new Set(liveFiles.map((f) => f.id));
+            const existingNonLive = prev.filter((f) => !f.id || !liveIds.has(f.id));
+            return [...liveFiles, ...existingNonLive];
+          });
+        }
+      } catch (err) {
+        console.warn("Could not load live media library:", err);
+      } finally {
+        if (!cancelled) setIsLoadingMedia(false);
+      }
+    }
+
+    loadLiveMedia();
+    return () => { cancelled = true; };
+  }, [companyId, clientId]);
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const chosen = Array.from(event.target.files ?? []);
     if (chosen.length === 0) return;
+
+    if (companyId && clientId) {
+      setIsUploading(true);
+      for (const file of chosen) {
+        try {
+          const asset = await mediaApi.upload(companyId, clientId, file);
+          const isImg = asset.kind === "IMAGE";
+          const ext = asset.format?.toLowerCase() || (isImg ? "jpg" : "mp4");
+          const newFile: MediaFile = {
+            id: asset.id,
+            name: file.name || `asset-${asset.id.slice(0, 8)}.${ext}`,
+            meta: `${(asset.bytes / (1024 * 1024)).toFixed(1)} MB • ${new Date(asset.uploadedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`,
+            type: isImg ? "image" : "video",
+            src: asset.url,
+            duration: asset.durationMs ? `${Math.floor(asset.durationMs / 60000)}:${Math.floor((asset.durationMs % 60000) / 1000).toString().padStart(2, "0")}` : undefined,
+          };
+          setFiles((prev) => [newFile, ...prev]);
+          toast.success(`Uploaded ${file.name}`);
+        } catch (err: unknown) {
+          const msg = ApiError.isApiError(err) ? err.message : (err instanceof Error ? err.message : "Upload failed");
+          toast.error(`Failed to upload ${file.name}`, { description: msg });
+        }
+      }
+      setIsUploading(false);
+      event.target.value = "";
+      return;
+    }
 
     const uploaded: MediaFile[] = chosen.map((file) => {
       const type = extToType(file.name);
@@ -140,7 +214,19 @@ export default function MediaLibrary() {
     }
   };
 
-  const deleteFile = (file: MediaFile) => {
+  const deleteFile = async (file: MediaFile) => {
+    if (file.id && companyId && clientId) {
+      try {
+        await mediaApi.remove(companyId, clientId, file.id);
+        toast.success(`Deleted ${file.name}`);
+      } catch (err: unknown) {
+        const msg = ApiError.isApiError(err) && err.status === 409
+          ? "Cannot delete: Media is in use by drafts or scheduled posts."
+          : (err instanceof Error ? err.message : "Failed to delete file.");
+        toast.error(msg);
+        return;
+      }
+    }
     setFiles((current) => current.filter((item) => item !== file));
     setCardMenu(null);
   };

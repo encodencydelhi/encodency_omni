@@ -62,6 +62,8 @@ export interface Member {
   name: string;
   email: string;
   jobTitle?: string;
+  department?: string;
+  phone?: string;
   avatarUrl: Maybe<string>;
   roleId: RoleId; // Base role
   roleName: string;

@@ -8,6 +8,7 @@ import { StatusBadge } from "./ui-badge";
 import { MOCK_DRAFTS } from "../mocks/content.mock";
 import { ContentPreviewPanel } from "./ContentPreview";
 import { draftsApi, type DraftSummaryRecord, isRevisionConflict } from "../live/drafts-api";
+import { mediaApi } from "../live/media-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";
 
@@ -302,7 +303,7 @@ export function DraftsTab() {
               ["Post Type", activeDraft?.campaign ? "🎯 Campaign Post" : "⚡ Standalone / Direct Post"],
               ["Campaign", activeDraft?.campaign?.name ?? "None (Standalone)"],
               ["Revision", (activeDraft as any)?.revision ? `Rev ${(activeDraft as any).revision}` : "—"],
-              ["Media", `${activeDraft?.masterContent.media.length ?? 0} files (TASK-11C pending)`],
+              ["Media", `${activeDraft?.masterContent.media.length ?? 0} files attached`],
               ["Last edited", activeDraft?.updatedAt.split("T")[0] ?? "—"],
               ["Owner", activeDraft?.createdBy ?? "—"],
             ].map(([k, v]) => (

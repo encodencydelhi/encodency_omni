@@ -14,6 +14,7 @@ export interface OrganizationAddress {
   state: string;
   city: string;
   address: string;
+  street?: string;
   postalCode: string;
 }
 
@@ -26,6 +27,7 @@ export interface OrganizationMetadata {
   planStatus: "Active" | "Past Due" | "Trialing";
   totalMembers: number;
   totalClients: number;
+  revision?: number;
 }
 
 export interface OrganizationProfile {
@@ -38,6 +40,8 @@ export interface OrganizationProfile {
   contactPhone: string;
   logo: string;
   description: string;
+  timezone?: string;
+  currency?: string;
   address: OrganizationAddress;
   metadata: OrganizationMetadata;
 }

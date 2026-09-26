@@ -156,6 +156,31 @@ class MockIntegrationsRepository implements IntegrationsRepository {
   }
 
   async discoverResources(providerId: ProviderId, clientName: string) {
+    const companyId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
+        : "development-company-id";
+
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const existingConn = mockConnections.find((c) => c.providerId === providerId && uuidPattern.test(c.id));
+    const targetIntegrationId = uuidPattern.test(providerId) ? providerId : existingConn?.id;
+
+    if (targetIntegrationId && uuidPattern.test(companyId)) {
+      try {
+        const liveResources = await integrationsApi.discoverResources(companyId, targetIntegrationId);
+        if (Array.isArray(liveResources) && liveResources.length > 0) {
+          return liveResources.map((r) => ({
+            id: r.externalResourceId,
+            name: r.name,
+            handle: r.resourceType.toLowerCase(),
+            type: r.resourceType.toLowerCase() as any,
+          }));
+        }
+      } catch (err) {
+        console.warn("Live integrationsApi.discoverResources failed, falling back to mock:", err);
+      }
+    }
+
     await wait(700);
     return discoverResources(providerId, clientName);
   }
@@ -269,7 +294,26 @@ class MockIntegrationsRepository implements IntegrationsRepository {
     };
   }
 
-  async updateResourceMapping() {
+  async updateResourceMapping(connectionId: string, resourceId: string, clientId: string) {
+    const companyId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
+        : "development-company-id";
+
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (uuidPattern.test(connectionId) && uuidPattern.test(companyId)) {
+      try {
+        await integrationsApi.mapResource(companyId, connectionId, {
+          clientId,
+          externalResourceId: resourceId,
+          resourceType: "FACEBOOK_PAGE",
+        });
+        return;
+      } catch (err) {
+        console.warn("Live integrationsApi.mapResource failed, falling back to mock:", err);
+      }
+    }
+
     await wait(450);
   }
 
@@ -324,7 +368,15 @@ class UnavailableIntegrationsRepository implements IntegrationsRepository {
       throw error;
     }
   }
-  async discoverResources(): Promise<DiscoveredResource[]> {
+  async discoverResources(providerId: ProviderId, clientName: string): Promise<DiscoveredResource[]> {
+    const companyId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
+        : "development-company-id";
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (uuidPattern.test(providerId) && uuidPattern.test(companyId)) {
+      return (await integrationsApi.discoverResources(companyId, providerId)) as any;
+    }
     throw unavailable();
   }
   async connect(): Promise<IntegrationConnection> {
@@ -339,7 +391,20 @@ class UnavailableIntegrationsRepository implements IntegrationsRepository {
   async runSync(): Promise<IntegrationSyncRun> {
     throw unavailable();
   }
-  async updateResourceMapping(): Promise<void> {
+  async updateResourceMapping(connectionId: string, resourceId: string, clientId: string): Promise<void> {
+    const companyId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
+        : "development-company-id";
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (uuidPattern.test(connectionId) && uuidPattern.test(companyId)) {
+      await integrationsApi.mapResource(companyId, connectionId, {
+        clientId,
+        externalResourceId: resourceId,
+        resourceType: "FACEBOOK_PAGE",
+      });
+      return;
+    }
     throw unavailable();
   }
   async saveSettings(): Promise<void> {
