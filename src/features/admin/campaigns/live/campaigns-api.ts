@@ -16,6 +16,39 @@ export interface BudgetResponse {
   currency: string;
 }
 
+export type CampaignObjective =
+  | "AWARENESS"
+  | "TRAFFIC"
+  | "ENGAGEMENT"
+  | "LEADS"
+  | "SALES"
+  | "APP_PROMOTION"
+  | "RETENTION"
+  | "REENGAGEMENT";
+
+export type CampaignMode = "ORGANIC" | "PAID" | "UNIFIED";
+export type BiddingStrategy = "LOWEST_COST" | "COST_CAP" | "BID_CAP" | "TARGET_ROAS" | "MINIMUM_ROAS";
+
+export interface KpisPayload {
+  targetReach?: number;
+  targetImpressions?: number;
+  targetClicks?: number;
+  targetEngagements?: number;
+  targetLeads?: number;
+  targetConversions?: number;
+  targetRevenue?: BudgetInput;
+  targetRoas?: string;
+}
+
+export interface AudiencePayload {
+  ageMin?: number;
+  ageMax?: number;
+  genders?: string[];
+  locations?: string[];
+  languages?: string[];
+  interests?: string[];
+}
+
 export interface CampaignRecord {
   id: string;
   clientId: string;
@@ -24,6 +57,17 @@ export interface CampaignRecord {
   budget: BudgetResponse | null;
   startDate: string | null;
   endDate: string | null;
+  objective?: CampaignObjective | null;
+  campaignMode?: CampaignMode | null;
+  category?: string | null;
+  campaignType?: string | null;
+  description?: string | null;
+  internalNotes?: string | null;
+  tags?: string[];
+  channels?: string[];
+  biddingStrategy?: BiddingStrategy | null;
+  kpis?: KpisPayload | null;
+  audience?: AudiencePayload | null;
   revision: number;
   createdAt: string;
   updatedAt: string;
@@ -34,6 +78,17 @@ export interface CreateCampaignPayload {
   budget?: BudgetInput | null;
   startDate?: string | null;
   endDate?: string | null;
+  objective?: CampaignObjective | null;
+  campaignMode?: CampaignMode | null;
+  category?: string | null;
+  campaignType?: string | null;
+  description?: string | null;
+  internalNotes?: string | null;
+  tags?: string[];
+  channels?: string[];
+  biddingStrategy?: BiddingStrategy | null;
+  kpis?: KpisPayload | null;
+  audience?: AudiencePayload | null;
   [key: string]: unknown;
 }
 
@@ -136,18 +191,16 @@ export const campaignsApi = {
     payload: CreateCampaignPayload,
     signal?: AbortSignal,
   ): Promise<CampaignRecord> {
-    const backendPayload: Record<string, unknown> = {
-      name: payload.name.trim(),
+    const fullPayload = {
+      ...payload,
+      name: payload.name ? payload.name.trim() : payload.name,
     };
-    if (payload.budget !== undefined) backendPayload.budget = payload.budget;
-    if (payload.startDate !== undefined) backendPayload.startDate = payload.startDate;
-    if (payload.endDate !== undefined) backendPayload.endDate = payload.endDate;
 
     return apiClient.request<CampaignRecord>({
       method: "POST",
       path: "/campaigns",
       headers: clientScopeHeaders(companyId, clientId),
-      body: backendPayload,
+      body: fullPayload,
       signal,
     });
   },

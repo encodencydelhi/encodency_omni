@@ -4,7 +4,8 @@
   "private": true,
   "description": "EnCodency omniPlatform — Super Admin Panel (frontend)",
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev --turbo",
+    "dev:webpack": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

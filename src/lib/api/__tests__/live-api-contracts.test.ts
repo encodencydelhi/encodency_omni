@@ -34,6 +34,8 @@ const { dashboardService } = await import("@/features/dashboard/services/dashboa
 const { ApiError } = await import("@/types/api");
 const { brandingApi, BRANDING_UPLOAD_LIMITS, describeBrandingError, isAssetConflict, isCompanyInactive, isFileTooLarge, isStorageUnavailable } =
   await import("@/features/admin/settings/live/branding-api");
+const { userAvatarApi, USER_AVATAR_LIMITS, isAvatarAssetConflict, isAvatarFileTooLarge, isAvatarStorageUnavailable } =
+  await import("@/features/auth/services/user-avatar-api");
 
 interface Call {
   url: string;
@@ -1324,4 +1326,67 @@ describe("brandingApi (IMAGE-01 Phase 2 contracts)", () => {
     assert.deepEqual(BRANDING_UPLOAD_LIMITS.favicon.mimeTypes, ["image/png", "image/webp"]);
   });
 });
+
+describe("userAvatarApi (IMAGE-01 Phase 4 contracts)", () => {
+  it("PUT /users/me/avatar sends multipart FormData and replacesAssetId", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        avatar: {
+          id: "a-u-1",
+          purpose: "user_avatar",
+          url: "https://res.cloudinary.com/avatar.png",
+          mimeType: "image/png",
+          format: "png",
+          bytes: 1024,
+          width: 200,
+          height: 200,
+          uploadedAt: "2026-09-26T10:00:00Z",
+        },
+      },
+    });
+
+    const file = new Blob(["avatar binary"], { type: "image/png" });
+    const result = await userAvatarApi.upload(file, { replacesAssetId: "old-avatar-1" });
+
+    assert.equal(calls[0]!.url, "/api/v1/users/me/avatar");
+    assert.equal(calls[0]!.init.method, "PUT");
+    assert.ok(calls[0]!.init.body instanceof FormData);
+    const form = calls[0]!.init.body as FormData;
+    assert.ok(form.get("file"));
+    assert.equal(form.get("replacesAssetId"), "old-avatar-1");
+    assert.equal(result.avatar?.id, "a-u-1");
+  });
+
+  it("DELETE /users/me/avatar removes avatar and returns null", async () => {
+    responses.push({
+      status: 200,
+      body: { avatar: null },
+    });
+
+    const result = await userAvatarApi.remove();
+
+    assert.equal(calls[0]!.url, "/api/v1/users/me/avatar");
+    assert.equal(calls[0]!.init.method, "DELETE");
+    assert.equal(result.avatar, null);
+  });
+
+  it("identifies avatar upload limits and error codes", async () => {
+    assert.equal(USER_AVATAR_LIMITS.maxBytes, 2 * 1024 * 1024);
+    assert.deepEqual(USER_AVATAR_LIMITS.mimeTypes, ["image/png", "image/jpeg", "image/webp"]);
+
+    responses.push(
+      { status: 409, body: { code: "asset_conflict", message: "Modified" } },
+      { status: 413, body: { code: "PAYLOAD_TOO_LARGE", message: "Too large" } },
+      { status: 503, body: { code: "storage_unavailable", message: "Storage down" } },
+    );
+
+    const file = new Blob(["test"], { type: "image/png" });
+    await assert.rejects(userAvatarApi.upload(file), (err: unknown) => isAvatarAssetConflict(err) === true);
+    await assert.rejects(userAvatarApi.upload(file), (err: unknown) => isAvatarFileTooLarge(err) === true);
+    await assert.rejects(userAvatarApi.upload(file), (err: unknown) => isAvatarStorageUnavailable(err) === true);
+  });
+});
+
+
 

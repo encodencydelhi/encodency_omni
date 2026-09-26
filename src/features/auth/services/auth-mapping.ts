@@ -31,7 +31,7 @@ export function toAuthenticatedUser(profile: CurrentUserResponse): Authenticated
     id: profile.id,
     email: profile.email,
     name: profile.email,
-    avatarUrl: null,
+    avatarUrl: profile.avatarUrl ?? profile.avatar?.url ?? null,
     role: isSuperAdmin ? "super_admin" : null,
     platformRole: isSuperAdmin ? "SUPER_ADMIN" : null,
     permissions: isSuperAdmin ? ROLE_PERMISSIONS.super_admin : [],

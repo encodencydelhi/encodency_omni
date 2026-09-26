@@ -16,12 +16,26 @@ export interface CompanyMembershipSummary {
   systemRole: CompanySystemRole;
 }
 
+export interface SafeAssetSummary {
+  id: string;
+  purpose: string;
+  url: string;
+  mimeType: string;
+  format: string;
+  bytes: number;
+  width: number | null;
+  height: number | null;
+  uploadedAt: string;
+}
+
 /** GET /api/v1/users/me */
 export interface CurrentUserResponse {
   id: string;
   email: string;
   totpEnabled: boolean;
   platformRole: "SUPER_ADMIN" | null;
+  avatar?: SafeAssetSummary | null;
+  avatarUrl?: string | null;
   memberships: CompanyMembershipSummary[];
 }
 

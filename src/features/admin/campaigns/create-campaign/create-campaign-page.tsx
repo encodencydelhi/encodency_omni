@@ -23,6 +23,7 @@ import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";
 
 import { toCalendarDateString } from "./date-utils";
+import { buildCampaignPayload } from "./campaign-mapper";
 
 export function CreateCampaignPage() {
   const router = useRouter();
@@ -140,16 +141,10 @@ export function CreateCampaignPage() {
 
     setIsSubmitting(true);
     try {
-      // Send ALL wizard fields in the payload as requested
-      const fullPayload = {
-        ...draft,
-        name,
-        budget,
-        startDate,
-        endDate,
-      };
+      // Build schema-aligned payload with all wizard fields
+      const campaignPayload = buildCampaignPayload(draft, isDraft);
 
-      const created = await campaignsApi.create(companyId, effectiveClientId, fullPayload);
+      const created = await campaignsApi.create(companyId, effectiveClientId, campaignPayload);
 
       // Switch active client context to effectiveClientId so /admin/campaigns immediately lists this campaign
       if (effectiveClientId) {

@@ -1,18 +1,19 @@
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/types/api";
 import type { ClientsRepository, LifecycleAction } from "./repository";
-import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult } from "./types";
+import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCreationCompany, EligibleMember } from "./types";
 import type { CompanyClient } from "@/features/companies/data/types";
 import { unavailableClientsProvider } from "./unavailable-provider";
 import { toListQuery } from "@/lib/api/transport";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
+import { ensureBundle, writeBundle } from "@/features/companies/data/mock/store";
 
 function getCompanyIdHeader(): string {
   return getStoredCompanyId();
 }
 
 /** Converts backend ClientRecord into the full ClientSummary structure expected by the UI. */
-function toClientSummary(raw: any): ClientSummary {
+function toClientSummary(raw: any, companyInfo?: { id: string; name: string }): ClientSummary {
   if (!raw) {
     throw new ApiError({ code: "NOT_FOUND", message: "Client not found", status: 404 });
   }
@@ -24,7 +25,8 @@ function toClientSummary(raw: any): ClientSummary {
   const industry: string = raw.industry ?? "Other";
   const website: string = raw.website ?? "";
   const targetAudience: string = raw.targetAudience ?? raw.description ?? "";
-  const companyId: string = raw.companyId ?? getCompanyIdHeader();
+  const companyId: string = raw.companyId ?? companyInfo?.id ?? getCompanyIdHeader();
+  const companyName: string = companyInfo?.name ?? raw.companyName ?? "Workspace Company";
   const createdAt: string = raw.createdAt ?? new Date().toISOString();
   const updatedAt: string = raw.updatedAt ?? createdAt;
 
@@ -73,7 +75,7 @@ function toClientSummary(raw: any): ClientSummary {
     displayId: id,
     company: {
       id: companyId,
-      name: "Workspace Company",
+      name: companyName,
       slug: companyId,
       planTier: "growth",
       planName: "Growth",
@@ -141,47 +143,110 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     mode: "api",
     
     async listClients(query: ClientListQuery): Promise<ClientListResult> {
-      const companyId = getCompanyIdHeader();
-      // If there is no valid company ID selected (e.g. at /super-admin/clients where no cross-company Super Admin API exists yet),
-      // gracefully fall back to the demo/preview repository so the Super Admin Clients directory stays functional.
-      if (!companyId || !UUID_PATTERN.test(companyId)) {
-        return fallback.listClients(query);
+      const companyId = query.company || getCompanyIdHeader();
+
+      // If a specific company is selected with a valid UUID
+      if (companyId && UUID_PATTERN.test(companyId)) {
+        try {
+          const rawClients = await apiClient.request<any[]>({
+            method: "GET",
+            path: "/clients",
+            query: toListQuery(query),
+            headers: { "x-company-id": companyId }
+          });
+          const clients = (Array.isArray(rawClients) ? rawClients : []).map((c) => toClientSummary(c));
+          for (const c of clients) {
+            try {
+              const bundle = ensureBundle(companyId, c.company.name);
+              if (!bundle.clients.some((item) => item.id === c.client.id)) {
+                bundle.clients.push(c.client);
+                writeBundle(bundle);
+              }
+            } catch {}
+          }
+          const page = query.page ?? 1;
+          const pageSize = query.pageSize ?? 10;
+          const totalPages = Math.max(1, Math.ceil(clients.length / pageSize));
+          
+          return {
+            data: clients,
+            matchingIds: clients.map(c => c.displayId ?? c.client.id),
+            pagination: { 
+              total: clients.length, 
+              page, 
+              pageSize, 
+              totalPages,
+              hasNextPage: page < totalPages,
+              hasPreviousPage: page > 1
+            }
+          };
+        } catch (err) {
+          if (ApiError.isApiError(err) && (err.status === 400 || err.status === 404)) {
+            return fallback.listClients(query);
+          }
+        }
       }
 
+      // In Super Admin cross-company view, fetch live companies and their clients from backend
+      let liveClients: ClientSummary[] = [];
       try {
-        const rawClients = await apiClient.request<any[]>({
+        const companiesRes = await apiClient.request<any>({
           method: "GET",
-          path: "/clients",
-          query: toListQuery(query),
-          headers: { "x-company-id": companyId }
+          path: "/super-admin/companies",
+          query: { page: 1, limit: 100, status: "ACTIVE" },
         });
-        const clients = (Array.isArray(rawClients) ? rawClients : []).map(toClientSummary);
-        const page = query.page ?? 1;
-        const pageSize = query.pageSize ?? 10;
-        const totalPages = Math.max(1, Math.ceil(clients.length / pageSize));
-        
-        return {
-          data: clients,
-          matchingIds: clients.map(c => c.displayId ?? c.client.id),
-          pagination: { 
-            total: clients.length, 
-            page, 
-            pageSize, 
-            totalPages,
-            hasNextPage: page < totalPages,
-            hasPreviousPage: page > 1
-          }
-        };
-      } catch (err) {
-        if (ApiError.isApiError(err) && (err.status === 400 || err.status === 404)) {
-          return fallback.listClients(query);
-        }
-        throw err;
+        const companiesWithClients = (companiesRes.items ?? []).filter((c: any) => c.clientCount > 0);
+        const detailPromises = companiesWithClients.map((c: any) =>
+          apiClient.request<any>({
+            method: "GET",
+            path: `/super-admin/companies/${c.id}`,
+          }).then((detail: any) =>
+            (detail.clients ?? []).map((client: any) => {
+              const summary = toClientSummary(client, { id: c.id, name: c.name });
+              try {
+                const bundle = ensureBundle(c.id, c.name);
+                if (!bundle.clients.some((item) => item.id === summary.client.id)) {
+                  bundle.clients.push(summary.client);
+                  writeBundle(bundle);
+                }
+              } catch {}
+              return summary;
+            })
+          ).catch(() => [])
+        );
+        const clientArrays = await Promise.all(detailPromises);
+        liveClients = clientArrays.flat();
+      } catch {
+        // ignore if not super admin or offline
       }
+
+      const fallbackResult = await fallback.listClients(query);
+      const combined = [
+        ...liveClients,
+        ...fallbackResult.data.filter((fc) => !liveClients.some((lc) => lc.client.id === fc.client.id)),
+      ];
+
+      const page = query.page ?? 1;
+      const pageSize = query.pageSize ?? 10;
+      const totalPages = Math.max(1, Math.ceil(combined.length / pageSize));
+      const paged = combined.slice((page - 1) * pageSize, page * pageSize);
+
+      return {
+        data: paged,
+        matchingIds: combined.map((c) => c.displayId ?? c.client.id),
+        pagination: {
+          total: combined.length,
+          page,
+          pageSize,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+      };
     },
 
     async createClient(input: CreateClientInput, actor): Promise<ClientSummary> {
-      const companyId = getCompanyIdHeader();
+      const companyId = input.companyId || getCompanyIdHeader();
       if (!companyId || !UUID_PATTERN.test(companyId)) {
         return fallback.createClient(input, actor);
       }
@@ -191,18 +256,33 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
       const industry = input.industry?.trim() || undefined;
       const targetAudience = (input.targetAudience ?? input.description)?.trim() || undefined;
 
-      const created = await apiClient.request<any>({
-        method: "POST",
-        path: "/clients",
-        body: {
-          name,
-          ...(industry ? { industry } : {}),
-          ...(website ? { website } : {}),
-          ...(targetAudience ? { targetAudience } : {}),
-        },
-        headers: { "x-company-id": companyId }
-      });
-      return toClientSummary(created);
+      try {
+        const created = await apiClient.request<any>({
+          method: "POST",
+          path: "/clients",
+          body: {
+            name,
+            ...(industry ? { industry } : {}),
+            ...(website ? { website } : {}),
+            ...(targetAudience ? { targetAudience } : {}),
+          },
+          headers: { "x-company-id": companyId }
+        });
+        const summary = toClientSummary(created);
+        try {
+          const bundle = ensureBundle(companyId, summary.company.name);
+          if (!bundle.clients.some((item) => item.id === summary.client.id)) {
+            bundle.clients.push(summary.client);
+            writeBundle(bundle);
+          }
+        } catch {}
+        return summary;
+      } catch (err) {
+        if (ApiError.isApiError(err) && (err.status === 400 || err.status === 404)) {
+          return fallback.createClient(input, actor);
+        }
+        throw err;
+      }
     },
 
     async getClient(id: string): Promise<ClientSummary> {
@@ -211,22 +291,83 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
         return fallback.getClient(id);
       }
 
-      const raw = await apiClient.request<any>({
-        method: "GET",
-        path: `/clients/${id}`,
-        headers: { 
-          "x-company-id": companyId,
-          "x-client-id": id
+      try {
+        const raw = await apiClient.request<any>({
+          method: "GET",
+          path: `/clients/${id}`,
+          headers: { 
+            "x-company-id": companyId,
+            "x-client-id": id
+          }
+        });
+        return toClientSummary(raw);
+      } catch (err) {
+        if (ApiError.isApiError(err) && (err.status === 400 || err.status === 404)) {
+          return fallback.getClient(id);
         }
-      });
-      return toClientSummary(raw);
+        throw err;
+      }
+    },
+
+    async listCreationCompanies(): Promise<ClientCreationCompany[]> {
+      const fallbackCompanies = await fallback.listCreationCompanies();
+      try {
+        const response = await apiClient.request<any>({
+          method: "GET",
+          path: "/super-admin/companies",
+          query: { page: 1, limit: 100, status: "ACTIVE" },
+        });
+        const items: any[] = response.items ?? [];
+        const liveCompanies: ClientCreationCompany[] = items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          accountStatus: item.status === "ARCHIVED" ? "archived" : "active",
+          planName: "Growth",
+          clientsUsed: item.clientCount ?? 0,
+          clientLimit: 10,
+          availableSlots: Math.max(0, 10 - (item.clientCount ?? 0)),
+          eligibleMembers: item.memberCount ?? 1,
+          eligibility: { ok: true, code: "ok", reason: null },
+        }));
+        return [
+          ...liveCompanies,
+          ...fallbackCompanies.filter((fc) => !liveCompanies.some((lc) => lc.id === fc.id)),
+        ];
+      } catch {
+        return fallbackCompanies;
+      }
+    },
+
+    async listEligibleMembers(companyId: string, clientId?: string): Promise<EligibleMember[]> {
+      try {
+        return await fallback.listEligibleMembers(companyId, clientId);
+      } catch (err) {
+        if (!UUID_PATTERN.test(companyId)) throw err;
+        try {
+          const detail = await apiClient.request<any>({
+            method: "GET",
+            path: `/super-admin/companies/${encodeURIComponent(companyId)}`,
+          });
+          const members: any[] = detail.members ?? [];
+          return members.map((m) => {
+            const role = (m.systemRole?.toLowerCase() === "owner" ? "owner" : m.systemRole?.toLowerCase() === "admin" ? "admin" : "member") as any;
+            return {
+              membershipId: m.membershipId,
+              name: m.email.split("@")[0] ?? m.email,
+              email: m.email,
+              companyRole: role,
+              alreadyAssigned: false,
+            };
+          });
+        } catch {
+          return [];
+        }
+      }
     },
 
     exportClients: fallback.exportClients,
     getPortfolio: fallback.getPortfolio,
     getFacets: fallback.getFacets,
-    listCreationCompanies: fallback.listCreationCompanies,
-    listEligibleMembers: fallback.listEligibleMembers,
     getOverview: fallback.getOverview,
     getTeam: fallback.getTeam,
     getChannels: fallback.getChannels,

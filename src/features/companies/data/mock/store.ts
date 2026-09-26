@@ -83,6 +83,94 @@ export function requireBundle(id: string): CompanyBundle {
   return bundle;
 }
 
+export function ensureBundle(companyId: string, companyName?: string): CompanyBundle {
+  const existing = findBundle(companyId);
+  if (existing) return existing;
+  const current = getStore();
+  const now = new Date().toISOString();
+  const bundle: CompanyBundle = {
+    company: {
+      id: companyId,
+      displayId: companyId,
+      slug: companyId,
+      name: companyName ?? "Workspace Company",
+      domain: null,
+      logoUrl: null,
+      profile: {
+        legalName: null,
+        website: null,
+        industry: "Technology",
+        country: "India",
+        companySize: "11-50",
+        contactEmail: null,
+        contactPhone: null,
+        timezone: "Asia/Kolkata",
+        currency: "INR",
+        language: "English",
+        region: "India (Mumbai)",
+      },
+      accountStatus: "active",
+      suspension: null,
+      archivedAt: null,
+      ownerUserId: null,
+      internalOwners: { accountManagerId: null, supportOwnerId: null, technicalOwnerId: null },
+      internalTags: [],
+      createdAt: now,
+      lastActiveAt: now,
+      isDemoCreated: false,
+    },
+    subscription: {
+      id: `sub_${companyId}`,
+      companyId,
+      planTier: "growth",
+      billingCycle: "monthly",
+      status: "active",
+      startedAt: now,
+      currentPeriodStart: now,
+      renewsAt: now,
+      trialEndsAt: null,
+      scheduledCancellationAt: null,
+      cancelledAt: null,
+      scheduledChange: null,
+      paymentMethod: null,
+    },
+    overrides: [],
+    usageBaseline: {},
+    users: [],
+    clients: [],
+    integrations: [],
+    invoices: [],
+    payments: [],
+    activity: [],
+    security: {
+      companyId,
+      policies: {
+        require2fa: false,
+        passwordPolicy: "standard",
+        sessionTimeoutMinutes: 1440,
+        ssoEnabled: false,
+        ipAllowlistEnabled: false,
+      },
+      allowedEmailDomains: [],
+      activeSessions: 1,
+      accountLockouts: 0,
+      accessLock: null,
+      passwordResetRequestedAt: null,
+      sessionRevocationRequestedAt: null,
+      events: [],
+    },
+    notes: [],
+    tickets: [],
+    jobs: {
+      failedLast24h: 0,
+      lastFailureAt: null,
+    },
+    clientDetails: {},
+  };
+  current.bundles.set(companyId, bundle);
+  return bundle;
+}
+
 export function writeBundle(bundle: CompanyBundle): void {
   const current = getStore();
   current.bundles.set(bundle.company.id, bundle);

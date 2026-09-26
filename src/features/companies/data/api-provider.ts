@@ -204,10 +204,27 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
           hasPreviousPage: response.page > 1,
         };
 
+        const apiSummaries = response.items.map(toCompanySummary);
+        let demoCreated: CompanySummary[] = [];
+        try {
+          const fallbackResult = await fallback.listCompanies(query);
+          demoCreated = fallbackResult.data.filter((c) => c.company.isDemoCreated);
+        } catch {
+          // ignore fallback failures
+        }
+
+        const combined = [
+          ...demoCreated,
+          ...apiSummaries.filter((api) => !demoCreated.some((d) => d.company.id === api.company.id)),
+        ];
+
         return {
-          data: response.items.map(toCompanySummary),
-          pagination,
-          matchingIds: response.items.map((row) => row.id),
+          data: combined,
+          pagination: {
+            ...pagination,
+            total: pagination.total + demoCreated.length,
+          },
+          matchingIds: combined.map((row) => row.company.id),
         };
       } catch (error) {
         throw error;

@@ -9,16 +9,85 @@ import { cn } from "@/lib/utils/cn";
 import { getUserDisplay } from "@/lib/utils/user-display";
 import Image from "next/image";
 
+import { useRef, useState } from "react";
+import { toast } from "sonner";
+import {
+  userAvatarApi,
+  USER_AVATAR_LIMITS,
+  isAvatarAssetConflict,
+  isAvatarFileTooLarge,
+  isAvatarStorageUnavailable,
+} from "@/features/auth/services/user-avatar-api";
+
 export function AdminTopbar() {
   const { setMobileNavOpen, isSidebarCollapsed } = useAdminContext();
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const { fullName, firstName, email: userEmail, initials } = getUserDisplay(user);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > USER_AVATAR_LIMITS.maxBytes) {
+      toast.error("Avatar image must be smaller than 2MB.");
+      return;
+    }
+
+    if (!USER_AVATAR_LIMITS.mimeTypes.includes(file.type)) {
+      toast.error("Unsupported format. Please upload PNG, JPEG or WebP.");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    const toastId = toast.loading("Updating profile avatar...");
+    try {
+      await userAvatarApi.upload(file);
+      await refreshUser();
+      toast.success("Avatar updated successfully", { id: toastId });
+    } catch (err) {
+      if (isAvatarAssetConflict(err)) {
+        toast.error("Avatar was modified elsewhere. Please refresh.", { id: toastId });
+      } else if (isAvatarFileTooLarge(err)) {
+        toast.error("File is too large. Maximum size is 2MB.", { id: toastId });
+      } else if (isAvatarStorageUnavailable(err)) {
+        toast.error("Storage service unavailable. Please try again.", { id: toastId });
+      } else {
+        toast.error("Failed to upload avatar", { id: toastId });
+      }
+    } finally {
+      setUploadingAvatar(false);
+      if (e.target) e.target.value = "";
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    setUploadingAvatar(true);
+    const toastId = toast.loading("Removing avatar...");
+    try {
+      await userAvatarApi.remove();
+      await refreshUser();
+      toast.success("Avatar removed", { id: toastId });
+    } catch {
+      toast.error("Failed to remove avatar", { id: toastId });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   return (
     <header className={cn(
       "fixed top-0 right-0 z-30 flex h-[60px] items-center gap-4 border-b border-[#E2E8F0] bg-white px-4 sm:px-6 lg:px-8 transition-[left] duration-200",
       isSidebarCollapsed ? "left-0 lg:left-[64px]" : "left-0 lg:left-[220px]"
     )}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        className="hidden"
+        onChange={handleAvatarChange}
+      />
       <button
         className="grid size-9 place-items-center rounded-sm text-[#64748B] hover:bg-[#F1F5F9] transition-colors lg:hidden"
         onClick={() => setMobileNavOpen(true)}
@@ -130,6 +199,28 @@ export function AdminTopbar() {
             <DropdownMenuItem asChild className="rounded-sm cursor-pointer">
               <Link href="/admin/settings">Profile settings</Link>
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }}
+              disabled={uploadingAvatar}
+              className="rounded-sm cursor-pointer"
+            >
+              {user?.avatarUrl ? "Change avatar..." : "Upload avatar..."}
+            </DropdownMenuItem>
+            {user?.avatarUrl && (
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  void handleAvatarRemove();
+                }}
+                disabled={uploadingAvatar}
+                className="rounded-sm cursor-pointer text-red-600 focus:text-red-600"
+              >
+                Remove avatar
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem asChild className="rounded-sm cursor-pointer">
               <Link href="/admin/settings">Organization settings</Link>
             </DropdownMenuItem>
