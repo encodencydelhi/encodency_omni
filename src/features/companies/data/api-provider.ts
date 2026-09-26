@@ -26,7 +26,7 @@
  */
 import { apiClient } from "@/lib/api/client";
 import { ApiError, type PaginationMeta } from "@/types/api";
-import type { CompaniesRepository } from "./repository";
+import type { BulkResult, CompaniesRepository } from "./repository";
 import type {
   CompanyAccountStatus,
   CompanyListQuery,
@@ -34,6 +34,7 @@ import type {
   CompanyOwner,
   CompanySummary,
   CreateCompanyInput,
+  UpdateCompanyInput,
 } from "./types";
 import { ensureBundle, writeBundle } from "./mock/store";
 import { organizationApi, type UpdateOrganizationPayload } from "@/features/admin/settings/live/organization-api";
@@ -62,6 +63,16 @@ interface SuperAdminCompanySummary {
   ownerEmail: string | null;
   ownerOnboarding?: OwnerOnboarding | null;
   logo?: { id: string; url: string } | null;
+  legalName?: string | null;
+  industry?: string | null;
+  website?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  description?: string | null;
+  address?: any;
+  taxId?: string | null;
+  timezone?: string | null;
+  currency?: string | null;
 }
 
 interface SuperAdminCompanyListResponse {
@@ -104,26 +115,29 @@ function toSlug(name: string): string {
 }
 
 function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
+  const address = (row.address as Record<string, string> | null) || {};
+  const website = row.website ?? null;
+  const domain = website ? website.replace(/^https?:\/\//i, "").split("/")[0] : null;
   return {
     company: {
       id: row.id,
       displayId: row.id,
       slug: toSlug(row.name),
       name: row.name,
-      domain: null,
+      domain: domain || null,
       logoUrl: row.logo?.url ?? null,
       profile: {
-        legalName: null,
-        website: null,
-        industry: "",
-        country: "",
+        legalName: row.legalName || null,
+        website,
+        industry: row.industry ?? "",
+        country: address.country ?? "",
         companySize: null,
-        contactEmail: null,
-        contactPhone: null,
-        timezone: "Asia/Kolkata",
-        currency: "INR",
+        contactEmail: row.contactEmail ?? null,
+        contactPhone: row.contactPhone ?? null,
+        timezone: row.timezone ?? "Asia/Kolkata",
+        currency: row.currency ?? "INR",
         language: "English",
-        region: "",
+        region: address.state ?? "",
       },
       accountStatus: toAccountStatus(row.status),
       suspension: null,
@@ -217,7 +231,19 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
           hasPreviousPage: response.page > 1,
         };
 
-        const apiSummaries = response.items.map(toCompanySummary);
+        const apiSummaries = response.items.map((row) => {
+          const s = toCompanySummary(row);
+          try {
+            const bundle = ensureBundle(row.id, row.name);
+            s.company.internalTags = bundle.company.internalTags ?? [];
+            s.company.internalOwners = bundle.company.internalOwners ?? { accountManagerId: null, supportOwnerId: null, technicalOwnerId: null };
+            s.company.profile.companySize = bundle.company.profile.companySize ?? null;
+            if (!s.company.logoUrl && bundle.company.logoUrl) {
+              s.company.logoUrl = bundle.company.logoUrl;
+            }
+          } catch {}
+          return s;
+        });
         let demoCreated: CompanySummary[] = [];
         try {
           const fallbackResult = await fallback.listCompanies(query);
@@ -254,7 +280,17 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         method: "GET",
         path: `/super-admin/companies/${encodeURIComponent(id)}`,
       });
-      return toCompanySummary(detail);
+      const summary = toCompanySummary(detail);
+      try {
+        const bundle = ensureBundle(id, summary.company.name);
+        summary.company.internalTags = bundle.company.internalTags ?? [];
+        summary.company.internalOwners = bundle.company.internalOwners ?? { accountManagerId: null, supportOwnerId: null, technicalOwnerId: null };
+        summary.company.profile.companySize = bundle.company.profile.companySize ?? null;
+        if (!summary.company.logoUrl && bundle.company.logoUrl) {
+          summary.company.logoUrl = bundle.company.logoUrl;
+        }
+      } catch {}
+      return summary;
     },
 
     async createCompany(input: CreateCompanyInput, actor): Promise<CompanySummary> {
@@ -317,6 +353,94 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         writeBundle(bundle);
       } catch {}
       return summary;
+    },
+
+    async updateCompany(id: string, input: UpdateCompanyInput, actor): Promise<CompanySummary> {
+      if (!UUID_PATTERN.test(id)) {
+        return fallback.updateCompany(id, input, actor);
+      }
+
+      const website = input.website
+        ? input.website.startsWith("http")
+          ? input.website
+          : `https://${input.website}`
+        : null;
+
+      const patched = await apiClient.request<SuperAdminCompanyDetailResponse>({
+        method: "PATCH",
+        path: `/super-admin/companies/${encodeURIComponent(id)}`,
+        body: {
+          name: input.name.trim(),
+          legalName: input.legalName ?? null,
+          website,
+          industry: input.industry ?? null,
+          address: input.country ? { country: input.country } : undefined,
+          contactEmail: input.contactEmail ?? null,
+          contactPhone: input.contactPhone ?? null,
+        },
+      });
+
+      const summary = toCompanySummary(patched);
+      try {
+        const bundle = ensureBundle(id, summary.company.name);
+        bundle.company = {
+          ...bundle.company,
+          ...summary.company,
+          profile: {
+            ...bundle.company.profile,
+            ...summary.company.profile,
+            companySize: input.companySize ?? bundle.company.profile.companySize ?? null,
+          },
+          internalTags: input.internalTags ?? bundle.company.internalTags,
+          internalOwners: input.internalOwners ?? bundle.company.internalOwners,
+        };
+        writeBundle(bundle);
+        summary.company.internalTags = bundle.company.internalTags;
+        summary.company.internalOwners = bundle.company.internalOwners;
+        summary.company.profile.companySize = bundle.company.profile.companySize;
+        if (!summary.company.logoUrl && bundle.company.logoUrl) {
+          summary.company.logoUrl = bundle.company.logoUrl;
+        }
+      } catch {}
+
+      return summary;
+    },
+
+    async archiveCompany(id: string, input: { note: string }, actor): Promise<CompanySummary> {
+      if (!UUID_PATTERN.test(id)) {
+        return fallback.archiveCompany(id, input, actor);
+      }
+      const patched = await apiClient.request<SuperAdminCompanyDetailResponse>({
+        method: "PATCH",
+        path: `/super-admin/companies/${encodeURIComponent(id)}`,
+        body: { status: "ARCHIVED" },
+      });
+      return toCompanySummary(patched);
+    },
+
+    async reactivateCompanies(ids: string[], input: { note: string }, actor): Promise<BulkResult> {
+      const updated: string[] = [];
+      const skipped: Array<{ id: string; name: string; reason: string }> = [];
+
+      for (const id of ids) {
+        if (!UUID_PATTERN.test(id)) {
+          const res = await fallback.reactivateCompanies([id], input, actor);
+          updated.push(...res.updated);
+          skipped.push(...res.skipped);
+        } else {
+          try {
+            await apiClient.request<SuperAdminCompanyDetailResponse>({
+              method: "PATCH",
+              path: `/super-admin/companies/${encodeURIComponent(id)}`,
+              body: { status: "ACTIVE" },
+            });
+            updated.push(id);
+          } catch (e) {
+            skipped.push({ id, name: id, reason: e instanceof Error ? e.message : "Failed to reactivate" });
+          }
+        }
+      }
+      return { updated, skipped };
     },
   };
 }

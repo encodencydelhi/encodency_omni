@@ -2,6 +2,7 @@
 
 import { Loader2Icon, PlusIcon, UploadIcon, Trash2Icon, XIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils/cn";
 import { COMPANY_SIZES, COUNTRIES, INDUSTRIES, INTERNAL_TAG_OPTIONS } from "../data/config";
-import { describeError, useCompanyMutations, useStaff } from "../data/hooks";
+import { companyKeys, describeError, useCompanyMutations, useStaff } from "../data/hooks";
+import { ensureBundle, writeBundle } from "../data/mock/store";
 import type { CompanyInternalOwner, CompanySize, CompanySummary, UpdateCompanyInput } from "../data/types";
 import { useUnsavedGuard } from "../hooks/use-unsaved-guard";
 import { isValidEmail, isValidPhone, isValidWebsite } from "../lib/validation";
@@ -54,6 +56,7 @@ function toForm(summary: CompanySummary): EditForm {
 }
 
 export function CompanyEditDrawer({ summary, onClose }: { summary: CompanySummary; onClose: () => void }) {
+  const queryClient = useQueryClient();
   const mutations = useCompanyMutations();
   const staff = useStaff();
   const initial = useMemo(() => toForm(summary), [summary]);
@@ -75,7 +78,13 @@ export function CompanyEditDrawer({ summary, onClose }: { summary: CompanySummar
     brandingApi
       .get(summary.company.id)
       .then((res) => {
-        if (active) setCurrentLogoUrl(res.logo?.url ?? null);
+        if (active) {
+          const url = res.logo?.url ?? null;
+          setCurrentLogoUrl(url);
+          if (url && !summary.company.logoUrl) {
+            summary.company.logoUrl = url;
+          }
+        }
       })
       .catch(() => {
         // Keep whatever the summary provided; branding is non-blocking here.
@@ -101,7 +110,15 @@ export function CompanyEditDrawer({ summary, onClose }: { summary: CompanySummar
     setLogoUploading(true);
     try {
       const res = await brandingApi.uploadSuperAdminLogo(summary.company.id, file);
-      setCurrentLogoUrl(res.logo?.url || null);
+      const newLogoUrl = res.logo?.url || null;
+      setCurrentLogoUrl(newLogoUrl);
+      summary.company.logoUrl = newLogoUrl;
+      try {
+        const bundle = ensureBundle(summary.company.id, summary.company.name);
+        bundle.company.logoUrl = newLogoUrl;
+        writeBundle(bundle);
+      } catch {}
+      await queryClient.invalidateQueries({ queryKey: companyKeys.all });
       toast.success("Company logo updated successfully.");
     } catch (err: unknown) {
       toast.error("Logo upload failed", { description: describeBrandingError(err) });
@@ -116,6 +133,13 @@ export function CompanyEditDrawer({ summary, onClose }: { summary: CompanySummar
     try {
       await brandingApi.removeSuperAdminLogo(summary.company.id);
       setCurrentLogoUrl(null);
+      summary.company.logoUrl = null;
+      try {
+        const bundle = ensureBundle(summary.company.id, summary.company.name);
+        bundle.company.logoUrl = null;
+        writeBundle(bundle);
+      } catch {}
+      await queryClient.invalidateQueries({ queryKey: companyKeys.all });
       toast.success("Company logo removed.");
     } catch (err: unknown) {
       toast.error("Failed to remove logo", { description: describeBrandingError(err) });
@@ -163,6 +187,10 @@ export function CompanyEditDrawer({ summary, onClose }: { summary: CompanySummar
 
     try {
       await mutations.updateCompany(summary.company.id, input);
+      if (currentLogoUrl) {
+        summary.company.logoUrl = currentLogoUrl;
+      }
+      await queryClient.invalidateQueries({ queryKey: companyKeys.all });
       toast.success(`${form.name.trim()} updated`);
       return true;
     } catch (failure) {
