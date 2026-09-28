@@ -2,7 +2,7 @@ import { AllSettingsState, DataExportRequest, SettingsActivityItem, UserPreferen
 import { INITIAL_SETTINGS_STATE } from "./mock-provider";
 import { SETTINGS_MOCK_MODE, SETTINGS_STORAGE_KEY } from "./config";
 import { apiClient } from "@/lib/api/client";
-import { getStoredCompanyId, setStoredTenancy, DEFAULT_FALLBACK_COMPANY_ID } from "@/lib/api/tenancy-storage";
+import { getStoredCompanyId, setStoredTenancy, clearStoredClientId, DEFAULT_FALLBACK_COMPANY_ID } from "@/lib/api/tenancy-storage";
 import { brandingApi } from "../live/branding-api";
 import { organizationApi } from "../live/organization-api";
 import type { CurrentUserResponse } from "@/types/domain/auth";
@@ -42,6 +42,11 @@ export class SettingsRepository {
               user.memberships.find((m) => m.companyId === activeCompanyId) ?? user.memberships[0];
 
             if (activeMembership) {
+              // Switching Company invalidates the stored Client (it belongs to the
+              // previous one) — client-scoped routes would answer 403 until re-picked.
+              if (activeCompanyId !== activeMembership.companyId) {
+                clearStoredClientId();
+              }
               activeCompanyId = activeMembership.companyId;
               setStoredTenancy(activeCompanyId);
 

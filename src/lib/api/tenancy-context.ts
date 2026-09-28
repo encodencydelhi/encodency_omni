@@ -7,6 +7,7 @@ import { clientsApi } from "@/features/admin/projects/live/clients-api";
 import {
   DEFAULT_FALLBACK_COMPANY_ID,
   DEFAULT_FALLBACK_CLIENT_ID,
+  clearStoredClientId,
   getStoredCompanyId,
   getStoredClientId,
   setStoredTenancy,
@@ -15,6 +16,7 @@ import {
 export {
   DEFAULT_FALLBACK_COMPANY_ID,
   DEFAULT_FALLBACK_CLIENT_ID,
+  clearStoredClientId,
   getStoredCompanyId,
   getStoredClientId,
   setStoredTenancy,
@@ -48,33 +50,40 @@ export function useTenancyContext(): TenancyContextState {
 
     setCompanyState(resolvedCompany);
 
-    // Resolve client ID: if localStorage has it, keep it. Otherwise, try listing clients.
-    let resolvedClient = getStoredClientId();
-    if (resolvedClient && resolvedClient !== DEFAULT_FALLBACK_CLIENT_ID) {
-      setClientState(resolvedClient);
-      setIsReady(true);
-      return;
-    }
+    const storedClient = getStoredClientId();
 
     if (!resolvedCompany) {
+      setClientState(storedClient);
       setIsReady(true);
       return;
     }
 
-    // Try fetching available clients for this company
+    // A stored Client id only belongs to one Company: pairing it with a different one
+    // makes every client-scoped route fail with 403 "Client access denied". So the
+    // stored id is reconciled against this Company's real client list instead of being
+    // trusted as-is (the previous behaviour kept a Client from the last Company).
     let cancelled = false;
     clientsApi
       .list(resolvedCompany)
       .then((clients) => {
         if (cancelled) return;
-        if (clients.length > 0 && clients[0]) {
-          const firstClientId = clients[0].id;
-          setClientState(firstClientId);
-          setStoredTenancy(getStoredCompanyId(), firstClientId);
+        const ids = clients.map((client) => client.id);
+        if (storedClient && ids.includes(storedClient)) {
+          setClientState(storedClient);
+          return;
+        }
+        const nextClientId = clients[0]?.id ?? "";
+        setClientState(nextClientId);
+        if (nextClientId) {
+          setStoredTenancy(resolvedCompany, nextClientId);
+        } else {
+          clearStoredClientId();
         }
       })
       .catch(() => {
-        // Keep fallback if unable to list
+        // Listing failed (offline, transient error): keep the stored Client rather
+        // than dropping tenancy context for a page that could still work.
+        if (!cancelled) setClientState(storedClient);
       })
       .finally(() => {
         if (!cancelled) setIsReady(true);
@@ -88,6 +97,10 @@ export function useTenancyContext(): TenancyContextState {
   const setCompanyId = useCallback((id: string) => {
     setCompanyState(id);
     setStoredTenancy(id);
+    // The selected Client belonged to the previous Company — drop it so the next
+    // resolution picks one that actually exists under the new Company.
+    setClientState("");
+    clearStoredClientId();
   }, []);
 
   const setClientId = useCallback((id: string) => {

@@ -13,6 +13,7 @@ import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils/cn";
 import type { DashboardSnapshot } from "@/types/domain/dashboard";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { DemoTag } from "./demo-tag";
 
 const PLAN_COLORS: Record<string, string> = {
   starter: "bg-[#3b82f6]",
@@ -103,7 +104,7 @@ export function PlanDistributionPanel({
             <ClipboardListIcon className="size-4" />
           </div>
           <div className="flex flex-col min-w-0">
-            <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">Plan Distribution</h3>
+            <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">Plan Distribution</h3> <DemoTag />
             <p className="text-[12px] text-slate-500 font-medium truncate">Total active subscriptions: {distribution.activeTotal}</p>
           </div>
         </div>
@@ -152,7 +153,7 @@ export function LatestSignupsPanel({
           <div className="flex size-8 items-center justify-center rounded-sm bg-blue-100 text-blue-500 shrink-0">
             <Building2Icon className="size-4" />
           </div>
-          <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">Latest Signups</h3>
+          <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">Latest Signups</h3> <DemoTag />
         </div>
         <Link href={ROUTES.superAdmin.companies} className="inline-flex shrink-0 items-center gap-1 text-[12px] font-semibold text-red-500 hover:text-red-600">
           View all <ArrowRightIcon className="size-3" />
@@ -200,7 +201,7 @@ export function ApiUsagePanel({
           <div className="flex size-8 items-center justify-center rounded-sm bg-purple-100 text-purple-500 shrink-0">
             <ActivityIcon className="size-4" />
           </div>
-          <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">API Usage Snapshot</h3>
+          <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">API Usage Snapshot</h3> <DemoTag />
         </div>
         <select className="text-[11px] border border-slate-200 rounded-sm px-1.5 py-1 bg-white text-slate-500 font-medium outline-none shrink-0 cursor-pointer">
           <option>Last 30 days</option>
@@ -265,7 +266,7 @@ export function IntegrationStatusPanel({
           <div className="flex size-8 items-center justify-center rounded-sm bg-emerald-100 text-emerald-500 shrink-0">
             <SettingsIcon className="size-4" />
           </div>
-          <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">Integration Status</h3>
+          <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">Integration Status</h3> <DemoTag />
         </div>
         <Link href={ROUTES.superAdmin.integrations} className="inline-flex shrink-0 items-center gap-1 text-[12px] font-semibold text-red-500 hover:text-red-600">
           View all <ArrowRightIcon className="size-3" />

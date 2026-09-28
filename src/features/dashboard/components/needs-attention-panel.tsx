@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatRelativeTime } from "@/lib/utils/format";
 import type { AttentionItem } from "@/types/domain/dashboard";
 import type { NotificationSeverity } from "@/types/domain/notification";
+import { DemoTag } from "./demo-tag";
 
 /** Icon per attention item, so the list is scannable without reading it. */
 const ITEM_ICONS: Record<string, LucideIcon> = {
@@ -59,6 +60,7 @@ export function NeedsAttentionPanel({ items, isLoading }: NeedsAttentionPanelPro
       title="Needs Attention"
       action={
         <div className="flex items-center gap-3">
+          <DemoTag />
           {!isLoading && sorted.length > 0 ? (
             <span className="flex size-5 items-center justify-center rounded-sm bg-primary text-[0.625rem] font-semibold text-primary-foreground">
               {sorted.length}

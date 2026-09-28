@@ -24,6 +24,7 @@ import {
   seeded,
 } from "./mock-provider";
 import { integrationsApi, toBackendProvider } from "../live/integrations-api";
+import { getStoredClientId } from "@/lib/api/tenancy-storage";
 import { ApiError } from "@/types/api";
 import type {
   IntegrationConnection,
@@ -100,6 +101,34 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const nowIso = () => new Date().toISOString();
 const uid = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function activeCompanyId(): string {
+  return typeof window !== "undefined"
+    ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
+    : "development-company-id";
+}
+
+/**
+ * Backend resource enum supported by POST /integrations/:id/map (Prisma ResourceType).
+ * Returns undefined for provider types this backend version cannot store — those are
+ * never sent, so the caller can keep the local flow instead of posting a 400.
+ */
+function toBackendResourceType(type: ResourceType | undefined) {
+  switch (type) {
+    case "facebook_page":
+      return "FACEBOOK_PAGE" as const;
+    case "instagram_account":
+      return "INSTAGRAM_ACCOUNT" as const;
+    case "gbp_location":
+      return "GOOGLE_BUSINESS_LOCATION" as const;
+    case "linkedin_page":
+      return "LINKEDIN_ORGANIZATION" as const;
+    default:
+      return undefined;
+  }
+}
+
 function hash(text: string) {
   return [...text].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) >>> 0, 7);
 }
@@ -155,29 +184,50 @@ class MockIntegrationsRepository implements IntegrationsRepository {
     }
   }
 
+  /**
+   * Finds the backend CompanyIntegration id for a provider: the id itself if it is
+   * already a UUID, a UUID connection from the local snapshot, or — for connections
+   * that only exist in the backend — the id reported by GET /integrations/overview.
+   */
+  private async resolveLiveIntegrationId(companyId: string, providerId: ProviderId): Promise<string | null> {
+    if (UUID_PATTERN.test(providerId)) return providerId;
+    const fromSnapshot = mockConnections.find((c) => c.providerId === providerId && UUID_PATTERN.test(c.id))?.id;
+    if (fromSnapshot) return fromSnapshot;
+
+    const backendProvider = toBackendProvider(providerId);
+    const clientId = typeof window !== "undefined" ? getStoredClientId() : "";
+    if (!backendProvider || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) return null;
+
+    try {
+      const overview = await integrationsApi.getOverview(companyId, clientId);
+      return overview.providers.find((p) => p.provider === backendProvider)?.integrationId ?? null;
+    } catch (err) {
+      console.warn("Live integrationsApi.getOverview failed while resolving the integration id:", err);
+      return null;
+    }
+  }
+
   async discoverResources(providerId: ProviderId, clientName: string) {
-    const companyId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
-        : "development-company-id";
+    const companyId = activeCompanyId();
 
-    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    const existingConn = mockConnections.find((c) => c.providerId === providerId && uuidPattern.test(c.id));
-    const targetIntegrationId = uuidPattern.test(providerId) ? providerId : existingConn?.id;
-
-    if (targetIntegrationId && uuidPattern.test(companyId)) {
-      try {
-        const liveResources = await integrationsApi.discoverResources(companyId, targetIntegrationId);
-        if (Array.isArray(liveResources) && liveResources.length > 0) {
-          return liveResources.map((r) => ({
-            id: r.externalResourceId,
-            name: r.name,
-            handle: r.resourceType.toLowerCase(),
-            type: r.resourceType.toLowerCase() as any,
-          }));
+    // Live first: only fall back to the local sample list when there is no backend
+    // integration for this provider or the backend call fails.
+    if (UUID_PATTERN.test(companyId)) {
+      const targetIntegrationId = await this.resolveLiveIntegrationId(companyId, providerId);
+      if (targetIntegrationId) {
+        try {
+          const liveResources = await integrationsApi.discoverResources(companyId, targetIntegrationId);
+          if (Array.isArray(liveResources) && liveResources.length > 0) {
+            return liveResources.map((r) => ({
+              id: r.externalResourceId,
+              name: r.name,
+              handle: r.resourceType.toLowerCase(),
+              type: r.resourceType.toLowerCase() as any,
+            }));
+          }
+        } catch (err) {
+          console.warn("Live integrationsApi.discoverResources failed, falling back to mock:", err);
         }
-      } catch (err) {
-        console.warn("Live integrationsApi.discoverResources failed, falling back to mock:", err);
       }
     }
 
@@ -295,22 +345,30 @@ class MockIntegrationsRepository implements IntegrationsRepository {
   }
 
   async updateResourceMapping(connectionId: string, resourceId: string, clientId: string) {
-    const companyId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
-        : "development-company-id";
+    const companyId = activeCompanyId();
+    const connection = mockConnections.find((c) => c.id === connectionId);
+    // Resource type comes from the resource itself; the backend rejects an unknown
+    // enum value, so unsupported types never reach the network.
+    const resourceType = toBackendResourceType(connection?.resources.find((r) => r.id === resourceId)?.type);
 
-    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (uuidPattern.test(connectionId) && uuidPattern.test(companyId)) {
-      try {
-        await integrationsApi.mapResource(companyId, connectionId, {
-          clientId,
-          externalResourceId: resourceId,
-          resourceType: "FACEBOOK_PAGE",
-        });
-        return;
-      } catch (err) {
-        console.warn("Live integrationsApi.mapResource failed, falling back to mock:", err);
+    if (UUID_PATTERN.test(companyId) && UUID_PATTERN.test(clientId) && resourceType) {
+      const integrationId = UUID_PATTERN.test(connectionId)
+        ? connectionId
+        : connection
+          ? await this.resolveLiveIntegrationId(companyId, connection.providerId)
+          : null;
+
+      if (integrationId) {
+        try {
+          await integrationsApi.mapResource(companyId, integrationId, {
+            clientId,
+            externalResourceId: resourceId,
+            resourceType,
+          });
+          return;
+        } catch (err) {
+          console.warn("Live integrationsApi.mapResource failed, falling back to mock:", err);
+        }
       }
     }
 

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Check, ChevronDown, ChevronRight, Download, Plus, Send, Sparkles, MoreHorizontal,
   Loader2, AlertCircle, RefreshCw
@@ -10,17 +10,19 @@ import { Card } from "./ui-card";
 import { SelectField } from "./ui-fields";
 import { PlatformBadge } from "./ui-platform";
 import { draftsApi, isRevisionConflict } from "../live/drafts-api";
+import { mediaApi } from "../live/media-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";
 import type {
   Platform, ContentType, MediaRatio, MasterContent, PlatformOverride,
   PlatformSchedule, PlatformValidation, UTMConfig, AutoAdaptOptions,
+  MediaAsset,
 } from "../types/content.types";
 import {
   ALL_PLATFORMS, PLATFORM_META, PLATFORM_CONTENT_TYPES,
   MOCK_CONNECTIONS,
 } from "../config/platform-config";
-import { MOCK_MEDIA, MOCK_CLIENTS } from "../mocks/content.mock";
+import { MOCK_CLIENTS } from "../mocks/content.mock";
 import { ContentPreviewPanel } from "./ContentPreview";
 import { ContentChecklist } from "./ContentChecklist";
 import { MasterContentEditor } from "./MasterContentEditor";
@@ -100,6 +102,34 @@ export function CreateContentTab() {
   const [isSavingDraft, setIsSavingDraft] = useState<boolean>(false);
   const [conflictNotice, setConflictNotice] = useState<string | null>(null);
 
+  /* Live media library (GET /media) — feeds the picker strip instead of sample rows. */
+  const [libraryMedia, setLibraryMedia] = useState<MediaAsset[]>([]);
+
+  useEffect(() => {
+    if (!companyId || !clientId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await mediaApi.list(companyId, clientId);
+        if (cancelled) return;
+        setLibraryMedia(
+          res.items.map((asset) => ({
+            id: asset.id,
+            url: asset.url,
+            type: asset.kind === "IMAGE" ? "image" : "video",
+            name: `asset-${asset.id.slice(0, 8)}.${asset.format?.toLowerCase() || (asset.kind === "IMAGE" ? "jpg" : "mp4")}`,
+            alt: asset.mimeType,
+          })),
+        );
+      } catch (err) {
+        if (!cancelled) console.warn("Could not load the media library:", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId, clientId]);
+
   const reloadLatestDraft = useCallback(async () => {
     if (!companyId || !clientId || !savedDraftId) return;
     try {
@@ -151,6 +181,11 @@ export function CreateContentTab() {
     setIsSavingDraft(true);
     setConflictNotice(null);
 
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const assetIds = (masterContent.media ?? [])
+      .map((m) => m.id)
+      .filter((id) => uuidPattern.test(id));
+
     try {
       if (savedDraftId && currentRevision !== null) {
         // Optimistic concurrency: send expectedRevision
@@ -160,6 +195,15 @@ export function CreateContentTab() {
           content: masterContent.caption,
           variants,
         });
+
+        if (assetIds.length > 0) {
+          try {
+            await mediaApi.setDraftMedia(companyId, clientId, savedDraftId, updated.revision, assetIds);
+          } catch (mErr) {
+            console.warn("Could not sync draft media:", mErr);
+          }
+        }
+
         setCurrentRevision(updated.revision);
         setVariantIds(variantsToPlatformMap(updated.variants));
         toast.success(`Draft updated successfully (Revision ${updated.revision})`);
@@ -168,6 +212,7 @@ export function CreateContentTab() {
         const created = await draftsApi.create(companyId, clientId, {
           title,
           content: masterContent.caption,
+          assetIds: assetIds.length > 0 ? assetIds : undefined,
           variants,
         });
         setSavedDraftId(created.id);
@@ -358,13 +403,16 @@ export function CreateContentTab() {
                 <p className="mt-1 text-[10px] text-[#7A87A0]">Recommended 1080 × 1350 (4:5) for Instagram</p>
               </div>
               <div className="mt-2 grid grid-cols-5 gap-1">
-                {MOCK_MEDIA.slice(0, 4).map((m, i) => (
+                {(masterContent.media?.length ? masterContent.media : libraryMedia).slice(0, 4).map((m, i) => (
                   <div key={m.id} className="relative overflow-hidden rounded-sm border border-[#E2E8F0]">
-                    <img src={m.url} alt={m.alt} className="h-14 w-full object-cover" />
+                    <img src={m.url} alt={m.alt ?? m.name} className="h-14 w-full object-cover" />
                     <span className="absolute left-0.5 top-0.5 grid size-3.5 place-items-center rounded bg-[#172044]/80 text-[8px] font-semibold text-white">{i + 1}</span>
                     <button className="absolute right-0.5 top-0.5 rounded bg-white/90 p-0.5"><MoreHorizontal className="size-2.5 text-slate-500" /></button>
                   </div>
                 ))}
+                {masterContent.media?.length === 0 && libraryMedia.length === 0 && (
+                  <p className="col-span-4 text-[10.5px] text-[#7A87A0]">No files in your library yet — upload one to attach it.</p>
+                )}
                 <button className="grid h-14 place-items-center rounded-sm border border-dashed border-[#CBD5E1] text-[#7A87A0] hover:bg-slate-50">
                   <Plus className="size-3.5" /><span className="mt-0.5 text-[9px] font-semibold">Add</span>
                 </button>
@@ -490,7 +538,7 @@ export function CreateContentTab() {
             { label: "Platforms selected", done: channels.length > 0 },
             { label: "Content types set", done: channels.every(p => !!contentTypes[p]) },
             { label: "Caption added", done: masterContent.caption.length > 0 },
-            { label: "Media added", done: MOCK_MEDIA.length > 0 },
+            { label: "Media added", done: (masterContent.media ?? []).length > 0 },
             { label: "Ratio configured", done: !!masterRatio },
             { label: "Platform overrides reviewed", done: true },
             { label: "Tracking configured", done: !!globalUtm.source },

@@ -8,7 +8,6 @@ import { StatusBadge } from "./ui-badge";
 import { MOCK_DRAFTS } from "../mocks/content.mock";
 import { ContentPreviewPanel } from "./ContentPreview";
 import { draftsApi, type DraftSummaryRecord, isRevisionConflict } from "../live/drafts-api";
-import { mediaApi } from "../live/media-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";
 

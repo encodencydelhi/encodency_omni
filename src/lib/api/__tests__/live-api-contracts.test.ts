@@ -1550,6 +1550,18 @@ describe("superAdminAuditLogsApi (TASK-17 persisted audit logs contracts)", () =
   });
 
   describe("authService (Forgot & Reset Password Phase A contracts)", () => {
+    it("POST /auth/forgot-password sends only the email and gets the enumeration-safe accepted body", async () => {
+      responses.push({ status: 200, body: { status: "accepted" } });
+      const res = await authService.requestPasswordReset("user@acme.test");
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0]!.url, "/api/v1/auth/forgot-password");
+      assert.equal(calls[0]!.init.method, "POST");
+      const body = JSON.parse(calls[0]!.init.body as string);
+      assert.deepEqual(Object.keys(body), ["email"]);
+      assert.equal(body.email, "user@acme.test");
+      assert.equal(res, undefined);
+    });
+
     it("POST /auth/reset-password sends single-use token and new password", async () => {
       responses.push({ status: 200, body: { status: "password_reset" } });
       await authService.resetPassword("tok-reset-999", "NewSecurePassword123!");

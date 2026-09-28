@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/types/api";
 import type { ClientsRepository, LifecycleAction } from "./repository";
-import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCreationCompany, EligibleMember, MutationActor, ClientTeamData, ClientAssignmentView } from "./types";
+import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCreationCompany, EligibleMember, MutationActor, ClientTeamData, ClientAssignmentView, ClientOverviewData } from "./types";
 import type { OrganisationRole } from "@/types/domain/user";
 import type { CompanyClient } from "@/features/companies/data/types";
 import { unavailableClientsProvider } from "./unavailable-provider";
@@ -173,6 +173,30 @@ function toClientSummary(raw: any, companyInfo?: { id: string; name: string }): 
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+/** Maps GET /clients/:id/members rows into the assignment view the UI renders. */
+function toAssignmentView(m: any): ClientAssignmentView {
+  const roleLower = (m.systemRole || "").toLowerCase();
+  const companyRole: OrganisationRole =
+    roleLower === "owner" ? "owner" :
+    roleLower === "admin" ? "admin" :
+    roleLower === "manager" ? "marketing_manager" :
+    roleLower === "viewer" ? "viewer" : "viewer";
+
+  return {
+    membershipId: m.membershipId,
+    name: m.user?.name || m.user?.email?.split("@")[0] || "Team Member",
+    email: m.user?.email || "",
+    companyRole,
+    level: m.isLead ? "admin" : "editor",
+    isLead: !!m.isLead,
+    membershipStatus: "active",
+    lastLoginAt: null,
+    assignedAt: new Date().toISOString(),
+    assignedBy: "System",
+    issue: null,
+  };
+}
+
 export function createApiClientsProvider(fallback: ClientsRepository): ClientsRepository {
   const provider: ClientsRepository = {
     ...fallback,
@@ -331,7 +355,18 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
             "x-client-id": id
           }
         });
-        return toClientSummary(raw);
+        const summary = toClientSummary(raw);
+        // The detail endpoint carries no member counts; fill them from the members
+        // list so the "Assigned members" strip never renders the placeholder 0.
+        try {
+          const members = await clientsApi.listMembers(companyId, id);
+          return {
+            ...summary,
+            counts: { ...summary.counts, assigned: members.length, activeMembers: members.length },
+          };
+        } catch {
+          return summary;
+        }
       } catch (err) {
         if (ApiError.isApiError(err) && (err.status === 400 || err.status === 404)) {
           return fallback.getClient(id);
@@ -373,7 +408,8 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
       if (UUID_PATTERN.test(companyId)) {
         try {
           let rawCompanyMembers: Array<{
-            membershipId: string;
+            membershipId?: string;
+            id?: string;
             email?: string;
             systemRole?: string;
             user?: { email?: string; name?: string | null };
@@ -414,12 +450,14 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
               const name = m.user?.name || email.split("@")[0] || "Member";
               const sysRole = (m.systemRole || "").toLowerCase();
               const role = (sysRole === "owner" ? "owner" : sysRole === "admin" ? "admin" : "member") as any;
+              // GET /team/members returns `id`; the super-admin company detail returns `membershipId`.
+              const membershipId = m.membershipId ?? m.id ?? "";
               return {
-                membershipId: m.membershipId,
+                membershipId,
                 name,
                 email,
                 companyRole: role,
-                alreadyAssigned: assignedIds.has(m.membershipId),
+                alreadyAssigned: assignedIds.has(membershipId),
               };
             });
           }
@@ -434,7 +472,32 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     exportClients: fallback.exportClients,
     getPortfolio: fallback.getPortfolio,
     getFacets: fallback.getFacets,
-    getOverview: fallback.getOverview,
+
+    /** Everything except the team panel still comes from the fallback; the assigned team and its
+     * counts are replaced with GET /clients/:id/members so the overview never shows mock rows. */
+    async getOverview(id: string): Promise<ClientOverviewData> {
+      const overview = await fallback.getOverview(id);
+      const companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) return overview;
+      try {
+        const members = await clientsApi.listMembers(companyId, id);
+        return {
+          ...overview,
+          team: members.map(toAssignmentView),
+          summary: {
+            ...overview.summary,
+            counts: {
+              ...overview.summary.counts,
+              assigned: members.length,
+              activeMembers: members.length,
+            },
+          },
+        };
+      } catch (err) {
+        console.warn("Live clientsApi.listMembers failed for overview, keeping fallback team:", err);
+        return overview;
+      }
+    },
 
     async getTeam(id: string): Promise<ClientTeamData> {
       const companyId = getCompanyIdHeader();
@@ -448,28 +511,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
           provider.listEligibleMembers(companyId, id),
         ]);
 
-        const assignments: ClientAssignmentView[] = (rawMembers as any[]).map((m: any) => {
-          const roleLower = (m.systemRole || "").toLowerCase();
-          const companyRole: OrganisationRole =
-            roleLower === "owner" ? "owner" :
-            roleLower === "admin" ? "admin" :
-            roleLower === "manager" ? "marketing_manager" :
-            roleLower === "viewer" ? "viewer" : "viewer";
-
-          return {
-            membershipId: m.membershipId,
-            name: m.user?.name || m.user?.email?.split("@")[0] || "Team Member",
-            email: m.user?.email || "",
-            companyRole,
-            level: m.isLead ? "admin" : "editor",
-            isLead: !!m.isLead,
-            membershipStatus: "active",
-            lastLoginAt: null,
-            assignedAt: new Date().toISOString(),
-            assignedBy: "System",
-            issue: null,
-          };
-        });
+        const assignments: ClientAssignmentView[] = (rawMembers as any[]).map(toAssignmentView);
 
         return {
           summary,

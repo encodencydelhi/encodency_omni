@@ -50,7 +50,9 @@ export function DashboardHeader({
           Platform Overview
         </h1>
         <p className="text-[0.8125rem] text-muted-foreground">
-          Real-time metrics and system health for {identity.name}.
+          Platform metrics and system health for {identity.name}. Tiles marked
+          <span className="mx-1 inline-flex items-center rounded-sm border border-amber-200 bg-amber-50 px-1.5 py-px text-[11px] font-medium text-amber-700">Demo data</span>
+          show sample figures, not live aggregates.
         </p>
       </div>
 

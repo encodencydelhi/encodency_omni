@@ -70,13 +70,13 @@ export default function MediaLibrary() {
     { name: "press-release.docx", meta: "420 KB • Mar 18, 2025", type: "doc", src: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&fm=jpg&q=85&w=900" },
   ]);
 
-  const tabs: [string, string, string, React.ComponentType<{ size?: number }>][] = [
-    ["All Files", "248", "all", Boxes],
-    ["Images", "186", "image", ImageIcon],
-    ["Videos", "32", "video", Video],
-    ["Documents", "18", "document", FileText],
-    ["Designs", "8", "design", Palette],
-    ["Other", "4", "other", Boxes],
+  const baseTabs: [string, string, React.ComponentType<{ size?: number }>][] = [
+    ["All Files", "all", Boxes],
+    ["Images", "image", ImageIcon],
+    ["Videos", "video", Video],
+    ["Documents", "document", FileText],
+    ["Designs", "design", Palette],
+    ["Other", "other", Boxes],
   ];
 
   const [activeTab, setActiveTab] = useState("all");
@@ -91,6 +91,10 @@ export default function MediaLibrary() {
     if (tabKey === "other") return !["image", "video", "pdf", "doc", "design"].includes(type);
     return type === tabKey;
   };
+
+  const tabs: [string, string, string, React.ComponentType<{ size?: number }>][] = baseTabs.map(
+    ([label, tabKey, Icon]) => [label, String(files.filter((file) => matchesTab(file.type, tabKey)).length), tabKey, Icon],
+  );
 
   const filteredFiles = files.filter((file) => matchesTab(file.type, activeTab));
   const activeCount = tabs.find(([, , key]) => key === activeTab)?.[1] ?? String(files.length);
@@ -115,6 +119,13 @@ export default function MediaLibrary() {
   const { companyId, clientId } = useTenancyContext();
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
+  // Sample (seed) rows are shown only until the first successful live fetch;
+  // once the backend answers, the list is the backend's — never a merge of both.
+  const [isLive, setIsLive] = useState(false);
+  // A failed live fetch must be visible (with a retry) instead of a silent
+  // console.warn that leaves the sample rows looking like real data.
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!companyId || !clientId) return;
@@ -122,29 +133,27 @@ export default function MediaLibrary() {
 
     async function loadLiveMedia() {
       setIsLoadingMedia(true);
+      setLoadError(false);
       try {
         const res = await mediaApi.list(companyId, clientId);
-        if (!cancelled && res?.items && res.items.length > 0) {
-          const liveFiles: MediaFile[] = res.items.map((asset) => {
-            const isImg = asset.kind === "IMAGE";
-            const ext = asset.format?.toLowerCase() || (isImg ? "jpg" : "mp4");
-            return {
-              id: asset.id,
-              name: `asset-${asset.id.slice(0, 8)}.${ext}`,
-              meta: `${(asset.bytes / (1024 * 1024)).toFixed(1)} MB • ${new Date(asset.uploadedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`,
-              type: isImg ? "image" : "video",
-              src: asset.url,
-              duration: asset.durationMs ? `${Math.floor(asset.durationMs / 60000)}:${Math.floor((asset.durationMs % 60000) / 1000).toString().padStart(2, "0")}` : undefined,
-            };
-          });
-          setFiles((prev) => {
-            const liveIds = new Set(liveFiles.map((f) => f.id));
-            const existingNonLive = prev.filter((f) => !f.id || !liveIds.has(f.id));
-            return [...liveFiles, ...existingNonLive];
-          });
-        }
+        if (cancelled) return;
+        const liveFiles: MediaFile[] = (res?.items ?? []).map((asset) => {
+          const isImg = asset.kind === "IMAGE";
+          const ext = asset.format?.toLowerCase() || (isImg ? "jpg" : "mp4");
+          return {
+            id: asset.id,
+            name: `asset-${asset.id.slice(0, 8)}.${ext}`,
+            meta: `${(asset.bytes / (1024 * 1024)).toFixed(1)} MB • ${new Date(asset.uploadedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`,
+            type: isImg ? "image" : "video",
+            src: asset.url,
+            duration: asset.durationMs ? `${Math.floor(asset.durationMs / 60000)}:${Math.floor((asset.durationMs % 60000) / 1000).toString().padStart(2, "0")}` : undefined,
+          };
+        });
+        setFiles(liveFiles);
+        setIsLive(true);
       } catch (err) {
         console.warn("Could not load live media library:", err);
+        if (!cancelled) setLoadError(true);
       } finally {
         if (!cancelled) setIsLoadingMedia(false);
       }
@@ -152,7 +161,7 @@ export default function MediaLibrary() {
 
     loadLiveMedia();
     return () => { cancelled = true; };
-  }, [companyId, clientId]);
+  }, [companyId, clientId, reloadKey]);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const chosen = Array.from(event.target.files ?? []);
@@ -285,6 +294,23 @@ export default function MediaLibrary() {
           <div className="flex gap-2 items-center text-[10px] text-[#66738a] my-0.5 mb-1"><span>Dashboard</span><ChevronRight size={10} /><b className="text-[#1b2743]">Media Library</b></div>
           <h1 className="m-0 text-[25px] leading-[1.05] tracking-[-0.7px] font-[780]">Media Library</h1>
           <p className="mt-1.5 mb-0 text-xs text-[#68758d]">Store, organize and manage all your images, videos and files in one place.</p>
+          {loadError ? (
+            <span className="mt-1.5 inline-flex flex-wrap items-center gap-2 rounded-[5px] border border-[#f3c2c2] bg-[#fdecec] px-2 py-[3px] text-[9px] font-[650] text-[#a12323]">
+              Couldn&apos;t load media from the backend{isLive ? " — showing the last loaded list" : " — showing sample rows"}.
+              <button
+                type="button"
+                onClick={() => setReloadKey((key) => key + 1)}
+                disabled={isLoadingMedia}
+                className="rounded-[4px] border border-[#e4232c] bg-[#e4232c] px-2 py-[2px] text-[9px] font-[700] text-white disabled:opacity-60"
+              >
+                {isLoadingMedia ? "Retrying…" : "Retry"}
+              </button>
+            </span>
+          ) : !isLive ? (
+            <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-[5px] border border-[#f0d9a4] bg-[#fdf6e6] px-2 py-[3px] text-[9px] font-[650] text-[#8a6d1f]">
+              {isLoadingMedia ? "Loading library…" : "Sample data — not loaded from the backend yet"}
+            </span>
+          ) : null}
         </div>
         <div className="relative h-[91px] overflow-hidden rounded-[7px] border border-[#e9edf2] bg-[linear-gradient(100deg,#fff_0%,#fff_43%,#fff4f5_100%)] px-[19px] py-[13px] max-[820px]:hidden after:absolute after:right-[-2px] after:top-0 after:h-full after:w-1/2 after:bg-[radial-gradient(circle_at_42%_24%,rgba(231,44,54,.12)_0_5px,transparent_6px),radial-gradient(circle_at_70%_50%,rgba(231,44,54,.10)_0_7px,transparent_8px),linear-gradient(140deg,transparent_30%,rgba(229,35,45,.10)_31%,transparent_33%),linear-gradient(160deg,transparent_55%,rgba(229,35,45,.08)_56%,transparent_58%)]">
           <div className="relative z-[1]">
@@ -514,15 +540,15 @@ export default function MediaLibrary() {
 
           <div className="h-[31px] flex items-center justify-end gap-1 mt-[5px]">
             <span className="mr-auto text-[9px] text-[#526079]">Showing {filteredFiles.length ? 1 : 0}–{filteredFiles.length} of {activeCount} files</span>
-            <button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a]"><ChevronLeft size={12} /></button>
-            <button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e4232c] bg-[#e4232c] text-[9px] text-white">1</button><button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a]">2</button><button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a]">3</button><button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a]">…</button><button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a]">16</button>
-            <button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a]"><ChevronRight size={12} /></button>
+            <button disabled className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a] disabled:opacity-50"><ChevronLeft size={12} /></button>
+            <button className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e4232c] bg-[#e4232c] text-[9px] text-white">1</button>
+            <button disabled className="grid h-[27px] w-[27px] place-items-center rounded-[5px] border border-[#e0e5ec] bg-white text-[9px] text-[#40506a] disabled:opacity-50"><ChevronRight size={12} /></button>
           </div>
         </main>
 
         <aside className="flex min-w-0 flex-col gap-[11px] overflow-hidden rounded-[7px] border border-[#e4e8ef] bg-white p-[10px] max-[820px]:order-[-1]">
           <section className="border-b border-[#eef1f5] pb-[11px] last:border-0">
-            <div className="mb-[7px] flex items-center justify-between"><h3 className="m-0 text-xs font-[750]">Storage Usage</h3></div>
+            <div className="mb-[7px] flex items-center justify-between"><h3 className="m-0 text-xs font-[750]">Storage Usage</h3><span className="rounded-[5px] border border-[#f0d9a4] bg-[#fdf6e6] px-1.5 py-[2px] text-[8px] font-[650] text-[#8a6d1f]">Sample</span></div>
             <div className="text-[9px] text-[#556178]"><b className="text-[10px] text-[#28354f]">2.8 GB</b> of 10 GB used <strong className="float-right text-[9px] text-[#5d6880]">28%</strong></div>
             <div className="mt-2 h-[10px] overflow-hidden rounded-[8px] bg-[#e9edf3]"><i /></div>
           </section>

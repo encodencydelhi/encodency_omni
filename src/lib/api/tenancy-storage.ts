@@ -34,3 +34,14 @@ export function setStoredTenancy(companyId: string, clientId?: string): void {
     localStorage.setItem(STORAGE_KEY_CLIENT, clientId);
   }
 }
+
+/**
+ * A Client id is only meaningful together with its Company: the backend rejects a
+ * pair from two different Companies with 403 "Client access denied". Clearing it
+ * explicitly (rather than passing "" to setStoredTenancy, which is ignored) is what
+ * makes switching Company drop the stale Client of the previous one.
+ */
+export function clearStoredClientId(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(STORAGE_KEY_CLIENT);
+}

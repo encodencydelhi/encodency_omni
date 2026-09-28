@@ -19,6 +19,7 @@ import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils/cn";
 import { formatRelativeTime } from "@/lib/utils/format";
 import type { ActivityKind, DashboardSnapshot } from "@/types/domain/dashboard";
+import { DemoTag } from "./demo-tag";
 
 const ACTIVITY_PRESENTATION: Record<ActivityKind, { icon: LucideIcon; accent: string }> = {
   company_registered: { icon: Building2Icon, accent: "bg-info-subtle text-info" },
@@ -39,13 +40,16 @@ export function RecentActivity({ entries, isLoading }: RecentActivityProps) {
     <SectionCard
       title="Recent Activity"
       action={
-        <Link
-          href={ROUTES.superAdmin.auditLogs}
-          className="inline-flex items-center gap-1 text-2xs font-medium text-primary transition-colors hover:text-primary-hover"
-        >
-          View all
-          <ArrowRightIcon className="size-3" />
-        </Link>
+        <div className="flex items-center gap-3">
+          <DemoTag />
+          <Link
+            href={ROUTES.superAdmin.auditLogs}
+            className="inline-flex items-center gap-1 text-2xs font-medium text-primary transition-colors hover:text-primary-hover"
+          >
+            View all
+            <ArrowRightIcon className="size-3" />
+          </Link>
+        </div>
       }
       className="h-[320px]"
       contentClassName="overflow-y-auto"

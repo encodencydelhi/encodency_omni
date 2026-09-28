@@ -7,6 +7,7 @@ import { CardSkeleton } from "@/components/shared/loading-state";
 import { SectionCard } from "@/components/shared/section-card";
 import { formatNumber } from "@/lib/utils/format";
 import type { DashboardSnapshot } from "@/types/domain/dashboard";
+import { DemoTag } from "./demo-tag";
 
 const DonutChart = dynamic(
   () => import("@/components/shared/charts/donut-chart").then((module) => module.DonutChart),
@@ -32,7 +33,7 @@ export function SubscriptionDistribution({ distribution, isLoading }: Subscripti
   );
 
   return (
-    <SectionCard title="Subscription Distribution">
+    <SectionCard title="Subscription Distribution" action={<DemoTag />}>
       {isLoading ? (
         <CardSkeleton lines={5} />
       ) : (

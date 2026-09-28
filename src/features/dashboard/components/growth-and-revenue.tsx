@@ -5,6 +5,7 @@ import { ChartSkeleton } from "@/components/shared/loading-state";
 import { SectionCard } from "@/components/shared/section-card";
 import { formatCompactNumber, formatCurrency, formatNumber } from "@/lib/utils/format";
 import type { DashboardSnapshot } from "@/types/domain/dashboard";
+import { DemoTag } from "./demo-tag";
 
 /** Recharts is heavy and client-only, so both charts are code-split. */
 const MonthlyBarChart = dynamic(
@@ -29,8 +30,9 @@ export function CompanyGrowthChart({
       title="Company Growth"
       description="Total companies added over time"
       action={
-        <span className="text-2xs text-muted-foreground">
+        <span className="flex items-center gap-2 text-2xs text-muted-foreground">
           Total <span className="font-semibold text-foreground">{formatNumber(growth.total)}</span>
+          <DemoTag />
         </span>
       }
     >
@@ -58,8 +60,9 @@ export function RevenueChart({
       title="Revenue Overview"
       description="Monthly recurring revenue (MRR)"
       action={
-        <span className="text-2xs font-semibold text-foreground">
+        <span className="flex items-center gap-2 text-2xs font-semibold text-foreground">
           {formatCurrency(revenue.mrrMinor, revenue.currency, { compact: true })}
+          <DemoTag />
         </span>
       }
     >
