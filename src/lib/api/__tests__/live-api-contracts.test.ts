@@ -581,7 +581,7 @@ describe("tenant selection guardrails", () => {
 
   it("integrationsRepository rejects OAuth without a real company selection", async () => {
     await assert.rejects(
-      () => getIntegrationsRepository().authorize("META"),
+      () => getIntegrationsRepository().authorize("meta"),
       (err: unknown) => err instanceof Error && err.message.includes("Select a Company to continue"),
     );
     assert.equal(calls.length, 0, "no OAuth request should be sent when company is unset");
