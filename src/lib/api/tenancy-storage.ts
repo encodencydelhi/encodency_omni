@@ -1,10 +1,42 @@
 const STORAGE_KEY_COMPANY = "omni_active_company_id";
 const STORAGE_KEY_CLIENT = "omni_active_client_id";
+const MEMORY_STORAGE = new Map<string, string>();
+
+function createFallbackStorage(): Storage {
+  return {
+    get length() {
+      return MEMORY_STORAGE.size;
+    },
+    clear() {
+      MEMORY_STORAGE.clear();
+    },
+    getItem(key: string) {
+      return MEMORY_STORAGE.has(key) ? MEMORY_STORAGE.get(key)! : null;
+    },
+    key(index: number) {
+      return Array.from(MEMORY_STORAGE.keys())[index] ?? null;
+    },
+    removeItem(key: string) {
+      MEMORY_STORAGE.delete(key);
+    },
+    setItem(key: string, value: string) {
+      MEMORY_STORAGE.set(key, value);
+    },
+  };
+}
+
+if (typeof globalThis !== "undefined" && !("localStorage" in globalThis)) {
+  Object.defineProperty(globalThis, "localStorage", {
+    value: createFallbackStorage(),
+    configurable: true,
+    writable: true,
+  });
+}
 
 function getStorage(): Storage | null {
   if (typeof window !== "undefined" && window.localStorage) return window.localStorage;
   if (typeof globalThis !== "undefined" && "localStorage" in globalThis && globalThis.localStorage) return globalThis.localStorage;
-  return null;
+  return createFallbackStorage();
 }
 
 // Never silently select a fake/default tenant in production or live requests

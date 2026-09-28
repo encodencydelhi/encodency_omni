@@ -1,10 +1,11 @@
-import { AllSettingsState, DataExportRequest, SettingsActivityItem, UserPreferences } from "./types";
+import type { AllSettingsState, DataExportRequest, SettingsActivityItem, UserPreferences } from "./types";
 import { INITIAL_SETTINGS_STATE } from "./mock-provider";
 import { SETTINGS_MOCK_MODE, SETTINGS_STORAGE_KEY } from "./config";
 import { apiClient } from "@/lib/api/client";
 import { getStoredCompanyId, setStoredTenancy, clearStoredClientId, DEFAULT_FALLBACK_COMPANY_ID } from "@/lib/api/tenancy-storage";
 import { brandingApi } from "../live/branding-api";
 import { organizationApi } from "../live/organization-api";
+import { teamApi } from "@/features/admin/team/live/team-api";
 import type { CurrentUserResponse } from "@/types/domain/auth";
 
 export class SettingsRepository {
@@ -295,21 +296,40 @@ export class SettingsRepository {
   }
 
   public static async transferOwnership(newOwnerName: string, newOwnerEmail: string): Promise<void> {
-    const current = await this.getSettings();
-    await this.saveSettings({
-      organization: {
-        ...current.organization,
-        metadata: {
-          ...current.organization.metadata,
-          owner: newOwnerName,
-          ownerEmail: newOwnerEmail,
-        },
-      },
-    }, {
-      action: `Transferred organization ownership to ${newOwnerName} (${newOwnerEmail})`,
-      section: "danger",
-      setting: "OrganizationOwner",
+    const companyId = getStoredCompanyId();
+    if (!companyId || companyId === DEFAULT_FALLBACK_COMPANY_ID) {
+      throw new Error("Select a Company to continue.");
+    }
+
+    const me = await apiClient.request<CurrentUserResponse>({
+      method: "GET",
+      path: "/users/me",
     });
+
+    const currentMembership = me.memberships.find((membership) => membership.companyId === companyId && membership.systemRole === "OWNER");
+    if (!currentMembership) {
+      throw new Error("Only the current organization owner can transfer ownership.");
+    }
+
+    const members = await teamApi.listMembers(companyId);
+    const targetMember = members.find((member) => {
+      const matchEmail = member.user.email.trim().toLowerCase() === newOwnerEmail.trim().toLowerCase();
+      const matchName = member.user.name?.trim().toLowerCase() === newOwnerName.trim().toLowerCase();
+      return matchEmail || matchName;
+    });
+
+    if (!targetMember) {
+      throw new Error(`No active member in this company matches ${newOwnerName || newOwnerEmail}.`);
+    }
+
+    if (targetMember.id === currentMembership.membershipId) {
+      throw new Error("The new owner must be a different member of this organization.");
+    }
+
+    // Match the live backend role-transfer contract: demote the current owner,
+    // then promote the replacement owner to the final OWNER role.
+    await teamApi.updateRole(companyId, currentMembership.membershipId, "ADMIN");
+    await teamApi.updateRole(companyId, targetMember.id, "OWNER");
   }
 
   public static async deactivateOrganization(): Promise<void> {

@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserCheck, AlertTriangle, X, Loader2 } from "lucide-react";
+import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
+import { teamApi } from "@/features/admin/team/live/team-api";
 
 interface TransferOwnershipModalProps {
   open: boolean;
@@ -10,11 +12,11 @@ interface TransferOwnershipModalProps {
   onConfirm: (newOwnerName: string, newOwnerEmail: string) => Promise<void>;
 }
 
-const ELIGIBLE_ADMINS = [
-  { name: "Priya Sharma", email: "priya@namogange.org", role: "Organization Admin" },
-  { name: "Amit Singh", email: "amit@namogange.org", role: "Organization Admin" },
-  { name: "Neha Verma", email: "neha@namogange.org", role: "SEO Manager / Invited Admin" },
-];
+interface EligibleAdmin {
+  name: string;
+  email: string;
+  role: string;
+}
 
 export function TransferOwnershipModal({
   open,
@@ -22,13 +24,65 @@ export function TransferOwnershipModal({
   onClose,
   onConfirm,
 }: TransferOwnershipModalProps) {
-  const [selectedAdmin, setSelectedAdmin] = useState(ELIGIBLE_ADMINS[0]?.email ?? "");
+  const [eligibleAdmins, setEligibleAdmins] = useState<EligibleAdmin[]>([]);
+  const [selectedAdmin, setSelectedAdmin] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const companyId = getStoredCompanyId();
+    if (!companyId) {
+      setEligibleAdmins([]);
+      setSelectedAdmin("");
+      return;
+    }
+
+    let active = true;
+    setLoadingMembers(true);
+
+    teamApi
+      .listMembers(companyId)
+      .then((members) => {
+        if (!active) return;
+
+        const nextAdmins = members
+          .filter((member) => {
+            const sameOwner = member.user.name?.trim().toLowerCase() === currentOwner.trim().toLowerCase();
+            const sameEmail = member.user.email.trim().toLowerCase() === currentOwner.trim().toLowerCase();
+            return !sameOwner && !sameEmail && (member.systemRole === "ADMIN" || member.systemRole === "OWNER");
+          })
+          .map((member) => ({
+            name: member.user.name || member.user.email,
+            email: member.user.email,
+            role: member.systemRole === "OWNER" ? "Organization Owner" : "Organization Admin",
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        setEligibleAdmins(nextAdmins);
+        setSelectedAdmin(nextAdmins[0]?.email ?? "");
+      })
+      .catch(() => {
+        if (!active) return;
+        setEligibleAdmins([]);
+        setSelectedAdmin("");
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingMembers(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [currentOwner, open]);
 
   if (!open) return null;
 
-  const targetAdmin = ELIGIBLE_ADMINS.find((a) => a.email === selectedAdmin) || ELIGIBLE_ADMINS[0];
+  const targetAdmin = eligibleAdmins.find((a) => a.email === selectedAdmin) || eligibleAdmins[0];
 
   const handleTransfer = async () => {
     if (!agreed || !targetAdmin) return;
@@ -81,28 +135,40 @@ export function TransferOwnershipModal({
             Select Successor Administrator
           </label>
           <div className="space-y-1">
-            {ELIGIBLE_ADMINS.map((admin) => (
-              <label
-                key={admin.email}
-                className={`flex items-center justify-between p-2 rounded-xl border transition-colors cursor-pointer text-[11px] shadow-2xs ${
-                  selectedAdmin === admin.email
-                    ? "border-blue-500 bg-blue-50/40 text-[#0F172A]"
-                    : "border-[#CBD5E1] hover:bg-slate-50 text-[#334155]"
-                }`}
-              >
-                <div>
-                  <div className="font-semibold text-[11.5px] text-[#0F172A]">{admin.name}</div>
-                  <div className="text-[9.5px] text-[#64748B] font-normal">{admin.email}</div>
-                </div>
-                <input
-                  type="radio"
-                  name="successor"
-                  checked={selectedAdmin === admin.email}
-                  onChange={() => setSelectedAdmin(admin.email)}
-                  className="size-3.5 text-blue-600"
-                />
-              </label>
-            ))}
+            {loadingMembers ? (
+              <div className="flex items-center gap-2 rounded-xl border border-[#CBD5E1] bg-slate-50 p-2 text-[10.5px] text-[#475569]">
+                <Loader2 className="size-3.5 animate-spin" />
+                Loading eligible administrators...
+              </div>
+            ) : eligibleAdmins.length > 0 ? (
+              eligibleAdmins.map((admin) => (
+                <label
+                  key={admin.email}
+                  className={`flex items-center justify-between p-2 rounded-xl border transition-colors cursor-pointer text-[11px] shadow-2xs ${
+                    selectedAdmin === admin.email
+                      ? "border-blue-500 bg-blue-50/40 text-[#0F172A]"
+                      : "border-[#CBD5E1] hover:bg-slate-50 text-[#334155]"
+                  }`}
+                >
+                  <div>
+                    <div className="font-semibold text-[11.5px] text-[#0F172A]">{admin.name}</div>
+                    <div className="text-[9.5px] text-[#64748B] font-normal">{admin.email}</div>
+                  </div>
+                  <div className="text-[9px] text-[#475569] font-medium">{admin.role}</div>
+                  <input
+                    type="radio"
+                    name="successor"
+                    checked={selectedAdmin === admin.email}
+                    onChange={() => setSelectedAdmin(admin.email)}
+                    className="size-3.5 text-blue-600"
+                  />
+                </label>
+              ))
+            ) : (
+              <div className="rounded-xl border border-dashed border-[#CBD5E1] bg-slate-50 p-2 text-[10.5px] text-[#475569]">
+                No eligible administrators found in this company.
+              </div>
+            )}
           </div>
         </div>
 

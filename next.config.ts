@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   // Lets a verification build/dev server write elsewhere without touching a running dev server's .next.
   distDir: process.env.NEXT_DIST_DIR || ".next",
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+    ],
+  },
   async rewrites() {
     return [
       {

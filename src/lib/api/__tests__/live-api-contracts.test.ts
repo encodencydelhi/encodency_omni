@@ -47,6 +47,7 @@ const { notificationService } = await import(
 const { superAdminUsersApi } = await import(
   "@/features/users/live/super-admin-users-api"
 );
+const { SettingsRepository } = await import("@/features/admin/settings/settings-data/repository");
 
 interface Call {
   url: string;
@@ -232,6 +233,38 @@ describe("Team & Invitations API", () => {
     assert.equal(calls[0]!.url, "/api/v1/companies/c-1/invitations");
     assert.equal(calls[0]!.init.headers["x-company-id"], "c-1");
     assert.deepEqual(body(calls[0]!), { email: "new@example.com", systemRole: "VIEWER" });
+  });
+
+  it("transferOwnership promotes the new owner and demotes the current owner through membership role routes", async () => {
+    globalThis.localStorage.setItem("omni_active_company_id", "c-1");
+    responses.push({
+      status: 200,
+      body: {
+        id: "u-1",
+        email: "sompal7678@example.com",
+        memberships: [
+          { membershipId: "m-10", companyId: "c-1", companyName: "Acme", companyStatus: "ACTIVE", systemRole: "OWNER" },
+          { membershipId: "m-11", companyId: "c-2", companyName: "Other", companyStatus: "ACTIVE", systemRole: "ADMIN" },
+        ],
+      },
+    });
+    responses.push({
+      status: 200,
+      body: [
+        { id: "m-10", systemRole: "OWNER", user: { id: "u-1", email: "sompal7678@example.com", name: "sompal7678" } },
+        { id: "m-11", systemRole: "ADMIN", user: { id: "u-2", email: "newowner@example.com", name: "New Owner" } },
+      ],
+    });
+    responses.push({ status: 200, body: { id: "m-10", systemRole: "ADMIN" } });
+    responses.push({ status: 200, body: { id: "m-11", systemRole: "OWNER" } });
+
+    await SettingsRepository.transferOwnership("New Owner", "newowner@example.com");
+
+    assert.equal(calls[1]!.url, "/api/v1/team/members");
+    assert.equal(calls[2]!.url, "/api/v1/team/members/m-10/role");
+    assert.deepEqual(body(calls[2]!), { systemRole: "ADMIN" });
+    assert.equal(calls[3]!.url, "/api/v1/team/members/m-11/role");
+    assert.deepEqual(body(calls[3]!), { systemRole: "OWNER" });
   });
 
   it("accepts an invitation publicly, without treating a 403 as a lost session", async () => {
