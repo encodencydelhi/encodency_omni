@@ -96,7 +96,7 @@ function toAggregateFromSummary(u: SuperAdminUserSummary, detail?: SuperAdminUse
       email: u.email,
       phone: null,
       avatarUrl: u.avatarUrl,
-      globalStatus: "active",
+      globalStatus: u.status === "DEACTIVATED" ? "suspended" : "active",
       emailVerified: true,
       createdAt: u.createdAt,
       lastLoginAt: u.updatedAt,
@@ -127,51 +127,60 @@ const apiUsersProvider: UsersRepository = {
   ...mockUsersProvider,
 
   async listUsers(query: UserListQuery = {}): Promise<UserListResult> {
-    try {
-      const page = query.page ?? 1;
-      const limit = query.pageSize ?? 20;
-      const search = query.filters?.search;
+    const page = query.page ?? 1;
+    const limit = query.pageSize ?? 20;
+    const search = query.filters?.search;
 
-      const res = await superAdminUsersApi.list({
-        page,
-        limit,
-        search,
-      });
+    const res = await superAdminUsersApi.list({
+      page,
+      limit,
+      search,
+    });
 
-      const items = res.items.map((u) => toAggregateFromSummary(u));
+    const items = res.items.map((u) => toAggregateFromSummary(u));
 
-      return {
-        items,
-        total: res.total,
-        page: res.page,
-        pageSize: res.limit,
-        pageCount: Math.ceil(res.total / res.limit) || 1,
-        kpis: {
-          totalUsers: res.total,
-          activeUsers: res.total,
-          pendingInvites: 0,
-          suspendedUsers: 0,
-          twoFactorEnabled: res.items.filter((i) => i.mfaEnabled).length,
-          twoFactorTotal: res.total,
-          inactive30PlusDays: 0,
-          multiCompanyUsers: res.items.filter((i) => i.companyCount > 1).length,
-          needsAttentionCount: 0,
-        },
-      };
-    } catch (err) {
-      console.warn("Live superAdminUsersApi.list failed, using fallback:", err);
-      return mockUsersProvider.listUsers(query);
-    }
+    return {
+      items,
+      total: res.total,
+      page: res.page,
+      pageSize: res.limit,
+      pageCount: Math.ceil(res.total / res.limit) || 1,
+      kpis: {
+        totalUsers: res.total,
+        activeUsers: res.items.filter((i) => i.status !== "DEACTIVATED").length,
+        pendingInvites: 0,
+        suspendedUsers: res.items.filter((i) => i.status === "DEACTIVATED").length,
+        twoFactorEnabled: res.items.filter((i) => i.mfaEnabled).length,
+        twoFactorTotal: res.total,
+        inactive30PlusDays: 0,
+        multiCompanyUsers: res.items.filter((i) => i.companyCount > 1).length,
+        needsAttentionCount: 0,
+      },
+    };
   },
 
   async getUser(id: string): Promise<UserAggregate> {
-    try {
-      const detail = await superAdminUsersApi.get(id);
-      return toAggregateFromSummary(detail, detail);
-    } catch (err) {
-      console.warn("Live superAdminUsersApi.get failed, using fallback:", err);
-      return mockUsersProvider.getUser(id);
-    }
+    const detail = await superAdminUsersApi.get(id);
+    return toAggregateFromSummary(detail, detail);
+  },
+
+  async suspendGlobalAccount(userId: string): Promise<UserAggregate> {
+    await superAdminUsersApi.setStatus(userId, "DEACTIVATED");
+    return this.getUser(userId);
+  },
+
+  async reactivateGlobalAccount(userId: string): Promise<UserAggregate> {
+    await superAdminUsersApi.setStatus(userId, "ACTIVE");
+    return this.getUser(userId);
+  },
+
+  async revokeAllSessions(userId: string): Promise<UserAggregate> {
+    await superAdminUsersApi.revokeSessions(userId);
+    return this.getUser(userId);
+  },
+
+  async requirePasswordReset(userId: string): Promise<void> {
+    await superAdminUsersApi.passwordReset(userId);
   },
 };
 

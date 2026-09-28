@@ -39,6 +39,12 @@ const { userAvatarApi, USER_AVATAR_LIMITS, isAvatarAssetConflict, isAvatarFileTo
 const { superAdminAuditLogsApi } = await import(
   "@/features/audit-logs/live/super-admin-audit-logs-api"
 );
+const { notificationService } = await import(
+  "@/features/notifications/services/notification-service"
+);
+const { superAdminUsersApi } = await import(
+  "@/features/users/live/super-admin-users-api"
+);
 
 interface Call {
   url: string;
@@ -1484,6 +1490,202 @@ describe("superAdminAuditLogsApi (TASK-17 persisted audit logs contracts)", () =
     assert.equal(calls[0]!.init.method, "GET");
     assert.equal(result.id, "al-123");
     assert.equal(result.resourceType, "CLIENT");
+  });
+
+  describe("notificationService (In-app notifications Phase A contracts)", () => {
+    it("GET /notifications passes limit and unreadOnly query parameters", async () => {
+      responses.push({
+        status: 200,
+        body: {
+          items: [
+            {
+              id: "notif-1",
+              type: "publishing.failed",
+              title: "Post Failed",
+              message: "Post could not be published to LinkedIn",
+              data: { scheduledPostId: "post-100" },
+              readAt: null,
+              createdAt: "2026-09-28T10:00:00.000Z",
+              companyId: "comp-1",
+              clientId: "cli-1",
+            },
+          ],
+          total: 1,
+          unreadCount: 1,
+          page: 1,
+          limit: 10,
+        },
+      });
+
+      const res = await notificationService.list({ pageSize: 10, filters: { readState: "unread" } as any });
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0]!.init.method, "GET");
+      assert.match(calls[0]!.url, /\/api\/v1\/notifications/);
+      assert.match(calls[0]!.url, /limit=10/);
+      assert.match(calls[0]!.url, /unreadOnly=true/);
+      assert.equal(res.data.length, 1);
+      assert.equal(res.data[0]!.id, "notif-1");
+      assert.equal(res.data[0]!.severity, "critical");
+      assert.equal(res.data[0]!.isRead, false);
+      assert.equal(res.pagination.total, 1);
+    });
+
+    it("PATCH /notifications/:id/read marks notification as read", async () => {
+      responses.push({ status: 200, body: { id: "notif-1", readAt: "2026-09-28T10:05:00.000Z" } });
+      const res = await notificationService.markRead("notif-1");
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0]!.url, "/api/v1/notifications/notif-1/read");
+      assert.equal(calls[0]!.init.method, "PATCH");
+      assert.equal(res.success, true);
+    });
+
+    it("POST /notifications/read-all marks all notifications as read", async () => {
+      responses.push({ status: 200, body: { updated: 5 } });
+      const res = await notificationService.markAllRead();
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0]!.url, "/api/v1/notifications/read-all");
+      assert.equal(calls[0]!.init.method, "POST");
+      assert.equal(res.success, true);
+    });
+  });
+
+  describe("authService (Forgot & Reset Password Phase A contracts)", () => {
+    it("POST /auth/reset-password sends single-use token and new password", async () => {
+      responses.push({ status: 200, body: { status: "password_reset" } });
+      await authService.resetPassword("tok-reset-999", "NewSecurePassword123!");
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0]!.url, "/api/v1/auth/reset-password");
+      assert.equal(calls[0]!.init.method, "POST");
+      const body = JSON.parse(calls[0]!.init.body as string);
+      assert.equal(body.token, "tok-reset-999");
+      assert.equal(body.password, "NewSecurePassword123!");
+    });
+  });
+
+  describe("teamApi (Company Invitations Phase A1 contracts)", () => {
+    it("GET /companies/:companyId/invitations passes company scope header and query", async () => {
+      responses.push({
+        status: 200,
+        body: {
+          items: [
+            {
+              id: "inv-1",
+              email: "dev@acme.test",
+              systemRole: "ADMIN",
+              status: "pending",
+              expiresAt: "2026-09-30T10:00:00.000Z",
+              createdAt: "2026-09-28T10:00:00.000Z",
+              invitedBy: { userId: "u-1", name: "Admin", email: "admin@acme.test" },
+            },
+          ],
+          total: 1,
+          page: 1,
+          limit: 25,
+        },
+      });
+
+      const res = await teamApi.listInvitations("comp-1", { status: "pending" });
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0]!.init.method, "GET");
+      assert.equal(calls[0]!.init.headers["x-company-id"], "comp-1");
+      assert.match(calls[0]!.url, /\/api\/v1\/companies\/comp-1\/invitations/);
+      assert.match(calls[0]!.url, /status=pending/);
+      assert.equal(res.items.length, 1);
+      assert.equal(res.items[0]!.email, "dev@acme.test");
+    });
+
+    it("POST /companies/:companyId/invitations/:id/resend re-issues invitation", async () => {
+      responses.push({ status: 200, body: { invitationId: "inv-2", status: "pending", expiresAt: "2026-09-30T10:00:00.000Z" } });
+      const res = await teamApi.resendInvitation("comp-1", "inv-1");
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0]!.init.method, "POST");
+      assert.equal(calls[0]!.url, "/api/v1/companies/comp-1/invitations/inv-1/resend");
+      assert.equal(calls[0]!.init.headers["x-company-id"], "comp-1");
+      assert.equal(res.status, "pending");
+    });
+
+    it("DELETE /companies/:companyId/invitations/:id revokes invitation", async () => {
+      responses.push({ status: 200, body: { invitationId: "inv-1", status: "revoked" } });
+      const res = await teamApi.revokeInvitation("comp-1", "inv-1");
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0]!.init.method, "DELETE");
+      assert.equal(calls[0]!.url, "/api/v1/companies/comp-1/invitations/inv-1");
+      assert.equal(calls[0]!.init.headers["x-company-id"], "comp-1");
+      assert.equal(res.status, "revoked");
+    });
+  });
+
+  describe("integrationsApi (Client Channel Overview Phase A3 contracts)", () => {
+    it("GET /integrations/overview sends x-company-id and x-client-id headers", async () => {
+      responses.push({
+        status: 200,
+        body: {
+          clientId: "cli-1",
+          providers: [
+            {
+              provider: "LINKEDIN",
+              status: "MAPPED",
+              health: "healthy",
+              reconnectRequired: false,
+              integrationId: "int-1",
+              companyConnectionAvailable: true,
+              mappedResourceCount: 1,
+              resources: [
+                {
+                  mappingId: "map-1",
+                  resourceType: "LINKEDIN_ORGANIZATION",
+                  externalResourceId: "urn:li:org:123",
+                  integrationId: "int-1",
+                },
+              ],
+              lastUpdatedAt: "2026-09-28T10:00:00.000Z",
+              publishingSupported: true,
+            },
+          ],
+        },
+      });
+
+      const res = await integrationsApi.getOverview("comp-1", "cli-1");
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0]!.init.method, "GET");
+      assert.equal(calls[0]!.url, "/api/v1/integrations/overview");
+      assert.equal(calls[0]!.init.headers["x-company-id"], "comp-1");
+      assert.equal(calls[0]!.init.headers["x-client-id"], "cli-1");
+      assert.equal(res.providers.length, 1);
+      assert.equal(res.providers[0]!.provider, "LINKEDIN");
+      assert.equal(res.providers[0]!.status, "MAPPED");
+    });
+  });
+
+  describe("superAdminUsersApi (Super Admin User Lifecycle Phase B contracts)", () => {
+    it("PATCH /super-admin/users/:userId/status updates user status", async () => {
+      responses.push({ status: 200, body: { status: "DEACTIVATED" } });
+      const res = await superAdminUsersApi.setStatus("usr-123", "DEACTIVATED");
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0]!.init.method, "PATCH");
+      assert.equal(calls[0]!.url, "/api/v1/super-admin/users/usr-123/status");
+      const body = JSON.parse(calls[0]!.init.body as string);
+      assert.equal(body.status, "DEACTIVATED");
+      assert.equal(res.status, "DEACTIVATED");
+    });
+
+    it("POST /super-admin/users/:userId/revoke-sessions revokes user sessions", async () => {
+      responses.push({ status: 200, body: { revokedSessions: 3 } });
+      const res = await superAdminUsersApi.revokeSessions("usr-123");
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0]!.init.method, "POST");
+      assert.equal(calls[0]!.url, "/api/v1/super-admin/users/usr-123/revoke-sessions");
+      assert.equal(res.revokedSessions, 3);
+    });
+
+    it("POST /super-admin/users/:userId/password-reset triggers admin password reset", async () => {
+      responses.push({ status: 200, body: { status: "queued" } });
+      const res = await superAdminUsersApi.passwordReset("usr-123");
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0]!.init.method, "POST");
+      assert.equal(calls[0]!.url, "/api/v1/super-admin/users/usr-123/password-reset");
+      assert.equal(res.status, "queued");
+    });
   });
 });
 

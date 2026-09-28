@@ -73,6 +73,35 @@ export interface ResourceMappingResponse {
   createdAt: string;
 }
 
+export type OverviewProvider = "META" | "INSTAGRAM" | "LINKEDIN" | "GOOGLE_BUSINESS";
+export type ConnectionStatus = "NOT_CONNECTED" | "CONNECTED" | "MAPPED" | "RECONNECT_REQUIRED";
+export type ConnectionHealth = "healthy" | "expiring_soon" | "expired" | "revoked" | "error" | "not_connected";
+
+export interface OverviewResource {
+  mappingId: string;
+  resourceType: BackendResourceType;
+  externalResourceId: string;
+  integrationId: string;
+}
+
+export interface ProviderOverview {
+  provider: OverviewProvider;
+  status: ConnectionStatus;
+  health: ConnectionHealth;
+  reconnectRequired: boolean;
+  integrationId: string | null;
+  companyConnectionAvailable: boolean;
+  mappedResourceCount: number;
+  resources: OverviewResource[];
+  lastUpdatedAt: string | null;
+  publishingSupported: boolean;
+}
+
+export interface ClientChannelOverview {
+  clientId: string;
+  providers: ProviderOverview[];
+}
+
 export const integrationsApi = {
   /**
    * GET /integrations/registry
@@ -144,6 +173,24 @@ export const integrationsApi = {
       path: `/integrations/${encodeURIComponent(integrationId)}/map`,
       headers: companyScopeHeaders(companyId),
       body: payload,
+      signal,
+    });
+  },
+
+  /**
+   * GET /integrations/overview (Phase A3)
+   * Consolidated read-only channel overview for the Client named by x-client-id (Company via x-company-id).
+   * Auth: @CompanyContextRoute({ client: 'required' }) + integrations:read
+   */
+  async getOverview(
+    companyId: string,
+    clientId: string,
+    signal?: AbortSignal,
+  ): Promise<ClientChannelOverview> {
+    return apiClient.request<ClientChannelOverview>({
+      method: "GET",
+      path: "/integrations/overview",
+      headers: companyScopeHeaders(companyId, { "x-client-id": clientId }),
       signal,
     });
   },

@@ -3,6 +3,7 @@ import { apiClient } from "@/lib/api/client";
 export type PlatformRole = "SUPER_ADMIN" | "SUPPORT" | "USER";
 export type SystemRole = "OWNER" | "ADMIN" | "MANAGER" | "VIEWER";
 export type CompanyStatus = "ACTIVE" | "SUSPENDED" | "ARCHIVED";
+export type UserStatus = "ACTIVE" | "DEACTIVATED";
 
 export interface SuperAdminUserSummary {
   id: string;
@@ -10,6 +11,8 @@ export interface SuperAdminUserSummary {
   name: string | null;
   avatarUrl: string | null;
   platformRole: PlatformRole;
+  status: UserStatus;
+  deactivatedAt: string | null;
   mfaEnabled: boolean;
   membershipCount: number;
   companyCount: number;
@@ -81,6 +84,43 @@ export const superAdminUsersApi = {
     return apiClient.request<SuperAdminUserDetail>({
       method: "GET",
       path: `/super-admin/users/${encodeURIComponent(userId)}`,
+      signal,
+    });
+  },
+
+  /**
+   * PATCH /api/v1/super-admin/users/:userId/status (Phase B1)
+   * Super Admin only. Sets status to ACTIVE or DEACTIVATED.
+   */
+  async setStatus(userId: string, status: UserStatus, signal?: AbortSignal): Promise<{ status: UserStatus }> {
+    return apiClient.request<{ status: UserStatus }>({
+      method: "PATCH",
+      path: `/super-admin/users/${encodeURIComponent(userId)}/status`,
+      body: { status },
+      signal,
+    });
+  },
+
+  /**
+   * POST /api/v1/super-admin/users/:userId/revoke-sessions (Phase B2)
+   * Super Admin only. Revokes all active sessions for another user.
+   */
+  async revokeSessions(userId: string, signal?: AbortSignal): Promise<{ revokedSessions: number }> {
+    return apiClient.request<{ revokedSessions: number }>({
+      method: "POST",
+      path: `/super-admin/users/${encodeURIComponent(userId)}/revoke-sessions`,
+      signal,
+    });
+  },
+
+  /**
+   * POST /api/v1/super-admin/users/:userId/password-reset (Phase B3)
+   * Super Admin only. Triggers admin-issued password reset email for an active user.
+   */
+  async passwordReset(userId: string, signal?: AbortSignal): Promise<{ status: "queued" }> {
+    return apiClient.request<{ status: "queued" }>({
+      method: "POST",
+      path: `/super-admin/users/${encodeURIComponent(userId)}/password-reset`,
       signal,
     });
   },

@@ -12,6 +12,7 @@ import type { InternalRole } from "@/types/domain/team";
 export const ROUTES = {
   login: "/login",
   forgotPassword: "/forgot-password",
+  resetPassword: "/reset-password",
 
   superAdmin: {
     root: "/super-admin",

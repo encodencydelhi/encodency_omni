@@ -45,6 +45,34 @@ export interface InvitationCreatedResponse {
   token: string;
 }
 
+/** One row of GET /companies/:companyId/invitations, exactly as backend returns it (Phase A1). */
+export interface TeamInvitationRecord {
+  id: string;
+  email: string;
+  systemRole: CompanySystemRole;
+  status: "pending" | "accepted" | "revoked" | "expired";
+  expiresAt: string;
+  createdAt: string;
+  invitedBy: {
+    userId: string;
+    name: string | null;
+    email: string;
+  };
+}
+
+export interface ListInvitationsParams {
+  page?: number;
+  limit?: number;
+  status?: "pending" | "accepted" | "revoked" | "expired";
+}
+
+export interface ListInvitationsResponse {
+  items: TeamInvitationRecord[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export const teamApi = {
   /** GET /team/members — Company membership required. */
   listMembers(companyId: string): Promise<TeamMemberRecord[]> {
@@ -111,6 +139,41 @@ export const teamApi = {
       method: "POST",
       path: "/invitations/finalize",
       body: { token },
+    });
+  },
+
+  /** GET /companies/:companyId/invitations — list team invitations (Phase A1). */
+  listInvitations(companyId: string, params?: ListInvitationsParams): Promise<ListInvitationsResponse> {
+    const query: Record<string, string | number> = {};
+    if (params?.page) query.page = params.page;
+    if (params?.limit) query.limit = params.limit;
+    if (params?.status) query.status = params.status;
+    return apiClient.request<ListInvitationsResponse>({
+      method: "GET",
+      path: `/companies/${encodeURIComponent(companyId)}/invitations`,
+      query,
+      headers: companyScopeHeaders(companyId),
+    });
+  },
+
+  /** POST /companies/:companyId/invitations/:invitationId/resend — resend an invitation (Phase A1). */
+  resendInvitation(
+    companyId: string,
+    invitationId: string,
+  ): Promise<{ invitationId: string; status: "pending"; expiresAt: string }> {
+    return apiClient.request({
+      method: "POST",
+      path: `/companies/${encodeURIComponent(companyId)}/invitations/${encodeURIComponent(invitationId)}/resend`,
+      headers: companyScopeHeaders(companyId),
+    });
+  },
+
+  /** DELETE /companies/:companyId/invitations/:invitationId — revoke an invitation (Phase A1). */
+  revokeInvitation(companyId: string, invitationId: string): Promise<{ invitationId: string; status: "revoked" }> {
+    return apiClient.request({
+      method: "DELETE",
+      path: `/companies/${encodeURIComponent(companyId)}/invitations/${encodeURIComponent(invitationId)}`,
+      headers: companyScopeHeaders(companyId),
     });
   },
 };

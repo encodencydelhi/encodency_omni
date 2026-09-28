@@ -145,6 +145,15 @@ export const authService = {
     await apiClient.request({ method: "POST", path: "/auth/forgot-password", body: { email }, skipSessionExpiry: true });
   },
 
+  async resetPassword(token: string, password: string): Promise<void> {
+    await apiClient.request({
+      method: "POST",
+      path: "/auth/reset-password",
+      body: { token, password },
+      skipSessionExpiry: true,
+    });
+  },
+
   /**
    * Minimal authenticated verification endpoint from TASK-03.
    * Calls GET /auth/me to verify that the session cookie is valid and returns { userId }.

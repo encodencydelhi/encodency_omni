@@ -38,6 +38,7 @@ import type {
 } from "./types";
 import { ensureBundle, writeBundle } from "./mock/store";
 import { organizationApi, type UpdateOrganizationPayload } from "@/features/admin/settings/live/organization-api";
+import { superAdminCompaniesApi } from "../live/super-admin-companies-api";
 
 /* ------------------------------------------------------------------ */
 /* Backend DTO shapes (mirrors super-admin-companies.types.ts)         */
@@ -360,32 +361,19 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         return fallback.updateCompany(id, input, actor);
       }
 
-      const website = input.website
-        ? input.website.startsWith("http")
-          ? input.website
-          : `https://${input.website}`
-        : null;
+      // Decision 2: name/status are Company administration fields;
+      // legalName, industry, website, contact, address, taxId, timezone, currency remain Organization Profile fields.
+      const name = input.name?.trim();
+      const body: Record<string, any> = {};
+      if (name) body.name = name;
 
-      let patched: SuperAdminCompanyDetailResponse | null = null;
-      try {
-        patched = await apiClient.request<SuperAdminCompanyDetailResponse>({
-          method: "PATCH",
-          path: `/super-admin/companies/${encodeURIComponent(id)}`,
-          body: {
-            name: input.name.trim(),
-            legalName: input.legalName ?? null,
-            website,
-            industry: input.industry ?? null,
-            address: input.country ? { country: input.country } : undefined,
-            contactEmail: input.contactEmail ?? null,
-            contactPhone: input.contactPhone ?? null,
-          },
-        });
-      } catch (err) {
-        console.warn("Backend PATCH /super-admin/companies/:id not available or failed, falling back to local bundle", err);
-      }
+      const patched = await apiClient.request<SuperAdminCompanyDetailResponse>({
+        method: "PATCH",
+        path: `/super-admin/companies/${encodeURIComponent(id)}`,
+        body,
+      });
 
-      const summary = patched ? toCompanySummary(patched) : await fallback.getCompany(id);
+      const summary = toCompanySummary(patched);
       try {
         const bundle = ensureBundle(id, summary.company.name);
         bundle.company = {
@@ -409,6 +397,14 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       } catch {}
 
       return summary;
+    },
+
+    async resendOwnerInvitation(id: string, actor): Promise<CompanySummary> {
+      if (!UUID_PATTERN.test(id)) {
+        return fallback.resendOwnerInvitation(id, actor);
+      }
+      const res = await superAdminCompaniesApi.resendOwnerInvitation(id);
+      return toCompanySummary(res as any);
     },
 
     async archiveCompany(id: string, input: { note: string }, actor): Promise<CompanySummary> {
