@@ -24,7 +24,7 @@ import {
   seeded,
 } from "./mock-provider";
 import { integrationsApi, toBackendProvider } from "../live/integrations-api";
-import { getStoredClientId } from "@/lib/api/tenancy-storage";
+import { getStoredClientId, getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { ApiError } from "@/types/api";
 import type {
   IntegrationConnection,
@@ -104,9 +104,7 @@ const uid = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2,
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function activeCompanyId(): string {
-  return typeof window !== "undefined"
-    ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
-    : "development-company-id";
+  return getStoredCompanyId();
 }
 
 /**
@@ -164,10 +162,7 @@ class MockIntegrationsRepository implements IntegrationsRepository {
         "Only Meta, Google Business, and LinkedIn are supported by the platform backend.",
       );
     }
-    const companyId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
-        : "development-company-id";
+    const companyId = activeCompanyId();
 
     try {
       const response = await integrationsApi.initOAuth(companyId, backendProvider);
@@ -408,10 +403,7 @@ class UnavailableIntegrationsRepository implements IntegrationsRepository {
         "Only Meta, Google Business, and LinkedIn are supported by the platform backend.",
       );
     }
-    const companyId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
-        : "development-company-id";
+    const companyId = activeCompanyId();
 
     try {
       return await integrationsApi.initOAuth(companyId, backendProvider);
@@ -427,10 +419,7 @@ class UnavailableIntegrationsRepository implements IntegrationsRepository {
     }
   }
   async discoverResources(providerId: ProviderId, clientName: string): Promise<DiscoveredResource[]> {
-    const companyId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
-        : "development-company-id";
+    const companyId = activeCompanyId();
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (uuidPattern.test(providerId) && uuidPattern.test(companyId)) {
       return (await integrationsApi.discoverResources(companyId, providerId)) as any;
@@ -450,10 +439,7 @@ class UnavailableIntegrationsRepository implements IntegrationsRepository {
     throw unavailable();
   }
   async updateResourceMapping(connectionId: string, resourceId: string, clientId: string): Promise<void> {
-    const companyId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("omni_active_company_id") ?? "development-company-id"
-        : "development-company-id";
+    const companyId = activeCompanyId();
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (uuidPattern.test(connectionId) && uuidPattern.test(companyId)) {
       await integrationsApi.mapResource(companyId, connectionId, {

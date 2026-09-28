@@ -20,6 +20,8 @@ const {
   isFileTooLarge: isClientLogoFileTooLarge,
   isStorageUnavailable: isClientLogoStorageUnavailable,
 } = await import("@/features/admin/projects/live/clients-api");
+const { teamRepository } = await import("@/features/admin/team/team-data/repository");
+const { getIntegrationsRepository } = await import("@/features/admin/integrations/integrations-data/repository");
 const { teamApi, invitationLink } = await import("@/features/admin/team/live/team-api");
 const { authService } = await import("@/features/auth/services/auth-service");
 const { systemHealthService } = await import("@/features/system-health/services/system-health-service");
@@ -537,6 +539,52 @@ describe("integrationsApi (TASK-09 OAuth contracts)", () => {
         err.status === 403 &&
         err.message.includes("integrations:write"),
     );
+  });
+});
+
+describe("tenant selection guardrails", () => {
+  const originalWindow = globalThis.window;
+
+  beforeEach(() => {
+    const store = new Map<string, string>();
+    Object.defineProperty(globalThis, "localStorage", {
+      value: {
+        getItem: (key: string) => store.get(key) ?? null,
+        setItem: (key: string, value: string) => store.set(key, value),
+        removeItem: (key: string) => store.delete(key),
+        clear: () => store.clear(),
+      },
+      configurable: true,
+    });
+    Object.defineProperty(globalThis, "window", {
+      value: { localStorage: (globalThis as { localStorage: Storage }).localStorage },
+      configurable: true,
+    });
+  });
+
+  afterEach(() => {
+    delete (globalThis as { localStorage?: Storage }).localStorage;
+    if (originalWindow === undefined) {
+      delete (globalThis as { window?: unknown }).window;
+    } else {
+      Object.defineProperty(globalThis, "window", { value: originalWindow, configurable: true });
+    }
+  });
+
+  it("teamRepository rejects a live call without a real company selection", async () => {
+    await assert.rejects(
+      () => teamRepository.getMembers(),
+      (err: unknown) => ApiError.isApiError(err) && err.code === "NO_COMPANY_SELECTED",
+    );
+    assert.equal(calls.length, 0, "no request should be sent when company is unset");
+  });
+
+  it("integrationsRepository rejects OAuth without a real company selection", async () => {
+    await assert.rejects(
+      () => getIntegrationsRepository().authorize("META"),
+      (err: unknown) => err instanceof Error && err.message.includes("Select a Company to continue"),
+    );
+    assert.equal(calls.length, 0, "no OAuth request should be sent when company is unset");
   });
 });
 

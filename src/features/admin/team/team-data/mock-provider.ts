@@ -1,4 +1,4 @@
-import { ISODate, Invitation, Member, MemberActivity, TeamGroup } from "./types";
+import type { ISODate, Invitation, Member, MemberActivity, TeamGroup } from "./types";
 
 
 

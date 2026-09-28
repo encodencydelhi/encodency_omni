@@ -1,37 +1,46 @@
 const STORAGE_KEY_COMPANY = "omni_active_company_id";
 const STORAGE_KEY_CLIENT = "omni_active_client_id";
 
+function getStorage(): Storage | null {
+  if (typeof window !== "undefined" && window.localStorage) return window.localStorage;
+  if (typeof globalThis !== "undefined" && "localStorage" in globalThis && globalThis.localStorage) return globalThis.localStorage;
+  return null;
+}
+
 // Never silently select a fake/default tenant in production or live requests
 export const DEFAULT_FALLBACK_COMPANY_ID = "";
 export const DEFAULT_FALLBACK_CLIENT_ID = "";
 
 export function getStoredCompanyId(): string {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem(STORAGE_KEY_COMPANY);
-    if (stored && stored.trim() && stored.trim() !== "development-company-id") {
-      return stored.trim();
-    }
+  const storage = getStorage();
+  if (!storage) return "";
+
+  const stored = storage.getItem(STORAGE_KEY_COMPANY);
+  if (stored && stored.trim() && stored.trim() !== "development-company-id") {
+    return stored.trim();
   }
   return "";
 }
 
 export function getStoredClientId(): string {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem(STORAGE_KEY_CLIENT);
-    if (stored && stored.trim() && stored.trim() !== "development-client-id") {
-      return stored.trim();
-    }
+  const storage = getStorage();
+  if (!storage) return "";
+
+  const stored = storage.getItem(STORAGE_KEY_CLIENT);
+  if (stored && stored.trim() && stored.trim() !== "development-client-id") {
+    return stored.trim();
   }
   return "";
 }
 
 export function setStoredTenancy(companyId: string, clientId?: string): void {
-  if (typeof window === "undefined") return;
+  const storage = getStorage();
+  if (!storage) return;
   if (companyId) {
-    localStorage.setItem(STORAGE_KEY_COMPANY, companyId);
+    storage.setItem(STORAGE_KEY_COMPANY, companyId);
   }
   if (clientId) {
-    localStorage.setItem(STORAGE_KEY_CLIENT, clientId);
+    storage.setItem(STORAGE_KEY_CLIENT, clientId);
   }
 }
 
@@ -42,6 +51,7 @@ export function setStoredTenancy(companyId: string, clientId?: string): void {
  * makes switching Company drop the stale Client of the previous one.
  */
 export function clearStoredClientId(): void {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(STORAGE_KEY_CLIENT);
+  const storage = getStorage();
+  if (!storage) return;
+  storage.removeItem(STORAGE_KEY_CLIENT);
 }

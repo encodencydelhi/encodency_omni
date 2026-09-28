@@ -1,15 +1,13 @@
 import { MOCK_ACTIVITY, MOCK_GROUPS, MOCK_INVITATIONS, MOCK_MEMBERS } from "./mock-provider";
-import { Invitation, Member, MemberActivity, TeamGroup } from "./types";
+import type { Invitation, Member, MemberActivity, TeamGroup } from "./types";
 import { apiClient } from "@/lib/api/client";
 import { companyScopeHeaders } from "@/lib/api/company-scope";
+import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { ApiError } from "@/types/api";
 import { teamApi } from "../live/team-api";
 
 function getCompanyId() {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("omni_active_company_id") ?? "development-company-id";
-  }
-  return "development-company-id";
+  return getStoredCompanyId();
 }
 
 /** Backend CreateInvitationDto requires UUID v4 client ids — demo ids like `c-1` are omitted. */
