@@ -4,7 +4,7 @@ import { apiClient } from "@/lib/api/client";
 import { companyScopeHeaders } from "@/lib/api/company-scope";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { ApiError } from "@/types/api";
-import { teamApi } from "../live/team-api";
+import { teamApi, type TeamInvitationRecord } from "../live/team-api";
 
 function getCompanyId() {
   return getStoredCompanyId();
@@ -86,6 +86,38 @@ function toMember(raw: any): Member {
   };
 }
 
+const INVITE_ROLE_NAMES: Record<string, string> = {
+  owner: "Organization Owner",
+  admin: "Organization Admin",
+  manager: "Social Media Manager",
+  viewer: "Viewer",
+};
+
+const INVITE_STATUS_MAP: Record<string, Invitation["status"]> = {
+  pending: "pending",
+  accepted: "accepted",
+  expired: "expired",
+  revoked: "cancelled",
+};
+
+function toInvitation(row: TeamInvitationRecord): Invitation {
+  const roleId = (row.systemRole || "VIEWER").toLowerCase();
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.email.split("@")[0] || row.email,
+    roleId,
+    roleName: INVITE_ROLE_NAMES[roleId] || "Team Member",
+    clients: [],
+    accessLevel: "full",
+    groups: [],
+    invitedBy: { id: row.invitedBy?.userId ?? "", name: row.invitedBy?.name || row.invitedBy?.email || "Team member" },
+    sentAt: row.createdAt,
+    expiresAt: row.expiresAt,
+    status: INVITE_STATUS_MAP[row.status] ?? "pending",
+  };
+}
+
 export const teamRepository = {
   async getMembers(): Promise<Member[]> {
     try {
@@ -111,7 +143,15 @@ export const teamRepository = {
   },
 
   async getInvitations(): Promise<Invitation[]> {
-    return [...invitations];
+    try {
+      const response = await teamApi.listInvitations(getCompanyId(), { page: 1, limit: 100 });
+      const rows = Array.isArray(response?.items) ? response.items : [];
+      invitations = rows.map(toInvitation);
+      return [...invitations];
+    } catch (error) {
+      if (process.env.NEXT_PUBLIC_DATA_SOURCE === "mock" || shouldFallBack(error)) return [...invitations];
+      throw error;
+    }
   },
 
   async getActivity(): Promise<MemberActivity[]> {
@@ -278,10 +318,18 @@ export const teamRepository = {
   },
 
   async updateInvitation(id: string, patch: Partial<Invitation>): Promise<void> {
+    const isResend = patch.status === "pending" && !patch.roleId;
+    if (isResend && process.env.NEXT_PUBLIC_DATA_SOURCE !== "mock") {
+      await teamApi.resendInvitation(getCompanyId(), id);
+      return;
+    }
     invitations = invitations.map((invite) => invite.id === id ? { ...invite, ...patch } : invite);
   },
 
   async deleteInvitation(id: string): Promise<void> {
+    if (process.env.NEXT_PUBLIC_DATA_SOURCE !== "mock") {
+      await teamApi.revokeInvitation(getCompanyId(), id);
+    }
     invitations = invitations.filter((invite) => invite.id !== id);
   },
 
