@@ -100,6 +100,7 @@ export function CreateContentTab() {
 
   const [savedDraftId, setSavedDraftId] = useState<string | null>(null);
   const [currentRevision, setCurrentRevision] = useState<number | null>(null);
+  const [savedAssetIds, setSavedAssetIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!companyId) return;
@@ -153,6 +154,7 @@ export function CreateContentTab() {
       const latest = await draftsApi.get(companyId, clientId, savedDraftId);
       setCurrentRevision(latest.revision);
       setVariantIds(variantsToPlatformMap(latest.variants));
+      setSavedAssetIds(latest.media.map((item) => item.asset.id));
       setMasterContent((prev) => ({
         ...prev,
         caption: latest.content,
@@ -207,6 +209,7 @@ export function CreateContentTab() {
     const assetIds = (masterContent.media ?? [])
       .map((m) => m.id)
       .filter((id) => uuidPattern.test(id));
+    let draftContentSaved = false;
 
     try {
       if (savedDraftId && currentRevision !== null) {
@@ -218,17 +221,19 @@ export function CreateContentTab() {
           variants,
         });
 
-        if (assetIds.length > 0) {
-          try {
-            await mediaApi.setDraftMedia(companyId, clientId, savedDraftId, updated.revision, assetIds);
-          } catch (mErr) {
-            console.warn("Could not sync draft media:", mErr);
-          }
-        }
-
+        draftContentSaved = true;
         setCurrentRevision(updated.revision);
         setVariantIds(variantsToPlatformMap(updated.variants));
-        toast.success(`Draft updated successfully (Revision ${updated.revision})`);
+        const mediaChanged = assetIds.length !== savedAssetIds.length || assetIds.some((id, index) => id !== savedAssetIds[index]);
+        let savedRevision = updated.revision;
+        if (mediaChanged) {
+          const mediaUpdated = await mediaApi.setDraftMedia(companyId, clientId, savedDraftId, updated.revision, assetIds);
+          savedRevision = mediaUpdated.revision;
+          setSavedAssetIds(assetIds);
+        }
+
+        setCurrentRevision(savedRevision);
+        toast.success(`Draft updated successfully (Revision ${savedRevision})`);
       } else {
         // Create new draft
         const created = await draftsApi.create(companyId, clientId, {
@@ -239,6 +244,7 @@ export function CreateContentTab() {
         });
         setSavedDraftId(created.id);
         setCurrentRevision(created.revision);
+        setSavedAssetIds(assetIds);
         setVariantIds(variantsToPlatformMap(created.variants));
         toast.success(`Draft saved successfully (Revision ${created.revision})`);
       }
@@ -253,16 +259,22 @@ export function CreateContentTab() {
         }
         if (err.reason) detailsList.push(`Reason: ${err.reason}`);
         const description = detailsList.length > 0 ? detailsList.join(" | ") : (err.status ? `Status HTTP ${err.status}` : undefined);
-        toast.error(`Failed to save draft: ${err.message}`, { description, duration: 6000 });
+        const message = draftContentSaved
+          ? `Draft content saved, but media sync failed: ${err.message}`
+          : `Failed to save draft: ${err.message}`;
+        toast.error(message, { description, duration: 6000 });
       } else if (err instanceof Error) {
-        toast.error(`Failed to save draft: ${err.message}`, { duration: 6000 });
+        const message = draftContentSaved
+          ? `Draft content saved, but media sync failed: ${err.message}`
+          : `Failed to save draft: ${err.message}`;
+        toast.error(message, { duration: 6000 });
       } else {
         toast.error("An unexpected error occurred while saving draft.", { duration: 6000 });
       }
     } finally {
       setIsSavingDraft(false);
     }
-  }, [companyId, clientId, masterContent, channels, platformOverrides, savedDraftId, currentRevision]);
+  }, [companyId, clientId, masterContent, channels, platformOverrides, savedDraftId, currentRevision, savedAssetIds]);
 
   /* ── Derived ── */
   const connectedPlatforms = useMemo(() =>

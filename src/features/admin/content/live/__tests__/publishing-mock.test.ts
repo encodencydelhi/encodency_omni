@@ -10,6 +10,7 @@ process.env.NEXT_PUBLIC_DATA_SOURCE = "mock";
 process.env.NEXT_PUBLIC_MOCK_LATENCY_MS = "0";
 
 const { schedulingApi } = await import("../../live/scheduling-api");
+const { mediaApi } = await import("../../live/media-api");
 const { ApiError } = await import("@/types/api");
 
 const companyId = "development-company-id";
@@ -49,6 +50,33 @@ describe("publishing mock routes (TASK-11B parity)", () => {
     const detail = await schedulingApi.get(companyId, clientId, created.id);
     assert.equal(detail.id, created.id);
     assert.equal(detail.status, "SCHEDULED");
+  });
+
+  it("discovers Instagram, enforces one media item, schedules the image, and reads its detail", async () => {
+    const igDraftId = "draft-ig-001";
+    const igVariantId = "var-ig-001";
+    const targets = await schedulingApi.targets(companyId, clientId, igDraftId, igVariantId);
+    assert.equal(targets.items.length, 1);
+    assert.equal(targets.items[0]!.resourceType, "INSTAGRAM_ACCOUNT");
+    assert.equal(targets.items[0]!.publishable, true);
+
+    const schedule = (expectedDraftRevision: number) => schedulingApi.schedule(companyId, clientId, igDraftId, igVariantId, {
+      resourceMappingId: "map-ig-001",
+      scheduledFor: futureIso(40),
+      expectedDraftRevision,
+    });
+
+    await assert.rejects(schedule(1), (error: unknown) => ApiError.isApiError(error) && error.reason === "media_not_supported_for_channel");
+    await mediaApi.setDraftMedia(companyId, clientId, igDraftId, 1, ["asset-ig-a", "asset-ig-b"]);
+    await assert.rejects(schedule(2), (error: unknown) => ApiError.isApiError(error) && error.reason === "media_combination_not_supported");
+    await mediaApi.setDraftMedia(companyId, clientId, igDraftId, 2, ["asset-ig-image"]);
+
+    const created = await schedule(3);
+    assert.equal(created.status, "SCHEDULED");
+    assert.equal(created.channel, "INSTAGRAM_ACCOUNT");
+    const detail = await schedulingApi.get(companyId, clientId, created.id);
+    assert.equal(detail.media?.length, 1);
+    assert.equal(detail.media?.[0]?.asset?.kind, "IMAGE");
   });
 
   it("rejects a duplicate schedule with already_scheduled + scheduledPostId", async () => {

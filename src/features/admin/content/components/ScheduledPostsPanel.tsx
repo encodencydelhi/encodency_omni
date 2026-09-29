@@ -292,8 +292,6 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
             const unsupported = items.length === 0 && !targetsPending;
             const composed = composeScheduledFor(sched?.date, sched?.time);
 
-            const isGoogle = platform === "google-business";
-
             return (
               <div key={platform} className="rounded-sm border border-[#E2E8F0] p-2">
                 <div className="flex items-center gap-2">
@@ -306,18 +304,14 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
                 </div>
 
                 <div className="mt-1.5 flex items-center gap-1.5">
-                  {isGoogle ? (
-                    <span className="flex-1 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] text-amber-800">
-                      Google publishing is not supported in TASK-11B (Meta Pages & LinkedIn Organizations supported).
-                    </span>
-                  ) : targetsPending && items.length === 0 ? (
+                  {targetsPending && items.length === 0 ? (
                     <span className="flex items-center gap-1 text-[10px] text-[#7A87A0]">
                       <Loader2 className="size-3 animate-spin" /> Discovering targets…
                     </span>
                   ) : items.length === 0 ? (
                     <span className="text-[10px] text-[#7A87A0]">
                       {unsupported
-                        ? "No publishing target mapped yet — connect and map a page in Integrations."
+                        ? "No publishing target mapped yet — connect and map a resource in Integrations."
                         : "No target for this channel."}
                     </span>
                   ) : (
@@ -339,18 +333,16 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
                     </select>
                   )}
 
-                  {!isGoogle && (
-                    <button
-                      disabled={!scheduleReady || scheduling || !selected || "error" in composed}
-                      onClick={() => {
-                        if ("error" in composed) return toast.error(composed.error);
-                        setPendingConfirm({ platform, scheduledFor: composed.scheduledFor });
-                      }}
-                      className="flex h-7 shrink-0 items-center gap-1 rounded-sm bg-[#1769DF] px-2.5 text-[10px] font-semibold text-white transition hover:bg-[#1259BD] disabled:cursor-not-allowed disabled:bg-gray-400"
-                    >
-                      <Calendar className="size-3" /> Schedule
-                    </button>
-                  )}
+                  <button
+                    disabled={!scheduleReady || scheduling || !selected || "error" in composed}
+                    onClick={() => {
+                      if ("error" in composed) return toast.error(composed.error);
+                      setPendingConfirm({ platform, scheduledFor: composed.scheduledFor });
+                    }}
+                    className="flex h-7 shrink-0 items-center gap-1 rounded-sm bg-[#1769DF] px-2.5 text-[10px] font-semibold text-white transition hover:bg-[#1259BD] disabled:cursor-not-allowed disabled:bg-gray-400"
+                  >
+                    <Calendar className="size-3" /> Schedule
+                  </button>
                 </div>
 
                 {"error" in composed && <p className="mt-1 text-[10px] text-red-500">{composed.error}</p>}
@@ -530,8 +522,7 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
             <p className="mt-1 text-[11px] leading-4 text-[#687797]">
               This will publish to{" "}
               <b>{PLATFORM_META[pendingConfirm.platform]?.label ?? pendingConfirm.platform}</b> at{" "}
-              <b>{new Date(pendingConfirm.scheduledFor).toLocaleString()}</b>. Publishing to Facebook or LinkedIn is a
-              real, network-visible action.
+              <b>{new Date(pendingConfirm.scheduledFor).toLocaleString()}</b>. This is a real, network-visible action.
             </p>
             <div className="mt-3 flex justify-end gap-1.5">
               <button

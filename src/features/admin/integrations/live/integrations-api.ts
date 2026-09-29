@@ -73,9 +73,10 @@ export interface ResourceMappingResponse {
   createdAt: string;
 }
 
-export type OverviewProvider = "META" | "INSTAGRAM" | "LINKEDIN" | "GOOGLE_BUSINESS";
+export type OverviewProvider = "META" | "INSTAGRAM" | "LINKEDIN" | "GOOGLE_BUSINESS" | "WHATSAPP";
 export type ConnectionStatus = "NOT_CONNECTED" | "CONNECTED" | "MAPPED" | "RECONNECT_REQUIRED";
 export type ConnectionHealth = "healthy" | "expiring_soon" | "expired" | "revoked" | "error" | "not_connected";
+export type ProviderSupportState = "connected" | "disconnected" | "setup_required" | "unsupported" | "coming_soon" | "permission_required" | "degraded";
 
 export interface OverviewResource {
   mappingId: string;
@@ -95,6 +96,9 @@ export interface ProviderOverview {
   resources: OverviewResource[];
   lastUpdatedAt: string | null;
   publishingSupported: boolean;
+  state: ProviderSupportState;
+  availableActions: string[];
+  reason: string | null;
 }
 
 export interface ClientChannelOverview {

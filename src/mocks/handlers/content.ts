@@ -30,7 +30,7 @@ interface MockDraft {
   media: Array<{ position: number; asset: any }>;
   variants: {
     id: string;
-    channel: "FACEBOOK_PAGE" | "INSTAGRAM_ACCOUNT" | "LINKEDIN_ORGANIZATION";
+    channel: "FACEBOOK_PAGE" | "INSTAGRAM_ACCOUNT" | "LINKEDIN_ORGANIZATION" | "GOOGLE_BUSINESS_LOCATION";
     content: string | null;
     effectiveContent: string;
     updatedAt: string;
@@ -99,6 +99,31 @@ export const mockDrafts: MockDraft[] = [
       },
     ],
     createdAt: new Date(Date.now() - 86400000).toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "draft-ig-001",
+    companyId: "development-company-id",
+    clientId: "moksha-sewa",
+    campaignId: null,
+    title: "Instagram image test",
+    content: "A cleaner river starts with one small action.",
+    revision: 1,
+    reviewStatus: "DRAFT",
+    reviewedAt: null,
+    reviewedBy: null,
+    reviewNote: null,
+    media: [],
+    variants: [
+      {
+        id: "var-ig-001",
+        channel: "INSTAGRAM_ACCOUNT",
+        content: null,
+        effectiveContent: "A cleaner river starts with one small action.",
+        updatedAt: new Date().toISOString(),
+      },
+    ],
+    createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
 ];

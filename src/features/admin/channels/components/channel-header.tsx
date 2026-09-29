@@ -86,14 +86,14 @@ export const CHANNEL_CONFIGS: Record<ChannelType, ChannelConfig> = {
     name: "WhatsApp",
     href: "/admin/whatsapp",
     badge: "WhatsApp Business API",
-    tagline: "Manage WhatsApp Business API, broadcast campaigns, interactive templates, automation and customer chats.",
-    accountHandle: "Namo Gange Trust Helpline (+91 98110 XXXXX)",
-    statusText: "Cloud API Active • 98.4% Delivery",
+    tagline: "Configure AiSensy, manage templates and track queued message delivery.",
+    accountHandle: "Company WhatsApp configuration",
+    statusText: "",
     gradientBg: "bg-gradient-to-r from-[#ECFDF5]/90 via-[#F0FDF4]/60 to-white",
     borderAccent: "border-[#A7F3D0]/60",
     iconBg: "bg-[#25D366]",
     brandColor: "#25D366",
-    primaryActionLabel: "Send Broadcast",
+    primaryActionLabel: "Send Template Message",
     primaryActionIcon: Send,
   },
   youtube: {
@@ -126,6 +126,10 @@ interface ChannelHeaderProps {
   onPrimaryAction?: () => void;
   primaryActionLabel?: string;
   hidePrimaryAction?: boolean;
+  disablePrimaryAction?: boolean;
+  hideDateRange?: boolean;
+  hideExport?: boolean;
+  connectionStatus?: { label: string; tone: "success" | "warning" | "error" | "neutral" };
   extraActions?: React.ReactNode;
 }
 
@@ -141,6 +145,10 @@ export function ChannelHeader({
   onPrimaryAction,
   primaryActionLabel,
   hidePrimaryAction = false,
+  disablePrimaryAction = false,
+  hideDateRange = false,
+  hideExport = false,
+  connectionStatus,
   extraActions,
 }: ChannelHeaderProps) {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -223,6 +231,20 @@ export function ChannelHeader({
         <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-slate-100">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
             {(() => {
+              if (connectionStatus) {
+                const toneStyles = {
+                  success: "bg-emerald-50 text-emerald-700 border-emerald-200/70 bg-emerald-500",
+                  warning: "bg-amber-50 text-amber-700 border-amber-200/70 bg-amber-500",
+                  error: "bg-rose-50 text-rose-700 border-rose-200/70 bg-rose-500",
+                  neutral: "bg-slate-50 text-slate-600 border-slate-200 bg-slate-400",
+                };
+                const [background, text, border, dot] = toneStyles[connectionStatus.tone].split(" ");
+                return (
+                  <span className={cn("inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[11px] font-bold border", background, text, border)}>
+                    <span className={cn("size-2 rounded-sm", dot)} /> {connectionStatus.label}
+                  </span>
+                );
+              }
               const statusPills: Record<ChannelType, { label: string; text: string; bg: string; border: string; dot: string }> = {
                 whatsapp: { label: "WABA Cloud API Connected", text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200/70", dot: "bg-emerald-500" },
                 meta: { label: "Meta Graph API Connected", text: "text-pink-700", bg: "bg-pink-50", border: "border-pink-200/70", dot: "bg-pink-500" },
@@ -255,23 +277,23 @@ export function ChannelHeader({
             </button>
 
             {/* Date Range Selector */}
-            <div className="flex h-[36px] items-center gap-2 rounded-sm border border-slate-200 bg-white px-3 shadow-xs transition-colors hover:bg-slate-50 cursor-pointer">
+            {!hideDateRange && <div className="flex h-[36px] items-center gap-2 rounded-sm border border-slate-200 bg-white px-3 shadow-xs transition-colors hover:bg-slate-50 cursor-pointer">
               <CalendarDays className={cn("size-3.5 shrink-0", channel === "whatsapp" ? "text-emerald-600" : "text-blue-600")} />
               <div className="text-left text-xs leading-none">
                 <span className="block font-bold text-slate-800">{dateRangeText}</span>
                 <span className="block mt-0.5 text-[10px] text-slate-400 font-medium">{dateRangeSubtext}</span>
               </div>
               <ChevronDown className="size-3 text-slate-400" />
-            </div>
+            </div>}
 
             {/* Export Action */}
-            <button
+            {!hideExport && <button
               onClick={onExport}
               className="flex h-[36px] items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
             >
               <Download className="size-3.5 text-slate-500" />
               <span>Export</span>
-            </button>
+            </button>}
 
             {/* Channel-Specific Extra Actions */}
             {extraActions}
@@ -280,8 +302,10 @@ export function ChannelHeader({
             {!hidePrimaryAction && effectivePrimaryLabel && (
               <button
                 onClick={onPrimaryAction}
+                disabled={disablePrimaryAction}
                 className={cn(
                   "flex h-[36px] items-center gap-1.5 rounded-sm px-3.5 text-[11.5px] font-bold text-white shadow-xs transition-all active:scale-98 cursor-pointer",
+                  disablePrimaryAction && "cursor-not-allowed opacity-50",
                   channel === "whatsapp"
                     ? "bg-emerald-600 hover:bg-emerald-700"
                     : channel === "meta"

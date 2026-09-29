@@ -27,6 +27,7 @@ const { authService } = await import("@/features/auth/services/auth-service");
 const { systemHealthService } = await import("@/features/system-health/services/system-health-service");
 const { tenancyHarnessService } = await import("@/features/system-health/services/tenancy-harness-service");
 const { integrationsApi } = await import("@/features/admin/integrations/live/integrations-api");
+const { whatsappApi } = await import("@/features/admin/channels/live/whatsapp-api");
 const { campaignsApi } = await import("@/features/admin/campaigns/live/campaigns-api");
 const { draftsApi } = await import("@/features/admin/content/live/drafts-api");
 const { schedulingApi, QUEUE_RECOVERY_WARNING, TOKEN_EXPIRY_WARNING } = await import(
@@ -115,6 +116,50 @@ describe("HttpTransport", () => {
   it("joins NestJS validation message arrays into readable text", async () => {
     responses.push({ status: 400, body: { message: ["name must be longer than or equal to 3 characters", "website must be a URL address"] } });
     await assert.rejects(new HttpTransport("/api/v1").request({ method: "POST", path: "/clients" }), (error: unknown) => ApiError.isApiError(error) && error.message.includes("name must be") && error.message.includes("website must be"));
+  });
+});
+
+describe("WhatsApp API", () => {
+  it("configures AiSensy at company scope without adding unsupported fields", async () => {
+    responses.push({ status: 200, body: { id: "wa-1", provider: "AISENSY", status: "ACTIVE", updatedAt: "2026-09-29T10:00:00Z" } });
+    const payload = { apiBaseUrl: "https://api.aisensy.com", apiKey: "secret", senderId: "sender-1" };
+    await whatsappApi.configure("c-1", payload);
+    assert.equal(calls[0]!.url, "/api/v1/integrations/whatsapp/config");
+    assert.equal(calls[0]!.init.method, "PUT");
+    assert.equal(calls[0]!.init.headers["x-company-id"], "c-1");
+    assert.deepEqual(body(calls[0]!), payload);
+  });
+
+  it("lists and upserts templates with verified Company and Client scope", async () => {
+    responses.push({ status: 200, body: { items: [] } }, { status: 200, body: { id: "t-1", name: "reminder", language: "en", status: "ENABLED", variables: ["name"] } });
+    await whatsappApi.listTemplates("c-1", "cl-1");
+    await whatsappApi.upsertTemplate("c-1", "cl-1", { name: "reminder", language: "en", variables: ["name"] });
+    assert.equal(calls[0]!.url, "/api/v1/integrations/whatsapp/templates");
+    assert.equal(calls[0]!.init.headers["x-company-id"], "c-1");
+    assert.equal(calls[0]!.init.headers["x-client-id"], "cl-1");
+    assert.equal(calls[1]!.init.method, "PUT");
+    assert.deepEqual(body(calls[1]!), { name: "reminder", language: "en", variables: ["name"] });
+  });
+
+  it("queues a template send and reads status history with an optional status filter", async () => {
+    responses.push({ status: 201, body: { id: "m-1", status: "QUEUED" } }, { status: 200, body: { items: [] } }, { status: 200, body: { id: "m-1", status: "SENT" } });
+    await whatsappApi.sendMessage("c-1", "cl-1", { templateId: "t-1", destinationPhone: "+14155550100", variables: { name: "Ari" } });
+    await whatsappApi.listMessages("c-1", "cl-1", "FAILED");
+    await whatsappApi.getMessage("c-1", "cl-1", "m-1");
+    assert.equal(calls[0]!.url, "/api/v1/integrations/whatsapp/messages");
+    assert.equal(calls[0]!.init.method, "POST");
+    assert.deepEqual(body(calls[0]!), { templateId: "t-1", destinationPhone: "+14155550100", variables: { name: "Ari" } });
+    assert.equal(calls[1]!.url, "/api/v1/integrations/whatsapp/messages?status=FAILED");
+    assert.equal(calls[2]!.url, "/api/v1/integrations/whatsapp/messages/m-1");
+    for (const call of calls) {
+      assert.equal(call.init.headers["x-company-id"], "c-1");
+      assert.equal(call.init.headers["x-client-id"], "cl-1");
+    }
+  });
+
+  it("refuses Client-scoped requests when no Client is selected", async () => {
+    await assert.rejects(whatsappApi.listTemplates("c-1", ""), (error: unknown) => ApiError.isApiError(error) && error.code === "NO_CLIENT_SELECTED");
+    assert.equal(calls.length, 0);
   });
 });
 

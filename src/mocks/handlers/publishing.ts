@@ -43,6 +43,12 @@ interface MockScheduledPost {
   failureCode: string | null;
   lastErrorCode: string | null;
   externalPostId: string | null;
+  media?: Array<{
+    position: number;
+    assetId: string;
+    available: boolean;
+    asset: Record<string, unknown>;
+  }>;
   attemptCount: number;
   publishedAt: string | null;
   cancelledAt: string | null;
@@ -57,6 +63,8 @@ const MAX_HORIZON_MS = 180 * 24 * 60 * 60 * 1000;
 const CHANNEL_MAX_LENGTH: Partial<Record<Channel, number>> = {
   LINKEDIN_ORGANIZATION: 3000,
   FACEBOOK_PAGE: 10000,
+  GOOGLE_BUSINESS_LOCATION: 1500,
+  INSTAGRAM_ACCOUNT: 2200,
 };
 
 /** `clientId` used by the seeded draft fixtures; resolved from the draft row itself. */
@@ -103,7 +111,7 @@ const mockTargets: MockTarget[] = [
     connectionStatus: "ACTIVE",
     tokenExpiresAt: null,
     canRefreshToken: true,
-    supported: false,
+    supported: true,
   },
 ];
 
@@ -175,8 +183,7 @@ function findVariant(
   };
 }
 
-/** Backend PUBLISHABLE_CHANNELS — Instagram/Google Business need TASK-11C media. */
-const PUBLISHABLE_CHANNELS: Channel[] = ["FACEBOOK_PAGE", "LINKEDIN_ORGANIZATION"];
+const PUBLISHABLE_CHANNELS: Channel[] = ["FACEBOOK_PAGE", "INSTAGRAM_ACCOUNT", "LINKEDIN_ORGANIZATION", "GOOGLE_BUSINESS_LOCATION"];
 
 function toTargetResponse(target: MockTarget) {
   const reason = !target.supported
@@ -275,6 +282,20 @@ export const publishingRoutes: MockRoutes = {
       badRequest("content_too_long_for_channel", `Content is too long for ${variant.channel} (max ${max} characters).`);
     }
 
+    const attachments = draft.media;
+    if (variant.channel === "INSTAGRAM_ACCOUNT" && attachments.length === 0) {
+      badRequest("media_not_supported_for_channel", "Instagram publishing requires exactly one image or one Reel video.");
+    }
+    if (attachments.length > 0 && variant.channel !== "FACEBOOK_PAGE" && variant.channel !== "INSTAGRAM_ACCOUNT") {
+      badRequest("media_not_supported_for_channel", `Publishing media to ${variant.channel} is not available yet. Detach the media to publish text only.`);
+    }
+    if (variant.channel === "INSTAGRAM_ACCOUNT" && attachments.length !== 1) {
+      badRequest("media_combination_not_supported", "Instagram publishing supports exactly one image or one Reel video in this backend version.");
+    }
+    if (attachments.some(({ asset }) => asset.kind !== "IMAGE" && asset.kind !== "VIDEO")) {
+      badRequest("media_combination_not_supported", "Only images and videos are supported for publishing.");
+    }
+
     const duplicate = mockScheduledPosts.find(
       (p) =>
         p.variantId === params.variantId &&
@@ -303,6 +324,12 @@ export const publishingRoutes: MockRoutes = {
       content: variant.content,
       draftRevision: variant.draftRevision,
       draftChangedSinceScheduled: false,
+      media: attachments.map(({ position, asset }) => ({
+        position,
+        assetId: asset.id,
+        available: true,
+        asset,
+      })),
       scheduledFor: scheduledFor.toISOString(),
       status: "SCHEDULED",
       failureCode: null,
