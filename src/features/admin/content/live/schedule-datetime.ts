@@ -43,6 +43,11 @@ export function toIsoWithOffset(date: Date): string {
   return date.toISOString();
 }
 
+/** The backend requires two minutes of lead time; keep an extra minute for request latency. */
+export function immediateScheduledFor(now: Date = new Date()): string {
+  return toIsoWithOffset(new Date(now.getTime() + MIN_LEAD_MS + 60_000));
+}
+
 /** Returns a message when the value is outside the backend window, else null. */
 export function scheduleWindowError(date: Date, now: Date = new Date()): string | null {
   const time = date.getTime();

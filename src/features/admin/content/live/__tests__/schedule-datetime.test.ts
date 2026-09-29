@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 const {
   composeScheduledFor,
+  immediateScheduledFor,
   parseScheduleDateTime,
   scheduleWindowError,
   upcomingDateLabels,
@@ -46,6 +47,12 @@ describe("schedule-datetime (TASK-11B scheduledFor formatting)", () => {
     assert.match(scheduleWindowError(new Date(NOW.getTime() + 60 * 1000), NOW) ?? "", /2 minutes/);
     assert.equal(scheduleWindowError(new Date(NOW.getTime() + 10 * 60 * 1000), NOW), null);
     assert.match(scheduleWindowError(new Date(NOW.getTime() + 181 * 24 * 60 * 60 * 1000), NOW) ?? "", /180 days/);
+  });
+
+  it("queues Publish Now beyond the backend minimum lead time", () => {
+    const scheduledFor = new Date(immediateScheduledFor(NOW));
+    assert.equal(scheduleWindowError(scheduledFor, NOW), null);
+    assert.equal(scheduledFor.getTime() - NOW.getTime(), 3 * 60 * 1000);
   });
 
   it("composeScheduledFor reports why a slot is unusable", () => {

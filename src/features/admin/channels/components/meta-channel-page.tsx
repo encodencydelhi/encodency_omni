@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Area,
   AreaChart,
@@ -785,13 +786,14 @@ function NeedsAttention({ rows, loading }: { rows: AttentionRow[]; loading: bool
 const postCols = "grid-cols-[1.5fr_.42fr_.62fr_.72fr]";
 
 function TopPosts({ rows, loading }: { rows: PostRow[]; loading: boolean }) {
+  const router = useRouter();
   return (
     <Box
       title="Published Posts / Reels"
       subtitle="GET /content/scheduled-posts · status PUBLISHED"
       action="Open content"
       onAction={() => {
-        window.location.assign("/admin/content");
+        router.push("/admin/content");
       }}
       empty={!loading && rows.length === 0 ? "No published posts yet for this Client." : undefined}
     >
@@ -832,13 +834,14 @@ function TopPosts({ rows, loading }: { rows: PostRow[]; loading: boolean }) {
 const campaignCols = "grid-cols-[1.32fr_.8fr_.7fr_.42fr_.42fr_.72fr]";
 
 function CampaignPerformance({ rows, loading }: { rows: CampaignRow[]; loading: boolean }) {
+  const router = useRouter();
   return (
     <Box
       title="Campaign Performance"
       subtitle="GET /campaigns · spend and target KPIs from the backend"
       action="Open campaigns"
       onAction={() => {
-        window.location.assign("/admin/campaigns");
+        router.push("/admin/campaigns");
       }}
       empty={!loading && rows.length === 0 ? "No campaigns for this Client yet." : undefined}
     >
@@ -1058,13 +1061,14 @@ function Conversations() {
 const scheduledCols = "grid-cols-[1.5fr_.5fr_.66fr_.9fr]";
 
 function ScheduledContent({ rows, loading }: { rows: ScheduledRow[]; loading: boolean }) {
+  const router = useRouter();
   return (
     <Box
       title="Scheduled Content"
       subtitle="GET /content/scheduled-posts · status SCHEDULED"
       action="Open calendar"
       onAction={() => {
-        window.location.assign("/admin/calendar");
+        router.push("/admin/calendar");
       }}
       empty={!loading && rows.length === 0 ? "Nothing scheduled for this Client." : undefined}
     >

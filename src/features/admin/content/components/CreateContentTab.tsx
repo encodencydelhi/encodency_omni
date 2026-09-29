@@ -12,8 +12,13 @@ import { PlatformBadge } from "./ui-platform";
 import { draftsApi } from "../live/drafts-api";
 import { mediaApi } from "../live/media-api";
 import { schedulingApi } from "../live/scheduling-api";
+import { immediateScheduledFor } from "../live/schedule-datetime";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
+import { env } from "@/config/env";
+import { useMetaOverview } from "@/features/admin/channels/live/meta-instagram-hooks";
 import { ApiError } from "@/types/api";
+import { getPublishablePlatforms, overviewProviderForPlatform } from "../live/publishable-platforms";
+import { instagramPublishError } from "../live/instagram-publish-policy";
 import type {
   Platform, ContentType, MediaRatio, MasterContent, PlatformOverride,
   PlatformSchedule, PlatformValidation, UTMConfig, AutoAdaptOptions,
@@ -23,7 +28,6 @@ import {
   ALL_PLATFORMS, PLATFORM_META, PLATFORM_CONTENT_TYPES,
   MOCK_CONNECTIONS, PLATFORM_CHAR_LIMITS, MEDIA_CAPABLE_PLATFORMS,
 } from "../config/platform-config";
-import { MOCK_CLIENTS } from "../mocks/content.mock";
 import { clientsApi } from "@/features/admin/projects/live/clients-api";
 import { ContentPreviewPanel } from "./ContentPreview";
 import { ContentChecklist } from "./ContentChecklist";
@@ -108,9 +112,11 @@ export function CreateContentTab() {
   const [globalUtm, setGlobalUtm] = useState<UTMConfig>({ source: "", medium: "", campaign: "", content: "", term: "" });
   const [platformUtms, setPlatformUtms] = useState<Partial<Record<Platform, UTMConfig>>>({});
   /* ── Tenancy & Live Draft State (TASK-11A) ── */
-  const { companyId, clientId } = useTenancyContext();
-  const [clientNames, setClientNames] = useState<string[]>(MOCK_CLIENTS.map((c) => c.name));
-  const [selectedClient, setSelectedClient] = useState(MOCK_CLIENTS[0]!.name);
+  const { companyId, clientId, setClientId } = useTenancyContext();
+  const overviewQuery = useMetaOverview(companyId, clientId, env.dataSource === "api" && Boolean(companyId && clientId));
+  const channelAvailabilityLoading = env.dataSource === "api" && overviewQuery.isLoading;
+  const channelAvailabilityError = env.dataSource === "api" ? overviewQuery.error : null;
+  const [clientOptions, setClientOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [previewPlatform, setPreviewPlatform] = useState<Platform>("instagram");
   const [channelsOpen, setChannelsOpen] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
@@ -126,9 +132,7 @@ export function CreateContentTab() {
       .list(companyId)
       .then((clients) => {
         if (cancelled || !clients.length) return;
-        const names = clients.map((client) => client.displayName || client.name);
-        setClientNames(names);
-        setSelectedClient((current) => (names.includes(current) ? current : names[0]!));
+        setClientOptions(clients.map((client) => ({ id: client.id, name: client.displayName || client.name })));
       })
       .catch(() => {});
     return () => { cancelled = true; };
@@ -346,9 +350,30 @@ export function CreateContentTab() {
   }, [companyId, clientId, masterContent, channels, platformOverrides, savedDraftId, currentRevision, savedAssetIds]);
 
   /* ── Derived ── */
-  const connectedPlatforms = useMemo(() =>
-    ALL_PLATFORMS.filter(p => MOCK_CONNECTIONS[p].status === "connected"),
-    []);
+  const connectedPlatforms = useMemo(() => env.dataSource === "api"
+    ? getPublishablePlatforms(overviewQuery.data)
+    : ALL_PLATFORMS.filter(p => MOCK_CONNECTIONS[p].status === "connected"), [overviewQuery.data]);
+
+  useEffect(() => {
+    if (channelAvailabilityLoading) return;
+    setChannels((current) => {
+      const stillPublishable = current.filter((platform) => connectedPlatforms.includes(platform));
+      if (stillPublishable.length > 0) return stillPublishable;
+      return connectedPlatforms.includes("instagram") ? ["instagram"] : connectedPlatforms.slice(0, 1);
+    });
+  }, [channelAvailabilityLoading, connectedPlatforms]);
+
+  const changeClient = (nextClientId: string) => {
+    if (nextClientId === clientId) return;
+    setClientId(nextClientId);
+    setSavedDraftId(null);
+    setCurrentRevision(null);
+    setSavedAssetIds([]);
+    setVariantIds({});
+    setLibraryMedia([]);
+    setMasterContent((current) => ({ ...current, media: [] }));
+    setSchedules([]);
+  };
 
   /* ── Handlers ── */
   const toggleChannel = (p: Platform) => {
@@ -399,11 +424,8 @@ export function CreateContentTab() {
 
       /* Mirrors publishing.constants.ts: `checkMediaForChannel`. */
       if (p === "instagram") {
-        if (mediaCount === 0) {
-          items.push({ field: "media", level: "error", message: "Instagram needs exactly one image or one video" });
-        } else if (mediaCount > 1) {
-          items.push({ field: "media", level: "error", message: "Instagram accepts a single image or video — remove the extra media" });
-        }
+        const instagramError = instagramPublishError(ct, (masterContent.media ?? []).map((media) => media.type));
+        if (instagramError) items.push({ field: "media", level: "error", message: instagramError });
       } else if (mediaCount > 0 && !MEDIA_CAPABLE_PLATFORMS.includes(p)) {
         items.push({ field: "media", level: "warning", message: `${PLATFORM_META[p].label} is text-only here — scheduling with media is refused` });
       }
@@ -433,7 +455,7 @@ export function CreateContentTab() {
       const saved = await handleSaveDraft();
       if (!saved) return;
 
-      const scheduledFor = new Date(Date.now() + 15_000).toISOString();
+      const scheduledFor = immediateScheduledFor();
       const published: string[] = [];
       const failed: string[] = [];
 
@@ -498,8 +520,22 @@ export function CreateContentTab() {
           {channelsOpen && (
             <div className="p-3">
               <div className="space-y-0.5">
-                {connectedPlatforms.map((p) => {
-                  const conn = MOCK_CONNECTIONS[p];
+                {channelAvailabilityLoading ? (
+                  <p className="px-2 py-3 text-[11px] text-[#7A87A0]">Checking this Client's mapped publishing accounts…</p>
+                ) : connectedPlatforms.length === 0 ? (
+                  <div className="px-2 py-3 text-[11px] text-[#7A87A0]">
+                    {channelAvailabilityError instanceof Error
+                      ? channelAvailabilityError.message
+                      : "No publishable accounts are mapped to this Client. Connect and map an account in Integrations."}
+                  </div>
+                ) : connectedPlatforms.map((p) => {
+                  const backendProvider = overviewProviderForPlatform(p);
+                  const providerOverview = backendProvider
+                    ? overviewQuery.data?.providers.find((item) => item.provider === backendProvider)
+                    : undefined;
+                  const conn = env.dataSource === "api"
+                    ? { status: "connected" as const, account: providerOverview?.resources[0]?.externalResourceId ?? "Mapped account" }
+                    : MOCK_CONNECTIONS[p];
                   const on = channels.includes(p);
                   const meta = PLATFORM_META[p];
 
@@ -549,13 +585,18 @@ export function CreateContentTab() {
           </div>
 
           <div className="grid grid-cols-1 gap-2.5">
-            <SelectField
-              label="Client"
-              value={selectedClient}
-              options={clientNames}
-              onChange={setSelectedClient}
-              required
-            />
+            <label className="min-w-0 flex-1">
+              <span className="mb-1 block text-[11.5px] font-semibold text-[#4B5B76]">Client <span className="text-red-500">*</span></span>
+              <select
+                value={clientId}
+                onChange={(event) => changeClient(event.target.value)}
+                disabled={clientOptions.length === 0}
+                className="h-9 w-full rounded-sm border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] font-medium text-[#24365A] outline-none focus:border-[#1769DF] disabled:bg-slate-50"
+              >
+                {clientOptions.length === 0 && <option value="">Loading Clients…</option>}
+                {clientOptions.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}
+              </select>
+            </label>
           </div>
         </Card>
 
@@ -791,10 +832,10 @@ export function CreateContentTab() {
           </button>
           <button className={cn(
             "flex h-8 flex-1 items-center justify-center gap-1 rounded-sm text-[10.5px] font-semibold text-white shadow-sm transition",
-            errorCount > 0 || isPublishing || isSavingDraft ? "bg-gray-400 cursor-not-allowed" : "bg-[#EB0711] hover:bg-[#D60811]"
+            errorCount > 0 || isPublishing || isSavingDraft || channelAvailabilityLoading || channels.length === 0 ? "bg-gray-400 cursor-not-allowed" : "bg-[#EB0711] hover:bg-[#D60811]"
           )}
             onClick={() => void handlePublishNow()}
-            disabled={errorCount > 0 || isPublishing || isSavingDraft}
+            disabled={errorCount > 0 || isPublishing || isSavingDraft || channelAvailabilityLoading || channels.length === 0}
           >
             {(isPublishing || isSavingDraft) ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3" />}
             {errorCount > 0 ? `${errorCount} channel${errorCount > 1 ? "s" : ""} need attention` : isPublishing ? "Publishing…" : "Publish"}
