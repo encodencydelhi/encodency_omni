@@ -25,11 +25,6 @@ function overview(providers: ProviderOverview[]): ClientChannelOverview {
   return {
     clientId: "client-1",
     providers,
-    futureProviders: [
-      { provider: "X", state: "coming_soon", availableActions: [], reason: null },
-      { provider: "YOUTUBE", state: "coming_soon", availableActions: [], reason: null },
-      { provider: "META_ADS", state: "coming_soon", availableActions: [], reason: null },
-    ],
   };
 }
 

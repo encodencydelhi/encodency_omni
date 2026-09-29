@@ -18,7 +18,7 @@ import { env } from "@/config/env";
 import { useMetaOverview } from "@/features/admin/channels/live/meta-instagram-hooks";
 import { ApiError } from "@/types/api";
 import { getPublishablePlatforms, overviewProviderForPlatform } from "../live/publishable-platforms";
-import { instagramPublishError } from "../live/instagram-publish-policy";
+import { instagramPublishError, type InstagramMediaKind } from "../live/instagram-publish-policy";
 import type {
   Platform, ContentType, MediaRatio, MasterContent, PlatformOverride,
   PlatformSchedule, PlatformValidation, UTMConfig, AutoAdaptOptions,
@@ -424,7 +424,7 @@ export function CreateContentTab() {
 
       /* Mirrors publishing.constants.ts: `checkMediaForChannel`. */
       if (p === "instagram") {
-        const instagramError = instagramPublishError(ct, (masterContent.media ?? []).map((media) => media.type));
+        const instagramError = instagramPublishError(ct, (masterContent.media ?? []).filter(m => m.type === "image" || m.type === "video").map((media) => media.type as InstagramMediaKind));
         if (instagramError) items.push({ field: "media", level: "error", message: instagramError });
       } else if (mediaCount > 0 && !MEDIA_CAPABLE_PLATFORMS.includes(p)) {
         items.push({ field: "media", level: "warning", message: `${PLATFORM_META[p].label} is text-only here — scheduling with media is refused` });
