@@ -1,7 +1,7 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   Area,
   AreaChart,
@@ -14,6 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { toast } from "sonner";
 import {
   AlertTriangle,
   BadgeCheck,
@@ -21,11 +22,8 @@ import {
   CalendarPlus,
   CalendarRange,
   ChevronDown,
-  Heart,
   Link2,
   Megaphone,
-  MessageCircle,
-  MoreVertical,
   PenLine,
   RefreshCcw,
   Rocket,
@@ -36,15 +34,17 @@ import {
 } from "lucide-react";
 import { ChannelLogo } from "../../shared/channel-logo";
 import { cn } from "@/lib/utils/cn";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
+import { integrationsApi, type ProviderOverview } from "@/features/admin/integrations/live/integrations-api";
+import type { ScheduledPost } from "@/features/admin/content/live/scheduling-api";
+import {
+  metaProvider,
+  useMetaCampaigns,
+  useMetaOverview,
+  useMetaScheduledPosts,
+} from "../live/meta-instagram-hooks";
 
-const stats = [
-  { label: "Connected Accounts", value: "2", trend: "0%", note: "Facebook + Instagram", icon: Link2, color: "blue" },
-  { label: "Total Followers", value: "24.6K", trend: "12%", note: "+ 2.6K this month", icon: UsersRound, color: "sky" },
-  { label: "Total Reach", value: "186.3K", trend: "28%", note: "+40.8K from last month", icon: Signal, color: "green" },
-  { label: "Engagement Rate", value: "4.8%", trend: "16%", note: "Industry avg. 2.9%", icon: Heart, color: "red" },
-  { label: "Scheduled Posts", value: "12", trend: "33%", note: "Next 7 days", icon: CalendarRange, color: "purple" },
-  { label: "Ad Spend", value: "₹12,450", trend: "8%", note: "Across 4 campaigns", icon: Megaphone, color: "rose" },
-] as const;
+/* ── demo-only panels (no backend route exists for these) ───────────────── */
 
 const performance = [
   { d: "Mar 15", fbReach: 12000, igReach: 6800, fbEng: 900, igEng: 520 },
@@ -55,67 +55,6 @@ const performance = [
   { d: "Apr 10", fbReach: 34600, igReach: 25400, fbEng: 2240, igEng: 1680 },
   { d: "Apr 14", fbReach: 38200, igReach: 29800, fbEng: 2480, igEng: 1920 },
 ];
-
-const accounts = [
-  {
-    id: "fb",
-    channel: "Facebook",
-    name: "Namo Gange Trust",
-    type: "Facebook Page",
-    photo: "/campaigns/river-cleanup.jpg",
-    metrics: [
-      ["18.2K", "Followers"],
-      ["4.6%", "Engagement"],
-      ["12.4K", "Reach (30d)"],
-      ["342", "Posts"],
-    ],
-  },
-  {
-    id: "ig",
-    channel: "Instagram",
-    name: "@namogangetrust",
-    type: "Instagram Business",
-    photo: "/campaigns/clean-river.jpg",
-    metrics: [
-      ["6.4K", "Followers"],
-      ["5.3%", "Engagement"],
-      ["8.6K", "Reach (30d)"],
-      ["287", "Posts"],
-    ],
-  },
-] as const;
-
-const attention = [
-  { title: "Ad spend 32% higher than usual", detail: "Clean Ganga Awareness · 2 hours ago", tone: "amber", icon: AlertTriangle },
-  { title: "18 unread Instagram comments", detail: "Across 3 recent posts · 4 hours ago", tone: "red", icon: MessageCircle },
-  { title: "Ad rejected by Meta", detail: "River Conservation · 6 hours ago", tone: "red", icon: XCircle },
-  { title: "Page media sync failed", detail: "Namo Gange Trust · 12 hours ago", tone: "red", icon: RefreshCcw },
-] as const;
-
-const posts = [
-  { title: "Clean Ganga, Brighter...", excerpt: "A cleaner tomorrow...", platform: "Instagram", type: "Reel", reach: "24.8K", engagement: "6.2%", clicks: "1.2K", published: "Apr 12, 2025", photo: "/campaigns/clean-river.jpg" },
-  { title: "Rivers Save Lives", excerpt: "Together for river...", platform: "Instagram", type: "Image", reach: "18.6K", engagement: "4.8%", clicks: "892", published: "Apr 10, 2025", photo: "/campaigns/river-cleanup.jpg" },
-  { title: "Volunteer with Us", excerpt: "Be the change", platform: "Facebook", type: "Reel", reach: "16.2K", engagement: "5.9%", clicks: "1.1K", published: "Apr 8, 2025", photo: "/campaigns/tree-planting.jpg" },
-  { title: "World Water Day 2025", excerpt: "Water unites us", platform: "Facebook", type: "Video", reach: "14.7K", engagement: "4.1%", clicks: "642", published: "Apr 5, 2025", photo: "/campaigns/water-conservation.jpg" },
-  { title: "Small Actions Big Impact", excerpt: "Keep our rivers clean", platform: "Instagram", type: "Carousel", reach: "12.3K", engagement: "3.6%", clicks: "521", published: "Apr 2, 2025", photo: "/campaigns/ganga-tourism.jpg" },
-];
-
-const metaCampaigns = [
-  { name: "Clean Ganga Awareness", objective: "Awareness", spend: "₹4,320", leads: "86", links: "66", cpl: "₹50", status: "Active", photo: "/campaigns/clean-river.jpg" },
-  { name: "Volunteer Drive", objective: "Leads", spend: "₹3,120", leads: "62", links: "62", cpl: "₹50", status: "Active", photo: "/campaigns/tree-planting.jpg" },
-  { name: "River Conservation", objective: "Traffic", spend: "₹2,450", leads: "28", links: "42", cpl: "₹88", status: "Active", photo: "/campaigns/river-cleanup.jpg" },
-  { name: "World Water Day", objective: "Engagement", spend: "₹1,860", leads: "—", links: "—", cpl: "—", status: "Completed", photo: "/campaigns/water-conservation.jpg" },
-  { name: "Donate for Change", objective: "Conversions", spend: "₹700", leads: "18", links: "12", cpl: "₹39", status: "Active", photo: "/campaigns/ganga-tourism.jpg" },
-];
-
-const quickActions = [
-  { label: "Create Post", icon: PenLine, color: "rose", href: "#" },
-  { label: "Schedule Reel", icon: Video, color: "purple", href: "#" },
-  { label: "Launch Campaign", icon: Rocket, color: "blue", href: "/admin/meta/ads/create" },
-  { label: "Sync Accounts", icon: RefreshCcw, color: "green", href: "#" },
-  { label: "View Leads", icon: UsersRound, color: "amber", href: "/admin/meta/ads/leads" },
-  { label: "Open Calendar", icon: CalendarPlus, color: "slate", href: "/admin/calendar" },
-] as const;
 
 const gender = [
   { name: "Women", value: 62, color: "#F2709B" },
@@ -139,42 +78,339 @@ const conversations = [
   { user: "Neha Singh", platform: "Instagram", message: "Would love to join the next drive!", time: "6 hours ago", type: "Comment" },
 ];
 
-const scheduled = [
-  { title: "Save Rivers, Save Lives", platform: "Instagram", type: "Image", date: "Apr 15, 2025", time: "10:00 AM", photo: "/campaigns/river-cleanup.jpg" },
-  { title: "Behind the Scenes", platform: "Instagram", type: "Reel", date: "Apr 15, 2025", time: "02:00 PM", photo: "/campaigns/clean-river.jpg" },
-  { title: "Volunteer Stories", platform: "Facebook", type: "Carousel", date: "Apr 16, 2025", time: "09:00 AM", photo: "/campaigns/tree-planting.jpg" },
-  { title: "Clean Ganga Drive", platform: "Facebook", type: "Video", date: "Apr 16, 2025", time: "05:00 PM", photo: "/campaigns/ganga-tourism.jpg" },
-];
+/* ── live row shapes ────────────────────────────────────────────────────── */
+
+type PlatformName = "Facebook" | "Instagram";
+
+interface AccountRow {
+  id: string;
+  channel: PlatformName;
+  name: string;
+  type: string;
+  connected: boolean;
+  reconnect: boolean;
+  metrics: Array<[string, string]>;
+}
+
+interface AttentionRow {
+  id: string;
+  title: string;
+  detail: string;
+  tone: "amber" | "red";
+  icon: typeof AlertTriangle;
+}
+
+interface PostRow {
+  id: string;
+  title: string;
+  excerpt: string;
+  platform: PlatformName;
+  type: string;
+  published: string;
+}
+
+interface CampaignRow {
+  id: string;
+  name: string;
+  objective: string;
+  spend: string;
+  leads: string;
+  links: string;
+  cpl: string;
+  status: string;
+}
+
+interface ScheduledRow {
+  id: string;
+  title: string;
+  platform: PlatformName;
+  type: string;
+  date: string;
+  time: string;
+}
+
+const STATE_COPY: Record<NonNullable<ProviderOverview["state"]>, string> = {
+  connected: "Connected",
+  disconnected: "Connected · no account mapped",
+  setup_required: "Setup required",
+  unsupported: "Unsupported",
+  coming_soon: "Coming soon",
+  permission_required: "Permission required",
+  degraded: "Reconnect required",
+};
+
+function platformOf(channel: string): PlatformName {
+  return channel === "INSTAGRAM_ACCOUNT" ? "Instagram" : "Facebook";
+}
+
+function postType(post: ScheduledPost): string {
+  const media = post.media ?? [];
+  if (media.length > 1) return "Carousel";
+  if (media[0]?.asset?.kind === "VIDEO") return "Video";
+  return media.length === 1 ? "Image" : "Text";
+}
+
+function splitContent(content: string): { title: string; excerpt: string } {
+  const clean = content.replace(/\s+/g, " ").trim();
+  if (clean.length <= 44) return { title: clean || "(empty post)", excerpt: "" };
+  return { title: `${clean.slice(0, 44)}…`, excerpt: clean.slice(44, 96) };
+}
+
+function formatDate(value: string | null): string {
+  if (!value) return "—";
+  return new Date(value).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function formatTime(value: string): string {
+  return new Date(value).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+}
+
+function accountRow(provider: ProviderOverview | null, channel: PlatformName, type: string): AccountRow {
+  return {
+    id: channel,
+    channel,
+    name: provider?.resources[0]?.externalResourceId
+      ? `${type} · ${provider.resources[0].externalResourceId}`
+      : type,
+    type: provider ? STATE_COPY[provider.state] : "Setup required",
+    connected: provider?.state === "connected",
+    reconnect: Boolean(provider?.reconnectRequired),
+    metrics: [
+      [String(provider?.mappedResourceCount ?? 0), "Mapped"],
+      [provider?.health ? provider.health.replace("_", " ") : "—", "Health"],
+      [provider?.publishingSupported ? "Yes" : "No", "Publishing"],
+      [provider?.lastUpdatedAt ? formatDate(provider.lastUpdatedAt) : "—", "Updated"],
+    ],
+  };
+}
+
+/* ── page ───────────────────────────────────────────────────────────────── */
 
 export function MetaChannelPage() {
+  const { companyId, clientId, isReady } = useTenancyContext();
+  const [connecting, setConnecting] = useState(false);
+
+  const enabled = isReady && Boolean(companyId) && Boolean(clientId);
+  const overviewQuery = useMetaOverview(companyId, clientId, enabled);
+  const postsQuery = useMetaScheduledPosts(companyId, clientId, enabled);
+  const campaignsQuery = useMetaCampaigns(companyId, clientId, enabled);
+
+  const meta = metaProvider(overviewQuery.data, "META");
+  const instagram = metaProvider(overviewQuery.data, "INSTAGRAM");
+
+  const allPosts = postsQuery.data?.items ?? [];
+  const scheduledPosts = allPosts.filter((post) => post.status === "SCHEDULED");
+  const publishedPosts = allPosts.filter((post) => post.status === "PUBLISHED");
+  const failedPosts = allPosts.filter((post) => post.status === "FAILED");
+
+  const refresh = () => {
+    void overviewQuery.refetch();
+    void postsQuery.refetch();
+    void campaignsQuery.refetch();
+  };
+
+  const connectMeta = async () => {
+    if (!companyId) {
+      toast.error("Select a Company before connecting Meta.");
+      return;
+    }
+    setConnecting(true);
+    try {
+      const { authUrl } = await integrationsApi.initOAuth(companyId, "META");
+      window.location.assign(authUrl);
+      return;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to start the Meta connection.");
+      setConnecting(false);
+    }
+  };
+
+  const scopeNotice = !isReady
+    ? null
+    : !companyId
+      ? "Select a Company to manage Meta & Instagram."
+      : !clientId
+        ? "Select a Client to load connections, posts and campaigns."
+        : null;
+
+  const loadError = !isReady
+    ? null
+    : overviewQuery.error
+      ? message(overviewQuery.error, "Unable to load the channel overview.")
+      : postsQuery.error
+        ? message(postsQuery.error, "Unable to load publishing history.")
+        : campaignsQuery.error
+          ? message(campaignsQuery.error, "Unable to load campaigns.")
+          : null;
+
+  const connectedCount = [meta, instagram].filter((row) => row && row.state !== "setup_required").length;
+
+  const accounts: AccountRow[] = [
+    accountRow(meta, "Facebook", "Facebook Page"),
+    accountRow(instagram, "Instagram", "Instagram Business"),
+  ];
+
+  const attention: AttentionRow[] = [];
+  for (const provider of [meta, instagram]) {
+    if (!provider) continue;
+    if (provider.reconnectRequired) {
+      attention.push({
+        id: `${provider.provider}-reconnect`,
+        title: `${provider.provider} connection needs attention`,
+        detail: provider.reason ?? "Reconnect the account to keep publishing.",
+        tone: "red",
+        icon: XCircle,
+      });
+    } else if (provider.state === "setup_required") {
+      attention.push({
+        id: `${provider.provider}-setup`,
+        title: `${provider.provider} is not connected yet`,
+        detail: provider.reason ?? "Connect the account before publishing.",
+        tone: "amber",
+        icon: AlertTriangle,
+      });
+    } else if (provider.state === "disconnected") {
+      attention.push({
+        id: `${provider.provider}-unmapped`,
+        title: `${provider.provider} has no account mapped to this Client`,
+        detail: "Map a Page or Instagram account from Integrations.",
+        tone: "amber",
+        icon: Link2,
+      });
+    }
+  }
+  if (failedPosts.length) {
+    attention.push({
+      id: "publish-failures",
+      title: `${failedPosts.length} post${failedPosts.length === 1 ? "" : "s"} failed to publish`,
+      detail: failedPosts[0]?.failureCode ?? "Open Content → Scheduled posts for details.",
+      tone: "red",
+      icon: RefreshCcw,
+    });
+  }
+
+  const published: PostRow[] = publishedPosts.slice(0, 6).map((post) => ({
+    id: post.id,
+    ...splitContent(post.content),
+    platform: platformOf(post.channel),
+    type: postType(post),
+    published: formatDate(post.publishedAt),
+  }));
+
+  const campaigns: CampaignRow[] = (campaignsQuery.data?.items ?? []).slice(0, 6).map((campaign) => ({
+    id: campaign.id,
+    name: campaign.name,
+    objective: campaign.objective ?? "—",
+    spend: campaign.budget ? `${campaign.budget.currency} ${campaign.budget.amount}` : "—",
+    leads: campaign.kpis?.targetLeads != null ? String(campaign.kpis.targetLeads) : "—",
+    links: "—",
+    cpl: "—",
+    status: campaign.status,
+  }));
+
+  const scheduled: ScheduledRow[] = scheduledPosts.slice(0, 6).map((post) => ({
+    id: post.id,
+    title: splitContent(post.content).title,
+    platform: platformOf(post.channel),
+    type: postType(post),
+    date: formatDate(post.scheduledFor),
+    time: formatTime(post.scheduledFor),
+  }));
+
+  const isLoading = overviewQuery.isLoading || postsQuery.isLoading || campaignsQuery.isLoading;
+
+  const stats = [
+    { label: "Connected Accounts", value: String(connectedCount), trend: null, note: "Facebook + Instagram", icon: Link2, color: "blue", demo: false },
+    { label: "Scheduled Posts", value: String(scheduledPosts.length), trend: null, note: `${publishedPosts.length} published · ${failedPosts.length} failed`, icon: CalendarRange, color: "purple", demo: false },
+    { label: "Mapped Accounts", value: String((meta?.mappedResourceCount ?? 0) + (instagram?.mappedResourceCount ?? 0)), trend: null, note: "Resources mapped to this Client", icon: UsersRound, color: "sky", demo: false },
+    { label: "Total Followers", value: "—", trend: null, note: "Not exposed by the backend", icon: UsersRound, color: "green", demo: true },
+    { label: "Total Reach", value: "—", trend: null, note: "Not exposed by the backend", icon: Signal, color: "red", demo: true },
+    { label: "Ad Spend", value: "—", trend: null, note: "Meta Ads is not connected yet", icon: Megaphone, color: "rose", demo: true },
+  ] as const;
+
   return (
     <div className="space-y-2">
-      <Header />
+      <Header
+        connectedCount={connectedCount}
+        onConnect={connectMeta}
+        connecting={connecting}
+        onRefresh={refresh}
+      />
+
+      {scopeNotice && (
+        <div className="rounded-sm border border-[#DDE4ED] bg-white px-3 py-2 text-[11px] text-[#52617D]" role="status">
+          {scopeNotice}
+        </div>
+      )}
+
+      {loadError && (
+        <div className="flex items-center justify-between gap-3 rounded-sm border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900" role="alert">
+          <span>{loadError}</span>
+          <button className="shrink-0 font-semibold underline" onClick={refresh}>Retry</button>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-6">
         {stats.map((stat) => (
-          <Stat key={stat.label} {...stat} />
+          <Stat key={stat.label} {...stat} loading={isLoading} />
         ))}
       </div>
+
       <div className="grid items-start gap-2 [&>section]:h-[232px] xl:grid-cols-[1.5fr_1fr_.86fr]">
         <PerformanceOverview />
-        <ConnectedAccounts />
-        <NeedsAttention />
+        <ConnectedAccounts rows={accounts} loading={overviewQuery.isLoading} onConnect={connectMeta} connecting={connecting} />
+        <NeedsAttention rows={attention} loading={overviewQuery.isLoading || postsQuery.isLoading} />
       </div>
+
       <div className="grid items-start gap-2 [&>section]:h-[236px] xl:grid-cols-[1.16fr_1.2fr_.64fr]">
-        <TopPosts />
-        <CampaignPerformance />
-        <QuickActions />
+        <TopPosts rows={published} loading={postsQuery.isLoading} />
+        <CampaignPerformance rows={campaigns} loading={campaignsQuery.isLoading} />
+        <QuickActions onConnect={connectMeta} connecting={connecting} />
       </div>
+
       <div className="grid items-start gap-2 [&>section]:h-[224px] xl:grid-cols-[1fr_1.1fr_.9fr]">
         <AudienceInsights />
         <Conversations />
-        <ScheduledContent />
+        <ScheduledContent rows={scheduled} loading={postsQuery.isLoading} />
       </div>
+
+      <RefreshHint cachedAt={overviewQuery.dataUpdatedAt} onRefresh={refresh} />
     </div>
   );
 }
 
-function Header() {
+function message(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function RefreshHint({ cachedAt, onRefresh }: { cachedAt: number; onRefresh: () => void }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-sm border border-[#DDE4ED] bg-white px-3 py-2 text-[11px] text-[#7C89A2]">
+      <span>
+        Meta &amp; Instagram panels read live from the backend
+        {cachedAt ? ` · last refresh ${new Date(cachedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}` : ""}.
+        Followers, reach and inbox metrics have no backend route yet and are hidden rather than simulated.
+      </span>
+      <button className="flex shrink-0 items-center gap-1 font-semibold text-[#EB0711]" onClick={onRefresh}>
+        <RefreshCcw className="size-3" /> Refresh
+      </button>
+    </div>
+  );
+}
+
+/* ── shared chrome ──────────────────────────────────────────────────────── */
+
+function Header({
+  connectedCount,
+  onConnect,
+  connecting,
+  onRefresh,
+}: {
+  connectedCount: number;
+  onConnect: () => void;
+  connecting: boolean;
+  onRefresh: () => void;
+}) {
   return (
     <div className="flex min-h-[52px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="self-center">
@@ -184,25 +420,43 @@ function Header() {
           <ChannelLogo channel="Instagram" className="size-[19px] bg-transparent" />
         </h1>
         <p className="mt-0.5 text-[11px] leading-4 text-[#687797]">
-          Manage your Facebook and Instagram presence, create content, run campaigns and track performance.
+          {connectedCount > 0
+            ? `${connectedCount} of 2 channels connected · manage content, campaigns and publishing for Facebook and Instagram.`
+            : "Connect Facebook and Instagram to publish content and track what the backend knows about this Client."}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-3">
+        <button
+          onClick={onConnect}
+          disabled={connecting}
+          className="flex h-12 items-center gap-2 rounded-sm bg-[#1769DF] px-4 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#1259BD] disabled:opacity-60"
+        >
+          <span className="text-left">
+            <span className="block">{connecting ? "Opening Meta…" : "Connect Facebook & Instagram"}</span>
+            <span className="block text-[11px] font-medium text-blue-100">OAuth via the platform backend</span>
+          </span>
+        </button>
         <Link
           href="/admin/meta/ads"
-          className="flex h-12 items-center gap-2 rounded-sm bg-[#1769DF] px-4 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#1259BD]"
+          className="flex h-12 items-center gap-2 rounded-sm border border-[#D7E0EB] bg-white px-4 text-xs font-semibold text-[#172044] shadow-[0_1px_4px_rgb(31_50_81/0.08)] transition-colors hover:bg-[#F8FAFD]"
         >
-          <span className="text-left"><span className="block">Open Meta Ads Manager</span><span className="block text-[11px] font-medium text-blue-100">Paid ads across Facebook &amp; Instagram</span></span>
+          Meta Ads Manager
         </Link>
-        <button className="flex h-12 w-[230px] items-center gap-2 rounded-sm border border-[#D7E0EB] bg-white px-3 shadow-[0_1px_4px_rgb(31_50_81/0.08)] overflow-hidden">
+        <button className="flex h-12 items-center gap-2 rounded-sm border border-[#D7E0EB] bg-white px-3 shadow-[0_1px_4px_rgb(31_50_81/0.08)]">
           <CalendarDays className="size-3.5 shrink-0 text-[#19315E]" />
           <span className="text-left leading-none">
-            <b className="block text-[11px] leading-4 text-[#172044]">Last 30 days</b>
-            <small className="block whitespace-nowrap text-[11px] leading-3 text-[#75829D]">
-              Mar 15, 2025 – Apr 14, 2025
-            </small>
+            <b className="block text-[11px] leading-4 text-[#172044]">Live data</b>
+            <small className="block whitespace-nowrap text-[11px] leading-3 text-[#75829D]">Fetched on load</small>
           </span>
           <ChevronDown className="ml-auto size-3 shrink-0" />
+        </button>
+        <button
+          onClick={onRefresh}
+          title="Refresh live data"
+          aria-label="Refresh live data"
+          className="grid size-12 place-items-center rounded-sm border border-[#D7E0EB] bg-white text-[#425273] shadow-[0_1px_4px_rgb(31_50_81/0.08)] transition-colors hover:bg-[#F8FAFD]"
+        >
+          <RefreshCcw className="size-4" />
         </button>
       </div>
     </div>
@@ -227,13 +481,17 @@ function Stat({
   note,
   icon: Icon,
   color,
+  demo,
+  loading,
 }: {
   label: string;
   value: string;
-  trend: string;
+  trend: string | null;
   note: string;
   icon: typeof Link2;
   color: string;
+  demo?: boolean;
+  loading?: boolean;
 }) {
   return (
     <div className="flex min-h-[78px] items-center rounded-sm border border-[#DCE4EE] bg-white px-2.5 py-2.5 shadow-[0_1px_4px_rgb(31_50_81/0.05)] transition-shadow hover:shadow-md">
@@ -242,10 +500,15 @@ function Stat({
           <Icon className="size-[15px]" />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-[11px] font-semibold leading-3 text-[#52617D]">{label}</p>
+          <p className="flex items-center gap-1 truncate text-[11px] font-semibold leading-3 text-[#52617D]">
+            {label}
+            {demo && (
+              <i className="shrink-0 rounded bg-[#EDF1F7] px-1 text-[9px] font-semibold not-italic text-[#7C89A2]">demo</i>
+            )}
+          </p>
           <div className="flex items-baseline gap-1">
-            <b className="text-[19px] leading-[22px] tracking-[-0.02em] text-[#142044]">{value}</b>
-            <span className="whitespace-nowrap text-[11px] font-semibold text-[#05A36D]">↑ {trend}</span>
+            <b className="text-[19px] leading-[22px] tracking-[-0.02em] text-[#142044]">{loading ? "…" : value}</b>
+            {trend && <span className="whitespace-nowrap text-[11px] font-semibold text-[#05A36D]">↑ {trend}</span>}
           </div>
           <p className="mt-0.5 truncate text-[11px] leading-3 text-[#7C89A2]">{note}</p>
         </div>
@@ -259,14 +522,20 @@ function Box({
   subtitle,
   badge,
   action,
+  onAction,
   filter,
+  demo,
+  empty,
   children,
 }: {
   title: string;
   subtitle?: string;
   badge?: string;
   action?: string;
+  onAction?: () => void;
   filter?: string;
+  demo?: boolean;
+  empty?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -274,7 +543,7 @@ function Box({
       <header
         className={cn(
           "flex shrink-0 items-center justify-between gap-2 border-b border-[#E8EDF3] px-2.5",
-          subtitle ? "h-[38px]" : "h-8",
+          subtitle || demo ? "h-[38px]" : "h-8",
         )}
       >
         <div className="min-w-0">
@@ -284,6 +553,9 @@ function Box({
               <i className="grid size-[15px] place-items-center rounded-sm bg-[#EB0711] text-[11px] font-semibold not-italic text-white">
                 {badge}
               </i>
+            )}
+            {demo && (
+              <i className="rounded bg-[#EDF1F7] px-1 text-[9px] font-semibold not-italic text-[#7C89A2]">demo data</i>
             )}
           </h2>
           {subtitle && <p className="truncate text-[11px] leading-3 text-[#7C89A2]">{subtitle}</p>}
@@ -295,13 +567,24 @@ function Box({
           </button>
         )}
         {action && (
-          <button className="shrink-0 whitespace-nowrap text-[11px] font-semibold text-[#EB0711]">{action} →</button>
+          <button
+            type="button"
+            onClick={onAction}
+            className="shrink-0 whitespace-nowrap text-[11px] font-semibold text-[#EB0711]"
+          >
+            {action} →
+          </button>
         )}
       </header>
       {children}
+      {empty && (
+        <p className="px-3 py-6 text-center text-[11px] text-[#7C89A2]">{empty}</p>
+      )}
     </section>
   );
 }
+
+/* ── panels ─────────────────────────────────────────────────────────────── */
 
 function PerformanceOverview() {
   const legend = [
@@ -313,8 +596,9 @@ function PerformanceOverview() {
   return (
     <Box
       title="Performance Overview"
-      subtitle="Reach, engagement and profile visits across Facebook & Instagram"
+      subtitle="Reach and engagement are not exposed by the backend yet — illustrative series"
       filter="Last 30 days"
+      demo
     >
       <div className="flex min-h-0 flex-1 flex-col px-2 pb-1">
         <div className="flex h-6 shrink-0 flex-wrap items-center gap-x-2.5 text-[11px] text-[#52617D]">
@@ -397,170 +681,207 @@ function PerformanceOverview() {
   );
 }
 
-function ConnectedAccounts() {
+function ConnectedAccounts({
+  rows,
+  loading,
+  onConnect,
+  connecting,
+}: {
+  rows: AccountRow[];
+  loading: boolean;
+  onConnect: () => void;
+  connecting: boolean;
+}) {
   return (
-    <Box title="Connected Accounts" action="Manage Accounts">
+    <Box
+      title="Connected Accounts"
+      action={rows.some((row) => row.connected) ? "Manage" : "Connect"}
+      onAction={onConnect}
+      subtitle="GET /integrations/overview"
+    >
       <div className="scrollbar-thin flex min-h-0 flex-1 flex-col divide-y divide-[#EDF1F5] overflow-y-auto">
-        {accounts.map((account) => (
-          <div key={account.id} className="flex flex-1 flex-col justify-center p-2">
-            <div className="flex items-center gap-1.5">
-              <ChannelLogo channel={account.channel} className="size-[26px] shadow-[0_1px_4px_rgb(31_50_81/0.14)]" />
-              <Image
-                src={account.photo}
-                alt=""
-                width={34}
-                height={26}
-                className="h-[26px] w-[34px] shrink-0 rounded object-cover shadow-sm"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[11px] font-semibold leading-4 text-[#172044]">{account.name}</p>
-                <p className="truncate text-[11px] leading-3 text-[#7C89A2]">{account.type}</p>
-              </div>
-              <span className="flex shrink-0 items-center gap-0.5 rounded-sm bg-[#E5F7EF] px-1.5 py-0.5 text-[11px] font-semibold text-[#078359]">
-                <BadgeCheck className="size-2.5" />
-                Connected
-              </span>
-              <button className="shrink-0 text-[#93A0B8]">
-                <MoreVertical className="size-3.5" />
-              </button>
-            </div>
-            <div className="mt-1.5 grid grid-cols-4 gap-1 text-center">
-              {account.metrics.map(([value, label]) => (
-                <span key={label} className="min-w-0">
-                  <b className="block text-[11px] leading-4 text-[#172044]">{value}</b>
-                  <small className="block truncate text-[11px] leading-3 text-[#7C89A2]">{label}</small>
+        {loading && <p className="px-3 py-6 text-[11px] text-[#7C89A2]">Loading connections…</p>}
+        {!loading &&
+          rows.map((account) => (
+            <div key={account.id} className="flex flex-1 flex-col justify-center p-2">
+              <div className="flex items-center gap-1.5">
+                <ChannelLogo channel={account.channel} className="size-[26px] shadow-[0_1px_4px_rgb(31_50_81/0.14)]" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[11px] font-semibold leading-4 text-[#172044]">{account.name}</p>
+                  <p className="truncate text-[11px] leading-3 text-[#7C89A2]">{account.type}</p>
+                </div>
+                <span
+                  className={cn(
+                    "flex shrink-0 items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-[11px] font-semibold",
+                    account.reconnect
+                      ? "bg-[#FFEAEC] text-[#EA1A26]"
+                      : account.connected
+                        ? "bg-[#E5F7EF] text-[#078359]"
+                        : "bg-[#FFF1D8] text-[#B87600]",
+                  )}
+                >
+                  {account.connected ? <BadgeCheck className="size-2.5" /> : <AlertTriangle className="size-2.5" />}
+                  {account.reconnect ? "Reconnect" : account.connected ? "Connected" : "Setup"}
                 </span>
-              ))}
+              </div>
+              <div className="mt-1.5 grid grid-cols-4 gap-1 text-center">
+                {account.metrics.map(([value, label]) => (
+                  <span key={label} className="min-w-0">
+                    <b className="block truncate text-[11px] leading-4 text-[#172044]">{value}</b>
+                    <small className="block truncate text-[11px] leading-3 text-[#7C89A2]">{label}</small>
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </Box>
-  );
-}
-
-function NeedsAttention() {
-  return (
-    <Box title="Needs Attention" badge="4" action="View all">
-      <div className="scrollbar-thin flex min-h-0 flex-1 flex-col divide-y divide-[#EDF1F5] overflow-y-auto">
-        {attention.map(({ title, detail, tone, icon: Icon }) => (
-          <div key={title} className="flex flex-1 items-center gap-2 px-2 py-[9px]">
-            <span
-              className={cn(
-                "grid size-5 shrink-0 place-items-center rounded-sm",
-                tone === "amber" ? "bg-[#FFF0E2] text-[#F07800]" : "bg-[#FFEAEC] text-[#EA1A26]",
-              )}
+          ))}
+        {!loading && rows.every((row) => !row.connected) && (
+          <div className="p-2">
+            <button
+              onClick={onConnect}
+              disabled={connecting}
+              className="w-full rounded-sm border border-dashed border-[#C9D5E5] px-2 py-2 text-[11px] font-semibold text-[#1769DF] hover:bg-[#F5F9FF] disabled:opacity-60"
             >
-              <Icon className="size-3" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[11px] font-semibold leading-4 text-[#1B2647]">{title}</p>
-              <p className="truncate text-[11px] leading-3 text-[#7A87A0]">{detail}</p>
-            </div>
+              {connecting ? "Opening Meta…" : "Connect Facebook & Instagram"}
+            </button>
           </div>
-        ))}
+        )}
       </div>
     </Box>
   );
 }
 
-const postCols = "grid-cols-[1.5fr_.42fr_.62fr_.5fr_.72fr_.44fr_.82fr]";
-
-function TopPosts() {
+function NeedsAttention({ rows, loading }: { rows: AttentionRow[]; loading: boolean }) {
   return (
-    <Box title="Top Performing Posts / Reels" action="View all">
+    <Box
+      title="Needs Attention"
+      badge={rows.length ? String(rows.length) : undefined}
+      subtitle="Derived from connection health and publish failures"
+      empty={!loading && rows.length === 0 ? "Nothing needs attention right now." : undefined}
+    >
+      <div className="scrollbar-thin flex min-h-0 flex-1 flex-col divide-y divide-[#EDF1F5] overflow-y-auto">
+        {loading && <p className="px-3 py-6 text-[11px] text-[#7C89A2]">Checking status…</p>}
+        {!loading &&
+          rows.map(({ id, title, detail, tone, icon: Icon }) => (
+            <div key={id} className="flex flex-1 items-center gap-2 px-2 py-[9px]">
+              <span
+                className={cn(
+                  "grid size-5 shrink-0 place-items-center rounded-sm",
+                  tone === "amber" ? "bg-[#FFF0E2] text-[#F07800]" : "bg-[#FFEAEC] text-[#EA1A26]",
+                )}
+              >
+                <Icon className="size-3" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[11px] font-semibold leading-4 text-[#1B2647]">{title}</p>
+                <p className="truncate text-[11px] leading-3 text-[#7A87A0]">{detail}</p>
+              </div>
+            </div>
+          ))}
+      </div>
+    </Box>
+  );
+}
+
+const postCols = "grid-cols-[1.5fr_.42fr_.62fr_.72fr]";
+
+function TopPosts({ rows, loading }: { rows: PostRow[]; loading: boolean }) {
+  return (
+    <Box
+      title="Published Posts / Reels"
+      subtitle="GET /content/scheduled-posts · status PUBLISHED"
+      action="Open content"
+      onAction={() => {
+        window.location.assign("/admin/content");
+      }}
+      empty={!loading && rows.length === 0 ? "No published posts yet for this Client." : undefined}
+    >
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2">
         <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[11px] text-[#7A87A0]", postCols)}>
           <span>Content</span>
           <span>Platform</span>
           <span>Type</span>
-          <span>Reach</span>
-          <span>Engagement</span>
-          <span>Clicks</span>
           <span>Published</span>
         </div>
-        {posts.map((post) => (
-          <div
-            key={post.title}
-            className={cn(
-              "grid items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[11px] text-[#3B4A6B]",
-              postCols,
-            )}
-          >
-            <span className="flex min-w-0 items-center gap-1.5">
-              <Image
-                src={post.photo}
-                alt=""
-                width={30}
-                height={22}
-                className="h-[22px] w-[30px] shrink-0 rounded object-cover shadow-sm"
-              />
-              <span className="min-w-0">
-                <b className="block truncate text-[#172044]">{post.title}</b>
-                <small className="block truncate text-[11px] text-[#8A97AF]">{post.excerpt}</small>
+        {loading && <p className="py-6 text-center text-[11px] text-[#7C89A2]">Loading published posts…</p>}
+        {!loading &&
+          rows.map((post) => (
+            <div
+              key={post.id}
+              className={cn(
+                "grid items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[11px] text-[#3B4A6B]",
+                postCols,
+              )}
+            >
+              <span className="flex min-w-0 items-center gap-1.5">
+                <ChannelLogo channel={post.platform} className="size-[22px] shrink-0 rounded shadow-sm" />
+                <span className="min-w-0">
+                  <b className="block truncate text-[#172044]">{post.title}</b>
+                  {post.excerpt && <small className="block truncate text-[#8A97AF]">{post.excerpt}</small>}
+                </span>
               </span>
-            </span>
-            <ChannelLogo channel={post.platform} className="size-[15px]" />
-            <span>{post.type}</span>
-            <b className="text-[#172044]">{post.reach}</b>
-            <span>{post.engagement}</span>
-            <span>{post.clicks}</span>
-            <span className="text-[11px] text-[#71809D]">{post.published}</span>
-          </div>
-        ))}
+              <ChannelLogo channel={post.platform} className="size-[15px]" />
+              <span>{post.type}</span>
+              <span className="text-[11px] text-[#71809D]">{post.published}</span>
+            </div>
+          ))}
       </div>
     </Box>
   );
 }
 
-const campaignCols = "grid-cols-[1.32fr_.8fr_.58fr_.42fr_.42fr_.42fr_.72fr]";
+const campaignCols = "grid-cols-[1.32fr_.8fr_.7fr_.42fr_.42fr_.72fr]";
 
-function CampaignPerformance() {
+function CampaignPerformance({ rows, loading }: { rows: CampaignRow[]; loading: boolean }) {
   return (
-    <Box title="Campaign Performance" action="View all">
+    <Box
+      title="Campaign Performance"
+      subtitle="GET /campaigns · spend and target KPIs from the backend"
+      action="Open campaigns"
+      onAction={() => {
+        window.location.assign("/admin/campaigns");
+      }}
+      empty={!loading && rows.length === 0 ? "No campaigns for this Client yet." : undefined}
+    >
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2">
         <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[11px] text-[#7A87A0]", campaignCols)}>
           <span>Campaign</span>
           <span>Objective</span>
-          <span>Spend</span>
+          <span>Budget</span>
           <span>Leads</span>
-          <span>Links</span>
           <span>CPL</span>
           <span>Status</span>
         </div>
-        {metaCampaigns.map((campaign) => (
-          <div
-            key={campaign.name}
-            className={cn(
-              "grid items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[11px] text-[#3B4A6B]",
-              campaignCols,
-            )}
-          >
-            <span className="flex min-w-0 items-center gap-1.5">
-              <Image
-                src={campaign.photo}
-                alt=""
-                width={30}
-                height={22}
-                className="h-[22px] w-[30px] shrink-0 rounded object-cover shadow-sm"
-              />
-              <b className="truncate text-[#172044]">{campaign.name}</b>
-            </span>
-            <span className="truncate">{campaign.objective}</span>
-            <b className="text-[#172044]">{campaign.spend}</b>
-            <span>{campaign.leads}</span>
-            <span>{campaign.links}</span>
-            <span>{campaign.cpl}</span>
-            <i
+        {loading && <p className="py-6 text-center text-[11px] text-[#7C89A2]">Loading campaigns…</p>}
+        {!loading &&
+          rows.map((campaign) => (
+            <div
+              key={campaign.id}
               className={cn(
-                "w-fit rounded px-1 py-0.5 text-[11px] font-semibold not-italic",
-                campaign.status === "Active" ? "bg-[#E5F7EF] text-[#078359]" : "bg-[#EAF2FF] text-[#286CB7]",
+                "grid items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[11px] text-[#3B4A6B]",
+                campaignCols,
               )}
             >
-              {campaign.status}
-            </i>
-          </div>
-        ))}
+              <span className="flex min-w-0 items-center gap-1.5">
+                <b className="truncate text-[#172044]">{campaign.name}</b>
+              </span>
+              <span className="truncate">{campaign.objective}</span>
+              <b className="truncate text-[#172044]">{campaign.spend}</b>
+              <span>{campaign.leads}</span>
+              <span>{campaign.cpl}</span>
+              <i
+                className={cn(
+                  "w-fit rounded px-1 py-0.5 text-[11px] font-semibold not-italic",
+                  campaign.status === "ACTIVE"
+                    ? "bg-[#E5F7EF] text-[#078359]"
+                    : campaign.status === "PAUSED"
+                      ? "bg-[#FFF1D8] text-[#B87600]"
+                      : "bg-[#EAF2FF] text-[#286CB7]",
+                )}
+              >
+                {campaign.status}
+              </i>
+            </div>
+          ))}
       </div>
     </Box>
   );
@@ -575,26 +896,44 @@ const actionSkin: Record<string, string> = {
   slate: "border-[#DFE6F0] bg-[#F8FAFD] text-[#43567A] hover:bg-[#EDF1F7]",
 };
 
-
-function QuickActions() {
+function QuickActions({ onConnect, connecting }: { onConnect: () => void; connecting: boolean }) {
+  const actions: Array<{ label: string; icon: typeof PenLine; color: string; href?: string; onClick?: () => void }> = [
+    { label: "Connect Instagram", icon: Link2, color: "rose", onClick: onConnect },
+    { label: "Create Post", icon: PenLine, color: "purple", href: "/admin/content" },
+    { label: "Schedule Reel", icon: Video, color: "blue", href: "/admin/calendar" },
+    { label: "Launch Campaign", icon: Rocket, color: "green", href: "/admin/campaigns/new" },
+    { label: "View Leads", icon: UsersRound, color: "amber", href: "/admin/meta/ads/leads" },
+    { label: "Open Calendar", icon: CalendarPlus, color: "slate", href: "/admin/calendar" },
+  ];
   return (
     <Box title="Quick Actions">
       <div className="grid min-h-0 flex-1 grid-cols-2 content-between gap-2 p-2">
-        {quickActions.map(({ label, icon: Icon, color, href }) => (
-          <Link
-            href={href}
-            key={label}
-            className={cn(
-              "flex h-[44px] items-center gap-1.5 rounded-sm border px-1.5 text-left text-[11px] font-semibold leading-3 transition-colors",
-              actionSkin[color],
-            )}
-          >
-            <span className={cn("grid size-6 shrink-0 place-items-center rounded-sm", tint[color])}>
-              <Icon className="size-3.5" />
-            </span>
-            {label}
-          </Link>
-        ))}
+        {actions.map(({ label, icon: Icon, color, href, onClick }) => {
+          const content = (
+            <>
+              <span className={cn("grid size-6 shrink-0 place-items-center rounded-sm", tint[color])}>
+                <Icon className="size-3.5" />
+              </span>
+              {label}
+            </>
+          );
+          const className = cn(
+            "flex h-[44px] items-center gap-1.5 rounded-sm border px-1.5 text-left text-[11px] font-semibold leading-3 transition-colors disabled:opacity-60",
+            actionSkin[color],
+          );
+          if (href) {
+            return (
+              <Link href={href} key={label} className={className}>
+                {content}
+              </Link>
+            );
+          }
+          return (
+            <button key={label} type="button" onClick={onClick} disabled={connecting && label === "Connect Instagram"} className={className}>
+              {content}
+            </button>
+          );
+        })}
       </div>
     </Box>
   );
@@ -602,7 +941,7 @@ function QuickActions() {
 
 function AudienceInsights() {
   return (
-    <Box title="Audience Insights" filter="Last 30 days">
+    <Box title="Audience Insights" subtitle="No backend route for follower demographics yet" filter="Last 30 days" demo>
       <div className="grid min-h-0 flex-1 grid-cols-[150px_1fr] items-center gap-2 px-2.5 pb-2">
         <div>
           <div className="relative mx-auto size-[140px]">
@@ -624,12 +963,6 @@ function AudienceInsights() {
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
-            <div className="absolute inset-0 grid place-items-center text-center">
-              <span>
-                <b className="block text-[18px] leading-5 tracking-[-0.02em] text-[#172044]">24.6K</b>
-                <small className="text-[11px] text-[#71809D]">Total Followers</small>
-              </span>
-            </div>
           </div>
           <div className="mt-1 space-y-[3px] px-0.5 text-[11px] text-[#52617D]">
             {gender.map((slice) => (
@@ -670,7 +1003,7 @@ const conversationCols = "grid-cols-[.85fr_.42fr_1.5fr_.7fr_.62fr]";
 
 function Conversations() {
   return (
-    <Box title="Recent Comments & Messages" action="View all">
+    <Box title="Recent Comments & Messages" subtitle="No inbox route in this backend version" demo>
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2">
         <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[11px] text-[#7A87A0]", conversationCols)}>
           <span>User</span>
@@ -724,9 +1057,17 @@ function Conversations() {
 
 const scheduledCols = "grid-cols-[1.5fr_.5fr_.66fr_.9fr]";
 
-function ScheduledContent() {
+function ScheduledContent({ rows, loading }: { rows: ScheduledRow[]; loading: boolean }) {
   return (
-    <Box title="Scheduled Content" action="View all">
+    <Box
+      title="Scheduled Content"
+      subtitle="GET /content/scheduled-posts · status SCHEDULED"
+      action="Open calendar"
+      onAction={() => {
+        window.location.assign("/admin/calendar");
+      }}
+      empty={!loading && rows.length === 0 ? "Nothing scheduled for this Client." : undefined}
+    >
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2">
         <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[11px] text-[#7A87A0]", scheduledCols)}>
           <span>Content</span>
@@ -734,33 +1075,29 @@ function ScheduledContent() {
           <span>Type</span>
           <span>Schedule</span>
         </div>
-        {scheduled.map((item) => (
-          <div
-            key={item.title}
-            className={cn(
-              "grid items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[11px] text-[#3B4A6B]",
-              scheduledCols,
-            )}
-          >
-            <span className="flex min-w-0 items-center gap-1.5">
-              <Image
-                src={item.photo}
-                alt=""
-                width={30}
-                height={22}
-                className="h-[22px] w-[30px] shrink-0 rounded object-cover shadow-sm"
-              />
-              <b className="truncate text-[#172044]">{item.title}</b>
-            </span>
-            <ChannelLogo channel={item.platform} className="size-[15px]" />
-            <span>{item.type}</span>
-            <span className="text-[11px] leading-3 text-[#62718E]">
-              {item.date}
-              <br />
-              {item.time}
-            </span>
-          </div>
-        ))}
+        {loading && <p className="py-6 text-center text-[11px] text-[#7C89A2]">Loading schedule…</p>}
+        {!loading &&
+          rows.map((item) => (
+            <div
+              key={item.id}
+              className={cn(
+                "grid items-center gap-1 border-t border-[#EDF1F5] py-1.5 text-[11px] text-[#3B4A6B]",
+                scheduledCols,
+              )}
+            >
+              <span className="flex min-w-0 items-center gap-1.5">
+                <ChannelLogo channel={item.platform} className="size-[22px] shrink-0 rounded shadow-sm" />
+                <b className="truncate text-[#172044]">{item.title}</b>
+              </span>
+              <ChannelLogo channel={item.platform} className="size-[15px]" />
+              <span>{item.type}</span>
+              <span className="text-[11px] leading-3 text-[#62718E]">
+                {item.date}
+                <br />
+                {item.time}
+              </span>
+            </div>
+          ))}
       </div>
     </Box>
   );

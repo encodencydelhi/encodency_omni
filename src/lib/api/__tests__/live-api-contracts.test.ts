@@ -130,6 +130,37 @@ describe("WhatsApp API", () => {
     assert.deepEqual(body(calls[0]!), payload);
   });
 
+  it("reads the stored AiSensy configuration back at Company scope (secrets stay write-only)", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        configured: true,
+        provider: "AISENSY",
+        status: "ACTIVE",
+        displayName: "QA workspace",
+        apiBaseUrl: "https://api.aisensy.com",
+        senderId: "QA",
+        hasApiKey: true,
+        hasWebhookSecret: false,
+        updatedAt: "2026-09-29T10:00:00Z",
+      },
+    });
+    const config = await whatsappApi.getConfig("c-1");
+    assert.equal(calls[0]!.url, "/api/v1/integrations/whatsapp/config");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(calls[0]!.init.headers["x-company-id"], "c-1");
+    assert.equal(calls[0]!.init.headers["x-client-id"], undefined, "config is Company-scoped, never Client-scoped");
+    assert.equal(config.configured, true);
+    assert.equal(config.hasApiKey, true);
+    assert.equal(config.displayName, "QA workspace");
+  });
+
+  it("omits apiKey from a re-save so the stored write-only secret is preserved", async () => {
+    responses.push({ status: 200, body: { id: "wa-1", provider: "AISENSY", status: "ACTIVE", updatedAt: "2026-09-29T10:05:00Z" } });
+    await whatsappApi.configure("c-1", { apiBaseUrl: "https://api.aisensy.com", displayName: "QA workspace" });
+    assert.deepEqual(Object.keys(body(calls[0]!)).sort(), ["apiBaseUrl", "displayName"]);
+  });
+
   it("lists and upserts templates with verified Company and Client scope", async () => {
     responses.push({ status: 200, body: { items: [] } }, { status: 200, body: { id: "t-1", name: "reminder", language: "en", status: "ENABLED", variables: ["name"] } });
     await whatsappApi.listTemplates("c-1", "cl-1");

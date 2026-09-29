@@ -15,9 +15,22 @@ export type WhatsAppMessageStatus =
 export interface WhatsAppConfigPayload {
   displayName?: string;
   apiBaseUrl: string;
-  apiKey: string;
+  /** Omit to keep the key already stored on the backend (write-only secret). */
+  apiKey?: string;
   webhookSecret?: string;
   senderId?: string;
+}
+
+export interface WhatsAppConfigState {
+  configured: boolean;
+  provider: "AISENSY";
+  status: string | null;
+  displayName: string | null;
+  apiBaseUrl: string | null;
+  senderId: string | null;
+  hasApiKey: boolean;
+  hasWebhookSecret: boolean;
+  updatedAt: string | null;
 }
 
 export interface WhatsAppConfigResult {
@@ -93,6 +106,27 @@ function clientScopeHeaders(companyId: string, clientId: string): Record<string,
 }
 
 export const whatsappApi = {
+  /**
+   * GET /integrations/whatsapp/config
+   * Business Purpose: Read back the non-secret AiSensy settings so the Settings
+   * tab prefills from the backend instead of the browser. Secrets stay write-only.
+   * Auth: @CompanyContextRoute() (x-company-id) + integrations:read.
+   */
+  async getConfig(companyId: string, signal?: AbortSignal): Promise<WhatsAppConfigState> {
+    return apiClient.request<WhatsAppConfigState>({
+      method: "GET",
+      path: "/integrations/whatsapp/config",
+      headers: companyScopeHeaders(companyId),
+      signal,
+    });
+  },
+
+  /**
+   * PUT /integrations/whatsapp/config
+   * Business Purpose: Create or update the Company-scoped AiSensy connection.
+   * `apiKey` may be omitted on later saves to keep the stored key.
+   * Auth: @CompanyContextRoute() (x-company-id) + integrations:write.
+   */
   async configure(companyId: string, payload: WhatsAppConfigPayload, signal?: AbortSignal): Promise<WhatsAppConfigResult> {
     return apiClient.request<WhatsAppConfigResult>({
       method: "PUT",

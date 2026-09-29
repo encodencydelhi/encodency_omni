@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { AlertCircle, FileText, Plus, RefreshCw, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils/cn";
-import { whatsappApi, type WhatsAppConfigPayload, type WhatsAppMessage, type WhatsAppMessageStatus, type WhatsAppTemplate } from "../../live/whatsapp-api";
+import { whatsappApi, type WhatsAppConfigPayload, type WhatsAppConfigState, type WhatsAppMessage, type WhatsAppMessageStatus, type WhatsAppTemplate } from "../../live/whatsapp-api";
 import type { ProviderOverview } from "@/features/admin/integrations/live/integrations-api";
 
 const MESSAGE_STATUSES: WhatsAppMessageStatus[] = ["QUEUED", "SENDING", "SENT", "DELIVERED", "READ", "FAILED", "REJECTED", "OUTCOME_UNKNOWN"];
@@ -27,14 +27,28 @@ function StatusLabel({ status }: { status: string }) {
   return <span className={cn("inline-flex rounded-sm border px-2 py-0.5 text-[11px] font-semibold", color)}>{status.replaceAll("_", " ")}</span>;
 }
 
+function ErrorRow({ error, onRetry }: { error: string | null; onRetry: () => void }) {
+  if (!error) return null;
+  return (
+    <div className="flex items-center justify-between gap-3 border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900" role="alert">
+      <span>{error}</span>
+      <button type="button" className="shrink-0 font-semibold underline" onClick={onRetry}>Retry</button>
+    </div>
+  );
+}
+
 export function OverviewTab({
   loading,
+  error,
+  onRetry,
   status,
   templates,
   messages,
   onTabChange,
 }: {
   loading: boolean;
+  error: string | null;
+  onRetry: () => void;
   status: ProviderOverview | null;
   templates: WhatsAppTemplate[];
   messages: WhatsAppMessage[];
@@ -44,15 +58,16 @@ export function OverviewTab({
   const queued = messages.filter((message) => message.status === "QUEUED" || message.status === "SENDING").length;
   const delivered = messages.filter((message) => message.status === "DELIVERED" || message.status === "READ").length;
   const failures = messages.filter((message) => message.status === "FAILED" || message.status === "REJECTED" || message.status === "OUTCOME_UNKNOWN").length;
-  const metrics = [
-    ["Enabled templates", enabled],
-    ["Queued / sending", queued],
-    ["Delivered / read", delivered],
-    ["Failed / unknown", failures],
+  const metrics: Array<[string, number | string, string]> = [
+    ["Enabled templates", enabled, `Of ${templates.length} registered for this Client`],
+    ["Queued / sending", queued, `Of ${messages.length} returned messages`],
+    ["Delivered / read", delivered, `Of ${messages.length} returned messages`],
+    ["Failed / unknown", failures, `Of ${messages.length} returned messages`],
   ];
 
   return (
     <div className="space-y-4 pt-3">
+      <ErrorRow error={error} onRetry={onRetry} />
       <section className="flex flex-col gap-3 border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-sm font-bold text-slate-900">WhatsApp provider</h2>
@@ -62,11 +77,11 @@ export function OverviewTab({
       </section>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {metrics.map(([label, value]) => (
+        {metrics.map(([label, value, note]) => (
           <div key={label} className="border border-slate-200 bg-white p-4">
             <p className="text-xs font-semibold text-slate-500">{label}</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{loading ? "—" : value}</p>
-            <p className="mt-1 text-[11px] text-slate-400">From the latest {messages.length} returned messages</p>
+            <p className="mt-1 text-[11px] text-slate-400">{note}</p>
           </div>
         ))}
       </div>
@@ -100,14 +115,19 @@ export function OverviewTab({
 export function TemplatesTab({
   templates,
   loading,
+  error,
+  onRetry,
   onOpenModal,
 }: {
   templates: WhatsAppTemplate[];
   loading: boolean;
+  error: string | null;
+  onRetry: () => void;
   onOpenModal: (modal: string) => void;
 }) {
   return (
     <div className="space-y-3 pt-3">
+      <ErrorRow error={error} onRetry={onRetry} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold text-slate-900">Client templates</h2>
@@ -144,6 +164,8 @@ export function ConversationsTab({
   messages,
   templates,
   loading,
+  error,
+  onRetry,
   status,
   onStatusChange,
   onRefresh,
@@ -152,6 +174,8 @@ export function ConversationsTab({
   messages: WhatsAppMessage[];
   templates: WhatsAppTemplate[];
   loading: boolean;
+  error: string | null;
+  onRetry: () => void;
   status: WhatsAppMessageStatus | "ALL";
   onStatusChange: (status: WhatsAppMessageStatus | "ALL") => void;
   onRefresh: () => void;
@@ -160,8 +184,16 @@ export function ConversationsTab({
   const templateNames = new Map(templates.map((template) => [template.id, template.name]));
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const toggleRow = (id: string) => {
+    const willExpand = expandedId !== id;
+    setExpandedId(willExpand ? id : null);
+    // Only a fresh GET /messages/:id when a row is opened — collapsing is local.
+    if (willExpand) onViewMessage(id);
+  };
+
   return (
     <div className="space-y-3 pt-3">
+      <ErrorRow error={error} onRetry={onRetry} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold text-slate-900">Outbound message status</h2>
@@ -187,17 +219,17 @@ export function ConversationsTab({
             {messages.map((message) => {
               const expanded = expandedId === message.id;
               return (
-                <>
-                  <tr key={message.id}>
+                <Fragment key={message.id}>
+                  <tr>
                     <td className="px-4 py-3 font-medium text-slate-800">{message.destinationPhone}</td>
                     <td className="px-3 py-3 text-slate-600">{templateNames.get(message.templateId) ?? message.templateId}</td>
                     <td className="px-3 py-3"><StatusLabel status={message.status} /></td>
                     <td className="px-3 py-3 text-slate-500">{formatDate(message.createdAt)}</td>
                     <td className="px-3 py-3 text-slate-500">{formatDate(message.readAt ?? message.deliveredAt ?? message.sentAt ?? message.failedAt)}</td>
-                    <td className="px-3 py-3"><button className="font-semibold text-emerald-700 hover:underline" onClick={() => { setExpandedId(expanded ? null : message.id); onViewMessage(message.id); }}>{expanded ? "Hide" : "Details"}</button></td>
+                    <td className="px-3 py-3"><button type="button" className="font-semibold text-emerald-700 hover:underline" onClick={() => toggleRow(message.id)}>{expanded ? "Hide" : "Details"}</button></td>
                   </tr>
-                  {expanded && <tr key={`${message.id}-details`}><td colSpan={6} className="bg-slate-50 px-4 py-3 text-[11px] text-slate-600">Provider message: {message.providerMessageId ?? "Not assigned"} · Failure: {message.failureReasonCode ?? "None"}</td></tr>}
-                </>
+                  {expanded && <tr><td colSpan={6} className="bg-slate-50 px-4 py-3 text-[11px] text-slate-600">Provider message: {message.providerMessageId ?? "Not assigned"} · Failure: {message.failureReasonCode ?? "None"}</td></tr>}
+                </Fragment>
               );
             })}
             {!loading && messages.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-500">No messages match this filter.</td></tr>}
@@ -231,19 +263,31 @@ function readWhatsAppSettings(companyId: string): { displayName: string; apiBase
 
 export function SettingsTab({
   companyId,
-  configured,
+  config,
+  loading,
+  error,
+  onRetry,
   onSaved,
 }: {
   companyId: string;
-  configured: boolean;
+  config: WhatsAppConfigState | null;
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
   onSaved: () => void;
 }) {
-  const [displayName, setDisplayName] = useState(() => readWhatsAppSettings(companyId).displayName);
-  const [apiBaseUrl, setApiBaseUrl] = useState(() => readWhatsAppSettings(companyId).apiBaseUrl);
+  // The backend is the source of truth for every non-secret field; localStorage only
+  // paints the form before the first `GET /integrations/whatsapp/config` resolves.
+  const cached = readWhatsAppSettings(companyId);
+  const [displayName, setDisplayName] = useState(config?.displayName ?? cached.displayName);
+  const [apiBaseUrl, setApiBaseUrl] = useState(config?.apiBaseUrl ?? cached.apiBaseUrl);
   const [apiKey, setApiKey] = useState("");
   const [webhookSecret, setWebhookSecret] = useState("");
-  const [senderId, setSenderId] = useState(() => readWhatsAppSettings(companyId).senderId);
+  const [senderId, setSenderId] = useState(config?.senderId ?? cached.senderId);
   const [saving, setSaving] = useState(false);
+
+  const configured = Boolean(config?.configured && config?.hasApiKey);
+  const apiKeyRequired = !configured;
 
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -251,10 +295,14 @@ export function SettingsTab({
       toast.error("Select a Company before configuring WhatsApp.");
       return;
     }
+    if (apiKeyRequired && !apiKey) {
+      toast.error("Enter the AiSensy API key to complete the first setup.");
+      return;
+    }
     setSaving(true);
     const payload: WhatsAppConfigPayload = {
       apiBaseUrl: apiBaseUrl.trim(),
-      apiKey,
+      ...(apiKey ? { apiKey } : {}),
       ...(displayName.trim() ? { displayName: displayName.trim() } : {}),
       ...(senderId.trim() ? { senderId: senderId.trim() } : {}),
       ...(webhookSecret ? { webhookSecret } : {}),
@@ -280,15 +328,21 @@ export function SettingsTab({
     }
   };
 
+  if (loading && !config) {
+    return <div className="mx-auto mt-3 max-w-3xl border border-slate-200 bg-white p-6 text-sm text-slate-500">Loading WhatsApp configuration…</div>;
+  }
+
   return (
     <form onSubmit={save} className="mx-auto mt-3 max-w-3xl space-y-4 border border-slate-200 bg-white p-4 sm:p-6">
       <div>
         <h2 className="text-sm font-bold text-slate-900">AiSensy connection</h2>
         <p className="mt-1 text-xs text-slate-500">Configuration is Company-scoped. Secrets are write-only and are never loaded back into the form.</p>
       </div>
+      <ErrorRow error={error} onRetry={onRetry} />
       <div className="flex items-center gap-2 text-xs text-slate-600">
         <span className={cn("size-2 rounded-full", configured ? "bg-emerald-500" : "bg-amber-500")} />
         {configured ? "Provider configuration is active" : "Provider setup required"}
+        {config?.status ? <span className="text-slate-400">· {config.status}</span> : null}
       </div>
       <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
         Display name
@@ -299,8 +353,11 @@ export function SettingsTab({
         <Input type="url" required value={apiBaseUrl} onChange={(event) => setApiBaseUrl(event.target.value)} placeholder="https://api.aisensy.com" />
       </label>
       <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
-        API key <span className="font-normal text-slate-400">(write-only — re-enter after refresh)</span>
-        <Input type="password" required value={apiKey} onChange={(event) => setApiKey(event.target.value)} autoComplete="new-password" maxLength={4000} />
+        API key{" "}
+        <span className="font-normal text-slate-400">
+          {apiKeyRequired ? "(required for the first setup — write-only)" : "(stored · leave blank to keep the saved key)"}
+        </span>
+        <Input type="password" required={apiKeyRequired} value={apiKey} onChange={(event) => setApiKey(event.target.value)} autoComplete="new-password" maxLength={4000} />
       </label>
       <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
         Sender ID <span className="font-normal text-slate-400">(optional)</span>
@@ -309,10 +366,14 @@ export function SettingsTab({
       <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
         Webhook signing secret <span className="font-normal text-slate-400">(optional)</span>
         <Input type="password" value={webhookSecret} onChange={(event) => setWebhookSecret(event.target.value)} autoComplete="new-password" maxLength={4000} />
-        <span className="block font-normal text-amber-700">The backend replaces the saved webhook secret on every save; leaving this blank removes any existing secret.</span>
+        <span className="block font-normal text-amber-700">
+          {config?.hasWebhookSecret
+            ? "A secret is saved. Replacing it requires re-entering the value; leaving this blank removes the stored secret."
+            : "The backend replaces the saved webhook secret on every save; leaving this blank removes any existing secret."}
+        </span>
       </label>
       <div className="flex justify-end border-t border-slate-100 pt-4">
-        <Button type="submit" disabled={saving || !companyId}>{saving ? "Saving…" : "Save configuration"}</Button>
+        <Button type="submit" disabled={saving || !companyId || Boolean(error)}>{saving ? "Saving…" : "Save configuration"}</Button>
       </div>
     </form>
   );

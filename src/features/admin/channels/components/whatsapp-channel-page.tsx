@@ -1,12 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChannelHeader } from "./channel-header";
 import { cn } from "@/lib/utils/cn";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
-import { integrationsApi, type ProviderOverview } from "@/features/admin/integrations/live/integrations-api";
-import { whatsappApi, type WhatsAppMessage, type WhatsAppTemplate } from "../live/whatsapp-api";
+import { type ProviderOverview } from "@/features/admin/integrations/live/integrations-api";
+import { whatsappApi, type WhatsAppMessage, type WhatsAppMessageStatus } from "../live/whatsapp-api";
+import {
+  useWhatsAppConfig,
+  useWhatsAppMessages,
+  useWhatsAppOverview,
+  useWhatsAppTemplates,
+  whatsappKeys,
+} from "../live/whatsapp-hooks";
 import { ConversationsTab, CreateTemplateModal, OverviewTab, SendTemplateModal, SettingsTab, TemplatesTab } from "./whatsapp-tabs/whatsapp-live-tabs";
 
 const tabs = ["Overview", "Templates", "Messages", "Settings"] as const;
@@ -22,70 +30,98 @@ const SUPPORT_STATE_COPY: Record<NonNullable<ProviderOverview["state"]>, string>
   degraded: "Configuration needs attention",
 };
 
+function errorText(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function WhatsappChannelPage() {
   const { companyId, clientId, isReady } = useTenancyContext();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabType>("Overview");
   const [activeModal, setActiveModal] = useState<"send-template" | "create-template" | null>(null);
-  const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
-  const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
-  const [providerOverview, setProviderOverview] = useState<ProviderOverview | null>(null);
-  const [messageStatus, setMessageStatus] = useState<WhatsAppMessage["status"] | "ALL">("ALL");
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [messageStatus, setMessageStatus] = useState<WhatsAppMessageStatus | "ALL">("ALL");
 
-  const refresh = useCallback(async (status = messageStatus) => {
-    if (!isReady) return;
-    if (!companyId) {
-      setLoadError("Select a Company to manage WhatsApp.");
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setLoadError(null);
-    try {
-      if (!clientId) {
-        setProviderOverview(null);
-        setTemplates([]);
-        setMessages([]);
-        setLoadError("Select a Client to view templates and message history. Company configuration remains available in Settings.");
-        return;
-      }
-      const [overview, templateResult, messageResult] = await Promise.all([
-        integrationsApi.getOverview(companyId, clientId),
-        whatsappApi.listTemplates(companyId, clientId),
-        whatsappApi.listMessages(companyId, clientId, status === "ALL" ? undefined : status),
-      ]);
-      setProviderOverview(overview.providers.find((provider) => provider.provider === "WHATSAPP") ?? null);
-      setTemplates(templateResult.items);
-      setMessages(messageResult.items);
-    } catch (error) {
-      setLoadError(error instanceof Error ? error.message : "Unable to load WhatsApp data.");
-    } finally {
-      setLoading(false);
-    }
-  }, [clientId, companyId, isReady, messageStatus]);
+  const hasCompany = isReady && Boolean(companyId);
+  const hasClient = hasCompany && Boolean(clientId);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  // Each endpoint is its own query: a failure in one tab never blanks the others,
+  // and the Company-scoped Settings tab works before a Client is selected.
+  const configQuery = useWhatsAppConfig(companyId, hasCompany);
+  const overviewQuery = useWhatsAppOverview(companyId, clientId, hasClient);
+  const templatesQuery = useWhatsAppTemplates(companyId, clientId, hasClient);
+  const messagesQuery = useWhatsAppMessages(companyId, clientId, messageStatus, hasClient);
 
-  const status = providerOverview?.state;
-  const tone = status === "connected" ? "success" : status === "degraded" ? "error" : status ? "warning" : "neutral";
+  const config = configQuery.data ?? null;
+  const providerOverview = overviewQuery.data ?? null;
+  const templates = templatesQuery.data?.items ?? [];
+  const messages = messagesQuery.data?.items ?? [];
   const enabledTemplates = templates.filter((template) => template.status === "ENABLED");
 
-  const changeMessageStatus = (nextStatus: WhatsAppMessage["status"] | "ALL") => {
+  const refetchAll = () => {
+    void configQuery.refetch();
+    void overviewQuery.refetch();
+    void templatesQuery.refetch();
+    void messagesQuery.refetch();
+  };
+
+  // Informational states the user resolves by picking a scope — never a retry target.
+  const scopeNotice = !isReady
+    ? null
+    : !companyId
+      ? "Select a Company to manage WhatsApp."
+      : !clientId
+        ? "Select a Client to view templates and message history. Company configuration remains available in Settings."
+        : null;
+
+  const scopeError = !isReady
+    ? null
+    : !companyId || configQuery.error
+      ? configQuery.error
+        ? errorText(configQuery.error, "Unable to load the WhatsApp configuration.")
+        : null
+      : !clientId
+        ? null
+        : overviewQuery.error
+          ? errorText(overviewQuery.error, "Unable to load the channel overview.")
+          : templatesQuery.error
+            ? errorText(templatesQuery.error, "Unable to load templates.")
+            : messagesQuery.error
+              ? errorText(messagesQuery.error, "Unable to load message history.")
+              : null;
+
+  const status = providerOverview?.state;
+
+  const changeMessageStatus = (nextStatus: WhatsAppMessageStatus | "ALL") => {
     setMessageStatus(nextStatus);
-    void refresh(nextStatus);
   };
 
   const handleMessageDetails = async (id: string) => {
+    if (!companyId || !clientId) return;
     try {
       const message = await whatsappApi.getMessage(companyId, clientId, id);
-      setMessages((current) => current.map((item) => item.id === id ? message : item));
+      // Patch the active status-filtered list in place so the expanded row shows
+      // the freshest provider state without a full list refetch.
+      const key = whatsappKeys.messages(companyId, clientId, messageStatus);
+      queryClient.setQueryData<{ items: WhatsAppMessage[] }>(key, (current) =>
+        current ? { items: current.items.map((item) => (item.id === id ? message : item)) } : current,
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to refresh message status.");
+      toast.error(errorText(error, "Unable to refresh message status."));
     }
   };
+
+  const connectionLabel = !companyId
+    ? "Select a Company"
+    : config && !config.configured
+      ? "Setup required"
+      : providerOverview
+        ? SUPPORT_STATE_COPY[providerOverview.state]
+        : config?.configured
+          ? "Configured · select a Client"
+          : clientId ? "Checking status" : "Select a Client";
+  const connectionTone = config && !config.configured
+    ? "warning"
+    : status === "connected" ? "success" : status === "degraded" ? "error" : status ? "warning" : "neutral";
 
   return (
     <div className="pb-8">
@@ -93,12 +129,13 @@ export function WhatsappChannelPage() {
         <ChannelHeader
           channel="whatsapp"
           customTagline="Configure AiSensy, manage Client-scoped templates and track queued delivery status."
-          customAccountHandle={status === "connected" ? "AiSensy provider configured" : "Company WhatsApp configuration"}
-          connectionStatus={{
-            label: providerOverview ? SUPPORT_STATE_COPY[providerOverview.state] : clientId ? "Checking status" : "Select a Client",
-            tone,
-          }}
-          onSync={() => void refresh()}
+          customAccountHandle={
+            config?.configured
+              ? (config.displayName ? `${config.displayName} · AiSensy` : "AiSensy provider configured")
+              : "Company WhatsApp configuration"
+          }
+          connectionStatus={{ label: connectionLabel, tone: connectionTone }}
+          onSync={refetchAll}
           onPrimaryAction={() => setActiveModal("send-template")}
           hideDateRange
           hideExport
@@ -121,17 +158,25 @@ export function WhatsappChannelPage() {
         </nav>
       </div>
 
-      {loadError && (
+      {scopeNotice && (
+        <div className="my-3 border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700" role="status">
+          {scopeNotice}
+        </div>
+      )}
+
+      {scopeError && (
         <div className="my-3 flex items-center justify-between gap-3 border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert">
-          <span>{loadError}</span>
-          <button className="font-semibold underline" onClick={() => void refresh()}>Retry</button>
+          <span>{scopeError}</span>
+          <button className="font-semibold underline" onClick={refetchAll}>Retry</button>
         </div>
       )}
 
       <div className="space-y-4">
         {activeTab === "Overview" && (
           <OverviewTab
-            loading={loading}
+            loading={overviewQuery.isLoading || templatesQuery.isLoading || messagesQuery.isLoading}
+            error={overviewQuery.error ? errorText(overviewQuery.error, "Unable to load the channel overview.") : null}
+            onRetry={() => void overviewQuery.refetch()}
             status={providerOverview}
             templates={templates}
             messages={messages}
@@ -139,21 +184,37 @@ export function WhatsappChannelPage() {
           />
         )}
         {activeTab === "Templates" && (
-          <TemplatesTab templates={templates} loading={loading} onOpenModal={(modal) => setActiveModal(modal as "create-template" | "send-template")} />
+          <TemplatesTab
+            templates={templates}
+            loading={templatesQuery.isLoading}
+            error={templatesQuery.error ? errorText(templatesQuery.error, "Unable to load templates.") : null}
+            onRetry={() => void templatesQuery.refetch()}
+            onOpenModal={(modal) => setActiveModal(modal as "create-template" | "send-template")}
+          />
         )}
         {activeTab === "Messages" && (
           <ConversationsTab
             messages={messages}
             templates={templates}
-            loading={loading}
+            loading={messagesQuery.isLoading}
+            error={messagesQuery.error ? errorText(messagesQuery.error, "Unable to load message history.") : null}
+            onRetry={() => void messagesQuery.refetch()}
             status={messageStatus}
             onStatusChange={changeMessageStatus}
-            onRefresh={() => void refresh()}
+            onRefresh={() => void messagesQuery.refetch()}
             onViewMessage={handleMessageDetails}
           />
         )}
         {activeTab === "Settings" && (
-          <SettingsTab key={companyId} companyId={companyId} configured={Boolean(providerOverview?.companyConnectionAvailable)} onSaved={() => void refresh()} />
+          <SettingsTab
+            key={`${companyId}-${config?.updatedAt ?? "unconfigured"}`}
+            companyId={companyId}
+            config={config}
+            loading={configQuery.isLoading}
+            error={configQuery.error ? errorText(configQuery.error, "Unable to load the WhatsApp configuration.") : null}
+            onRetry={() => void configQuery.refetch()}
+            onSaved={refetchAll}
+          />
         )}
       </div>
 
@@ -162,7 +223,10 @@ export function WhatsappChannelPage() {
         onClose={() => setActiveModal(null)}
         companyId={companyId}
         clientId={clientId}
-        onSaved={() => void refresh()}
+        onSaved={() => {
+          void templatesQuery.refetch();
+          void overviewQuery.refetch();
+        }}
       />
       <SendTemplateModal
         isOpen={activeModal === "send-template"}
@@ -170,7 +234,7 @@ export function WhatsappChannelPage() {
         companyId={companyId}
         clientId={clientId}
         templates={enabledTemplates}
-        onSent={() => void refresh()}
+        onSent={() => void messagesQuery.refetch()}
       />
     </div>
   );
