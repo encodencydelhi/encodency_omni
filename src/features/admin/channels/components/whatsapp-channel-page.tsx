@@ -153,7 +153,7 @@ export function WhatsappChannelPage() {
           />
         )}
         {activeTab === "Settings" && (
-          <SettingsTab companyId={companyId} configured={Boolean(providerOverview?.companyConnectionAvailable)} onSaved={() => void refresh()} />
+          <SettingsTab key={companyId} companyId={companyId} configured={Boolean(providerOverview?.companyConnectionAvailable)} onSaved={() => void refresh()} />
         )}
       </div>
 

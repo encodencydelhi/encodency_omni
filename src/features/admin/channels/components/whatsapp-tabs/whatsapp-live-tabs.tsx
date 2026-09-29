@@ -209,6 +209,26 @@ export function ConversationsTab({
   );
 }
 
+function whatsappSettingsKey(companyId: string) {
+  return `encodency:whatsapp-config:${companyId}`;
+}
+
+function readWhatsAppSettings(companyId: string): { displayName: string; apiBaseUrl: string; senderId: string } {
+  if (!companyId || typeof window === "undefined") return { displayName: "", apiBaseUrl: "", senderId: "" };
+  try {
+    const raw = window.localStorage.getItem(whatsappSettingsKey(companyId));
+    if (!raw) return { displayName: "", apiBaseUrl: "", senderId: "" };
+    const parsed = JSON.parse(raw) as Partial<{ displayName: string; apiBaseUrl: string; senderId: string }>;
+    return {
+      displayName: typeof parsed.displayName === "string" ? parsed.displayName : "",
+      apiBaseUrl: typeof parsed.apiBaseUrl === "string" ? parsed.apiBaseUrl : "",
+      senderId: typeof parsed.senderId === "string" ? parsed.senderId : "",
+    };
+  } catch {
+    return { displayName: "", apiBaseUrl: "", senderId: "" };
+  }
+}
+
 export function SettingsTab({
   companyId,
   configured,
@@ -218,11 +238,11 @@ export function SettingsTab({
   configured: boolean;
   onSaved: () => void;
 }) {
-  const [displayName, setDisplayName] = useState("");
-  const [apiBaseUrl, setApiBaseUrl] = useState("");
+  const [displayName, setDisplayName] = useState(() => readWhatsAppSettings(companyId).displayName);
+  const [apiBaseUrl, setApiBaseUrl] = useState(() => readWhatsAppSettings(companyId).apiBaseUrl);
   const [apiKey, setApiKey] = useState("");
   const [webhookSecret, setWebhookSecret] = useState("");
-  const [senderId, setSenderId] = useState("");
+  const [senderId, setSenderId] = useState(() => readWhatsAppSettings(companyId).senderId);
   const [saving, setSaving] = useState(false);
 
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -241,6 +261,14 @@ export function SettingsTab({
     };
     try {
       const result = await whatsappApi.configure(companyId, payload);
+      try {
+        window.localStorage.setItem(
+          whatsappSettingsKey(companyId),
+          JSON.stringify({ displayName: payload.displayName ?? "", apiBaseUrl: payload.apiBaseUrl, senderId: payload.senderId ?? "" }),
+        );
+      } catch {
+        // Storage unavailable (private mode / quota) — settings simply won't prefill.
+      }
       setApiKey("");
       setWebhookSecret("");
       toast.success("AiSensy configuration saved", { description: `Provider status: ${result.status}.` });
@@ -271,7 +299,7 @@ export function SettingsTab({
         <Input type="url" required value={apiBaseUrl} onChange={(event) => setApiBaseUrl(event.target.value)} placeholder="https://api.aisensy.com" />
       </label>
       <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
-        API key
+        API key <span className="font-normal text-slate-400">(write-only — re-enter after refresh)</span>
         <Input type="password" required value={apiKey} onChange={(event) => setApiKey(event.target.value)} autoComplete="new-password" maxLength={4000} />
       </label>
       <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
