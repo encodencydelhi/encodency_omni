@@ -30,11 +30,14 @@ export const gbRoutes = {
 
 /**
  * Mock mode: data comes from `data/mock-provider.ts` and mutations resolve
- * locally. With it off the repository has no live provider yet, so the
- * workspace shows the "Google Business API not connected" state instead of
- * fabricated data.
+ * locally. It follows the app data source — with `NEXT_PUBLIC_DATA_SOURCE=api`
+ * the repository reads the mapped Google Business locations of the active
+ * Client through the backend, and with no connection the workspace shows the
+ * "Google Business API not connected" state instead of fabricated data.
+ * `NEXT_PUBLIC_GBP_MOCK_MODE=true` forces the local data set regardless.
  */
-export const GBP_MOCK_MODE = true;
+export const GBP_MOCK_MODE =
+  process.env.NEXT_PUBLIC_DATA_SOURCE !== "api" || process.env.NEXT_PUBLIC_GBP_MOCK_MODE === "true";
 
 /* ------------------------------------------------------------------ */
 /* Periods                                                             */

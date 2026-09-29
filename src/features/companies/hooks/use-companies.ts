@@ -20,10 +20,17 @@ export function useCompanies(params: CompanyListParams) {
   });
 }
 
+import { superAdminCompaniesApi } from "../live/super-admin-companies-api";
+
 export function useCompanyRefs() {
   return useQuery({
     queryKey: queryKeys.companies.list("refs"),
-    queryFn: ({ signal }) => companyService.listRefs(signal),
+    queryFn: async ({ signal }) => {
+      // In super-admin views, we need to list companies for assignment.
+      // We'll use the super-admin API instead of the deprecated /companies/refs
+      const res = await superAdminCompaniesApi.list({ limit: 100 });
+      return res.items.map(c => ({ id: c.id, name: c.name }));
+    },
     staleTime: 10 * 60_000,
   });
 }

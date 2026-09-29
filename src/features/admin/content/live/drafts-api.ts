@@ -2,12 +2,17 @@ import { apiClient } from "@/lib/api/client";
 import { companyScopeHeaders } from "@/lib/api/company-scope";
 import { ApiError } from "@/types/api";
 
-export type DraftChannel = "FACEBOOK_PAGE" | "INSTAGRAM_ACCOUNT" | "LINKEDIN_ORGANIZATION";
+export type DraftChannel =
+  | "FACEBOOK_PAGE"
+  | "INSTAGRAM_ACCOUNT"
+  | "LINKEDIN_ORGANIZATION"
+  | "GOOGLE_BUSINESS_LOCATION";
 
 export const SUPPORTED_DRAFT_CHANNELS: readonly DraftChannel[] = [
   "FACEBOOK_PAGE",
   "INSTAGRAM_ACCOUNT",
   "LINKEDIN_ORGANIZATION",
+  "GOOGLE_BUSINESS_LOCATION",
 ] as const;
 
 export interface DraftVariantRecord {

@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { gbpRepository, mockControls } from "../data/repository";
 import { evaluateCapabilities } from "../lib/capabilities";
 import { GBP_MOCK_MODE, gbRoutes } from "../lib/constants";
+import { googleBusinessApi } from "../live/google-business-api";
+import { ApiError } from "@/types/api";
 import type {
   ActivityEvent,
   AttributeDefinition,
@@ -281,8 +283,16 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
         await gbpRepository.commit({ label: opts.pending, requiresWrite }, apply);
         toast.success(opts.success, { id });
         return true;
-      } catch {
+      } catch (err) {
         setSimulation((s) => ({ ...s, failNextAction: false }));
+        if (ApiError.isApiError(err)) {
+          toast.error(err.message, {
+            id,
+            description: err.reason === "provider_not_connected" ? "Reconnect the Google Business account in Integrations." : err.reason,
+            action: err.reason === "provider_not_connected" ? { label: "Connect", onClick: () => router.push(`${gbRoutes.settings}#connection`) } : undefined,
+          });
+          return false;
+        }
         toast.error("That did not go through", {
           id,
           description: "Google did not respond in time. Nothing was changed.",
@@ -303,7 +313,10 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
       const review = live.current.snapshot?.reviews.find((r) => r.reviewId === reviewId);
       if (!review) return false;
       const isEdit = review.reply !== null;
-      return perform({ pending: isEdit ? "Updating reply..." : "Posting reply...", success: isEdit ? "Reply updated" : "Reply posted" }, () => {
+      return perform({ pending: isEdit ? "Updating reply..." : "Posting reply...", success: isEdit ? "Reply updated" : "Reply posted" }, async () => {
+        if (gbpRepository.mode === "live") {
+          await googleBusinessApi.replyToReview(review.locationId, reviewId, comment);
+        }
         patchSnapshot((prev) => ({
           ...prev,
           reviews: prev.reviews.map((r) =>
@@ -327,6 +340,12 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     async (reviewId) => {
       const review = live.current.snapshot?.reviews.find((r) => r.reviewId === reviewId);
       if (!review) return false;
+      if (gbpRepository.mode === "live") {
+        toast.error("Google does not expose reply deletion here", {
+          description: "Edit the reply instead, or manage it in the Business Profile Manager.",
+        });
+        return false;
+      }
       return perform({ pending: "Deleting reply...", success: "Reply deleted" }, () => {
         patchSnapshot((prev) => ({ ...prev, reviews: prev.reviews.map((r) => (r.reviewId === reviewId ? { ...r, reply: null } : r)) }));
         log({

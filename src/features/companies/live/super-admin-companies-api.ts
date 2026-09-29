@@ -80,6 +80,21 @@ export const superAdminCompaniesApi = {
   },
 
   /**
+   * GET /api/v1/super-admin/companies
+   */
+  list(query?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<{ items: SuperAdminCompanyRecord[]; total: number; page: number; limit: number }> {
+    return apiClient.request({
+      method: "GET",
+      path: "/super-admin/companies",
+      query,
+    });
+  },
+
+  /**
    * POST /api/v1/super-admin/companies/:companyId/owner-invitation/resend
    * Resends the owner invitation email, revoking any pending one.
    */

@@ -20,7 +20,7 @@ import type {
 } from "../types/content.types";
 import {
   ALL_PLATFORMS, PLATFORM_META, PLATFORM_CONTENT_TYPES,
-  MOCK_CONNECTIONS,
+  MOCK_CONNECTIONS, PLATFORM_CHAR_LIMITS,
 } from "../config/platform-config";
 import { MOCK_CLIENTS } from "../mocks/content.mock";
 import { clientsApi } from "@/features/admin/projects/live/clients-api";
@@ -192,6 +192,11 @@ export function CreateContentTab() {
         content: platformOverrides.linkedin?.caption || masterContent.caption,
       };
     }
+    if (channels.includes("google-business")) {
+      variants.GOOGLE_BUSINESS_LOCATION = {
+        content: platformOverrides["google-business"]?.caption || masterContent.caption,
+      };
+    }
 
     const title = masterContent.headline?.trim() || masterContent.caption.slice(0, 45).trim() || "Untitled Draft";
 
@@ -305,6 +310,17 @@ export function CreateContentTab() {
 
       if (p === "whatsapp" && spec?.fields.includes("templateName") && !(platformOverrides[p]?.fields as Record<string, string>)?.templateName) {
         items.push({ field: "template", level: "warning", message: "Template not selected" });
+      }
+
+      if (p === "google-business") {
+        const caption = platformOverrides[p]?.caption || masterContent.caption;
+        const maxChars = PLATFORM_CHAR_LIMITS[p] ?? 1500;
+        if (caption.length > maxChars) {
+          items.push({ field: "caption", level: "error", message: `Caption exceeds ${maxChars} characters` });
+        }
+        if ((masterContent.media ?? []).length > 0) {
+          items.push({ field: "media", level: "error", message: "Google Business posts are text-only — remove the media" });
+        }
       }
 
       const level = items.some(i => i.level === "error") ? "error" : items.some(i => i.level === "warning") ? "warning" : "ready";

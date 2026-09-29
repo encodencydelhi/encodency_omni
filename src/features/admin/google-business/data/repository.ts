@@ -20,7 +20,11 @@ export interface MutationContext {
 
 export interface GbpProvider {
   readonly mode: "mock" | "live";
-  loadSnapshot(): Promise<GbpSnapshot>;
+  /**
+   * Receives a fresh copy of the local snapshot so a live provider only has to
+   * overlay what the backend actually knows; mock returns it untouched.
+   */
+  loadSnapshot(base: GbpSnapshot): Promise<GbpSnapshot>;
   /**
    * Write seam. The mock provider only simulates latency and failures; the live
    * provider will POST to the OmniPlatform backend and return its response.
@@ -59,13 +63,13 @@ function clone<T>(value: T): T {
 
 const mockProvider: GbpProvider = {
   mode: "mock",
-  async loadSnapshot() {
+  async loadSnapshot(base) {
     await wait(500);
     if (failNextLoad) {
       failNextLoad = false;
       throw new Error("Upstream request failed");
     }
-    return clone(mockSnapshot);
+    return base;
   },
   async commit(context, apply) {
     await wait(context.requiresWrite === false ? 400 : 700);
@@ -77,29 +81,16 @@ const mockProvider: GbpProvider = {
   },
 };
 
-/**
- * Placeholder for the real provider. It intentionally throws rather than
- * inventing data, so turning `GBP_MOCK_MODE` off shows the "not connected"
- * state instead of fake production numbers.
- */
-const liveProvider: GbpProvider = {
-  mode: "live",
-  async loadSnapshot() {
-    throw new GbpNotConnectedError();
-  },
-  async commit() {
-    throw new GbpNotConnectedError();
-  },
-};
+import { apiProvider } from "./api-provider";
 
 export function getProvider(): GbpProvider {
-  return GBP_MOCK_MODE ? mockProvider : liveProvider;
+  return GBP_MOCK_MODE ? mockProvider : apiProvider;
 }
 
 export const gbpRepository = {
   get mode() {
     return getProvider().mode;
   },
-  loadSnapshot: () => getProvider().loadSnapshot(),
+  loadSnapshot: () => getProvider().loadSnapshot(clone(mockSnapshot)),
   commit: <T>(context: MutationContext, apply: () => T) => getProvider().commit(context, apply),
 };

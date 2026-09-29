@@ -15,6 +15,7 @@ const CHANNEL_TO_PLATFORM: Record<DraftChannel, Platform> = {
   FACEBOOK_PAGE: "facebook",
   INSTAGRAM_ACCOUNT: "instagram",
   LINKEDIN_ORGANIZATION: "linkedin",
+  GOOGLE_BUSINESS_LOCATION: "google-business",
 };
 
 const STATUS_MAP: Record<DraftReviewStatus, string> = {

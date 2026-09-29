@@ -130,11 +130,22 @@ const apiUsersProvider: UsersRepository = {
     const page = query.page ?? 1;
     const limit = query.pageSize ?? 20;
     const search = query.filters?.search;
+    const companyId = query.filters?.companyId;
+    let systemRole: "OWNER" | "ADMIN" | "MANAGER" | "VIEWER" | undefined;
+
+    if (query.filters?.role) {
+      if (query.filters.role === "owner") systemRole = "OWNER";
+      else if (query.filters.role === "admin") systemRole = "ADMIN";
+      else if (query.filters.role === "marketing_manager") systemRole = "MANAGER";
+      else if (query.filters.role === "viewer") systemRole = "VIEWER";
+    }
 
     const res = await superAdminUsersApi.list({
       page,
       limit,
       search,
+      companyId,
+      systemRole,
     });
 
     const items = res.items.map((u) => toAggregateFromSummary(u));

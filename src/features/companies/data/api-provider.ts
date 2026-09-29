@@ -20,13 +20,22 @@
  * 401/403/429 and validation errors still propagate: an authorization or
  * contract problem must surface, not quietly swap in demo rows.
  *
- * Every method the backend does not serve (portfolio, overview, billing,
- * usage, mutations, ...) delegates straight to the same fallback so the whole
- * workspace stays functional while those APIs are built (TASK-12+).
+ * `getPortfolio()` has no stats endpoint either, so it pages the list endpoint
+ * to the end and derives the KPIs with the same `computePortfolio()` the demo
+ * provider uses. Billing-derived numbers (MRR, trialing, past due) stay at
+ * their honest zero until the backend serves subscription data.
+ *
+ * Every other method the backend does not serve (overview, billing, usage,
+ * mutations, ...) delegates straight to the fallback so the whole workspace
+ * stays functional while those APIs are built (TASK-12+).
  */
 import { apiClient } from "@/lib/api/client";
 import { ApiError, type PaginationMeta } from "@/types/api";
 import type { BulkResult, CompaniesRepository } from "./repository";
+import { commercialContext } from "@/features/plans-subscriptions/data/mock/plan-store";
+import { platformNow } from "./clock";
+import { STAFF } from "./mock/dataset";
+import { computePortfolio, type DerivationContext } from "./selectors";
 import type {
   CompanyAccountStatus,
   CompanyListQuery,
@@ -34,6 +43,7 @@ import type {
   CompanyOwner,
   CompanySummary,
   CreateCompanyInput,
+  PortfolioSummary,
   UpdateCompanyInput,
 } from "./types";
 import { ensureBundle, writeBundle } from "./mock/store";
@@ -91,6 +101,8 @@ interface SuperAdminCompanyDetailResponse extends SuperAdminCompanySummary {
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_LIMIT = 100;
 const DEFAULT_LIMIT = 25;
+/** Safety net for `getPortfolio()`'s full pagination: 100 pages x 100 rows. */
+const MAX_PORTFOLIO_PAGES = 100;
 
 /* ------------------------------------------------------------------ */
 /* Mapping                                                             */
@@ -179,6 +191,26 @@ function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
   };
 }
 
+/** Maps a backend row and overlays the local-only bundle fields (tags, owners, size, logo). */
+function mapApiRow(row: SuperAdminCompanySummary): CompanySummary {
+  const summary = toCompanySummary(row);
+  try {
+    const bundle = ensureBundle(row.id, row.name);
+    summary.company.internalTags = bundle.company.internalTags ?? [];
+    summary.company.internalOwners = bundle.company.internalOwners ?? { accountManagerId: null, supportOwnerId: null, technicalOwnerId: null };
+    summary.company.profile.companySize = bundle.company.profile.companySize ?? null;
+    if (!summary.company.logoUrl && bundle.company.logoUrl) {
+      summary.company.logoUrl = bundle.company.logoUrl;
+    }
+  } catch {}
+  return summary;
+}
+
+/** Derivation context for portfolio KPIs — the currency is the only plan data `computePortfolio` reads. */
+function portfolioContext(): DerivationContext {
+  return { now: platformNow(), staff: STAFF, ...commercialContext() };
+}
+
 /* ------------------------------------------------------------------ */
 /* Fallback policy                                                     */
 /* ------------------------------------------------------------------ */
@@ -194,6 +226,30 @@ function toBackendStatus(accountStatus: string | undefined): BackendCompanyStatu
   if (accountStatus === "archived") return "ARCHIVED";
   if (accountStatus === "active") return "ACTIVE";
   return undefined;
+}
+
+/** Every row the backend serves, paged at the API's maximum page size. Empty on a fallback-worthy error. */
+async function fetchAllSummaries(): Promise<CompanySummary[]> {
+  const summaries: CompanySummary[] = [];
+  let page = 1;
+  let totalPages = 1;
+  try {
+    do {
+      const response = await apiClient.request<SuperAdminCompanyListResponse>({
+        method: "GET",
+        path: "/super-admin/companies",
+        query: { page, limit: MAX_LIMIT },
+      });
+      totalPages = Math.max(1, Math.ceil(response.total / response.limit));
+      summaries.push(...response.items.map(mapApiRow));
+      page += 1;
+      // Guard against a backend that reports an ever-growing total.
+    } while (page <= totalPages && page <= MAX_PORTFOLIO_PAGES);
+  } catch (error) {
+    if (shouldFallBack(error)) return [];
+    throw error;
+  }
+  return summaries;
 }
 
 /* ------------------------------------------------------------------ */
@@ -232,19 +288,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
           hasPreviousPage: response.page > 1,
         };
 
-        const apiSummaries = response.items.map((row) => {
-          const s = toCompanySummary(row);
-          try {
-            const bundle = ensureBundle(row.id, row.name);
-            s.company.internalTags = bundle.company.internalTags ?? [];
-            s.company.internalOwners = bundle.company.internalOwners ?? { accountManagerId: null, supportOwnerId: null, technicalOwnerId: null };
-            s.company.profile.companySize = bundle.company.profile.companySize ?? null;
-            if (!s.company.logoUrl && bundle.company.logoUrl) {
-              s.company.logoUrl = bundle.company.logoUrl;
-            }
-          } catch {}
-          return s;
-        });
+        const apiSummaries = response.items.map(mapApiRow);
         let demoCreated: CompanySummary[] = [];
         try {
           const fallbackResult = await fallback.listCompanies(query);
@@ -271,6 +315,25 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       }
     },
 
+    /**
+     * No stats endpoint: page the list endpoint to the end and derive the KPIs
+     * from the real rows, so the strip matches the table below it. Unreachable
+     * or empty backend → demo portfolio (the documented fallback policy).
+     */
+    async getPortfolio(): Promise<PortfolioSummary> {
+      const apiSummaries = await fetchAllSummaries();
+      if (apiSummaries.length === 0) return fallback.getPortfolio();
+
+      let demoCreated: CompanySummary[] = [];
+      try {
+        demoCreated = (await fallback.exportCompanies({})).filter((c) => c.company.isDemoCreated);
+      } catch {
+        // ignore fallback failures
+      }
+
+      return computePortfolio(portfolioContext(), [...demoCreated, ...apiSummaries]);
+    },
+
     async getCompany(id: string): Promise<CompanySummary> {
       // Demo ids (cmp_*) are handled by fallback only when explicitly in mock mode
       if (!UUID_PATTERN.test(id)) {
@@ -281,17 +344,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         method: "GET",
         path: `/super-admin/companies/${encodeURIComponent(id)}`,
       });
-      const summary = toCompanySummary(detail);
-      try {
-        const bundle = ensureBundle(id, summary.company.name);
-        summary.company.internalTags = bundle.company.internalTags ?? [];
-        summary.company.internalOwners = bundle.company.internalOwners ?? { accountManagerId: null, supportOwnerId: null, technicalOwnerId: null };
-        summary.company.profile.companySize = bundle.company.profile.companySize ?? null;
-        if (!summary.company.logoUrl && bundle.company.logoUrl) {
-          summary.company.logoUrl = bundle.company.logoUrl;
-        }
-      } catch {}
-      return summary;
+      return mapApiRow(detail);
     },
 
     async createCompany(input: CreateCompanyInput, actor): Promise<CompanySummary> {

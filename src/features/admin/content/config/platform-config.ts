@@ -187,3 +187,11 @@ export const SAFE_ZONES: Record<Platform, { top: number; bottom: number; left: n
   website:          { top: 5, bottom: 5, left: 5, right: 5, description: "Varies by theme" },
   email:            { top: 5, bottom: 5, left: 5, right: 5, description: "Varies by email client" },
 };
+
+/* ── Publishing limits mirrored from the backend (publishing.constants.ts) ── */
+export const PLATFORM_CHAR_LIMITS: Partial<Record<Platform, number>> = {
+  "google-business": 1500,
+};
+
+/** Channels the backend accepts media on; every other channel is text-only. */
+export const MEDIA_CAPABLE_PLATFORMS: readonly Platform[] = ["facebook", "instagram"];
