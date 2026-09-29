@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
+import { useLinkedInOverview, linkedinProvider } from "../live/linkedin-hooks";
 import {
   Area,
   AreaChart,
@@ -182,6 +184,11 @@ function CardLink({
 export function LinkedInChannelPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("Overview");
+  
+  const { companyId, clientId, isReady } = useTenancyContext();
+  const enabled = isReady && Boolean(companyId) && Boolean(clientId);
+  const overviewQuery = useLinkedInOverview(companyId!, clientId!, enabled);
+  const linkedinStatus = linkedinProvider(overviewQuery.data);
 
   return (
     <div className="pb-8">
@@ -195,7 +202,7 @@ export function LinkedInChannelPage() {
       </div>
 
       <div className="space-y-2">
-        {activeTab === "Overview" && <OverviewTab onNavigateTab={setActiveTab} />}
+        {activeTab === "Overview" && <OverviewTab onNavigateTab={setActiveTab} status={linkedinStatus} />}
         {activeTab === "Posts" && <PostsTab />}
         {activeTab === "Analytics" && <AnalyticsTab />}
         {activeTab === "Audience" && <AudienceTab />}
@@ -2508,9 +2515,20 @@ const recentActivity = [
   { title: "Mention detected", detail: "You were mentioned in a post by Green India Initiative.", time: "6 hours ago", icon: AtSign, color: "green" },
 ] as const;
 
-function OverviewTab({ onNavigateTab }: { onNavigateTab?: (tab: TabType) => void }) {
+function OverviewTab({
+  onNavigateTab,
+  status,
+}: {
+  onNavigateTab?: (tab: TabType) => void;
+  status: any;
+}) {
   return (
     <div className="space-y-2">
+      {/* 0. Connection Status Indicator */}
+      <div className="p-2 bg-white border border-[#E4EAF2] rounded-sm text-[11px] font-semibold text-[#172044]">
+        Connection Status: {status ? "Connected" : "Disconnected"}
+      </div>
+
       {/* 1. Namo Gange Trust Page Banner (Commented out for now) */}
       {/* <PageOverview /> */}
 
