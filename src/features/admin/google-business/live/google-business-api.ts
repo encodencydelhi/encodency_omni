@@ -234,11 +234,26 @@ function toWeekdayIndex(value: unknown): number {
   return 0;
 }
 
+interface GoogleClockTime {
+  hours?: number;
+  minutes?: number;
+  day?: number | string;
+}
+
+interface GooglePeriod {
+  day?: number | string;
+  openDay?: number | string;
+  open?: GoogleClockTime;
+  close?: GoogleClockTime;
+  openHourTime?: GoogleClockTime;
+  closeHourTime?: GoogleClockTime;
+}
+
 /**
  * Google has shipped both `{open:{day,hours,minutes}}` and
  * `{openDay,openHourTime:{hours,minutes}}` shapes for `regularHours.periods`.
  */
-function mapPeriod(period: Record<string, any> | undefined): TimePeriod | null {
+function mapPeriod(period: GooglePeriod | undefined): TimePeriod | null {
   if (!period) return null;
   const open = period.open ?? period.openHourTime;
   const close = period.close ?? period.closeHourTime;
@@ -248,7 +263,7 @@ function mapPeriod(period: Record<string, any> | undefined): TimePeriod | null {
 }
 
 export function mapRegularHours(raw: Record<string, unknown> | null): RegularHours {
-  const periods = Array.isArray(raw?.periods) ? (raw.periods as Array<Record<string, any>>) : [];
+  const periods = Array.isArray(raw?.periods) ? (raw.periods as GooglePeriod[]) : [];
   const mapped = periods.map(mapPeriod).filter((p): p is TimePeriod => p !== null);
   return { periods: mapped, open24: [] };
 }

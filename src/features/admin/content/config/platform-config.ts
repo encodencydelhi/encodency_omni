@@ -190,6 +190,9 @@ export const SAFE_ZONES: Record<Platform, { top: number; bottom: number; left: n
 
 /* ── Publishing limits mirrored from the backend (publishing.constants.ts) ── */
 export const PLATFORM_CHAR_LIMITS: Partial<Record<Platform, number>> = {
+  instagram: 2200,
+  facebook: 10_000,
+  linkedin: 3000,
   "google-business": 1500,
 };
 

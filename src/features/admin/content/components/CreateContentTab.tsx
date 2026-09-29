@@ -1,7 +1,7 @@
 "use client";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
-  Check, ChevronDown, ChevronRight, Download, Plus, Send, Sparkles, MoreHorizontal,
+  Check, ChevronDown, ChevronRight, Download, Plus, Send, X,
   Loader2, AlertCircle, RefreshCw
 } from "lucide-react";
 import { toast } from "sonner";
@@ -9,8 +9,9 @@ import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
 import { SelectField } from "./ui-fields";
 import { PlatformBadge } from "./ui-platform";
-import { draftsApi, isRevisionConflict } from "../live/drafts-api";
+import { draftsApi } from "../live/drafts-api";
 import { mediaApi } from "../live/media-api";
+import { schedulingApi } from "../live/scheduling-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";
 import type {
@@ -20,7 +21,7 @@ import type {
 } from "../types/content.types";
 import {
   ALL_PLATFORMS, PLATFORM_META, PLATFORM_CONTENT_TYPES,
-  MOCK_CONNECTIONS, PLATFORM_CHAR_LIMITS,
+  MOCK_CONNECTIONS, PLATFORM_CHAR_LIMITS, MEDIA_CAPABLE_PLATFORMS,
 } from "../config/platform-config";
 import { MOCK_CLIENTS } from "../mocks/content.mock";
 import { clientsApi } from "@/features/admin/projects/live/clients-api";
@@ -43,6 +44,13 @@ const CHANNEL_TO_PLATFORM: Record<string, Platform> = {
   GOOGLE_BUSINESS_LOCATION: "google-business",
 };
 
+/** Composer platform → the backend draft-variant/schedule channel. */
+const PLATFORM_TO_CHANNEL: Partial<Record<Platform, string>> = {
+  instagram: "INSTAGRAM_ACCOUNT",
+  facebook: "FACEBOOK_PAGE",
+  linkedin: "LINKEDIN_ORGANIZATION",
+};
+
 function variantsToPlatformMap(
   variants: { id: string; channel: string }[],
 ): Partial<Record<Platform, string>> {
@@ -57,7 +65,16 @@ function variantsToPlatformMap(
 export function CreateContentTab() {
   /* ── State ── */
   const [channels, setChannels] = useState<Platform[]>(["instagram", "facebook", "linkedin"]);
-  const [contentTypes, setContentTypes] = useState<Partial<Record<Platform, ContentType>>>({});
+  /* Default channels start selected, so their content types must exist too —
+     otherwise every channel fails validation before the user touches anything. */
+  const [contentTypes, setContentTypes] = useState<Partial<Record<Platform, ContentType>>>(() => {
+    const initial: Partial<Record<Platform, ContentType>> = {};
+    for (const platform of ["instagram", "facebook", "linkedin"] as Platform[]) {
+      const specs = PLATFORM_CONTENT_TYPES[platform];
+      if (specs?.length) initial[platform] = specs[0]!.id;
+    }
+    return initial;
+  });
   const [masterContent, setMasterContent] = useState<MasterContent>({
     caption: "Small actions create a cleaner tomorrow.\n\nLet's work together for a healthier, greener and cleaner India.\n\n#CleanGanga #HealthyIndia #Sustainability #MokshaSewa",
     headline: "CLEAN RIVERS BRIGHTER TOMORROW",
@@ -148,6 +165,56 @@ export function CreateContentTab() {
     };
   }, [companyId, clientId]);
 
+  /* ── Media attachment ── */
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const toggleMedia = useCallback((asset: MediaAsset) => {
+    setMasterContent((prev) => {
+      const current = prev.media ?? [];
+      const attached = current.some((m) => m.id === asset.id);
+      return { ...prev, media: attached ? current.filter((m) => m.id !== asset.id) : [...current, asset] };
+    });
+  }, []);
+
+  const removeMedia = useCallback((id: string) => {
+    setMasterContent((prev) => ({ ...prev, media: (prev.media ?? []).filter((m) => m.id !== id) }));
+  }, []);
+
+  const handleUpload = useCallback(
+    async (file: File) => {
+      if (!companyId || !clientId) return toast.error("Verified Company and Client context are required.");
+      const isVideo = file.type.startsWith("video/");
+      const maxBytes = isVideo ? 50 * 1024 * 1024 : 8 * 1024 * 1024;
+      if (file.size > maxBytes) {
+        return toast.error(`${file.name} is too large`, { description: isVideo ? "Videos must be 50 MB or less." : "Images must be 8 MB or less." });
+      }
+      setIsUploading(true);
+      const loadingId = toast.loading(`Uploading ${file.name}...`);
+      try {
+        const record = await mediaApi.upload(companyId, clientId, file);
+        const asset: MediaAsset = {
+          id: record.id,
+          url: record.url,
+          type: record.kind === "IMAGE" ? "image" : "video",
+          name: file.name,
+          alt: record.mimeType,
+        };
+        setLibraryMedia((prev) => (prev.some((m) => m.id === asset.id) ? prev : [asset, ...prev]));
+        setMasterContent((prev) => {
+          const current = prev.media ?? [];
+          return current.some((m) => m.id === asset.id) ? prev : { ...prev, media: [...current, asset] };
+        });
+        toast.success("Media uploaded and attached", { id: loadingId });
+      } catch (err) {
+        toast.error(ApiError.isApiError(err) ? err.message : "Upload failed.", { id: loadingId });
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [companyId, clientId],
+  );
+
   const reloadLatestDraft = useCallback(async () => {
     if (!companyId || !clientId || !savedDraftId) return;
     try {
@@ -167,14 +234,14 @@ export function CreateContentTab() {
     }
   }, [companyId, clientId, savedDraftId]);
 
-  const handleSaveDraft = useCallback(async () => {
+  const handleSaveDraft = useCallback(async (): Promise<{ draftId: string; revision: number; variantIds: Partial<Record<Platform, string>> } | null> => {
     if (!companyId || !clientId) {
       toast.error("Verified Company and Client context are required.");
-      return;
+      return null;
     }
     if (!masterContent.caption.trim()) {
       toast.error("Please enter a caption before saving draft.");
-      return;
+      return null;
     }
 
     // Map supported channels (FACEBOOK_PAGE, INSTAGRAM_ACCOUNT, LINKEDIN_ORGANIZATION)
@@ -194,11 +261,9 @@ export function CreateContentTab() {
         content: platformOverrides.linkedin?.caption || masterContent.caption,
       };
     }
-    if (channels.includes("google-business")) {
-      variants.GOOGLE_BUSINESS_LOCATION = {
-        content: platformOverrides["google-business"]?.caption || masterContent.caption,
-      };
-    }
+    // NOTE: Google Business has no draft-variant support in the backend yet
+    // (`drafts.service.ts` DRAFT_CHANNELS). Sending GOOGLE_BUSINESS_LOCATION
+    // fails the whole save, so it is deliberately not emitted here.
 
     const title = masterContent.headline?.trim() || masterContent.caption.slice(0, 45).trim() || "Untitled Draft";
 
@@ -210,6 +275,7 @@ export function CreateContentTab() {
       .map((m) => m.id)
       .filter((id) => uuidPattern.test(id));
     let draftContentSaved = false;
+    let result: { draftId: string; revision: number; variantIds: Partial<Record<Platform, string>> } | null = null;
 
     try {
       if (savedDraftId && currentRevision !== null) {
@@ -233,6 +299,7 @@ export function CreateContentTab() {
         }
 
         setCurrentRevision(savedRevision);
+        result = { draftId: savedDraftId, revision: savedRevision, variantIds: variantsToPlatformMap(updated.variants) };
         toast.success(`Draft updated successfully (Revision ${savedRevision})`);
       } else {
         // Create new draft
@@ -246,6 +313,7 @@ export function CreateContentTab() {
         setCurrentRevision(created.revision);
         setSavedAssetIds(assetIds);
         setVariantIds(variantsToPlatformMap(created.variants));
+        result = { draftId: created.id, revision: created.revision, variantIds: variantsToPlatformMap(created.variants) };
         toast.success(`Draft saved successfully (Revision ${created.revision})`);
       }
     } catch (err: unknown) {
@@ -274,6 +342,7 @@ export function CreateContentTab() {
     } finally {
       setIsSavingDraft(false);
     }
+    return result;
   }, [companyId, clientId, masterContent, channels, platformOverrides, savedDraftId, currentRevision, savedAssetIds]);
 
   /* ── Derived ── */
@@ -306,10 +375,14 @@ export function CreateContentTab() {
         items.push({ field: "contentType", level: "error", message: "Content type not selected" });
       }
 
+      const caption = platformOverrides[p]?.caption || masterContent.caption;
+      const maxChars = PLATFORM_CHAR_LIMITS[p];
+      const mediaCount = (masterContent.media ?? []).length;
+
       if (!masterContent.caption && spec?.fields.includes("caption")) {
         items.push({ field: "caption", level: "error", message: "Caption is required" });
-      } else if (masterContent.caption && masterContent.caption.length > 2200) {
-        items.push({ field: "caption", level: "error", message: "Caption exceeds 2200 characters" });
+      } else if (maxChars && caption.length > maxChars) {
+        items.push({ field: "caption", level: "error", message: `Caption exceeds ${maxChars} characters for ${PLATFORM_META[p].label}` });
       }
 
       if (spec?.fields.includes("altText") && !masterContent.altText && !platformOverrides[p]?.altText) {
@@ -324,15 +397,19 @@ export function CreateContentTab() {
         items.push({ field: "template", level: "warning", message: "Template not selected" });
       }
 
+      /* Mirrors publishing.constants.ts: `checkMediaForChannel`. */
+      if (p === "instagram") {
+        if (mediaCount === 0) {
+          items.push({ field: "media", level: "error", message: "Instagram needs exactly one image or one video" });
+        } else if (mediaCount > 1) {
+          items.push({ field: "media", level: "error", message: "Instagram accepts a single image or video — remove the extra media" });
+        }
+      } else if (mediaCount > 0 && !MEDIA_CAPABLE_PLATFORMS.includes(p)) {
+        items.push({ field: "media", level: "warning", message: `${PLATFORM_META[p].label} is text-only here — scheduling with media is refused` });
+      }
+
       if (p === "google-business") {
-        const caption = platformOverrides[p]?.caption || masterContent.caption;
-        const maxChars = PLATFORM_CHAR_LIMITS[p] ?? 1500;
-        if (caption.length > maxChars) {
-          items.push({ field: "caption", level: "error", message: `Caption exceeds ${maxChars} characters` });
-        }
-        if ((masterContent.media ?? []).length > 0) {
-          items.push({ field: "media", level: "error", message: "Google Business posts are text-only — remove the media" });
-        }
+        items.push({ field: "channel", level: "warning", message: "Google Business draft variants are not supported by the backend yet — it cannot be scheduled" });
       }
 
       const level = items.some(i => i.level === "error") ? "error" : items.some(i => i.level === "warning") ? "warning" : "ready";
@@ -341,6 +418,64 @@ export function CreateContentTab() {
   }, [channels, contentTypes, masterContent, platformOverrides]);
 
   const errorCount = validations.filter(v => v.level === "error").length;
+
+  /* Publish now: save the draft, then queue one scheduled post per selected
+     channel at a target the backend reports as publishable. */
+  const [isPublishing, setIsPublishing] = useState(false);
+  const handlePublishNow = useCallback(async () => {
+    if (isPublishing || isSavingDraft) return;
+    if (errorCount > 0) return toast.error("Fix the flagged channels before publishing.");
+    if (!companyId || !clientId) return toast.error("Verified Company and Client context are required.");
+    if (channels.length === 0) return toast.error("Select at least one channel.");
+
+    setIsPublishing(true);
+    try {
+      const saved = await handleSaveDraft();
+      if (!saved) return;
+
+      const scheduledFor = new Date(Date.now() + 15_000).toISOString();
+      const published: string[] = [];
+      const failed: string[] = [];
+
+      for (const platform of channels) {
+        const channel = PLATFORM_TO_CHANNEL[platform];
+        const variantId = saved.variantIds[platform];
+        if (!channel) continue; // e.g. Google Business — no backend draft channel
+        if (!variantId) {
+          failed.push(`${PLATFORM_META[platform].label}: draft variant missing`);
+          continue;
+        }
+        try {
+          const { items } = await schedulingApi.targets(companyId, clientId, saved.draftId, variantId);
+          const target = items.find((t) => t.publishable);
+          if (!target) {
+            failed.push(`${PLATFORM_META[platform].label}: ${items[0]?.reason ?? "no mapped publishing target"}`);
+            continue;
+          }
+          await schedulingApi.schedule(companyId, clientId, saved.draftId, variantId, {
+            resourceMappingId: target.resourceMappingId,
+            scheduledFor,
+            expectedDraftRevision: saved.revision,
+          });
+          published.push(PLATFORM_META[platform].label);
+        } catch (error) {
+          failed.push(`${PLATFORM_META[platform].label}: ${ApiError.isApiError(error) ? error.message : error instanceof Error ? error.message : "unknown error"}`);
+        }
+      }
+
+      if (published.length > 0) {
+        toast.success(`Publishing queued for ${published.join(", ")}`, {
+          description: "The worker picks it up within seconds — see Scheduled posts for the outcome.",
+          duration: 8000,
+        });
+      }
+      if (failed.length > 0) {
+        toast.error("Some channels were not queued", { description: failed.join(" | "), duration: 10_000 });
+      }
+    } finally {
+      setIsPublishing(false);
+    }
+  }, [isPublishing, isSavingDraft, errorCount, companyId, clientId, channels, handleSaveDraft]);
 
   return (
     <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_320px_320px]">
@@ -435,40 +570,99 @@ export function CreateContentTab() {
           >
             <div className="min-w-0">
               <h3 className="truncate text-[13.5px] font-semibold text-[#172044]">Media</h3>
-              <p className="mt-0.5 text-[11.5px] text-[#7A87A0]">JPG, PNG, GIF, MP4 up to 100MB</p>
+              <p className="mt-0.5 text-[11.5px] text-[#7A87A0]">JPG, PNG, WebP up to 8 MB · MP4/MOV up to 50 MB</p>
             </div>
             {mediaOpen ? <ChevronDown className="size-4 text-[#7A87A0]" /> : <ChevronRight className="size-4 text-[#7A87A0]" />}
           </button>
 
           {mediaOpen && (
             <div className="p-3">
+              <input
+                ref={uploadInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (file) void handleUpload(file);
+                }}
+              />
               <div className="rounded-sm border-2 border-dashed border-[#B9CFF2] bg-[#F7FAFF] py-4 text-center transition hover:border-[#1769DF] hover:bg-[#F0F6FF]">
-                <p className="text-[12px] font-semibold text-[#24365A]">Drag & drop files here, or click to browse</p>
-                <button className="mt-1.5 h-7 rounded-sm bg-[#1769DF] px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-[#1259BD]">Upload from device</button>
-                <p className="mt-1 text-[10px] text-[#7A87A0]">Recommended 1080 × 1350 (4:5) for Instagram</p>
-              </div>
-              <div className="mt-2 grid grid-cols-5 gap-1">
-                {(masterContent.media?.length ? masterContent.media : libraryMedia).slice(0, 4).map((m, i) => (
-                  <div key={m.id} className="relative overflow-hidden rounded-sm border border-[#E2E8F0]">
-                    <img src={m.url} alt={m.alt ?? m.name} className="h-14 w-full object-cover" />
-                    <span className="absolute left-0.5 top-0.5 grid size-3.5 place-items-center rounded bg-[#172044]/80 text-[8px] font-semibold text-white">{i + 1}</span>
-                    <button className="absolute right-0.5 top-0.5 rounded bg-white/90 p-0.5"><MoreHorizontal className="size-2.5 text-slate-500" /></button>
-                  </div>
-                ))}
-                {masterContent.media?.length === 0 && libraryMedia.length === 0 && (
-                  <p className="col-span-4 text-[10.5px] text-[#7A87A0]">No files in your library yet — upload one to attach it.</p>
-                )}
-                <button className="grid h-14 place-items-center rounded-sm border border-dashed border-[#CBD5E1] text-[#7A87A0] hover:bg-slate-50">
-                  <Plus className="size-3.5" /><span className="mt-0.5 text-[9px] font-semibold">Add</span>
+                <p className="text-[12px] font-semibold text-[#24365A]">Upload a file from your device</p>
+                <button
+                  onClick={() => uploadInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="mt-1.5 h-7 rounded-sm bg-[#1769DF] px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-[#1259BD] disabled:opacity-50"
+                >
+                  {isUploading ? "Uploading…" : "Upload from device"}
                 </button>
+                <p className="mt-1 text-[10px] text-[#7A87A0]">Instagram needs exactly one image or video — recommended 1080 × 1350 (4:5)</p>
               </div>
-              <div className="mt-1.5 flex flex-wrap gap-1">
-                {["Media Library", "Unsplash", "Pexels", "Google Drive", "AI Generate"].map((s) => (
-                  <button key={s} className="flex h-6 items-center gap-1 rounded-sm border border-[#E2E8F0] px-2 text-[10px] font-semibold text-[#687797] hover:bg-slate-50">
-                    {s === "AI Generate" && <Sparkles className="size-2.5 text-purple-500" />}
-                    {s}
+
+              {/* Attached to this post */}
+              <div className="mt-3">
+                <p className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[#7A87A0]">
+                  Attached ({(masterContent.media ?? []).length})
+                </p>
+                <div className="grid grid-cols-5 gap-1">
+                  {(masterContent.media ?? []).map((m, i) => (
+                    <div key={m.id} className="relative overflow-hidden rounded-sm border border-[#1769DF]">
+                      <img src={m.url} alt={m.alt ?? m.name} className="h-14 w-full object-cover" />
+                      <span className="absolute left-0.5 top-0.5 grid size-3.5 place-items-center rounded bg-[#1769DF] text-[8px] font-semibold text-white">{i + 1}</span>
+                      <button
+                        onClick={() => removeMedia(m.id)}
+                        aria-label={`Remove ${m.name}`}
+                        className="absolute right-0.5 top-0.5 rounded bg-white/90 p-0.5 text-slate-600 hover:bg-white"
+                      >
+                        <X className="size-2.5" />
+                      </button>
+                    </div>
+                  ))}
+                  {(masterContent.media ?? []).length === 0 && (
+                    <p className="col-span-5 text-[10.5px] text-[#7A87A0]">
+                      Nothing attached yet — pick from your library below or upload a file.
+                    </p>
+                  )}
+                  <button
+                    onClick={() => uploadInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="grid h-14 place-items-center rounded-sm border border-dashed border-[#CBD5E1] text-[#7A87A0] hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    <Plus className="size-3.5" /><span className="mt-0.5 text-[9px] font-semibold">Add</span>
                   </button>
-                ))}
+                </div>
+              </div>
+
+              {/* Library picker */}
+              <div className="mt-3">
+                <p className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[#7A87A0]">Media library — click to attach</p>
+                <div className="grid grid-cols-5 gap-1">
+                  {libraryMedia.map((m) => {
+                    const attached = (masterContent.media ?? []).some((a) => a.id === m.id);
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => toggleMedia(m)}
+                        title={attached ? "Detach from post" : "Attach to post"}
+                        className={cn(
+                          "relative overflow-hidden rounded-sm border transition",
+                          attached ? "border-[#1769DF] ring-1 ring-[#1769DF]" : "border-[#E2E8F0] hover:border-[#9DBBEA]"
+                        )}
+                      >
+                        <img src={m.url} alt={m.alt ?? m.name} className="h-14 w-full object-cover" />
+                        {attached && (
+                          <span className="absolute right-0.5 top-0.5 grid size-3.5 place-items-center rounded bg-[#1769DF] text-white">
+                            <Check className="size-2.5" />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                  {libraryMedia.length === 0 && (
+                    <p className="col-span-5 text-[10.5px] text-[#7A87A0]">No files in your library yet — upload one to attach it.</p>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -597,10 +791,13 @@ export function CreateContentTab() {
           </button>
           <button className={cn(
             "flex h-8 flex-1 items-center justify-center gap-1 rounded-sm text-[10.5px] font-semibold text-white shadow-sm transition",
-            errorCount > 0 ? "bg-gray-400 cursor-not-allowed" : "bg-[#EB0711] hover:bg-[#D60811]"
-          )}>
-            <Send className="size-3" />
-            {errorCount > 0 ? `${errorCount} channel${errorCount > 1 ? "s" : ""} need attention` : "Publish"}
+            errorCount > 0 || isPublishing || isSavingDraft ? "bg-gray-400 cursor-not-allowed" : "bg-[#EB0711] hover:bg-[#D60811]"
+          )}
+            onClick={() => void handlePublishNow()}
+            disabled={errorCount > 0 || isPublishing || isSavingDraft}
+          >
+            {(isPublishing || isSavingDraft) ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3" />}
+            {errorCount > 0 ? `${errorCount} channel${errorCount > 1 ? "s" : ""} need attention` : isPublishing ? "Publishing…" : "Publish"}
           </button>
         </div>
       </div>

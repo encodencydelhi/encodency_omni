@@ -2,17 +2,17 @@ import { apiClient } from "@/lib/api/client";
 import { companyScopeHeaders } from "@/lib/api/company-scope";
 import { ApiError } from "@/types/api";
 
-export type DraftChannel =
-  | "FACEBOOK_PAGE"
-  | "INSTAGRAM_ACCOUNT"
-  | "LINKEDIN_ORGANIZATION"
-  | "GOOGLE_BUSINESS_LOCATION";
+/**
+ * Mirrors the backend `DRAFT_CHANNELS` (content/drafts.service.ts). Google
+ * Business is publishable but has no draft-variant channel yet — sending it
+ * is rejected with `variants.<channel> is not a supported channel`.
+ */
+export type DraftChannel = "FACEBOOK_PAGE" | "INSTAGRAM_ACCOUNT" | "LINKEDIN_ORGANIZATION";
 
 export const SUPPORTED_DRAFT_CHANNELS: readonly DraftChannel[] = [
   "FACEBOOK_PAGE",
   "INSTAGRAM_ACCOUNT",
   "LINKEDIN_ORGANIZATION",
-  "GOOGLE_BUSINESS_LOCATION",
 ] as const;
 
 export interface DraftVariantRecord {
