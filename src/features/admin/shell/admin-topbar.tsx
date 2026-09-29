@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, ChevronDown, Menu, Plus, Search } from "lucide-react";
+import { ChevronDown, Menu, Plus, Search } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { NotificationsMenu } from "@/components/layout/notifications-menu";
 import { useAdminContext } from "./admin-context";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { cn } from "@/lib/utils/cn";
@@ -154,13 +155,7 @@ export function AdminTopbar() {
 
         <div className="h-4 w-[1px] bg-[#E4E4E7] hidden sm:block mx-1" />
 
-        <button
-          className="relative grid size-9 place-items-center rounded-sm text-[#71717A] hover:bg-[#F4F4F5] hover:text-[#18181B] transition-colors"
-          aria-label="Notifications"
-        >
-          <Bell className="size-[18px]" />
-          <span className="absolute right-2 top-2 size-2 rounded-sm border-2 border-white bg-[#EB0711]" />
-        </button>
+        <NotificationsMenu />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

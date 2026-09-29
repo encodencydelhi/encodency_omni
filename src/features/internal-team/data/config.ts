@@ -18,7 +18,8 @@ export const COMPANY_POOL_EXPORT = [
   { id: "cmp_amberline-cosmetics", name: "Amberline Cosmetics" },
 ] as const;
 
-export const TEAM_MOCK_MODE = true;
+/** `false` once the live `GET /super-admin/users` transport is active (see data/repository.ts). */
+export const TEAM_MOCK_MODE = process.env.NEXT_PUBLIC_DATA_SOURCE !== "api";
 export const MOCK_REFERENCE_TIME = new Date("2026-09-19T12:00:00Z").getTime();
 export const SESSION_STORAGE_KEYS = { internalTeamStore: "encodency_internal_team_v1" } as const;
 

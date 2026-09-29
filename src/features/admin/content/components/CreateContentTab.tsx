@@ -23,6 +23,7 @@ import {
   MOCK_CONNECTIONS,
 } from "../config/platform-config";
 import { MOCK_CLIENTS } from "../mocks/content.mock";
+import { clientsApi } from "@/features/admin/projects/live/clients-api";
 import { ContentPreviewPanel } from "./ContentPreview";
 import { ContentChecklist } from "./ContentChecklist";
 import { MasterContentEditor } from "./MasterContentEditor";
@@ -89,15 +90,31 @@ export function CreateContentTab() {
   const [schedules, setSchedules] = useState<PlatformSchedule[]>([]);
   const [globalUtm, setGlobalUtm] = useState<UTMConfig>({ source: "", medium: "", campaign: "", content: "", term: "" });
   const [platformUtms, setPlatformUtms] = useState<Partial<Record<Platform, UTMConfig>>>({});
+  /* ── Tenancy & Live Draft State (TASK-11A) ── */
+  const { companyId, clientId } = useTenancyContext();
+  const [clientNames, setClientNames] = useState<string[]>(MOCK_CLIENTS.map((c) => c.name));
   const [selectedClient, setSelectedClient] = useState(MOCK_CLIENTS[0]!.name);
   const [previewPlatform, setPreviewPlatform] = useState<Platform>("instagram");
   const [channelsOpen, setChannelsOpen] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
 
-  /* ── Tenancy & Live Draft State (TASK-11A) ── */
-  const { companyId, clientId } = useTenancyContext();
   const [savedDraftId, setSavedDraftId] = useState<string | null>(null);
   const [currentRevision, setCurrentRevision] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!companyId) return;
+    let cancelled = false;
+    clientsApi
+      .list(companyId)
+      .then((clients) => {
+        if (cancelled || !clients.length) return;
+        const names = clients.map((client) => client.displayName || client.name);
+        setClientNames(names);
+        setSelectedClient((current) => (names.includes(current) ? current : names[0]!));
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [companyId]);
   const [variantIds, setVariantIds] = useState<Partial<Record<Platform, string>>>({});
   const [isSavingDraft, setIsSavingDraft] = useState<boolean>(false);
   const [conflictNotice, setConflictNotice] = useState<string | null>(null);
@@ -372,7 +389,7 @@ export function CreateContentTab() {
             <SelectField
               label="Client"
               value={selectedClient}
-              options={MOCK_CLIENTS.map(c => c.name)}
+              options={clientNames}
               onChange={setSelectedClient}
               required
             />

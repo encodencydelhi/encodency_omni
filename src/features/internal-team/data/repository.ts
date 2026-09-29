@@ -20,8 +20,97 @@ import type {
 } from "./types";
 import { STAFF_MEMBERS, STAFF_INVITATIONS, STAFF_ACCESS_REVIEWS, STAFF_ACTIVITIES, STAFF_LIFECYCLE_EVENTS, COMPANY_POOL_EXPORT } from "./mock-data";
 import { filterStaff, sortStaff, paginateStaff, computeStaffKpis, computeInvitationKpis, computeAccessReviewKpis } from "./selectors";
+import { getMfaState } from "./config";
+import { apiClient } from "@/lib/api/client";
+import { ApiError } from "@/types/api";
+import {
+  superAdminUsersApi,
+  type SuperAdminUserDetail,
+  type SuperAdminUserSummary,
+} from "@/features/users/live/super-admin-users-api";
+import type { InternalRole } from "@/types/domain/team";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const PLATFORM_ROLE_TO_INTERNAL: Record<string, InternalRole> = {
+  SUPER_ADMIN: "super_admin",
+  SUPPORT: "support",
+  USER: "operations",
+};
+
+/** Network / 5xx / 404 fall back to the bundled dataset; auth and validation stay loud. */
+function canFallBack(error: unknown): boolean {
+  if (!ApiError.isApiError(error)) return true;
+  return error.status === 0 || error.status === 404 || error.status >= 500;
+}
+
+function toStaffMember(user: SuperAdminUserSummary | SuperAdminUserDetail): StaffMember {
+  const memberships = "memberships" in user ? user.memberships : [];
+  const role: InternalRole = PLATFORM_ROLE_TO_INTERNAL[user.platformRole] ?? "operations";
+  const primary = memberships[0];
+
+  return {
+    id: user.id,
+    name: user.name || user.email.split("@")[0] || user.email,
+    email: user.email,
+    avatarUrl: user.avatarUrl,
+    jobTitle: primary?.jobTitle ?? "",
+    department: primary?.department ?? "",
+    role,
+    status: user.status === "ACTIVE" ? "active" : "suspended",
+    mfaEnabled: user.mfaEnabled,
+    mfaState: getMfaState(user.mfaEnabled),
+    lastActiveAt: user.updatedAt,
+    createdAt: user.createdAt,
+    globalUserId: user.id,
+    assignments: memberships.map((membership) => ({
+      id: membership.membershipId,
+      staffId: user.id,
+      companyId: membership.company.id,
+      companyName: membership.company.name,
+      responsibility: "primary_owner" as const,
+      assignedAt: membership.createdAt,
+      assignedBy: "",
+      status: "active" as const,
+    })),
+    accessReviewStatus: "not_scheduled",
+    nextReviewDate: null,
+    privilegedAccess: user.platformRole === "SUPER_ADMIN",
+    effectiveCapabilities: computeEffectiveCapabilities(role),
+    sensitiveCapabilities: computeSensitiveCapabilities(role),
+  };
+}
+
+/** GET /super-admin/users is capped at 100 rows per page, so the directory walks every page. */
+async function fetchAllLiveStaff(): Promise<StaffMember[]> {
+  const members: StaffMember[] = [];
+  let page = 1;
+  let total = Number.POSITIVE_INFINITY;
+
+  while (members.length < total && page <= 50) {
+    const response = await superAdminUsersApi.list({ page, limit: 100 });
+    total = response.total;
+    if (!response.items.length) break;
+    members.push(...response.items.map(toStaffMember));
+    page += 1;
+  }
+
+  return members;
+}
+
+async function fetchCompanyCount(): Promise<number> {
+  try {
+    const response = await apiClient.request<{ total?: number }>({
+      method: "GET",
+      path: "/super-admin/companies",
+      query: { page: 1, limit: 1 },
+    });
+    return typeof response?.total === "number" ? response.total : COMPANY_POOL_EXPORT.length;
+  } catch (error) {
+    if (canFallBack(error)) return COMPANY_POOL_EXPORT.length;
+    throw error;
+  }
+}
 
 const staffStore: StaffMember[] = [...STAFF_MEMBERS];
 const invitationStore: StaffInvitation[] = [...STAFF_INVITATIONS];
@@ -97,25 +186,52 @@ function cloneStaffMember(original: StaffMember, overrides?: Partial<StaffMember
 
 export const internalTeamRepository: InternalTeamRepository = {
   async listStaff(query) {
-    await sleep(150);
-    const filtered = filterStaff(staffStore, query);
+    let source = staffStore;
+    let companyCount = COMPANY_POOL_EXPORT.length;
+    try {
+      const [liveStaff, liveCompanyCount] = await Promise.all([fetchAllLiveStaff(), fetchCompanyCount()]);
+      source = liveStaff;
+      companyCount = liveCompanyCount;
+      staffStore.splice(0, staffStore.length, ...liveStaff);
+    } catch (error) {
+      if (!canFallBack(error)) throw error;
+    }
+
+    const filtered = filterStaff(source, query);
     const sorted = sortStaff(filtered, query.sort);
     const page = query.page || 1;
     const pageSize = query.pageSize || 10;
     const items = paginateStaff(sorted, page, pageSize);
-    const kpis = computeStaffKpis(staffStore, invitationStore, COMPANY_POOL_EXPORT.length);
+    const kpis = computeStaffKpis(source, invitationStore, companyCount);
     return { items, total: sorted.length, page, pageSize, pageCount: Math.ceil(sorted.length / pageSize), kpis };
   },
 
   async getStaff(id) {
-    await sleep(100);
-    const found = staffStore.find((s) => s.id === id);
-    return found ? cloneStaffMember(found) : null;
+    try {
+      const detail = await superAdminUsersApi.get(id);
+      const mapped = toStaffMember(detail);
+      const index = staffStore.findIndex((s) => s.id === id);
+      if (index === -1) staffStore.push(mapped);
+      else staffStore[index] = mapped;
+      return mapped;
+    } catch (error) {
+      if (!canFallBack(error)) throw error;
+      await sleep(100);
+      const found = staffStore.find((s) => s.id === id);
+      return found ? cloneStaffMember(found) : null;
+    }
   },
 
   async getStaffKpis() {
-    await sleep(80);
-    return computeStaffKpis(staffStore, invitationStore, COMPANY_POOL_EXPORT.length);
+    try {
+      const [liveStaff, liveCompanyCount] = await Promise.all([fetchAllLiveStaff(), fetchCompanyCount()]);
+      staffStore.splice(0, staffStore.length, ...liveStaff);
+      return computeStaffKpis(liveStaff, invitationStore, liveCompanyCount);
+    } catch (error) {
+      if (!canFallBack(error)) throw error;
+      await sleep(80);
+      return computeStaffKpis(staffStore, invitationStore, COMPANY_POOL_EXPORT.length);
+    }
   },
 
   async listInvitations(query) {

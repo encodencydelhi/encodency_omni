@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Clock3, Copy, FileText, ImageIcon, MoreHorizontal, Search, Sparkles, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Clock3, Copy, FileText, ImageIcon, Loader2, MoreHorizontal, Search, Sparkles, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { draftsApi, type DraftSummaryRecord } from "../live/drafts-api";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
 
 type View = "ai-assistant" | "templates" | "drafts";
 
@@ -21,13 +23,6 @@ const templates = [
   ["Volunteer Call", "Invite supporters to join your next initiative.", "Community", "bg-violet-50 text-violet-600"],
   ["Festival Greeting", "Create a thoughtful seasonal social post.", "Greeting", "bg-amber-50 text-amber-600"],
   ["Quick Update", "Publish a concise project or organization update.", "Update", "bg-cyan-50 text-cyan-600"],
-];
-
-const drafts = [
-  ["Clean Ganga Awareness – Week 2", "Small actions create a cleaner tomorrow...", "Instagram, Facebook", "Today, 10:42 AM"],
-  ["Volunteer Spotlight: Riya Sharma", "Meet Riya, one of the changemakers...", "LinkedIn", "Yesterday, 4:18 PM"],
-  ["World Environment Day", "This Environment Day, let us renew...", "All channels", "Jun 2, 2025"],
-  ["Monthly Impact Report", "Together we collected 1.8 tons of waste...", "Facebook, LinkedIn", "May 29, 2025"],
 ];
 
 export function ContentLibraryPage({ view }: { view: View }) {
@@ -66,5 +61,61 @@ function Templates() {
 }
 
 function Drafts() {
-  return <section className="overflow-hidden rounded-sm border bg-white shadow-sm"><div className="flex items-center justify-between border-b p-4"><div><h2 className="text-[16px] font-semibold">Saved Drafts</h2><p className="text-[12px] text-muted-foreground">Continue editing content you saved earlier.</p></div><div className="flex h-9 w-64 items-center gap-2 rounded-sm border px-3"><Search className="size-4 text-muted-foreground" /><input className="w-full text-[12px] outline-none" placeholder="Search drafts..." /></div></div><div className="divide-y">{drafts.map(([title, excerpt, channels, updated], i) => <article key={title} className="grid grid-cols-[44px_1fr_150px_130px_90px] items-center gap-3 px-4 py-3 hover:bg-gray-50"><span className="grid size-10 place-items-center rounded-sm bg-rose-50 text-[#e20611]"><FileText className="size-5" /></span><div className="min-w-0"><h3 className="truncate text-[13px] font-semibold">{title}</h3><p className="truncate text-[11px] text-muted-foreground">{excerpt}</p></div><span className="text-[11px] text-muted-foreground">{channels}</span><span className="flex items-center gap-1 text-[10px] text-muted-foreground"><Clock3 className="size-3" />{updated}</span><div className="flex justify-end gap-1"><button className="rounded p-2 text-blue-600 hover:bg-blue-50"><Copy className="size-4" /></button><button className="rounded p-2 text-red-500 hover:bg-red-50"><Trash2 className="size-4" /></button><button className="rounded p-2 hover:bg-gray-100"><MoreHorizontal className="size-4" /></button></div></article>)}</div></section>;
+  const { companyId, clientId, isReady } = useTenancyContext();
+  const [items, setItems] = useState<DraftSummaryRecord[] | null>(null);
+
+  useEffect(() => {
+    if (!isReady || !companyId || !clientId) return;
+    let cancelled = false;
+    draftsApi
+      .list(companyId, clientId, { page: 1, limit: 50 })
+      .then((res) => { if (!cancelled) setItems(res.items ?? []); })
+      .catch(() => { if (!cancelled) setItems([]); });
+    return () => { cancelled = true; };
+  }, [isReady, companyId, clientId]);
+
+  return (
+    <section className="overflow-hidden rounded-sm border bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b p-4">
+        <div>
+          <h2 className="text-[16px] font-semibold">Saved Drafts</h2>
+          <p className="text-[12px] text-muted-foreground">Continue editing content you saved earlier.</p>
+        </div>
+        <div className="flex h-9 w-64 items-center gap-2 rounded-sm border px-3">
+          <Search className="size-4 text-muted-foreground" />
+          <input className="w-full text-[12px] outline-none" placeholder="Search drafts..." />
+        </div>
+      </div>
+
+      {items === null ? (
+        <div className="flex items-center justify-center gap-2 py-12 text-[12px] text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" /> Loading drafts...
+        </div>
+      ) : items.length === 0 ? (
+        <div className="py-12 text-center text-[12px] text-muted-foreground">No saved drafts yet.</div>
+      ) : (
+        <div className="divide-y">
+          {items.map((draft) => (
+            <article key={draft.id} className="grid grid-cols-[44px_1fr_150px_130px_90px] items-center gap-3 px-4 py-3 hover:bg-gray-50">
+              <span className="grid size-10 place-items-center rounded-sm bg-rose-50 text-[#e20611]"><FileText className="size-5" /></span>
+              <div className="min-w-0">
+                <h3 className="truncate text-[13px] font-semibold">{draft.title || "Untitled draft"}</h3>
+                <p className="truncate text-[11px] text-muted-foreground">{draft.contentPreview}</p>
+              </div>
+              <span className="text-[11px] text-muted-foreground">{draft.channels.join(", ") || "—"}</span>
+              <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <Clock3 className="size-3" />
+                {new Date(draft.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+              </span>
+              <div className="flex justify-end gap-1">
+                <button className="rounded p-2 text-blue-600 hover:bg-blue-50"><Copy className="size-4" /></button>
+                <button className="rounded p-2 text-red-500 hover:bg-red-50"><Trash2 className="size-4" /></button>
+                <button className="rounded p-2 hover:bg-gray-100"><MoreHorizontal className="size-4" /></button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }
