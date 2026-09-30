@@ -160,7 +160,8 @@ const seniorityLabels: Record<string, string> = {
 function audienceMetrics(data: Record<string, unknown>[]) {
   const rawMetrics = data.flatMap((record) => Object.entries(record).flatMap(([key, entries]) => {
     if (!key.startsWith("followerCountsBy") || !Array.isArray(entries)) return [];
-    const category = title(key.replace("followerCountsBy", ""));
+    const rawCategory = title(key.replace("followerCountsBy", ""));
+    const category = ({ "Geo Country": "Country", Geo: "Region", Function: "Job function", "Staff Count Range": "Company size" } as Record<string, string>)[rawCategory] || rawCategory;
     return entries.flatMap((entry): Array<Metric & { category: string }> => {
       const row = asRecord(entry);
       const counts = asRecord(row.followerCounts);

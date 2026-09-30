@@ -103,6 +103,12 @@
   --content-max-width: 90rem; /* 1440px */
 }
 
+/* Recharts adds a browser focus outline around SVG containers after chart interaction. */
+.recharts-wrapper,
+.recharts-surface {
+  outline: none;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
