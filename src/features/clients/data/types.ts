@@ -339,6 +339,16 @@ export interface ClientCreationCompany {
   };
 }
 
+/** Real plan slot for the caller's own Company, read from the backend instead of the client's own budget. */
+export interface ClientCompanySlot {
+  planName: string;
+  /** null when the Company has no subscription to report usage against. */
+  clientsUsed: number | null;
+  clientLimit: number | null;
+  availableSlots: number | null;
+  eligibility: ClientCreationCompany["eligibility"];
+}
+
 export interface EligibleMember {
   membershipId: string;
   name: string;

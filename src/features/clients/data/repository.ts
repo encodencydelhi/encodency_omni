@@ -15,6 +15,7 @@ import type {
   ClientActivityData,
   ClientActivityFilter,
   ClientChannelsData,
+  ClientCompanySlot,
   ClientCreationCompany,
   ClientFacets,
   ClientListQuery,
@@ -50,6 +51,8 @@ export interface ClientsRepository {
   getFacets(): Promise<ClientFacets>;
   /** Every company with its client-creation eligibility, for the create wizard. */
   listCreationCompanies(): Promise<ClientCreationCompany[]>;
+  /** Plan/limit snapshot for ONE company (the admin wizard's own Company). null when it cannot be read. */
+  getOwnCompanySlot(companyId: string): Promise<ClientCompanySlot | null>;
   /** Members of one company who could be assigned to a client (active memberships only). */
   listEligibleMembers(companyId: string, clientId?: string): Promise<EligibleMember[]>;
   getClient(id: string): Promise<ClientSummary>;

@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ROUTES } from "@/config/routes";
 import { ErrorBanner, FlowDialog, Stepper, SubmitButton } from "@/features/companies/components/flows/flow-kit";
 import { Field, KeyValue } from "@/features/companies/components/primitives";
 import { companySectionHref } from "@/features/companies/data/config";
@@ -19,7 +20,7 @@ import { isValidEmail, isValidPhone, isValidWebsite } from "@/features/companies
 import { ORGANISATION_ROLE } from "@/types/domain/user";
 import { cn } from "@/lib/utils/cn";
 import { INDUSTRIES, LANGUAGES, REPORTING_PERIODS, SESSION_STORAGE_KEYS, TIMEZONES, clientHref, resolveClientBasePath } from "../data/config";
-import { describeError, useClientMutations, useClientsList, useCreationCompanies, useEligibleMembers } from "../data/hooks";
+import { describeError, useClientMutations, useClientsList, useCreationCompanies, useEligibleMembers, useOwnCompanySlot } from "../data/hooks";
 import type { ClientCreationCompany, ClientSummary, CreateClientInput } from "../data/types";
 import { ClientAvatar } from "./client-avatar";
 import { LogoPicker } from "./logo-picker";
@@ -342,7 +343,16 @@ function TeamStep({ draft, update, errors }: { draft: Draft; update: (patch: Par
 /* Step 4 - review                                                     */
 /* ------------------------------------------------------------------ */
 
-function ReviewStep({ draft, company }: { draft: Draft; company: ClientCreationCompany | undefined }) {
+function ReviewStep({
+  draft,
+  company,
+  slotState,
+}: {
+  draft: Draft;
+  company: ClientCreationCompany | undefined;
+  /** undefined in the Super Admin flow: its company list already carries the limits. */
+  slotState?: "pending" | "ready" | "unavailable";
+}) {
   const members = useEligibleMembers(draft.companyId || null);
   const names = (members.data ?? []).filter((member) => draft.memberIds.includes(member.membershipId)).map((member) => member.name);
   const lead = (members.data ?? []).find((member) => member.membershipId === draft.leadUserId);
@@ -357,11 +367,18 @@ function ReviewStep({ draft, company }: { draft: Draft; company: ClientCreationC
         </div>
       </div>
       <dl className="divide-y divide-border rounded-sm border border-border px-3">
-        <KeyValue label="Parent company">{company?.name}</KeyValue>
+        <KeyValue label="Parent company">{company?.name ?? "—"}</KeyValue>
+        <KeyValue label="Plan">{company?.planName ?? "—"}</KeyValue>
         <KeyValue label="Client slot">
-          {company?.clientLimit === null || company?.clientLimit === undefined
-            ? "No client limit on this plan"
-            : `Uses ${company.clientsUsed + 1} of ${company.clientLimit} client slots`}
+          {slotState === "pending"
+            ? "Reading plan usage…"
+            : slotState === "unavailable"
+              ? "Plan usage unavailable"
+              : !company
+                ? "—"
+                : company.clientLimit === null || company.clientLimit === undefined
+                  ? "No client limit on this plan"
+                  : `Uses ${company.clientsUsed + 1} of ${company.clientLimit} client slots`}
         </KeyValue>
         <KeyValue label="Industry">{draft.industry}</KeyValue>
         <KeyValue label="Primary website">{draft.website.trim() || <span className="text-muted-foreground">Not configured</span>}</KeyValue>
@@ -399,7 +416,6 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
   const pathname = usePathname();
   const basePath = resolveClientBasePath(pathname);
   const mutations = useClientMutations();
-  const companies = useCreationCompanies();
   const { user } = useAuth();
 
   const isSuperAdmin = pathname.startsWith("/super-admin");
@@ -415,6 +431,11 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
       ""
     );
   }, [initialCompanyId, adminCompany]);
+
+  // The cross-company list is a Super Admin capability; the admin wizard reads its own company's
+  // plan slot from the billing summary instead of a platform list it cannot call.
+  const companies = useCreationCompanies(isSuperAdmin);
+  const ownSlot = useOwnCompanySlot(isSuperAdmin ? null : defaultCompanyId || null);
 
   const [draft, setDraft] = useState<Draft>(() => {
     // Open clean and empty with admin's company bound by default
@@ -458,6 +479,17 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
 
   const update = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }));
 
+  /** undefined for the Super Admin flow (its list carries the limits); "pending" while the slot loads. */
+  const ownSlotState: "pending" | "ready" | "unavailable" | undefined = isSuperAdmin
+    ? undefined
+    : !defaultCompanyId
+      ? "unavailable"
+      : ownSlot.isPending
+        ? "pending"
+        : ownSlot.data
+          ? "ready"
+          : "unavailable";
+
   const company = useMemo(() => {
     const targetId = draft.companyId || defaultCompanyId;
     if (targetId && companies.data) {
@@ -465,20 +497,31 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
       if (found) return found;
     }
     if (adminCompany) {
+      // Real plan/limit/usage from GET /billing/summary; nothing here invents a budget.
+      const slot = ownSlot.data;
+      const accountStatus = adminCompany.companyStatus === "ARCHIVED" ? "archived" : "active";
+      const eligibility =
+        accountStatus !== "active"
+          ? {
+              ok: false,
+              code: "company_not_active" as const,
+              reason: `${adminCompany.companyName} is archived. New clients cannot be created for it.`,
+            }
+          : (slot?.eligibility ?? { ok: true, code: "ok" as const, reason: null });
       return {
         id: adminCompany.companyId,
         name: adminCompany.companyName,
-        accountStatus: "active",
-        planName: "Active Plan",
-        clientsUsed: 0,
-        clientLimit: null,
-        availableSlots: null,
+        accountStatus,
+        planName: slot?.planName ?? (ownSlotState === "pending" ? "Reading plan…" : "Plan unavailable"),
+        clientsUsed: slot?.clientsUsed ?? 0,
+        clientLimit: slot?.clientLimit ?? null,
+        availableSlots: slot?.availableSlots ?? null,
         eligibleMembers: 1,
-        eligibility: { ok: true, code: "ok", reason: null },
+        eligibility,
       } as ClientCreationCompany;
     }
     return companies.data?.[0];
-  }, [draft.companyId, defaultCompanyId, companies.data, adminCompany]);
+  }, [draft.companyId, defaultCompanyId, companies.data, adminCompany, ownSlot.data, ownSlotState]);
 
   const isIdentityStep = isSuperAdmin ? step >= 1 : step >= 0;
   const errors: Record<string, string> = {};
@@ -496,6 +539,8 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
   const shown = { ...(attempted ? errors : {}), ...serverErrors };
 
   const blocked = isSuperAdmin && step === 0 && (!company || !company.eligibility.ok);
+  // The backend answers 402 when the plan is at its limit; show the same verdict before the request.
+  const adminBlocked = !isSuperAdmin && step === maxStep && Boolean(company && !company.eligibility.ok);
   const identityInvalid = Boolean(errors.name || errors.website || errors.contactEmail || errors.contactPhone);
 
   const next = () => {
@@ -690,7 +735,7 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
               <ArrowRightIcon />
             </Button>
           ) : (
-            <SubmitButton pending={pending} disabled={pending} onClick={() => void submit()}>
+            <SubmitButton pending={pending} disabled={pending || adminBlocked} onClick={() => void submit()}>
               {pending ? "Saving..." : "Create Client"}
             </SubmitButton>
           )}
@@ -707,19 +752,29 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
           <span className="rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary">Company Workspace</span>
         </div>
       ) : null}
+      {!isSuperAdmin && company && !company.eligibility.ok ? (
+        <AlertBanner tone="danger" title={company.eligibility.reason ?? "New clients cannot be created for this company."}>
+          <span className="block">The limit comes from this company&apos;s plan — review it in Billing before adding a client.</span>
+          <span className="mt-2 flex flex-wrap gap-1.5">
+            <Button asChild variant="outline" size="sm">
+              <Link href={ROUTES.admin.billing}>Open Billing</Link>
+            </Button>
+          </span>
+        </AlertBanner>
+      ) : null}
       <ErrorBanner message={error} />
       {isSuperAdmin ? (
         <>
           {step === 0 ? <CompanyStep draft={draft} update={update} /> : null}
           {step === 1 ? <IdentityStep draft={draft} update={update} errors={shown} onFileSelect={setPendingLogoFile} /> : null}
           {step === 2 ? <TeamStep draft={draft} update={update} errors={shown} /> : null}
-          {step === 3 ? <ReviewStep draft={draft} company={company} /> : null}
+          {step === 3 ? <ReviewStep draft={draft} company={company} slotState={ownSlotState} /> : null}
         </>
       ) : (
         <>
           {step === 0 ? <IdentityStep draft={draft} update={update} errors={shown} onFileSelect={setPendingLogoFile} /> : null}
           {step === 1 ? <TeamStep draft={draft} update={update} errors={shown} /> : null}
-          {step === 2 ? <ReviewStep draft={draft} company={company} /> : null}
+          {step === 2 ? <ReviewStep draft={draft} company={company} slotState={ownSlotState} /> : null}
         </>
       )}
     </FlowDialog>
