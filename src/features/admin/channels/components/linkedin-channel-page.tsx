@@ -189,7 +189,9 @@ export function LinkedInChannelPage() {
   const enabled = isReady && Boolean(companyId) && Boolean(clientId);
   const overviewQuery = useLinkedInOverview(companyId!, clientId!, enabled);
   const linkedinStatus = linkedinProvider(overviewQuery.data);
-  const isConnected = linkedinStatus?.status === "CONNECTED" || linkedinStatus?.state === "connected";
+  const isConnected = linkedinStatus?.status === "CONNECTED" || linkedinStatus?.status === "MAPPED" || linkedinStatus?.state === "connected";
+  const hasMappedPage = Boolean(linkedinStatus?.mappedResourceCount);
+  const showPersonalOnlyState = isConnected && !hasMappedPage;
 
   return (
     <div className="pb-8">
@@ -201,7 +203,7 @@ export function LinkedInChannelPage() {
             overviewQuery.isLoading
               ? { label: "Checking Status...", tone: "neutral" }
               : isConnected
-                ? { label: "LinkedIn Active", tone: "success" }
+                ? { label: linkedinStatus?.mappedResourceCount ? "LinkedIn Page Active" : "LinkedIn Account Active", tone: "success" }
                 : { label: "Not Connected", tone: "neutral" }
           }
           onSync={() => overviewQuery.refetch()}
@@ -212,20 +214,24 @@ export function LinkedInChannelPage() {
 
       <div className="space-y-2">
         {activeTab === "Overview" && (
-          <OverviewTab
-            onNavigateTab={setActiveTab}
-            status={linkedinStatus}
-            isConnected={isConnected}
-            isLoading={overviewQuery.isLoading}
-            onRefetch={() => overviewQuery.refetch()}
-          />
+          showPersonalOnlyState ? (
+            <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} />
+          ) : (
+            <OverviewTab
+              onNavigateTab={setActiveTab}
+              status={linkedinStatus}
+              isConnected={isConnected}
+              isLoading={overviewQuery.isLoading}
+              onRefetch={() => overviewQuery.refetch()}
+            />
+          )
         )}
-        {activeTab === "Posts" && <PostsTab />}
-        {activeTab === "Analytics" && <AnalyticsTab />}
-        {activeTab === "Audience" && <AudienceTab />}
-        {activeTab === "Campaigns" && <CampaignsTab />}
-        {activeTab === "Leads" && <LeadsTab />}
-        {activeTab === "Inbox" && <InboxTab />}
+        {activeTab === "Posts" && (showPersonalOnlyState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <PostsTab />)}
+        {activeTab === "Analytics" && (showPersonalOnlyState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <AnalyticsTab />)}
+        {activeTab === "Audience" && (showPersonalOnlyState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <AudienceTab />)}
+        {activeTab === "Campaigns" && (showPersonalOnlyState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <CampaignsTab />)}
+        {activeTab === "Leads" && (showPersonalOnlyState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <LeadsTab />)}
+        {activeTab === "Inbox" && (showPersonalOnlyState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <InboxTab />)}
         {activeTab === "Settings" && (
           <SettingsTab
             status={linkedinStatus}
@@ -261,6 +267,124 @@ function Tabs({
         </button>
       ))}
     </nav>
+  );
+}
+
+function LinkedInPersonalOnlyState({
+  status,
+  onRefetch,
+}: {
+  status: any;
+  onRefetch?: () => void;
+}) {
+  const { companyId } = useTenancyContext();
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
+  const connectedAt = status?.lastUpdatedAt ? new Date(status.lastUpdatedAt).toLocaleString() : null;
+  const memberConnection = status?.connections?.find((connection: any) => connection.accountType === "LINKEDIN_MEMBER");
+  const accountName = memberConnection?.accountName || "LinkedIn Personal Account";
+  const accountEmail = memberConnection?.accountEmail || "Email not returned yet";
+  const accountPictureUrl = memberConnection?.accountPictureUrl;
+  const profile = memberConnection?.accountProfile || {};
+  const profileRows = [
+    ["Full name", profile.name || memberConnection?.accountName],
+    ["First name", profile.givenName],
+    ["Last name", profile.familyName],
+    ["Email", profile.email || memberConnection?.accountEmail],
+    ["Email verified", typeof profile.emailVerified === "boolean" ? (profile.emailVerified ? "Yes" : "No") : null],
+    ["Locale", profile.locale],
+    ["Member id", profile.sub || memberConnection?.externalAccountId],
+  ].filter((row): row is [string, string] => typeof row[1] === "string" && row[1].trim().length > 0);
+
+  const handleReconnect = async () => {
+    try {
+      setConnectError(null);
+      setIsConnecting(true);
+      if (!companyId) throw new Error("Active Company ID is required to connect LinkedIn.");
+      const { authUrl } = await integrationsApi.initOAuth(companyId, "LINKEDIN");
+      window.location.href = authUrl;
+    } catch (error: any) {
+      setIsConnecting(false);
+      setConnectError(error?.message || "Failed to start LinkedIn OAuth flow. Please try again.");
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <section className="rounded-sm border border-emerald-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex gap-3">
+            {accountPictureUrl ? (
+              <Image src={accountPictureUrl} alt="" width={40} height={40} className="size-10 shrink-0 rounded-sm object-cover" />
+            ) : (
+              <div className="grid size-10 shrink-0 place-items-center rounded-sm bg-[#0A66C2] text-white">
+                <span className="text-[17px] font-bold">in</span>
+              </div>
+            )}
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-[14px] font-bold text-[#111B43]">{accountName}</h2>
+                <span className="inline-flex items-center gap-1 rounded-sm border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                  <span className="size-1.5 rounded-sm bg-emerald-500" />
+                  Active
+                </span>
+              </div>
+              <p className="mt-0.5 text-[11px] font-medium text-[#64748B]">{accountEmail}</p>
+              <p className="mt-1 max-w-3xl text-[12px] leading-5 text-[#52617D]">
+                Your LinkedIn member login is saved and healthy. Real company page posts, followers, impressions, analytics and leads are not available yet because no LinkedIn organization page is mapped to this client.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[#64748B]">
+                <span>Connected: <strong className="text-[#172044]">{connectedAt || "Yes"}</strong></span>
+                <span>Account type: <strong className="text-[#172044]">Personal profile</strong></span>
+                <span>Company page mappings: <strong className="text-[#172044]">{status?.mappedResourceCount ?? 0}</strong></span>
+                {memberConnection?.externalAccountId && (
+                  <span>LinkedIn member id: <strong className="text-[#172044]">{memberConnection.externalAccountId}</strong></span>
+                )}
+              </div>
+              {profileRows.length > 0 && (
+                <div className="mt-3 grid max-w-3xl grid-cols-1 gap-2 rounded-sm border border-[#E4EAF2] bg-[#F8FAFD] p-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {profileRows.map(([label, value]) => (
+                    <div key={label}>
+                      <p className="text-[10px] font-semibold uppercase text-[#8A97AF]">{label}</p>
+                      <p className="mt-0.5 break-words text-[12px] font-semibold text-[#172044]">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {connectError && (
+                <p className="mt-2 rounded-sm border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-600">
+                  {connectError}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <button
+              type="button"
+              onClick={onRefetch}
+              className="h-8 rounded-sm border border-[#DDE4ED] bg-white px-3 text-[11px] font-bold text-[#425273] hover:bg-[#F8FAFD]"
+            >
+              Refresh
+            </button>
+            <button
+              type="button"
+              onClick={handleReconnect}
+              disabled={isConnecting}
+              className="h-8 rounded-sm bg-[#0A66C2] px-3 text-[11px] font-bold text-white hover:bg-[#084e96] disabled:opacity-70"
+            >
+              {isConnecting ? "Redirecting..." : "Reconnect"}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-sm border border-amber-200 bg-amber-50 p-4">
+        <h3 className="text-[13px] font-bold text-amber-900">Real LinkedIn page data is blocked until a company page is mapped</h3>
+        <p className="mt-1 text-[12px] leading-5 text-amber-800">
+          The backend currently has real OAuth connection status and organization discovery support. To show real posts, followers and analytics here, the connected LinkedIn user must have admin access to a LinkedIn company page and the app must have LinkedIn organization/page permissions. A normal /in/ personal profile does not provide company-page analytics.
+        </p>
+      </section>
+    </div>
   );
 }
 
@@ -2556,6 +2680,11 @@ function OverviewTab({
   const { companyId } = useTenancyContext();
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
+  const hasMappedPage = Boolean(status?.mappedResourceCount);
+  const connectedLabel = hasMappedPage ? "LinkedIn Company Page Connected" : "LinkedIn Personal Account Connected";
+  const connectedDetail = hasMappedPage
+    ? "Company page is mapped for this client."
+    : "Personal LinkedIn profile login is connected. Company page data appears after mapping an organization page.";
 
   const handleConnect = async () => {
     try {
@@ -2592,7 +2721,7 @@ function OverviewTab({
                 </span>
               </div>
               <p className="mt-0.5 text-[11px] text-[#475569]">
-                {status?.reason || "Connect your LinkedIn Company Page to schedule posts, sync analytics, run employee advocacy and track follower growth."}
+                {status?.reason || "Connect LinkedIn to verify your personal profile login. Company pages can be mapped after organization access is available."}
               </p>
               {connectError && (
                 <p className="mt-1 text-[11px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-1 rounded-xs">
@@ -2628,10 +2757,10 @@ function OverviewTab({
         <div className="flex items-center justify-between p-3 bg-white border border-emerald-200/80 rounded-sm text-[11.5px] font-semibold text-[#172044] shadow-xs">
           <div className="flex items-center gap-2.5">
             <span className="size-2 rounded-sm bg-emerald-500 animate-pulse" />
-            <span className="text-emerald-700 font-bold">LinkedIn Company Page Connected</span>
+            <span className="text-emerald-700 font-bold">{connectedLabel}</span>
             <span className="text-slate-300">|</span>
             <span className="text-slate-500 text-[11px]">
-              {status?.lastUpdatedAt ? `Last synced: ${new Date(status.lastUpdatedAt).toLocaleString()}` : "Active & Healthy"}
+              {status?.lastUpdatedAt ? `Last synced: ${new Date(status.lastUpdatedAt).toLocaleString()}` : connectedDetail}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -4511,6 +4640,9 @@ function SettingsTab({
   // General state
   const [channelName, setChannelName] = useState("LinkedIn");
   const project = "Moksha Sewa";
+  const hasMappedPage = Boolean(status?.mappedResourceCount);
+  const connectionTitle = hasMappedPage ? "LinkedIn Company Page" : "LinkedIn Personal Account";
+  const connectionSubtitle = hasMappedPage ? "Mapped organization page" : "Connected member profile";
   const timezone = "Asia/Kolkata (GMT+5:30)";
   const [description, setDescription] = useState(
     "Working towards a cleaner Ganga through awareness, action and community participation."
@@ -4704,8 +4836,8 @@ function SettingsTab({
                     </p>
                     <p className="text-[10px] text-[#8A97AF]">
                       {isConnected
-                        ? "Your LinkedIn page is connected and working properly."
-                        : "Your LinkedIn page is not connected yet. Connect to enable posting & analytics."}
+                        ? "Your LinkedIn account is connected and working properly."
+                        : "Your LinkedIn account is not connected yet. Connect to enable posting & analytics."}
                     </p>
                   </div>
                 </div>
@@ -4716,8 +4848,8 @@ function SettingsTab({
                       <span className="text-[16px] font-semibold">in</span>
                     </div>
                     <div>
-                      <p className="text-[12px] font-semibold text-[#172044]">Namo Gange Trust</p>
-                      <p className="text-[10px] text-[#8A97AF]">@namogangetrust</p>
+                      <p className="text-[12px] font-semibold text-[#172044]">{connectionTitle}</p>
+                      <p className="text-[10px] text-[#8A97AF]">{connectionSubtitle}</p>
                     </div>
                   </div>
                   <ExternalLink className="size-3.5 text-[#8A97AF]" />

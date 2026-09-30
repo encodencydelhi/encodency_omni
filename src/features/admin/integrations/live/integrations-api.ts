@@ -85,6 +85,20 @@ export interface OverviewResource {
   integrationId: string;
 }
 
+export interface OverviewConnection {
+  integrationId: string;
+  provider: BackendOAuthProvider;
+  accountType: "LOGIN" | "LINKEDIN_MEMBER";
+  externalAccountId: string;
+  accountName: string | null;
+  accountEmail: string | null;
+  accountPictureUrl: string | null;
+  accountProfile: Record<string, unknown> | null;
+  status: "ACTIVE" | "EXPIRED" | "REVOKED" | "ERROR";
+  health: ConnectionHealth;
+  lastUpdatedAt: string;
+}
+
 export interface ProviderOverview {
   provider: OverviewProvider;
   status: ConnectionStatus;
@@ -92,6 +106,7 @@ export interface ProviderOverview {
   reconnectRequired: boolean;
   integrationId: string | null;
   companyConnectionAvailable: boolean;
+  connections: OverviewConnection[];
   mappedResourceCount: number;
   resources: OverviewResource[];
   lastUpdatedAt: string | null;
