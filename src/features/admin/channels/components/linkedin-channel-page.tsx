@@ -2515,6 +2515,9 @@ const recentActivity = [
   { title: "Mention detected", detail: "You were mentioned in a post by Green India Initiative.", time: "6 hours ago", icon: AtSign, color: "green" },
 ] as const;
 
+import { integrationsApi } from "@/features/admin/integrations/live/integrations-api";
+// ... (rest of imports)
+
 function OverviewTab({
   onNavigateTab,
   status,
@@ -2522,11 +2525,27 @@ function OverviewTab({
   onNavigateTab?: (tab: TabType) => void;
   status: any;
 }) {
+  const handleConnect = async () => {
+    try {
+      await integrationsApi.initOAuth("LINKEDIN");
+    } catch (error) {
+      console.error("Failed to initiate LinkedIn OAuth:", error);
+    }
+  };
+
   return (
     <div className="space-y-2">
       {/* 0. Connection Status Indicator */}
-      <div className="p-2 bg-white border border-[#E4EAF2] rounded-sm text-[11px] font-semibold text-[#172044]">
-        Connection Status: {status ? "Connected" : "Disconnected"}
+      <div className="flex items-center justify-between p-2 bg-white border border-[#E4EAF2] rounded-sm text-[11px] font-semibold text-[#172044]">
+        <span>Connection Status: {status ? "Connected" : "Disconnected"}</span>
+        {!status && (
+          <button
+            onClick={handleConnect}
+            className="px-3 py-1 bg-[#0A66C2] text-white rounded-sm hover:bg-[#0958A8] transition-colors cursor-pointer"
+          >
+            Connect LinkedIn
+          </button>
+        )}
       </div>
 
       {/* 1. Namo Gange Trust Page Banner (Commented out for now) */}

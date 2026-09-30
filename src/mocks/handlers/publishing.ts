@@ -286,7 +286,7 @@ export const publishingRoutes: MockRoutes = {
     if (variant.channel === "INSTAGRAM_ACCOUNT" && attachments.length === 0) {
       badRequest("media_not_supported_for_channel", "Instagram publishing requires exactly one image or one Reel video.");
     }
-    if (attachments.length > 0 && variant.channel !== "FACEBOOK_PAGE" && variant.channel !== "INSTAGRAM_ACCOUNT") {
+    if (attachments.length > 0 && variant.channel !== "FACEBOOK_PAGE" && variant.channel !== "INSTAGRAM_ACCOUNT" && variant.channel !== "LINKEDIN_ORGANIZATION") {
       badRequest("media_not_supported_for_channel", `Publishing media to ${variant.channel} is not available yet. Detach the media to publish text only.`);
     }
     if (variant.channel === "INSTAGRAM_ACCOUNT" && attachments.length !== 1) {

@@ -187,7 +187,7 @@ export function isContentTooLong(error: unknown): error is ApiError {
   return reasonIs(error, "content_too_long_for_channel");
 }
 
-/** 400 `{ reason: 'media_not_supported_for_channel' }` — LinkedIn media publishing is not supported yet. */
+/** 400 `{ reason: 'media_not_supported_for_channel' }` — Media publishing is not supported for this channel. */
 export function isMediaNotSupportedForChannel(error: unknown): error is ApiError {
   return reasonIs(error, "media_not_supported_for_channel");
 }
@@ -205,7 +205,7 @@ export function isMediaUnavailable(error: unknown): error is ApiError {
 /** Human-readable explanation for scheduling error codes/reasons */
 export function describeScheduleError(error: unknown): string {
   if (isMediaNotSupportedForChannel(error)) {
-    return "Media publishing is not supported for this channel (LinkedIn). Please detach media from the draft before scheduling.";
+    return "Media publishing is not supported for this channel. Please detach media from the draft before scheduling.";
   }
   if (isMediaCombinationNotSupported(error)) {
     return "This media combination is not supported. Use 1-10 photos or exactly one video, never a mix.";
