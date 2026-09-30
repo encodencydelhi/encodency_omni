@@ -65,6 +65,18 @@ export function getStoredClientId(): string {
   return "";
 }
 
+/**
+ * `localStorage`'s own `storage` event only fires in *other* tabs, so every
+ * `useTenancyContext()` instance in this tab keeps its own React state. Writing
+ * the scope broadcasts this event so a change made by one component (e.g. the
+ * sidebar Client switcher) is picked up by every mounted consumer immediately.
+ */
+export const TENANCY_CHANGE_EVENT = "omni:tenancy-changed";
+
+function emitTenancyChange(): void {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(TENANCY_CHANGE_EVENT));
+}
+
 export function setStoredTenancy(companyId: string, clientId?: string): void {
   const storage = getStorage();
   if (!storage) return;
@@ -74,6 +86,7 @@ export function setStoredTenancy(companyId: string, clientId?: string): void {
   if (clientId) {
     storage.setItem(STORAGE_KEY_CLIENT, clientId);
   }
+  emitTenancyChange();
 }
 
 /**
@@ -86,4 +99,5 @@ export function clearStoredClientId(): void {
   const storage = getStorage();
   if (!storage) return;
   storage.removeItem(STORAGE_KEY_CLIENT);
+  emitTenancyChange();
 }

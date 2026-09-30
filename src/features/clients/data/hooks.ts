@@ -34,6 +34,7 @@ export const clientKeys = {
   portfolio: [...ROOT, "portfolio"] as const,
   facets: [...ROOT, "facets"] as const,
   creationCompanies: [...ROOT, "creation-companies"] as const,
+  ownCompanySlot: (companyId: string) => [...ROOT, "own-company-slot", companyId] as const,
   eligibleMembers: (companyId: string) => [...ROOT, "eligible-members", companyId] as const,
   client: (id: string) => [...ROOT, "client", id] as const,
   section: (id: string, section: string, params?: unknown) => [...ROOT, "client", id, section, params ?? null] as const,
@@ -58,6 +59,17 @@ export function useClientFacets() {
 
 export function useCreationCompanies(enabled = true) {
   return useQuery({ queryKey: clientKeys.creationCompanies, queryFn: () => clientsRepository.listCreationCompanies(), enabled });
+}
+
+/** Real plan/limit snapshot for the company the admin wizard is creating into. */
+export function useOwnCompanySlot(companyId: string | null) {
+  return useQuery({
+    queryKey: clientKeys.ownCompanySlot(companyId ?? ""),
+    queryFn: () => clientsRepository.getOwnCompanySlot(companyId as string),
+    enabled: Boolean(companyId),
+    retry: false,
+    staleTime: 60_000,
+  });
 }
 
 export function useEligibleMembers(companyId: string | null) {

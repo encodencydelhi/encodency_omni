@@ -73,6 +73,8 @@ export interface WhatsAppMessage {
   destinationPhone: string;
   providerMessageId: string | null;
   failureReasonCode: string | null;
+  /** Backend's human sentence for `failureReasonCode` (may be null for unknown codes). */
+  failureReasonDetail?: string | null;
   sentAt: string | null;
   deliveredAt: string | null;
   readAt: string | null;
@@ -120,6 +122,8 @@ export function describeWhatsAppFailure(code: string | null | undefined): string
       return "WhatsApp provider setup is required before sending.";
     case "missing_provider_message_id":
       return "AiSensy accepted the request but returned no message ID.";
+    case "provider_message_rejected":
+      return "AiSensy refused the message — usually the campaign name does not exist in AiSensy or the attached template is not approved. Check the campaign name under Templates.";
     default:
       return code;
   }

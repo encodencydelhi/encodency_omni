@@ -277,6 +277,20 @@ export const mockClientsProvider: ClientsRepository = {
     return allBundles().map((bundle) => creationCompany(ctx, bundle)).sort((a, b) => a.name.localeCompare(b.name));
   },
 
+  async getOwnCompanySlot(companyId) {
+    await wait("read");
+    const bundle = findBundle(companyId);
+    if (!bundle) return null;
+    const company = creationCompany(context(), bundle);
+    return {
+      planName: company.planName,
+      clientsUsed: company.clientsUsed,
+      clientLimit: company.clientLimit,
+      availableSlots: company.availableSlots,
+      eligibility: company.eligibility,
+    };
+  },
+
   async listEligibleMembers(companyId, clientId) {
     await wait("read");
     const bundle = findBundle(companyId);

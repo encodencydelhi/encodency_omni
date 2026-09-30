@@ -5,6 +5,7 @@
  */
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, it } from "node:test";
+import type { ClientsRepository } from "@/features/clients/data/repository";
 
 process.env.NEXT_PUBLIC_DATA_SOURCE = "api";
 process.env.NEXT_PUBLIC_API_BASE_URL = "/api/v1";
@@ -49,6 +50,7 @@ const { superAdminUsersApi } = await import(
   "@/features/users/live/super-admin-users-api"
 );
 const { SettingsRepository } = await import("@/features/admin/settings/settings-data/repository");
+const { createApiClientsProvider } = await import("@/features/clients/data/api-provider");
 
 interface Call {
   url: string;
@@ -1855,6 +1857,77 @@ describe("superAdminAuditLogsApi (TASK-17 persisted audit logs contracts)", () =
       assert.equal(calls[0]!.url, "/api/v1/super-admin/users/usr-123/password-reset");
       assert.equal(res.status, "queued");
     });
+  });
+});
+
+describe("client create wizard plan slot (real billing, no client billing)", () => {
+  const fallback = {
+    mode: "mock",
+    listCreationCompanies: async () => [],
+    getOwnCompanySlot: async () => null,
+  } as unknown as ClientsRepository;
+  const provider = createApiClientsProvider(fallback);
+  /** The slot read is guarded by the same UUID check as every other company-scoped call. */
+  const companyId = "6092634f-cfc4-4c34-8371-285f9f8d3f73";
+
+  it("reads the company's plan slot from GET /billing/summary with the company header", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        subscriptionRequired: false,
+        subscriptionId: "s-1",
+        status: "ACTIVE",
+        plan: { id: "p-1", name: "Growth", isActive: true, monthlyPrice: 4900 },
+        currentPeriodEnd: "2026-10-01T00:00:00.000Z",
+        limits: { maxClients: 5, maxAiTokens: 100000 },
+        usage: { currentClients: 5, currentAiTokens: 12 },
+        remaining: { clients: 0, aiTokens: 99988 },
+      },
+    });
+    const slot = await provider.getOwnCompanySlot(companyId);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0]!.url, "/api/v1/billing/summary");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.equal(calls[0]!.init.headers["x-client-id"], undefined, "the slot is Company-scoped, never Client-scoped");
+    assert.equal(slot!.planName, "Growth");
+    assert.equal(slot!.clientLimit, 5);
+    assert.equal(slot!.clientsUsed, 5);
+    assert.equal(slot!.availableSlots, 0);
+    assert.equal(slot!.eligibility.ok, false, "a company at its limit is refused before the 402");
+    assert.equal(slot!.eligibility.code, "limit_reached");
+  });
+
+  it("reports an unprovisioned company as unlimited, exactly like the backend", async () => {
+    responses.push({ status: 200, body: { subscriptionRequired: true, subscriptionId: null, status: "INCOMPLETE", plan: null } });
+    const slot = await provider.getOwnCompanySlot(companyId);
+    assert.equal(slot!.planName, "No subscription");
+    assert.equal(slot!.clientLimit, null);
+    assert.equal(slot!.availableSlots, null);
+    assert.equal(slot!.eligibility.ok, true, "no subscription means no limit");
+  });
+
+  it("returns null rather than inventing a budget when the read fails", async () => {
+    responses.push({ status: 404, body: { message: "Not found.", code: "not_found" } });
+    assert.equal(await provider.getOwnCompanySlot(companyId), null);
+  });
+
+  it("takes super-admin company limits from the subscription list, not from constants", async () => {
+    responses.push(
+      {
+        status: 200,
+        body: { items: [{ id: "c-1", name: "Acme", status: "ACTIVE", clientCount: 4, memberCount: 3 }], total: 1, page: 1, limit: 100 },
+      },
+      { status: 200, body: [{ id: "s-1", companyId: "c-1", status: "ACTIVE", plan: { id: "p-1", name: "Growth", maxClients: 10 } }] },
+    );
+    const list = await provider.listCreationCompanies();
+    assert.equal(calls[1]!.url, "/api/v1/super-admin/subscriptions");
+    const acme = list.find((item) => item.id === "c-1");
+    assert.ok(acme, "the live company is in the list");
+    assert.equal(acme.planName, "Growth");
+    assert.equal(acme.clientLimit, 10);
+    assert.equal(acme.clientsUsed, 4);
+    assert.equal(acme.availableSlots, 6);
+    assert.equal(acme.eligibility.ok, true);
   });
 });
 

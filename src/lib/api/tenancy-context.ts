@@ -7,6 +7,7 @@ import { clientsApi } from "@/features/admin/projects/live/clients-api";
 import {
   DEFAULT_FALLBACK_COMPANY_ID,
   DEFAULT_FALLBACK_CLIENT_ID,
+  TENANCY_CHANGE_EVENT,
   clearStoredClientId,
   getStoredCompanyId,
   getStoredClientId,
@@ -16,6 +17,7 @@ import {
 export {
   DEFAULT_FALLBACK_COMPANY_ID,
   DEFAULT_FALLBACK_CLIENT_ID,
+  TENANCY_CHANGE_EVENT,
   clearStoredClientId,
   getStoredCompanyId,
   getStoredClientId,
@@ -63,36 +65,68 @@ export function useTenancyContext(): TenancyContextState {
     // stored id is reconciled against this Company's real client list instead of being
     // trusted as-is (the previous behaviour kept a Client from the last Company).
     let cancelled = false;
-    clientsApi
-      .list(resolvedCompany)
-      .then((clients) => {
-        if (cancelled) return;
-        const ids = clients.map((client) => client.id);
-        if (storedClient && ids.includes(storedClient)) {
+    let attempts = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    // `isReady` only flips once the scope is actually known — either the real
+    // Client id or a genuine "this Company has no Clients" — so pages never show
+    // a premature "Select a Client" while the first list request is still open.
+    const settle = () => {
+      if (!cancelled) setIsReady(true);
+    };
+
+    const resolveClient = () => {
+      clientsApi
+        .list(resolvedCompany)
+        .then((clients) => {
+          if (cancelled) return;
+          const ids = clients.map((client) => client.id);
+          if (storedClient && ids.includes(storedClient)) {
+            setClientState(storedClient);
+          } else {
+            const nextClientId = clients[0]?.id ?? "";
+            setClientState(nextClientId);
+            if (nextClientId) {
+              setStoredTenancy(resolvedCompany, nextClientId);
+            } else {
+              clearStoredClientId();
+            }
+          }
+          settle();
+        })
+        .catch(() => {
+          // Listing failed (backend restarting, offline, transient error). A single
+          // failure used to lock this tab into "no Client" until a full reload, which
+          // blocks every Client-scoped action — so the resolution retries a few times
+          // before finally falling back to the stored id.
+          if (cancelled) return;
+          attempts += 1;
+          if (attempts <= 3) {
+            retryTimer = setTimeout(resolveClient, 1000 * attempts);
+            return;
+          }
           setClientState(storedClient);
-          return;
-        }
-        const nextClientId = clients[0]?.id ?? "";
-        setClientState(nextClientId);
-        if (nextClientId) {
-          setStoredTenancy(resolvedCompany, nextClientId);
-        } else {
-          clearStoredClientId();
-        }
-      })
-      .catch(() => {
-        // Listing failed (offline, transient error): keep the stored Client rather
-        // than dropping tenancy context for a page that could still work.
-        if (!cancelled) setClientState(storedClient);
-      })
-      .finally(() => {
-        if (!cancelled) setIsReady(true);
-      });
+          settle();
+        });
+    };
+
+    resolveClient();
 
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [user]);
+
+  // Scope writes are broadcast (same tab) by tenancy-storage so every mounted
+  // consumer — WhatsApp, LinkedIn, the sidebar switcher — sees one shared scope.
+  useEffect(() => {
+    const sync = () => {
+      setCompanyState(getStoredCompanyId());
+      setClientState(getStoredClientId());
+    };
+    window.addEventListener(TENANCY_CHANGE_EVENT, sync);
+    return () => window.removeEventListener(TENANCY_CHANGE_EVENT, sync);
+  }, []);
 
   const setCompanyId = useCallback((id: string) => {
     setCompanyState(id);

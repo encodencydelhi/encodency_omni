@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/types/api";
 import type { ClientsRepository, LifecycleAction } from "./repository";
-import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCreationCompany, EligibleMember, MutationActor, ClientTeamData, ClientAssignmentView, ClientOverviewData } from "./types";
+import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCompanySlot, ClientCreationCompany, EligibleMember, MutationActor, ClientTeamData, ClientAssignmentView, ClientOverviewData } from "./types";
 import type { OrganisationRole } from "@/types/domain/user";
 import type { CompanyClient } from "@/features/companies/data/types";
 import { unavailableClientsProvider } from "./unavailable-provider";
@@ -197,6 +197,48 @@ function toAssignmentView(m: any): ClientAssignmentView {
   };
 }
 
+/** Shape of `GET /billing/summary` (see the backend's `getBillingSummary`). */
+interface BillingSummaryResponse {
+  subscriptionRequired?: unknown;
+  status?: unknown;
+  plan?: { name?: unknown } | null;
+  limits?: { maxClients?: unknown } | null;
+  usage?: { currentClients?: unknown } | null;
+}
+
+/**
+ * Plan/limit verdict for a company, mirroring the backend's `checkEntitlement`
+ * (`billing.service.ts`) so the wizard promises exactly what the server will allow:
+ * no subscription means no limit, a non-ACTIVE subscription blocks creation, and an
+ * ACTIVE one allows `maxClients` total. `NONE` is our own marker for "not provisioned".
+ */
+function slotEligibility(input: { planName: string; clientLimit: number | null; clientsUsed: number | null; status: string }): ClientCompanySlot["eligibility"] {
+  if (input.status === "NONE") return { ok: true, code: "ok", reason: null };
+  if (input.status !== "ACTIVE") {
+    return {
+      ok: false,
+      code: "subscription_ended",
+      reason: `This company's subscription is ${input.status.toLowerCase()}. Reactivate it before adding clients.`,
+    };
+  }
+  if (input.clientLimit !== null && input.clientsUsed !== null && input.clientsUsed >= input.clientLimit) {
+    return { ok: false, code: "limit_reached", reason: "Client limit reached for the selected company." };
+  }
+  return { ok: true, code: "ok", reason: null };
+}
+
+/** Reads a `GET /super-admin/subscriptions` row (plan included) into plan name + limit, or "no subscription". */
+function planSlotFromSubscription(subscription: unknown): { planName: string; clientLimit: number | null; status: string } {
+  const row = (subscription ?? null) as { plan?: { name?: unknown; maxClients?: unknown } | null; status?: unknown } | null;
+  const planName = typeof row?.plan?.name === "string" && row.plan.name.length > 0 ? row.plan.name : null;
+  if (!planName) return { planName: "No subscription", clientLimit: null, status: "NONE" };
+  return {
+    planName,
+    clientLimit: typeof row?.plan?.maxClients === "number" ? row.plan.maxClients : null,
+    status: typeof row?.status === "string" ? row.status : "NONE",
+  };
+}
+
 export function createApiClientsProvider(fallback: ClientsRepository): ClientsRepository {
   const provider: ClientsRepository = {
     ...fallback,
@@ -384,23 +426,79 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
           query: { page: 1, limit: 100, status: "ACTIVE" },
         });
         const items: any[] = response.items ?? [];
-        const liveCompanies: ClientCreationCompany[] = items.map((item) => ({
-          id: item.id,
-          name: item.name,
-          accountStatus: item.status === "ARCHIVED" ? "archived" : "active",
-          planName: "Growth",
-          clientsUsed: item.clientCount ?? 0,
-          clientLimit: 10,
-          availableSlots: Math.max(0, 10 - (item.clientCount ?? 0)),
-          eligibleMembers: item.memberCount ?? 1,
-          eligibility: { ok: true, code: "ok", reason: null },
-        }));
+        // Plan + limit per company come from the billing service — never from client-side constants.
+        const subscriptionByCompany = new Map<string, unknown>();
+        try {
+          const subscriptions = await apiClient.request<unknown>({ method: "GET", path: "/super-admin/subscriptions" });
+          if (Array.isArray(subscriptions)) {
+            for (const subscription of subscriptions) {
+              if (subscription?.companyId) subscriptionByCompany.set(subscription.companyId, subscription);
+            }
+          }
+        } catch (subscriptionError) {
+          console.warn("Failed to read company subscriptions for plan limits:", subscriptionError);
+        }
+        const liveCompanies: ClientCreationCompany[] = items.map((item) => {
+          const slot = planSlotFromSubscription(subscriptionByCompany.get(item.id));
+          const clientsUsed = item.clientCount ?? 0;
+          return {
+            id: item.id,
+            name: item.name,
+            accountStatus: item.status === "ARCHIVED" ? "archived" : "active",
+            planName: slot.planName,
+            clientsUsed,
+            clientLimit: slot.clientLimit,
+            availableSlots: slot.clientLimit === null ? null : Math.max(0, slot.clientLimit - clientsUsed),
+            eligibleMembers: item.memberCount ?? 1,
+            eligibility: slotEligibility({ ...slot, clientsUsed }),
+          };
+        });
         return [
           ...liveCompanies,
           ...fallbackCompanies.filter((fc) => !liveCompanies.some((lc) => lc.id === fc.id)),
         ];
       } catch {
         return fallbackCompanies;
+      }
+    },
+
+    /**
+     * The admin wizard's own company: `GET /billing/summary` (Company scope + `billing:read`)
+     * reports the real plan, limit and usage. `null` when the read fails, so callers show
+     * "unknown" rather than a number the backend would contradict with a 402.
+     */
+    async getOwnCompanySlot(companyId: string): Promise<ClientCompanySlot | null> {
+      if (!UUID_PATTERN.test(companyId)) return null;
+      try {
+        const summary = await apiClient.request<BillingSummaryResponse>({
+          method: "GET",
+          path: "/billing/summary",
+          headers: { "x-company-id": companyId },
+        });
+        if (summary?.subscriptionRequired === false && summary.plan) {
+          const planName = typeof summary.plan.name === "string" ? summary.plan.name : "Subscription";
+          const clientLimit = typeof summary.limits?.maxClients === "number" ? summary.limits.maxClients : null;
+          const clientsUsed = typeof summary.usage?.currentClients === "number" ? summary.usage.currentClients : null;
+          const status = typeof summary.status === "string" ? summary.status : "ACTIVE";
+          return {
+            planName,
+            clientsUsed,
+            clientLimit,
+            availableSlots: clientLimit === null || clientsUsed === null ? null : Math.max(0, clientLimit - clientsUsed),
+            eligibility: slotEligibility({ planName, clientLimit, clientsUsed, status }),
+          };
+        }
+        // `subscriptionRequired: true` — the company is not provisioned, so it has no client limit.
+        return {
+          planName: "No subscription",
+          clientsUsed: null,
+          clientLimit: null,
+          availableSlots: null,
+          eligibility: slotEligibility({ planName: "No subscription", clientLimit: null, clientsUsed: null, status: "NONE" }),
+        };
+      } catch (error) {
+        console.warn("Failed to read the company's plan slot:", error);
+        return null;
       }
     },
 

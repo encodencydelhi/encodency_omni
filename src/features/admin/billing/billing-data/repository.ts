@@ -1,5 +1,8 @@
 
 import { addMonths, addYears, differenceInCalendarDays, parseISO } from "date-fns";
+import { apiClient } from "@/lib/api/client";
+import { companyScopeHeaders } from "@/lib/api/company-scope";
+import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { BILLING_MOCK_MODE, CHANGE_LABEL, DECLINED_TEST_CARD } from "./config";
 import { buildSnapshot, priceLines, reference, round2 } from "./mock-provider";
 import {
@@ -532,40 +535,117 @@ class MockBillingRepository implements BillingRepository {
 }
 
 /* ------------------------------------------------------------------ */
-/* Unavailable (mock mode off, no service attached)                    */
+/* Live (mock mode off, service attached)                              */
 /* ------------------------------------------------------------------ */
 
 const unavailable = () =>
   new BillingServiceError(
     "service_unavailable",
-    "The billing service isn't reachable right now.",
-    "Mock mode is off and no billing backend is configured. Set NEXT_PUBLIC_BILLING_MOCK_MODE=true to explore with sample data.",
+    "This billing action isn't implemented in the backend yet.",
+    "Wait for the backend developer to finish this API.",
   );
 
-class UnavailableBillingRepository implements BillingRepository {
+class LiveBillingRepository implements BillingRepository {
   readonly mode = "live" as const;
-  failNextPayment() { }
-  loadSnapshot = async (): Promise<BillingSnapshot> => { throw unavailable(); };
-  changePlan = this.loadSnapshot;
-  withdrawPendingChange = this.loadSnapshot;
-  cancelSubscription = this.loadSnapshot;
-  resumeSubscription = this.loadSnapshot;
-  savePaymentMethod = this.loadSnapshot;
-  setPrimaryMethod = this.loadSnapshot;
-  removePaymentMethod = this.loadSnapshot;
-  payInvoice = this.loadSnapshot;
-  saveProfile = this.loadSnapshot;
-  saveContact = this.loadSnapshot;
-  removeContact = this.loadSnapshot;
-  buyCredits = this.loadSnapshot;
-  setAddOn = this.loadSnapshot;
-  requestSales = this.loadSnapshot;
+  private failNext = false;
+  
+  failNextPayment(on: boolean) { this.failNext = on; }
+  
+  loadSnapshot = async (scenario: BillingScenario): Promise<BillingSnapshot> => { 
+    // Fetch live data
+    const companyId = getStoredCompanyId();
+    const summary = await apiClient.request<any>({ method: 'GET', path: '/billing/summary', headers: companyScopeHeaders(companyId) }).catch(() => null);
+    
+    // Create a base mock snapshot to fulfill UI gaps
+    const snapshot = buildSnapshot(scenario, new Date());
+    
+    if (summary && !summary.subscriptionRequired && summary.status === 'ACTIVE') {
+      snapshot.subscription.status = 'active';
+      snapshot.subscription.currentPeriodEnd = summary.currentPeriodEnd;
+      snapshot.subscription.id = summary.subscriptionId;
+      
+      const planLimits = summary.limits;
+      const usage = summary.usage;
+      
+      const matchingPlan = snapshot.plans.find(p => p.name.toLowerCase() === summary.plan.name.toLowerCase()) || snapshot.plans[1];
+      if (matchingPlan) {
+         snapshot.subscription.planId = matchingPlan.id;
+         matchingPlan.limits.clients = planLimits.maxClients;
+         matchingPlan.limits.aiCredits = planLimits.maxAiTokens;
+         matchingPlan.monthlyPrice = summary.plan.monthlyPrice;
+         snapshot.credits.included = planLimits.maxAiTokens;
+      }
+      
+      const clientsUsage = snapshot.usage.find(u => u.key === 'clients');
+      if (clientsUsage) clientsUsage.used = usage.currentClients;
+      
+      const aiTokensUsage = snapshot.usage.find(u => u.key === 'aiCredits');
+      if (aiTokensUsage) aiTokensUsage.used = usage.currentAiTokens;
+      
+      snapshot.credits.used = usage.currentAiTokens;
+    } else if (summary && summary.status) {
+      // Map backend status to frontend SubscriptionStatus
+      const rawStatus = summary.status.toLowerCase();
+      let mappedStatus: SubscriptionStatus = 'active';
+      if (rawStatus === 'canceled' || rawStatus === 'cancelled') mappedStatus = 'cancelled';
+      else if (rawStatus === 'past_due') mappedStatus = 'past_due';
+      else if (rawStatus === 'suspended') mappedStatus = 'past_due'; // map to past_due for now
+      else if (rawStatus === 'incomplete') mappedStatus = 'active'; // map to active so UI buttons are not disabled
+      
+      snapshot.subscription.status = mappedStatus;
+    }
+
+    try {
+      const companyId = getStoredCompanyId();
+      const invoices = await apiClient.request<any[]>({ method: 'GET', path: '/billing/invoices', headers: companyScopeHeaders(companyId) });
+      if (invoices && Array.isArray(invoices) && invoices.length > 0) {
+        snapshot.invoices = invoices.map(inv => ({
+          id: inv.id,
+          number: inv.id.split('-')[0], // simplistic mock
+          periodStart: inv.createdAt,
+          periodEnd: inv.createdAt,
+          issuedAt: inv.createdAt,
+          dueAt: inv.createdAt,
+          status: inv.status.toLowerCase() as any,
+          lines: [],
+          subtotal: inv.amount,
+          taxRate: 0,
+          tax: 0,
+          total: inv.amount,
+          paymentMethodLabel: 'Card',
+          paidAt: inv.paidAt,
+          transactionId: inv.id,
+          refundedAt: null,
+          note: null
+        }));
+      }
+    } catch(e) {
+      // ignore
+    }
+    
+    return snapshot;
+  };
+
+  changePlan = async () => { throw unavailable(); };
+  withdrawPendingChange = async () => { throw unavailable(); };
+  cancelSubscription = async () => { throw unavailable(); };
+  resumeSubscription = async () => { throw unavailable(); };
+  savePaymentMethod = async () => { throw unavailable(); };
+  setPrimaryMethod = async () => { throw unavailable(); };
+  removePaymentMethod = async () => { throw unavailable(); };
+  payInvoice = async () => { throw unavailable(); };
+  saveProfile = async () => { throw unavailable(); };
+  saveContact = async () => { throw unavailable(); };
+  removeContact = async () => { throw unavailable(); };
+  buyCredits = async () => { throw unavailable(); };
+  setAddOn = async () => { throw unavailable(); };
+  requestSales = async () => { throw unavailable(); };
 }
 
 let instance: BillingRepository | null = null;
 
 export function getBillingRepository(): BillingRepository {
-  if (!instance) instance = BILLING_MOCK_MODE ? new MockBillingRepository() : new UnavailableBillingRepository();
+  if (!instance) instance = BILLING_MOCK_MODE ? new MockBillingRepository() : new LiveBillingRepository();
   return instance;
 }
 
