@@ -189,6 +189,7 @@ export function LinkedInChannelPage() {
   const enabled = isReady && Boolean(companyId) && Boolean(clientId);
   const overviewQuery = useLinkedInOverview(companyId!, clientId!, enabled);
   const linkedinStatus = linkedinProvider(overviewQuery.data);
+  const isConnected = linkedinStatus?.status === "CONNECTED" || linkedinStatus?.state === "connected";
 
   return (
     <div className="pb-8">
@@ -196,20 +197,41 @@ export function LinkedInChannelPage() {
       <div className="-mx-4 -mt-5 mb-5 bg-white px-4 pt-5 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6 shadow-sm border-b border-[#E4EAF2]">
         <ChannelHeader
           channel="linkedin"
+          connectionStatus={
+            overviewQuery.isLoading
+              ? { label: "Checking Status...", tone: "neutral" }
+              : isConnected
+                ? { label: "LinkedIn Active", tone: "success" }
+                : { label: "Not Connected", tone: "neutral" }
+          }
+          onSync={() => overviewQuery.refetch()}
           onPrimaryAction={() => router.push("/admin/linkedin/create-post")}
         />
         <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
       <div className="space-y-2">
-        {activeTab === "Overview" && <OverviewTab onNavigateTab={setActiveTab} status={linkedinStatus} />}
+        {activeTab === "Overview" && (
+          <OverviewTab
+            onNavigateTab={setActiveTab}
+            status={linkedinStatus}
+            isConnected={isConnected}
+            isLoading={overviewQuery.isLoading}
+            onRefetch={() => overviewQuery.refetch()}
+          />
+        )}
         {activeTab === "Posts" && <PostsTab />}
         {activeTab === "Analytics" && <AnalyticsTab />}
         {activeTab === "Audience" && <AudienceTab />}
         {activeTab === "Campaigns" && <CampaignsTab />}
         {activeTab === "Leads" && <LeadsTab />}
         {activeTab === "Inbox" && <InboxTab />}
-        {activeTab === "Settings" && <SettingsTab />}
+        {activeTab === "Settings" && (
+          <SettingsTab
+            status={linkedinStatus}
+            isConnected={isConnected}
+          />
+        )}
       </div>
     </div>
   );
@@ -2521,32 +2543,116 @@ import { integrationsApi } from "@/features/admin/integrations/live/integrations
 function OverviewTab({
   onNavigateTab,
   status,
+  isConnected,
+  isLoading,
+  onRefetch,
 }: {
   onNavigateTab?: (tab: TabType) => void;
   status: any;
+  isConnected: boolean;
+  isLoading?: boolean;
+  onRefetch?: () => void;
 }) {
+  const { companyId } = useTenancyContext();
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
+
   const handleConnect = async () => {
     try {
-      await integrationsApi.initOAuth("LINKEDIN");
-    } catch (error) {
+      setConnectError(null);
+      setIsConnecting(true);
+      if (!companyId) throw new Error("Active Company ID is required to connect LinkedIn.");
+      // Fresh OAuth init request to backend every time: POST /api/v1/integrations/oauth/init
+      const { authUrl } = await integrationsApi.initOAuth(companyId, "LINKEDIN");
+      if (!authUrl) throw new Error("Backend did not return an authorization URL.");
+      // Redirect immediately to that exact authUrl
+      window.location.href = authUrl;
+    } catch (error: any) {
+      setIsConnecting(false);
       console.error("Failed to initiate LinkedIn OAuth:", error);
+      setConnectError(error?.message || "Failed to start LinkedIn OAuth flow. Please try again.");
     }
   };
 
   return (
     <div className="space-y-2">
-      {/* 0. Connection Status Indicator */}
-      <div className="flex items-center justify-between p-2 bg-white border border-[#E4EAF2] rounded-sm text-[11px] font-semibold text-[#172044]">
-        <span>Connection Status: {status ? "Connected" : "Disconnected"}</span>
-        {!status && (
-          <button
-            onClick={handleConnect}
-            className="px-3 py-1 bg-[#0A66C2] text-white rounded-sm hover:bg-[#0958A8] transition-colors cursor-pointer"
-          >
-            Connect LinkedIn
-          </button>
-        )}
-      </div>
+      {/* 0. Connection Status Banner */}
+      {!isConnected ? (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-3.5 bg-gradient-to-r from-[#EFF6FF] via-[#F8FAFD] to-white border border-[#BFDBFE] rounded-sm shadow-xs">
+          <div className="flex items-start gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-sm bg-[#0A66C2] text-white shadow-xs">
+              <span className="text-[17px] font-bold">in</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-[13.5px] font-bold text-[#111B43]">LinkedIn Not Connected</h3>
+                <span className="inline-flex items-center gap-1 rounded-sm bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                  <span className="size-1.5 rounded-sm bg-amber-500" />
+                  Setup Required
+                </span>
+              </div>
+              <p className="mt-0.5 text-[11px] text-[#475569]">
+                {status?.reason || "Connect your LinkedIn Company Page to schedule posts, sync analytics, run employee advocacy and track follower growth."}
+              </p>
+              {connectError && (
+                <p className="mt-1 text-[11px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-1 rounded-xs">
+                  {connectError}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <button
+              onClick={handleConnect}
+              disabled={isConnecting}
+              className={cn(
+                "flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-[#0A66C2] text-white rounded-sm text-[12px] font-bold shadow-xs hover:bg-[#084e96] transition-all active:scale-98 cursor-pointer",
+                isConnecting && "opacity-75 cursor-not-allowed"
+              )}
+            >
+              {isConnecting ? (
+                <>
+                  <RefreshCcw className="size-3.5 animate-spin" />
+                  <span>Redirecting to LinkedIn...</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-[14px] font-bold">in</span>
+                  <span>Connect LinkedIn</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between p-3 bg-white border border-emerald-200/80 rounded-sm text-[11.5px] font-semibold text-[#172044] shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="size-2 rounded-sm bg-emerald-500 animate-pulse" />
+            <span className="text-emerald-700 font-bold">LinkedIn Company Page Connected</span>
+            <span className="text-slate-300">|</span>
+            <span className="text-slate-500 text-[11px]">
+              {status?.lastUpdatedAt ? `Last synced: ${new Date(status.lastUpdatedAt).toLocaleString()}` : "Active & Healthy"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleConnect}
+              disabled={isConnecting}
+              className="text-[11px] font-bold text-[#0A66C2] hover:underline cursor-pointer"
+            >
+              {isConnecting ? "Redirecting..." : "Reconnect"}
+            </button>
+            {onRefetch && (
+              <button
+                onClick={onRefetch}
+                className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 cursor-pointer"
+              >
+                Refresh
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 1. Namo Gange Trust Page Banner (Commented out for now) */}
       {/* <PageOverview /> */}
@@ -4375,7 +4481,29 @@ function InboxTab() {
 // TAB 7: SETTINGS TAB
 // ----------------------------------------------------
 
-function SettingsTab() {
+function SettingsTab({
+  status,
+  isConnected = false,
+}: {
+  status?: any;
+  isConnected?: boolean;
+}) {
+  const { companyId } = useTenancyContext();
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const handleConnect = async () => {
+    try {
+      setIsConnecting(true);
+      if (!companyId) throw new Error("Active Company ID is required to connect LinkedIn.");
+      const { authUrl } = await integrationsApi.initOAuth(companyId, "LINKEDIN");
+      if (!authUrl) throw new Error("Backend did not return an authorization URL.");
+      window.location.href = authUrl;
+    } catch (error) {
+      setIsConnecting(false);
+      console.error("Failed to initiate LinkedIn OAuth:", error);
+    }
+  };
+
   const [activeSubnav, setActiveSubnav] = useState<
     "General" | "Page Settings" | "Publishing" | "Team & Permissions" | "Notifications" | "Lead Sync" | "Advanced"
   >("General");
@@ -4568,11 +4696,17 @@ function SettingsTab() {
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="size-2.5 rounded-sm bg-[#16A34A]" />
+                      <span className={cn("size-2.5 rounded-sm", isConnected ? "bg-[#16A34A]" : "bg-amber-500")} />
                       <h3 className="text-[13.5px] font-semibold text-[#172044]">Connection Status</h3>
                     </div>
-                    <p className="mt-0.5 text-[10px] font-semibold text-[#16A34A]">Connected</p>
-                    <p className="text-[10px] text-[#8A97AF]">Your LinkedIn page is connected and working properly.</p>
+                    <p className={cn("mt-0.5 text-[10px] font-semibold", isConnected ? "text-[#16A34A]" : "text-amber-600")}>
+                      {isConnected ? "Connected" : "Disconnected"}
+                    </p>
+                    <p className="text-[10px] text-[#8A97AF]">
+                      {isConnected
+                        ? "Your LinkedIn page is connected and working properly."
+                        : "Your LinkedIn page is not connected yet. Connect to enable posting & analytics."}
+                    </p>
                   </div>
                 </div>
 
@@ -4592,30 +4726,44 @@ function SettingsTab() {
                 <div className="space-y-2 divide-y divide-[#EDF1F5] text-[11px]">
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-[#64748B]">Followers</span>
-                    <span className="font-semibold text-[#172044]">12,482</span>
+                    <span className="font-semibold text-[#172044]">{isConnected ? "12,482" : "—"}</span>
                   </div>
                   <div className="flex items-center justify-between pt-1.5">
                     <span className="text-[#64748B]">Page Type</span>
                     <span className="font-medium text-[#172044]">Non-profit Organization</span>
                   </div>
                   <div className="flex items-center justify-between pt-1.5">
-                    <span className="text-[#64748B]">Location</span>
-                    <span className="font-medium text-[#172044]">New Delhi, India</span>
+                    <span className="text-[#64748B]">Status</span>
+                    <span className="font-medium text-[#172044]">{isConnected ? "Active" : "Setup Required"}</span>
                   </div>
                   <div className="flex items-center justify-between pt-1.5">
                     <span className="text-[#64748B]">Connected On</span>
-                    <span className="font-medium text-[#172044]">Mar 10, 2025, 11:24 AM</span>
+                    <span className="font-medium text-[#172044]">{status?.lastUpdatedAt ? new Date(status.lastUpdatedAt).toLocaleDateString() : "—"}</span>
                   </div>
                   <div className="flex items-center justify-between pt-1.5">
                     <span className="text-[#64748B]">Last Synced</span>
-                    <span className="font-medium text-[#172044]">Apr 14, 2025, 10:32 AM</span>
+                    <span className="font-medium text-[#172044]">{status?.lastUpdatedAt ? new Date(status.lastUpdatedAt).toLocaleTimeString() : "—"}</span>
                   </div>
                 </div>
 
-                <button className="flex w-full items-center justify-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white py-1.5 text-[11.5px] font-semibold text-[#172044] hover:bg-[#F8FAFD]">
-                  <RefreshCcw className="size-3 text-[#0A66C2]" />
-                  <span>Sync Now</span>
-                </button>
+                {!isConnected ? (
+                  <button
+                    onClick={handleConnect}
+                    disabled={isConnecting}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-none bg-[#0A66C2] py-2 text-[11.5px] font-semibold text-white shadow-xs hover:bg-[#0958A8] transition-colors cursor-pointer"
+                  >
+                    <span>{isConnecting ? "Redirecting..." : "Connect LinkedIn"}</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleConnect}
+                    disabled={isConnecting}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-none border border-[#DDE4ED] bg-white py-1.5 text-[11.5px] font-semibold text-[#172044] hover:bg-[#F8FAFD] transition-colors cursor-pointer"
+                  >
+                    <RefreshCcw className="size-3 text-[#0A66C2]" />
+                    <span>Sync Now</span>
+                  </button>
+                )}
               </div>
             </div>
 

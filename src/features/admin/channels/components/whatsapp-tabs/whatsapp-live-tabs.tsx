@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils/cn";
-import { whatsappApi, type WhatsAppConfigPayload, type WhatsAppConfigState, type WhatsAppMessage, type WhatsAppMessageStatus, type WhatsAppTemplate } from "../../live/whatsapp-api";
+import { whatsappApi, describeWhatsAppFailure, type WhatsAppConfigPayload, type WhatsAppConfigState, type WhatsAppMessage, type WhatsAppMessageStatus, type WhatsAppTemplate } from "../../live/whatsapp-api";
 import type { ProviderOverview } from "@/features/admin/integrations/live/integrations-api";
 
 const MESSAGE_STATUSES: WhatsAppMessageStatus[] = ["QUEUED", "SENDING", "SENT", "DELIVERED", "READ", "FAILED", "REJECTED", "OUTCOME_UNKNOWN"];
@@ -35,6 +35,50 @@ function ErrorRow({ error, onRetry }: { error: string | null; onRetry: () => voi
       <button type="button" className="shrink-0 font-semibold underline" onClick={onRetry}>Retry</button>
     </div>
   );
+}
+
+const MESSAGE_POLL_INTERVAL_MS = 1500;
+const MESSAGE_POLL_BUDGET_MS = 10000;
+
+/**
+ * Fire-and-forget watcher: the POST /messages call only queues the message, so
+ * the outcome (SENT vs REJECTED) lands a moment later. Polls the single message
+ * for at most ~10s and surfaces exactly one toast for whatever it settles on.
+ */
+function watchMessageOutcome(companyId: string, clientId: string, messageId: string) {
+  const deadline = Date.now() + MESSAGE_POLL_BUDGET_MS;
+  let lastStatus: WhatsAppMessageStatus = "QUEUED";
+  void (async () => {
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, MESSAGE_POLL_INTERVAL_MS));
+      let message: WhatsAppMessage;
+      try {
+        message = await whatsappApi.getMessage(companyId, clientId, messageId);
+      } catch {
+        continue; // transient read failure — keep trying until the budget runs out
+      }
+      lastStatus = message.status;
+      if (message.status === "SENT" || message.status === "DELIVERED" || message.status === "READ") {
+        toast.success("WhatsApp message sent", { description: `AiSensy accepted it — status ${message.status}.` });
+        return;
+      }
+      if (message.status === "FAILED" || message.status === "REJECTED") {
+        toast.error("WhatsApp message was not accepted", {
+          description: describeWhatsAppFailure(message.failureReasonCode) ?? `Provider rejected the message (${message.failureReasonCode ?? "no reason code"}).`,
+        });
+        return;
+      }
+      if (message.status === "OUTCOME_UNKNOWN") {
+        toast.warning("WhatsApp delivery outcome unknown", {
+          description: "AiSensy did not answer in time. The message may still be delivered — check Messages.",
+        });
+        return;
+      }
+    }
+    toast.warning("WhatsApp send is still in progress", {
+      description: `Last status: ${lastStatus.replaceAll("_", " ")}. Delivery updates continue in Messages.`,
+    });
+  })();
 }
 
 export function OverviewTab({
@@ -228,7 +272,16 @@ export function ConversationsTab({
                     <td className="px-3 py-3 text-slate-500">{formatDate(message.readAt ?? message.deliveredAt ?? message.sentAt ?? message.failedAt)}</td>
                     <td className="px-3 py-3"><button type="button" className="font-semibold text-emerald-700 hover:underline" onClick={() => toggleRow(message.id)}>{expanded ? "Hide" : "Details"}</button></td>
                   </tr>
-                  {expanded && <tr><td colSpan={6} className="bg-slate-50 px-4 py-3 text-[11px] text-slate-600">Provider message: {message.providerMessageId ?? "Not assigned"} · Failure: {message.failureReasonCode ?? "None"}</td></tr>}
+                  {expanded && (
+                    <tr>
+                      <td colSpan={6} className="bg-slate-50 px-4 py-3 text-[11px] text-slate-600">
+                        Provider message: {message.providerMessageId ?? "Not assigned"} · Failure:{" "}
+                        {message.failureReasonCode
+                          ? `${describeWhatsAppFailure(message.failureReasonCode)} (${message.failureReasonCode})`
+                          : "None"}
+                      </td>
+                    </tr>
+                  )}
                 </Fragment>
               );
             })}
@@ -285,9 +338,38 @@ export function SettingsTab({
   const [webhookSecret, setWebhookSecret] = useState("");
   const [senderId, setSenderId] = useState(config?.senderId ?? cached.senderId);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   const configured = Boolean(config?.configured && config?.hasApiKey);
   const apiKeyRequired = !configured;
+
+  const test = async () => {
+    if (!companyId) {
+      toast.error("Select a Company before testing WhatsApp.");
+      return;
+    }
+    const apiBaseUrlValue = apiBaseUrl.trim();
+    if (!apiBaseUrlValue) {
+      toast.error("Enter the AiSensy API base URL to test.");
+      return;
+    }
+    setTesting(true);
+    try {
+      const result = await whatsappApi.testConfig(companyId, {
+        apiBaseUrl: apiBaseUrlValue,
+        ...(apiKey ? { apiKey } : {}),
+      });
+      if (result.ok) {
+        toast.success("AiSensy connection works", { description: result.message });
+      } else {
+        toast.error("AiSensy connection failed", { description: result.message });
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to test the AiSensy connection.");
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -350,7 +432,10 @@ export function SettingsTab({
       </label>
       <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
         API base URL
-        <Input type="url" required value={apiBaseUrl} onChange={(event) => setApiBaseUrl(event.target.value)} placeholder="https://api.aisensy.com" />
+        <Input type="url" required value={apiBaseUrl} onChange={(event) => setApiBaseUrl(event.target.value)} placeholder="https://backend.aisensy.com" />
+        <span className="block font-normal text-slate-500">
+          The AiSensy API host, not the website: https://backend.aisensy.com. The backend appends /campaign/t1/api/v2 to this URL for every send.
+        </span>
       </label>
       <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
         API key{" "}
@@ -372,8 +457,11 @@ export function SettingsTab({
             : "The backend replaces the saved webhook secret on every save; leaving this blank removes any existing secret."}
         </span>
       </label>
-      <div className="flex justify-end border-t border-slate-100 pt-4">
-        <Button type="submit" disabled={saving || !companyId || Boolean(error)}>{saving ? "Saving…" : "Save configuration"}</Button>
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-4">
+        <Button type="button" variant="outline" onClick={test} disabled={testing || saving || !companyId}>
+          {testing ? "Testing…" : "Test connection"}
+        </Button>
+        <Button type="submit" disabled={saving || testing || !companyId || Boolean(error)}>{saving ? "Saving…" : "Save configuration"}</Button>
       </div>
     </form>
   );
@@ -490,7 +578,9 @@ export function SendTemplateModal({
         destinationPhone: destinationPhone.trim(),
         variables: Object.fromEntries(selected.variables.map((name) => [name, variables[name] ?? ""])),
       });
-      toast.success("WhatsApp message queued", { description: `Current status: ${result.status}. Delivery updates appear in Messages.` });
+      toast.info("WhatsApp message queued", { description: `Current status: ${result.status}. Checking delivery…` });
+      // The POST only queues; the AiSensy outcome arrives moments later.
+      watchMessageOutcome(companyId, clientId, result.id);
       setDestinationPhone("");
       setVariables({});
       onClose();

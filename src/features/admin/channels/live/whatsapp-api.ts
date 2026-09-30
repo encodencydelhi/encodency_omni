@@ -86,6 +86,45 @@ export interface SendWhatsAppMessagePayload {
   variables: Record<string, string>;
 }
 
+export interface WhatsAppConfigTestResult {
+  ok: boolean;
+  /** WhatsAppErrorCode when `ok` is false, otherwise null. */
+  code: string | null;
+  upstreamStatus: number | null;
+  templateCount: number;
+  message: string;
+}
+
+/**
+ * Operator-facing copy for backend WhatsAppErrorCode values. Unknown codes fall
+ * back to the raw code so a new backend error never renders as an empty string.
+ */
+export function describeWhatsAppFailure(code: string | null | undefined): string | null {
+  if (!code) return null;
+  switch (code) {
+    case "provider_endpoint_invalid":
+      return "The API base URL does not answer like the AiSensy API. Use https://backend.aisensy.com (not https://aisensy.com).";
+    case "provider_auth_failed":
+      return "AiSensy rejected the API key. Check the API key in Settings.";
+    case "provider_template_not_found":
+      return "AiSensy has no API campaign with that name. Create a Live API campaign and sync templates.";
+    case "template_variables_invalid":
+      return "The template variables do not match the AiSensy campaign parameters.";
+    case "provider_rate_limited":
+      return "AiSensy rate-limited the request; it is retried automatically.";
+    case "provider_temporarily_unavailable":
+      return "AiSensy is temporarily unavailable; the request is retried automatically.";
+    case "provider_outcome_unknown":
+      return "The request timed out before AiSensy answered — delivery outcome is unknown.";
+    case "provider_setup_required":
+      return "WhatsApp provider setup is required before sending.";
+    case "missing_provider_message_id":
+      return "AiSensy accepted the request but returned no message ID.";
+    default:
+      return code;
+  }
+}
+
 export interface SendWhatsAppMessageResult {
   id: string;
   status: WhatsAppMessageStatus;
@@ -131,6 +170,27 @@ export const whatsappApi = {
     return apiClient.request<WhatsAppConfigResult>({
       method: "PUT",
       path: "/integrations/whatsapp/config",
+      headers: companyScopeHeaders(companyId),
+      body: payload,
+      signal,
+    });
+  },
+
+  /**
+   * POST /integrations/whatsapp/config/test
+   * Business Purpose: dry-run the AiSensy base URL + key without saving them.
+   * The backend lists provider templates and answers 200 { ok, code, message }
+   * for both outcomes so the form can render the result inline.
+   * Auth: @CompanyContextRoute() (x-company-id) + integrations:write.
+   */
+  async testConfig(
+    companyId: string,
+    payload: { apiBaseUrl?: string; apiKey?: string },
+    signal?: AbortSignal,
+  ): Promise<WhatsAppConfigTestResult> {
+    return apiClient.request<WhatsAppConfigTestResult>({
+      method: "POST",
+      path: "/integrations/whatsapp/config/test",
       headers: companyScopeHeaders(companyId),
       body: payload,
       signal,
