@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
-  AlertTriangle, ArrowUpRight, BarChart3, Building2, CheckCircle2, ExternalLink,
-  FileText, Loader2, MessageSquare, RefreshCcw, ShieldCheck, Users,
+  AlertTriangle, ArrowUpRight, BarChart3, Building2, CheckCircle2, ExternalLink, Eye,
+  FileText, Loader2, MessageSquare, RefreshCcw, ShieldCheck, TrendingUp, Users,
 } from "lucide-react";
+import {
+  Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from "recharts";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { integrationsApi, type LinkedInDashboardResponse, type LinkedInDataset } from "../../integrations/live/integrations-api";
 
@@ -67,8 +70,8 @@ function DatasetNotice({ dataset, title: noticeTitle }: { dataset: LinkedInDatas
 
 function PageToolbar({ title: heading, subtitle, syncedAt, onSync, syncing }: { title: string; subtitle: string; syncedAt: string; onSync: () => void; syncing: boolean }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-[#DDE4ED] bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <div><h2 className="text-[17px] font-bold text-[#111B43]">{heading}</h2><p className="mt-0.5 text-[11px] text-[#687797]">{subtitle} · Updated {new Date(syncedAt).toLocaleString()}</p></div>
+    <div className="flex flex-col gap-3 border-b border-[#DDE4ED] bg-[#FBFCFE] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div><div className="mb-1 flex items-center gap-2"><span className="h-4 w-0.5 bg-[#0A66C2]" /><h2 className="text-[16px] font-bold text-[#111B43]">{heading}</h2></div><p className="text-[10.5px] text-[#687797]">{subtitle} · Updated {new Date(syncedAt).toLocaleString()}</p></div>
       <button onClick={onSync} disabled={syncing} className="inline-flex h-9 items-center justify-center gap-2 border border-[#CBD5E1] bg-white px-3 text-[11px] font-semibold text-[#334155] shadow-sm hover:bg-[#F8FAFC] disabled:opacity-60">
         <RefreshCcw className={`size-3.5 text-[#0A66C2] ${syncing ? "animate-spin" : ""}`} /> Sync live
       </button>
@@ -78,9 +81,15 @@ function PageToolbar({ title: heading, subtitle, syncedAt, onSync, syncing }: { 
 
 function KpiStrip({ metrics }: { metrics: SummaryMetric[] }) {
   const primary = metrics.slice(0, 4).map((metric) => [metric.label, metric.value] as const);
+  const styles = [
+    { icon: Users, color: "text-[#0A66C2]", background: "bg-[#EAF3FB]", accent: "bg-[#0A66C2]" },
+    { icon: Eye, color: "text-[#7C3AED]", background: "bg-[#F1ECFE]", accent: "bg-[#7C3AED]" },
+    { icon: BarChart3, color: "text-[#D97706]", background: "bg-[#FFF4DE]", accent: "bg-[#F59E0B]" },
+    { icon: MessageSquare, color: "text-[#059669]", background: "bg-[#E5F8F1]", accent: "bg-[#10B981]" },
+  ];
   return <div className="grid border-y border-[#DDE4ED] bg-white sm:grid-cols-2 lg:grid-cols-4">{primary.map(([label, value], index) => (
-    <div key={label} className={`px-5 py-4 ${index > 0 ? "border-t border-[#E8EDF3] sm:border-l sm:border-t-0" : ""}`}>
-      <p className="text-[10px] font-semibold uppercase text-[#7B89A4]">{label}</p><p className="mt-1 text-[24px] font-bold text-[#111B43]">{value === null ? "—" : compact(value)}</p><p className="mt-0.5 text-[10px] text-[#8190AA]">{value === null ? "Currently unavailable" : "LinkedIn reported value"}</p>
+    <div key={label} className={`relative overflow-hidden px-5 py-4 ${index > 0 ? "border-t border-[#E8EDF3] sm:border-l sm:border-t-0" : ""}`}>
+      {(() => { const style = styles[index] ?? styles[0]!; const Icon = style.icon; return <><span className={`absolute inset-x-0 top-0 h-0.5 ${style.accent}`} /><div className="flex items-start justify-between gap-3"><div><p className="text-[9.5px] font-semibold uppercase text-[#7B89A4]">{label}</p><p className="mt-1.5 text-[24px] font-bold tracking-normal text-[#111B43]">{value === null ? "—" : compact(value)}</p></div><div className={`grid size-8 place-items-center ${style.background} ${style.color}`}><Icon className="size-4" /></div></div><p className="mt-0.5 text-[9.5px] text-[#8190AA]">{value === null ? "Currently unavailable" : "LinkedIn reported value"}</p></>; })()}
     </div>
   ))}</div>;
 }
@@ -95,6 +104,7 @@ function Overview({ dashboard }: { dashboard: LinkedInDashboardResponse }) {
   const organizationType = toText(org.organizationType);
   const specialties = Array.isArray(org.localizedSpecialties) ? org.localizedSpecialties.filter((item): item is string => typeof item === "string") : [];
   const metrics = dashboardMetrics(dashboard);
+  const snapshot = metrics.filter((metric): metric is SummaryMetric & { value: number } => metric.value !== null);
   const datasets = [
     ["Company profile", dashboard.organization], ["Published content", dashboard.posts], ["Page analytics", dashboard.pageStatistics],
     ["Follower insights", dashboard.followers], ["Post analytics", dashboard.shareStatistics], ["Comments & reactions", dashboard.social],
@@ -106,6 +116,7 @@ function Overview({ dashboard }: { dashboard: LinkedInDashboardResponse }) {
     </div>
     <DatasetNotice dataset={dashboard.organization} />
     <KpiStrip metrics={metrics} />
+    {snapshot.length > 0 && <div className="grid border-b border-[#DDE4ED] bg-white lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.6fr)]"><section className="border-b border-[#DDE4ED] px-5 py-5 lg:border-b-0 lg:border-r"><div className="mb-4"><h3 className="text-[13px] font-bold text-[#172044]">Page performance snapshot</h3><p className="mt-1 text-[10.5px] text-[#7B89A4]">Current totals reported by LinkedIn</p></div><div className="h-52"><ResponsiveContainer width="100%" height="100%"><BarChart data={snapshot} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}><CartesianGrid stroke="#E8EDF3" strokeDasharray="3 3" vertical={false} /><XAxis dataKey="label" tick={{ fill: "#64748B", fontSize: 10 }} axisLine={false} tickLine={false} /><YAxis tick={{ fill: "#7B89A4", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={compact} /><Tooltip formatter={(value) => [Number(value).toLocaleString(), "Value"]} contentStyle={{ border: "1px solid #DDE4ED", borderRadius: 4, fontSize: 11 }} /><Bar dataKey="value" fill="#0A66C2" radius={[3, 3, 0, 0]} maxBarSize={42} /></BarChart></ResponsiveContainer></div></section><aside className="p-5"><h3 className="text-[13px] font-bold text-[#172044]">Sync health</h3><p className="mt-1 text-[10.5px] text-[#7B89A4]">Dataset availability for this page</p><div className="mt-4 space-y-3">{datasets.slice(0, 5).map(([label, dataset]) => <div key={label} className="flex items-center justify-between gap-4"><span className="text-[10.5px] font-medium text-[#52617D]">{label}</span><span className={`inline-flex items-center gap-1 text-[10px] font-semibold ${dataset.state === "live" ? "text-emerald-700" : dataset.state === "permission_required" ? "text-amber-700" : "text-[#64748B]"}`}><span className={`size-1.5 rounded-full ${dataset.state === "live" ? "bg-emerald-500" : dataset.state === "permission_required" ? "bg-amber-500" : "bg-[#94A3B8]"}`} />{title(dataset.state)}</span></div>)}</div></aside></div>}
     <div className="bg-white px-5 py-4"><div className="mb-3"><h3 className="text-[13px] font-bold text-[#172044]">Live data coverage</h3><p className="text-[10.5px] text-[#7B89A4]">Availability reported independently for each LinkedIn API</p></div>
       <div className="overflow-x-auto"><table className="w-full min-w-150 text-left"><thead><tr className="border-y border-[#E5EAF1] bg-[#F8FAFC] text-[10px] uppercase text-[#7B89A4]"><th className="px-3 py-2.5">Dataset</th><th className="px-3 py-2.5">Status</th><th className="px-3 py-2.5">Records</th><th className="px-3 py-2.5">Details</th></tr></thead><tbody className="divide-y divide-[#EDF1F5]">{datasets.map(([label, dataset]) => <tr key={label} className="text-[11px]"><td className="px-3 py-3 font-semibold text-[#253352]">{label}</td><td className="px-3 py-3"><span className={`inline-flex items-center gap-1.5 font-semibold ${dataset.state === "live" ? "text-emerald-700" : dataset.state === "permission_required" ? "text-amber-700" : "text-[#64748B]"}`}>{dataset.state === "live" ? <CheckCircle2 className="size-3.5" /> : <AlertTriangle className="size-3.5" />}{title(dataset.state)}</span></td><td className="px-3 py-3 text-[#52617D]">{Array.isArray(dataset.data) ? dataset.data.length : dataset.state === "live" ? "Available" : "-"}</td><td className="max-w-lg px-3 py-3 text-[#687797]">{dataset.reason || "Data is available from LinkedIn."}</td></tr>)}</tbody></table></div>
     </div>
@@ -123,9 +134,18 @@ function Posts({ dataset, social }: { dataset: LinkedInDashboardResponse["posts"
 function Analytics({ dashboard }: { dashboard: LinkedInDashboardResponse }) {
   const metrics = flattenMetrics([...dashboard.shareStatistics.data, ...dashboard.pageStatistics.data]);
   const summary = dashboardMetrics(dashboard);
-  const max = Math.max(...metrics.map((metric) => metric.value), 1);
+  const chartData = metrics
+    .filter((metric) => metric.value >= 0)
+    .sort((left, right) => right.value - left.value)
+    .slice(0, 10)
+    .map((metric) => ({ name: metric.label, value: metric.value, path: metric.key }));
   return <><DatasetNotice dataset={dashboard.shareStatistics} /><DatasetNotice dataset={dashboard.pageStatistics} /><KpiStrip metrics={summary} />
-    {metrics.length > 0 && <div className="bg-white px-5 py-5"><div className="mb-4"><h3 className="text-[13px] font-bold text-[#172044]">Performance breakdown</h3><p className="text-[10.5px] text-[#7B89A4]">All metrics returned by LinkedIn for the mapped organization</p></div><div className="grid gap-x-10 gap-y-4 lg:grid-cols-2">{metrics.slice(0, 24).map((metric, index) => <div key={`${metric.key}-${index}`} className="grid grid-cols-[minmax(120px,1fr)_2fr_70px] items-center gap-3"><p className="truncate text-[10.5px] font-medium text-[#52617D]" title={metric.key}>{metric.label}</p><div className="h-1.5 bg-[#E8EEF5]"><div className="h-full bg-[#0A66C2]" style={{ width: `${Math.max(2, metric.value / max * 100)}%` }} /></div><p className="text-right text-[11px] font-bold text-[#172044]">{compact(metric.value)}</p></div>)}</div></div>}
+    {chartData.length > 0 && <div className="grid border-t border-[#DDE4ED] bg-white xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.8fr)]">
+      <section className="border-b border-[#DDE4ED] p-5 xl:border-b-0 xl:border-r"><div className="mb-5 flex items-start justify-between gap-4"><div><h3 className="text-[13px] font-bold text-[#172044]">Performance breakdown</h3><p className="mt-1 text-[10.5px] text-[#7B89A4]">Top live metrics returned for the mapped organization</p></div><div className="grid size-8 place-items-center bg-[#EAF3FB] text-[#0A66C2]"><TrendingUp className="size-4" /></div></div>
+        <div className="h-80 w-full"><ResponsiveContainer width="100%" height="100%"><BarChart data={chartData} layout="vertical" margin={{ right: 24, left: 20 }}><CartesianGrid stroke="#E8EDF3" strokeDasharray="3 3" horizontal={false} /><XAxis type="number" tick={{ fill: "#7B89A4", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={compact} /><YAxis type="category" dataKey="name" width={105} tick={{ fill: "#52617D", fontSize: 10 }} axisLine={false} tickLine={false} /><Tooltip cursor={{ fill: "#F4F7FA" }} formatter={(value) => [Number(value).toLocaleString(), "Value"]} contentStyle={{ border: "1px solid #DDE4ED", borderRadius: 4, fontSize: 11 }} /><Bar dataKey="value" fill="#0A66C2" radius={[0, 3, 3, 0]} barSize={14} /></BarChart></ResponsiveContainer></div>
+      </section>
+      <section className="p-5"><h3 className="text-[13px] font-bold text-[#172044]">Metric detail</h3><p className="mt-1 text-[10.5px] text-[#7B89A4]">Exact values from LinkedIn</p><div className="mt-4 divide-y divide-[#EDF1F5]">{chartData.slice(0, 8).map((metric) => <div key={metric.path} className="flex items-center justify-between gap-4 py-3"><div className="min-w-0"><p className="truncate text-[11px] font-semibold text-[#33415F]">{metric.name}</p><p className="mt-0.5 truncate text-[9px] text-[#94A0B5]" title={metric.path}>{title(metric.path.replaceAll(" / ", " · "))}</p></div><span className="shrink-0 text-[13px] font-bold tabular-nums text-[#111B43]">{compact(metric.value)}</span></div>)}</div></section>
+    </div>}
   </>;
 }
 
@@ -169,7 +189,27 @@ export function LinkedInLiveTab({ tab }: { tab: LinkedInTab }) {
     catch (cause: unknown) { setError(cause instanceof Error ? cause.message : "Could not load LinkedIn page data."); }
     finally { setLoading(false); }
   };
-  useEffect(() => { void load(); }, [companyId, clientId]);
+  useEffect(() => {
+    if (!companyId || !clientId) return;
+    let active = true;
+
+    const fetchDashboard = async () => {
+      try {
+        const nextDashboard = await integrationsApi.getLinkedInDashboard(companyId, clientId);
+        if (active) {
+          setDashboard(nextDashboard);
+          setError(null);
+        }
+      } catch (cause: unknown) {
+        if (active) setError(cause instanceof Error ? cause.message : "Could not load LinkedIn page data.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void fetchDashboard();
+    return () => { active = false; };
+  }, [companyId, clientId]);
 
   if (loading && !dashboard) return <div className="flex min-h-72 items-center justify-center border-y border-[#DDE4ED] bg-white"><div className="text-center"><Loader2 className="mx-auto size-5 animate-spin text-[#0A66C2]" /><p className="mt-3 text-[11px] text-[#687797]">Syncing LinkedIn page data...</p></div></div>;
   if (error || !dashboard) return <div className="border-l-4 border-red-500 bg-red-50 px-5 py-4"><p className="text-[12px] font-semibold text-red-800">LinkedIn data could not be loaded</p><p className="mt-1 text-[11px] text-red-700">{error}</p><button onClick={() => void load()} className="mt-3 inline-flex h-8 items-center gap-2 border border-red-200 bg-white px-3 text-[10.5px] font-semibold text-red-700"><RefreshCcw className="size-3" /> Retry</button></div>;

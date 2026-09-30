@@ -30,6 +30,7 @@ import {
   Bell,
   BookOpen,
   Briefcase,
+  Building2,
   Calendar,
   CalendarClock,
   Check,
@@ -216,8 +217,8 @@ export function LinkedInChannelPage() {
       <div className="space-y-2">
         {activeTab === "Overview" && (
           showLiveConnectionState ? (
-            <div className="space-y-3">
-              <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} />
+            <div className="space-y-1.5">
+              <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} compact />
               {hasMappedPage && <LinkedInLiveTab tab="Overview" />}
             </div>
           ) : (
@@ -238,7 +239,7 @@ export function LinkedInChannelPage() {
         {activeTab === "Inbox" && (hasMappedPage ? <LinkedInLiveTab tab="Inbox" /> : showLiveConnectionState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <InboxTab />)}
         {activeTab === "Settings" && (
           showLiveConnectionState ? (
-            <div className="space-y-3">
+            <div className="space-y-1.5">
               <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} />
               {hasMappedPage && <LinkedInLiveTab tab="Settings" />}
             </div>
@@ -284,9 +285,11 @@ function Tabs({
 function LinkedInPersonalOnlyState({
   status,
   onRefetch,
+  compact = false,
 }: {
   status: any;
   onRefetch?: () => void;
+  compact?: boolean;
 }) {
   const { companyId, clientId } = useTenancyContext();
   const [isConnecting, setIsConnecting] = useState(false);
@@ -374,10 +377,36 @@ function LinkedInPersonalOnlyState({
     }
   };
 
+  if (compact && hasMappedPage) {
+    return (
+      <section className="relative flex min-h-23 flex-col gap-4 overflow-hidden border border-[#D8E1EC] bg-white px-5 py-3.5 shadow-[0_2px_8px_rgb(31_50_81/0.05)] lg:flex-row lg:items-center lg:justify-between">
+        <span className="absolute inset-y-0 left-0 w-0.5 bg-[#0A66C2]" />
+        <div className="flex min-w-0 items-center gap-5">
+          {accountPictureUrl ? (
+            <Image src={accountPictureUrl} alt={accountName} width={112} height={64} className="h-16 w-28 shrink-0 scale-[1.18] object-contain object-center" priority />
+          ) : (
+            <div className="grid size-12 shrink-0 place-items-center bg-[#0A66C2] text-[15px] font-bold text-white">in</div>
+          )}
+          <span className="hidden h-11 w-px shrink-0 bg-[#E2E8F0] sm:block" />
+          <div className="min-w-0 py-1">
+            <div className="flex flex-wrap items-center gap-2"><p className="truncate text-[13px] font-bold text-[#172044]">{accountName}</p><span className="inline-flex h-5 items-center gap-1.5 border border-emerald-200 bg-emerald-50 px-2 text-[9.5px] font-bold text-emerald-700"><span className="size-1.5 rounded-full bg-emerald-500" />Connected</span></div>
+            <p className="mt-1 truncate text-[10.5px] font-medium text-[#64748B]">{accountEmail}</p>
+            <p className="mt-1 flex items-center gap-1.5 text-[9.5px] text-[#8A97AF]"><Building2 className="size-3 text-[#0A66C2]" />{mappedResources.length} company {mappedResources.length === 1 ? "page" : "pages"} mapped to this client</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={onRefetch} title="Refresh connection" className="inline-flex h-9 items-center gap-2 border border-[#D8E1EC] bg-white px-3.5 text-[10.5px] font-semibold text-[#425273] shadow-[0_1px_2px_rgb(31_50_81/0.04)] hover:border-[#B8C7DA] hover:bg-[#F8FAFC]"><RefreshCcw className="size-3.5" />Refresh</button>
+          <button type="button" onClick={handleReconnect} disabled={isConnecting} className="inline-flex h-9 items-center gap-2 bg-[#0A66C2] px-3.5 text-[10.5px] font-semibold text-white shadow-[0_1px_2px_rgb(10_102_194/0.2)] hover:bg-[#084E96] disabled:opacity-60"><LinkIcon className="size-3.5" />{isConnecting ? "Redirecting..." : "Reconnect"}</button>
+        </div>
+        {connectError && <p className="text-[10px] font-semibold text-rose-600">{connectError}</p>}
+      </section>
+    );
+  }
+
   return (
     <div className="space-y-3">
-      <section className="rounded-sm border border-emerald-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <section className="overflow-hidden border border-[#DDE4ED] bg-white shadow-[0_1px_3px_rgb(31_50_81/0.05)]">
+        <div className="flex flex-col gap-4 border-b border-[#E4EAF2] px-5 py-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex gap-3">
             {accountPictureUrl ? (
               <Image src={accountPictureUrl} alt="" width={40} height={40} className="size-10 shrink-0 rounded-sm object-cover" />
@@ -395,10 +424,10 @@ function LinkedInPersonalOnlyState({
                 </span>
               </div>
               <p className="mt-0.5 text-[11px] font-medium text-[#64748B]">{accountEmail}</p>
-              <p className="mt-1 max-w-3xl text-[12px] leading-5 text-[#52617D]">
+              <p className="mt-1 max-w-3xl text-[11px] leading-5 text-[#52617D]">
                 {hasMappedPage
-                  ? "Your LinkedIn member login is saved and a company page is mapped to this client. Live posts, followers, analytics and leads need dedicated LinkedIn page data endpoints before the dashboard can replace this status view."
-                  : "Your LinkedIn member login is saved and healthy. Real company page posts, followers, impressions, analytics and leads are not available yet because no LinkedIn organization page is mapped to this client."}
+                  ? "Authenticated member account used to manage and sync the LinkedIn pages mapped below."
+                  : "Authenticated member account. Discover and map a company page to start syncing page data."}
               </p>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[#64748B]">
                 <span>Connected: <strong className="text-[#172044]">{connectedAt || "Yes"}</strong></span>
@@ -408,29 +437,6 @@ function LinkedInPersonalOnlyState({
                   <span>LinkedIn member id: <strong className="text-[#172044]">{memberConnection.externalAccountId}</strong></span>
                 )}
               </div>
-              {profileRows.length > 0 && (
-                <div className="mt-3 grid max-w-3xl grid-cols-1 gap-2 rounded-sm border border-[#E4EAF2] bg-[#F8FAFD] p-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {profileRows.map(([label, value]) => (
-                    <div key={label}>
-                      <p className="text-[10px] font-semibold uppercase text-[#8A97AF]">{label}</p>
-                      <p className="mt-0.5 break-words text-[12px] font-semibold text-[#172044]">{value}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {mappedResources.length > 0 && (
-                <div className="mt-3 max-w-3xl rounded-sm border border-emerald-200 bg-emerald-50 p-3">
-                  <p className="text-[11px] font-bold text-emerald-800">Mapped company page</p>
-                  <div className="mt-2 grid gap-1">
-                    {mappedResources.map((resource: any) => (
-                      <div key={resource.mappingId} className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-emerald-900">
-                        <span>Type: <strong>{resource.resourceType}</strong></span>
-                        <span>URN: <strong>{resource.externalResourceId}</strong></span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
               {connectError && (
                 <p className="mt-2 rounded-sm border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-600">
                   {connectError}
@@ -438,7 +444,7 @@ function LinkedInPersonalOnlyState({
               )}
             </div>
           </div>
-          <div className="flex shrink-0 gap-2">
+          <div className="flex shrink-0 flex-wrap gap-2">
             <button
               type="button"
               onClick={handleDisconnect}
@@ -472,6 +478,8 @@ function LinkedInPersonalOnlyState({
             </button>
           </div>
         </div>
+        {profileRows.length > 0 && <div className="grid border-b border-[#E4EAF2] bg-[#F8FAFC] sm:grid-cols-2 lg:grid-cols-4">{profileRows.slice(0, 4).map(([label, value], index) => <div key={label} className={`px-5 py-3 ${index ? "border-t border-[#E4EAF2] sm:border-l sm:border-t-0" : ""}`}><p className="text-[9px] font-semibold uppercase text-[#8A97AF]">{label}</p><p className="mt-1 truncate text-[11px] font-semibold text-[#172044]" title={value}>{value}</p></div>)}</div>}
+        {mappedResources.length > 0 && <div className="px-5 py-4"><div className="mb-3 flex items-center justify-between"><div><h3 className="text-[12px] font-bold text-[#172044]">Mapped company pages</h3><p className="mt-0.5 text-[10px] text-[#7B89A4]">LinkedIn organizations assigned to this client</p></div><span className="text-[10px] font-semibold text-[#0A66C2]">{mappedResources.length} connected</span></div><div className="grid gap-2 md:grid-cols-2">{mappedResources.map((resource: any, index: number) => { const organizationId = String(resource.externalResourceId || "").split(":").at(-1); return <div key={resource.mappingId} className="flex min-w-0 items-center gap-3 border border-[#DDE4ED] bg-white px-3 py-3"><div className="grid size-9 shrink-0 place-items-center bg-[#EAF3FB] text-[11px] font-bold text-[#0A66C2]">in</div><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><p className="truncate text-[11px] font-semibold text-[#172044]">Company page {index + 1}</p><span className="size-1.5 shrink-0 rounded-full bg-emerald-500" /></div><p className="mt-0.5 truncate text-[9.5px] text-[#7B89A4]">Organization ID: {organizationId}</p></div><a href={`https://www.linkedin.com/company/${organizationId}`} target="_blank" rel="noreferrer" title="Open on LinkedIn" className="grid size-8 shrink-0 place-items-center border border-[#DDE4ED] text-[#0A66C2] hover:bg-[#F2F8FD]"><ExternalLink className="size-3.5" /></a></div>; })}</div></div>}
       </section>
 
       {discoveredPages.length > 0 && (

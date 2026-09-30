@@ -28,6 +28,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "media.licdn-ei.com",
       },
+      {
+        protocol: "https",
+        hostname: "dms-akam.licdn-ei.com",
+      },
     ],
   },
   async rewrites() {
