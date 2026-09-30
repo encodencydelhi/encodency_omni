@@ -121,7 +121,43 @@ export interface ClientChannelOverview {
   providers: ProviderOverview[];
 }
 
+export type LinkedInDatasetState = "live" | "empty" | "permission_required" | "reconnect_required" | "rate_limited" | "unavailable";
+
+export interface LinkedInDataset<T> {
+  state: LinkedInDatasetState;
+  data: T;
+  reason: string | null;
+}
+
+export interface LinkedInDashboardResponse {
+  organizationUrn: string;
+  mappingId: string;
+  syncedAt: string;
+  organization: LinkedInDataset<Record<string, unknown>>;
+  networkSize: LinkedInDataset<Record<string, unknown>>;
+  posts: LinkedInDataset<Record<string, unknown>[]>;
+  followers: LinkedInDataset<Record<string, unknown>[]>;
+  pageStatistics: LinkedInDataset<Record<string, unknown>[]>;
+  shareStatistics: LinkedInDataset<Record<string, unknown>[]>;
+  social: LinkedInDataset<Record<string, unknown>[]>;
+  campaigns: LinkedInDataset<Record<string, unknown>[]>;
+  leads: LinkedInDataset<Record<string, unknown>[]>;
+  inbox: LinkedInDataset<Record<string, unknown>[]>;
+}
+
 export const integrationsApi = {
+  async getLinkedInDashboard(
+    companyId: string,
+    clientId: string,
+    signal?: AbortSignal,
+  ): Promise<LinkedInDashboardResponse> {
+    return apiClient.request<LinkedInDashboardResponse>({
+      method: "GET",
+      path: "/integrations/linkedin/dashboard",
+      headers: companyScopeHeaders(companyId, { "x-client-id": clientId }),
+      signal,
+    });
+  },
   /**
    * GET /integrations/registry
    * Business Purpose: The providers this deployment can actually connect.
@@ -192,6 +228,19 @@ export const integrationsApi = {
       path: `/integrations/${encodeURIComponent(integrationId)}/map`,
       headers: companyScopeHeaders(companyId),
       body: payload,
+      signal,
+    });
+  },
+
+  async disconnectProvider(
+    companyId: string,
+    provider: BackendOAuthProvider,
+    signal?: AbortSignal,
+  ): Promise<{ disconnected: number }> {
+    return apiClient.request<{ disconnected: number }>({
+      method: "DELETE",
+      path: `/integrations/${encodeURIComponent(provider)}`,
+      headers: companyScopeHeaders(companyId),
       signal,
     });
   },

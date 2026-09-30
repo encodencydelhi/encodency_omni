@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { useLinkedInOverview, linkedinProvider } from "../live/linkedin-hooks";
+import { LinkedInLiveTab } from "./linkedin-live-tab";
 import {
   Area,
   AreaChart,
@@ -191,7 +192,7 @@ export function LinkedInChannelPage() {
   const linkedinStatus = linkedinProvider(overviewQuery.data);
   const isConnected = linkedinStatus?.status === "CONNECTED" || linkedinStatus?.status === "MAPPED" || linkedinStatus?.state === "connected";
   const hasMappedPage = Boolean(linkedinStatus?.mappedResourceCount);
-  const showPersonalOnlyState = isConnected && !hasMappedPage;
+  const showLiveConnectionState = isConnected;
 
   return (
     <div className="pb-8">
@@ -214,8 +215,11 @@ export function LinkedInChannelPage() {
 
       <div className="space-y-2">
         {activeTab === "Overview" && (
-          showPersonalOnlyState ? (
-            <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} />
+          showLiveConnectionState ? (
+            <div className="space-y-3">
+              <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} />
+              {hasMappedPage && <LinkedInLiveTab tab="Overview" />}
+            </div>
           ) : (
             <OverviewTab
               onNavigateTab={setActiveTab}
@@ -226,17 +230,24 @@ export function LinkedInChannelPage() {
             />
           )
         )}
-        {activeTab === "Posts" && (showPersonalOnlyState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <PostsTab />)}
-        {activeTab === "Analytics" && (showPersonalOnlyState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <AnalyticsTab />)}
-        {activeTab === "Audience" && (showPersonalOnlyState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <AudienceTab />)}
-        {activeTab === "Campaigns" && (showPersonalOnlyState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <CampaignsTab />)}
-        {activeTab === "Leads" && (showPersonalOnlyState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <LeadsTab />)}
-        {activeTab === "Inbox" && (showPersonalOnlyState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <InboxTab />)}
+        {activeTab === "Posts" && (hasMappedPage ? <LinkedInLiveTab tab="Posts" /> : showLiveConnectionState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <PostsTab />)}
+        {activeTab === "Analytics" && (hasMappedPage ? <LinkedInLiveTab tab="Analytics" /> : showLiveConnectionState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <AnalyticsTab />)}
+        {activeTab === "Audience" && (hasMappedPage ? <LinkedInLiveTab tab="Audience" /> : showLiveConnectionState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <AudienceTab />)}
+        {activeTab === "Campaigns" && (hasMappedPage ? <LinkedInLiveTab tab="Campaigns" /> : showLiveConnectionState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <CampaignsTab />)}
+        {activeTab === "Leads" && (hasMappedPage ? <LinkedInLiveTab tab="Leads" /> : showLiveConnectionState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <LeadsTab />)}
+        {activeTab === "Inbox" && (hasMappedPage ? <LinkedInLiveTab tab="Inbox" /> : showLiveConnectionState ? <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} /> : <InboxTab />)}
         {activeTab === "Settings" && (
-          <SettingsTab
-            status={linkedinStatus}
-            isConnected={isConnected}
-          />
+          showLiveConnectionState ? (
+            <div className="space-y-3">
+              <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} />
+              {hasMappedPage && <LinkedInLiveTab tab="Settings" />}
+            </div>
+          ) : (
+            <SettingsTab
+              status={linkedinStatus}
+              isConnected={isConnected}
+            />
+          )
         )}
       </div>
     </div>
@@ -277,11 +288,17 @@ function LinkedInPersonalOnlyState({
   status: any;
   onRefetch?: () => void;
 }) {
-  const { companyId } = useTenancyContext();
+  const { companyId, clientId } = useTenancyContext();
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [mappingResourceId, setMappingResourceId] = useState<string | null>(null);
+  const [discoveredPages, setDiscoveredPages] = useState<any[]>([]);
   const [connectError, setConnectError] = useState<string | null>(null);
   const connectedAt = status?.lastUpdatedAt ? new Date(status.lastUpdatedAt).toLocaleString() : null;
   const memberConnection = status?.connections?.find((connection: any) => connection.accountType === "LINKEDIN_MEMBER");
+  const mappedResources = Array.isArray(status?.resources) ? status.resources : [];
+  const hasMappedPage = mappedResources.length > 0;
   const accountName = memberConnection?.accountName || "LinkedIn Personal Account";
   const accountEmail = memberConnection?.accountEmail || "Email not returned yet";
   const accountPictureUrl = memberConnection?.accountPictureUrl;
@@ -309,6 +326,54 @@ function LinkedInPersonalOnlyState({
     }
   };
 
+  const handleDisconnect = async () => {
+    try {
+      setConnectError(null);
+      setIsDisconnecting(true);
+      if (!companyId) throw new Error("Active Company ID is required to disconnect LinkedIn.");
+      await integrationsApi.disconnectProvider(companyId, "LINKEDIN");
+      onRefetch?.();
+    } catch (error: any) {
+      setConnectError(error?.message || "Failed to disconnect LinkedIn. Please try again.");
+    } finally {
+      setIsDisconnecting(false);
+    }
+  };
+
+  const handleDiscoverPages = async () => {
+    try {
+      setConnectError(null);
+      setIsDiscovering(true);
+      const integrationId = memberConnection?.integrationId;
+      if (!companyId || !integrationId) throw new Error("LinkedIn connection is required before discovering pages.");
+      const pages = await integrationsApi.discoverResources(companyId, integrationId);
+      setDiscoveredPages(pages.filter((page) => page.resourceType === "LINKEDIN_ORGANIZATION"));
+    } catch (error: any) {
+      setConnectError(error?.message || "Could not discover LinkedIn company pages. Reconnect after enabling organization permissions.");
+    } finally {
+      setIsDiscovering(false);
+    }
+  };
+
+  const handleMapPage = async (page: any) => {
+    try {
+      setConnectError(null);
+      setMappingResourceId(page.externalResourceId);
+      const integrationId = memberConnection?.integrationId;
+      if (!companyId || !clientId || !integrationId) throw new Error("Company, client and LinkedIn connection are required before mapping.");
+      await integrationsApi.mapResource(companyId, integrationId, {
+        clientId,
+        externalResourceId: page.externalResourceId,
+        resourceType: "LINKEDIN_ORGANIZATION",
+      });
+      onRefetch?.();
+    } catch (error: any) {
+      setConnectError(error?.message || "Could not map this LinkedIn company page.");
+    } finally {
+      setMappingResourceId(null);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <section className="rounded-sm border border-emerald-200 bg-white p-4 shadow-sm">
@@ -331,12 +396,14 @@ function LinkedInPersonalOnlyState({
               </div>
               <p className="mt-0.5 text-[11px] font-medium text-[#64748B]">{accountEmail}</p>
               <p className="mt-1 max-w-3xl text-[12px] leading-5 text-[#52617D]">
-                Your LinkedIn member login is saved and healthy. Real company page posts, followers, impressions, analytics and leads are not available yet because no LinkedIn organization page is mapped to this client.
+                {hasMappedPage
+                  ? "Your LinkedIn member login is saved and a company page is mapped to this client. Live posts, followers, analytics and leads need dedicated LinkedIn page data endpoints before the dashboard can replace this status view."
+                  : "Your LinkedIn member login is saved and healthy. Real company page posts, followers, impressions, analytics and leads are not available yet because no LinkedIn organization page is mapped to this client."}
               </p>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[#64748B]">
                 <span>Connected: <strong className="text-[#172044]">{connectedAt || "Yes"}</strong></span>
                 <span>Account type: <strong className="text-[#172044]">Personal profile</strong></span>
-                <span>Company page mappings: <strong className="text-[#172044]">{status?.mappedResourceCount ?? 0}</strong></span>
+                <span>Company page mappings: <strong className="text-[#172044]">{mappedResources.length}</strong></span>
                 {memberConnection?.externalAccountId && (
                   <span>LinkedIn member id: <strong className="text-[#172044]">{memberConnection.externalAccountId}</strong></span>
                 )}
@@ -351,6 +418,19 @@ function LinkedInPersonalOnlyState({
                   ))}
                 </div>
               )}
+              {mappedResources.length > 0 && (
+                <div className="mt-3 max-w-3xl rounded-sm border border-emerald-200 bg-emerald-50 p-3">
+                  <p className="text-[11px] font-bold text-emerald-800">Mapped company page</p>
+                  <div className="mt-2 grid gap-1">
+                    {mappedResources.map((resource: any) => (
+                      <div key={resource.mappingId} className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-emerald-900">
+                        <span>Type: <strong>{resource.resourceType}</strong></span>
+                        <span>URN: <strong>{resource.externalResourceId}</strong></span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {connectError && (
                 <p className="mt-2 rounded-sm border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-600">
                   {connectError}
@@ -361,10 +441,26 @@ function LinkedInPersonalOnlyState({
           <div className="flex shrink-0 gap-2">
             <button
               type="button"
+              onClick={handleDisconnect}
+              disabled={isDisconnecting}
+              className="h-8 rounded-sm border border-rose-200 bg-white px-3 text-[11px] font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-70"
+            >
+              {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+            </button>
+            <button
+              type="button"
               onClick={onRefetch}
               className="h-8 rounded-sm border border-[#DDE4ED] bg-white px-3 text-[11px] font-bold text-[#425273] hover:bg-[#F8FAFD]"
             >
               Refresh
+            </button>
+            <button
+              type="button"
+              onClick={handleDiscoverPages}
+              disabled={isDiscovering}
+              className="h-8 rounded-sm border border-[#BFDBFE] bg-white px-3 text-[11px] font-bold text-[#0A66C2] hover:bg-[#EFF6FF] disabled:opacity-70"
+            >
+              {isDiscovering ? "Discovering..." : "Discover Pages"}
             </button>
             <button
               type="button"
@@ -378,12 +474,38 @@ function LinkedInPersonalOnlyState({
         </div>
       </section>
 
-      <section className="rounded-sm border border-amber-200 bg-amber-50 p-4">
-        <h3 className="text-[13px] font-bold text-amber-900">Real LinkedIn page data is blocked until a company page is mapped</h3>
+      {discoveredPages.length > 0 && (
+        <section className="rounded-sm border border-[#DDE4ED] bg-white p-4 shadow-sm">
+          <h3 className="text-[13px] font-bold text-[#172044]">LinkedIn company pages found</h3>
+          <div className="mt-3 grid gap-2">
+            {discoveredPages.map((page) => (
+              <div key={page.externalResourceId} className="flex items-center justify-between gap-3 rounded-sm border border-[#E4EAF2] bg-[#F8FAFD] p-3">
+                <div>
+                  <p className="text-[12px] font-bold text-[#172044]">{page.name}</p>
+                  <p className="mt-0.5 text-[10px] text-[#64748B]">{page.externalResourceId}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleMapPage(page)}
+                  disabled={mappingResourceId === page.externalResourceId}
+                  className="h-8 shrink-0 rounded-sm bg-[#0A66C2] px-3 text-[11px] font-bold text-white hover:bg-[#084e96] disabled:opacity-70"
+                >
+                  {mappingResourceId === page.externalResourceId ? "Mapping..." : "Map to Client"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {!hasMappedPage && <section className="rounded-sm border border-amber-200 bg-amber-50 p-4">
+        <h3 className="text-[13px] font-bold text-amber-900">
+          Real LinkedIn page data is blocked until a company page is mapped
+        </h3>
         <p className="mt-1 text-[12px] leading-5 text-amber-800">
-          The backend currently has real OAuth connection status and organization discovery support. To show real posts, followers and analytics here, the connected LinkedIn user must have admin access to a LinkedIn company page and the app must have LinkedIn organization/page permissions. A normal /in/ personal profile does not provide company-page analytics.
+          The connected LinkedIn user must have admin access to a LinkedIn company page and the app must have LinkedIn organization/page permissions. A normal /in/ personal profile does not provide company-page analytics.
         </p>
-      </section>
+      </section>}
     </div>
   );
 }
