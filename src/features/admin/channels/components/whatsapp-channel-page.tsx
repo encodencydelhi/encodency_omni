@@ -125,7 +125,7 @@ export function WhatsappChannelPage() {
     : status === "connected" ? "success" : status === "degraded" ? "error" : status ? "warning" : "neutral";
 
   return (
-    <div className="pb-8">
+    <div className="pb-8 capitalize">
       <div className="-mx-4 -mt-5 mb-1 border-b border-slate-200 bg-white px-4 pt-5 shadow-xs sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
         <ChannelHeader
           channel="whatsapp"
