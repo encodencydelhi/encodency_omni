@@ -18,14 +18,17 @@ import { companySectionHref } from "@/features/companies/data/config";
 import { isValidEmail, isValidPhone, isValidWebsite } from "@/features/companies/lib/validation";
 import { ORGANISATION_ROLE } from "@/types/domain/user";
 import { cn } from "@/lib/utils/cn";
-import { INDUSTRIES, LANGUAGES, SESSION_STORAGE_KEYS, TIMEZONES, clientHref, resolveClientBasePath } from "../data/config";
+import { INDUSTRIES, LANGUAGES, REPORTING_PERIODS, SESSION_STORAGE_KEYS, TIMEZONES, clientHref, resolveClientBasePath } from "../data/config";
 import { describeError, useClientMutations, useClientsList, useCreationCompanies, useEligibleMembers } from "../data/hooks";
 import type { ClientCreationCompany, ClientSummary, CreateClientInput } from "../data/types";
 import { ClientAvatar } from "./client-avatar";
 import { LogoPicker } from "./logo-picker";
 import { clientsApi, describeClientLogoError } from "@/features/admin/projects/live/clients-api";
+import { useAuth } from "@/features/auth/components/auth-provider";
+import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 
-const STEPS = ["Parent company", "Client identity", "Defaults & team", "Review"];
+const SUPER_ADMIN_STEPS = ["Parent company", "Client identity", "Defaults & team", "Review"];
+const ADMIN_STEPS = ["Client identity", "Defaults & team", "Review"];
 const NONE = "__none__";
 
 interface Draft {
@@ -36,10 +39,12 @@ interface Draft {
   website: string;
   contactEmail: string;
   contactPhone: string;
+  targetAudience: string;
   description: string;
   logoDataUrl: string | null;
   timezone: string;
   language: string;
+  reportingPeriod: "7d" | "30d" | "90d";
   memberIds: string[];
   leadUserId: string;
 }
@@ -48,25 +53,23 @@ const EMPTY: Draft = {
   companyId: "",
   name: "",
   displayName: "",
-  industry: "Other",
+  industry: "Technology",
   website: "",
   contactEmail: "",
   contactPhone: "",
+  targetAudience: "",
   description: "",
   logoDataUrl: null,
   timezone: "Asia/Kolkata",
   language: "English",
+  reportingPeriod: "30d",
   memberIds: [],
   leadUserId: NONE,
 };
 
 function readDraft(): Draft | null {
-  try {
-    const raw = window.sessionStorage.getItem(SESSION_STORAGE_KEYS.createDraft);
-    return raw ? ({ ...EMPTY, ...(JSON.parse(raw) as Partial<Draft>), logoDataUrl: null } as Draft) : null;
-  } catch {
-    return null;
-  }
+  // Always return null so client form opens clean and completely empty as requested
+  return null;
 }
 
 function writeDraft(draft: Draft | null): void {
@@ -222,17 +225,20 @@ function IdentityStep({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Primary website" htmlFor="create-website" error={errors.website} hint="Optional. Some clients have no website.">
-          <Input id="create-website" value={draft.website} onChange={(event) => update({ website: event.target.value })} placeholder="example.com" aria-invalid={Boolean(errors.website)} />
+        <Field label="Primary website" htmlFor="create-website" error={errors.website} hint="Optional. E.g. https://example.com">
+          <Input id="create-website" value={draft.website} onChange={(event) => update({ website: event.target.value })} placeholder="https://example.com" aria-invalid={Boolean(errors.website)} />
         </Field>
         <Field label="Contact email" htmlFor="create-email" error={errors.contactEmail}>
-          <Input id="create-email" type="email" value={draft.contactEmail} onChange={(event) => update({ contactEmail: event.target.value })} aria-invalid={Boolean(errors.contactEmail)} />
+          <Input id="create-email" type="email" value={draft.contactEmail} onChange={(event) => update({ contactEmail: event.target.value })} placeholder="contact@example.com" aria-invalid={Boolean(errors.contactEmail)} />
         </Field>
         <Field label="Contact phone" htmlFor="create-phone" error={errors.contactPhone}>
-          <Input id="create-phone" value={draft.contactPhone} onChange={(event) => update({ contactPhone: event.target.value })} aria-invalid={Boolean(errors.contactPhone)} />
+          <Input id="create-phone" value={draft.contactPhone} onChange={(event) => update({ contactPhone: event.target.value })} placeholder="+91 9876543210" aria-invalid={Boolean(errors.contactPhone)} />
         </Field>
-        <Field label="Description" htmlFor="create-description" className="sm:col-span-2">
-          <Textarea id="create-description" rows={2} maxLength={300} value={draft.description} onChange={(event) => update({ description: event.target.value })} />
+        <Field label="Target audience" htmlFor="create-target-audience" className="sm:col-span-2" hint="Key audience demographic, market segment or customer profile">
+          <Input id="create-target-audience" value={draft.targetAudience} onChange={(event) => update({ targetAudience: event.target.value })} placeholder="e.g. B2B Enterprise, Tech Startups, Retail Consumers" />
+        </Field>
+        <Field label="Description & Notes" htmlFor="create-description" className="sm:col-span-2">
+          <Textarea id="create-description" rows={3} maxLength={1000} value={draft.description} onChange={(event) => update({ description: event.target.value })} placeholder="Brief background, goals, or notes about the client..." />
         </Field>
       </div>
     </div>
@@ -255,7 +261,7 @@ function TeamStep({ draft, update, errors }: { draft: Draft; update: (patch: Par
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Timezone" htmlFor="create-timezone">
           <Select value={draft.timezone} onValueChange={(timezone) => update({ timezone })}>
             <SelectTrigger id="create-timezone"><SelectValue /></SelectTrigger>
@@ -272,6 +278,16 @@ function TeamStep({ draft, update, errors }: { draft: Draft; update: (patch: Par
             <SelectContent>
               {LANGUAGES.map((option) => (
                 <SelectItem key={option} value={option}>{option}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label="Reporting timeframe" htmlFor="create-reporting-period" hint="Default reporting window">
+          <Select value={draft.reportingPeriod} onValueChange={(reportingPeriod: "7d" | "30d" | "90d") => update({ reportingPeriod })}>
+            <SelectTrigger id="create-reporting-period"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {REPORTING_PERIODS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -350,7 +366,15 @@ function ReviewStep({ draft, company }: { draft: Draft; company: ClientCreationC
         <KeyValue label="Industry">{draft.industry}</KeyValue>
         <KeyValue label="Primary website">{draft.website.trim() || <span className="text-muted-foreground">Not configured</span>}</KeyValue>
         <KeyValue label="Contact">{draft.contactEmail.trim() || draft.contactPhone.trim() || <span className="text-muted-foreground">None</span>}</KeyValue>
-        <KeyValue label="Timezone / language">{draft.timezone} · {draft.language}</KeyValue>
+        <KeyValue label="Timezone / language">
+          {draft.timezone} · {draft.language} ({REPORTING_PERIODS.find((r) => r.value === draft.reportingPeriod)?.label ?? draft.reportingPeriod})
+        </KeyValue>
+        {draft.targetAudience.trim() ? (
+          <KeyValue label="Target audience">{draft.targetAudience.trim()}</KeyValue>
+        ) : null}
+        {draft.description.trim() ? (
+          <KeyValue label="Description">{draft.description.trim()}</KeyValue>
+        ) : null}
         <KeyValue label="Team">{names.length === 0 ? <span className="text-muted-foreground">No members yet</span> : `${names.length} - ${names.join(", ")}`}</KeyValue>
         <KeyValue label="Client lead">{lead?.name ?? <span className="text-muted-foreground">Not assigned</span>}</KeyValue>
       </dl>
@@ -376,11 +400,32 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
   const basePath = resolveClientBasePath(pathname);
   const mutations = useClientMutations();
   const companies = useCreationCompanies();
+  const { user } = useAuth();
+
+  const isSuperAdmin = pathname.startsWith("/super-admin");
+  const steps = isSuperAdmin ? SUPER_ADMIN_STEPS : ADMIN_STEPS;
+  const maxStep = isSuperAdmin ? 3 : 2;
+
+  const adminCompany = useMemo(() => user?.memberships?.[0] ?? null, [user]);
+  const defaultCompanyId = useMemo(() => {
+    return (
+      initialCompanyId ||
+      adminCompany?.companyId ||
+      getStoredCompanyId() ||
+      ""
+    );
+  }, [initialCompanyId, adminCompany]);
+
   const [draft, setDraft] = useState<Draft>(() => {
-    const restored = typeof window === "undefined" ? null : readDraft();
-    return { ...(restored ?? EMPTY), ...(initialCompanyId ? { companyId: initialCompanyId } : {}) };
+    // Open clean and empty with admin's company bound by default
+    if (typeof window !== "undefined") {
+      try {
+        window.sessionStorage.removeItem(SESSION_STORAGE_KEYS.createDraft);
+      } catch {}
+    }
+    return { ...EMPTY, companyId: defaultCompanyId };
   });
-  const restored = useMemo(() => draft.name.trim().length > 0 && !initialCompanyId, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [step, setStep] = useState(0);
   const [attempted, setAttempted] = useState(false);
   const [pending, setPending] = useState(false);
@@ -393,11 +438,51 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
     if (!created) writeDraft(draft);
   }, [created, draft]);
 
-  const update = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }));
-  const company = companies.data?.find((item) => item.id === draft.companyId);
+  // Auto-select company context if not selected yet
+  useEffect(() => {
+    if (!draft.companyId) {
+      if (defaultCompanyId) {
+        setDraft((prev) => ({ ...prev, companyId: defaultCompanyId }));
+      } else if (companies.data && companies.data.length > 0) {
+        const activeStored = typeof window !== "undefined" ? window.localStorage.getItem("omni_active_company") : null;
+        const matched =
+          companies.data.find((c) => c.id === activeStored && c.eligibility.ok) ||
+          companies.data.find((c) => c.eligibility.ok) ||
+          companies.data[0];
+        if (matched) {
+          setDraft((prev) => ({ ...prev, companyId: matched.id }));
+        }
+      }
+    }
+  }, [companies.data, defaultCompanyId, draft.companyId]);
 
+  const update = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }));
+
+  const company = useMemo(() => {
+    const targetId = draft.companyId || defaultCompanyId;
+    if (targetId && companies.data) {
+      const found = companies.data.find((item) => item.id === targetId);
+      if (found) return found;
+    }
+    if (adminCompany) {
+      return {
+        id: adminCompany.companyId,
+        name: adminCompany.companyName,
+        accountStatus: "active",
+        planName: "Active Plan",
+        clientsUsed: 0,
+        clientLimit: null,
+        availableSlots: null,
+        eligibleMembers: 1,
+        eligibility: { ok: true, code: "ok", reason: null },
+      } as ClientCreationCompany;
+    }
+    return companies.data?.[0];
+  }, [draft.companyId, defaultCompanyId, companies.data, adminCompany]);
+
+  const isIdentityStep = isSuperAdmin ? step >= 1 : step >= 0;
   const errors: Record<string, string> = {};
-  if (step >= 1) {
+  if (isIdentityStep) {
     const trimmedName = draft.name.trim().replace(/\s+/g, " ");
     if (!trimmedName) {
       errors.name = "Client name is required.";
@@ -410,24 +495,39 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
   }
   const shown = { ...(attempted ? errors : {}), ...serverErrors };
 
-  const blocked = step === 0 && (!company || !company.eligibility.ok);
+  const blocked = isSuperAdmin && step === 0 && (!company || !company.eligibility.ok);
   const identityInvalid = Boolean(errors.name || errors.website || errors.contactEmail || errors.contactPhone);
 
   const next = () => {
-    if (step === 0) {
-      if (blocked) return;
-      setAttempted(false);
-      setStep(1);
-      return;
+    if (isSuperAdmin) {
+      if (step === 0) {
+        if (blocked) return;
+        setAttempted(false);
+        setStep(1);
+        return;
+      }
+      if (step === 1) {
+        setAttempted(true);
+        if (identityInvalid) return;
+        setAttempted(false);
+        setStep(2);
+        return;
+      }
+      setStep((current) => Math.min(maxStep, current + 1));
+    } else {
+      // Admin Flow:
+      // step 0: Identity
+      // step 1: Defaults & Team
+      // step 2: Review
+      if (step === 0) {
+        setAttempted(true);
+        if (identityInvalid) return;
+        setAttempted(false);
+        setStep(1);
+        return;
+      }
+      setStep((current) => Math.min(maxStep, current + 1));
     }
-    if (step === 1) {
-      setAttempted(true);
-      if (identityInvalid) return;
-      setAttempted(false);
-      setStep(2);
-      return;
-    }
-    setStep((current) => Math.min(3, current + 1));
   };
 
   const discard = () => {
@@ -439,7 +539,7 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
   const submit = async () => {
     const normalizedName = draft.name.trim().replace(/\s+/g, " ");
     if (!normalizedName || normalizedName.length < 3) {
-      setStep(1);
+      setStep(isSuperAdmin ? 1 : 0);
       setAttempted(true);
       return;
     }
@@ -447,8 +547,9 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
     setPending(true);
     setError(null);
     setServerErrors({});
+    const effectiveCompanyId = draft.companyId || defaultCompanyId || company?.id || "";
     const input: CreateClientInput = {
-      companyId: draft.companyId,
+      companyId: effectiveCompanyId,
       name: normalizedName,
       displayName: draft.displayName.trim().replace(/\s+/g, " ") || undefined,
       industry: draft.industry,
@@ -458,9 +559,10 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
       // IMAGE-01 Phase 3: POST /clients remains JSON-only; do NOT send logoDataUrl or file
       logoDataUrl: null,
       description: draft.description.trim() || undefined,
-      targetAudience: draft.description.trim() || undefined,
+      targetAudience: draft.targetAudience.trim() || draft.description.trim() || undefined,
       timezone: draft.timezone,
       language: draft.language,
+      reportingPeriod: draft.reportingPeriod,
       leadMembershipId: draft.leadUserId === NONE ? null : draft.leadUserId,
       membershipIds: draft.memberIds,
       leadUserId: draft.leadUserId === NONE ? null : draft.leadUserId,
@@ -508,8 +610,8 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
         description: described.message,
       });
       // Send the operator back to the step that holds the problem.
-      if (described.fieldErrors.members) setStep(2);
-      else if (Object.keys(described.fieldErrors).length > 0) setStep(1);
+      if (described.fieldErrors.members) setStep(isSuperAdmin ? 2 : 1);
+      else if (Object.keys(described.fieldErrors).length > 0) setStep(isSuperAdmin ? 1 : 0);
     } finally {
       setPending(false);
     }
@@ -518,8 +620,8 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
   const another = () => {
     setCreated(null);
     setPendingLogoFile(null);
-    setDraft({ ...EMPTY, companyId: draft.companyId });
-    setStep(1);
+    setDraft({ ...EMPTY, companyId: defaultCompanyId });
+    setStep(0);
     setAttempted(false);
   };
 
@@ -558,13 +660,23 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
     <FlowDialog
       open
       onOpenChange={(open) => !open && !pending && discard()}
-      title="Create client"
-      description="Add a client workspace to a company."
+      title="Add Client"
+      description="Add a new client workspace to an organization."
       size="lg"
       footer={
         <>
           <Button variant="ghost" onClick={discard} disabled={pending} className="mr-auto">
             Cancel
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDraft({ ...EMPTY, companyId: defaultCompanyId })}
+            disabled={pending}
+            type="button"
+            className="text-muted-foreground hover:text-foreground text-xs"
+          >
+            Clear Form
           </Button>
           {step > 0 ? (
             <Button variant="outline" onClick={() => { setAttempted(false); setStep(step - 1); }} disabled={pending}>
@@ -572,7 +684,7 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
               Back
             </Button>
           ) : null}
-          {step < 3 ? (
+          {step < maxStep ? (
             <Button onClick={next} disabled={blocked || pending}>
               Next
               <ArrowRightIcon />
@@ -585,15 +697,31 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
         </>
       }
     >
-      <Stepper steps={STEPS} current={step} />
-      {restored && step === 0 ? (
-        <p className="text-2xs text-muted-foreground">Restored your unfinished draft from this session. <button type="button" className="underline" onClick={() => setDraft(EMPTY)}>Start over</button></p>
+      <Stepper steps={steps} current={step} />
+      {!isSuperAdmin && (company?.name || adminCompany?.companyName) ? (
+        <div className="flex items-center justify-between rounded-sm border border-border/80 bg-surface-sunken px-3 py-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Creating for Organization:</span>
+            <span className="font-semibold text-foreground">{company?.name || adminCompany?.companyName}</span>
+          </div>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary">Company Workspace</span>
+        </div>
       ) : null}
       <ErrorBanner message={error} />
-      {step === 0 ? <CompanyStep draft={draft} update={update} /> : null}
-      {step === 1 ? <IdentityStep draft={draft} update={update} errors={shown} onFileSelect={setPendingLogoFile} /> : null}
-      {step === 2 ? <TeamStep draft={draft} update={update} errors={shown} /> : null}
-      {step === 3 ? <ReviewStep draft={draft} company={company} /> : null}
+      {isSuperAdmin ? (
+        <>
+          {step === 0 ? <CompanyStep draft={draft} update={update} /> : null}
+          {step === 1 ? <IdentityStep draft={draft} update={update} errors={shown} onFileSelect={setPendingLogoFile} /> : null}
+          {step === 2 ? <TeamStep draft={draft} update={update} errors={shown} /> : null}
+          {step === 3 ? <ReviewStep draft={draft} company={company} /> : null}
+        </>
+      ) : (
+        <>
+          {step === 0 ? <IdentityStep draft={draft} update={update} errors={shown} onFileSelect={setPendingLogoFile} /> : null}
+          {step === 1 ? <TeamStep draft={draft} update={update} errors={shown} /> : null}
+          {step === 2 ? <ReviewStep draft={draft} company={company} /> : null}
+        </>
+      )}
     </FlowDialog>
   );
 }

@@ -479,6 +479,7 @@ export interface CreateClientInput {
   targetAudience?: string;
   timezone: string;
   language: string;
+  reportingPeriod?: ReportingPeriod;
   leadMembershipId?: string | null;
   membershipIds?: string[];
   /** Deprecated alias */

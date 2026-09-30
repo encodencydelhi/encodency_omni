@@ -22,6 +22,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/features/auth/components/auth-provider";
 import { useTableQueryState } from "@/hooks/use-table-query-state";
 import { formatNumber } from "@/lib/utils/format";
 import { CreateClientWizard } from "../components/client-create-wizard";
@@ -45,6 +46,7 @@ export function ClientsListPage({ basePath: propBasePath }: { basePath?: string 
   const basePath = propBasePath ?? resolveClientBasePath(pathname);
   const searchParams = useSearchParams();
   const mutations = useClientMutations();
+  const { user } = useAuth();
   const { capabilities, openFlow, rowMenu, dialogs } = useClientActions();
 
   const table = useTableQueryState({ filterKeys: CLIENT_FILTER_KEYS, defaultSort: { field: "createdAt", direction: "desc" } });
@@ -131,7 +133,7 @@ export function ClientsListPage({ basePath: propBasePath }: { basePath?: string 
           icon={FolderIcon}
           title="No clients yet"
           description="Client workspaces appear here as soon as a company creates one."
-          action={capabilities.canCreateClient ? <Button onClick={() => setCreating(true)}><PlusIcon />Create Client</Button> : undefined}
+          action={<Button onClick={() => setCreating(true)}><PlusIcon />Add Client</Button>}
         />
       );
     }
@@ -200,12 +202,10 @@ export function ClientsListPage({ basePath: propBasePath }: { basePath?: string 
                 ) : null}
               </DropdownMenuContent>
             </DropdownMenu>
-            {capabilities.canCreateClient ? (
-              <Button size="sm" onClick={() => setCreating(true)}>
-                <PlusIcon />
-                Create Client
-              </Button>
-            ) : null}
+            <Button size="sm" onClick={() => setCreating(true)} className="gap-1.5 font-medium shadow-sm">
+              <PlusIcon className="size-4" />
+              Add Client
+            </Button>
           </>
         }
       />
@@ -307,7 +307,11 @@ export function ClientsListPage({ basePath: propBasePath }: { basePath?: string 
       )}
 
       <ClientPreviewDrawer clientId={previewId} fallback={rows.find((row) => row.client.id === previewId)} onClose={() => setPreview(null)} />
-      <CreateClientWizard open={creating} initialCompanyId={filterCompany} onClose={() => setCreating(false)} />
+      <CreateClientWizard
+        open={creating}
+        initialCompanyId={filterCompany || user?.memberships?.[0]?.companyId}
+        onClose={() => setCreating(false)}
+      />
       <ConfirmDialog
         open={confirmReset}
         onOpenChange={setConfirmReset}

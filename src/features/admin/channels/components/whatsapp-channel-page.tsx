@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChannelHeader } from "./channel-header";
+import { ClientScopeSelect } from "./client-scope-select";
 import { cn } from "@/lib/utils/cn";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { type ProviderOverview } from "@/features/admin/integrations/live/integrations-api";
@@ -35,7 +36,7 @@ function errorText(error: unknown, fallback: string): string {
 }
 
 export function WhatsappChannelPage() {
-  const { companyId, clientId, isReady } = useTenancyContext();
+  const { companyId, clientId, setClientId, isReady } = useTenancyContext();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabType>("Overview");
   const [activeModal, setActiveModal] = useState<"send-template" | "create-template" | null>(null);
@@ -160,7 +161,19 @@ export function WhatsappChannelPage() {
 
       {scopeNotice && (
         <div className="my-3 border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700" role="status">
-          {scopeNotice}
+          <p>{scopeNotice}</p>
+          {/* A scope notice without options is a dead end: offer the Client list
+              here whenever the automatic resolution ended up with no Client. */}
+          {isReady && companyId && !clientId && (
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <label className="text-xs font-semibold text-slate-700">
+                Client
+                <span className="ml-2 inline-block align-middle">
+                  <ClientScopeSelect companyId={companyId} onSelect={setClientId} />
+                </span>
+              </label>
+            </div>
+          )}
         </div>
       )}
 

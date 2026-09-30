@@ -277,7 +277,7 @@ export function ConversationsTab({
                       <td colSpan={6} className="bg-slate-50 px-4 py-3 text-[11px] text-slate-600">
                         Provider message: {message.providerMessageId ?? "Not assigned"} · Failure:{" "}
                         {message.failureReasonCode
-                          ? `${describeWhatsAppFailure(message.failureReasonCode)} (${message.failureReasonCode})`
+                          ? `${message.failureReasonDetail ?? describeWhatsAppFailure(message.failureReasonCode)} (${message.failureReasonCode})`
                           : "None"}
                       </td>
                     </tr>
@@ -530,6 +530,12 @@ export function CreateTemplateModal({
       <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto bg-white">
         <DialogTitle className="text-base font-bold">Add WhatsApp template</DialogTitle>
         <DialogDescription className="text-xs">Register a template already approved and available in AiSensy. Saving here does not submit it for provider approval.</DialogDescription>
+        {!clientId ? (
+          <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+            <AlertCircle className="size-4 shrink-0" />
+            {companyId ? "Templates are saved per Client. Pick a Client in the notice above the tabs, then reopen this form." : "Select a Company before adding a template."}
+          </div>
+        ) : (
         <form onSubmit={submit} className="space-y-3 pt-2">
           <label className="block space-y-1 text-xs font-semibold">Template name<Input required pattern="[a-zA-Z0-9_.-]{1,120}" value={name} onChange={(event) => setName(event.target.value)} /></label>
           <label className="block space-y-1 text-xs font-semibold">Provider template ID <span className="font-normal text-slate-400">(optional)</span><Input value={providerTemplateId} onChange={(event) => setProviderTemplateId(event.target.value)} maxLength={160} /></label>
@@ -542,6 +548,7 @@ export function CreateTemplateModal({
           <label className="block space-y-1 text-xs font-semibold">Footer preview <span className="font-normal text-slate-400">(optional)</span><Input value={footer} onChange={(event) => setFooter(event.target.value)} maxLength={1000} /></label>
           <div className="flex justify-end gap-2 pt-2"><Button type="button" variant="outline" onClick={close}>Cancel</Button><Button type="submit" disabled={saving || !companyId || !clientId}>{saving ? "Saving…" : "Save template"}</Button></div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

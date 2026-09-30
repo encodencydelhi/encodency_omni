@@ -48,6 +48,7 @@ export class HttpTransport implements Transport {
         signal: spec.signal,
         headers: {
           Accept: "application/json",
+          "ngrok-skip-browser-warning": "true",
           ...(spec.body && !isFormData ? { "Content-Type": "application/json" } : {}),
           ...spec.headers,
         },
