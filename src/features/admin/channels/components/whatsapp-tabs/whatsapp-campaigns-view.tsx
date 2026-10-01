@@ -34,6 +34,7 @@ interface CampaignsViewProps {
   error: string | null;
   onRetry: () => void;
   onOpenModal?: (modal: string) => void;
+  onViewAudience?: (campaignId: string) => void;
 }
 
 type CampaignMetric = "sent" | "delivered" | "read" | "failed";
@@ -71,6 +72,7 @@ export function WhatsAppCampaignsView({
   error,
   onRetry,
   onOpenModal,
+  onViewAudience,
 }: CampaignsViewProps) {
   const [selectedMetric, setSelectedMetric] = useState<CampaignMetric>("delivered");
   const [search, setSearch] = useState("");
@@ -246,6 +248,7 @@ export function WhatsAppCampaignsView({
                 <th className="px-3 py-3">Delivery %</th>
                 <th className="px-3 py-3">Read %</th>
                 <th className="px-3 py-3">Status</th>
+                <th className="px-3 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -262,6 +265,13 @@ export function WhatsAppCampaignsView({
                   <td className="px-3 py-3 font-semibold text-slate-800">{c.readRate.toFixed(1)}%</td>
                   <td className="px-3 py-3">
                     <StatusBadge status={c.status} />
+                  </td>
+                  <td className="px-3 py-3 text-right">
+                    {onViewAudience && (
+                      <Button variant="ghost" size="sm" onClick={() => onViewAudience(c.id)} className="h-7 text-[11px]">
+                        <Eye className="mr-1.5 size-3" /> View Audience
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))}

@@ -178,6 +178,8 @@ export function WhatsAppTemplatesView({
                     color: "#F8FAFC",
                     fontSize: "12px",
                   }}
+                  labelStyle={{ fontWeight: 700, color: "#94A3B8", marginBottom: "4px" }}
+                  itemStyle={{ color: "#F1F5F9" }}
                   formatter={(val: any) => [`${val} messages`, "Total Volume"]}
                   labelFormatter={(_label, payload) => payload?.[0]?.payload?.fullName || _label}
                 />

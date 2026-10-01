@@ -131,12 +131,12 @@ export function useWhatsAppTemplates(companyId: string, clientId: string, enable
   });
 }
 
-/** GET /integrations/whatsapp/messages[?status=…] — Client-scoped, paginated to the backend's 50-row cap. */
-export function useWhatsAppMessages(companyId: string, clientId: string, status: WhatsAppMessageStatus | "ALL", enabled: boolean) {
+/** GET /integrations/whatsapp/messages[?status=…&campaignId=…] — Client-scoped, paginated to the backend's 50-row cap. */
+export function useWhatsAppMessages(companyId: string, clientId: string, status: WhatsAppMessageStatus | "ALL", enabled: boolean, campaignId?: string) {
   return useQuery<{ items: WhatsAppMessage[] }>({
-    queryKey: whatsappKeys.messages(companyId, clientId, status),
+    queryKey: [...whatsappKeys.messages(companyId, clientId, status), campaignId],
     enabled: enabled && Boolean(companyId) && Boolean(clientId),
-    queryFn: ({ signal }) => whatsappApi.listMessages(companyId, clientId, status === "ALL" ? undefined : status, signal),
+    queryFn: ({ signal }) => whatsappApi.listMessages(companyId, clientId, status === "ALL" ? undefined : status, campaignId, signal),
     staleTime: 5_000,
     // Keeps the previous status's rows on screen while the next filter loads.
     placeholderData: keepPreviousData,

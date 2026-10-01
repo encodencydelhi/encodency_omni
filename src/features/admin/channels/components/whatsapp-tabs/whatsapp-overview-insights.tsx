@@ -26,8 +26,6 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  Coins,
-  ExternalLink,
   Eye,
   FileText,
   Filter,
@@ -36,13 +34,11 @@ import {
   PieChart as PieIcon,
   RefreshCw,
   Send,
-  ShieldAlert,
   ShieldCheck,
   TrendingUp,
   UserCheck,
   UserMinus,
   Users,
-  Wallet,
   XCircle,
   Zap,
 } from "lucide-react";
@@ -164,18 +160,8 @@ export function WhatsAppOverviewInsights({
     }
   };
 
-  // Top 8 KPI Cards as explicitly specified in section 11
+  // Top KPI Cards
   const kpis = [
-    {
-      id: "credits",
-      label: "WhatsApp Credits",
-      value: "API N/A",
-      note: "AiSensy Portal only",
-      badge: "External",
-      icon: Wallet,
-      color: "text-amber-600",
-      bg: "bg-amber-50/60 border-amber-200",
-    },
     {
       id: "total_messages",
       label: "Total Messages",
@@ -318,7 +304,7 @@ export function WhatsAppOverviewInsights({
       {/* =================================================================== */}
       {/* 11. TOP 8 KPI CARDS                                                 */}
       {/* =================================================================== */}
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
@@ -340,11 +326,11 @@ export function WhatsAppOverviewInsights({
       </section>
 
       {/* =================================================================== */}
-      {/* ROW 1: Message Performance Trend & WhatsApp Credit Balance          */}
+      {/* ROW 1: Message Performance Trend                                     */}
       {/* =================================================================== */}
-      <div className="grid gap-5 lg:grid-cols-3">
-        {/* Left: Message Performance Graph (2 Cols) */}
-        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-2xs lg:col-span-2">
+      <div className="grid gap-5">
+        {/* Message Performance Graph (Full Width) */}
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-2xs">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
             <div>
               <div className="flex items-center gap-2">
@@ -438,68 +424,6 @@ export function WhatsAppOverviewInsights({
                 </LineChart>
               </ResponsiveContainer>
             )}
-          </div>
-        </section>
-
-        {/* Right: WhatsApp Credit Balance Section (1 Col) */}
-        <section className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-5 shadow-2xs">
-          <div>
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Wallet className="size-4 text-amber-600" />
-                <h3 className="text-sm font-bold text-slate-900">WhatsApp Credits</h3>
-              </div>
-              <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">
-                INR (₹)
-              </span>
-            </div>
-
-            {/* Official Notice Card */}
-            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50/60 p-4">
-              <div className="flex items-start gap-2.5">
-                <ShieldAlert className="size-4 shrink-0 text-amber-600 mt-0.5" />
-                <div>
-                  <h4 className="text-xs font-bold text-amber-900">Credit balance unavailable via AiSensy API</h4>
-                  <p className="mt-1 text-[11px] leading-relaxed text-amber-800">
-                    AiSensy does not provide an official programmatic endpoint to query WhatsApp Conversation Credits (WCC) or historical wallet balance.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-3 border-t border-amber-200/80 pt-3 text-[11px] text-amber-900 space-y-1.5">
-                <div className="flex justify-between">
-                  <span className="text-amber-700">Currency:</span>
-                  <span className="font-semibold">INR (₹)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-amber-700">Credit Status:</span>
-                  <span className="font-semibold text-emerald-700">Managed via Portal</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-amber-700">Historical Tracking:</span>
-                  <span className="font-medium text-slate-500">Disabled (No API snapshot)</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded border border-slate-100 bg-slate-50/70 p-3 text-[11px] text-slate-600 leading-normal">
-              <p className="font-semibold text-slate-800">Data Integrity Notice:</p>
-              <p className="mt-1">
-                To guarantee zero fake or fabricated metrics, historical credit consumption charts are not shown because one message does not always equal one credit.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 border-t border-slate-100 pt-3">
-            <a
-              href="https://app.aisensy.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-slate-800 transition-colors"
-            >
-              <span>View Balance on AiSensy Portal</span>
-              <ExternalLink className="size-3.5" />
-            </a>
           </div>
         </section>
       </div>

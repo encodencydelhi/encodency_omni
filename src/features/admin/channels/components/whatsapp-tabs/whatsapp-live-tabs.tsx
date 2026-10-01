@@ -1,17 +1,20 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import {
   Activity,
   AlertCircle,
   CheckCircle2,
   FileText,
+  Loader2,
   Megaphone,
   Phone,
   Plus,
   RefreshCw,
   Send,
+  Eye,
   ShieldCheck,
+  Sparkles,
   Tag,
   Users,
   XCircle,
@@ -23,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils/cn";
+import { ApiError } from "@/types/api";
 import {
   whatsappApi,
   describeWhatsAppFailure,
@@ -36,9 +40,15 @@ import {
   type WhatsAppOverviewAnalytics,
   type WhatsAppTemplate,
   type WhatsAppTemplateAnalyticsItem,
+  type WhatsAppTemplateLookup,
   type WhatsAppWebhookHealth,
 } from "../../live/whatsapp-api";
-import { useCreateWhatsAppCampaign, useRetryWhatsAppMessage, useSyncWhatsAppTemplates } from "../../live/whatsapp-hooks";
+import {
+  describeNumericPlaceholders,
+  extractAllVariables,
+  extractTemplateVariables,
+} from "../../live/template-variables";
+import { useCreateWhatsAppCampaign, useRetryWhatsAppMessage, useSyncWhatsAppTemplates, useWhatsAppMessages } from "../../live/whatsapp-hooks";
 import type { ProviderOverview } from "@/features/admin/integrations/live/integrations-api";
 import { WhatsAppOverviewInsights } from "./whatsapp-overview-insights";
 import { WhatsAppCampaignsView } from "./whatsapp-campaigns-view";
@@ -69,11 +79,13 @@ function StatusLabel({ status }: { status: string }) {
     status === "ACTIVE" ||
     status === "COMPLETED"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : status === "FAILED" || status === "REJECTED" || status === "OUTCOME_UNKNOWN"
+      : status === "FAILED" || status === "REJECTED"
         ? "border-rose-200 bg-rose-50 text-rose-700"
-        : status === "RUNNING" || status === "SENDING" || status === "QUEUED"
-          ? "border-blue-200 bg-blue-50 text-blue-700"
-          : "border-slate-200 bg-slate-50 text-slate-700";
+        : status === "OUTCOME_UNKNOWN"
+          ? "border-amber-200 bg-amber-50 text-amber-700"
+          : status === "RUNNING" || status === "SENDING" || status === "QUEUED"
+            ? "border-blue-200 bg-blue-50 text-blue-700"
+            : "border-slate-200 bg-slate-50 text-slate-700";
   return (
     <span className={cn("inline-flex rounded-sm border px-2 py-0.5 text-[11px] font-semibold", color)}>
       {status.replaceAll("_", " ")}
@@ -183,12 +195,14 @@ export function CampaignsTab({
   error,
   onRetry,
   onOpenModal,
+  onViewAudience,
 }: {
   campaigns: WhatsAppCampaignItem[];
   loading: boolean;
   error: string | null;
   onRetry: () => void;
   onOpenModal?: (modal: string) => void;
+  onViewAudience?: (campaignId: string) => void;
 }) {
   return (
     <WhatsAppCampaignsView
@@ -197,6 +211,7 @@ export function CampaignsTab({
       error={error}
       onRetry={onRetry}
       onOpenModal={onOpenModal}
+      onViewAudience={onViewAudience}
     />
   );
 }
@@ -615,7 +630,7 @@ export function SettingsTab({
   }
 
   return (
-    <div className="mx-auto mt-2 max-w-3xl space-y-4">
+    <div className="mx-auto mt-2 max-w-6xl grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
       <form onSubmit={save} className="space-y-4 border border-slate-200 bg-white p-4 sm:p-6 rounded-sm shadow-2xs">
         <div>
           <h2 className="text-sm font-bold text-slate-900">AiSensy Connection & Credentials</h2>
@@ -758,6 +773,27 @@ export function SettingsTab({
   );
 }
 
+function parseCommaList(value: string): string[] {
+  return value.split(",").map((entry) => entry.trim()).filter(Boolean);
+}
+
+/**
+ * Copy for a failed AiSensy template lookup.
+ *
+ * `provider_template_not_found` prefers the backend message because it quotes
+ * the exact name the operator typed; every other reason uses the shared
+ * operator-facing sentence, which is written for the lookup path.
+ */
+function lookupFailureCopy(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.reason === "provider_template_not_found") return error.message;
+    return describeWhatsAppFailure(error.reason) ?? error.message;
+  }
+  return error instanceof Error && error.message ? error.message : "Unable to fetch the template from AiSensy.";
+}
+
+type LookupStatus = "idle" | "busy" | "ok" | "error";
+
 export function CreateTemplateModal({
   isOpen,
   onClose,
@@ -780,8 +816,30 @@ export function CreateTemplateModal({
   const [footer, setFooter] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const close = () => {
-    if (saving) return;
+  // Autofill (AiSensy lookup) state.
+  const [lookupStatus, setLookupStatus] = useState<LookupStatus>("idle");
+  const [lookupNote, setLookupNote] = useState<string | null>(null);
+  const [lookupMatches, setLookupMatches] = useState<WhatsAppTemplateLookup["matches"]>([]);
+  const [fetchedVariables, setFetchedVariables] = useState<string[]>([]);
+  const [editVariablesManually, setEditVariablesManually] = useState(false);
+  /** Whether the current body came from AiSensy rather than the operator's keyboard. */
+  const [bodyFromProvider, setBodyFromProvider] = useState(false);
+  const [bodyTouched, setBodyTouched] = useState(false);
+  const [footerTouched, setFooterTouched] = useState(false);
+  const [detailsTouched, setDetailsTouched] = useState(false);
+  const fetchedForName = useRef("");
+
+  const detectedVariables = useMemo(() => {
+    if (editVariablesManually) return parseCommaList(variables);
+    if (bodyFromProvider && fetchedVariables.length > 0) return fetchedVariables;
+    return extractAllVariables(body);
+  }, [editVariablesManually, variables, bodyFromProvider, fetchedVariables, body]);
+
+  const numericTokens = useMemo(() => extractTemplateVariables(body).numericTokens, [body]);
+  /** Numbered placeholders the operator typed themselves — the manual path rejects them. */
+  const manualNumericTokens = bodyFromProvider ? [] : numericTokens;
+
+  const reset = () => {
     setName("");
     setProviderTemplateId("");
     setLanguage("en");
@@ -789,22 +847,116 @@ export function CreateTemplateModal({
     setVariables("");
     setBody("");
     setFooter("");
+    setSaving(false);
+    setLookupStatus("idle");
+    setLookupNote(null);
+    setLookupMatches([]);
+    setFetchedVariables([]);
+    setEditVariablesManually(false);
+    setBodyFromProvider(false);
+    setBodyTouched(false);
+    setFooterTouched(false);
+    setDetailsTouched(false);
+    fetchedForName.current = "";
+  };
+
+  const close = () => {
+    if (saving) return;
+    reset();
     onClose();
+  };
+
+  /**
+   * Writes a provider result onto the form. Fields the operator has already
+   * edited are left alone unless this is an explicit fetch, so an accidental
+   * blur never throws away typed work.
+   */
+  const applyLookup = (result: WhatsAppTemplateLookup, force: boolean) => {
+    const wroteDetails = force || !detailsTouched;
+    const wroteFooter = force || !footerTouched;
+    const wroteBody = force || !bodyTouched;
+
+    if (wroteDetails) {
+      if (result.language) setLanguage(result.language);
+      if (result.category) setCategory(result.category);
+      setProviderTemplateId(result.providerTemplateId ?? "");
+      setDetailsTouched(false);
+    }
+    if (wroteFooter) {
+      setFooter(result.footer ?? "");
+      setFooterTouched(false);
+    }
+    if (wroteBody) {
+      setBody(result.body ?? "");
+      setBodyFromProvider(Boolean(result.body));
+      setBodyTouched(false);
+    }
+
+    setFetchedVariables(result.variables);
+    setLookupMatches(result.matches);
+
+    const variableNote = result.variables.length === 0 ? "no variables" : `${result.variables.length} variable(s)`;
+    const keptBody = wroteBody ? "" : " Body left as you typed it.";
+    setLookupNote(`Loaded “${result.name}” (${result.language}) from AiSensy — ${variableNote}.${keptBody}`);
+  };
+
+  /**
+   * Fetches one template by name.
+   *
+   * `languageOverride` narrows the search to a single variant (used by the
+   * language picker); without it every language variant is returned.
+   */
+  const runLookup = async (options: { force?: boolean; languageOverride?: string } = {}) => {
+    const target = name.trim();
+    if (!target || !companyId || !clientId || lookupStatus === "busy") return;
+    // Blur-driven lookups are cheap no-ops once the name is known, and never
+    // interrupt a body the operator is already writing by hand.
+    if (!options.force) {
+      if (fetchedForName.current === target || bodyTouched) return;
+    }
+
+    setLookupStatus("busy");
+    setLookupNote(null);
+    try {
+      const result = await whatsappApi.lookupTemplate(companyId, clientId, target, options.languageOverride);
+      applyLookup(result, options.force === true);
+      fetchedForName.current = target;
+      setLookupStatus("ok");
+    } catch (error) {
+      setLookupStatus("error");
+      setLookupNote(lookupFailureCopy(error));
+    }
+  };
+
+  const toggleManualVariables = () => {
+    if (!editVariablesManually) {
+      setVariables(detectedVariables.join(", "));
+      setEditVariablesManually(true);
+      return;
+    }
+    setEditVariablesManually(false);
   };
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const variableNames = variables
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean);
+
+    if (manualNumericTokens.length > 0) {
+      toast.error(describeNumericPlaceholders(manualNumericTokens));
+      return;
+    }
+    const manualNumeric = detectedVariables.filter((entry) => /^\d+$/.test(entry));
+    if (editVariablesManually && manualNumeric.length > 0) {
+      toast.error(describeNumericPlaceholders(manualNumeric));
+      return;
+    }
+
     setSaving(true);
     try {
       await whatsappApi.upsertTemplate(companyId, clientId, {
         name: name.trim(),
         language,
         category,
-        variables: variableNames,
+        variables: detectedVariables,
         ...(providerTemplateId.trim() ? { providerTemplateId: providerTemplateId.trim() } : {}),
         ...(body.trim() ? { body: body.trim() } : {}),
         ...(footer.trim() ? { footer: footer.trim() } : {}),
@@ -836,20 +988,94 @@ export function CreateTemplateModal({
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-3 pt-2">
-            <label className="block space-y-1 text-xs font-semibold">
-              Template name
-              <Input
-                required
-                pattern="[a-zA-Z0-9_.-]{1,120}"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </label>
+            <div className="space-y-1 text-xs font-semibold">
+              <span>Template name</span>
+              <div className="flex gap-2">
+                <Input
+                  required
+                  pattern="[a-zA-Z0-9_.-]{1,120}"
+                  value={name}
+                  onChange={(event) => {
+                    setName(event.target.value);
+                    if (event.target.value !== fetchedForName.current) setLookupStatus("idle");
+                  }}
+                  onBlur={() => runLookup()}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0"
+                  disabled={lookupStatus === "busy" || !name.trim()}
+                  onClick={() => runLookup({ force: true })}
+                >
+                  {lookupStatus === "busy" ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="size-3.5" />
+                  )}
+                  {lookupStatus === "busy" ? "Fetching…" : "Fetch from AiSensy"}
+                </Button>
+              </div>
+            </div>
+
+            {lookupStatus === "busy" && !lookupNote && (
+              <div className="flex items-center gap-2 border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+                <Loader2 className="size-4 shrink-0 animate-spin" />
+                Looking up “{name.trim()}” in AiSensy…
+              </div>
+            )}
+            {lookupNote && lookupStatus !== "busy" && (
+              <div
+                className={cn(
+                  "flex items-start gap-2 border p-3 text-xs",
+                  lookupStatus === "error"
+                    ? "border-red-200 bg-red-50 text-red-900"
+                    : "border-emerald-200 bg-emerald-50 text-emerald-900",
+                )}
+              >
+                {lookupStatus === "error" ? (
+                  <AlertCircle className="size-4 shrink-0" />
+                ) : (
+                  <CheckCircle2 className="size-4 shrink-0" />
+                )}
+                <span>
+                  {lookupNote}
+                  {lookupStatus === "error" && " You can still paste the body and variables by hand below."}
+                </span>
+              </div>
+            )}
+
+            {lookupStatus === "ok" && lookupMatches.length > 1 && (
+              <div className="space-y-1 text-xs font-semibold">
+                <span>Language variant</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {lookupMatches.map((match) => (
+                    <button
+                      key={match.language}
+                      type="button"
+                      onClick={() => runLookup({ force: true, languageOverride: match.language })}
+                      className={cn(
+                        "rounded-sm border px-2 py-1 font-mono text-[11px] transition-colors",
+                        match.language === language
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-400",
+                      )}
+                    >
+                      {match.language}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <label className="block space-y-1 text-xs font-semibold">
               Provider template ID <span className="font-normal text-slate-400">(optional)</span>
               <Input
                 value={providerTemplateId}
-                onChange={(event) => setProviderTemplateId(event.target.value)}
+                onChange={(event) => {
+                  setProviderTemplateId(event.target.value);
+                  setDetailsTouched(true);
+                }}
                 maxLength={160}
               />
             </label>
@@ -859,33 +1085,107 @@ export function CreateTemplateModal({
                 <Input
                   required
                   value={language}
-                  onChange={(event) => setLanguage(event.target.value)}
+                  onChange={(event) => {
+                    setLanguage(event.target.value);
+                    setDetailsTouched(true);
+                  }}
                   pattern="[a-z]{2,3}([_-][A-Za-z0-9]{2,8})?"
                 />
               </label>
               <label className="block space-y-1 text-xs font-semibold">
                 Category
-                <Input value={category} onChange={(event) => setCategory(event.target.value)} maxLength={80} />
+                <Input
+                  value={category}
+                  onChange={(event) => {
+                    setCategory(event.target.value);
+                    setDetailsTouched(true);
+                  }}
+                  maxLength={80}
+                />
               </label>
             </div>
             <label className="block space-y-1 text-xs font-semibold">
-              Variable names{" "}
-              <span className="font-normal text-slate-400">(comma-separated; e.g. first_name, date)</span>
-              <Input value={variables} onChange={(event) => setVariables(event.target.value)} />
-            </label>
-            <label className="block space-y-1 text-xs font-semibold">
               Body preview
-              <Textarea value={body} onChange={(event) => setBody(event.target.value)} maxLength={4000} rows={4} />
+              <Textarea
+                value={body}
+                onChange={(event) => {
+                  setBody(event.target.value);
+                  setBodyTouched(true);
+                  setBodyFromProvider(false);
+                }}
+                maxLength={4000}
+                rows={4}
+              />
             </label>
+            {bodyFromProvider && numericTokens.length > 0 && (
+              <p className="text-[11px] text-emerald-700">
+                Loaded from AiSensy. Numbered placeholders like {`{{${numericTokens[0]}}}`} are kept as-is — values are
+                filled positionally, so the order matches the provider template.
+              </p>
+            )}
+            {manualNumericTokens.length > 0 && (
+              <p className="text-[11px] text-amber-700">{describeNumericPlaceholders(manualNumericTokens)}</p>
+            )}
             <label className="block space-y-1 text-xs font-semibold">
               Footer preview <span className="font-normal text-slate-400">(optional)</span>
-              <Input value={footer} onChange={(event) => setFooter(event.target.value)} maxLength={1000} />
+              <Input
+                value={footer}
+                onChange={(event) => {
+                  setFooter(event.target.value);
+                  setFooterTouched(true);
+                }}
+                maxLength={1000}
+              />
             </label>
+
+            <div className="space-y-1 text-xs font-semibold">
+              <div className="flex items-center justify-between gap-2">
+                <span>
+                  Variables{" "}
+                  {!editVariablesManually && detectedVariables.length > 0 && (
+                    <span className="font-normal text-slate-400">({detectedVariables.length} detected)</span>
+                  )}
+                </span>
+                <button
+                  type="button"
+                  onClick={toggleManualVariables}
+                  className="rounded-sm border border-slate-200 px-2 py-0.5 text-[11px] font-normal text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
+                >
+                  {editVariablesManually ? "Auto-detect" : "Edit manually"}
+                </button>
+              </div>
+              {editVariablesManually ? (
+                <>
+                  <Input
+                    value={variables}
+                    onChange={(event) => setVariables(event.target.value)}
+                    placeholder="first_name, date"
+                  />
+                  <p className="font-normal text-slate-400">Comma-separated; e.g. first_name, date</p>
+                </>
+              ) : detectedVariables.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {detectedVariables.map((entry) => (
+                    <span
+                      key={entry}
+                      className="rounded-sm bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-normal text-slate-700"
+                    >
+                      {`{{${entry}}}`}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="font-normal text-slate-400">
+                  No placeholders yet — fetch the body from AiSensy or type one to detect them.
+                </p>
+              )}
+            </div>
+
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={close}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={saving || !companyId || !clientId}>
+              <Button type="submit" disabled={saving || lookupStatus === "busy" || !companyId || !clientId}>
                 {saving ? "Saving…" : "Save template"}
               </Button>
             </div>
@@ -1304,6 +1604,76 @@ export function CreateCampaignModal({
             </Button>
           </div>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function AudienceModal({
+  isOpen,
+  onClose,
+  campaignId,
+  companyId,
+  clientId,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  campaignId: string | null;
+  companyId?: string;
+  clientId?: string;
+}) {
+  const query = useWhatsAppMessages(companyId ?? "", clientId ?? "", "ALL", isOpen && Boolean(campaignId), campaignId ?? undefined);
+  const messages = query.data?.items ?? [];
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto bg-white">
+        <DialogTitle className="text-base font-bold flex items-center gap-2">
+          <Eye className="size-5 text-emerald-600" />
+          Campaign Audience Overview
+        </DialogTitle>
+        <DialogDescription className="text-xs text-slate-500">
+          Showing recipients and their realtime delivery statuses for this campaign.
+        </DialogDescription>
+        
+        <div className="mt-4 overflow-x-auto rounded-sm border border-slate-200">
+          <table className="w-full min-w-[600px] text-left text-xs">
+            <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] uppercase text-slate-500">
+              <tr>
+                <th className="px-4 py-3">Recipient</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Sent At</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {messages.map((m) => (
+                <tr key={m.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-4 py-3 font-medium text-slate-900">{m.destinationPhone}</td>
+                  <td className="px-4 py-3">
+                    <StatusLabel status={m.status} />
+                  </td>
+                  <td className="px-4 py-3 text-slate-500">
+                    {m.createdAt ? new Date(m.createdAt).toLocaleString() : "—"}
+                  </td>
+                </tr>
+              ))}
+              {!query.isLoading && messages.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
+                    No recipients found for this campaign.
+                  </td>
+                </tr>
+              )}
+              {query.isLoading && (
+                <tr>
+                  <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
+                    Loading audience data...
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </DialogContent>
     </Dialog>
   );

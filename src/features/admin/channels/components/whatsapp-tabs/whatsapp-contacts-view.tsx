@@ -57,8 +57,8 @@ export function WhatsAppContactsView({
   }, [contacts, search]);
 
   const totalContacts = contacts.length;
-  const optedIn = contacts.filter((c) => c.optInStatus).length;
-  const optedOut = contacts.filter((c) => !c.optInStatus).length;
+  const optedIn = contacts.filter((c) => c.optedIn).length;
+  const optedOut = contacts.filter((c) => !c.optedIn).length;
 
   return (
     <div className="space-y-4 pt-1">

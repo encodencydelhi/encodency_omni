@@ -43,17 +43,49 @@ export interface WhatsAppConfigResult {
   updatedAt: string;
 }
 
+export interface WhatsAppTemplateButton {
+  type: string;
+  text: string;
+  url?: string | null;
+  phoneNumber?: string | null;
+  urlType?: 'STATIC' | 'DYNAMIC' | null;
+}
+
+export interface WhatsAppTemplateHeader {
+  type: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT' | 'LOCATION' | string;
+  text?: string | null;
+  mediaUrl?: string | null;
+}
+
 export interface WhatsAppTemplate {
   id: string;
   name: string;
   providerTemplateId: string | null;
+  /** Provider status: APPROVED, PENDING, REJECTED, PAUSED — from AiSensy. */
+  providerStatus: string | null;
   language: string;
   category: string | null;
+  /** Template type from provider: STANDARD, AUTHENTICATION, CAROUSEL, etc. */
+  templateType: string | null;
   status: "ENABLED" | "DISABLED";
   variables: string[];
+  parameterCount: number;
+  header: WhatsAppTemplateHeader | null;
   body: string | null;
   footer: string | null;
+  buttons: WhatsAppTemplateButton[] | null;
   updatedAt: string;
+}
+
+export interface WhatsAppTemplateLookup {
+  name: string;
+  language?: string;
+  category?: string;
+  providerTemplateId?: string;
+  footer?: string;
+  body?: string;
+  variables: string[];
+  matches: { language: string }[];
 }
 
 export interface UpsertWhatsAppTemplatePayload {
@@ -297,11 +329,18 @@ export interface WhatsAppContactItem {
   name: string | null;
   source: string;
   status: string;
-  optInStatus: boolean;
+  /** True when contact has opted in to receive WhatsApp messages */
+  optedIn: boolean;
+  optedInAt: string | null;
+  optedOutAt: string | null;
   tags: string[];
   lastActiveAt: string | null;
+  lastInteractionAt: string | null;
+  attributes: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
+  /** @deprecated Use optedIn instead */
+  optInStatus?: boolean;
 }
 
 export interface WhatsAppContactsResponse {
@@ -393,6 +432,24 @@ export const whatsappApi = {
     });
   },
 
+  async lookupTemplate(
+    companyId: string,
+    clientId: string,
+    name: string,
+    language?: string,
+    signal?: AbortSignal,
+  ): Promise<WhatsAppTemplateLookup> {
+    const params = new URLSearchParams();
+    params.set("name", name);
+    if (language) params.set("language", language);
+    return apiClient.request<WhatsAppTemplateLookup>({
+      method: "GET",
+      path: `/integrations/whatsapp/templates/lookup?${params.toString()}`,
+      headers: clientScopeHeaders(companyId, clientId),
+      signal,
+    });
+  },
+
   async upsertTemplate(
     companyId: string,
     clientId: string,
@@ -440,13 +497,17 @@ export const whatsappApi = {
     companyId: string,
     clientId: string,
     status?: WhatsAppMessageStatus,
+    campaignId?: string,
     signal?: AbortSignal,
   ): Promise<{ items: WhatsAppMessage[] }> {
     return apiClient.request<{ items: WhatsAppMessage[] }>({
       method: "GET",
       path: "/integrations/whatsapp/messages",
       headers: clientScopeHeaders(companyId, clientId),
-      query: status ? { status } : undefined,
+      query: {
+        ...(status ? { status } : {}),
+        ...(campaignId ? { campaignId } : {}),
+      },
       signal,
     });
   },
@@ -518,15 +579,42 @@ export const whatsappApi = {
     payload: {
       name: string;
       status?: string;
+      campaignType?: string;
+      description?: string;
       templateId?: string;
       recipients?: string[];
       variables?: Record<string, string>;
+      scheduledAt?: string;
     },
     signal?: AbortSignal,
   ): Promise<WhatsAppCampaignItem> {
     return apiClient.request<WhatsAppCampaignItem>({
       method: "POST",
       path: "/integrations/whatsapp/campaigns",
+      headers: clientScopeHeaders(companyId, clientId),
+      body: payload,
+      signal,
+    });
+  },
+
+  async listCampaigns(companyId: string, clientId: string, signal?: AbortSignal): Promise<{ items: WhatsAppCampaignItem[] }> {
+    return apiClient.request<{ items: WhatsAppCampaignItem[] }>({
+      method: "GET",
+      path: "/integrations/whatsapp/campaigns",
+      headers: clientScopeHeaders(companyId, clientId),
+      signal,
+    });
+  },
+
+  async createContact(
+    companyId: string,
+    clientId: string,
+    payload: { phone: string; name?: string; source?: string; tags?: string[]; optedIn?: boolean; attributes?: Record<string, unknown> },
+    signal?: AbortSignal,
+  ): Promise<{ id: string; phone: string; name: string | null; status: string; optedIn: boolean; createdAt: string }> {
+    return apiClient.request({
+      method: "POST",
+      path: "/integrations/whatsapp/contacts",
       headers: clientScopeHeaders(companyId, clientId),
       body: payload,
       signal,
