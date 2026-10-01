@@ -48,7 +48,7 @@ import {
   extractAllVariables,
   extractTemplateVariables,
 } from "../../live/template-variables";
-import { useCreateWhatsAppCampaign, useRetryWhatsAppMessage, useSyncWhatsAppTemplates, useWhatsAppMessages } from "../../live/whatsapp-hooks";
+import { useCreateWhatsAppCampaign, useRetryWhatsAppMessage, useSyncWhatsAppTemplates, useWhatsAppMessages, useCreateWhatsAppContact } from "../../live/whatsapp-hooks";
 import type { ProviderOverview } from "@/features/admin/integrations/live/integrations-api";
 import { WhatsAppOverviewInsights } from "./whatsapp-overview-insights";
 import { WhatsAppCampaignsView } from "./whatsapp-campaigns-view";
@@ -97,7 +97,7 @@ function ErrorRow({ error, onRetry }: { error: string | null; onRetry: () => voi
   if (!error) return null;
   return (
     <div
-      className="flex items-center justify-between gap-3 border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900"
+      className="flex items-center justify-between gap-2 border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900"
       role="alert"
     >
       <span>{error}</span>
@@ -173,7 +173,7 @@ export function OverviewTab({
   clientId?: string;
 }) {
   return (
-    <div className="space-y-4 pt-1">
+    <div className="space-y-2 pt-1">
       <ErrorRow error={error} onRetry={onRetry} />
       <WhatsAppOverviewInsights
         overviewAnalytics={overviewAnalytics ?? null}
@@ -269,12 +269,14 @@ export function ContactsTab({
   loading,
   error,
   onRetry,
+  onAddContact,
 }: {
   contacts: WhatsAppContactItem[];
   growthTimeline?: WhatsAppContactGrowthPoint[];
   loading: boolean;
   error: string | null;
   onRetry: () => void;
+  onAddContact?: () => void;
 }) {
   return (
     <WhatsAppContactsView
@@ -283,6 +285,7 @@ export function ContactsTab({
       loading={loading}
       error={error}
       onRetry={onRetry}
+      onAddContact={onAddContact}
     />
   );
 }
@@ -342,9 +345,9 @@ export function ConversationsTab({
   };
 
   return (
-    <div className="space-y-3 pt-1">
+    <div className="space-y-2 pt-1">
       <ErrorRow error={error} onRetry={onRetry} />
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-sm font-bold text-slate-900">Outbound Message Logs & Delivery Tracking</h2>
           <p className="mt-0.5 text-xs text-slate-500">
@@ -420,7 +423,7 @@ export function ConversationsTab({
                   {expanded && (
                     <tr>
                       <td colSpan={6} className="bg-slate-50/80 px-4 py-3 text-[11px] text-slate-700">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                           <div className="space-y-1.5">
                             <p>
                               <span className="font-semibold text-slate-800">Provider Message ID:</span>{" "}
@@ -439,7 +442,7 @@ export function ConversationsTab({
                                 {message.failureReasonCode})
                               </p>
                             )}
-                            <div className="mt-2 flex flex-wrap gap-4 text-[11px] text-slate-600">
+                            <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-600">
                               <span>
                                 <strong>Created:</strong> {formatDate(message.createdAt)}
                               </span>
@@ -630,8 +633,8 @@ export function SettingsTab({
   }
 
   return (
-    <div className="mx-auto mt-2 max-w-6xl grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
-      <form onSubmit={save} className="space-y-4 border border-slate-200 bg-white p-4 sm:p-6 rounded-sm shadow-2xs">
+    <div className="pt-1 grid grid-cols-1 items-start gap-2 lg:grid-cols-2">
+      <form onSubmit={save} className="space-y-2 border border-slate-200 bg-white p-4 sm:p-6 rounded-sm shadow-2xs">
         <div>
           <h2 className="text-sm font-bold text-slate-900">AiSensy Connection & Credentials</h2>
           <p className="mt-0.5 text-xs text-slate-500">
@@ -756,7 +759,7 @@ export function SettingsTab({
           <code>POST /integrations/whatsapp/webhook</code>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 text-xs">
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 text-xs">
           <div className="border border-slate-100 p-3 bg-slate-50/50 rounded">
             <span className="text-slate-500 font-medium">Total Webhook Events Recorded:</span>
             <p className="mt-1 text-base font-bold text-slate-900">{webhookHealth?.totalEventsReceived ?? 0}</p>
@@ -987,7 +990,7 @@ export function CreateTemplateModal({
               : "Select a Company before adding a template."}
           </div>
         ) : (
-          <form onSubmit={submit} className="space-y-3 pt-2">
+          <form onSubmit={submit} className="space-y-2 pt-2">
             <div className="space-y-1 text-xs font-semibold">
               <span>Template name</span>
               <div className="flex gap-2">
@@ -1079,7 +1082,7 @@ export function CreateTemplateModal({
                 maxLength={160}
               />
             </label>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-2 sm:grid-cols-2">
               <label className="block space-y-1 text-xs font-semibold">
                 Language code
                 <Input
@@ -1257,7 +1260,7 @@ export function SendTemplateModal({
             Add an enabled template and configure AiSensy before sending.
           </div>
         ) : (
-          <form onSubmit={submit} className="space-y-3 pt-2">
+          <form onSubmit={submit} className="space-y-2 pt-2">
             <label className="block space-y-1 text-xs font-semibold">
               Approved template
               <Select
@@ -1436,7 +1439,7 @@ export function CreateCampaignModal({
           Set up your marketing broadcast, select your approved Meta template, and dispatch messages to your audience.
         </DialogDescription>
 
-        <form onSubmit={submit} className="space-y-4 pt-2">
+        <form onSubmit={submit} className="space-y-2 pt-2">
           <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
             Campaign Name
             <Input
@@ -1486,7 +1489,7 @@ export function CreateCampaignModal({
           </div>
 
           {broadcastNow && (
-            <div className="space-y-3.5 border-t border-slate-100 pt-3">
+            <div className="space-y-2.5 border-t border-slate-100 pt-3">
               {templates.length === 0 ? (
                 <div className="rounded-sm border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 space-y-1">
                   <p className="font-semibold">No approved templates found in client registry</p>
@@ -1674,6 +1677,97 @@ export function AudienceModal({
             </tbody>
           </table>
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function AddContactModal({
+  isOpen,
+  onClose,
+  companyId,
+  clientId,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  companyId?: string;
+  clientId?: string;
+}) {
+  const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  const [source, setSource] = useState("Manual Addition");
+  const createMutation = useCreateWhatsAppContact();
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyId || !clientId) return;
+    try {
+      await createMutation.mutateAsync({
+        companyId,
+        clientId,
+        phone,
+        name: name || undefined,
+        source,
+        optedIn: true,
+      });
+      toast.success("Contact Added", { description: `Successfully added ${phone} to your audience.` });
+      setPhone("");
+      setName("");
+      onClose();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to add contact.");
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !createMutation.isPending && onClose()}>
+      <DialogContent className="max-w-md bg-white">
+        <DialogTitle className="text-base font-bold flex items-center gap-2">
+          <Plus className="size-5 text-indigo-600" />
+          Add Audience Contact
+        </DialogTitle>
+        <DialogDescription className="text-xs text-slate-500">
+          Manually add a recipient to your WhatsApp audience. They will be marked as opted-in by default.
+        </DialogDescription>
+
+        <form onSubmit={submit} className="space-y-2 pt-2">
+          <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
+            Phone Number (with Country Code)
+            <Input
+              required
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="e.g. +919876543210"
+              className="text-xs"
+            />
+          </label>
+          <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
+            Name (Optional)
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Rahul Kumar"
+              className="text-xs"
+            />
+          </label>
+          <label className="block space-y-1.5 text-xs font-semibold text-slate-700">
+            Source (Optional)
+            <Input
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+              placeholder="e.g. Walk-in / Manual Addition"
+              className="text-xs"
+            />
+          </label>
+          <div className="pt-2 flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={createMutation.isPending}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createMutation.isPending || !phone.trim() || !companyId || !clientId}>
+              {createMutation.isPending ? "Adding..." : "Add Contact"}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

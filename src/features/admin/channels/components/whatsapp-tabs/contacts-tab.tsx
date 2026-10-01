@@ -130,7 +130,7 @@ export function ContactsTab({ onOpenModal }: ContactsTabProps) {
       </div>
 
       {/* Top Search & Action Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
@@ -186,7 +186,7 @@ export function ContactsTab({ onOpenModal }: ContactsTabProps) {
 
       {/* Bulk Select Banner */}
       {selected.length > 0 && (
-        <div className="flex items-center gap-3 rounded-sm border border-emerald-200 bg-emerald-50/80 px-4 py-2.5 shadow-xs">
+        <div className="flex items-center gap-2 rounded-sm border border-emerald-200 bg-emerald-50/80 px-4 py-2.5 shadow-xs">
           <span className="text-xs font-bold text-emerald-900">{selected.length} contacts selected</span>
           <div className="h-4 w-px bg-emerald-200" />
           <Button size="sm" variant="ghost" onClick={() => toast.success(`Exporting ${selected.length} contacts to CSV...`)} className="h-7 text-xs font-bold text-emerald-800 hover:bg-emerald-100">

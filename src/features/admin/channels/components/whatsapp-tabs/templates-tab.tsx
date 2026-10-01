@@ -76,7 +76,7 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
   };
 
   return (
-    <div className="space-y-3 pt-1">
+    <div className="space-y-2 pt-1">
       {/* 6 Key Template Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
         {[
@@ -110,7 +110,7 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />

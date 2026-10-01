@@ -102,7 +102,15 @@ export function WhatsAppCampaignsView({
   const activeMetricConfig = METRIC_CONFIG[selectedMetric];
 
   return (
-    <div className="space-y-4 pt-1">
+    <div className="space-y-2 pt-1">
+      <div className="flex items-center justify-end">
+        {onOpenModal && (
+          <Button onClick={() => onOpenModal("create-campaign")} className="shrink-0 h-8">
+            <Plus className="size-3.5 mr-1" /> Create Campaign
+          </Button>
+        )}
+      </div>
+
       {error && (
         <div className="flex items-center justify-between border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
           <span>{error}</span>
@@ -113,7 +121,7 @@ export function WhatsAppCampaignsView({
       )}
 
       {/* 4 Summary Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="rounded-sm border border-slate-200 bg-white p-3.5 shadow-2xs">
           <p className="text-[11px] font-semibold text-slate-500 uppercase">Total Campaigns</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{loading ? "—" : totalCampaigns}</p>
@@ -138,7 +146,7 @@ export function WhatsAppCampaignsView({
 
       {/* Bar Chart Comparing Campaigns with Metric Switcher */}
       <section className="rounded-sm border border-slate-200 bg-white p-4 shadow-2xs">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
           <div>
             <div className="flex items-center gap-2">
               <BarChart3 className="size-4 text-emerald-600" />
@@ -212,7 +220,7 @@ export function WhatsAppCampaignsView({
 
       {/* Detailed Campaign Table */}
       <section className="overflow-hidden rounded-sm border border-slate-200 bg-white shadow-2xs">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-4">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">Campaign Performance Registry</h3>
             <p className="mt-0.5 text-xs text-slate-500">Comprehensive delivery and read conversion per campaign.</p>
@@ -226,11 +234,6 @@ export function WhatsAppCampaignsView({
                 className="h-8 text-xs"
               />
             </div>
-            {onOpenModal && (
-              <Button size="sm" onClick={() => onOpenModal("create-campaign")} className="shrink-0 h-8">
-                <Plus className="size-3.5 mr-1" /> Create Campaign
-              </Button>
-            )}
           </div>
         </header>
 

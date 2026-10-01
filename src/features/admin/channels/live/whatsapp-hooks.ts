@@ -199,3 +199,28 @@ export function useSyncWhatsAppTemplates() {
     },
   });
 }
+
+/** POST /integrations/whatsapp/contacts — Create or update a WhatsApp contact. */
+export function useCreateWhatsAppContact() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    { id: string; phone: string; name: string | null; status: string; optedIn: boolean; createdAt: string },
+    Error,
+    {
+      companyId: string;
+      clientId: string;
+      phone: string;
+      name?: string;
+      source?: string;
+      tags?: string[];
+      optedIn?: boolean;
+    }
+  >({
+    mutationFn: ({ companyId, clientId, ...payload }) =>
+      whatsappApi.createContact(companyId, clientId, payload),
+    onSuccess: (_, { companyId, clientId }) => {
+      void queryClient.invalidateQueries({ queryKey: whatsappKeys.contacts(companyId, clientId) });
+      void queryClient.invalidateQueries({ queryKey: whatsappKeys.overviewAnalytics(companyId, clientId) });
+    },
+  });
+}

@@ -34,6 +34,7 @@ interface ContactsViewProps {
   loading: boolean;
   error: string | null;
   onRetry: () => void;
+  onAddContact?: () => void;
 }
 
 function formatDate(value: string | null) {
@@ -46,6 +47,7 @@ export function WhatsAppContactsView({
   loading,
   error,
   onRetry,
+  onAddContact,
 }: ContactsViewProps) {
   const [search, setSearch] = useState("");
 
@@ -61,7 +63,7 @@ export function WhatsAppContactsView({
   const optedOut = contacts.filter((c) => !c.optedIn).length;
 
   return (
-    <div className="space-y-4 pt-1">
+    <div className="space-y-2 pt-1">
       {error && (
         <div className="flex items-center justify-between border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
           <span>{error}</span>
@@ -72,7 +74,7 @@ export function WhatsAppContactsView({
       )}
 
       {/* 3 Summary Cards */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <div className="rounded-sm border border-slate-200 bg-white p-3.5 shadow-2xs">
           <p className="text-[11px] font-semibold text-slate-500 uppercase">Total Audience</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{loading ? "—" : totalContacts.toLocaleString()}</p>
@@ -170,7 +172,7 @@ export function WhatsAppContactsView({
 
       {/* Contacts Table */}
       <section className="overflow-hidden rounded-sm border border-slate-200 bg-white shadow-2xs">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-4">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
               Audience Contacts & Opt-In Directory
@@ -179,13 +181,24 @@ export function WhatsAppContactsView({
               Active subscriber directory with acquisition source and opt-in status.
             </p>
           </div>
-          <div className="w-full sm:w-64">
-            <Input
-              placeholder="Search phone or name..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-8 text-xs"
-            />
+          <div className="flex w-full sm:w-auto items-center gap-2">
+            <div className="w-full sm:w-64">
+              <Input
+                placeholder="Search phone or name..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-8 text-xs"
+              />
+            </div>
+            {onAddContact && (
+              <button
+                type="button"
+                onClick={onAddContact}
+                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-sm bg-indigo-600 px-3 text-xs font-semibold text-white transition-colors hover:bg-indigo-700"
+              >
+                Add Contact
+              </button>
+            )}
           </div>
         </header>
 

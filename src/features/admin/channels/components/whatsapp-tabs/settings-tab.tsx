@@ -126,7 +126,7 @@ export function SettingsTab() {
             </div>
           </section>
 
-          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+          <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-2">
             <h3 className="text-sm font-bold text-slate-900">Auto-Reply Settings</h3>
             <div className="flex items-center justify-between">
               <div>
@@ -256,7 +256,7 @@ export function SettingsTab() {
                 <label className="text-xs font-bold text-slate-700">Business Description</label>
                 <Input defaultValue="Namo Gange Trust - River Conservation, Tree Plantation & Community Service" className="h-10 text-xs border-slate-200" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700">Website</label>
                   <Input defaultValue="https://namogange.org" className="h-10 text-xs border-slate-200" />
@@ -330,7 +330,7 @@ export function SettingsTab() {
       )}
 
       {/* Danger Zone */}
-      <section className="rounded-sm border-2 border-rose-200 bg-rose-50/30 p-5 shadow-xs space-y-3">
+      <section className="rounded-sm border-2 border-rose-200 bg-rose-50/30 p-5 shadow-xs space-y-2">
         <h3 className="flex items-center gap-2 text-sm font-bold text-rose-700">
           <AlertTriangle className="size-4" /> Danger Zone
         </h3>

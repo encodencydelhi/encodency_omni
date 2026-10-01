@@ -33,6 +33,7 @@ import {
   SettingsTab,
   TemplatesTab,
   AudienceModal,
+  AddContactModal,
 } from "./whatsapp-tabs/whatsapp-live-tabs";
 
 const tabs = ["Overview", "Campaigns", "Templates", "Contacts", "Messages", "Settings"] as const;
@@ -56,7 +57,7 @@ export function WhatsappChannelPage() {
   const { companyId, clientId, setClientId, isReady } = useTenancyContext();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabType>("Overview");
-  const [activeModal, setActiveModal] = useState<"send-template" | "create-template" | "create-campaign" | null>(null);
+  const [activeModal, setActiveModal] = useState<"send-template" | "create-template" | "create-campaign" | "add-contact" | null>(null);
   const [viewAudienceCampaignId, setViewAudienceCampaignId] = useState<string | null>(null);
   const [messageStatus, setMessageStatus] = useState<WhatsAppMessageStatus | "ALL">("ALL");
 
@@ -313,6 +314,7 @@ export function WhatsappChannelPage() {
             loading={contactsQuery.isLoading}
             error={contactsQuery.error ? errorText(contactsQuery.error, "Unable to load contacts.") : null}
             onRetry={() => void contactsQuery.refetch()}
+            onAddContact={() => setActiveModal("add-contact")}
           />
         )}
         {activeTab === "Messages" && (
@@ -391,6 +393,12 @@ export function WhatsappChannelPage() {
         isOpen={viewAudienceCampaignId !== null}
         onClose={() => setViewAudienceCampaignId(null)}
         campaignId={viewAudienceCampaignId}
+        companyId={companyId}
+        clientId={clientId}
+      />
+      <AddContactModal
+        isOpen={activeModal === "add-contact"}
+        onClose={() => setActiveModal(null)}
         companyId={companyId}
         clientId={clientId}
       />

@@ -95,7 +95,13 @@ export function WhatsAppTemplatesView({
   }, [templates]);
 
   return (
-    <div className="space-y-4 pt-1">
+    <div className="space-y-2 pt-1">
+      <div className="flex items-center justify-end">
+        <Button onClick={() => onOpenModal("create-template")} className="shrink-0 h-8">
+          <Plus className="size-3.5 mr-1" /> Add Template
+        </Button>
+      </div>
+
       {error && (
         <div className="flex items-center justify-between border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
           <span>{error}</span>
@@ -106,7 +112,7 @@ export function WhatsAppTemplatesView({
       )}
 
       {/* 4 Summary Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="rounded-sm border border-slate-200 bg-white p-3.5 shadow-2xs">
           <p className="text-[11px] font-semibold text-slate-500 uppercase">Registered Templates</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{loading ? "—" : totalTemplates}</p>
@@ -141,9 +147,6 @@ export function WhatsAppTemplatesView({
               Horizontal performance breakdown showing which templates have generated the highest message throughput.
             </p>
           </div>
-          <Button size="sm" onClick={() => onOpenModal("create-template")} className="mt-2 sm:mt-0">
-            <Plus className="size-3.5 mr-1" /> Add Template
-          </Button>
         </div>
 
         {chartData.length === 0 ? (
@@ -196,7 +199,7 @@ export function WhatsAppTemplatesView({
 
       {/* Expanded Template Analytics Table */}
       <section className="overflow-hidden rounded-sm border border-slate-200 bg-white shadow-2xs">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-4">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
               Granular Template Performance Metrics
@@ -226,13 +229,6 @@ export function WhatsAppTemplatesView({
                 {syncing ? "Syncing..." : "Sync from AiSensy"}
               </Button>
             )}
-            <Button
-              size="sm"
-              onClick={() => onOpenModal("create-template")}
-              className="h-8 text-xs shrink-0"
-            >
-              <Plus className="size-3.5 mr-1" /> Add Template
-            </Button>
           </div>
         </header>
 

@@ -98,7 +98,7 @@ export function AnalyticsTab() {
   return (
     <div className="space-y-2 pt-1">
       {/* Top Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2.5">
           <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="h-10 w-40 text-xs border-slate-200 rounded-sm"><SelectValue /></SelectTrigger>
@@ -160,7 +160,7 @@ export function AnalyticsTab() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <Box title="Message Trends Over Time">
           <div className="p-4">
-            <div className="mb-3 flex gap-4 text-xs font-semibold text-slate-600">
+            <div className="mb-3 flex gap-2 text-xs font-semibold text-slate-600">
               <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-emerald-500" />Sent</span>
               <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-blue-500" />Delivered</span>
               <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-purple-500" />Read</span>
@@ -229,7 +229,7 @@ export function AnalyticsTab() {
                 </div>
               </div>
             </div>
-            <div className="ml-6 flex-1 space-y-3">
+            <div className="ml-6 flex-1 space-y-2">
               {typeDistribution.map((d) => (
                 <div key={d.name} className="flex items-center justify-between text-xs font-semibold">
                   <span className="flex items-center gap-2 text-slate-600">
@@ -287,9 +287,9 @@ export function AnalyticsTab() {
 
       {/* Conversion Funnel */}
       <Box title="WhatsApp Conversion Funnel">
-        <div className="flex flex-wrap items-center justify-center gap-3 p-5">
+        <div className="flex flex-wrap items-center justify-center gap-2 p-5">
           {funnelSteps.map((step, i) => (
-            <div key={step.label} className="flex items-center gap-3">
+            <div key={step.label} className="flex items-center gap-2">
               <div className="text-center">
                 <div
                   className={cn(

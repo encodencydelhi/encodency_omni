@@ -209,11 +209,11 @@ export function FlowsTab() {
 
       {/* Screen Sequence Preview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+        <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-2">
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Flow Screen Builder Structure</h3>
           <div className="space-y-2.5">
             {flowScreens.map((screen, i) => (
-              <div key={screen.id} className="flex items-center gap-3">
+              <div key={screen.id} className="flex items-center gap-2">
                 <div className="flex flex-col items-center">
                   <span className="grid size-6 place-items-center rounded-sm bg-emerald-600 text-[10px] font-bold text-white shadow-xs">
                     {i + 1}
@@ -234,9 +234,9 @@ export function FlowsTab() {
           </div>
         </section>
 
-        <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+        <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs space-y-2">
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Active Flow Completion Rates</h3>
-          <div className="space-y-3 pt-1">
+          <div className="space-y-2 pt-1">
             {flowList.filter((f) => f.status === "Published").map((f) => (
               <div key={f.id} className="space-y-1">
                 <div className="flex items-center justify-between text-xs font-semibold">

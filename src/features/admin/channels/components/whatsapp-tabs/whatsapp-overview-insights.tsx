@@ -228,11 +228,11 @@ export function WhatsAppOverviewInsights({
   ];
 
   return (
-    <div className="space-y-6 pt-1">
+    <div className="space-y-2 pt-1">
       {/* =================================================================== */}
       {/* 12. GLOBAL DATE FILTER BAR                                          */}
       {/* =================================================================== */}
-      <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3.5 shadow-2xs sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <Calendar className="size-4 text-emerald-600" />
           <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Analytics Period:</span>
@@ -271,7 +271,7 @@ export function WhatsAppOverviewInsights({
 
       {/* Custom Date Range Inputs (Visible when Custom is selected) */}
       {selectedRange === "custom" && (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 text-xs">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 text-xs">
           <div className="flex items-center gap-1.5">
             <span className="font-semibold text-slate-700">Start Date:</span>
             <input
@@ -304,7 +304,7 @@ export function WhatsAppOverviewInsights({
       {/* =================================================================== */}
       {/* 11. TOP 8 KPI CARDS                                                 */}
       {/* =================================================================== */}
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+      <section className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
@@ -328,10 +328,10 @@ export function WhatsAppOverviewInsights({
       {/* =================================================================== */}
       {/* ROW 1: Message Performance Trend                                     */}
       {/* =================================================================== */}
-      <div className="grid gap-5">
+      <div className="grid gap-2">
         {/* Message Performance Graph (Full Width) */}
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-2xs">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3">
             <div>
               <div className="flex items-center gap-2">
                 <BarChart3 className="size-4 text-emerald-600" />
@@ -429,9 +429,9 @@ export function WhatsAppOverviewInsights({
       </div>
 
       {/* =================================================================== */}
-      {/* ROW 2: Delivery Funnel & Campaign Performance                       */}
+      {/* Overview Analytics Grid (3 columns on large screens)                */}
       {/* =================================================================== */}
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-3">
         {/* Delivery Funnel */}
         <section className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-5 shadow-2xs">
           <div>
@@ -447,7 +447,7 @@ export function WhatsAppOverviewInsights({
               End-to-end transmission pipeline from initial dispatch to confirmed read status.
             </p>
 
-            <div className="mt-5 space-y-4">
+            <div className="mt-5 space-y-2">
               {/* Funnel Step 1: Sent */}
               <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3.5">
                 <div className="flex items-center justify-between text-xs">
@@ -631,7 +631,7 @@ export function WhatsAppOverviewInsights({
                 {campaignPerformance.map((c) => (
                   <div key={c.id} className="flex items-center justify-between py-2">
                     <span className="font-semibold text-slate-800 truncate max-w-[180px]">{c.name}</span>
-                    <div className="flex items-center gap-3 text-[11px]">
+                    <div className="flex items-center gap-2 text-[11px]">
                       <span className="text-emerald-700 font-medium">Del: {c.deliveryRate.toFixed(1)}%</span>
                       <span className="text-indigo-700 font-medium">Read: {c.readRate.toFixed(1)}%</span>
                       <span className="text-rose-600 font-medium">Fail: {c.failureRate.toFixed(1)}%</span>
@@ -652,12 +652,7 @@ export function WhatsAppOverviewInsights({
             </button>
           </div>
         </section>
-      </div>
 
-      {/* =================================================================== */}
-      {/* ROW 3: Template Performance & Audience Growth                       */}
-      {/* =================================================================== */}
-      <div className="grid gap-5 lg:grid-cols-2">
         {/* Template Performance (Horizontal Bar Chart + Details) */}
         <section className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-5 shadow-2xs">
           <div>
@@ -760,7 +755,7 @@ export function WhatsAppOverviewInsights({
                         {t.category} · {t.language} · {t.usageCount ?? t.total} uses
                       </p>
                     </div>
-                    <div className="flex items-center gap-3 text-[11px]">
+                    <div className="flex items-center gap-2 text-[11px]">
                       <span className="text-emerald-700 font-medium">Del: {t.deliveryRate.toFixed(1)}%</span>
                       <span className="text-indigo-700 font-medium">Read: {t.readRate.toFixed(1)}%</span>
                       <span className="text-rose-600 font-medium">Fail: {(t.failureRate ?? 0).toFixed(1)}%</span>
@@ -874,12 +869,7 @@ export function WhatsAppOverviewInsights({
             </button>
           </div>
         </section>
-      </div>
 
-      {/* =================================================================== */}
-      {/* ROW 4: Failure Diagnostics & Opt-in / Opt-out Analytics             */}
-      {/* =================================================================== */}
-      <div className="grid gap-5 lg:grid-cols-2">
         {/* Message Failure Analysis */}
         <section className="flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-5 shadow-2xs">
           <div>
@@ -923,6 +913,7 @@ export function WhatsAppOverviewInsights({
                         tick={{ fontSize: 11, fill: "#334155" }}
                         tickLine={false}
                         axisLine={false}
+                        tickFormatter={(val: string) => (val.length > 20 ? `${val.slice(0, 18)}...` : val)}
                       />
                       <Tooltip
                         contentStyle={{
@@ -944,16 +935,20 @@ export function WhatsAppOverviewInsights({
 
                 <div className="mt-4 divide-y divide-slate-100 text-xs">
                   {failureReasons.map((item, idx) => (
-                    <div key={item.code} className="flex items-center justify-between py-1.5">
-                      <div className="flex items-center gap-2">
+                    <div key={item.code} className="flex items-center justify-between py-1.5 gap-2">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
                         <span
-                          className="size-2 rounded-full"
+                          className="size-2 rounded-full shrink-0"
                           style={{ backgroundColor: FAILURE_COLORS[idx % FAILURE_COLORS.length] }}
                         />
-                        <span className="font-medium text-slate-700">{item.label}</span>
-                        <code className="text-[10px] text-slate-400">({item.code})</code>
+                        <span className="font-medium text-slate-700 truncate" title={item.label}>
+                          {item.label}
+                        </span>
+                        <code className="text-[10px] text-slate-400 shrink-0 truncate" title={item.code}>
+                          ({item.code})
+                        </code>
                       </div>
-                      <span className="font-bold text-slate-900">
+                      <span className="font-bold text-slate-900 shrink-0">
                         {item.count} ({item.percentage.toFixed(1)}%)
                       </span>
                     </div>
@@ -1000,7 +995,7 @@ export function WhatsAppOverviewInsights({
                 </p>
               </div>
             ) : (
-              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 items-center gap-4">
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 items-center gap-2">
                 <div className="h-44 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -1030,7 +1025,7 @@ export function WhatsAppOverviewInsights({
                   </ResponsiveContainer>
                 </div>
 
-                <div className="space-y-3 text-xs">
+                <div className="space-y-2 text-xs">
                   <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1.5 font-bold text-emerald-950">

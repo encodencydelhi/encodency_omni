@@ -63,12 +63,12 @@ export function AutomationTab({ onOpenModal }: AutomationTabProps) {
   return (
     <div className="space-y-2 pt-1">
       {/* Top Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h3 className="text-sm font-bold text-slate-900 tracking-tight">Automation Rules & Keyword Triggers</h3>
           <p className="text-xs text-slate-500">Automate responses, agent assignment and drip sequences via AiSensy WABA engine.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-sm px-3 py-1.5">
             <span className="text-xs font-bold text-slate-700">Master Switch</span>
             <Switch checked={automationEnabled} onCheckedChange={(val) => { setAutomationEnabled(val); toast.info(val ? "Automation Enabled" : "Automation Paused"); }} />
@@ -107,14 +107,14 @@ export function AutomationTab({ onOpenModal }: AutomationTabProps) {
       </div>
 
       {/* Rules List */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {ruleList.map((rule) => {
           const TriggerIcon = triggerIcons[rule.triggerType] || Zap;
           return (
             <div
               key={rule.id}
               className={cn(
-                "flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-sm border p-4 bg-white shadow-xs transition-all hover:shadow-md",
+                "flex flex-col sm:flex-row items-start sm:items-center gap-2 rounded-sm border p-4 bg-white shadow-xs transition-all hover:shadow-md",
                 rule.enabled ? "border-slate-200" : "border-slate-200 opacity-60 bg-slate-50/50"
               )}
             >
@@ -130,13 +130,13 @@ export function AutomationTab({ onOpenModal }: AutomationTabProps) {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">{rule.description}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600">
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600">
                   <span>Trigger: <b className="text-slate-900 font-bold">{rule.trigger}</b></span>
                   <span>Action: <b className="text-slate-900 font-bold">{rule.action}</b></span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 self-end sm:self-center">
+              <div className="flex items-center gap-2 self-end sm:self-center">
                 <div className="text-right">
                   <p className="text-[10px] text-slate-400 font-semibold uppercase">Last triggered</p>
                   <p className="text-xs font-bold text-slate-900">{rule.lastTriggered}</p>
@@ -160,7 +160,7 @@ export function AutomationTab({ onOpenModal }: AutomationTabProps) {
       {/* Visual Workflow Preview Node Diagram */}
       <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-xs">
         <h3 className="mb-3 text-xs font-bold text-slate-900 uppercase tracking-wider">Visual Bot Flow Execution Diagram</h3>
-        <div className="flex items-center justify-center gap-3 overflow-x-auto py-4">
+        <div className="flex items-center justify-center gap-2 overflow-x-auto py-4">
           {[
             { label: "1. Inbound Trigger", sub: "Incoming User Message", color: "bg-emerald-50 border-emerald-300 text-emerald-800" },
             { label: "2. Logic Condition", sub: 'Contains "help" / "join"', color: "bg-blue-50 border-blue-300 text-blue-800" },
@@ -168,7 +168,7 @@ export function AutomationTab({ onOpenModal }: AutomationTabProps) {
             { label: "4. Team Inbox", sub: "Assign to Agent", color: "bg-amber-50 border-amber-300 text-amber-800" },
             { label: "5. Resolution", sub: "Mark Chat Resolved", color: "bg-slate-100 border-slate-300 text-slate-700" },
           ].map((node, i) => (
-            <div key={i} className="flex items-center gap-3">
+            <div key={i} className="flex items-center gap-2">
               <div className={cn("rounded-sm border-2 px-4 py-3 text-center min-w-[150px] shadow-xs", node.color)}>
                 <p className="text-[10px] font-bold uppercase tracking-wider opacity-75">{node.label}</p>
                 <p className="text-xs font-bold mt-0.5">{node.sub}</p>

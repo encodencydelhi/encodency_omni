@@ -91,7 +91,7 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
   };
 
   return (
-    <div className="space-y-3 pt-1">
+    <div className="space-y-2 pt-1">
       {/* 6 Key Campaigns Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
         {[
@@ -125,7 +125,7 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
       </div>
 
       {/* Top Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
@@ -322,7 +322,7 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
             { name: "Volunteer Recruitment - Awareness", platform: "Instagram", status: "Active", conversations: 1650, cost: "₹13.20", ctr: "2.8%", budget: "₹20,000", spent: "₹14,200" },
             { name: "Donation Appeal - Festival Season", platform: "Facebook", status: "Active", conversations: 1031, cost: "₹12.90", ctr: "3.5%", budget: "₹15,000", spent: "₹11,100" },
           ].map((ad, i) => (
-            <div key={i} className="flex items-center gap-4 rounded-sm border border-slate-200/80 bg-slate-50/30 p-3 hover:bg-slate-50 transition-colors">
+            <div key={i} className="flex items-center gap-2 rounded-sm border border-slate-200/80 bg-slate-50/30 p-3 hover:bg-slate-50 transition-colors">
               <div className="grid size-9 shrink-0 place-items-center rounded-sm bg-blue-600 text-white text-xs font-bold shadow-xs">
                 {ad.platform === "Facebook" ? "f" : "IG"}
               </div>
@@ -331,7 +331,7 @@ export function CampaignsTab({ onOpenModal }: CampaignsTabProps) {
                   <p className="text-xs font-bold text-slate-900">{ad.name}</p>
                   <span className="rounded-sm bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">{ad.status}</span>
                 </div>
-                <div className="mt-1 flex items-center gap-4 text-[11px] text-slate-500">
+                <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-500">
                   <span>Conversations: <b className="text-slate-900">{ad.conversations.toLocaleString()}</b></span>
                   <span>Cost/Conv: <b className="text-slate-900">{ad.cost}</b></span>
                   <span>CTR: <b className="text-slate-900">{ad.ctr}</b></span>

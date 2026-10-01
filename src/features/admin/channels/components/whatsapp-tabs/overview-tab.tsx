@@ -215,7 +215,7 @@ export function OverviewTab({
           }
         >
           <div className="flex h-full flex-col px-3.5 py-3">
-            <div className="mb-2 flex shrink-0 gap-3 text-[11px] font-bold text-slate-600">
+            <div className="mb-2 flex shrink-0 gap-2 text-[11px] font-bold text-slate-600">
               <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-emerald-500" />Sent</span>
               <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-blue-500" />Delivered</span>
               <span className="flex items-center gap-1"><i className="size-2 rounded-sm bg-purple-500" />Read</span>
