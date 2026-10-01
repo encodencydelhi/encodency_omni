@@ -124,6 +124,14 @@ export interface CampaignDraft {
   notifyMarketing: boolean;
   notifyEmail: boolean;
   approvalState: string;
+
+  // WhatsApp Campaign & Broadcast Integration
+  whatsappTemplateId?: string;
+  whatsappRecipients?: string[];
+  whatsappManualRecipients?: string;
+  whatsappIncludeAllContacts?: boolean;
+  whatsappVariables?: Record<string, string>;
+  whatsappBroadcastNow?: boolean;
 }
 
 export interface AutomationRule {
@@ -328,6 +336,13 @@ export const initialCampaign: CampaignDraft = {
   notifyMarketing: true,
   notifyEmail: false,
   approvalState: "Approved",
+
+  whatsappTemplateId: "",
+  whatsappRecipients: [],
+  whatsappManualRecipients: "",
+  whatsappIncludeAllContacts: false,
+  whatsappVariables: {},
+  whatsappBroadcastNow: false,
 };
 
 export const CAMPAIGN_STEPS = [

@@ -17,12 +17,24 @@ import {
   Upload,
   Video,
   X,
+  Send,
+  Users,
+  Phone,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+  ExternalLink,
 } from "lucide-react";
 import type { CampaignDraft } from "../draft";
 import { ChannelLogo } from "../../../shared/channel-logo";
-import { Field, SelectInput, TagField, Textarea, TextInput } from "../ui";
+import { Field, SelectInput, TagField, Textarea, TextInput, control } from "../ui";
 import { SpellCheckedInput } from "@/components/ui/spellchecked-input";
 import { cn } from "@/lib/utils/cn";
+import {
+  whatsappApi,
+  type WhatsAppTemplate,
+  type WhatsAppContactItem,
+} from "../../../channels/live/whatsapp-api";
 
 type Setter = <K extends keyof CampaignDraft>(key: K, value: CampaignDraft[K]) => void;
 
@@ -59,11 +71,71 @@ const AI_ADAPTATIONS = [
 
 const DEFAULT_FORMATS = ["4:5 IG Feed", "9:16 Reel", "9:16 Story", "1.91:1 FB", "1:1 LinkedIn", "16:9 YT", "9:16 Shorts", "16:9 X", "16:9 Web", "3:1 Email"];
 
-export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter }) {
+export function StepContent({
+  draft,
+  set,
+  companyId,
+  effectiveClientId,
+}: {
+  draft: CampaignDraft;
+  set: Setter;
+  companyId?: string;
+  effectiveClientId?: string;
+}) {
   const [customFormats, setCustomFormats] = React.useState<{ ratio: string; label: string }[]>([]);
   const [showCustomInput, setShowCustomInput] = React.useState(false);
   const [newRatio, setNewRatio] = React.useState("");
   const [newLabel, setNewLabel] = React.useState("");
+  const [activePlatformTab, setActivePlatformTab] = React.useState<string>(draft.activePlatform || "Instagram Post");
+
+  // WhatsApp templates and contacts loading for active client
+  const [templates, setTemplates] = React.useState<WhatsAppTemplate[]>([]);
+  const [contacts, setContacts] = React.useState<WhatsAppContactItem[]>([]);
+  const [loadingWhatsApp, setLoadingWhatsApp] = React.useState(false);
+  const [waError, setWaError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!companyId || !effectiveClientId) return;
+    let active = true;
+    setLoadingWhatsApp(true);
+    setWaError(null);
+
+    Promise.all([
+      whatsappApi.listTemplates(companyId, effectiveClientId).catch((err) => {
+        console.warn("Failed to load WhatsApp templates:", err);
+        return { items: [] };
+      }),
+      whatsappApi.getContacts(companyId, effectiveClientId).catch((err) => {
+        console.warn("Failed to load WhatsApp contacts:", err);
+        return { items: [], growthTimeline: [] };
+      }),
+    ])
+      .then(([tmplRes, contactsRes]) => {
+        if (!active) return;
+        const tmpls = tmplRes?.items ?? [];
+        setTemplates(tmpls);
+        setContacts(contactsRes?.items ?? []);
+        const firstTmpl = tmpls[0];
+        if (!draft.whatsappTemplateId && firstTmpl) {
+          set("whatsappTemplateId", firstTmpl.id);
+        }
+      })
+      .catch((err) => {
+        if (active) setWaError(err.message || "Failed to load WhatsApp data");
+      })
+      .finally(() => {
+        if (active) setLoadingWhatsApp(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [companyId, effectiveClientId]);
+
+  const selectedTemplate = React.useMemo(() => {
+    if (!draft.whatsappTemplateId) return templates[0] || null;
+    return templates.find((t) => t.id === draft.whatsappTemplateId) || templates[0] || null;
+  }, [templates, draft.whatsappTemplateId]);
 
   const addCustomFormat = () => {
     if (newRatio.trim() && newLabel.trim()) {
@@ -77,6 +149,57 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
   const removeCustomFormat = (index: number) => {
     setCustomFormats(customFormats.filter((_, i) => i !== index));
   };
+
+  const handleTabChange = (tabId: string) => {
+    setActivePlatformTab(tabId);
+    set("activePlatform", tabId);
+  };
+
+  const handleTemplateSelect = (id: string) => {
+    set("whatsappTemplateId", id);
+    const tmpl = templates.find((t) => t.id === id);
+    if (tmpl && tmpl.variables.length > 0) {
+      const vars = { ...(draft.whatsappVariables || {}) };
+      for (const v of tmpl.variables) {
+        if (!vars[v]) {
+          vars[v] = v.toLowerCase().includes("name") ? draft.client || "Customer" : "";
+        }
+      }
+      set("whatsappVariables", vars);
+    }
+  };
+
+  const handleVariableChange = (varKey: string, val: string) => {
+    const existing = draft.whatsappVariables || {};
+    set("whatsappVariables", { ...existing, [varKey]: val });
+  };
+
+  const handleManualPhonesChange = (text: string) => {
+    set("whatsappManualRecipients", text);
+    const parsed = text.split(/[\n,]+/).map((p) => p.trim()).filter(Boolean);
+    const contactPhones = draft.whatsappIncludeAllContacts ? contacts.map((c) => c.phone).filter(Boolean) : [];
+    set("whatsappRecipients", [...new Set([...parsed, ...contactPhones])]);
+  };
+
+  const handleToggleIncludeAllContacts = (include: boolean) => {
+    set("whatsappIncludeAllContacts", include);
+    const manual = (draft.whatsappManualRecipients || "").split(/[\n,]+/).map((p) => p.trim()).filter(Boolean);
+    const contactPhones = include ? contacts.map((c) => c.phone).filter(Boolean) : [];
+    set("whatsappRecipients", [...new Set([...manual, ...contactPhones])]);
+  };
+
+  // Preview body with interpolated variables
+  const renderedWhatsAppBody = React.useMemo(() => {
+    if (!selectedTemplate?.body) return draft.masterCaption || "No content configured.";
+    let body = selectedTemplate.body;
+    const vars = draft.whatsappVariables || {};
+    for (const [key, val] of Object.entries(vars)) {
+      if (val) {
+        body = body.replaceAll(`{{${key}}}`, val);
+      }
+    }
+    return body;
+  }, [selectedTemplate, draft.whatsappVariables, draft.masterCaption]);
 
   return (
     <div className="space-y-2.5">
@@ -230,56 +353,292 @@ export function StepContent({ draft, set }: { draft: CampaignDraft; set: Setter 
 
       <Panel letter="C" icon={BarChart3} title="Platform-Specific Content" caption="Customize content for each platform with individual captions, media and settings.">
         <div className="scrollbar-thin flex gap-1 overflow-x-auto border-b border-[#E7EDF5] pb-0">
-          {PLATFORM_TABS.map((tab, index) => (
-            <button key={tab.id} className={cn("flex h-8 shrink-0 items-center gap-1.5 rounded-t-lg border border-b-0 px-3 text-[10.5px] font-semibold", index === 0 ? "border-[#DDE6F1] bg-white text-[#155EEF]" : "border-transparent text-[#687797]")}>
-              <ChannelLogo channel={tab.channel} className="size-4" />
-              {tab.id}
-            </button>
-          ))}
+          {PLATFORM_TABS.map((tab) => {
+            const isTabActive = activePlatformTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabChange(tab.id)}
+                className={cn(
+                  "flex h-8 shrink-0 items-center gap-1.5 rounded-t-lg border border-b-0 px-3 text-[10.5px] font-semibold transition-all",
+                  isTabActive
+                    ? "border-[#DDE6F1] bg-white text-[#155EEF] shadow-xs font-bold"
+                    : "border-transparent text-[#687797] hover:text-[#111827] hover:bg-slate-50",
+                )}
+              >
+                <ChannelLogo channel={tab.channel} className="size-4" />
+                {tab.id}
+                {tab.channel === "WhatsApp" && templates.length > 0 && (
+                  <span className="ml-0.5 rounded-full bg-emerald-100 px-1.5 py-0.2 text-[9px] font-semibold text-emerald-700">
+                    {templates.length}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="grid gap-3 rounded-b-lg border-x border-b border-[#E7EDF5] p-3 xl:grid-cols-[minmax(360px,1fr)_360px_minmax(460px,1fr)]">
-          <div>
-            <SectionTitle icon={FileText} title="Instagram Post Settings" caption="Customize content for Instagram feed posts." />
-            <Field label="Caption">
-              <Textarea value={draft.masterCaption} onChange={(v) => set("masterCaption", v)} rows={6} max={2200} />
-            </Field>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="Media">
-              <span className="relative block h-[96px] overflow-hidden rounded-sm border border-[#DDE6F1]">
-                <Image src="/campaigns/save-rivers/square.png" alt="" fill sizes="150px" className="object-cover" />
-                <button className="absolute bottom-1.5 right-1.5 rounded bg-black/60 px-2 py-0.5 text-[8px] font-semibold text-white">Edit</button>
-              </span>
-            </Field>
-            <Field label="Alt Text">
-              <Textarea value="Riverside cleanup drive with volunteers" onChange={() => undefined} rows={4} max={125} />
-            </Field>
-            <Field label="Location" className="col-span-2">
-              <TextInput value="" onChange={() => undefined} placeholder="Add location" />
-            </Field>
-          </div>
-          <div className="grid gap-3 md:grid-cols-[240px_minmax(0,1fr)]">
-            <PostPreview />
-            <div>
-              <b className="mb-2 block text-[11.5px] text-[#132044]">Platform Options</b>
-              {["Include Location", "Tag People", "Add Link in Bio Reminder"].map((item) => (
-                <div key={item} className="mb-2 flex items-center gap-2">
-                  <span className="h-5 w-9 rounded-sm bg-[#18B875] p-0.5"><i className="block size-4 translate-x-4 rounded-sm bg-white" /></span>
-                  <span className="text-[10px] font-semibold text-[#34415F]">{item}</span>
+        {activePlatformTab === "WhatsApp Broadcast" ? (
+          /* ================= WHATSAPP BROADCAST STUDIO ================= */
+          <div className="grid gap-3 rounded-b-lg border-x border-b border-[#E7EDF5] p-3.5 xl:grid-cols-[minmax(340px,1fr)_minmax(340px,1fr)_minmax(340px,1fr)]">
+            {/* Column 1: Template Selection & Variables */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <SectionTitle icon={MessageCircle} title="WhatsApp Template" caption="Meta-approved message template from AiSensy." />
+                {loadingWhatsApp && <RefreshCw className="size-3.5 animate-spin text-[#155EEF]" />}
+              </div>
+
+              {templates.length > 0 ? (
+                <div className="space-y-2.5">
+                  <label className="block text-[11px] font-semibold text-slate-700">
+                    Select Approved Template
+                    <div className="relative mt-1">
+                      <select
+                        value={draft.whatsappTemplateId || templates[0]?.id}
+                        onChange={(e) => handleTemplateSelect(e.target.value)}
+                        className="w-full rounded-sm border border-slate-200 bg-white px-2.5 py-2 text-xs font-medium text-slate-800 shadow-2xs outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      >
+                        {templates.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name} ({t.language}) {t.category ? `· ${t.category}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </label>
+
+                  {selectedTemplate && (
+                    <div className="rounded-sm border border-slate-200 bg-slate-50/70 p-2.5 text-xs text-slate-600 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-800 text-[11.5px]">{selectedTemplate.name}</span>
+                        <span className="inline-flex rounded-sm bg-emerald-100 px-1.5 py-0.5 text-[9.5px] font-semibold text-emerald-800">
+                          {selectedTemplate.status}
+                        </span>
+                      </div>
+                      <p className="text-[10.5px] text-slate-500">
+                        Language: <b className="text-slate-700">{selectedTemplate.language}</b>
+                        {selectedTemplate.category && <> · Category: <b className="text-slate-700">{selectedTemplate.category}</b></>}
+                      </p>
+                      {selectedTemplate.footer && (
+                        <p className="text-[10px] italic text-slate-400">Footer: {selectedTemplate.footer}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Template Variable Inputs */}
+                  {selectedTemplate && selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
+                    <div className="rounded-sm border border-indigo-100 bg-indigo-50/40 p-2.5 space-y-2">
+                      <p className="text-[11px] font-semibold text-indigo-900">
+                        Template Variables ({selectedTemplate.variables.length})
+                      </p>
+                      <div className="space-y-1.5">
+                        {selectedTemplate.variables.map((variable) => (
+                          <div key={variable} className="flex items-center gap-2">
+                            <span className="w-20 shrink-0 font-mono text-[10.5px] font-semibold text-indigo-700">
+                              {`{{${variable}}}`}
+                            </span>
+                            <input
+                              type="text"
+                              value={draft.whatsappVariables?.[variable] ?? ""}
+                              onChange={(e) => handleVariableChange(variable, e.target.value)}
+                              placeholder={`Value for ${variable}`}
+                              className="h-7 min-w-0 flex-1 rounded border border-indigo-200 bg-white px-2 text-xs text-slate-800 outline-none focus:border-indigo-500"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Immediate Dispatch Toggle */}
+                  <label className="flex items-start gap-2 rounded-sm border border-slate-200 bg-white p-2.5 cursor-pointer hover:bg-slate-50">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(draft.whatsappBroadcastNow)}
+                      onChange={(e) => set("whatsappBroadcastNow", e.target.checked)}
+                      className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <div className="text-[11px] leading-tight">
+                      <b className="block font-semibold text-slate-800">Broadcast Messages on Campaign Launch</b>
+                      <span className="text-[10px] text-slate-500">
+                        When enabled, AiSensy will dispatch live WhatsApp messages immediately upon campaign launch.
+                      </span>
+                    </div>
+                  </label>
                 </div>
-              ))}
-              <div className="grid grid-cols-2 gap-2">
-                <Field label="CTA Button">
-                  <SelectInput value={draft.cta} onChange={(v) => set("cta", v)} options={["Learn More", "Join Now", "Donate"]} />
-                </Field>
-                <Field label="First Comment">
-                  <TextInput value={draft.firstComment} onChange={(v) => set("firstComment", v)} />
-                </Field>
+              ) : (
+                <div className="rounded-sm border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 space-y-2">
+                  <div className="flex items-center gap-1.5 font-semibold">
+                    <AlertCircle className="size-4 shrink-0 text-amber-600" />
+                    <span>No approved templates detected</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-amber-800">
+                    Templates from your connected AiSensy account will sync automatically. You can still save or launch this campaign; a WhatsApp campaign registry will be created.
+                  </p>
+                  <a
+                    href="/admin/whatsapp"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 hover:underline"
+                  >
+                    Manage Templates in WhatsApp Channel <ExternalLink className="size-3" />
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Column 2: Audience & Recipient Targeting */}
+            <div className="space-y-3">
+              <SectionTitle icon={Users} title="Audience & Recipients" caption="Target client contacts or specify phone numbers." />
+
+              <div className="space-y-2.5">
+                <label className="block text-[11px] font-semibold text-slate-700">
+                  Manual Phone Numbers (CSV or Newline)
+                  <textarea
+                    rows={4}
+                    value={draft.whatsappManualRecipients || ""}
+                    onChange={(e) => handleManualPhonesChange(e.target.value)}
+                    placeholder="+919876543210&#10;+919812345678&#10;+919800000000"
+                    className="mt-1 w-full rounded-sm border border-slate-200 bg-white p-2 font-mono text-xs text-slate-800 shadow-2xs outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  />
+                </label>
+
+                {contacts.length > 0 && (
+                  <label className="flex items-center gap-2 rounded-sm border border-slate-200 bg-white p-2.5 cursor-pointer hover:bg-slate-50">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(draft.whatsappIncludeAllContacts)}
+                      onChange={(e) => handleToggleIncludeAllContacts(e.target.checked)}
+                      className="rounded text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <div className="text-[11px] leading-tight">
+                      <b className="font-semibold text-slate-800">Include all registered Client Contacts</b>
+                      <span className="block text-[10px] text-slate-500">
+                        {contacts.length} saved contact(s) available in this client workspace.
+                      </span>
+                    </div>
+                  </label>
+                )}
+
+                <div className="rounded-sm border border-slate-200 bg-slate-50 p-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-600">Total WhatsApp Audience</span>
+                    <span className="rounded bg-indigo-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                      {(draft.whatsappRecipients?.length || 0)} recipients
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[10px] text-slate-400">
+                    Standard WhatsApp Business messaging policy applies. Only opt-in recipients will be contacted.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Column 3: Live WhatsApp Chat Simulation */}
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <SectionTitle icon={Phone} title="WhatsApp Live Preview" caption="Real-time recipient handset preview." />
+                <span className="rounded bg-emerald-50 px-2 py-0.5 text-[9.5px] font-semibold text-emerald-700 border border-emerald-200">
+                  AiSensy Verified
+                </span>
+              </div>
+
+              {/* Realistic WhatsApp Chat Card */}
+              <div className="overflow-hidden rounded-md border border-slate-300 bg-[#E5DDD5] shadow-sm">
+                {/* Chat Top Bar */}
+                <div className="flex items-center gap-2 bg-[#075E54] px-3 py-2 text-white">
+                  <div className="size-7 rounded-full bg-emerald-400/20 text-white flex items-center justify-center font-bold text-xs ring-1 ring-white/30">
+                    WA
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1">
+                      <p className="truncate text-xs font-semibold leading-tight">{draft.client || "Brand Support"}</p>
+                      <CheckCircle2 className="size-3 shrink-0 text-emerald-300" />
+                    </div>
+                    <p className="text-[9px] text-emerald-100">Official Business Account</p>
+                  </div>
+                </div>
+
+                {/* Message Bubble Container */}
+                <div className="p-3 space-y-2 min-h-[220px]">
+                  <div className="mx-auto my-1 rounded bg-[#FDFEFA]/80 px-2.5 py-0.5 text-center text-[9px] font-semibold text-slate-600 shadow-2xs w-fit">
+                    TODAY
+                  </div>
+
+                  <div className="relative max-w-[92%] rounded-lg bg-white p-2.5 shadow-2xs text-xs text-slate-800 space-y-1">
+                    <p className="whitespace-pre-wrap leading-relaxed text-[11.5px] font-normal text-slate-900">
+                      {renderedWhatsAppBody}
+                    </p>
+
+                    {selectedTemplate?.footer && (
+                      <p className="text-[9.5px] text-slate-400 border-t border-slate-100 pt-1">
+                        {selectedTemplate.footer}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-end gap-1 text-[9px] text-slate-400 pt-0.5">
+                      <span>10:45 AM</span>
+                      <span className="text-emerald-600 font-bold">✔✔</span>
+                    </div>
+                  </div>
+
+                  {draft.cta && (
+                    <div className="max-w-[92%]">
+                      <div className="rounded bg-white/95 px-3 py-1.5 text-center text-xs font-semibold text-[#00A884] shadow-2xs hover:bg-white cursor-pointer border-t border-slate-100">
+                        {draft.cta}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          /* ================= STANDARD PLATFORM (INSTAGRAM, ETC.) ================= */
+          <div className="grid gap-3 rounded-b-lg border-x border-b border-[#E7EDF5] p-3 xl:grid-cols-[minmax(360px,1fr)_360px_minmax(460px,1fr)]">
+            <div>
+              <SectionTitle icon={FileText} title={`${activePlatformTab} Settings`} caption={`Customize content for ${activePlatformTab}.`} />
+              <Field label="Caption">
+                <Textarea value={draft.masterCaption} onChange={(v) => set("masterCaption", v)} rows={6} max={2200} />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Media">
+                <span className="relative block h-[96px] overflow-hidden rounded-sm border border-[#DDE6F1]">
+                  <Image src="/campaigns/save-rivers/square.png" alt="" fill sizes="150px" className="object-cover" />
+                  <button className="absolute bottom-1.5 right-1.5 rounded bg-black/60 px-2 py-0.5 text-[8px] font-semibold text-white">Edit</button>
+                </span>
+              </Field>
+              <Field label="Alt Text">
+                <Textarea value="Riverside cleanup drive with volunteers" onChange={() => undefined} rows={4} max={125} />
+              </Field>
+              <Field label="Location" className="col-span-2">
+                <TextInput value="" onChange={() => undefined} placeholder="Add location" />
+              </Field>
+            </div>
+            <div className="grid gap-3 md:grid-cols-[240px_minmax(0,1fr)]">
+              <PostPreview />
+              <div>
+                <b className="mb-2 block text-[11.5px] text-[#132044]">Platform Options</b>
+                {["Include Location", "Tag People", "Add Link in Bio Reminder"].map((item) => (
+                  <div key={item} className="mb-2 flex items-center gap-2">
+                    <span className="h-5 w-9 rounded-sm bg-[#18B875] p-0.5"><i className="block size-4 translate-x-4 rounded-sm bg-white" /></span>
+                    <span className="text-[10px] font-semibold text-[#34415F]">{item}</span>
+                  </div>
+                ))}
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="CTA Button">
+                    <SelectInput value={draft.cta} onChange={(v) => set("cta", v)} options={["Learn More", "Join Now", "Donate"]} />
+                  </Field>
+                  <Field label="First Comment">
+                    <TextInput value={draft.firstComment} onChange={(v) => set("firstComment", v)} />
+                  </Field>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </Panel>
 
       <div className="grid gap-2 xl:grid-cols-[.9fr_1fr_1fr]">

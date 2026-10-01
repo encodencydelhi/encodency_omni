@@ -18,6 +18,7 @@ import { StepAutomation } from "./steps/step-7-automation";
 import { StepReview } from "./steps/step-8-review";
 import { cn } from "@/lib/utils/cn";
 import { campaignsApi } from "../live/campaigns-api";
+import { whatsappApi } from "@/features/admin/channels/live/whatsapp-api";
 import { clientsApi, type ClientRecord } from "@/features/admin/projects/live/clients-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";
@@ -65,6 +66,13 @@ export function CreateCampaignPage() {
     return names.length > 0 ? names : ["Moksha Sewa", "Namo Gange Trust", "Ganga Explorer"];
   }, [availableClients, draft.client]);
 
+  const effectiveClientId = useMemo(() => {
+    const matchedClient = availableClients.find(
+      (c) => c.name.toLowerCase() === draft.client?.trim().toLowerCase() || c.id === draft.client,
+    );
+    return matchedClient?.id || contextClientId || availableClients[0]?.id || "";
+  }, [availableClients, draft.client, contextClientId]);
+
   const set = useCallback(
     <K extends keyof CampaignDraft>(key: K, value: CampaignDraft[K]) =>
       setDraft((current) => ({ ...current, [key]: value })),
@@ -77,12 +85,6 @@ export function CreateCampaignPage() {
   }, []);
 
   const handleSubmit = useCallback(async (isDraft: boolean) => {
-    // Resolve client ID: matching client name from loaded clients, or current context client ID
-    const matchedClient = availableClients.find(
-      (c) => c.name.toLowerCase() === draft.client?.trim().toLowerCase() || c.id === draft.client,
-    );
-    const effectiveClientId = matchedClient?.id || contextClientId || availableClients[0]?.id;
-
     if (!companyId || !effectiveClientId) {
       toast.error("Missing Company or Client context", {
         description: "A verified Company and Client context are required to create a campaign.",
@@ -146,6 +148,45 @@ export function CreateCampaignPage() {
 
       const created = await campaignsApi.create(companyId, effectiveClientId, campaignPayload);
 
+      // Check if WhatsApp channel is selected or WhatsApp placement / template configured
+      const isWhatsAppSelected =
+        draft.channels.some((c) => c.toLowerCase().includes("whatsapp")) ||
+        draft.placements.some((p) => p.toLowerCase().startsWith("wa-") || p.toLowerCase().includes("whatsapp")) ||
+        Boolean(draft.whatsappTemplateId);
+
+      let waCampaignInfo: { name: string; sent: number } | null = null;
+      if (isWhatsAppSelected) {
+        try {
+          const manualPhones = (draft.whatsappManualRecipients || "")
+            .split(/[\n,]+/)
+            .map((p) => p.trim())
+            .filter(Boolean);
+          const combinedRecipients = [
+            ...new Set([...manualPhones, ...(draft.whatsappRecipients || [])]),
+          ];
+
+          const waRes = await whatsappApi.createCampaign(companyId, effectiveClientId, {
+            name: name.slice(0, 120),
+            status: isDraft ? "DRAFT" : "ACTIVE",
+            templateId: draft.whatsappBroadcastNow && draft.whatsappTemplateId ? draft.whatsappTemplateId : undefined,
+            recipients: draft.whatsappBroadcastNow && combinedRecipients.length > 0 ? combinedRecipients : undefined,
+            variables:
+              draft.whatsappBroadcastNow && draft.whatsappTemplateId && draft.whatsappVariables
+                ? draft.whatsappVariables
+                : undefined,
+          });
+
+          waCampaignInfo = {
+            name: waRes.name,
+            sent: waRes.sent ?? 0,
+          };
+        } catch (waErr: any) {
+          console.warn("WhatsApp campaign sync notice:", waErr);
+          const note = waErr?.message || "WhatsApp provider not configured";
+          toast.info(`WhatsApp sync notice: ${note}`, { duration: 5000 });
+        }
+      }
+
       // Switch active client context to effectiveClientId so /admin/campaigns immediately lists this campaign
       if (effectiveClientId) {
         setClientId(effectiveClientId);
@@ -180,7 +221,21 @@ export function CreateCampaignPage() {
         localStorage.setItem("omni_last_campaign_draft", JSON.stringify(fullDraftRecord));
       } catch {}
 
-      toast.success(`Campaign "${created.name}" created (Revision ${created.revision})`);
+      if (waCampaignInfo) {
+        if (waCampaignInfo.sent > 0) {
+          toast.success(
+            `Campaign "${created.name}" created & launched with ${waCampaignInfo.sent} WhatsApp broadcast message(s)!`,
+            { duration: 5000 },
+          );
+        } else {
+          toast.success(
+            `Campaign "${created.name}" created & registered in WhatsApp Channel!`,
+            { duration: 5000 },
+          );
+        }
+      } else {
+        toast.success(`Campaign "${created.name}" created (Revision ${created.revision})`);
+      }
       router.push("/admin/campaigns");
     } catch (err: unknown) {
       if (ApiError.isApiError(err)) {
@@ -221,7 +276,7 @@ export function CreateCampaignPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [companyId, contextClientId, availableClients, draft, router]);
+  }, [companyId, effectiveClientId, draft, router, setClientId]);
 
   const hideRail = step === 5;
 
@@ -243,7 +298,14 @@ export function CreateCampaignPage() {
           {step === 2 && <StepGoals draft={draft} set={set} />}
           {step === 3 && <StepChannels draft={draft} set={set} />}
           {step === 4 && <StepAudience draft={draft} set={set} />}
-          {step === 5 && <StepContent draft={draft} set={set} />}
+          {step === 5 && (
+            <StepContent
+              draft={draft}
+              set={set}
+              companyId={companyId}
+              effectiveClientId={effectiveClientId}
+            />
+          )}
           {step === 6 && <StepTracking draft={draft} set={set} />}
           {step === 7 && <StepAutomation draft={draft} set={set} />}
           {step === 8 && <StepReview draft={draft} set={set} goTo={goTo} />}

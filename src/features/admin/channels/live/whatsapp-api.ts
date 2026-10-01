@@ -86,6 +86,7 @@ export interface SendWhatsAppMessagePayload {
   templateId: string;
   destinationPhone: string;
   variables: Record<string, string>;
+  campaignId?: string;
 }
 
 export interface WhatsAppConfigTestResult {
@@ -135,6 +136,188 @@ export interface SendWhatsAppMessageResult {
   templateId: string;
   destinationPhone: string;
   createdAt: string;
+}
+
+export interface WhatsAppTimelinePoint {
+  date: string;
+  label: string;
+  sent: number;
+  delivered: number;
+  read: number;
+  failed: number;
+}
+
+export interface WhatsAppDeliveryFunnel {
+  sent: number;
+  delivered: number;
+  read: number;
+  failed?: number;
+  deliveryConversion: number;
+  readConversion: number;
+  failureConversion?: number;
+}
+
+export interface WhatsAppFailureReasonItem {
+  code: string;
+  label: string;
+  count: number;
+  percentage: number;
+}
+
+export interface WhatsAppPlatformImpact {
+  messagesProcessed: number;
+  campaignsManaged: number;
+  contactsReached: number;
+  templatesUsed: number;
+  failedDetected: number;
+  failedRecovered: number;
+}
+
+export interface WhatsAppCreditsAnalytics {
+  available: boolean;
+  reason: string;
+  currency: string;
+  currentBalance: number | null;
+  lastUpdated: string | null;
+  historical: Array<{ date: string; balance: number }>;
+  consumption: {
+    today: number;
+    thisWeek: number;
+    thisMonth: number;
+  } | null;
+  note: string;
+}
+
+export interface WhatsAppCampaignPerformancePoint {
+  id: string;
+  name: string;
+  status: string;
+  sent: number;
+  delivered: number;
+  read: number;
+  failed: number;
+  deliveryRate: number;
+  readRate: number;
+  failureRate: number;
+}
+
+export interface WhatsAppCampaignStatusItem {
+  status: string;
+  count: number;
+}
+
+export interface WhatsAppOptInStats {
+  optedIn: number;
+  optedOut: number;
+  optedInPercentage: number;
+  optedOutPercentage: number;
+  total: number;
+}
+
+export interface WhatsAppAudienceGrowthPoint {
+  date: string;
+  label: string;
+  totalContacts: number;
+  optedIn: number;
+  optedOut: number;
+  activeContacts: number;
+}
+
+export interface WhatsAppAnalyticsQuery {
+  range?: "today" | "7d" | "15d" | "30d" | "90d" | "this_month" | "last_month" | "custom";
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface WhatsAppOverviewAnalytics {
+  range?: string;
+  total: number;
+  sent: number;
+  delivered: number;
+  read: number;
+  failed: number;
+  deliveryRate: number;
+  readRate: number;
+  failureRate: number;
+  activeContacts: number;
+  totalCampaigns: number;
+  timeline: WhatsAppTimelinePoint[];
+  deliveryFunnel: WhatsAppDeliveryFunnel;
+  failureReasons: WhatsAppFailureReasonItem[];
+  platformImpact: WhatsAppPlatformImpact;
+  credits: WhatsAppCreditsAnalytics;
+  campaignPerformance: WhatsAppCampaignPerformancePoint[];
+  campaignStatusDistribution: WhatsAppCampaignStatusItem[];
+  templatePerformance: WhatsAppTemplateAnalyticsItem[];
+  optInStats: WhatsAppOptInStats;
+  audienceGrowth: WhatsAppAudienceGrowthPoint[];
+}
+
+export interface WhatsAppCampaignItem {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  audience: number;
+  sent: number;
+  delivered: number;
+  read: number;
+  failed: number;
+  deliveryRate: number;
+  readRate: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WhatsAppTemplateAnalyticsItem extends WhatsAppTemplate {
+  total: number;
+  sent: number;
+  delivered: number;
+  read: number;
+  failed: number;
+  deliveryRate: number;
+  readRate: number;
+  failureRate?: number;
+  usageCount?: number;
+  campaignsUsed: number;
+  lastUsedAt: string | null;
+}
+
+export interface WhatsAppContactGrowthPoint {
+  date: string;
+  label: string;
+  newContacts: number;
+  totalContacts: number;
+  activeContacts: number;
+}
+
+export interface WhatsAppContactItem {
+  id: string;
+  phone: string;
+  name: string | null;
+  source: string;
+  status: string;
+  optInStatus: boolean;
+  tags: string[];
+  lastActiveAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WhatsAppContactsResponse {
+  items: WhatsAppContactItem[];
+  growthTimeline: WhatsAppContactGrowthPoint[];
+}
+
+export interface WhatsAppWebhookHealth {
+  status: "ACTIVE" | "NO_EVENTS";
+  lastReceivedAt: string | null;
+  totalEventsReceived: number;
+}
+
+export interface RetryWhatsAppMessageResult {
+  id: string;
+  status: WhatsAppMessageStatus;
 }
 
 function clientScopeHeaders(companyId: string, clientId: string): Record<string, string> {
@@ -225,6 +408,19 @@ export const whatsappApi = {
     });
   },
 
+  async syncTemplates(
+    companyId: string,
+    clientId: string,
+    signal?: AbortSignal,
+  ): Promise<{ synced: number; created: number; updated: number; items: WhatsAppTemplate[] }> {
+    return apiClient.request({
+      method: "POST",
+      path: "/integrations/whatsapp/templates/sync",
+      headers: clientScopeHeaders(companyId, clientId),
+      signal,
+    });
+  },
+
   async sendMessage(
     companyId: string,
     clientId: string,
@@ -259,6 +455,115 @@ export const whatsappApi = {
     return apiClient.request<WhatsAppMessage>({
       method: "GET",
       path: `/integrations/whatsapp/messages/${encodeURIComponent(id)}`,
+      headers: clientScopeHeaders(companyId, clientId),
+      signal,
+    });
+  },
+
+  async getOverviewAnalytics(
+    companyId: string,
+    clientId: string,
+    query?: WhatsAppAnalyticsQuery,
+    signal?: AbortSignal,
+  ): Promise<WhatsAppOverviewAnalytics> {
+    return apiClient.request<WhatsAppOverviewAnalytics>({
+      method: "GET",
+      path: "/integrations/whatsapp/analytics/overview",
+      headers: clientScopeHeaders(companyId, clientId),
+      query: query as Record<string, string | number | boolean | undefined>,
+      signal,
+    });
+  },
+
+  async getCreditsAnalytics(
+    companyId: string,
+    clientId: string,
+    signal?: AbortSignal,
+  ): Promise<WhatsAppCreditsAnalytics> {
+    return apiClient.request<WhatsAppCreditsAnalytics>({
+      method: "GET",
+      path: "/integrations/whatsapp/analytics/credits",
+      headers: clientScopeHeaders(companyId, clientId),
+      signal,
+    });
+  },
+
+  async getFailuresAnalytics(
+    companyId: string,
+    clientId: string,
+    query?: WhatsAppAnalyticsQuery,
+    signal?: AbortSignal,
+  ): Promise<{ totalFailed: number; items: WhatsAppFailureReasonItem[] }> {
+    return apiClient.request<{ totalFailed: number; items: WhatsAppFailureReasonItem[] }>({
+      method: "GET",
+      path: "/integrations/whatsapp/analytics/failures",
+      headers: clientScopeHeaders(companyId, clientId),
+      query: query as Record<string, string | number | boolean | undefined>,
+      signal,
+    });
+  },
+
+  async getCampaigns(companyId: string, clientId: string, signal?: AbortSignal): Promise<{ items: WhatsAppCampaignItem[] }> {
+    return apiClient.request<{ items: WhatsAppCampaignItem[] }>({
+      method: "GET",
+      path: "/integrations/whatsapp/analytics/campaigns",
+      headers: clientScopeHeaders(companyId, clientId),
+      signal,
+    });
+  },
+
+  async createCampaign(
+    companyId: string,
+    clientId: string,
+    payload: {
+      name: string;
+      status?: string;
+      templateId?: string;
+      recipients?: string[];
+      variables?: Record<string, string>;
+    },
+    signal?: AbortSignal,
+  ): Promise<WhatsAppCampaignItem> {
+    return apiClient.request<WhatsAppCampaignItem>({
+      method: "POST",
+      path: "/integrations/whatsapp/campaigns",
+      headers: clientScopeHeaders(companyId, clientId),
+      body: payload,
+      signal,
+    });
+  },
+
+  async getTemplateAnalytics(companyId: string, clientId: string, signal?: AbortSignal): Promise<{ items: WhatsAppTemplateAnalyticsItem[] }> {
+    return apiClient.request<{ items: WhatsAppTemplateAnalyticsItem[] }>({
+      method: "GET",
+      path: "/integrations/whatsapp/analytics/templates",
+      headers: clientScopeHeaders(companyId, clientId),
+      signal,
+    });
+  },
+
+  async getContacts(companyId: string, clientId: string, signal?: AbortSignal): Promise<WhatsAppContactsResponse> {
+    return apiClient.request<WhatsAppContactsResponse>({
+      method: "GET",
+      path: "/integrations/whatsapp/contacts",
+      headers: clientScopeHeaders(companyId, clientId),
+      signal,
+    });
+  },
+
+  async getWebhookHealth(companyId: string, clientId: string, signal?: AbortSignal): Promise<WhatsAppWebhookHealth> {
+    return apiClient.request<WhatsAppWebhookHealth>({
+      method: "GET",
+      path: "/integrations/whatsapp/webhooks/health",
+      headers: clientScopeHeaders(companyId, clientId),
+      signal,
+    });
+  },
+
+  async retryMessage(companyId: string, clientId: string, id: string, signal?: AbortSignal): Promise<RetryWhatsAppMessageResult> {
+    return apiClient.request<RetryWhatsAppMessageResult>({
+      method: "POST",
+      path: `/integrations/whatsapp/messages/${encodeURIComponent(id)}/retry`,
       headers: clientScopeHeaders(companyId, clientId),
       signal,
     });

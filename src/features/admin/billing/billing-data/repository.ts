@@ -31,6 +31,7 @@ import type {
   PaymentMethod,
   PlanId,
   SubscriptionChange,
+  SubscriptionStatus,
 } from "./types";
 
 export type BillingErrorCode = "service_unavailable" | "payment_declined" | "card_expired" | "validation" | "conflict" | "network";
