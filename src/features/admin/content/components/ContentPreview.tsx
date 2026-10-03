@@ -7,6 +7,20 @@ import type { Platform } from "../types/content.types";
 import { PLATFORM_META } from "../config/platform-config";
 import { IMG } from "../mocks/content.mock";
 
+function getPlatformMeta(p: Platform | string) {
+  const raw = typeof p === "string" ? p.toLowerCase().trim() : "";
+  const key = (raw === "twitter" ? "x" : raw) as Platform;
+  return (
+    PLATFORM_META[key] || {
+      label: typeof p === "string" && p ? p : "Platform",
+      short: typeof p === "string" && p ? p.slice(0, 2).toUpperCase() : "PL",
+      color: "#475569",
+      bg: "#F1F5F9",
+      icon: "🌐",
+    }
+  );
+}
+
 export function ContentPreviewPanel({
   platform,
   setPlatform,
@@ -22,19 +36,22 @@ export function ContentPreviewPanel({
   hashtags?: string[];
   image?: string | null;
 }) {
-  const meta = PLATFORM_META[platform];
+  const meta = getPlatformMeta(platform);
   const resolvedImage = image === undefined ? IMG.river : image;
   return (
     <Card>
       <div className="flex items-center gap-1.5 border-b border-[#EDF1F5] pb-2 mb-2">
         <span className="text-[11px] font-semibold text-[#7A87A0]">Live Preview</span>
         <div className="ml-auto flex gap-0.5">
-          {channels.map((p) => (
-            <button key={p} onClick={() => setPlatform(p)} className={cn("flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[9.5px] font-semibold transition", platform === p ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#7A87A0] hover:bg-slate-50")}>
-              <PlatformBadge platform={p} size="sm" />
-              {PLATFORM_META[p].short}
-            </button>
-          ))}
+          {channels.map((p) => {
+            const pMeta = getPlatformMeta(p);
+            return (
+              <button key={p} onClick={() => setPlatform(p)} className={cn("flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[9.5px] font-semibold transition", platform === p ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#7A87A0] hover:bg-slate-50")}>
+                <PlatformBadge platform={p} size="sm" />
+                {pMeta.short}
+              </button>
+            );
+          })}
         </div>
       </div>
       <div className="overflow-hidden rounded-sm border border-[#E2E8F0]">

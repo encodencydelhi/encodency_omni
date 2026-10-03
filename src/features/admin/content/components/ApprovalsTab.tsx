@@ -212,13 +212,13 @@ export function ApprovalsTab() {
                   activeApproval?.id === a.id ? "bg-[#F7FAFF]" : ""
                 )}
               >
-                <span className="grid h-9 w-13 shrink-0 place-items-center rounded-sm bg-slate-100 text-[15px]">{PLATFORM_META[a.channel].icon}</span>
+                <span className="grid h-9 w-13 shrink-0 place-items-center rounded-sm bg-slate-100 text-[15px]">{PLATFORM_META[a.channel]?.icon ?? "🌐"}</span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <p className="truncate text-[12px] font-semibold text-[#24365A]">{a.title}</p>
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10.5px] text-[#7A87A0]">
-                    <span>{PLATFORM_META[a.channel].label}</span>
+                    <span>{PLATFORM_META[a.channel]?.label ?? a.channel}</span>
                     <span>·</span>
                     <span>{a.submittedBy}</span>
                     <span>·</span>

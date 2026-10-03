@@ -4,22 +4,33 @@ import { cn } from "@/lib/utils/cn";
 import type { Platform } from "../types/content.types";
 import { PLATFORM_META, ALL_PLATFORMS } from "../config/platform-config";
 
-export function PlatformBadge({ platform, size = "md" }: { platform: Platform; size?: "sm" | "md" }) {
-  const meta = PLATFORM_META[platform];
+export function PlatformBadge({ platform, size = "md" }: { platform: Platform | string; size?: "sm" | "md" }) {
+  const raw = typeof platform === "string" ? platform.toLowerCase().trim() : "";
+  const normalizedKey = (raw === "twitter" ? "x" : raw) as Platform;
+  const meta = PLATFORM_META[normalizedKey] || {
+    label: typeof platform === "string" && platform ? platform : "Platform",
+    short: typeof platform === "string" && platform ? platform.slice(0, 2).toUpperCase() : "PL",
+    color: "#475569",
+    bg: "#F1F5F9",
+    icon: "🌐",
+  };
+
   return (
     <span className={cn("inline-flex shrink-0 items-center justify-center rounded-sm font-semibold", meta.bg, size === "sm" ? "h-5 w-5 text-[10px]" : "h-7 w-7 text-[13px]")} style={{ color: meta.color }}>
-      {platform === "instagram" && <FaInstagram />}
-      {platform === "facebook" && <FaFacebookF />}
-      {platform === "linkedin" && <FaLinkedinIn />}
-      {platform === "youtube" && <FaYoutube />}
-      {platform === "tiktok" && <FaTiktok />}
-      {platform === "x" && <FaXTwitter />}
-      {platform === "pinterest" && <FaPinterest />}
-      {platform === "threads" && <FaThreads />}
-      {platform === "whatsapp" && <FaWhatsapp />}
-      {platform === "google-business" && <FaGoogle />}
-      {platform === "website" && <span>{meta.icon}</span>}
-      {platform === "email" && <span>{meta.icon}</span>}
+      {normalizedKey === "instagram" && <FaInstagram />}
+      {normalizedKey === "facebook" && <FaFacebookF />}
+      {normalizedKey === "linkedin" && <FaLinkedinIn />}
+      {normalizedKey === "youtube" && <FaYoutube />}
+      {normalizedKey === "tiktok" && <FaTiktok />}
+      {normalizedKey === "x" && <FaXTwitter />}
+      {normalizedKey === "pinterest" && <FaPinterest />}
+      {normalizedKey === "threads" && <FaThreads />}
+      {normalizedKey === "whatsapp" && <FaWhatsapp />}
+      {normalizedKey === "google-business" && <FaGoogle />}
+      {(normalizedKey === "website" || normalizedKey === "email") && <span>{meta.icon}</span>}
+      {!["instagram", "facebook", "linkedin", "youtube", "tiktok", "x", "pinterest", "threads", "whatsapp", "google-business", "website", "email"].includes(normalizedKey) && (
+        <span>{meta.short}</span>
+      )}
     </span>
   );
 }

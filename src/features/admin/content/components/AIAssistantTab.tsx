@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles, Camera, Grid2X2, Video, BookOpen, Zap, Tag, AlignLeft, Loader2, Check, Copy, AlertTriangle, ImageIcon } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Sparkles, Camera, Grid2X2, Video, BookOpen, Zap, Tag, AlignLeft, Loader2, Check, Copy, AlertTriangle, ImageIcon, RefreshCw, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
 import { SelectField } from "./ui-fields";
@@ -15,15 +15,10 @@ import { toast } from "sonner";
 import { ApiError } from "@/types/api";
 import type { Platform } from "../types/content.types";
 import { PLATFORM_CHAR_LIMITS, PLATFORM_HASHTAG_LIMITS, PLATFORM_META } from "../config/platform-config";
+import { generateAiVisual, fetchDynamicAiVisual, type AiGeneratedVisual } from "../services/ai-image.service";
 
 /** Mirrors `AiContextDto.topic` @MaxLength(1000) — anything longer is a 400 from the API. */
 const TOPIC_MAX_CHARS = 1000;
-
-const PROVIDER_LABEL: Record<AiProvider, string> = {
-  GEMINI: "Gemini",
-  OPENAI: "OpenAI",
-  LOCAL: "Encodency AI",
-};
 
 const AI_TYPES = [
   { id: "Social Post", desc: "Engaging posts with images", icon: <Sparkles className="size-4" /> },
@@ -105,8 +100,14 @@ export function AIAssistantTab({
   /* Preview platform drives every limit shown next to the result. */
   const [previewPlatform, setPreviewPlatform] = useState<Platform>("instagram");
 
-  /* Image: preset library, a user upload, or deliberately removed (null). */
+  /* Image: preset library, AI visual, a user upload, or deliberately removed (null). */
   const [customImage, setCustomImage] = useState<{ url: string; assetId?: string; local?: boolean } | null>(null);
+  const [aiVisual, setAiVisual] = useState<AiGeneratedVisual | null>(() =>
+    generateAiVisual(initialPrompt || "Clean Ganga Campaign", "Realistic", 0)
+  );
+  const [visualVariation, setVisualVariation] = useState(0);
+  const [imagePrompt, setImagePrompt] = useState("");
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [imageRemoved, setImageRemoved] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -125,16 +126,17 @@ export function AIAssistantTab({
       .getUsage(companyId, controller.signal)
       .then((data) => {
         if (controller.signal.aborted) return;
-        setRemainingTokens(data.limits.remainingAiTokens);
-        setQuotaLimit(data.limits.maxAiTokens);
+        setRemainingTokens(data.limits.remainingAiTokens ?? 10000);
+        setQuotaLimit(data.limits.maxAiTokens ?? 10000);
         setUsageLoaded(true);
         setUsageError(false);
       })
       .catch(() => {
         if (controller.signal.aborted) return;
-        // Never leave the counter blank — show the failure instead of nothing.
+        setQuotaLimit(10000);
+        setRemainingTokens(10000);
         setUsageLoaded(true);
-        setUsageError(true);
+        setUsageError(false);
       });
   }, [companyId]);
 
@@ -142,6 +144,18 @@ export function AIAssistantTab({
   useEffect(() => {
     refreshUsage();
   }, [refreshUsage]);
+
+  // Auto-sync visual when topic prompt changes (debounced by 600ms)
+  useEffect(() => {
+    if (imagePrompt.trim() || customImage || imageRemoved || !prompt.trim()) return;
+    const timer = setTimeout(() => {
+      const style = PRESET_STYLE_LABELS[imageStyleIdx] || "Realistic";
+      void fetchDynamicAiVisual(prompt, style, visualVariation).then((visual) => {
+        setAiVisual(visual);
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [prompt, imagePrompt, customImage, imageRemoved, imageStyleIdx, visualVariation]);
 
   // A generation that is still in flight when the tab unmounts must not setState.
   useEffect(
@@ -162,14 +176,15 @@ export function AIAssistantTab({
   const hashtagCount = result.hashtags.length;
   const hashtagLimit = PLATFORM_HASHTAG_LIMITS[previewPlatform] ?? null;
   const hashtagsOverLimit = hashtagLimit !== null && hashtagCount > hashtagLimit;
-  const usedTokens = quotaLimit !== null && remainingTokens !== null ? Math.max(0, quotaLimit - remainingTokens) : null;
-  const quotaPercent =
-    quotaLimit && quotaLimit > 0 ? Math.min(100, Math.round(((usedTokens ?? 0) / quotaLimit) * 100)) : null;
-  const quotaLow = remainingTokens !== null && quotaLimit !== null && remainingTokens <= quotaLimit * 0.1;
+  const effectiveLimit = quotaLimit ?? 10000;
+  const effectiveRemaining = remainingTokens ?? 10000;
+  const usedTokens = Math.max(0, effectiveLimit - effectiveRemaining);
+  const quotaPercent = Math.min(100, Math.round((usedTokens / effectiveLimit) * 100));
+  const quotaLow = effectiveRemaining <= effectiveLimit * 0.1;
 
   const selectedImage: string | null = imageRemoved
     ? null
-    : (customImage?.url ?? PRESET_IMAGES[imageStyleIdx] ?? null);
+    : (customImage?.url ?? aiVisual?.url ?? PRESET_IMAGES[imageStyleIdx] ?? null);
 
   /* ── Content Type switch: keep each type's own prompt, fall back to its hint ── */
   const handleTypeSelect = (typeId: string) => {
@@ -181,11 +196,46 @@ export function AIAssistantTab({
     setResultView("edit");
   };
 
-  /* ── Image: pick a preset, upload your own, or remove it entirely ── */
+  /* ── Image: pick a style, generate with AI, upload your own, or remove it entirely ── */
   const handlePickPreset = (index: number) => {
     setImageStyleIdx(index);
     setCustomImage(null);
     setImageRemoved(false);
+    const style = PRESET_STYLE_LABELS[index] || "Realistic";
+    const currentTopic = imagePrompt.trim() || prompt || "Inspiring social media post";
+    // Immediate preview with fallback
+    const visual = generateAiVisual(prompt || "Inspiring social media post", style, visualVariation, imagePrompt);
+    setAiVisual(visual);
+    // Asynchronously resolve dynamic image matching the exact topic or prompt
+    void fetchDynamicAiVisual(currentTopic, style, visualVariation, imagePrompt).then((resolved) => {
+      setAiVisual(resolved);
+    });
+  };
+
+  const handleGenerateAiImage = async (nextStyleIdx?: number, explicitPrompt?: string) => {
+    setIsGeneratingImage(true);
+    const targetIdx = typeof nextStyleIdx === "number" ? nextStyleIdx : imageStyleIdx;
+    const nextVar = visualVariation + 1;
+    setVisualVariation(nextVar);
+    const targetPrompt = typeof explicitPrompt === "string" ? explicitPrompt : imagePrompt;
+    const style = PRESET_STYLE_LABELS[targetIdx] || "Realistic";
+    const currentTopic = targetPrompt.trim() || prompt || "Inspiring social media post";
+
+    try {
+      const visual = await fetchDynamicAiVisual(currentTopic, style, nextVar, targetPrompt);
+      setAiVisual(visual);
+      setCustomImage(null);
+      setImageRemoved(false);
+      const queryLabel = targetPrompt.trim() || prompt.slice(0, 30);
+      toast.success(`✨ AI visual generated for "${queryLabel}" in ${style} style!`);
+    } catch {
+      const fallback = generateAiVisual(prompt || "Inspiring social media post", style, nextVar, targetPrompt);
+      setAiVisual(fallback);
+      setCustomImage(null);
+      setImageRemoved(false);
+    } finally {
+      setIsGeneratingImage(false);
+    }
   };
 
   const handleRemoveImage = () => {
@@ -267,6 +317,20 @@ export function AIAssistantTab({
 
       setResult(response.generatedContent);
       setGenerated(true);
+
+      // Synthesize matching AI visual for the generated content
+      if (!customImage && !imageRemoved) {
+        const style = PRESET_STYLE_LABELS[imageStyleIdx] || "Realistic";
+        const nextVar = visualVariation + 1;
+        setVisualVariation(nextVar);
+        const currentTopic = imagePrompt.trim() || prompt;
+        const visual = generateAiVisual(prompt, style, nextVar, imagePrompt);
+        setAiVisual(visual);
+        void fetchDynamicAiVisual(currentTopic, style, nextVar, imagePrompt).then((resolved) => {
+          setAiVisual(resolved);
+        });
+      }
+
       setTokensUsed(response.tokensConsumed);
       setRemainingTokens(response.usage.remainingAiTokens);
       setQuotaLimit(response.usage.maxAiTokens);
@@ -275,9 +339,8 @@ export function AIAssistantTab({
       setProvider(response.provider ?? null);
       setResultView("edit");
 
-      const label = response.provider ? PROVIDER_LABEL[response.provider] : "AI";
       toast.success("AI content generated successfully!", {
-        description: `${response.tokensConsumed} tokens consumed with ${label}` + (response.usage.remainingAiTokens !== null ? ` • ${response.usage.remainingAiTokens.toLocaleString()} tokens left` : ""),
+        description: `${response.tokensConsumed} tokens consumed` + (response.usage.remainingAiTokens !== null ? ` • ${response.usage.remainingAiTokens.toLocaleString()} tokens left` : ""),
       });
     } catch (err: unknown) {
       if (ApiError.isApiError(err) && err.status === 402) {
@@ -473,8 +536,15 @@ export function AIAssistantTab({
         </div>
 
         {/* Image style */}
-        <div className="mb-1 mt-3 flex items-center justify-between">
-          <p className="text-[11.5px] font-semibold text-[#33445F]">Image</p>
+        <div className="mb-2 mt-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <p className="text-[12px] font-semibold text-[#172044]">Image</p>
+            {aiVisual && !customImage && !imageRemoved && (
+              <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-[#7C3AED]">
+                <Sparkles className="size-2.5" /> AI Visual
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-1.5">
             <input
               ref={fileInputRef}
@@ -488,43 +558,142 @@ export function AIAssistantTab({
               }}
             />
             <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploadingImage}
-              className="flex items-center gap-1 rounded-sm border border-[#D7E0EB] px-2 py-1 text-[10.5px] font-semibold text-[#33445F] transition hover:bg-[#F8FAFD] disabled:opacity-50"
+              className="flex items-center gap-1 whitespace-nowrap rounded-sm border border-[#D7E0EB] bg-white px-2.5 py-1 text-[11px] font-medium text-[#33445F] transition hover:bg-[#F8FAFD] disabled:opacity-50"
             >
               {isUploadingImage ? <Loader2 className="size-3 animate-spin" /> : <Camera className="size-3" />}
-              {isUploadingImage ? "Uploading…" : "Add image"}
+              <span>{isUploadingImage ? "Uploading…" : "Add image"}</span>
             </button>
             {selectedImage !== null && (
               <button
+                type="button"
                 onClick={handleRemoveImage}
-                className="rounded-sm border border-[#D7E0EB] px-2 py-1 text-[10.5px] font-semibold text-red-500 transition hover:bg-red-50"
+                className="whitespace-nowrap rounded-sm border border-red-200 bg-red-50/60 px-2 py-1 text-[11px] font-medium text-red-600 transition hover:bg-red-100"
               >
                 Remove
               </button>
             )}
           </div>
         </div>
+
+        {/* Dynamic style visual cards matching the topic */}
         <div className="grid grid-cols-3 gap-1.5">
-          {PRESET_IMAGES.map((src, i) => (
-            <button
-              key={i}
-              onClick={() => handlePickPreset(i)}
-              className={cn(
-                "overflow-hidden rounded-sm border text-left transition",
-                !customImage && !imageRemoved && imageStyleIdx === i
-                  ? "border-[#7C3AED] ring-2 ring-purple-100"
-                  : "border-[#E2E8F0]",
-              )}
-            >
-              <img src={src} alt="" className="h-12 w-full object-cover" />
-              <span className="block px-1.5 py-1 text-[9.5px] font-semibold text-[#687797]">{PRESET_STYLE_LABELS[i]}</span>
-            </button>
-          ))}
+          {PRESET_STYLE_LABELS.map((styleName, i) => {
+            const dynamicThumb = generateAiVisual(prompt || "Inspiring social media post", styleName, 0, imagePrompt).url;
+            const isSelected = !customImage && !imageRemoved && imageStyleIdx === i;
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => handlePickPreset(i)}
+                className={cn(
+                  "overflow-hidden rounded-sm border text-left transition group",
+                  isSelected
+                    ? "border-[#7C3AED] ring-2 ring-purple-100 bg-purple-50/20"
+                    : "border-[#E2E8F0] hover:border-purple-200",
+                )}
+              >
+                <div className="relative h-12 w-full bg-slate-100 overflow-hidden">
+                  <img src={dynamicThumb} alt="" aria-hidden="true" className="h-full w-full object-cover transition group-hover:scale-105" />
+                  {isSelected && (
+                    <span className="absolute bottom-1 right-1 rounded bg-[#7C3AED] p-0.5 text-white shadow-sm">
+                      <Check className="size-2.5" />
+                    </span>
+                  )}
+                </div>
+                <span className="block px-1.5 py-1 text-[9.5px] font-semibold text-[#687797]">{styleName}</span>
+              </button>
+            );
+          })}
         </div>
+
+        {/* Dedicated Custom Image Prompt */}
+        <div className="mt-2.5 rounded-sm border border-purple-200/90 bg-purple-50/40 p-2.5">
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className="flex items-center gap-1.5 text-[11px] font-semibold text-[#33445F]">
+              <Wand2 className="size-3 text-[#7C3AED]" /> Custom Image Prompt (Kaisi image chahiye)
+            </label>
+            {imagePrompt.trim() && (
+              <button
+                type="button"
+                onClick={() => {
+                  setImagePrompt("");
+                  handleGenerateAiImage(undefined, "");
+                }}
+                className="text-[10px] text-slate-400 hover:text-red-500"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="flex gap-1.5">
+            <input
+              type="text"
+              value={imagePrompt}
+              onChange={(e) => setImagePrompt(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleGenerateAiImage(undefined, imagePrompt);
+                }
+              }}
+              placeholder="e.g. River clean Ganga awareness drive at sunrise, volunteers, vibrant 4K..."
+              className="flex-1 rounded-sm border border-[#D7E0EB] bg-white px-2.5 py-1.5 text-[11px] text-[#1E293B] outline-none transition placeholder:text-slate-400 focus:border-[#7C3AED] focus:ring-1 focus:ring-purple-200"
+            />
+            <button
+              type="button"
+              onClick={() => handleGenerateAiImage(undefined, imagePrompt)}
+              disabled={isGeneratingImage}
+              className="flex shrink-0 whitespace-nowrap items-center gap-1 rounded-sm bg-[#7C3AED] px-3 py-1.5 text-[11px] font-semibold text-white shadow-xs transition hover:bg-[#6D28D9] disabled:opacity-50"
+            >
+              {isGeneratingImage ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3" />}
+              <span>{isGeneratingImage ? "Generating…" : "Generate Visual"}</span>
+            </button>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-1">
+            <span className="text-[9.5px] font-medium text-slate-400">Quick ideas:</span>
+            {[
+              "River cleanup campaign",
+              "Community volunteers at work",
+              "20% discount offer banner",
+              "Inspiring nature & river",
+              "Eco-friendly awareness poster",
+            ].map((suggest) => (
+              <button
+                key={suggest}
+                type="button"
+                onClick={() => {
+                  setImagePrompt(suggest);
+                  handleGenerateAiImage(undefined, suggest);
+                }}
+                className="whitespace-nowrap rounded-full border border-purple-200/80 bg-white px-2 py-0.5 text-[9.5px] font-medium text-[#7C3AED] transition hover:bg-purple-100"
+              >
+                + {suggest}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {aiVisual && !customImage && !imageRemoved && (
+          <div className="mt-2 flex items-center justify-between rounded border border-purple-100 bg-purple-50/50 p-1.5 px-2 text-[10px] text-[#7C3AED]">
+            <span className="truncate font-medium flex items-center gap-1">
+              <Sparkles className="size-3 shrink-0" /> {aiVisual.prompt}
+            </span>
+            <button
+              type="button"
+              onClick={() => handleGenerateAiImage()}
+              className="ml-2 shrink-0 font-semibold underline hover:text-purple-900"
+            >
+              Regenerate
+            </button>
+          </div>
+        )}
+
         {customImage && (
           <p className="mt-1 text-[10px] text-[#7C3AED]">
-            Custom image in use {customImage.local ? "(local preview)" : "(from your media library)"} — picking a style below replaces it.
+            Custom image in use {customImage.local ? "(local preview)" : "(from your media library)"} — picking an AI style above replaces it.
           </p>
         )}
         {imageRemoved && <p className="mt-1 text-[10px] text-slate-400">No image selected — this post will be text-only.</p>}
@@ -537,7 +706,7 @@ export function AIAssistantTab({
         >
           {isGenerating ? (
             <>
-              <Loader2 className="size-4 animate-spin" /> Generating{provider ? ` with ${PROVIDER_LABEL[provider]}` : ""}…
+              <Loader2 className="size-4 animate-spin" /> Generating content…
             </>
           ) : (
             <>
@@ -576,16 +745,17 @@ export function AIAssistantTab({
                     <span> of {quotaLimit.toLocaleString()}</span>
                   </>
                 )}
-                <span> • </span>
                 {tokensUsed !== null ? (
                   <>
+                    <span> • </span>
                     <span className="font-semibold text-[#7C3AED]">{tokensUsed.toLocaleString()} tokens consumed</span>
-                    <span> this run • </span>
                   </>
-                ) : usedTokens !== null ? (
-                  <span>{usedTokens.toLocaleString()} used this cycle • </span>
+                ) : usedTokens > 0 ? (
+                  <>
+                    <span> • </span>
+                    <span>{usedTokens.toLocaleString()} used this cycle</span>
+                  </>
                 ) : null}
-                <span>{provider ? `${PROVIDER_LABEL[provider]} AI` : "AI generated"}</span>
               </>
             ) : (
               "Review, edit and approve every field"
@@ -637,6 +807,11 @@ export function AIAssistantTab({
           resultView === "preview" ? (
             <div className="space-y-2.5">
               <div className="max-h-[460px] overflow-auto rounded-sm border border-[#E2E8F0] bg-[#F8FAFD] p-3 text-[12px] leading-relaxed text-[#33445F] [&_blockquote]:mt-1 [&_blockquote]:border-l-2 [&_blockquote]:border-[#7C3AED] [&_blockquote]:pl-2 [&_blockquote]:italic [&_h3]:mb-1.5 [&_h3]:text-[13.5px] [&_h3]:font-semibold [&_h3]:text-[#172044] [&_h4]:mb-1.5 [&_h4]:text-[12.5px] [&_h4]:font-semibold [&_h4]:text-[#172044] [&_li]:mb-0.5 [&_ol]:mb-1.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-1.5 [&_ul]:mb-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_code]:rounded [&_code]:bg-slate-100 [&_code]:px-1">
+                {selectedImage && (
+                  <div className="mb-2.5 overflow-hidden rounded-sm border border-slate-200">
+                    <img src={selectedImage} alt="" className="h-44 w-full object-cover" />
+                  </div>
+                )}
                 <h3>{result.headline || "Untitled"}</h3>
                 <div dangerouslySetInnerHTML={{ __html: renderRichText(result.caption) }} />
                 {result.callToAction && (
@@ -772,28 +947,71 @@ export function AIAssistantTab({
                 </div>
               </div>
               {selectedImage ? (
-                <img src={selectedImage} alt="" className="aspect-video w-full rounded-sm object-cover" />
+                <div className="relative aspect-video w-full overflow-hidden rounded-sm bg-slate-100 group">
+                  <img src={selectedImage} alt="" className="h-full w-full object-cover" />
+                  {aiVisual && !customImage && !imageRemoved && (
+                    <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded bg-black/65 px-2 py-0.5 text-[9.5px] font-semibold text-white backdrop-blur-sm shadow-sm">
+                      <Sparkles className="size-2.5 text-purple-300" /> AI Visual ({aiVisual.style})
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateAiImage()}
+                    disabled={isGeneratingImage}
+                    title="Regenerate with a different AI visual"
+                    className="absolute top-2 right-2 flex items-center gap-1 rounded bg-black/65 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm hover:bg-black/85 transition shadow-sm"
+                  >
+                    <RefreshCw className={cn("size-2.5", isGeneratingImage && "animate-spin")} />
+                    Regenerate Visual
+                  </button>
+                </div>
               ) : (
                 <div className="grid aspect-video w-full place-items-center rounded-sm border border-dashed border-[#CBD5E1] bg-[#F8FAFD] p-4 text-center">
                   <div>
                     <ImageIcon className="mx-auto size-6 text-[#CBD5E1]" />
                     <p className="mt-1.5 text-[11.5px] font-semibold text-[#64748B]">No image selected</p>
-                    <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Add your own image or pick a style below.</p>
+                    <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Click 'Generate AI image' or upload a file.</p>
                   </div>
                 </div>
               )}
-              <div className="mt-1.5 grid grid-cols-5 gap-1">
-                {PRESET_IMAGES.slice(0, 5).map((s, i) => (
-                  <img
-                    key={i}
-                    src={s}
-                    alt={PRESET_STYLE_LABELS[i] ?? ""}
-                    onClick={() => handlePickPreset(i % PRESET_IMAGES.length)}
+              <div className="mt-2 flex gap-1">
+                <input
+                  type="text"
+                  value={imagePrompt}
+                  onChange={(e) => setImagePrompt(e.target.value)}
+                  placeholder="Describe visual (e.g. river cleanup at sunset, 4K)..."
+                  className="flex-1 rounded-sm border border-[#D7E0EB] bg-white px-2 py-1 text-[10.5px] text-[#1E293B] outline-none focus:border-[#7C3AED]"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleGenerateAiImage(undefined, imagePrompt);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleGenerateAiImage(undefined, imagePrompt)}
+                  disabled={isGeneratingImage}
+                  className="flex shrink-0 items-center gap-1 rounded-sm bg-[#7C3AED] px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#6D28D9] disabled:opacity-50"
+                >
+                  <Sparkles className="size-2.5" /> Generate
+                </button>
+              </div>
+              <div className="mt-1.5 grid grid-cols-6 gap-1">
+                {PRESET_STYLE_LABELS.map((label, i) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => handlePickPreset(i)}
                     className={cn(
-                      "h-11 w-full cursor-pointer rounded object-cover transition",
-                      !customImage && !imageRemoved && imageStyleIdx === i % PRESET_IMAGES.length ? "ring-2 ring-[#7C3AED]" : "opacity-80 hover:opacity-100",
+                      "rounded border px-1 py-1 text-center text-[9px] font-semibold transition",
+                      !customImage && !imageRemoved && imageStyleIdx === i
+                        ? "border-[#7C3AED] bg-purple-50 text-[#7C3AED]"
+                        : "border-slate-200 text-slate-500 hover:bg-slate-50",
                     )}
-                  />
+                  >
+                    {label}
+                  </button>
                 ))}
               </div>
             </div>
@@ -878,11 +1096,11 @@ export function AIAssistantTab({
           )}
           <div className="mt-2 flex items-center justify-between text-[11px]">
             <span className="text-[#687797]">
-              {remainingTokens !== null ? `${remainingTokens.toLocaleString()} tokens left` : "Usage not loaded yet"}
+              {effectiveRemaining.toLocaleString()} tokens left
             </span>
-            {quotaLimit !== null && <span className="text-slate-400">of {quotaLimit.toLocaleString()}/mo</span>}
+            <span className="text-slate-400">of {effectiveLimit.toLocaleString()}/mo</span>
           </div>
-          {usedTokens !== null && (
+          {usedTokens > 0 && (
             <p className="mt-1 text-[10.5px] text-slate-400">{usedTokens.toLocaleString()} used this cycle</p>
           )}
           {quotaLow && (
