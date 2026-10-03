@@ -12,7 +12,6 @@ import {
   Check,
   CheckCircle2,
   Clock3,
-  ExternalLink,
   FileVideo,
   Globe2,
   ImagePlus,
@@ -42,7 +41,7 @@ import { duration, fileSize } from "../lib/format";
 import { useYouTube } from "../store/youtube-store";
 import type { ContentType, Visibility } from "../types";
 
-const STEPS = ["Upload", "Details", "Audience", "Video elements", "Visibility", "Playlists", "Advanced", "Review"] as const;
+const STEPS = ["Upload", "Details", "Audience", "Visibility", "Playlists", "Advanced", "Review"] as const;
 type Step = (typeof STEPS)[number];
 
 /** library: adding the file to the media library; ready: in the library; error: library upload failed. */
@@ -402,7 +401,6 @@ function UploadFlow() {
             {step === "Upload" && <UploadStep file={file} onChoose={(f) => void chooseFile(f)} onRemove={removeFile} type={draft.type} setType={(t) => set("type", t)} />}
             {step === "Details" && <DetailsStep draft={draft} set={set} showErrors={showErrors} />}
             {step === "Audience" && <AudienceStep draft={draft} set={set} />}
-            {step === "Video elements" && <ElementsStep />}
             {step === "Visibility" && <VisibilityStep draft={draft} set={set} />}
             {step === "Playlists" && <PlaylistsStep draft={draft} set={set} />}
             {step === "Advanced" && <AdvancedStep draft={draft} set={set} />}
@@ -472,7 +470,6 @@ const STEP_HELP: Record<Step, string> = {
   Upload: "Choose the video file. It's added to your media library first, then sent to YouTube.",
   Details: "Title, description, thumbnail and tags help viewers find your video.",
   Audience: "YouTube requires every video to declare whether it's made for kids.",
-  "Video elements": "Cards, end screens and subtitles are finished in YouTube Studio.",
   Visibility: "Uploads always start private. Choose who can watch and when the video goes live.",
   Playlists: "Add the video to one or more playlists once it's on YouTube.",
   Advanced: "License and embedding. Other options are managed in YouTube Studio.",
@@ -719,29 +716,6 @@ function AudienceStep({ draft, set }: StepProps) {
         <ChoiceCard name="kids" checked={draft.madeForKids === true} onSelect={() => set("madeForKids", true)} icon={Baby} title="Yes, it's made for kids" description="Comments, notifications and personalised ads are turned off." />
         <ChoiceCard name="kids" checked={draft.madeForKids === false} onSelect={() => set("madeForKids", false)} icon={UsersRound} title="No, it's not made for kids" />
       </div>
-      <div className="rounded-sm border border-[#E4E9F0]">
-        <ToggleRow label="Restrict to viewers over 18" description="Age restrictions can only be set in YouTube Studio." checked={false} disabled onChange={() => undefined} />
-      </div>
-    </div>
-  );
-}
-
-function ElementsStep() {
-  return (
-    <div className="space-y-4">
-      {[
-        { title: "Subtitles", body: "Caption files can't be sent through the YouTube API from OmniPlatform." },
-        { title: "End screen", body: "Promote related videos, playlists or a subscribe button in the last 5–20 seconds." },
-        { title: "Cards", body: "Add interactive cards that link to videos, playlists or channels during playback." },
-      ].map((item) => (
-        <div key={item.title} className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-[#E4E9F0] bg-[#F8FAFC] p-4">
-          <div className="min-w-0">
-            <p className="flex items-center gap-2 text-[13px] font-semibold text-[#0F1B3D]">{item.title} <Badge>YouTube Studio</Badge></p>
-            <p className="mt-0.5 text-[12px] text-[#6B7890]">{item.body} Complete it in YouTube Studio after uploading.</p>
-          </div>
-          <Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.studio} external>Open YouTube Studio</Button>
-        </div>
-      ))}
     </div>
   );
 }
@@ -827,14 +801,9 @@ function AdvancedStep({ draft, set }: StepProps) {
         <FormField label="License">
           <SelectMenu<Draft["license"]> label="License" size="md" fullWidth value={draft.license} onChange={(v) => set("license", v)} options={[{ value: "youtube", label: "Standard YouTube License" }, { value: "creativeCommon", label: "Creative Commons – Attribution" }]} />
         </FormField>
-        <FormField label="Recording date" hint="Set in YouTube Studio.">
-          <input type="date" className={yt.input} disabled value="" onChange={() => undefined} aria-label="Recording date (set in YouTube Studio)" />
-        </FormField>
       </div>
       <div className="divide-y divide-[#EEF1F5] rounded-[10px] border border-[#E4E9F0]">
         <ToggleRow label="Allow embedding" description="Let others embed this video on their websites." checked={draft.embeddable} onChange={(c) => set("embeddable", c)} />
-        <ToggleRow label="Allow comments" description="Comments can only be turned on or off in YouTube Studio." checked={draft.madeForKids !== true} disabled onChange={() => undefined} />
-        <ToggleRow label="Includes paid promotion" description="Disclosures are set in YouTube Studio." checked={false} disabled onChange={() => undefined} />
       </div>
     </div>
   );

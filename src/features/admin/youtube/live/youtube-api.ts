@@ -18,7 +18,10 @@ import type {
   YouTubeAnalyticsTopVideosResponse,
   YouTubeAnalyticsTrafficSourcesResponse,
   YouTubeAnalyticsVideoResponse,
+  YouTubeChannelMappingDto,
   YouTubeChannelResponse,
+  YouTubeClientOverviewDto,
+  YouTubeDiscoveredChannelDto,
   YouTubeCommentDeleteResponse,
   YouTubeCommentModerationResponse,
   YouTubeCommentOrder,
@@ -142,6 +145,36 @@ export const youtubeApi = {
       path: "/integrations/oauth/init",
       headers: companyScopeHeaders(scope.companyId),
       body: { provider: "YOUTUBE", ...(capability ? { capability } : {}), ...(integrationId ? { integrationId } : {}) },
+    }),
+
+  /**
+   * The Company's YouTube connection id. `/integrations/youtube/connection` only reports it once a channel is
+   * mapped, so linking the first channel has to read it from the Client overview.
+   */
+  clientOverview: (scope: YouTubeScope, signal?: AbortSignal) =>
+    apiClient.request<YouTubeClientOverviewDto>({
+      method: "GET",
+      path: "/integrations/overview",
+      headers: headers(scope),
+      signal,
+    }),
+
+  /** `integrations:read`. Channels the Company connection can reach. Spends Google quota, so it is click-driven. */
+  discoverChannels: (scope: YouTubeScope, integrationId: string, signal?: AbortSignal) =>
+    apiClient.request<YouTubeDiscoveredChannelDto[]>({
+      method: "GET",
+      path: `/integrations/${seg(integrationId)}/resources`,
+      headers: companyScopeHeaders(scope.companyId),
+      signal,
+    }),
+
+  /** `integrations:write`. Links one channel to this Client. 409 when the channel is already mapped. */
+  linkChannel: (scope: YouTubeScope, integrationId: string, channelId: string) =>
+    apiClient.request<YouTubeChannelMappingDto>({
+      method: "POST",
+      path: `/integrations/${seg(integrationId)}/map`,
+      headers: companyScopeHeaders(scope.companyId),
+      body: { clientId: scope.clientId, externalResourceId: channelId, resourceType: "YOUTUBE_CHANNEL" },
     }),
 
   /** Company-wide: removes the Company's YouTube login(s). Destructive; always behind a typed confirmation. */

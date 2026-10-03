@@ -52,6 +52,42 @@ function requireScope(scope: YouTubeScope | null): YouTubeScope {
 
 /* ------------------------------ connection / channel ------------------------------ */
 
+export interface LinkCandidates {
+  /** The Company's YouTube connection. Null when the Company has no YouTube login at all. */
+  integrationId: string | null;
+  accountName: string | null;
+  channels: { id: string; name: string }[];
+}
+
+/**
+ * Channels that can be linked to this Client. Only runs while the picker is open: discovery calls Google.
+ * `/integrations/youtube/connection` cannot answer this - it reports no integrationId until a channel is mapped.
+ */
+export function useLinkCandidatesQuery(enabled: boolean) {
+  const scope = useYouTubeScope();
+  return useQuery<LinkCandidates>({
+    queryKey: scope ? youtubeKeys.linkCandidates(scope) : ["youtube", "none", "link-candidates"],
+    queryFn: async ({ signal }) => {
+      const ready = requireScope(scope);
+      const overview = await youtubeApi.clientOverview(ready, signal);
+      const provider = overview.providers.find((item) => item.provider === "YOUTUBE");
+      const connection = provider?.connections[0] ?? null;
+      const integrationId = provider?.integrationId ?? connection?.integrationId ?? null;
+      if (!integrationId) return { integrationId: null, accountName: null, channels: [] };
+      const resources = await youtubeApi.discoverChannels(ready, integrationId, signal);
+      return {
+        integrationId,
+        accountName: connection?.accountName ?? null,
+        channels: resources.filter((r) => r.resourceType === "YOUTUBE_CHANNEL").map((r) => ({ id: r.externalResourceId, name: r.name })),
+      };
+    },
+    enabled: enabled && scope !== null,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    retry: shouldRetryYouTubeQuery,
+  });
+}
+
 export function useConnectionQuery() {
   const scope = useYouTubeScope();
   return useQuery({
@@ -361,6 +397,14 @@ export function useYouTubeMutations() {
     },
   });
 
+  const linkChannel = useMutation({
+    mutationFn: (vars: { integrationId: string; channelId: string }) => youtubeApi.linkChannel(s(), vars.integrationId, vars.channelId),
+    onSuccess: () => {
+      // The whole workspace was gated on the missing mapping, so everything is re-read.
+      void qc.invalidateQueries({ queryKey: youtubeKeys.root(s()) });
+    },
+  });
+
   const initConsent = useMutation({
     mutationFn: (vars: { capability?: Parameters<typeof youtubeApi.initConsent>[1]; integrationId?: string | null }) => youtubeApi.initConsent(s(), vars.capability, vars.integrationId),
   });
@@ -532,7 +576,7 @@ export function useYouTubeMutations() {
   });
 
   return {
-    sync, initConsent, disconnect, updateVideo, deleteVideo, createUpload, setThumbnail, publish, schedule, reschedule, cancelSchedule,
+    sync, initConsent, linkChannel, disconnect, updateVideo, deleteVideo, createUpload, setThumbnail, publish, schedule, reschedule, cancelSchedule,
     createPlaylist, updatePlaylist, deletePlaylist, addPlaylistItem, removePlaylistItem, movePlaylistItem,
     replyToComment, updateComment, deleteComment, moderateComment, rejectComment,
     createBroadcast, updateBroadcast, bindBroadcast, transitionBroadcast, createStream, sendChat,

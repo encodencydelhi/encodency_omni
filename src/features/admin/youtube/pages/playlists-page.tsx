@@ -275,7 +275,7 @@ function EditPlaylistBody({ playlist, onClose }: { playlist: Playlist; onClose: 
       <Dialog open onOpenChange={(o) => !o && !busy && (dirty ? setConfirmDiscard(true) : onClose())}>
         <DialogContent className="w-[calc(100vw-24px)] max-w-[480px] gap-0 p-0">
           <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
-            <DialogTitle className="text-[15px] text-[#0F1B3D]">Edit playlist</DialogTitle>
+            <DialogTitle className="text-[15px] text-[#0F1B3D]">Edit Playlist</DialogTitle>
             <DialogDescription className="text-[12.5px] text-[#6B7890]">Changes are saved to YouTube.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 px-5 py-4">
@@ -318,7 +318,7 @@ function AddVideosBody({ playlist, onClose }: { playlist: Playlist; onClose: () 
     <Dialog open onOpenChange={(o) => !o && !busy && onClose()}>
       <DialogContent className="w-[calc(100vw-24px)] max-w-[540px] gap-0 p-0">
         <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
-          <DialogTitle className="text-[15px] text-[#0F1B3D]">Add videos</DialogTitle>
+          <DialogTitle className="text-[15px] text-[#0F1B3D]">Add Videos</DialogTitle>
           <DialogDescription className="line-clamp-1 text-[12.5px] text-[#6B7890]">to {playlist.title}</DialogDescription>
         </DialogHeader>
         <div className="px-5 pt-3"><SearchField value={q} onChange={setQ} placeholder="Search your videos" autoFocus /></div>
@@ -513,7 +513,7 @@ function PlaylistDetailBody({
             </dl>
             {playlist.system && <Notice tone="neutral" title="Managed by YouTube">This list is read-only. It can only be changed in YouTube.</Notice>}
             <div className="flex gap-2">
-              <Button size="sm" variant="primary" icon={ListPlus} gate={can.canManagePlaylists} disabled={playlist.system} disabledReason="Managed by YouTube" onClick={() => actions.setAdd(playlist)} className="flex-1">Add videos</Button>
+              <Button size="sm" variant="primary" icon={ListPlus} gate={can.canManagePlaylists} disabled={playlist.system} disabledReason="Managed by YouTube" onClick={() => actions.setAdd(playlist)} className="flex-1">Add Videos</Button>
               <Button size="sm" variant="secondary" icon={Pencil} gate={can.canManagePlaylists} disabled={playlist.system} disabledReason="Managed by YouTube" onClick={() => actions.setEdit(playlist)}>Edit</Button>
               <ActionMenu
                 label="More playlist actions"
@@ -548,7 +548,7 @@ function PlaylistDetailBody({
           ) : error ? (
             <ErrorState error={describeYouTubeError(error)} onRetry={refetch} title="Playlist items couldn't load" />
           ) : list.length === 0 ? (
-            <EmptyState icon={ListVideo} title="This playlist is empty" description="Add videos so viewers can watch them in sequence." action={<Button variant="primary" icon={ListPlus} gate={can.canManagePlaylists} disabled={playlist.system} onClick={() => actions.setAdd(playlist)}>Add videos</Button>} />
+            <EmptyState icon={ListVideo} title="This playlist is empty" description="Add videos so viewers can watch them in sequence." action={<Button variant="primary" icon={ListPlus} gate={can.canManagePlaylists} disabled={playlist.system} onClick={() => actions.setAdd(playlist)}>Add Videos</Button>} />
           ) : (
             <ol className="divide-y divide-[#EEF1F5]">
               {list.map((item, i) => (

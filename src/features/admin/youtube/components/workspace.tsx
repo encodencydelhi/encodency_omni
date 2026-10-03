@@ -35,6 +35,7 @@ import { relative } from "../lib/format";
 import { useYouTube } from "../store/youtube-store";
 import type { Period } from "../types";
 import { CreatePlaylistDialog } from "./dialogs";
+import { LinkChannelDialog } from "./link-channel-dialog";
 import { ActionMenu, Badge, Button, EmptyState, SelectMenu, Skeleton, Thumb, buttonClass, useDebounced, yt } from "./ui";
 
 const TABS = [
@@ -499,20 +500,29 @@ function DisconnectedState() {
 }
 
 function NotMappedState() {
-  const { rawConnection } = useYouTube();
+  const { rawConnection, can, startConsent } = useYouTube();
+  const [linkOpen, setLinkOpen] = useState(false);
+  const companyConnected = Boolean(rawConnection?.companyConnectionAvailable);
   return (
     <div className={cn(yt.card)}>
       <EmptyState
         icon={VideoIcon}
         title="Link a YouTube channel to this client"
         description={
-          rawConnection?.companyConnectionAvailable
-            ? "Your company is connected to YouTube, but no channel is linked to this client yet. Link one in Integrations to continue."
+          companyConnected
+            ? "Your company is connected to YouTube, but no channel is linked to this client yet. Pick the channel this client manages to continue."
             : "Connect a YouTube account for your company, then link its channel to this client."
         }
-        action={<Button variant="primary" href={ytRoutes.integrations}>Open Integrations</Button>}
+        action={
+          companyConnected ? (
+            <Button variant="primary" gate={can.canManageConnection} onClick={() => setLinkOpen(true)}>Link channel</Button>
+          ) : (
+            <Button variant="primary" gate={can.canManageConnection} onClick={() => void startConsent()}>Connect YouTube</Button>
+          )
+        }
         secondary={<Button variant="secondary" href={ytRoutes.settings}>Open settings</Button>}
       />
+      <LinkChannelDialog open={linkOpen} onOpenChange={setLinkOpen} />
     </div>
   );
 }

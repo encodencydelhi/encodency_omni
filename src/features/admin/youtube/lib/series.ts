@@ -12,7 +12,7 @@ export function fillSeries(range: { startDate: string; endDate: string }, points
   const end = Date.parse(`${range.endDate}T00:00:00.000Z`);
   for (let t = start; t <= end; t += DAY_MS) {
     const date = new Date(t).toISOString().slice(0, 10);
-    out.push(byDate.get(date) ?? { date, views: null, watchTime: null, subscribers: null, avgViewDuration: null, impressions: null, ctr: null });
+    out.push(byDate.get(date) ?? { date, views: null, watchTime: null, subscribers: null, avgViewDuration: null });
   }
   return out;
 }

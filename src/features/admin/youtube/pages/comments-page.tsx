@@ -413,7 +413,7 @@ function ThreadDrawer({ thread, video, onClose, onRemove }: { thread: CommentThr
     <Sheet open={thread !== null} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-full max-w-[520px] sm:max-w-[520px]">
         <SheetHeader>
-          <SheetTitle className="text-[15px] text-[#0F1B3D]">Comment thread</SheetTitle>
+          <SheetTitle className="text-[15px] text-[#0F1B3D]">Comment Thread</SheetTitle>
           <SheetDescription asChild>
             <Link href={ytRoutes.video(video.id)} onClick={onClose} className="flex items-center gap-2 text-[12.5px] text-[#6B7890] hover:text-[#2563EB]">
               <Thumb src={video.thumbnailUrl} className="w-12" sizes="48px" />

@@ -118,9 +118,6 @@ export interface VideoStats {
   likes: Maybe<number>;
   /** Null when comments are disabled. */
   comments: Maybe<number>;
-  /** The Analytics API does not report impressions or CTR for channel reports: always null. */
-  ctr: Maybe<number>;
-  impressions: Maybe<number>;
   avgViewDurationSec: Maybe<number>;
   subscribersGained: Maybe<number>;
 }
@@ -238,9 +235,7 @@ export type MetricKey =
   | "views"
   | "watchTime"
   | "subscribers"
-  | "avgViewDuration"
-  | "impressions"
-  | "ctr";
+  | "avgViewDuration";
 
 export interface SeriesPoint {
   date: ISODate;
@@ -250,9 +245,6 @@ export interface SeriesPoint {
   subscribers: Maybe<number>;
   /** Seconds. */
   avgViewDuration: Maybe<number>;
-  /** Not reported by the Analytics API: always null. */
-  impressions: Maybe<number>;
-  ctr: Maybe<number>;
 }
 
 export interface MetricSummary {

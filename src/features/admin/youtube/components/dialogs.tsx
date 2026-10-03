@@ -84,7 +84,7 @@ function CreatePlaylistBody({ open, onOpenChange, videoIds, onCreated }: CreateP
     <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
       <DialogContent className="w-[calc(100vw-24px)] max-w-[480px] gap-0 p-0">
         <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
-          <DialogTitle className="text-[15px] text-[#0F1B3D]">Create playlist</DialogTitle>
+          <DialogTitle className="text-[15px] text-[#0F1B3D]">Create Playlist</DialogTitle>
           <DialogDescription className="text-[12.5px] text-[#6B7890]">
             {videoIds?.length ? `The ${videoIds.length === 1 ? "selected video" : `${videoIds.length} selected videos`} will be added to the new playlist.` : "Organise related videos so viewers keep watching."}
           </DialogDescription>
@@ -120,7 +120,7 @@ function CreatePlaylistBody({ open, onOpenChange, videoIds, onCreated }: CreateP
         </form>
         <DialogFooter className="border-t border-[#EEF1F5] px-5 py-3">
           <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
-          <Button variant="primary" loading={busy} gate={can.canManagePlaylists} onClick={() => void submit()}>Create playlist</Button>
+          <Button variant="primary" loading={busy} gate={can.canManagePlaylists} onClick={() => void submit()}>Create Playlist</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -152,7 +152,7 @@ function AddToPlaylistBody({ open, onOpenChange, videoIds }: VideoIdsDialogProps
       <Dialog open={open && !createOpen} onOpenChange={(o) => !busy && onOpenChange(o)}>
         <DialogContent className="w-[calc(100vw-24px)] max-w-[460px] gap-0 p-0">
           <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
-            <DialogTitle className="text-[15px] text-[#0F1B3D]">Add to playlist</DialogTitle>
+            <DialogTitle className="text-[15px] text-[#0F1B3D]">Add to Playlist</DialogTitle>
             <DialogDescription className="text-[12.5px] text-[#6B7890]">
               {videoIds.length === 1 ? "Choose one or more playlists." : `Add ${videoIds.length} videos to one or more playlists.`}
             </DialogDescription>
@@ -344,7 +344,7 @@ function VisibilityBody({ open, onOpenChange, videoIds }: VideoIdsDialogProps) {
     <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
       <DialogContent className="w-[calc(100vw-24px)] max-w-[440px] gap-0 p-0">
         <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
-          <DialogTitle className="text-[15px] text-[#0F1B3D]">Change visibility</DialogTitle>
+          <DialogTitle className="text-[15px] text-[#0F1B3D]">Change Visibility</DialogTitle>
           <DialogDescription className="text-[12.5px] text-[#6B7890]">Applies to {videoIds.length} selected {videoIds.length === 1 ? "video" : "videos"}.</DialogDescription>
         </DialogHeader>
         <div className="space-y-2 px-5 py-4">
@@ -423,7 +423,7 @@ function ThumbnailBody({ open, onOpenChange, video }: VideoDialogProps & { video
     <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
       <DialogContent className="max-h-[92dvh] max-w-[760px] gap-0 overflow-y-auto p-0">
         <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
-          <DialogTitle className="text-[15px] text-[#0F1B3D]">Manage thumbnail</DialogTitle>
+          <DialogTitle className="text-[15px] text-[#0F1B3D]">Manage Thumbnail</DialogTitle>
           <DialogDescription className="line-clamp-1 text-[12.5px] text-[#6B7890]">{video.title}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-5 px-5 py-4 md:grid-cols-[1fr_280px]">
@@ -572,7 +572,7 @@ function EditMetadataBody({ open, onOpenChange, video }: VideoDialogProps & { vi
       <Sheet open={open} onOpenChange={(o) => (o ? onOpenChange(true) : dirty ? setConfirmClose(true) : onOpenChange(false))}>
         <SheetContent className="w-full max-w-[560px] sm:max-w-[560px]">
           <SheetHeader>
-            <SheetTitle className="text-[15px] text-[#0F1B3D]">Edit details</SheetTitle>
+            <SheetTitle className="text-[15px] text-[#0F1B3D]">Edit Details</SheetTitle>
             <SheetDescription className="line-clamp-1 text-[12.5px]">Changes are saved to YouTube.</SheetDescription>
           </SheetHeader>
           <SheetBody className="space-y-4">
@@ -607,7 +607,6 @@ function EditMetadataBody({ open, onOpenChange, video }: VideoDialogProps & { vi
             </FormField>
             <div className="divide-y divide-[#EEF1F5] rounded-sm border border-[#E4E9F0]">
               <ToggleRow label="Made for kids" description="Required by COPPA. Limits comments, notifications and personalised ads." checked={draft.madeForKids} onChange={(c) => set("madeForKids", c)} />
-              <ToggleRow label="Allow comments" description="Comments can only be turned on or off in YouTube Studio." checked={video.commentsEnabled !== false && !draft.madeForKids} disabled onChange={() => undefined} />
             </div>
           </SheetBody>
           <SheetFooter className="justify-between">
@@ -655,8 +654,22 @@ export function HealthDetailSheet({ open, onOpenChange, analytics }: { open: boo
     const d = analytics.data;
     if (!analytics.enabled || !d.hasData) return null;
     return {
-      current: { views: d.rawTotals.current.views, likes: d.likes.current, comments: d.comments.current, netSubscribers: d.rawTotals.current.subscribers },
-      previous: { views: d.rawTotals.previous.views, likes: d.likes.previous, comments: d.comments.previous, netSubscribers: d.rawTotals.previous.subscribers },
+      current: {
+        views: d.rawTotals.current.views,
+        likes: d.likes.current,
+        comments: d.comments.current,
+        netSubscribers: d.rawTotals.current.subscribers,
+        watchTime: d.rawTotals.current.watchTime,
+        avgViewDuration: d.rawTotals.current.avgViewDuration,
+      },
+      previous: {
+        views: d.rawTotals.previous.views,
+        likes: d.likes.previous,
+        comments: d.comments.previous,
+        netSubscribers: d.rawTotals.previous.subscribers,
+        watchTime: d.rawTotals.previous.watchTime,
+        avgViewDuration: d.rawTotals.previous.avgViewDuration,
+      },
     };
   }, [analytics.data, analytics.enabled]);
   const { score, factors } = useMemo(() => channelHealth(channel, videos, comparison), [channel, videos, comparison]);
@@ -666,7 +679,7 @@ export function HealthDetailSheet({ open, onOpenChange, analytics }: { open: boo
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full max-w-[560px] sm:max-w-[560px]">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2 text-[15px] text-[#0F1B3D]">Channel health</SheetTitle>
+          <SheetTitle className="flex items-center gap-2 text-[15px] text-[#0F1B3D]">Channel Health</SheetTitle>
           <SheetDescription className="text-[12.5px]">An OmniPlatform score built from your synced channel data. It isn&apos;t a YouTube metric and doesn&apos;t affect how YouTube ranks your videos.</SheetDescription>
         </SheetHeader>
         <SheetBody className="space-y-4">
