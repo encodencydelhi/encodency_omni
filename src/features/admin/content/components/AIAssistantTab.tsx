@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { ApiError } from "@/types/api";
 import type { Platform } from "../types/content.types";
 import { PLATFORM_CHAR_LIMITS, PLATFORM_HASHTAG_LIMITS, PLATFORM_META } from "../config/platform-config";
-import { generateAiVisual, fetchDynamicAiVisual, type AiGeneratedVisual } from "../services/ai-image.service";
+import { fetchDynamicAiVisual, type AiGeneratedVisual, PRESET_STYLE_LABELS } from "../services/ai-image.service";
 
 /** Mirrors `AiContextDto.topic` @MaxLength(1000) — anything longer is a 400 from the API. */
 const TOPIC_MAX_CHARS = 1000;
@@ -51,9 +51,6 @@ const PROMPT_HINTS: Record<string, string> = {
   "Hashtags": "Generate a curated set of trending, high-reach, and niche community hashtags for river conservation.",
   "Variations": "Provide 3 different creative angles for our upcoming riverbank tree plantation campaign.",
 };
-
-const PRESET_IMAGES = [IMG.river, IMG.nature, IMG.water, IMG.people, IMG.lake, IMG.forest];
-const PRESET_STYLE_LABELS = ["Realistic", "Nature", "Minimal", "Community", "River", "Forest"];
 
 export function AIAssistantTab({
   initialPrompt,
@@ -106,11 +103,9 @@ export function AIAssistantTab({
   /* Preview platform drives every limit shown next to the result. */
   const [previewPlatform, setPreviewPlatform] = useState<Platform>("instagram");
 
-  /* Image: preset library, AI visual, a user upload, or deliberately removed (null). */
+  /* Image: pure AI visual generated via OpenAI, user upload, or deliberately removed. */
   const [customImage, setCustomImage] = useState<{ url: string; assetId?: string; local?: boolean } | null>(null);
-  const [aiVisual, setAiVisual] = useState<AiGeneratedVisual | null>(() =>
-    generateAiVisual(initialPrompt || "Clean Ganga Campaign", "Realistic", 0)
-  );
+  const [aiVisual, setAiVisual] = useState<AiGeneratedVisual | null>(null);
   const [visualVariation, setVisualVariation] = useState(0);
   const [imagePrompt, setImagePrompt] = useState("");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -178,7 +173,7 @@ export function AIAssistantTab({
 
   const selectedImage: string | null = imageRemoved
     ? null
-    : (customImage?.url ?? aiVisual?.url ?? PRESET_IMAGES[imageStyleIdx] ?? null);
+    : (customImage?.url ?? aiVisual?.url ?? null);
 
   /* ── Content Type switch: keep each type's own prompt, fall back to its hint ── */
   const handleTypeSelect = (typeId: string) => {
@@ -196,37 +191,51 @@ export function AIAssistantTab({
     setCustomImage(null);
     setImageRemoved(false);
     const style = PRESET_STYLE_LABELS[index] || "Realistic";
-    const currentTopic = imagePrompt.trim() || prompt || "Inspiring social media post";
-    // Immediate preview with fallback
-    const visual = generateAiVisual(prompt || "Inspiring social media post", style, visualVariation, imagePrompt);
-    setAiVisual(visual);
-    // Asynchronously resolve dynamic image matching the exact topic or prompt
-    void fetchDynamicAiVisual(currentTopic, style, visualVariation, imagePrompt).then((resolved) => {
-      setAiVisual(resolved);
-    });
+    const currentTopic = imagePrompt.trim() || prompt;
+    if (!currentTopic) return;
+    setIsGeneratingImage(true);
+    fetchDynamicAiVisual(currentTopic, style, visualVariation, imagePrompt)
+      .then((resolved) => {
+        if (resolved) {
+          setAiVisual(resolved);
+          toast.success(`✨ Generated AI image in ${style} style!`);
+        }
+      })
+      .catch((err) => {
+        toast.error(`Image generation failed: ${err.message || "Unknown error"}`);
+      })
+      .finally(() => {
+        setIsGeneratingImage(false);
+      });
   };
 
   const handleGenerateAiImage = async (nextStyleIdx?: number, explicitPrompt?: string) => {
-    setIsGeneratingImage(true);
     const targetIdx = typeof nextStyleIdx === "number" ? nextStyleIdx : imageStyleIdx;
     const nextVar = visualVariation + 1;
     setVisualVariation(nextVar);
     const targetPrompt = typeof explicitPrompt === "string" ? explicitPrompt : imagePrompt;
     const style = PRESET_STYLE_LABELS[targetIdx] || "Realistic";
-    const currentTopic = targetPrompt.trim() || prompt || "Inspiring social media post";
+    const currentTopic = targetPrompt.trim() || prompt;
 
+    if (!currentTopic) {
+      toast.error("Please enter a topic or image description to generate an AI image.");
+      return;
+    }
+
+    setIsGeneratingImage(true);
     try {
       const visual = await fetchDynamicAiVisual(currentTopic, style, nextVar, targetPrompt);
-      setAiVisual(visual);
-      setCustomImage(null);
-      setImageRemoved(false);
-      const queryLabel = targetPrompt.trim() || prompt.slice(0, 30);
-      toast.success(`✨ AI visual generated for "${queryLabel}" in ${style} style!`);
-    } catch {
-      const fallback = generateAiVisual(prompt || "Inspiring social media post", style, nextVar, targetPrompt);
-      setAiVisual(fallback);
-      setCustomImage(null);
-      setImageRemoved(false);
+      if (visual) {
+        setAiVisual(visual);
+        setCustomImage(null);
+        setImageRemoved(false);
+        const queryLabel = targetPrompt.trim() || prompt.slice(0, 30);
+        toast.success(`✨ AI visual generated for "${queryLabel.slice(0, 35)}..." in ${style} style!`);
+      } else {
+        toast.error("Could not generate image. Please verify your OPENAI_API_KEY.");
+      }
+    } catch (err: any) {
+      toast.error(`Image generation failed: ${err?.message || "Unknown error"}`);
     } finally {
       setIsGeneratingImage(false);
     }
@@ -312,17 +321,25 @@ export function AIAssistantTab({
       setResult(response.generatedContent);
       setGenerated(true);
 
-      // Synthesize matching AI visual for the generated content
+      // Synthesize matching AI visual strictly with OpenAI if user hasn't uploaded or removed image
       if (!customImage && !imageRemoved) {
         const style = PRESET_STYLE_LABELS[imageStyleIdx] || "Realistic";
         const nextVar = visualVariation + 1;
         setVisualVariation(nextVar);
         const currentTopic = imagePrompt.trim() || prompt;
-        const visual = generateAiVisual(prompt, style, nextVar, imagePrompt);
-        setAiVisual(visual);
-        void fetchDynamicAiVisual(currentTopic, style, nextVar, imagePrompt).then((resolved) => {
-          setAiVisual(resolved);
-        });
+        if (currentTopic) {
+          setIsGeneratingImage(true);
+          fetchDynamicAiVisual(currentTopic, style, nextVar, imagePrompt)
+            .then((resolved) => {
+              if (resolved) setAiVisual(resolved);
+            })
+            .catch((err) => {
+              console.error("AI image generation error:", err);
+            })
+            .finally(() => {
+              setIsGeneratingImage(false);
+            });
+        }
       }
 
       setTokensUsed(response.tokensConsumed);
@@ -573,32 +590,40 @@ export function AIAssistantTab({
           </div>
         </div>
 
-        {/* Dynamic style visual cards matching the topic */}
+        {/* Dynamic style visual cards with clean aesthetic tags */}
         <div className="grid grid-cols-3 gap-1.5">
           {PRESET_STYLE_LABELS.map((styleName, i) => {
-            const dynamicThumb = generateAiVisual(prompt || "Inspiring social media post", styleName, 0, imagePrompt).url;
             const isSelected = !customImage && !imageRemoved && imageStyleIdx === i;
+            const gradients = [
+              "from-emerald-400 to-teal-500",
+              "from-blue-400 to-indigo-500",
+              "from-amber-400 to-orange-500",
+              "from-purple-400 to-pink-500",
+              "from-rose-400 to-red-500",
+              "from-slate-400 to-gray-600",
+            ];
+            const bg = gradients[i % gradients.length];
             return (
               <button
                 key={i}
                 type="button"
                 onClick={() => handlePickPreset(i)}
                 className={cn(
-                  "overflow-hidden rounded-sm border text-left transition group",
+                  "overflow-hidden rounded-sm border p-2 text-left transition group",
                   isSelected
-                    ? "border-[#7C3AED] ring-2 ring-purple-100 bg-purple-50/20"
-                    : "border-[#E2E8F0] hover:border-purple-200",
+                    ? "border-[#7C3AED] ring-2 ring-purple-100 bg-purple-50/40"
+                    : "border-[#E2E8F0] hover:border-purple-200 bg-white",
                 )}
               >
-                <div className="relative h-12 w-full bg-slate-100 overflow-hidden">
-                  <img src={dynamicThumb} alt="" aria-hidden="true" className="h-full w-full object-cover transition group-hover:scale-105" />
+                <div className={cn("h-6 w-full rounded-xs bg-gradient-to-r mb-1.5 opacity-80 group-hover:opacity-100 transition", bg)} />
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-[#1E293B] truncate">{styleName}</span>
                   {isSelected && (
-                    <span className="absolute bottom-1 right-1 rounded bg-[#7C3AED] p-0.5 text-white shadow-sm">
+                    <span className="rounded bg-[#7C3AED] p-0.5 text-white shadow-xs">
                       <Check className="size-2.5" />
                     </span>
                   )}
                 </div>
-                <span className="block px-1.5 py-1 text-[9.5px] font-semibold text-[#687797]">{styleName}</span>
               </button>
             );
           })}
@@ -968,46 +993,6 @@ export function AIAssistantTab({
                     </div>
                   </div>
                 )}
-                <div className="mt-2 flex gap-1">
-                  <input
-                    type="text"
-                    value={imagePrompt}
-                    onChange={(e) => setImagePrompt(e.target.value)}
-                    placeholder="Describe visual (e.g. river cleanup at sunset, 4K)..."
-                    className="flex-1 rounded-sm border border-[#D7E0EB] bg-white px-2 py-1 text-[10.5px] text-[#1E293B] outline-none focus:border-[#7C3AED]"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleGenerateAiImage(undefined, imagePrompt);
-                      }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleGenerateAiImage(undefined, imagePrompt)}
-                    disabled={isGeneratingImage}
-                    className="flex shrink-0 items-center gap-1 rounded-sm bg-[#7C3AED] px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#6D28D9] disabled:opacity-50"
-                  >
-                    <Sparkles className="size-2.5" /> Generate
-                  </button>
-                </div>
-                <div className="mt-1.5 grid grid-cols-6 gap-1">
-                  {PRESET_STYLE_LABELS.map((label, i) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => handlePickPreset(i)}
-                      className={cn(
-                        "rounded border px-1 py-1 text-center text-[9px] font-semibold transition",
-                        !customImage && !imageRemoved && imageStyleIdx === i
-                          ? "border-[#7C3AED] bg-purple-50 text-[#7C3AED]"
-                          : "border-slate-200 text-slate-500 hover:bg-slate-50",
-                      )}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               {/* Actions */}
@@ -1046,6 +1031,7 @@ export function AIAssistantTab({
           caption={result.caption}
           hashtags={result.hashtags}
           image={selectedImage}
+          isLoadingImage={isGeneratingImage}
         />
 
         {/* Platform limits for the selected preview channel */}

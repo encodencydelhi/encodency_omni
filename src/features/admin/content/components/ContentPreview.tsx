@@ -1,11 +1,10 @@
 "use client";
-import { MoreHorizontal, Heart, MessageCircle, Send, Bookmark } from "lucide-react";
+import { MoreHorizontal, Heart, MessageCircle, Send, Bookmark, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
 import { PlatformBadge } from "./ui-platform";
 import type { Platform } from "../types/content.types";
 import { PLATFORM_META } from "../config/platform-config";
-import { IMG } from "../mocks/content.mock";
 
 function getPlatformMeta(p: Platform | string) {
   const raw = typeof p === "string" ? p.toLowerCase().trim() : "";
@@ -28,6 +27,7 @@ export function ContentPreviewPanel({
   caption,
   hashtags,
   image,
+  isLoadingImage,
 }: {
   platform: Platform;
   setPlatform: (p: Platform) => void;
@@ -35,9 +35,11 @@ export function ContentPreviewPanel({
   caption?: string;
   hashtags?: string[];
   image?: string | null;
+  isLoadingImage?: boolean;
 }) {
   const meta = getPlatformMeta(platform);
-  const resolvedImage = image === undefined ? IMG.river : image;
+  const resolvedImage = image || null;
+
   return (
     <Card>
       <div className="flex items-center gap-1.5 border-b border-[#EDF1F5] pb-2 mb-2">
@@ -46,7 +48,14 @@ export function ContentPreviewPanel({
           {channels.map((p) => {
             const pMeta = getPlatformMeta(p);
             return (
-              <button key={p} onClick={() => setPlatform(p)} className={cn("flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[9.5px] font-semibold transition", platform === p ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#7A87A0] hover:bg-slate-50")}>
+              <button
+                key={p}
+                onClick={() => setPlatform(p)}
+                className={cn(
+                  "flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[9.5px] font-semibold transition",
+                  platform === p ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#7A87A0] hover:bg-slate-50"
+                )}
+              >
                 <PlatformBadge platform={p} size="sm" />
                 {pMeta.short}
               </button>
@@ -70,22 +79,32 @@ export function ContentPreviewPanel({
           </div>
         </div>
         <div className="relative">
-          {resolvedImage ? (
-            <>
-              <img src={resolvedImage} alt="" className="aspect-[4/3.4] w-full object-cover" />
-            </>
+          {isLoadingImage ? (
+            <div className="grid aspect-[4/3.4] w-full place-items-center border-b border-[#EDF1F5] bg-gradient-to-br from-purple-50 via-slate-50 to-indigo-50 text-center p-4">
+              <div className="flex flex-col items-center">
+                <Sparkles className="size-6 text-[#7C3AED] animate-spin" />
+                <p className="mt-2 text-[12px] font-semibold text-[#172044]">Generating AI Image with OpenAI…</p>
+                <p className="mt-0.5 text-[10px] text-[#64748B]">Synthesizing photorealistic visual directly from your prompt</p>
+              </div>
+            </div>
+          ) : resolvedImage ? (
+            <img src={resolvedImage} alt="" className="aspect-[4/3.4] w-full object-cover" />
           ) : (
-            <div className="grid aspect-[4/3.4] w-full place-items-center border-b border-[#EDF1F5] bg-[#F8FAFD] text-center">
+            <div className="grid aspect-[4/3.4] w-full place-items-center border-b border-[#EDF1F5] bg-[#F8FAFD] text-center p-4">
               <div>
                 <p className="text-[12px] font-semibold text-[#64748B]">No image selected</p>
-                <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Add one from the AI result panel.</p>
+                <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Click 'Generate' to create a visual with OpenAI.</p>
               </div>
             </div>
           )}
         </div>
         <div className="px-2 py-1.5">
           <div className="flex items-center justify-between text-[#1d2f50]">
-            <div className="flex items-center gap-2.5"><Heart className="size-3.5 fill-red-500 text-red-500" /><MessageCircle className="size-3.5" /><Send className="size-3.5" /></div>
+            <div className="flex items-center gap-2.5">
+              <Heart className="size-3.5 fill-red-500 text-red-500" />
+              <MessageCircle className="size-3.5" />
+              <Send className="size-3.5" />
+            </div>
             <Bookmark className="size-3.5" />
           </div>
           <p className="mt-0.5 text-[10.5px] font-semibold text-[#172044]">1,246 likes</p>
@@ -95,7 +114,7 @@ export function ContentPreviewPanel({
             <span className="text-[#94A3B8]"> more</span>
           </p>
           <p className="mt-0.5 text-[10px] font-medium text-[#1769DF]">
-            {hashtags && hashtags.length > 0 ? hashtags.slice(0, 5).join(" ") : "#CleanGanga #HealthyIndia #Sustainability"}
+            {hashtags && hashtags.length > 0 ? hashtags.slice(0, 5).join(" ") : "#BharatOrganicExpo #OrganicIndia #NaturalFarming"}
           </p>
         </div>
       </div>
