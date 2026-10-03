@@ -858,8 +858,11 @@ export function ChoiceCard({
 /* Media & people                                                      */
 /* ------------------------------------------------------------------ */
 
-/** Remote YouTube / Google images are served as-is (they are already optimised and not on the Next image allow-list). */
-const isRemote = (src: string) => /^(https?:|blob:|data:)/.test(src);
+/**
+ * Blob and data URLs (local previews) must never go through the optimiser. Remote https images do:
+ * the YouTube/Google hosts are on the Next allow-list, so they are re-served from our own origin.
+ */
+const isRemote = (src: string) => /^(blob:|data:)/.test(src);
 
 export function Thumb({
   src,

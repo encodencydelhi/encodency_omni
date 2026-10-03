@@ -49,6 +49,8 @@ export const youtubeKeys = {
   liveStreams: (s: YouTubeKeyScope) => [...ytRoot(s), "live", "streams"] as const,
   liveChat: (s: YouTubeKeyScope, broadcastId: string) => [...ytRoot(s), "live", "chat", broadcastId] as const,
   mediaImages: (s: YouTubeKeyScope) => [...ytRoot(s), "media-images"] as const,
+  /** Channels on the Company connection that could be linked to this Client. */
+  linkCandidates: (s: YouTubeKeyScope) => [...ytRoot(s), "link-candidates"] as const,
 } as const;
 
 export const queryKeys = {

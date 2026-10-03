@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils/cn";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ToggleRow } from "../components/dialogs";
-import { CapabilityState, ErrorState, PageSkeleton, UnavailableState } from "../components/states";
+import { CapabilityState, ErrorState, PageSkeleton } from "../components/states";
 import {
   ActionMenu,
   Avatar,
@@ -351,11 +351,10 @@ function LiveNowCard({ event, onEnd, onSetup }: { event: LiveEvent; onEnd: () =>
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.studio} external>Open in YouTube Studio</Button>
-            <Button size="sm" variant="secondary" icon={Settings2} onClick={onSetup}>Stream setup</Button>
+            <Button size="sm" variant="secondary" icon={Settings2} onClick={onSetup}>Stream Setup</Button>
           </div>
           <Button size="sm" variant="dangerSolid" icon={Square} gate={can.canTransitionLive} onClick={onEnd}>End stream</Button>
         </div>
-        <p className="border-t border-[#EEF1F5] px-4 py-2 text-[11.5px] text-[#98A2B3]">Concurrent viewers aren&apos;t reported by YouTube&apos;s API; see them in YouTube Studio.</p>
       </Card>
       <LiveChat event={event} className="xl:col-span-4" />
     </div>
@@ -376,7 +375,7 @@ function LiveChat({ event, className }: { event: LiveEvent; className?: string }
   if (!event.enableChat) {
     return (
       <Card className={className}>
-        <CardHeader title="Live chat" />
+        <CardHeader title="Live Chat" />
         <EmptyState compact icon={MessageSquare} title="Chat is turned off" description="Enable live chat for this broadcast in YouTube Studio." action={<Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.studio} external>Open YouTube Studio</Button>} />
       </Card>
     );
@@ -393,7 +392,7 @@ function LiveChat({ event, className }: { event: LiveEvent; className?: string }
 
   return (
     <Card className={cn("flex h-[520px] flex-col", className)}>
-      <CardHeader title="Live chat" description="Updates every few seconds" actions={<Button size="xs" variant="ghost" icon={ExternalLink} href={ytRoutes.studio} external>Pop out</Button>} />
+      <CardHeader title="Live Chat" description="Updates every few seconds" actions={<Button size="xs" variant="ghost" icon={ExternalLink} href={ytRoutes.studio} external>Pop out</Button>} />
       <div className="scrollbar-thin flex-1 space-y-2.5 overflow-y-auto border-y border-[#EEF1F5] px-4 py-3">
         {chat.isPending ? (
           <div className="space-y-2">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-5 w-full" />)}</div>
@@ -434,7 +433,7 @@ function SetupDrawer({ event, stream, onClose, onGoLive }: { event: LiveEvent | 
     <Sheet open={event !== null} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-full max-w-[520px] sm:max-w-[520px]">
         <SheetHeader>
-          <SheetTitle className="text-[15px] text-[#0F1B3D]">Stream setup</SheetTitle>
+          <SheetTitle className="text-[15px] text-[#0F1B3D]">Stream Setup</SheetTitle>
           <SheetDescription className="line-clamp-1 text-[12.5px]">{event?.title}</SheetDescription>
         </SheetHeader>
         {event && <SetupBody key={event.id} event={event} stream={stream} onGoLive={onGoLive} />}
@@ -504,13 +503,9 @@ function SetupBody({ event, stream, onGoLive }: { event: LiveEvent; stream: YouT
         <p className="text-[12px] leading-5 text-[#6B7890]">Paste these into OBS, Streamlabs or your hardware encoder. Never share the stream key — anyone with it can stream to your channel. It&apos;s fetched only when you ask and is never saved by OmniPlatform.</p>
       </div>
 
-      <div className="rounded-[10px] border border-[#E4E9F0]">
-        <div className="flex items-center justify-between px-3.5 py-3">
-          <span className="text-[13px] font-semibold text-[#0F1B3D]">Latency</span>
-          <span className="text-[12px] text-[#98A2B3]">Set in YouTube Studio</span>
-        </div>
-        <div className="border-t border-[#EEF1F5]"><ToggleRow label="DVR" description="Chosen when the event was created." checked={event.enableDvr === true} disabled onChange={() => undefined} /></div>
-        <div className="border-t border-[#EEF1F5]"><ToggleRow label="Live chat" description="Turn chat on or off in YouTube Studio." checked={event.enableChat} disabled onChange={() => undefined} /></div>
+      <div className="divide-y divide-[#EEF1F5] rounded-[10px] border border-[#E4E9F0]">
+        <ToggleRow label="DVR" description="Chosen when the event was created." checked={event.enableDvr === true} disabled onChange={() => undefined} />
+        <ToggleRow label="Live chat" description="Reported by YouTube for this broadcast." checked={event.enableChat} disabled onChange={() => undefined} />
       </div>
 
       {event.lifecycle === "upcoming" && (
@@ -561,7 +556,7 @@ function EditLiveBody({ event, onClose }: { event: LiveEvent; onClose: () => voi
     <Dialog open onOpenChange={(o) => !o && !busy && onClose()}>
       <DialogContent className="w-[calc(100vw-24px)] max-w-[500px] gap-0 p-0">
         <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
-          <DialogTitle className="text-[15px] text-[#0F1B3D]">Edit live event</DialogTitle>
+          <DialogTitle className="text-[15px] text-[#0F1B3D]">Edit Live Event</DialogTitle>
           <DialogDescription className="text-[12.5px] text-[#6B7890]">Updates the scheduled broadcast on YouTube.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 px-5 py-4">
@@ -593,7 +588,7 @@ function EditLiveBody({ event, onClose }: { event: LiveEvent; onClose: () => voi
 /* Create live                                                         */
 /* ------------------------------------------------------------------ */
 
-const CREATE_STEPS = ["Live details", "Stream settings", "Schedule", "Thumbnail", "Visibility", "Review"] as const;
+const CREATE_STEPS = ["Live details", "Stream settings", "Schedule", "Visibility", "Review"] as const;
 type CreateStep = (typeof CREATE_STEPS)[number];
 
 export function LiveCreatePage() {
@@ -711,9 +706,7 @@ function LiveCreate() {
                 <div className="divide-y divide-[#EEF1F5] rounded-[10px] border border-[#E4E9F0]">
                   <ToggleRow label="Enable DVR" description="Viewers can pause and rewind while you're live." checked={form.enableDvr} onChange={(c) => set("enableDvr", c)} />
                   <ToggleRow label="Made for kids" description="Required by COPPA. Turns off comments and live chat features for kids' content." checked={form.madeForKids} onChange={(c) => set("madeForKids", c)} />
-                  <ToggleRow label="Live chat" description="Chat is on by default; change it in YouTube Studio." checked disabled onChange={() => undefined} />
                 </div>
-                <p className="text-[12px] text-[#98A2B3]">Latency mode is set in YouTube Studio.</p>
               </>
             )}
             {step === "Schedule" && (
@@ -725,9 +718,6 @@ function LiveCreate() {
                 </div>
                 {errors.Schedule ? <Notice tone="amber" title={errors.Schedule} /> : <Notice tone="blue" title={`Starts ${format(when, "EEEE, MMM d 'at' h:mm a")}`}>Viewers can set a reminder from the watch page. You can go live any time once your encoder connects.</Notice>}
               </>
-            )}
-            {step === "Thumbnail" && (
-              <UnavailableState title="Set the thumbnail after creating the event" description="Live thumbnails aren't set while creating a broadcast through the API. Once the event exists, open it in YouTube Studio to upload one." />
             )}
             {step === "Visibility" && (
               <div className="space-y-2">

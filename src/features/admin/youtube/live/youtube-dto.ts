@@ -55,6 +55,44 @@ export interface YouTubeConnectionResponse {
   googleAccountName: string | null;
 }
 
+/**
+ * Linking a channel to this Client uses the shared integration routes, not `/integrations/youtube/**`:
+ * the Company connection id comes from `GET /integrations/overview`, the channels from
+ * `GET /integrations/:id/resources`, and the mapping from `POST /integrations/:id/map`.
+ */
+export interface YouTubeOverviewConnectionDto {
+  integrationId: string;
+  accountName: string | null;
+  accountEmail: string | null;
+  health: string;
+}
+
+export interface YouTubeOverviewProviderDto {
+  provider: string;
+  integrationId: string | null;
+  companyConnectionAvailable: boolean;
+  connections: YouTubeOverviewConnectionDto[];
+}
+
+export interface YouTubeClientOverviewDto {
+  clientId: string;
+  providers: YouTubeOverviewProviderDto[];
+}
+
+/** One channel the Company connection can reach. `externalResourceId` is the `UC...` channel id. */
+export interface YouTubeDiscoveredChannelDto {
+  externalResourceId: string;
+  name: string;
+  resourceType: string;
+}
+
+export interface YouTubeChannelMappingDto {
+  id: string;
+  clientId: string;
+  externalResourceId: string;
+  resourceType: string;
+}
+
 export interface YouTubeChannelDto {
   id: string;
   title: string | null;

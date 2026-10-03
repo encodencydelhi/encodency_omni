@@ -83,8 +83,6 @@ export function formatMetric(key: MetricKey, value: Maybe<number>): string {
       return hours(value);
     case "avgViewDuration":
       return duration(value);
-    case "ctr":
-      return percent(value);
     default:
       return compact(value);
   }

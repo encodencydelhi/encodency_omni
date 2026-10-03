@@ -29,7 +29,7 @@ import { ApiError } from "@/types/api";
 import { cn } from "@/lib/utils/cn";
 import { ChartLegend, TrendChart, summarize, type Granularity } from "../components/charts";
 import { AddToPlaylistDialog, DeleteVideosDialog, EditMetadataSheet, FactorRow, ScheduleDialog, ScoreRing, ThumbnailManager } from "../components/dialogs";
-import { CapabilityState, ErrorState, PageSkeleton, UnavailableState } from "../components/states";
+import { CapabilityState, ErrorState, PageSkeleton } from "../components/states";
 import {
   ActionMenu,
   Badge,
@@ -58,7 +58,7 @@ import { fillSeries } from "../lib/series";
 import { useQueryState } from "../hooks/use-query-state";
 import { describeYouTubeError } from "../live/youtube-errors";
 import { METRICS, VISIBILITY_LABEL, categoryLabel, languageLabel, ytRoutes } from "../lib/constants";
-import { date, dateTime, duration, full, hours, percent, relative } from "../lib/format";
+import { date, dateTime, duration, full, hours, percent } from "../lib/format";
 import { videoOptimization } from "../lib/insights";
 import { periodRange, previousPeriodRange } from "../lib/period";
 import { useYouTube } from "../store/youtube-store";
@@ -313,7 +313,7 @@ function OverviewTab({ video }: { video: Video }) {
         {analyticsOn && !perf.error && (
           <Card className="xl:col-span-8">
             <CardHeader
-              title="Performance — last 28 days"
+              title="Performance — Last 28 Days"
               actions={<Segmented<MetricKey> label="Metric" value={metric} onChange={setMetric} items={(["views", "watchTime", "subscribers"] as MetricKey[]).map((k) => ({ value: k, label: METRICS[k].short }))} />}
             />
             <div className="px-4 pb-4">
@@ -329,7 +329,7 @@ function OverviewTab({ video }: { video: Video }) {
           </Card>
         )}
         <Card className={cn(analyticsOn && !perf.error ? "xl:col-span-4" : "xl:col-span-12")}>
-          <CardHeader title="Video info" />
+          <CardHeader title="Video Info" />
           <dl className="px-4 pb-3">
             <DefinitionRow label="Video ID" mono>{video.id}</DefinitionRow>
             <DefinitionRow label="URL">
@@ -370,10 +370,10 @@ function AnalyticsTab({ video }: { video: Video }) {
   const subsGained = summarize(perf.current, "subscribers");
   const views = summarize(perf.current, "views");
   return (
-    <div className="space-y-1">
-      <Card>
+    <div className="grid gap-1 xl:grid-cols-12">
+      <Card className="xl:col-span-8">
         <CardHeader
-          title="Views & watch time"
+          title="Views & Watch Time"
           description="Last 28 days vs previous 28 days"
           actions={
             <>
@@ -390,42 +390,22 @@ function AnalyticsTab({ video }: { video: Video }) {
           )}
         </div>
       </Card>
-      <div className="grid gap-1 xl:grid-cols-12">
-        <Card className="xl:col-span-7">
-          <CardHeader title="Audience retention" description="How long viewers keep watching" />
-          <UnavailableState compact title="Not available through the API" description="YouTube's Analytics API doesn't report a per-video retention curve to OmniPlatform. Open the video in YouTube Studio to see it." />
-        </Card>
-        <Card className="xl:col-span-5">
-          <CardHeader title="Traffic sources" />
-          <UnavailableState compact title="Channel-level only" description="Traffic sources are reported for the whole channel, not per video. See Analytics → Reach." />
-        </Card>
-      </div>
-      <div className="grid gap-1 md:grid-cols-3">
-        <Card>
-          <CardHeader title="Audience" description="Age" />
-          <UnavailableState compact title="Channel-level only" description="Demographics are reported for the whole channel. See the Audience page." />
-        </Card>
-        <Card>
-          <CardHeader title="Devices" />
-          <UnavailableState compact title="Channel-level only" description="Device breakdowns are reported for the whole channel. See the Audience page." />
-        </Card>
-        <Card>
-          <CardHeader title="Subscriber impact" />
-          <div className="space-y-3 px-4 pb-4">
-            <div className="rounded-sm bg-[#ECFAF3] px-3 py-2.5">
-              <p className="text-[12px] text-[#067647]">Subscribers from this video</p>
-              <p className="text-[22px] font-semibold tabular-nums text-[#0F1B3D]">{subsGained === null ? "—" : `${subsGained >= 0 ? "+" : ""}${full(subsGained)}`}</p>
-            </div>
-            {subsGained !== null && views !== null && views > 0 ? (
-              <p className="text-[12.5px] leading-5 text-[#3C4A66]">
-                That&apos;s <b>{((subsGained / views) * 1000).toFixed(1)}</b> subscribers per 1,000 views over 28 days.
-              </p>
-            ) : (
-              <p className="text-[12.5px] leading-5 text-[#6B7890]">Not enough data to compare yet.</p>
-            )}
+      <Card className="h-fit xl:col-span-4">
+        <CardHeader title="Subscriber Impact" />
+        <div className="space-y-3 px-4 pb-4">
+          <div className="rounded-sm bg-[#ECFAF3] px-3 py-2.5">
+            <p className="text-[12px] text-[#067647]">Subscribers from this video</p>
+            <p className="text-[22px] font-semibold tabular-nums text-[#0F1B3D]">{subsGained === null ? "—" : `${subsGained >= 0 ? "+" : ""}${full(subsGained)}`}</p>
           </div>
-        </Card>
-      </div>
+          {subsGained !== null && views !== null && views > 0 ? (
+            <p className="text-[12.5px] leading-5 text-[#3C4A66]">
+              That&apos;s <b>{((subsGained / views) * 1000).toFixed(1)}</b> subscribers per 1,000 views over 28 days.
+            </p>
+          ) : (
+            <p className="text-[12.5px] leading-5 text-[#6B7890]">Not enough data to compare yet.</p>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }
@@ -466,8 +446,8 @@ function DetailsTab({ video, onEdit }: { video: Video; onEdit: () => void }) {
   const { can } = useYouTube();
 
   return (
-    <div className="grid gap-1 xl:grid-cols-12">
-      <Card className="xl:col-span-7">
+    <div>
+      <Card>
         <CardHeader title="Metadata" actions={<Button size="sm" variant="secondary" icon={Pencil} gate={can.canEditVideo} onClick={onEdit}>Edit</Button>} />
         <dl className="px-4 pb-3">
           <DefinitionRow label="Title">{video.title}</DefinitionRow>
@@ -480,21 +460,6 @@ function DetailsTab({ video, onEdit }: { video: Video; onEdit: () => void }) {
           <DefinitionRow label="Comments">{video.commentsEnabled === null ? "Not reported" : video.commentsEnabled && !video.madeForKids ? "On" : "Off"}</DefinitionRow>
         </dl>
       </Card>
-
-      <div className="space-y-1 xl:col-span-5">
-        <Card>
-          <CardHeader title="Approval" badge={<InternalBadge hint="Internal OmniPlatform workflow. Separate from the video's YouTube status." />} />
-          <UnavailableState compact title="Not available yet" description="Approval workflows aren't part of the YouTube integration." />
-        </Card>
-        <Card>
-          <CardHeader title="Recent changes" badge={<InternalBadge label="OmniPlatform history" />} />
-          <UnavailableState compact title="Not available yet" description="Edits are saved straight to YouTube. Version history isn't recorded." />
-        </Card>
-        <Card>
-          <CardHeader title="Activity" badge={<InternalBadge label="Audit log" />} />
-          <UnavailableState compact title="Not available yet" description={`Last published ${video.publishedAt ? relative(video.publishedAt) : "—"}. A per-video activity log isn't recorded yet.`} />
-        </Card>
-      </div>
     </div>
   );
 }

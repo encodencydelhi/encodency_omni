@@ -55,3 +55,6 @@ next-env.d.ts
 # Logs
 /logs
 *.log
+
+# stray build dirs from verification runs (Tailwind scans anything not ignored)
+/.next-*/

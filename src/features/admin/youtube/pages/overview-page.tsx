@@ -15,7 +15,6 @@ import {
   Info,
   ListPlus,
   MessageSquare,
-  MousePointerClick,
   PlugZap,
   Radio,
   Reply,
@@ -75,12 +74,7 @@ const KPI_ICONS: Record<MetricKey, typeof Eye> = {
   watchTime: Clock,
   subscribers: UsersRound,
   avgViewDuration: Timer,
-  impressions: BarChart3,
-  ctr: MousePointerClick,
 };
-
-/** The Analytics API does not report these for channel reports; said plainly instead of showing a number. */
-const NO_IMPRESSIONS = "YouTube's API doesn't report impressions or click-through rate.";
 
 export function OverviewPage() {
   const { ready } = useYouTube();
@@ -108,11 +102,11 @@ function Overview() {
           </Card>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-1 md:grid-cols-4">
               {analytics.isLoading ? (
                 <KpiSkeleton />
               ) : (
-                (["views", "watchTime", "subscribers", "avgViewDuration", "impressions", "ctr"] as MetricKey[]).map((key) => (
+                (["views", "watchTime", "subscribers", "avgViewDuration"] as MetricKey[]).map((key) => (
                   <KpiCard
                     key={key}
                     metric={key}
@@ -120,9 +114,9 @@ function Overview() {
                     value={analytics.data.totals[key].value}
                     previous={analytics.data.totals[key].previous}
                     spark={analytics.data.spark[key]}
-                    unavailable={key === "impressions" || key === "ctr" ? NO_IMPRESSIONS : !analytics.data.hasData ? "No data for this period" : undefined}
+                    unavailable={!analytics.data.hasData ? "No data for this period" : undefined}
                     active={metric === key && key !== "avgViewDuration"}
-                    onClick={key === "avgViewDuration" || key === "impressions" || key === "ctr" ? undefined : () => setMetric(key)}
+                    onClick={key === "avgViewDuration" ? undefined : () => setMetric(key)}
                   />
                 ))
               )}
@@ -162,6 +156,12 @@ function ChannelProfile({ className }: { className?: string }) {
   const [playlistOpen, setPlaylistOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [thumbVideo, setThumbVideo] = useState<Video | null>(null);
+  // A blocked or dead Google image falls back to the plain avatar instead of a broken-image icon.
+  const [bannerFailed, setBannerFailed] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const [descOpen, setDescOpen] = useState(false);
+  // Six lines is roughly where the clamp bites; anything shorter needs no dialog.
+  const longDescription = channel.description.length > 300 || channel.description.split("\n").length > 6;
 
   const quick = [
     { label: "Upload video", icon: Upload, onClick: () => router.push(ytRoutes.upload), gate: can.canUpload },
@@ -173,15 +173,29 @@ function ChannelProfile({ className }: { className?: string }) {
 
   return (
     <Card className={cn("overflow-hidden", className)}>
-      <div className="relative h-[108px] bg-[#E9EDF3]">
-        {channel.bannerUrl && <Image src={channel.bannerUrl} alt={`${channel.title} channel banner`} fill priority unoptimized sizes="(min-width: 1280px) 900px, 100vw" className="object-cover" />}
+      <div className="relative aspect-[2560/424] min-h-[84px] w-full bg-[#E9EDF3]">
+        {channel.bannerUrl && !bannerFailed && (
+          <Image
+            src={channel.bannerUrl}
+            alt={`${channel.title} channel banner`}
+            fill
+            priority
+            sizes="(min-width: 1280px) 900px, 100vw"
+            className="object-cover object-center"
+            onError={() => setBannerFailed(true)}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0F1B3D]/35 via-transparent to-transparent" />
       </div>
       <div className="px-4 pb-3.5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="flex min-w-0 items-end gap-3">
             <span className="relative -mt-9 grid size-[72px] shrink-0 place-items-center overflow-hidden rounded-sm border-4 border-white bg-white shadow-[0_2px_8px_rgba(15,27,61,0.15)]">
-              {channel.avatarUrl ? <Image src={channel.avatarUrl} alt="" width={64} height={64} unoptimized className="size-full object-contain" /> : <Avatar name={channel.title} className="size-full text-[18px]" />}
+              {channel.avatarUrl && !avatarFailed ? (
+                <Image src={channel.avatarUrl} alt="" width={64} height={64} className="size-full object-contain" onError={() => setAvatarFailed(true)} />
+              ) : (
+                <Avatar name={channel.title} className="size-full text-[18px]" />
+              )}
             </span>
             <div className="min-w-0 pt-2">
               <p className="flex items-center gap-1.5 text-[16px] font-semibold leading-5 text-[#0F1B3D]">
@@ -195,12 +209,25 @@ function ChannelProfile({ className }: { className?: string }) {
           </div>
           <div className="flex flex-wrap gap-1.5">
             {channel.id && <Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.channelOnYouTube(channel)} external>View on YouTube</Button>}
-            <Button size="sm" variant="secondary" icon={Info} onClick={() => setDetailsOpen(true)}>Channel details</Button>
+            <Button size="sm" variant="secondary" icon={Info} onClick={() => setDetailsOpen(true)}>Channel Details</Button>
             <Button size="sm" variant="secondary" icon={PlugZap} href={`${ytRoutes.settings}#connection`}>Manage connection</Button>
           </div>
         </div>
 
-        <p className="mt-3 line-clamp-2 max-w-[760px] text-[12.5px] leading-5 text-[#3C4A66]">{channel.description || "No channel description."}</p>
+        <div className="mt-3 max-w-[760px]">
+          <p className="line-clamp-6 whitespace-pre-line text-[12.5px] leading-5 text-[#3C4A66]">
+            {channel.description || "No channel description."}
+          </p>
+          {longDescription && (
+            <button
+              type="button"
+              onClick={() => setDescOpen(true)}
+              className={cn("mt-1 rounded text-[12px] font-semibold text-[#2563EB] hover:underline", yt.focus)}
+            >
+              Show more
+            </button>
+          )}
+        </div>
 
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
           <SyncStatus compact />
@@ -227,6 +254,26 @@ function ChannelProfile({ className }: { className?: string }) {
         </div>
       </div>
 
+      {/* Expanding in place made this card much taller than the column beside it, so the rest opens here. */}
+      <Dialog open={descOpen} onOpenChange={setDescOpen}>
+        <DialogContent className="w-[calc(100vw-24px)] max-w-[640px] gap-0 p-0">
+          <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
+            <DialogTitle className="text-[15px] text-[#0F1B3D]">About {channel.title}</DialogTitle>
+            <DialogDescription className="text-[12.5px] text-[#6B7890]">The channel description as it appears on YouTube.</DialogDescription>
+          </DialogHeader>
+          <div className="scrollbar-thin max-h-[60vh] overflow-y-auto px-5 py-4">
+            <p className="whitespace-pre-line text-[13px] leading-6 text-[#3C4A66]">{channel.description || "No channel description."}</p>
+          </div>
+          <div className="flex justify-end gap-2 border-t border-[#EEF1F5] px-5 py-3">
+            {channel.id && (
+              <Button variant="secondary" icon={ExternalLink} href={ytRoutes.channelOnYouTube(channel)} external>
+                View on YouTube
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => setDescOpen(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <ChannelDetailsSheet open={detailsOpen} onOpenChange={setDetailsOpen} />
       <CreatePlaylistDialog open={playlistOpen} onOpenChange={setPlaylistOpen} onCreated={(p) => router.push(ytRoutes.playlist(p.id))} />
       <VideoPickerDialog
@@ -249,22 +296,22 @@ function ChannelDetailsSheet({ open, onOpenChange }: { open: boolean; onOpenChan
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full max-w-[480px] sm:max-w-[480px]">
         <SheetHeader>
-          <SheetTitle className="text-[15px] text-[#0F1B3D]">Channel details</SheetTitle>
+          <SheetTitle className="text-[15px] text-[#0F1B3D]">Channel Details</SheetTitle>
           <SheetDescription className="text-[12.5px]">Synced from YouTube. Branding, handle and About links are edited in YouTube Studio.</SheetDescription>
         </SheetHeader>
         <SheetBody>
           <dl>
-            <DefinitionRow label="Channel name">{channel.title}</DefinitionRow>
+            <DefinitionRow label="Channel Name">{channel.title}</DefinitionRow>
             <DefinitionRow label="Handle">{channel.handle || "—"}</DefinitionRow>
             <DefinitionRow label="Channel ID" mono>{channel.id || "—"}</DefinitionRow>
             <DefinitionRow label="Custom URL">{channel.customUrl || "—"}</DefinitionRow>
             <DefinitionRow label="Subscribers">{channel.subscriberCount === null ? "Hidden by the owner" : channel.subscriberCount.toLocaleString("en-IN")}</DefinitionRow>
             <DefinitionRow label="Videos">{full(channel.videoCount)}</DefinitionRow>
-            <DefinitionRow label="Lifetime views">{full(channel.viewCount)}</DefinitionRow>
+            <DefinitionRow label="Lifetime Views">{full(channel.viewCount)}</DefinitionRow>
             <DefinitionRow label="Country">{channel.country ?? "—"}</DefinitionRow>
             <DefinitionRow label="Joined">{date(channel.createdAt)}</DefinitionRow>
-            <DefinitionRow label="Google account">{channel.googleAccount ?? "—"}</DefinitionRow>
-            <DefinitionRow label="Last synced">{relative(connection.lastSyncedAt)}</DefinitionRow>
+            <DefinitionRow label="Google Account">{channel.googleAccount ?? "—"}</DefinitionRow>
+            <DefinitionRow label="Last Synced">{relative(connection.lastSyncedAt)}</DefinitionRow>
           </dl>
           <p className="mt-4 text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Description</p>
           <p className="mt-1.5 whitespace-pre-line text-[12.5px] leading-5 text-[#3C4A66]">{channel.description || "No channel description."}</p>
@@ -284,7 +331,7 @@ function VideoPickerDialog({ open, onOpenChange, videos, onPick }: { open: boole
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-24px)] max-w-[520px] gap-0 p-0">
         <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
-          <DialogTitle className="text-[15px] text-[#0F1B3D]">Manage thumbnails</DialogTitle>
+          <DialogTitle className="text-[15px] text-[#0F1B3D]">Manage Thumbnails</DialogTitle>
           <DialogDescription className="text-[12.5px] text-[#6B7890]">Choose a video to update its thumbnail.</DialogDescription>
         </DialogHeader>
         <div className="px-5 pt-3"><SearchField value={q} onChange={setQ} placeholder="Search videos" autoFocus /></div>
@@ -319,17 +366,32 @@ function ChannelHealthCard({ className, analytics }: { className?: string; analy
     const d = analytics.data;
     if (!analytics.enabled || !d.hasData) return null;
     return {
-      current: { views: d.rawTotals.current.views, likes: d.likes.current, comments: d.comments.current, netSubscribers: d.rawTotals.current.subscribers },
-      previous: { views: d.rawTotals.previous.views, likes: d.likes.previous, comments: d.comments.previous, netSubscribers: d.rawTotals.previous.subscribers },
+      current: {
+        views: d.rawTotals.current.views,
+        likes: d.likes.current,
+        comments: d.comments.current,
+        netSubscribers: d.rawTotals.current.subscribers,
+        watchTime: d.rawTotals.current.watchTime,
+        avgViewDuration: d.rawTotals.current.avgViewDuration,
+      },
+      previous: {
+        views: d.rawTotals.previous.views,
+        likes: d.likes.previous,
+        comments: d.comments.previous,
+        netSubscribers: d.rawTotals.previous.subscribers,
+        watchTime: d.rawTotals.previous.watchTime,
+        avgViewDuration: d.rawTotals.previous.avgViewDuration,
+      },
     };
   }, [analytics.data, analytics.enabled]);
-  const { score, factors } = useMemo(() => channelHealth(channel, videos, comparison), [channel, videos, comparison]);
+  const { score, factors, stats } = useMemo(() => channelHealth(channel, videos, comparison), [channel, videos, comparison]);
   const weakest = [...factors].sort((a, b) => a.score - b.score);
+  const worst = weakest[0];
 
   return (
     <Card className={cn("flex flex-col", className)}>
       <CardHeader
-        title="Channel health"
+        title="Channel Health"
         badge={<InternalBadge hint="Calculated by OmniPlatform from synced data. Not an official YouTube score." />}
         actions={<Button size="xs" variant="link" onClick={() => setOpen(true)}>View details</Button>}
       />
@@ -350,15 +412,40 @@ function ChannelHealthCard({ className, analytics }: { className?: string; analy
                 </p>
               </div>
             </div>
-            <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-              {factors.slice(0, 7).map((f) => (
-                <li key={f.key} className="grid grid-cols-[1fr_72px_28px] items-center gap-2 text-[12px]">
-                  <span className="truncate text-[#3C4A66]">{f.label}</span>
-                  <Meter value={f.score} tone={scoreTone(f.score)} />
-                  <b className="text-right font-semibold tabular-nums text-[#0F1B3D]">{f.score}</b>
-                </li>
+            <dl className="grid grid-cols-2 gap-1 xl:grid-cols-4">
+              {stats.map((stat) => (
+                <div key={stat.label} className="rounded-sm bg-[#F8FAFC] px-2.5 py-2" title={stat.hint}>
+                  <dt className="truncate text-[11px] text-[#6B7890]">{stat.label}</dt>
+                  <dd className="mt-0.5 text-[15px] font-semibold tabular-nums text-[#0F1B3D]">{stat.value}</dd>
+                </div>
               ))}
-            </ul>
+            </dl>
+            {/* Side by side with the channel profile this list would run far past it, so it scrolls in place. */}
+            <div className="scrollbar-thin -mr-1.5 min-h-0 pr-1.5 xl:max-h-[184px] xl:overflow-y-auto">
+              <ul className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-1">
+                {factors.map((f) => (
+                  <li key={f.key} className="min-w-0">
+                    <div className="grid grid-cols-[1fr_72px_28px] items-center gap-2 text-[12px]">
+                      <span className="truncate font-medium text-[#3C4A66]">{f.label}</span>
+                      <Meter value={f.score} tone={scoreTone(f.score)} />
+                      <b className="text-right font-semibold tabular-nums text-[#0F1B3D]">{f.score}</b>
+                    </div>
+                    <p className="mt-0.5 line-clamp-2 text-[11.5px] leading-4 text-[#6B7890]">{f.explanation}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {worst && (
+              <div className="mt-auto rounded-sm border border-[#FBE3B6] bg-[#FFFAF0] px-3 py-2.5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#B54708]">Do this next</p>
+                <p className="mt-1 text-[12px] leading-4 text-[#24324F]">{worst.recommendation}</p>
+                {worst.action && (
+                  <Button size="xs" variant="secondary" className="mt-2" href={worst.action.href}>
+                    {worst.action.label}
+                  </Button>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -388,12 +475,12 @@ function PerformanceCard({
   const [granularity, setGranularity] = useState<Granularity>(days > 90 ? "weekly" : "daily");
   const [compare, setCompare] = useState(true);
   const effective: Granularity = granularity === "monthly" && days < 90 ? "weekly" : granularity;
-  const chartMetric: MetricKey = metric === "avgViewDuration" || metric === "impressions" || metric === "ctr" ? "views" : metric;
+  const chartMetric: MetricKey = metric === "avgViewDuration" ? "views" : metric;
 
   return (
     <Card className={className}>
       <CardHeader
-        title="Performance overview"
+        title="Performance Overview"
         description={`${periodLabel} compared with the previous ${days} days`}
         actions={
           <>
@@ -446,7 +533,7 @@ function TrafficCard({ className, total }: { className?: string; total: number |
   const top = traffic.data.rows.slice(0, 6);
   return (
     <Card className={cn("flex flex-col", className)}>
-      <CardHeader title="Traffic sources" description="Where views came from" actions={<ViewLink href={withPeriod(`${ytRoutes.analytics}?tab=reach`)}>View details</ViewLink>} />
+      <CardHeader title="Traffic Sources" description="Where views came from" actions={<ViewLink href={withPeriod(`${ytRoutes.analytics}?tab=reach`)}>View details</ViewLink>} />
       {traffic.isLoading ? (
         <div className="px-4 pb-4"><Skeleton className="mx-auto size-[150px]" /></div>
       ) : traffic.error ? (
@@ -478,7 +565,7 @@ function TopContentCard({ className }: { className?: string }) {
 
   return (
     <Card className={className}>
-      <CardHeader title="Top performing content" description="By views in the selected period" actions={<ViewLink href={`${ytRoutes.content}?status=published&sort=views`}>View all</ViewLink>} />
+      <CardHeader title="Top Performing Content" description="By views in the selected period" actions={<ViewLink href={`${ytRoutes.content}?status=published&sort=views`}>View all</ViewLink>} />
       {!enabled ? (
         <CapabilityState compact capability={can.canViewAnalytics} />
       ) : q.isPending ? (
@@ -552,7 +639,7 @@ function AudienceSnapshot({ className }: { className?: string }) {
 
   return (
     <Card className={cn("flex flex-col", className)}>
-      <CardHeader title="Audience snapshot" actions={<ViewLink href={withPeriod(`${ytRoutes.audience}?tab=${detailTab}`)}>View details</ViewLink>} />
+      <CardHeader title="Audience Snapshot" actions={<ViewLink href={withPeriod(`${ytRoutes.audience}?tab=${detailTab}`)}>View details</ViewLink>} />
       {!can.canViewAnalytics.allowed ? (
         <CapabilityState compact capability={can.canViewAnalytics} />
       ) : audience.error ? (
@@ -648,7 +735,7 @@ function RecentComments() {
 
   return (
     <Card className="flex flex-col h-[380px]">
-      <CardHeader title="Recent comments" description={latest ? `On your latest video: ${latest.title}` : undefined} actions={latest ? <ViewLink href={href}>View all</ViewLink> : undefined} />
+      <CardHeader title="Recent Comments" description={latest ? `On your latest video: ${latest.title}` : undefined} actions={latest ? <ViewLink href={href}>View all</ViewLink> : undefined} />
       <div className="border-b border-[#EEF1F5] px-4 shrink-0">
         <UnderlineTabs<CommentTab>
           label="Comment filter"
@@ -736,7 +823,7 @@ function UpcomingContent() {
   return (
     <Card className="flex flex-col h-[380px]">
       <CardHeader
-        title="Upcoming YouTube content"
+        title="Upcoming YouTube Content"
         actions={
           <>
             <Button size="xs" variant="ghost" icon={CalendarDays} href={ytRoutes.calendar}>View calendar</Button>

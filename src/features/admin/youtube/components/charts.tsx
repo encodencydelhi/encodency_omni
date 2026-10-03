@@ -55,15 +55,12 @@ export function aggregate(series: SeriesPoint[], granularity: Granularity): Seri
       return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
     };
     const avgDur = mean("avgViewDuration");
-    const ctr = mean("ctr");
     return {
       date,
       views: sum("views"),
       watchTime: sum("watchTime"),
       subscribers: sum("subscribers"),
-      impressions: sum("impressions"),
       avgViewDuration: avgDur === null ? null : Math.round(avgDur),
-      ctr: ctr === null ? null : Number(ctr.toFixed(2)),
     };
   });
 }
@@ -73,7 +70,7 @@ export function summarize(series: SeriesPoint[], key: MetricKey): number | null 
   const values = series.map((p) => p[key]).filter((v): v is number => v !== null);
   if (!values.length) return null;
   const total = values.reduce((s, v) => s + v, 0);
-  return key === "ctr" || key === "avgViewDuration" ? total / values.length : total;
+  return key === "avgViewDuration" ? total / values.length : total;
 }
 
 /* ------------------------------------------------------------------ */
@@ -217,7 +214,7 @@ export function TrendChart({
           </defs>
           <CartesianGrid stroke="#EEF1F5" vertical={false} />
           <XAxis dataKey="date" tickFormatter={(d: string) => format(parseISO(d), pattern)} tick={axisTick} axisLine={false} tickLine={false} minTickGap={28} />
-          <YAxis tick={axisTick} axisLine={false} tickLine={false} width={48} tickFormatter={(v: number) => (metric === "ctr" ? `${v}%` : metric === "avgViewDuration" ? formatMetric(metric, v) : compact(v))} />
+          <YAxis tick={axisTick} axisLine={false} tickLine={false} width={48} tickFormatter={(v: number) => (metric === "avgViewDuration" ? formatMetric(metric, v) : compact(v))} />
           <Tooltip
             cursor={{ stroke: "#C9D1DC", strokeDasharray: "3 3" }}
             content={({ active, payload }) => {

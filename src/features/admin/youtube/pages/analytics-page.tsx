@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
-import { ArrowRight, BarChart3, Clock, Download, Eye, FileText, MousePointerClick, Printer, Radio, Timer, UsersRound, X } from "lucide-react";
+import { ArrowRight, BarChart3, Clock, Download, Eye, FileText, Printer, Radio, Timer, UsersRound, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Switch } from "@/components/ui/switch";
 import { BarList, ChartLegend, Donut, KpiCard, KpiSkeleton, LegendList, TrendChart, aggregate, type Granularity } from "../components/charts";
 import { downloadCsv } from "../components/dialogs";
 import { RevenueSection } from "./monetization-page";
-import { CapabilityState, ErrorState, PageSkeleton, UnavailableState } from "../components/states";
+import { CapabilityState, ErrorState, PageSkeleton } from "../components/states";
 import {
   ActionMenu,
   Button,
@@ -43,11 +43,10 @@ import type { ContentType, MetricKey, SeriesPoint, Video } from "../types";
 
 type AnalyticsTab = "overview" | "content" | "reach" | "engagement" | "audience" | "revenue";
 
-const DEFAULTS = { tab: "overview", metric: "views", compare: "1", type: "all", video: "all", country: "all", device: "all", granularity: "daily" };
+const DEFAULTS = { tab: "overview", metric: "views", compare: "1", video: "all", granularity: "daily" };
 
-const KPI_ICONS: Record<MetricKey, typeof Eye> = { views: Eye, watchTime: Clock, subscribers: UsersRound, avgViewDuration: Timer, impressions: BarChart3, ctr: MousePointerClick };
-const NO_IMPRESSIONS = "YouTube's API doesn't report impressions or click-through rate.";
-/** KPI cards that can drive the chart (the API has no impressions/CTR series). */
+const KPI_ICONS: Record<MetricKey, typeof Eye> = { views: Eye, watchTime: Clock, subscribers: UsersRound, avgViewDuration: Timer };
+/** Every KPI card can drive the trend chart. */
 const CHARTABLE: MetricKey[] = ["views", "watchTime", "subscribers", "avgViewDuration"];
 
 export function AnalyticsPage() {
@@ -128,13 +127,9 @@ function Analytics() {
             <Switch checked={compare} onCheckedChange={(c) => set({ compare: c ? "1" : "0" })} className="scale-90" aria-label="Compare with previous period" />
             Compare to previous
           </label>
-          <SelectMenu label="Content type" prefix="Type:" disabled value="all" onChange={() => undefined} options={[{ value: "all", label: "All" }]} />
           <SelectMenu label="Video" prefix="Video:" className="max-w-[240px]" value={values.video} onChange={(v) => set({ video: v })} options={[{ value: "all", label: "All content" }, ...published.map((v) => ({ value: v.id, label: v.title }))]} />
-          <SelectMenu label="Country" prefix="Country:" disabled value="all" onChange={() => undefined} options={[{ value: "all", label: "All" }]} />
-          <SelectMenu label="Device" prefix="Device:" disabled value="all" onChange={() => undefined} options={[{ value: "all", label: "All" }]} />
           {activeFilters > 0 && <Button size="sm" variant="ghost" icon={X} onClick={() => reset(["tab", "period", "metric", "compare", "granularity"])}>Clear video filter</Button>}
           {selectedVideo && <ViewLink href={ytRoutes.video(selectedVideo.id)}>Open video</ViewLink>}
-          <span className="text-[11.5px] text-[#98A2B3]">Type, country and device filters aren&apos;t available through YouTube&apos;s API.</span>
         </div>
       </Card>
 
@@ -143,11 +138,11 @@ function Analytics() {
       ) : (
         <>
           {(tab === "overview" || tab === "engagement" || tab === "reach") && (
-            <div className="grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-1 md:grid-cols-4">
               {view.isLoading ? (
                 <KpiSkeleton />
               ) : (
-                (tab === "reach" ? (["impressions", "ctr", "views", "subscribers", "watchTime", "avgViewDuration"] as MetricKey[]) : METRIC_ORDER).map((key) => (
+                METRIC_ORDER.map((key) => (
                   <KpiCard
                     key={key}
                     metric={key}
@@ -155,7 +150,7 @@ function Analytics() {
                     value={totals[key].value}
                     previous={compare ? totals[key].previous : null}
                     spark={spark[key]}
-                    unavailable={key === "impressions" || key === "ctr" ? NO_IMPRESSIONS : !view.data.hasData ? "No data for this period" : undefined}
+                    unavailable={!view.data.hasData ? "No data for this period" : undefined}
                     active={metric === key}
                     onClick={CHARTABLE.includes(key) ? () => set({ metric: key }) : undefined}
                   />
@@ -166,13 +161,7 @@ function Analytics() {
 
           {tab === "overview" && (
             <>
-              <div className="grid gap-1 xl:grid-cols-12">
-                <TrendCard className="xl:col-span-8" current={current} previous={previous} metric={metric} compare={compare} granularity={granularity} days={days} loading={view.isLoading} hasData={view.data.hasData} onMetric={(m) => set({ metric: m })} onGranularity={(g) => set({ granularity: g })} />
-                <Card className="xl:col-span-4">
-                  <CardHeader title="Real-time" description="Last 48 hours" />
-                  <UnavailableState title="Not available through the API" description="YouTube's Analytics API doesn't provide real-time views to OmniPlatform. Open YouTube Studio for live numbers." />
-                </Card>
-              </div>
+              <TrendCard current={current} previous={previous} metric={metric} compare={compare} granularity={granularity} days={days} loading={view.isLoading} hasData={view.data.hasData} onMetric={(m) => set({ metric: m })} onGranularity={(g) => set({ granularity: g })} />
               <div className="grid gap-1 xl:grid-cols-12">
                 <TopContentCard className="xl:col-span-7" videos={videos} days={days} />
                 <TrafficTable className="xl:col-span-5" compact days={days} />
@@ -182,12 +171,8 @@ function Analytics() {
 
           {tab === "content" && (
             <>
-              <TopContentCard videos={videos} days={days} full />
               <div className="grid gap-1 xl:grid-cols-12">
-                <Card className="xl:col-span-8">
-                  <CardHeader title="Audience retention" description="Average across long-form videos" />
-                  <UnavailableState title="Not available through the API" description="YouTube's Analytics API doesn't report retention curves to OmniPlatform. Open the video in YouTube Studio to see it." />
-                </Card>
+                <TopContentCard className="xl:col-span-8" videos={videos} days={days} full />
                 <ContentTypeCard className="xl:col-span-4" videos={videos} days={days} />
               </div>
             </>
@@ -200,49 +185,32 @@ function Analytics() {
                 <TrendCard className="xl:col-span-7" current={current} previous={previous} metric={metric === "views" ? "views" : "views"} compare={compare} granularity={granularity} days={days} loading={view.isLoading} hasData={view.data.hasData} onMetric={(m) => set({ metric: m })} onGranularity={(g) => set({ granularity: g })} metrics={["views"]} />
               </div>
               <TrafficTable days={days} />
-              <div className="grid gap-1 md:grid-cols-2">
-                <Card>
-                  <CardHeader title="External sources" description="Websites and apps that link to your videos" />
-                  <UnavailableState compact title="Not available through the API" description="Per-site referral detail isn't reported to OmniPlatform." />
-                </Card>
-                <Card>
-                  <CardHeader title="YouTube search terms" description="Top searches that led to your content" />
-                  <UnavailableState compact title="Not available through the API" description="Search terms aren't reported to OmniPlatform." />
-                </Card>
-              </div>
             </>
           )}
 
           {tab === "engagement" && (
             <>
-              <div className="grid gap-1 xl:grid-cols-12">
-                <TrendCard className="xl:col-span-7" current={current} previous={previous} metric={metric === "watchTime" || metric === "avgViewDuration" || metric === "subscribers" ? metric : "watchTime"} compare={compare} granularity={granularity} days={days} loading={view.isLoading} hasData={view.data.hasData} onMetric={(m) => set({ metric: m })} onGranularity={(g) => set({ granularity: g })} metrics={["watchTime", "avgViewDuration", "subscribers"]} />
-                <Card className="xl:col-span-5">
-                  <CardHeader title="Audience retention" description="Average across long-form videos" />
-                  <UnavailableState title="Not available through the API" description="YouTube's Analytics API doesn't report retention curves to OmniPlatform." />
-                </Card>
-              </div>
+              <TrendCard current={current} previous={previous} metric={metric === "watchTime" || metric === "avgViewDuration" || metric === "subscribers" ? metric : "watchTime"} compare={compare} granularity={granularity} days={days} loading={view.isLoading} hasData={view.data.hasData} onMetric={(m) => set({ metric: m })} onGranularity={(g) => set({ granularity: g })} metrics={["watchTime", "avgViewDuration", "subscribers"]} />
               <EngagementTable videos={published} />
             </>
           )}
 
           {tab === "audience" && (
-            <div className="grid gap-1 xl:grid-cols-12">
-              <Card className="xl:col-span-8">
-                <CardHeader title="Subscribers" description="Net subscribers over time" actions={<ViewLink href={`${ytRoutes.audience}?tab=subscribers&period=${period}`}>Subscriber details</ViewLink>} />
-                <div className="px-4 pb-4">
-                  {view.isLoading ? <Skeleton className="h-[240px] w-full" /> : <TrendChart current={current} previous={previous} metric="subscribers" granularity={granularity} compare={compare} height={240} />}
-                </div>
-              </Card>
-              <Card className="xl:col-span-4">
-                <CardHeader title="Returning vs new viewers" />
-                <div className="space-y-3 px-4 pb-4">
-                  <UnavailableState compact title="Not available through the API" description="YouTube doesn't report new vs returning viewers to OmniPlatform." />
-                  <p className="text-[12.5px] leading-5 text-[#6B7890]">Demographics, geography and devices live in the Audience tab.</p>
-                  <Button size="sm" variant="secondary" iconRight={ArrowRight} href={`${ytRoutes.audience}?period=${period}`}>Open Audience</Button>
-                </div>
-              </Card>
-            </div>
+            <Card>
+              <CardHeader
+                title="Subscribers"
+                description="Net subscribers over time"
+                actions={
+                  <>
+                    <ViewLink href={`${ytRoutes.audience}?tab=subscribers&period=${period}`}>Subscriber details</ViewLink>
+                    <Button size="sm" variant="secondary" iconRight={ArrowRight} href={`${ytRoutes.audience}?period=${period}`}>Open Audience</Button>
+                  </>
+                }
+              />
+              <div className="px-4 pb-4">
+                {view.isLoading ? <Skeleton className="h-[240px] w-full" /> : <TrendChart current={current} previous={previous} metric="subscribers" granularity={granularity} compare={compare} height={240} />}
+              </div>
+            </Card>
           )}
 
           {tab === "revenue" && can.canViewRevenue.allowed && <RevenueSection />}
@@ -283,7 +251,7 @@ function TrendCard({
   return (
     <Card className={className}>
       <CardHeader
-        title="Performance trend"
+        title="Performance Trend"
         actions={
           <SelectMenu<Granularity>
             label="Granularity"
@@ -354,7 +322,7 @@ function TopContentCard({ className, videos, days, full: isFull }: { className?:
   return (
     <Card className={className}>
       <CardHeader
-        title="Top content"
+        title="Top Content"
         actions={<Segmented<ContentType> label="Content type" value={type} onChange={setType} items={[{ value: "video", label: "Videos" }, { value: "short", label: "Shorts" }, { value: "live", label: "Live" }]} />}
       />
       {q.isPending ? (
@@ -418,7 +386,7 @@ function ContentTypeCard({ className, videos, days }: { className?: string; vide
   const colors = ["#E5202E", "#7C3AED", "#0891B2"];
   return (
     <Card className={className}>
-      <CardHeader title="Views by content type" description="Among your top 50 videos" />
+      <CardHeader title="Views by Content Type" description="Among your top 50 videos" />
       {q.isPending ? (
         <div className="px-4 pb-4"><Skeleton className="mx-auto size-[132px]" /></div>
       ) : data.length === 0 ? (
@@ -441,7 +409,7 @@ function TrafficTable({ className, compact: isCompact, days }: { className?: str
   const rows = traffic.data.rows;
   return (
     <Card className={className}>
-      <CardHeader title="Traffic sources" description="How viewers find your content" actions={isCompact ? <ViewLink href={withPeriod(`${ytRoutes.analytics}?tab=reach`)}>Details</ViewLink> : undefined} />
+      <CardHeader title="Traffic Sources" description="How viewers find your content" actions={isCompact ? <ViewLink href={withPeriod(`${ytRoutes.analytics}?tab=reach`)}>Details</ViewLink> : undefined} />
       {traffic.isLoading ? (
         <div className="space-y-2 px-4 pb-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-6 w-full" />)}</div>
       ) : traffic.error ? (
@@ -489,7 +457,7 @@ function PlaybackCard({ className, days }: { className?: string; days: number })
   const q = usePlaybackLocations(days);
   return (
     <Card className={className}>
-      <CardHeader title="Where views happen" description="Playback locations, share of views" />
+      <CardHeader title="Where Views Happen" description="Playback locations, share of views" />
       <div className="px-4 pb-4">
         {q.isLoading ? <Skeleton className="h-32 w-full" /> : q.error ? <ErrorState compact error={q.error} onRetry={q.refetch} /> : q.data.rows.length === 0 ? (
           <EmptyState compact icon={BarChart3} title="No data" description="YouTube hasn't reported playback locations for this range." />
@@ -510,7 +478,7 @@ function EngagementTable({ videos }: { videos: Video[] }) {
     .slice(0, 8);
   return (
     <Card>
-      <CardHeader title="Most engaging content" description="Likes and comments per view (lifetime)" />
+      <CardHeader title="Most Engaging Content" description="Likes and comments per view (lifetime)" />
       {rows.length === 0 ? (
         <EmptyState compact icon={BarChart3} title="Nothing to rank yet" description="Engagement appears once videos have views, visible likes and comments." />
       ) : (

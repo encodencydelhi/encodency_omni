@@ -50,11 +50,9 @@ export const METRICS: Record<MetricKey, { label: string; short: string; color: s
   watchTime: { label: "Watch Time", short: "Watch time", color: "#7C3AED", help: "Total hours viewers spent watching." },
   subscribers: { label: "Subscribers", short: "Subscribers", color: "#E5202E", help: "Net subscribers gained (gained − lost)." },
   avgViewDuration: { label: "Avg. View Duration", short: "Avg. duration", color: "#0E9F6E", help: "Average length of a view." },
-  impressions: { label: "Impressions", short: "Impressions", color: "#0891B2", help: "Times thumbnails were shown on YouTube." },
-  ctr: { label: "Impressions CTR", short: "CTR", color: "#D97706", help: "How often impressions turned into views." },
 };
 
-export const METRIC_ORDER: MetricKey[] = ["views", "watchTime", "subscribers", "avgViewDuration", "impressions", "ctr"];
+export const METRIC_ORDER: MetricKey[] = ["views", "watchTime", "subscribers", "avgViewDuration"];
 
 export const TYPE_LABEL: Record<ContentType, string> = { video: "Video", short: "Short", live: "Live" };
 

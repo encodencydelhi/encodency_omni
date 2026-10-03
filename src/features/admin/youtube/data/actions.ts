@@ -70,6 +70,8 @@ export type ConsentTarget = YouTubeConsentCapability | undefined;
 export interface YouTubeActions {
   /** Starts Google sign-in (initial connect / reconnect) or the incremental consent for ONE named capability. */
   startConsent: (capability?: ConsentTarget) => Promise<boolean>;
+  /** Maps one Company-connection channel to this Client. Needs `integrations:write`. */
+  linkChannel: (integrationId: string, channelId: string) => Promise<boolean>;
   syncNow: () => Promise<boolean>;
   disconnect: () => Promise<boolean>;
 
@@ -162,6 +164,14 @@ export function useYouTubeActions(args: { scope: YouTubeScope | null; mutations:
       return true;
     },
     [attempt, connection?.integrationId],
+  );
+
+  const linkChannel = useCallback(
+    async (integrationId: string, channelId: string) => {
+      const r = await attempt(`link:${channelId}`, () => mr.current.linkChannel.mutateAsync({ integrationId, channelId }), { success: "Channel linked to this client" });
+      return r !== null;
+    },
+    [attempt],
   );
 
   const syncNow = useCallback(async () => {
@@ -516,7 +526,7 @@ export function useYouTubeActions(args: { scope: YouTubeScope | null; mutations:
 
   return useMemo(
     () => ({
-      startConsent, syncNow, disconnect,
+      startConsent, linkChannel, syncNow, disconnect,
       updateVideo, setVisibility, deleteVideos, changeThumbnail, publishNow, scheduleVideo, cancelSchedule,
       uploadMedia, startUpload, finishUpload,
       createPlaylist, updatePlaylist, deletePlaylist, addToPlaylists, removePlaylistItem, movePlaylistItem,
@@ -524,7 +534,7 @@ export function useYouTubeActions(args: { scope: YouTubeScope | null; mutations:
       createLiveEvent, updateLiveEvent, attachStream, startLiveEvent, endLiveEvent, sendLiveChat, revealStreamCredentials,
     }),
     [
-      startConsent, syncNow, disconnect,
+      startConsent, linkChannel, syncNow, disconnect,
       updateVideo, setVisibility, deleteVideos, changeThumbnail, publishNow, scheduleVideo, cancelSchedule,
       uploadMedia, startUpload, finishUpload,
       createPlaylist, updatePlaylist, deletePlaylist, addToPlaylists, removePlaylistItem, movePlaylistItem,

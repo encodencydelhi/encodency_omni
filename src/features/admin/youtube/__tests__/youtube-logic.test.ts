@@ -195,7 +195,7 @@ describe("insights use only real data", () => {
   });
 
   it("adds engagement and growth only with a real comparison", () => {
-    const period = (views: number, likes: number, comments: number, net: number) => ({ views, likes, comments, netSubscribers: net });
+    const period = (views: number, likes: number, comments: number, net: number) => ({ views, likes, comments, netSubscribers: net, watchTime: null, avgViewDuration: null });
     const { factors } = channelHealth(channel, [], { current: period(1000, 80, 20, 12), previous: period(1000, 50, 10, 6) });
     assert.ok(factors.some((f) => f.key === "engagement") && factors.some((f) => f.key === "growth"));
   });
