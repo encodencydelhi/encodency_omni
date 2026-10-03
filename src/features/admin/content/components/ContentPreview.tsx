@@ -73,9 +73,6 @@ export function ContentPreviewPanel({
           {resolvedImage ? (
             <>
               <img src={resolvedImage} alt="" className="aspect-[4/3.4] w-full object-cover" />
-              <div className="absolute inset-x-3 bottom-3">
-                <p className="max-w-[160px] text-[16px] font-black leading-[1.02] text-white drop-shadow-lg">CLEAN RIVERS<br />BRIGHTER TOMORROW</p>
-              </div>
             </>
           ) : (
             <div className="grid aspect-[4/3.4] w-full place-items-center border-b border-[#EDF1F5] bg-[#F8FAFD] text-center">

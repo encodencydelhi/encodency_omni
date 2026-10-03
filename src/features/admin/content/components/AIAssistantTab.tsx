@@ -20,6 +20,12 @@ import { generateAiVisual, fetchDynamicAiVisual, type AiGeneratedVisual } from "
 /** Mirrors `AiContextDto.topic` @MaxLength(1000) — anything longer is a 400 from the API. */
 const TOPIC_MAX_CHARS = 1000;
 
+const PROVIDER_LABEL: Record<AiProvider, string> = {
+  GEMINI: "Gemini",
+  OPENAI: "OpenAI",
+  LOCAL: "Encodency AI",
+};
+
 const AI_TYPES = [
   { id: "Social Post", desc: "Engaging posts with images", icon: <Sparkles className="size-4" /> },
   { id: "Carousel", desc: "Multi-slide content", icon: <Grid2X2 className="size-4" /> },
@@ -144,18 +150,6 @@ export function AIAssistantTab({
   useEffect(() => {
     refreshUsage();
   }, [refreshUsage]);
-
-  // Auto-sync visual when topic prompt changes (debounced by 600ms)
-  useEffect(() => {
-    if (imagePrompt.trim() || customImage || imageRemoved || !prompt.trim()) return;
-    const timer = setTimeout(() => {
-      const style = PRESET_STYLE_LABELS[imageStyleIdx] || "Realistic";
-      void fetchDynamicAiVisual(prompt, style, visualVariation).then((visual) => {
-        setAiVisual(visual);
-      });
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [prompt, imagePrompt, customImage, imageRemoved, imageStyleIdx, visualVariation]);
 
   // A generation that is still in flight when the tab unmounts must not setState.
   useEffect(
@@ -339,8 +333,9 @@ export function AIAssistantTab({
       setProvider(response.provider ?? null);
       setResultView("edit");
 
+      const label = response.provider ? PROVIDER_LABEL[response.provider] : "AI";
       toast.success("AI content generated successfully!", {
-        description: `${response.tokensConsumed} tokens consumed` + (response.usage.remainingAiTokens !== null ? ` • ${response.usage.remainingAiTokens.toLocaleString()} tokens left` : ""),
+        description: `${response.tokensConsumed} tokens consumed with ${label}` + (response.usage.remainingAiTokens !== null ? ` • ${response.usage.remainingAiTokens.toLocaleString()} tokens left` : ""),
       });
     } catch (err: unknown) {
       if (ApiError.isApiError(err) && err.status === 402) {
@@ -706,7 +701,7 @@ export function AIAssistantTab({
         >
           {isGenerating ? (
             <>
-              <Loader2 className="size-4 animate-spin" /> Generating content…
+              <Loader2 className="size-4 animate-spin" /> Generating{provider ? ` with ${PROVIDER_LABEL[provider]}` : ""}…
             </>
           ) : (
             <>
@@ -745,17 +740,16 @@ export function AIAssistantTab({
                     <span> of {quotaLimit.toLocaleString()}</span>
                   </>
                 )}
+                <span> • </span>
                 {tokensUsed !== null ? (
                   <>
-                    <span> • </span>
                     <span className="font-semibold text-[#7C3AED]">{tokensUsed.toLocaleString()} tokens consumed</span>
+                    <span> this run • </span>
                   </>
-                ) : usedTokens > 0 ? (
-                  <>
-                    <span> • </span>
-                    <span>{usedTokens.toLocaleString()} used this cycle</span>
-                  </>
+                ) : usedTokens !== null ? (
+                  <span>{usedTokens.toLocaleString()} used this cycle • </span>
                 ) : null}
+                <span>{provider ? `${PROVIDER_LABEL[provider]} AI` : "AI generated"}</span>
               </>
             ) : (
               "Review, edit and approve every field"
@@ -828,211 +822,211 @@ export function AIAssistantTab({
               </p>
             </div>
           ) : (
-          <div className="space-y-2.5">
-            {/* Editable Headline */}
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <label className="text-[11px] font-semibold text-[#33445F]">Headline / Title</label>
-                <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-[#7C3AED]">
-                  {selected}
-                </span>
-              </div>
-              <input
-                type="text"
-                value={result.headline || ""}
-                onChange={(e) => setResult({ ...result, headline: e.target.value })}
-                placeholder="Title or hook"
-                className="w-full rounded-sm border border-[#D9E1EC] px-2.5 py-1.5 text-[12.5px] font-semibold text-[#1E293B] outline-none focus:border-[#7C3AED]"
-              />
-            </div>
-
-            {/* Editable Content Body / Slides / Script */}
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <label className="text-[11px] font-semibold text-[#33445F]">
-                  {selected === "Carousel"
-                    ? "Carousel Slides (editable)"
-                    : selected === "Reel Script"
-                    ? "Reel Script & Audio Cues (editable)"
-                    : selected === "Blog"
-                    ? "Blog Article Copy (editable)"
-                    : selected === "Variations"
-                    ? "Content Variations A/B/C (editable)"
-                    : "Main Content / Caption (editable)"}
-                </label>
-                <span className="text-[10px] text-slate-400">✏️ Editable</span>
-              </div>
-              <textarea
-                value={result.caption}
-                onChange={(e) => setResult({ ...result, caption: e.target.value })}
-                rows={selected === "Carousel" || selected === "Reel Script" || selected === "Blog" || selected === "Variations" ? 11 : 6}
-                spellCheck
-                className={cn(
-                  "w-full resize-y rounded-sm border p-2.5 text-[12px] leading-relaxed text-[#33445F] outline-none focus:border-[#7C3AED]",
-                  captionOverLimit ? "border-red-300 bg-red-50/40" : "border-[#D9E1EC]",
-                )}
-              />
-              <div className="mt-1 flex items-center justify-between text-[10px]">
-                <span className="text-slate-400">
-                  {captionLimit !== null ? `Platform limit for ${previewPlatform}: ${captionLimit.toLocaleString()} characters` : `No character limit for ${previewPlatform}`}
-                </span>
-                <span className={cn("tabular-nums", captionOverLimit ? "font-semibold text-red-500" : captionNearLimit ? "text-amber-500" : "text-slate-400")}>
-                  {captionLength.toLocaleString()}
-                  {captionLimit !== null ? ` / ${captionLimit.toLocaleString()}` : ""}
-                </span>
-              </div>
-            </div>
-
-            {/* Editable Call To Action */}
-            <div>
-              <label className="mb-1 block text-[11px] font-semibold text-[#33445F]">Call To Action (CTA)</label>
-              <input
-                type="text"
-                value={result.callToAction || ""}
-                onChange={(e) => setResult({ ...result, callToAction: e.target.value })}
-                placeholder="e.g. Save this post, Comment START, Link in bio"
-                className="w-full rounded-sm border border-[#D9E1EC] px-2.5 py-1.5 text-[11.5px] text-[#33445F] outline-none focus:border-[#7C3AED]"
-              />
-            </div>
-
-            {/* Editable Hashtags */}
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <label className="text-[11px] font-semibold text-[#33445F]">Hashtags (space separated)</label>
-                <span className={cn("text-[10px] tabular-nums", hashtagsOverLimit ? "font-semibold text-red-500" : "text-slate-400")}>
-                  {hashtagCount} used{hashtagLimit !== null ? ` / ${hashtagLimit} allowed` : ""}
-                </span>
-              </div>
-              <input
-                type="text"
-                value={result.hashtags.join(" ")}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  const tags = raw.split(/\s+/).filter(Boolean).map((t) => (t.startsWith("#") ? t : `#${t}`));
-                  setResult({ ...result, hashtags: tags });
-                }}
-                placeholder="#tag1 #tag2 #tag3"
-                className={cn(
-                  "w-full rounded-sm border px-2.5 py-1.5 text-[11.5px] font-semibold text-[#1769DF] outline-none focus:border-[#7C3AED]",
-                  hashtagsOverLimit ? "border-red-300 bg-red-50/40" : "border-[#D9E1EC]",
-                )}
-              />
-              {hashtagsOverLimit && (
-                <p className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-red-500">
-                  <AlertTriangle className="size-3" /> {previewPlatform} allows at most {hashtagLimit} hashtags.
-                </p>
-              )}
-            </div>
-
-            {/* Image — fully removable & replaceable */}
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <label className="text-[11px] font-semibold text-[#33445F]">Image</label>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploadingImage}
-                    className="rounded-sm border border-[#D7E0EB] px-2 py-0.5 text-[10.5px] font-semibold text-[#33445F] transition hover:bg-[#F8FAFD] disabled:opacity-50"
-                  >
-                    {isUploadingImage ? "Uploading…" : selectedImage ? "Replace" : "Add image"}
-                  </button>
-                  {selectedImage && (
-                    <button
-                      onClick={handleRemoveImage}
-                      className="rounded-sm border border-[#D7E0EB] px-2 py-0.5 text-[10.5px] font-semibold text-red-500 transition hover:bg-red-50"
-                    >
-                      Remove
-                    </button>
-                  )}
+            <div className="space-y-2.5">
+              {/* Editable Headline */}
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-[#33445F]">Headline / Title</label>
+                  <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-[#7C3AED]">
+                    {selected}
+                  </span>
                 </div>
-              </div>
-              {selectedImage ? (
-                <div className="relative aspect-video w-full overflow-hidden rounded-sm bg-slate-100 group">
-                  <img src={selectedImage} alt="" className="h-full w-full object-cover" />
-                  {aiVisual && !customImage && !imageRemoved && (
-                    <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded bg-black/65 px-2 py-0.5 text-[9.5px] font-semibold text-white backdrop-blur-sm shadow-sm">
-                      <Sparkles className="size-2.5 text-purple-300" /> AI Visual ({aiVisual.style})
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => handleGenerateAiImage()}
-                    disabled={isGeneratingImage}
-                    title="Regenerate with a different AI visual"
-                    className="absolute top-2 right-2 flex items-center gap-1 rounded bg-black/65 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm hover:bg-black/85 transition shadow-sm"
-                  >
-                    <RefreshCw className={cn("size-2.5", isGeneratingImage && "animate-spin")} />
-                    Regenerate Visual
-                  </button>
-                </div>
-              ) : (
-                <div className="grid aspect-video w-full place-items-center rounded-sm border border-dashed border-[#CBD5E1] bg-[#F8FAFD] p-4 text-center">
-                  <div>
-                    <ImageIcon className="mx-auto size-6 text-[#CBD5E1]" />
-                    <p className="mt-1.5 text-[11.5px] font-semibold text-[#64748B]">No image selected</p>
-                    <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Click 'Generate AI image' or upload a file.</p>
-                  </div>
-                </div>
-              )}
-              <div className="mt-2 flex gap-1">
                 <input
                   type="text"
-                  value={imagePrompt}
-                  onChange={(e) => setImagePrompt(e.target.value)}
-                  placeholder="Describe visual (e.g. river cleanup at sunset, 4K)..."
-                  className="flex-1 rounded-sm border border-[#D7E0EB] bg-white px-2 py-1 text-[10.5px] text-[#1E293B] outline-none focus:border-[#7C3AED]"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleGenerateAiImage(undefined, imagePrompt);
-                    }
-                  }}
+                  value={result.headline || ""}
+                  onChange={(e) => setResult({ ...result, headline: e.target.value })}
+                  placeholder="Title or hook"
+                  className="w-full rounded-sm border border-[#D9E1EC] px-2.5 py-1.5 text-[12.5px] font-semibold text-[#1E293B] outline-none focus:border-[#7C3AED]"
                 />
+              </div>
+
+              {/* Editable Content Body / Slides / Script */}
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-[#33445F]">
+                    {selected === "Carousel"
+                      ? "Carousel Slides (editable)"
+                      : selected === "Reel Script"
+                        ? "Reel Script & Audio Cues (editable)"
+                        : selected === "Blog"
+                          ? "Blog Article Copy (editable)"
+                          : selected === "Variations"
+                            ? "Content Variations A/B/C (editable)"
+                            : "Main Content / Caption (editable)"}
+                  </label>
+                  <span className="text-[10px] text-slate-400">✏️ Editable</span>
+                </div>
+                <textarea
+                  value={result.caption}
+                  onChange={(e) => setResult({ ...result, caption: e.target.value })}
+                  rows={selected === "Carousel" || selected === "Reel Script" || selected === "Blog" || selected === "Variations" ? 11 : 6}
+                  spellCheck
+                  className={cn(
+                    "w-full resize-y rounded-sm border p-2.5 text-[12px] leading-relaxed text-[#33445F] outline-none focus:border-[#7C3AED]",
+                    captionOverLimit ? "border-red-300 bg-red-50/40" : "border-[#D9E1EC]",
+                  )}
+                />
+                <div className="mt-1 flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">
+                    {captionLimit !== null ? `Platform limit for ${previewPlatform}: ${captionLimit.toLocaleString()} characters` : `No character limit for ${previewPlatform}`}
+                  </span>
+                  <span className={cn("tabular-nums", captionOverLimit ? "font-semibold text-red-500" : captionNearLimit ? "text-amber-500" : "text-slate-400")}>
+                    {captionLength.toLocaleString()}
+                    {captionLimit !== null ? ` / ${captionLimit.toLocaleString()}` : ""}
+                  </span>
+                </div>
+              </div>
+
+              {/* Editable Call To Action */}
+              <div>
+                <label className="mb-1 block text-[11px] font-semibold text-[#33445F]">Call To Action (CTA)</label>
+                <input
+                  type="text"
+                  value={result.callToAction || ""}
+                  onChange={(e) => setResult({ ...result, callToAction: e.target.value })}
+                  placeholder="e.g. Save this post, Comment START, Link in bio"
+                  className="w-full rounded-sm border border-[#D9E1EC] px-2.5 py-1.5 text-[11.5px] text-[#33445F] outline-none focus:border-[#7C3AED]"
+                />
+              </div>
+
+              {/* Editable Hashtags */}
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-[#33445F]">Hashtags (space separated)</label>
+                  <span className={cn("text-[10px] tabular-nums", hashtagsOverLimit ? "font-semibold text-red-500" : "text-slate-400")}>
+                    {hashtagCount} used{hashtagLimit !== null ? ` / ${hashtagLimit} allowed` : ""}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={result.hashtags.join(" ")}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    const tags = raw.split(/\s+/).filter(Boolean).map((t) => (t.startsWith("#") ? t : `#${t}`));
+                    setResult({ ...result, hashtags: tags });
+                  }}
+                  placeholder="#tag1 #tag2 #tag3"
+                  className={cn(
+                    "w-full rounded-sm border px-2.5 py-1.5 text-[11.5px] font-semibold text-[#1769DF] outline-none focus:border-[#7C3AED]",
+                    hashtagsOverLimit ? "border-red-300 bg-red-50/40" : "border-[#D9E1EC]",
+                  )}
+                />
+                {hashtagsOverLimit && (
+                  <p className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-red-500">
+                    <AlertTriangle className="size-3" /> {previewPlatform} allows at most {hashtagLimit} hashtags.
+                  </p>
+                )}
+              </div>
+
+              {/* Image — fully removable & replaceable */}
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-[#33445F]">Image</label>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingImage}
+                      className="rounded-sm border border-[#D7E0EB] px-2 py-0.5 text-[10.5px] font-semibold text-[#33445F] transition hover:bg-[#F8FAFD] disabled:opacity-50"
+                    >
+                      {isUploadingImage ? "Uploading…" : selectedImage ? "Replace" : "Add image"}
+                    </button>
+                    {selectedImage && (
+                      <button
+                        onClick={handleRemoveImage}
+                        className="rounded-sm border border-[#D7E0EB] px-2 py-0.5 text-[10.5px] font-semibold text-red-500 transition hover:bg-red-50"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {selectedImage ? (
+                  <div className="relative aspect-video w-full overflow-hidden rounded-sm bg-slate-100 group">
+                    <img src={selectedImage} alt="" className="h-full w-full object-cover" />
+                    {aiVisual && !customImage && !imageRemoved && (
+                      <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded bg-black/65 px-2 py-0.5 text-[9.5px] font-semibold text-white backdrop-blur-sm shadow-sm">
+                        <Sparkles className="size-2.5 text-purple-300" /> AI Visual ({aiVisual.style})
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateAiImage()}
+                      disabled={isGeneratingImage}
+                      title="Regenerate with a different AI visual"
+                      className="absolute top-2 right-2 flex items-center gap-1 rounded bg-black/65 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm hover:bg-black/85 transition shadow-sm"
+                    >
+                      <RefreshCw className={cn("size-2.5", isGeneratingImage && "animate-spin")} />
+                      Regenerate Visual
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid aspect-video w-full place-items-center rounded-sm border border-dashed border-[#CBD5E1] bg-[#F8FAFD] p-4 text-center">
+                    <div>
+                      <ImageIcon className="mx-auto size-6 text-[#CBD5E1]" />
+                      <p className="mt-1.5 text-[11.5px] font-semibold text-[#64748B]">No image selected</p>
+                      <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Click 'Generate AI image' or upload a file.</p>
+                    </div>
+                  </div>
+                )}
+                <div className="mt-2 flex gap-1">
+                  <input
+                    type="text"
+                    value={imagePrompt}
+                    onChange={(e) => setImagePrompt(e.target.value)}
+                    placeholder="Describe visual (e.g. river cleanup at sunset, 4K)..."
+                    className="flex-1 rounded-sm border border-[#D7E0EB] bg-white px-2 py-1 text-[10.5px] text-[#1E293B] outline-none focus:border-[#7C3AED]"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleGenerateAiImage(undefined, imagePrompt);
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateAiImage(undefined, imagePrompt)}
+                    disabled={isGeneratingImage}
+                    className="flex shrink-0 items-center gap-1 rounded-sm bg-[#7C3AED] px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#6D28D9] disabled:opacity-50"
+                  >
+                    <Sparkles className="size-2.5" /> Generate
+                  </button>
+                </div>
+                <div className="mt-1.5 grid grid-cols-6 gap-1">
+                  {PRESET_STYLE_LABELS.map((label, i) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => handlePickPreset(i)}
+                      className={cn(
+                        "rounded border px-1 py-1 text-center text-[9px] font-semibold transition",
+                        !customImage && !imageRemoved && imageStyleIdx === i
+                          ? "border-[#7C3AED] bg-purple-50 text-[#7C3AED]"
+                          : "border-slate-200 text-slate-500 hover:bg-slate-50",
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-2 flex gap-1.5">
                 <button
-                  type="button"
-                  onClick={() => handleGenerateAiImage(undefined, imagePrompt)}
-                  disabled={isGeneratingImage}
-                  className="flex shrink-0 items-center gap-1 rounded-sm bg-[#7C3AED] px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#6D28D9] disabled:opacity-50"
+                  onClick={handleSaveDraft}
+                  disabled={isSavingDraft}
+                  className="flex h-8.5 flex-1 items-center justify-center gap-1 rounded-sm border border-[#D7E0EB] bg-white text-[11.5px] font-semibold text-[#687797] hover:bg-gray-50 disabled:opacity-50 transition"
                 >
-                  <Sparkles className="size-2.5" /> Generate
+                  {isSavingDraft ? <Loader2 className="size-3 animate-spin" /> : null} Save draft
+                </button>
+                <button
+                  onClick={handleUsePost}
+                  className="flex h-8.5 flex-1 items-center justify-center gap-1 rounded-sm bg-[#1769DF] text-[11.5px] font-semibold text-white hover:bg-blue-600 transition"
+                >
+                  {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />} {copied ? "Copied!" : "Use this post"}
                 </button>
               </div>
-              <div className="mt-1.5 grid grid-cols-6 gap-1">
-                {PRESET_STYLE_LABELS.map((label, i) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => handlePickPreset(i)}
-                    className={cn(
-                      "rounded border px-1 py-1 text-center text-[9px] font-semibold transition",
-                      !customImage && !imageRemoved && imageStyleIdx === i
-                        ? "border-[#7C3AED] bg-purple-50 text-[#7C3AED]"
-                        : "border-slate-200 text-slate-500 hover:bg-slate-50",
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
             </div>
-
-            {/* Actions */}
-            <div className="mt-2 flex gap-1.5">
-              <button
-                onClick={handleSaveDraft}
-                disabled={isSavingDraft}
-                className="flex h-8.5 flex-1 items-center justify-center gap-1 rounded-sm border border-[#D7E0EB] bg-white text-[11.5px] font-semibold text-[#687797] hover:bg-gray-50 disabled:opacity-50 transition"
-              >
-                {isSavingDraft ? <Loader2 className="size-3 animate-spin" /> : null} Save draft
-              </button>
-              <button
-                onClick={handleUsePost}
-                className="flex h-8.5 flex-1 items-center justify-center gap-1 rounded-sm bg-[#1769DF] text-[11.5px] font-semibold text-white hover:bg-blue-600 transition"
-              >
-                {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />} {copied ? "Copied!" : "Use this post"}
-              </button>
-            </div>
-          </div>
           )
         ) : (
           <div className="grid min-h-[220px] place-items-center rounded-sm border border-dashed border-[#CBD5E1] bg-[#F8FAFD] p-6 text-center">
