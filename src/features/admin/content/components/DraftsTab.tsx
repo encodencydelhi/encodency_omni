@@ -59,7 +59,7 @@ export function DraftsTab() {
         id: d.id,
         title: d.title || "Untitled Draft",
         content: d.content,
-        channels: (d.channels?.length ? d.channels : ["instagram"]) as any[],
+        channels: (d.channels?.length ? d.channels.map((c: string) => typeof c === "string" ? (c.toLowerCase() === "twitter" ? "x" : c.toLowerCase()) : c) : ["instagram"]) as any[],
         approvalStatus: "draft" as const,
         campaign: d.campaignId ? { id: d.campaignId, name: `Campaign ${d.campaignId.slice(0, 8)}` } : undefined,
         client: { id: d.clientId, name: "Active Client" },
@@ -215,7 +215,13 @@ export function DraftsTab() {
                     activeDraft?.id === d.id ? "bg-[#F7FAFF]" : ""
                   )}
                 >
-                  <img src={d.masterContent.media[0]?.url ?? ""} alt="" className="h-10 w-14 shrink-0 rounded-sm object-cover bg-slate-100" />
+                  {d.masterContent.media[0]?.url ? (
+                    <img src={d.masterContent.media[0].url} alt="" className="h-10 w-14 shrink-0 rounded-sm object-cover bg-slate-100" />
+                  ) : (
+                    <div className="flex h-10 w-14 shrink-0 items-center justify-center rounded-sm bg-slate-100 text-slate-400">
+                      <FileText className="size-4" />
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <p className="truncate text-[12.5px] font-semibold text-[#24365A]">{d.title}</p>
@@ -262,7 +268,13 @@ export function DraftsTab() {
                   )}
                 >
                   <div className="relative aspect-video w-full bg-slate-100">
-                    <img src={d.masterContent.media[0]?.url ?? ""} alt="" className="h-full w-full object-cover" />
+                    {d.masterContent.media[0]?.url ? (
+                      <img src={d.masterContent.media[0].url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-slate-400">
+                        <FileText className="size-6" />
+                      </div>
+                    )}
                     <span className="absolute left-1.5 top-1.5">
                       {d.campaign ? (
                         <span className="rounded bg-[#172044]/80 px-1.5 py-0.5 text-[9px] font-semibold text-white backdrop-blur-sm">

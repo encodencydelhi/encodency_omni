@@ -464,14 +464,14 @@ export function CreateContentTab() {
         const variantId = saved.variantIds[platform];
         if (!channel) continue; // e.g. Google Business — no backend draft channel
         if (!variantId) {
-          failed.push(`${PLATFORM_META[platform].label}: draft variant missing`);
+          failed.push(`${PLATFORM_META[platform]?.label ?? platform}: draft variant missing`);
           continue;
         }
         try {
           const { items } = await schedulingApi.targets(companyId, clientId, saved.draftId, variantId);
           const target = items.find((t) => t.publishable);
           if (!target) {
-            failed.push(`${PLATFORM_META[platform].label}: ${items[0]?.reason ?? "no mapped publishing target"}`);
+            failed.push(`${PLATFORM_META[platform]?.label ?? platform}: ${items[0]?.reason ?? "no mapped publishing target"}`);
             continue;
           }
           await schedulingApi.schedule(companyId, clientId, saved.draftId, variantId, {
@@ -479,9 +479,9 @@ export function CreateContentTab() {
             scheduledFor,
             expectedDraftRevision: saved.revision,
           });
-          published.push(PLATFORM_META[platform].label);
+          published.push(PLATFORM_META[platform]?.label ?? platform);
         } catch (error) {
-          failed.push(`${PLATFORM_META[platform].label}: ${ApiError.isApiError(error) ? error.message : error instanceof Error ? error.message : "unknown error"}`);
+          failed.push(`${PLATFORM_META[platform]?.label ?? platform}: ${ApiError.isApiError(error) ? error.message : error instanceof Error ? error.message : "unknown error"}`);
         }
       }
 

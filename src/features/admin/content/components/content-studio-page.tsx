@@ -810,7 +810,7 @@ export default function ContentStudio() {
   const content = useMemo(() => {
     switch (activeTab) {
       case "Create": return <CreateTab postType={postType} setPostType={setPostType} />;
-      case "AI Assistant": return <AIAssistantTab initialPrompt={aiPrompt} />;
+      case "AI Assistant": return <AIAssistantTab key={aiPrompt} initialPrompt={aiPrompt} />;
       case "Templates": return <TemplatesTab />;
       case "Saved Drafts": return <DraftsTab />;
       case "Content Ideas": return <IdeasTab onCustomizeWithAi={handleCustomizeWithAi} />;

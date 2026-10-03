@@ -196,5 +196,11 @@ export const PLATFORM_CHAR_LIMITS: Partial<Record<Platform, number>> = {
   "google-business": 1500,
 };
 
+/* ── Hashtag caps. Only platforms with a published hard cap are listed; the
+      others accept an unbounded number, so no limit is shown for them. ── */
+export const PLATFORM_HASHTAG_LIMITS: Partial<Record<Platform, number>> = {
+  instagram: 30,
+};
+
 /** Channels the backend accepts media on; every other channel is text-only. */
 export const MEDIA_CAPABLE_PLATFORMS: readonly Platform[] = ["facebook", "instagram"];

@@ -39,7 +39,8 @@ export default function ContentStudioShell() {
   const content = useMemo(() => {
     switch (activeTab) {
       case "Create": return <CreateContentTab />;
-      case "AI Assistant": return <AIAssistantTab initialPrompt={aiPrompt} initialType={aiType} />;
+      // key: remount when a fresh prompt/type arrives so the tab resets cleanly
+      case "AI Assistant": return <AIAssistantTab key={`${aiType}|${aiPrompt}`} initialPrompt={aiPrompt} initialType={aiType} />;
       case "Templates": return <TemplatesTab />;
       case "Saved Drafts": return <DraftsTab />;
       case "Content Ideas": return <IdeasTab onCustomizeWithAi={handleCustomizeWithAi} onUseIdea={handleUseIdea} />;
