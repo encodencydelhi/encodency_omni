@@ -40,9 +40,14 @@ export function hours(value: Maybe<number>): string {
   return `${compact(value)} hrs`;
 }
 
-export function inr(value: Maybe<number>, digits = 0): string {
-  if (value === null) return DASH;
-  return `₹${value.toLocaleString("en-IN", { maximumFractionDigits: digits, minimumFractionDigits: digits })}`;
+/** Amounts are shown in the currency YouTube reported them in (ISO 4217); there is no hardcoded currency. */
+export function money(value: Maybe<number>, currency: string, digits = 0): string {
+  if (value === null || Number.isNaN(value)) return DASH;
+  try {
+    return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: digits, minimumFractionDigits: digits }).format(value);
+  } catch {
+    return `${value.toLocaleString("en-IN", { maximumFractionDigits: digits, minimumFractionDigits: digits })} ${currency}`;
+  }
 }
 
 function toDate(iso: Maybe<string>) {

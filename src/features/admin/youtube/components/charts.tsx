@@ -44,30 +44,43 @@ export function aggregate(series: SeriesPoint[], granularity: Granularity): Seri
     buckets.set(key, [...(buckets.get(key) ?? []), p]);
   }
   return [...buckets.entries()].map(([date, points]) => {
-    const sum = (k: keyof SeriesPoint) => points.reduce((s, p) => s + (p[k] as number), 0);
+    // A bucket with no value at all stays null (a gap), never zero; partial buckets sum/average only the days that have data.
+    const known = (k: keyof SeriesPoint) => points.map((p) => p[k] as number | null).filter((v): v is number => v !== null);
+    const sum = (k: keyof SeriesPoint) => {
+      const v = known(k);
+      return v.length ? v.reduce((a, b) => a + b, 0) : null;
+    };
+    const mean = (k: keyof SeriesPoint) => {
+      const v = known(k);
+      return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+    };
+    const avgDur = mean("avgViewDuration");
+    const ctr = mean("ctr");
     return {
       date,
       views: sum("views"),
       watchTime: sum("watchTime"),
       subscribers: sum("subscribers"),
       impressions: sum("impressions"),
-      avgViewDuration: Math.round(sum("avgViewDuration") / points.length),
-      ctr: Number((sum("ctr") / points.length).toFixed(2)),
+      avgViewDuration: avgDur === null ? null : Math.round(avgDur),
+      ctr: ctr === null ? null : Number(ctr.toFixed(2)),
     };
   });
 }
 
-export function summarize(series: SeriesPoint[], key: MetricKey): number {
-  if (!series.length) return 0;
-  const total = series.reduce((s, p) => s + p[key], 0);
-  return key === "ctr" || key === "avgViewDuration" ? total / series.length : total;
+/** Total (or mean for rates) over the days that have data. No data at all -> null, never 0. */
+export function summarize(series: SeriesPoint[], key: MetricKey): number | null {
+  const values = series.map((p) => p[key]).filter((v): v is number => v !== null);
+  if (!values.length) return null;
+  const total = values.reduce((s, v) => s + v, 0);
+  return key === "ctr" || key === "avgViewDuration" ? total / values.length : total;
 }
 
 /* ------------------------------------------------------------------ */
 /* Sparkline & KPI                                                     */
 /* ------------------------------------------------------------------ */
 
-export function Sparkline({ data, color, height = 32 }: { data: number[]; color: string; height?: number }) {
+export function Sparkline({ data, color, height = 32 }: { data: (number | null)[]; color: string; height?: number }) {
   const points = useMemo(() => data.map((v, i) => ({ i, v })), [data]);
   const id = `spark-${color.replace("#", "")}`;
   return (
@@ -101,7 +114,7 @@ export function KpiCard({
   metric: MetricKey;
   value: number | null;
   previous: number | null;
-  spark?: number[];
+  spark?: (number | null)[];
   icon?: ComponentType<{ className?: string }>;
   onClick?: () => void;
   active?: boolean;
@@ -525,7 +538,8 @@ const LAND_DOTS = LAND.flatMap(([lat, ranges]) =>
 export function BubbleMap({ rows, metric, selected, onSelect }: { rows: GeographyRow[]; metric: "views" | "watchTimeHours" | "subscribers"; selected?: string | null; onSelect?: (code: string) => void }) {
   const W = 720;
   const H = 340;
-  const max = Math.max(...rows.map((r) => r[metric]), 1);
+  const placed = rows.filter((r): r is GeographyRow & { lat: number; lon: number } => r.lat !== null && r.lon !== null);
+  const max = Math.max(...placed.map((r) => r[metric]), 1);
   const project = (lat: number, lon: number) => [((lon + 180) / 360) * W, ((75 - lat) / 135) * H] as const;
   return (
     <div className="relative w-full overflow-hidden rounded-sm bg-[linear-gradient(180deg,#F8FAFC,#F2F5F9)] ring-1 ring-inset ring-[#EEF1F5]">
@@ -534,7 +548,7 @@ export function BubbleMap({ rows, metric, selected, onSelect }: { rows: Geograph
           const [x, y] = project(lat, lon);
           return <circle key={`${lat}:${lon}`} cx={x} cy={y} r={3.1} fill="#D5DCE6" />;
         })}
-        {rows.map((row) => {
+        {placed.map((row) => {
           const [x, y] = project(row.lat, row.lon);
           const r = 5 + Math.sqrt(row[metric] / max) * 34;
           const active = selected === row.code;

@@ -1,24 +1,49 @@
 "use client";
 
 import { useState, type ComponentType } from "react";
-import { Hourglass, KeyRound, LockKeyhole, ShieldAlert, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { AlertTriangle, Hourglass, Info, KeyRound, LockKeyhole, ShieldAlert, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import type { YouTubeErrorInfo } from "../live/youtube-errors";
 import { ytRoutes } from "../lib/constants";
 import { useYouTube } from "../store/youtube-store";
 import type { Capability } from "../types";
 import { Button, Skeleton, yt } from "./ui";
 
 const FIX_META: Record<NonNullable<Capability["fix"]>, { icon: ComponentType<{ className?: string }>; title: string }> = {
-  reconnect: { icon: KeyRound, title: "Permission required" },
+  reconnect: { icon: KeyRound, title: "Reconnect YouTube" },
+  grant: { icon: KeyRound, title: "Permission required" },
+  connect: { icon: KeyRound, title: "Connect YouTube" },
   request_access: { icon: LockKeyhole, title: "You don't have access" },
   enable_feature: { icon: Sparkles, title: "Not available for this channel" },
   wait: { icon: Hourglass, title: "Temporarily unavailable" },
 };
 
-export function CapabilityState({ capability, title, className, compact }: { capability: Capability; title?: string; className?: string; compact?: boolean }) {
-  const { reconnect, can } = useYouTube();
+/** The one button that fixes a permission / connection problem (named consent only, never a raw scope). */
+function FixButton({ fix, grant }: { fix: NonNullable<Capability["fix"]>; grant?: Capability["grant"] }) {
+  const { startConsent, can, connection } = useYouTube();
   const [busy, setBusy] = useState(false);
+  const run = async (capability?: Capability["grant"]) => {
+    if (busy) return;
+    setBusy(true);
+    await startConsent(capability);
+    setBusy(false);
+  };
+
+  if (fix === "reconnect") return <Button size="sm" variant="primary" loading={busy} gate={can.canManageConnection} onClick={() => void run()}>Reconnect YouTube</Button>;
+  if (fix === "grant") return <Button size="sm" variant="primary" loading={busy} gate={can.canManageConnection} onClick={() => void run(grant)}>Grant permission</Button>;
+  if (fix === "connect") {
+    return connection.state === "not_mapped" ? (
+      <Button size="sm" variant="primary" href={ytRoutes.integrations}>Link channel to this client</Button>
+    ) : (
+      <Button size="sm" variant="primary" loading={busy} gate={can.canManageConnection} onClick={() => void run()}>Connect YouTube</Button>
+    );
+  }
+  if (fix === "enable_feature") return <Button size="sm" variant="secondary" href={ytRoutes.studio} external>Open YouTube Studio</Button>;
+  return null;
+}
+
+/** Shown where a capability is missing: says why, and offers the single action that can fix it. */
+export function CapabilityState({ capability, title, className, compact }: { capability: Capability; title?: string; className?: string; compact?: boolean }) {
   const meta = FIX_META[capability.fix ?? "request_access"];
   const Icon = meta.icon ?? ShieldAlert;
 
@@ -29,33 +54,38 @@ export function CapabilityState({ capability, title, className, compact }: { cap
       </span>
       <p className="mt-3 text-[13.5px] font-semibold text-[#0F1B3D]">{title ?? meta.title}</p>
       <p className="mt-1 max-w-[380px] text-[12.5px] leading-5 text-[#6B7890]">{capability.reason}</p>
+      <div className="mt-3.5 flex flex-wrap justify-center gap-2">{capability.fix && <FixButton fix={capability.fix} grant={capability.grant} />}</div>
+    </div>
+  );
+}
+
+/** A failed read: the mapped message, plus Try again and the permission fix when there is one. Never raw JSON. */
+export function ErrorState({ error, onRetry, title, className, compact }: { error: YouTubeErrorInfo; onRetry?: () => void; title?: string; className?: string; compact?: boolean }) {
+  const fix = error.action === "grant" || error.action === "reconnect" || error.action === "connect" ? error.action : null;
+  return (
+    <div role="alert" className={cn("flex flex-col items-center justify-center px-6 text-center", compact ? "py-6" : "py-12", className)}>
+      <span className="grid size-10 place-items-center rounded-sm bg-[#FEF1F2] text-[#C81E2B] ring-1 ring-[#FBD5D9]">
+        <AlertTriangle className="size-5" />
+      </span>
+      <p className="mt-3 text-[13.5px] font-semibold text-[#0F1B3D]">{title ?? error.title}</p>
+      <p className="mt-1 max-w-[380px] text-[12.5px] leading-5 text-[#6B7890]">{error.message}</p>
       <div className="mt-3.5 flex flex-wrap justify-center gap-2">
-        {capability.fix === "reconnect" && (
-          <Button
-            size="sm"
-            variant="primary"
-            loading={busy}
-            gate={can.canManageConnection}
-            onClick={async () => {
-              setBusy(true);
-              await reconnect();
-              setBusy(false);
-            }}
-          >
-            Reconnect permissions
-          </Button>
-        )}
-        {capability.fix === "request_access" && (
-          <Button size="sm" variant="secondary" onClick={() => toast.success("Access request sent", { description: "Workspace owners have been notified." })}>
-            Request access
-          </Button>
-        )}
-        {capability.fix === "enable_feature" && (
-          <Button size="sm" variant="secondary" href={ytRoutes.studio} external>
-            Open YouTube Studio
-          </Button>
-        )}
+        {fix && <FixButton fix={fix} grant={error.capability ?? undefined} />}
+        {onRetry && error.retryable && <Button size="sm" variant="secondary" onClick={onRetry}>Try again</Button>}
       </div>
+    </div>
+  );
+}
+
+/** For things the YouTube API does not provide at all: said plainly, never replaced with an invented number. */
+export function UnavailableState({ title, description, compact, className }: { title: string; description: string; compact?: boolean; className?: string }) {
+  return (
+    <div className={cn("flex flex-col items-center justify-center px-6 text-center", compact ? "py-6" : "py-10", className)}>
+      <span className="grid size-10 place-items-center rounded-sm bg-[#F3F5F9] text-[#6B7890] ring-1 ring-[#E4E9F0]">
+        <Info className="size-5" />
+      </span>
+      <p className="mt-3 text-[13.5px] font-semibold text-[#0F1B3D]">{title}</p>
+      <p className="mt-1 max-w-[380px] text-[12.5px] leading-5 text-[#6B7890]">{description}</p>
     </div>
   );
 }

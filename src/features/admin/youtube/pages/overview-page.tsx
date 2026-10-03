@@ -2,10 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import {
-  BadgeCheck,
   BarChart3,
   CalendarDays,
   Clock,
@@ -31,9 +30,9 @@ import { cn } from "@/lib/utils/cn";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
-import { BarList, ChartLegend, Donut, KpiCard, LegendList, TrendChart, type Granularity } from "../components/charts";
+import { BarList, ChartLegend, Donut, KpiCard, KpiSkeleton, LegendList, TrendChart, type Granularity } from "../components/charts";
 import { CreatePlaylistDialog, HealthDetailSheet, ScoreRing, ThumbnailManager } from "../components/dialogs";
-import { CapabilityState, PageSkeleton } from "../components/states";
+import { CapabilityState, ErrorState, PageSkeleton } from "../components/states";
 import {
   Avatar,
   Badge,
@@ -47,6 +46,7 @@ import {
   SearchField,
   Segmented,
   SelectMenu,
+  Skeleton,
   StatusBadge,
   Thumb,
   TypeBadge,
@@ -58,14 +58,17 @@ import {
   yt,
 } from "../components/ui";
 import { SyncStatus } from "../components/workspace";
-import { useChannelAnalytics } from "../hooks/use-analytics";
+import { useAnalyticsTopVideos, useCommentsInfinite, useLiveBroadcasts } from "../data/hooks";
+import { isAnswered, toCommentThread } from "../data/mappers";
+import { useAudienceData, useChannelAnalytics, useTrafficSources, type ChannelAnalytics, type QueryView } from "../data/view-hooks";
 import { usePeriod, useWithPeriod } from "../hooks/use-query-state";
-import { trafficSources } from "../data/mock";
+import { describeYouTubeError, isLiveNotEnabled } from "../live/youtube-errors";
 import { METRICS, ytRoutes } from "../lib/constants";
-import { compact, date, hours, percent, relative } from "../lib/format";
+import { compact, date, duration, full, hours, percent, relative } from "../lib/format";
 import { channelHealth, scoreTone } from "../lib/insights";
+import { periodRange } from "../lib/period";
 import { useYouTube } from "../store/youtube-store";
-import type { MetricKey, Video } from "../types";
+import type { CommentThread, MetricKey, Video } from "../types";
 
 const KPI_ICONS: Record<MetricKey, typeof Eye> = {
   views: Eye,
@@ -75,6 +78,9 @@ const KPI_ICONS: Record<MetricKey, typeof Eye> = {
   impressions: BarChart3,
   ctr: MousePointerClick,
 };
+
+/** The Analytics API does not report these for channel reports; said plainly instead of showing a number. */
+const NO_IMPRESSIONS = "YouTube's API doesn't report impressions or click-through rate.";
 
 export function OverviewPage() {
   const { ready } = useYouTube();
@@ -92,30 +98,41 @@ function Overview() {
     <div className="space-y-1">
       <div className="grid gap-1 xl:grid-cols-12">
         <ChannelProfile className="xl:col-span-8" />
-        <ChannelHealthCard className="xl:col-span-4" />
+        <ChannelHealthCard className="xl:col-span-4" analytics={analytics} />
       </div>
 
       {can.canViewAnalytics.allowed ? (
-        <>
-          <div className="grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-6">
-            {(["views", "watchTime", "subscribers", "avgViewDuration", "impressions", "ctr"] as MetricKey[]).map((key) => (
-              <KpiCard
-                key={key}
-                metric={key}
-                icon={KPI_ICONS[key]}
-                value={analytics.totals[key].value}
-                previous={analytics.totals[key].previous}
-                spark={analytics.spark[key]}
-                active={metric === key && key !== "avgViewDuration"}
-                onClick={key === "avgViewDuration" ? undefined : () => setMetric(key)}
-              />
-            ))}
-          </div>
-          <div className="grid gap-1 xl:grid-cols-12">
-            <PerformanceCard className="xl:col-span-8" metric={metric} onMetric={setMetric} analytics={analytics} periodLabel={label} />
-            <TrafficCard className="xl:col-span-4" total={analytics.totals.views.value} />
-          </div>
-        </>
+        analytics.error ? (
+          <Card>
+            <ErrorState error={analytics.error} onRetry={analytics.refetch} title="Analytics couldn't load" />
+          </Card>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-6">
+              {analytics.isLoading ? (
+                <KpiSkeleton />
+              ) : (
+                (["views", "watchTime", "subscribers", "avgViewDuration", "impressions", "ctr"] as MetricKey[]).map((key) => (
+                  <KpiCard
+                    key={key}
+                    metric={key}
+                    icon={KPI_ICONS[key]}
+                    value={analytics.data.totals[key].value}
+                    previous={analytics.data.totals[key].previous}
+                    spark={analytics.data.spark[key]}
+                    unavailable={key === "impressions" || key === "ctr" ? NO_IMPRESSIONS : !analytics.data.hasData ? "No data for this period" : undefined}
+                    active={metric === key && key !== "avgViewDuration"}
+                    onClick={key === "avgViewDuration" || key === "impressions" || key === "ctr" ? undefined : () => setMetric(key)}
+                  />
+                ))
+              )}
+            </div>
+            <div className="grid gap-1 xl:grid-cols-12">
+              <PerformanceCard className="xl:col-span-8" metric={metric} onMetric={setMetric} analytics={analytics} periodLabel={label} />
+              <TrafficCard className="xl:col-span-4" total={analytics.data.totals.views.value} />
+            </div>
+          </>
+        )
       ) : (
         <Card>
           <CapabilityState capability={can.canViewAnalytics} title="Analytics unavailable" />
@@ -157,41 +174,43 @@ function ChannelProfile({ className }: { className?: string }) {
   return (
     <Card className={cn("overflow-hidden", className)}>
       <div className="relative h-[108px] bg-[#E9EDF3]">
-        <Image src={channel.bannerUrl} alt={`${channel.title} channel banner`} fill priority sizes="(min-width: 1280px) 900px, 100vw" className="object-cover" />
+        {channel.bannerUrl && <Image src={channel.bannerUrl} alt={`${channel.title} channel banner`} fill priority unoptimized sizes="(min-width: 1280px) 900px, 100vw" className="object-cover" />}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0F1B3D]/35 via-transparent to-transparent" />
       </div>
       <div className="px-4 pb-3.5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="flex min-w-0 items-end gap-3">
             <span className="relative -mt-9 grid size-[72px] shrink-0 place-items-center overflow-hidden rounded-sm border-4 border-white bg-white shadow-[0_2px_8px_rgba(15,27,61,0.15)]">
-              <Image src={channel.avatarUrl} alt="" width={64} height={64} className="size-full object-contain" />
+              {channel.avatarUrl ? <Image src={channel.avatarUrl} alt="" width={64} height={64} unoptimized className="size-full object-contain" /> : <Avatar name={channel.title} className="size-full text-[18px]" />}
             </span>
             <div className="min-w-0 pt-2">
               <p className="flex items-center gap-1.5 text-[16px] font-semibold leading-5 text-[#0F1B3D]">
                 <span className="truncate">{channel.title}</span>
-                {channel.isVerified && <BadgeCheck className="size-4 shrink-0 text-[#2563EB]" aria-label="Verified channel" />}
               </p>
               <p className="mt-0.5 text-[12.5px] text-[#6B7890]">
-                {channel.handle} · <b className="font-semibold text-[#24324F]">{compact(channel.subscriberCount)}</b> subscribers · <b className="font-semibold text-[#24324F]">{channel.videoCount}</b> videos
+                {channel.handle && <>{channel.handle} · </>}
+                <b className="font-semibold text-[#24324F]">{compact(channel.subscriberCount)}</b> subscribers · <b className="font-semibold text-[#24324F]">{full(channel.videoCount)}</b> videos
               </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            <Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.channelOnYouTube(channel.handle)} external>View on YouTube</Button>
+            {channel.id && <Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.channelOnYouTube(channel)} external>View on YouTube</Button>}
             <Button size="sm" variant="secondary" icon={Info} onClick={() => setDetailsOpen(true)}>Channel details</Button>
             <Button size="sm" variant="secondary" icon={PlugZap} href={`${ytRoutes.settings}#connection`}>Manage connection</Button>
           </div>
         </div>
 
-        <p className="mt-3 line-clamp-2 max-w-[760px] text-[12.5px] leading-5 text-[#3C4A66]">{channel.description}</p>
+        <p className="mt-3 line-clamp-2 max-w-[760px] text-[12.5px] leading-5 text-[#3C4A66]">{channel.description || "No channel description."}</p>
 
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
           <SyncStatus compact />
           <span className="hidden h-4 w-px bg-[#E4E9F0] sm:block" />
-          <button type="button" onClick={() => copyText(channel.id, "Channel ID copied")} className={cn("inline-flex items-center gap-1.5 rounded text-[12px] text-[#6B7890] hover:text-[#0F1B3D]", yt.focus)}>
-            ID <code className="font-mono text-[11.5px] text-[#24324F]">{channel.id}</code>
-            <Copy className="size-3" />
-          </button>
+          {channel.id && (
+            <button type="button" onClick={() => copyText(channel.id, "Channel ID copied")} className={cn("inline-flex items-center gap-1.5 rounded text-[12px] text-[#6B7890] hover:text-[#0F1B3D]", yt.focus)}>
+              ID <code className="font-mono text-[11.5px] text-[#24324F]">{channel.id}</code>
+              <Copy className="size-3" />
+            </button>
+          )}
           <div className="flex flex-wrap gap-1">
             {channel.keywords.map((k) => (
               <Badge key={k}>{k}</Badge>
@@ -236,20 +255,19 @@ function ChannelDetailsSheet({ open, onOpenChange }: { open: boolean; onOpenChan
         <SheetBody>
           <dl>
             <DefinitionRow label="Channel name">{channel.title}</DefinitionRow>
-            <DefinitionRow label="Handle">{channel.handle}</DefinitionRow>
-            <DefinitionRow label="Channel ID" mono>{channel.id}</DefinitionRow>
-            <DefinitionRow label="Custom URL">{channel.customUrl}</DefinitionRow>
-            <DefinitionRow label="Verified">{channel.isVerified ? "Yes" : "No"}</DefinitionRow>
-            <DefinitionRow label="Subscribers">{channel.subscriberCount.toLocaleString("en-IN")}</DefinitionRow>
-            <DefinitionRow label="Videos">{channel.videoCount.toLocaleString("en-IN")}</DefinitionRow>
-            <DefinitionRow label="Lifetime views">{channel.viewCount.toLocaleString("en-IN")}</DefinitionRow>
-            <DefinitionRow label="Country">{channel.country}</DefinitionRow>
+            <DefinitionRow label="Handle">{channel.handle || "—"}</DefinitionRow>
+            <DefinitionRow label="Channel ID" mono>{channel.id || "—"}</DefinitionRow>
+            <DefinitionRow label="Custom URL">{channel.customUrl || "—"}</DefinitionRow>
+            <DefinitionRow label="Subscribers">{channel.subscriberCount === null ? "Hidden by the owner" : channel.subscriberCount.toLocaleString("en-IN")}</DefinitionRow>
+            <DefinitionRow label="Videos">{full(channel.videoCount)}</DefinitionRow>
+            <DefinitionRow label="Lifetime views">{full(channel.viewCount)}</DefinitionRow>
+            <DefinitionRow label="Country">{channel.country ?? "—"}</DefinitionRow>
             <DefinitionRow label="Joined">{date(channel.createdAt)}</DefinitionRow>
-            <DefinitionRow label="Google account">{channel.googleAccount}</DefinitionRow>
+            <DefinitionRow label="Google account">{channel.googleAccount ?? "—"}</DefinitionRow>
             <DefinitionRow label="Last synced">{relative(connection.lastSyncedAt)}</DefinitionRow>
           </dl>
           <p className="mt-4 text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Description</p>
-          <p className="mt-1.5 whitespace-pre-line text-[12.5px] leading-5 text-[#3C4A66]">{channel.description}</p>
+          <p className="mt-1.5 whitespace-pre-line text-[12.5px] leading-5 text-[#3C4A66]">{channel.description || "No channel description."}</p>
         </SheetBody>
         <SheetFooter>
           <Button variant="secondary" icon={ExternalLink} href={ytRoutes.studio} external>Edit in YouTube Studio</Button>
@@ -271,14 +289,14 @@ function VideoPickerDialog({ open, onOpenChange, videos, onPick }: { open: boole
         </DialogHeader>
         <div className="px-5 pt-3"><SearchField value={q} onChange={setQ} placeholder="Search videos" autoFocus /></div>
         <ul className="max-h-[360px] overflow-y-auto px-3 py-2">
-          {list.length === 0 && <li className="py-6 text-center text-[12.5px] text-[#6B7890]">No videos match “{q}”.</li>}
+          {list.length === 0 && <li className="py-6 text-center text-[12.5px] text-[#6B7890]">{videos.length === 0 ? "No videos to show yet." : <>No videos match “{q}”.</>}</li>}
           {list.map((v) => (
             <li key={v.id}>
               <button type="button" onClick={() => onPick(v)} className={cn("flex w-full items-center gap-3 rounded-sm px-2 py-1.5 text-left hover:bg-[#F8FAFC]", yt.focus)}>
                 <Thumb src={v.thumbnailUrl} className="w-[72px]" sizes="72px" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[12.5px] font-semibold text-[#0F1B3D]">{v.title}</span>
-                  <span className="text-[11.5px] text-[#6B7890]">{v.stats.ctr !== null ? `CTR ${percent(v.stats.ctr)}` : "No CTR data yet"}</span>
+                  <span className="text-[11.5px] text-[#6B7890]">{v.stats.views === null ? "Views unavailable" : `${compact(v.stats.views)} views`}</span>
                 </span>
                 <TypeBadge type={v.type} />
               </button>
@@ -294,10 +312,18 @@ function VideoPickerDialog({ open, onOpenChange, videos, onPick }: { open: boole
 /* Channel health                                                      */
 /* ------------------------------------------------------------------ */
 
-function ChannelHealthCard({ className }: { className?: string }) {
-  const { channel, videos, comments, features } = useYouTube();
+function ChannelHealthCard({ className, analytics }: { className?: string; analytics: QueryView<ChannelAnalytics> }) {
+  const { channel, videos, videosState } = useYouTube();
   const [open, setOpen] = useState(false);
-  const { score, factors } = useMemo(() => channelHealth(channel, videos, comments, features.monetizationEnabled), [channel, videos, comments, features.monetizationEnabled]);
+  const comparison = useMemo(() => {
+    const d = analytics.data;
+    if (!analytics.enabled || !d.hasData) return null;
+    return {
+      current: { views: d.rawTotals.current.views, likes: d.likes.current, comments: d.comments.current, netSubscribers: d.rawTotals.current.subscribers },
+      previous: { views: d.rawTotals.previous.views, likes: d.likes.previous, comments: d.comments.previous, netSubscribers: d.rawTotals.previous.subscribers },
+    };
+  }, [analytics.data, analytics.enabled]);
+  const { score, factors } = useMemo(() => channelHealth(channel, videos, comparison), [channel, videos, comparison]);
   const weakest = [...factors].sort((a, b) => a.score - b.score);
 
   return (
@@ -308,26 +334,35 @@ function ChannelHealthCard({ className }: { className?: string }) {
         actions={<Button size="xs" variant="link" onClick={() => setOpen(true)}>View details</Button>}
       />
       <div className="flex flex-1 flex-col gap-3 px-4 pb-4">
-        <div className="flex items-center gap-4">
-          <ScoreRing score={score} />
-          <div className="min-w-0">
-            <p className="text-[13px] font-semibold text-[#0F1B3D]">{score >= 80 ? "Healthy channel" : score >= 60 ? "Room to improve" : "Needs attention"}</p>
-            <p className="mt-0.5 text-[12px] leading-4 text-[#6B7890]">
-              Biggest opportunity: <b className="font-semibold text-[#24324F]">{weakest[0]?.label.toLowerCase()}</b>.
-            </p>
+        {videosState.isLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-16 w-full" />
           </div>
-        </div>
-        <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-          {factors.slice(0, 7).map((f) => (
-            <li key={f.key} className="grid grid-cols-[1fr_72px_28px] items-center gap-2 text-[12px]">
-              <span className="truncate text-[#3C4A66]">{f.label}</span>
-              <Meter value={f.score} tone={scoreTone(f.score)} />
-              <b className="text-right font-semibold tabular-nums text-[#0F1B3D]">{f.score}</b>
-            </li>
-          ))}
-        </ul>
+        ) : (
+          <>
+            <div className="flex items-center gap-4">
+              <ScoreRing score={score} />
+              <div className="min-w-0">
+                <p className="text-[13px] font-semibold text-[#0F1B3D]">{score >= 80 ? "Healthy channel" : score >= 60 ? "Room to improve" : "Needs attention"}</p>
+                <p className="mt-0.5 text-[12px] leading-4 text-[#6B7890]">
+                  Biggest opportunity: <b className="font-semibold text-[#24324F]">{weakest[0]?.label.toLowerCase()}</b>.
+                </p>
+              </div>
+            </div>
+            <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+              {factors.slice(0, 7).map((f) => (
+                <li key={f.key} className="grid grid-cols-[1fr_72px_28px] items-center gap-2 text-[12px]">
+                  <span className="truncate text-[#3C4A66]">{f.label}</span>
+                  <Meter value={f.score} tone={scoreTone(f.score)} />
+                  <b className="text-right font-semibold tabular-nums text-[#0F1B3D]">{f.score}</b>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </div>
-      <HealthDetailSheet open={open} onOpenChange={setOpen} />
+      <HealthDetailSheet open={open} onOpenChange={setOpen} analytics={analytics} />
     </Card>
   );
 }
@@ -346,13 +381,14 @@ function PerformanceCard({
   className?: string;
   metric: MetricKey;
   onMetric: (m: MetricKey) => void;
-  analytics: ReturnType<typeof useChannelAnalytics>;
+  analytics: QueryView<ChannelAnalytics>;
   periodLabel: string;
 }) {
   const { days } = usePeriod();
   const [granularity, setGranularity] = useState<Granularity>(days > 90 ? "weekly" : "daily");
   const [compare, setCompare] = useState(true);
   const effective: Granularity = granularity === "monthly" && days < 90 ? "weekly" : granularity;
+  const chartMetric: MetricKey = metric === "avgViewDuration" || metric === "impressions" || metric === "ctr" ? "views" : metric;
 
   return (
     <Card className={className}>
@@ -382,31 +418,47 @@ function PerformanceCard({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Segmented<MetricKey>
             label="Chart metric"
-            value={metric === "avgViewDuration" ? "views" : metric}
+            value={chartMetric}
             onChange={onMetric}
             className="max-w-full overflow-x-auto"
-            items={(["views", "watchTime", "subscribers", "impressions", "ctr"] as MetricKey[]).map((m) => ({ value: m, label: METRICS[m].short }))}
+            items={(["views", "watchTime", "subscribers"] as MetricKey[]).map((m) => ({ value: m, label: METRICS[m].short }))}
           />
-          <ChartLegend items={[{ label: METRICS[metric].label, color: METRICS[metric].color }, ...(compare ? [{ label: "Previous period", color: "#C9D1DC", dashed: true }] : [])]} />
+          <ChartLegend items={[{ label: METRICS[chartMetric].label, color: METRICS[chartMetric].color }, ...(compare ? [{ label: "Previous period", color: "#C9D1DC", dashed: true }] : [])]} />
         </div>
         <div className="mt-3">
-          <TrendChart current={analytics.current} previous={analytics.previous} metric={metric} granularity={effective} compare={compare} height={250} />
+          {analytics.isLoading ? (
+            <Skeleton className="h-[250px] w-full" />
+          ) : !analytics.data.hasData ? (
+            <EmptyState compact icon={BarChart3} title="No data for this period" description="YouTube hasn't reported views for this date range yet. Try a longer range." />
+          ) : (
+            <TrendChart current={analytics.data.current} previous={analytics.data.previous} metric={chartMetric} granularity={effective} compare={compare} height={250} />
+          )}
         </div>
       </div>
     </Card>
   );
 }
 
-function TrafficCard({ className, total }: { className?: string; total: number }) {
+function TrafficCard({ className, total }: { className?: string; total: number | null }) {
   const withPeriod = useWithPeriod();
-  const top = trafficSources.slice(0, 6);
+  const { days } = usePeriod();
+  const traffic = useTrafficSources(days);
+  const top = traffic.data.rows.slice(0, 6);
   return (
     <Card className={cn("flex flex-col", className)}>
       <CardHeader title="Traffic sources" description="Where views came from" actions={<ViewLink href={withPeriod(`${ytRoutes.analytics}?tab=reach`)}>View details</ViewLink>} />
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 pb-4 sm:flex-row xl:flex-col 2xl:flex-row">
-        <Donut data={top} size={150} thickness={18} centerValue={compact(total)} centerLabel="Total views" />
-        <LegendList data={top} className="w-full" />
-      </div>
+      {traffic.isLoading ? (
+        <div className="px-4 pb-4"><Skeleton className="mx-auto size-[150px]" /></div>
+      ) : traffic.error ? (
+        <ErrorState compact error={traffic.error} onRetry={traffic.refetch} />
+      ) : top.length === 0 ? (
+        <EmptyState compact icon={BarChart3} title="No traffic data" description="YouTube hasn't reported traffic sources for this date range." />
+      ) : (
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 pb-4 sm:flex-row xl:flex-col 2xl:flex-row">
+          <Donut data={top} size={150} thickness={18} centerValue={compact(total)} centerLabel="Total views" />
+          <LegendList data={top} className="w-full" />
+        </div>
+      )}
     </Card>
   );
 }
@@ -416,16 +468,25 @@ function TrafficCard({ className, total }: { className?: string; total: number }
 /* ------------------------------------------------------------------ */
 
 function TopContentCard({ className }: { className?: string }) {
-  const { videos } = useYouTube();
-  const top = useMemo(
-    () => videos.filter((v) => v.status === "published").sort((a, b) => b.stats.views - a.stats.views).slice(0, 5),
-    [videos],
-  );
+  const { videos, can, connection } = useYouTube();
+  const { days } = usePeriod();
+  const range = useMemo(() => periodRange(days), [days]);
+  const enabled = can.canViewAnalytics.allowed && connection.state !== "disconnected" && connection.state !== "not_mapped";
+  const q = useAnalyticsTopVideos(range, "views", enabled, 5);
+  const byId = useMemo(() => new Map(videos.map((v) => [v.id, v])), [videos]);
+  const rows = (q.data?.items ?? []).filter((t) => t.metrics.views !== null);
+
   return (
     <Card className={className}>
       <CardHeader title="Top performing content" description="By views in the selected period" actions={<ViewLink href={`${ytRoutes.content}?status=published&sort=views`}>View all</ViewLink>} />
-      {top.length === 0 ? (
-        <EmptyState compact icon={BarChart3} title="No published content yet" description="Performance appears here once your first video is public." />
+      {!enabled ? (
+        <CapabilityState compact capability={can.canViewAnalytics} />
+      ) : q.isPending ? (
+        <div className="space-y-2 px-4 pb-4">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+      ) : q.error ? (
+        <ErrorState compact error={describeYouTubeError(q.error)} onRetry={() => void q.refetch()} />
+      ) : rows.length === 0 ? (
+        <EmptyState compact icon={BarChart3} title="No performance data yet" description="Performance appears here once YouTube reports views for the selected period." />
       ) : (
         <div className="scrollbar-thin overflow-x-auto">
           <table className="w-full min-w-[640px] text-left">
@@ -435,28 +496,33 @@ function TopContentCard({ className }: { className?: string }) {
                 <th className={cn(thClass, "static bg-white")}>Content</th>
                 <th className={cn(thClass, "static bg-white text-right")}>Views</th>
                 <th className={cn(thClass, "static bg-white text-right")}>Watch time</th>
-                <th className={cn(thClass, "static bg-white text-right")}>CTR</th>
+                <th className={cn(thClass, "static bg-white text-right")}>Avg. duration</th>
                 <th className={cn(thClass, "static bg-white pr-4 text-right")}>Engagement</th>
               </tr>
             </thead>
             <tbody>
-              {top.map((v, i) => {
-                const engagement = v.stats.views ? ((v.stats.likes + v.stats.comments) / v.stats.views) * 100 : null;
+              {rows.map((t, i) => {
+                const known = byId.get(t.videoId);
+                const views = t.metrics.views ?? null;
+                const likes = t.metrics.likes ?? null;
+                const comments = t.metrics.comments ?? null;
+                const engagement = views && views > 0 && likes !== null && comments !== null ? ((likes + comments) / views) * 100 : null;
+                const title = known?.title ?? t.video?.title ?? "Video";
                 return (
-                  <tr key={v.id} className="group hover:bg-[#F8FAFC]">
+                  <tr key={t.videoId} className="group hover:bg-[#F8FAFC]">
                     <td className={cn(tdClass, "pl-4 text-[12px] font-semibold text-[#98A2B3]")}>{i + 1}</td>
                     <td className={cn(tdClass, "max-w-[340px]")}>
-                      <Link href={ytRoutes.video(v.id)} className="flex items-center gap-2.5 rounded">
-                        <Thumb src={v.thumbnailUrl} durationSec={v.durationSec} className="w-[76px]" sizes="76px" />
+                      <Link href={ytRoutes.video(t.videoId)} className="flex items-center gap-2.5 rounded">
+                        <Thumb src={known?.thumbnailUrl ?? t.video?.thumbnail} durationSec={known?.durationSec} className="w-[76px]" sizes="76px" />
                         <span className="min-w-0">
-                          <span className="block truncate text-[12.5px] font-semibold text-[#0F1B3D] group-hover:text-[#2563EB]">{v.title}</span>
-                          <span className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-[#6B7890]"><TypeBadge type={v.type} />{date(v.publishedAt)}</span>
+                          <span className="block truncate text-[12.5px] font-semibold text-[#0F1B3D] group-hover:text-[#2563EB]">{title}</span>
+                          <span className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-[#6B7890]">{known && <TypeBadge type={known.type} />}{date(known?.publishedAt ?? t.video?.publishedAt ?? null)}</span>
                         </span>
                       </Link>
                     </td>
-                    <td className={cn(tdClass, "text-right font-semibold tabular-nums text-[#0F1B3D]")}>{compact(v.stats.views)}</td>
-                    <td className={cn(tdClass, "text-right tabular-nums")}>{hours(v.stats.watchTimeHours)}</td>
-                    <td className={cn(tdClass, "text-right tabular-nums")}>{percent(v.stats.ctr)}</td>
+                    <td className={cn(tdClass, "text-right font-semibold tabular-nums text-[#0F1B3D]")}>{compact(views)}</td>
+                    <td className={cn(tdClass, "text-right tabular-nums")}>{hours(t.metrics.estimatedMinutesWatched === null || t.metrics.estimatedMinutesWatched === undefined ? null : t.metrics.estimatedMinutesWatched / 60)}</td>
+                    <td className={cn(tdClass, "text-right tabular-nums")}>{duration(t.metrics.averageViewDurationSeconds ?? null)}</td>
                     <td className={cn(tdClass, "pr-4 text-right tabular-nums")}>{percent(engagement)}</td>
                   </tr>
                 );
@@ -476,7 +542,10 @@ function TopContentCard({ className }: { className?: string }) {
 type AudienceTab = "age" | "geo" | "devices";
 
 function AudienceSnapshot({ className }: { className?: string }) {
-  const { can, audience: a } = useYouTube();
+  const { can } = useYouTube();
+  const { days } = usePeriod();
+  const audience = useAudienceData(days);
+  const a = audience.data;
   const withPeriod = useWithPeriod();
   const [tab, setTab] = useState<AudienceTab>("age");
   const detailTab = tab === "age" ? "demographics" : tab === "geo" ? "geography" : "devices";
@@ -486,6 +555,8 @@ function AudienceSnapshot({ className }: { className?: string }) {
       <CardHeader title="Audience snapshot" actions={<ViewLink href={withPeriod(`${ytRoutes.audience}?tab=${detailTab}`)}>View details</ViewLink>} />
       {!can.canViewAnalytics.allowed ? (
         <CapabilityState compact capability={can.canViewAnalytics} />
+      ) : audience.error ? (
+        <ErrorState compact error={audience.error} onRetry={audience.refetch} />
       ) : (
         <div className="flex flex-1 flex-col px-4 pb-4">
           <div className="border-b border-[#EEF1F5]">
@@ -502,33 +573,35 @@ function AudienceSnapshot({ className }: { className?: string }) {
             />
           </div>
           <div className="flex-1 pt-3.5">
-            {tab === "age" &&
-              (a.age && a.gender ? (
-                <div className="space-y-4">
-                  <div className="flex gap-2">
-                    {a.gender.slice(0, 2).map((g, i) => (
-                      <div key={g.label} className="flex-1 rounded-sm bg-[#F8FAFC] px-3 py-2">
-                        <p className="text-[11.5px] text-[#6B7890]">{g.label}</p>
-                        <p className="text-[17px] font-semibold tabular-nums" style={{ color: i === 0 ? "#2563EB" : "#DB2777" }}>{g.value.toFixed(1)}%</p>
+            {audience.isLoading ? (
+              <div className="space-y-2">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-5 w-full" />)}</div>
+            ) : (
+              <>
+                {tab === "age" &&
+                  (a.age && a.gender ? (
+                    <div className="space-y-4">
+                      <div className="flex gap-2">
+                        {a.gender.slice(0, 2).map((g, i) => (
+                          <div key={g.label} className="flex-1 rounded-sm bg-[#F8FAFC] px-3 py-2">
+                            <p className="text-[11.5px] text-[#6B7890]">{g.label}</p>
+                            <p className="text-[17px] font-semibold tabular-nums" style={{ color: i === 0 ? "#2563EB" : "#DB2777" }}>{g.value.toFixed(1)}%</p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  <BarList data={a.age.slice(0, 6)} color="#2563EB" />
-                </div>
-              ) : (
-                <NotEnoughData />
-              ))}
-            {tab === "geo" &&
-              (a.geography ? (
-                <BarList
-                  data={a.geography.slice(0, 6).map((g) => ({ label: g.country, value: g.views }))}
-                  color="#E5202E"
-                  format={(v) => compact(v)}
-                />
-              ) : (
-                <NotEnoughData />
-              ))}
-            {tab === "devices" && (a.devices ? <BarList data={a.devices} color="#7C3AED" /> : <NotEnoughData />)}
+                      <BarList data={a.age.slice(0, 6)} color="#2563EB" />
+                    </div>
+                  ) : (
+                    <NotEnoughData />
+                  ))}
+                {tab === "geo" &&
+                  (a.geography ? (
+                    <BarList data={a.geography.slice(0, 6).map((g) => ({ label: g.country, value: g.views }))} color="#E5202E" format={(v) => compact(v)} />
+                  ) : (
+                    <NotEnoughData />
+                  ))}
+                {tab === "devices" && (a.devices ? <BarList data={a.devices} color="#7C3AED" /> : <NotEnoughData />)}
+              </>
+            )}
           </div>
         </div>
       )}
@@ -547,28 +620,35 @@ export function NotEnoughData() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Recent comments                                                     */
+/* Recent comments (comments are per video: the most recent published video)  */
 /* ------------------------------------------------------------------ */
 
 type CommentTab = "all" | "unanswered" | "review";
 
 function RecentComments() {
-  const { comments, videos, can, toggleCommentLike } = useYouTube();
+  const { videos, can, connection } = useYouTube();
   const [tab, setTab] = useState<CommentTab>("all");
-  const lists = useMemo(() => {
-    const sorted = [...comments].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-    return {
-      all: sorted.filter((c) => c.moderationStatus === "published"),
-      unanswered: sorted.filter((c) => c.moderationStatus === "published" && !c.replies.some((r) => r.isChannelOwner)),
-      review: sorted.filter((c) => c.moderationStatus === "heldForReview" || c.moderationStatus === "likelySpam"),
-    };
-  }, [comments]);
+  const latest = useMemo(() => [...videos].filter((v) => v.status === "published").sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))[0], [videos]);
+  const usable = connection.state === "connected" || connection.state === "syncing";
+  const commentsOn = latest ? latest.commentsEnabled !== false : false;
+  const published = useCommentsInfinite(latest?.id, { filter: "published", order: "time", enabled: usable && commentsOn });
+  const review = useCommentsInfinite(latest?.id, { filter: "heldForReview", order: "time", enabled: usable && commentsOn && tab === "review" && can.canModerateComments.allowed });
+
+  const threads = useMemo<CommentThread[]>(() => (latest ? (published.data?.pages.flatMap((p) => p.items.map((t) => toCommentThread(t, latest.id))) ?? []) : []), [published.data, latest]);
+  const reviewThreads = useMemo<CommentThread[]>(() => (latest ? (review.data?.pages.flatMap((p) => p.items.map((t) => toCommentThread(t, latest.id))) ?? []) : []), [review.data, latest]);
+  const lists = {
+    all: threads,
+    unanswered: threads.filter((c) => !isAnswered(c)),
+    review: reviewThreads,
+  };
   const list = lists[tab].slice(0, 5);
-  const href = tab === "all" ? ytRoutes.comments : tab === "unanswered" ? `${ytRoutes.comments}?status=unanswered` : `${ytRoutes.comments}?status=held`;
+  const href = `${ytRoutes.comments}?video=${latest?.id ?? ""}${tab === "unanswered" ? "&status=unanswered" : tab === "review" ? "&status=held" : ""}`;
+  const loading = tab === "review" ? review.isPending && review.fetchStatus !== "idle" : published.isPending && published.fetchStatus !== "idle";
+  const error = tab === "review" ? review.error : published.error;
 
   return (
     <Card className="flex flex-col h-[380px]">
-      <CardHeader title="Recent comments" actions={<ViewLink href={href}>View all</ViewLink>} />
+      <CardHeader title="Recent comments" description={latest ? `On your latest video: ${latest.title}` : undefined} actions={latest ? <ViewLink href={href}>View all</ViewLink> : undefined} />
       <div className="border-b border-[#EEF1F5] px-4 shrink-0">
         <UnderlineTabs<CommentTab>
           label="Comment filter"
@@ -576,51 +656,47 @@ function RecentComments() {
           value={tab}
           onChange={setTab}
           items={[
-            { value: "all", label: "All", count: lists.all.length },
-            { value: "unanswered", label: "Unanswered", count: lists.unanswered.length },
-            { value: "review", label: "Needs review", count: lists.review.length },
+            { value: "all", label: "All", count: published.data ? lists.all.length : undefined },
+            { value: "unanswered", label: "Unanswered", count: published.data ? lists.unanswered.length : undefined },
+            { value: "review", label: "Needs review", count: review.data ? lists.review.length : undefined },
           ]}
         />
       </div>
-      {list.length === 0 ? (
+      {!latest ? (
+        <EmptyState compact icon={MessageSquare} title="No published videos yet" description="Comments appear here once a video is public and viewers engage." />
+      ) : !commentsOn ? (
+        <EmptyState compact icon={MessageSquare} title="Comments are turned off" description="Comments are disabled for your latest video." />
+      ) : tab === "review" && !can.canModerateComments.allowed ? (
+        <CapabilityState compact capability={can.canModerateComments} />
+      ) : loading ? (
+        <div className="space-y-3 px-4 py-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+      ) : error ? (
+        <ErrorState compact error={describeYouTubeError(error)} onRetry={() => void (tab === "review" ? review.refetch() : published.refetch())} />
+      ) : list.length === 0 ? (
         <EmptyState compact icon={MessageSquare} title={tab === "unanswered" ? "Every comment has a reply" : tab === "review" ? "Nothing to review" : "No comments yet"} description="Comments will appear here once viewers engage." />
       ) : (
         <div className="flex-1 overflow-y-auto scrollbar-thin">
           <ul className="divide-y divide-[#EEF1F5]">
-            {list.map((c) => {
-            const video = videos.find((v) => v.id === c.videoId);
-            return (
+            {list.map((c) => (
               <li key={c.id} className="flex gap-3 px-4 py-2.5">
-                <Avatar name={c.author} />
+                <Avatar name={c.author} src={c.authorAvatar} />
                 <div className="min-w-0 flex-1">
                   <p className="flex flex-wrap items-center gap-x-2 text-[12px]">
                     <b className="font-semibold text-[#0F1B3D]">{c.author}</b>
                     <span className="text-[#98A2B3]">{relative(c.publishedAt)}</span>
-                    {c.priority && <Badge tone="blue">Priority</Badge>}
                   </p>
                   <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-5 text-[#24324F]">{c.text}</p>
-                  {video && (
-                    <Link href={ytRoutes.video(video.id)} className="mt-0.5 block truncate text-[11.5px] text-[#6B7890] hover:text-[#2563EB]">on {video.title}</Link>
-                  )}
+                  <Link href={ytRoutes.video(latest.id)} className="mt-0.5 block truncate text-[11.5px] text-[#6B7890] hover:text-[#2563EB]">on {latest.title}</Link>
                 </div>
                 <div className="flex shrink-0 items-start gap-1">
-                  <Button
-                    size="iconSm"
-                    variant="ghost"
-                    aria-label={c.likedByChannel ? "Unlike comment" : "Like comment"}
-                    aria-pressed={c.likedByChannel}
-                    gate={can.canReplyComments}
-                    onClick={() => toggleCommentLike(c.id)}
-                    className={cn("w-auto gap-1 px-1.5 text-[11.5px]", c.likedByChannel && "text-[#2563EB]")}
-                  >
-                    <ThumbsUp className={cn("size-3.5", c.likedByChannel && "fill-current")} />
-                    {c.likeCount}
-                  </Button>
-                  <Button size="xs" variant="secondary" icon={Reply} href={`${ytRoutes.comments}?thread=${c.id}`}>Reply</Button>
+                  <span className="inline-flex h-7 items-center gap-1 px-1.5 text-[11.5px] text-[#6B7890]" aria-label={`${c.likeCount ?? 0} likes`}>
+                    <ThumbsUp className="size-3.5" />
+                    {c.likeCount ?? 0}
+                  </span>
+                  <Button size="xs" variant="secondary" icon={Reply} href={`${ytRoutes.comments}?video=${latest.id}&thread=${c.id}`}>Reply</Button>
                 </div>
               </li>
-            );
-          })}
+            ))}
           </ul>
         </div>
       )}
@@ -633,18 +709,29 @@ function RecentComments() {
 /* ------------------------------------------------------------------ */
 
 function UpcomingContent() {
-  const { videos, liveEvents, can } = useYouTube();
+  const { videos, videosState, can, connection, features, markLiveNotEnabled } = useYouTube();
+  const usable = connection.state === "connected" || connection.state === "syncing";
+  const live = useLiveBroadcasts("upcoming", usable && features.liveStreamingEnabled);
+  const liveError = live.error;
+  useEffect(() => {
+    if (liveError && isLiveNotEnabled(liveError)) markLiveNotEnabled();
+  }, [liveError, markLiveNotEnabled]);
+
   const items = useMemo(() => {
     const vids = videos
       .filter((v) => v.status === "scheduled" || v.status === "draft" || v.status === "failed")
       .map((v) => ({ id: v.id, title: v.title, thumb: v.thumbnailUrl, type: v.type, when: v.scheduledAt, status: v.status, href: ytRoutes.video(v.id) }));
-    const lives = liveEvents
-      .filter((e) => e.lifecycle === "upcoming")
-      .map((e) => ({ id: e.id, title: e.title, thumb: e.thumbnailUrl, type: "live" as const, when: e.scheduledStart, status: "scheduled" as const, href: `${ytRoutes.live}?tab=upcoming` }));
-    return [...vids, ...lives]
-      .sort((a, b) => (a.when ?? "9999").localeCompare(b.when ?? "9999"))
-      .slice(0, 6);
-  }, [videos, liveEvents]);
+    const lives = (live.data?.pages.flatMap((p) => p.items) ?? []).map((e) => ({
+      id: e.broadcastId,
+      title: e.title ?? "Untitled live event",
+      thumb: e.thumbnails.medium ?? e.thumbnails.default ?? "",
+      type: "live" as const,
+      when: e.scheduledStartTime,
+      status: "scheduled" as const,
+      href: `${ytRoutes.live}?tab=upcoming`,
+    }));
+    return [...vids, ...lives].sort((a, b) => (a.when ?? "9999").localeCompare(b.when ?? "9999")).slice(0, 6);
+  }, [videos, live.data]);
 
   return (
     <Card className="flex flex-col h-[380px]">
@@ -657,36 +744,41 @@ function UpcomingContent() {
           </>
         }
       />
-      {items.length === 0 ? (
+      {videosState.isLoading ? (
+        <div className="space-y-2 px-4 pb-4">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+      ) : videosState.isError && videosState.error ? (
+        <ErrorState compact error={videosState.error} onRetry={videosState.refetch} />
+      ) : items.length === 0 ? (
         <EmptyState compact icon={CalendarDays} title="Nothing scheduled" description="Schedule uploads ahead to keep a consistent cadence." />
       ) : (
         <div className="flex-1 overflow-y-auto scrollbar-thin border-t border-[#EEF1F5]">
           <ul className="divide-y divide-[#EEF1F5]">
             {items.map((item) => {
-            const d = item.when ? parseISO(item.when) : null;
-            return (
-              <li key={item.id}>
-                <Link href={item.href} className="group flex items-center gap-3 px-4 py-2.5 hover:bg-[#F8FAFC]">
-                  <span className={cn("grid w-11 shrink-0 place-items-center rounded-sm py-1 leading-none", d ? "bg-[#FEF1F2] text-[#C81E2B]" : "bg-[#F1F4F8] text-[#6B7890]")}>
-                    <small className="text-[10px] font-semibold uppercase">{d ? format(d, "MMM") : "No"}</small>
-                    <b className="text-[15px] font-semibold leading-5">{d ? format(d, "d") : "date"}</b>
-                  </span>
-                  <Thumb src={item.thumb} className="w-[64px]" sizes="64px" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[12.5px] font-semibold text-[#0F1B3D] group-hover:text-[#2563EB]">{item.title}</span>
-                    <span className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-[#6B7890]">
-                      <TypeBadge type={item.type} />
-                      {d ? format(d, "EEE · h:mm a") : "Not scheduled"}
+              const d = item.when ? parseISO(item.when) : null;
+              return (
+                <li key={item.id}>
+                  <Link href={item.href} className="group flex items-center gap-3 px-4 py-2.5 hover:bg-[#F8FAFC]">
+                    <span className={cn("grid w-11 shrink-0 place-items-center rounded-sm py-1 leading-none", d ? "bg-[#FEF1F2] text-[#C81E2B]" : "bg-[#F1F4F8] text-[#6B7890]")}>
+                      <small className="text-[10px] font-semibold uppercase">{d ? format(d, "MMM") : "No"}</small>
+                      <b className="text-[15px] font-semibold leading-5">{d ? format(d, "d") : "date"}</b>
                     </span>
-                  </span>
-                  <StatusBadge status={item.status} />
-                </Link>
-              </li>
-            );
-          })}
+                    <Thumb src={item.thumb} className="w-[64px]" sizes="64px" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[12.5px] font-semibold text-[#0F1B3D] group-hover:text-[#2563EB]">{item.title}</span>
+                      <span className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-[#6B7890]">
+                        <TypeBadge type={item.type} />
+                        {d ? format(d, "EEE · h:mm a") : "Not scheduled"}
+                      </span>
+                    </span>
+                    <StatusBadge status={item.status} />
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
     </Card>
   );
 }
+

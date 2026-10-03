@@ -1,14 +1,13 @@
+import type { YouTubeConsentCapability } from "../live/youtube-dto";
 import type {
   ApprovalState,
   ContentType,
+  GrantedKey,
   MetricKey,
   ModerationStatus,
   Period,
   PublishStatus,
   Visibility,
-  WorkspaceRole,
-  YouTubePermission,
-  YouTubeScope,
 } from "../types";
 
 export const YT_ROOT = "/admin/youtube";
@@ -27,19 +26,17 @@ export const ytRoutes = {
   liveCreate: `${YT_ROOT}/live/create`,
   monetization: `${YT_ROOT}/monetization`,
   settings: `${YT_ROOT}/settings`,
+  /** Where a company login is linked to a Client. */
+  integrations: "/admin/integrations",
   calendar: "/admin/calendar?channel=youtube",
   studio: "https://studio.youtube.com",
   watch: (id: string) => `https://www.youtube.com/watch?v=${id}`,
   playlistOnYouTube: (id: string) => `https://www.youtube.com/playlist?list=${id}`,
-  channelOnYouTube: (handle: string) => `https://www.youtube.com/${handle}`,
+  /** `@handle` when the channel has one, otherwise the channel-id URL. */
+  channelOnYouTube: (channel: { id: string; handle: string }) => (channel.handle ? `https://www.youtube.com/${channel.handle}` : `https://www.youtube.com/channel/${channel.id}`),
+  /** Management of monetization is not available through the public API: link out. */
+  monetizationInStudio: (channelId: string) => `https://studio.youtube.com/channel/${channelId}/monetization`,
 } as const;
-
-/**
- * Mock mode: data comes from `data/mock.ts` and mutations resolve locally.
- * When the backend is attached this flips off and the "Preview states" panel
- * in Settings disappears.
- */
-export const YT_MOCK_MODE = true;
 
 export const PERIODS: { value: Period; label: string; days: number }[] = [
   { value: "7d", label: "Last 7 days", days: 7 },
@@ -122,44 +119,19 @@ export const languageLabel = (id: string) => LANGUAGES.find((l) => l.id === id)?
 
 export const TIMEZONES = ["Asia/Kolkata", "UTC", "Europe/London", "America/New_York", "Asia/Dubai", "Asia/Singapore"];
 
-export const ROLE_LABEL: Record<WorkspaceRole, string> = {
-  owner: "Owner",
-  manager: "Channel Manager",
-  editor: "Editor",
-  contributor: "Contributor",
-  analyst: "Analyst",
+/**
+ * The Google permissions OmniPlatform can hold for a channel. Each maps to ONE named consent capability (the server owns the
+ * Google scope behind it); `readChannel` is part of the initial connection and has no separate consent.
+ */
+export const GRANTED_INFO: Record<GrantedKey, { label: string; description: string; consent: YouTubeConsentCapability | null }> = {
+  readChannel: { label: "Read channel", description: "Channel profile, videos, playlists and comments.", consent: null },
+  uploadVideos: { label: "Upload videos", description: "Upload new videos and set custom thumbnails.", consent: "YOUTUBE_UPLOAD_VIDEO" },
+  manageChannel: { label: "Manage videos, playlists, comments & live", description: "Edit metadata, publish, manage playlists and comments, run live broadcasts.", consent: "YOUTUBE_MANAGE_CONTENT" },
+  readAnalytics: { label: "View analytics", description: "Views, watch time, audience and traffic reports.", consent: "YOUTUBE_READ_ANALYTICS" },
+  readMonetaryAnalytics: { label: "View revenue", description: "Estimated revenue and ad reports (a separate permission).", consent: "YOUTUBE_READ_MONETARY_ANALYTICS" },
 };
 
-export const PERMISSION_LABEL: Record<YouTubePermission, string> = {
-  view_youtube: "View YouTube",
-  view_analytics: "View analytics",
-  upload_content: "Upload content",
-  edit_content: "Edit content",
-  delete_content: "Delete content",
-  publish_content: "Publish content",
-  schedule_content: "Schedule content",
-  manage_playlists: "Manage playlists",
-  moderate_comments: "Moderate comments",
-  reply_comments: "Reply to comments",
-  manage_live: "Manage live streams",
-  manage_connection: "Manage connection",
-  view_monetization: "View monetization",
-  manage_settings: "Manage settings",
-  approve_content: "Approve content",
-};
-
-export const ALL_PERMISSIONS = Object.keys(PERMISSION_LABEL) as YouTubePermission[];
-
-export const SCOPE_INFO: Record<YouTubeScope, { label: string; description: string }> = {
-  "youtube.readonly": { label: "Read channel", description: "Channel profile, videos, playlists and comments." },
-  "youtube.upload": { label: "Upload videos", description: "Upload new videos and set thumbnails." },
-  youtube: { label: "Manage videos & playlists", description: "Edit metadata, delete videos, manage playlists and live broadcasts." },
-  "youtube.force-ssl": { label: "Manage comments", description: "Reply to, moderate and delete comments." },
-  "yt-analytics.readonly": { label: "View analytics", description: "Views, watch time, audience and traffic reports." },
-  "yt-analytics-monetary.readonly": { label: "View revenue", description: "Estimated revenue, RPM and CPM reports." },
-};
-
-export const ALL_SCOPES = Object.keys(SCOPE_INFO) as YouTubeScope[];
+export const GRANTED_KEYS = Object.keys(GRANTED_INFO) as GrantedKey[];
 
 export const TITLE_MAX = 100;
 export const DESCRIPTION_MAX = 5000;

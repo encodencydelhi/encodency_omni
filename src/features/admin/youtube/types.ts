@@ -1,3 +1,9 @@
+import type { YouTubeConsentCapability } from "./live/youtube-dto";
+
+/**
+ * View models used by the YouTube pages. They are built from the backend DTOs in `data/mappers.ts`.
+ * A value the API does not provide is `null` (rendered as an em dash / "unavailable"), never a zero or an invented number.
+ */
 
 export type ISODate = string;
 
@@ -14,6 +20,7 @@ export type PublishStatus =
   | "processing"
   | "failed";
 
+/** There is no approval workflow behind the API; every video is `none`. Kept so shared badges keep compiling. */
 export type ApprovalState =
   | "none"
   | "pending"
@@ -22,22 +29,24 @@ export type ApprovalState =
   | "rejected";
 
 export type Period = "7d" | "28d" | "90d" | "365d";
+
 export interface Channel {
   id: string;
   title: string;
+  /** `@handle`, or "" when the channel has none. */
   handle: string;
   description: string;
   customUrl: string;
   avatarUrl: string;
   bannerUrl: string;
-  isVerified: boolean;
-  subscriberCount: number;
-  videoCount: number;
-  viewCount: number;
-  country: string;
-  createdAt: ISODate;
+  /** Null when the owner hides the subscriber count. */
+  subscriberCount: Maybe<number>;
+  videoCount: Maybe<number>;
+  viewCount: Maybe<number>;
+  country: Maybe<string>;
+  createdAt: Maybe<ISODate>;
   keywords: string[];
-  googleAccount: string;
+  googleAccount: Maybe<string>;
 }
 
 export type ConnectionState =
@@ -46,43 +55,21 @@ export type ConnectionState =
   | "sync_failed"
   | "token_expired"
   | "quota_exceeded"
+  | "not_mapped"
   | "disconnected";
 
 export interface ConnectionInfo {
   state: ConnectionState;
-  lastSyncedAt: ISODate;
-  nextSyncAt: ISODate;
-  autoSync: boolean;
-  syncFrequency: "hourly" | "6h" | "12h" | "daily";
-  quotaUsed: number;
-  quotaLimit: number;
+  lastSyncedAt: Maybe<ISODate>;
+  /** Stable backend reason when the connection is not ACTIVE. */
+  reason: Maybe<string>;
+  requiresReconnect: boolean;
+  /** The Company has a YouTube login that could be linked to this Client. */
+  companyConnectionAvailable: boolean;
 }
 
-export type YouTubeScope =
-  | "youtube.readonly"
-  | "youtube.upload"
-  | "youtube"
-  | "youtube.force-ssl"
-  | "yt-analytics.readonly"
-  | "yt-analytics-monetary.readonly";
-export type YouTubePermission =
-  | "view_youtube"
-  | "view_analytics"
-  | "upload_content"
-  | "edit_content"
-  | "delete_content"
-  | "publish_content"
-  | "schedule_content"
-  | "manage_playlists"
-  | "moderate_comments"
-  | "reply_comments"
-  | "manage_live"
-  | "manage_connection"
-  | "view_monetization"
-  | "manage_settings"
-  | "approve_content";
-
-export type WorkspaceRole = "owner" | "manager" | "editor" | "contributor" | "analyst";
+/** The permissions Google actually granted (`grantedCapabilities` of the connection response). */
+export type GrantedKey = "readChannel" | "readAnalytics" | "readMonetaryAnalytics" | "uploadVideos" | "manageChannel";
 
 export type CapabilityKey =
   | "canUpload"
@@ -92,9 +79,13 @@ export type CapabilityKey =
   | "canSchedule"
   | "canApprove"
   | "canManagePlaylists"
+  | "canDeletePlaylist"
   | "canReplyComments"
   | "canModerateComments"
+  | "canRemoveComments"
   | "canGoLive"
+  | "canTransitionLive"
+  | "canViewStreamKey"
   | "canViewAnalytics"
   | "canViewRevenue"
   | "canManageConnection"
@@ -103,22 +94,31 @@ export type CapabilityKey =
 export interface Capability {
   allowed: boolean;
   reason?: string;
-  fix?: "reconnect" | "request_access" | "enable_feature" | "wait";
+  /**
+   * reconnect: the connection is unusable (Google sign-in again). grant: a named permission is missing (incremental consent).
+   * connect: link/connect a channel first. request_access: the user's role lacks it. enable_feature: not enabled by YouTube. wait: temporary.
+   */
+  fix?: "reconnect" | "grant" | "connect" | "request_access" | "enable_feature" | "wait";
+  /** Set with `fix: "grant"`: the named capability to ask Google for (never a raw scope string). */
+  grant?: YouTubeConsentCapability;
 }
 
 export type CapabilityMap = Record<CapabilityKey, Capability>;
 
 export interface ChannelFeatures {
+  /** `false` only after the backend answered `youtube_live_not_enabled`. Unknown is `true` (not blocked until proven). */
   liveStreamingEnabled: boolean;
-  monetizationEnabled: boolean;
-  customThumbnailsEnabled: boolean;
-  longUploadsEnabled: boolean;
 }
+
 export interface VideoStats {
-  views: number;
-  watchTimeHours: number;
-  likes: number;
-  comments: number;
+  views: Maybe<number>;
+  /** From the Analytics API for the loaded period; null when not loaded / no data. */
+  watchTimeHours: Maybe<number>;
+  /** Null when the owner hides likes. */
+  likes: Maybe<number>;
+  /** Null when comments are disabled. */
+  comments: Maybe<number>;
+  /** The Analytics API does not report impressions or CTR for channel reports: always null. */
   ctr: Maybe<number>;
   impressions: Maybe<number>;
   avgViewDurationSec: Maybe<number>;
@@ -135,112 +135,47 @@ export interface Video {
   status: PublishStatus;
   publishedAt: Maybe<ISODate>;
   scheduledAt: Maybe<ISODate>;
-  durationSec: number;
+  /** The id of the OmniPlatform publish/schedule record that owns `scheduledAt` (for reschedule/cancel). */
+  scheduleId: Maybe<string>;
+  durationSec: Maybe<number>;
   tags: string[];
-  categoryId: string;
-  language: string;
-  madeForKids: boolean;
-  ageRestricted: boolean;
-  license: "youtube" | "creativeCommon";
-  embeddable: boolean;
-  commentsEnabled: boolean;
-  paidPromotion: boolean;
-  recordingDate: Maybe<ISODate>;
-  playlistIds: string[];
+  categoryId: Maybe<string>;
+  language: Maybe<string>;
+  madeForKids: Maybe<boolean>;
+  embeddable: Maybe<boolean>;
+  /** `true` unless YouTube omits the comment count (comments disabled). */
+  commentsEnabled: Maybe<boolean>;
   stats: VideoStats;
+  /** Always `none`: no approval workflow exists in the backend. */
   approval: ApprovalState;
   failureReason?: string;
-  updatedAt: ISODate;
-}
-export interface ApprovalEvent {
-  id: string;
-  videoId: string;
-  action: "submitted" | "approved" | "changes_requested" | "rejected";
-  actor: string;
-  note?: string;
-  at: ISODate;
+  updatedAt: Maybe<ISODate>;
 }
 
-export type VersionField =
-  | "title"
-  | "description"
-  | "tags"
-  | "thumbnail"
-  | "visibility"
-  | "schedule";
-
-export interface VersionEntry {
-  id: string;
-  videoId: string;
-  field: VersionField;
-  previous: string;
-  next: string;
-  actor: string;
-  at: ISODate;
-}
-
-export type AuditAction =
-  | "upload"
-  | "edit"
-  | "delete"
-  | "publish"
-  | "schedule"
-  | "comment_reply"
-  | "moderation"
-  | "playlist"
-  | "live"
-  | "reconnect"
-  | "permission"
-  | "settings"
-  | "thumbnail"
-  | "sync"
-  | "approval";
-
-export interface AuditEvent {
-  id: string;
-  actor: string;
-  action: AuditAction;
-  summary: string;
-  entity: { type: "video" | "playlist" | "comment" | "live" | "channel" | "settings"; id?: string; label: string };
-  previous?: string;
-  next?: string;
-  source: "OmniPlatform" | "YouTube sync";
-  at: ISODate;
-}
-
-export type NotificationKind =
-  | "upload_completed"
-  | "upload_failed"
-  | "video_published"
-  | "schedule_failed"
-  | "priority_comment"
-  | "live_starting"
-  | "live_failed"
-  | "token_expired"
-  | "permission_removed"
-  | "sync_failed"
-  | "quota_warning"
-  | "monetization_changed"
-  | "approval_requested";
-
-export interface WorkspaceNotification {
-  id: string;
-  kind: NotificationKind;
-  title: string;
-  body: string;
-  href: string;
-  at: ISODate;
-  read: boolean;
-}
 export interface Playlist {
   id: string;
   title: string;
   description: string;
   visibility: Visibility;
-  videoIds: string[];
-  updatedAt: ISODate;
-  createdAt: ISODate;
+  /** `contentDetails.itemCount` (counts private/deleted items too). */
+  itemCount: Maybe<number>;
+  thumbnailUrl: Maybe<string>;
+  createdAt: Maybe<ISODate>;
+  /** YouTube-managed lists (uploads, liked, watch later...): read-only. */
+  system: boolean;
 }
+
+export interface PlaylistItem {
+  playlistItemId: string;
+  videoId: string;
+  position: Maybe<number>;
+  title: string;
+  thumbnailUrl: Maybe<string>;
+  available: boolean;
+  privacy: Maybe<Visibility>;
+  addedAt: Maybe<ISODate>;
+}
+
 export type ModerationStatus = "published" | "heldForReview" | "likelySpam" | "rejected";
 
 export interface CommentReply {
@@ -249,49 +184,56 @@ export interface CommentReply {
   authorAvatar?: string;
   isChannelOwner: boolean;
   text: string;
-  likeCount: number;
-  publishedAt: ISODate;
+  likeCount: Maybe<number>;
+  publishedAt: Maybe<ISODate>;
 }
 
 export interface CommentThread {
+  /** Thread id. */
   id: string;
+  /** The top-level comment id (replies, edits and moderation use this one). */
+  commentId: string;
   videoId: string;
   author: string;
   authorAvatar?: string;
   text: string;
-  likeCount: number;
-  publishedAt: ISODate;
+  likeCount: Maybe<number>;
+  publishedAt: Maybe<ISODate>;
   moderationStatus: ModerationStatus;
-  likedByChannel: boolean;
+  /** Replies YouTube included with the thread; `totalReplyCount` can be larger. */
   replies: CommentReply[];
-  priority: boolean;
+  totalReplyCount: number;
+  canReply: boolean;
+  authoredByChannel: boolean;
 }
+
 export type LiveLifecycle = "upcoming" | "live" | "completed";
 
 export type StreamHealth = "waiting" | "receiving" | "healthy" | "live" | "ended";
 
 export interface LiveEvent {
+  /** Broadcast id (equals the replay video id once complete). */
   id: string;
   title: string;
   description: string;
-  thumbnailUrl: string;
-  scheduledStart: ISODate;
+  thumbnailUrl: Maybe<string>;
+  scheduledStart: Maybe<ISODate>;
   actualStart: Maybe<ISODate>;
   actualEnd: Maybe<ISODate>;
   visibility: Visibility;
   lifecycle: LiveLifecycle;
+  /** Raw YouTube lifecycle, for transitions. */
+  lifeCycleStatus: string;
+  /** Derived from the bound stream's status/health (needs a bound stream); `waiting` when none. */
   health: StreamHealth;
-  latency: "normal" | "low" | "ultraLow";
-  enableDvr: boolean;
+  enableDvr: Maybe<boolean>;
   enableChat: boolean;
-  ingestUrl: string;
-  streamKey: string;
-  concurrentViewers: Maybe<number>;
-  peakViewers: Maybe<number>;
-  totalViews: Maybe<number>;
-  chatMessages: Maybe<number>;
+  streamId: Maybe<string>;
+  liveChatId: Maybe<string>;
+  /** The broadcast id doubles as the replay video id after the stream completes. */
   replayVideoId: Maybe<string>;
 }
+
 export type MetricKey =
   | "views"
   | "watchTime"
@@ -302,12 +244,15 @@ export type MetricKey =
 
 export interface SeriesPoint {
   date: ISODate;
-  views: number;
-  watchTime: number;
-  subscribers: number;
-  avgViewDuration: number;
-  impressions: number;
-  ctr: number;
+  views: Maybe<number>;
+  /** Hours (the API reports minutes; converted once in the mapper). */
+  watchTime: Maybe<number>;
+  subscribers: Maybe<number>;
+  /** Seconds. */
+  avgViewDuration: Maybe<number>;
+  /** Not reported by the Analytics API: always null. */
+  impressions: Maybe<number>;
+  ctr: Maybe<number>;
 }
 
 export interface MetricSummary {
@@ -327,64 +272,31 @@ export interface BreakdownRow {
 export interface GeographyRow {
   code: string;
   country: string;
-  lat: number;
-  lon: number;
+  /** Null when the country has no entry in the local centroid table (still listed, just not drawn on the map). */
+  lat: Maybe<number>;
+  lon: Maybe<number>;
   views: number;
   watchTimeHours: number;
   subscribers: number;
 }
 
 export interface AudienceData {
-  uniqueViewers: Maybe<number>;
-  returningViewers: Maybe<number>;
-  newViewers: Maybe<number>;
+  /** Percent of viewers, 0-100; null below YouTube's privacy thresholds. */
   age: Maybe<BreakdownRow[]>;
   gender: Maybe<BreakdownRow[]>;
   geography: Maybe<GeographyRow[]>;
   devices: Maybe<BreakdownRow[]>;
-  activity: Maybe<number[][]>;
-  subscriberSources: Maybe<BreakdownRow[]>;
+  subscribed: Maybe<BreakdownRow[]>;
 }
 
 export interface RevenueData {
-  estimatedRevenue: number;
-  previousRevenue: number;
-  rpm: number;
-  cpm: number;
-  monetizedPlaybacks: number;
-  series: { date: ISODate; revenue: number }[];
-  sources: BreakdownRow[];
-}
-export interface WorkspaceSettings {
-  defaults: {
-    visibility: Visibility;
-    categoryId: string;
-    language: string;
-    tags: string[];
-    descriptionFooter: string;
-    playlistId: string;
-    timezone: string;
-    madeForKids: boolean;
-    license: "youtube" | "creativeCommon";
-    commentsEnabled: boolean;
-  };
-  notifications: Record<
-    "uploadCompleted" | "publishFailed" | "newComments" | "liveEvents" | "syncFailure" | "quotaWarning",
-    { inApp: boolean; email: boolean }
-  >;
-  moderation: {
-    priorityAlerts: boolean;
-    blockedKeywords: string[];
-    holdLinks: boolean;
-    requireApproval: boolean;
-  };
-  rolePermissions: Record<WorkspaceRole, YouTubePermission[]>;
-}
-
-export interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: WorkspaceRole;
-  initials: string;
+  currency: string;
+  estimatedRevenue: Maybe<number>;
+  estimatedAdRevenue: Maybe<number>;
+  grossRevenue: Maybe<number>;
+  cpm: Maybe<number>;
+  playbackBasedCpm: Maybe<number>;
+  monetizedPlaybacks: Maybe<number>;
+  adImpressions: Maybe<number>;
+  series: { date: ISODate; revenue: Maybe<number> }[];
 }

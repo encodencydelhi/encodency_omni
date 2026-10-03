@@ -858,6 +858,9 @@ export function ChoiceCard({
 /* Media & people                                                      */
 /* ------------------------------------------------------------------ */
 
+/** Remote YouTube / Google images are served as-is (they are already optimised and not on the Next image allow-list). */
+const isRemote = (src: string) => /^(https?:|blob:|data:)/.test(src);
+
 export function Thumb({
   src,
   alt = "",
@@ -866,17 +869,17 @@ export function Thumb({
   vertical,
   sizes = "160px",
 }: {
-  src: string;
+  src: string | null | undefined;
   alt?: string;
-  durationSec?: number;
+  durationSec?: number | null;
   className?: string;
   vertical?: boolean;
   sizes?: string;
 }) {
   return (
     <span className={cn("relative block shrink-0 overflow-hidden rounded-sm bg-[#E9EDF3]", vertical ? "aspect-[9/16]" : "aspect-video", className)}>
-      <Image src={src} alt={alt} fill sizes={sizes} unoptimized={src.startsWith("blob:") || src.startsWith("data:")} className="object-cover" />
-      {durationSec !== undefined && durationSec > 0 && (
+      {src ? <Image src={src} alt={alt} fill sizes={sizes} unoptimized={isRemote(src)} className="object-cover" /> : null}
+      {durationSec !== undefined && durationSec !== null && durationSec > 0 && (
         <span className="absolute bottom-1 right-1 rounded bg-[#0F1B3D]/80 px-1 text-[10px] font-semibold leading-4 text-white">{fmtDuration(durationSec)}</span>
       )}
     </span>
@@ -896,7 +899,7 @@ export function Avatar({ name, src, className }: { name: string; src?: string; c
   if (src) {
     return (
       <span className={cn("relative block size-8 shrink-0 overflow-hidden rounded-sm bg-[#E9EDF3]", className)}>
-        <Image src={src} alt="" fill sizes="40px" className="object-cover" />
+        <Image src={src} alt="" fill sizes="40px" unoptimized={isRemote(src)} className="object-cover" />
       </span>
     );
   }

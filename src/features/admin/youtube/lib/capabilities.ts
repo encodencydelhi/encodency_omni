@@ -1,84 +1,112 @@
-import type {
-  Capability,
-  CapabilityKey,
-  CapabilityMap,
-  ChannelFeatures,
-  ConnectionState,
-  YouTubePermission,
-  YouTubeScope,
-} from "../types";
+import type { CompanySystemRole } from "@/types/domain/auth";
+import type { YouTubeConsentCapability, YouTubeGrantedCapabilities } from "../live/youtube-dto";
+import type { Capability, CapabilityKey, CapabilityMap, ChannelFeatures, ConnectionInfo, GrantedKey } from "../types";
 
-interface CapabilityInput {
-  connection: ConnectionState;
-  scopes: YouTubeScope[];
-  permissions: YouTubePermission[];
-  features: ChannelFeatures;
-}
+/**
+ * Who may do what — derived from three real sources, never from a simulator:
+ *   1. the connection state of the Client's channel (GET connection.status),
+ *   2. the Google permissions actually granted (GET connection.grantedCapabilities),
+ *   3. the platform RBAC of the signed-in user (company membership `systemRole`).
+ * The backend re-checks every request; this only decides which buttons are enabled and why a disabled one is disabled.
+ */
+
+export type RbacCapability = "integrations:read" | "integrations:write" | "content:read" | "content:write" | "content:publish";
+
+/** Mirror of backend/src/rbac/capability-catalogue.ts (SYSTEM_ROLE_CAPABILITIES) for the capabilities YouTube routes use. */
+export const ROLE_CAPABILITIES: Readonly<Record<CompanySystemRole, readonly RbacCapability[]>> = {
+  VIEWER: ["integrations:read", "content:read"],
+  MANAGER: ["integrations:read", "content:read", "content:write"],
+  ADMIN: ["integrations:read", "integrations:write", "content:read", "content:write", "content:publish"],
+  OWNER: ["integrations:read", "integrations:write", "content:read", "content:write", "content:publish"],
+};
 
 interface Rule {
-  /** Every listed scope is required (any one of the alternatives in a nested array). */
-  scopes: (YouTubeScope | YouTubeScope[])[];
-  permission: YouTubePermission;
-  feature?: keyof ChannelFeatures;
-  /** Read-only capabilities still work from synced data while the token is expired. */
-  worksOffline?: boolean;
-  noun: string;
+  rbac: RbacCapability;
+  /** The Google permission that must be granted. */
+  grant?: GrantedKey;
+  /** The named consent to offer when `grant` is missing. */
+  consent?: YouTubeConsentCapability;
+  /** Needs a usable, mapped connection (everything except managing the connection itself). */
+  needsConnection: boolean;
+  /** Needs YouTube Live to be enabled for the channel. */
+  needsLive?: boolean;
+  what: string;
 }
 
-const RULES: Record<CapabilityKey, Rule> = {
-  canUpload: { scopes: [["youtube.upload", "youtube"]], permission: "upload_content", noun: "upload videos" },
-  canEditVideo: { scopes: [["youtube", "youtube.force-ssl"]], permission: "edit_content", noun: "edit videos" },
-  canDeleteVideo: { scopes: [["youtube", "youtube.force-ssl"]], permission: "delete_content", noun: "delete videos" },
-  canPublish: { scopes: [["youtube", "youtube.upload"]], permission: "publish_content", noun: "publish videos" },
-  canSchedule: { scopes: [["youtube", "youtube.upload"]], permission: "schedule_content", noun: "schedule videos" },
-  canApprove: { scopes: [], permission: "approve_content", noun: "approve content", worksOffline: true },
-  canManagePlaylists: { scopes: [["youtube", "youtube.force-ssl"]], permission: "manage_playlists", noun: "manage playlists" },
-  canReplyComments: { scopes: ["youtube.force-ssl"], permission: "reply_comments", noun: "reply to comments" },
-  canModerateComments: { scopes: ["youtube.force-ssl"], permission: "moderate_comments", noun: "moderate comments" },
-  canGoLive: { scopes: [["youtube", "youtube.force-ssl"]], permission: "manage_live", feature: "liveStreamingEnabled", noun: "create live streams" },
-  canViewAnalytics: { scopes: ["yt-analytics.readonly"], permission: "view_analytics", noun: "view analytics", worksOffline: true },
-  canViewRevenue: { scopes: ["yt-analytics-monetary.readonly"], permission: "view_monetization", feature: "monetizationEnabled", noun: "view revenue", worksOffline: true },
-  canManageConnection: { scopes: [], permission: "manage_connection", noun: "manage the connection", worksOffline: true },
-  canManageSettings: { scopes: [], permission: "manage_settings", noun: "change YouTube settings", worksOffline: true },
+const RULES: Record<Exclude<CapabilityKey, "canApprove" | "canManageSettings">, Rule> = {
+  canUpload: { rbac: "content:publish", grant: "uploadVideos", consent: "YOUTUBE_UPLOAD_VIDEO", needsConnection: true, what: "upload videos" },
+  canEditVideo: { rbac: "content:write", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, what: "edit videos" },
+  canDeleteVideo: { rbac: "integrations:write", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, what: "delete videos" },
+  canPublish: { rbac: "content:publish", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, what: "publish videos" },
+  canSchedule: { rbac: "content:publish", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, what: "schedule videos" },
+  canManagePlaylists: { rbac: "content:write", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, what: "manage playlists" },
+  canDeletePlaylist: { rbac: "integrations:write", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, what: "delete playlists" },
+  canReplyComments: { rbac: "content:write", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, what: "reply to comments" },
+  canModerateComments: { rbac: "content:write", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, what: "moderate comments" },
+  canRemoveComments: { rbac: "integrations:write", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, what: "remove comments" },
+  canGoLive: { rbac: "content:write", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, needsLive: true, what: "create live events" },
+  canTransitionLive: { rbac: "content:publish", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, needsLive: true, what: "start or end a live broadcast" },
+  canViewStreamKey: { rbac: "integrations:write", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, needsLive: true, what: "see the stream key" },
+  canViewAnalytics: { rbac: "integrations:read", grant: "readAnalytics", consent: "YOUTUBE_READ_ANALYTICS", needsConnection: true, what: "view analytics" },
+  canViewRevenue: { rbac: "integrations:read", grant: "readMonetaryAnalytics", consent: "YOUTUBE_READ_MONETARY_ANALYTICS", needsConnection: true, what: "view revenue" },
+  canManageConnection: { rbac: "integrations:write", needsConnection: false, what: "manage the YouTube connection" },
 };
 
-const FEATURE_REASON: Record<keyof ChannelFeatures, string> = {
-  liveStreamingEnabled: "Live streaming isn't enabled for this channel. Enable it in YouTube Studio (takes up to 24 hours).",
-  monetizationEnabled: "This channel isn't in the YouTube Partner Program, so revenue data isn't available.",
-  customThumbnailsEnabled: "Custom thumbnails require a verified channel.",
-  longUploadsEnabled: "Videos longer than 15 minutes require a verified channel.",
-};
+const ALLOW: Capability = { allowed: true };
 
-function evaluate(rule: Rule, input: CapabilityInput): Capability {
-  // Order matters: tell the user the thing that actually unblocks them first.
-  if (!input.permissions.includes(rule.permission)) {
-    return { allowed: false, reason: `Your role can't ${rule.noun}. Ask a workspace owner for access.`, fix: "request_access" };
+const ROLE_NAME: Record<CompanySystemRole, string> = { OWNER: "Owner", ADMIN: "Admin", MANAGER: "Manager", VIEWER: "Viewer" };
+
+function connectionBlock(connection: ConnectionInfo, what: string): Capability | null {
+  switch (connection.state) {
+    case "disconnected":
+      return { allowed: false, reason: `Connect a YouTube channel to ${what}.`, fix: "connect" };
+    case "not_mapped":
+      return { allowed: false, reason: `Link the company's YouTube channel to this Client to ${what}.`, fix: "connect" };
+    case "token_expired":
+      return { allowed: false, reason: `The YouTube connection expired. Reconnect to ${what}.`, fix: "reconnect" };
+    case "quota_exceeded":
+      return { allowed: false, reason: `The YouTube quota is used up. You can ${what} again after it resets.`, fix: "wait" };
+    default:
+      return null;
   }
-  if (input.connection === "disconnected") {
-    return { allowed: false, reason: `Connect a YouTube channel to ${rule.noun}.`, fix: "reconnect" };
-  }
-  if (!rule.worksOffline) {
-    if (input.connection === "token_expired") {
-      return { allowed: false, reason: `YouTube connection expired. Reconnect the channel to ${rule.noun}.`, fix: "reconnect" };
-    }
-    if (input.connection === "quota_exceeded") {
-      return { allowed: false, reason: "Daily YouTube API quota reached. Changes resume after the quota resets (midnight PT).", fix: "wait" };
-    }
-  }
-  const missing = rule.scopes.find((s) =>
-    Array.isArray(s) ? !s.some((alt) => input.scopes.includes(alt)) : !input.scopes.includes(s),
-  );
-  if (missing) {
-    return { allowed: false, reason: `Reconnect YouTube permissions to ${rule.noun}.`, fix: "reconnect" };
-  }
-  if (rule.feature && !input.features[rule.feature]) {
-    return { allowed: false, reason: FEATURE_REASON[rule.feature], fix: "enable_feature" };
-  }
-  return { allowed: true };
 }
 
-export function evaluateCapabilities(input: CapabilityInput): CapabilityMap {
-  return Object.fromEntries(
-    (Object.keys(RULES) as CapabilityKey[]).map((key) => [key, evaluate(RULES[key], input)]),
-  ) as CapabilityMap;
+export function hasRbac(role: CompanySystemRole | null, capability: RbacCapability): boolean {
+  return role !== null && ROLE_CAPABILITIES[role].includes(capability);
+}
+
+export function evaluateCapabilities(input: {
+  connection: ConnectionInfo;
+  granted: YouTubeGrantedCapabilities | null;
+  role: CompanySystemRole | null;
+  features: ChannelFeatures;
+}): CapabilityMap {
+  const { connection, granted, role, features } = input;
+
+  const evaluate = (rule: Rule): Capability => {
+    if (rule.needsConnection) {
+      const blocked = connectionBlock(connection, rule.what);
+      if (blocked) return blocked;
+    }
+    if (!hasRbac(role, rule.rbac)) {
+      const who = role ? `${ROLE_NAME[role]} accounts` : "Your account";
+      return { allowed: false, reason: `${who} can't ${rule.what}. Ask an admin for access.`, fix: "request_access" };
+    }
+    if (rule.grant && !granted?.[rule.grant]) {
+      return { allowed: false, reason: `Grant the YouTube permission needed to ${rule.what}.`, fix: "grant", grant: rule.consent };
+    }
+    if (rule.needsLive && !features.liveStreamingEnabled) {
+      return { allowed: false, reason: "This channel isn't enabled for YouTube Live. Enable it in YouTube Studio.", fix: "enable_feature" };
+    }
+    return ALLOW;
+  };
+
+  const map = Object.fromEntries((Object.keys(RULES) as (keyof typeof RULES)[]).map((key) => [key, evaluate(RULES[key])])) as Record<keyof typeof RULES, Capability>;
+
+  return {
+    ...map,
+    // There is no approval workflow and no stored workspace preferences behind the API: shown as unavailable, never faked.
+    canApprove: { allowed: false, reason: "Approvals aren't part of the YouTube integration." },
+    canManageSettings: { allowed: false, reason: "YouTube workspace preferences aren't stored yet, so there is nothing to change here." },
+  };
 }

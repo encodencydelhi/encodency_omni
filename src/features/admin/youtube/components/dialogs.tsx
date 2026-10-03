@@ -2,43 +2,39 @@
 
 import { useMemo, useRef, useState } from "react";
 import { addDays, format, formatDistanceToNowStrict, parseISO } from "date-fns";
-import {
-  CheckCircle2,
-  Clock3,
-  Globe2,
-  History,
-  Link2,
-  Lock,
-  Plus,
-  RotateCcw,
-  Upload,
-} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { CheckCircle2, Clock3, Globe2, Link2, Lock, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
+import { mediaApi } from "@/features/admin/content/live/media-api";
+import { youtubeKeys } from "@/lib/query/keys";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
-import { THUMBNAIL_LIBRARY } from "../data/mock";
+import { toPlaylist } from "../data/mappers";
+import { csvCell } from "../lib/csv";
+import { metadataPatch, pickDraft, type MetaDraft } from "../lib/video-patch";
+import { type ChannelAnalytics, type QueryView } from "../data/view-hooks";
 import { useNow } from "../hooks/use-now";
 import { useUnsavedChanges } from "../hooks/use-unsaved-changes";
-import { CATEGORIES, DESCRIPTION_MAX, LANGUAGES, TIMEZONES, TITLE_MAX, VISIBILITY_LABEL, ytRoutes } from "../lib/constants";
-import { date as fmtDate, dateTime, relative } from "../lib/format";
+import type { YouTubePublishTarget } from "../live/youtube-dto";
+import { CATEGORIES, DESCRIPTION_MAX, LANGUAGES, TITLE_MAX, VISIBILITY_LABEL, languageLabel, ytRoutes } from "../lib/constants";
+import { date as fmtDate } from "../lib/format";
 import { channelHealth, scoreTone, type ScoreFactor } from "../lib/insights";
 import { useYouTube } from "../store/youtube-store";
-import type { Playlist, VersionField, Video, Visibility } from "../types";
+import type { Playlist, Video, Visibility } from "../types";
 import {
   Badge,
   Button,
   ChoiceCard,
   ConfirmDialog,
-  EmptyState,
   FormField,
-  InternalBadge,
   Meter,
   Notice,
   SearchField,
   SelectMenu,
+  Skeleton,
   TagInput,
   Thumb,
   yt,
@@ -64,13 +60,15 @@ function CreatePlaylistBody({ open, onOpenChange, videoIds, onCreated }: CreateP
   const { createPlaylist, can } = useYouTube();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [visibility, setVisibility] = useState<Visibility>("public");
+  // New playlists are PRIVATE unless the person chooses otherwise.
+  const [visibility, setVisibility] = useState<Visibility>("private");
   const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const error = !title.trim() ? "Give the playlist a title." : title.length > 150 ? "Titles can be up to 150 characters." : undefined;
+  const error = !title.trim() ? "Give the playlist a title." : title.length > 150 ? "Titles can be up to 150 characters." : /[<>]/.test(title) ? "Titles can't contain < or >." : undefined;
 
   const submit = async () => {
+    if (busy) return;
     setTouched(true);
     if (error) return;
     setBusy(true);
@@ -78,7 +76,7 @@ function CreatePlaylistBody({ open, onOpenChange, videoIds, onCreated }: CreateP
     setBusy(false);
     if (playlist) {
       onOpenChange(false);
-      onCreated?.(playlist);
+      onCreated?.(toPlaylist(playlist));
     }
   };
 
@@ -112,9 +110,9 @@ function CreatePlaylistBody({ open, onOpenChange, videoIds, onCreated }: CreateP
               value={visibility}
               onChange={setVisibility}
               options={[
-                { value: "public", label: "Public", description: "Anyone can search for and view" },
-                { value: "unlisted", label: "Unlisted", description: "Anyone with the link can view" },
                 { value: "private", label: "Private", description: "Only you and people you choose" },
+                { value: "unlisted", label: "Unlisted", description: "Anyone with the link can view" },
+                { value: "public", label: "Public", description: "Anyone can search for and view" },
               ]}
             />
           </FormField>
@@ -140,14 +138,14 @@ export function AddToPlaylistDialog(props: VideoIdsDialogProps) {
 }
 
 function AddToPlaylistBody({ open, onOpenChange, videoIds }: VideoIdsDialogProps) {
-  const { playlists, addToPlaylists, can } = useYouTube();
+  const { playlists, playlistsState, addToPlaylists, can } = useYouTube();
   const [selected, setSelected] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const filtered = playlists.filter((p) => p.title.toLowerCase().includes(query.toLowerCase()));
-  const already = (p: Playlist) => videoIds.every((id) => p.videoIds.includes(id));
+  // YouTube-managed lists (uploads, liked videos...) cannot be changed through the API.
+  const filtered = playlists.filter((p) => !p.system && p.title.toLowerCase().includes(query.toLowerCase()));
 
   return (
     <>
@@ -163,29 +161,27 @@ function AddToPlaylistBody({ open, onOpenChange, videoIds }: VideoIdsDialogProps
             <SearchField value={query} onChange={setQuery} placeholder="Search playlists" />
           </div>
           <ul className="max-h-[300px] space-y-1 overflow-y-auto px-3 py-2">
-            {filtered.length === 0 && <li className="px-2 py-6 text-center text-[12.5px] text-[#6B7890]">No playlists match “{query}”.</li>}
-            {filtered.map((p) => {
-              const inAll = already(p);
-              const checked = inAll || selected.includes(p.id);
-              return (
-                <li key={p.id}>
-                  <label className={cn("flex cursor-pointer items-center gap-3 rounded-sm px-2 py-2 hover:bg-[#F8FAFC]", inAll && "cursor-default opacity-70")}>
-                    <Checkbox
-                      checked={checked}
-                      disabled={inAll}
-                      onCheckedChange={(c) => setSelected((prev) => (c ? [...prev, p.id] : prev.filter((x) => x !== p.id)))}
-                      aria-label={p.title}
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] font-medium text-[#0F1B3D]">{p.title}</span>
-                      <span className="block text-[11.5px] text-[#6B7890]">
-                        {VISIBILITY_LABEL[p.visibility]} · {p.videoIds.length} videos{inAll ? " · Already added" : ""}
-                      </span>
+            {playlistsState.isLoading && <li className="space-y-2 px-2 py-2"><Skeleton className="h-8 w-full" /><Skeleton className="h-8 w-full" /></li>}
+            {!playlistsState.isLoading && filtered.length === 0 && (
+              <li className="px-2 py-6 text-center text-[12.5px] text-[#6B7890]">{playlists.length === 0 ? "You don't own any playlists yet. Create one below." : <>No playlists match “{query}”.</>}</li>
+            )}
+            {filtered.map((p) => (
+              <li key={p.id}>
+                <label className="flex cursor-pointer items-center gap-3 rounded-sm px-2 py-2 hover:bg-[#F8FAFC]">
+                  <Checkbox
+                    checked={selected.includes(p.id)}
+                    onCheckedChange={(c) => setSelected((prev) => (c ? [...prev, p.id] : prev.filter((x) => x !== p.id)))}
+                    aria-label={p.title}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-medium text-[#0F1B3D]">{p.title}</span>
+                    <span className="block text-[11.5px] text-[#6B7890]">
+                      {VISIBILITY_LABEL[p.visibility]}{p.itemCount !== null ? ` · ${p.itemCount} videos` : ""}
                     </span>
-                  </label>
-                </li>
-              );
-            })}
+                  </span>
+                </label>
+              </li>
+            ))}
           </ul>
           <DialogFooter className="items-center border-t border-[#EEF1F5] px-5 py-3 sm:justify-between">
             <Button variant="ghost" size="sm" icon={Plus} gate={can.canManagePlaylists} onClick={() => setCreateOpen(true)}>New playlist</Button>
@@ -198,6 +194,7 @@ function AddToPlaylistBody({ open, onOpenChange, videoIds }: VideoIdsDialogProps
                 disabledReason="Select at least one playlist"
                 gate={can.canManagePlaylists}
                 onClick={async () => {
+                  if (busy) return;
                   setBusy(true);
                   const ok = await addToPlaylists(videoIds, selected);
                   setBusy(false);
@@ -210,12 +207,7 @@ function AddToPlaylistBody({ open, onOpenChange, videoIds }: VideoIdsDialogProps
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <CreatePlaylistDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        videoIds={videoIds}
-        onCreated={() => onOpenChange(false)}
-      />
+      <CreatePlaylistDialog open={createOpen} onOpenChange={setCreateOpen} videoIds={videoIds} onCreated={() => onOpenChange(false)} />
     </>
   );
 }
@@ -230,24 +222,33 @@ export function ScheduleDialog(props: VideoDialogProps) {
   return props.open && props.video ? <ScheduleBody {...props} video={props.video} /> : null;
 }
 
+const browserZone = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Local time";
+  } catch {
+    return "Local time";
+  }
+};
+
 function ScheduleBody({ open, onOpenChange, video }: VideoDialogProps & { video: Video }) {
-  const { scheduleVideo, settings, can } = useYouTube();
+  const { scheduleVideo, cancelSchedule, can } = useYouTube();
   const now = useNow();
   const [day, setDay] = useState(() => format(video.scheduledAt ? parseISO(video.scheduledAt) : addDays(new Date(), 1), "yyyy-MM-dd"));
   const [time, setTime] = useState(() => (video.scheduledAt ? format(parseISO(video.scheduledAt), "HH:mm") : "10:00"));
-  const [timezone, setTimezone] = useState(settings.defaults.timezone);
+  const [target, setTarget] = useState<YouTubePublishTarget>(video.visibility === "unlisted" ? "unlisted" : "public");
   const [busy, setBusy] = useState(false);
+  const zone = browserZone();
 
   const when = day && time ? new Date(`${day}T${time}`) : null;
   const error = !when || Number.isNaN(when.getTime()) ? "Pick a date and time." : when.getTime() < now + 15 * 60_000 ? "Schedule at least 15 minutes from now." : undefined;
-  const isReschedule = Boolean(video?.scheduledAt);
+  const isReschedule = Boolean(video.scheduleId);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
       <DialogContent className="w-[calc(100vw-24px)] max-w-[440px] gap-0 p-0">
         <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
           <DialogTitle className="text-[15px] text-[#0F1B3D]">{isReschedule ? "Reschedule" : "Schedule"} video</DialogTitle>
-          <DialogDescription className="line-clamp-1 text-[12.5px] text-[#6B7890]">{video?.title}</DialogDescription>
+          <DialogDescription className="line-clamp-1 text-[12.5px] text-[#6B7890]">{video.title}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 px-5 py-4">
           <div className="grid grid-cols-2 gap-3">
@@ -258,19 +259,50 @@ function ScheduleBody({ open, onOpenChange, video }: VideoDialogProps & { video:
               <input id="sch-time" type="time" className={yt.input} value={time} onChange={(e) => setTime(e.target.value)} />
             </FormField>
           </div>
-          <FormField label="Time zone">
-            <SelectMenu label="Time zone" size="md" fullWidth value={timezone} onChange={setTimezone} options={TIMEZONES.map((t) => ({ value: t, label: t }))} />
+          <FormField label="Time zone" hint="Times use your browser's time zone and are sent to YouTube with an explicit UTC offset.">
+            <SelectMenu label="Time zone" size="md" fullWidth disabled value={zone} onChange={() => undefined} options={[{ value: zone, label: zone }]} />
+          </FormField>
+          <FormField label="Visibility when published">
+            <SelectMenu<YouTubePublishTarget>
+              label="Visibility when published"
+              size="md"
+              fullWidth
+              disabled={isReschedule}
+              value={target}
+              onChange={setTarget}
+              options={[
+                { value: "public", label: "Public", description: "Everyone can watch" },
+                { value: "unlisted", label: "Unlisted", description: "Anyone with the link" },
+              ]}
+            />
           </FormField>
           {error ? (
             <Notice tone="amber" title={error} />
           ) : (
-            <Notice tone="blue" title={`Goes public ${when ? format(when, "EEE, MMM d 'at' h:mm a") : ""}`}>
+            <Notice tone="blue" title={`Goes ${target} ${when ? format(when, "EEE, MMM d 'at' h:mm a") : ""}`}>
               The video stays private until then{when ? ` — ${formatDistanceToNowStrict(when, { addSuffix: true })}` : ""}.
             </Notice>
           )}
         </div>
         <DialogFooter className="border-t border-[#EEF1F5] px-5 py-3">
-          <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
+          {isReschedule && (
+            <Button
+              variant="ghost"
+              className="mr-auto text-[#C81E2B]"
+              disabled={busy}
+              gate={can.canSchedule}
+              onClick={async () => {
+                if (busy) return;
+                setBusy(true);
+                const ok = await cancelSchedule(video);
+                setBusy(false);
+                if (ok) onOpenChange(false);
+              }}
+            >
+              Cancel schedule
+            </Button>
+          )}
+          <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={busy}>Close</Button>
           <Button
             variant="primary"
             icon={Clock3}
@@ -279,9 +311,10 @@ function ScheduleBody({ open, onOpenChange, video }: VideoDialogProps & { video:
             disabledReason={error}
             gate={can.canSchedule}
             onClick={async () => {
-              if (!video || !when) return;
+              if (busy || !when) return;
               setBusy(true);
-              const ok = await scheduleVideo(video.id, when.toISOString());
+              // toISOString() carries the explicit UTC offset (Z) the backend requires.
+              const ok = await scheduleVideo(video, when.toISOString(), target);
               setBusy(false);
               if (ok) onOpenChange(false);
             }}
@@ -304,7 +337,8 @@ export function VisibilityDialog(props: VideoIdsDialogProps) {
 
 function VisibilityBody({ open, onOpenChange, videoIds }: VideoIdsDialogProps) {
   const { setVisibility, can } = useYouTube();
-  const [value, setValue] = useState<Visibility>("public");
+  // Never pre-selects Public: making videos public is always a deliberate choice.
+  const [value, setValue] = useState<Visibility>("private");
   const [busy, setBusy] = useState(false);
   return (
     <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
@@ -314,9 +348,9 @@ function VisibilityBody({ open, onOpenChange, videoIds }: VideoIdsDialogProps) {
           <DialogDescription className="text-[12.5px] text-[#6B7890]">Applies to {videoIds.length} selected {videoIds.length === 1 ? "video" : "videos"}.</DialogDescription>
         </DialogHeader>
         <div className="space-y-2 px-5 py-4">
-          <ChoiceCard name="bulk-vis" checked={value === "public"} onSelect={() => setValue("public")} icon={Globe2} title="Public" description="Everyone can watch." />
-          <ChoiceCard name="bulk-vis" checked={value === "unlisted"} onSelect={() => setValue("unlisted")} icon={Link2} title="Unlisted" description="Anyone with the link can watch." />
           <ChoiceCard name="bulk-vis" checked={value === "private"} onSelect={() => setValue("private")} icon={Lock} title="Private" description="Only you and people you choose." />
+          <ChoiceCard name="bulk-vis" checked={value === "unlisted"} onSelect={() => setValue("unlisted")} icon={Link2} title="Unlisted" description="Anyone with the link can watch." />
+          <ChoiceCard name="bulk-vis" checked={value === "public"} onSelect={() => setValue("public")} icon={Globe2} title="Public" description="Everyone can watch." />
         </div>
         <DialogFooter className="border-t border-[#EEF1F5] px-5 py-3">
           <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
@@ -325,6 +359,7 @@ function VisibilityBody({ open, onOpenChange, videoIds }: VideoIdsDialogProps) {
             loading={busy}
             gate={can.canEditVideo}
             onClick={async () => {
+              if (busy) return;
               setBusy(true);
               const ok = await setVisibility(videoIds, value);
               setBusy(false);
@@ -344,28 +379,36 @@ function VisibilityBody({ open, onOpenChange, videoIds }: VideoIdsDialogProps) {
 /* ------------------------------------------------------------------ */
 
 const MAX_THUMB_BYTES = 2 * 1024 * 1024;
+const THUMB_TYPES = ["image/jpeg", "image/png"];
 
 export function ThumbnailManager(props: VideoDialogProps) {
   return props.open && props.video ? <ThumbnailBody {...props} video={props.video} /> : null;
 }
 
+type Candidate = { kind: "file"; file: File; preview: string } | { kind: "asset"; assetId: string; preview: string };
+
 function ThumbnailBody({ open, onOpenChange, video }: VideoDialogProps & { video: Video }) {
-  const { changeThumbnail, thumbnailHistory, features, can, channel } = useYouTube();
-  const [candidate, setCandidate] = useState<string | null>(null);
+  const { changeThumbnail, can, channel, scope } = useYouTube();
+  const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
   const input = useRef<HTMLInputElement>(null);
 
-  const history = thumbnailHistory[video.id] ?? [];
-  const suggestions = THUMBNAIL_LIBRARY.filter((u) => u !== video.thumbnailUrl).slice(0, 4);
-  const preview = candidate ?? video.thumbnailUrl;
-  const thumbGate = features.customThumbnailsEnabled ? can.canEditVideo : { allowed: false, reason: "Custom thumbnails require a verified channel. Verify in YouTube Studio.", fix: "enable_feature" as const };
+  // The real media library (images only): PNG/JPEG that fit YouTube's 2 MB limit.
+  const library = useQuery({
+    queryKey: scope ? youtubeKeys.mediaImages(scope) : ["youtube", "none", "media-images"],
+    queryFn: () => mediaApi.list(scope!.companyId, scope!.clientId, { kind: "IMAGE", limit: 24 }),
+    enabled: scope !== null,
+    staleTime: 60_000,
+  });
+  const suggestions = (library.data?.items ?? []).filter((a) => THUMB_TYPES.includes(a.mimeType) && a.bytes <= MAX_THUMB_BYTES).slice(0, 8);
+  const preview = candidate?.preview ?? video.thumbnailUrl;
 
   const accept = (file: File | undefined) => {
     if (!file) return;
-    if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(file.type)) {
-      setError("Use a JPG, PNG, GIF or WebP image.");
+    if (!THUMB_TYPES.includes(file.type)) {
+      setError("Use a JPG or PNG image.");
       return;
     }
     if (file.size > MAX_THUMB_BYTES) {
@@ -373,7 +416,7 @@ function ThumbnailBody({ open, onOpenChange, video }: VideoDialogProps & { video
       return;
     }
     setError(null);
-    setCandidate(URL.createObjectURL(file));
+    setCandidate({ kind: "file", file, preview: URL.createObjectURL(file) });
   };
 
   return (
@@ -400,45 +443,42 @@ function ThumbnailBody({ open, onOpenChange, video }: VideoDialogProps & { video
                   setDragging(false);
                   accept(e.dataTransfer.files[0]);
                 }}
-                disabled={!thumbGate.allowed}
+                disabled={!can.canUpload.allowed}
                 className={cn(
                   "flex w-full flex-col items-center justify-center rounded-sm border border-dashed px-4 py-6 text-center transition",
                   dragging ? "border-[#E5202E] bg-[#FFF8F8]" : "border-[#C9D1DC] bg-[#F8FAFC] hover:border-[#98A2B3]",
-                  !thumbGate.allowed && "cursor-not-allowed opacity-60",
+                  !can.canUpload.allowed && "cursor-not-allowed opacity-60",
                   yt.focus,
                 )}
               >
                 <Upload className="size-5 text-[#6B7890]" />
                 <span className="mt-2 text-[13px] font-semibold text-[#0F1B3D]">Drop an image or click to browse</span>
-                <span className="mt-0.5 text-[11.5px] text-[#6B7890]">1280×720 recommended · JPG, PNG, GIF or WebP · up to 2 MB</span>
+                <span className="mt-0.5 text-[11.5px] text-[#6B7890]">1280×720 recommended · JPG or PNG · up to 2 MB</span>
               </button>
-              <input ref={input} type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden onChange={(e) => accept(e.target.files?.[0])} />
+              <input ref={input} type="file" accept="image/jpeg,image/png" hidden onChange={(e) => accept(e.target.files?.[0])} />
               {error && <p role="alert" className="mt-1.5 text-[12px] font-medium text-[#C81E2B]">{error}</p>}
-              {!thumbGate.allowed && <p className="mt-1.5 text-[12px] text-[#B54708]">{thumbGate.reason}</p>}
+              {!can.canUpload.allowed && <p className="mt-1.5 text-[12px] text-[#B54708]">{can.canUpload.reason}</p>}
             </div>
 
             <div>
               <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">From your media library</p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {suggestions.map((url) => (
-                  <button key={url} type="button" onClick={() => setCandidate(url)} aria-pressed={candidate === url} className={cn("rounded-sm ring-offset-2 transition", candidate === url ? "ring-2 ring-[#E5202E]" : "hover:ring-2 hover:ring-[#C9D1DC]", yt.focus)}>
-                    <Thumb src={url} sizes="140px" />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="mb-2 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">
-                Previous thumbnails <InternalBadge label="OmniPlatform history" />
-              </p>
-              {history.length === 0 ? (
-                <p className="text-[12px] text-[#98A2B3]">Thumbnails you replace from OmniPlatform will appear here.</p>
+              {library.isPending ? (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="aspect-video w-full" />)}</div>
+              ) : library.isError ? (
+                <p className="text-[12px] text-[#98A2B3]">The media library couldn&apos;t be loaded.</p>
+              ) : suggestions.length === 0 ? (
+                <p className="text-[12px] text-[#98A2B3]">No JPG or PNG images (up to 2 MB) in the media library yet.</p>
               ) : (
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                  {history.map((url) => (
-                    <button key={url} type="button" onClick={() => setCandidate(url)} aria-pressed={candidate === url} className={cn("rounded-sm ring-offset-2", candidate === url ? "ring-2 ring-[#E5202E]" : "hover:ring-2 hover:ring-[#C9D1DC]", yt.focus)}>
-                      <Thumb src={url} sizes="120px" />
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {suggestions.map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => setCandidate({ kind: "asset", assetId: a.id, preview: a.url })}
+                      aria-pressed={candidate?.kind === "asset" && candidate.assetId === a.id}
+                      className={cn("rounded-sm ring-offset-2 transition", candidate?.kind === "asset" && candidate.assetId === a.id ? "ring-2 ring-[#E5202E]" : "hover:ring-2 hover:ring-[#C9D1DC]", yt.focus)}
+                    >
+                      <Thumb src={a.url} sizes="140px" />
                     </button>
                   ))}
                 </div>
@@ -452,8 +492,10 @@ function ThumbnailBody({ open, onOpenChange, video }: VideoDialogProps & { video
               <Thumb src={preview} durationSec={video.durationSec} sizes="280px" />
               <div className="mt-2.5 flex gap-2">
                 <span className="relative size-8 shrink-0 overflow-hidden rounded-sm bg-white ring-1 ring-[#E4E9F0]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={channel.avatarUrl} alt="" className="size-full object-contain" />
+                  {channel.avatarUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={channel.avatarUrl} alt="" className="size-full object-contain" />
+                  )}
                 </span>
                 <div className="min-w-0">
                   <p className="line-clamp-2 text-[12.5px] font-semibold leading-4 text-[#0F1B3D]">{video.title}</p>
@@ -473,11 +515,11 @@ function ThumbnailBody({ open, onOpenChange, video }: VideoDialogProps & { video
             loading={busy}
             disabled={!candidate}
             disabledReason="Upload or choose a new thumbnail first"
-            gate={thumbGate}
+            gate={can.canUpload}
             onClick={async () => {
-              if (!candidate) return;
+              if (!candidate || busy) return;
               setBusy(true);
-              const ok = await changeThumbnail(video.id, candidate);
+              const ok = await changeThumbnail(video.id, candidate.kind === "file" ? { file: candidate.file } : { assetId: candidate.assetId });
               setBusy(false);
               if (ok) onOpenChange(false);
             }}
@@ -494,41 +536,28 @@ function ThumbnailBody({ open, onOpenChange, video }: VideoDialogProps & { video
 /* Edit metadata                                                       */
 /* ------------------------------------------------------------------ */
 
-type MetaDraft = Pick<Video, "title" | "description" | "tags" | "categoryId" | "language" | "visibility" | "madeForKids" | "commentsEnabled" | "playlistIds">;
-
-const pickDraft = (v: Video): MetaDraft => ({
-  title: v.title,
-  description: v.description,
-  tags: v.tags,
-  categoryId: v.categoryId,
-  language: v.language,
-  visibility: v.visibility,
-  madeForKids: v.madeForKids,
-  commentsEnabled: v.commentsEnabled,
-  playlistIds: v.playlistIds,
-});
-
 export function EditMetadataSheet(props: VideoDialogProps) {
   return props.open && props.video ? <EditMetadataBody {...props} video={props.video} /> : null;
 }
 
 function EditMetadataBody({ open, onOpenChange, video }: VideoDialogProps & { video: Video }) {
-  const { updateVideo, playlists, can } = useYouTube();
+  const { updateVideo, can } = useYouTube();
   const [draft, setDraft] = useState<MetaDraft>(() => pickDraft(video));
   const [busy, setBusy] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
 
   const dirty = JSON.stringify(pickDraft(video)) !== JSON.stringify(draft);
   const errors = {
-    title: !draft.title.trim() ? "Title is required." : draft.title.length > TITLE_MAX ? `Keep the title under ${TITLE_MAX} characters.` : undefined,
-    description: draft.description.length > DESCRIPTION_MAX ? "Description is too long." : undefined,
+    title: !draft.title.trim() ? "Title is required." : draft.title.length > TITLE_MAX ? `Keep the title under ${TITLE_MAX} characters.` : /[<>]/.test(draft.title) ? "Titles can't contain < or >." : undefined,
+    description: draft.description.length > DESCRIPTION_MAX ? "Description is too long." : /[<>]/.test(draft.description) ? "Descriptions can't contain < or >." : undefined,
+    tags: draft.tags.some((t) => /[<>,]/.test(t)) ? "Tags can't contain <, > or commas." : undefined,
   };
-  const invalid = Boolean(errors.title || errors.description);
+  const invalid = Boolean(errors.title || errors.description || errors.tags);
 
   const save = async () => {
-    if (invalid) return false;
+    if (invalid || busy) return false;
     setBusy(true);
-    const ok = await updateVideo(video.id, draft);
+    const ok = await updateVideo(video.id, metadataPatch(video, draft));
     setBusy(false);
     if (ok) onOpenChange(false);
     return ok;
@@ -544,7 +573,7 @@ function EditMetadataBody({ open, onOpenChange, video }: VideoDialogProps & { vi
         <SheetContent className="w-full max-w-[560px] sm:max-w-[560px]">
           <SheetHeader>
             <SheetTitle className="text-[15px] text-[#0F1B3D]">Edit details</SheetTitle>
-            <SheetDescription className="line-clamp-1 text-[12.5px]">Changes are saved to YouTube and tracked in OmniPlatform version history.</SheetDescription>
+            <SheetDescription className="line-clamp-1 text-[12.5px]">Changes are saved to YouTube.</SheetDescription>
           </SheetHeader>
           <SheetBody className="space-y-4">
             {!can.canEditVideo.allowed && <Notice tone="amber" title="Editing unavailable">{can.canEditVideo.reason}</Notice>}
@@ -554,18 +583,18 @@ function EditMetadataBody({ open, onOpenChange, video }: VideoDialogProps & { vi
             <FormField label="Description" htmlFor="em-desc" counter={{ value: draft.description.length, max: DESCRIPTION_MAX }} error={errors.description}>
               <textarea id="em-desc" rows={7} className={yt.textarea} value={draft.description} onChange={(e) => set("description", e.target.value)} />
             </FormField>
-            <FormField label="Tags" htmlFor="em-tags" hint="Press Enter or comma to add. Tags help with misspellings and related searches.">
+            <FormField label="Tags" htmlFor="em-tags" error={errors.tags} hint="Press Enter or comma to add. Tags help with misspellings and related searches.">
               <TagInput id="em-tags" value={draft.tags} onChange={(t) => set("tags", t)} />
             </FormField>
             <div className="grid gap-3 sm:grid-cols-2">
               <FormField label="Category">
                 <SelectMenu label="Category" size="md" fullWidth value={draft.categoryId} onChange={(v) => set("categoryId", v)} options={CATEGORIES.map((c) => ({ value: c.id, label: c.label }))} />
               </FormField>
-              <FormField label="Video language">
-                <SelectMenu label="Language" size="md" fullWidth value={draft.language} onChange={(v) => set("language", v)} options={LANGUAGES.map((l) => ({ value: l.id, label: l.label }))} />
+              <FormField label="Video language" hint="Set in YouTube Studio.">
+                <SelectMenu label="Language" size="md" fullWidth disabled value={video.language ?? ""} onChange={() => undefined} options={[{ value: video.language ?? "", label: video.language ? languageLabel(video.language) : "Not set" }, ...LANGUAGES.filter((l) => l.id !== video.language).map((l) => ({ value: l.id, label: l.label }))]} />
               </FormField>
             </div>
-            <FormField label="Visibility" hint={video.status === "scheduled" ? "Scheduled videos stay private until their publish time." : undefined}>
+            <FormField label="Visibility" hint={video.status === "scheduled" ? "Scheduled videos stay private until their publish time. Change the schedule to change when they go public." : undefined}>
               <SelectMenu<Visibility>
                 label="Visibility"
                 size="md"
@@ -573,22 +602,12 @@ function EditMetadataBody({ open, onOpenChange, video }: VideoDialogProps & { vi
                 disabled={video.status === "scheduled"}
                 value={draft.visibility}
                 onChange={(v) => set("visibility", v)}
-                options={(["public", "unlisted", "private"] as Visibility[]).map((v) => ({ value: v, label: VISIBILITY_LABEL[v] }))}
+                options={(["private", "unlisted", "public"] as Visibility[]).map((v) => ({ value: v, label: VISIBILITY_LABEL[v] }))}
               />
-            </FormField>
-            <FormField label="Playlists">
-              <div className="max-h-40 space-y-0.5 overflow-y-auto rounded-sm border border-[#DCE2EA] p-1.5">
-                {playlists.map((p) => (
-                  <label key={p.id} className="flex cursor-pointer items-center gap-2.5 rounded-sm px-2 py-1.5 text-[12.5px] text-[#24324F] hover:bg-[#F8FAFC]">
-                    <Checkbox checked={draft.playlistIds.includes(p.id)} onCheckedChange={(c) => set("playlistIds", c ? [...draft.playlistIds, p.id] : draft.playlistIds.filter((x) => x !== p.id))} />
-                    <span className="truncate">{p.title}</span>
-                  </label>
-                ))}
-              </div>
             </FormField>
             <div className="divide-y divide-[#EEF1F5] rounded-sm border border-[#E4E9F0]">
               <ToggleRow label="Made for kids" description="Required by COPPA. Limits comments, notifications and personalised ads." checked={draft.madeForKids} onChange={(c) => set("madeForKids", c)} />
-              <ToggleRow label="Allow comments" description={draft.madeForKids ? "Comments are always off for made-for-kids videos." : "Viewers can comment on this video."} checked={draft.commentsEnabled && !draft.madeForKids} disabled={draft.madeForKids} onChange={(c) => set("commentsEnabled", c)} />
+              <ToggleRow label="Allow comments" description="Comments can only be turned on or off in YouTube Studio." checked={video.commentsEnabled !== false && !draft.madeForKids} disabled onChange={() => undefined} />
             </div>
           </SheetBody>
           <SheetFooter className="justify-between">
@@ -627,101 +646,27 @@ export function ToggleRow({ label, description, checked, onChange, disabled, bad
 }
 
 /* ------------------------------------------------------------------ */
-/* Version history                                                     */
-/* ------------------------------------------------------------------ */
-
-const FIELD_LABEL: Record<VersionField, string> = {
-  title: "Title",
-  description: "Description",
-  tags: "Tags",
-  thumbnail: "Thumbnail",
-  visibility: "Visibility",
-  schedule: "Schedule",
-};
-
-export function VersionHistorySheet({ open, onOpenChange, video }: { open: boolean; onOpenChange: (open: boolean) => void; video: Video | null }) {
-  const { versions, restoreVersion, can } = useYouTube();
-  const [restoring, setRestoring] = useState<string | null>(null);
-  const entries = versions.filter((v) => v.videoId === video?.id);
-
-  const show = (field: VersionField, value: string) => {
-    if (field === "thumbnail") return <Thumb src={value} className="w-28" sizes="112px" />;
-    if (field === "schedule") return <span>{value.includes("T") ? dateTime(value) : value}</span>;
-    return <span className="line-clamp-3 break-words">{value}</span>;
-  };
-
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full max-w-[520px] sm:max-w-[520px]">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2 text-[15px] text-[#0F1B3D]">Version history <InternalBadge /></SheetTitle>
-          <SheetDescription className="text-[12.5px]">Changes made through OmniPlatform. Edits made directly in YouTube Studio aren&apos;t tracked here.</SheetDescription>
-        </SheetHeader>
-        <SheetBody>
-          {entries.length === 0 ? (
-            <EmptyState compact icon={History} title="No changes recorded yet" description="When someone edits the title, description, tags, thumbnail, visibility or schedule, the previous value is saved here." />
-          ) : (
-            <ol className="relative space-y-4 border-l border-[#E4E9F0] pl-5">
-              {entries.map((entry) => (
-                <li key={entry.id} className="relative">
-                  <span className="absolute -left-[26px] top-1 size-2.5 rounded-sm border-2 border-white bg-[#98A2B3] ring-1 ring-[#E4E9F0]" />
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-[12.5px] text-[#3C4A66]">
-                      <b className="font-semibold text-[#0F1B3D]">{entry.actor}</b> changed <b className="font-semibold text-[#0F1B3D]">{FIELD_LABEL[entry.field].toLowerCase()}</b>
-                    </p>
-                    <span className="text-[11.5px] text-[#98A2B3]" title={dateTime(entry.at)}>{relative(entry.at)}</span>
-                  </div>
-                  <div className="mt-2 grid gap-2 rounded-sm border border-[#EEF1F5] bg-[#F8FAFC] p-2.5 text-[12px] sm:grid-cols-2">
-                    <div className="min-w-0">
-                      <p className="mb-1 text-[10.5px] font-semibold uppercase tracking-[0.04em] text-[#98A2B3]">Before</p>
-                      <div className="text-[#6B7890] line-through decoration-[#C9D1DC]">{show(entry.field, entry.previous)}</div>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="mb-1 text-[10.5px] font-semibold uppercase tracking-[0.04em] text-[#98A2B3]">After</p>
-                      <div className="text-[#0F1B3D]">{show(entry.field, entry.next)}</div>
-                    </div>
-                  </div>
-                  {entry.field !== "schedule" && (
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      icon={RotateCcw}
-                      className="mt-1.5"
-                      loading={restoring === entry.id}
-                      gate={can.canEditVideo}
-                      onClick={async () => {
-                        setRestoring(entry.id);
-                        await restoreVersion(entry.id);
-                        setRestoring(null);
-                      }}
-                    >
-                      Restore previous {FIELD_LABEL[entry.field].toLowerCase()}
-                    </Button>
-                  )}
-                </li>
-              ))}
-            </ol>
-          )}
-        </SheetBody>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /* Channel health detail                                               */
 /* ------------------------------------------------------------------ */
 
-export function HealthDetailSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  const { channel, videos, comments, features } = useYouTube();
-  const { score, factors } = useMemo(() => channelHealth(channel, videos, comments, features.monetizationEnabled), [channel, videos, comments, features.monetizationEnabled]);
+export function HealthDetailSheet({ open, onOpenChange, analytics }: { open: boolean; onOpenChange: (open: boolean) => void; analytics: QueryView<ChannelAnalytics> }) {
+  const { channel, videos } = useYouTube();
+  const comparison = useMemo(() => {
+    const d = analytics.data;
+    if (!analytics.enabled || !d.hasData) return null;
+    return {
+      current: { views: d.rawTotals.current.views, likes: d.likes.current, comments: d.comments.current, netSubscribers: d.rawTotals.current.subscribers },
+      previous: { views: d.rawTotals.previous.views, likes: d.likes.previous, comments: d.comments.previous, netSubscribers: d.rawTotals.previous.subscribers },
+    };
+  }, [analytics.data, analytics.enabled]);
+  const { score, factors } = useMemo(() => channelHealth(channel, videos, comparison), [channel, videos, comparison]);
   const sorted = [...factors].sort((a, b) => a.score - b.score);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full max-w-[560px] sm:max-w-[560px]">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2 text-[15px] text-[#0F1B3D]">Channel health <InternalBadge /></SheetTitle>
+          <SheetTitle className="flex items-center gap-2 text-[15px] text-[#0F1B3D]">Channel health</SheetTitle>
           <SheetDescription className="text-[12.5px]">An OmniPlatform score built from your synced channel data. It isn&apos;t a YouTube metric and doesn&apos;t affect how YouTube ranks your videos.</SheetDescription>
         </SheetHeader>
         <SheetBody className="space-y-4">
@@ -787,26 +732,24 @@ export function ScoreRing({ score, size = 96, label = "/100" }: { score: number;
 /* ------------------------------------------------------------------ */
 
 export function DeleteVideosDialog({ open, onOpenChange, videos, onDeleted }: { open: boolean; onOpenChange: (open: boolean) => void; videos: Video[]; onDeleted?: () => void }) {
-  const { deleteVideos, playlists, comments } = useYouTube();
+  const { deleteVideos, can } = useYouTube();
   const ids = videos.map((v) => v.id);
-  const playlistCount = playlists.filter((p) => p.videoIds.some((id) => ids.includes(id))).length;
-  const commentCount = comments.filter((c) => ids.includes(c.videoId)).length;
   const single = videos.length === 1 ? videos[0] : undefined;
   return (
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
       title={single ? `Delete “${single.title}”?` : `Delete ${videos.length} videos?`}
-      description="This permanently deletes the video from YouTube, including its views, comments and analytics. It also removes it from connected OmniPlatform views. This can't be undone."
+      description="This permanently deletes the video from YouTube, including its views, comments and analytics. This can't be undone."
       affected={[
-        ...videos.slice(0, 5).map((v) => `${v.title} · ${v.stats.views.toLocaleString("en-IN")} views`),
+        ...videos.slice(0, 5).map((v) => `${v.title} · ${v.stats.views === null ? "views unavailable" : `${v.stats.views.toLocaleString("en-IN")} views`}`),
         ...(videos.length > 5 ? [`…and ${videos.length - 5} more`] : []),
-        ...(playlistCount ? [`Removed from ${playlistCount} playlist${playlistCount > 1 ? "s" : ""}`] : []),
-        ...(commentCount ? [`${commentCount} synced comment thread${commentCount > 1 ? "s" : ""} will be removed`] : []),
+        ...(can.canDeleteVideo.allowed ? [] : [can.canDeleteVideo.reason ?? "You can't delete videos."]),
       ]}
       confirmText={videos.length > 1 ? "DELETE" : undefined}
       confirmLabel={single ? "Delete video" : `Delete ${videos.length} videos`}
       onConfirm={async () => {
+        if (!can.canDeleteVideo.allowed) return false;
         const ok = await deleteVideos(ids);
         if (ok) onDeleted?.();
         return ok;
@@ -816,7 +759,7 @@ export function DeleteVideosDialog({ open, onOpenChange, videos, onDeleted }: { 
 }
 
 export function exportVideosCsv(videos: Video[], filename = "youtube-content.csv") {
-  const header = ["Video ID", "Title", "Type", "Visibility", "Status", "Published", "Views", "Watch time (hours)", "Likes", "Comments", "CTR (%)", "URL"];
+  const header = ["Video ID", "Title", "Type", "Visibility", "Status", "Published", "Views", "Watch time (hours, last 28 days)", "Likes", "Comments", "URL"];
   const rows = videos.map((v) => [
     v.id,
     v.title,
@@ -824,11 +767,10 @@ export function exportVideosCsv(videos: Video[], filename = "youtube-content.csv
     v.visibility,
     v.status,
     v.publishedAt ? fmtDate(v.publishedAt, "yyyy-MM-dd") : "",
-    v.stats.views,
-    v.stats.watchTimeHours,
-    v.stats.likes,
-    v.stats.comments,
-    v.stats.ctr ?? "",
+    v.stats.views ?? "",
+    v.stats.watchTimeHours === null ? "" : Number(v.stats.watchTimeHours.toFixed(2)),
+    v.stats.likes ?? "",
+    v.stats.comments ?? "",
     ytRoutes.watch(v.id),
   ]);
   downloadCsv([header, ...rows], filename);
@@ -836,7 +778,7 @@ export function exportVideosCsv(videos: Video[], filename = "youtube-content.csv
 }
 
 export function downloadCsv(rows: (string | number)[][], filename: string) {
-  const csv = rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const csv = rows.map((r) => r.map(csvCell).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

@@ -12,10 +12,8 @@ import {
   ChevronDown,
   ChevronRight,
   ExternalLink,
-  Film,
   ListPlus,
   Loader2,
-  MessageSquare,
   Plus,
   Radio,
   RefreshCw,
@@ -26,14 +24,13 @@ import {
   Video as VideoIcon,
   WifiOff,
   XCircle,
-  Clock3,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils/cn";
 import { usePeriod, useQueryState } from "../hooks/use-query-state";
 import { useHydrated, useNow } from "../hooks/use-now";
 import { UnsavedChangesDialog } from "../hooks/use-unsaved-changes";
-import { PERIODS, TYPE_LABEL, ytRoutes } from "../lib/constants";
+import { GRANTED_KEYS, PERIODS, TYPE_LABEL, ytRoutes } from "../lib/constants";
 import { relative } from "../lib/format";
 import { useYouTube } from "../store/youtube-store";
 import type { Period } from "../types";
@@ -63,7 +60,7 @@ function currentTab(pathname: string) {
 export function YouTubeWorkspace({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? ytRoutes.overview;
   const tab = currentTab(pathname);
-  const { connection, simulation } = useYouTube();
+  const { connection, loadError, noClient, ready } = useYouTube();
   const isSettings = tab.label === "Settings";
 
   return (
@@ -73,7 +70,17 @@ export function YouTubeWorkspace({ children }: { children: ReactNode }) {
         <ConnectionBanner />
         <WorkspaceTabs activeLabel={tab.label} />
         <main className="min-w-0">
-          {simulation.loadError && !isSettings ? <LoadErrorState /> : connection.state === "disconnected" && !isSettings ? <DisconnectedState /> : children}
+          {ready && noClient ? (
+            <NoClientState />
+          ) : ready && loadError && !isSettings ? (
+            <LoadErrorState />
+          ) : ready && connection.state === "disconnected" && !isSettings ? (
+            <DisconnectedState />
+          ) : ready && connection.state === "not_mapped" && !isSettings ? (
+            <NotMappedState />
+          ) : (
+            children
+          )}
         </main>
       </div>
       <UnsavedChangesDialog />
@@ -83,23 +90,15 @@ export function YouTubeWorkspace({ children }: { children: ReactNode }) {
 }
 
 function LoadErrorState() {
-  const { simulate } = useYouTube();
+  const { reload, loadError } = useYouTube();
   return (
     <div className={cn(yt.card)}>
       <EmptyState
         icon={AlertTriangle}
         title="We couldn't load your YouTube data"
-        description="OmniPlatform couldn't reach its YouTube data service. Your channel isn't affected. Try again in a moment."
+        description={loadError?.message ?? "OmniPlatform couldn't reach its YouTube data service. Your channel isn't affected. Try again in a moment."}
         action={
-          <Button
-            variant="primary"
-            icon={RefreshCw}
-            onClick={() => {
-              simulate.setLoadError(false);
-              simulate.setLoading(true);
-              setTimeout(() => simulate.setLoading(false), 900);
-            }}
-          >
+          <Button variant="primary" icon={RefreshCw} onClick={reload}>
             Try again
           </Button>
         }
@@ -143,9 +142,11 @@ function WorkspaceHeader({ tabLabel }: { tabLabel: string }) {
           <GlobalSearch />
           {PERIOD_TABS.has(tabLabel) && <DateRangeSelect />}
           <NotificationsButton />
-          <Button variant="secondary" size="sm" icon={ExternalLink} href={ytRoutes.channelOnYouTube(channel.handle)} external className="h-9 max-xl:hidden">
-            View on YouTube
-          </Button>
+          {channel.id && (
+            <Button variant="secondary" size="sm" icon={ExternalLink} href={ytRoutes.channelOnYouTube(channel)} external className="h-9 max-xl:hidden">
+              View on YouTube
+            </Button>
+          )}
           <ActionMenu
             label="Create content"
             width={220}
@@ -193,10 +194,10 @@ function DateRangeSelect() {
 /* Global search                                                       */
 /* ------------------------------------------------------------------ */
 
-type Hit = { type: "Video" | "Short" | "Live" | "Playlist" | "Comment" | "Live event"; title: string; context: string; href: string; thumb?: string };
+type Hit = { type: "Video" | "Short" | "Live" | "Playlist"; title: string; context: string; href: string; thumb?: string };
 
 function GlobalSearch() {
-  const { videos, playlists, comments, liveEvents } = useYouTube();
+  const { videos, playlists } = useYouTube();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -208,21 +209,14 @@ function GlobalSearch() {
     if (q.length < 2) return [];
     const out: Hit[] = [];
     videos.forEach((v) => {
-      if (v.title.toLowerCase().includes(q) || v.tags.some((t) => t.includes(q)))
+      if (v.title.toLowerCase().includes(q) || v.tags.some((t) => t.toLowerCase().includes(q)) || v.id.toLowerCase() === q)
         out.push({ type: TYPE_LABEL[v.type] as Hit["type"], title: v.title, context: v.status === "published" ? "Published" : v.status[0]!.toUpperCase() + v.status.slice(1), href: ytRoutes.video(v.id), thumb: v.thumbnailUrl });
     });
     playlists.forEach((p) => {
-      if (p.title.toLowerCase().includes(q)) out.push({ type: "Playlist", title: p.title, context: `${p.videoIds.length} videos`, href: ytRoutes.playlist(p.id) });
-    });
-    comments.forEach((c) => {
-      if (c.text.toLowerCase().includes(q) || c.author.toLowerCase().includes(q))
-        out.push({ type: "Comment", title: `“${c.text}”`, context: c.author, href: `${ytRoutes.comments}?thread=${c.id}` });
-    });
-    liveEvents.forEach((e) => {
-      if (e.title.toLowerCase().includes(q)) out.push({ type: "Live event", title: e.title, context: e.lifecycle === "live" ? "Live now" : e.lifecycle === "upcoming" ? "Upcoming" : "Completed", href: `${ytRoutes.live}?tab=${e.lifecycle}` });
+      if (p.title.toLowerCase().includes(q)) out.push({ type: "Playlist", title: p.title, context: p.itemCount === null ? "Playlist" : `${p.itemCount} videos`, href: ytRoutes.playlist(p.id) });
     });
     return out.slice(0, 9);
-  }, [q, videos, playlists, comments, liveEvents]);
+  }, [q, videos, playlists]);
 
 
   useEffect(() => {
@@ -252,8 +246,8 @@ function GlobalSearch() {
         role="combobox"
         aria-expanded={showPanel}
         aria-controls="yt-search-results"
-        aria-label="Search videos, Shorts, playlists and comments"
-        placeholder="Search videos, playlists, comments…"
+        aria-label="Search videos, Shorts and playlists"
+        placeholder="Search videos and playlists…"
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -300,7 +294,7 @@ function GlobalSearch() {
               ))}
             </div>
           ) : hits.length === 0 ? (
-            <p className="px-3.5 py-4 text-center text-[12.5px] text-[#6B7890]">No videos, playlists or comments match “{query.trim()}”.</p>
+            <p className="px-3.5 py-4 text-center text-[12.5px] text-[#6B7890]">No loaded videos or playlists match “{query.trim()}”.</p>
           ) : (
             hits.map((hit, i) => (
               <button
@@ -317,7 +311,7 @@ function GlobalSearch() {
                   <Thumb src={hit.thumb} className="w-14" sizes="56px" />
                 ) : (
                   <span className="grid h-8 w-14 shrink-0 place-items-center rounded-sm bg-[#F1F4F8] text-[#6B7890]">
-                    {hit.type === "Playlist" ? <ListPlus className="size-4" /> : hit.type === "Comment" ? <MessageSquare className="size-4" /> : <Radio className="size-4" />}
+                    {hit.type === "Playlist" ? <ListPlus className="size-4" /> : <Radio className="size-4" />}
                   </span>
                 )}
                 <span className="min-w-0 flex-1">
@@ -338,67 +332,21 @@ function GlobalSearch() {
 /* Notifications                                                       */
 /* ------------------------------------------------------------------ */
 
-const NOTIFICATION_ICON = {
-  upload_completed: { icon: CheckCircle2, tone: "text-[#067647] bg-[#ECFAF3]" },
-  video_published: { icon: CheckCircle2, tone: "text-[#067647] bg-[#ECFAF3]" },
-  upload_failed: { icon: XCircle, tone: "text-[#C81E2B] bg-[#FEF1F2]" },
-  schedule_failed: { icon: XCircle, tone: "text-[#C81E2B] bg-[#FEF1F2]" },
-  live_failed: { icon: XCircle, tone: "text-[#C81E2B] bg-[#FEF1F2]" },
-  priority_comment: { icon: MessageSquare, tone: "text-[#1D4ED8] bg-[#EFF4FF]" },
-  live_starting: { icon: Radio, tone: "text-[#C81E2B] bg-[#FEF1F2]" },
-  token_expired: { icon: ShieldAlert, tone: "text-[#B54708] bg-[#FFF7E8]" },
-  permission_removed: { icon: ShieldAlert, tone: "text-[#B54708] bg-[#FFF7E8]" },
-  sync_failed: { icon: AlertTriangle, tone: "text-[#B54708] bg-[#FFF7E8]" },
-  quota_warning: { icon: AlertTriangle, tone: "text-[#B54708] bg-[#FFF7E8]" },
-  monetization_changed: { icon: Film, tone: "text-[#6D28D9] bg-[#F4F0FF]" },
-  approval_requested: { icon: Clock3, tone: "text-[#6D28D9] bg-[#F4F0FF]" },
-} as const;
-
 function NotificationsButton() {
-  const { notifications, markNotificationRead, markAllNotificationsRead } = useYouTube();
-  const [open, setOpen] = useState(false);
-  const unread = notifications.filter((n) => !n.read).length;
+  // The backend does not emit YouTube notification events yet. Connection and sync problems are shown in the banner above.
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover>
       <PopoverTrigger asChild>
-        <button type="button" aria-label={`YouTube notifications${unread ? `, ${unread} unread` : ""}`} className={cn(buttonClass("secondary", "icon", "relative size-9"))}>
+        <button type="button" aria-label="YouTube notifications" className={cn(buttonClass("secondary", "icon", "relative size-9"))}>
           <Bell className="size-4" />
-          {unread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-sm bg-[#E5202E] px-1 text-[10px] font-bold text-white ring-2 ring-[#F6F8FB]">{unread}</span>}
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[360px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[10px] border-[#E4E9F0] p-0">
         <div className="flex items-center justify-between border-b border-[#EEF1F5] px-3.5 py-2.5">
           <p className="text-[13px] font-semibold text-[#0F1B3D]">YouTube notifications</p>
-          <Button variant="link" size="xs" onClick={markAllNotificationsRead} disabled={!unread}>Mark all as read</Button>
         </div>
         <ul className="max-h-[380px] overflow-y-auto">
-          {notifications.length === 0 && <li className="px-4 py-8 text-center text-[12.5px] text-[#6B7890]">You&apos;re all caught up.</li>}
-          {notifications.map((n) => {
-            const meta = NOTIFICATION_ICON[n.kind];
-            const Icon = meta.icon;
-            return (
-              <li key={n.id}>
-                <Link
-                  href={n.href}
-                  onClick={() => {
-                    markNotificationRead(n.id);
-                    setOpen(false);
-                  }}
-                  className={cn("flex gap-2.5 border-b border-[#F3F5F9] px-3.5 py-2.5 hover:bg-[#F8FAFC]", !n.read && "bg-[#FFFBFB]")}
-                >
-                  <span className={cn("grid size-7 shrink-0 place-items-center rounded-sm", meta.tone)}><Icon className="size-3.5" /></span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center justify-between gap-2">
-                      <span className="truncate text-[12.5px] font-semibold text-[#0F1B3D]">{n.title}</span>
-                      {!n.read && <span className="size-2 shrink-0 rounded-sm bg-[#E5202E]" aria-label="Unread" />}
-                    </span>
-                    <span className="line-clamp-2 text-[12px] leading-4 text-[#3C4A66]">{n.body}</span>
-                    <span className="mt-0.5 block text-[11px] text-[#98A2B3]">{relative(n.at)}</span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
+          <li className="px-4 py-8 text-center text-[12.5px] text-[#6B7890]">You&apos;re all caught up.</li>
         </ul>
       </PopoverContent>
     </Popover>
@@ -410,7 +358,7 @@ function NotificationsButton() {
 /* ------------------------------------------------------------------ */
 
 export function SyncStatus({ compact }: { compact?: boolean }) {
-  const { connection, syncNow, channel } = useYouTube();
+  const { connection, syncNow, channel, can, isSyncing } = useYouTube();
   // Relative times depend on the viewer's clock, so they render after hydration to keep SSR output stable.
   const hydrated = useHydrated();
   useNow();
@@ -425,24 +373,33 @@ export function SyncStatus({ compact }: { compact?: boolean }) {
       <Badge tone="red" icon={ShieldAlert}>Connection expired</Badge>
     ) : state === "quota_exceeded" ? (
       <Badge tone="amber" icon={AlertTriangle}>Quota reached</Badge>
+    ) : state === "not_mapped" ? (
+      <Badge tone="amber" icon={AlertTriangle}>Not linked to this client</Badge>
     ) : state === "disconnected" ? (
       <Badge tone="neutral" icon={WifiOff}>Disconnected</Badge>
     ) : (
       <Badge tone="green" icon={CheckCircle2}>Connected</Badge>
     );
+  const syncable = state === "connected" || state === "syncing" || state === "sync_failed";
 
   return (
     <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
       {!compact && <span className="text-[12.5px] font-semibold text-[#0F1B3D]">{channel.title}</span>}
       {pill}
-      {state !== "disconnected" && (
+      {state !== "disconnected" && state !== "not_mapped" && (
         <span className="text-[12px] text-[#6B7890]">
-          Last synced <time dateTime={hydrated ? connection.lastSyncedAt : undefined}>{hydrated ? relative(connection.lastSyncedAt) : "…"}</time>
+          {connection.lastSyncedAt ? (
+            <>
+              Last synced <time dateTime={hydrated ? connection.lastSyncedAt : undefined}>{hydrated ? relative(connection.lastSyncedAt) : "…"}</time>
+            </>
+          ) : (
+            "Not synced yet"
+          )}
         </span>
       )}
-      {state !== "disconnected" && state !== "token_expired" && (
-        <Button size="xs" variant="ghost" icon={RefreshCw} loading={state === "syncing"} onClick={() => void syncNow()} className="text-[#2563EB] hover:text-[#1D4ED8]">
-          {state === "syncing" ? "Syncing…" : "Sync now"}
+      {syncable && (
+        <Button size="xs" variant="ghost" icon={RefreshCw} loading={isSyncing || state === "syncing"} gate={can.canManageConnection} onClick={() => void syncNow()} className="text-[#2563EB] hover:text-[#1D4ED8]">
+          {isSyncing || state === "syncing" ? "Syncing…" : "Sync now"}
         </Button>
       )}
     </div>
@@ -450,61 +407,52 @@ export function SyncStatus({ compact }: { compact?: boolean }) {
 }
 
 function ConnectionBanner() {
-  const { connection, reconnect, syncNow, scopes, can } = useYouTube();
+  const { connection, startConsent, reload, granted, can, ready } = useYouTube();
   const [busy, setBusy] = useState(false);
-  const missingScopes = scopes.length < 6;
+  const missing = GRANTED_KEYS.filter((k) => !granted?.[k]);
 
-  const run = async (fn: () => Promise<boolean>) => {
+  const run = async (fn: () => Promise<unknown> | unknown) => {
+    if (busy) return;
     setBusy(true);
     await fn();
     setBusy(false);
   };
 
   const reconnectBtn = (
-    <Button size="sm" variant="primary" loading={busy} gate={can.canManageConnection} onClick={() => run(reconnect)}>
+    <Button size="sm" variant="primary" loading={busy} gate={can.canManageConnection} onClick={() => run(() => startConsent())}>
       Reconnect channel
     </Button>
   );
 
+  if (!ready) return null;
   let banner: ReactNode = null;
   if (connection.state === "token_expired") {
     banner = (
-      <Strip tone="red" icon={ShieldAlert} title="YouTube connection expired" body="Showing data from the last successful sync. Publishing, replies and edits are paused until you reconnect.">
+      <Strip tone="red" icon={ShieldAlert} title="YouTube connection expired" body="Publishing, replies and edits are paused until you reconnect.">
         {reconnectBtn}
       </Strip>
     );
   } else if (connection.state === "quota_exceeded") {
     banner = (
       <Strip tone="amber" icon={AlertTriangle} title="Daily YouTube API quota reached" body="Viewing cached data works normally. Uploads, edits and replies resume after the quota resets at midnight Pacific Time.">
-        <Button size="sm" variant="secondary" href={`${ytRoutes.settings}#sync`}>View quota usage</Button>
+        <Button size="sm" variant="secondary" href={`${ytRoutes.settings}#sync`}>Open sync settings</Button>
       </Strip>
     );
   } else if (connection.state === "sync_failed") {
     banner = (
-      <Strip tone="amber" icon={AlertTriangle} title="Last sync didn't complete" body={`Data may be out of date — last successful sync was ${relative(connection.lastSyncedAt)}.`}>
-        <Button size="sm" variant="secondary" icon={RefreshCw} loading={busy} onClick={() => run(syncNow)}>Try again</Button>
+      <Strip tone="amber" icon={AlertTriangle} title="YouTube reported a problem" body="Data may be out of date until the connection recovers.">
+        <Button size="sm" variant="secondary" icon={RefreshCw} loading={busy} onClick={() => run(() => reload())}>Try again</Button>
       </Strip>
     );
-  } else if (connection.state === "connected" && connection.quotaUsed / connection.quotaLimit >= 0.8) {
-    banner = (
-      <Strip tone="amber" icon={AlertTriangle} title={`API quota at ${Math.round((connection.quotaUsed / connection.quotaLimit) * 100)}%`} body="Uploads and bulk edits use the most quota. If the limit is reached, changes pause until midnight Pacific Time.">
-        <Button size="sm" variant="secondary" href={`${ytRoutes.settings}#sync`}>View quota usage</Button>
-      </Strip>
-    );
-  } else if (missingScopes && connection.state === "connected") {
+  } else if (missing.length > 0 && (connection.state === "connected" || connection.state === "syncing")) {
     banner = (
       <Strip tone="amber" icon={ShieldAlert} title="Some YouTube permissions are missing" body="A few actions are unavailable until you grant the missing permissions.">
         <Button size="sm" variant="secondary" href={`${ytRoutes.settings}#permissions`}>Review permissions</Button>
-        {reconnectBtn}
       </Strip>
     );
   }
 
-  return (
-    <>
-      {banner}
-    </>
-  );
+  return <>{banner}</>;
 }
 
 function Strip({ tone, icon: Icon, title, body, children }: { tone: "red" | "amber"; icon: typeof ShieldAlert; title: string; body: string; children: ReactNode }) {
@@ -520,7 +468,7 @@ function Strip({ tone, icon: Icon, title, body, children }: { tone: "red" | "amb
 }
 
 function DisconnectedState() {
-  const { reconnect, can } = useYouTube();
+  const { startConsent, can } = useYouTube();
   const [busy, setBusy] = useState(false);
   return (
     <div className={cn(yt.card)}>
@@ -529,12 +477,50 @@ function DisconnectedState() {
         title="Connect your YouTube channel"
         description="Connect a channel to manage videos, Shorts, playlists, comments, live streams and analytics from OmniPlatform. You'll be asked to sign in with Google and choose the permissions to grant."
         action={
-          <Button variant="primary" icon={FaYoutubeIcon} loading={busy} gate={can.canManageConnection} onClick={async () => { setBusy(true); await reconnect(); setBusy(false); }}>
+          <Button
+            variant="primary"
+            icon={FaYoutubeIcon}
+            loading={busy}
+            gate={can.canManageConnection}
+            onClick={async () => {
+              if (busy) return;
+              setBusy(true);
+              await startConsent();
+              setBusy(false);
+            }}
+          >
             Connect YouTube channel
           </Button>
         }
         secondary={<Button variant="secondary" href={ytRoutes.settings}>Open settings</Button>}
       />
+    </div>
+  );
+}
+
+function NotMappedState() {
+  const { rawConnection } = useYouTube();
+  return (
+    <div className={cn(yt.card)}>
+      <EmptyState
+        icon={VideoIcon}
+        title="Link a YouTube channel to this client"
+        description={
+          rawConnection?.companyConnectionAvailable
+            ? "Your company is connected to YouTube, but no channel is linked to this client yet. Link one in Integrations to continue."
+            : "Connect a YouTube account for your company, then link its channel to this client."
+        }
+        action={<Button variant="primary" href={ytRoutes.integrations}>Open Integrations</Button>}
+        secondary={<Button variant="secondary" href={ytRoutes.settings}>Open settings</Button>}
+      />
+    </div>
+  );
+}
+
+function NoClientState() {
+  return (
+    <div className={cn(yt.card)}>
+      <EmptyState icon={VideoIcon} title="Select a client" description="YouTube is managed per client. Choose a client from the client switcher to continue." />
     </div>
   );
 }
@@ -548,10 +534,8 @@ function FaYoutubeIcon({ className }: { className?: string }) {
 /* ------------------------------------------------------------------ */
 
 function WorkspaceTabs({ activeLabel }: { activeLabel: string }) {
-  const { comments, liveEvents, videos } = useYouTube();
+  const { videos } = useYouTube();
   const { period } = usePeriod();
-  const needsAttention = comments.filter((c) => c.moderationStatus === "heldForReview" || (c.moderationStatus === "published" && c.replies.length === 0 && c.priority)).length;
-  const liveNow = liveEvents.some((e) => e.lifecycle === "live");
   const failed = videos.filter((v) => v.status === "failed").length;
 
   return (
@@ -572,13 +556,7 @@ function WorkspaceTabs({ activeLabel }: { activeLabel: string }) {
               )}
             >
               {t.label}
-              {t.label === "Comments" && needsAttention > 0 && <span className="rounded-sm bg-[#FEF1F2] px-1.5 text-[10.5px] font-bold leading-4 text-[#C81E2B]">{needsAttention}</span>}
               {t.label === "Content" && failed > 0 && <span className="rounded-sm bg-[#FEF1F2] px-1.5 text-[10.5px] font-bold leading-4 text-[#C81E2B]" title={`${failed} failed`}>{failed}</span>}
-              {t.label === "Live" && liveNow && (
-                <span className="flex items-center gap-1 rounded-sm bg-[#E5202E] px-1.5 text-[10px] font-bold uppercase leading-4 text-white">
-                  <span className="size-1.5 animate-pulse rounded-sm bg-white" />Live
-                </span>
-              )}
             </Link>
           );
         })}

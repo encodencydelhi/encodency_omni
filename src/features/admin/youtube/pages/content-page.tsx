@@ -20,7 +20,6 @@ import {
   MoreHorizontal,
   Pencil,
   Rows3,
-  Send,
   SendHorizonal,
   Trash2,
   Upload,
@@ -38,7 +37,7 @@ import {
   VisibilityDialog,
   exportVideosCsv,
 } from "../components/dialogs";
-import { PageSkeleton } from "../components/states";
+import { ErrorState, PageSkeleton } from "../components/states";
 import {
   ActionMenu,
   ApprovalBadge,
@@ -64,9 +63,10 @@ import {
   type MenuItem,
   type SortDir,
 } from "../components/ui";
+import { usePlaylistItemsInfinite } from "../data/hooks";
 import { useQueryState } from "../hooks/use-query-state";
 import { ytRoutes } from "../lib/constants";
-import { compact, date, dateTime, hours, percent } from "../lib/format";
+import { compact, date, dateTime, duration, hours } from "../lib/format";
 import { useYouTube } from "../store/youtube-store";
 import type { Video } from "../types";
 
@@ -86,24 +86,25 @@ const DEFAULTS = {
 };
 
 type SubTab = "all" | "videos" | "shorts" | "live" | "scheduled" | "drafts";
-type SortKey = "date" | "title" | "views" | "watch" | "comments" | "likes" | "ctr";
+type SortKey = "date" | "title" | "views" | "watch" | "comments" | "likes" | "avd";
 
 function sortValue(v: Video, key: SortKey): number | string {
   switch (key) {
     case "title":
       return v.title.toLowerCase();
+    // An unavailable value sorts last, never as zero.
     case "views":
-      return v.stats.views;
+      return v.stats.views ?? -1;
     case "watch":
-      return v.stats.watchTimeHours;
+      return v.stats.watchTimeHours ?? -1;
     case "comments":
-      return v.stats.comments;
+      return v.stats.comments ?? -1;
     case "likes":
-      return v.stats.likes;
-    case "ctr":
-      return v.stats.ctr ?? -1;
+      return v.stats.likes ?? -1;
+    case "avd":
+      return v.stats.avgViewDurationSec ?? -1;
     default:
-      return v.publishedAt ?? v.scheduledAt ?? v.updatedAt;
+      return v.publishedAt ?? v.scheduledAt ?? v.updatedAt ?? "";
   }
 }
 
@@ -114,8 +115,7 @@ export function ContentPage() {
 }
 
 function ContentManager() {
-  const store = useYouTube();
-  const { videos, playlists, can, settings } = store;
+  const { videos, videosState, playlists, can } = useYouTube();
   const router = useRouter();
   const { values, set, reset } = useQueryState(DEFAULTS);
 
@@ -135,6 +135,10 @@ function ContentManager() {
   const [visibilityFor, setVisibilityFor] = useState<string[] | null>(null);
   const [deleteFor, setDeleteFor] = useState<string[] | null>(null);
 
+  // A playlist filter needs that playlist's items (the video list doesn't say which playlists a video is in).
+  const playlistItems = usePlaylistItemsInfinite(values.playlist === "all" ? undefined : values.playlist, values.playlist !== "all");
+  const playlistMembers = useMemo(() => (values.playlist === "all" ? null : new Set(playlistItems.data?.pages.flatMap((p) => p.items.map((i) => i.videoId)).filter(Boolean) as string[] ?? [])), [values.playlist, playlistItems.data]);
+
   const subTab: SubTab =
     values.status === "scheduled" ? "scheduled" : values.status === "draft" ? "drafts" : values.type === "video" ? "videos" : values.type === "short" ? "shorts" : values.type === "live" ? "live" : "all";
 
@@ -146,10 +150,10 @@ function ContentManager() {
       if (values.type !== "all" && v.type !== values.type) return false;
       if (values.status !== "all" && v.status !== values.status) return false;
       if (values.visibility !== "all" && v.visibility !== values.visibility) return false;
-      if (values.playlist !== "all" && !v.playlistIds.includes(values.playlist)) return false;
+      if (playlistMembers && !playlistMembers.has(v.id)) return false;
       if (since) {
         const when = v.publishedAt ?? v.scheduledAt ?? v.updatedAt;
-        if (new Date(when) < since) return false;
+        if (!when || new Date(when) < since) return false;
       }
       return true;
     });
@@ -160,7 +164,7 @@ function ContentManager() {
       const bv = sortValue(b, key);
       return av < bv ? -dir : av > bv ? dir : 0;
     });
-  }, [videos, values]);
+  }, [videos, values, playlistMembers]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const page = Math.min(Math.max(1, Number(values.page) || 1), pageCount);
@@ -204,7 +208,6 @@ function ContentManager() {
   const someOnPage = visible.some((v) => selected.includes(v.id));
 
   const rowActions = (v: Video): (MenuItem | "separator")[] => {
-    const needsApproval = settings.moderation.requireApproval && !can.canPublish.allowed;
     const unpublished = v.status === "draft" || v.status === "scheduled";
     return [
       { label: "View details", icon: Eye, href: ytRoutes.video(v.id) },
@@ -212,17 +215,16 @@ function ContentManager() {
       { label: "Change thumbnail", icon: ImageIcon, onSelect: () => setThumbVideo(v.id), gate: can.canEditVideo },
       "separator",
       { label: "View analytics", icon: BarChart3, href: `${ytRoutes.video(v.id)}?tab=analytics`, hidden: v.status !== "published", gate: can.canViewAnalytics },
-      { label: "View comments", icon: MessageSquare, href: `${ytRoutes.comments}?video=${v.id}`, hidden: v.status !== "published" },
+      { label: "View comments", icon: MessageSquare, href: `${ytRoutes.comments}?video=${v.id}`, hidden: v.status !== "published" || v.commentsEnabled === false },
       { label: "Add to playlist", icon: ListPlus, onSelect: () => setPlaylistFor([v.id]), gate: can.canManagePlaylists },
       {
-        label: v.scheduledAt && v.status === "scheduled" ? "Reschedule" : "Schedule",
+        label: v.scheduleId && v.status === "scheduled" ? "Reschedule" : "Schedule",
         icon: CalendarClock,
         onSelect: () => setScheduleVideo(v.id),
-        hidden: !(unpublished || v.status === "failed") || (needsApproval && v.approval !== "approved"),
+        hidden: !unpublished,
         gate: can.canSchedule,
       },
-      { label: "Submit for approval", icon: Send, onSelect: () => void store.submitForApproval(v.id), hidden: !(v.status === "draft" && needsApproval && (v.approval === "none" || v.approval === "changes_requested")) },
-      { label: "Publish now", icon: SendHorizonal, onSelect: () => router.push(`${ytRoutes.video(v.id)}?tab=details&confirm=publish`), hidden: !unpublished || needsApproval, gate: can.canPublish },
+      { label: "Publish now", icon: SendHorizonal, onSelect: () => router.push(`${ytRoutes.video(v.id)}?tab=details&confirm=publish`), hidden: !unpublished, gate: can.canPublish },
       { label: "Open on YouTube", icon: ExternalLink, href: ytRoutes.watch(v.id), external: true, hidden: v.status !== "published" },
       "separator",
       { label: "Delete", icon: Trash2, danger: true, onSelect: () => setDeleteFor([v.id]), gate: can.canDeleteVideo },
@@ -278,8 +280,7 @@ function ContentManager() {
               { value: "date:asc", label: "Oldest first" },
               { value: "views:desc", label: "Most views" },
               { value: "watch:desc", label: "Most watch time" },
-              { value: "ctr:desc", label: "Highest CTR" },
-              { value: "ctr:asc", label: "Lowest CTR" },
+              { value: "avd:desc", label: "Longest avg. duration" },
               { value: "title:asc", label: "Title A–Z" },
             ]}
           />
@@ -328,7 +329,11 @@ function ContentManager() {
           </div>
         )}
 
-        {videos.length === 0 ? (
+        {videosState.isLoading ? (
+          <div className="space-y-2 p-4" aria-busy="true" aria-label="Loading content">{Array.from({ length: 6 }, (_, i) => <div key={i} className="h-12 animate-pulse rounded-sm bg-[#EDF1F6]" />)}</div>
+        ) : videosState.isError && videosState.error && videos.length === 0 ? (
+          <ErrorState error={videosState.error} onRetry={videosState.refetch} title="Content couldn't load" />
+        ) : videos.length === 0 ? (
           <EmptyState icon={VideoIcon} title="No content yet" description="Upload your first video to start building your channel from OmniPlatform." action={<Button variant="primary" icon={Upload} gate={can.canUpload} href={ytRoutes.upload}>Upload your first video</Button>} />
         ) : filtered.length === 0 ? (
           <EmptyState icon={Filter} title="No content matches these filters" description="Try a different search term or clear the filters to see everything." action={<Button variant="secondary" icon={X} onClick={() => { setSearch(""); reset(["view"]); }}>Clear filters</Button>} />
@@ -363,7 +368,7 @@ function ContentManager() {
                     <SortHeader label="Watch time" align="right" active={values.sort === "watch"} dir={values.dir as SortDir} onClick={() => toggleSort("watch")} />
                     <SortHeader label="Comments" align="right" active={values.sort === "comments"} dir={values.dir as SortDir} onClick={() => toggleSort("comments")} />
                     <SortHeader label="Likes" align="right" active={values.sort === "likes"} dir={values.dir as SortDir} onClick={() => toggleSort("likes")} />
-                    <SortHeader label="CTR" align="right" active={values.sort === "ctr"} dir={values.dir as SortDir} onClick={() => toggleSort("ctr")} />
+                    <SortHeader label="Avg. duration" align="right" active={values.sort === "avd"} dir={values.dir as SortDir} onClick={() => toggleSort("avd")} />
                     <th className={cn(thClass, "pr-3.5 text-right")}><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
@@ -416,7 +421,7 @@ function ContentManager() {
                           {published ? <Link href={`${ytRoutes.comments}?video=${v.id}`} className="hover:text-[#2563EB] hover:underline">{compact(v.stats.comments)}</Link> : "—"}
                         </td>
                         <td className={cn(tdClass, "text-right tabular-nums")}>{published ? compact(v.stats.likes) : "—"}</td>
-                        <td className={cn(tdClass, "text-right tabular-nums")}>{percent(v.stats.ctr)}</td>
+                        <td className={cn(tdClass, "text-right tabular-nums")}>{published ? duration(v.stats.avgViewDurationSec) : "—"}</td>
                         <td className={cn(tdClass, "pr-3.5 text-right")}>
                           <ActionMenu label={`Actions for ${v.title}`} items={rowActions(v)} trigger={<button type="button" className={buttonClass("ghost", "icon")}><MoreHorizontal className="size-4" /></button>} />
                         </td>
@@ -433,6 +438,12 @@ function ContentManager() {
         {filtered.length > 0 && (
           <div className="border-t border-[#EEF1F5]">
             <Pagination page={page} pageCount={pageCount} total={filtered.length} pageSize={PAGE_SIZE} noun="items" onPage={(p) => set({ page: String(p) })} />
+          </div>
+        )}
+        {videosState.hasMore && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#EEF1F5] px-4 py-2.5 text-[12px] text-[#6B7890]">
+            <span>Showing the {videos.length} most recent uploads. Filters and sorting apply to what is loaded.</span>
+            <Button size="sm" variant="secondary" loading={videosState.isFetchingMore} onClick={videosState.loadMore}>Load more videos</Button>
           </div>
         )}
       </Card>
@@ -475,7 +486,7 @@ function GridCard({ video: v, selected, onSelect, actions }: { video: Video; sel
           {[
             ["Views", v.status === "published" ? compact(v.stats.views) : "—"],
             ["Likes", v.status === "published" ? compact(v.stats.likes) : "—"],
-            ["CTR", percent(v.stats.ctr)],
+            ["Watch time", v.status === "published" ? hours(v.stats.watchTimeHours) : "—"],
           ].map(([label, value]) => (
             <div key={label}>
               <p className="text-[10.5px] text-[#98A2B3]">{label}</p>
@@ -510,7 +521,7 @@ function MobileList({ videos, selected, setSelected, rowActions }: { videos: Vid
             <p className="mt-1.5 text-[11.5px] text-[#6B7890]">
               {v.status === "published" ? (
                 <>
-                  <b className="font-semibold text-[#24324F]">{compact(v.stats.views)}</b> views · {percent(v.stats.ctr)} CTR · {date(v.publishedAt)}
+                  <b className="font-semibold text-[#24324F]">{compact(v.stats.views)}</b> views · {hours(v.stats.watchTimeHours)} · {date(v.publishedAt)}
                 </>
               ) : v.status === "scheduled" ? (
                 <span className="inline-flex items-center gap-1"><CheckCircle2 className="size-3" />{dateTime(v.scheduledAt)}</span>
