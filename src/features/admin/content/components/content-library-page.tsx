@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils/cn";
 import { draftsApi, type DraftSummaryRecord } from "../live/drafts-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 
+import { AIAssistantTab } from "./AIAssistantTab";
+
 type View = "ai-assistant" | "templates" | "drafts";
 
 const tabs = [
@@ -36,7 +38,7 @@ export function ContentLibraryPage({ view }: { view: View }) {
       <nav className="flex items-center gap-7 border-b">
         {tabs.map(([label, href, id]) => <Link key={id} href={href} className={cn("border-b-2 pb-2.5 text-[13px] font-semibold", view === id ? "border-[#e20611] text-[#e20611]" : "border-transparent text-muted-foreground hover:text-foreground")}>{label}</Link>)}
       </nav>
-      {view === "ai-assistant" && <AiAssistant prompt={prompt} setPrompt={setPrompt} />}
+      {view === "ai-assistant" && <AIAssistantTab />}
       {view === "templates" && <Templates />}
       {view === "drafts" && <Drafts />}
     </div>

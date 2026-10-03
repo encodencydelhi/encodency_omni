@@ -39,6 +39,7 @@ import {
 } from "react-icons/fa6";
 import { cn } from "@/lib/utils/cn";
 import RichTextEditor from "@/components/layout/rich-text-editor";
+import { AIAssistantTab } from "./AIAssistantTab";
 
 /* ---------------------------------- types ---------------------------------- */
 
@@ -495,67 +496,6 @@ function CreateTab({ postType, setPostType }: { postType: PostType; setPostType:
   );
 }
 
-/* ------------------------------ AI assistant -------------------------------- */
-
-function AIAssistantTab() {
-  const [prompt, setPrompt] = useState("Create an Instagram post about Clean Ganga awareness with a motivating, eco-friendly tone.");
-  return (
-    <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
-      <Card title="Describe your idea" subtitle="AI drafts caption, hashtags and creative">
-        <label className="mb-1 block text-[12px] font-semibold text-[#33445F]">Topic / prompt *</label>
-        <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} spellCheck className="w-full resize-none rounded-sm border border-[#dce4ef] p-2.5 text-[12.5px] leading-5 outline-none focus:border-[#7C3AED]" />
-        <div className="mt-2 grid grid-cols-3 gap-1.5">
-          <SelectField label="Audience" value="General public" />
-          <SelectField label="Tone" value="Positive" />
-          <SelectField label="Language" value="English" />
-        </div>
-        <p className="mb-1.5 mt-3 text-[12px] font-semibold text-[#33445F]">Image style</p>
-        <div className="grid grid-cols-3 gap-1.5">
-          {IMAGES.slice(0, 6).map((src, i) => (
-            <button key={src + i} className={cn("overflow-hidden rounded-sm border text-left", i === 0 ? "border-[#7C3AED] ring-2 ring-violet-100" : "border-[#e5ecf4]")}>
-              <img src={src} alt="" className="h-14 w-full object-cover" />
-              <span className="block px-2 py-1 text-[10.5px] font-semibold text-slate-600">{["Realistic", "Nature", "Minimal", "Documentary", "Community", "River"][i]}</span>
-            </button>
-          ))}
-        </div>
-        <button className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-sm bg-[#7C3AED] text-[13px] font-semibold text-white shadow-sm shadow-purple-200 transition hover:bg-[#6D28D9]">
-          <Sparkles className="size-4" /> Generate content
-        </button>
-      </Card>
-
-      <Card
-        title="AI result"
-        subtitle="Review, then send to editor"
-        action={<button className="text-[11.5px] font-semibold text-[#1769DF]">Regenerate</button>}
-      >
-        <div className="rounded-sm border border-[#e2e8f0] p-2.5 text-[12.5px] leading-5 text-slate-700">
-          Small actions create a cleaner tomorrow.
-          <br /><br />
-          Let&apos;s work together for a healthier, greener and cleaner India. 💙🌱
-          <br /><br />
-          <span className="font-semibold text-[#1769DF]">#CleanGanga #HealthyIndia #Sustainability #MokshaSewa</span>
-        </div>
-        <img src={IMAGES[4]} alt="" className="mt-2 aspect-video w-full rounded-sm object-cover" />
-        <div className="mt-2 flex gap-1.5">
-          <button className="h-8 flex-1 rounded-sm border text-[12px] font-semibold text-slate-600">Save draft</button>
-          <button className="h-8 flex-1 rounded-sm bg-[#1769DF] text-[12px] font-semibold text-white">Use this post</button>
-        </div>
-      </Card>
-
-      <div className="space-y-2.5 lg:sticky lg:top-4">
-        <Card title="Live preview"><PhonePreview /></Card>
-        <Card title="Quick refinements">
-          <div className="grid grid-cols-2 gap-1">
-            {["Make shorter", "Add CTA", "Change tone", "More hashtags", "Hindi version", "Add emojis"].map((x) => (
-              <button key={x} className="rounded-sm border border-[#e5ecf4] px-2 py-1.5 text-left text-[11.5px] font-semibold text-slate-600 hover:border-violet-200 hover:bg-violet-50/50">✨ {x}</button>
-            ))}
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
 /* -------------------------------- templates --------------------------------- */
 
 const TEMPLATES = [
@@ -724,7 +664,7 @@ const IDEAS = [
   { title: "River Cleanup Drive", desc: "Join Saturday's community cleanup.", img: IMAGES[2], tag: "Event" },
 ];
 
-function IdeasTab() {
+function IdeasTab({ onCustomizeWithAi }: { onCustomizeWithAi?: (idea: (typeof IDEAS)[0]) => void } = {}) {
   const [selected, setSelected] = useState(0);
   const active = IDEAS[selected]!;
   return (
@@ -732,7 +672,14 @@ function IdeasTab() {
       <Card
         title="Content ideas"
         subtitle="Curated prompts for your next post"
-        action={<button className="flex h-9 items-center gap-1.5 rounded-sm bg-violet-50 px-3 text-[12px] font-semibold text-violet-700 ring-1 ring-violet-100 hover:bg-violet-100"><Sparkles className="size-3.5" /> Generate with AI</button>}
+        action={
+          <button
+            onClick={() => onCustomizeWithAi?.(active)}
+            className="flex h-9 items-center gap-1.5 rounded-sm bg-violet-50 px-3 text-[12px] font-semibold text-violet-700 ring-1 ring-violet-100 hover:bg-violet-100 transition"
+          >
+            <Sparkles className="size-3.5" /> Generate with AI
+          </button>
+        }
       >
         <div className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-3">
           {IDEAS.map((idea, i) => (
@@ -752,7 +699,12 @@ function IdeasTab() {
         <p className="mt-2 text-[14px] font-semibold text-[#16233F]">{active.title}</p>
         <p className="mt-0.5 text-[12px] leading-4.5 text-slate-500">{active.desc} Suggested for Instagram, Facebook and LinkedIn · best posted 9–11 AM.</p>
         <button className="mt-2 h-10 w-full rounded-sm bg-[#EB0711] text-[13px] font-semibold text-white transition hover:bg-[#D60811]">Use this idea</button>
-        <button className="mt-1.5 h-9 w-full rounded-sm border text-[12px] font-semibold text-slate-600 hover:bg-slate-50">Customize with AI</button>
+        <button
+          onClick={() => onCustomizeWithAi?.(active)}
+          className="mt-1.5 flex h-9 w-full items-center justify-center gap-1.5 rounded-sm border border-purple-200 bg-purple-50/70 text-[12px] font-semibold text-[#7C3AED] hover:bg-purple-100 transition"
+        >
+          <Sparkles className="size-3.5" /> Customize with AI
+        </button>
       </Card>
     </div>
   );
@@ -848,17 +800,23 @@ function ApprovalsTab() {
 export default function ContentStudio() {
   const [activeTab, setActiveTab] = useState<Tab>("Create");
   const [postType, setPostType] = useState<PostType>("Image");
+  const [aiPrompt, setAiPrompt] = useState<string | undefined>(undefined);
+
+  const handleCustomizeWithAi = (idea: { title: string; desc: string }) => {
+    setAiPrompt(`Create an engaging post for "${idea.title}": ${idea.desc}`);
+    setActiveTab("AI Assistant");
+  };
 
   const content = useMemo(() => {
     switch (activeTab) {
       case "Create": return <CreateTab postType={postType} setPostType={setPostType} />;
-      case "AI Assistant": return <AIAssistantTab />;
+      case "AI Assistant": return <AIAssistantTab initialPrompt={aiPrompt} />;
       case "Templates": return <TemplatesTab />;
       case "Saved Drafts": return <DraftsTab />;
-      case "Content Ideas": return <IdeasTab />;
+      case "Content Ideas": return <IdeasTab onCustomizeWithAi={handleCustomizeWithAi} />;
       case "Approvals": return <ApprovalsTab />;
     }
-  }, [activeTab, postType]);
+  }, [activeTab, postType, aiPrompt]);
 
   return (
     <div className="w-full min-w-0 space-y-3 text-[#243758]">

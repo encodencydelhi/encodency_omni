@@ -22,17 +22,30 @@ const TABS: Array<{ id: Tab; hint: string }> = [
 
 export default function ContentStudioShell() {
   const [activeTab, setActiveTab] = useState<Tab>("Create");
+  const [aiPrompt, setAiPrompt] = useState<string | undefined>(undefined);
+  const [aiType, setAiType] = useState<string | undefined>(undefined);
+
+  const handleCustomizeWithAi = (idea: { title: string; description: string; contentType?: string }) => {
+    const type = idea.contentType === "carousel" ? "Carousel" : idea.contentType === "video" ? "Reel Script" : "Social Post";
+    setAiPrompt(`Create an engaging post for "${idea.title}": ${idea.description}`);
+    setAiType(type);
+    setActiveTab("AI Assistant");
+  };
+
+  const handleUseIdea = () => {
+    setActiveTab("Create");
+  };
 
   const content = useMemo(() => {
     switch (activeTab) {
       case "Create": return <CreateContentTab />;
-      case "AI Assistant": return <AIAssistantTab />;
+      case "AI Assistant": return <AIAssistantTab initialPrompt={aiPrompt} initialType={aiType} />;
       case "Templates": return <TemplatesTab />;
       case "Saved Drafts": return <DraftsTab />;
-      case "Content Ideas": return <IdeasTab />;
+      case "Content Ideas": return <IdeasTab onCustomizeWithAi={handleCustomizeWithAi} onUseIdea={handleUseIdea} />;
       case "Approvals": return <ApprovalsTab />;
     }
-  }, [activeTab]);
+  }, [activeTab, aiPrompt, aiType]);
 
   return (
     <div className="w-full min-w-0 space-y-3 text-[#172044]">
