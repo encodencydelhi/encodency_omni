@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
 export function Card({ title, subtitle, action, children, className }: {
-  title?: string; subtitle?: string; action?: ReactNode; children: ReactNode; className?: string;
+  title?: string; subtitle?: ReactNode; action?: ReactNode; children: ReactNode; className?: string;
 }) {
   return (
     <section className={cn("overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]", className)}>

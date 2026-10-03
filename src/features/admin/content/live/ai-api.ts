@@ -21,9 +21,13 @@ export interface GeneratedAiResult {
   fullContent?: string;
 }
 
+/** Which engine produced the copy — surfaced so the UI never claims "Gemini" for the local fallback. */
+export type AiProvider = "GEMINI" | "OPENAI" | "LOCAL";
+
 export interface AiGenerateResponse {
   generatedContent: GeneratedAiResult;
   tokensConsumed: number;
+  provider?: AiProvider;
   usage: {
     currentAiTokens: number;
     maxAiTokens: number | null;

@@ -1,17 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Sparkles, Camera, Grid2X2, Video, BookOpen, Zap, Tag, AlignLeft, Loader2, Check, Copy } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Sparkles, Camera, Grid2X2, Video, BookOpen, Zap, Tag, AlignLeft, Loader2, Check, Copy, AlertTriangle, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
 import { SelectField } from "./ui-fields";
 import { MOCK_AI_CONTENT, IMG } from "../mocks/content.mock";
 import { ContentPreviewPanel } from "./ContentPreview";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
-import { aiApi, type GeneratedAiResult } from "../live/ai-api";
+import { aiApi, type GeneratedAiResult, type AiProvider } from "../live/ai-api";
 import { draftsApi } from "../live/drafts-api";
+import { mediaApi } from "../live/media-api";
 import { toast } from "sonner";
 import { ApiError } from "@/types/api";
+import type { Platform } from "../types/content.types";
+import { PLATFORM_CHAR_LIMITS, PLATFORM_HASHTAG_LIMITS, PLATFORM_META } from "../config/platform-config";
+
+/** Mirrors `AiContextDto.topic` @MaxLength(1000) — anything longer is a 400 from the API. */
+const TOPIC_MAX_CHARS = 1000;
+
+const PROVIDER_LABEL: Record<AiProvider, string> = {
+  GEMINI: "Gemini",
+  OPENAI: "OpenAI",
+  LOCAL: "Encodency AI",
+};
 
 const AI_TYPES = [
   { id: "Social Post", desc: "Engaging posts with images", icon: <Sparkles className="size-4" /> },
@@ -39,6 +51,9 @@ const PROMPT_HINTS: Record<string, string> = {
   "Variations": "Provide 3 different creative angles for our upcoming riverbank tree plantation campaign.",
 };
 
+const PRESET_IMAGES = [IMG.river, IMG.nature, IMG.water, IMG.people, IMG.lake, IMG.forest];
+const PRESET_STYLE_LABELS = ["Realistic", "Nature", "Minimal", "Community", "River", "Forest"];
+
 export function AIAssistantTab({
   initialPrompt,
   initialType,
@@ -59,13 +74,8 @@ export function AIAssistantTab({
   const [language, setLanguage] = useState("English");
   const [imageStyleIdx, setImageStyleIdx] = useState(0);
 
-  useEffect(() => {
-    if (initialPrompt) setPrompt(initialPrompt);
-  }, [initialPrompt]);
-
-  useEffect(() => {
-    if (initialType) setSelected(initialType);
-  }, [initialType]);
+  // initialPrompt / initialType are applied through `key` on the parent, so a
+  // fresh prompt remounts this tab instead of syncing state in an effect.
 
   const [generated, setGenerated] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -82,26 +92,131 @@ export function AIAssistantTab({
   const [tokensUsed, setTokensUsed] = useState<number | null>(null);
   const [remainingTokens, setRemainingTokens] = useState<number | null>(null);
   const [quotaLimit, setQuotaLimit] = useState<number | null>(null);
+  const [usageLoaded, setUsageLoaded] = useState(false);
+  const [usageError, setUsageError] = useState(false);
+  const [provider, setProvider] = useState<AiProvider | null>(null);
+
+  /* Per-type prompt drafts: switching Content Type never destroys what was typed. */
+  const [promptDrafts, setPromptDrafts] = useState<Record<string, string>>({});
+
+  /* Result presentation: raw text (editable) or rendered preview. */
+  const [resultView, setResultView] = useState<"edit" | "preview">("edit");
+
+  /* Preview platform drives every limit shown next to the result. */
+  const [previewPlatform, setPreviewPlatform] = useState<Platform>("instagram");
+
+  /* Image: preset library, a user upload, or deliberately removed (null). */
+  const [customImage, setCustomImage] = useState<{ url: string; assetId?: string; local?: boolean } | null>(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  /* One in-flight generation at a time; unmount aborts it. */
+  const abortRef = useRef<AbortController | null>(null);
+  const usageAbortRef = useRef<AbortController | null>(null);
+
+  const refreshUsage = useCallback(() => {
+    usageAbortRef.current?.abort();
+    const controller = new AbortController();
+    usageAbortRef.current = controller;
+    if (!companyId) return;
+
+    aiApi
+      .getUsage(companyId, controller.signal)
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        setRemainingTokens(data.limits.remainingAiTokens);
+        setQuotaLimit(data.limits.maxAiTokens);
+        setUsageLoaded(true);
+        setUsageError(false);
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        // Never leave the counter blank — show the failure instead of nothing.
+        setUsageLoaded(true);
+        setUsageError(true);
+      });
+  }, [companyId]);
 
   // Load existing AI token usage summary
   useEffect(() => {
-    if (!companyId) return;
-    let cancelled = false;
+    refreshUsage();
+  }, [refreshUsage]);
 
-    aiApi.getUsage(companyId)
-      .then((data) => {
-        if (cancelled) return;
-        setRemainingTokens(data.limits.remainingAiTokens);
-        setQuotaLimit(data.limits.maxAiTokens);
-      })
-      .catch(() => {
-        // Quiet fallback if usage cannot be loaded
-      });
+  // A generation that is still in flight when the tab unmounts must not setState.
+  useEffect(
+    () => () => {
+      abortRef.current?.abort();
+      usageAbortRef.current?.abort();
+    },
+    [],
+  );
 
-    return () => {
-      cancelled = true;
-    };
-  }, [companyId]);
+  /* ── Derived limits (shown live next to every field) ── */
+  const promptLength = prompt.length;
+  const promptOverLimit = promptLength > TOPIC_MAX_CHARS;
+  const captionLength = result.caption.length;
+  const captionLimit = PLATFORM_CHAR_LIMITS[previewPlatform] ?? null;
+  const captionOverLimit = captionLimit !== null && captionLength > captionLimit;
+  const captionNearLimit = captionLimit !== null && !captionOverLimit && captionLength > captionLimit * 0.8;
+  const hashtagCount = result.hashtags.length;
+  const hashtagLimit = PLATFORM_HASHTAG_LIMITS[previewPlatform] ?? null;
+  const hashtagsOverLimit = hashtagLimit !== null && hashtagCount > hashtagLimit;
+  const usedTokens = quotaLimit !== null && remainingTokens !== null ? Math.max(0, quotaLimit - remainingTokens) : null;
+  const quotaPercent =
+    quotaLimit && quotaLimit > 0 ? Math.min(100, Math.round(((usedTokens ?? 0) / quotaLimit) * 100)) : null;
+  const quotaLow = remainingTokens !== null && quotaLimit !== null && remainingTokens <= quotaLimit * 0.1;
+
+  const selectedImage: string | null = imageRemoved
+    ? null
+    : (customImage?.url ?? PRESET_IMAGES[imageStyleIdx] ?? null);
+
+  /* ── Content Type switch: keep each type's own prompt, fall back to its hint ── */
+  const handleTypeSelect = (typeId: string) => {
+    if (typeId === selected) return;
+    setPromptDrafts((prev) => ({ ...prev, [selected]: prompt }));
+    setSelected(typeId);
+    const saved = promptDrafts[typeId];
+    setPrompt(saved && saved.trim() ? saved : (PROMPT_HINTS[typeId] ?? ""));
+    setResultView("edit");
+  };
+
+  /* ── Image: pick a preset, upload your own, or remove it entirely ── */
+  const handlePickPreset = (index: number) => {
+    setImageStyleIdx(index);
+    setCustomImage(null);
+    setImageRemoved(false);
+  };
+
+  const handleRemoveImage = () => {
+    setCustomImage(null);
+    setImageRemoved(true);
+  };
+
+  const handleAddImage = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file.");
+      return;
+    }
+    if (companyId && clientId) {
+      setIsUploadingImage(true);
+      try {
+        const record = await mediaApi.upload(companyId, clientId, file);
+        setCustomImage({ url: record.url, assetId: record.id });
+        setImageRemoved(false);
+        toast.success("Image added!", { description: "Saved to your client media library." });
+        return;
+      } catch (err) {
+        toast.error(ApiError.isApiError(err) ? err.message : "Upload failed — showing a local preview instead.");
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
+    // No client selected: preview locally so the flow is never blocked.
+    setCustomImage({ url: URL.createObjectURL(file), local: true });
+    setImageRemoved(false);
+    toast.info("Using a local preview.", { description: "Select a Client to save the image to your library." });
+  };
 
   const handleGenerate = async (refinements: string[] = []) => {
     if (!prompt.trim()) {
@@ -109,10 +224,21 @@ export function AIAssistantTab({
       return;
     }
 
+    if (promptOverLimit) {
+      toast.error(`Prompt is too long (${promptLength.toLocaleString()} characters).`, {
+        description: `The backend accepts a maximum of ${TOPIC_MAX_CHARS.toLocaleString()} characters.`,
+      });
+      return;
+    }
+
     if (!companyId) {
       toast.error("Company context required to generate AI content.");
       return;
     }
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     setIsGenerating(true);
 
@@ -122,37 +248,58 @@ export function AIAssistantTab({
     }
 
     try {
-      const response = await aiApi.generate(companyId, {
-        promptType: selected,
-        context: {
-          topic: prompt,
-          tone,
-          targetAudience: audience,
-          language,
-          imageStyle: ["Realistic", "Nature", "Minimal", "Community", "River", "Forest"][imageStyleIdx],
-          refinements: combinedRefinements,
+      const response = await aiApi.generate(
+        companyId,
+        {
+          promptType: selected,
+          context: {
+            topic: prompt,
+            tone,
+            targetAudience: audience,
+            language,
+            imageStyle: PRESET_STYLE_LABELS[imageStyleIdx],
+            refinements: combinedRefinements,
+          },
         },
-      });
+        controller.signal,
+      );
+      if (controller.signal.aborted) return;
 
       setResult(response.generatedContent);
       setGenerated(true);
       setTokensUsed(response.tokensConsumed);
       setRemainingTokens(response.usage.remainingAiTokens);
       setQuotaLimit(response.usage.maxAiTokens);
+      setUsageLoaded(true);
+      setUsageError(false);
+      setProvider(response.provider ?? null);
+      setResultView("edit");
 
+      const label = response.provider ? PROVIDER_LABEL[response.provider] : "AI";
       toast.success("AI content generated successfully!", {
-        description: `${response.tokensConsumed} tokens consumed with Gemini` + (response.usage.remainingAiTokens !== null ? ` • ${response.usage.remainingAiTokens.toLocaleString()} tokens left` : ""),
+        description: `${response.tokensConsumed} tokens consumed with ${label}` + (response.usage.remainingAiTokens !== null ? ` • ${response.usage.remainingAiTokens.toLocaleString()} tokens left` : ""),
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (ApiError.isApiError(err) && err.status === 402) {
+        // Sync the quota pill with the numbers the API returned instead of guessing.
+        const limit = err.detail<number>("limit");
+        const current = err.detail<number>("current");
+        if (typeof limit === "number") {
+          setQuotaLimit(limit);
+          setRemainingTokens(typeof current === "number" ? Math.max(0, limit - current) : 0);
+          setUsageLoaded(true);
+        }
         toast.error("Monthly AI Token quota exhausted!", {
           description: "Please upgrade your subscription plan in Billing to get more AI tokens.",
           duration: 7000,
         });
+      } else if (ApiError.isApiError(err) && err.status === 0) {
+        toast.error("Unable to reach the platform API.", { description: "Check your connection and try again." });
       } else {
         toast.error(ApiError.isApiError(err) ? err.message : "Failed to generate AI content. Please try again.");
       }
     } finally {
+      if (abortRef.current === controller) abortRef.current = null;
       setIsGenerating(false);
     }
   };
@@ -173,9 +320,11 @@ export function AIAssistantTab({
           INSTAGRAM_ACCOUNT: { content: fullText },
           FACEBOOK_PAGE: { content: fullText },
         },
+        // Attach the uploaded image so the draft keeps its media.
+        ...(customImage?.assetId ? { assetIds: [customImage.assetId] } : {}),
       });
       toast.success("Draft saved to Content Studio!", { description: "Your customized copy was saved to Saved Drafts." });
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(ApiError.isApiError(err) ? err.message : "Could not save draft.");
     } finally {
       setIsSavingDraft(false);
@@ -184,11 +333,16 @@ export function AIAssistantTab({
 
   const handleUsePost = () => {
     const fullText = (result.headline ? `${result.headline}\n\n` : "") + result.caption + (result.hashtags.length > 0 ? `\n\n${result.hashtags.join(" ")}` : "");
-    navigator.clipboard.writeText(fullText).then(() => {
-      setCopied(true);
-      toast.success("Post copied to clipboard!", { description: "Your edited copy is ready to paste into any editor." });
-      setTimeout(() => setCopied(false), 2500);
-    });
+    navigator.clipboard
+      .writeText(fullText)
+      .then(() => {
+        setCopied(true);
+        toast.success("Post copied to clipboard!", { description: "Your edited copy is ready to paste into any editor." });
+        setTimeout(() => setCopied(false), 2500);
+      })
+      .catch(() => {
+        toast.error("Could not access the clipboard.", { description: "Your browser blocked clipboard access — copy from the editor instead." });
+      });
   };
 
   return (
@@ -197,9 +351,9 @@ export function AIAssistantTab({
       <Card
         title="What would you like to create?"
         action={
-          remainingTokens !== null && (
+          usageLoaded && (
             <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10.5px] font-semibold text-[#7C3AED]">
-              {remainingTokens.toLocaleString()} tokens left
+              {quotaLimit === null ? "Unlimited AI tokens" : `${(remainingTokens ?? 0).toLocaleString()} tokens left`}
             </span>
           )
         }
@@ -208,12 +362,7 @@ export function AIAssistantTab({
           {AI_TYPES.map((t) => (
             <button
               key={t.id}
-              onClick={() => {
-                setSelected(t.id);
-                if (!prompt || Object.values(PROMPT_HINTS).includes(prompt)) {
-                  setPrompt(PROMPT_HINTS[t.id] || prompt);
-                }
-              }}
+              onClick={() => handleTypeSelect(t.id)}
               className={cn(
                 "rounded-sm border p-2 text-left transition",
                 selected === t.id ? "border-purple-300 bg-purple-50 shadow-sm" : "border-[#E2E8F0] hover:border-[#CBD5E1]"
@@ -228,16 +377,29 @@ export function AIAssistantTab({
           ))}
         </div>
 
-        {/* Prompt */}
+        {/* Prompt — each Content Type loads its own prompt (custom text is kept per type) */}
         <div className="mt-3">
-          <label className="mb-1 block text-[11.5px] font-semibold text-[#33445F]">Topic / prompt *</label>
+          <div className="mb-1 flex items-center justify-between">
+            <label className="text-[11.5px] font-semibold text-[#33445F]">Topic / prompt *</label>
+            <span
+              className={cn(
+                "text-[10px] tabular-nums",
+                promptOverLimit ? "font-semibold text-red-500" : promptLength > TOPIC_MAX_CHARS * 0.8 ? "text-amber-500" : "text-slate-400",
+              )}
+            >
+              {promptLength.toLocaleString()} / {TOPIC_MAX_CHARS.toLocaleString()} characters
+            </span>
+          </div>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             rows={4}
             spellCheck
-            placeholder="What should the post be about?"
-            className="w-full resize-none rounded-sm border border-[#D9E1EC] p-2.5 text-[12px] leading-5 outline-none focus:border-[#7C3AED]"
+            placeholder={PROMPT_HINTS[selected] || "What should the post be about?"}
+            className={cn(
+              "w-full resize-none rounded-sm border p-2.5 text-[12px] leading-5 outline-none focus:border-[#7C3AED]",
+              promptOverLimit ? "border-red-300 bg-red-50/40" : "border-[#D9E1EC]",
+            )}
           />
         </div>
 
@@ -311,31 +473,71 @@ export function AIAssistantTab({
         </div>
 
         {/* Image style */}
-        <p className="mb-1 mt-3 text-[11.5px] font-semibold text-[#33445F]">Image style</p>
+        <div className="mb-1 mt-3 flex items-center justify-between">
+          <p className="text-[11.5px] font-semibold text-[#33445F]">Image</p>
+          <div className="flex items-center gap-1.5">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void handleAddImage(file);
+                e.target.value = "";
+              }}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingImage}
+              className="flex items-center gap-1 rounded-sm border border-[#D7E0EB] px-2 py-1 text-[10.5px] font-semibold text-[#33445F] transition hover:bg-[#F8FAFD] disabled:opacity-50"
+            >
+              {isUploadingImage ? <Loader2 className="size-3 animate-spin" /> : <Camera className="size-3" />}
+              {isUploadingImage ? "Uploading…" : "Add image"}
+            </button>
+            {selectedImage !== null && (
+              <button
+                onClick={handleRemoveImage}
+                className="rounded-sm border border-[#D7E0EB] px-2 py-1 text-[10.5px] font-semibold text-red-500 transition hover:bg-red-50"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
         <div className="grid grid-cols-3 gap-1.5">
-          {[IMG.river, IMG.nature, IMG.water, IMG.people, IMG.lake, IMG.forest].map((src, i) => (
+          {PRESET_IMAGES.map((src, i) => (
             <button
               key={i}
-              onClick={() => setImageStyleIdx(i)}
-              className={cn("overflow-hidden rounded-sm border text-left transition", imageStyleIdx === i ? "border-[#7C3AED] ring-2 ring-purple-100" : "border-[#E2E8F0]")}
+              onClick={() => handlePickPreset(i)}
+              className={cn(
+                "overflow-hidden rounded-sm border text-left transition",
+                !customImage && !imageRemoved && imageStyleIdx === i
+                  ? "border-[#7C3AED] ring-2 ring-purple-100"
+                  : "border-[#E2E8F0]",
+              )}
             >
               <img src={src} alt="" className="h-12 w-full object-cover" />
-              <span className="block px-1.5 py-1 text-[9.5px] font-semibold text-[#687797]">
-                {["Realistic", "Nature", "Minimal", "Community", "River", "Forest"][i]}
-              </span>
+              <span className="block px-1.5 py-1 text-[9.5px] font-semibold text-[#687797]">{PRESET_STYLE_LABELS[i]}</span>
             </button>
           ))}
         </div>
+        {customImage && (
+          <p className="mt-1 text-[10px] text-[#7C3AED]">
+            Custom image in use {customImage.local ? "(local preview)" : "(from your media library)"} — picking a style below replaces it.
+          </p>
+        )}
+        {imageRemoved && <p className="mt-1 text-[10px] text-slate-400">No image selected — this post will be text-only.</p>}
 
         {/* Generate button */}
         <button
           onClick={() => handleGenerate()}
-          disabled={isGenerating}
+          disabled={isGenerating || promptOverLimit}
           className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-sm bg-[#7C3AED] text-[12.5px] font-semibold text-white shadow-sm transition hover:bg-[#6D28D9] disabled:opacity-70"
         >
           {isGenerating ? (
             <>
-              <Loader2 className="size-4 animate-spin" /> Generating with Gemini...
+              <Loader2 className="size-4 animate-spin" /> Generating{provider ? ` with ${PROVIDER_LABEL[provider]}` : ""}…
             </>
           ) : (
             <>
@@ -343,23 +545,114 @@ export function AIAssistantTab({
             </>
           )}
         </button>
+        {promptOverLimit && (
+          <p className="mt-1.5 flex items-center gap-1 text-[10.5px] font-semibold text-red-500">
+            <AlertTriangle className="size-3" /> Prompt exceeds the {TOPIC_MAX_CHARS.toLocaleString()}-character limit.
+          </p>
+        )}
       </Card>
 
-      {/* 2. AI Result (EVERY SINGLE FIELD IS EDITABLE!) */}
+      {/* 2. AI Result — switch between editing every field and a rendered preview */}
       <Card
         title="AI result"
-        subtitle={tokensUsed ? `${tokensUsed} tokens consumed • Gemini AI` : "Review & edit every field directly"}
+        subtitle={
+          <>
+            {usageError && remainingTokens === null && quotaLimit === null ? (
+              <span className="text-[#DC2626]">
+                Usage unavailable{" "}
+                <button onClick={refreshUsage} className="font-semibold underline">
+                  retry
+                </button>
+              </span>
+            ) : usageLoaded ? (
+              <>
+                {quotaLimit === null ? (
+                  <span className="font-semibold text-[#7C3AED]">Unlimited AI tokens</span>
+                ) : (
+                  <>
+                    <span className="font-semibold text-[#7C3AED]">
+                      {(remainingTokens ?? 0).toLocaleString()} left
+                    </span>
+                    <span> of {quotaLimit.toLocaleString()}</span>
+                  </>
+                )}
+                <span> • </span>
+                {tokensUsed !== null ? (
+                  <>
+                    <span className="font-semibold text-[#7C3AED]">{tokensUsed.toLocaleString()} tokens consumed</span>
+                    <span> this run • </span>
+                  </>
+                ) : usedTokens !== null ? (
+                  <span>{usedTokens.toLocaleString()} used this cycle • </span>
+                ) : null}
+                <span>{provider ? `${PROVIDER_LABEL[provider]} AI` : "AI generated"}</span>
+              </>
+            ) : (
+              "Review, edit and approve every field"
+            )}
+          </>
+        }
         action={
-          <button
-            onClick={() => handleGenerate()}
-            disabled={isGenerating}
-            className="text-[11px] font-semibold text-[#1769DF] hover:underline disabled:opacity-50"
-          >
-            Regenerate
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {usageLoaded && (
+              <span
+                className={cn(
+                  "whitespace-nowrap rounded-full px-2 py-0.5 text-[10.5px] font-semibold",
+                  quotaLow ? "bg-amber-50 text-amber-600" : "bg-purple-50 text-[#7C3AED]",
+                )}
+                title="AI tokens remaining this billing cycle"
+              >
+                {usageError && quotaLimit === null
+                  ? "Usage —"
+                  : quotaLimit === null
+                    ? "Unlimited"
+                    : `${(remainingTokens ?? 0).toLocaleString()} left`}
+              </span>
+            )}
+            <div className="flex overflow-hidden rounded-sm border border-[#D7E0EB]">
+              <button
+                onClick={() => setResultView("edit")}
+                className={cn("px-2 py-1 text-[10.5px] font-semibold transition", resultView === "edit" ? "bg-[#1769DF] text-white" : "text-[#687797] hover:bg-[#F8FAFD]")}
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => setResultView("preview")}
+                className={cn("px-2 py-1 text-[10.5px] font-semibold transition", resultView === "preview" ? "bg-[#1769DF] text-white" : "text-[#687797] hover:bg-[#F8FAFD]")}
+              >
+                Preview
+              </button>
+            </div>
+            <button
+              onClick={() => handleGenerate()}
+              disabled={isGenerating}
+              className="text-[11px] font-semibold text-[#1769DF] hover:underline disabled:opacity-50"
+            >
+              Regenerate
+            </button>
+          </div>
         }
       >
         {generated ? (
+          resultView === "preview" ? (
+            <div className="space-y-2.5">
+              <div className="max-h-[460px] overflow-auto rounded-sm border border-[#E2E8F0] bg-[#F8FAFD] p-3 text-[12px] leading-relaxed text-[#33445F] [&_blockquote]:mt-1 [&_blockquote]:border-l-2 [&_blockquote]:border-[#7C3AED] [&_blockquote]:pl-2 [&_blockquote]:italic [&_h3]:mb-1.5 [&_h3]:text-[13.5px] [&_h3]:font-semibold [&_h3]:text-[#172044] [&_h4]:mb-1.5 [&_h4]:text-[12.5px] [&_h4]:font-semibold [&_h4]:text-[#172044] [&_li]:mb-0.5 [&_ol]:mb-1.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-1.5 [&_ul]:mb-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_code]:rounded [&_code]:bg-slate-100 [&_code]:px-1">
+                <h3>{result.headline || "Untitled"}</h3>
+                <div dangerouslySetInnerHTML={{ __html: renderRichText(result.caption) }} />
+                {result.callToAction && (
+                  <p className="mt-2 rounded-sm bg-purple-50 px-2 py-1.5 text-[11.5px] font-semibold text-[#7C3AED]">
+                    {result.callToAction}
+                  </p>
+                )}
+                {result.hashtags.length > 0 && (
+                  <p className="mt-1.5 text-[11.5px] font-medium text-[#1769DF]">{result.hashtags.join(" ")}</p>
+                )}
+              </div>
+              <p className="text-center text-[10.5px] text-slate-400">
+                Read-only preview — switch to <span className="font-semibold text-[#1769DF]">Edit</span> to change any field.
+              </p>
+            </div>
+          ) : (
           <div className="space-y-2.5">
             {/* Editable Headline */}
             <div>
@@ -399,8 +692,20 @@ export function AIAssistantTab({
                 onChange={(e) => setResult({ ...result, caption: e.target.value })}
                 rows={selected === "Carousel" || selected === "Reel Script" || selected === "Blog" || selected === "Variations" ? 11 : 6}
                 spellCheck
-                className="w-full resize-y rounded-sm border border-[#D9E1EC] p-2.5 text-[12px] leading-relaxed text-[#33445F] outline-none focus:border-[#7C3AED]"
+                className={cn(
+                  "w-full resize-y rounded-sm border p-2.5 text-[12px] leading-relaxed text-[#33445F] outline-none focus:border-[#7C3AED]",
+                  captionOverLimit ? "border-red-300 bg-red-50/40" : "border-[#D9E1EC]",
+                )}
               />
+              <div className="mt-1 flex items-center justify-between text-[10px]">
+                <span className="text-slate-400">
+                  {captionLimit !== null ? `Platform limit for ${previewPlatform}: ${captionLimit.toLocaleString()} characters` : `No character limit for ${previewPlatform}`}
+                </span>
+                <span className={cn("tabular-nums", captionOverLimit ? "font-semibold text-red-500" : captionNearLimit ? "text-amber-500" : "text-slate-400")}>
+                  {captionLength.toLocaleString()}
+                  {captionLimit !== null ? ` / ${captionLimit.toLocaleString()}` : ""}
+                </span>
+              </div>
             </div>
 
             {/* Editable Call To Action */}
@@ -417,7 +722,12 @@ export function AIAssistantTab({
 
             {/* Editable Hashtags */}
             <div>
-              <label className="mb-1 block text-[11px] font-semibold text-[#33445F]">Hashtags (space separated)</label>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-[11px] font-semibold text-[#33445F]">Hashtags (space separated)</label>
+                <span className={cn("text-[10px] tabular-nums", hashtagsOverLimit ? "font-semibold text-red-500" : "text-slate-400")}>
+                  {hashtagCount} used{hashtagLimit !== null ? ` / ${hashtagLimit} allowed` : ""}
+                </span>
+              </div>
               <input
                 type="text"
                 value={result.hashtags.join(" ")}
@@ -427,25 +737,62 @@ export function AIAssistantTab({
                   setResult({ ...result, hashtags: tags });
                 }}
                 placeholder="#tag1 #tag2 #tag3"
-                className="w-full rounded-sm border border-[#D9E1EC] px-2.5 py-1.5 text-[11.5px] font-semibold text-[#1769DF] outline-none focus:border-[#7C3AED]"
+                className={cn(
+                  "w-full rounded-sm border px-2.5 py-1.5 text-[11.5px] font-semibold text-[#1769DF] outline-none focus:border-[#7C3AED]",
+                  hashtagsOverLimit ? "border-red-300 bg-red-50/40" : "border-[#D9E1EC]",
+                )}
               />
+              {hashtagsOverLimit && (
+                <p className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-red-500">
+                  <AlertTriangle className="size-3" /> {previewPlatform} allows at most {hashtagLimit} hashtags.
+                </p>
+              )}
             </div>
 
-            {/* Image Preview & Selection */}
+            {/* Image — fully removable & replaceable */}
             <div>
-              <img
-                src={[IMG.river, IMG.nature, IMG.water, IMG.people, IMG.lake, IMG.forest][imageStyleIdx]}
-                alt=""
-                className="aspect-video w-full rounded-sm object-cover"
-              />
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-[11px] font-semibold text-[#33445F]">Image</label>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingImage}
+                    className="rounded-sm border border-[#D7E0EB] px-2 py-0.5 text-[10.5px] font-semibold text-[#33445F] transition hover:bg-[#F8FAFD] disabled:opacity-50"
+                  >
+                    {isUploadingImage ? "Uploading…" : selectedImage ? "Replace" : "Add image"}
+                  </button>
+                  {selectedImage && (
+                    <button
+                      onClick={handleRemoveImage}
+                      className="rounded-sm border border-[#D7E0EB] px-2 py-0.5 text-[10.5px] font-semibold text-red-500 transition hover:bg-red-50"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+              {selectedImage ? (
+                <img src={selectedImage} alt="" className="aspect-video w-full rounded-sm object-cover" />
+              ) : (
+                <div className="grid aspect-video w-full place-items-center rounded-sm border border-dashed border-[#CBD5E1] bg-[#F8FAFD] p-4 text-center">
+                  <div>
+                    <ImageIcon className="mx-auto size-6 text-[#CBD5E1]" />
+                    <p className="mt-1.5 text-[11.5px] font-semibold text-[#64748B]">No image selected</p>
+                    <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Add your own image or pick a style below.</p>
+                  </div>
+                </div>
+              )}
               <div className="mt-1.5 grid grid-cols-5 gap-1">
-                {[IMG.people, IMG.cleanup, IMG.river, IMG.lake, IMG.nature].map((s, i) => (
+                {PRESET_IMAGES.slice(0, 5).map((s, i) => (
                   <img
                     key={i}
                     src={s}
-                    alt=""
-                    onClick={() => setImageStyleIdx(i % 6)}
-                    className={`h-11 w-full cursor-pointer rounded object-cover transition ${i === imageStyleIdx ? "ring-2 ring-[#7C3AED]" : "opacity-80 hover:opacity-100"}`}
+                    alt={PRESET_STYLE_LABELS[i] ?? ""}
+                    onClick={() => handlePickPreset(i % PRESET_IMAGES.length)}
+                    className={cn(
+                      "h-11 w-full cursor-pointer rounded object-cover transition",
+                      !customImage && !imageRemoved && imageStyleIdx === i % PRESET_IMAGES.length ? "ring-2 ring-[#7C3AED]" : "opacity-80 hover:opacity-100",
+                    )}
                   />
                 ))}
               </div>
@@ -468,6 +815,7 @@ export function AIAssistantTab({
               </button>
             </div>
           </div>
+          )
         ) : (
           <div className="grid min-h-[220px] place-items-center rounded-sm border border-dashed border-[#CBD5E1] bg-[#F8FAFD] p-6 text-center">
             <Sparkles className="size-7 text-[#CBD5E1]" />
@@ -480,13 +828,70 @@ export function AIAssistantTab({
       {/* 3. Live Preview & Quick Refinements */}
       <div className="space-y-2.5 xl:sticky xl:top-4">
         <ContentPreviewPanel
-          platform="instagram"
-          setPlatform={() => {}}
+          platform={previewPlatform}
+          setPlatform={setPreviewPlatform}
           channels={["instagram", "facebook"]}
           caption={result.caption}
           hashtags={result.hashtags}
-          image={[IMG.river, IMG.nature, IMG.water, IMG.people, IMG.lake, IMG.forest][imageStyleIdx]}
+          image={selectedImage}
         />
+
+        {/* Platform limits for the selected preview channel */}
+        <Card title="Platform limits" subtitle={PLATFORM_META[previewPlatform]?.label ?? previewPlatform}>
+          <ul className="space-y-1.5 text-[11px] text-[#687797]">
+            <li className="flex items-center justify-between gap-2">
+              <span>Caption characters</span>
+              <span className={cn("font-semibold tabular-nums", captionOverLimit ? "text-red-500" : "text-[#33445F]")}>
+                {captionLength}
+                {captionLimit !== null ? ` / ${captionLimit}` : ""}
+              </span>
+            </li>
+            <li className="flex items-center justify-between gap-2">
+              <span>Hashtags</span>
+              <span className={cn("font-semibold tabular-nums", hashtagsOverLimit ? "text-red-500" : "text-[#33445F]")}>
+                {hashtagCount}
+                {hashtagLimit !== null ? ` / ${hashtagLimit}` : ""}
+              </span>
+            </li>
+            <li className="flex items-center justify-between gap-2">
+              <span>Prompt characters</span>
+              <span className={cn("font-semibold tabular-nums", promptOverLimit ? "text-red-500" : "text-[#33445F]")}>
+                {promptLength} / {TOPIC_MAX_CHARS.toLocaleString()}
+              </span>
+            </li>
+          </ul>
+        </Card>
+
+        {/* AI token budget from the Usage API */}
+        <Card title="Usage & limits" subtitle={quotaPercent !== null ? `${quotaPercent}% of monthly AI tokens used` : "Monthly AI token budget"}>
+          {quotaPercent !== null ? (
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EDF1F5]">
+              <div
+                className={cn("h-full rounded-full transition-all", quotaLow ? "bg-amber-400" : "bg-[#7C3AED]")}
+                style={{ width: `${quotaPercent}%` }}
+              />
+            </div>
+          ) : (
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EDF1F5]">
+              <div className="h-full w-0 rounded-full bg-[#7C3AED]" />
+            </div>
+          )}
+          <div className="mt-2 flex items-center justify-between text-[11px]">
+            <span className="text-[#687797]">
+              {remainingTokens !== null ? `${remainingTokens.toLocaleString()} tokens left` : "Usage not loaded yet"}
+            </span>
+            {quotaLimit !== null && <span className="text-slate-400">of {quotaLimit.toLocaleString()}/mo</span>}
+          </div>
+          {usedTokens !== null && (
+            <p className="mt-1 text-[10.5px] text-slate-400">{usedTokens.toLocaleString()} used this cycle</p>
+          )}
+          {quotaLow && (
+            <p className="mt-1.5 flex items-center gap-1 text-[10.5px] font-semibold text-amber-600">
+              <AlertTriangle className="size-3" /> Running low — consider upgrading your plan in Billing.
+            </p>
+          )}
+        </Card>
+
         <Card title="Quick refinements">
           <div className="grid grid-cols-2 gap-1">
             {["Make shorter", "Add CTA", "Change tone", "More hashtags", "Hindi version", "Add emojis"].map((x) => (
@@ -504,4 +909,89 @@ export function AIAssistantTab({
       </div>
     </div>
   );
+}
+
+/**
+ * Tiny escape-first markdown renderer for the read-only Preview view.
+ * Everything is HTML-escaped first; only our own tags are injected, so
+ * model output can never smuggle in markup or scripts.
+ */
+function renderRichText(src: string): string {
+  const escaped = src
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  const inline = (s: string) =>
+    s
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*\w])\*([^*\n]+)\*/g, "$1<em>$2</em>")
+      .replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  const lines = escaped.split(/\r?\n/);
+  const out: string[] = [];
+  let list: "ul" | "ol" | null = null;
+  const closeList = () => {
+    if (list) {
+      out.push(`</${list}>`);
+      list = null;
+    }
+  };
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (!line.trim()) {
+      closeList();
+      continue;
+    }
+
+    const heading = line.match(/^(#{1,6})\s+(.*)$/);
+    if (heading) {
+      closeList();
+      const level = Math.min(6, (heading[1]?.length ?? 1) + 2);
+      out.push(`<h${level}>${inline(heading[2] ?? "")}</h${level}>`);
+      continue;
+    }
+
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
+      closeList();
+      out.push("<hr/>");
+      continue;
+    }
+
+    const quote = line.match(/^&gt;\s?(.*)$/);
+    if (quote) {
+      closeList();
+      out.push(`<blockquote>${inline(quote[1] ?? "")}</blockquote>`);
+      continue;
+    }
+
+    const ul = line.match(/^[-*•]\s+(.*)$/);
+    if (ul) {
+      if (list !== "ul") {
+        closeList();
+        out.push("<ul>");
+        list = "ul";
+      }
+      out.push(`<li>${inline(ul[1] ?? "")}</li>`);
+      continue;
+    }
+
+    const ol = line.match(/^\d+[.)]\s+(.*)$/);
+    if (ol) {
+      if (list !== "ol") {
+        closeList();
+        out.push("<ol>");
+        list = "ol";
+      }
+      out.push(`<li>${inline(ol[1] ?? "")}</li>`);
+      continue;
+    }
+
+    closeList();
+    out.push(`<p>${inline(line)}</p>`);
+  }
+
+  closeList();
+  return out.join("");
 }

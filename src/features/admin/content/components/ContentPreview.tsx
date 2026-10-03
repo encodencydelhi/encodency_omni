@@ -20,9 +20,10 @@ export function ContentPreviewPanel({
   channels: Platform[];
   caption?: string;
   hashtags?: string[];
-  image?: string;
+  image?: string | null;
 }) {
   const meta = PLATFORM_META[platform];
+  const resolvedImage = image === undefined ? IMG.river : image;
   return (
     <Card>
       <div className="flex items-center gap-1.5 border-b border-[#EDF1F5] pb-2 mb-2">
@@ -52,10 +53,21 @@ export function ContentPreviewPanel({
           </div>
         </div>
         <div className="relative">
-          <img src={image || IMG.river} alt="" className="aspect-[4/3.4] w-full object-cover" />
-          <div className="absolute inset-x-3 bottom-3">
-            <p className="max-w-[160px] text-[16px] font-black leading-[1.02] text-white drop-shadow-lg">CLEAN RIVERS<br />BRIGHTER TOMORROW</p>
-          </div>
+          {resolvedImage ? (
+            <>
+              <img src={resolvedImage} alt="" className="aspect-[4/3.4] w-full object-cover" />
+              <div className="absolute inset-x-3 bottom-3">
+                <p className="max-w-[160px] text-[16px] font-black leading-[1.02] text-white drop-shadow-lg">CLEAN RIVERS<br />BRIGHTER TOMORROW</p>
+              </div>
+            </>
+          ) : (
+            <div className="grid aspect-[4/3.4] w-full place-items-center border-b border-[#EDF1F5] bg-[#F8FAFD] text-center">
+              <div>
+                <p className="text-[12px] font-semibold text-[#64748B]">No image selected</p>
+                <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Add one from the AI result panel.</p>
+              </div>
+            </div>
+          )}
         </div>
         <div className="px-2 py-1.5">
           <div className="flex items-center justify-between text-[#1d2f50]">
