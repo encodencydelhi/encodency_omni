@@ -659,7 +659,7 @@ export function AIAssistantTab({
                   handleGenerateAiImage(undefined, imagePrompt);
                 }
               }}
-              placeholder="e.g. River clean Ganga awareness drive at sunrise, volunteers, vibrant 4K..."
+              placeholder="e.g. Modern business conference, organic farmers market, vibrant 4K UHD..."
               className="flex-1 rounded-sm border border-[#D7E0EB] bg-white px-2.5 py-1.5 text-[11px] text-[#1E293B] outline-none transition placeholder:text-slate-400 focus:border-[#7C3AED] focus:ring-1 focus:ring-purple-200"
             />
             <button
@@ -675,11 +675,11 @@ export function AIAssistantTab({
           <div className="mt-2 flex flex-wrap items-center gap-1">
             <span className="text-[9.5px] font-medium text-slate-400">Quick ideas:</span>
             {[
-              "River cleanup campaign",
-              "Community volunteers at work",
-              "20% discount offer banner",
-              "Inspiring nature & river",
-              "Eco-friendly awareness poster",
+              "Organic farmers market",
+              "Product launch showcase",
+              "Creative team workshop",
+              "Special promotional banner",
+              "Minimalist studio portrait",
             ].map((suggest) => (
               <button
                 key={suggest}
