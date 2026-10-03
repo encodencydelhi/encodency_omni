@@ -194,7 +194,7 @@ export function AIAssistantTab({
     const currentTopic = imagePrompt.trim() || prompt;
     if (!currentTopic) return;
     setIsGeneratingImage(true);
-    fetchDynamicAiVisual(currentTopic, style, visualVariation, imagePrompt)
+    fetchDynamicAiVisual(currentTopic, style, visualVariation, imagePrompt, companyId)
       .then((resolved) => {
         if (resolved) {
           setAiVisual(resolved);
@@ -224,7 +224,7 @@ export function AIAssistantTab({
 
     setIsGeneratingImage(true);
     try {
-      const visual = await fetchDynamicAiVisual(currentTopic, style, nextVar, targetPrompt);
+      const visual = await fetchDynamicAiVisual(currentTopic, style, nextVar, targetPrompt, companyId);
       if (visual) {
         setAiVisual(visual);
         setCustomImage(null);
@@ -329,7 +329,7 @@ export function AIAssistantTab({
         const currentTopic = imagePrompt.trim() || prompt;
         if (currentTopic) {
           setIsGeneratingImage(true);
-          fetchDynamicAiVisual(currentTopic, style, nextVar, imagePrompt)
+          fetchDynamicAiVisual(currentTopic, style, nextVar, imagePrompt, companyId)
             .then((resolved) => {
               if (resolved) setAiVisual(resolved);
             })
@@ -633,7 +633,7 @@ export function AIAssistantTab({
         <div className="mt-2.5 rounded-sm border border-purple-200/90 bg-purple-50/40 p-2.5">
           <div className="mb-1.5 flex items-center justify-between">
             <label className="flex items-center gap-1.5 text-[11px] font-semibold text-[#33445F]">
-              <Wand2 className="size-3 text-[#7C3AED]" /> Custom Image Prompt (Kaisi image chahiye)
+              <Wand2 className="size-3 text-[#7C3AED]" /> Custom Image Prompt
             </label>
             {imagePrompt.trim() && (
               <button
