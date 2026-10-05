@@ -75,6 +75,8 @@ export interface ApiErrorGroup {
   lastSeenAt: string;
   statusCodes: number[];
   explanation: string;
+  /** Requests in the selected window that belong to this group (the request list holds only the most recent ones). Absent in sample data. */
+  occurrences?: number;
 }
 
 export interface ApiRateLimit {
@@ -87,7 +89,7 @@ export interface ApiRateLimit {
   used: number;
   remaining: number | null;
   resetAt: string | null;
-  source: "demo_telemetry" | "provider_header" | "configured_policy";
+  source: "demo_telemetry" | "provider_header" | "configured_policy" | "observed_telemetry";
 }
 
 export interface ApiDependency {
@@ -126,6 +128,22 @@ export interface ApiMonitoringConfig {
   errorRateWarningPercent: number;
 }
 
+/** Figures the server worked out over EVERY request in the window; they stay right when more requests happened than the snapshot lists. */
+export interface ApiAggregates {
+  windowStart: string;
+  totalRequests: number;
+  success2xx: number;
+  serverErrors: number;
+  throttled: number;
+  p95: number | null;
+  endpoints: Array<{ endpointId: string; requests: number; errors5xx: number; throttled: number; p50: number | null; p95: number | null; p99: number | null; lastSeen: string | null }>;
+  services: Array<{ serviceId: string; requests: number; errors5xx: number; throttled: number; p95: number | null }>;
+  trend: Array<{ start: string; requests: number; errors5xx: number }>;
+  latencyBands: Array<{ label: string; count: number }>;
+  availability: Array<{ endpointId: string; buckets: Array<{ requests: number; errors5xx: number }> }>;
+  listed: number;
+}
+
 export interface ApiMonitoringSnapshot {
   environment: ApiEnvironment;
   generatedAt: string;
@@ -140,4 +158,6 @@ export interface ApiMonitoringSnapshot {
   activity: ApiActivity[];
   sources: ApiMonitoringSource[];
   config: ApiMonitoringConfig;
+  /** Present when the data comes from the live server. */
+  aggregates?: ApiAggregates;
 }

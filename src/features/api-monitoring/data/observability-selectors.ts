@@ -25,6 +25,20 @@ export function statusClass(statusCode: number) {
 }
 
 export function kpis(snapshot: ApiMonitoringSnapshot, range: ApiTimeRange, serviceId = "all", customMinutes?: number) {
+  const a = snapshot.aggregates;
+  if (a) {
+    const stats = endpointStats(snapshot);
+    return {
+      total: a.totalRequests,
+      http2xxRate: a.totalRequests ? (a.success2xx / a.totalRequests) * 100 : 0,
+      http5xxRate: a.totalRequests ? (a.serverErrors / a.totalRequests) * 100 : 0,
+      p95: a.p95,
+      throttled: a.throttled,
+      observed: a.services.length,
+      slow: stats.filter((row) => row.p95 !== null && row.p95 > row.endpoint.p95TargetMs).length,
+      gaps: stats.filter((row) => row.endpoint.enabled && row.requests === 0).length,
+    };
+  }
   const rows = requestsInRange(snapshot, range, serviceId, customMinutes);
   const total = rows.length;
   const success = rows.filter((row) => row.statusCode >= 200 && row.statusCode < 300).length;
@@ -46,6 +60,22 @@ export function kpis(snapshot: ApiMonitoringSnapshot, range: ApiTimeRange, servi
 }
 
 export function endpointStats(snapshot: ApiMonitoringSnapshot, rows: ApiRequest[] = snapshot.requests) {
+  const a = snapshot.aggregates;
+  if (a) {
+    return snapshot.endpoints.map((endpoint) => {
+      const row = a.endpoints.find((item) => item.endpointId === endpoint.id);
+      return {
+        endpoint,
+        requests: row?.requests ?? 0,
+        rate5xx: row && row.requests ? (row.errors5xx / row.requests) * 100 : 0,
+        throttled: row?.throttled ?? 0,
+        p50: row?.p50 ?? null,
+        p95: row?.p95 ?? null,
+        p99: row?.p99 ?? null,
+        lastSeen: row?.lastSeen ?? null,
+      };
+    });
+  }
   return snapshot.endpoints.map((endpoint) => {
     const matching = rows.filter((row) => row.endpointId === endpoint.id);
     const total = matching.length;
@@ -65,6 +95,14 @@ export function endpointStats(snapshot: ApiMonitoringSnapshot, rows: ApiRequest[
 }
 
 export function serviceStats(snapshot: ApiMonitoringSnapshot, rows: ApiRequest[]) {
+  const a = snapshot.aggregates;
+  if (a) {
+    return snapshot.services.map((service) => {
+      const row = a.services.find((item) => item.serviceId === service.id);
+      const requests = row?.requests ?? 0;
+      return { service, requests, rate5xx: requests ? ((row?.errors5xx ?? 0) / requests) * 100 : 0, throttled: row?.throttled ?? 0, p95: row?.p95 ?? null, freshness: requests ? ("fresh" as const) : ("missing" as const) };
+    });
+  }
   return snapshot.services.map((service) => {
     const matching = rows.filter((row) => row.serviceId === service.id);
     const total = matching.length;

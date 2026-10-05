@@ -30,14 +30,14 @@ export interface PaginatedApiRequestsResponse {
 }
 
 export async function fetchLiveApiMonitoringSnapshot(
-  environment: ApiEnvironment,
+  environment: ApiEnvironment | null,
   range: ApiTimeRange,
   hours: number,
   serviceId: string,
 ): Promise<ApiMonitoringSnapshot> {
   const isLive = env.dataSource === "api";
   if (!isLive) {
-    return buildApiMonitoringSnapshot(environment);
+    return buildApiMonitoringSnapshot(environment ?? "production");
   }
 
   // Never silently swallow errors into fake mock snapshots.
@@ -45,7 +45,8 @@ export async function fetchLiveApiMonitoringSnapshot(
     method: "GET",
     path: "/super-admin/api-monitoring/snapshot",
     query: {
-      environment,
+      // No environment chosen yet: the server answers for the environment it is running as.
+      environment: environment ?? undefined,
       range,
       hours,
       serviceId: serviceId === "all" ? undefined : serviceId,
@@ -54,7 +55,7 @@ export async function fetchLiveApiMonitoringSnapshot(
 }
 
 export function useLiveApiMonitoringSnapshot(
-  environment: ApiEnvironment,
+  environment: ApiEnvironment | null,
   range: ApiTimeRange,
   hours: number,
   serviceId: string,
@@ -70,7 +71,7 @@ export function useLiveApiMonitoringSnapshot(
     setError(null);
 
     if (!isApi) {
-      setSnapshot(buildApiMonitoringSnapshot(environment));
+      setSnapshot(buildApiMonitoringSnapshot(environment ?? "production"));
       setLoading(false);
       return;
     }
@@ -102,6 +103,11 @@ export function useLiveApiMonitoringSnapshot(
     error,
     isLive: isApi && !error && Boolean(snapshot),
   };
+}
+
+/** One request by id, wherever it sits in the retention period (the snapshot lists only the most recent ones). */
+export async function fetchLiveApiRequestById(id: string): Promise<ApiRequest> {
+  return await apiClient.request<ApiRequest>({ method: "GET", path: `/super-admin/api-monitoring/requests/${encodeURIComponent(id)}` });
 }
 
 export async function updateLiveMonitoringConfig(
@@ -158,7 +164,7 @@ export async function fetchLiveApiRequests(params: {
     method: "GET",
     path: "/super-admin/api-monitoring/requests",
     query: {
-      environment: params.environment ?? "production",
+      environment: params.environment,
       range: params.range ?? "24h",
       hours: params.hours ?? 24,
       serviceId: params.serviceId && params.serviceId !== "all" ? params.serviceId : undefined,
