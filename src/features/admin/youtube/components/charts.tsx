@@ -8,8 +8,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -20,7 +18,7 @@ import {
 import { format, parseISO, startOfMonth, startOfWeek } from "date-fns";
 import { cn } from "@/lib/utils/cn";
 import { METRICS } from "../lib/constants";
-import { changePct, compact, formatMetric } from "../lib/format";
+import { changePct, compact, formatMetric, hours } from "../lib/format";
 import type { BreakdownRow, GeographyRow, MetricKey, SeriesPoint } from "../types";
 import { InfoTip, Skeleton, TrendDelta, yt } from "./ui";
 
@@ -40,10 +38,12 @@ export function aggregate(series: SeriesPoint[], granularity: Granularity): Seri
   const buckets = new Map<string, SeriesPoint[]>();
   for (const p of series) {
     const d = parseISO(p.date);
-    const key = (granularity === "weekly" ? startOfWeek(d, { weekStartsOn: 1 }) : startOfMonth(d)).toISOString();
+    const key = format(granularity === "weekly" ? startOfWeek(d, { weekStartsOn: 1 }) : startOfMonth(d), "yyyy-MM-dd");
     buckets.set(key, [...(buckets.get(key) ?? []), p]);
   }
-  return [...buckets.entries()].map(([date, points]) => {
+  // A bucket is labelled with its first day inside the series, so a range that starts mid-week (a video published on a Friday) does not appear to start earlier.
+  return [...buckets.values()].map((points) => {
+    const date = points[0]!.date;
     // A bucket with no value at all stays null (a gap), never zero; partial buckets sum/average only the days that have data.
     const known = (k: keyof SeriesPoint) => points.map((p) => p[k] as number | null).filter((v): v is number => v !== null);
     const sum = (k: keyof SeriesPoint) => {
@@ -214,7 +214,7 @@ export function TrendChart({
           </defs>
           <CartesianGrid stroke="#EEF1F5" vertical={false} />
           <XAxis dataKey="date" tickFormatter={(d: string) => format(parseISO(d), pattern)} tick={axisTick} axisLine={false} tickLine={false} minTickGap={28} />
-          <YAxis tick={axisTick} axisLine={false} tickLine={false} width={48} tickFormatter={(v: number) => (metric === "avgViewDuration" ? formatMetric(metric, v) : compact(v))} />
+          <YAxis tick={axisTick} axisLine={false} tickLine={false} width={56} tickFormatter={(v: number) => (metric === "avgViewDuration" || metric === "watchTime" ? formatMetric(metric, v) : compact(v))} />
           <Tooltip
             cursor={{ stroke: "#C9D1DC", strokeDasharray: "3 3" }}
             content={({ active, payload }) => {
@@ -376,123 +376,6 @@ export function ColumnChart({ data, height = 160, color = "#E5202E", labelFormat
 }
 
 /* ------------------------------------------------------------------ */
-/* Retention                                                           */
-/* ------------------------------------------------------------------ */
-
-export function RetentionChart({ data, height = 240, durationSec }: { data: { position: number; retention: number; typical: number }[]; height?: number; durationSec?: number }) {
-  const label = (pos: number) => (durationSec ? formatMetric("avgViewDuration", (pos / 100) * durationSec) : `${pos}%`);
-  return (
-    <div style={{ height }} className="w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid stroke="#EEF1F5" vertical={false} />
-          <XAxis dataKey="position" tickFormatter={label} tick={axisTick} axisLine={false} tickLine={false} minTickGap={32} />
-          <YAxis tick={axisTick} axisLine={false} tickLine={false} width={40} domain={[0, 100]} tickFormatter={(v: number) => `${v}%`} />
-          <Tooltip
-            content={({ active, payload }) => {
-              const row = payload?.[0]?.payload as { position: number; retention: number; typical: number } | undefined;
-              if (!active || !row) return null;
-              return (
-                <div className="rounded-sm border border-[#E4E9F0] bg-white px-3 py-2 text-[12px] shadow-md">
-                  <p className="font-semibold text-[#0F1B3D]">At {label(row.position)}</p>
-                  <p className="mt-1 text-[#3C4A66]">This content: <b>{row.retention}%</b> still watching</p>
-                  <p className="text-[#6B7890]">Typical: {row.typical}%</p>
-                </div>
-              );
-            }}
-          />
-          <Line type="monotone" dataKey="typical" stroke="#C9D1DC" strokeDasharray="4 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />
-          <Line type="monotone" dataKey="retention" stroke="#7C3AED" strokeWidth={2} dot={false} isAnimationActive={false} />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Heatmap                                                             */
-/* ------------------------------------------------------------------ */
-
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-export function ActivityHeatmap({ matrix, timezone }: { matrix: number[][]; timezone: string }) {
-  const max = Math.max(...matrix.flat(), 1);
-  return (
-    <div>
-      <div className="scrollbar-thin overflow-x-auto">
-        <div className="min-w-[560px]">
-          <div className="grid grid-cols-[36px_repeat(24,1fr)] gap-[3px]">
-            <span />
-            {Array.from({ length: 24 }, (_, h) => (
-              <span key={h} className="text-center text-[10px] text-[#98A2B3]">{h % 3 === 0 ? (h === 0 ? "12a" : h < 12 ? `${h}a` : h === 12 ? "12p" : `${h - 12}p`) : ""}</span>
-            ))}
-            {matrix.map((row, d) => (
-              <FragmentRow key={DAYS[d]} day={DAYS[d] ?? ""} row={row} max={max} />
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11.5px] text-[#6B7890]">
-        <span>Times shown in {timezone}</span>
-        <span className="flex items-center gap-1.5">
-          Fewer
-          {[0.1, 0.3, 0.5, 0.75, 1].map((o) => (
-            <i key={o} className="size-3 rounded-[3px]" style={{ background: `rgba(229,32,46,${o})` }} />
-          ))}
-          More viewers
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function FragmentRow({ day, row, max }: { day: string; row: number[]; max: number }) {
-  return (
-    <>
-      <span className="self-center text-[11px] font-medium text-[#6B7890]">{day}</span>
-      {row.map((v, h) => (
-        <span
-          key={h}
-          title={`${day} ${h}:00 — relative activity ${Math.round((v / max) * 100)}%`}
-          className="aspect-square min-h-3 rounded-[3px]"
-          style={{ background: `rgba(229,32,46,${Math.max(0.06, v / max)})` }}
-        />
-      ))}
-    </>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Funnel                                                              */
-/* ------------------------------------------------------------------ */
-
-export function Funnel({ steps }: { steps: { label: string; value: string; rate?: string; width: number; help?: string }[] }) {
-  return (
-    <ol className="space-y-2">
-      {steps.map((step, i) => (
-        <li key={step.label}>
-          {i > 0 && step.rate && (
-            <p className="mb-1 pl-3 text-[11px] text-[#6B7890]">
-              ↓ <b className="font-semibold text-[#0F1B3D]">{step.rate}</b>
-            </p>
-          )}
-          <div className="relative h-11 overflow-hidden rounded-sm bg-[#F3F5F9]">
-            <span className="absolute inset-y-0 left-0 rounded-sm bg-gradient-to-r from-[#FDE3E5] to-[#FBD0D4]" style={{ width: `${Math.max(12, step.width)}%` }} />
-            <span className="relative flex h-full items-center justify-between gap-3 px-3">
-              <span className="flex items-center gap-1 text-[12.5px] font-medium text-[#24324F]">
-                {step.label}
-                {step.help && <InfoTip text={step.help} />}
-              </span>
-              <b className="text-[14px] font-semibold tabular-nums text-[#0F1B3D]">{step.value}</b>
-            </span>
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /* Bubble map (equirectangular, no external geometry)                  */
 /* ------------------------------------------------------------------ */
 
@@ -540,7 +423,7 @@ export function BubbleMap({ rows, metric, selected, onSelect }: { rows: Geograph
   const project = (lat: number, lon: number) => [((lon + 180) / 360) * W, ((75 - lat) / 135) * H] as const;
   return (
     <div className="relative w-full overflow-hidden rounded-sm bg-[linear-gradient(180deg,#F8FAFC,#F2F5F9)] ring-1 ring-inset ring-[#EEF1F5]">
-      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label="Views by country">
+      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label="Views By Country">
         {LAND_DOTS.map(([lat, lon]) => {
           const [x, y] = project(lat, lon);
           return <circle key={`${lat}:${lon}`} cx={x} cy={y} r={3.1} fill="#D5DCE6" />;
@@ -551,7 +434,7 @@ export function BubbleMap({ rows, metric, selected, onSelect }: { rows: Geograph
           const active = selected === row.code;
           return (
             <g key={row.code} onClick={() => onSelect?.(row.code)} className={onSelect ? "cursor-pointer" : undefined}>
-              <title>{`${row.country}: ${compact(row[metric])}`}</title>
+              <title>{`${row.country}: ${metric === "watchTimeHours" ? hours(row[metric]) : compact(row[metric])}`}</title>
               <circle cx={x} cy={y} r={r} fill="#E5202E" fillOpacity={active ? 0.45 : 0.18} stroke="#E5202E" strokeOpacity={active ? 1 : 0.55} strokeWidth={active ? 2 : 1} />
               <circle cx={x} cy={y} r={2.5} fill="#E5202E" />
               {r > 14 && (

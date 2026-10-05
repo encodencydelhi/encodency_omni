@@ -104,7 +104,7 @@ function CreatePlaylistBody({ open, onOpenChange, videoIds, onCreated }: CreateP
           </FormField>
           <FormField label="Visibility">
             <SelectMenu<Visibility>
-              label="Playlist visibility"
+              label="Playlist Visibility"
               size="md"
               fullWidth
               value={visibility}
@@ -259,12 +259,12 @@ function ScheduleBody({ open, onOpenChange, video }: VideoDialogProps & { video:
               <input id="sch-time" type="time" className={yt.input} value={time} onChange={(e) => setTime(e.target.value)} />
             </FormField>
           </div>
-          <FormField label="Time zone" hint="Times use your browser's time zone and are sent to YouTube with an explicit UTC offset.">
-            <SelectMenu label="Time zone" size="md" fullWidth disabled value={zone} onChange={() => undefined} options={[{ value: zone, label: zone }]} />
+          <FormField label="Time Zone" hint="Times use your browser's time zone and are sent to YouTube with an explicit UTC offset.">
+            <SelectMenu label="Time Zone" size="md" fullWidth disabled value={zone} onChange={() => undefined} options={[{ value: zone, label: zone }]} />
           </FormField>
-          <FormField label="Visibility when published">
+          <FormField label="Visibility When Published">
             <SelectMenu<YouTubePublishTarget>
-              label="Visibility when published"
+              label="Visibility When Published"
               size="md"
               fullWidth
               disabled={isReschedule}
@@ -576,7 +576,7 @@ function EditMetadataBody({ open, onOpenChange, video }: VideoDialogProps & { vi
             <SheetDescription className="line-clamp-1 text-[12.5px]">Changes are saved to YouTube.</SheetDescription>
           </SheetHeader>
           <SheetBody className="space-y-4">
-            {!can.canEditVideo.allowed && <Notice tone="amber" title="Editing unavailable">{can.canEditVideo.reason}</Notice>}
+            {!can.canEditVideo.allowed && <Notice tone="amber" title="Editing Unavailable">{can.canEditVideo.reason}</Notice>}
             <FormField label="Title" required htmlFor="em-title" counter={{ value: draft.title.length, max: TITLE_MAX }} error={errors.title}>
               <input id="em-title" className={yt.input} value={draft.title} onChange={(e) => set("title", e.target.value)} />
             </FormField>
@@ -590,7 +590,7 @@ function EditMetadataBody({ open, onOpenChange, video }: VideoDialogProps & { vi
               <FormField label="Category">
                 <SelectMenu label="Category" size="md" fullWidth value={draft.categoryId} onChange={(v) => set("categoryId", v)} options={CATEGORIES.map((c) => ({ value: c.id, label: c.label }))} />
               </FormField>
-              <FormField label="Video language" hint="Set in YouTube Studio.">
+              <FormField label="Video Language" hint="Set In YouTube Studio.">
                 <SelectMenu label="Language" size="md" fullWidth disabled value={video.language ?? ""} onChange={() => undefined} options={[{ value: video.language ?? "", label: video.language ? languageLabel(video.language) : "Not set" }, ...LANGUAGES.filter((l) => l.id !== video.language).map((l) => ({ value: l.id, label: l.label }))]} />
               </FormField>
             </div>
@@ -606,7 +606,7 @@ function EditMetadataBody({ open, onOpenChange, video }: VideoDialogProps & { vi
               />
             </FormField>
             <div className="divide-y divide-[#EEF1F5] rounded-sm border border-[#E4E9F0]">
-              <ToggleRow label="Made for kids" description="Required by COPPA. Limits comments, notifications and personalised ads." checked={draft.madeForKids} onChange={(c) => set("madeForKids", c)} />
+              <ToggleRow label="Made For Kids" description="Required by COPPA. Limits comments, notifications and personalised ads." checked={draft.madeForKids} onChange={(c) => set("madeForKids", c)} />
             </div>
           </SheetBody>
           <SheetFooter className="justify-between">
@@ -623,9 +623,9 @@ function EditMetadataBody({ open, onOpenChange, video }: VideoDialogProps & { vi
       <ConfirmDialog
         open={confirmClose}
         onOpenChange={setConfirmClose}
-        title="Discard unsaved changes?"
+        title="Discard Unsaved Changes?"
         description="Your edits to this video's details haven't been saved to YouTube."
-        confirmLabel="Discard changes"
+        confirmLabel="Discard Changes"
         onConfirm={() => onOpenChange(false)}
       />
     </>
@@ -772,7 +772,7 @@ export function DeleteVideosDialog({ open, onOpenChange, videos, onDeleted }: { 
 }
 
 export function exportVideosCsv(videos: Video[], filename = "youtube-content.csv") {
-  const header = ["Video ID", "Title", "Type", "Visibility", "Status", "Published", "Views", "Watch time (hours, last 28 days)", "Likes", "Comments", "URL"];
+  const header = ["Video ID", "Title", "Type", "Visibility", "Status", "Published", "Views", "Watch time (minutes, last 365 days)", "Likes", "Comments", "URL"];
   const rows = videos.map((v) => [
     v.id,
     v.title,
@@ -781,7 +781,7 @@ export function exportVideosCsv(videos: Video[], filename = "youtube-content.csv
     v.status,
     v.publishedAt ? fmtDate(v.publishedAt, "yyyy-MM-dd") : "",
     v.stats.views ?? "",
-    v.stats.watchTimeHours === null ? "" : Number(v.stats.watchTimeHours.toFixed(2)),
+    v.stats.watchTimeHours === null ? "" : Math.round(v.stats.watchTimeHours * 60),
     v.stats.likes ?? "",
     v.stats.comments ?? "",
     ytRoutes.watch(v.id),

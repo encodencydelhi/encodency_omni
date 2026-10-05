@@ -46,9 +46,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { APPROVAL_LABEL, STATUS_LABEL, TYPE_LABEL, VISIBILITY_LABEL } from "../lib/constants";
+import { STATUS_LABEL, TYPE_LABEL, VISIBILITY_LABEL } from "../lib/constants";
 import { duration as fmtDuration } from "../lib/format";
-import type { ApprovalState, Capability, ContentType, PublishStatus, Visibility } from "../types";
+import type { Capability, ContentType, PublishStatus, Visibility } from "../types";
 
 /* ------------------------------------------------------------------ */
 /* Tokens                                                              */
@@ -179,7 +179,7 @@ export function Hint({ text, children, side = "top" }: { text: ReactNode; childr
 export function InfoTip({ text, className }: { text: ReactNode; className?: string }) {
   return (
     <Hint text={text}>
-      <button type="button" aria-label="More information" className={cn("inline-grid size-4 place-items-center rounded-sm text-[#98A2B3] hover:text-[#3C4A66]", yt.focus, className)}>
+      <button type="button" aria-label="More Information" className={cn("inline-grid size-4 place-items-center rounded-sm text-[#98A2B3] hover:text-[#3C4A66]", yt.focus, className)}>
         <Info className="size-3.5" />
       </button>
     </Hint>
@@ -337,23 +337,6 @@ const TYPE_TONE: Record<ContentType, Tone> = { video: "red", short: "violet", li
 
 export function TypeBadge({ type }: { type: ContentType }) {
   return <Badge tone={TYPE_TONE[type]}>{TYPE_LABEL[type]}</Badge>;
-}
-
-const APPROVAL_TONE: Record<ApprovalState, Tone> = {
-  none: "neutral",
-  pending: "amber",
-  changes_requested: "amber",
-  approved: "green",
-  rejected: "red",
-};
-
-export function ApprovalBadge({ state }: { state: ApprovalState }) {
-  if (state === "none") return null;
-  return (
-    <Badge tone={APPROVAL_TONE[state]} dot>
-      {APPROVAL_LABEL[state]}
-    </Badge>
-  );
 }
 
 /** Marks OmniPlatform-owned data so it's never mistaken for YouTube's own. */
@@ -705,7 +688,7 @@ export function SearchField({
         {loading ? (
           <Loader2 className="mr-1 size-3.5 animate-spin text-[#98A2B3]" aria-label="Searching" />
         ) : value ? (
-          <button type="button" onClick={() => onChange("")} aria-label="Clear search" className={cn("grid size-5 place-items-center rounded text-[#98A2B3] hover:bg-[#F1F4F8] hover:text-[#3C4A66]", yt.focus)}>
+          <button type="button" onClick={() => onChange("")} aria-label="Clear Search" className={cn("grid size-5 place-items-center rounded text-[#98A2B3] hover:bg-[#F1F4F8] hover:text-[#3C4A66]", yt.focus)}>
             <X className="size-3.5" />
           </button>
         ) : null}
@@ -1194,7 +1177,7 @@ export function Pagination({
       </span>
       {pageCount > 1 && (
         <div className="flex items-center gap-1">
-          <Button size="iconSm" variant="secondary" aria-label="Previous page" disabled={page <= 1} onClick={() => onPage(page - 1)}>
+          <Button size="iconSm" variant="secondary" aria-label="Previous Page" disabled={page <= 1} onClick={() => onPage(page - 1)}>
             <ChevronLeft className="size-3.5" />
           </Button>
           {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
@@ -1208,7 +1191,7 @@ export function Pagination({
               {p}
             </button>
           ))}
-          <Button size="iconSm" variant="secondary" aria-label="Next page" disabled={page >= pageCount} onClick={() => onPage(page + 1)}>
+          <Button size="iconSm" variant="secondary" aria-label="Next Page" disabled={page >= pageCount} onClick={() => onPage(page + 1)}>
             <ChevronRight className="size-3.5" />
           </Button>
         </div>

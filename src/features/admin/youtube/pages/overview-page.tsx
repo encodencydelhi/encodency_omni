@@ -31,7 +31,7 @@ import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHea
 import { Switch } from "@/components/ui/switch";
 import { BarList, ChartLegend, Donut, KpiCard, KpiSkeleton, LegendList, TrendChart, type Granularity } from "../components/charts";
 import { CreatePlaylistDialog, HealthDetailSheet, ScoreRing, ThumbnailManager } from "../components/dialogs";
-import { CapabilityState, ErrorState, PageSkeleton } from "../components/states";
+import { CapabilityState, ErrorState, PageSkeleton, AnalyticsLagNote } from "../components/states";
 import {
   Avatar,
   Badge,
@@ -129,7 +129,7 @@ function Overview() {
         )
       ) : (
         <Card>
-          <CapabilityState capability={can.canViewAnalytics} title="Analytics unavailable" />
+          <CapabilityState capability={can.canViewAnalytics} title="Analytics Unavailable" />
         </Card>
       )}
 
@@ -164,11 +164,11 @@ function ChannelProfile({ className }: { className?: string }) {
   const longDescription = channel.description.length > 300 || channel.description.split("\n").length > 6;
 
   const quick = [
-    { label: "Upload video", icon: Upload, onClick: () => router.push(ytRoutes.upload), gate: can.canUpload },
+    { label: "Upload Video", icon: Upload, onClick: () => router.push(ytRoutes.upload), gate: can.canUpload },
     { label: "Create Short", icon: Smartphone, onClick: () => router.push(`${ytRoutes.upload}?type=short`), gate: can.canUpload },
-    { label: "Go live", icon: Radio, onClick: () => router.push(ytRoutes.liveCreate), gate: can.canGoLive },
-    { label: "Create playlist", icon: ListPlus, onClick: () => setPlaylistOpen(true), gate: can.canManagePlaylists },
-    { label: "Manage thumbnails", icon: ImageIcon, onClick: () => setPickerOpen(true), gate: can.canEditVideo },
+    { label: "Go Live", icon: Radio, onClick: () => router.push(ytRoutes.liveCreate), gate: can.canGoLive },
+    { label: "Create Playlist", icon: ListPlus, onClick: () => setPlaylistOpen(true), gate: can.canManagePlaylists },
+    { label: "Manage Thumbnails", icon: ImageIcon, onClick: () => setPickerOpen(true), gate: can.canEditVideo },
   ];
 
   return (
@@ -208,9 +208,9 @@ function ChannelProfile({ className }: { className?: string }) {
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {channel.id && <Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.channelOnYouTube(channel)} external>View on YouTube</Button>}
+            {channel.id && <Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.channelOnYouTube(channel)} external>View On YouTube</Button>}
             <Button size="sm" variant="secondary" icon={Info} onClick={() => setDetailsOpen(true)}>Channel Details</Button>
-            <Button size="sm" variant="secondary" icon={PlugZap} href={`${ytRoutes.settings}#connection`}>Manage connection</Button>
+            <Button size="sm" variant="secondary" icon={PlugZap} href={`${ytRoutes.settings}#connection`}>Manage Connection</Button>
           </div>
         </div>
 
@@ -317,7 +317,7 @@ function ChannelDetailsSheet({ open, onOpenChange }: { open: boolean; onOpenChan
           <p className="mt-1.5 whitespace-pre-line text-[12.5px] leading-5 text-[#3C4A66]">{channel.description || "No channel description."}</p>
         </SheetBody>
         <SheetFooter>
-          <Button variant="secondary" icon={ExternalLink} href={ytRoutes.studio} external>Edit in YouTube Studio</Button>
+          <Button variant="secondary" icon={ExternalLink} href={ytRoutes.studio} external>Edit In YouTube Studio</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -495,7 +495,7 @@ function PerformanceCard({
               ]}
             />
             <label className="flex h-8 cursor-pointer items-center gap-2 rounded-sm border border-[#DCE2EA] bg-white px-2.5 text-[12px] font-medium text-[#24324F]">
-              <Switch checked={compare} onCheckedChange={setCompare} className="scale-90" aria-label="Compare with previous period" />
+              <Switch checked={compare} onCheckedChange={setCompare} className="scale-90" aria-label="Compare With Previous Period" />
               Compare
             </label>
           </>
@@ -504,21 +504,21 @@ function PerformanceCard({
       <div className="px-4 pb-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Segmented<MetricKey>
-            label="Chart metric"
+            label="Chart Metric"
             value={chartMetric}
             onChange={onMetric}
             className="max-w-full overflow-x-auto"
             items={(["views", "watchTime", "subscribers"] as MetricKey[]).map((m) => ({ value: m, label: METRICS[m].short }))}
           />
-          <ChartLegend items={[{ label: METRICS[chartMetric].label, color: METRICS[chartMetric].color }, ...(compare ? [{ label: "Previous period", color: "#C9D1DC", dashed: true }] : [])]} />
+          <ChartLegend items={[{ label: METRICS[chartMetric].label, color: METRICS[chartMetric].color }, ...(compare ? [{ label: "Previous Period", color: "#C9D1DC", dashed: true }] : [])]} />
         </div>
         <div className="mt-3">
           {analytics.isLoading ? (
             <Skeleton className="h-[250px] w-full" />
           ) : !analytics.data.hasData ? (
-            <EmptyState compact icon={BarChart3} title="No data for this period" description="YouTube hasn't reported views for this date range yet. Try a longer range." />
+            <EmptyState compact icon={BarChart3} title="No Data For This Period" description="YouTube hasn't reported views for this date range yet. Try a longer range." />
           ) : (
-            <TrendChart current={analytics.data.current} previous={analytics.data.previous} metric={chartMetric} granularity={effective} compare={compare} height={250} />
+            <><TrendChart current={analytics.data.current} previous={analytics.data.previous} metric={chartMetric} granularity={effective} compare={compare} height={250} /><AnalyticsLagNote /></>
           )}
         </div>
       </div>
@@ -533,13 +533,13 @@ function TrafficCard({ className, total }: { className?: string; total: number |
   const top = traffic.data.rows.slice(0, 6);
   return (
     <Card className={cn("flex flex-col", className)}>
-      <CardHeader title="Traffic Sources" description="Where views came from" actions={<ViewLink href={withPeriod(`${ytRoutes.analytics}?tab=reach`)}>View details</ViewLink>} />
+      <CardHeader title="Traffic Sources" description="Where views came from" actions={<ViewLink href={withPeriod(`${ytRoutes.analytics}?tab=reach`)}>View Details</ViewLink>} />
       {traffic.isLoading ? (
         <div className="px-4 pb-4"><Skeleton className="mx-auto size-[150px]" /></div>
       ) : traffic.error ? (
         <ErrorState compact error={traffic.error} onRetry={traffic.refetch} />
       ) : top.length === 0 ? (
-        <EmptyState compact icon={BarChart3} title="No traffic data" description="YouTube hasn't reported traffic sources for this date range." />
+        <EmptyState compact icon={BarChart3} title="No Traffic Data" description="YouTube hasn't reported traffic sources for this date range." />
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 pb-4 sm:flex-row xl:flex-col 2xl:flex-row">
           <Donut data={top} size={150} thickness={18} centerValue={compact(total)} centerLabel="Total views" />
@@ -565,7 +565,7 @@ function TopContentCard({ className }: { className?: string }) {
 
   return (
     <Card className={className}>
-      <CardHeader title="Top Performing Content" description="By views in the selected period" actions={<ViewLink href={`${ytRoutes.content}?status=published&sort=views`}>View all</ViewLink>} />
+      <CardHeader title="Top Performing Content" description="By views in the selected period" actions={<ViewLink href={`${ytRoutes.content}?status=published&sort=views`}>View All</ViewLink>} />
       {!enabled ? (
         <CapabilityState compact capability={can.canViewAnalytics} />
       ) : q.isPending ? (
@@ -573,7 +573,7 @@ function TopContentCard({ className }: { className?: string }) {
       ) : q.error ? (
         <ErrorState compact error={describeYouTubeError(q.error)} onRetry={() => void q.refetch()} />
       ) : rows.length === 0 ? (
-        <EmptyState compact icon={BarChart3} title="No performance data yet" description="Performance appears here once YouTube reports views for the selected period." />
+        <EmptyState compact icon={BarChart3} title="No Performance Data Yet" description="Performance appears here once YouTube reports views for the selected period." />
       ) : (
         <div className="scrollbar-thin overflow-x-auto">
           <table className="w-full min-w-[640px] text-left">
@@ -639,7 +639,7 @@ function AudienceSnapshot({ className }: { className?: string }) {
 
   return (
     <Card className={cn("flex flex-col", className)}>
-      <CardHeader title="Audience Snapshot" actions={<ViewLink href={withPeriod(`${ytRoutes.audience}?tab=${detailTab}`)}>View details</ViewLink>} />
+      <CardHeader title="Audience Snapshot" actions={<ViewLink href={withPeriod(`${ytRoutes.audience}?tab=${detailTab}`)}>View Details</ViewLink>} />
       {!can.canViewAnalytics.allowed ? (
         <CapabilityState compact capability={can.canViewAnalytics} />
       ) : audience.error ? (
@@ -648,12 +648,12 @@ function AudienceSnapshot({ className }: { className?: string }) {
         <div className="flex flex-1 flex-col px-4 pb-4">
           <div className="border-b border-[#EEF1F5]">
             <UnderlineTabs<AudienceTab>
-              label="Audience breakdown"
+              label="Audience Breakdown"
               size="sm"
               value={tab}
               onChange={setTab}
               items={[
-                { value: "age", label: "Age & gender" },
+                { value: "age", label: "Age & Gender" },
                 { value: "geo", label: "Geography" },
                 { value: "devices", label: "Devices" },
               ]}
@@ -735,24 +735,24 @@ function RecentComments() {
 
   return (
     <Card className="flex flex-col h-[380px]">
-      <CardHeader title="Recent Comments" description={latest ? `On your latest video: ${latest.title}` : undefined} actions={latest ? <ViewLink href={href}>View all</ViewLink> : undefined} />
+      <CardHeader title="Recent Comments" description={latest ? `On your latest video: ${latest.title}` : undefined} actions={latest ? <ViewLink href={href}>View All</ViewLink> : undefined} />
       <div className="border-b border-[#EEF1F5] px-4 shrink-0">
         <UnderlineTabs<CommentTab>
-          label="Comment filter"
+          label="Comment Filter"
           size="sm"
           value={tab}
           onChange={setTab}
           items={[
             { value: "all", label: "All", count: published.data ? lists.all.length : undefined },
             { value: "unanswered", label: "Unanswered", count: published.data ? lists.unanswered.length : undefined },
-            { value: "review", label: "Needs review", count: review.data ? lists.review.length : undefined },
+            { value: "review", label: "Needs Review", count: review.data ? lists.review.length : undefined },
           ]}
         />
       </div>
       {!latest ? (
-        <EmptyState compact icon={MessageSquare} title="No published videos yet" description="Comments appear here once a video is public and viewers engage." />
+        <EmptyState compact icon={MessageSquare} title="No Published Videos Yet" description="Comments appear here once a video is public and viewers engage." />
       ) : !commentsOn ? (
-        <EmptyState compact icon={MessageSquare} title="Comments are turned off" description="Comments are disabled for your latest video." />
+        <EmptyState compact icon={MessageSquare} title="Comments Are Turned Off" description="Comments are disabled for your latest video." />
       ) : tab === "review" && !can.canModerateComments.allowed ? (
         <CapabilityState compact capability={can.canModerateComments} />
       ) : loading ? (
@@ -826,8 +826,8 @@ function UpcomingContent() {
         title="Upcoming YouTube Content"
         actions={
           <>
-            <Button size="xs" variant="ghost" icon={CalendarDays} href={ytRoutes.calendar}>View calendar</Button>
-            <Button size="xs" variant="secondary" gate={can.canSchedule.allowed ? can.canUpload : can.canSchedule} href={`${ytRoutes.upload}?publish=schedule`}>Schedule new</Button>
+            <Button size="xs" variant="ghost" icon={CalendarDays} href={ytRoutes.calendar}>View Calendar</Button>
+            <Button size="xs" variant="secondary" gate={can.canSchedule.allowed ? can.canUpload : can.canSchedule} href={`${ytRoutes.upload}?publish=schedule`}>Schedule New</Button>
           </>
         }
       />
@@ -836,7 +836,7 @@ function UpcomingContent() {
       ) : videosState.isError && videosState.error ? (
         <ErrorState compact error={videosState.error} onRetry={videosState.refetch} />
       ) : items.length === 0 ? (
-        <EmptyState compact icon={CalendarDays} title="Nothing scheduled" description="Schedule uploads ahead to keep a consistent cadence." />
+        <EmptyState compact icon={CalendarDays} title="Nothing Scheduled" description="Schedule uploads ahead to keep a consistent cadence." />
       ) : (
         <div className="flex-1 overflow-y-auto scrollbar-thin border-t border-[#EEF1F5]">
           <ul className="divide-y divide-[#EEF1F5]">

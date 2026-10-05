@@ -18,9 +18,9 @@ export function MonetizationPage() {
   if (!ready) return <PageSkeleton />;
   const actions = (
     <>
-      <Button variant="secondary" icon={Wallet} href="https://www.google.com/adsense" external>View payments in AdSense</Button>
+      <Button variant="secondary" icon={Wallet} href="https://www.google.com/adsense" external>View Payments In AdSense</Button>
       {channel.id && (
-        <Button variant="secondary" icon={ExternalLink} href={ytRoutes.monetizationInStudio(channel.id)} external>Open Monetization in YouTube Studio</Button>
+        <Button variant="secondary" icon={ExternalLink} href={ytRoutes.monetizationInStudio(channel.id)} external>Open Monetization In YouTube Studio</Button>
       )}
     </>
   );
@@ -31,7 +31,7 @@ export function MonetizationPage() {
         <RevenueSection />
       ) : (
         <Card>
-          <CapabilityState capability={can.canViewRevenue} title="Revenue data unavailable" />
+          <CapabilityState capability={can.canViewRevenue} title="Revenue Data Unavailable" />
         </Card>
       )}
     </div>
@@ -43,10 +43,10 @@ export function RevenueKpis({ revenue, views, previousRevenue, label }: { revenu
   // RPM = revenue per 1,000 views, from the same period's views (YouTube's definition); unavailable without both.
   const rpm = revenue.estimatedRevenue !== null && views !== null && views > 0 ? (revenue.estimatedRevenue / views) * 1000 : null;
   const kpis = [
-    { label: "Estimated revenue", value: money(revenue.estimatedRevenue, c), delta: changePct(revenue.estimatedRevenue, previousRevenue), icon: IndianRupee, hint: label },
-    { label: "RPM", value: money(rpm, c, 2), delta: null, icon: Gauge, hint: "Per 1,000 views" },
-    { label: "CPM", value: money(revenue.cpm, c, 2), delta: null, icon: CircleDollarSign, hint: "Per 1,000 ad impressions" },
-    { label: "Monetized playbacks", value: compact(revenue.monetizedPlaybacks), delta: null, icon: PlayCircle, hint: "With at least one ad" },
+    { label: "Estimated Revenue", value: money(revenue.estimatedRevenue, c), delta: changePct(revenue.estimatedRevenue, previousRevenue), icon: IndianRupee, hint: label },
+    { label: "RPM", value: money(rpm, c, 2), delta: null, icon: Gauge, hint: "Per 1,000 Views" },
+    { label: "CPM", value: money(revenue.cpm, c, 2), delta: null, icon: CircleDollarSign, hint: "Per 1,000 Ad Impressions" },
+    { label: "Monetized Playbacks", value: compact(revenue.monetizedPlaybacks), delta: null, icon: PlayCircle, hint: "With At Least One Ad" },
   ];
   return (
     <div className="grid grid-cols-2 gap-1 xl:grid-cols-4">
@@ -68,7 +68,7 @@ export function RevenueTrendCard({ data, label, className }: { data: RevenueData
       <CardHeader title="Revenue Trend" description={`Estimated daily revenue · ${label}`} />
       <div className="h-[260px] px-2 pb-4">
         {data.series.length === 0 ? (
-          <EmptyState compact icon={Info} title="No daily revenue reported" description="YouTube returned totals for this period but no day-by-day rows." />
+          <EmptyState compact icon={Info} title="No Daily Revenue Reported" description="YouTube returned totals for this period but no day-by-day rows." />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data.series} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
@@ -110,7 +110,7 @@ export function RevenueSection() {
 
   if (revenue.isLoading) {
     return (
-      <div className="space-y-1" aria-busy="true" aria-label="Loading revenue">
+      <div className="space-y-1" aria-busy="true" aria-label="Loading Revenue">
         <div className="grid grid-cols-2 gap-1 xl:grid-cols-4">{[0, 1, 2, 3].map((i) => <Card key={i} className="p-3.5"><Skeleton className="h-3 w-24" /><Skeleton className="mt-3 h-6 w-28" /></Card>)}</div>
         <Card className="p-4"><Skeleton className="h-[240px] w-full" /></Card>
       </div>
@@ -124,7 +124,7 @@ export function RevenueSection() {
       <Card>
         <EmptyState
           icon={Info}
-          title="No revenue reported for this period"
+          title="No Revenue Reported For This Period"
           description="YouTube returned no revenue for this date range. The channel may not be monetized or had no earnings. It's unavailable, not zero."
         />
       </Card>
@@ -135,7 +135,7 @@ export function RevenueSection() {
     <div className="space-y-1">
       <RevenueKpis revenue={data} views={channelTotals.data.totals.views.value} previousRevenue={revenue.data.previousTotal} label={label} />
       <RevenueTrendCard data={data} label={label} />
-      <Notice tone="neutral" title="About these numbers">Revenue is estimated by YouTube and can change after month-end adjustments. Amounts are shown in {data.currency}, as reported by YouTube.</Notice>
+      <Notice tone="neutral" title="About These Numbers">Revenue is estimated by YouTube and can change after month-end adjustments. Amounts are shown in {data.currency}, as reported by YouTube.</Notice>
     </div>
   );
 }

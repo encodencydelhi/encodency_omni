@@ -12,11 +12,11 @@ import { Button, Skeleton, yt } from "./ui";
 
 const FIX_META: Record<NonNullable<Capability["fix"]>, { icon: ComponentType<{ className?: string }>; title: string }> = {
   reconnect: { icon: KeyRound, title: "Reconnect YouTube" },
-  grant: { icon: KeyRound, title: "Permission required" },
+  grant: { icon: KeyRound, title: "Permission Required" },
   connect: { icon: KeyRound, title: "Connect YouTube" },
   request_access: { icon: LockKeyhole, title: "You don't have access" },
-  enable_feature: { icon: Sparkles, title: "Not available for this channel" },
-  wait: { icon: Hourglass, title: "Temporarily unavailable" },
+  enable_feature: { icon: Sparkles, title: "Not Available For This Channel" },
+  wait: { icon: Hourglass, title: "Temporarily Unavailable" },
 };
 
 /** The one button that fixes a permission / connection problem (named consent only, never a raw scope). */
@@ -76,7 +76,7 @@ export function ErrorState({ error, onRetry, title, className, compact }: { erro
       <p className="mt-1 max-w-[380px] text-[12.5px] leading-5 text-[#6B7890]">{error.message}</p>
       <div className="mt-3.5 flex flex-wrap justify-center gap-2">
         {fix && <FixButton fix={fix} grant={error.capability ?? undefined} />}
-        {onRetry && error.retryable && <Button size="sm" variant="secondary" onClick={onRetry}>Try again</Button>}
+        {onRetry && error.retryable && <Button size="sm" variant="secondary" onClick={onRetry}>Try Again</Button>}
       </div>
     </div>
   );
@@ -139,4 +139,9 @@ export function PageSkeleton({ variant = "dashboard" }: { variant?: "dashboard" 
       </div>
     </div>
   );
+}
+
+/** Under channel trend charts: YouTube Analytics reports each day 2-3 days late, so the newest days can still be empty. */
+export function AnalyticsLagNote() {
+  return <p className="mt-2 text-[12px] leading-5 text-[#6B7890]">YouTube Analytics reports each day 2–3 days late, so the latest days fill in later.</p>;
 }

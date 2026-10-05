@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { youtubeKeys } from "@/lib/query/keys";
 import { youtubeApi, type DateRange, type YouTubeScope } from "../live/youtube-api";
@@ -267,6 +267,33 @@ export function useAnalyticsTopVideos(range: DateRange, sort: AnalyticsVideoSort
   return useAnalytics("top-videos", { ...range, sort, pageSize }, enabled, (s, signal) => youtubeApi.analyticsTopVideos(s, range, { sort, page: 1, pageSize }, signal));
 }
 
+/**
+ * Per-video totals for every video of the channel: the top-videos report, page by page (50 each) up to `maxPages`. `complete` is true once the report has no
+ * further page, so a video that is absent from it really had no views in the range.
+ */
+export function useAnalyticsTopVideosAll(range: DateRange, enabled: boolean, maxPages = 4) {
+  const scope = useYouTubeScope();
+  const query = useInfiniteQuery({
+    queryKey: scope ? youtubeKeys.analytics(scope, "top-videos-all", range) : ["youtube", "none", "analytics", "top-videos-all"],
+    queryFn: ({ pageParam, signal }) => youtubeApi.analyticsTopVideos(requireScope(scope), range, { sort: "views", page: pageParam, pageSize: 50 }, signal),
+    initialPageParam: 1,
+    getNextPageParam: (last) => last.nextPage ?? undefined,
+    enabled: scope !== null && enabled,
+    ...READ,
+    staleTime: 5 * 60_000,
+  });
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
+  const pages = query.data?.pages.length ?? 0;
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage && pages > 0 && pages < maxPages) void fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, pages, maxPages, fetchNextPage]);
+  return {
+    items: query.data?.pages.flatMap((p) => p.items) ?? [],
+    isPending: query.isPending,
+    complete: Boolean(query.data) && !hasNextPage,
+  };
+}
+
 export function useVideoAnalytics(videoId: string | undefined, range: DateRange, granularity: "total" | "day", enabled: boolean) {
   return useAnalytics("video", { videoId, ...range, granularity }, enabled && Boolean(videoId), (s, signal) => youtubeApi.analyticsVideo(s, videoId as string, range, granularity, signal));
 }
@@ -512,6 +539,9 @@ export function useYouTubeMutations() {
 
   const commentsChanged = (videoId: string, commentId?: string) => {
     void qc.invalidateQueries({ queryKey: youtubeKeys.commentsOfVideo(s(), videoId) });
+    // The comment count lives on the video, so the detail page and content list re-read it too.
+    void qc.invalidateQueries({ queryKey: youtubeKeys.video(s(), videoId) });
+    void qc.invalidateQueries({ queryKey: youtubeKeys.videos(s()) });
     if (commentId) void qc.invalidateQueries({ queryKey: youtubeKeys.replies(s(), commentId) });
   };
 

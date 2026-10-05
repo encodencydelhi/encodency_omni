@@ -22,7 +22,6 @@ import { Avatar, Badge, Button, Card, CardHeader, ConfirmDialog, DefinitionRow, 
 import { ROLE_CAPABILITIES, hasRbac, type RbacCapability } from "../lib/capabilities";
 import { GRANTED_INFO, GRANTED_KEYS, ytRoutes } from "../lib/constants";
 import { dateTime, relative } from "../lib/format";
-import { useReportTypes, useReportingJobs } from "../data/hooks";
 import { useYouTube } from "../store/youtube-store";
 import type { CompanySystemRole } from "@/types/domain/auth";
 import type { GrantedKey } from "../types";
@@ -87,7 +86,7 @@ function Settings() {
       <PageTitle title="Settings" description="How the YouTube integration is connected, which permissions it holds and who can do what." />
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-1 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <nav aria-label="Settings sections" className="h-fit min-w-0 lg:sticky lg:top-[76px]">
+        <nav aria-label="Settings Sections" className="h-fit min-w-0 lg:sticky lg:top-[76px]">
           <Card className="scrollbar-thin flex gap-1 overflow-x-auto p-1.5 lg:flex-col">
             {SECTIONS.map((s) => (
               <a
@@ -157,7 +156,7 @@ function ConnectionSection() {
         <div>
           <DefinitionRow label="Status">{status}</DefinitionRow>
           <DefinitionRow label="Last Sync">{connection.lastSyncedAt ? dateTime(connection.lastSyncedAt) : "Not synced yet"}</DefinitionRow>
-          <DefinitionRow label="Channel on YouTube">
+          <DefinitionRow label="Channel On YouTube">
             {channel.id ? <a href={ytRoutes.channelOnYouTube(channel)} target="_blank" rel="noopener noreferrer" className="text-[#2563EB] hover:underline">{channel.customUrl || channel.id}</a> : "—"}
           </DefinitionRow>
         </div>
@@ -205,10 +204,7 @@ function PermissionsSection() {
 }
 
 function SyncSection() {
-  const { connection, can, syncNow, isSyncing, rawConnection } = useYouTube();
-  const usable = connection.state === "connected" || connection.state === "syncing";
-  const reportTypes = useReportTypes(usable && Boolean(rawConnection?.grantedCapabilities.readAnalytics));
-  const jobs = useReportingJobs(usable && Boolean(rawConnection?.grantedCapabilities.readAnalytics));
+  const { connection, can, syncNow, isSyncing } = useYouTube();
   return (
     <Section id="sync" title="Sync" icon={RefreshCw} description="Channel data is read from YouTube when you open a page and cached briefly to save quota. Edits and replies are sent to YouTube immediately.">
       <div className="grid gap-4 lg:grid-cols-2">
@@ -218,34 +214,13 @@ function SyncSection() {
           </dl>
           <Button size="sm" variant="secondary" icon={RefreshCw} loading={isSyncing} gate={can.canManageConnection} disabled={connection.state === "token_expired" || connection.state === "disconnected" || connection.state === "not_mapped"} disabledReason="Connect and link the channel first" onClick={() => void syncNow()}>Sync now</Button>
         </div>
-        <div className="rounded-[10px] border border-[#E4E9F0] p-3.5">
-          <p className="text-[13px] font-semibold text-[#0F1B3D]">Reporting</p>
-          <p className="mt-0.5 text-[12px] text-[#6B7890]">Bulk daily reports from the YouTube Reporting API (read-only here).</p>
-          {!rawConnection?.grantedCapabilities.readAnalytics ? (
-            <p className="mt-3 text-[12px] text-[#98A2B3]">Grant the analytics permission to see reporting jobs.</p>
-          ) : reportTypes.isPending || jobs.isPending ? (
-            <p className="mt-3 text-[12px] text-[#98A2B3]">Loading…</p>
-          ) : reportTypes.isError || jobs.isError ? (
-            <p className="mt-3 text-[12px] text-[#98A2B3]">Reporting information isn&apos;t available right now.</p>
-          ) : (
-            <ul className="mt-3 space-y-1.5 text-[12px] text-[#3C4A66]">
-              {(reportTypes.data?.items ?? []).map((t) => (
-                <li key={t.id} className="flex items-center justify-between gap-2">
-                  <span>{t.label}</span>
-                  <Badge tone={t.jobExists ? "green" : "neutral"}>{t.jobExists ? "Job exists" : t.availableAtProvider ? "Available" : "Unavailable"}</Badge>
-                </li>
-              ))}
-              {(jobs.data?.items.length ?? 0) === 0 && <li className="text-[#98A2B3]">No reporting jobs have been created.</li>}
-            </ul>
-          )}
-        </div>
       </div>
     </Section>
   );
 }
 
 const MATRIX: { label: string; capability: RbacCapability }[] = [
-  { label: "View Channel, Videos and Analytics", capability: "integrations:read" },
+  { label: "View Channel, Videos And Analytics", capability: "integrations:read" },
   { label: "Edit Videos, Playlists and Comments, Create Live Events", capability: "content:write" },
   { label: "Upload, Publish, Schedule, Go Live", capability: "content:publish" },
   { label: "Delete, Remove Comments, Sync, Stream Keys, Connection", capability: "integrations:write" },
@@ -276,7 +251,7 @@ function TeamSection() {
                   <td className={cn(tdClass, "whitespace-normal pl-4 font-medium text-[#24324F]")}>{row.label}</td>
                   {ROLES.map((r) => (
                     <td key={r.role} className={cn(tdClass, "text-center")}>
-                      {ROLE_CAPABILITIES[r.role].includes(row.capability) ? <Check className="mx-auto size-4 text-[#12B76A]" aria-label="Allowed" /> : <Minus className="mx-auto size-4 text-[#C9D1DC]" aria-label="Not allowed" />}
+                      {ROLE_CAPABILITIES[r.role].includes(row.capability) ? <Check className="mx-auto size-4 text-[#12B76A]" aria-label="Allowed" /> : <Minus className="mx-auto size-4 text-[#C9D1DC]" aria-label="Not Allowed" />}
                     </td>
                   ))}
                 </tr>
@@ -286,7 +261,7 @@ function TeamSection() {
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-[12.5px] text-[#6B7890]">{role ? `Your role: ${ROLES.find((r) => r.role === role)?.label}. ${hasRbac(role, "content:publish") ? "You can publish." : "You can't publish or upload."}` : "Your role couldn't be determined."}</p>
-          <Button size="xs" variant="link" href="/admin/team">Manage team</Button>
+          <Button size="xs" variant="link" href="/admin/team">Manage Team</Button>
         </div>
       </div>
     </Section>

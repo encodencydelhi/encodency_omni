@@ -20,14 +20,6 @@ export type PublishStatus =
   | "processing"
   | "failed";
 
-/** There is no approval workflow behind the API; every video is `none`. Kept so shared badges keep compiling. */
-export type ApprovalState =
-  | "none"
-  | "pending"
-  | "changes_requested"
-  | "approved"
-  | "rejected";
-
 export type Period = "7d" | "28d" | "90d" | "365d";
 
 export interface Channel {
@@ -77,7 +69,6 @@ export type CapabilityKey =
   | "canDeleteVideo"
   | "canPublish"
   | "canSchedule"
-  | "canApprove"
   | "canManagePlaylists"
   | "canDeletePlaylist"
   | "canReplyComments"
@@ -88,8 +79,7 @@ export type CapabilityKey =
   | "canViewStreamKey"
   | "canViewAnalytics"
   | "canViewRevenue"
-  | "canManageConnection"
-  | "canManageSettings";
+  | "canManageConnection";
 
 export interface Capability {
   allowed: boolean;
@@ -143,8 +133,6 @@ export interface Video {
   /** `true` unless YouTube omits the comment count (comments disabled). */
   commentsEnabled: Maybe<boolean>;
   stats: VideoStats;
-  /** Always `none`: no approval workflow exists in the backend. */
-  approval: ApprovalState;
   failureReason?: string;
   updatedAt: Maybe<ISODate>;
 }

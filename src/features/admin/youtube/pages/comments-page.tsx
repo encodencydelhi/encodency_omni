@@ -94,7 +94,7 @@ export function CommentsPage() {
       <PageTitle title="Comments" description="Reply to viewers and keep conversations healthy. Comments are shown one video at a time." />
       {!video ? (
         <Card>
-          <EmptyState icon={MessageSquare} title="No published videos yet" description="Comments belong to videos. Publish a video, then reply to and moderate its comments here." action={<Button variant="primary" href={ytRoutes.content}>Go to content</Button>} />
+          <EmptyState icon={MessageSquare} title="No Published Videos Yet" description="Comments belong to videos. Publish a video, then reply to and moderate its comments here." action={<Button variant="primary" href={ytRoutes.content}>Go To Content</Button>} />
         </Card>
       ) : (
         <>
@@ -112,10 +112,10 @@ function AttentionSummary({ video }: { video: Video }) {
   const q = useVideoComments(video.id, commentsOn);
   const answered = q.publishedThreads.filter(isAnswered).length;
   const tiles = [
-    { status: "unanswered", label: "Unanswered", hint: "Waiting for a reply", count: q.published.data ? q.publishedThreads.length - answered : null, icon: MessageSquareReply, tone: "text-[#1D4ED8] bg-[#EFF4FF]" },
-    { status: "published", label: "Replied", hint: "Channel has answered", count: q.published.data ? answered : null, icon: CheckCircle2, tone: "text-[#067647] bg-[#ECFAF3]" },
-    { status: "held", label: "Held for review", hint: "Hidden until approved", count: q.held.data ? q.heldThreads.length : null, icon: PauseCircle, tone: "text-[#B54708] bg-[#FFF7E8]" },
-    { status: "spam", label: "Likely spam", hint: "Review or remove", count: q.spam.data ? q.spamThreads.length : null, icon: Clock3, tone: "text-[#C81E2B] bg-[#FEF1F2]" },
+    { status: "unanswered", label: "Unanswered", hint: "Waiting For A Reply", count: q.published.data ? q.publishedThreads.length - answered : null, icon: MessageSquareReply, tone: "text-[#1D4ED8] bg-[#EFF4FF]" },
+    { status: "published", label: "Replied", hint: "Channel Has Answered", count: q.published.data ? answered : null, icon: CheckCircle2, tone: "text-[#067647] bg-[#ECFAF3]" },
+    { status: "held", label: "Held For Review", hint: "Hidden Until Approved", count: q.held.data ? q.heldThreads.length : null, icon: PauseCircle, tone: "text-[#B54708] bg-[#FFF7E8]" },
+    { status: "spam", label: "Likely Spam", hint: "Review Or Remove", count: q.spam.data ? q.spamThreads.length : null, icon: Clock3, tone: "text-[#C81E2B] bg-[#FEF1F2]" },
   ];
   return (
     <div className="grid grid-cols-2 gap-1 xl:grid-cols-4">
@@ -211,12 +211,12 @@ export function CommentInbox({ videoId, publishedVideos }: { videoId?: string; p
   const activeFilters = (["date", "q", "reply"] as const).filter((k) => values[k] !== DEFAULTS[k]).length;
 
   const moderationItems = (c: CommentThread): (MenuItem | "separator")[] => [
-    { label: "Open thread", icon: MessageSquareReply, onSelect: () => set({ thread: c.id }) },
-    { label: "Open video", icon: ExternalLink, href: ytRoutes.video(c.videoId), hidden: Boolean(videoId) },
-    { label: "View video analytics", icon: BarChart3, href: `${ytRoutes.video(c.videoId)}?tab=analytics`, gate: can.canViewAnalytics },
+    { label: "Open Thread", icon: MessageSquareReply, onSelect: () => set({ thread: c.id }) },
+    { label: "Open Video", icon: ExternalLink, href: ytRoutes.video(c.videoId), hidden: Boolean(videoId) },
+    { label: "View Video Analytics", icon: BarChart3, href: `${ytRoutes.video(c.videoId)}?tab=analytics`, gate: can.canViewAnalytics },
     "separator",
-    { label: "Approve & publish", icon: CheckCircle2, onSelect: () => void moderateComments(itemsOf([c.id]), "published"), hidden: c.moderationStatus === "published", gate: can.canModerateComments },
-    { label: "Hold for review", icon: PauseCircle, onSelect: () => void moderateComments(itemsOf([c.id]), "heldForReview"), hidden: c.moderationStatus === "heldForReview", gate: can.canModerateComments },
+    { label: "Approve & Publish", icon: CheckCircle2, onSelect: () => void moderateComments(itemsOf([c.id]), "published"), hidden: c.moderationStatus === "published", gate: can.canModerateComments },
+    { label: "Hold For Review", icon: PauseCircle, onSelect: () => void moderateComments(itemsOf([c.id]), "heldForReview"), hidden: c.moderationStatus === "heldForReview", gate: can.canModerateComments },
     "separator",
     { label: c.authoredByChannel ? "Delete comment" : "Remove comment", icon: Trash2, danger: true, onSelect: () => setConfirmRemove([c.id]), gate: can.canRemoveComments },
   ];
@@ -224,7 +224,7 @@ export function CommentInbox({ videoId, publishedVideos }: { videoId?: string; p
   if (!video) {
     return (
       <Card>
-        <EmptyState icon={MessageSquare} title="No published videos yet" description="Comments belong to videos. Publish a video, then reply to and moderate its comments here." />
+        <EmptyState icon={MessageSquare} title="No Published Videos Yet" description="Comments belong to videos. Publish a video, then reply to and moderate its comments here." />
       </Card>
     );
   }
@@ -233,15 +233,15 @@ export function CommentInbox({ videoId, publishedVideos }: { videoId?: string; p
     <Card>
       <div className="border-b border-[#EEF1F5] px-3 pt-1">
         <UnderlineTabs<InboxTab>
-          label="Comment status"
+          label="Comment Status"
           value={tab}
           onChange={(v) => set({ status: v })}
           items={[
             { value: "all", label: "All", count: q.published.data ? counts.all : undefined },
             { value: "unanswered", label: "Unanswered", count: q.published.data ? counts.unanswered : undefined },
             { value: "published", label: "Published", count: q.published.data ? counts.published : undefined },
-            { value: "held", label: "Held for review", count: q.held.data ? counts.held : undefined },
-            { value: "spam", label: "Likely spam", count: q.spam.data ? counts.spam : undefined },
+            { value: "held", label: "Held For Review", count: q.held.data ? counts.held : undefined },
+            { value: "spam", label: "Likely Spam", count: q.spam.data ? counts.spam : undefined },
           ]}
         />
       </div>
@@ -250,9 +250,9 @@ export function CommentInbox({ videoId, publishedVideos }: { videoId?: string; p
         {!videoId && (
           <SelectMenu label="Video" prefix="Video:" className="max-w-[260px]" value={video.id} onChange={(v) => set({ video: v, thread: "" })} options={options.map((v) => ({ value: v.id, label: v.title }))} />
         )}
-        <SelectMenu label="Date" prefix="Date:" value={values.date} onChange={(v) => set({ date: v })} options={[{ value: "all", label: "Any time" }, { value: "1d", label: "Last 24 hours" }, { value: "7d", label: "Last 7 days" }, { value: "28d", label: "Last 28 days" }]} />
-        <SelectMenu label="Reply status" prefix="Reply:" value={values.reply} onChange={(v) => set({ reply: v })} options={[{ value: "all", label: "Any" }, { value: "unanswered", label: "Not replied" }, { value: "answered", label: "Replied" }]} />
-        <SelectMenu label="Sort" prefix="Sort:" value={values.sort} onChange={(v) => set({ sort: v })} options={[{ value: "newest", label: "Newest" }, { value: "oldest", label: "Oldest" }, { value: "likes", label: "Most liked" }]} />
+        <SelectMenu label="Date" prefix="Date:" value={values.date} onChange={(v) => set({ date: v })} options={[{ value: "all", label: "Any Time" }, { value: "1d", label: "Last 24 Hours" }, { value: "7d", label: "Last 7 Days" }, { value: "28d", label: "Last 28 Days" }]} />
+        <SelectMenu label="Reply Status" prefix="Reply:" value={values.reply} onChange={(v) => set({ reply: v })} options={[{ value: "all", label: "Any" }, { value: "unanswered", label: "Not Replied" }, { value: "answered", label: "Replied" }]} />
+        <SelectMenu label="Sort" prefix="Sort:" value={values.sort} onChange={(v) => set({ sort: v })} options={[{ value: "newest", label: "Newest" }, { value: "oldest", label: "Oldest" }, { value: "likes", label: "Most Liked" }]} />
         {activeFilters > 0 && (
           <Button size="sm" variant="ghost" icon={X} className="ml-auto" onClick={() => { setSearch(""); reset(videoId ? ["tab", "status"] : ["status", "video"]); }}>
             Clear {activeFilters} filter{activeFilters > 1 ? "s" : ""}
@@ -272,14 +272,14 @@ export function CommentInbox({ videoId, publishedVideos }: { videoId?: string; p
       )}
 
       {!commentsOn ? (
-        <EmptyState icon={MessageSquare} title="Comments are turned off" description="Comments are disabled for this video. You can turn them on in YouTube Studio." action={<Button variant="secondary" href={ytRoutes.studio} external>Open YouTube Studio</Button>} />
+        <EmptyState icon={MessageSquare} title="Comments Are Turned Off" description="Comments are disabled for this video. You can turn them on in YouTube Studio." action={<Button variant="secondary" href={ytRoutes.studio} external>Open YouTube Studio</Button>} />
       ) : needsModerate ? (
-        <CapabilityState capability={can.canModerateComments} title="Moderation queue unavailable" />
+        <CapabilityState capability={can.canModerateComments} title="Moderation Queue Unavailable" />
       ) : active.isPending && active.fetchStatus !== "idle" ? (
-        <div className="space-y-3 p-4" aria-busy="true" aria-label="Loading comments">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
+        <div className="space-y-3 p-4" aria-busy="true" aria-label="Loading Comments">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
       ) : active.error ? (
         isCommentsDisabled(active.error) ? (
-          <EmptyState icon={MessageSquare} title="Comments are turned off" description="Comments are disabled for this video. You can turn them on in YouTube Studio." />
+          <EmptyState icon={MessageSquare} title="Comments Are Turned Off" description="Comments are disabled for this video. You can turn them on in YouTube Studio." />
         ) : (
           <ErrorState error={describeYouTubeError(active.error)} onRetry={() => void active.refetch()} title="Comments couldn't load" />
         )
@@ -290,7 +290,7 @@ export function CommentInbox({ videoId, publishedVideos }: { videoId?: string; p
           description="New comments that need attention will show up here."
         />
       ) : filtered.length === 0 ? (
-        <EmptyState icon={Filter} title="No comments match" description="Try a different search or clear filters." action={<Button variant="secondary" icon={X} onClick={() => { setSearch(""); reset(["status", "video"]); }}>Clear filters</Button>} />
+        <EmptyState icon={Filter} title="No Comments Match" description="Try a different search or clear filters." action={<Button variant="secondary" icon={X} onClick={() => { setSearch(""); reset(["status", "video"]); }}>Clear filters</Button>} />
       ) : (
         <ul className="divide-y divide-[#EEF1F5]">
           {shown.map((c) => {

@@ -209,7 +209,6 @@ export function toVideo(dto: YouTubeVideoDto, schedule: Maybe<YouTubePublishResp
       avgViewDurationSec: null,
       subscribersGained: null,
     },
-    approval: "none",
     failureReason: status === "failed" ? failureText(dto.status.uploadStatus, schedule) : undefined,
     updatedAt: dto.publishedAt,
   };

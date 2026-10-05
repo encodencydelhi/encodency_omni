@@ -1,5 +1,6 @@
 import { subDays } from "date-fns";
 import { DESCRIPTION_MAX, TITLE_MAX } from "./constants";
+import { hours } from "./format";
 import type { Channel, Maybe, Video } from "../types";
 
 /**
@@ -117,7 +118,7 @@ export function channelHealth(
         key: "watchTime",
         label: "Watch Time Trend",
         score: clamp(60 + change * 0.5),
-        explanation: `${Math.round(cur.watchTime).toLocaleString("en-IN")} hours watched, ${change >= 0 ? "up" : "down"} ${Math.abs(change).toFixed(1)}% on the period before.`,
+        explanation: `${hours(cur.watchTime)} watched, ${change >= 0 ? "up" : "down"} ${Math.abs(change).toFixed(1)}% on the period before.`,
         recommendation: change < 0 ? "Look at which videos lost views in Analytics and make more of what held up." : "Keep publishing in the formats that are gaining watch time.",
         action: { label: "View Analytics", href: "/admin/youtube/analytics?metric=watchTime" },
       });

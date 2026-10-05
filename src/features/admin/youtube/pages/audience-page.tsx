@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Clock, Monitor, Smartphone, Tablet, Timer, Tv, UsersRound, Eye, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { BarList, BubbleMap, Donut, LegendList, TrendChart } from "../components/charts";
-import { CapabilityState, ErrorState, PageSkeleton } from "../components/states";
+import { CapabilityState, ErrorState, PageSkeleton, AnalyticsLagNote } from "../components/states";
 import { Card, CardHeader, PageTitle, Segmented, Skeleton, SortHeader, TrendDelta, UnderlineTabs, ViewLink, tdClass, thClass, yt, type SortDir } from "../components/ui";
 import { useAudienceData, useChannelAnalytics } from "../data/view-hooks";
 import { usePeriod, useQueryState, useWithPeriod } from "../hooks/use-query-state";
@@ -23,7 +23,7 @@ export function AudiencePage() {
   return (
     <div className="space-y-1">
       <PageTitle title="Audience" description="Who watches your content and where they are." />
-      {can.canViewAnalytics.allowed ? <Audience /> : <Card><CapabilityState capability={can.canViewAnalytics} title="Audience data unavailable" /></Card>}
+      {can.canViewAnalytics.allowed ? <Audience /> : <Card><CapabilityState capability={can.canViewAnalytics} title="Audience Data Unavailable" /></Card>}
     </div>
   );
 }
@@ -38,17 +38,17 @@ function Audience() {
 
   // YouTube's Analytics API reports channel totals for the period; unique / returning / new viewer counts are not available to OmniPlatform.
   const kpis: { label: string; key: MetricKey; value: number | null; prev: number | null; icon: LucideIcon; hint: string; format: (v: number) => string }[] = [
-    { label: "Views", key: "views", value: t.views.value, prev: t.views.previous, icon: Eye, hint: "In the selected period", format: compact },
-    { label: "Watch time", key: "watchTime", value: t.watchTime.value, prev: t.watchTime.previous, icon: Clock, hint: "Hours watched", format: (v) => hours(v) },
-    { label: "Subscribers (net)", key: "subscribers", value: t.subscribers.value, prev: t.subscribers.previous, icon: UsersRound, hint: "Gained minus lost", format: (v) => `${v >= 0 ? "+" : ""}${full(v)}` },
-    { label: "Avg. view duration", key: "avgViewDuration", value: t.avgViewDuration.value, prev: t.avgViewDuration.previous, icon: Timer, hint: "Per view", format: (v) => duration(v) },
+    { label: "Views", key: "views", value: t.views.value, prev: t.views.previous, icon: Eye, hint: "In The Selected Period", format: compact },
+    { label: "Watch Time", key: "watchTime", value: t.watchTime.value, prev: t.watchTime.previous, icon: Clock, hint: "Time Watched", format: (v) => hours(v) },
+    { label: "Subscribers (Net)", key: "subscribers", value: t.subscribers.value, prev: t.subscribers.previous, icon: UsersRound, hint: "Gained Minus Lost", format: (v) => `${v >= 0 ? "+" : ""}${full(v)}` },
+    { label: "Avg. View Duration", key: "avgViewDuration", value: t.avgViewDuration.value, prev: t.avgViewDuration.previous, icon: Timer, hint: "Per View", format: (v) => duration(v) },
   ];
 
   return (
     <div className="space-y-1">
       <div className="border-b border-[#E4E9F0]">
         <UnderlineTabs<AudienceTab>
-          label="Audience sections"
+          label="Audience Sections"
           value={tab}
           onChange={(v) => set({ tab: v })}
           items={[
@@ -114,11 +114,11 @@ function Audience() {
                   ))}
                 </div>
                 <div className="px-4 pb-4 pt-3">
-                  {analytics.isLoading ? <Skeleton className="h-[240px] w-full" /> : <TrendChart current={analytics.data.current} previous={analytics.data.previous} metric="subscribers" granularity={days > 90 ? "weekly" : "daily"} height={240} />}
+                  {analytics.isLoading ? <Skeleton className="h-[240px] w-full" /> : <><TrendChart current={analytics.data.current} previous={analytics.data.previous} metric="subscribers" granularity={days > 90 ? "weekly" : "daily"} height={240} /><AnalyticsLagNote /></>}
                 </div>
               </Card>
               <Card className="xl:col-span-4">
-                <CardHeader title="Views by Subscriber Status" />
+                <CardHeader title="Views By Subscriber Status" />
                 <div className="px-4 pb-4">
                   {audience.isLoading ? <Skeleton className="h-24 w-full" /> : audience.data.subscribed ? <BarList data={audience.data.subscribed} color="#E5202E" /> : <ThresholdNotice />}
                 </div>
@@ -189,7 +189,7 @@ function GeographyCard({ className, compactView, metric, onMetric, selected, onS
         description="Where your viewers are"
         actions={
           onMore ? <button type="button" onClick={onMore} className="text-[12px] font-semibold text-[#2563EB] hover:underline">Details</button> : onMetric ? (
-            <Segmented<GeoMetric> label="Map metric" value={metric} onChange={onMetric} items={[{ value: "views", label: "Views" }, { value: "watchTimeHours", label: "Watch time" }, { value: "subscribers", label: "Subscribers" }]} />
+            <Segmented<GeoMetric> label="Map Metric" value={metric} onChange={onMetric} items={[{ value: "views", label: "Views" }, { value: "watchTimeHours", label: "Watch Time" }, { value: "subscribers", label: "Subscribers" }]} />
           ) : undefined
         }
       />
@@ -209,7 +209,7 @@ function GeographyCard({ className, compactView, metric, onMetric, selected, onS
                   <tr>
                     <th className={cn(thClass, "static pl-4")}>Country</th>
                     <SortHeader className="static" label="Views" align="right" active={sort === "views"} dir={dir} onClick={() => toggle("views")} />
-                    <SortHeader className="static" label="Watch time" align="right" active={sort === "watchTimeHours"} dir={dir} onClick={() => toggle("watchTimeHours")} />
+                    <SortHeader className="static" label="Watch Time" align="right" active={sort === "watchTimeHours"} dir={dir} onClick={() => toggle("watchTimeHours")} />
                     <SortHeader className="static pr-4" label="Subscribers" align="right" active={sort === "subscribers"} dir={dir} onClick={() => toggle("subscribers")} />
                   </tr>
                 </thead>

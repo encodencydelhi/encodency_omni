@@ -55,13 +55,13 @@ function LinkChannelBody({ open, onOpenChange }: LinkChannelProps) {
 
         <div className="max-h-[52vh] overflow-y-auto px-5 py-4">
           {candidates.isPending ? (
-            <div className="space-y-2" aria-busy="true" aria-label="Loading channels">
+            <div className="space-y-2" aria-busy="true" aria-label="Loading Channels">
               {[0, 1, 2].map((i) => (
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
           ) : candidates.error ? (
-            <Notice tone="red" title="Couldn&apos;t load channels">
+            <Notice tone="red" title="Couldn&apos;t Load Channels">
               {describeYouTubeError(candidates.error).message}
               <span className="mt-2 block">
                 <Button size="sm" variant="secondary" onClick={() => void candidates.refetch()}>
@@ -73,7 +73,7 @@ function LinkChannelBody({ open, onOpenChange }: LinkChannelProps) {
             <EmptyState
               compact
               icon={Link2}
-              title="No Google account connected yet"
+              title="No Google Account Connected Yet"
               description="Connect a Google account that owns the channel first, then come back to link it."
               action={
                 <Button size="sm" variant="primary" gate={can.canManageConnection} onClick={() => void startConsent()}>
@@ -85,7 +85,7 @@ function LinkChannelBody({ open, onOpenChange }: LinkChannelProps) {
             <EmptyState
               compact
               icon={Link2}
-              title="No channels on this account"
+              title="No Channels On This Account"
               description="The connected Google account doesn't own a YouTube channel, or the permission to read it wasn't granted. Reconnect with a different account if the channel belongs elsewhere."
               action={
                 <Button size="sm" variant="secondary" gate={can.canManageConnection} onClick={() => void startConsent()}>

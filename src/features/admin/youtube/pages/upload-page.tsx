@@ -334,7 +334,7 @@ function UploadFlow() {
     <div className="space-y-1">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <Button size="icon" variant="ghost" aria-label="Back to content" onClick={() => navigate(ytRoutes.content)}>
+          <Button size="icon" variant="ghost" aria-label="Back To Content" onClick={() => navigate(ytRoutes.content)}>
             <ArrowLeft className="size-4" />
           </Button>
           <div className="min-w-0">
@@ -348,16 +348,16 @@ function UploadFlow() {
         </div>
       </div>
 
-      {!can.canUpload.allowed && <Notice tone="amber" title="Uploading is unavailable">{can.canUpload.reason}</Notice>}
+      {!can.canUpload.allowed && <Notice tone="amber" title="Uploading Is Unavailable">{can.canUpload.reason}</Notice>}
       {shownFailure && shownPhase === "failed" && (
-        <Notice tone="red" title="The upload didn't complete" actions={<Button size="sm" variant="primary" icon={RefreshCw} onClick={retry}>Try again</Button>}>
+        <Notice tone="red" title="The upload didn't complete" actions={<Button size="sm" variant="primary" icon={RefreshCw} onClick={retry}>Try Again</Button>}>
           {shownFailure}
         </Notice>
       )}
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-1 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_300px]">
         <Card className="h-fit p-2 lg:sticky lg:top-[76px]">
-          <ol className="flex gap-1 overflow-x-auto lg:flex-col" aria-label="Upload steps">
+          <ol className="flex gap-1 overflow-x-auto lg:flex-col" aria-label="Upload Steps">
             {STEPS.map((s, i) => {
               const hasError = Boolean(errors[s]?.length) && visited.has(s) && s !== step;
               const complete = visited.has(s) && !errors[s]?.length && i < stepIndex;
@@ -393,7 +393,7 @@ function UploadFlow() {
           </div>
           <div className="space-y-4 px-5 py-4">
             {showErrors && errors[step]?.length ? (
-              <Notice tone="red" title="Fix these before continuing">
+              <Notice tone="red" title="Fix These Before Continuing">
                 <ul className="list-disc pl-4">{errors[step]!.map((m) => <li key={m}>{m}</li>)}</ul>
               </Notice>
             ) : null}
@@ -613,12 +613,12 @@ function UploadStep({ file, onChoose, onRemove, type, setType }: { file: FileInf
           <div className="mt-3"><FileProgress file={file} /></div>
           {file.state === "ready" && <p className="mt-2 text-[12px] text-[#6B7890]">The file is in your media library. You can keep filling in the details.</p>}
           {file.state === "error" && (
-            <Notice tone="red" className="mt-3" title="This file can't be used" actions={<Button size="sm" variant="primary" icon={RefreshCw} onClick={onRemove}>Choose another file</Button>}>
+            <Notice tone="red" className="mt-3" title="This file can't be used" actions={<Button size="sm" variant="primary" icon={RefreshCw} onClick={onRemove}>Choose Another File</Button>}>
               {file.message ?? "The file couldn't be added to the media library."} {limitText}
             </Notice>
           )}
           {file.state === "ready" && type === "short" && file.durationSec !== null && file.durationSec > 60 && (
-            <Notice tone="amber" className="mt-3" title="This is longer than a Short">YouTube treats vertical videos of up to 60 seconds as Shorts. Switch to Video or upload a shorter file.</Notice>
+            <Notice tone="amber" className="mt-3" title="This Is Longer Than A Short">YouTube treats vertical videos of up to 60 seconds as Shorts. Switch to Video or upload a shorter file.</Notice>
           )}
         </div>
       )}
@@ -698,8 +698,8 @@ function DetailsStep({ draft, set, showErrors }: StepProps & { showErrors: boole
         <FormField label="Category">
           <SelectMenu label="Category" size="md" fullWidth value={draft.categoryId} onChange={(v) => set("categoryId", v)} options={CATEGORIES.map((c) => ({ value: c.id, label: c.label }))} />
         </FormField>
-        <FormField label="Video language">
-          <SelectMenu label="Language" size="md" fullWidth value={draft.language} onChange={(v) => set("language", v)} options={[{ value: "", label: "Not set" }, ...LANGUAGES.map((l) => ({ value: l.id, label: l.label }))]} />
+        <FormField label="Video Language">
+          <SelectMenu label="Language" size="md" fullWidth value={draft.language} onChange={(v) => set("language", v)} options={[{ value: "", label: "Not Set" }, ...LANGUAGES.map((l) => ({ value: l.id, label: l.label }))]} />
         </FormField>
       </div>
     </div>
@@ -709,10 +709,10 @@ function DetailsStep({ draft, set, showErrors }: StepProps & { showErrors: boole
 function AudienceStep({ draft, set }: StepProps) {
   return (
     <div className="space-y-4">
-      <Notice tone="blue" title="Required by law">
+      <Notice tone="blue" title="Required By Law">
         Regardless of location, you&apos;re legally required to comply with the Children&apos;s Online Privacy Protection Act (COPPA) and other laws.
       </Notice>
-      <div className="space-y-2" role="radiogroup" aria-label="Made for kids">
+      <div className="space-y-2" role="radiogroup" aria-label="Made For Kids">
         <ChoiceCard name="kids" checked={draft.madeForKids === true} onSelect={() => set("madeForKids", true)} icon={Baby} title="Yes, it's made for kids" description="Comments, notifications and personalised ads are turned off." />
         <ChoiceCard name="kids" checked={draft.madeForKids === false} onSelect={() => set("madeForKids", false)} icon={UsersRound} title="No, it's not made for kids" />
       </div>
@@ -725,9 +725,9 @@ function VisibilityStep({ draft, set }: StepProps) {
   const zone = browserZone();
   return (
     <div className="space-y-4">
-      <Notice tone="blue" title="Uploads start private">The video is uploaded as private first. Publishing or scheduling happens after YouTube has the file.</Notice>
+      <Notice tone="blue" title="Uploads Start Private">The video is uploaded as private first. Publishing or scheduling happens after YouTube has the file.</Notice>
       <div className="space-y-2">
-        <ChoiceCard name="publish-mode" checked={draft.publishMode === "now"} onSelect={() => set("publishMode", "now")} icon={Upload} title="Save or publish" description="Keep it private, or make it public or unlisted once uploaded." />
+        <ChoiceCard name="publish-mode" checked={draft.publishMode === "now"} onSelect={() => set("publishMode", "now")} icon={Upload} title="Save Or Publish" description="Keep it private, or make it public or unlisted once uploaded." />
         {draft.publishMode === "now" && (
           <div className="ml-7 grid gap-2 sm:grid-cols-3">
             {(["private", "unlisted", "public"] as Visibility[]).map((v) => (
@@ -744,12 +744,12 @@ function VisibilityStep({ draft, set }: StepProps) {
             <FormField label="Time" htmlFor="up-time">
               <input id="up-time" type="time" className={yt.input} value={draft.time} onChange={(e) => set("time", e.target.value)} />
             </FormField>
-            <FormField label="Time zone">
-              <SelectMenu label="Time zone" size="md" fullWidth disabled value={zone} onChange={() => undefined} options={[{ value: zone, label: zone }]} />
+            <FormField label="Time Zone">
+              <SelectMenu label="Time Zone" size="md" fullWidth disabled value={zone} onChange={() => undefined} options={[{ value: zone, label: zone }]} />
             </FormField>
             <div className="sm:col-span-3">
-              <FormField label="Visibility when published">
-                <SelectMenu<"public" | "unlisted"> label="Visibility when published" size="md" fullWidth value={draft.visibility === "unlisted" ? "unlisted" : "public"} onChange={(v) => set("visibility", v)} options={[{ value: "public", label: "Public" }, { value: "unlisted", label: "Unlisted" }]} />
+              <FormField label="Visibility When Published">
+                <SelectMenu<"public" | "unlisted"> label="Visibility When Published" size="md" fullWidth value={draft.visibility === "unlisted" ? "unlisted" : "public"} onChange={(v) => set("visibility", v)} options={[{ value: "public", label: "Public" }, { value: "unlisted", label: "Unlisted" }]} />
               </FormField>
             </div>
             {!Number.isNaN(when.getTime()) && <p className="text-[12px] text-[#6B7890] sm:col-span-3">Goes {draft.visibility === "unlisted" ? "unlisted" : "public"} {format(when, "EEEE, MMMM d 'at' h:mm a")} ({zone}).</p>}
@@ -803,7 +803,7 @@ function AdvancedStep({ draft, set }: StepProps) {
         </FormField>
       </div>
       <div className="divide-y divide-[#EEF1F5] rounded-[10px] border border-[#E4E9F0]">
-        <ToggleRow label="Allow embedding" description="Let others embed this video on their websites." checked={draft.embeddable} onChange={(c) => set("embeddable", c)} />
+        <ToggleRow label="Allow Embedding" description="Let others embed this video on their websites." checked={draft.embeddable} onChange={(c) => set("embeddable", c)} />
       </div>
     </div>
   );
@@ -854,7 +854,7 @@ function ReviewStep({
           </ul>
         </Notice>
       ) : (
-        <Notice tone="blue" icon={CheckCircle2} title="Ready to send to YouTube">The video is uploaded as private first; YouTube may need a few minutes to process it before it can be published.</Notice>
+        <Notice tone="blue" icon={CheckCircle2} title="Ready To Send To YouTube">The video is uploaded as private first; YouTube may need a few minutes to process it before it can be published.</Notice>
       )}
       <dl className="divide-y divide-[#EEF1F5] rounded-[10px] border border-[#E4E9F0]">
         {rows.map((row) => (
