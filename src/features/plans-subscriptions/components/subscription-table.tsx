@@ -64,7 +64,7 @@ export function PeriodCell({ row }: { row: SubscriptionRow }) {
     <div className="whitespace-nowrap">
       <span className="block text-[0.8125rem] tabular text-foreground">{formatDate(at)}</span>
       <span className={cn("block text-2xs", trial && days <= 7 ? "font-medium text-warning" : "text-muted-foreground")}>
-        {trial ? "Trial ends" : row.status === "scheduled_cancellation" ? "Ends" : "Renews"} {days < 0 ? `${-days}d ago` : days === 0 ? "today" : `in ${days}d`}
+        {trial ? "Trial Ends" : row.status === "scheduled_cancellation" ? "Ends" : "Renews"} {days < 0 ? `${-days}d ago` : days === 0 ? "today" : `in ${days}d`}
       </span>
     </div>
   );
@@ -176,7 +176,7 @@ export function SubscriptionCards({
             <dl className="mt-2 grid grid-cols-3 gap-2 text-2xs">
               <div><dt className="text-muted-foreground">Plan</dt><dd className="font-medium text-foreground">{row.planName} v{row.planVersion}</dd></div>
               <div><dt className="text-muted-foreground">MRR</dt><dd className="font-medium tabular text-foreground">{row.mrrMinor > 0 ? money(row.mrrMinor, row.currency, true) : "-"}</dd></div>
-              <div><dt className="text-muted-foreground">{row.status === "trialing" ? "Trial ends" : "Renews"}</dt><dd className="font-medium text-foreground">{formatDate(row.status === "trialing" && row.trialEndsAt ? row.trialEndsAt : row.renewsAt)}</dd></div>
+              <div><dt className="text-muted-foreground">{row.status === "trialing" ? "Trial Ends" : "Renews"}</dt><dd className="font-medium text-foreground">{formatDate(row.status === "trialing" && row.trialEndsAt ? row.trialEndsAt : row.renewsAt)}</dd></div>
             </dl>
           </article>
         );

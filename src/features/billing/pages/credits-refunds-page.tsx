@@ -84,7 +84,7 @@ export function CreditsRefundsPage() {
       await approveCreditNote(id);
       toast.success("Credit note approved and posted to financial accounts");
     } catch (err: any) {
-      toast.error(err.message || "Failed to approve credit note");
+      toast.error(err.message || "Failed To Approve Credit Note");
     }
   };
 
@@ -92,19 +92,19 @@ export function CreditsRefundsPage() {
   const handleApproveRefund = async (id: string) => {
     try {
       const refund = await approveRefund(id);
-      if (refund.status === "failed") toast.error(refund.failureReason ? `Refund could not be sent: ${refund.failureReason}` : "Refund could not be sent");
-      else toast.success(refund.status === "succeeded" ? "Refund approved and sent to the payer" : "Refund approved");
+      if (refund.status === "failed") toast.error(refund.failureReason ? `Refund could not be sent: ${refund.failureReason}` : "Refund Could Not Be Sent");
+      else toast.success(refund.status === "succeeded" ? "Refund approved and sent to the payer" : "Refund Approved");
     } catch (err: any) {
-      toast.error(err.message || "Failed to approve refund");
+      toast.error(err.message || "Failed To Approve Refund");
     }
   };
 
   const handleRejectRefund = async (id: string) => {
     try {
       await rejectRefund(id);
-      toast.success("Refund request rejected");
+      toast.success("Refund Request Rejected");
     } catch (err: any) {
-      toast.error(err.message || "Failed to reject refund");
+      toast.error(err.message || "Failed To Reject Refund");
     }
   };
 
@@ -216,7 +216,7 @@ export function CreditsRefundsPage() {
         <BillingKpiCard
           label="ISSUED"
           value={kpis.issuedCnCount}
-          hint="Credit notes"
+          hint="Credit Notes"
           badge="Active"
           badgeTone="success"
           icon={ReceiptIcon}
@@ -224,7 +224,7 @@ export function CreditsRefundsPage() {
         <BillingKpiCard
           label="PENDING"
           value={kpis.pendingCnCount}
-          hint="In review"
+          hint="In Review"
           badge="Review"
           badgeTone="warning"
           icon={ClockIcon}
@@ -247,7 +247,7 @@ export function CreditsRefundsPage() {
         <BillingKpiCard
           label="REFUNDS"
           value={kpis.pendingRefundsCount}
-          hint="In review"
+          hint="In Review"
           badge="Pending"
           badgeTone="warning"
           icon={RotateCcwIcon}
@@ -333,7 +333,7 @@ export function CreditsRefundsPage() {
                         <CreditNoteStatusBadge status={cn.status} />
                       </td>
                       <td className="py-2 px-3 text-muted-foreground whitespace-nowrap">
-                        {cn.issuedAt ? formatDate(cn.issuedAt) : "Awaiting approval"}
+                        {cn.issuedAt ? formatDate(cn.issuedAt) : "Awaiting Approval"}
                       </td>
                       <td className="py-2 px-3 text-right">
                         {cn.status === "pending_approval" ? (

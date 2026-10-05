@@ -66,7 +66,7 @@ export function minorToInputValue(amountMinor: number): string {
 /**
  * Multi-currency guard: throws if currencies do not match.
  */
-export function assertSameCurrency(currencyA: string, currencyB: string, context = "Financial operation"): void {
+export function assertSameCurrency(currencyA: string, currencyB: string, context = "Financial Operation"): void {
   if (currencyA.toUpperCase() !== currencyB.toUpperCase()) {
     throw new Error(`${context} cannot mix currencies ${currencyA} and ${currencyB} without conversion.`);
   }

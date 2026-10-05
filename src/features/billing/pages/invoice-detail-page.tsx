@@ -131,7 +131,7 @@ export function InvoiceDetailPage({ invoiceId: propInvoiceId }: InvoiceDetailPag
                     await issueInvoice(invoice.id);
                     toast.success(`Invoice ${invoice.number} issued`);
                   } catch (err: any) {
-                    toast.error(err.message || "Failed to issue invoice");
+                    toast.error(err.message || "Failed To Issue Invoice");
                   }
                 }}
                 className="h-8 rounded-sm text-xs bg-slate-900 text-white hover:bg-slate-800 gap-1.5"
@@ -160,28 +160,28 @@ export function InvoiceDetailPage({ invoiceId: propInvoiceId }: InvoiceDetailPag
         <BillingKpiCard
           label="GROSS"
           value={formatMoney(invoice.totalMinor, invoice.currency)}
-          hint="Gross total"
+          hint="Gross Total"
           badge="Total"
           badgeTone="neutral"
         />
         <BillingKpiCard
           label="NET DUE"
           value={formatMoney(invoice.adjustedReceivableMinor, invoice.currency)}
-          hint="Net amount"
+          hint="Net Amount"
           badge="Net"
           badgeTone="info"
         />
         <BillingKpiCard
           label="PAID"
           value={formatMoney(invoice.allocatedPaymentsMinor, invoice.currency)}
-          hint="Cash applied"
+          hint="Cash Applied"
           badge="Paid"
           badgeTone="success"
         />
         <BillingKpiCard
           label="CREDITS"
           value={formatMoney(invoice.accountCreditAppliedMinor, invoice.currency)}
-          hint="From ledger"
+          hint="From Ledger"
           badge="Credit"
           badgeTone="info"
         />
@@ -195,7 +195,7 @@ export function InvoiceDetailPage({ invoiceId: propInvoiceId }: InvoiceDetailPag
         <BillingKpiCard
           label="DUE DATE"
           value={formatDate(invoice.dueAt)}
-          hint={invoice.timingState === "overdue" ? "Past due" : "Normal"}
+          hint={invoice.timingState === "overdue" ? "Past Due" : "Normal"}
           badge={invoice.timingState === "overdue" ? "Overdue" : "On Track"}
           badgeTone={invoice.timingState === "overdue" ? "danger" : "neutral"}
           icon={ClockIcon}

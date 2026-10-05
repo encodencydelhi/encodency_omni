@@ -135,7 +135,7 @@ export function BillingAccountsPage() {
         <BillingKpiCard
           label="ACCOUNTS"
           value={accounts.length}
-          hint="Total tenants"
+          hint="Total Tenants"
           badge="Total"
           badgeTone="info"
           icon={Building2Icon}
@@ -143,7 +143,7 @@ export function BillingAccountsPage() {
         <BillingKpiCard
           label="ACTIVE"
           value={accounts.filter((a) => a.accountStatus === "active").length}
-          hint="Good standing"
+          hint="Good Standing"
           badge="Active"
           badgeTone="success"
           icon={CheckCircle2Icon}
@@ -151,7 +151,7 @@ export function BillingAccountsPage() {
         <BillingKpiCard
           label="DELINQUENT"
           value={accounts.filter((a) => a.accountStatus === "delinquent").length}
-          hint="Past due"
+          hint="Past Due"
           badge="Overdue"
           badgeTone="danger"
           icon={AlertTriangleIcon}
@@ -159,7 +159,7 @@ export function BillingAccountsPage() {
         <BillingKpiCard
           label="SUSPENDED"
           value={accounts.filter((a) => a.accountStatus === "suspended").length}
-          hint="Billing hold"
+          hint="Billing Hold"
           badge="Hold"
           badgeTone="warning"
           icon={ClockIcon}

@@ -142,7 +142,7 @@ class BillingStore {
     }>;
   }): Invoice {
     const account = this.accounts.find((a) => a.id === input.billingAccountId);
-    if (!account) throw new Error("Billing account not found");
+    if (!account) throw new Error("Billing Account Not Found");
 
     const seq = 100 + this.invoices.length + 1;
     const invoiceNumber = `${this.policies.invoicePrefix}-${seq.toString().padStart(4, "0")}`;
@@ -233,7 +233,7 @@ class BillingStore {
     allocations: Array<{ invoiceId: string; amountMinor: number }>,
   ): void {
     const payment = this.payments.find((p) => p.id === paymentId);
-    if (!payment) throw new Error("Payment not found");
+    if (!payment) throw new Error("Payment Not Found");
 
     const totalToAllocate = allocations.reduce((acc, a) => acc + a.amountMinor, 0);
     if (totalToAllocate <= 0) throw new Error("Allocation amount must be greater than zero");
@@ -313,15 +313,15 @@ class BillingStore {
 
   public applyAccountCredit(accountId: string, invoiceId: string, amountMinor: number): void {
     const account = this.accounts.find((a) => a.id === accountId);
-    if (!account) throw new Error("Billing account not found");
+    if (!account) throw new Error("Billing Account Not Found");
     const invoice = this.invoices.find((i) => i.id === invoiceId);
-    if (!invoice) throw new Error("Invoice not found");
+    if (!invoice) throw new Error("Invoice Not Found");
 
     if (account.availableCreditMinor < amountMinor) {
-      throw new Error("Insufficient available credit on billing account");
+      throw new Error("Insufficient Available Credit On Billing Account");
     }
     if (invoice.outstandingBalanceMinor < amountMinor) {
-      throw new Error("Application amount exceeds outstanding invoice balance");
+      throw new Error("Application Amount Exceeds Outstanding Invoice Balance");
     }
 
     // Add debit ledger entry
@@ -376,7 +376,7 @@ class BillingStore {
     disposition: CreditNote["disposition"];
   }): CreditNote {
     const invoice = this.invoices.find((i) => i.id === input.invoiceId);
-    if (!invoice) throw new Error("Invoice not found");
+    if (!invoice) throw new Error("Invoice Not Found");
     if (input.amountMinor > invoice.totalMinor) {
       throw new Error("Credit note amount cannot exceed original invoice total");
     }
@@ -415,7 +415,7 @@ class BillingStore {
 
   public approveCreditNote(creditNoteId: string): void {
     const cn = this.creditNotes.find((c) => c.id === creditNoteId);
-    if (!cn) throw new Error("Credit note not found");
+    if (!cn) throw new Error("Credit Note Not Found");
 
     cn.status = "issued";
     cn.issuedAt = new Date().toISOString();
@@ -477,10 +477,10 @@ class BillingStore {
     reason: string;
   }): Refund {
     const payment = this.payments.find((p) => p.id === input.paymentId);
-    if (!payment) throw new Error("Payment not found");
+    if (!payment) throw new Error("Payment Not Found");
 
     if (input.requestedAmountMinor > payment.grossAmountMinor) {
-      throw new Error("Refund amount exceeds gross payment amount");
+      throw new Error("Refund Amount Exceeds Gross Payment Amount");
     }
 
     const seq = this.refunds.length + 1;
@@ -531,7 +531,7 @@ class BillingStore {
     notes?: string;
   }): Payment {
     const account = this.accounts.find((a) => a.id === input.billingAccountId);
-    if (!account) throw new Error("Billing account not found");
+    if (!account) throw new Error("Billing Account Not Found");
 
     const seq = 8800 + this.payments.length + 1;
     const payment: Payment = {
@@ -574,7 +574,7 @@ class BillingStore {
 
   public voidInvoice(invoiceId: string, reason: string): void {
     const invoice = this.invoices.find((i) => i.id === invoiceId);
-    if (!invoice) throw new Error("Invoice not found");
+    if (!invoice) throw new Error("Invoice Not Found");
     if (invoice.allocatedPaymentsMinor > 0) {
       throw new Error("Cannot void an invoice with allocated payments. Please unallocate or issue a credit note.");
     }
@@ -599,7 +599,7 @@ class BillingStore {
     updates: Partial<Pick<BillingAccount, "legalName" | "billingEmail" | "billingContact" | "billingPhone" | "taxId" | "paymentTerms" | "address">>,
   ): void {
     const account = this.accounts.find((a) => a.id === accountId);
-    if (!account) throw new Error("Billing account not found");
+    if (!account) throw new Error("Billing Account Not Found");
 
     Object.assign(account, updates);
     this.logActivity(
@@ -622,7 +622,7 @@ class BillingStore {
     },
   ): void {
     const exp = this.exceptions.find((e) => e.id === issueId);
-    if (!exp) throw new Error("Exception not found");
+    if (!exp) throw new Error("Exception Not Found");
 
     if (updates.status) exp.status = updates.status;
     if (updates.assignedOwner) exp.assignedOwner = updates.assignedOwner;
@@ -643,7 +643,7 @@ class BillingStore {
 
   public issueInvoice(invoiceId: string): Invoice {
     const invoice = this.invoices.find((i) => i.id === invoiceId);
-    if (!invoice) throw new Error("Invoice not found");
+    if (!invoice) throw new Error("Invoice Not Found");
     if (invoice.documentState !== "draft") throw new Error("Only a draft invoice can be issued.");
     invoice.documentState = "issued";
     invoice.issuedAt = new Date().toISOString();
@@ -655,7 +655,7 @@ class BillingStore {
 
   public approveRefund(refundId: string): Refund {
     const refund = this.refunds.find((r) => r.id === refundId);
-    if (!refund) throw new Error("Refund not found");
+    if (!refund) throw new Error("Refund Not Found");
     if (refund.status !== "pending_approval") throw new Error("This refund is not waiting for approval.");
     refund.status = "succeeded";
     refund.approvedBy = "Sompal Singh (Head of Finance)";
@@ -667,7 +667,7 @@ class BillingStore {
 
   public rejectRefund(refundId: string, reason?: string): Refund {
     const refund = this.refunds.find((r) => r.id === refundId);
-    if (!refund) throw new Error("Refund not found");
+    if (!refund) throw new Error("Refund Not Found");
     if (refund.status !== "pending_approval") throw new Error("This refund is not waiting for approval.");
     refund.status = "rejected";
     refund.failureReason = reason ?? null;

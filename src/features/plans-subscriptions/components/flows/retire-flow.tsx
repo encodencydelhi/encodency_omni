@@ -65,7 +65,7 @@ export function RetireFlow({ summary, onClose }: { summary: PlanSummary; onClose
         <div className="flex justify-between gap-3 py-1.5"><dt className="text-muted-foreground">Active subscribers</dt><dd className="text-foreground">{subscribers.paid} paid, {subscribers.trial} on trial</dd></div>
       </dl>
 
-      <AlertBanner tone="info" title="What changes">
+      <AlertBanner tone="info" title="What Changes">
         <ul className="mt-1 list-disc space-y-0.5 pl-4">
           <li>New purchase, upgrade and downgrade to this plan are switched off.</li>
           <li>{subscribers.total === 0 ? "Nobody is subscribed, so no company is affected." : `${pluralise(subscribers.total, "existing subscription")} keep${subscribers.total === 1 ? "s" : ""} referencing this plan at the version and price they are on. Nothing is cancelled, repriced or migrated.`}</li>

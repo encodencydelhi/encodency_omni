@@ -13,13 +13,13 @@ import { effectiveLimitLabel, overrideLabel } from "../data/selectors";
 import type { EntitlementRow, EntitlementStatus, ResourceKey } from "../data/types";
 
 const STATUS: Record<EntitlementStatus, { label: string; tone: "success" | "info" | "warning" | "danger" | "neutral" }> = {
-  within: { label: "Within limit", tone: "success" },
-  high: { label: "High usage", tone: "info" },
-  near_limit: { label: "Near limit", tone: "warning" },
-  exceeded: { label: "Over limit", tone: "danger" },
-  not_metered: { label: "Not metered", tone: "neutral" },
+  within: { label: "Within Limit", tone: "success" },
+  high: { label: "High Usage", tone: "info" },
+  near_limit: { label: "Near Limit", tone: "warning" },
+  exceeded: { label: "Over Limit", tone: "danger" },
+  not_metered: { label: "Not Metered", tone: "neutral" },
   enabled: { label: "Enabled", tone: "success" },
-  disabled: { label: "Not included", tone: "neutral" },
+  disabled: { label: "Not Included", tone: "neutral" },
   unavailable: { label: "Unavailable", tone: "neutral" },
 };
 
@@ -66,10 +66,10 @@ export function EntitlementTable({ rows, canOverride, onOverride }: { rows: Enti
                     <tr key={`${row.kind}-${row.key}`} className="group">
                       <th scope="row" className="border-b border-border px-3 py-1.5 text-left font-normal group-hover:bg-accent/50">
                         <span className="block text-foreground">{row.name}</span>
-                        {row.kind === "resource" ? <span className="block text-2xs text-muted-foreground">{row.resetPeriod === "none" ? "Capacity" : row.resetPeriod === "billing_cycle" ? "Per billing period" : "Per month"}</span> : null}
+                        {row.kind === "resource" ? <span className="block text-2xs text-muted-foreground">{row.resetPeriod === "none" ? "Capacity" : row.resetPeriod === "billing_cycle" ? "Per Billing Period" : "Per Month"}</span> : null}
                       </th>
                       <td className="border-b border-border px-3 py-1.5 tabular group-hover:bg-accent/50">
-                        {row.base ? formatRule(row.base, row.unit) : row.baseEnabled ? "Included" : "Not included"}
+                        {row.base ? formatRule(row.base, row.unit) : row.baseEnabled ? "Included" : "Not Included"}
                       </td>
                       <td className="border-b border-border px-3 py-1.5 group-hover:bg-accent/50">
                         {row.override ? (
@@ -83,7 +83,7 @@ export function EntitlementTable({ rows, canOverride, onOverride }: { rows: Enti
                       </td>
                       <td className="border-b border-border px-3 py-1.5 group-hover:bg-accent/50">
                         <span className="block font-medium tabular text-foreground">{effectiveLimitLabel(row)}</span>
-                        {row.effective ? <span className="block text-2xs text-muted-foreground">{row.effective.ruleApplied === "base" ? "Plan allowance" : row.effective.ruleApplied}</span> : null}
+                        {row.effective ? <span className="block text-2xs text-muted-foreground">{row.effective.ruleApplied === "base" ? "Plan Allowance" : row.effective.ruleApplied}</span> : null}
                       </td>
                       <td className="border-b border-border px-3 py-1.5 text-right tabular group-hover:bg-accent/50">
                         {row.used === null ? <span className="text-muted-foreground">-</span> : formatNumber(row.used)}

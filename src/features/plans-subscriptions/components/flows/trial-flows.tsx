@@ -43,13 +43,13 @@ export function TrialManagementDialog({ row, onAction, onClose }: { row: Subscri
       footer={<Button variant="outline" onClick={onClose}>Close</Button>}
     >
       <dl className="divide-y divide-border rounded-sm border border-border px-3">
-        <KeyValue label="Trial start">{formatDate(row.startedAt)}</KeyValue>
-        <KeyValue label="Trial end">{row.trialEndsAt ? formatDate(row.trialEndsAt) : "-"}</KeyValue>
-        <KeyValue label="Days remaining"><span className={days <= 3 ? "font-medium text-danger" : undefined}>{days < 0 ? `Ended ${-days} days ago` : `${days} days`}</span></KeyValue>
-        <KeyValue label="Trial plan">{row.planName}</KeyValue>
-        <KeyValue label="Extensions used">{used} of {limit} days</KeyValue>
-        <KeyValue label="Current usage">{row.usageRisk === "ok" ? "Within limits" : row.usageRisk === "near_limit" ? "Near a limit" : "Over a limit"}</KeyValue>
-        <KeyValue label="Payment method">{data?.paymentMethodLabel ?? "None on file"}</KeyValue>
+        <KeyValue label="Trial Start">{formatDate(row.startedAt)}</KeyValue>
+        <KeyValue label="Trial End">{row.trialEndsAt ? formatDate(row.trialEndsAt) : "-"}</KeyValue>
+        <KeyValue label="Days Remaining"><span className={days <= 3 ? "font-medium text-danger" : undefined}>{days < 0 ? `Ended ${-days} days ago` : `${days} days`}</span></KeyValue>
+        <KeyValue label="Trial Plan">{row.planName}</KeyValue>
+        <KeyValue label="Extensions Used">{used} of {limit} days</KeyValue>
+        <KeyValue label="Current Usage">{row.usageRisk === "ok" ? "Within Limits" : row.usageRisk === "near_limit" ? "Near A Limit" : "Over A Limit"}</KeyValue>
+        <KeyValue label="Payment Method">{data?.paymentMethodLabel ?? "None On File"}</KeyValue>
       </dl>
       <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-3">
         <Button variant="outline" onClick={() => onAction("extend")}><CalendarPlusIcon />Extend Trial</Button>
@@ -107,7 +107,7 @@ export function ExtendTrialFlow({ row, onClose }: { row: SubscriptionRow; onClos
     <FlowDialog
       open
       onOpenChange={(open) => !open && !pending && onClose()}
-      title="Extend trial"
+      title="Extend Trial"
       description={`${row.company.name} - ${row.planName}`}
       footer={
         <>
@@ -127,9 +127,9 @@ export function ExtendTrialFlow({ row, onClose }: { row: SubscriptionRow; onClos
         <div className="space-y-3">
           <dl className="grid grid-cols-1 gap-1 sm:grid-cols-3">
             {[
-              ["Current trial end", row.trialEndsAt ? formatDate(row.trialEndsAt) : "-"],
-              ["New trial end", newEnd ? formatDate(newEnd) : "-"],
-              ["Extension allowance", `${used} used · ${left} left of ${limit}`],
+              ["Current Trial End", row.trialEndsAt ? formatDate(row.trialEndsAt) : "-"],
+              ["New Trial End", newEnd ? formatDate(newEnd) : "-"],
+              ["Extension Allowance", `${used} used · ${left} left of ${limit}`],
             ].map(([label, value]) => (
               <div key={label} className="rounded-sm border border-border px-3 py-2"><dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</dt><dd className="text-[0.8125rem] font-medium text-foreground">{value}</dd></div>
             ))}
@@ -202,7 +202,7 @@ export function ConvertTrialFlow({ row, onClose }: { row: SubscriptionRow; onClo
     <FlowDialog
       open
       onOpenChange={(open) => !open && !pending && onClose()}
-      title="Convert trial to paid"
+      title="Convert Trial To Paid"
       description={`${row.company.name} - currently on a ${row.planName} trial`}
       footer={
         <>
@@ -216,12 +216,12 @@ export function ConvertTrialFlow({ row, onClose }: { row: SubscriptionRow; onClo
         </>
       }
     >
-      <Stepper steps={["Plan & billing", "Review"]} current={step} />
+      <Stepper steps={["Plan & Billing", "Review"]} current={step} />
       <ErrorBanner message={error} />
       {step === 0 ? (
         <div className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Paid plan" htmlFor="convert-plan">
+            <Field label="Paid Plan" htmlFor="convert-plan">
               <Select value={planKey} onValueChange={(value) => setPlanKey(value as PlanKey)}>
                 <SelectTrigger id="convert-plan"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -233,7 +233,7 @@ export function ConvertTrialFlow({ row, onClose }: { row: SubscriptionRow; onClo
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Billing cycle" htmlFor="convert-cycle">
+            <Field label="Billing Cycle" htmlFor="convert-cycle">
               <Select value={cycle} onValueChange={(value) => setCycle(value as BillingCycle)}>
                 <SelectTrigger id="convert-cycle"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -245,14 +245,14 @@ export function ConvertTrialFlow({ row, onClose }: { row: SubscriptionRow; onClo
           </div>
           <dl className="grid grid-cols-1 gap-1 sm:grid-cols-3">
             {[
-              ["Recurring amount", version ? `${money(recurring, version.price.currency)} / ${cycle === "annual" ? "year" : "month"}` : "-"],
+              ["Recurring Amount", version ? `${money(recurring, version.price.currency)} / ${cycle === "annual" ? "year" : "month"}` : "-"],
               ["Effective", "Immediately"],
-              ["Payment readiness", method ? method : "No payment method on file"],
+              ["Payment Readiness", method ? method : "No Payment Method On File"],
             ].map(([label, value]) => (
               <div key={label} className="rounded-sm border border-border px-3 py-2"><dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</dt><dd className="text-[0.8125rem] font-medium text-foreground">{value}</dd></div>
             ))}
           </dl>
-          {!method ? <AlertBanner tone="warning" title="No payment method">The subscription will start, but payment stays pending until a method is added and the invoice is paid.</AlertBanner> : null}
+          {!method ? <AlertBanner tone="warning" title="No Payment Method">The subscription will start, but payment stays pending until a method is added and the invoice is paid.</AlertBanner> : null}
         </div>
       ) : (
         <div className="space-y-2">
@@ -262,7 +262,7 @@ export function ConvertTrialFlow({ row, onClose }: { row: SubscriptionRow; onClo
             <div className="flex justify-between gap-3 py-1.5"><dt className="text-muted-foreground">Recurring amount</dt><dd>{version ? money(recurring, version.price.currency) : "-"}</dd></div>
             <div className="flex justify-between gap-3 py-1.5"><dt className="text-muted-foreground">Result</dt><dd>Active - payment pending</dd></div>
           </dl>
-          <AlertBanner tone="info" title="Demo payment policy">
+          <AlertBanner tone="info" title="Demo Payment Policy">
             Converting issues an open invoice and starts the paid period. No payment is collected here, so billing shows the amount as pending until it is paid. It is never presented as paid.
           </AlertBanner>
         </div>

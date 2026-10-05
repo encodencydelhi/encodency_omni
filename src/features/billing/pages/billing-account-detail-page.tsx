@@ -118,7 +118,7 @@ export function BillingAccountDetailPage({ accountId: propAccountId }: BillingAc
         <BillingKpiCard
           label="OUTSTANDING"
           value={formatMoney(account.currentOutstandingMinor, account.currency)}
-          hint="Open balance"
+          hint="Open Balance"
           badge={account.currentOutstandingMinor > 0 ? "Due" : "Paid"}
           badgeTone={account.currentOutstandingMinor > 0 ? "warning" : "success"}
           icon={ClockIcon}
@@ -126,7 +126,7 @@ export function BillingAccountDetailPage({ accountId: propAccountId }: BillingAc
         <BillingKpiCard
           label="OVERDUE"
           value={formatMoney(account.overdueMinor, account.currency)}
-          hint="Past due"
+          hint="Past Due"
           badge={account.overdueMinor > 0 ? "Overdue" : "Clean"}
           badgeTone={account.overdueMinor > 0 ? "danger" : "neutral"}
           icon={AlertTriangleIcon}
@@ -150,14 +150,14 @@ export function BillingAccountDetailPage({ accountId: propAccountId }: BillingAc
         <BillingKpiCard
           label="PLAN"
           value={account.subscriptionTier.toUpperCase()}
-          hint="Tier level"
+          hint="Tier Level"
           badge="Plan"
           badgeTone="neutral"
         />
         <BillingKpiCard
           label="RENEWAL"
           value={account.renewsAt ? formatDate(account.renewsAt) : "N/A"}
-          hint="Next cycle"
+          hint="Next Cycle"
           badge="Auto"
           badgeTone="neutral"
         />
@@ -188,11 +188,11 @@ export function BillingAccountDetailPage({ accountId: propAccountId }: BillingAc
             </div>
             <div className="flex justify-between py-0.5 border-b border-border/40">
               <span className="text-muted-foreground">Contact Phone:</span>
-              <span className="text-foreground">{account.billingPhone ?? "None provided"}</span>
+              <span className="text-foreground">{account.billingPhone ?? "None Provided"}</span>
             </div>
             <div className="flex justify-between py-0.5 border-b border-border/40">
               <span className="text-muted-foreground">Tax Identifier / GSTIN:</span>
-              <span className="font-mono text-foreground font-semibold">{account.taxId ?? "None specified"}</span>
+              <span className="font-mono text-foreground font-semibold">{account.taxId ?? "None Specified"}</span>
             </div>
             <div className="flex justify-between py-0.5">
               <span className="text-muted-foreground">Registered Address:</span>

@@ -85,7 +85,7 @@ const missing = (what: string) => new ApiError({ code: "NOT_FOUND", status: 404,
 
 export const planKeyOf = (name: string): PlanKey => (name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "custom") as PlanKey;
 
-const NOT_RECORDED = "Not recorded";
+const NOT_RECORDED = "Not Recorded";
 
 export interface LiveSubscription extends BackendSubscription {
   usage?: { currentClients: number; currentAiTokens: number };
@@ -215,7 +215,7 @@ export function toRow(sub: LiveSubscription): SubscriptionRow {
     id: sub.id,
     company: companyRefOf(sub),
     planKey: planKeyOf(sub.plan?.name ?? ""),
-    planName: sub.plan?.name ?? "Unknown plan",
+    planName: sub.plan?.name ?? "Unknown Plan",
     planVersion: 1,
     currentVersion: 1,
     isLegacyVersion: false,
@@ -250,7 +250,7 @@ export function attentionOf(rows: SubscriptionRow[], now: number = Date.now()): 
       items.push({ id: `${row.id}-renewal-overdue`, kind: "past_due", severity: "warning", subscriptionId: row.id, company: row.company, issue: "The renewal date has passed and the period has not been renewed", at: row.renewsAt, actions: ["subscription", "billing"] });
     }
     if (row.status === "past_due") {
-      items.push({ id: `${row.id}-past-due`, kind: "past_due", severity: "critical", subscriptionId: row.id, company: row.company, issue: row.hasOpenInvoice ? "Payment is outstanding" : "Payment is overdue", at: row.renewsAt, actions: ["subscription", "billing"] });
+      items.push({ id: `${row.id}-past-due`, kind: "past_due", severity: "critical", subscriptionId: row.id, company: row.company, issue: row.hasOpenInvoice ? "Payment Is Outstanding" : "Payment Is Overdue", at: row.renewsAt, actions: ["subscription", "billing"] });
     }
     if (row.usageRisk === "over_limit") {
       items.push({ id: `${row.id}-over-limit`, kind: "usage_over_limit", severity: "warning", subscriptionId: row.id, company: row.company, issue: "Usage is over a plan limit", at: row.renewsAt, actions: ["subscription", "usage"] });
@@ -316,16 +316,16 @@ export function entitlementsOf(plan: BackendPlan, usage: LiveSubscription["usage
 /* ---- history from the audit trail ---- */
 
 const ACTION_LABEL: Record<string, string> = {
-  "subscription.assigned": "Subscription assigned",
-  "subscription.plan_changed": "Plan changed",
-  "subscription.suspended": "Subscription suspended",
-  "subscription.reactivated": "Subscription reactivated",
-  "subscription.cancelled": "Subscription cancelled",
-  "billing.checkout.created": "Checkout started",
-  "billing.invoice.paid": "Invoice paid",
-  "plan.updated": "Plan saved",
-  "plan.activated": "Plan shown for purchase",
-  "plan.deactivated": "Plan hidden from purchase",
+  "subscription.assigned": "Subscription Assigned",
+  "subscription.plan_changed": "Plan Changed",
+  "subscription.suspended": "Subscription Suspended",
+  "subscription.reactivated": "Subscription Reactivated",
+  "subscription.cancelled": "Subscription Cancelled",
+  "billing.checkout.created": "Checkout Started",
+  "billing.invoice.paid": "Invoice Paid",
+  "plan.updated": "Plan Saved",
+  "plan.activated": "Plan Shown For Purchase",
+  "plan.deactivated": "Plan Hidden From Purchase",
 };
 
 export function eventOf(item: SuperAdminAuditLogItem, planNames: Map<string, string>): SubscriptionEvent {
@@ -582,7 +582,7 @@ export class LivePlansRepository implements PlansRepository {
     }
     return {
       row,
-      company: { ...companyRefOf(raw), ownerName: raw.owner?.name ?? raw.owner?.email ?? "Not recorded" },
+      company: { ...companyRefOf(raw), ownerName: raw.owner?.name ?? raw.owner?.email ?? "Not Recorded" },
       plan: backendPlan ? toPlatformPlan(backendPlan) : null,
       version: backendPlan ? versionOf(backendPlan) : null,
       entitlements,
@@ -616,7 +616,7 @@ export class LivePlansRepository implements PlansRepository {
     const nextRows = entitlementsOf(next, raw.usage);
     const rows = currentRows.map((row, index) => {
       const target = nextRows[index]!;
-      const label = (item: EntitlementRow) => (item.kind === "resource" ? (item.base ? ruleLabel(item.base) : "—") : item.baseEnabled ? "Included" : "Not included");
+      const label = (item: EntitlementRow) => (item.kind === "resource" ? (item.base ? ruleLabel(item.base) : "—") : item.baseEnabled ? "Included" : "Not Included");
       return { key: row.key, kind: row.kind, name: row.name, unit: row.unit, current: label(row), next: label(target), changed: label(row) !== label(target), used: row.used, over: false };
     });
     const overLimit = [
@@ -704,7 +704,7 @@ export class LivePlansRepository implements PlansRepository {
   async startNewVersion(planId: string, actor: Actor): Promise<PlanSummary> {
     const { summary, plan } = await this.summaryOf(planId);
     const current = summary.current;
-    if (!current) throw missing("Plan version");
+    if (!current) throw missing("Plan Version");
     const input: PlanDraftInput = {
       name: summary.plan.name,
       internalCode: summary.plan.internalCode,
@@ -834,6 +834,6 @@ export class LivePlansRepository implements PlansRepository {
 }
 
 function ruleLabel(rule: LimitRule): string {
-  return rule.kind === "unlimited" ? "Unlimited" : rule.kind === "none" ? "Not available" : new Intl.NumberFormat("en-IN").format(rule.value ?? 0);
+  return rule.kind === "unlimited" ? "Unlimited" : rule.kind === "none" ? "Not Available" : new Intl.NumberFormat("en-IN").format(rule.value ?? 0);
 }
 

@@ -17,7 +17,7 @@ import { describeError, usePlanMutations, usePlans } from "../data/hooks";
 import { emptyPlanInput, validatePlanConfig } from "../data/selectors";
 import type { CreatePlanInput, PlanDraftInput, PlanIssue, PlanSummary } from "../data/types";
 
-const STEPS = ["Basic details", "Pricing", "Features", "Limits", "Availability", "Review & publish"];
+const STEPS = ["Basic Details", "Pricing", "Features", "Limits", "Availability", "Review & Publish"];
 
 /** Which validation fields belong to which step, so Continue only blocks on the step you are on. */
 const STEP_FIELDS: Array<(field: string) => boolean> = [
@@ -110,7 +110,7 @@ export function PlanCreatePage() {
             <span className="flex size-10 items-center justify-center rounded-sm bg-success-subtle text-success">
               <CircleCheckIcon className="size-5" aria-hidden />
             </span>
-            <p className="text-sm font-semibold text-foreground">{PLANS_MOCK_MODE ? "Plan created in demo workspace" : "Plan created"}</p>
+            <p className="text-sm font-semibold text-foreground">{PLANS_MOCK_MODE ? "Plan Created In Demo Workspace" : "Plan Created"}</p>
             <p className="max-w-md text-[0.8125rem] text-muted-foreground">
               {summary.plan.name} ({summary.plan.internalCode}) {published ? "was published as version 1. It now appears in the catalogue, the comparison and plan selectors, according to its availability." : "was saved as a draft. It is not available to any company until it is published."}
             </p>
@@ -152,12 +152,12 @@ export function PlanCreatePage() {
                   <span className="mt-1 block">You can still save this as a draft and finish it later.</span>
                 </AlertBanner>
               ) : (
-                <AlertBanner tone="success" title="Ready to publish">
+                <AlertBanner tone="success" title="Ready To Publish">
                   The configuration is valid. Publishing creates version 1, which becomes an immutable snapshot.
                 </AlertBanner>
               )}
               {warnings.length > 0 ? (
-                <AlertBanner tone="warning" title="Worth a look">
+                <AlertBanner tone="warning" title="Worth A Look">
                   <ul className="mt-1 list-disc space-y-0.5 pl-4">
                     {warnings.map((issue) => (
                       <li key={issue.field + issue.message}>{issue.message}</li>

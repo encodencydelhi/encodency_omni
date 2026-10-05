@@ -217,7 +217,7 @@ export function PaymentsTable({ initialQuickFilter }: PaymentsTableProps) {
         <BillingKpiCard
           label="PENDING"
           value={kpis.pendingCount}
-          hint="In flight"
+          hint="In Flight"
           badge="Queue"
           badgeTone="warning"
           icon={ClockIcon}
@@ -233,7 +233,7 @@ export function PaymentsTable({ initialQuickFilter }: PaymentsTableProps) {
         <BillingKpiCard
           label="COLLECTED"
           value={formatMoney(kpis.collectedMinor, currencyFilter === "ALL" ? "INR" : currencyFilter, { compact: true })}
-          hint="Cash in"
+          hint="Cash In"
           badge="Settled"
           badgeTone="success"
         />
@@ -248,7 +248,7 @@ export function PaymentsTable({ initialQuickFilter }: PaymentsTableProps) {
         <BillingKpiCard
           label="SETTLING"
           value={kpis.pendingSettlementCount}
-          hint="In batch"
+          hint="In Batch"
           badge="Transit"
           badgeTone="neutral"
         />

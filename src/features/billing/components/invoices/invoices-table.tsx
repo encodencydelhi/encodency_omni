@@ -205,7 +205,7 @@ export function InvoicesTable({ initialQuickFilter }: InvoicesTableProps) {
         <BillingKpiCard
           label="ISSUED"
           value={kpis.issuedCount}
-          hint="Active docs"
+          hint="Active Docs"
           badge="Total"
           badgeTone="info"
           icon={FileTextIcon}
@@ -221,7 +221,7 @@ export function InvoicesTable({ initialQuickFilter }: InvoicesTableProps) {
         <BillingKpiCard
           label="PARTIAL"
           value={kpis.partiallyPaidCount}
-          hint="Part paid"
+          hint="Part Paid"
           badge="Partial"
           badgeTone="info"
           icon={CreditCardIcon}
@@ -237,7 +237,7 @@ export function InvoicesTable({ initialQuickFilter }: InvoicesTableProps) {
         <BillingKpiCard
           label="OVERDUE"
           value={kpis.overdueCount}
-          hint="Past due"
+          hint="Past Due"
           badge={kpis.overdueCount > 0 ? "Action" : "None"}
           badgeTone={kpis.overdueCount > 0 ? "danger" : "neutral"}
           icon={AlertTriangleIcon}

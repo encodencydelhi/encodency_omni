@@ -86,7 +86,7 @@ export function OverrideFlow({ row, initialResource, onClose }: { row: Subscript
     <FlowDialog
       open
       onOpenChange={(open) => !open && !pending && onClose()}
-      title="Apply entitlement override"
+      title="Apply Entitlement Override"
       description={`${row.company.name} · ${row.planName} (subscription ${row.id})`}
       size="lg"
       footer={
@@ -125,8 +125,8 @@ export function OverrideFlow({ row, initialResource, onClose }: { row: Subscript
             <RadioGroup value={rule} onValueChange={(next) => setRule(next as "additive" | "absolute")} className="grid gap-1.5 sm:grid-cols-2">
               {(
                 [
-                  ["additive", "Add to the plan allowance", "The value is added on top of whatever the plan allows."],
-                  ["absolute", "Replace the plan allowance", "The value becomes the limit, whatever the plan says."],
+                  ["additive", "Add To The Plan Allowance", "The value is added on top of whatever the plan allows."],
+                  ["absolute", "Replace The Plan Allowance", "The value becomes the limit, whatever the plan says."],
                 ] as const
               ).map(([option, label, hint]) => (
                 <div key={option} className="flex items-start gap-2.5 rounded-sm border border-border px-3 py-2">
@@ -141,7 +141,7 @@ export function OverrideFlow({ row, initialResource, onClose }: { row: Subscript
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <Field label={rule === "additive" ? "Additional allowance" : "New limit"} htmlFor="override-value" required error={errors.value} hint={effectiveNow !== null ? `Effective allowance: ${formatLimitValue(effectiveNow, def?.unit)}` : unlimitedBase ? "The plan is unlimited, so it stays unlimited." : undefined}>
+            <Field label={rule === "additive" ? "Additional Allowance" : "New Limit"} htmlFor="override-value" required error={errors.value} hint={effectiveNow !== null ? `Effective allowance: ${formatLimitValue(effectiveNow, def?.unit)}` : unlimitedBase ? "The plan is unlimited, so it stays unlimited." : undefined}>
               <Input id="override-value" inputMode="numeric" value={value} onChange={(event) => setValue(event.target.value.replace(/\D/g, ""))} aria-invalid={Boolean(errors.value)} className="tabular" />
             </Field>
             <Field label="Starts" htmlFor="override-start" required error={errors.startsAt}>
@@ -156,7 +156,7 @@ export function OverrideFlow({ row, initialResource, onClose }: { row: Subscript
             <Field label="Reason" htmlFor="override-reason" required error={errors.reason}>
               <Textarea id="override-reason" rows={2} maxLength={300} value={reason} onChange={(event) => setReason(event.target.value)} />
             </Field>
-            <Field label="Approved by" htmlFor="override-approver" required error={errors.approvedBy} hint="Who authorised this exception.">
+            <Field label="Approved By" htmlFor="override-approver" required error={errors.approvedBy} hint="Who authorised this exception.">
               <Input id="override-approver" value={approvedBy} onChange={(event) => setApprovedBy(event.target.value)} />
             </Field>
           </div>
@@ -168,17 +168,17 @@ export function OverrideFlow({ row, initialResource, onClose }: { row: Subscript
               ["Company", row.company.name],
               ["Resource", def?.name ?? resource],
               ["Rule", rule === "additive" ? `Add ${new Intl.NumberFormat("en-IN").format(number)} to the plan allowance` : `Replace the plan allowance with ${new Intl.NumberFormat("en-IN").format(number)}`],
-              ["Plan allowance", formatLimitValue(base, def?.unit)],
-              ["Effective allowance", formatLimitValue(effectiveNow, def?.unit)],
-              ["Current usage", used === null ? "-" : `${used} ${def?.unit ?? ""}`],
+              ["Plan Allowance", formatLimitValue(base, def?.unit)],
+              ["Effective Allowance", formatLimitValue(effectiveNow, def?.unit)],
+              ["Current Usage", used === null ? "-" : `${used} ${def?.unit ?? ""}`],
               ["Period", `${formatDate(startsAt)} to ${formatDate(expiresAt)}`],
-              ["Approved by", approvedBy],
+              ["Approved By", approvedBy],
               ["Reason", reason],
             ].map(([label, text]) => (
               <div key={label} className="flex justify-between gap-3 py-1.5"><dt className="text-muted-foreground">{label}</dt><dd className="max-w-md text-right text-foreground">{text}</dd></div>
             ))}
           </dl>
-          <AlertBanner tone={overAfterExpiry ? "warning" : "info"} title="When it expires">
+          <AlertBanner tone={overAfterExpiry ? "warning" : "info"} title="When It Expires">
             The limit returns to {formatLimitValue(base, def?.unit)}.{overAfterExpiry ? ` Usage is already ${used}, above that, so ${row.company.name} would be over its limit after ${formatDate(expiresAt)} unless usage falls or the plan changes.` : " Current usage fits within it."}
           </AlertBanner>
           {resource === "Clients" ? <p className="text-2xs text-muted-foreground">Client creation eligibility for this company updates as soon as the override is granted.</p> : null}

@@ -86,7 +86,7 @@ export function EditAccountModal({
       onClose();
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      toast.error(err.message || "Failed to update billing account");
+      toast.error(err.message || "Failed To Update Billing Account");
     }
     finally {
       handleSubmitInFlight = false;

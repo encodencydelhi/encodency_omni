@@ -75,7 +75,7 @@ export function BillingTabs() {
 
   return (
     <div className="bg-transparent px-2">
-      <nav className="flex items-center gap-0 overflow-x-auto scrollbar-none" aria-label="Billing sections">
+      <nav className="flex items-center gap-0 overflow-x-auto scrollbar-none" aria-label="Billing Sections">
         {tabs.map((tab) => {
           const isActive = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
           const Icon = tab.icon;

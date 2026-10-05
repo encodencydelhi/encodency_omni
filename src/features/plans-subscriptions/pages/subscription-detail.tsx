@@ -51,50 +51,50 @@ function OverviewSection({ detail, actions }: { detail: SubscriptionDetail; acti
           <KeyValue label="Name">{company.name}</KeyValue>
           <KeyValue label="Company ID">{company.displayId}</KeyValue>
           <KeyValue label="Owner">{company.ownerName}</KeyValue>
-          <KeyValue label="Account status"><span className="capitalize">{company.accountStatus}</span></KeyValue>
+          <KeyValue label="Account Status"><span className="capitalize">{company.accountStatus}</span></KeyValue>
         </dl>
         <p className="mt-2 text-2xs text-muted-foreground">The company account and its subscription are separate: cancelling one never changes the other.</p>
       </Panel>
 
-      <Panel title="Plan & pricing" action={plan ? <Button asChild variant="ghost" size="sm"><Link href={routes.plan(plan.id)}>Open Plan</Link></Button> : undefined}>
+      <Panel title="Plan & Pricing" action={plan ? <Button asChild variant="ghost" size="sm"><Link href={routes.plan(plan.id)}>Open Plan</Link></Button> : undefined}>
         <dl className="divide-y divide-border">
           <KeyValue label="Plan">{row.planName}</KeyValue>
           <KeyValue label="Version">v{row.planVersion} {row.isLegacyVersion ? <LegacyVersionTag version={row.planVersion} current={row.currentVersion} /> : null}</KeyValue>
-          <KeyValue label="Billing cycle"><span className="capitalize">{row.billingCycle}</span></KeyValue>
-          <KeyValue label="Recurring price">{money(row.recurringMinor, row.currency)} / {row.billingCycle === "annual" ? "year" : "month"}</KeyValue>
-          <KeyValue label="MRR contribution">{row.mrrMinor > 0 ? money(row.mrrMinor, row.currency) : <span className="text-muted-foreground">{row.status === "trialing" ? "Trial - none" : "None"}</span>}</KeyValue>
+          <KeyValue label="Billing Cycle"><span className="capitalize">{row.billingCycle}</span></KeyValue>
+          <KeyValue label="Recurring Price">{money(row.recurringMinor, row.currency)} / {row.billingCycle === "annual" ? "year" : "month"}</KeyValue>
+          <KeyValue label="MRR Contribution">{row.mrrMinor > 0 ? money(row.mrrMinor, row.currency) : <span className="text-muted-foreground">{row.status === "trialing" ? "Trial - None" : "None"}</span>}</KeyValue>
         </dl>
       </Panel>
 
       <Panel title="Dates">
         <dl className="divide-y divide-border">
-          <KeyValue label="Subscription start">{formatDate(row.startedAt)}</KeyValue>
-          {row.trialEndsAt ? <KeyValue label="Trial end">{formatDate(row.trialEndsAt)}</KeyValue> : null}
+          <KeyValue label="Subscription Start">{formatDate(row.startedAt)}</KeyValue>
+          {row.trialEndsAt ? <KeyValue label="Trial End">{formatDate(row.trialEndsAt)}</KeyValue> : null}
           <KeyValue label="Renewal">{row.status === "cancelled" || row.status === "expired" ? "Ended" : formatDate(row.renewsAt)}</KeyValue>
-          <KeyValue label="Scheduled cancellation">{row.scheduledCancellationAt ? formatDate(row.scheduledCancellationAt) : <span className="text-muted-foreground">None</span>}</KeyValue>
-          {detail.extendedDays > 0 ? <KeyValue label="Trial extended">{detail.extendedDays} days</KeyValue> : null}
+          <KeyValue label="Scheduled Cancellation">{row.scheduledCancellationAt ? formatDate(row.scheduledCancellationAt) : <span className="text-muted-foreground">None</span>}</KeyValue>
+          {detail.extendedDays > 0 ? <KeyValue label="Trial Extended">{detail.extendedDays} days</KeyValue> : null}
         </dl>
       </Panel>
 
-      <Panel title="Billing health" action={<Button asChild variant="ghost" size="sm"><Link href={companySectionHref(company.id, "billing")}>Review Billing</Link></Button>}>
+      <Panel title="Billing Health" action={<Button asChild variant="ghost" size="sm"><Link href={companySectionHref(company.id, "billing")}>Review Billing</Link></Button>}>
         <dl className="divide-y divide-border">
-          <KeyValue label="Billing status"><BillingStatusBadge status={row.billingStatus} /></KeyValue>
-          <KeyValue label="Payment method">{detail.paymentMethodLabel ?? <span className="text-muted-foreground">None on file</span>}</KeyValue>
-          <KeyValue label="Open invoice">{detail.openInvoiceNumber ?? <span className="text-muted-foreground">None</span>}</KeyValue>
+          <KeyValue label="Billing Status"><BillingStatusBadge status={row.billingStatus} /></KeyValue>
+          <KeyValue label="Payment Method">{detail.paymentMethodLabel ?? <span className="text-muted-foreground">None on file</span>}</KeyValue>
+          <KeyValue label="Open Invoice">{detail.openInvoiceNumber ?? <span className="text-muted-foreground">None</span>}</KeyValue>
         </dl>
         <p className="mt-2 text-2xs text-muted-foreground">Invoices and payments are managed in Billing. This screen never claims a payment was collected.</p>
       </Panel>
 
-      <Panel title="Usage snapshot" action={<Button asChild variant="ghost" size="sm"><Link href={companySectionHref(company.id, "usage")}>Review Usage</Link></Button>}>
+      <Panel title="Usage Snapshot" action={<Button asChild variant="ghost" size="sm"><Link href={companySectionHref(company.id, "usage")}>Review Usage</Link></Button>}>
         <dl className="divide-y divide-border">
-          <KeyValue label="Over an effective limit"><span className={detail.usageSummary.exceeded > 0 ? "font-medium text-danger" : undefined}>{detail.usageSummary.exceeded}</span></KeyValue>
-          <KeyValue label="Near a limit">{detail.usageSummary.nearLimit}</KeyValue>
-          <KeyValue label="Highest utilisation">{highest ? `${highest.utilization}% (${USAGE_RESOURCE_BY_KEY[highest.resource].label})` : "-"}</KeyValue>
+          <KeyValue label="Over An Effective Limit"><span className={detail.usageSummary.exceeded > 0 ? "font-medium text-danger" : undefined}>{detail.usageSummary.exceeded}</span></KeyValue>
+          <KeyValue label="Near A Limit">{detail.usageSummary.nearLimit}</KeyValue>
+          <KeyValue label="Highest Utilisation">{highest ? `${highest.utilization}% (${USAGE_RESOURCE_BY_KEY[highest.resource].label})` : "-"}</KeyValue>
         </dl>
       </Panel>
 
       <Panel
-        title="Active overrides"
+        title="Active Overrides"
         action={actions.can(row).override ? <Button variant="ghost" size="sm" onClick={() => actions.openFlow({ kind: "override", row })}><ShieldPlusIcon />Apply</Button> : undefined}
       >
         {overridden.length === 0 ? (
@@ -111,7 +111,7 @@ function OverviewSection({ detail, actions }: { detail: SubscriptionDetail; acti
         )}
       </Panel>
 
-      <Panel title="Scheduled changes" className="lg:col-span-1">
+      <Panel title="Scheduled Changes" className="lg:col-span-1">
         {detail.scheduled.length === 0 ? (
           <p className="text-[0.8125rem] text-muted-foreground">Nothing is scheduled.</p>
         ) : (
@@ -126,7 +126,7 @@ function OverviewSection({ detail, actions }: { detail: SubscriptionDetail; acti
         )}
       </Panel>
 
-      <Panel title="Recent events" className="lg:col-span-2" action={<Button asChild variant="ghost" size="sm"><Link href={routes.subscription(row.id, "history")}>Changes &amp; History</Link></Button>}>
+      <Panel title="Recent Events" className="lg:col-span-2" action={<Button asChild variant="ghost" size="sm"><Link href={routes.subscription(row.id, "history")}>Changes &amp; History</Link></Button>}>
         {detail.history.length === 0 ? (
           <p className="text-[0.8125rem] text-muted-foreground">No events yet.</p>
         ) : (
@@ -156,7 +156,7 @@ function EntitlementsSection({ detail, actions }: { detail: SubscriptionDetail; 
   return (
     <div className="space-y-1">
       {!detail.version ? (
-        <AlertBanner tone="danger" title="No valid plan version">This subscription does not reference a published plan version, so its entitlements cannot be resolved.</AlertBanner>
+        <AlertBanner tone="danger" title="No Valid Plan Version">This subscription does not reference a published plan version, so its entitlements cannot be resolved.</AlertBanner>
       ) : (
         <AlertBanner tone="info" title={`Entitlements from ${row.planName} version ${row.planVersion}`}>
           The plan allowance is what the plan version defines. An override is a company-specific exception; the effective allowance is what the company can actually use, and never edits the plan.
@@ -177,9 +177,9 @@ function EntitlementsSection({ detail, actions }: { detail: SubscriptionDetail; 
         <EntitlementTable rows={detail.entitlements} canOverride={canOverride} onOverride={(resource) => actions.openFlow({ kind: "override", row, resource })} />
       </Panel>
 
-      <Panel title="Company overrides" description="Granted to this company only; the plan is unchanged" flush>
+      <Panel title="Company Overrides" description="Granted to this company only; the plan is unchanged" flush>
         <MiniTable
-          caption="Company entitlement overrides"
+          caption="Company Entitlement Overrides"
           rows={overrides}
           getKey={(item) => item.id}
           empty={<p className="px-3 pb-4 text-[0.8125rem] text-muted-foreground">No overrides have been granted to this company.</p>}
@@ -187,7 +187,7 @@ function EntitlementsSection({ detail, actions }: { detail: SubscriptionDetail; 
             { id: "resource", header: "Resource", cell: (item) => USAGE_RESOURCE_BY_KEY[item.resource].label },
             { id: "rule", header: "Rule", cell: (item) => (item.rule === "additive" ? `Adds ${item.delta}` : `Replaces with ${item.overrideLimit}`) },
             { id: "period", header: "Period", hideBelow: "sm", cell: (item) => <span className="text-2xs tabular">{formatDate(item.startsAt)} → {formatDate(item.expiresAt)}</span> },
-            { id: "by", header: "Approved by", hideBelow: "md", cell: (item) => item.approvedBy },
+            { id: "by", header: "Approved By", hideBelow: "md", cell: (item) => item.approvedBy },
             { id: "reason", header: "Reason", hideBelow: "lg", cell: (item) => <span className="line-clamp-1 text-2xs text-muted-foreground">{item.reason}</span> },
             {
               id: "state",
@@ -217,7 +217,7 @@ function EntitlementsSection({ detail, actions }: { detail: SubscriptionDetail; 
         onConfirm={() => {
           const id = revoking;
           setRevoking(null);
-          if (id) void mutations.revokeOverride(row.id, id, "Revoked early by Super Admin").then(() => toast.success("Override revoked")).catch((failure: unknown) => toast.error(describeError(failure).message));
+          if (id) void mutations.revokeOverride(row.id, id, "Revoked Early By Super Admin").then(() => toast.success("Override Revoked")).catch((failure: unknown) => toast.error(describeError(failure).message));
         }}
       />
     </div>
@@ -227,9 +227,9 @@ function EntitlementsSection({ detail, actions }: { detail: SubscriptionDetail; 
 function HistorySection({ detail }: { detail: SubscriptionDetail }) {
   return (
     <div className="space-y-1">
-      <Panel title="Changes & history" description="Subscription lifecycle, plan, trial and override events" flush>
+      <Panel title="Changes & History" description="Subscription lifecycle, plan, trial and override events" flush>
         <MiniTable
-          caption="Subscription events"
+          caption="Subscription Events"
           rows={detail.history}
           getKey={(event) => event.id}
           empty={<p className="px-3 pb-4 text-[0.8125rem] text-muted-foreground">No events yet.</p>}
@@ -262,7 +262,7 @@ export function SubscriptionDetailPage() {
   const actions = useSubscriptionActions();
   const detail = query.data;
 
-  if (query.error && !detail) return <PlansError subject="Subscription" error={query.error} onRetry={() => void query.refetch()} back={{ href: routes.subscriptions, label: "Back to Subscriptions" }} />;
+  if (query.error && !detail) return <PlansError subject="Subscription" error={query.error} onRetry={() => void query.refetch()} back={{ href: routes.subscriptions, label: "Back To Subscriptions" }} />;
   if (!detail) {
     return (
       <div className="space-y-2">
@@ -293,7 +293,7 @@ export function SubscriptionDetailPage() {
               <span className="font-mono">{row.id}</span>
               <span>{row.planName} v{row.planVersion}</span>
               <span>Started {formatDate(row.startedAt)}</span>
-              <span className="inline-flex items-center gap-1">{row.status === "trialing" ? "Trial ends" : row.status === "cancelled" || row.status === "expired" ? "" : "Renews"} <PeriodCell row={row} /></span>
+              <span className="inline-flex items-center gap-1">{row.status === "trialing" ? "Trial Ends" : row.status === "cancelled" || row.status === "expired" ? "" : "Renews"} <PeriodCell row={row} /></span>
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-1.5">
@@ -301,12 +301,12 @@ export function SubscriptionDetailPage() {
             {menu.length > 0 ? (
               <ActionMenu items={menu} label={`Manage subscription for ${company.name}`} />
             ) : (
-              <Button variant="outline" size="icon-sm" disabled aria-label="No actions available"><MoreHorizontalIcon /></Button>
+              <Button variant="outline" size="icon-sm" disabled aria-label="No Actions Available"><MoreHorizontalIcon /></Button>
             )}
           </div>
         </div>
         {row.status === "scheduled_cancellation" ? (
-          <AlertBanner tone="warning" title="Cancellation is scheduled" action={allowed.undo ? <Button size="sm" variant="outline" onClick={() => actions.openFlow({ kind: "undo", row })}>Undo Cancellation</Button> : undefined}>
+          <AlertBanner tone="warning" title="Cancellation Is Scheduled" action={allowed.undo ? <Button size="sm" variant="outline" onClick={() => actions.openFlow({ kind: "undo", row })}>Undo Cancellation</Button> : undefined}>
             The subscription ends on {row.scheduledCancellationAt ? formatDate(row.scheduledCancellationAt) : "the end of the term"}. The company account is not affected.
           </AlertBanner>
         ) : null}
@@ -315,20 +315,20 @@ export function SubscriptionDetailPage() {
             Entitlement overrides no longer apply. The company account and its data are unchanged.
           </AlertBanner>
         ) : null}
-        {row.status === "past_due" ? <AlertBanner tone="danger" title="Payment is past due">The renewal payment has not been collected. Review Billing for the invoice.</AlertBanner> : null}
-        {row.planMissing ? <AlertBanner tone="danger" title="Missing plan reference">This subscription references a plan that does not exist. Change its plan to fix it.</AlertBanner> : null}
+        {row.status === "past_due" ? <AlertBanner tone="danger" title="Payment Is Past Due">The renewal payment has not been collected. Review Billing for the invoice.</AlertBanner> : null}
+        {row.planMissing ? <AlertBanner tone="danger" title="Missing Plan Reference">This subscription references a plan that does not exist. Change its plan to fix it.</AlertBanner> : null}
       </header>
 
       <StatGrid className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-6">
         <StatCard compact label="Plan" value={<span className="text-[0.8125rem]">{row.planName}</span>} hint={`Version ${row.planVersion}`} />
         <StatCard compact label="Recurring" value={<span className="text-base">{money(row.recurringMinor, row.currency, true)}</span>} hint={`per ${row.billingCycle === "annual" ? "year" : "month"}`} />
         <StatCard compact label="MRR" value={<span className="text-base">{row.mrrMinor > 0 ? money(row.mrrMinor, row.currency, true) : "-"}</span>} hint={row.status === "trialing" ? "Trial" : "Normalized"} />
-        <StatCard compact label="Billing health" value={<span className="text-[0.8125rem]">{row.billingStatus.replace(/_/g, " ")}</span>} href={companySectionHref(company.id, "billing")} />
-        <StatCard compact label="Usage warnings" value={detail.usageSummary.exceeded + detail.usageSummary.nearLimit} hint={detail.usageSummary.exceeded > 0 ? `${detail.usageSummary.exceeded} over limit` : "None over"} tone={detail.usageSummary.exceeded > 0 ? "danger" : "neutral"} href={routes.subscription(row.id, "entitlements")} />
-        <StatCard compact label="Pending changes" value={detail.scheduled.length} hint="Scheduled" href={routes.subscription(row.id, "history")} />
+        <StatCard compact label="Billing Health" value={<span className="text-[0.8125rem]">{row.billingStatus.replace(/_/g, " ")}</span>} href={companySectionHref(company.id, "billing")} />
+        <StatCard compact label="Usage Warnings" value={detail.usageSummary.exceeded + detail.usageSummary.nearLimit} hint={detail.usageSummary.exceeded > 0 ? `${detail.usageSummary.exceeded} over limit` : "None Over"} tone={detail.usageSummary.exceeded > 0 ? "danger" : "neutral"} href={routes.subscription(row.id, "entitlements")} />
+        <StatCard compact label="Pending Changes" value={detail.scheduled.length} hint="Scheduled" href={routes.subscription(row.id, "history")} />
       </StatGrid>
 
-      <nav aria-label="Subscription sections" className="overflow-x-auto border-b border-border scrollbar-thin">
+      <nav aria-label="Subscription Sections" className="overflow-x-auto border-b border-border scrollbar-thin">
         <ul className="flex min-w-max gap-0.5">
           {SUBSCRIPTION_SECTIONS.map((item) => (
             <li key={item.key}>

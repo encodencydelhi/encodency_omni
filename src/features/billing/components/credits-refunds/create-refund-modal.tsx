@@ -58,7 +58,7 @@ export function CreateRefundModal({
     handleSubmitInFlight = true;
     try {
       if (!selectedPayment) {
-        toast.error("Please select an eligible payment");
+        toast.error("Please Select An Eligible Payment");
         return;
       }
       const amountMinor = parseAmountToMinor(amountMajor);
@@ -93,7 +93,7 @@ export function CreateRefundModal({
       onClose();
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      toast.error(err.message || "Failed to submit refund request");
+      toast.error(err.message || "Failed To Submit Refund Request");
     }
     finally {
       handleSubmitInFlight = false;
@@ -120,7 +120,7 @@ export function CreateRefundModal({
             <Label className="text-xs font-medium text-foreground">Original Payment Transaction</Label>
             <Select value={selectedPaymentId} onValueChange={setSelectedPaymentId}>
               <SelectTrigger className="h-8 text-xs rounded-sm bg-background border-border">
-                <SelectValue placeholder="Select payment" />
+                <SelectValue placeholder="Select Payment" />
               </SelectTrigger>
               <SelectContent className="rounded-sm">
                 {eligiblePayments.map((p) => (

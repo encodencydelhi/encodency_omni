@@ -138,35 +138,35 @@ export function PaymentDetailPage({ paymentId: propPaymentId }: PaymentDetailPag
         <BillingKpiCard
           label="GROSS"
           value={formatMoney(payment.grossAmountMinor, payment.currency)}
-          hint="Gross payment"
+          hint="Gross Payment"
           badge="Gross"
           badgeTone="neutral"
         />
         <BillingKpiCard
           label="FEE"
           value={formatMoney(payment.feeMinor, payment.currency)}
-          hint="Gateway fee"
+          hint="Gateway Fee"
           badge="Fee"
           badgeTone="neutral"
         />
         <BillingKpiCard
           label="NET CASH"
           value={formatMoney(payment.netAmountMinor, payment.currency)}
-          hint="Treasury net"
+          hint="Treasury Net"
           badge="Net"
           badgeTone="success"
         />
         <BillingKpiCard
           label="ALLOCATED"
           value={formatMoney(payment.allocatedAmountMinor, payment.currency)}
-          hint="To invoices"
+          hint="To Invoices"
           badge="Applied"
           badgeTone="info"
         />
         <BillingKpiCard
           label="UNLINKED"
           value={formatMoney(payment.unallocatedBalanceMinor, payment.currency)}
-          hint="Available cash"
+          hint="Available Cash"
           badge={payment.unallocatedBalanceMinor > 0 ? "Open" : "Zero"}
           badgeTone={payment.unallocatedBalanceMinor > 0 ? "warning" : "success"}
         />

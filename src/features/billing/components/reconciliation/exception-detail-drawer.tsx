@@ -68,12 +68,12 @@ export function ExceptionDetailDrawer({
         newNote: newNote.trim() || undefined,
       });
 
-      toast.success("Investigation notes and status updated successfully");
+      toast.success("Investigation Notes And Status Updated Successfully");
       setNewNote("");
       onClose();
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      toast.error(err.message || "Failed to update exception");
+      toast.error(err.message || "Failed To Update Exception");
     }
     finally {
       handleSaveInvestigationInFlight = false;

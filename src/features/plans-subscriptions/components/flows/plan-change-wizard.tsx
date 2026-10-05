@@ -25,7 +25,7 @@ import { money, signedMoney } from "../../lib/money";
 import { PlanStatusBadge } from "../badges";
 import { MiniTable } from "../mini-table";
 
-const STEPS = ["Select plan", "Compare", "Usage impact", "Effective date", "Review"];
+const STEPS = ["Select Plan", "Compare", "Usage Impact", "Effective Date", "Review"];
 
 type Effective = "immediately" | "next_renewal" | "custom_date";
 
@@ -98,7 +98,7 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
     <FlowDialog
       open
       onOpenChange={(open) => !open && !pending && onClose()}
-      title="Change plan"
+      title="Change Plan"
       description={`${row.company.name} is on ${row.planName} (version ${row.planVersion}, ${row.billingCycle}).`}
       size="xl"
       footer={
@@ -130,7 +130,7 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
         <div className="space-y-2">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <p className="text-[0.8125rem] text-muted-foreground">Choose the plan {row.company.name} should move to. Plans that are not available for this move are shown, but cannot be chosen.</p>
-            <Field label="Billing cycle" htmlFor="change-cycle" className="w-40">
+            <Field label="Billing Cycle" htmlFor="change-cycle" className="w-40">
               <Select value={cycle} onValueChange={(value) => setCycle(value as BillingCycle)}>
                 <SelectTrigger id="change-cycle" size="sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -141,7 +141,7 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
             </Field>
           </div>
           {choices.error ? <ErrorBanner message={describeError(choices.error).message} /> : null}
-          <RadioGroup value={planKey ?? ""} onValueChange={(value) => { setPlanKey(value as PlanKey); setAcknowledged(false); }} className="grid grid-cols-1 gap-1 sm:grid-cols-2" aria-label="New plan">
+          <RadioGroup value={planKey ?? ""} onValueChange={(value) => { setPlanKey(value as PlanKey); setAcknowledged(false); }} className="grid grid-cols-1 gap-1 sm:grid-cols-2" aria-label="New Plan">
             {(choices.data ?? []).map((choice) => {
               const version = choice.summary.current;
               const price = version ? (cycle === "annual" ? version.price.annualMinor : version.price.monthlyMinor) : 0;
@@ -159,7 +159,7 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
                       {choice.isCurrent ? <span className="rounded-sm border border-border-strong bg-neutral-subtle px-1 text-[10px] font-medium text-neutral">Current</span> : null}
                       {choice.summary.plan.status !== "published" ? <PlanStatusBadge status={choice.summary.plan.status} /> : null}
                     </span>
-                    <span className="block text-2xs text-muted-foreground">{version ? `${money(price, version.price.currency)} / ${cycle === "annual" ? "year" : "month"} · version ${version.version}` : "No published version"}</span>
+                    <span className="block text-2xs text-muted-foreground">{version ? `${money(price, version.price.currency)} / ${cycle === "annual" ? "year" : "month"} · version ${version.version}` : "No Published Version"}</span>
                     {blockedReason ? <span className="block text-2xs text-warning">{blockedReason}</span> : null}
                     {sameAsNow ? <span className="block text-2xs text-muted-foreground">Same plan and cycle</span> : null}
                   </Label>
@@ -188,13 +188,13 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
                 <p className="text-2xs text-muted-foreground">{money(data.next.recurringMinor, data.next.currency)} / {data.next.cycle === "annual" ? "year" : "month"} ({data.currencyMismatch ? "different currency" : signedMoney(monthlyDelta, data.next.currency) + " per month equivalent"})</p>
               </div>
             </div>
-            {data.currencyMismatch ? <AlertBanner tone="warning" title="The currency differs">The new plan is priced in {data.next.currency}, the current one in {data.current.currency}. No conversion is applied or invented.</AlertBanner> : null}
+            {data.currencyMismatch ? <AlertBanner tone="warning" title="The Currency Differs">The new plan is priced in {data.next.currency}, the current one in {data.current.currency}. No conversion is applied or invented.</AlertBanner> : null}
             <div className="flex items-center gap-2">
               <Checkbox id="show-all-rows" checked={showAll} onCheckedChange={(value) => setShowAll(value === true)} />
               <Label htmlFor="show-all-rows" className="text-2xs font-normal text-muted-foreground">Show unchanged entitlements too</Label>
             </div>
             <MiniTable
-              caption="Plan comparison"
+              caption="Plan Comparison"
               rows={changedRows}
               getKey={(item) => `${item.kind}-${item.key}`}
               empty={<p className="text-[0.8125rem] text-muted-foreground">These plan versions have identical entitlements.</p>}
@@ -212,13 +212,13 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
         <div className="space-y-2">
           <p className="text-[0.8125rem] text-muted-foreground">Real usage today against the new plan&apos;s limits. Nothing is deleted, removed or disconnected as a result of a plan change.</p>
           <MiniTable
-            caption="Usage against the new plan"
+            caption="Usage Against The New Plan"
             rows={data.rows.filter((item) => item.kind === "resource" && item.used !== null)}
             getKey={(item) => item.key}
             columns={[
               { id: "name", header: "Resource", cell: (item) => item.name },
-              { id: "used", header: "In use", align: "right", cell: (item) => <span className="tabular">{item.used}</span> },
-              { id: "next", header: "New limit", align: "right", cell: (item) => <span className="tabular">{item.next}</span> },
+              { id: "used", header: "In Use", align: "right", cell: (item) => <span className="tabular">{item.used}</span> },
+              { id: "next", header: "New Limit", align: "right", cell: (item) => <span className="tabular">{item.next}</span> },
               { id: "status", header: "Status", cell: (item) => (item.over ? <span className="font-medium text-danger">Over new limit</span> : <span className="text-success">Within limit</span>) },
             ]}
           />
@@ -232,7 +232,7 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
               {fieldErrors.overLimit ? <span role="alert" className="mt-1 block text-danger">{fieldErrors.overLimit}</span> : null}
             </AlertBanner>
           ) : (
-            <AlertBanner tone="success" title="Current usage fits the new plan">No resource exceeds the new allowance.</AlertBanner>
+            <AlertBanner tone="success" title="Current Usage Fits The New Plan">No resource exceeds the new allowance.</AlertBanner>
           )}
           {policy.data ? <p className="text-2xs text-muted-foreground">Over-limit policy: users - {policy.data.overLimit.users.replace(/_/g, " ")}, clients - {policy.data.overLimit.clients.replace(/_/g, " ")}, connections - {policy.data.overLimit.connectedAccounts.replace(/_/g, " ")}.</p> : null}
         </div>
@@ -240,12 +240,12 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
 
       {step === 3 ? (
         <div className="space-y-2">
-          <RadioGroup value={effective} onValueChange={(value) => setEffective(value as Effective)} className="gap-1.5" aria-label="Effective date">
+          <RadioGroup value={effective} onValueChange={(value) => setEffective(value as Effective)} className="gap-1.5" aria-label="Effective Date">
             {(
               [
                 ["immediately", "Immediately", "The plan changes now. Prices and limits follow at once."],
-                ["next_renewal", "At next renewal", `Scheduled for ${formatDate(row.status === "trialing" && row.trialEndsAt ? row.trialEndsAt : row.renewsAt)}. Nothing changes until then.`],
-                ["custom_date", "On a custom date", "Choose a future date. A scheduled change is created; nothing changes until then."],
+                ["next_renewal", "At Next Renewal", `Scheduled for ${formatDate(row.status === "trialing" && row.trialEndsAt ? row.trialEndsAt : row.renewsAt)}. Nothing changes until then.`],
+                ["custom_date", "On A Custom Date", "Choose a future date. A scheduled change is created; nothing changes until then."],
               ] as const
             ).map(([value, label, hint]) => (
               <div key={value} className="flex items-start gap-2.5 rounded-sm border border-border px-3 py-2">
@@ -258,7 +258,7 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
             ))}
           </RadioGroup>
           {effective === "custom_date" ? (
-            <Field label="Effective date" htmlFor="change-date" error={dateInvalid ? "Choose a date after today." : fieldErrors.effectiveAt}>
+            <Field label="Effective Date" htmlFor="change-date" error={dateInvalid ? "Choose a date after today." : fieldErrors.effectiveAt}>
               <Input id="change-date" type="date" min={tomorrow} value={customDate} onChange={(event) => setCustomDate(event.target.value)} className="w-48" aria-invalid={dateInvalid} />
             </Field>
           ) : null}
@@ -270,18 +270,18 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
           <dl className="divide-y divide-border rounded-sm border border-border px-3 text-[0.8125rem]">
             {[
               ["Company", row.company.name],
-              ["Current plan", `${data.current.planName} · v${data.current.version} · ${data.current.cycle}`],
-              ["New plan", `${data.next.planName} · v${data.next.version} · ${data.next.cycle}`],
-              ["Current price", `${money(data.current.recurringMinor, data.current.currency)} / ${data.current.cycle === "annual" ? "year" : "month"}`],
-              ["New price", `${money(data.next.recurringMinor, data.next.currency)} / ${data.next.cycle === "annual" ? "year" : "month"}`],
+              ["Current Plan", `${data.current.planName} · v${data.current.version} · ${data.current.cycle}`],
+              ["New Plan", `${data.next.planName} · v${data.next.version} · ${data.next.cycle}`],
+              ["Current Price", `${money(data.current.recurringMinor, data.current.currency)} / ${data.current.cycle === "annual" ? "year" : "month"}`],
+              ["New Price", `${money(data.next.recurringMinor, data.next.currency)} / ${data.next.cycle === "annual" ? "year" : "month"}`],
               ["Effective", effective === "immediately" ? "Immediately" : effective === "next_renewal" ? `At next renewal (${formatDate(row.renewsAt)})` : formatDate(customDate)],
-              ["Entitlement changes", `${data.rows.filter((item) => item.changed).length} changed`],
-              ["Usage conflicts", overLimit.length === 0 ? "None" : overLimit.map((item) => `${item.name} (${item.used} > ${item.nextLimit})`).join(", ")],
+              ["Entitlement Changes", `${data.rows.filter((item) => item.changed).length} changed`],
+              ["Usage Conflicts", overLimit.length === 0 ? "None" : overLimit.map((item) => `${item.name} (${item.used} > ${item.nextLimit})`).join(", ")],
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between gap-3 py-1.5"><dt className="text-muted-foreground">{label}</dt><dd className="max-w-md text-right text-foreground">{value}</dd></div>
             ))}
           </dl>
-          <AlertBanner tone="info" title={isMockMode ? "Demo workspace" : "What happens"}>
+          <AlertBanner tone="info" title={isMockMode ? "Demo Workspace" : "What Happens"}>
             {!isMockMode
               ? "The plan changes immediately and the company's limits change with it. Nothing is charged or credited here; billing is handled separately."
               : effective === "immediately"

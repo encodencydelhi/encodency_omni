@@ -117,7 +117,7 @@ export class LiveBillingStore {
       } catch (error) {
         const wasError = this.status === "error";
         this.status = "error";
-        if (!wasError) toast.error(messageOf(error, "Billing data couldn't be loaded"));
+        if (!wasError) toast.error(messageOf(error, "Billing Data Couldn't Be Loaded"));
       } finally {
         this.inFlight = null;
         this.notify();
@@ -169,7 +169,7 @@ export class LiveBillingStore {
     } catch (error) {
       // A refusal can mean what is on screen is out of date (someone else just acted): read again so it is not left stale.
       void this.refresh();
-      throw new Error(messageOf(error, "The change could not be made"));
+      throw new Error(messageOf(error, "The Change Could Not Be Made"));
     }
     await this.refresh();
     return result;

@@ -30,7 +30,7 @@ const KEYS = ["q", "status", "visibility", "retired", "view"] as const;
 
 const VISIBILITY_OPTIONS = [
   { value: "public", label: "Public" },
-  { value: "invite_only", label: "Invite only" },
+  { value: "invite_only", label: "Invite Only" },
 ];
 
 function comparisonColumns(plans: PlanSummary[]): ComparisonColumn[] {
@@ -44,7 +44,7 @@ function comparisonColumns(plans: PlanSummary[]): ComparisonColumn[] {
         subtitle: (
           <span className="flex flex-wrap items-center gap-1">
             <PlanStatusBadge status={item.plan.status} />
-            <span>{item.current ? `v${item.current.version}` : "Draft only"}</span>
+            <span>{item.current ? `v${item.current.version}` : "Draft Only"}</span>
           </span>
         ),
         version,
@@ -94,19 +94,19 @@ export function PlansCataloguePage() {
 
       {portfolio ? (
         <StatGrid className="grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
-          <StatCard compact label="Published Plans" value={portfolio.published} hint="Open for business" tone="success" href="?status=published" />
-          <StatCard compact label="Draft Plans" value={portfolio.draft} hint="Not yet published" href="?status=draft" />
-          <StatCard compact label="Hidden Plans" value={portfolio.hidden} hint="Hidden from new purchase" tone="warning" href="?status=hidden" />
-          <StatCard compact label="Retired Plans" value={portfolio.retired} hint="Closed to new business" href="?status=retired" />
-          <StatCard compact label="Active Subscribers" value={formatNumber(portfolio.activeSubscribers)} hint="Companies on any plan" href={routes.subscriptionsFor({ status: "current" })} />
-          <StatCard compact label="Requiring Review" value={portfolio.requiringReview} hint="Drafts or invalid setup" tone={portfolio.requiringReview > 0 ? "warning" : "neutral"} />
+          <StatCard compact label="Published Plans" value={portfolio.published} hint="Open For Business" tone="success" href="?status=published" />
+          <StatCard compact label="Draft Plans" value={portfolio.draft} hint="Not Yet Published" href="?status=draft" />
+          <StatCard compact label="Hidden Plans" value={portfolio.hidden} hint="Hidden From New Purchase" tone="warning" href="?status=hidden" />
+          <StatCard compact label="Retired Plans" value={portfolio.retired} hint="Closed To New Business" href="?status=retired" />
+          <StatCard compact label="Active Subscribers" value={formatNumber(portfolio.activeSubscribers)} hint="Companies On Any Plan" href={routes.subscriptionsFor({ status: "current" })} />
+          <StatCard compact label="Requiring Review" value={portfolio.requiringReview} hint="Drafts Or Invalid Setup" tone={portfolio.requiringReview > 0 ? "warning" : "neutral"} />
         </StatGrid>
       ) : plans.error ? null : (
         <StatGridSkeleton count={6} className="grid-cols-2 sm:grid-cols-3 xl:grid-cols-6" />
       )}
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search plan name, code or segment..." aria-label="Search plans" className="w-full sm:w-72" />
+        <SearchInput value={search} onChange={setSearch} placeholder="Search plan name, code or segment..." aria-label="Search Plans" className="w-full sm:w-72" />
         <FilterSelect label="Status" value={url.values.status || undefined} options={toStatusOptions(PLAN_STATUS)} onChange={(value) => url.set({ status: value })} />
         <FilterSelect label="Visibility" value={url.values.visibility || undefined} options={VISIBILITY_OPTIONS} onChange={(value) => url.set({ visibility: value })} />
         <div className="flex items-center gap-1.5 pl-1">
@@ -133,16 +133,16 @@ export function PlansCataloguePage() {
           {portfolio && portfolio.published + portfolio.draft + portfolio.hidden + portfolio.retired === 0 ? (
             <EmptyState
               icon={LayersIcon}
-              title="No plans yet"
+              title="No Plans Yet"
               description="Create the first plan to start offering subscriptions."
               action={actions.capabilities.canCreatePlan ? <Button onClick={() => router.push(routes.createPlan)}><PlusIcon />Create Plan</Button> : undefined}
             />
           ) : url.values.status === "published" ? (
-            <EmptyState icon={LayersIcon} title="No published plans" description="Publish a draft to make it available." action={<Button variant="outline" onClick={() => url.set({ status: null })}>Clear Filters</Button>} />
+            <EmptyState icon={LayersIcon} title="No Published Plans" description="Publish a draft to make it available." action={<Button variant="outline" onClick={() => url.set({ status: null })}>Clear Filters</Button>} />
           ) : url.values.status === "draft" ? (
-            <EmptyState icon={LayersIcon} title="No draft plans" description="Every plan has been published." action={<Button variant="outline" onClick={() => url.set({ status: null })}>Clear Filters</Button>} />
+            <EmptyState icon={LayersIcon} title="No Draft Plans" description="Every plan has been published." action={<Button variant="outline" onClick={() => url.set({ status: null })}>Clear Filters</Button>} />
           ) : (
-            <EmptyState icon={SearchXIcon} title="No plans match these filters" description="Try a broader search, or clear the filters." action={<Button variant="outline" onClick={() => { url.set({ q: null, status: null, visibility: null, retired: null }); setSearch(""); }}>Clear Filters</Button>} />
+            <EmptyState icon={SearchXIcon} title="No Plans Match These Filters" description="Try a broader search, or clear the filters." action={<Button variant="outline" onClick={() => { url.set({ q: null, status: null, visibility: null, retired: null }); setSearch(""); }}>Clear Filters</Button>} />
           )}
         </div>
       ) : (

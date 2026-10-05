@@ -57,11 +57,11 @@ function MoneyInput({ id, value, onChange, invalid, currency }: { id: string; va
 export function BasicsSection({ value, onChange, errors, codeLocked, idPrefix = "plan" }: SectionProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <Field label="Plan name" htmlFor={`${idPrefix}-name`} required error={errors.name} hint="Shown to companies and in reports.">
+      <Field label="Plan Name" htmlFor={`${idPrefix}-name`} required error={errors.name} hint="Shown to companies and in reports.">
         <Input id={`${idPrefix}-name`} value={value.name} onChange={(event) => onChange({ name: event.target.value })} aria-invalid={Boolean(errors.name)} autoFocus />
       </Field>
       <Field
-        label="Internal code"
+        label="Internal Code"
         htmlFor={`${idPrefix}-code`}
         required
         error={errors.internalCode}
@@ -79,7 +79,7 @@ export function BasicsSection({ value, onChange, errors, codeLocked, idPrefix = 
       <Field label="Description" htmlFor={`${idPrefix}-description`} className="sm:col-span-2">
         <Textarea id={`${idPrefix}-description`} rows={2} maxLength={200} value={value.description} onChange={(event) => onChange({ description: event.target.value })} placeholder="One sentence on who the plan is for" />
       </Field>
-      <Field label="Target segment" htmlFor={`${idPrefix}-segment`}>
+      <Field label="Target Segment" htmlFor={`${idPrefix}-segment`}>
         <Select value={value.targetSegment} onValueChange={(targetSegment) => onChange({ targetSegment })}>
           <SelectTrigger id={`${idPrefix}-segment`}><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -95,13 +95,13 @@ export function BasicsSection({ value, onChange, errors, codeLocked, idPrefix = 
           {(["public", "invite_only"] as const).map((option) => (
             <div key={option} className="flex items-center gap-1.5">
               <RadioGroupItem value={option} id={`${idPrefix}-vis-${option}`} />
-              <Label htmlFor={`${idPrefix}-vis-${option}`} className="font-normal">{option === "public" ? "Public" : "Invite only"}</Label>
+              <Label htmlFor={`${idPrefix}-vis-${option}`} className="font-normal">{option === "public" ? "Public" : "Invite Only"}</Label>
             </div>
           ))}
         </RadioGroup>
         <p className="text-2xs text-muted-foreground">An invite-only plan can still be published; it is offered by the sales team.</p>
       </div>
-      <Field label="Internal notes" htmlFor={`${idPrefix}-notes`} className="sm:col-span-2" hint="Visible to platform staff only.">
+      <Field label="Internal Notes" htmlFor={`${idPrefix}-notes`} className="sm:col-span-2" hint="Visible to platform staff only.">
         <Textarea id={`${idPrefix}-notes`} rows={2} maxLength={400} value={value.internalNotes} onChange={(event) => onChange({ internalNotes: event.target.value })} />
       </Field>
     </div>
@@ -131,36 +131,36 @@ export function PricingSection({ value, onChange, errors, idPrefix = "plan" }: S
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Monthly recurring price" htmlFor={`${idPrefix}-monthly`} required error={errors.monthlyMinor}>
+        <Field label="Monthly Recurring Price" htmlFor={`${idPrefix}-monthly`} required error={errors.monthlyMinor}>
           <MoneyInput id={`${idPrefix}-monthly`} value={price.monthlyMinor} onChange={(monthlyMinor) => set({ monthlyMinor })} invalid={Boolean(errors.monthlyMinor)} currency={price.currency} />
         </Field>
-        <Field label="Annual recurring price" htmlFor={`${idPrefix}-annual`} required error={errors.annualMinor}>
+        <Field label="Annual Recurring Price" htmlFor={`${idPrefix}-annual`} required error={errors.annualMinor}>
           <MoneyInput id={`${idPrefix}-annual`} value={price.annualMinor} onChange={(annualMinor) => set({ annualMinor })} invalid={Boolean(errors.annualMinor)} currency={price.currency} />
         </Field>
         <Field label="Trial duration (days)" htmlFor={`${idPrefix}-trial`} error={errors.trialDays} hint="0 means no trial.">
           <Input id={`${idPrefix}-trial`} inputMode="numeric" value={String(price.trialDays)} onChange={(event) => set({ trialDays: Number(event.target.value.replace(/\D/g, "")) || 0 })} aria-invalid={Boolean(errors.trialDays)} className="tabular" />
         </Field>
-        <Field label="One-time setup fee" htmlFor={`${idPrefix}-setup`} error={errors.setupFeeMinor} hint="Optional. Never counted in MRR.">
+        <Field label="One-time Setup Fee" htmlFor={`${idPrefix}-setup`} error={errors.setupFeeMinor} hint="Optional. Never counted in MRR.">
           <MoneyInput id={`${idPrefix}-setup`} value={price.setupFeeMinor} onChange={(setupFeeMinor) => set({ setupFeeMinor })} invalid={Boolean(errors.setupFeeMinor)} currency={price.currency} />
         </Field>
       </div>
-      <Field label="Commercial notes" htmlFor={`${idPrefix}-pricenotes`} hint="Internal. Explains how this price was decided.">
+      <Field label="Commercial Notes" htmlFor={`${idPrefix}-pricenotes`} hint="Internal. Explains how this price was decided.">
         <Textarea id={`${idPrefix}-pricenotes`} rows={2} maxLength={300} value={price.notes} onChange={(event) => set({ notes: event.target.value })} />
       </Field>
       <div className="grid gap-1 sm:grid-cols-3">
         <div className="rounded-sm border border-border bg-surface-sunken px-3 py-2">
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Monthly equivalent (annual)</p>
-          <p className="text-[0.8125rem] font-medium tabular text-foreground">{comparable ? money(Math.round(price.annualMinor / 12), price.currency) : "Enter both prices"}</p>
+          <p className="text-[0.8125rem] font-medium tabular text-foreground">{comparable ? money(Math.round(price.annualMinor / 12), price.currency) : "Enter Both Prices"}</p>
         </div>
         <div className="rounded-sm border border-border bg-surface-sunken px-3 py-2">
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Annual savings</p>
           <p className="text-[0.8125rem] font-medium tabular text-foreground">
-            {savings ? (savings.amountMinor >= 0 ? `${money(savings.amountMinor, price.currency)} (${savings.percent}%)` : "Annual costs more than 12 months") : "Enter both prices"}
+            {savings ? (savings.amountMinor >= 0 ? `${money(savings.amountMinor, price.currency)} (${savings.percent}%)` : "Annual Costs More Than 12 Months") : "Enter Both Prices"}
           </p>
         </div>
         <div className="rounded-sm border border-border bg-surface-sunken px-3 py-2">
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Trial</p>
-          <p className="text-[0.8125rem] font-medium text-foreground">{price.trialDays > 0 ? `${price.trialDays} days, not counted as paid` : "No trial"}</p>
+          <p className="text-[0.8125rem] font-medium text-foreground">{price.trialDays > 0 ? `${price.trialDays} days, not counted as paid` : "No Trial"}</p>
         </div>
       </div>
       <p className="text-2xs text-muted-foreground">Prices are entered in major units and stored in minor units. Payment processing and tax are not modelled here.</p>
@@ -314,9 +314,9 @@ export function AvailabilitySection({ value, onChange, errors, idPrefix = "plan"
   const availability = value.availability;
   const set = (patch: Partial<typeof availability>) => onChange({ availability: { ...availability, ...patch } });
   const rows: Array<[keyof Pick<typeof availability, "newPurchase" | "upgrade" | "downgrade">, string, string]> = [
-    ["newPurchase", "Available for new purchase", "Companies can subscribe to this plan when they sign up."],
-    ["upgrade", "Available for upgrade", "Existing companies can move up to this plan."],
-    ["downgrade", "Available for downgrade", "Existing companies can move down to this plan."],
+    ["newPurchase", "Available For New Purchase", "Companies can subscribe to this plan when they sign up."],
+    ["upgrade", "Available For Upgrade", "Existing companies can move up to this plan."],
+    ["downgrade", "Available For Downgrade", "Existing companies can move down to this plan."],
   ];
 
   return (
@@ -341,7 +341,7 @@ export function AvailabilitySection({ value, onChange, errors, idPrefix = "plan"
               <div key={option} className="flex items-center gap-2 rounded-sm border border-border px-3 py-2">
                 <RadioGroupItem value={option} id={`${idPrefix}-avail-vis-${option}`} />
                 <Label htmlFor={`${idPrefix}-avail-vis-${option}`} className="flex-1 font-normal">
-                  <span className="block text-[0.8125rem] font-medium text-foreground">{option === "public" ? "Public" : "Invite only"}</span>
+                  <span className="block text-[0.8125rem] font-medium text-foreground">{option === "public" ? "Public" : "Invite Only"}</span>
                   <span className="block text-2xs text-muted-foreground">{option === "public" ? "Listed wherever plans are offered." : "Offered only by the sales team."}</span>
                 </Label>
               </div>
@@ -382,16 +382,16 @@ export function ReviewSummary({ value }: { value: PlanDraftInput }) {
       <Panel title="Identity">
         <dl className="divide-y divide-border">
           <KeyValue label="Name">{value.name || <span className="text-danger">Missing</span>}</KeyValue>
-          <KeyValue label="Internal code"><span className="font-mono text-2xs">{value.internalCode || "Missing"}</span></KeyValue>
+          <KeyValue label="Internal Code"><span className="font-mono text-2xs">{value.internalCode || "Missing"}</span></KeyValue>
           <KeyValue label="Segment">{value.targetSegment}</KeyValue>
-          <KeyValue label="Visibility">{value.availability.visibility === "public" ? "Public" : "Invite only"}</KeyValue>
+          <KeyValue label="Visibility">{value.availability.visibility === "public" ? "Public" : "Invite Only"}</KeyValue>
         </dl>
       </Panel>
       <Panel title="Pricing">
         <dl className="divide-y divide-border">
           <KeyValue label="Monthly">{money(value.price.monthlyMinor, value.price.currency)}</KeyValue>
           <KeyValue label="Annual">{money(value.price.annualMinor, value.price.currency)}</KeyValue>
-          <KeyValue label="Setup fee">{value.price.setupFeeMinor > 0 ? money(value.price.setupFeeMinor, value.price.currency) : "None"}</KeyValue>
+          <KeyValue label="Setup Fee">{value.price.setupFeeMinor > 0 ? money(value.price.setupFeeMinor, value.price.currency) : "None"}</KeyValue>
           <KeyValue label="Trial">{value.price.trialDays > 0 ? `${value.price.trialDays} days` : "None"}</KeyValue>
         </dl>
       </Panel>
@@ -412,7 +412,7 @@ export function ReviewSummary({ value }: { value: PlanDraftInput }) {
             const rule = value.limits[def.key] ?? { kind: "none" as const, value: null };
             return (
               <KeyValue key={def.key} label={def.name}>
-                {rule.kind === "none" ? "Not available" : rule.kind === "unlimited" ? "Unlimited" : `${new Intl.NumberFormat("en-IN").format(rule.value ?? 0)} ${def.unit}${rule.kind === "custom" ? " (custom)" : ""}`}
+                {rule.kind === "none" ? "Not Available" : rule.kind === "unlimited" ? "Unlimited" : `${new Intl.NumberFormat("en-IN").format(rule.value ?? 0)} ${def.unit}${rule.kind === "custom" ? " (custom)" : ""}`}
               </KeyValue>
             );
           })}
@@ -420,7 +420,7 @@ export function ReviewSummary({ value }: { value: PlanDraftInput }) {
       </Panel>
       <Panel title="Availability" className="lg:col-span-2">
         <p className="text-[0.8125rem] text-foreground">
-          {[value.availability.newPurchase && "new purchase", value.availability.upgrade && "upgrade", value.availability.downgrade && "downgrade"].filter(Boolean).join(", ") || "Not available anywhere"} · {value.availability.currencies.join(", ") || "no currency"}
+          {[value.availability.newPurchase && "new purchase", value.availability.upgrade && "upgrade", value.availability.downgrade && "downgrade"].filter(Boolean).join(", ") || "Not Available Anywhere"} · {value.availability.currencies.join(", ") || "no currency"}
         </p>
       </Panel>
     </div>

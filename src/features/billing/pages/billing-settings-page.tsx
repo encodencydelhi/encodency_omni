@@ -57,7 +57,7 @@ export function BillingSettingsPage() {
       await updatePolicies(updated);
       toast.success("Billing and financial governance policies updated successfully");
     } catch (err: any) {
-      toast.error(err.message || "Failed to update policies");
+      toast.error(err.message || "Failed To Update Policies");
     }
     finally {
       handleSaveInFlight = false;

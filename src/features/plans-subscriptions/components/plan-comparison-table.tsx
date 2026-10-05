@@ -30,8 +30,8 @@ function buildRows(columns: readonly ComparisonColumn[]): Row[] {
   const same = (values: string[]) => values.every((value) => value === values[0]);
 
   const priceRows: Array<[string, string, (version: PlanVersion) => string]> = [
-    ["price.monthly", "Monthly price", (v) => money(v.price.monthlyMinor, v.price.currency)],
-    ["price.annual", "Annual price", (v) => money(v.price.annualMinor, v.price.currency)],
+    ["price.monthly", "Monthly Price", (v) => money(v.price.monthlyMinor, v.price.currency)],
+    ["price.annual", "Annual Price", (v) => money(v.price.annualMinor, v.price.currency)],
     ["price.trial", "Trial", (v) => (v.price.trialDays > 0 ? `${v.price.trialDays} days` : "None")],
   ];
   for (const [key, label, read] of priceRows) {
@@ -57,7 +57,7 @@ function buildRows(columns: readonly ComparisonColumn[]): Row[] {
         key: feature.key,
         label: feature.name,
         category,
-        values: enabled.map((on) => ({ text: on ? "Included" : "Not included", enabled: on })),
+        values: enabled.map((on) => ({ text: on ? "Included" : "Not Included", enabled: on })),
         differs: !enabled.every((on) => on === enabled[0]),
       });
     }

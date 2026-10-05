@@ -36,22 +36,22 @@ type FilterKey = (typeof FILTER_KEYS)[number];
 
 const STATUS_OPTIONS: FilterOption[] = [
   { value: "current", label: "All current (not ended)" },
-  { value: "paid", label: "Active paid" },
+  { value: "paid", label: "Active Paid" },
   { value: "active", label: "Active" },
   { value: "trialing", label: "Trialing" },
-  { value: "past_due", label: "Past due" },
+  { value: "past_due", label: "Past Due" },
   { value: "paused", label: "Paused" },
-  { value: "scheduled_cancellation", label: "Scheduled cancellation" },
+  { value: "scheduled_cancellation", label: "Scheduled Cancellation" },
   { value: "cancelled", label: "Cancelled" },
   { value: "expired", label: "Expired" },
-  { value: "ended", label: "Cancelled or expired" },
+  { value: "ended", label: "Cancelled Or Expired" },
 ];
 const CYCLE_OPTIONS: FilterOption[] = [
   { value: "monthly", label: "Monthly" },
   { value: "annual", label: "Annual" },
 ];
-const TRIAL_OPTIONS: FilterOption[] = [{ value: "1", label: "Ending within 7 days" }];
-const VERSION_OPTIONS: FilterOption[] = [{ value: "legacy", label: "On an older plan version" }];
+const TRIAL_OPTIONS: FilterOption[] = [{ value: "1", label: "Ending Within 7 Days" }];
+const VERSION_OPTIONS: FilterOption[] = [{ value: "legacy", label: "On An Older Plan Version" }];
 
 function SortSelect({ table }: { table: ReturnType<typeof useTableQueryState<FilterKey>> }) {
   const current = table.sort ? `${table.sort.field}:${table.sort.direction}` : "renewsAt:asc";
@@ -64,7 +64,7 @@ function SortSelect({ table }: { table: ReturnType<typeof useTableQueryState<Fil
         if (option) table.setSort(option.field, option.direction);
       }}
     >
-      <SelectTrigger size="sm" aria-label="Sort subscriptions" className="w-auto min-w-[10.5rem] gap-1.5">
+      <SelectTrigger size="sm" aria-label="Sort Subscriptions" className="w-auto min-w-[10.5rem] gap-1.5">
         <span className="text-muted-foreground">Sort:</span>
         <SelectValue placeholder="Custom" />
       </SelectTrigger>
@@ -119,7 +119,7 @@ export function SubscriptionsListPage() {
       ],
       secondary: [
         { key: "cycle" as const, label: "Cycle", options: CYCLE_OPTIONS },
-        { key: "billing" as const, label: "Billing health", options: toStatusOptions(BILLING_STATUS_META) },
+        { key: "billing" as const, label: "Billing Health", options: toStatusOptions(BILLING_STATUS_META) },
         { key: "trialEnding" as const, label: "Trial", options: TRIAL_OPTIONS },
         { key: "renewal" as const, label: "Renewal", options: RENEWAL_OPTIONS },
         { key: "created" as const, label: "Created", options: CREATED_OPTIONS },
@@ -151,7 +151,7 @@ export function SubscriptionsListPage() {
   const emptyState = (
     <EmptyState
       icon={hasFilters ? SearchXIcon : LayersIcon}
-      title={hasFilters ? "No subscriptions match these filters" : "No subscriptions yet"}
+      title={hasFilters ? "No Subscriptions Match These Filters" : "No Subscriptions Yet"}
       description={hasFilters ? "Try a broader search, or clear the filters." : "Company subscriptions appear here as soon as a company subscribes to a plan."}
       action={hasFilters ? <Button variant="outline" onClick={table.clearFilters}>Clear Filters</Button> : undefined}
     />
@@ -186,12 +186,12 @@ export function SubscriptionsListPage() {
 
       {kpis ? (
         <StatGrid className="grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
-          <StatCard compact label="Active Paid" value={formatNumber(kpis.activePaid)} hint="In good standing" tone="success" href={link("status=paid")} />
-          <StatCard compact label="Trialing" value={formatNumber(kpis.trialing)} hint="Not counted as paid" tone="info" href={link("status=trialing")} />
-          <StatCard compact label="Past Due" value={formatNumber(kpis.pastDue)} hint="Payment outstanding" tone="danger" href={link("status=past_due")} />
-          <StatCard compact label="Scheduled Cancellation" value={formatNumber(kpis.scheduledCancellation)} hint="Still paying" tone="warning" href={link("status=scheduled_cancellation")} />
+          <StatCard compact label="Active Paid" value={formatNumber(kpis.activePaid)} hint="In Good Standing" tone="success" href={link("status=paid")} />
+          <StatCard compact label="Trialing" value={formatNumber(kpis.trialing)} hint="Not Counted As Paid" tone="info" href={link("status=trialing")} />
+          <StatCard compact label="Past Due" value={formatNumber(kpis.pastDue)} hint="Payment Outstanding" tone="danger" href={link("status=past_due")} />
+          <StatCard compact label="Scheduled Cancellation" value={formatNumber(kpis.scheduledCancellation)} hint="Still Paying" tone="warning" href={link("status=scheduled_cancellation")} />
           <StatCard compact label="Cancelled / Expired" value={formatNumber(kpis.ended)} hint="Ended" href={link("status=ended")} />
-          <StatCard compact label="Renewals Soon" value={formatNumber(kpis.renewalsSoon)} hint="Within 14 days" href={link("renewal=14d")} />
+          <StatCard compact label="Renewals Soon" value={formatNumber(kpis.renewalsSoon)} hint="Within 14 Days" href={link("renewal=14d")} />
         </StatGrid>
       ) : (
         <StatGridSkeleton count={6} className="grid-cols-2 sm:grid-cols-3 xl:grid-cols-6" />
@@ -199,14 +199,14 @@ export function SubscriptionsListPage() {
 
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-1.5">
-          <SearchInput value={table.search} onChange={table.setSearch} placeholder="Search company, subscription ID or plan..." aria-label="Search subscriptions" className="w-full sm:w-[22rem]" />
+          <SearchInput value={table.search} onChange={table.setSearch} placeholder="Search company, subscription ID or plan..." aria-label="Search Subscriptions" className="w-full sm:w-[22rem]" />
           <div className="hidden flex-wrap items-center gap-1.5 lg:flex">
             {filterDefs.primary.map((def) => renderFilter(def))}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className={secondaryActive > 0 ? "border-primary/40 bg-primary-subtle" : undefined}>
                   <SlidersHorizontalIcon />
-                  More filters
+                  More Filters
                   {secondaryActive > 0 ? <span className="rounded-sm bg-primary px-1 text-2xs text-primary-foreground tabular">{secondaryActive}</span> : null}
                 </Button>
               </PopoverTrigger>
@@ -244,7 +244,7 @@ export function SubscriptionsListPage() {
                   getRowId={(row) => row.id}
                   isLoading={false}
                   isFetching={list.isFetching}
-                  caption="Company subscriptions"
+                  caption="Company Subscriptions"
                   sort={table.sort}
                   onToggleSort={table.toggleSort}
                   pagination={list.data?.pagination}

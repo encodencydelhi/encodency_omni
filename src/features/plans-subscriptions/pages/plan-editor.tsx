@@ -26,7 +26,7 @@ import { money, signedMoney } from "../lib/money";
 type Tab = "basics" | "pricing" | "features" | "limits" | "availability";
 
 const TABS: Array<{ key: Tab; label: string; owns: (field: string) => boolean }> = [
-  { key: "basics", label: "Basic details", owns: (f) => f === "name" || f === "internalCode" },
+  { key: "basics", label: "Basic Details", owns: (f) => f === "name" || f === "internalCode" },
   { key: "pricing", label: "Pricing", owns: (f) => ["currency", "monthlyMinor", "annualMinor", "trialDays", "setupFeeMinor"].includes(f) },
   { key: "features", label: "Features", owns: (f) => f.startsWith("feature.") || f === "features" },
   { key: "limits", label: "Limits", owns: (f) => f.startsWith("limit.") },
@@ -44,7 +44,7 @@ function ImpactPanel({ planId, value, live }: { planId: string; value: PlanDraft
   if (!live) return <Panel title="Impact"><p className="text-[0.8125rem] text-muted-foreground">This plan has not been published, so no subscriber is affected by changes.</p></Panel>;
   const data = impact.data;
   return (
-    <Panel title="Impact on subscribers" description="Against the current published version">
+    <Panel title="Impact On Subscribers" description="Against The Current Published Version">
       {!data ? (
         <p className="text-[0.8125rem] text-muted-foreground">Calculating...</p>
       ) : (
@@ -92,7 +92,7 @@ function EditorBody({ summary }: { summary: PlanSummary }) {
     setError(null);
     try {
       await mutations.saveDraft(plan.id, value);
-      toast.success("Draft saved");
+      toast.success("Draft Saved");
       return true;
     } catch (failure) {
       setError(describeError(failure).message);
@@ -131,7 +131,7 @@ function EditorBody({ summary }: { summary: PlanSummary }) {
         </div>
         <Button variant="ghost" size="sm" onClick={guard.requestClose}>
           <ArrowLeftIcon />
-          Back to plan
+          Back To Plan
         </Button>
       </div>
 
@@ -139,7 +139,7 @@ function EditorBody({ summary }: { summary: PlanSummary }) {
 
       <div className="grid grid-cols-1 gap-1 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-1">
-          <nav aria-label="Editor sections" className="flex gap-0.5 overflow-x-auto rounded-sm border border-border bg-card p-1 scrollbar-thin">
+          <nav aria-label="Editor Sections" className="flex gap-0.5 overflow-x-auto rounded-sm border border-border bg-card p-1 scrollbar-thin">
             {visibleTabs.map((item) => {
               const count = errors.filter((issue) => item.owns(issue.field)).length;
               return (
@@ -178,9 +178,9 @@ function EditorBody({ summary }: { summary: PlanSummary }) {
         </div>
       </div>
 
-      <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-2 rounded-sm border border-border bg-card px-3 py-2 shadow-md" role="region" aria-label="Draft actions">
+      <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-2 rounded-sm border border-border bg-card px-3 py-2 shadow-md" role="region" aria-label="Draft Actions">
         <p className="text-2xs text-muted-foreground" aria-live="polite">
-          {dirty ? "Unsaved changes" : "All changes saved"}
+          {dirty ? "Unsaved Changes" : "All Changes Saved"}
           {errors.length > 0 ? ` · ${errors.length} problem${errors.length === 1 ? "" : "s"} to fix before publishing` : ""}
         </p>
         <div className="ml-auto flex flex-wrap gap-2">
@@ -214,23 +214,23 @@ export function PlanEditorPage() {
   const query = usePlan(planId);
   const [starting, setStarting] = useState(false);
 
-  if (query.error && !query.data) return <PlansError subject="Plan" error={query.error} onRetry={() => void query.refetch()} back={{ href: routes.plans, label: "Back to Plans" }} />;
+  if (query.error && !query.data) return <PlansError subject="Plan" error={query.error} onRetry={() => void query.refetch()} back={{ href: routes.plans, label: "Back To Plans" }} />;
   if (!query.data) return <PanelSkeleton rows={8} />;
   const summary = query.data.summary;
 
   if (!capabilities.canEditDraftPlan) {
-    return <PlansError subject="Editor" error={new Error("You do not have permission to edit plans.")} back={{ href: routes.plan(planId), label: "Back to plan" }} />;
+    return <PlansError subject="Editor" error={new Error("You do not have permission to edit plans.")} back={{ href: routes.plan(planId), label: "Back To Plan" }} />;
   }
   if (summary.plan.status === "retired") {
     return (
-      <AlertBanner tone="info" title="This plan is retired">
+      <AlertBanner tone="info" title="This Plan Is Retired">
         A retired plan cannot be edited. <Link href={routes.plan(planId)} className="underline">Back to the plan</Link>
       </AlertBanner>
     );
   }
   if (!summary.draft) {
     return (
-      <Panel title="No draft to edit">
+      <Panel title="No Draft To Edit">
         <p className="text-[0.8125rem] text-foreground">{summary.plan.name} is published. To change it, start a new version - the published version stays exactly as it is.</p>
         <div className="mt-3 flex gap-2">
           <Button

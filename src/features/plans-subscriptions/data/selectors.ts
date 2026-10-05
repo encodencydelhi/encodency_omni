@@ -159,7 +159,7 @@ export function emptyPlanInput(): CreatePlanInput {
     name: "",
     internalCode: "",
     description: "",
-    targetSegment: "Growing brand teams",
+    targetSegment: "Growing Brand Teams",
     internalNotes: "",
     price: { currency: "INR", monthlyMinor: 0, annualMinor: 0, setupFeeMinor: 0, trialDays: 14, notes: "Demo configuration - not an approved commercial decision." },
     features: Object.fromEntries(FEATURES.map((item) => [item.key, false])),
@@ -531,7 +531,7 @@ export function buildScheduledChanges(ctx: DerivationContext, bundles: readonly 
         kind,
         subscriptionId: subscription.id,
         company,
-        label: kind === "billing_cycle" ? "Billing cycle change" : `${kind === "upgrade" ? "Upgrade" : "Downgrade"} to ${nameOf(change.planTier)}`,
+        label: kind === "billing_cycle" ? "Billing Cycle Change" : `${kind === "upgrade" ? "Upgrade" : "Downgrade"} to ${nameOf(change.planTier)}`,
         current: `${nameOf(subscription.planTier)} (${subscription.billingCycle})`,
         scheduled: `${nameOf(change.planTier)} (${change.billingCycle})`,
         effectiveAt: change.effectiveAt,
@@ -549,7 +549,7 @@ export function buildScheduledChanges(ctx: DerivationContext, bundles: readonly 
         kind: "cancellation",
         subscriptionId: subscription.id,
         company,
-        label: "Scheduled cancellation",
+        label: "Scheduled Cancellation",
         current: "Active",
         scheduled: "Cancelled",
         effectiveAt: subscription.scheduledCancellationAt,
@@ -825,9 +825,9 @@ export function buildEntitlements(ctx: DerivationContext, bundle: CompanyBundle,
 }
 
 export function effectiveLimitLabel(row: EntitlementRow): string {
-  if (!row.effective) return row.effectiveEnabled ? "Enabled" : "Not included";
+  if (!row.effective) return row.effectiveEnabled ? "Enabled" : "Not Included";
   if (row.effective.ruleApplied === "inactive subscription") return "Inactive";
-  return row.effective.effectiveValue === null ? "Unlimited" : row.effective.effectiveValue === 0 ? "Not available" : `${new Intl.NumberFormat("en-IN").format(row.effective.effectiveValue)} ${row.unit}`;
+  return row.effective.effectiveValue === null ? "Unlimited" : row.effective.effectiveValue === 0 ? "Not Available" : `${new Intl.NumberFormat("en-IN").format(row.effective.effectiveValue)} ${row.unit}`;
 }
 
 export function overrideLabel(row: EntitlementRow): string | null {
@@ -858,7 +858,7 @@ export function buildSubscriptionDetail(
   const method = bundle.subscription.paymentMethod;
   return {
     row,
-    company: { ...companyRef(bundle), ownerName: owner?.name ?? "No owner assigned" },
+    company: { ...companyRef(bundle), ownerName: owner?.name ?? "No Owner Assigned" },
     plan,
     version,
     entitlements: buildEntitlements(ctx, bundle, version),
@@ -918,7 +918,7 @@ export function computeVersionImpact(
   if (priceDiff && priceDiff.annualMinor !== 0) summary.push(`Annual price ${priceDiff.annualMinor > 0 ? "increased" : "decreased"}`);
   for (const feature of changedFeatures) summary.push(`${feature.name} ${feature.to ? "added" : "removed"}`);
   for (const limit of changedLimits) summary.push(`${limit.name}: ${formatRule(limit.from, limit.unit)} -> ${formatRule(limit.to, limit.unit)}`);
-  if (summary.length === 0) summary.push(current ? "No changes to price, features or limits" : "Initial version");
+  if (summary.length === 0) summary.push(current ? "No changes to price, features or limits" : "Initial Version");
 
   return {
     fromVersion: current?.version ?? null,
@@ -973,7 +973,7 @@ export function computePlanChangeImpact(
     for (const feature of FEATURES) {
       const from = Boolean(currentVersion.features[feature.key]);
       const to = Boolean(nextVersion.features[feature.key]);
-      rows.push({ key: feature.key, kind: "feature", name: feature.name, unit: "", current: from ? "Included" : "Not included", next: to ? "Included" : "Not included", changed: from !== to, used: null, over: false });
+      rows.push({ key: feature.key, kind: "feature", name: feature.name, unit: "", current: from ? "Included" : "Not Included", next: to ? "Included" : "Not Included", changed: from !== to, used: null, over: false });
     }
   }
 

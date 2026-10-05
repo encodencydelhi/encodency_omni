@@ -82,11 +82,11 @@ export function ApplyCreditModal({
         return;
       }
       if (amountMinor > selectedAccount.availableCreditMinor) {
-        toast.error("Amount exceeds available account credit");
+        toast.error("Amount Exceeds Available Account Credit");
         return;
       }
       if (amountMinor > selectedInvoice.outstandingBalanceMinor) {
-        toast.error("Amount exceeds outstanding invoice balance");
+        toast.error("Amount Exceeds Outstanding Invoice Balance");
         return;
       }
 
@@ -98,7 +98,7 @@ export function ApplyCreditModal({
       onClose();
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      toast.error(err.message || "Failed to apply account credit");
+      toast.error(err.message || "Failed To Apply Account Credit");
     }
     finally {
       handleSubmitInFlight = false;
@@ -128,7 +128,7 @@ export function ApplyCreditModal({
               setSelectedInvoiceId("");
             }}>
               <SelectTrigger className="h-8 text-xs rounded-sm bg-background border-border">
-                <SelectValue placeholder="Select account" />
+                <SelectValue placeholder="Select Account" />
               </SelectTrigger>
               <SelectContent className="rounded-sm">
                 {accountsWithCredit.map((acc) => (
@@ -160,7 +160,7 @@ export function ApplyCreditModal({
             ) : (
               <Select value={selectedInvoice?.id} onValueChange={setSelectedInvoiceId}>
                 <SelectTrigger className="h-8 text-xs rounded-sm bg-background border-border">
-                  <SelectValue placeholder="Select invoice" />
+                  <SelectValue placeholder="Select Invoice" />
                 </SelectTrigger>
                 <SelectContent className="rounded-sm">
                   {eligibleInvoices.map((inv) => (

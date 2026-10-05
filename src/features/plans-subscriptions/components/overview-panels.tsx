@@ -40,12 +40,12 @@ export function OverviewKpis({ portfolio }: { portfolio: SubscriptionPortfolio |
     <StatGrid className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-8">
       <StatCard compact label="Total Current" value={formatNumber(portfolio.totalCurrent)} hint={`+${portfolio.newLast30d} new in 30 days`} href={link({ status: "current" })} title="Subscriptions that are not cancelled or expired: paid + trials + past due + paused" />
       <StatCard compact label="Active Paid" value={formatNumber(portfolio.activePaid)} hint="Paying, in good standing" tone="success" href={link({ status: "paid" })} />
-      <StatCard compact label="Active Trials" value={formatNumber(portfolio.trials)} hint="Not counted as paid" tone="info" href={link({ status: "trialing" })} />
-      <StatCard compact label="Past Due" value={formatNumber(portfolio.pastDue)} hint="Payment not collected" tone="danger" href={link({ status: "past_due" })} />
+      <StatCard compact label="Active Trials" value={formatNumber(portfolio.trials)} hint="Not Counted As Paid" tone="info" href={link({ status: "trialing" })} />
+      <StatCard compact label="Past Due" value={formatNumber(portfolio.pastDue)} hint="Payment Not Collected" tone="danger" href={link({ status: "past_due" })} />
       <StatCard compact label="Scheduled Cancellation" value={formatNumber(portfolio.scheduledCancellation)} hint="Within Active Paid" tone="warning" href={link({ status: "scheduled_cancellation" })} title="These are still paying until the term ends, so they are already counted in Active Paid" />
-      <StatCard compact label="MRR" value={<span className="text-base">{moneyTotals(portfolio.mrrByCurrency, true)}</span>} hint="Normalized monthly recurring" title="Monthly price, or annual price / 12. Trials, setup fees, tax and credits are excluded. Currencies are never added together." href={`${routes.subscriptions}?sort=mrr:desc`} />
-      <StatCard compact label="Trials Ending Soon" value={formatNumber(portfolio.trialsEndingSoon)} hint="Within 7 days" tone="warning" href={link({ trialEnding: "1" })} />
-      <StatCard compact label="Needs Attention" value={formatNumber(portfolio.needsAttention)} hint="Open issues" tone="danger" href="#attention" />
+      <StatCard compact label="MRR" value={<span className="text-base">{moneyTotals(portfolio.mrrByCurrency, true)}</span>} hint="Normalized Monthly Recurring" title="Monthly price, or annual price / 12. Trials, setup fees, tax and credits are excluded. Currencies are never added together." href={`${routes.subscriptions}?sort=mrr:desc`} />
+      <StatCard compact label="Trials Ending Soon" value={formatNumber(portfolio.trialsEndingSoon)} hint="Within 7 Days" tone="warning" href={link({ trialEnding: "1" })} />
+      <StatCard compact label="Needs Attention" value={formatNumber(portfolio.needsAttention)} hint="Open Issues" tone="danger" href="#attention" />
     </StatGrid>
   );
 }
@@ -72,7 +72,7 @@ export function TrendsPanel() {
       action={
         <>
           <Select value={metric} onValueChange={(value) => setMetric(value as TrendMetric)}>
-            <SelectTrigger size="sm" aria-label="Trend metric" className="w-auto min-w-[9.5rem]">
+            <SelectTrigger size="sm" aria-label="Trend Metric" className="w-auto min-w-[9.5rem]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -96,7 +96,7 @@ export function TrendsPanel() {
               </button>
             ))}
           </div>
-          <Button variant="ghost" size="icon-sm" onClick={() => setTable((value) => !value)} aria-label={table ? "Show chart" : "Show table"} aria-pressed={table}>
+          <Button variant="ghost" size="icon-sm" onClick={() => setTable((value) => !value)} aria-label={table ? "Show Chart" : "Show Table"} aria-pressed={table}>
             {table ? <LineChartIcon /> : <TableIcon />}
           </Button>
         </>
@@ -111,7 +111,7 @@ export function TrendsPanel() {
             rows={data}
             getKey={(point) => point.at}
             columns={[
-              { id: "period", header: "Period ending", cell: (point) => point.label },
+              { id: "period", header: "Period Ending", cell: (point) => point.label },
               { id: "value", header: label, align: "right", cell: (point) => <span className="tabular">{point.value}</span> },
             ]}
           />
@@ -130,12 +130,12 @@ export function TrendsPanel() {
 
 export function AdoptionPanel({ rows }: { rows: PlanAdoptionRow[] | undefined }) {
   return (
-    <Panel className="h-full" title="Plan Adoption" description="Subscribers and recurring revenue by plan" flush>
+    <Panel className="h-full" title="Plan Adoption" description="Subscribers And Recurring Revenue By Plan" flush>
       {rows === undefined ? (
         <div className="px-3 pb-3"><ChartSkeleton /></div>
       ) : (
         <MiniTable
-          caption="Plan adoption"
+          caption="Plan Adoption"
           rows={rows}
           getKey={(row) => row.planId}
           columns={[
@@ -194,7 +194,7 @@ export function AttentionPanel({ items }: { items: SubscriptionAttentionItem[] |
           <div className="px-3 pb-3"><ChartSkeleton /></div>
         ) : (
           <MiniTable
-            caption="Subscriptions needing attention"
+            caption="Subscriptions Needing Attention"
             rows={items}
             getKey={(item) => item.id}
             empty={
@@ -247,7 +247,7 @@ export function UpcomingPanel({ items }: { items: ScheduledChangeView[] | undefi
         <div className="px-3 pb-3"><ChartSkeleton /></div>
       ) : (
         <MiniTable
-          caption="Upcoming subscription changes"
+          caption="Upcoming Subscription Changes"
           rows={items}
           getKey={(item) => item.id}
           empty={<p className="px-3 pb-4 text-[0.8125rem] text-muted-foreground">No changes are scheduled.</p>}
@@ -289,7 +289,7 @@ export function EndingTrialsPanel({ trials }: { trials: TrialRow[] | undefined }
                 <span className="block text-2xs text-muted-foreground">{trial.planName}</span>
               </Link>
               <span className={cn("shrink-0 text-2xs font-medium tabular", trial.daysRemaining <= 2 ? "text-danger" : "text-warning")}>
-                {trial.daysRemaining < 0 ? `Ended ${-trial.daysRemaining}d ago` : trial.daysRemaining === 0 ? "Ends today" : `${trial.daysRemaining}d left`}
+                {trial.daysRemaining < 0 ? `Ended ${-trial.daysRemaining}d ago` : trial.daysRemaining === 0 ? "Ends Today" : `${trial.daysRemaining}d left`}
               </span>
             </li>
           ))}
@@ -314,7 +314,7 @@ export function ActivityPanel({ events, canViewAll = true }: { events: Subscript
         <div className="px-3 pb-3"><ChartSkeleton /></div>
       ) : (
         <MiniTable
-          caption="Recent subscription activity"
+          caption="Recent Subscription Activity"
           rows={events}
           getKey={(event) => event.id}
           empty={<p className="px-3 pb-4 text-[0.8125rem] text-muted-foreground">No subscription activity yet.</p>}

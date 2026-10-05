@@ -13,7 +13,7 @@ export function moneyTotals(totals: Record<string, number>, compact = false): st
 }
 
 export function signedMoney(minor: number, currency: string): string {
-  if (minor === 0) return "No change";
+  if (minor === 0) return "No Change";
   return `${minor > 0 ? "+" : "-"}${formatCurrency(Math.abs(minor), currency)}`;
 }
 

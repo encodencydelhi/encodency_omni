@@ -49,7 +49,7 @@ export function CancelSubscriptionFlow({ row, onClose }: { row: SubscriptionRow;
     setError(null);
     try {
       await mutations.cancelSubscription(row.id, { timing: chosen, reason: reason.trim() });
-      toast.success(chosen === "immediate" ? "Subscription cancelled" : "Cancellation scheduled", { description: isMockMode ? "The company account is unchanged. Demo only: no refund or charge was made." : "The company account is unchanged. No refund or charge was made here." });
+      toast.success(chosen === "immediate" ? "Subscription Cancelled" : "Cancellation Scheduled", { description: isMockMode ? "The company account is unchanged. Demo only: no refund or charge was made." : "The company account is unchanged. No refund or charge was made here." });
       onClose();
     } catch (failure) {
       setError(describeError(failure).message);
@@ -72,10 +72,10 @@ export function CancelSubscriptionFlow({ row, onClose }: { row: SubscriptionRow;
       }
     >
       <ErrorBanner message={error} />
-      <RadioGroup value={chosen} onValueChange={(value) => setTiming(value as "end_of_term" | "immediate")} className="gap-1.5" aria-label="Cancellation timing">
+      <RadioGroup value={chosen} onValueChange={(value) => setTiming(value as "end_of_term" | "immediate")} className="gap-1.5" aria-label="Cancellation Timing">
         {(
           [
-            ["end_of_term", "At the end of the term", `Access continues until ${formatDate(endsAt)}, then the subscription ends. It can be undone before then.`],
+            ["end_of_term", "At The End Of The Term", `Access continues until ${formatDate(endsAt)}, then the subscription ends. It can be undone before then.`],
             ["immediate", "Immediately", "The subscription ends today and entitlements stop applying."],
           ] as const
         ).map(([value, label, hint]) => (
@@ -91,10 +91,10 @@ export function CancelSubscriptionFlow({ row, onClose }: { row: SubscriptionRow;
 
       <dl className="divide-y divide-border rounded-sm border border-border px-3">
         <KeyValue label="Effective">{chosen === "immediate" ? "Today" : formatDate(endsAt)}</KeyValue>
-        <KeyValue label="Access and entitlements">{chosen === "immediate" ? "Stop applying today" : "Unchanged until the end date"}</KeyValue>
-        <KeyValue label="Outstanding billing">{detail.data?.openInvoiceNumber ? `Invoice ${detail.data.openInvoiceNumber} is open` : "No open invoice"}</KeyValue>
-        <KeyValue label="Company account">Unchanged (not suspended)</KeyValue>
-        <KeyValue label="Scheduled operations">Nothing is deleted; data is retained per the cancellation policy</KeyValue>
+        <KeyValue label="Access And Entitlements">{chosen === "immediate" ? "Stop Applying Today" : "Unchanged Until The End Date"}</KeyValue>
+        <KeyValue label="Outstanding Billing">{detail.data?.openInvoiceNumber ? `Invoice ${detail.data.openInvoiceNumber} is open` : "No Open Invoice"}</KeyValue>
+        <KeyValue label="Company Account">Unchanged (not suspended)</KeyValue>
+        <KeyValue label="Scheduled Operations">Nothing is deleted; data is retained per the cancellation policy</KeyValue>
       </dl>
       {detail.data?.openInvoiceNumber ? <AlertBanner tone="warning" title="There is an unpaid invoice">Cancelling does not settle or void it. Review it in Billing.</AlertBanner> : null}
       <Field label="Reason" htmlFor="cancel-reason" required error={reasonError}>
@@ -117,8 +117,8 @@ export function UndoCancellationFlow({ row, onClose }: { row: SubscriptionRow; o
     setPending(true);
     setError(null);
     try {
-      await mutations.undoCancellation(row.id, "Scheduled cancellation undone");
-      toast.success("Cancellation undone");
+      await mutations.undoCancellation(row.id, "Scheduled Cancellation Undone");
+      toast.success("Cancellation Undone");
       onClose();
     } catch (failure) {
       setError(describeError(failure).message);
@@ -174,7 +174,7 @@ export function ReactivateFlow({ row, onClose }: { row: SubscriptionRow; onClose
     setError(null);
     setFieldErrors({});
     try {
-      await mutations.reactivateSubscription(row.id, { planKey: planKey || undefined, reason: "Reactivated by Super Admin" });
+      await mutations.reactivateSubscription(row.id, { planKey: planKey || undefined, reason: "Reactivated By Super Admin" });
       toast.success(`${row.company.name}'s subscription reactivated`, { description: isMockMode ? (ended ? "A new period starts and an invoice is open. Demo only: nothing was charged." : undefined) : ended ? "A new period started and an invoice is open for the company to pay in Billing." : "The subscription is active again." });
       onClose();
     } catch (failure) {
@@ -201,23 +201,23 @@ export function ReactivateFlow({ row, onClose }: { row: SubscriptionRow; onClose
     >
       <ErrorBanner message={error} />
       <dl className="divide-y divide-border rounded-sm border border-border px-3">
-        <KeyValue label="Previous status">{row.status.replace(/_/g, " ")}</KeyValue>
-        <KeyValue label={ended ? "Ended" : "Scheduled end"}>{formatDate(endedAt)}{ended && window > 0 ? ` (${daysSince} days ago; window ${window} days)` : ""}</KeyValue>
+        <KeyValue label="Previous Status">{row.status.replace(/_/g, " ")}</KeyValue>
+        <KeyValue label={ended ? "Ended" : "Scheduled End"}>{formatDate(endedAt)}{ended && window > 0 ? ` (${daysSince} days ago; window ${window} days)` : ""}</KeyValue>
         <KeyValue label="Plan">{row.planName} · {planAvailable ? "available" : "no longer available"}</KeyValue>
-        <KeyValue label="Billing readiness">{detail.data?.paymentMethodLabel ?? "No payment method on file"}</KeyValue>
+        <KeyValue label="Billing Readiness">{detail.data?.paymentMethodLabel ?? "No Payment Method On File"}</KeyValue>
         <KeyValue label="Effective">Immediately</KeyValue>
       </dl>
       {!planAvailable ? (
-        <Field label="Reactivate onto" htmlFor="reactivate-plan" required error={fieldErrors.planKey} hint={`${row.planName} is retired or unpublished, so choose an available plan.`}>
+        <Field label="Reactivate Onto" htmlFor="reactivate-plan" required error={fieldErrors.planKey} hint={`${row.planName} is retired or unpublished, so choose an available plan.`}>
           <Select value={planKey} onValueChange={(value) => setPlanKey(value as PlanKey)}>
-            <SelectTrigger id="reactivate-plan"><SelectValue placeholder="Choose a plan" /></SelectTrigger>
+            <SelectTrigger id="reactivate-plan"><SelectValue placeholder="Choose A Plan" /></SelectTrigger>
             <SelectContent>
               {options.map((choice) => <SelectItem key={choice.summary.plan.key} value={choice.summary.plan.key}>{choice.summary.plan.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </Field>
       ) : null}
-      <AlertBanner tone="info" title={isMockMode ? "Demo workspace" : "What happens"}>
+      <AlertBanner tone="info" title={isMockMode ? "Demo Workspace" : "What Happens"}>
         {ended
           ? isMockMode
             ? "Reactivating a cancelled or expired subscription starts a new period and opens an invoice. No payment is collected, so billing shows it as pending."
@@ -246,7 +246,7 @@ export function RescheduleFlow({ change, onClose }: { change: ScheduledChangeVie
     setError(null);
     try {
       await mutations.rescheduleChange(change.subscriptionId, new Date(`${date}T00:00:00.000Z`).toISOString(), reason.trim());
-      toast.success("Change rescheduled");
+      toast.success("Change Rescheduled");
       onClose();
     } catch (failure) {
       setError(describeError(failure).message);
@@ -259,7 +259,7 @@ export function RescheduleFlow({ change, onClose }: { change: ScheduledChangeVie
     <FlowDialog
       open
       onOpenChange={(open) => !open && !pending && onClose()}
-      title="Reschedule change"
+      title="Reschedule Change"
       description={`${change.company.name}: ${change.label}`}
       footer={
         <>
@@ -270,7 +270,7 @@ export function RescheduleFlow({ change, onClose }: { change: ScheduledChangeVie
     >
       <ErrorBanner message={error} />
       <p className="text-[0.8125rem] text-foreground"><ScheduledKindBadge kind={change.kind} /> <span className="ml-1">{change.current} → {change.scheduled}, currently {formatDate(change.effectiveAt)}</span></p>
-      <Field label="New effective date" htmlFor="reschedule-date" error={invalid ? "Choose a date after today." : null}>
+      <Field label="New Effective Date" htmlFor="reschedule-date" error={invalid ? "Choose a date after today." : null}>
         <Input id="reschedule-date" type="date" min={tomorrow} value={date} onChange={(event) => setDate(event.target.value)} className="w-48" />
       </Field>
       <Field label="Reason (optional)" htmlFor="reschedule-reason">
@@ -290,8 +290,8 @@ export function CancelScheduledFlow({ change, onClose }: { change: ScheduledChan
     setPending(true);
     setError(null);
     try {
-      await mutations.cancelScheduledChange(change.subscriptionId, target, "Cancelled by Super Admin");
-      toast.success(target === "cancellation" ? "Scheduled cancellation undone" : "Scheduled change cancelled");
+      await mutations.cancelScheduledChange(change.subscriptionId, target, "Cancelled By Super Admin");
+      toast.success(target === "cancellation" ? "Scheduled Cancellation Undone" : "Scheduled Change Cancelled");
       onClose();
     } catch (failure) {
       setError(describeError(failure).message);

@@ -41,7 +41,7 @@ export function UsageRiskBadge({ risk }: { risk: UsageRisk }) {
   return (
     <Badge tone={tone}>
       <span className={cn("size-1.5 rounded-sm", DOT[tone])} aria-hidden />
-      {risk === "over_limit" ? "Over limit" : "Near limit"}
+      {risk === "over_limit" ? "Over Limit" : "Near Limit"}
     </Badge>
   );
 }

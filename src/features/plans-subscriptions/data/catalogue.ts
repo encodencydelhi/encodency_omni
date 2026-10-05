@@ -40,35 +40,35 @@ export const RESOURCE_BY_KEY: Readonly<Record<ResourceKey, ResourceDef>> = Objec
 
 /** Boolean capabilities. Only things the product actually ships are listed. */
 export const FEATURES: readonly FeatureDef[] = [
-  { key: "multiple_clients", name: "Multiple client workspaces", description: "Operate more than one client under the company.", category: "Organization", dependencies: [] },
-  { key: "custom_branding", name: "Custom branding", description: "White-label reports and workspaces.", category: "Organization", dependencies: [] },
+  { key: "multiple_clients", name: "Multiple Client Workspaces", description: "Operate more than one client under the company.", category: "Organization", dependencies: [] },
+  { key: "custom_branding", name: "Custom Branding", description: "White-label reports and workspaces.", category: "Organization", dependencies: [] },
 
-  { key: "omnichannel_publisher", name: "Omnichannel publisher", description: "Compose and schedule posts across connected channels.", category: "Marketing", dependencies: [] },
-  { key: "approval_workflows", name: "Approval workflows", description: "Review and approve content before it publishes.", category: "Marketing", dependencies: ["omnichannel_publisher"] },
-  { key: "campaign_attribution", name: "Campaign attribution", description: "Attribute leads and results to campaigns.", category: "Marketing", dependencies: [] },
-  { key: "lead_inbox", name: "Lead inbox", description: "Collect and triage inbound leads.", category: "Marketing", dependencies: [] },
+  { key: "omnichannel_publisher", name: "Omnichannel Publisher", description: "Compose and schedule posts across connected channels.", category: "Marketing", dependencies: [] },
+  { key: "approval_workflows", name: "Approval Workflows", description: "Review and approve content before it publishes.", category: "Marketing", dependencies: ["omnichannel_publisher"] },
+  { key: "campaign_attribution", name: "Campaign Attribution", description: "Attribute leads and results to campaigns.", category: "Marketing", dependencies: [] },
+  { key: "lead_inbox", name: "Lead Inbox", description: "Collect and triage inbound leads.", category: "Marketing", dependencies: [] },
   { key: "channel_meta", name: "Meta / Instagram", description: "Facebook and Instagram connections.", category: "Marketing", dependencies: [] },
   { key: "channel_linkedin", name: "LinkedIn", description: "LinkedIn page connections.", category: "Marketing", dependencies: [] },
   { key: "channel_google_business", name: "Google Business Profile", description: "Google Business Profile connections.", category: "Marketing", dependencies: [] },
   { key: "channel_whatsapp", name: "WhatsApp", description: "WhatsApp business messaging.", category: "Marketing", dependencies: [] },
   { key: "channel_youtube", name: "YouTube", description: "YouTube channel connections.", category: "Marketing", dependencies: [] },
 
-  { key: "ai_assistant", name: "AI marketing assistant", description: "AI content and insight assistance.", category: "AI & Automation", dependencies: [] },
-  { key: "automation_engine", name: "Automation builder", description: "Build and run workflow automations.", category: "AI & Automation", dependencies: [] },
-  { key: "advanced_conditions", name: "Advanced automation conditions", description: "Branching, filters and multi-step conditions.", category: "AI & Automation", dependencies: ["automation_engine"] },
+  { key: "ai_assistant", name: "AI Marketing Assistant", description: "AI content and insight assistance.", category: "AI & Automation", dependencies: [] },
+  { key: "automation_engine", name: "Automation Builder", description: "Build and run workflow automations.", category: "AI & Automation", dependencies: [] },
+  { key: "advanced_conditions", name: "Advanced Automation Conditions", description: "Branching, filters and multi-step conditions.", category: "AI & Automation", dependencies: ["automation_engine"] },
 
-  { key: "seo_audit", name: "SEO site audit", description: "Crawl and audit client websites.", category: "Website & SEO", dependencies: [] },
-  { key: "website_monitoring", name: "Website monitoring", description: "Uptime and health monitoring for client websites.", category: "Website & SEO", dependencies: [] },
-  { key: "keyword_tracking", name: "Keyword tracking", description: "Track keyword positions over time.", category: "Website & SEO", dependencies: ["seo_audit"] },
-  { key: "gsc_reporting", name: "Search Console reporting", description: "Reporting from Google Search Console.", category: "Website & SEO", dependencies: ["seo_audit"] },
-  { key: "ga4_reporting", name: "GA4 reporting", description: "Reporting from Google Analytics 4.", category: "Website & SEO", dependencies: [] },
+  { key: "seo_audit", name: "SEO Site Audit", description: "Crawl and audit client websites.", category: "Website & SEO", dependencies: [] },
+  { key: "website_monitoring", name: "Website Monitoring", description: "Uptime and health monitoring for client websites.", category: "Website & SEO", dependencies: [] },
+  { key: "keyword_tracking", name: "Keyword Tracking", description: "Track keyword positions over time.", category: "Website & SEO", dependencies: ["seo_audit"] },
+  { key: "gsc_reporting", name: "Search Console Reporting", description: "Reporting from Google Search Console.", category: "Website & SEO", dependencies: ["seo_audit"] },
+  { key: "ga4_reporting", name: "GA4 Reporting", description: "Reporting from Google Analytics 4.", category: "Website & SEO", dependencies: [] },
 
-  { key: "client_permissions", name: "Client-level permissions", description: "Restrict members to specific clients.", category: "Team & Governance", dependencies: ["multiple_clients"] },
-  { key: "extended_audit", name: "Extended audit retention", description: "Longer retention of audit history.", category: "Team & Governance", dependencies: [] },
-  { key: "priority_support", name: "Priority support", description: "Faster support response.", category: "Team & Governance", dependencies: [] },
-  { key: "success_manager", name: "Named success manager", description: "A dedicated OmniPlatform contact.", category: "Team & Governance", dependencies: ["priority_support"] },
+  { key: "client_permissions", name: "Client-level Permissions", description: "Restrict members to specific clients.", category: "Team & Governance", dependencies: ["multiple_clients"] },
+  { key: "extended_audit", name: "Extended Audit Retention", description: "Longer retention of audit history.", category: "Team & Governance", dependencies: [] },
+  { key: "priority_support", name: "Priority Support", description: "Faster support response.", category: "Team & Governance", dependencies: [] },
+  { key: "success_manager", name: "Named Success Manager", description: "A dedicated OmniPlatform contact.", category: "Team & Governance", dependencies: ["priority_support"] },
 
-  { key: "api_access", name: "API access", description: "Access to the platform API.", category: "Platform/API", dependencies: [] },
+  { key: "api_access", name: "API Access", description: "Access to the platform API.", category: "Platform/API", dependencies: [] },
   { key: "webhooks", name: "Webhooks", description: "Outbound webhook delivery.", category: "Platform/API", dependencies: ["api_access"] },
 ];
 
@@ -106,7 +106,7 @@ export function limitToRule(limit: number | null, kind?: LimitKind): LimitRule {
 export function formatRule(rule: LimitRule, unit?: string): string {
   switch (rule.kind) {
     case "none":
-      return "Not available";
+      return "Not Available";
     case "unlimited":
       return "Unlimited";
     default:
@@ -116,7 +116,7 @@ export function formatRule(rule: LimitRule, unit?: string): string {
 
 export function formatLimitValue(limit: number | null, unit?: string): string {
   if (limit === null) return "Unlimited";
-  if (limit === 0) return "Not available";
+  if (limit === 0) return "Not Available";
   return `${new Intl.NumberFormat("en-IN").format(limit)}${unit ? ` ${unit}` : ""}`;
 }
 

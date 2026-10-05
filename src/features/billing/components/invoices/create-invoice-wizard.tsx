@@ -130,7 +130,7 @@ export function CreateInvoiceWizard({
     handleSaveDraftInFlight = true;
     try {
       if (!selectedAccount) {
-        toast.error("Please select a valid billing account");
+        toast.error("Please Select A Valid Billing Account");
         return;
       }
       if (lineItems.some((li) => !li.description.trim())) {
@@ -161,7 +161,7 @@ export function CreateInvoiceWizard({
       onClose();
       if (onSuccess) onSuccess(created.id);
     } catch (err: any) {
-      toast.error(err.message || "Failed to create draft invoice");
+      toast.error(err.message || "Failed To Create Draft Invoice");
     }
     finally {
       handleSaveDraftInFlight = false;
@@ -218,7 +218,7 @@ export function CreateInvoiceWizard({
                 <Label className="text-xs font-medium text-foreground">Company Billing Account</Label>
                 <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
                   <SelectTrigger className="h-9 text-xs rounded-sm bg-background border-border">
-                    <SelectValue placeholder="Select company account" />
+                    <SelectValue placeholder="Select Company Account" />
                   </SelectTrigger>
                   <SelectContent className="rounded-sm">
                     {accounts.map((acc) => (
@@ -237,7 +237,7 @@ export function CreateInvoiceWizard({
                   <div>
                     Billing Currency: <span className="font-bold">{selectedAccount.currency}</span> | Payment Terms: {selectedAccount.paymentTerms}
                   </div>
-                  <div>Tax Identifier: {selectedAccount.taxId ?? "None specified"}</div>
+                  <div>Tax Identifier: {selectedAccount.taxId ?? "None Specified"}</div>
                 </div>
               )}
             </div>

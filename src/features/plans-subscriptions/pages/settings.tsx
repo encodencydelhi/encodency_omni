@@ -54,7 +54,7 @@ function SettingsForm({ initial, canEdit }: { initial: SubscriptionPolicy; canEd
     setServerErrors({});
     try {
       await mutations.savePolicy(draft);
-      toast.success("Subscription policies saved", { description: PLANS_MOCK_MODE ? "Trial extensions, cancellation defaults and reactivation now follow them." : "Saved for the whole platform." });
+      toast.success("Subscription Policies Saved", { description: PLANS_MOCK_MODE ? "Trial extensions, cancellation defaults and reactivation now follow them." : "Saved for the whole platform." });
       return true;
     } catch (failure) {
       const described = describeError(failure);
@@ -101,10 +101,10 @@ function SettingsForm({ initial, canEdit }: { initial: SubscriptionPolicy; canEd
   return (
     <div className="space-y-2">
       <ErrorBanner message={error} />
-      {!canEdit ? <AlertBanner tone="info" title="View only">You can see these policies but not change them.</AlertBanner> : null}
+      {!canEdit ? <AlertBanner tone="info" title="View Only">You can see these policies but not change them.</AlertBanner> : null}
 
       <div className="grid grid-cols-1 gap-1 lg:grid-cols-2">
-        <Panel title="Trial policy" description="How trials start and how far they can be extended">
+        <Panel title="Trial Policy" description="How trials start and how far they can be extended">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Default trial duration (days)" htmlFor="pol-trial-days" error={errors.defaultTrialDays}>
               <Input id="pol-trial-days" inputMode="numeric" disabled={disabled} value={String(value.trial.defaultTrialDays)} onChange={(event) => set("trial", { defaultTrialDays: number(event.target.value) })} aria-invalid={Boolean(errors.defaultTrialDays)} className="tabular" />
@@ -122,9 +122,9 @@ function SettingsForm({ initial, canEdit }: { initial: SubscriptionPolicy; canEd
           </div>
         </Panel>
 
-        <Panel title="Default subscription options" description="What a new subscription starts with">
+        <Panel title="Default Subscription Options" description="What A New Subscription Starts With">
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Default trial plan" htmlFor="pol-trial-plan" error={errors.defaultTrialPlan}>
+            <Field label="Default Trial Plan" htmlFor="pol-trial-plan" error={errors.defaultTrialPlan}>
               <Select value={value.trial.defaultTrialPlan} onValueChange={(next) => set("trial", { defaultTrialPlan: next })} disabled={disabled}>
                 <SelectTrigger id="pol-trial-plan"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -134,7 +134,7 @@ function SettingsForm({ initial, canEdit }: { initial: SubscriptionPolicy; canEd
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Default billing cycle" htmlFor="pol-cycle">
+            <Field label="Default Billing Cycle" htmlFor="pol-cycle">
               <Select value={value.renewal.defaultBillingCycle} onValueChange={(next) => set("renewal", { defaultBillingCycle: next as "monthly" | "annual" })} disabled={disabled}>
                 <SelectTrigger id="pol-cycle"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -147,7 +147,7 @@ function SettingsForm({ initial, canEdit }: { initial: SubscriptionPolicy; canEd
           <p className="mt-2 text-2xs text-muted-foreground">{KIND_HINT}</p>
         </Panel>
 
-        <Panel title="Renewal policy" description="Reminders, grace and what a failed payment does">
+        <Panel title="Renewal Policy" description="Reminders, grace and what a failed payment does">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Renewal reminders (days before)" htmlFor="pol-ren-rem" error={errors.renewalReminders} hint="e.g. 14, 7.">
               <Input id="pol-ren-rem" disabled={disabled} value={renewalReminders} onChange={(event) => setRenewalReminders(event.target.value)} aria-invalid={Boolean(errors.renewalReminders)} />
@@ -155,7 +155,7 @@ function SettingsForm({ initial, canEdit }: { initial: SubscriptionPolicy; canEd
             <Field label="Grace period (days)" htmlFor="pol-grace" error={errors.gracePeriodDays} hint="Reference for failed payments. Nothing runs automatically.">
               <Input id="pol-grace" inputMode="numeric" disabled={disabled} value={String(value.renewal.gracePeriodDays)} onChange={(event) => set("renewal", { gracePeriodDays: number(event.target.value) })} aria-invalid={Boolean(errors.gracePeriodDays)} className="tabular" />
             </Field>
-            <Field label="Failed payment handling" htmlFor="pol-failed" className="sm:col-span-2" hint={FAILED_PAYMENT_HANDLING[value.renewal.failedPaymentHandling].description}>
+            <Field label="Failed Payment Handling" htmlFor="pol-failed" className="sm:col-span-2" hint={FAILED_PAYMENT_HANDLING[value.renewal.failedPaymentHandling].description}>
               <Select value={value.renewal.failedPaymentHandling} onValueChange={(next) => set("renewal", { failedPaymentHandling: next as FailedPaymentHandling })} disabled={disabled}>
                 <SelectTrigger id="pol-failed"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -167,9 +167,9 @@ function SettingsForm({ initial, canEdit }: { initial: SubscriptionPolicy; canEd
           <p className="mt-2 text-2xs text-muted-foreground">Payment gateway settings and secrets are not managed here.</p>
         </Panel>
 
-        <Panel title="Cancellation policy" description="When a cancellation takes effect, and how long a company can come back">
+        <Panel title="Cancellation Policy" description="When a cancellation takes effect, and how long a company can come back">
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Default cancellation timing" htmlFor="pol-timing" hint={value.cancellation.defaultTiming === "end_of_term" ? "Access continues to the end of the paid term." : "Access ends the day it is cancelled."}>
+            <Field label="Default Cancellation Timing" htmlFor="pol-timing" hint={value.cancellation.defaultTiming === "end_of_term" ? "Access continues to the end of the paid term." : "Access ends the day it is cancelled."}>
               <Select value={value.cancellation.defaultTiming} onValueChange={(next) => set("cancellation", { defaultTiming: next as "end_of_term" | "immediate" })} disabled={disabled}>
                 <SelectTrigger id="pol-timing"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -185,7 +185,7 @@ function SettingsForm({ initial, canEdit }: { initial: SubscriptionPolicy; canEd
           <p className="mt-2 text-2xs text-muted-foreground">Cancelling does not delete data or suspend the company account. Retention is not promised here.</p>
         </Panel>
 
-        <Panel title="Over-limit policy" description="What happens when a company is above an effective limit" className="lg:col-span-2">
+        <Panel title="Over-limit Policy" description="What happens when a company is above an effective limit" className="lg:col-span-2">
           <ul className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
             {OVER_LIMIT_RESOURCES.map((resource) => (
               <li key={resource.key} className="py-2">
@@ -205,7 +205,7 @@ function SettingsForm({ initial, canEdit }: { initial: SubscriptionPolicy; canEd
       </div>
 
       {dirty ? (
-        <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-2 rounded-sm border border-primary/30 bg-card px-3 py-2 shadow-md" role="region" aria-label="Unsaved changes">
+        <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-2 rounded-sm border border-primary/30 bg-card px-3 py-2 shadow-md" role="region" aria-label="Unsaved Changes">
           <p className="text-[0.8125rem] font-medium text-foreground">You have unsaved changes</p>
           {hasErrors ? <p className="text-2xs text-danger">Fix the highlighted fields to save.</p> : null}
           <div className="ml-auto flex gap-2">

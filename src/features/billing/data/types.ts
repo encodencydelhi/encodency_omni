@@ -188,7 +188,7 @@ export interface BillingAccount {
   address: BillingAddress;
   taxId: string | null;
   currency: "INR" | "USD" | string;
-  paymentTerms: "Due on Receipt" | "Net 15" | "Net 30" | "Net 60";
+  paymentTerms: "Due On Receipt" | "Net 15" | "Net 30" | "Net 60";
   invoiceDelivery: "email_pdf" | "portal_only" | "email_and_portal";
   defaultPaymentMethod: string;
   accountStatus: "active" | "delinquent" | "suspended" | "on_hold";

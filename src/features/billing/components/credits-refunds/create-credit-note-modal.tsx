@@ -55,7 +55,7 @@ export function CreateCreditNoteModal({
     handleSubmitInFlight = true;
     try {
       if (!selectedInvoice) {
-        toast.error("Please select an eligible invoice");
+        toast.error("Please Select An Eligible Invoice");
         return;
       }
       const amountMinor = parseAmountToMinor(amountMajor);
@@ -85,7 +85,7 @@ export function CreateCreditNoteModal({
       onClose();
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      toast.error(err.message || "Failed to create credit note");
+      toast.error(err.message || "Failed To Create Credit Note");
     }
     finally {
       handleSubmitInFlight = false;
@@ -112,7 +112,7 @@ export function CreateCreditNoteModal({
             <Label className="text-xs font-medium text-foreground">Target Invoice</Label>
             <Select value={selectedInvoiceId} onValueChange={setSelectedInvoiceId}>
               <SelectTrigger className="h-8 text-xs rounded-sm bg-background border-border">
-                <SelectValue placeholder="Select invoice" />
+                <SelectValue placeholder="Select Invoice" />
               </SelectTrigger>
               <SelectContent className="rounded-sm">
                 {eligibleInvoices.map((inv) => (
@@ -160,7 +160,7 @@ export function CreateCreditNoteModal({
                 </SelectTrigger>
                 <SelectContent className="rounded-sm">
                   <SelectItem value="retain_as_account_credit" className="text-xs">
-                    Post to Account Credit
+                    Post To Account Credit
                   </SelectItem>
                   <SelectItem value="balance_adjustment" className="text-xs">
                     Direct Balance Reduction

@@ -141,7 +141,7 @@ export function ReconciliationPage() {
         <BillingKpiCard
           label="EXCEPTIONS"
           value={kpis.openCount}
-          hint="Action required"
+          hint="Action Required"
           badge="Action"
           badgeTone={kpis.openCount > 0 ? "danger" : "neutral"}
           icon={AlertCircleIcon}
@@ -149,7 +149,7 @@ export function ReconciliationPage() {
         <BillingKpiCard
           label="REVIEW"
           value={kpis.investigatingCount}
-          hint="In progress"
+          hint="In Progress"
           badge="Active"
           badgeTone="warning"
           icon={ClockIcon}

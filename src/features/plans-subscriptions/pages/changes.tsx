@@ -34,7 +34,7 @@ const VIEWS: Array<{ key: View; label: string }> = [
 ];
 
 const TRIAL_STATES = [
-  { value: "ending_soon", label: "Ending soon" },
+  { value: "ending_soon", label: "Ending Soon" },
   { value: "active", label: "Active" },
   { value: "expired", label: "Expired" },
   { value: "converted", label: "Converted" },
@@ -42,7 +42,7 @@ const TRIAL_STATES = [
 
 const TRIAL_STATE_LABEL: Record<TrialRow["state"], { label: string; className: string }> = {
   active: { label: "Active", className: "text-success" },
-  ending_soon: { label: "Ending soon", className: "text-warning" },
+  ending_soon: { label: "Ending Soon", className: "text-warning" },
   expired: { label: "Expired", className: "text-danger" },
   converted: { label: "Converted", className: "text-info" },
 };
@@ -64,7 +64,7 @@ function TrialsView() {
     if (trial.state === "active" || trial.state === "ending_soon") {
       if (actions.can(trial.row).trial) {
         items.push({ id: "extend", label: "Extend Trial", icon: TimerIcon, onSelect: () => actions.openFlow({ kind: "extend", row: trial.row }) });
-        items.push({ id: "convert", label: "Convert to Paid", onSelect: () => actions.openFlow({ kind: "convert", row: trial.row }) });
+        items.push({ id: "convert", label: "Convert To Paid", onSelect: () => actions.openFlow({ kind: "convert", row: trial.row }) });
       }
     }
     items.push({ id: "company", label: "Open Company", onSelect: () => router.push(ROUTES.superAdmin.company(trial.company.id)) });
@@ -74,7 +74,7 @@ function TrialsView() {
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-1.5">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search company or plan..." aria-label="Search trials" className="w-full sm:w-72" />
+        <SearchInput value={search} onChange={setSearch} placeholder="Search company or plan..." aria-label="Search Trials" className="w-full sm:w-72" />
         <FilterSelect label="Trial" value={url.values.tstate || undefined} options={TRIAL_STATES} onChange={(value) => url.set({ tstate: value })} />
         {filtered ? <Button variant="ghost" size="sm" onClick={() => { url.clear(); setSearch(""); }}>Clear Filters</Button> : null}
       </div>
@@ -89,7 +89,7 @@ function TrialsView() {
             rows={query.data}
             getKey={(trial) => trial.subscriptionId}
             empty={
-              <EmptyState icon={TimerIcon} title={filtered ? "No trials match these filters" : "No active trials"} description={filtered ? "Try a different state or search." : "Trials appear here when a company starts one."} action={filtered ? <Button variant="outline" onClick={() => { url.clear(); setSearch(""); }}>Clear Filters</Button> : undefined} />
+              <EmptyState icon={TimerIcon} title={filtered ? "No Trials Match These Filters" : "No Active Trials"} description={filtered ? "Try a different state or search." : "Trials appear here when a company starts one."} action={filtered ? <Button variant="outline" onClick={() => { url.clear(); setSearch(""); }}>Clear Filters</Button> : undefined} />
             }
             columns={[
               { id: "company", header: "Company", cell: (trial) => <Link href={routes.subscription(trial.subscriptionId)} className="font-medium text-foreground hover:text-primary hover:underline">{trial.company.name}</Link> },
@@ -133,16 +133,16 @@ function ScheduledView() {
         <p className="ml-auto text-2xs text-muted-foreground">{PLANS_MOCK_MODE ? "Scheduled means not yet applied. This demo applies nothing on a schedule." : "Scheduled means not yet applied. Changes are applied immediately; none are scheduled."}</p>
       </div>
       {query.error && !query.data ? (
-        <PlansError subject="Scheduled changes" error={query.error} onRetry={() => void query.refetch()} />
+        <PlansError subject="Scheduled Changes" error={query.error} onRetry={() => void query.refetch()} />
       ) : !query.data ? (
         <TableSkeleton rows={6} columns={7} />
       ) : (
         <Panel flush>
           <MiniTable
-            caption="Scheduled subscription changes"
+            caption="Scheduled Subscription Changes"
             rows={rows}
             getKey={(item) => item.id}
-            empty={<EmptyState icon={CalendarClockIcon} title="No scheduled changes" description={url.activeCount > 0 ? "None of this type is scheduled." : "Future-dated plan changes, cancellations and override expiries appear here."} action={url.activeCount > 0 ? <Button variant="outline" onClick={url.clear}>Clear Filters</Button> : undefined} />}
+            empty={<EmptyState icon={CalendarClockIcon} title="No Scheduled Changes" description={url.activeCount > 0 ? "None of this type is scheduled." : "Future-dated plan changes, cancellations and override expiries appear here."} action={url.activeCount > 0 ? <Button variant="outline" onClick={url.clear}>Clear Filters</Button> : undefined} />}
             columns={[
               { id: "company", header: "Company", cell: (item) => <Link href={routes.subscription(item.subscriptionId)} className="font-medium text-foreground hover:text-primary hover:underline">{item.company.name}</Link> },
               { id: "type", header: "Change Type", cell: (item) => <span><ScheduledKindBadge kind={item.kind} /><span className="mt-0.5 block text-2xs text-muted-foreground">{item.label}</span></span> },
@@ -173,16 +173,16 @@ function RecentView() {
   return (
     <div className="space-y-2">
       {query.error && !query.data ? (
-        <PlansError subject="Recent changes" error={query.error} onRetry={() => void query.refetch()} />
+        <PlansError subject="Recent Changes" error={query.error} onRetry={() => void query.refetch()} />
       ) : !query.data ? (
         <TableSkeleton rows={8} columns={6} />
       ) : (
         <Panel flush>
           <MiniTable
-            caption="Recent subscription changes"
+            caption="Recent Subscription Changes"
             rows={query.data.slice(0, 50)}
             getKey={(event) => event.id}
-            empty={<EmptyState icon={HistoryIcon} title="No changes yet" description="Plan, subscription, trial and override changes are recorded here." />}
+            empty={<EmptyState icon={HistoryIcon} title="No Changes Yet" description="Plan, subscription, trial and override changes are recorded here." />}
             columns={[
               { id: "time", header: "Time", cell: (event) => <span className="whitespace-nowrap text-2xs text-muted-foreground" title={formatDateTime(event.at)}>{relativeTime(event.at)}</span> },
               { id: "company", header: "Company", cell: (event) => (event.company ? <span className="font-medium text-foreground">{event.company.name}</span> : <span className="text-muted-foreground">Platform plan</span>) },
@@ -197,7 +197,7 @@ function RecentView() {
                 align: "right",
                 cell: (event) => (
                   <ActionMenu
-                    label="Event actions"
+                    label="Event Actions"
                     items={[
                       { id: "view", label: "View Event", icon: EyeIcon, onSelect: () => setViewing(event) },
                       ...(event.subscriptionId ? [{ id: "open", label: "Open Subscription", onSelect: () => router.push(routes.subscription(event.subscriptionId ?? "")) }] : []),
@@ -219,7 +219,7 @@ function RecentView() {
                 <p className="text-[0.8125rem] text-foreground">{viewing.summary}</p>
                 <Panel title="Details">
                   <dl className="divide-y divide-border">
-                    <KeyValue label="Company">{viewing.company?.name ?? "Platform plan"}</KeyValue>
+                    <KeyValue label="Company">{viewing.company?.name ?? "Platform Plan"}</KeyValue>
                     <KeyValue label="Actor">{viewing.actor}</KeyValue>
                     <KeyValue label="Result">{viewing.result}</KeyValue>
                     <KeyValue label="Previous">{viewing.previousValue ?? "-"}</KeyValue>
@@ -256,7 +256,7 @@ export function ChangesPage() {
         description="Manage running trials, review scheduled subscription changes and see recent commercial activity."
         meta={PLANS_MOCK_MODE ? <DemoTag>Demo data</DemoTag> : undefined}
       />
-      <div role="tablist" aria-label="Trials and changes views" className="inline-flex rounded-sm border border-border-strong bg-card p-0.5">
+      <div role="tablist" aria-label="Trials And Changes Views" className="inline-flex rounded-sm border border-border-strong bg-card p-0.5">
         {VIEWS.map((item) => (
           <Link
             key={item.key}

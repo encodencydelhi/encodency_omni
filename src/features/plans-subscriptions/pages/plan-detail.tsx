@@ -43,20 +43,20 @@ function OverviewSection({ summary, activity }: { summary: PlanSummary; activity
 
   return (
     <div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
-      <Panel title="Plan identity">
+      <Panel title="Plan Identity">
         <dl className="divide-y divide-border">
           <KeyValue label="Name">{plan.name}</KeyValue>
-          <KeyValue label="Internal code"><span className="font-mono text-2xs">{plan.internalCode}</span></KeyValue>
+          <KeyValue label="Internal Code"><span className="font-mono text-2xs">{plan.internalCode}</span></KeyValue>
           <KeyValue label="Status"><PlanStatusBadge status={plan.status} /></KeyValue>
           <KeyValue label="Segment">{plan.targetSegment}</KeyValue>
-          <KeyValue label="Visibility">{plan.availability.visibility === "public" ? "Public" : "Invite only"}</KeyValue>
+          <KeyValue label="Visibility">{plan.availability.visibility === "public" ? "Public" : "Invite Only"}</KeyValue>
           <KeyValue label="Created">{formatDate(plan.createdAt)}</KeyValue>
         </dl>
         {plan.description ? <p className="mt-2 text-2xs text-muted-foreground">{plan.description}</p> : null}
         {plan.internalNotes ? <p className="mt-2 rounded-sm bg-surface-sunken px-2 py-1.5 text-2xs text-muted-foreground"><span className="font-medium">Internal note: </span>{plan.internalNotes}</p> : null}
       </Panel>
 
-      <Panel title="Current version">
+      <Panel title="Current Version">
         {current ? (
           <dl className="divide-y divide-border">
             <KeyValue label="Version">v{current.version} <VersionStatusBadge status="published" /></KeyValue>
@@ -64,7 +64,7 @@ function OverviewSection({ summary, activity }: { summary: PlanSummary; activity
             <KeyValue label="Monthly">{money(current.price.monthlyMinor, current.price.currency)}</KeyValue>
             <KeyValue label="Annual">{money(current.price.annualMinor, current.price.currency)}</KeyValue>
             <KeyValue label="Trial">{current.price.trialDays > 0 ? `${current.price.trialDays} days` : "None"}</KeyValue>
-            <KeyValue label="Setup fee">{current.price.setupFeeMinor > 0 ? money(current.price.setupFeeMinor, current.price.currency) : "None"}</KeyValue>
+            <KeyValue label="Setup Fee">{current.price.setupFeeMinor > 0 ? money(current.price.setupFeeMinor, current.price.currency) : "None"}</KeyValue>
           </dl>
         ) : (
           <p className="text-[0.8125rem] text-muted-foreground">Not published yet. This plan is a draft and no company can subscribe to it.</p>
@@ -74,15 +74,15 @@ function OverviewSection({ summary, activity }: { summary: PlanSummary; activity
 
       <Panel title="Subscribers" action={<Button asChild variant="ghost" size="sm"><Link href={routes.subscriptionsFor({ plan: plan.key })}>View Subscriptions on This Plan</Link></Button>}>
         <dl className="divide-y divide-border">
-          <KeyValue label="Active paid">{formatNumber(subscribers.paid)}</KeyValue>
-          <KeyValue label="On trial">{formatNumber(subscribers.trial)}</KeyValue>
+          <KeyValue label="Active Paid">{formatNumber(subscribers.paid)}</KeyValue>
+          <KeyValue label="On Trial">{formatNumber(subscribers.trial)}</KeyValue>
           <KeyValue label="MRR">{moneyTotals(subscribers.mrrByCurrency)}</KeyValue>
-          <KeyValue label="On an older version">{formatNumber(subscribers.onOlderVersion)}</KeyValue>
+          <KeyValue label="On An Older Version">{formatNumber(subscribers.onOlderVersion)}</KeyValue>
         </dl>
         {plan.status === "retired" && subscribers.total > 0 ? <p className="mt-2 text-2xs text-muted-foreground">Retired, but these subscriptions keep referencing it unchanged.</p> : null}
       </Panel>
 
-      <Panel title="Entitlement summary" description={`${enabled.length} of ${FEATURES.length} features enabled`} className="lg:col-span-2">
+      <Panel title="Entitlement Summary" description={`${enabled.length} of ${FEATURES.length} features enabled`} className="lg:col-span-2">
         {current ? (
           <div className="space-y-2">
             <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
@@ -97,7 +97,7 @@ function OverviewSection({ summary, activity }: { summary: PlanSummary; activity
         )}
       </Panel>
 
-      <Panel title="Recent plan activity" action={<Button asChild variant="ghost" size="sm"><Link href={routes.plan(plan.id, "versions")}>All activity</Link></Button>}>
+      <Panel title="Recent Plan Activity" action={<Button asChild variant="ghost" size="sm"><Link href={routes.plan(plan.id, "versions")}>All activity</Link></Button>}>
         {activity.length === 0 ? (
           <p className="text-[0.8125rem] text-muted-foreground">No activity yet.</p>
         ) : (
@@ -119,38 +119,38 @@ function PricingSection({ summary, subscribersOnPlan }: { summary: PlanSummary; 
   const { current, draft } = summary;
   const savings = current ? annualSavings(current.price.monthlyMinor, current.price.annualMinor) : null;
   const diffs = current && draft ? [
-    ["Monthly price", money(current.price.monthlyMinor, current.price.currency), money(draft.price.monthlyMinor, draft.price.currency), current.price.monthlyMinor !== draft.price.monthlyMinor],
-    ["Annual price", money(current.price.annualMinor, current.price.currency), money(draft.price.annualMinor, draft.price.currency), current.price.annualMinor !== draft.price.annualMinor],
+    ["Monthly Price", money(current.price.monthlyMinor, current.price.currency), money(draft.price.monthlyMinor, draft.price.currency), current.price.monthlyMinor !== draft.price.monthlyMinor],
+    ["Annual Price", money(current.price.annualMinor, current.price.currency), money(draft.price.annualMinor, draft.price.currency), current.price.annualMinor !== draft.price.annualMinor],
     ["Trial", `${current.price.trialDays} days`, `${draft.price.trialDays} days`, current.price.trialDays !== draft.price.trialDays],
   ] as Array<[string, string, string, boolean]> : [];
 
   return (
     <div className="grid grid-cols-1 gap-1 lg:grid-cols-2">
-      <Panel title="Published pricing" description={current ? `Version ${current.version}` : undefined}>
+      <Panel title="Published Pricing" description={current ? `Version ${current.version}` : undefined}>
         {current ? (
           <dl className="divide-y divide-border">
             <KeyValue label="Currency">{current.price.currency}</KeyValue>
-            <KeyValue label="Monthly price">{money(current.price.monthlyMinor, current.price.currency)}</KeyValue>
-            <KeyValue label="Annual price">{money(current.price.annualMinor, current.price.currency)}</KeyValue>
-            <KeyValue label="Annual monthly equivalent">{money(Math.round(current.price.annualMinor / 12), current.price.currency)}</KeyValue>
-            <KeyValue label="Annual savings">{savings && savings.amountMinor >= 0 ? `${savings.percent}%` : "-"}</KeyValue>
-            <KeyValue label="Trial policy">{current.price.trialDays > 0 ? `${current.price.trialDays} days, not counted as paid` : "No trial"}</KeyValue>
-            <KeyValue label="Price version">v{current.version}</KeyValue>
+            <KeyValue label="Monthly Price">{money(current.price.monthlyMinor, current.price.currency)}</KeyValue>
+            <KeyValue label="Annual Price">{money(current.price.annualMinor, current.price.currency)}</KeyValue>
+            <KeyValue label="Annual Monthly Equivalent">{money(Math.round(current.price.annualMinor / 12), current.price.currency)}</KeyValue>
+            <KeyValue label="Annual Savings">{savings && savings.amountMinor >= 0 ? `${savings.percent}%` : "-"}</KeyValue>
+            <KeyValue label="Trial Policy">{current.price.trialDays > 0 ? `${current.price.trialDays} days, not counted as paid` : "No Trial"}</KeyValue>
+            <KeyValue label="Price Version">v{current.version}</KeyValue>
             <KeyValue label="Effective">{current.publishedAt ? formatDate(current.publishedAt) : "-"}</KeyValue>
-            <KeyValue label="Subscribers priced here">{formatNumber(subscribersOnPlan)}</KeyValue>
+            <KeyValue label="Subscribers Priced Here">{formatNumber(subscribersOnPlan)}</KeyValue>
           </dl>
         ) : (
           <p className="text-[0.8125rem] text-muted-foreground">Nothing is published, so no price is in force.</p>
         )}
         {current?.price.notes ? <p className="mt-2 text-2xs text-muted-foreground">{current.price.notes}</p> : null}
       </Panel>
-      <Panel title="Changing this price" description="Published pricing is never edited in place">
+      <Panel title="Changing This Price" description="Published pricing is never edited in place">
         <p className="text-[0.8125rem] text-foreground">A published version is an immutable snapshot. To change the price, create a new draft version, review the impact, then publish it with a rollout policy.</p>
         <p className="mt-2 text-2xs text-muted-foreground">Existing subscriptions keep the price of the version they are on until you migrate them or they move at renewal. Nobody&apos;s price changes silently.</p>
         {draft && diffs.length > 0 ? (
           <div className="mt-3">
             <p className="mb-1 text-[0.8125rem] font-medium text-foreground">Draft version {draft.version} versus current</p>
-            <MiniTable caption="Pricing differences" rows={diffs} getKey={(row) => row[0]} columns={[
+            <MiniTable caption="Pricing Differences" rows={diffs} getKey={(row) => row[0]} columns={[
               { id: "field", header: "Field", cell: (row) => row[0] },
               { id: "current", header: "Current", cell: (row) => row[1] },
               { id: "draft", header: "Draft", cell: (row) => <span className={cn(row[3] && "font-medium text-primary")}>{row[2]}</span> },
@@ -181,11 +181,11 @@ function FeaturesSection({ summary }: { summary: PlanSummary }) {
               rows={[...resources.map((def) => ({ kind: "resource" as const, key: def.key, name: def.name, def })), ...features.map((feature) => ({ kind: "feature" as const, key: feature.key, name: feature.name, def: feature }))]}
               getKey={(row) => `${row.kind}-${row.key}`}
               columns={[
-                { id: "name", header: "Feature / resource", cell: (row) => <span><span className="block font-medium text-foreground">{row.name}</span><span className="block font-mono text-[10px] text-muted-foreground">{row.key}</span></span> },
+                { id: "name", header: "Feature / Resource", cell: (row) => <span><span className="block font-medium text-foreground">{row.name}</span><span className="block font-mono text-[10px] text-muted-foreground">{row.key}</span></span> },
                 {
                   id: "value",
                   header: `Version ${base.version}`,
-                  cell: (row) => (row.kind === "resource" ? formatRule(base.limits[row.def.key as keyof typeof base.limits], row.def.unit) : base.features[row.key] ? "Included" : "Not included"),
+                  cell: (row) => (row.kind === "resource" ? formatRule(base.limits[row.def.key as keyof typeof base.limits], row.def.unit) : base.features[row.key] ? "Included" : "Not Included"),
                 },
                 ...(compare
                   ? [{
@@ -198,11 +198,11 @@ function FeaturesSection({ summary }: { summary: PlanSummary }) {
                           return <span className={cn(changed && "font-medium text-primary")}>{formatRule(compare.limits[key], (row.def as (typeof resources)[number]).unit)}{changed ? " • changed" : ""}</span>;
                         }
                         const changed = Boolean(base.features[row.key]) !== Boolean(compare.features[row.key]);
-                        return <span className={cn(changed && "font-medium text-primary")}>{compare.features[row.key] ? "Included" : "Not included"}{changed ? " • changed" : ""}</span>;
+                        return <span className={cn(changed && "font-medium text-primary")}>{compare.features[row.key] ? "Included" : "Not Included"}{changed ? " • changed" : ""}</span>;
                       },
                     }]
                   : []),
-                { id: "unit", header: "Unit / reset", hideBelow: "md", cell: (row) => (row.kind === "resource" ? `${(row.def as (typeof resources)[number]).unit} · ${(row.def as (typeof resources)[number]).resetPeriod === "none" ? "capacity" : (row.def as (typeof resources)[number]).resetPeriod === "billing_cycle" ? "per billing period" : "per month"}` : "-") },
+                { id: "unit", header: "Unit / Reset", hideBelow: "md", cell: (row) => (row.kind === "resource" ? `${(row.def as (typeof resources)[number]).unit} · ${(row.def as (typeof resources)[number]).resetPeriod === "none" ? "capacity" : (row.def as (typeof resources)[number]).resetPeriod === "billing_cycle" ? "per billing period" : "per month"}` : "-") },
                 { id: "dep", header: "Dependency", hideBelow: "lg", cell: (row) => (row.kind === "feature" && (row.def as (typeof features)[number]).dependencies.length > 0 ? (row.def as (typeof features)[number]).dependencies.join(", ") : "-") },
               ]}
             />
@@ -250,7 +250,7 @@ function AvailabilitySectionView({ summary }: { summary: PlanSummary }) {
     >
       {editing && editorValue ? (
         <div className="space-y-3">
-          {error ? <AlertBanner tone="danger" title="Nothing was changed">{error}</AlertBanner> : null}
+          {error ? <AlertBanner tone="danger" title="Nothing Was Changed">{error}</AlertBanner> : null}
           <AvailabilitySection value={editorValue} onChange={(patch) => patch.availability && setEditing(patch.availability)} errors={editing.currencies.length === 0 ? { currencies: "Choose at least one currency." } : {}} idPrefix="detail" />
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => { setEditing(null); setError(null); }} disabled={pending}>Cancel</Button>
@@ -259,11 +259,11 @@ function AvailabilitySectionView({ summary }: { summary: PlanSummary }) {
         </div>
       ) : (
         <dl className="divide-y divide-border">
-          <KeyValue label="Lifecycle status"><PlanStatusBadge status={plan.status} /></KeyValue>
-          <KeyValue label="New purchase">{yesNo(a.newPurchase && plan.status === "published")}</KeyValue>
+          <KeyValue label="Lifecycle Status"><PlanStatusBadge status={plan.status} /></KeyValue>
+          <KeyValue label="New Purchase">{yesNo(a.newPurchase && plan.status === "published")}</KeyValue>
           <KeyValue label="Upgrade">{yesNo(a.upgrade && plan.status === "published")}</KeyValue>
           <KeyValue label="Downgrade">{yesNo(a.downgrade && plan.status === "published")}</KeyValue>
-          <KeyValue label="Visibility">{a.visibility === "public" ? "Public" : "Invite only"}</KeyValue>
+          <KeyValue label="Visibility">{a.visibility === "public" ? "Public" : "Invite Only"}</KeyValue>
           <KeyValue label="Currencies">{a.currencies.join(", ")}</KeyValue>
         </dl>
       )}
@@ -279,7 +279,7 @@ function VersionSheet({ plan, version, onClose }: { plan: PlanSummary["plan"]; v
       <SheetContent className="w-full sm:max-w-xl">
         <SheetHeader>
           <SheetTitle>{plan.name} version {version?.version}</SheetTitle>
-          <SheetDescription>{version?.changeSummary.join("; ") || "No summary"}</SheetDescription>
+          <SheetDescription>{version?.changeSummary.join("; ") || "No Summary"}</SheetDescription>
         </SheetHeader>
         <SheetBody className="px-0">{version ? <ComparisonTable columns={columns} /> : null}</SheetBody>
       </SheetContent>
@@ -300,14 +300,14 @@ function VersionsSection({ summary, subscribersByVersion, activity }: { summary:
     <div className="space-y-1">
       <Panel title="Versions" description="Each published version is an immutable snapshot of price, features and limits" flush>
         <MiniTable
-          caption="Plan versions"
+          caption="Plan Versions"
           rows={versions}
           getKey={(version) => version.id}
           columns={[
             { id: "version", header: "Version", cell: (version) => <span className="font-medium text-foreground">v{version.version}</span> },
             { id: "status", header: "Status", cell: (version) => <VersionStatusBadge status={version.status} /> },
             { id: "published", header: "Published", hideBelow: "sm", cell: (version) => (version.publishedAt ? <span className="text-2xs">{formatDate(version.publishedAt)}<span className="block text-muted-foreground">{version.publishedBy}</span></span> : <span className="text-muted-foreground">Not published</span>) },
-            { id: "changes", header: "Changes", hideBelow: "md", className: "min-w-56", cell: (version) => <span className="line-clamp-2 text-2xs text-muted-foreground">{version.changeSummary.length ? version.changeSummary.join("; ") : "No changes recorded yet"}{version.rollout ? ` · ${ROLLOUT_POLICY[version.rollout].label}` : ""}</span> },
+            { id: "changes", header: "Changes", hideBelow: "md", className: "min-w-56", cell: (version) => <span className="line-clamp-2 text-2xs text-muted-foreground">{version.changeSummary.length ? version.changeSummary.join("; ") : "No Changes Recorded Yet"}{version.rollout ? ` · ${ROLLOUT_POLICY[version.rollout].label}` : ""}</span> },
             { id: "subs", header: "Subscribers", align: "right", cell: (version) => <span className="tabular">{subscribersByVersion[version.version] ?? 0}</span> },
             {
               id: "actions",
@@ -318,7 +318,7 @@ function VersionsSection({ summary, subscribersByVersion, activity }: { summary:
                   label={`Actions for version ${version.version}`}
                   items={[
                     { id: "view", label: "View Version", icon: EyeIcon, onSelect: () => setViewing(version) },
-                    { id: "compare", label: version.version === versions[0]?.version ? "Compare with previous" : `Compare with v${versions[0]?.version}`, onSelect: () => { setLeft(version.version); setRight(version.version === versions[0]?.version ? (versions[1]?.version ?? null) : (versions[0]?.version ?? null)); }, disabled: versions.length < 2 },
+                    { id: "compare", label: version.version === versions[0]?.version ? "Compare With Previous" : `Compare with v${versions[0]?.version}`, onSelect: () => { setLeft(version.version); setRight(version.version === versions[0]?.version ? (versions[1]?.version ?? null) : (versions[0]?.version ?? null)); }, disabled: versions.length < 2 },
                     { id: "subs", label: "View Subscribers", icon: UsersIcon, onSelect: () => router.push(routes.subscriptionsFor({ plan: plan.key })) },
                   ]}
                 />
@@ -337,7 +337,7 @@ function VersionsSection({ summary, subscribersByVersion, activity }: { summary:
         </Panel>
       ) : null}
 
-      <Panel title="Plan activity">
+      <Panel title="Plan Activity">
         {activity.length === 0 ? (
           <p className="text-[0.8125rem] text-muted-foreground">No activity yet.</p>
         ) : (
@@ -372,7 +372,7 @@ export function PlanDetailPage() {
   const data = query.data;
   const menu = useMemo(() => (data ? actions.menu(data.summary) : []), [actions, data]);
 
-  if (query.error && !data) return <PlansError subject="Plan" error={query.error} onRetry={() => void query.refetch()} back={{ href: routes.plans, label: "Back to Plans" }} />;
+  if (query.error && !data) return <PlansError subject="Plan" error={query.error} onRetry={() => void query.refetch()} back={{ href: routes.plans, label: "Back To Plans" }} />;
   if (!data) {
     return (
       <div className="space-y-2">
@@ -400,7 +400,7 @@ export function PlanDetailPage() {
             </div>
             <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-2xs text-muted-foreground">
               <span className="font-mono">{plan.internalCode}</span>
-              <span>{current ? `Current v${current.version}` : "Not published"}</span>
+              <span>{current ? `Current v${current.version}` : "Not Published"}</span>
               {draft ? <span className="text-warning">Draft v{draft.version} in progress</span> : null}
               <span>Updated {relativeTime(plan.updatedAt)} by {plan.updatedBy}</span>
             </p>
@@ -413,21 +413,21 @@ export function PlanDetailPage() {
             <ActionMenu items={menu} label={`More actions for ${plan.name}`} />
           </div>
         </div>
-        {plan.status === "retired" ? <AlertBanner tone="info" title="This plan is retired">It is closed to new business. {subscribers.total} existing {subscribers.total === 1 ? "subscription keeps" : "subscriptions keep"} referencing it unchanged.</AlertBanner> : null}
-        {plan.status === "hidden" ? <AlertBanner tone="warning" title="Hidden from new purchase">Existing subscribers keep this plan; nobody new can choose it.</AlertBanner> : null}
-        {plan.status === "draft" ? <AlertBanner tone="info" title="Draft plan">No company can subscribe until it is published.</AlertBanner> : null}
+        {plan.status === "retired" ? <AlertBanner tone="info" title="This Plan Is Retired">It is closed to new business. {subscribers.total} existing {subscribers.total === 1 ? "subscription keeps" : "subscriptions keep"} referencing it unchanged.</AlertBanner> : null}
+        {plan.status === "hidden" ? <AlertBanner tone="warning" title="Hidden From New Purchase">Existing subscribers keep this plan; nobody new can choose it.</AlertBanner> : null}
+        {plan.status === "draft" ? <AlertBanner tone="info" title="Draft Plan">No company can subscribe until it is published.</AlertBanner> : null}
       </header>
 
       <StatGrid className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-6">
-        <StatCard compact label="Current version" value={current ? `v${current.version}` : "Draft"} hint={current?.publishedAt ? formatDate(current.publishedAt) : "Not published"} />
-        <StatCard compact label="Monthly price" value={<span className="text-base">{price ? money(price.monthlyMinor, price.currency) : "-"}</span>} />
-        <StatCard compact label="Annual price" value={<span className="text-base">{price ? money(price.annualMinor, price.currency) : "-"}</span>} />
-        <StatCard compact label="Active subscribers" value={formatNumber(subscribers.total)} hint={`${subscribers.paid} paid · ${subscribers.trial} trial`} href={routes.subscriptionsFor({ plan: plan.key })} />
+        <StatCard compact label="Current Version" value={current ? `v${current.version}` : "Draft"} hint={current?.publishedAt ? formatDate(current.publishedAt) : "Not Published"} />
+        <StatCard compact label="Monthly Price" value={<span className="text-base">{price ? money(price.monthlyMinor, price.currency) : "-"}</span>} />
+        <StatCard compact label="Annual Price" value={<span className="text-base">{price ? money(price.annualMinor, price.currency) : "-"}</span>} />
+        <StatCard compact label="Active Subscribers" value={formatNumber(subscribers.total)} hint={`${subscribers.paid} paid · ${subscribers.trial} trial`} href={routes.subscriptionsFor({ plan: plan.key })} />
         <StatCard compact label="MRR" value={<span className="text-base">{moneyTotals(subscribers.mrrByCurrency, true)}</span>} />
-        <StatCard compact label="Last updated" value={<span className="text-[0.8125rem]">{relativeTime(plan.updatedAt)}</span>} />
+        <StatCard compact label="Last Updated" value={<span className="text-[0.8125rem]">{relativeTime(plan.updatedAt)}</span>} />
       </StatGrid>
 
-      <nav aria-label="Plan sections" className="overflow-x-auto border-b border-border scrollbar-thin">
+      <nav aria-label="Plan Sections" className="overflow-x-auto border-b border-border scrollbar-thin">
         <ul className="flex min-w-max gap-0.5">
           {PLAN_SECTIONS.map((item) => (
             <li key={item.key}>

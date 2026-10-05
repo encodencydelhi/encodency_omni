@@ -35,7 +35,7 @@ export function PlanCard({ summary, actions }: { summary: PlanSummary; actions: 
           </div>
           <PlanStatusBadge status={plan.status} />
         </div>
-        <p className="line-clamp-2 min-h-8 text-2xs text-muted-foreground">{plan.description || "No description"}</p>
+        <p className="line-clamp-2 min-h-8 text-2xs text-muted-foreground">{plan.description || "No Description"}</p>
 
         <div className="grid grid-cols-2 gap-2 border-y border-border py-2">
           <div>

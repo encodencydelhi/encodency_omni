@@ -48,7 +48,7 @@ export function SubscriptionPreviewDrawer({
         {query.error && !query.data ? (
           <>
             <SheetHeader><SheetTitle>Subscription preview</SheetTitle><SheetDescription>This subscription could not be loaded.</SheetDescription></SheetHeader>
-            <SheetBody><PlansError subject="Subscription" error={query.error} onRetry={() => void query.refetch()} back={{ href: routes.subscriptions, label: "Back to Subscriptions" }} /></SheetBody>
+            <SheetBody><PlansError subject="Subscription" error={query.error} onRetry={() => void query.refetch()} back={{ href: routes.subscriptions, label: "Back To Subscriptions" }} /></SheetBody>
           </>
         ) : !query.data ? (
           <>
@@ -81,19 +81,19 @@ function PreviewContent({ detail, actions, onClose }: { detail: SubscriptionDeta
       <SheetBody className="space-y-3">
         <StatGrid className="grid-cols-2">
           <StatCard label="Recurring" value={<span className="text-base">{money(row.recurringMinor, row.currency)}</span>} hint={`per ${row.billingCycle === "annual" ? "year" : "month"}`} />
-          <StatCard label="MRR contribution" value={<span className="text-base">{row.mrrMinor > 0 ? money(row.mrrMinor, row.currency) : "-"}</span>} hint={row.status === "trialing" ? "Trials are not MRR" : "Normalized monthly"} />
+          <StatCard label="MRR Contribution" value={<span className="text-base">{row.mrrMinor > 0 ? money(row.mrrMinor, row.currency) : "-"}</span>} hint={row.status === "trialing" ? "Trials Are Not MRR" : "Normalized Monthly"} />
         </StatGrid>
 
         <Panel title="Subscription">
           <dl className="divide-y divide-border">
             <KeyValue label="Plan">{row.planName} v{row.planVersion} {row.isLegacyVersion ? <LegacyVersionTag version={row.planVersion} current={row.currentVersion} /> : null}</KeyValue>
-            <KeyValue label="Billing cycle"><span className="capitalize">{row.billingCycle}</span></KeyValue>
-            <KeyValue label={row.status === "trialing" ? "Trial end" : "Renewal"}><PeriodCell row={row} /></KeyValue>
+            <KeyValue label="Billing Cycle"><span className="capitalize">{row.billingCycle}</span></KeyValue>
+            <KeyValue label={row.status === "trialing" ? "Trial End" : "Renewal"}><PeriodCell row={row} /></KeyValue>
             <KeyValue label="Started">{formatDate(row.startedAt)}</KeyValue>
           </dl>
         </Panel>
 
-        <Panel title="Usage warnings" description={warnings.length === 0 ? undefined : `${warnings.length} above 90% or over`}>
+        <Panel title="Usage Warnings" description={warnings.length === 0 ? undefined : `${warnings.length} above 90% or over`}>
           {warnings.length === 0 ? (
             <p className="text-[0.8125rem] text-muted-foreground">No resource is near or above its effective limit.</p>
           ) : (
@@ -108,7 +108,7 @@ function PreviewContent({ detail, actions, onClose }: { detail: SubscriptionDeta
           )}
         </Panel>
 
-        <Panel title="Active overrides">
+        <Panel title="Active Overrides">
           {row.activeOverrides === 0 ? (
             <p className="text-[0.8125rem] text-muted-foreground">No company-specific overrides.</p>
           ) : (
@@ -126,7 +126,7 @@ function PreviewContent({ detail, actions, onClose }: { detail: SubscriptionDeta
           )}
         </Panel>
 
-        <Panel title="Upcoming changes">
+        <Panel title="Upcoming Changes">
           {detail.scheduled.length === 0 ? (
             <p className="text-[0.8125rem] text-muted-foreground">Nothing is scheduled.</p>
           ) : (

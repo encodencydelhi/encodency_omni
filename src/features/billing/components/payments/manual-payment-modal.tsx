@@ -53,7 +53,7 @@ export function ManualPaymentModal({
     handleSubmitInFlight = true;
     try {
       if (!selectedAccount) {
-        toast.error("Please select a valid billing account");
+        toast.error("Please Select A Valid Billing Account");
         return;
       }
       const amountMinor = parseAmountToMinor(amountMajor);
@@ -83,7 +83,7 @@ export function ManualPaymentModal({
       onClose();
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      toast.error(err.message || "Failed to record payment");
+      toast.error(err.message || "Failed To Record Payment");
     }
     finally {
       handleSubmitInFlight = false;
@@ -110,7 +110,7 @@ export function ManualPaymentModal({
             <Label className="text-xs font-medium text-foreground">Company Billing Account</Label>
             <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
               <SelectTrigger className="h-8 text-xs rounded-sm bg-background border-border">
-                <SelectValue placeholder="Select account" />
+                <SelectValue placeholder="Select Account" />
               </SelectTrigger>
               <SelectContent className="rounded-sm">
                 {accounts.map((acc) => (

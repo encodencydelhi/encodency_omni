@@ -123,7 +123,7 @@ export function usePlanActions() {
             variant="destructive"
             onConfirm={() => {
               close();
-              void run(mutations.discardDraft(plan.id), "Draft version discarded");
+              void run(mutations.discardDraft(plan.id), "Draft Version Discarded");
             }}
           />
         );

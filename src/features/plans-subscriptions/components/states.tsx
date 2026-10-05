@@ -14,7 +14,7 @@ export function PlansError({
   subject,
   error,
   onRetry,
-  back = { href: routes.overview, label: "Back to Overview" },
+  back = { href: routes.overview, label: "Back To Overview" },
   className,
 }: {
   subject: string;
@@ -27,7 +27,7 @@ export function PlansError({
   const notFound = api?.code === "NOT_FOUND";
   const notConnected = api?.code === "SERVICE_UNAVAILABLE" && !PLANS_MOCK_MODE;
 
-  const title = notFound ? `${subject} not found` : notConnected ? "Commercial service not connected" : `${subject} unavailable`;
+  const title = notFound ? `${subject} not found` : notConnected ? "Commercial Service Not Connected" : `${subject} unavailable`;
   const description = notFound
     ? PLANS_MOCK_MODE ? "It does not exist, or it was removed from this demo workspace. Check the link or go back." : "It does not exist, or it was removed. Check the link or go back."
     : (api?.message ?? "The request did not complete. Nothing was changed.");

@@ -20,7 +20,7 @@ import type { PlanSummary, RolloutPolicy } from "../../data/types";
 import { money, signedMoney } from "../../lib/money";
 import { MiniTable } from "../mini-table";
 
-const STEPS = ["Differences", "Subscriber impact", "Rollout", "Confirm"];
+const STEPS = ["Differences", "Subscriber Impact", "Rollout", "Confirm"];
 
 /**
  * Publishing turns a draft into an immutable version. For a plan that is already
@@ -78,13 +78,13 @@ export function PublishFlow({ summary, onClose }: { summary: PlanSummary; onClos
       >
         <ErrorBanner message={error} />
         {errors.length > 0 ? (
-          <AlertBanner tone="danger" title="Fix these before publishing">
+          <AlertBanner tone="danger" title="Fix These Before Publishing">
             <ul className="mt-1 list-disc space-y-0.5 pl-4">
               {errors.map((issue) => <li key={issue.field}>{issue.message}</li>)}
             </ul>
           </AlertBanner>
         ) : (
-          <AlertBanner tone="success" title="The configuration is valid">
+          <AlertBanner tone="success" title="The Configuration Is Valid">
             Nobody is subscribed yet, so nothing changes for any company. It becomes available according to its availability rules.
           </AlertBanner>
         )}
@@ -130,9 +130,9 @@ export function PublishFlow({ summary, onClose }: { summary: PlanSummary; onClos
           <div className="space-y-2">
             <div className="grid grid-cols-1 gap-1 sm:grid-cols-3">
               {[
-                ["Current version", `Version ${data.fromVersion}`],
-                ["Proposed version", `Version ${data.toVersion}`],
-                ["Monthly price", data.priceDiff ? `${money(current?.price.monthlyMinor ?? 0, data.priceDiff.currency)} → ${money((current?.price.monthlyMinor ?? 0) + data.priceDiff.monthlyMinor, data.priceDiff.currency)} (${signedMoney(data.priceDiff.monthlyMinor, data.priceDiff.currency)})` : "-"],
+                ["Current Version", `Version ${data.fromVersion}`],
+                ["Proposed Version", `Version ${data.toVersion}`],
+                ["Monthly Price", data.priceDiff ? `${money(current?.price.monthlyMinor ?? 0, data.priceDiff.currency)} → ${money((current?.price.monthlyMinor ?? 0) + data.priceDiff.monthlyMinor, data.priceDiff.currency)} (${signedMoney(data.priceDiff.monthlyMinor, data.priceDiff.currency)})` : "-"],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-sm border border-border px-3 py-2">
                   <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
@@ -143,19 +143,19 @@ export function PublishFlow({ summary, onClose }: { summary: PlanSummary; onClos
             {data.priceDiff && data.priceDiff.annualMinor !== 0 ? <p className="text-2xs text-muted-foreground">Annual price {signedMoney(data.priceDiff.annualMinor, data.priceDiff.currency)}.</p> : null}
             <h4 className="text-[0.8125rem] font-semibold text-foreground">Changed features</h4>
             <MiniTable
-              caption="Changed features"
+              caption="Changed Features"
               rows={data.changedFeatures}
               getKey={(row) => row.key}
               empty={<p className="text-[0.8125rem] text-muted-foreground">No feature changes.</p>}
               columns={[
                 { id: "name", header: "Feature", cell: (row) => row.name },
-                { id: "from", header: "Was", cell: (row) => (row.from ? "Included" : "Not included") },
-                { id: "to", header: "Becomes", cell: (row) => <span className={row.to ? "text-success" : "text-danger"}>{row.to ? "Included" : "Not included"}</span> },
+                { id: "from", header: "Was", cell: (row) => (row.from ? "Included" : "Not Included") },
+                { id: "to", header: "Becomes", cell: (row) => <span className={row.to ? "text-success" : "text-danger"}>{row.to ? "Included" : "Not Included"}</span> },
               ]}
             />
             <h4 className="text-[0.8125rem] font-semibold text-foreground">Changed limits</h4>
             <MiniTable
-              caption="Changed limits"
+              caption="Changed Limits"
               rows={data.changedLimits}
               getKey={(row) => row.key}
               empty={<p className="text-[0.8125rem] text-muted-foreground">No limit changes.</p>}
@@ -177,21 +177,21 @@ export function PublishFlow({ summary, onClose }: { summary: PlanSummary; onClos
             <div className="rounded-sm border border-border px-3 py-2"><p className="text-[11px] uppercase tracking-wide text-muted-foreground">Proposed effect</p><p className="text-[0.8125rem] font-medium text-foreground">Set in the next step</p></div>
           </div>
           {data.exceedingNewLimits.length === 0 ? (
-            <AlertBanner tone="success" title="No company exceeds the proposed limits">Every current subscriber&apos;s usage fits within version {data.toVersion}.</AlertBanner>
+            <AlertBanner tone="success" title="No Company Exceeds The Proposed Limits">Every current subscriber&apos;s usage fits within version {data.toVersion}.</AlertBanner>
           ) : (
             <>
               <AlertBanner tone="warning" title={`${pluralise(data.affectedCompanies, "company", "companies")} would be above a reduced limit`}>
                 Nothing is deleted or disconnected. Under the over-limit policy their existing resources keep working and new ones are refused until usage fits.
               </AlertBanner>
               <MiniTable
-                caption="Subscribers exceeding the new limits"
+                caption="Subscribers Exceeding The New Limits"
                 rows={data.exceedingNewLimits}
                 getKey={(row) => `${row.subscriptionId}-${row.resource}`}
                 columns={[
                   { id: "company", header: "Company", cell: (row) => row.companyName },
                   { id: "resource", header: "Resource", cell: (row) => row.resourceName },
-                  { id: "used", header: "In use", align: "right", cell: (row) => <span className="tabular">{row.used}</span> },
-                  { id: "limit", header: "New limit", align: "right", cell: (row) => <span className="tabular font-medium">{row.newLimit}</span> },
+                  { id: "used", header: "In Use", align: "right", cell: (row) => <span className="tabular">{row.used}</span> },
+                  { id: "limit", header: "New Limit", align: "right", cell: (row) => <span className="tabular font-medium">{row.newLimit}</span> },
                 ]}
               />
             </>
@@ -202,7 +202,7 @@ export function PublishFlow({ summary, onClose }: { summary: PlanSummary; onClos
       {step === 2 ? (
         <div className="space-y-2">
           <p className="text-[0.8125rem] text-foreground">How does version {draft.version} reach existing subscriptions? New subscriptions always start on it.</p>
-          <RadioGroup value={rollout} onValueChange={(value) => setRollout(value as RolloutPolicy)} className="gap-1.5" aria-label="Rollout policy">
+          <RadioGroup value={rollout} onValueChange={(value) => setRollout(value as RolloutPolicy)} className="gap-1.5" aria-label="Rollout Policy">
             {(Object.keys(ROLLOUT_POLICY) as RolloutPolicy[]).map((option) => (
               <div key={option} className="flex items-start gap-2.5 rounded-sm border border-border px-3 py-2">
                 <RadioGroupItem value={option} id={`rollout-${option}`} className="mt-0.5" />
@@ -240,7 +240,7 @@ export function PublishFlow({ summary, onClose }: { summary: PlanSummary; onClos
             <div className="flex justify-between gap-3 py-1.5"><dt className="text-muted-foreground">Exceeding new limits</dt><dd className="text-foreground">{pluralise(data?.affectedCompanies ?? 0, "company", "companies")}</dd></div>
           </dl>
           {errors.length > 0 ? (
-            <AlertBanner tone="danger" title="Fix these before publishing">
+            <AlertBanner tone="danger" title="Fix These Before Publishing">
               <ul className="mt-1 list-disc space-y-0.5 pl-4">{errors.map((issue) => <li key={issue.field}>{issue.message}</li>)}</ul>
             </AlertBanner>
           ) : null}

@@ -45,7 +45,7 @@ export function VoidInvoiceDialog({
 
   const handleConfirm = async () => {
     if (!reason.trim()) {
-      toast.error("Please provide a cancellation/void reason");
+      toast.error("Please Provide A cancellation/void Reason");
       return;
     }
     if (voidInFlight) return;
@@ -55,7 +55,7 @@ export function VoidInvoiceDialog({
       toast.success(`Invoice ${invoice.number} voided successfully`);
       onClose();
     } catch (err: any) {
-      toast.error(err.message || "Failed to void invoice");
+      toast.error(err.message || "Failed To Void Invoice");
     } finally {
       voidInFlight = false;
     }

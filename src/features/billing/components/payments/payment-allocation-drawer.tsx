@@ -90,7 +90,7 @@ export function PaymentAllocationDrawer({
         return;
       }
       if (isOverAllocated) {
-        toast.error("Proposed allocation exceeds available unallocated funds");
+        toast.error("Proposed Allocation Exceeds Available Unallocated Funds");
         return;
       }
 
@@ -109,7 +109,7 @@ export function PaymentAllocationDrawer({
       onClose();
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      toast.error(err.message || "Failed to allocate payment");
+      toast.error(err.message || "Failed To Allocate Payment");
     }
     finally {
       handleConfirmAllocationInFlight = false;
@@ -129,7 +129,7 @@ export function PaymentAllocationDrawer({
               <span className="font-mono text-xs text-muted-foreground">{payment.reference}</span>
             </div>
             <SheetTitle className="text-lg font-bold tracking-tight text-foreground">
-              Allocate Funds to Invoices
+              Allocate Funds To Invoices
             </SheetTitle>
             <SheetDescription className="text-xs text-muted-foreground">
               Apply unallocated settled money from {payment.companyName} to open receivable invoices.

@@ -52,7 +52,7 @@ export function OverviewPage() {
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon-sm" aria-label="More actions">
+                <Button variant="outline" size="icon-sm" aria-label="More Actions">
                   <MoreHorizontalIcon />
                 </Button>
               </DropdownMenuTrigger>

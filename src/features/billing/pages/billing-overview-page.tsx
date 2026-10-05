@@ -52,7 +52,7 @@ export function BillingOverviewPage() {
         <BillingKpiCard
           label="GROSS"
           value={formatMoney(kpis.issuedInvoiceMinor, kpis.currency)}
-          hint="Period total"
+          hint="Period Total"
           badge={`${selectedPeriod}D`}
           badgeTone="info"
           icon={FileTextIcon}
@@ -79,7 +79,7 @@ export function BillingOverviewPage() {
         <BillingKpiCard
           label="OVERDUE"
           value={formatMoney(kpis.overdueAmountMinor, kpis.currency)}
-          hint="Past due"
+          hint="Past Due"
           badge={kpis.overdueAmountMinor > 0 ? "Urgent" : "None"}
           badgeTone={kpis.overdueAmountMinor > 0 ? "danger" : "neutral"}
           icon={AlertTriangleIcon}
@@ -119,7 +119,7 @@ export function BillingOverviewPage() {
         <BillingKpiCard
           label="REFUNDS"
           value={kpis.pendingRefundsCount}
-          hint="In review"
+          hint="In Review"
           badge="Queue"
           badgeTone="info"
           icon={RotateCcwIcon}
