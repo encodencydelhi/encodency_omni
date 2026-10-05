@@ -6,7 +6,7 @@ import type { NextConfig } from "next";
  * so the backend's HttpOnly session cookie and CSRF origin check work without
  * any cross-origin (CORS) exposure.
  */
-const BACKEND_ORIGIN = (process.env.BACKEND_ORIGIN ?? "http://127.0.0.1:4000").replace(/\/$/, "");
+const BACKEND_ORIGIN = (process.env.BACKEND_ORIGIN || "http://127.0.0.1:4000").replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,

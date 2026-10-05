@@ -252,7 +252,11 @@ class MockIntegrationsRepository implements IntegrationsRepository {
     if (fromSnapshot) return fromSnapshot;
 
     const backendProvider = toBackendProvider(providerId);
-    const clientId = typeof window !== "undefined" ? getStoredClientId() : "";
+    let clientId = typeof window !== "undefined" ? getStoredClientId() : "";
+    if (!clientId || !UUID_PATTERN.test(clientId)) {
+      const realClients = await clientsApi.list(companyId).catch(() => [] as ClientRecord[]);
+      clientId = realClients[0]?.id && UUID_PATTERN.test(realClients[0].id) ? realClients[0].id : "";
+    }
     if (!backendProvider || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) return null;
 
     try {
@@ -471,12 +475,16 @@ class LiveIntegrationsRepository implements IntegrationsRepository {
 
     const storedClientId = typeof window !== "undefined" ? getStoredClientId() : null;
 
-    // Parallel fetch: clients list, registry of configured providers, and client overview
-    const [realClients, registry, overview] = await Promise.all([
-      clientsApi.list(companyId).catch(() => [] as ClientRecord[]),
+    const realClients = await clientsApi.list(companyId).catch(() => [] as ClientRecord[]);
+    const targetClientId = (storedClientId && UUID_PATTERN.test(storedClientId))
+      ? storedClientId
+      : (realClients[0]?.id && UUID_PATTERN.test(realClients[0].id) ? realClients[0].id : null);
+
+    // Parallel fetch: registry of configured providers and client overview
+    const [registry, overview] = await Promise.all([
       integrationsApi.getRegistry().catch(() => [] as BackendOAuthProvider[]),
-      storedClientId && UUID_PATTERN.test(storedClientId)
-        ? integrationsApi.getOverview(companyId, storedClientId).catch(() => null)
+      targetClientId
+        ? integrationsApi.getOverview(companyId, targetClientId).catch(() => null)
         : Promise.resolve(null),
     ]);
 
@@ -636,7 +644,11 @@ class LiveIntegrationsRepository implements IntegrationsRepository {
     if (UUID_PATTERN.test(providerId)) return providerId;
 
     const backendProvider = toBackendProvider(providerId);
-    const clientId = typeof window !== "undefined" ? getStoredClientId() : "";
+    let clientId = typeof window !== "undefined" ? getStoredClientId() : "";
+    if (!clientId || !UUID_PATTERN.test(clientId)) {
+      const realClients = await clientsApi.list(companyId).catch(() => [] as ClientRecord[]);
+      clientId = realClients[0]?.id && UUID_PATTERN.test(realClients[0].id) ? realClients[0].id : "";
+    }
     if (!backendProvider || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) return null;
 
     try {
@@ -691,7 +703,11 @@ class LiveIntegrationsRepository implements IntegrationsRepository {
       );
     }
 
-    const targetClientId = input.clientId ?? (typeof window !== "undefined" ? getStoredClientId() : null);
+    let targetClientId = input.clientId ?? (typeof window !== "undefined" ? getStoredClientId() : null);
+    if (!targetClientId || !UUID_PATTERN.test(targetClientId)) {
+      const realClients = await clientsApi.list(companyId).catch(() => [] as ClientRecord[]);
+      targetClientId = realClients[0]?.id && UUID_PATTERN.test(realClients[0].id) ? realClients[0].id : null;
+    }
     if (!targetClientId) {
       throw new IntegrationServiceError(
         "validation",
@@ -706,7 +722,7 @@ class LiveIntegrationsRepository implements IntegrationsRepository {
       if (backendType) {
         await integrationsApi.mapResource(companyId, integrationId, {
           clientId: targetClientId,
-          externalResourceId: res.id,
+          externalResourceId: res.id ?? res.name,
           resourceType: backendType,
         });
       }
@@ -727,7 +743,7 @@ class LiveIntegrationsRepository implements IntegrationsRepository {
       rateLimitResetAt: null,
       syncFrequency: input.syncFrequency,
       resources: input.resources.map((r, i) => ({
-        id: `${integrationId}-${r.id}`,
+        id: `${integrationId}-${r.id ?? r.name}`,
         connectionId: integrationId,
         type: r.type,
         name: r.name,
