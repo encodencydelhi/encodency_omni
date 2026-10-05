@@ -13,7 +13,8 @@ import type {
   SubscriptionStatus,
   SupportLevel,
 } from "./types";
-export const BILLING_MOCK_MODE = process.env.NEXT_PUBLIC_BILLING_MOCK_MODE !== "false";
+/** Follows the app data source (`NEXT_PUBLIC_DATA_SOURCE=api` is live); `NEXT_PUBLIC_BILLING_MOCK_MODE=true` forces the sample data back for a preview. */
+export const BILLING_MOCK_MODE = process.env.NEXT_PUBLIC_DATA_SOURCE !== "api" || process.env.NEXT_PUBLIC_BILLING_MOCK_MODE === "true";
 
 export const BILLING_ROUTE = "/admin/billing";
 

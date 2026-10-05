@@ -188,6 +188,13 @@ export function MethodMark({ method, className }: { method: Pick<PaymentMethod, 
       </span>
     );
   }
+  if (method.type === "gateway") {
+    return (
+      <span className={cn(base, "border-[#E4E9F0] bg-white text-[#0F1B3D]")} aria-label="Razorpay Checkout">
+        <CreditCard className="size-3.5" />
+      </span>
+    );
+  }
   if (method.type === "upi") {
     return (
       <span className={cn(base, "border-[#E4E9F0] bg-white text-[#0F1B3D]")} aria-label="UPI">

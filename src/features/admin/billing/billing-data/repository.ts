@@ -5,6 +5,10 @@ import { companyScopeHeaders } from "@/lib/api/company-scope";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { BILLING_MOCK_MODE, CHANGE_LABEL, DECLINED_TEST_CARD } from "./config";
 import { buildSnapshot, priceLines, reference, round2 } from "./mock-provider";
+import { organizationApi } from "../../settings/live/organization-api";
+import { ApiError } from "@/types/api";
+import { collectPayment, CheckoutCancelled, CheckoutFailed, CheckoutUnavailable, type CheckoutOrder } from "./razorpay-checkout";
+import { buildLiveSnapshot, mapPlans, toOrganizationPatch, type BackendPlansResponse, type BackendBillingSummary, type BackendCurrentUser, type BackendInvoice, type BackendOrganization } from "./live-snapshot";
 import {
   detectBrand,
   downgradeImpact,
@@ -539,6 +543,41 @@ class MockBillingRepository implements BillingRepository {
 /* Live (mock mode off, service attached)                              */
 /* ------------------------------------------------------------------ */
 
+/** Server errors of the payment endpoints as the page's own error type, in plain words. */
+function paymentError(error: unknown): BillingServiceError {
+  if (error instanceof BillingServiceError) return error;
+  if (ApiError.isApiError(error)) {
+    switch (error.reason) {
+      case "payment_gateway_not_configured":
+      case "payment_gateway_misconfigured":
+        return new BillingServiceError("service_unavailable", "Online payment isn't set up yet.", "Ask your administrator to finish the payment setup. Nothing was charged.");
+      case "payment_gateway_unavailable":
+      case "payment_gateway_rejected":
+      case "payment_gateway_invalid_response":
+        return new BillingServiceError("service_unavailable", "The payment service isn't available right now.", "Try again in a moment. Nothing was charged.");
+      case "invalid_payment_signature":
+        return new BillingServiceError("payment_declined", "The payment couldn't be verified.", "If money left your account, it will be matched automatically. Reload to check.");
+      case "plan_change_not_immediate":
+        return new BillingServiceError("validation", "Moving to a cheaper plan isn't available online yet.", "Contact support to change to a smaller plan.");
+      case "already_on_plan":
+        return new BillingServiceError("conflict", "You're already on this plan.", "Choose a different plan.");
+      case "amount_too_small":
+        return new BillingServiceError("validation", "This change is too close to your renewal to charge separately.", "Try again after your next renewal.");
+      case "plan_inactive":
+      case "plan_not_found":
+      case "plan_not_payable":
+        return new BillingServiceError("validation", "That plan can't be bought online.", "Choose another plan.");
+      case "currency_not_supported":
+        return new BillingServiceError("validation", "Online payment supports INR only.", "Contact support for another currency.");
+      case "invoice_not_payable":
+      case "invoice_not_found":
+        return new BillingServiceError("conflict", "This invoice can't be paid any more.", "Reload the page to see its latest status.");
+    }
+    if (error.status === 403) return new BillingServiceError("validation", "You can't make payments for this organization.", "Ask an owner or admin to do this.");
+  }
+  return new BillingServiceError("service_unavailable", "The payment couldn't be started.", "Nothing was charged. Try again in a moment.");
+}
+
 const unavailable = () =>
   new BillingServiceError(
     "service_unavailable",
@@ -548,94 +587,116 @@ const unavailable = () =>
 
 class LiveBillingRepository implements BillingRepository {
   readonly mode = "live" as const;
-  private failNext = false;
-  
-  failNextPayment(on: boolean) { this.failNext = on; }
-  
-  loadSnapshot = async (scenario: BillingScenario): Promise<BillingSnapshot> => { 
-    // Fetch live data
-    const companyId = getStoredCompanyId();
-    const summary = await apiClient.request<any>({ method: 'GET', path: '/billing/summary', headers: companyScopeHeaders(companyId) }).catch(() => null);
-    
-    // Create a base mock snapshot to fulfill UI gaps
-    const snapshot = buildSnapshot(scenario, new Date());
-    
-    if (summary && !summary.subscriptionRequired && summary.status === 'ACTIVE') {
-      snapshot.subscription.status = 'active';
-      snapshot.subscription.currentPeriodEnd = summary.currentPeriodEnd;
-      snapshot.subscription.id = summary.subscriptionId;
-      
-      const planLimits = summary.limits;
-      const usage = summary.usage;
-      
-      const matchingPlan = snapshot.plans.find(p => p.name.toLowerCase() === summary.plan.name.toLowerCase()) || snapshot.plans[1];
-      if (matchingPlan) {
-         snapshot.subscription.planId = matchingPlan.id;
-         matchingPlan.limits.clients = planLimits.maxClients;
-         matchingPlan.limits.aiCredits = planLimits.maxAiTokens;
-         matchingPlan.monthlyPrice = summary.plan.monthlyPrice;
-         snapshot.credits.included = planLimits.maxAiTokens;
-      }
-      
-      const clientsUsage = snapshot.usage.find(u => u.key === 'clients');
-      if (clientsUsage) clientsUsage.used = usage.currentClients;
-      
-      const aiTokensUsage = snapshot.usage.find(u => u.key === 'aiCredits');
-      if (aiTokensUsage) aiTokensUsage.used = usage.currentAiTokens;
-      
-      snapshot.credits.used = usage.currentAiTokens;
-    } else if (summary && summary.status) {
-      // Map backend status to frontend SubscriptionStatus
-      const rawStatus = summary.status.toLowerCase();
-      let mappedStatus: SubscriptionStatus = 'active';
-      if (rawStatus === 'canceled' || rawStatus === 'cancelled') mappedStatus = 'cancelled';
-      else if (rawStatus === 'past_due') mappedStatus = 'past_due';
-      else if (rawStatus === 'suspended') mappedStatus = 'past_due'; // map to past_due for now
-      else if (rawStatus === 'incomplete') mappedStatus = 'active'; // map to active so UI buttons are not disabled
-      
-      snapshot.subscription.status = mappedStatus;
-    }
 
+  failNextPayment() {
+    /* mock-only preview control */
+  }
+
+  /**
+   * Everything shown comes from the backend: the subscription summary, the invoices, the organization profile, the signed-in user and the team size.
+   * The summary and the invoices are required (a failure is a real error, not a sample page); the other three only enrich the page.
+   */
+  /** Page plan id -> real plan uuid, refreshed on every load. */
+  private slotToPlanId: Partial<Record<PlanId, string>> = {};
+  private identity = { name: "", email: "" };
+
+  loadSnapshot = async (_scenario: BillingScenario): Promise<BillingSnapshot> => {
+    const companyId = getStoredCompanyId();
+    if (!companyId) throw new BillingServiceError("service_unavailable", "No company is selected.", "Select a company and reload.");
+    const headers = companyScopeHeaders(companyId);
     try {
-      const companyId = getStoredCompanyId();
-      const invoices = await apiClient.request<any[]>({ method: 'GET', path: '/billing/invoices', headers: companyScopeHeaders(companyId) });
-      if (invoices && Array.isArray(invoices) && invoices.length > 0) {
-        snapshot.invoices = invoices.map(inv => ({
-          id: inv.id,
-          number: inv.id.split('-')[0], // simplistic mock
-          periodStart: inv.createdAt,
-          periodEnd: inv.createdAt,
-          issuedAt: inv.createdAt,
-          dueAt: inv.createdAt,
-          status: inv.status.toLowerCase() as any,
-          lines: [],
-          subtotal: inv.amount,
-          taxRate: 0,
-          tax: 0,
-          total: inv.amount,
-          paymentMethodLabel: 'Card',
-          paidAt: inv.paidAt,
-          transactionId: inv.id,
-          refundedAt: null,
-          note: null
-        }));
-      }
-    } catch(e) {
-      // ignore
+      const [summary, invoices, catalog, organization, me, members] = await Promise.all([
+        apiClient.request<BackendBillingSummary>({ method: "GET", path: "/billing/summary", headers }),
+        apiClient.request<BackendInvoice[]>({ method: "GET", path: "/billing/invoices", headers }),
+        apiClient.request<BackendPlansResponse>({ method: "GET", path: "/billing/plans", headers }).catch(() => null),
+        apiClient.request<BackendOrganization>({ method: "GET", path: "/settings/organization", headers }).catch(() => null),
+        apiClient.request<BackendCurrentUser>({ method: "GET", path: "/users/me" }).catch(() => null),
+        apiClient.request<unknown[]>({ method: "GET", path: "/team/members", headers }).catch(() => null),
+      ]);
+      const snapshot = buildLiveSnapshot({ summary, invoices, catalog, organization, me, companyId, teamMembers: Array.isArray(members) ? members.length : null });
+      this.slotToPlanId = mapPlans(catalog, summary).slotToPlanId;
+      this.identity = { name: snapshot.currentUser.name, email: snapshot.currentUser.email };
+      return snapshot;
+    } catch (error) {
+      if (error instanceof BillingServiceError) throw error;
+      throw new BillingServiceError("service_unavailable", "Billing data couldn't be loaded.", "Check your connection and try again.");
     }
-    
-    return snapshot;
   };
 
-  changePlan = async () => { throw unavailable(); };
+  /**
+   * Upgrading, choosing a plan or reactivating is a payment: the server prices it (the same proration the page quotes) and creates the order, the person pays in
+   * Razorpay's window, and the server verifies the signed result before the plan changes. A cheaper plan or a cycle change is refused by the server for now.
+   */
+  changePlan = async (input: PlanChangeInput): Promise<BillingSnapshot> => {
+    const planId = this.slotToPlanId[input.planId];
+    if (!planId) throw new BillingServiceError("validation", "That plan isn't available.", "Reload the page and choose a plan again.");
+    const order = await this.post<CheckoutOrder>("/billing/checkout", { planId });
+    await this.pay(order);
+    return this.loadSnapshot("active");
+  };
   withdrawPendingChange = async () => { throw unavailable(); };
   cancelSubscription = async () => { throw unavailable(); };
   resumeSubscription = async () => { throw unavailable(); };
-  savePaymentMethod = async () => { throw unavailable(); };
+  savePaymentMethod = async (): Promise<BillingSnapshot> => {
+    throw new BillingServiceError("service_unavailable", "Cards aren't saved here.", "You enter your card or UPI details securely in Razorpay's payment window when you pay.");
+  };
   setPrimaryMethod = async () => { throw unavailable(); };
   removePaymentMethod = async () => { throw unavailable(); };
-  payInvoice = async () => { throw unavailable(); };
-  saveProfile = async () => { throw unavailable(); };
+  /** Pays an invoice that is waiting for payment, in Razorpay's window. */
+  payInvoice = async (invoiceId: string): Promise<BillingSnapshot> => {
+    const order = await this.post<CheckoutOrder>(`/billing/invoices/${encodeURIComponent(invoiceId)}/pay`);
+    await this.pay(order);
+    return this.loadSnapshot("active");
+  };
+
+  private async post<T>(path: string, body?: unknown): Promise<T> {
+    const companyId = getStoredCompanyId();
+    if (!companyId) throw new BillingServiceError("service_unavailable", "No company is selected.", "Select a company and reload.");
+    try {
+      return await apiClient.request<T>({ method: "POST", path, headers: companyScopeHeaders(companyId), body });
+    } catch (error) {
+      throw paymentError(error);
+    }
+  }
+
+  /** Opens the payment window and, once Razorpay reports success, has the server verify and apply it. */
+  private async pay(order: CheckoutOrder): Promise<void> {
+    let result;
+    try {
+      result = await collectPayment(order, this.identity);
+    } catch (error) {
+      if (error instanceof CheckoutCancelled) throw new BillingServiceError("payment_declined", "The payment was cancelled.", "Nothing was charged. Try again when you're ready.");
+      if (error instanceof CheckoutFailed) throw new BillingServiceError("payment_declined", error.message, "Nothing was charged. Try another card or UPI.");
+      if (error instanceof CheckoutUnavailable) throw new BillingServiceError("network", "The payment window couldn't load.", "Check your connection and try again. Nothing was charged.");
+      throw error;
+    }
+    await this.post("/billing/checkout/confirm", {
+      invoiceId: order.invoiceId,
+      razorpayOrderId: result.razorpay_order_id,
+      razorpayPaymentId: result.razorpay_payment_id,
+      razorpaySignature: result.razorpay_signature,
+    });
+  }
+  /** Billing details are the organization's own profile (`PATCH /settings/organization`, the same record Settings edits). */
+  saveProfile = async (profile: BillingProfile): Promise<BillingSnapshot> => {
+    const companyId = getStoredCompanyId();
+    if (!companyId) throw new BillingServiceError("service_unavailable", "No company is selected.", "Select a company and reload.");
+    try {
+      const current = await organizationApi.get(companyId);
+      await organizationApi.update(companyId, toOrganizationPatch(profile, current.revision));
+    } catch (error) {
+      if (error instanceof Error && error.message === "pan_not_stored") {
+        throw new BillingServiceError("validation", "PAN can't be saved yet.", "Leave PAN empty. Billing details keep your GSTIN or tax id.");
+      }
+      if (ApiError.isApiError(error)) {
+        if (error.status === 409) throw new BillingServiceError("conflict", "These details were changed by someone else.", "Reload the page and try again.");
+        if (error.status === 403) throw new BillingServiceError("validation", "You can't edit the organization's details.", "Ask an owner or admin to make this change.");
+        if (error.status === 400 || error.status === 422) throw new BillingServiceError("validation", error.message, "Check the highlighted details and try again.");
+      }
+      throw new BillingServiceError("service_unavailable", "Billing details couldn't be saved.", "Nothing was changed. Try again in a moment.");
+    }
+    return this.loadSnapshot("active");
+  };
   saveContact = async () => { throw unavailable(); };
   removeContact = async () => { throw unavailable(); };
   buyCredits = async () => { throw unavailable(); };

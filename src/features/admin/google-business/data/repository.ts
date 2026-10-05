@@ -32,10 +32,19 @@ export interface GbpProvider {
   commit<T>(context: MutationContext, apply: () => T): Promise<T>;
 }
 
+/** Why the workspace has nothing to show: no Google login at all, a login that needs reconnecting, or a login with no location linked to this Client yet. */
+export interface GbpNotConnectedDetail {
+  reason: "no_connection" | "reconnect" | "no_location";
+  integrationId: string | null;
+}
+
 export class GbpNotConnectedError extends Error {
-  constructor() {
+  readonly detail: GbpNotConnectedDetail | null;
+
+  constructor(detail: GbpNotConnectedDetail | null = null) {
     super("Google Business API is not connected.");
     this.name = "GbpNotConnectedError";
+    this.detail = detail;
   }
 }
 

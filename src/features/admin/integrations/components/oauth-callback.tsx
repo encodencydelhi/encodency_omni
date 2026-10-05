@@ -16,6 +16,7 @@ import {
   parseOAuthCallbackParams,
   stripOAuthCallbackParams,
 } from "../integrations-data/oauth-callback";
+import { consumeGbpReturn } from "@/features/admin/google-business/live/gbp-return";
 import { useIntegrations } from "../store/integrations-store";
 
 export function OAuthCallbackHandler() {
@@ -37,6 +38,11 @@ export function OAuthCallbackHandler() {
     const feedback = oauthCallbackFeedback(result);
     if (feedback.tone === "success") {
       toast.success(feedback.title, { description: feedback.description });
+      // Started from the Google Business page: go straight back so the user can pick the location there.
+      if (result.provider === "GOOGLE_BUSINESS" && consumeGbpReturn()) {
+        router.replace("/admin/google-business");
+        return;
+      }
       reload();
     } else {
       toast.error(feedback.title, { description: feedback.description });

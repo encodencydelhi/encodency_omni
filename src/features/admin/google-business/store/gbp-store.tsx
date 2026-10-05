@@ -4,10 +4,10 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { useRouter } from "next/navigation";
 import { addHours } from "date-fns";
 import { toast } from "sonner";
-import { gbpRepository, mockControls } from "../data/repository";
+import { gbpRepository, mockControls, type GbpNotConnectedDetail, type GbpNotConnectedError } from "../data/repository";
 import { evaluateCapabilities } from "../lib/capabilities";
 import { GBP_MOCK_MODE, gbRoutes } from "../lib/constants";
-import { googleBusinessApi } from "../live/google-business-api";
+import { googleBusinessApi, startGoogleBusinessConnect, mapProfileBody, toMediaItem, toPost, type GbpCreatePostInput, type GbpProfileUpdateInput } from "../live/google-business-api";
 import { ApiError } from "@/types/api";
 import type {
   ActivityEvent,
@@ -45,6 +45,61 @@ export type NewPostInput = Pick<Post, "locationIds" | "type" | "summary" | "medi
   state: PostState;
 };
 
+const WEEK_DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"] as const;
+
+/** Workspace hours -> the backend's weekly schedule (a day open 24 hours is 00:00-24:00). */
+function toLiveHours(hours: LocationProfile["regularHours"]): NonNullable<GbpProfileUpdateInput["regularHours"]> {
+  const periods = hours.periods.map((p) => ({ day: WEEK_DAYS[p.day] ?? "MONDAY", open: p.open, close: p.close }));
+  const allDay = hours.open24.map((day) => ({ day: WEEK_DAYS[day] ?? "MONDAY", open: "00:00", close: "24:00" }));
+  return [...allDay, ...periods];
+}
+
+const LIVE_PROFILE_KEYS = new Set(["title", "description", "website", "phone", "additionalPhones", "regularHours"]);
+
+/** Only what Google's Business Information API lets us change; any other key means the whole change is refused (null). */
+function toLiveProfilePatch(patch: Partial<LocationProfile>): GbpProfileUpdateInput | null {
+  if (Object.keys(patch).some((key) => !LIVE_PROFILE_KEYS.has(key))) return null;
+  const out: GbpProfileUpdateInput = {};
+  if (patch.title !== undefined) out.title = patch.title;
+  if (patch.description !== undefined) out.description = patch.description;
+  if (patch.website !== undefined) out.websiteUri = patch.website;
+  if (patch.phone !== undefined) out.primaryPhone = patch.phone;
+  if (patch.additionalPhones !== undefined) out.additionalPhones = patch.additionalPhones;
+  if (patch.regularHours !== undefined) out.regularHours = toLiveHours(patch.regularHours);
+  return out;
+}
+
+const GOOGLE_MEDIA_CATEGORY: Record<MediaCategory, string> = {
+  LOGO: "LOGO",
+  COVER: "COVER",
+  EXTERIOR: "EXTERIOR",
+  INTERIOR: "INTERIOR",
+  TEAM: "TEAMS",
+  AT_WORK: "AT_WORK",
+  ADDITIONAL: "ADDITIONAL",
+  VIDEO: "ADDITIONAL",
+};
+const toGoogleMediaCategory = (category: MediaCategory): string => GOOGLE_MEDIA_CATEGORY[category];
+
+/** Workspace post -> the backend's immediate-publish payload. A Call button has no link; every other button needs one. */
+function toLivePost(input: NewPostInput): GbpCreatePostInput {
+  const payload: GbpCreatePostInput = { summary: input.summary };
+  if (input.type === "event" || input.type === "offer") payload.topicType = input.type === "event" ? "EVENT" : "OFFER";
+  if (input.cta) payload.callToAction = input.cta.actionType === "CALL" ? { actionType: "CALL" } : { actionType: input.cta.actionType, url: input.cta.url };
+  const date = (iso: string) => iso.slice(0, 10);
+  if (input.event) payload.event = { title: input.event.title, startDate: date(input.event.startDate), endDate: date(input.event.endDate) };
+  if (input.type === "offer" && input.offer) {
+    payload.offer = {
+      ...(input.offer.couponCode ? { couponCode: input.offer.couponCode } : {}),
+      ...(input.offer.redeemOnlineUrl ? { redeemOnlineUrl: input.offer.redeemOnlineUrl } : {}),
+      ...(input.offer.termsConditions ? { termsConditions: input.offer.termsConditions } : {}),
+    };
+  }
+  const photo = input.media.find((url) => /^https:\/\//i.test(url));
+  if (photo) payload.photoUrl = photo;
+  return payload;
+}
+
 interface Simulation {
   failNextAction: boolean;
   failNextLoad: boolean;
@@ -69,6 +124,8 @@ interface GbpStore {
   mockMode: boolean;
   error: string | null;
   reload: () => void;
+  /** Why nothing is shown when the status is "not_connected". */
+  notConnected: GbpNotConnectedDetail | null;
 
   account: BusinessAccount | null;
   connection: ConnectionInfo;
@@ -178,7 +235,14 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<WorkspaceRole>("owner");
   const [simulation, setSimulation] = useState<Simulation>({ failNextAction: false, failNextLoad: false });
   const [reloadToken, setReloadToken] = useState(0);
+  const [notConnected, setNotConnected] = useState<GbpNotConnectedDetail | null>(null);
   const guardRef = useRef<GuardRegistration | null>(null);
+
+  const reload = useCallback(() => {
+    setStatus("loading");
+    setError(null);
+    setReloadToken((t) => t + 1);
+  }, []);
 
   // `status` already starts as "loading"; reload() puts it back before bumping
   // the token, so the effect only reports the outcome.
@@ -194,6 +258,7 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
       .catch((err: Error) => {
         if (cancelled) return;
         if (err.name === "GbpNotConnectedError") {
+          setNotConnected((err as GbpNotConnectedError).detail);
           setStatus("not_connected");
         } else {
           setError("OmniPlatform could not load Google Business data.");
@@ -253,6 +318,12 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     },
     [patchSnapshot],
   );
+
+  /** Live mode only: the workspace features Google's API cannot do (drafts, approvals, scheduling, attributes...) refuse clearly instead of pretending to save. */
+  const notLive = useCallback((what: string): false => {
+    toast.error(`${what} isn't available for a connected Google account`, { description: "Google's API does not provide this. Nothing was changed." });
+    return false;
+  }, []);
 
   /** Saving -> Saved / Failed for every mutation, with the connection checked first. */
   const perform = useCallback(
@@ -340,13 +411,8 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     async (reviewId) => {
       const review = live.current.snapshot?.reviews.find((r) => r.reviewId === reviewId);
       if (!review) return false;
-      if (gbpRepository.mode === "live") {
-        toast.error("Google does not expose reply deletion here", {
-          description: "Edit the reply instead, or manage it in the Business Profile Manager.",
-        });
-        return false;
-      }
-      return perform({ pending: "Deleting reply...", success: "Reply deleted" }, () => {
+      return perform({ pending: "Deleting reply...", success: "Reply deleted" }, async () => {
+        if (gbpRepository.mode === "live") await googleBusinessApi.deleteReviewReply(review.locationId, reviewId);
         patchSnapshot((prev) => ({ ...prev, reviews: prev.reviews.map((r) => (r.reviewId === reviewId ? { ...r, reply: null } : r)) }));
         log({
           action: "reply_delete",
@@ -368,10 +434,19 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     async (locationId, patch, summary = "Business profile updated") => {
       const location = live.current.snapshot?.locations.find((l) => l.locationId === locationId);
       if (!location) return false;
-      return perform({ pending: "Saving to Google...", success: summary }, () => {
+      let livePatch: GbpProfileUpdateInput | null = null;
+      if (gbpRepository.mode === "live") {
+        livePatch = toLiveProfilePatch(patch);
+        if (livePatch === null) return notLive("Changing categories, attributes, services, special hours, the service area or the address");
+      }
+      return perform({ pending: "Saving to Google...", success: summary }, async () => {
+        // Live: Google answers with the profile it now holds, which replaces the local copy.
+        const saved = livePatch ? mapProfileBody(await googleBusinessApi.updateProfile(location.locationId, livePatch)) : null;
         patchSnapshot((prev) => ({
           ...prev,
-          locations: prev.locations.map((l) => (l.locationId === locationId ? { ...l, profile: { ...l.profile, ...patch } } : l)),
+          locations: prev.locations.map((l) =>
+            l.locationId === locationId ? { ...l, profile: saved ? { ...l.profile, ...saved, specialHours: l.profile.specialHours, attributes: l.profile.attributes, services: l.profile.services } : { ...l.profile, ...patch } } : l,
+          ),
         }));
         const changed = Object.keys(patch);
         const action = changed.includes("regularHours")
@@ -392,7 +467,7 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
         });
       });
     },
-    [perform, patchSnapshot, log],
+    [perform, patchSnapshot, log, notLive],
   );
 
   const setLocationManaged = useCallback<GbpStore["setLocationManaged"]>(
@@ -418,6 +493,12 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
   const syncLocations = useCallback<GbpStore["syncLocations"]>(
     async (locationIds) => {
       const targets = locationIds ?? live.current.snapshot?.locations.map((l) => l.locationId) ?? [];
+      if (gbpRepository.mode === "live") {
+        // Live: "sync" is a real re-read from Google.
+        toast.success("Refreshing from Google...");
+        reload();
+        return true;
+      }
       patchSnapshot((prev) => ({
         ...prev,
         connection: { ...prev.connection, state: prev.connection.state === "connected" ? "syncing" : prev.connection.state },
@@ -460,12 +541,16 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
       }
       return ok;
     },
-    [perform, patchSnapshot, log, notify],
+    [perform, patchSnapshot, log, notify, reload],
   );
 
   const applyBulkHours = useCallback<GbpStore["applyBulkHours"]>(
     async (locationIds, hours) =>
-      perform({ pending: `Updating hours for ${locationIds.length} locations...`, success: `Hours updated for ${locationIds.length} locations` }, () => {
+      perform({ pending: `Updating hours for ${locationIds.length} locations...`, success: `Hours updated for ${locationIds.length} locations` }, async () => {
+        if (gbpRepository.mode === "live") {
+          const regularHours = toLiveHours(hours);
+          for (const id of locationIds) await googleBusinessApi.updateProfile(id, { regularHours });
+        }
         patchSnapshot((prev) => ({
           ...prev,
           locations: prev.locations.map((l) => (locationIds.includes(l.locationId) ? { ...l, profile: { ...l.profile, regularHours: hours } } : l)),
@@ -477,7 +562,7 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
 
   const applyBulkSpecialHours = useCallback<GbpStore["applyBulkSpecialHours"]>(
     async (locationIds, special) =>
-      perform({ pending: "Applying special hours...", success: `Special hours applied to ${locationIds.length} locations` }, () => {
+      gbpRepository.mode === "live" ? notLive("Special hours") : perform({ pending: "Applying special hours...", success: `Special hours applied to ${locationIds.length} locations` }, () => {
         patchSnapshot((prev) => ({
           ...prev,
           locations: prev.locations.map((l) =>
@@ -493,7 +578,7 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
 
   const applyBulkAttributes = useCallback<GbpStore["applyBulkAttributes"]>(
     async (locationIds, attributes) =>
-      perform({ pending: "Applying attributes...", success: `Attributes applied to ${locationIds.length} locations` }, () => {
+      gbpRepository.mode === "live" ? notLive("Attributes") : perform({ pending: "Applying attributes...", success: `Attributes applied to ${locationIds.length} locations` }, () => {
         patchSnapshot((prev) => ({
           ...prev,
           locations: prev.locations.map((l) =>
@@ -511,6 +596,23 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
 
   const createPost = useCallback<GbpStore["createPost"]>(
     async (input) => {
+      if (gbpRepository.mode === "live") {
+        if (input.state !== "published") {
+          notLive("Drafts, scheduled posts and approvals");
+          return null;
+        }
+        const payload = toLivePost(input);
+        const created: Post[] = [];
+        const ok = await perform({ pending: "Publishing to Google...", success: input.locationIds.length > 1 ? `Post published to ${input.locationIds.length} locations` : "Post published" }, async () => {
+          for (const locationId of input.locationIds) {
+            const { post } = await googleBusinessApi.createPost(locationId, payload);
+            created.push(toPost(post, locationId));
+          }
+          patchSnapshot((prev) => ({ ...prev, posts: [...created, ...prev.posts] }));
+          notify({ kind: "post_published", title: "Post published", body: input.summary.slice(0, 80), href: gbRoutes.posts });
+        });
+        return ok ? created[0] ?? null : null;
+      }
       const post: Post = {
         ...input,
         id: uid("post"),
@@ -547,6 +649,7 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     async (id, patch, summary = "Post updated") => {
       const post = live.current.snapshot?.posts.find((p) => p.id === id);
       if (!post) return false;
+      if (gbpRepository.mode === "live") return notLive("Editing a published post");
       return perform({ pending: "Saving post...", success: summary }, () => {
         patchSnapshot((prev) => ({ ...prev, posts: prev.posts.map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
         log({ action: "post_create", summary, entity: { type: "post", id, label: post.event?.title ?? post.summary.slice(0, 60) }, locationId: null });
@@ -559,7 +662,10 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     async (id) => {
       const post = live.current.snapshot?.posts.find((p) => p.id === id);
       if (!post) return false;
-      return perform({ pending: "Deleting post...", success: "Post deleted" }, () => {
+      return perform({ pending: "Deleting post...", success: "Post deleted" }, async () => {
+        if (gbpRepository.mode === "live") {
+          for (const locationId of post.locationIds) await googleBusinessApi.deletePost(locationId, id);
+        }
         patchSnapshot((prev) => ({ ...prev, posts: prev.posts.filter((p) => p.id !== id) }));
         log({ action: "post_delete", summary: "Deleted a post", entity: { type: "post", id, label: post.event?.title ?? post.summary.slice(0, 60) }, locationId: null });
       });
@@ -571,6 +677,7 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     async (id) => {
       const post = live.current.snapshot?.posts.find((p) => p.id === id);
       if (!post) return false;
+      if (gbpRepository.mode === "live") return notLive("Publishing a draft");
       patchSnapshot((prev) => ({ ...prev, posts: prev.posts.map((p) => (p.id === id ? { ...p, state: "publishing" } : p)) }));
       const ok = await perform({ pending: "Publishing to Google...", success: "Post published" }, () => {
         patchSnapshot((prev) => ({
@@ -599,6 +706,7 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     async (id, at) => {
       const post = live.current.snapshot?.posts.find((p) => p.id === id);
       if (!post) return false;
+      if (gbpRepository.mode === "live") return notLive("Scheduling a post");
       return perform({ pending: "Scheduling post...", success: post.scheduledAt ? "Post rescheduled" : "Post scheduled", requiresWrite: false }, () => {
         patchSnapshot((prev) => ({ ...prev, posts: prev.posts.map((p) => (p.id === id ? { ...p, state: "scheduled", scheduledAt: at } : p)) }));
         log({
@@ -618,6 +726,7 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     async (id, note) => {
       const post = live.current.snapshot?.posts.find((p) => p.id === id);
       if (!post) return false;
+      if (gbpRepository.mode === "live") return notLive("Post approvals");
       return perform({ pending: "Submitting...", success: "Submitted for approval", requiresWrite: false }, () => {
         patchSnapshot((prev) => ({
           ...prev,
@@ -638,6 +747,7 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     async (id, action, note) => {
       const post = live.current.snapshot?.posts.find((p) => p.id === id);
       if (!post) return false;
+      if (gbpRepository.mode === "live") return notLive("Post approvals");
       const label = { approved: "Approved", changes_requested: "Changes requested", rejected: "Rejected" }[action];
       return perform({ pending: "Saving review...", success: label, requiresWrite: false }, () => {
         patchSnapshot((prev) => ({
@@ -665,6 +775,22 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
   const uploadMedia = useCallback<GbpStore["uploadMedia"]>(
     async ({ locationId, category, sourceUrl, sizeBytes, dimensions }) => {
       const location = live.current.snapshot?.locations.find((l) => l.locationId === locationId);
+      if (gbpRepository.mode === "live") {
+        // Google fetches the photo itself, so it needs a public https link (a local file or blob URL cannot be fetched).
+        if (!/^https:\/\//i.test(sourceUrl)) {
+          toast.error("Google needs a public image link", { description: "Use an https:// image URL that anyone can open. Nothing was uploaded." });
+          return false;
+        }
+        return perform({ pending: "Uploading to Google...", success: "Media uploaded" }, async () => {
+          const { item } = await googleBusinessApi.addMedia(locationId, { sourceUrl, category: toGoogleMediaCategory(category), format: category === "VIDEO" ? "VIDEO" : "PHOTO" });
+          const mapped = toMediaItem(item, locationId);
+          patchSnapshot((prev) => ({
+            ...prev,
+            media: [{ ...mapped, state: "processing", sizeBytes, dimensions: mapped.dimensions ?? dimensions }, ...prev.media],
+            locations: prev.locations.map((l) => (l.locationId === locationId ? { ...l, photoCount: l.photoCount + 1 } : l)),
+          }));
+        });
+      }
       return perform({ pending: "Uploading to Google...", success: "Media uploaded" }, () => {
         const item: MediaItem = {
           name: `media/${uid("med")}`,
@@ -698,7 +824,13 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
 
   const deleteMedia = useCallback<GbpStore["deleteMedia"]>(
     async (mediaIds) =>
-      perform({ pending: "Deleting media...", success: mediaIds.length > 1 ? `${mediaIds.length} media items deleted` : "Media deleted" }, () => {
+      perform({ pending: "Deleting media...", success: mediaIds.length > 1 ? `${mediaIds.length} media items deleted` : "Media deleted" }, async () => {
+        if (gbpRepository.mode === "live") {
+          for (const mediaId of mediaIds) {
+            const item = live.current.snapshot?.media.find((m) => m.mediaId === mediaId);
+            if (item) await googleBusinessApi.deleteMedia(item.locationId, mediaId);
+          }
+        }
         patchSnapshot((prev) => ({
           ...prev,
           media: prev.media.filter((m) => !mediaIds.includes(m.mediaId)),
@@ -713,7 +845,15 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
   /* ---------------------------------------------------------------- */
 
   const reconnect = useCallback<GbpStore["reconnect"]>(async () => {
-    // Production: redirect to the backend OAuth start URL for the Business Profile scope.
+    if (gbpRepository.mode === "live") {
+      try {
+        window.location.assign(await startGoogleBusinessConnect());
+        return true;
+      } catch (err) {
+        toast.error(ApiError.isApiError(err) ? err.message : "Could not start the Google sign-in", { description: "Only an owner or admin can connect Google Business." });
+        return false;
+      }
+    }
     const id = toast.loading("Waiting for Google authorisation...");
     await new Promise((resolve) => setTimeout(resolve, 1200));
     patchSnapshot((prev) => ({
@@ -724,16 +864,20 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     log({ action: "connection_change", summary: "Reconnected the Google account", entity: { type: "account", label: "Google Business" }, locationId: null });
     toast.success("Google Business reconnected", { id, description: "Permissions granted and data is up to date." });
     return true;
-  }, [patchSnapshot, log]);
+  }, [patchSnapshot, log, router]);
 
   const disconnect = useCallback<GbpStore["disconnect"]>(async () => {
+    if (gbpRepository.mode === "live") {
+      router.push("/admin/integrations");
+      return true;
+    }
     const id = toast.loading("Disconnecting account...");
     await new Promise((resolve) => setTimeout(resolve, 900));
     patchSnapshot((prev) => ({ ...prev, connection: { ...prev.connection, state: "disconnected" } }));
     log({ action: "connection_change", summary: "Disconnected Google Business", entity: { type: "account", label: "Google Business" }, locationId: null });
     toast.success("Google Business disconnected", { id, description: "Synced data is kept for 30 days." });
     return true;
-  }, [patchSnapshot, log]);
+  }, [patchSnapshot, log, router]);
 
   const updateSettings = useCallback<GbpStore["updateSettings"]>(
     async (patch, summary = "Settings saved") =>
@@ -801,11 +945,8 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     status,
     mockMode: GBP_MOCK_MODE,
     error,
-    reload: () => {
-      setStatus("loading");
-      setError(null);
-      setReloadToken((t) => t + 1);
-    },
+    reload,
+    notConnected,
     account: snapshot?.account ?? null,
     connection,
     scopes,

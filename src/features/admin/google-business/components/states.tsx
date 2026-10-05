@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, type ComponentType } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { Hourglass, KeyRound, LockKeyhole, PlugZap, RefreshCw, ShieldAlert, Sparkles, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
 import { gbRoutes } from "../lib/constants";
+import { discoverGoogleLocations, linkGoogleLocations, type GbpLocationChoice } from "../live/google-business-api";
+import { ApiError } from "@/types/api";
 import { useGbp } from "../store/gbp-store";
 import type { Capability } from "../types";
 import { Button, Card, EmptyState, Skeleton, gb } from "./ui";
@@ -61,17 +63,37 @@ export function CapabilityState({ capability, title, className, compact }: { cap
   );
 }
 
-/** Shown when GBP_MOCK_MODE is off and no live provider is wired up yet. */
+/** Shown when the workspace has nothing to load: no Google login, a login to reconnect, or no location linked to this Client yet. */
 export function NotConnectedState() {
+  const { notConnected, reconnect } = useGbp();
+  const [busy, setBusy] = useState(false);
+
+  if (notConnected?.reason === "no_location" && notConnected.integrationId) {
+    return <LocationPicker integrationId={notConnected.integrationId} />;
+  }
+
+  const reconnecting = notConnected?.reason === "reconnect";
+  const connect = async () => {
+    if (busy) return;
+    setBusy(true);
+    const started = await reconnect();
+    // A successful start leaves the page for Google; only a failure comes back here.
+    if (!started) setBusy(false);
+  };
+
   return (
     <Card>
       <EmptyState
         icon={PlugZap}
-        title="Google Business API not connected"
-        description="This workspace has no live Google Business Profile connection yet. Connect an account to load locations, reviews, posts, media and performance data."
+        title={reconnecting ? "Reconnect Google Business" : "Connect Google Business"}
+        description={
+          reconnecting
+            ? "The Google connection for this company has expired or was revoked. Sign in with Google again to load locations, reviews, posts, media and performance."
+            : "Sign in with the Google account that manages your Business Profile. You will choose which locations belong to this client next."
+        }
         action={
-          <Button variant="primary" href={`${gbRoutes.settings}#connection`}>
-            Open connection settings
+          <Button variant="primary" icon={PlugZap} loading={busy} onClick={() => void connect()}>
+            {reconnecting ? "Reconnect with Google" : "Connect with Google"}
           </Button>
         }
         secondary={
@@ -80,6 +102,128 @@ export function NotConnectedState() {
           </Button>
         }
       />
+    </Card>
+  );
+}
+
+/** The Google login is connected; pick which of its locations belong to the active Client. */
+function LocationPicker({ integrationId }: { integrationId: string }) {
+  const { reload, reconnect } = useGbp();
+  const [choices, setChoices] = useState<GbpLocationChoice[] | null>(null);
+  const [failure, setFailure] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    discoverGoogleLocations(integrationId)
+      .then((list) => {
+        if (cancelled) return;
+        setChoices(list);
+        if (list.length === 1) setPicked([list[0]!.id]);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        const reason = (err as { reason?: string } | null)?.reason;
+        setFailure(
+          reason === "provider_quota_not_granted"
+            ? "Google has not given this Google Cloud project any quota for the Business Profile API yet. In Google Cloud, open the My Business Account Management API, check its Quotas page (requests per minute should not be 0), and request Business Profile API access if Google has not approved it yet."
+            : reason === "provider_rate_limited"
+            ? "Google limits how often Business Profile locations can be requested (only a few times a minute). Wait about a minute, then try again."
+            : reason === "provider_permission_required"
+              ? "Google refused access. Make sure the Business Profile APIs are enabled for this Google Cloud project and that Google has approved the project's access."
+              : ApiError.isApiError(err)
+              ? err.message
+              : "Google Business locations could not be loaded.",
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [integrationId]);
+
+  const toggle = (id: string) => setPicked((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const link = async () => {
+    if (!picked.length || saving) return;
+    setSaving(true);
+    try {
+      await linkGoogleLocations(integrationId, picked);
+      toast.success(picked.length === 1 ? "Location linked" : `${picked.length} locations linked`);
+      reload();
+    } catch (err) {
+      toast.error(ApiError.isApiError(err) ? err.message : "The locations could not be linked", { description: "Only an owner or admin can link locations." });
+      setSaving(false);
+    }
+  };
+
+  if (failure) {
+    return (
+      <Card>
+        <EmptyState
+          icon={TriangleAlert}
+          title="Could not load your Google locations"
+          description={failure}
+          action={
+            <Button variant="primary" icon={RefreshCw} onClick={reload}>
+              Try again
+            </Button>
+          }
+          secondary={
+            <Button variant="secondary" onClick={() => void reconnect()}>
+              Connect a different Google account
+            </Button>
+          }
+        />
+      </Card>
+    );
+  }
+
+  if (choices === null) return <Skeleton className="h-48 w-full" />;
+
+  if (choices.length === 0) {
+    return (
+      <Card>
+        <EmptyState
+          icon={PlugZap}
+          title="No Business Profile locations found"
+          description="This Google account does not manage any Business Profile locations. Sign in with the account that owns or manages them."
+          action={
+            <Button variant="primary" onClick={() => void reconnect()}>
+              Connect a different Google account
+            </Button>
+          }
+          secondary={
+            <Button variant="secondary" href={gbRoutes.businessProfileManager} external>
+              Open Business Profile Manager
+            </Button>
+          }
+        />
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <div className="mx-auto max-w-[560px] px-5 py-8">
+        <h2 className="text-[16px] font-semibold text-[#202124]">Choose locations for this client</h2>
+        <p className="mt-1 text-[13px] text-[#5F6368]">These locations come from your connected Google account. Linked locations load their profile, reviews, posts, media and performance here.</p>
+        <ul className="mt-4 space-y-2">
+          {choices.map((choice) => (
+            <li key={choice.id}>
+              <label className={cn("flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-[13px]", picked.includes(choice.id) ? "border-[#1A73E8] bg-[#F1F6FE]" : "border-[#E8EAED] hover:bg-[#F8F9FA]")}>
+                <input type="checkbox" className="size-4 accent-[#1A73E8]" checked={picked.includes(choice.id)} onChange={() => toggle(choice.id)} />
+                <span className="min-w-0 flex-1 truncate font-medium text-[#202124]">{choice.name}</span>
+              </label>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-5 flex justify-end">
+          <Button variant="primary" loading={saving} disabled={!picked.length} onClick={() => void link()}>
+            {picked.length > 1 ? `Link ${picked.length} locations` : "Link location"}
+          </Button>
+        </div>
+      </div>
     </Card>
   );
 }

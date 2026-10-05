@@ -217,6 +217,7 @@ export function backupMethod(methods: PaymentMethod[]) {
 
 export function methodLabel(method: PaymentMethod | null) {
   if (!method) return "No payment method";
+  if (method.type === "gateway") return "Razorpay Checkout";
   if (method.type === "upi") return `UPI AutoPay · ${method.upiId}`;
   return `${method.brand ? CARD_BRAND_LABEL[method.brand] : "Card"} •••• ${method.last4}`;
 }

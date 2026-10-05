@@ -123,7 +123,8 @@ export interface UsageEntity {
 }
 
 export type CardBrand = "visa" | "mastercard" | "rupay" | "amex";
-export type PaymentMethodType = "card" | "upi";
+/** `gateway` is the online payment window itself (Razorpay Checkout): card, UPI or net banking is entered there when paying, and nothing is stored here. */
+export type PaymentMethodType = "card" | "upi" | "gateway";
 export type PaymentMethodRole = "primary" | "backup";
 
 export interface PaymentMethod {

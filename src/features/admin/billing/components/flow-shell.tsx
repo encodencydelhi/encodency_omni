@@ -5,6 +5,7 @@ import { createContext, useContext, useState, type ComponentType, type ReactNode
 import { AlertTriangle, X as XIcon } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useBeforeUnload } from "../billing-data/hooks";
+import { usePaymentWindowOpen } from "../billing-data/razorpay-checkout";
 import { Button } from "./ui";
 
 interface Guard {
@@ -58,6 +59,8 @@ export function FlowShell({
   headerExtra?: ReactNode;
 }) {
   const [confirming, setConfirming] = useState(false);
+  // Steps aside while Razorpay's window is open (its fields can't take focus inside a modal dialog); the flow's state lives above this component and is kept.
+  const paying = usePaymentWindowOpen();
   const [saving, setSaving] = useState(false);
   useBeforeUnload(open && dirty);
 
@@ -75,7 +78,7 @@ export function FlowShell({
   const sheet = variant === "sheet";
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={(next) => (next ? onOpenChange(true) : requestClose())}>
+    <DialogPrimitive.Root open={open && !paying} onOpenChange={(next) => (next ? onOpenChange(true) : requestClose())}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[#0F1B3D]/30 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
         <DialogPrimitive.Content
