@@ -25,22 +25,21 @@ export type ClientCapabilities = Record<ClientCapabilityKey, boolean>;
 type Can = (permission: Permission) => boolean;
 
 export function deriveClientCapabilities(can: Can): ClientCapabilities {
-  const read = can("Clients:read") || can("companies:read");
+  const read = can("Clients:read");
   const write = can("companies:write");
-  // Default to true for admin workspace operations so admin users can create and manage clients
-  const allowAdmin = true;
   return {
-    canViewAllClients: true,
-    canCreateClient: true,
-    canEditClient: true,
-    canManageClientTeam: true,
-    canViewClientConnections: true,
-    canViewClientWebsiteSeo: true,
-    canViewClientActivity: true,
-    canManageClientSettings: true,
-    canPauseClient: true,
-    canResumeClient: true,
-    canArchiveClient: true,
-    canExportClientData: true,
+    canViewAllClients: read,
+    canCreateClient: read && write,
+    canEditClient: read && write,
+    canManageClientTeam: read && can("users:write"),
+    canViewClientConnections: read,
+    canViewClientWebsiteSeo: read,
+    canViewClientActivity: read,
+    canManageClientSettings: read && write,
+    canPauseClient: read && write,
+    canResumeClient: read && write,
+    // Archiving is the highest-impact lifecycle action: it also needs settings authority.
+    canArchiveClient: read && write && can("settings:write"),
+    canExportClientData: read,
   };
 }

@@ -79,6 +79,8 @@ export function oauthProviderLabel(provider: string | null): string {
       return "Google Business Profile";
     case "LINKEDIN":
       return "LinkedIn";
+    case "YOUTUBE":
+      return "YouTube";
     default:
       return provider || "The provider";
   }

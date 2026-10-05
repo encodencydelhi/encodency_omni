@@ -2,12 +2,13 @@ import { apiClient } from "@/lib/api/client";
 import { companyScopeHeaders } from "@/lib/api/company-scope";
 import type { ProviderId } from "../integrations-data/types";
 
-export type BackendOAuthProvider = "META" | "GOOGLE_BUSINESS" | "LINKEDIN";
+export type BackendOAuthProvider = "META" | "GOOGLE_BUSINESS" | "LINKEDIN" | "YOUTUBE";
 
 export const SUPPORTED_BACKEND_PROVIDERS: readonly BackendOAuthProvider[] = [
   "META",
   "GOOGLE_BUSINESS",
   "LINKEDIN",
+  "YOUTUBE",
 ] as const;
 
 export function toBackendProvider(providerId: ProviderId | string): BackendOAuthProvider | null {
@@ -22,6 +23,8 @@ export function toBackendProvider(providerId: ProviderId | string): BackendOAuth
       return "GOOGLE_BUSINESS";
     case "linkedin":
       return "LINKEDIN";
+    case "youtube":
+      return "YOUTUBE";
     default:
       return null;
   }
@@ -35,6 +38,8 @@ export function fromBackendProvider(provider: BackendOAuthProvider): ProviderId 
       return "google-business";
     case "LINKEDIN":
       return "linkedin";
+    case "YOUTUBE":
+      return "youtube";
   }
 }
 
@@ -50,7 +55,8 @@ export type BackendResourceType =
   | "FACEBOOK_PAGE"
   | "INSTAGRAM_ACCOUNT"
   | "GOOGLE_BUSINESS_LOCATION"
-  | "LINKEDIN_ORGANIZATION";
+  | "LINKEDIN_ORGANIZATION"
+  | "YOUTUBE_CHANNEL";
 
 export interface DiscoveredResource {
   externalResourceId: string;
@@ -73,7 +79,7 @@ export interface ResourceMappingResponse {
   createdAt: string;
 }
 
-export type OverviewProvider = "META" | "INSTAGRAM" | "LINKEDIN" | "GOOGLE_BUSINESS" | "WHATSAPP";
+export type OverviewProvider = "META" | "INSTAGRAM" | "LINKEDIN" | "GOOGLE_BUSINESS" | "WHATSAPP" | "YOUTUBE";
 export type ConnectionStatus = "NOT_CONNECTED" | "CONNECTED" | "MAPPED" | "RECONNECT_REQUIRED";
 export type ConnectionHealth = "healthy" | "expiring_soon" | "expired" | "revoked" | "error" | "not_connected";
 export type ProviderSupportState = "connected" | "disconnected" | "setup_required" | "unsupported" | "coming_soon" | "permission_required" | "degraded";

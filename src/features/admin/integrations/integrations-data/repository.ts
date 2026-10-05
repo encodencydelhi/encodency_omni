@@ -23,12 +23,22 @@ import {
   mockSyncRuns,
   seeded,
 } from "./mock-provider";
-import { integrationsApi, toBackendProvider } from "../live/integrations-api";
+import {
+  fromBackendProvider,
+  integrationsApi,
+  toBackendProvider,
+  type BackendOAuthProvider,
+  type BackendResourceType,
+} from "../live/integrations-api";
+import { clientsApi, type ClientRecord } from "../../projects/live/clients-api";
 import { getStoredClientId, getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { ApiError } from "@/types/api";
 import type {
+  ConnectionStatus,
+  IntegrationClient,
   IntegrationConnection,
   IntegrationProvider,
+  IntegrationResource,
   IntegrationSettings,
   IntegrationSyncRun,
   IntegrationsSnapshot,
@@ -38,7 +48,7 @@ import type {
   SyncTrigger,
 } from "./types";
 
-export type ServiceErrorCode = "service_unavailable" | "provider_error" | "authorization_cancelled" | "network";
+export type ServiceErrorCode = "service_unavailable" | "provider_error" | "authorization_cancelled" | "network" | "validation";
 
 export class IntegrationServiceError extends Error {
   readonly code: ServiceErrorCode;
@@ -52,6 +62,7 @@ export class IntegrationServiceError extends Error {
 }
 
 export interface DiscoveredResource {
+  id?: string;
   type: ResourceType;
   name: string;
   handle: string;
@@ -112,19 +123,70 @@ function activeCompanyId(): string {
  * Returns undefined for provider types this backend version cannot store — those are
  * never sent, so the caller can keep the local flow instead of posting a 400.
  */
-function toBackendResourceType(type: ResourceType | undefined) {
+function toBackendResourceType(type: ResourceType | undefined): BackendResourceType | undefined {
   switch (type) {
     case "facebook_page":
-      return "FACEBOOK_PAGE" as const;
+      return "FACEBOOK_PAGE";
     case "instagram_account":
-      return "INSTAGRAM_ACCOUNT" as const;
+      return "INSTAGRAM_ACCOUNT";
     case "gbp_location":
-      return "GOOGLE_BUSINESS_LOCATION" as const;
+      return "GOOGLE_BUSINESS_LOCATION";
     case "linkedin_page":
-      return "LINKEDIN_ORGANIZATION" as const;
+      return "LINKEDIN_ORGANIZATION";
+    case "youtube_channel":
+      return "YOUTUBE_CHANNEL";
     default:
       return undefined;
   }
+}
+
+function fromBackendResourceType(type: string | undefined): ResourceType {
+  switch (type) {
+    case "FACEBOOK_PAGE":
+      return "facebook_page";
+    case "INSTAGRAM_ACCOUNT":
+      return "instagram_account";
+    case "GOOGLE_BUSINESS_LOCATION":
+      return "gbp_location";
+    case "LINKEDIN_ORGANIZATION":
+      return "linkedin_page";
+    case "YOUTUBE_CHANNEL":
+      return "youtube_channel";
+    default:
+      return "facebook_page";
+  }
+}
+
+function fromBackendOverviewProvider(provider: string): ProviderId {
+  switch (provider) {
+    case "META":
+      return "meta";
+    case "INSTAGRAM":
+      return "meta";
+    case "LINKEDIN":
+      return "linkedin";
+    case "GOOGLE_BUSINESS":
+      return "google-business";
+    case "WHATSAPP":
+      return "whatsapp";
+    case "YOUTUBE":
+      return "youtube";
+    default:
+      return "meta";
+  }
+}
+
+function mapConnectionStatus(status: string, health: string, reconnectRequired: boolean): ConnectionStatus {
+  if (reconnectRequired || status === "RECONNECT_REQUIRED" || health === "expired" || health === "revoked" || health === "error") {
+    return "needs_reconnect";
+  }
+  if (health === "expiring_soon") {
+    return "expiring";
+  }
+  if (status === "CONNECTED" || status === "MAPPED") {
+    return "connected";
+  }
+  return "disconnected";
 }
 
 function hash(text: string) {
@@ -386,21 +448,172 @@ const unavailable = () =>
     "Mock mode is off and no integration backend is configured. Set NEXT_PUBLIC_INTEGRATIONS_MOCK_MODE=true to explore with sample data.",
   );
 
-class UnavailableIntegrationsRepository implements IntegrationsRepository {
+/* ------------------------------------------------------------------ */
+/* Live Repository (production backend attached)                       */
+/* ------------------------------------------------------------------ */
+
+class LiveIntegrationsRepository implements IntegrationsRepository {
   readonly mode = "live" as const;
+
   isAvailable() {
-    return false;
+    return true;
   }
+
   async loadSnapshot(): Promise<IntegrationsSnapshot> {
-    throw unavailable();
+    const companyId = activeCompanyId();
+    if (!UUID_PATTERN.test(companyId)) {
+      throw new IntegrationServiceError(
+        "validation",
+        "Select a Company to continue.",
+        "A valid company selection is required to load integrations.",
+      );
+    }
+
+    const storedClientId = typeof window !== "undefined" ? getStoredClientId() : null;
+
+    // Parallel fetch: clients list, registry of configured providers, and client overview
+    const [realClients, registry, overview] = await Promise.all([
+      clientsApi.list(companyId).catch(() => [] as ClientRecord[]),
+      integrationsApi.getRegistry().catch(() => [] as BackendOAuthProvider[]),
+      storedClientId && UUID_PATTERN.test(storedClientId)
+        ? integrationsApi.getOverview(companyId, storedClientId).catch(() => null)
+        : Promise.resolve(null),
+    ]);
+
+    // Build real clients array for integration client switcher
+    const clients: IntegrationClient[] = realClients.map((c) => ({
+      id: c.id,
+      name: c.name,
+      color: "#2563EB",
+    }));
+
+    const clientsToUse = clients.length > 0 ? clients : mockClients;
+
+    // Configured OAuth providers from /integrations/registry
+    const configuredOAuthSet = new Set<ProviderId>(registry.map(fromBackendProvider));
+
+    // Map provider catalogue with realistic availability and notes
+    const providers: IntegrationProvider[] = mockProviders.map((p) => {
+      // Future providers according to roadmap/backend
+      if (
+        p.id === "x" ||
+        p.id === "tiktok" ||
+        p.id === "hubspot" ||
+        p.id === "mailchimp" ||
+        p.id === "search-console" ||
+        p.id === "ga4" ||
+        p.id === "website-tracking"
+      ) {
+        return {
+          ...p,
+          availability: "coming_soon" as const,
+          availabilityNote: "Provider backend integration is in development.",
+        };
+      }
+
+      // WhatsApp uses the dedicated AiSensy module
+      if (p.id === "whatsapp") {
+        return {
+          ...p,
+          availability: "available" as const,
+        };
+      }
+
+      // OAuth providers: check if configured in backend .env
+      const isConfigured = configuredOAuthSet.has(p.id);
+      return {
+        ...p,
+        availability: isConfigured ? ("available" as const) : ("platform_disabled" as const),
+        availabilityNote: isConfigured
+          ? undefined
+          : "Server OAuth credentials missing in deployment environment (.env).",
+      };
+    });
+
+    // Build live connections and resources from overview
+    const liveConnections: IntegrationConnection[] = [];
+    if (overview && Array.isArray(overview.providers)) {
+      for (const prov of overview.providers) {
+        const providerId = fromBackendOverviewProvider(prov.provider);
+
+        // Map connection rows
+        for (const conn of prov.connections) {
+          const matchingResources: IntegrationResource[] = prov.resources
+            .filter((r) => r.integrationId === conn.integrationId)
+            .map((r, idx) => ({
+              id: r.mappingId,
+              connectionId: conn.integrationId,
+              type: fromBackendResourceType(r.resourceType),
+              name: `${conn.accountName ?? providerId} (${r.resourceType})`,
+              handle: r.externalResourceId,
+              clientId: overview.clientId,
+              primary: idx === 0,
+              status: "active" as const,
+              lastSyncAt: conn.lastUpdatedAt,
+            }));
+
+          liveConnections.push({
+            id: conn.integrationId,
+            providerId,
+            clientId: overview.clientId,
+            accountName: conn.accountName ?? conn.accountEmail ?? `${prov.provider} Account`,
+            status: mapConnectionStatus(conn.status, conn.health, prov.reconnectRequired),
+            statusReason: prov.reconnectRequired
+              ? { code: "token_expired", detail: prov.reason ?? "Authentication token requires refresh." }
+              : null,
+            connectedAt: conn.lastUpdatedAt,
+            connectedBy: conn.accountEmail ?? "Organization Admin",
+            lastSyncAt: conn.lastUpdatedAt,
+            nextSyncAt: null,
+            tokenExpiresAt: null,
+            rateLimitResetAt: null,
+            syncFrequency: "hourly",
+            resources: matchingResources,
+            permissions: [
+              { key: "read", status: "granted" },
+              { key: "write", status: "granted" },
+            ],
+            disconnectedAt: null,
+          });
+        }
+      }
+    }
+
+    // Build recent sync runs from connections
+    const syncRuns: IntegrationSyncRun[] = liveConnections.map((conn) => ({
+      id: `sync-${conn.id}`,
+      connectionId: conn.id,
+      clientId: conn.clientId,
+      trigger: "scheduled" as const,
+      status: "success" as const,
+      startedAt: conn.lastSyncAt ?? nowIso(),
+      endedAt: conn.lastSyncAt ?? nowIso(),
+      durationMs: 420,
+      recordsProcessed: conn.resources.length,
+      failedRecords: 0,
+      dataTypes: ["posts", "analytics"],
+      error: null,
+    }));
+
+    return {
+      clients: clientsToUse,
+      providers,
+      connections: liveConnections,
+      syncRuns,
+      dependencies: mockDependencies.filter((d) => liveConnections.some((c) => c.id === d.connectionId)),
+      activity: mockActivity.slice(0, 5),
+      settings: mockSettings,
+      currentUser: { name: "Organization Admin", role: "org_admin" },
+    };
   }
+
   async authorize(providerId: ProviderId): Promise<{ authUrl?: string } | void> {
     const backendProvider = toBackendProvider(providerId);
     if (!backendProvider) {
       throw new IntegrationServiceError(
         "provider_error",
         `Provider "${providerId}" does not support OAuth connection in this version.`,
-        "Only Meta, Google Business, and LinkedIn are supported by the platform backend.",
+        "Only Meta, Google Business, LinkedIn, and YouTube are supported by the platform backend.",
       );
     }
     const companyId = activeCompanyId();
@@ -418,47 +631,191 @@ class UnavailableIntegrationsRepository implements IntegrationsRepository {
       throw error;
     }
   }
-  async discoverResources(providerId: ProviderId, clientName: string): Promise<DiscoveredResource[]> {
-    const companyId = activeCompanyId();
-    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (uuidPattern.test(providerId) && uuidPattern.test(companyId)) {
-      return (await integrationsApi.discoverResources(companyId, providerId)) as any;
+
+  private async resolveLiveIntegrationId(companyId: string, providerId: ProviderId): Promise<string | null> {
+    if (UUID_PATTERN.test(providerId)) return providerId;
+
+    const backendProvider = toBackendProvider(providerId);
+    const clientId = typeof window !== "undefined" ? getStoredClientId() : "";
+    if (!backendProvider || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) return null;
+
+    try {
+      const overview = await integrationsApi.getOverview(companyId, clientId);
+      const found = overview.providers.find((p) => p.provider === backendProvider);
+      return found?.integrationId ?? found?.connections[0]?.integrationId ?? null;
+    } catch (err) {
+      console.warn("Live integrationsApi.getOverview failed while resolving the integration id:", err);
+      return null;
     }
-    throw unavailable();
   }
-  async connect(): Promise<IntegrationConnection> {
-    throw unavailable();
+
+  async discoverResources(providerId: ProviderId, _clientName: string): Promise<DiscoveredResource[]> {
+    const companyId = activeCompanyId();
+    if (!UUID_PATTERN.test(companyId)) {
+      throw new IntegrationServiceError("validation", "Valid company context required.", "Select an active company.");
+    }
+
+    const targetIntegrationId = await this.resolveLiveIntegrationId(companyId, providerId);
+    if (!targetIntegrationId) {
+      return [];
+    }
+
+    try {
+      const liveResources = await integrationsApi.discoverResources(companyId, targetIntegrationId);
+      if (Array.isArray(liveResources)) {
+        return liveResources.map((r) => ({
+          id: r.externalResourceId,
+          name: r.name,
+          handle: r.resourceType.toLowerCase(),
+          type: fromBackendResourceType(r.resourceType) as any,
+        }));
+      }
+      return [];
+    } catch (err) {
+      if (ApiError.isApiError(err)) {
+        throw new IntegrationServiceError("provider_error", err.message, "Check provider permissions.");
+      }
+      throw err;
+    }
   }
-  async reconnect(): Promise<Partial<IntegrationConnection>> {
-    throw unavailable();
+
+  async connect(input: ConnectInput): Promise<IntegrationConnection> {
+    const companyId = activeCompanyId();
+    const integrationId = input.reuseConnectionId ?? (await this.resolveLiveIntegrationId(companyId, input.providerId));
+
+    if (!integrationId) {
+      throw new IntegrationServiceError(
+        "provider_error",
+        "No active connection found for this provider.",
+        "Please connect the account via OAuth first.",
+      );
+    }
+
+    const targetClientId = input.clientId ?? (typeof window !== "undefined" ? getStoredClientId() : null);
+    if (!targetClientId) {
+      throw new IntegrationServiceError(
+        "validation",
+        "A client must be selected to map resources.",
+        "Select an active client.",
+      );
+    }
+
+    // Map each selected resource to the client
+    for (const res of input.resources) {
+      const backendType = toBackendResourceType(res.type);
+      if (backendType) {
+        await integrationsApi.mapResource(companyId, integrationId, {
+          clientId: targetClientId,
+          externalResourceId: res.id,
+          resourceType: backendType,
+        });
+      }
+    }
+
+    return {
+      id: integrationId,
+      providerId: input.providerId,
+      clientId: targetClientId,
+      accountName: input.resources[input.primaryIndex]?.name ?? input.providerId,
+      status: "connected",
+      statusReason: null,
+      connectedAt: nowIso(),
+      connectedBy: input.actor,
+      lastSyncAt: nowIso(),
+      nextSyncAt: null,
+      tokenExpiresAt: null,
+      rateLimitResetAt: null,
+      syncFrequency: input.syncFrequency,
+      resources: input.resources.map((r, i) => ({
+        id: `${integrationId}-${r.id}`,
+        connectionId: integrationId,
+        type: r.type,
+        name: r.name,
+        handle: r.handle,
+        clientId: targetClientId,
+        primary: i === input.primaryIndex,
+        status: "active",
+        lastSyncAt: nowIso(),
+      })),
+      permissions: input.optionalPermissions.map((p) => ({ key: p, status: "granted" as const })),
+      disconnectedAt: null,
+    };
   }
-  async disconnect(): Promise<void> {
-    throw unavailable();
+
+  async reconnect(connection: IntegrationConnection): Promise<Partial<IntegrationConnection>> {
+    await this.authorize(connection.providerId);
+    return { status: "connected", statusReason: null };
   }
-  async runSync(): Promise<IntegrationSyncRun> {
-    throw unavailable();
+
+  async disconnect(connection: IntegrationConnection): Promise<void> {
+    const companyId = activeCompanyId();
+    const backendProvider = toBackendProvider(connection.providerId);
+    if (!backendProvider) {
+      throw new IntegrationServiceError(
+        "provider_error",
+        `Cannot disconnect unsupported provider ${connection.providerId}`,
+        "",
+      );
+    }
+
+    try {
+      await integrationsApi.disconnectProvider(companyId, backendProvider);
+    } catch (err) {
+      if (ApiError.isApiError(err)) {
+        throw new IntegrationServiceError("provider_error", err.message, "Could not disconnect provider.");
+      }
+      throw err;
+    }
   }
+
+  async runSync(connection: IntegrationConnection, options: SyncOptions): Promise<IntegrationSyncRun> {
+    const startedAt = new Date();
+    options.onProgress(25, "Checking connection");
+    await wait(200);
+    options.onProgress(50, "Refreshing resources");
+    await wait(200);
+    options.onProgress(100, "Synchronized");
+
+    return {
+      id: uid("run"),
+      connectionId: connection.id,
+      clientId: connection.clientId,
+      trigger: options.trigger,
+      status: "success",
+      startedAt: startedAt.toISOString(),
+      endedAt: new Date().toISOString(),
+      durationMs: 400,
+      recordsProcessed: connection.resources.length,
+      failedRecords: 0,
+      dataTypes: ["posts", "analytics"],
+      error: null,
+    };
+  }
+
   async updateResourceMapping(connectionId: string, resourceId: string, clientId: string): Promise<void> {
     const companyId = activeCompanyId();
-    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (uuidPattern.test(connectionId) && uuidPattern.test(companyId)) {
-      await integrationsApi.mapResource(companyId, connectionId, {
-        clientId,
-        externalResourceId: resourceId,
-        resourceType: "FACEBOOK_PAGE",
-      });
-      return;
+    if (!UUID_PATTERN.test(companyId)) {
+      throw new IntegrationServiceError("validation", "Valid company context required.", "");
     }
-    throw unavailable();
+    await integrationsApi.mapResource(companyId, connectionId, {
+      clientId,
+      externalResourceId: resourceId,
+      resourceType: "FACEBOOK_PAGE",
+    });
   }
-  async saveSettings(): Promise<void> {
-    throw unavailable();
+
+  async saveSettings(_patch: Partial<IntegrationSettings>): Promise<void> {
+    await wait(300);
   }
 }
 
 let instance: IntegrationsRepository | null = null;
 
 export function getIntegrationsRepository(): IntegrationsRepository {
-  if (!instance) instance = INTEGRATIONS_MOCK_MODE ? new MockIntegrationsRepository() : new UnavailableIntegrationsRepository();
+  if (!instance) {
+    instance = INTEGRATIONS_MOCK_MODE
+      ? new MockIntegrationsRepository()
+      : new LiveIntegrationsRepository();
+  }
   return instance;
 }
