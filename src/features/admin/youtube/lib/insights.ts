@@ -164,7 +164,7 @@ export function channelHealth(
     {
       label: "Last Upload",
       value: lastUpload ? `${Math.max(0, Math.round((Date.now() - Date.parse(lastUpload)) / 86_400_000))}d ago` : "\u2014",
-      hint: "Days since the most recent published video",
+      hint: lastUpload ? `Most recent published video: ${lastUpload.slice(0, 10)}` : "Days since the most recent published video",
     },
     {
       label: "Published",

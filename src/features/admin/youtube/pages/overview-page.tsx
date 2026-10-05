@@ -415,7 +415,7 @@ function ChannelHealthCard({ className, analytics }: { className?: string; analy
             <dl className="grid grid-cols-2 gap-1 xl:grid-cols-4">
               {stats.map((stat) => (
                 <div key={stat.label} className="rounded-sm bg-[#F8FAFC] px-2.5 py-2" title={stat.hint}>
-                  <dt className="truncate text-[11px] text-[#6B7890]">{stat.label}</dt>
+                  <dt className="text-[11px] leading-4 text-[#6B7890]">{stat.label}</dt>
                   <dd className="mt-0.5 text-[15px] font-semibold tabular-nums text-[#0F1B3D]">{stat.value}</dd>
                 </div>
               ))}
