@@ -158,3 +158,48 @@ export async function fetchLiveApiRequests(params: {
   }
 }
 
+export function useLiveApiRequests(params: {
+  environment?: ApiEnvironment;
+  range?: ApiTimeRange;
+  hours?: number;
+  serviceId?: string;
+  status?: string;
+  search?: string;
+  endpointId?: string;
+  page?: number;
+  limit?: number;
+}) {
+  const [data, setData] = useState<PaginatedApiRequestsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+
+    fetchLiveApiRequests(params)
+      .then((res) => {
+        if (!active) return;
+        setData(res);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [
+    params.environment,
+    params.range,
+    params.hours,
+    params.serviceId,
+    params.status,
+    params.search,
+    params.endpointId,
+    params.page,
+    params.limit,
+  ]);
+
+  return { data, loading };
+}
+

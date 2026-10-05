@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Activity, AlertTriangle, ArrowLeft, Copy, Download, Eye, MoreHorizontal, Search, Settings, X } from "lucide-react";
+import { Activity, AlertTriangle, ArrowLeft, ChevronLeft, ChevronRight, Copy, Download, Eye, MoreHorizontal, Search, Settings, X } from "lucide-react";
 import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils/cn";
 import { buildApiMonitoringSnapshot } from "../data/observability-provider";
-import { useLiveApiMonitoringSnapshot, updateLiveMonitoringConfig } from "../data/live-provider";
+import { useLiveApiMonitoringSnapshot, updateLiveMonitoringConfig, useLiveApiRequests } from "../data/live-provider";
 import { endpointLabel, endpointStats, errorGroupMembers, kpis, requestsInRange, serviceStats, statusClass } from "../data/observability-selectors";
 import type { ApiEnvironment, ApiMonitoringConfig, ApiMonitoringSnapshot, ApiRateLimit, ApiRequest, ApiService, ApiTimeRange } from "../data/observability-types";
 
@@ -175,12 +175,51 @@ function EndpointDetail({ snapshot, rows, endpointId, onPreview }: { snapshot: A
   return <div className="space-y-1"><Back href={`${BASE}/explorer`} label="Back to API Explorer" /><Card className="p-4"><h2 className="font-mono text-lg font-bold text-[#111C3A]">{endpoint.method} {endpoint.path}</h2><p className="text-sm text-slate-600">{endpoint.name}</p><div className="mt-4 grid gap-1 sm:grid-cols-4"><Mini label="Request Count" value={String(stat?.requests ?? 0)} /><Mini label="P50" value={stat?.p50 ? `${stat.p50} ms` : "-"} /><Mini label="P95" value={stat?.p95 ? `${stat.p95} ms` : "-"} /><Mini label="P99" value={stat?.p99 ? `${stat.p99} ms` : "Insufficient sample"} /></div></Card><Card><Title title="Recent Matching Requests" /><RequestTable snapshot={snapshot} rows={matching} onPreview={onPreview} /></Card></div>;
 }
 
-function Requests({ snapshot, rows, onPreview }: { snapshot: ApiMonitoringSnapshot; rows: ApiRequest[]; onPreview: (request: ApiRequest) => void }) {
+function Requests({ snapshot, rows, onPreview, environment, range, hours, serviceId, isLive }: { snapshot: ApiMonitoringSnapshot; rows: ApiRequest[]; onPreview: (request: ApiRequest) => void; environment: ApiEnvironment; range: ApiTimeRange; hours: number; serviceId: string; isLive: boolean }) {
   const params = useSearchParams();
   const [status, setStatus] = useState(params.get("status") ?? "all");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const limit = 25;
+
+  const { data: liveData, loading: liveLoading } = useLiveApiRequests({
+    environment,
+    range,
+    hours,
+    serviceId,
+    status,
+    search: query,
+    page,
+    limit,
+  });
+
   const filtered = rows.filter((row) => (status === "all" || (status === "5xx" ? row.statusCode >= 500 : status === "429" ? row.statusCode === 429 : status === "4xx" ? row.statusCode >= 400 && row.statusCode < 500 : row.statusCode < 300)) && `${row.requestId} ${row.path} ${row.companyName ?? ""}`.toLowerCase().includes(query.toLowerCase()));
-  return <div className="space-y-1"><Card><Title title="Requests & Errors" subtitle="Sanitized request metadata, status classification and trace availability." action={<button onClick={() => download("api-requests.csv", csv(filtered.map((r) => ({ requestId: r.requestId, method: r.method, path: r.path, statusCode: r.statusCode, durationMs: r.durationMs, company: r.companyName, traceId: r.traceId }))))} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold"><Download className="size-4" />Export</button>} /><div className="flex flex-wrap gap-2 border-b border-slate-100 p-3"><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search request, endpoint or company" className="min-w-64 flex-1 rounded-md border border-slate-200 px-3 py-2 text-xs" /><select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-xs"><option value="all">All statuses</option><option value="2xx">HTTP 2xx</option><option value="4xx">HTTP 4xx</option><option value="5xx">HTTP 5xx</option><option value="429">HTTP 429</option></select></div><RequestTable snapshot={snapshot} rows={filtered} onPreview={onPreview} /></Card><ErrorGroups snapshot={snapshot} /></div>;
+  
+  const displayRows = isLive && liveData ? liveData.items : filtered.slice((page - 1) * limit, page * limit);
+  const totalPages = isLive && liveData ? liveData.totalPages : Math.ceil(filtered.length / limit);
+
+  return <div className="space-y-1"><Card><Title title="Requests & Errors" subtitle="Sanitized request metadata, status classification and trace availability." action={<button onClick={() => download("api-requests.csv", csv(filtered.map((r) => ({ requestId: r.requestId, method: r.method, path: r.path, statusCode: r.statusCode, durationMs: r.durationMs, company: r.companyName, traceId: r.traceId }))))} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold"><Download className="size-4" />Export</button>} /><div className="flex flex-wrap gap-2 border-b border-slate-100 p-3"><input value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} placeholder="Search request, endpoint or company" className="min-w-64 flex-1 rounded-md border border-slate-200 px-3 py-2 text-xs" /><select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} className="rounded-md border border-slate-200 px-2 py-2 text-xs"><option value="all">All statuses</option><option value="2xx">HTTP 2xx</option><option value="4xx">HTTP 4xx</option><option value="5xx">HTTP 5xx</option><option value="429">HTTP 429</option></select></div><div className={cn(isLive && liveLoading ? "opacity-50" : "")}><RequestTable snapshot={snapshot} rows={displayRows} onPreview={onPreview} /></div><Pagination page={page} totalPages={totalPages} onPageChange={setPage} /></Card><ErrorGroups snapshot={snapshot} /></div>;
+}
+
+function Pagination({ page, totalPages, onPageChange }: { page: number; totalPages: number; onPageChange: (page: number) => void }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3">
+      <div className="flex flex-1 justify-between sm:hidden">
+        <button onClick={() => onPageChange(page - 1)} disabled={page <= 1} className="relative inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">Previous</button>
+        <button onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} className="relative ml-3 inline-flex items-center rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">Next</button>
+      </div>
+      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        <div><p className="text-[13px] text-slate-500">Showing page <span className="font-bold text-[#111C3A]">{page}</span> of <span className="font-bold text-[#111C3A]">{totalPages}</span></p></div>
+        <div>
+          <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+            <button onClick={() => onPageChange(page - 1)} disabled={page <= 1} className="relative inline-flex items-center rounded-l-md border border-slate-200 bg-white px-2 py-2 text-slate-400 hover:bg-slate-50 disabled:opacity-50"><ChevronLeft className="size-4" /></button>
+            <button onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} className="relative inline-flex items-center rounded-r-md border border-slate-200 bg-white px-2 py-2 text-slate-400 hover:bg-slate-50 disabled:opacity-50"><ChevronRight className="size-4" /></button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function RequestDetail({ snapshot, requestId }: { snapshot: ApiMonitoringSnapshot; requestId: string }) {
@@ -290,5 +329,5 @@ export function ApiMonitoringOperationsCenter({ page = "overview", serviceId: se
   function setEnv(env: ApiEnvironment) { setEnvironmentState(env); const p = new URLSearchParams(search.toString()); p.set("env", env); router.replace(`${window.location.pathname}?${p.toString()}`); }
   function setRangeFilter(nextRange: ApiTimeRange) { setRange(nextRange); const p = new URLSearchParams(search.toString()); p.set("range", nextRange); router.replace(`${window.location.pathname}?${p.toString()}`); }
   function setServiceFilter(id: string) { setServiceId(id); const p = new URLSearchParams(search.toString()); if (id === "all") p.delete("service"); else p.set("service", id); router.replace(`${window.location.pathname}?${p.toString()}`); }
-  return <div className="space-y-1"><Header snapshot={snapshot} range={range} setRange={setRangeFilter} customHours={customHours} setCustomHours={(hours) => { setCustomHours(hours); const p = new URLSearchParams(search.toString()); p.set("hours", String(hours)); router.replace(`${window.location.pathname}?${p.toString()}`); }} serviceId={serviceId} setServiceId={setServiceFilter} setEnvironment={setEnv} isLive={isLive} /><Tabs />{loading ? <Skeleton /> : null}{!loading && page === "overview" ? <Overview snapshot={snapshot} range={range} serviceId={serviceId} rows={rows} customMinutes={customHours * 60} onPreviewService={setServicePreview} onPreviewRequest={setRequestPreview} /> : null}{!loading && page === "explorer" ? <Explorer snapshot={snapshot} rows={rows} onPreviewService={setServicePreview} /> : null}{!loading && page === "service" && serviceParam ? <ServiceDetail snapshot={snapshot} rows={rows} serviceId={serviceParam} onPreview={setRequestPreview} /> : null}{!loading && page === "endpoint" && endpointId ? <EndpointDetail snapshot={snapshot} rows={rows} endpointId={endpointId} onPreview={setRequestPreview} /> : null}{!loading && page === "requests" ? <Requests snapshot={snapshot} rows={rows} onPreview={setRequestPreview} /> : null}{!loading && page === "request" && requestId ? <RequestDetail snapshot={snapshot} requestId={requestId} /> : null}{!loading && page === "error" && errorId ? <ErrorDetail snapshot={snapshot} errorId={errorId} onPreview={setRequestPreview} /> : null}{!loading && page === "performance" ? <Performance snapshot={snapshot} rows={rows} /> : null}{!loading && page === "availability" ? <Availability snapshot={snapshot} rows={rows} /> : null}{!loading && page === "rate" ? <RateLimitPage snapshot={snapshot} /> : null}{!loading && page === "dependencies" ? <Dependencies snapshot={snapshot} /> : null}{!loading && page === "activity" ? <ActivitySettings snapshot={snapshot} config={config} setConfig={setConfig} /> : null}<ServicePreview service={servicePreview} snapshot={snapshot} onClose={() => setServicePreview(null)} /><RequestPreview request={requestPreview} snapshot={snapshot} onClose={() => setRequestPreview(null)} /></div>;
+  return <div className="space-y-1"><Header snapshot={snapshot} range={range} setRange={setRangeFilter} customHours={customHours} setCustomHours={(hours) => { setCustomHours(hours); const p = new URLSearchParams(search.toString()); p.set("hours", String(hours)); router.replace(`${window.location.pathname}?${p.toString()}`); }} serviceId={serviceId} setServiceId={setServiceFilter} setEnvironment={setEnv} isLive={isLive} /><Tabs />{loading ? <Skeleton /> : null}{!loading && page === "overview" ? <Overview snapshot={snapshot} range={range} serviceId={serviceId} rows={rows} customMinutes={customHours * 60} onPreviewService={setServicePreview} onPreviewRequest={setRequestPreview} /> : null}{!loading && page === "explorer" ? <Explorer snapshot={snapshot} rows={rows} onPreviewService={setServicePreview} /> : null}{!loading && page === "service" && serviceParam ? <ServiceDetail snapshot={snapshot} rows={rows} serviceId={serviceParam} onPreview={setRequestPreview} /> : null}{!loading && page === "endpoint" && endpointId ? <EndpointDetail snapshot={snapshot} rows={rows} endpointId={endpointId} onPreview={setRequestPreview} /> : null}{!loading && page === "requests" ? <Requests snapshot={snapshot} rows={rows} onPreview={setRequestPreview} environment={environment} range={range} hours={customHours} serviceId={serviceId} isLive={isLive} /> : null}{!loading && page === "request" && requestId ? <RequestDetail snapshot={snapshot} requestId={requestId} /> : null}{!loading && page === "error" && errorId ? <ErrorDetail snapshot={snapshot} errorId={errorId} onPreview={setRequestPreview} /> : null}{!loading && page === "performance" ? <Performance snapshot={snapshot} rows={rows} /> : null}{!loading && page === "availability" ? <Availability snapshot={snapshot} rows={rows} /> : null}{!loading && page === "rate" ? <RateLimitPage snapshot={snapshot} /> : null}{!loading && page === "dependencies" ? <Dependencies snapshot={snapshot} /> : null}{!loading && page === "activity" ? <ActivitySettings snapshot={snapshot} config={config} setConfig={setConfig} /> : null}<ServicePreview service={servicePreview} snapshot={snapshot} onClose={() => setServicePreview(null)} /><RequestPreview request={requestPreview} snapshot={snapshot} onClose={() => setRequestPreview(null)} /></div>;
 }
