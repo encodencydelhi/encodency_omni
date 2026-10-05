@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatDateTime } from "@/lib/utils/format";
 import { formatMoney } from "../data/money";
-import { usePaymentDetail } from "../data/hooks";
+import { useBillingStatus, usePaymentDetail } from "../data/hooks";
 import {
   PaymentAttemptBadge,
   SettlementBadge,
@@ -38,9 +38,11 @@ export function PaymentDetailPage({ paymentId: propPaymentId }: PaymentDetailPag
   const params = useParams();
   const paymentId = propPaymentId ?? (params?.paymentId as string) ?? "";
   const { payment, relatedRefunds } = usePaymentDetail(paymentId);
+  const loadStatus = useBillingStatus();
   const [isAllocationOpen, setIsAllocationOpen] = useState<boolean>(false);
 
   if (!payment) {
+    if (loadStatus === "idle" || loadStatus === "loading") return null;
     return (
       <div className="p-8 text-center bg-card rounded-sm border border-border space-y-3">
         <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-muted-foreground">

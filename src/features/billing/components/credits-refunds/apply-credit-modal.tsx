@@ -29,6 +29,8 @@ interface ApplyCreditModalProps {
   onSuccess?: () => void;
 }
 
+let handleSubmitInFlight = false;
+
 export function ApplyCreditModal({
   isOpen,
   onClose,
@@ -62,7 +64,9 @@ export function ApplyCreditModal({
     setAmountMajor(minorToInputValue(maxApplicable));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (handleSubmitInFlight) return;
+    handleSubmitInFlight = true;
     try {
       if (!selectedAccount) {
         toast.error("Please select a billing account with available credit");
@@ -86,7 +90,7 @@ export function ApplyCreditModal({
         return;
       }
 
-      applyAccountCredit(selectedAccount.id, selectedInvoice.id, amountMinor);
+      await applyAccountCredit(selectedAccount.id, selectedInvoice.id, amountMinor);
       toast.success(
         `Applied ${formatMoney(amountMinor, selectedAccount.currency)} credit to invoice ${selectedInvoice.number}`,
       );
@@ -95,6 +99,9 @@ export function ApplyCreditModal({
       if (onSuccess) onSuccess();
     } catch (err: any) {
       toast.error(err.message || "Failed to apply account credit");
+    }
+    finally {
+      handleSubmitInFlight = false;
     }
   };
 

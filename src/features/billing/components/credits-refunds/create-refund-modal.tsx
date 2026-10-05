@@ -29,6 +29,8 @@ interface CreateRefundModalProps {
   onSuccess?: () => void;
 }
 
+let handleSubmitInFlight = false;
+
 export function CreateRefundModal({
   isOpen,
   onClose,
@@ -51,7 +53,9 @@ export function CreateRefundModal({
     setAmountMajor(minorToInputValue(selectedPayment.grossAmountMinor));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (handleSubmitInFlight) return;
+    handleSubmitInFlight = true;
     try {
       if (!selectedPayment) {
         toast.error("Please select an eligible payment");
@@ -71,19 +75,28 @@ export function CreateRefundModal({
         return;
       }
 
-      requestRefund({
+      const refund = await requestRefund({
         paymentId: selectedPayment.id,
         requestedAmountMinor: amountMinor,
         reason: reason.trim(),
       });
 
-      toast.success("Refund request submitted in Pending Approval status");
+      if (refund.status === "failed") {
+        toast.error(refund.failureReason ? `Refund ${refund.reference} could not be sent: ${refund.failureReason}` : `Refund ${refund.reference} could not be sent`);
+      } else if (refund.status === "pending_approval") {
+        toast.success("Refund request submitted in Pending Approval status");
+      } else {
+        toast.success(`Refund ${refund.reference} is ${refund.status === "succeeded" ? "sent to the payer" : refund.status === "processing" ? "with the payment gateway" : refund.status.replace(/_/g, " ")}`);
+      }
       setAmountMajor("");
       setReason("");
       onClose();
       if (onSuccess) onSuccess();
     } catch (err: any) {
       toast.error(err.message || "Failed to submit refund request");
+    }
+    finally {
+      handleSubmitInFlight = false;
     }
   };
 

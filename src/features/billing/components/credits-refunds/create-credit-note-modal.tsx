@@ -30,6 +30,8 @@ interface CreateCreditNoteModalProps {
   onSuccess?: () => void;
 }
 
+let handleSubmitInFlight = false;
+
 export function CreateCreditNoteModal({
   isOpen,
   onClose,
@@ -48,7 +50,9 @@ export function CreateCreditNoteModal({
 
   const selectedInvoice = invoices.find((i) => i.id === selectedInvoiceId) ?? eligibleInvoices[0];
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (handleSubmitInFlight) return;
+    handleSubmitInFlight = true;
     try {
       if (!selectedInvoice) {
         toast.error("Please select an eligible invoice");
@@ -68,7 +72,7 @@ export function CreateCreditNoteModal({
         return;
       }
 
-      createCreditNote({
+      await createCreditNote({
         invoiceId: selectedInvoice.id,
         amountMinor,
         reason: reason.trim(),
@@ -82,6 +86,9 @@ export function CreateCreditNoteModal({
       if (onSuccess) onSuccess();
     } catch (err: any) {
       toast.error(err.message || "Failed to create credit note");
+    }
+    finally {
+      handleSubmitInFlight = false;
     }
   };
 

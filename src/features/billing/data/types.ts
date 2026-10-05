@@ -241,6 +241,8 @@ export type FinancialEventType =
   | "credit_applied"
   | "refund_requested"
   | "refund_approved"
+  | "refund_rejected"
+  | "refund_processed"
   | "reconciliation_reviewed"
   | "billing_account_updated"
   | "policy_updated";

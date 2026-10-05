@@ -30,6 +30,8 @@ interface ManualPaymentModalProps {
   onSuccess?: () => void;
 }
 
+let handleSubmitInFlight = false;
+
 export function ManualPaymentModal({
   isOpen,
   onClose,
@@ -46,7 +48,9 @@ export function ManualPaymentModal({
 
   const selectedAccount = accounts.find((a) => a.id === selectedAccountId) ?? accounts[0];
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (handleSubmitInFlight) return;
+    handleSubmitInFlight = true;
     try {
       if (!selectedAccount) {
         toast.error("Please select a valid billing account");
@@ -62,7 +66,7 @@ export function ManualPaymentModal({
         return;
       }
 
-      recordManualPayment({
+      await recordManualPayment({
         companyId: selectedAccount.companyId,
         billingAccountId: selectedAccount.id,
         amountMinor,
@@ -80,6 +84,9 @@ export function ManualPaymentModal({
       if (onSuccess) onSuccess();
     } catch (err: any) {
       toast.error(err.message || "Failed to record payment");
+    }
+    finally {
+      handleSubmitInFlight = false;
     }
   };
 

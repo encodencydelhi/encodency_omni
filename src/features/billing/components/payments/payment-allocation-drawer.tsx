@@ -30,6 +30,8 @@ interface PaymentAllocationDrawerProps {
   onSuccess?: () => void;
 }
 
+let handleConfirmAllocationInFlight = false;
+
 export function PaymentAllocationDrawer({
   payment,
   isOpen,
@@ -79,7 +81,9 @@ export function PaymentAllocationDrawer({
     }));
   };
 
-  const handleConfirmAllocation = () => {
+  const handleConfirmAllocation = async () => {
+    if (handleConfirmAllocationInFlight) return;
+    handleConfirmAllocationInFlight = true;
     try {
       if (proposedTotalMinor <= 0) {
         toast.error("Please specify at least one positive allocation amount");
@@ -97,7 +101,7 @@ export function PaymentAllocationDrawer({
         }))
         .filter((a) => a.amountMinor > 0);
 
-      allocatePayment(payment.id, allocationsToApply);
+      await allocatePayment(payment.id, allocationsToApply);
       toast.success(
         `Successfully allocated ${formatMoney(proposedTotalMinor, payment.currency)} across ${allocationsToApply.length} invoice(s)`,
       );
@@ -106,6 +110,9 @@ export function PaymentAllocationDrawer({
       if (onSuccess) onSuccess();
     } catch (err: any) {
       toast.error(err.message || "Failed to allocate payment");
+    }
+    finally {
+      handleConfirmAllocationInFlight = false;
     }
   };
 
@@ -262,7 +269,7 @@ export function PaymentAllocationDrawer({
             className="rounded-sm text-xs bg-slate-900 text-white hover:bg-slate-800"
           >
             <CheckIcon className="size-3.5 mr-1" />
-            Confirm Demo Allocation
+            Confirm Allocation
           </Button>
         </div>
       </SheetContent>

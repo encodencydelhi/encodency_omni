@@ -35,6 +35,8 @@ interface ExceptionDetailDrawerProps {
   onSuccess?: () => void;
 }
 
+let handleSaveInvestigationInFlight = false;
+
 export function ExceptionDetailDrawer({
   exception,
   isOpen,
@@ -44,7 +46,7 @@ export function ExceptionDetailDrawer({
   const { updateReconciliationIssue } = useReconciliation();
 
   const [status, setStatus] = useState<ReconciliationStatus>(exception?.status ?? "open");
-  const [assignedOwner, setAssignedOwner] = useState<string>(exception?.assignedOwner ?? "Sompal Singh");
+  const [assignedOwner, setAssignedOwner] = useState<string>(exception?.assignedOwner ?? "");
   const [newNote, setNewNote] = useState<string>("");
 
   if (!exception) return null;
@@ -56,9 +58,11 @@ export function ExceptionDetailDrawer({
     critical: "bg-rose-50 text-rose-700 border-rose-200 font-semibold",
   };
 
-  const handleSaveInvestigation = () => {
+  const handleSaveInvestigation = async () => {
+    if (handleSaveInvestigationInFlight) return;
+    handleSaveInvestigationInFlight = true;
     try {
-      updateReconciliationIssue(exception.id, {
+      await updateReconciliationIssue(exception.id, {
         status,
         assignedOwner: assignedOwner.trim() || undefined,
         newNote: newNote.trim() || undefined,
@@ -70,6 +74,9 @@ export function ExceptionDetailDrawer({
       if (onSuccess) onSuccess();
     } catch (err: any) {
       toast.error(err.message || "Failed to update exception");
+    }
+    finally {
+      handleSaveInvestigationInFlight = false;
     }
   };
 

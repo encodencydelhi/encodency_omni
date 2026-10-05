@@ -48,6 +48,8 @@ interface DraftLineItem {
   discountMajor: string;
 }
 
+let handleSaveDraftInFlight = false;
+
 export function CreateInvoiceWizard({
   isOpen,
   onClose,
@@ -123,7 +125,9 @@ export function CreateInvoiceWizard({
     { subtotalMinor: 0, discountMinor: 0, taxMinor: 0, totalMinor: 0 },
   );
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
+    if (handleSaveDraftInFlight) return;
+    handleSaveDraftInFlight = true;
     try {
       if (!selectedAccount) {
         toast.error("Please select a valid billing account");
@@ -137,7 +141,7 @@ export function CreateInvoiceWizard({
       const dueAtDate = new Date();
       dueAtDate.setDate(dueAtDate.getDate() + dueDays);
 
-      const created = createDraftInvoice({
+      const created = await createDraftInvoice({
         companyId: selectedAccount.companyId,
         billingAccountId: selectedAccount.id,
         type: invoiceType,
@@ -158,6 +162,9 @@ export function CreateInvoiceWizard({
       if (onSuccess) onSuccess(created.id);
     } catch (err: any) {
       toast.error(err.message || "Failed to create draft invoice");
+    }
+    finally {
+      handleSaveDraftInFlight = false;
     }
   };
 
@@ -441,7 +448,7 @@ export function CreateInvoiceWizard({
               <div>
                 <h3 className="text-base font-bold text-foreground">Ready to Save Draft Invoice</h3>
                 <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">
-                  Click below to persist this draft invoice in the platform billing directory. You can edit line items, record demo payments, or void it anytime prior to issuance.
+                  Click below to persist this draft invoice in the platform billing directory. You can issue it from its invoice page, or void it anytime prior to issuance.
                 </p>
               </div>
             </div>

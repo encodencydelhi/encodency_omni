@@ -10,6 +10,14 @@ import { billingStore } from "./store";
 import { calculateOverviewKpis } from "./selectors";
 import type { BillingOverviewKpis } from "./types";
 
+/** Whether the data has been read yet. Until it has, a record that is not found is only not loaded yet, not missing. */
+export function useBillingStatus() {
+  return useSyncExternalStore(
+    (onStoreChange) => billingStore.subscribe(onStoreChange),
+    () => billingStore.getStatus(),
+  );
+}
+
 export function useBillingOverview(options: { periodDays?: number; currency?: string } = {}) {
   const periodDays = options.periodDays ?? 30;
   const currency = options.currency ?? "ALL";
@@ -62,6 +70,7 @@ export function useInvoices() {
   return {
     invoices,
     createDraftInvoice: billingStore.createDraftInvoice.bind(billingStore),
+    issueInvoice: billingStore.issueInvoice.bind(billingStore),
     voidInvoice: billingStore.voidInvoice.bind(billingStore),
   };
 }
@@ -104,6 +113,7 @@ export function useInvoiceDetail(id: string) {
     invoice,
     relatedAllocations,
     relatedCreditNotes,
+    issueInvoice: billingStore.issueInvoice.bind(billingStore),
     voidInvoice: billingStore.voidInvoice.bind(billingStore),
   };
 }
@@ -191,6 +201,8 @@ export function useCreditsAndRefunds() {
     approveCreditNote: billingStore.approveCreditNote.bind(billingStore),
     applyAccountCredit: billingStore.applyAccountCredit.bind(billingStore),
     requestRefund: billingStore.requestRefund.bind(billingStore),
+    approveRefund: billingStore.approveRefund.bind(billingStore),
+    rejectRefund: billingStore.rejectRefund.bind(billingStore),
   };
 }
 

@@ -45,6 +45,8 @@ export function CreditsRefundsPage() {
     ledgerEntries,
     refunds,
     approveCreditNote,
+    approveRefund,
+    rejectRefund,
   } = useCreditsAndRefunds();
 
   // Modals
@@ -77,12 +79,32 @@ export function CreditsRefundsPage() {
   }, [creditNotes, ledgerEntries, refunds]);
 
   // Approve action
-  const handleApproveCreditNote = (id: string) => {
+  const handleApproveCreditNote = async (id: string) => {
     try {
-      approveCreditNote(id);
+      await approveCreditNote(id);
       toast.success("Credit note approved and posted to financial accounts");
     } catch (err: any) {
       toast.error(err.message || "Failed to approve credit note");
+    }
+  };
+
+  // Refund decisions
+  const handleApproveRefund = async (id: string) => {
+    try {
+      const refund = await approveRefund(id);
+      if (refund.status === "failed") toast.error(refund.failureReason ? `Refund could not be sent: ${refund.failureReason}` : "Refund could not be sent");
+      else toast.success(refund.status === "succeeded" ? "Refund approved and sent to the payer" : "Refund approved");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to approve refund");
+    }
+  };
+
+  const handleRejectRefund = async (id: string) => {
+    try {
+      await rejectRefund(id);
+      toast.success("Refund request rejected");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to reject refund");
     }
   };
 
@@ -429,9 +451,21 @@ export function CreditsRefundsPage() {
                       </td>
                       <td className="py-2 px-3 text-muted-foreground whitespace-nowrap">{formatDate(rfd.createdAt)}</td>
                       <td className="py-2 px-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                        {rfd.status === "pending_approval" ? (
+                          <>
+                            <Button variant="default" size="sm" onClick={() => handleApproveRefund(rfd.id)} className="h-6 text-[11px] rounded-sm bg-emerald-600 hover:bg-emerald-700 text-white">
+                              <CheckIcon className="size-3 mr-1" /> Approve
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handleRejectRefund(rfd.id)} className="h-6 text-[11px] rounded-sm border-rose-200 text-rose-600 hover:bg-rose-50">
+                              Reject
+                            </Button>
+                          </>
+                        ) : null}
                         <Button asChild variant="outline" size="sm" className="h-6 text-[11px] rounded-sm border-border">
                           <a href={`/super-admin/billing/payments/${rfd.paymentId}`}>Open Payment</a>
                         </Button>
+                        </div>
                       </td>
                     </tr>
                   ))

@@ -26,6 +26,8 @@ import type {
   AccountCreditLedgerEntry,
 } from "./types";
 import { deriveInvoiceCollectionState, deriveInvoiceTimingState } from "./selectors";
+import { isMockMode } from "@/config/env";
+import { LiveBillingStore } from "./live-store";
 
 type Listener = () => void;
 
@@ -40,6 +42,11 @@ class BillingStore {
   private activities: FinancialActivity[] = [...INITIAL_FINANCIAL_ACTIVITIES];
   private policies: BillingPolicies = { ...INITIAL_BILLING_POLICIES };
   private listeners: Set<Listener> = new Set();
+
+  /** The sample data is always there; the live store reports whether its first read has finished. */
+  public getStatus(): "idle" | "loading" | "ready" | "error" {
+    return "ready";
+  }
 
   public subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
@@ -634,6 +641,41 @@ class BillingStore {
     this.notify();
   }
 
+  public issueInvoice(invoiceId: string): Invoice {
+    const invoice = this.invoices.find((i) => i.id === invoiceId);
+    if (!invoice) throw new Error("Invoice not found");
+    if (invoice.documentState !== "draft") throw new Error("Only a draft invoice can be issued.");
+    invoice.documentState = "issued";
+    invoice.issuedAt = new Date().toISOString();
+    this.logActivity("invoice_issued", invoice.companyId, invoice.companyName, invoice.number, `Invoice ${invoice.number} issued`);
+    this.recalculateAccountBalances(invoice.billingAccountId);
+    this.notify();
+    return invoice;
+  }
+
+  public approveRefund(refundId: string): Refund {
+    const refund = this.refunds.find((r) => r.id === refundId);
+    if (!refund) throw new Error("Refund not found");
+    if (refund.status !== "pending_approval") throw new Error("This refund is not waiting for approval.");
+    refund.status = "succeeded";
+    refund.approvedBy = "Sompal Singh (Head of Finance)";
+    refund.processedAt = new Date().toISOString();
+    this.logActivity("refund_approved", refund.companyId, refund.companyName, refund.reference, `Refund ${refund.reference} approved`);
+    this.notify();
+    return refund;
+  }
+
+  public rejectRefund(refundId: string, reason?: string): Refund {
+    const refund = this.refunds.find((r) => r.id === refundId);
+    if (!refund) throw new Error("Refund not found");
+    if (refund.status !== "pending_approval") throw new Error("This refund is not waiting for approval.");
+    refund.status = "rejected";
+    refund.failureReason = reason ?? null;
+    this.logActivity("refund_rejected", refund.companyId, refund.companyName, refund.reference, `Refund ${refund.reference} rejected`);
+    this.notify();
+    return refund;
+  }
+
   public updatePolicies(newPolicies: Partial<BillingPolicies>): void {
     this.policies = { ...this.policies, ...newPolicies };
     this.logActivity(
@@ -664,4 +706,42 @@ class BillingStore {
   }
 }
 
-export const billingStore = new BillingStore();
+/** What the Billing pages use. Mutations may finish later (the live store asks the server), so callers await them. */
+export type BillingStoreApi = Pick<
+  BillingStore,
+  | "subscribe"
+  | "getStatus"
+  | "getAccounts"
+  | "getInvoices"
+  | "getInvoiceById"
+  | "getPayments"
+  | "getPaymentById"
+  | "getCreditNotes"
+  | "getLedgerEntries"
+  | "getRefunds"
+  | "getExceptions"
+  | "getActivities"
+  | "getPolicies"
+>;
+
+type Later<F> = F extends (...args: infer A) => infer R ? (...args: A) => R | Promise<R> : never;
+
+export type BillingStoreMutations = {
+  [K in
+    | "createDraftInvoice"
+    | "issueInvoice"
+    | "voidInvoice"
+    | "allocatePayment"
+    | "applyAccountCredit"
+    | "createCreditNote"
+    | "approveCreditNote"
+    | "requestRefund"
+    | "approveRefund"
+    | "rejectRefund"
+    | "recordManualPayment"
+    | "updateBillingAccount"
+    | "updateReconciliationIssue"
+    | "updatePolicies"]: Later<BillingStore[K]>;
+};
+
+export const billingStore: BillingStoreApi & BillingStoreMutations = isMockMode ? new BillingStore() : (new LiveBillingStore() as unknown as BillingStoreApi & BillingStoreMutations);

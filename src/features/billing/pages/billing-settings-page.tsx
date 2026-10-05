@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,8 @@ import {
   ShieldAlertIcon,
 } from "lucide-react";
 
+let handleSaveInFlight = false;
+
 export function BillingSettingsPage() {
   const { policies, updatePolicies } = useBillingPolicies();
 
@@ -35,7 +37,16 @@ export function BillingSettingsPage() {
     minorToInputValue(policies.highImpactThresholdMinor),
   );
 
-  const handleSave = () => {
+  // The policies arrive after the page opens (and change after a save): the form shows what the server has.
+  useEffect(() => {
+    setFormState({ ...policies });
+    setInstantRefundMajor(minorToInputValue(policies.refundMaxInstantThresholdMinor));
+    setHighImpactMajor(minorToInputValue(policies.highImpactThresholdMinor));
+  }, [policies]);
+
+  const handleSave = async () => {
+    if (handleSaveInFlight) return;
+    handleSaveInFlight = true;
     try {
       const updated: BillingPolicies = {
         ...formState,
@@ -43,10 +54,13 @@ export function BillingSettingsPage() {
         highImpactThresholdMinor: parseAmountToMinor(highImpactMajor),
       };
 
-      updatePolicies(updated);
+      await updatePolicies(updated);
       toast.success("Billing and financial governance policies updated successfully");
     } catch (err: any) {
       toast.error(err.message || "Failed to update policies");
+    }
+    finally {
+      handleSaveInFlight = false;
     }
   };
 
