@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { actionGates, evaluateCapabilities } from "../billing-data/capability-provider";
 import { attentionItems, nextPayment, outstandingInvoice, subscriptionFlags, usageRows } from "../billing-data/selectors";
-import { billingRoleOf, buildLiveSnapshot, mapPlans, toBillingProfile, toInvoices, toOrganizationPatch, toPayments, type LiveSnapshotInput } from "../billing-data/live-snapshot";
+import { billingRoleOf, buildLiveSnapshot, mapPlans, toBackendContact, toBillingContact, toBillingProfile, toInvoices, toOrganizationPatch, toPayments, type LiveSnapshotInput } from "../billing-data/live-snapshot";
 
 const input = (over: Partial<LiveSnapshotInput> = {}): LiveSnapshotInput => ({
   summary: {
@@ -146,10 +146,12 @@ describe("billing details <-> organization profile", () => {
     assert.equal(toOrganizationPatch({ ...profile, gstin: "", taxId: "" }, 1).taxId, null, "an emptied field is cleared, not kept");
   });
 
-  it("clears an address that is entirely empty, and refuses a PAN instead of silently dropping it", () => {
+  it("clears an address that is entirely empty, and carries the PAN both ways", () => {
     const empty = { ...toBillingProfile(org), addressLine1: "", city: "", state: "", country: "", postalCode: "" };
     assert.equal(toOrganizationPatch(empty, 1).address, null);
-    assert.throws(() => toOrganizationPatch({ ...toBillingProfile(org), pan: "ABCDE1234F" }, 1), /pan_not_stored/);
+    assert.equal(toOrganizationPatch({ ...toBillingProfile(org), pan: " ABCDE1234F " }, 1).pan, "ABCDE1234F");
+    assert.equal(toOrganizationPatch({ ...toBillingProfile(org), pan: "" }, 1).pan, null, "an emptied PAN is cleared");
+    assert.equal(toBillingProfile({ ...org, pan: "ABCDE1234F" }).pan, "ABCDE1234F");
   });
 });
 
@@ -157,21 +159,36 @@ describe("plans and the payment window", () => {
   const plan = (id: string, name: string, price: number, over: Record<string, unknown> = {}) => ({ id, name, monthlyPrice: price, maxClients: 5, maxAiTokens: 1000, automationEnabled: true, ...over });
   const catalog = (plans: ReturnType<typeof plan>[], configured = true) => ({ plans, gateway: { provider: "RAZORPAY" as const, configured } });
 
-  it("gives the real plans the page's four ids, cheapest first, and remembers which real plan each id is", () => {
+  it("lists the real plans under their own ids, cheapest first, and finds the current one", () => {
     const base = input();
-    const { plans, slotToPlanId, currentSlot } = mapPlans(catalog([plan("p-pro", "Pro", 999900), plan("p1", "Growth", 499900), plan("p-basic", "Basic", 99900)]), base.summary);
-    assert.deepEqual(plans.map((p) => [p.id, p.name, p.monthlyPrice, p.rank]), [["starter", "Basic", 999, 1], ["growth", "Growth", 4999, 2], ["professional", "Pro", 9999, 3]]);
-    assert.deepEqual(slotToPlanId, { starter: "p-basic", growth: "p1", professional: "p-pro" });
-    assert.equal(currentSlot, "growth", "the current plan is found by its real id");
+    const { plans, currentId } = mapPlans(catalog([plan("p-pro", "Pro", 999900), plan("p1", "Growth", 499900), plan("p-basic", "Basic", 99900)]), base.summary);
+    assert.deepEqual(plans.map((p) => [p.id, p.name, p.monthlyPrice, p.rank]), [["p-basic", "Basic", 999, 1], ["p1", "Growth", 4999, 2], ["p-pro", "Pro", 9999, 3]]);
+    assert.equal(currentId, "p1", "the current plan is found by its real id");
   });
 
-  it("always includes the current plan, even when it is no longer for sale or there are more than four plans", () => {
+  it("shows every plan on sale (not just four), and always the current plan even when it is no longer for sale", () => {
     const base = input();
     const retired = mapPlans(catalog([plan("p-pro", "Pro", 999900)]), base.summary);
     assert.equal(retired.plans.some((p) => p.name === "Growth"), true);
-    const many = mapPlans(catalog([plan("a", "A", 100), plan("b", "B", 200), plan("c", "C", 300), plan("d", "D", 400), plan("e", "E", 500), plan("f", "F", 600)]), base.summary);
-    assert.equal(many.plans.length, 4);
-    assert.equal(many.plans.some((p) => p.name === "Growth"), true);
+    const many = mapPlans(catalog([1, 2, 3, 4, 5, 6].map((n) => plan(`q${n}`, `Plan ${n}`, n * 1000))), base.summary);
+    assert.equal(many.plans.length, 7, "six on sale plus the current one");
+  });
+
+  it("shows a plan's yearly price per month, and nothing when annual is not offered", () => {
+    const { plans } = mapPlans(catalog([plan("p1", "Growth", 499900, { annualPrice: 4999000 }), plan("p2", "Flex", 1499900, { annualPrice: null })]), input().summary);
+    const growth = plans.find((p) => p.name === "Growth")!;
+    const flex = plans.find((p) => p.name === "Flex")!;
+    assert.ok(Math.abs(growth.annualMonthlyPrice! - 49990 / 12) < 1e-9);
+    assert.equal(flex.annualMonthlyPrice, null);
+  });
+
+  it("reads an annual subscription's cycle and period", () => {
+    const summary = { ...input().summary, billingCycle: "ANNUAL" as const, currentPeriodEnd: "2027-10-05T00:00:00.000Z" };
+    const snapshot = buildLiveSnapshot(input({ summary }));
+    assert.equal(snapshot.subscription.cycle, "annual");
+    assert.equal(snapshot.subscription.currentPeriodStart.slice(0, 10), "2026-10-05");
+    assert.equal(buildLiveSnapshot(input()).subscription.cycle, "monthly");
+    assert.equal(buildLiveSnapshot(input()).subscription.currentPeriodStart.slice(0, 10), "2026-10-05");
   });
 
   it("takes limits and the automation feature from the real plan", () => {
@@ -207,5 +224,26 @@ describe("plans and the payment window", () => {
     const snapshot = buildLiveSnapshot(input({ catalog: catalog([plan("p1", "Growth", 499900), plan("p2", "Pro", 999900)]) }));
     const gates = actionGates(snapshot, evaluateCapabilities("org_admin"));
     assert.equal(gates.upgrade.allowed, true, "a dearer plan exists and a method is present");
+  });
+});
+
+describe("billing contacts", () => {
+  const stored = { id: "0b1f6a52-3c0e-4e3a-9f7d-1c2d3e4f5a6b", kind: "FINANCE" as const, name: "Ravi", email: "ravi@acme.test", phone: null, role: "Accounts" };
+
+  it("shows the saved contacts, and the organization contact only while there are none", () => {
+    const saved = buildLiveSnapshot(input({ contacts: [stored] }));
+    assert.deepEqual(saved.contacts, [{ id: stored.id, kind: "finance", name: "Ravi", email: "ravi@acme.test", phone: "", role: "Accounts" }]);
+    const none = buildLiveSnapshot(input({ contacts: [] }));
+    assert.ok(none.contacts.length <= 1);
+    assert.ok(none.contacts.every((contact) => contact.id === "organization-contact"));
+  });
+
+  it("sends a contact to the server without the organization placeholder id and without blank optional fields", () => {
+    const placeholder = toBackendContact({ id: "organization-contact", kind: "primary", name: " Asha ", email: " a@acme.test ", phone: "", role: "" });
+    assert.deepEqual(placeholder, { kind: "PRIMARY", name: "Asha", email: "a@acme.test" });
+    const edit = toBackendContact({ ...toBillingContact(stored), phone: "+91 98765 43210" });
+    assert.equal(edit.id, stored.id);
+    assert.equal(edit.phone, "+91 98765 43210");
+    assert.equal(edit.kind, "FINANCE");
   });
 });

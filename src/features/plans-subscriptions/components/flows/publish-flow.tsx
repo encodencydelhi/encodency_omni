@@ -13,7 +13,7 @@ import { ErrorBanner, FlowDialog, Stepper, SubmitButton } from "@/features/compa
 import { Field } from "@/features/companies/components/primitives";
 import { pluralise } from "@/features/companies/lib/format";
 import { formatRule } from "../../data/catalogue";
-import { ROLLOUT_POLICY } from "../../data/config";
+import { ROLLOUT_POLICY, PLANS_MOCK_MODE } from "../../data/config";
 import { describeError, useCompaniesOnPlan, useImpactPreview, usePlanMutations } from "../../data/hooks";
 import { draftInputOf } from "../../data/selectors";
 import type { PlanSummary, RolloutPolicy } from "../../data/types";
@@ -226,7 +226,7 @@ export function PublishFlow({ summary, onClose }: { summary: PlanSummary; onClos
               </ul>
             </div>
           ) : null}
-          <p className="text-2xs text-muted-foreground">This demo records the rollout choice. It runs no background job: &ldquo;at renewal&rdquo; appears as a scheduled change, and nothing is applied on a schedule.</p>
+          {PLANS_MOCK_MODE ? <p className="text-2xs text-muted-foreground">This demo records the rollout choice. It runs no background job: &ldquo;at renewal&rdquo; appears as a scheduled change, and nothing is applied on a schedule.</p> : null}
         </div>
       ) : null}
 

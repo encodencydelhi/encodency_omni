@@ -4,7 +4,7 @@ import { useState } from "react";
 import { addDays } from "date-fns";
 import { CalendarClock, RotateCcw, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { CANCEL_REASONS, type CancelReason } from "../../billing-data/config";
+import { BILLING_MOCK_MODE, CANCEL_REASONS, type CancelReason } from "../../billing-data/config";
 import { useBillingView } from "../../billing-data/hooks";
 import { longDate } from "../../billing-data/selectors";
 import { useBilling } from "../../store/billing-store";
@@ -33,7 +33,7 @@ export function CancelFlow() {
     const result = await actions.cancel(label, feedback.trim());
     if (result.ok) {
       setPhase("done");
-      toast("Cancellation scheduled", { description: `Access continues until ${longDate(subscription.currentPeriodEnd)}.` });
+      toast(BILLING_MOCK_MODE ? "Cancellation scheduled" : "Subscription cancelled", { description: BILLING_MOCK_MODE ? `Access continues until ${longDate(subscription.currentPeriodEnd)}.` : "Pay for a plan again whenever you want to come back." });
     } else {
       setPhase("failed");
       setError({ message: `Cancellation failed. ${result.message}`, hint: result.hint });
@@ -77,9 +77,10 @@ export function CancelFlow() {
             <CalendarClock className="size-5" />
           </span>
           <div className="text-[12.5px] text-[#3C4A66]">
-            <p className="text-[15px] font-semibold text-[#0F1B3D]">Scheduled cancellation</p>
+            <p className="text-[15px] font-semibold text-[#0F1B3D]">{BILLING_MOCK_MODE ? "Scheduled cancellation" : "Subscription cancelled"}</p>
             <p>
-              Cancels on <b className="font-semibold text-[#0F1B3D]">{longDate(subscription.currentPeriodEnd)}</b>. You keep full access until then. Changed your mind? Resume any time before that from Subscription management.
+              {!BILLING_MOCK_MODE ? "Your subscription ended just now. Choose a plan in Billing any time to start again." : null}
+              {BILLING_MOCK_MODE ? <>Cancels on <b className="font-semibold text-[#0F1B3D]">{longDate(subscription.currentPeriodEnd)}</b>. You keep full access until then. Changed your mind? Resume any time before that from Subscription management.</> : null}
             </p>
           </div>
         </div>
@@ -102,22 +103,28 @@ export function CancelFlow() {
         <div className="space-y-3">
           {error && <FlowError message={error.message} hint={error.hint} />}
           <div className="rounded-[8px] border border-[#E4E9F0] p-3.5">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Access until</p>
-            <p className="text-[18px] font-semibold text-[#0F1B3D]">{longDate(subscription.currentPeriodEnd)}</p>
-            <p className="text-[12px] text-[#6B7890]">Full access and support continue until then — this isn&apos;t immediate.</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">{BILLING_MOCK_MODE ? "Access until" : "Takes effect"}</p>
+            <p className="text-[18px] font-semibold text-[#0F1B3D]">{BILLING_MOCK_MODE ? longDate(subscription.currentPeriodEnd) : "Immediately"}</p>
+            <p className="text-[12px] text-[#6B7890]">{BILLING_MOCK_MODE ? "Full access and support continue until then — this isn't immediate." : "Your plan stops applying as soon as you confirm. The unused part of the paid period is not refunded."}</p>
           </div>
-          <ImpactRow icon={CalendarClock} title="Scheduled content" description={`Posts scheduled after ${longDate(subscription.currentPeriodEnd)} won't be published. Anything before that date still goes out.`} />
+          {!BILLING_MOCK_MODE ? (
+            <>
+              <ImpactRow icon={CalendarClock} title="What stops" description="Anything that needs an active plan, such as adding clients, AI generation, media uploads and scans, stops working." />
+              <ImpactRow icon={CalendarClock} title="Your data" description="Nothing is deleted. Your clients, content and reports are still there if you start a plan again." />
+            </>
+          ) : null}
+          {BILLING_MOCK_MODE ? <><ImpactRow icon={CalendarClock} title="Scheduled content" description={`Posts scheduled after ${longDate(subscription.currentPeriodEnd)} won't be published. Anything before that date still goes out.`} />
           <ImpactRow icon={CalendarClock} title="Automation" description={dependent > 0 ? `${dependent} active automations and scheduled posts stop running when access ends.` : "No active automations will be affected."} />
           <ImpactRow icon={CalendarClock} title="Integrations" description={channels > 0 ? `${channels} connected channels are disconnected when access ends. You'll need to reconnect them if you come back.` : "No connected channels."} />
-          <ImpactRow icon={CalendarClock} title="Data retention" description={`Your clients, content and reports are kept until ${longDate(retentionEnds)} in case you return, then permanently deleted.`} />
+          <ImpactRow icon={CalendarClock} title="Data retention" description={`Your clients, content and reports are kept until ${longDate(retentionEnds)} in case you return, then permanently deleted.`} /></> : null}
         </div>
       ) : (
         <div className="space-y-3">
           {error && <FlowError message={error.message} hint={error.hint} />}
           <div className="rounded-[8px] border border-[#FBD5D9] bg-[#FEF6F7] p-3.5">
-            <p className="text-[13px] font-semibold text-[#C81E2B]">You&apos;re about to schedule cancellation of {plan.name}.</p>
+            <p className="text-[13px] font-semibold text-[#C81E2B]">{BILLING_MOCK_MODE ? `You're about to schedule cancellation of ${plan.name}.` : `You're about to cancel ${plan.name} now.`}</p>
             <p className="mt-1 text-[12.5px] text-[#3C4A66]">
-              Access continues until <b className="font-semibold">{longDate(subscription.currentPeriodEnd)}</b>. No further payments will be taken. You can resume at any point before then.
+              {BILLING_MOCK_MODE ? <>Access continues until <b className="font-semibold">{longDate(subscription.currentPeriodEnd)}</b>. No further payments will be taken. You can resume at any point before then.</> : "Your subscription ends immediately and the unused period is not refunded. You can start a plan again from Billing."}
             </p>
           </div>
         </div>

@@ -8,7 +8,7 @@ import { buildSnapshot, priceLines, reference, round2 } from "./mock-provider";
 import { organizationApi } from "../../settings/live/organization-api";
 import { ApiError } from "@/types/api";
 import { collectPayment, CheckoutCancelled, CheckoutFailed, CheckoutUnavailable, type CheckoutOrder } from "./razorpay-checkout";
-import { buildLiveSnapshot, mapPlans, toOrganizationPatch, type BackendPlansResponse, type BackendBillingSummary, type BackendCurrentUser, type BackendInvoice, type BackendOrganization } from "./live-snapshot";
+import { buildLiveSnapshot, mapPlans, toBackendContact, toOrganizationPatch, ORGANIZATION_CONTACT_ID, type BackendBillingContact, type BackendPlansResponse, type BackendBillingSummary, type BackendCurrentUser, type BackendInvoice, type BackendOrganization } from "./live-snapshot";
 import {
   detectBrand,
   downgradeImpact,
@@ -67,6 +67,8 @@ export interface PlanChangeInput {
   actor: string;
   resolution?: DowngradeResolution;
   note?: string;
+  /** Moving to a cheaper plan: the server applies it now, with no payment. */
+  downgrade?: boolean;
 }
 
 export interface BillingRepository {
@@ -558,7 +560,17 @@ function paymentError(error: unknown): BillingServiceError {
       case "invalid_payment_signature":
         return new BillingServiceError("payment_declined", "The payment couldn't be verified.", "If money left your account, it will be matched automatically. Reload to check.");
       case "plan_change_not_immediate":
-        return new BillingServiceError("validation", "Moving to a cheaper plan isn't available online yet.", "Contact support to change to a smaller plan.");
+        return new BillingServiceError("validation", "Moving to a cheaper plan isn't available this way.", "Use Downgrade plan from Subscription management.");
+      case "usage_over_limit":
+        return new BillingServiceError("conflict", error.message, "Reduce your usage below the smaller plan's limits, then try again.");
+      case "not_a_downgrade":
+        return new BillingServiceError("validation", "That isn't a cheaper plan.", "Choose a plan that costs less than your current one.");
+      case "no_active_subscription":
+        return new BillingServiceError("conflict", "Only an active subscription can move to another plan.", "Reload the page to see the latest state.");
+      case "cycle_change_not_immediate":
+        return new BillingServiceError("validation", "Changing the billing cycle isn't available online yet.", "It can take effect at your next renewal. Contact support to switch now.");
+      case "cycle_not_offered":
+        return new BillingServiceError("validation", "Annual billing isn't offered for this plan.", "Choose monthly billing, or another plan.");
       case "already_on_plan":
         return new BillingServiceError("conflict", "You're already on this plan.", "Choose a different plan.");
       case "amount_too_small":
@@ -596,8 +608,6 @@ class LiveBillingRepository implements BillingRepository {
    * Everything shown comes from the backend: the subscription summary, the invoices, the organization profile, the signed-in user and the team size.
    * The summary and the invoices are required (a failure is a real error, not a sample page); the other three only enrich the page.
    */
-  /** Page plan id -> real plan uuid, refreshed on every load. */
-  private slotToPlanId: Partial<Record<PlanId, string>> = {};
   private identity = { name: "", email: "" };
 
   loadSnapshot = async (_scenario: BillingScenario): Promise<BillingSnapshot> => {
@@ -605,16 +615,16 @@ class LiveBillingRepository implements BillingRepository {
     if (!companyId) throw new BillingServiceError("service_unavailable", "No company is selected.", "Select a company and reload.");
     const headers = companyScopeHeaders(companyId);
     try {
-      const [summary, invoices, catalog, organization, me, members] = await Promise.all([
+      const [summary, invoices, catalog, organization, me, members, contacts] = await Promise.all([
         apiClient.request<BackendBillingSummary>({ method: "GET", path: "/billing/summary", headers }),
         apiClient.request<BackendInvoice[]>({ method: "GET", path: "/billing/invoices", headers }),
         apiClient.request<BackendPlansResponse>({ method: "GET", path: "/billing/plans", headers }).catch(() => null),
         apiClient.request<BackendOrganization>({ method: "GET", path: "/settings/organization", headers }).catch(() => null),
         apiClient.request<BackendCurrentUser>({ method: "GET", path: "/users/me" }).catch(() => null),
         apiClient.request<unknown[]>({ method: "GET", path: "/team/members", headers }).catch(() => null),
+        apiClient.request<BackendBillingContact[]>({ method: "GET", path: "/billing/contacts", headers }).catch(() => null),
       ]);
-      const snapshot = buildLiveSnapshot({ summary, invoices, catalog, organization, me, companyId, teamMembers: Array.isArray(members) ? members.length : null });
-      this.slotToPlanId = mapPlans(catalog, summary).slotToPlanId;
+      const snapshot = buildLiveSnapshot({ summary, invoices, catalog, organization, contacts, me, companyId, teamMembers: Array.isArray(members) ? members.length : null });
       this.identity = { name: snapshot.currentUser.name, email: snapshot.currentUser.email };
       return snapshot;
     } catch (error) {
@@ -625,17 +635,24 @@ class LiveBillingRepository implements BillingRepository {
 
   /**
    * Upgrading, choosing a plan or reactivating is a payment: the server prices it (the same proration the page quotes) and creates the order, the person pays in
-   * Razorpay's window, and the server verifies the signed result before the plan changes. A cheaper plan or a cycle change is refused by the server for now.
+   * Razorpay's window, and the server verifies the signed result before the plan changes. A cheaper plan is applied at once without payment; a cycle change is refused by the server for now.
    */
   changePlan = async (input: PlanChangeInput): Promise<BillingSnapshot> => {
-    const planId = this.slotToPlanId[input.planId];
-    if (!planId) throw new BillingServiceError("validation", "That plan isn't available.", "Reload the page and choose a plan again.");
-    const order = await this.post<CheckoutOrder>("/billing/checkout", { planId });
+    if (input.downgrade) {
+      // A cheaper plan is not a payment: the server applies it now and refuses while usage is above the smaller plan's limits.
+      await this.post("/billing/downgrade", { planId: input.planId });
+      return this.loadSnapshot("active");
+    }
+    const order = await this.post<CheckoutOrder>("/billing/checkout", { planId: input.planId, cycle: input.cycle === "annual" ? "ANNUAL" : "MONTHLY" });
     await this.pay(order);
     return this.loadSnapshot("active");
   };
   withdrawPendingChange = async () => { throw unavailable(); };
-  cancelSubscription = async () => { throw unavailable(); };
+  /** Cancelling is immediate: the server ends the subscription at once and does not refund the unused period. */
+  cancelSubscription = async (input: { reason: string; feedback: string; actor: string }): Promise<BillingSnapshot> => {
+    await this.post("/billing/cancel", { reason: input.reason.slice(0, 120), feedback: input.feedback.slice(0, 1000) });
+    return this.loadSnapshot("active");
+  };
   resumeSubscription = async () => { throw unavailable(); };
   savePaymentMethod = async (): Promise<BillingSnapshot> => {
     throw new BillingServiceError("service_unavailable", "Cards aren't saved here.", "You enter your card or UPI details securely in Razorpay's payment window when you pay.");
@@ -649,11 +666,15 @@ class LiveBillingRepository implements BillingRepository {
     return this.loadSnapshot("active");
   };
 
-  private async post<T>(path: string, body?: unknown): Promise<T> {
+  private post<T>(path: string, body?: unknown): Promise<T> {
+    return this.send<T>("POST", path, body);
+  }
+
+  private async send<T>(method: "POST" | "PUT" | "DELETE", path: string, body?: unknown): Promise<T> {
     const companyId = getStoredCompanyId();
     if (!companyId) throw new BillingServiceError("service_unavailable", "No company is selected.", "Select a company and reload.");
     try {
-      return await apiClient.request<T>({ method: "POST", path, headers: companyScopeHeaders(companyId), body });
+      return await apiClient.request<T>({ method, path, headers: companyScopeHeaders(companyId), body });
     } catch (error) {
       throw paymentError(error);
     }
@@ -685,9 +706,6 @@ class LiveBillingRepository implements BillingRepository {
       const current = await organizationApi.get(companyId);
       await organizationApi.update(companyId, toOrganizationPatch(profile, current.revision));
     } catch (error) {
-      if (error instanceof Error && error.message === "pan_not_stored") {
-        throw new BillingServiceError("validation", "PAN can't be saved yet.", "Leave PAN empty. Billing details keep your GSTIN or tax id.");
-      }
       if (ApiError.isApiError(error)) {
         if (error.status === 409) throw new BillingServiceError("conflict", "These details were changed by someone else.", "Reload the page and try again.");
         if (error.status === 403) throw new BillingServiceError("validation", "You can't edit the organization's details.", "Ask an owner or admin to make this change.");
@@ -697,8 +715,18 @@ class LiveBillingRepository implements BillingRepository {
     }
     return this.loadSnapshot("active");
   };
-  saveContact = async () => { throw unavailable(); };
-  removeContact = async () => { throw unavailable(); };
+  /** Billing contacts are stored by the server; the first one is the primary, and making another primary demotes it. */
+  saveContact = async (contact: BillingContact): Promise<BillingSnapshot> => {
+    await this.send("PUT", "/billing/contacts", toBackendContact(contact));
+    return this.loadSnapshot("active");
+  };
+  removeContact = async (id: string): Promise<BillingSnapshot> => {
+    if (id === ORGANIZATION_CONTACT_ID) {
+      throw new BillingServiceError("validation", "This is your organization's own contact.", "Edit it in Settings, or add a billing contact to replace it.");
+    }
+    await this.send("DELETE", `/billing/contacts/${encodeURIComponent(id)}`);
+    return this.loadSnapshot("active");
+  };
   buyCredits = async () => { throw unavailable(); };
   setAddOn = async () => { throw unavailable(); };
   requestSales = async () => { throw unavailable(); };

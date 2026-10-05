@@ -22,7 +22,7 @@ import { describeError, usePlanMutations, usePlans, usePolicy, useSubscriptionCa
 import { parseDays, validatePolicy } from "../data/policies";
 import type { FailedPaymentHandling, OverLimitPolicy, OverLimitResource, SubscriptionPolicy } from "../data/types";
 
-const KIND_HINT = "Values here apply to the whole platform's subscriptions in this demo workspace.";
+const KIND_HINT = PLANS_MOCK_MODE ? "Values here apply to the whole platform's subscriptions in this demo workspace." : "Saved for the whole platform. Nothing here runs automatically yet: the billing engine does not read these values.";
 
 function SettingsForm({ initial, canEdit }: { initial: SubscriptionPolicy; canEdit: boolean }) {
   const router = useRouter();
@@ -54,7 +54,7 @@ function SettingsForm({ initial, canEdit }: { initial: SubscriptionPolicy; canEd
     setServerErrors({});
     try {
       await mutations.savePolicy(draft);
-      toast.success("Subscription policies saved", { description: "Trial extensions, cancellation defaults and reactivation now follow them." });
+      toast.success("Subscription policies saved", { description: PLANS_MOCK_MODE ? "Trial extensions, cancellation defaults and reactivation now follow them." : "Saved for the whole platform." });
       return true;
     } catch (failure) {
       const described = describeError(failure);
@@ -112,7 +112,7 @@ function SettingsForm({ initial, canEdit }: { initial: SubscriptionPolicy; canEd
             <Field label="Extension limit (total days)" htmlFor="pol-ext-days" error={errors.extensionLimitDays} hint="Across all extensions of one trial.">
               <Input id="pol-ext-days" inputMode="numeric" disabled={disabled} value={String(value.trial.extensionLimitDays)} onChange={(event) => set("trial", { extensionLimitDays: number(event.target.value) })} aria-invalid={Boolean(errors.extensionLimitDays)} className="tabular" />
             </Field>
-            <Field label="Expiry reminders (days before)" htmlFor="pol-trial-rem" error={errors.trialReminders} hint="e.g. 7, 3, 1. Recorded as policy; nothing is sent in this demo.">
+            <Field label="Expiry reminders (days before)" htmlFor="pol-trial-rem" error={errors.trialReminders} hint={"e.g. 7, 3, 1. " + (PLANS_MOCK_MODE ? "Recorded as policy; nothing is sent in this demo." : "Recorded as policy; no reminders are sent yet.")}>
               <Input id="pol-trial-rem" disabled={disabled} value={trialReminders} onChange={(event) => setTrialReminders(event.target.value)} aria-invalid={Boolean(errors.trialReminders)} />
             </Field>
             <div className="flex items-center justify-between gap-3 rounded-sm border border-border px-3 py-2">

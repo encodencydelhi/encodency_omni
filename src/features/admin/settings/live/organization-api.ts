@@ -21,6 +21,8 @@ export interface OrganizationRecord {
   description: string | null;
   address: OrganizationAddressPayload | null;
   taxId: string | null;
+  /** Permanent Account Number; absent on a server that has not stored one yet. */
+  pan?: string | null;
   timezone: string | null;
   currency: string | null;
   revision: number;
@@ -38,6 +40,7 @@ export interface UpdateOrganizationPayload {
   description?: string | null;
   address?: OrganizationAddressPayload | null;
   taxId?: string | null;
+  pan?: string | null;
   timezone?: string | null;
   currency?: string | null;
 }
