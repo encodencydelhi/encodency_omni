@@ -29,7 +29,9 @@ import type {
 export interface BackendBillingSummary {
   subscriptionId: string | null;
   status: string;
-  plan: { id: string; name: string; isActive: boolean; monthlyPrice: number };
+  /** What one paid period is. */
+  billingCycle?: "MONTHLY" | "ANNUAL";
+  plan: { id: string; name: string; isActive: boolean; monthlyPrice: number; annualPrice?: number | null };
   currentPeriodEnd: string;
   startedAt?: string | null;
   limits: { maxClients: number; maxAiTokens: number };
@@ -54,6 +56,8 @@ export interface BackendPlan {
   id: string;
   name: string;
   monthlyPrice: number;
+  /** The price of one year in paise, or null when annual billing is not offered. */
+  annualPrice?: number | null;
   maxClients: number;
   maxAiTokens: number;
   automationEnabled: boolean;
@@ -74,6 +78,7 @@ export interface BackendOrganization {
   contactPhone: string | null;
   address: { street?: string | null; city?: string | null; state?: string | null; country?: string | null; postalCode?: string | null } | null;
   taxId: string | null;
+  pan?: string | null;
 }
 
 export interface BackendCurrentUser {
@@ -87,51 +92,41 @@ const ALL_FEATURES: FeatureKey[] = [
   "white_label", "collaboration", "approvals", "audit_logs", "premium_channels", "crm", "sso", "api_access",
 ];
 
-const PLAN_SLOTS: PlanId[] = ["starter", "growth", "professional", "enterprise"];
 const NO_PLAN = "no-plan";
 
 /**
- * The page names its plans with four fixed ids, the backend identifies them by uuid. The plans (cheapest first, the current one always included) take the four
- * ids in order, and `slotToPlanId` remembers which real plan each id stands for so a choice can be sent back.
+ * The plans a company can choose (the active ones, cheapest first), with the current plan always included even if it is no longer for sale. A plan keeps its
+ * real id. Annual billing is a plan's yearly price shown per month (the page's `annualMonthlyPrice`).
  */
-export function mapPlans(catalog: BackendPlansResponse | null | undefined, summary: BackendBillingSummary): { plans: Plan[]; slotToPlanId: Partial<Record<PlanId, string>>; currentSlot: PlanId } {
+export function mapPlans(catalog: BackendPlansResponse | null | undefined, summary: BackendBillingSummary): { plans: Plan[]; currentId: PlanId } {
   const hasSubscription = summary.subscriptionId !== null;
   const byId = new Map<string, BackendPlan>((catalog?.plans ?? []).map((plan) => [plan.id, plan]));
   if (hasSubscription && !byId.has(summary.plan.id)) {
-    byId.set(summary.plan.id, { id: summary.plan.id, name: summary.plan.name, monthlyPrice: summary.plan.monthlyPrice, maxClients: summary.limits.maxClients, maxAiTokens: summary.limits.maxAiTokens, automationEnabled: true });
+    byId.set(summary.plan.id, { id: summary.plan.id, name: summary.plan.name, monthlyPrice: summary.plan.monthlyPrice, annualPrice: summary.plan.annualPrice ?? null, maxClients: summary.limits.maxClients, maxAiTokens: summary.limits.maxAiTokens, automationEnabled: true });
   }
   let ordered = [...byId.values()].sort((a, b) => a.monthlyPrice - b.monthlyPrice || a.name.localeCompare(b.name));
-  if (ordered.length > PLAN_SLOTS.length) {
-    // Four slots only: keep the current plan and drop the dearest others.
-    const keep = new Set(ordered.slice(0, PLAN_SLOTS.length).map((plan) => plan.id));
-    if (hasSubscription && !keep.has(summary.plan.id)) keep.delete([...keep].at(-1) as string), keep.add(summary.plan.id);
-    ordered = ordered.filter((plan) => keep.has(plan.id));
-  }
-  if (ordered.length === 0) ordered = [{ id: NO_PLAN, name: "No active plan", monthlyPrice: 0, maxClients: summary.limits.maxClients, maxAiTokens: summary.limits.maxAiTokens, automationEnabled: true }];
+  if (ordered.length === 0) ordered = [{ id: NO_PLAN, name: "No active plan", monthlyPrice: 0, annualPrice: null, maxClients: summary.limits.maxClients, maxAiTokens: summary.limits.maxAiTokens, automationEnabled: true }];
 
-  const slotToPlanId: Partial<Record<PlanId, string>> = {};
   const plans = ordered.map((plan, index): Plan => {
-    const slot = PLAN_SLOTS[index]!;
-    slotToPlanId[slot] = plan.id;
     // Limits the backend does not enforce are "no limit"; only clients and AI tokens are real caps.
     const limits = Object.fromEntries((["clients", "teamMembers", "channels", "aiCredits", "automations", "automationRuns", "scheduledPosts", "reports", "storageGb"] as LimitKey[]).map((key) => [key, null])) as PlanLimits;
     limits.clients = plan.maxClients;
     limits.aiCredits = plan.maxAiTokens;
     return {
-      id: slot,
+      id: plan.id,
       name: plan.name,
       tagline: "",
       rank: index + 1,
       monthlyPrice: paiseToRupees(plan.monthlyPrice),
-      annualMonthlyPrice: null,
+      annualMonthlyPrice: plan.annualPrice ? paiseToRupees(plan.annualPrice) / 12 : null,
       contactSales: false,
       limits,
       features: plan.automationEnabled ? ALL_FEATURES : ALL_FEATURES.filter((feature) => feature !== "automation"),
       support: "email",
     };
   });
-  const currentSlot = (Object.entries(slotToPlanId).find(([, id]) => hasSubscription && id === summary.plan.id)?.[0] as PlanId | undefined) ?? plans[0]!.id;
-  return { plans, slotToPlanId, currentSlot };
+  const currentId = hasSubscription && plans.some((plan) => plan.id === summary.plan.id) ? summary.plan.id : plans[0]!.id;
+  return { plans, currentId };
 }
 
 /** Razorpay Checkout as the one payment method: the card, UPI or net-banking details are entered in its window at payment time. */
@@ -228,7 +223,7 @@ export function toBillingProfile(org: BackendOrganization | null): BillingProfil
     country: address?.country ?? "",
     postalCode: address?.postalCode ?? "",
     gstin: isGstin ? taxNumber : "",
-    pan: "",
+    pan: org?.pan ?? "",
     taxId: isGstin ? "" : taxNumber,
   };
 }
@@ -236,11 +231,9 @@ export function toBillingProfile(org: BackendOrganization | null): BillingProfil
 const orNull = (value: string) => (value.trim() ? value.trim() : null);
 
 /**
- * The billing details form as an organization update. The organization has no PAN and no second address line, so a PAN is refused (never silently dropped)
- * and line 2 is kept by joining it to the street. GSTIN and tax id share the one tax number field (GSTIN wins when both are filled).
+ * The billing details form as an organization update. The organization has no second address line, so line 2 is kept by joining it to the street. GSTIN and tax id share the one tax number field (GSTIN wins when both are filled).
  */
 export function toOrganizationPatch(profile: BillingProfile, expectedRevision: number): UpdateOrganizationPayload {
-  if (profile.pan.trim()) throw new Error("pan_not_stored");
   const street = [profile.addressLine1.trim(), profile.addressLine2.trim()].filter(Boolean).join(", ");
   const address = { street: orNull(street), city: orNull(profile.city), state: orNull(profile.state), country: orNull(profile.country), postalCode: orNull(profile.postalCode) };
   return {
@@ -250,12 +243,44 @@ export function toOrganizationPatch(profile: BillingProfile, expectedRevision: n
     contactPhone: orNull(profile.billingPhone),
     address: Object.values(address).every((value) => value === null) ? null : address,
     taxId: orNull(profile.gstin) ?? orNull(profile.taxId),
+    pan: orNull(profile.pan),
   };
 }
 
-function toContacts(org: BackendOrganization | null): BillingContact[] {
+/** A billing contact as the server stores it. */
+export interface BackendBillingContact {
+  id: string;
+  kind: "PRIMARY" | "FINANCE" | "OTHER";
+  name: string;
+  email: string;
+  phone: string | null;
+  role: string | null;
+}
+
+/** The id of the contact shown from the organization's own details while none has been added. It is not a stored contact. */
+export const ORGANIZATION_CONTACT_ID = "organization-contact";
+
+export function toBillingContact(contact: BackendBillingContact): BillingContact {
+  return { id: contact.id, kind: contact.kind === "PRIMARY" ? "primary" : contact.kind === "FINANCE" ? "finance" : "other", name: contact.name, email: contact.email, phone: contact.phone ?? "", role: contact.role ?? "" };
+}
+
+export function toBackendContact(contact: BillingContact): { id?: string; kind: BackendBillingContact["kind"]; name: string; email: string; phone?: string; role?: string } {
+  const stored = contact.id && contact.id !== ORGANIZATION_CONTACT_ID && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(contact.id);
+  return {
+    ...(stored ? { id: contact.id } : {}),
+    kind: contact.kind === "primary" ? "PRIMARY" : contact.kind === "finance" ? "FINANCE" : "OTHER",
+    name: contact.name.trim(),
+    email: contact.email.trim(),
+    ...(contact.phone.trim() ? { phone: contact.phone.trim() } : {}),
+    ...(contact.role.trim() ? { role: contact.role.trim() } : {}),
+  };
+}
+
+/** The saved contacts, or, while none has been added, the organization's own contact details. */
+function toContacts(org: BackendOrganization | null, saved?: BackendBillingContact[] | null): BillingContact[] {
+  if (saved && saved.length > 0) return saved.map(toBillingContact);
   if (!org || (!org.contactEmail && !org.contactPhone)) return [];
-  return [{ id: "organization-contact", kind: "primary", name: org.legalName ?? org.name, email: org.contactEmail ?? "", phone: org.contactPhone ?? "", role: "Organization contact" }];
+  return [{ id: ORGANIZATION_CONTACT_ID, kind: "primary", name: org.legalName ?? org.name, email: org.contactEmail ?? "", phone: org.contactPhone ?? "", role: "Organization contact" }];
 }
 
 export interface LiveSnapshotInput {
@@ -264,6 +289,8 @@ export interface LiveSnapshotInput {
   catalog?: BackendPlansResponse | null;
   invoices: BackendInvoice[];
   organization: BackendOrganization | null;
+  /** `GET /billing/contacts`; absent when it could not be read. */
+  contacts?: BackendBillingContact[] | null;
   me: BackendCurrentUser | null;
   companyId: string;
   teamMembers: number | null;
@@ -274,9 +301,10 @@ export function buildLiveSnapshot(input: LiveSnapshotInput): BillingSnapshot {
   const hasSubscription = summary.subscriptionId !== null;
   const membership = me?.memberships.find((m) => m.companyId === companyId);
   const periodEnd = summary.currentPeriodEnd;
-  const periodStart = formatISO(addMonths(parseISO(periodEnd), -1));
+  const periodStart = formatISO(addMonths(parseISO(periodEnd), summary.billingCycle === "ANNUAL" ? -12 : -1));
 
-  const { plans, currentSlot } = mapPlans(input.catalog, summary);
+  const { plans, currentId } = mapPlans(input.catalog, summary);
+  const cycle = summary.billingCycle === "ANNUAL" ? "annual" : "monthly";
 
   const usage: UsageMetric[] = [
     { key: "clients", used: hasSubscription ? summary.usage.currentClients : 0, resets: false },
@@ -294,8 +322,8 @@ export function buildLiveSnapshot(input: LiveSnapshotInput): BillingSnapshot {
     plans,
     subscription: {
       id: summary.subscriptionId ?? "none",
-      planId: currentSlot,
-      cycle: "monthly",
+      planId: currentId,
+      cycle,
       status,
       startedAt: started,
       currentPeriodStart: periodStart,
@@ -313,7 +341,7 @@ export function buildLiveSnapshot(input: LiveSnapshotInput): BillingSnapshot {
     invoices,
     payments: toPayments(invoices),
     profile: toBillingProfile(organization),
-    contacts: toContacts(organization),
+    contacts: toContacts(organization, input.contacts),
     credits: { included: summary.limits.maxAiTokens, used: hasSubscription ? summary.usage.currentAiTokens : 0, purchased: 0, purchasedExpireAt: null, resetsAt: periodEnd },
     creditPacks: [],
     addOnCatalog: [],

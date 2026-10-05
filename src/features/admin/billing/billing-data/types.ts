@@ -1,6 +1,7 @@
 
 
-export type PlanId = "starter" | "growth" | "professional" | "enterprise";
+/** A plan's id. The sample plans use "starter", "growth", "professional" and "enterprise"; real plans use their own ids. */
+export type PlanId = string;
 export type BillingCycle = "monthly" | "annual";
 
 /** Metered or counted limits. `null` in a limit means unlimited. */

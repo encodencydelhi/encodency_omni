@@ -12,6 +12,8 @@ export interface BackendPlan {
   name: string;
   isActive: boolean;
   monthlyPrice: number;
+  /** The price of one year in paise, or null when annual billing is not offered. */
+  annualPrice?: number | null;
   maxClients: number;
   maxAiTokens: number;
   features: BackendPlanFeatures;
@@ -22,6 +24,8 @@ export interface BackendPlan {
 export interface UpsertPlanPayload {
   name: string;
   monthlyPrice: number;
+  /** Omit (or null) when annual billing is not offered. */
+  annualPrice?: number | null;
   features: {
     maxClients: number;
     maxAiTokens: number;
@@ -36,6 +40,8 @@ export interface BackendSubscription {
   companyId: string;
   planId: string;
   status: BackendSubStatus;
+  /** What one paid period is. */
+  billingCycle?: "MONTHLY" | "ANNUAL";
   currentPeriodEnd: string;
   createdAt: string;
   updatedAt: string;
@@ -43,8 +49,14 @@ export interface BackendSubscription {
   company?: {
     id: string;
     name: string;
-    slug?: string;
+    status?: string;
   };
+  /** Current usage (clients, and AI tokens in the current period). */
+  usage?: { currentClients: number; currentAiTokens: number };
+  /** The company's first owner (detail only). */
+  owner?: { name: string | null; email: string } | null;
+  /** The invoice waiting for payment, if any (detail only). */
+  openInvoiceId?: string | null;
 }
 
 export interface AssignSubscriptionPayload {
@@ -52,7 +64,30 @@ export interface AssignSubscriptionPayload {
   planId: string;
 }
 
+/** The platform subscription policy as the backend stores it (plan chosen by its key). */
+export interface BackendSubscriptionPolicy {
+  policy: {
+    trial: { defaultTrialDays: number; extensionLimitDays: number; reminderDays: number[]; defaultTrialPlan: string; allowWithoutPaymentMethod: boolean };
+    renewal: { defaultBillingCycle: "monthly" | "annual"; reminderDays: number[]; gracePeriodDays: number; failedPaymentHandling: string };
+    cancellation: { defaultTiming: "end_of_term" | "immediate"; reactivationWindowDays: number };
+    overLimit: Record<string, string>;
+  };
+  /** False until a Super Admin first saves one: the values are then the platform defaults. */
+  saved: boolean;
+  updatedAt: string | null;
+}
+
 export const superAdminPlansApi = {
+  /** GET /api/v1/super-admin/subscription-policy */
+  getPolicy(signal?: AbortSignal): Promise<BackendSubscriptionPolicy> {
+    return apiClient.request<BackendSubscriptionPolicy>({ method: "GET", path: "/super-admin/subscription-policy", signal });
+  },
+
+  /** PUT /api/v1/super-admin/subscription-policy */
+  savePolicy(policy: BackendSubscriptionPolicy["policy"], signal?: AbortSignal): Promise<BackendSubscriptionPolicy> {
+    return apiClient.request<BackendSubscriptionPolicy>({ method: "PUT", path: "/super-admin/subscription-policy", body: policy, signal });
+  },
+
   /** GET /api/v1/super-admin/plans */
   listPlans(signal?: AbortSignal): Promise<BackendPlan[]> {
     return apiClient.request<BackendPlan[]>({
@@ -119,11 +154,11 @@ export const superAdminPlansApi = {
   },
 
   /** PUT /api/v1/super-admin/subscriptions/:id/plan */
-  changePlan(id: string, planId: string, signal?: AbortSignal): Promise<BackendSubscription> {
+  changePlan(id: string, planId: string, billingCycle?: "MONTHLY" | "ANNUAL", signal?: AbortSignal): Promise<BackendSubscription> {
     return apiClient.request<BackendSubscription>({
       method: "PUT",
       path: `/super-admin/subscriptions/${encodeURIComponent(id)}/plan`,
-      body: { planId },
+      body: billingCycle ? { planId, billingCycle } : { planId },
       signal,
     });
   },

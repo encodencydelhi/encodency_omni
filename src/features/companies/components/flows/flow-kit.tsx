@@ -1,5 +1,6 @@
 "use client";
 
+import { isMockMode } from "@/config/env";
 import { CheckIcon, Loader2Icon } from "lucide-react";
 import type { ReactNode } from "react";
 import { AlertBanner } from "@/components/shared/alert-banner";
@@ -48,11 +49,12 @@ export function FlowDialog({
   footer,
   size = "md",
   showClose = true,
-  badge = (
+  // "Preview Mode" says nothing here is saved, which is only true of the sample data; with a real backend there is no badge.
+  badge = isMockMode ? (
     <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 shrink-0">
       Preview Mode
     </span>
-  ),
+  ) : null,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, Lock, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
-import { LIMIT_META } from "../../billing-data/config";
+import { BILLING_MOCK_MODE, LIMIT_META } from "../../billing-data/config";
 import { useBillingView } from "../../billing-data/hooks";
 import { count, downgradeImpact, longDate, money, periodPrice, planById, shortDate } from "../../billing-data/selectors";
 import type { DowngradeResolution, LimitKey, PlanId } from "../../billing-data/types";
@@ -42,10 +42,10 @@ export function DowngradeFlow({ initialPlan }: { initialPlan?: PlanId }) {
     setPhase("processing");
     setError(null);
     const resolution: DowngradeResolution = { keep: Object.fromEntries(conflicts.map((conflict) => [conflict.key, [...keptFor(conflict.key)]])) };
-    const result = await actions.changePlan({ planId, cycle: snapshot.subscription.cycle, resolution });
+    const result = await actions.changePlan({ planId, cycle: snapshot.subscription.cycle, resolution, downgrade: true });
     if (result.ok) {
       setPhase("done");
-      toast.success(`Downgrade to ${target.name} scheduled`);
+      toast.success(BILLING_MOCK_MODE ? `Downgrade to ${target.name} scheduled` : `You're now on ${target.name}`);
     } else {
       setPhase("failed");
       setError({ message: result.message, hint: result.hint });
@@ -67,7 +67,7 @@ export function DowngradeFlow({ initialPlan }: { initialPlan?: PlanId }) {
       width={640}
       icon={TrendingDown}
       title="Downgrade plan"
-      description={phase === "done" ? undefined : `${current.name} → ${target.name}, effective at your next renewal`}
+      description={phase === "done" ? undefined : `${current.name} → ${target.name}, ${BILLING_MOCK_MODE ? "effective at your next renewal" : "effective immediately"}`}
       locked={phase === "processing"}
       footer={
         phase === "done" ? (
@@ -82,7 +82,7 @@ export function DowngradeFlow({ initialPlan }: { initialPlan?: PlanId }) {
               disabledReason={unresolved.length > 0 ? `Resolve ${unresolved.length} limit conflict${unresolved.length === 1 ? "" : "s"} first.` : undefined}
               onClick={confirm}
             >
-              {phase === "failed" ? "Retry" : `Schedule downgrade to ${target.name}`}
+              {phase === "failed" ? "Retry" : BILLING_MOCK_MODE ? `Schedule downgrade to ${target.name}` : `Downgrade to ${target.name}`}
             </Button>
           </>
         )
@@ -92,9 +92,11 @@ export function DowngradeFlow({ initialPlan }: { initialPlan?: PlanId }) {
         <div className="flex items-start gap-3 py-2">
           <CheckCircle2 className="mt-0.5 size-5 text-[#067647]" />
           <div className="text-[12.5px] text-[#3C4A66]">
-            <p className="text-[15px] font-semibold text-[#0F1B3D]">Downgrade to {target.name} scheduled</p>
+            <p className="text-[15px] font-semibold text-[#0F1B3D]">{BILLING_MOCK_MODE ? `Downgrade to ${target.name} scheduled` : `You're now on ${target.name}`}</p>
             <p>
-              Takes effect {longDate(snapshot.subscription.currentPeriodEnd)}. You keep {current.name}&apos;s limits and price until then. You can withdraw it any time before that from Subscription management.
+              {BILLING_MOCK_MODE
+                ? `Takes effect ${longDate(snapshot.subscription.currentPeriodEnd)}. You keep ${current.name}'s limits and price until then. You can withdraw it any time before that from Subscription management.`
+                : `The smaller plan's limits apply now. Your paid period carries on to ${longDate(snapshot.subscription.currentPeriodEnd)}; nothing was charged or refunded.`}
             </p>
           </div>
         </div>
@@ -179,7 +181,9 @@ export function DowngradeFlow({ initialPlan }: { initialPlan?: PlanId }) {
           )}
 
           <p className="text-[12px] text-[#6B7890]">
-            You keep {current.name} and its price until {shortDate(snapshot.subscription.currentPeriodEnd)}. The downgrade — and any conflicts left unresolved — only applies then.
+            {BILLING_MOCK_MODE
+              ? `You keep ${current.name} and its price until ${shortDate(snapshot.subscription.currentPeriodEnd)}. The downgrade — and any conflicts left unresolved — only applies then.`
+              : `The change applies now. Nothing is charged or refunded: your paid period to ${shortDate(snapshot.subscription.currentPeriodEnd)} carries on. It is refused while your usage is above ${target.name}'s limits.`}
           </p>
         </div>
       )}

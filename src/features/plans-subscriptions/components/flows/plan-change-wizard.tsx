@@ -1,5 +1,6 @@
 "use client";
 
+import { isMockMode } from "@/config/env";
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -76,7 +77,7 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
         overLimitAcknowledged: acknowledged,
       });
       toast.success(effective === "immediately" ? `${row.company.name} is now on ${detail.row.planName}` : `Change scheduled for ${row.company.name}`, {
-        description: effective === "immediately" ? "Demo only: no payment was charged." : "The current plan stays until the effective date.",
+        description: effective === "immediately" ? (isMockMode ? "Demo only: no payment was charged." : "No payment was charged or credited here. Billing is handled separately.") : "The current plan stays until the effective date.",
       });
       onClose();
     } catch (failure) {
@@ -145,9 +146,13 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
               const version = choice.summary.current;
               const price = version ? (cycle === "annual" ? version.price.annualMinor : version.price.monthlyMinor) : 0;
               const sameAsNow = choice.isCurrent && cycle === row.billingCycle && row.planVersion === (version?.version ?? row.planVersion);
+              // Not sold in this cycle (no price for it), or the plan the company is already on, which can only be chosen to change its cycle.
+              const notSold = version !== null && version !== undefined && price <= 0;
+              const selectable = notSold ? false : choice.isCurrent ? cycle !== row.billingCycle : choice.eligible;
+              const blockedReason = notSold ? `This plan does not offer ${cycle} billing.` : choice.isCurrent && !selectable ? choice.reason : choice.isCurrent ? null : choice.reason;
               return (
                 <div key={choice.summary.plan.id} className={cn("flex items-start gap-2.5 rounded-sm border px-3 py-2", planKey === choice.summary.plan.key ? "border-primary/40 bg-primary-subtle/50" : "border-border", !choice.eligible && "opacity-60")}>
-                  <RadioGroupItem value={choice.summary.plan.key} id={`plan-${choice.summary.plan.key}`} disabled={!choice.eligible} className="mt-0.5" />
+                  <RadioGroupItem value={choice.summary.plan.key} id={`plan-${choice.summary.plan.key}`} disabled={!selectable} className="mt-0.5" />
                   <Label htmlFor={`plan-${choice.summary.plan.key}`} className="flex-1 cursor-pointer font-normal">
                     <span className="flex flex-wrap items-center gap-1.5">
                       <span className="text-[0.8125rem] font-semibold text-foreground">{choice.summary.plan.name}</span>
@@ -155,7 +160,7 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
                       {choice.summary.plan.status !== "published" ? <PlanStatusBadge status={choice.summary.plan.status} /> : null}
                     </span>
                     <span className="block text-2xs text-muted-foreground">{version ? `${money(price, version.price.currency)} / ${cycle === "annual" ? "year" : "month"} · version ${version.version}` : "No published version"}</span>
-                    {choice.reason ? <span className="block text-2xs text-warning">{choice.reason}</span> : null}
+                    {blockedReason ? <span className="block text-2xs text-warning">{blockedReason}</span> : null}
                     {sameAsNow ? <span className="block text-2xs text-muted-foreground">Same plan and cycle</span> : null}
                   </Label>
                 </div>
@@ -276,8 +281,12 @@ export function PlanChangeWizard({ row, initialPlan, onClose }: { row: Subscript
               <div key={label} className="flex justify-between gap-3 py-1.5"><dt className="text-muted-foreground">{label}</dt><dd className="max-w-md text-right text-foreground">{value}</dd></div>
             ))}
           </dl>
-          <AlertBanner tone="info" title="Demo workspace">
-            {effective === "immediately" ? "The change is applied to the shared demo records only. No payment is charged and no proration is calculated." : "A scheduled change record is created. Nothing is applied until its date, and no background job runs in this demo."}
+          <AlertBanner tone="info" title={isMockMode ? "Demo workspace" : "What happens"}>
+            {!isMockMode
+              ? "The plan changes immediately and the company's limits change with it. Nothing is charged or credited here; billing is handled separately."
+              : effective === "immediately"
+                ? "The change is applied to the shared demo records only. No payment is charged and no proration is calculated."
+                : "A scheduled change record is created. Nothing is applied until its date, and no background job runs in this demo."}
           </AlertBanner>
           <Field label="Reason (optional)" htmlFor="change-reason" hint="Recorded in the subscription history.">
             <Textarea id="change-reason" rows={2} maxLength={300} value={reason} onChange={(event) => setReason(event.target.value)} />

@@ -706,23 +706,42 @@ function endTimeOf(bundle: CompanyBundle): number | null {
  * History is derived from each subscription's own dates (start, trial window,
  * cancellation), so it is deterministic and always agrees with today's records.
  */
-export function computeTrend(ctx: DerivationContext, bundles: readonly CompanyBundle[], metric: TrendMetric, period: TrendPeriod): TrendPoint[] {
-  return buckets(period, ctx.now).map((bucket) => {
+/** The dates a trend point needs from one subscription (epoch ms; `null` when it has not ended or has no trial). */
+export interface TrendRecord {
+  startedAt: number;
+  endedAt: number | null;
+  trialEndsAt: number | null;
+}
+
+export function computeTrendFromRecords(now: number, records: readonly TrendRecord[], metric: TrendMetric, period: TrendPeriod): TrendPoint[] {
+  return buckets(period, now).map((bucket) => {
     let value = 0;
-    for (const bundle of bundles) {
-      const { subscription } = bundle;
-      const started = Date.parse(subscription.startedAt);
-      const ended = endTimeOf(bundle);
-      const trialEnd = subscription.status === "trialing" && subscription.trialEndsAt ? Date.parse(subscription.trialEndsAt) : null;
+    for (const record of records) {
       const at = bucket.end;
-      const live = started <= at && (ended === null || ended > at);
-      if (metric === "active_paid") value += live && (trialEnd === null || trialEnd <= at) ? 1 : 0;
-      else if (metric === "active_trials") value += live && trialEnd !== null && trialEnd > at ? 1 : 0;
-      else if (metric === "new_subscriptions") value += started > bucket.start && started <= bucket.end ? 1 : 0;
-      else value += ended !== null && ended > bucket.start && ended <= bucket.end ? 1 : 0;
+      const live = record.startedAt <= at && (record.endedAt === null || record.endedAt > at);
+      if (metric === "active_paid") value += live && (record.trialEndsAt === null || record.trialEndsAt <= at) ? 1 : 0;
+      else if (metric === "active_trials") value += live && record.trialEndsAt !== null && record.trialEndsAt > at ? 1 : 0;
+      else if (metric === "new_subscriptions") value += record.startedAt > bucket.start && record.startedAt <= bucket.end ? 1 : 0;
+      else value += record.endedAt !== null && record.endedAt > bucket.start && record.endedAt <= bucket.end ? 1 : 0;
     }
     return { label: bucket.label, at: new Date(bucket.end).toISOString(), value };
   });
+}
+
+/**
+ * History is derived from each subscription's own dates (start, trial window,
+ * cancellation), so it is deterministic and always agrees with today's records.
+ */
+export function computeTrend(ctx: DerivationContext, bundles: readonly CompanyBundle[], metric: TrendMetric, period: TrendPeriod): TrendPoint[] {
+  const records = bundles.map((bundle): TrendRecord => {
+    const { subscription } = bundle;
+    return {
+      startedAt: Date.parse(subscription.startedAt),
+      endedAt: endTimeOf(bundle),
+      trialEndsAt: subscription.status === "trialing" && subscription.trialEndsAt ? Date.parse(subscription.trialEndsAt) : null,
+    };
+  });
+  return computeTrendFromRecords(ctx.now, records, metric, period);
 }
 
 /* ------------------------------------------------------------------ */

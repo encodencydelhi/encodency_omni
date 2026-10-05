@@ -130,7 +130,7 @@ function ScheduledView() {
       <div className="flex flex-wrap items-center gap-1.5">
         <FilterSelect label="Type" value={url.values.skind || undefined} options={(Object.keys(SCHEDULED_KIND) as ScheduledChangeKind[]).map((kind) => ({ value: kind, label: SCHEDULED_KIND[kind].label }))} onChange={(value) => url.set({ skind: value })} />
         {url.activeCount > 0 ? <Button variant="ghost" size="sm" onClick={url.clear}>Clear Filters</Button> : null}
-        <p className="ml-auto text-2xs text-muted-foreground">Scheduled means not yet applied. This demo applies nothing on a schedule.</p>
+        <p className="ml-auto text-2xs text-muted-foreground">{PLANS_MOCK_MODE ? "Scheduled means not yet applied. This demo applies nothing on a schedule." : "Scheduled means not yet applied. Changes are applied immediately; none are scheduled."}</p>
       </div>
       {query.error && !query.data ? (
         <PlansError subject="Scheduled changes" error={query.error} onRetry={() => void query.refetch()} />

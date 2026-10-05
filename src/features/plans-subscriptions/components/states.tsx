@@ -29,7 +29,7 @@ export function PlansError({
 
   const title = notFound ? `${subject} not found` : notConnected ? "Commercial service not connected" : `${subject} unavailable`;
   const description = notFound
-    ? "It does not exist, or it was removed from this demo workspace. Check the link or go back."
+    ? PLANS_MOCK_MODE ? "It does not exist, or it was removed from this demo workspace. Check the link or go back." : "It does not exist, or it was removed. Check the link or go back."
     : (api?.message ?? "The request did not complete. Nothing was changed.");
   const Icon = notFound ? SearchXIcon : notConnected ? PlugZapIcon : AlertTriangleIcon;
 

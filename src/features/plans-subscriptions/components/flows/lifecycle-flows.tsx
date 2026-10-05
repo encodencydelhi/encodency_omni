@@ -1,5 +1,6 @@
 "use client";
 
+import { isMockMode } from "@/config/env";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AlertBanner } from "@/components/shared/alert-banner";
@@ -48,7 +49,7 @@ export function CancelSubscriptionFlow({ row, onClose }: { row: SubscriptionRow;
     setError(null);
     try {
       await mutations.cancelSubscription(row.id, { timing: chosen, reason: reason.trim() });
-      toast.success(chosen === "immediate" ? "Subscription cancelled" : "Cancellation scheduled", { description: "The company account is unchanged. Demo only: no refund or charge was made." });
+      toast.success(chosen === "immediate" ? "Subscription cancelled" : "Cancellation scheduled", { description: isMockMode ? "The company account is unchanged. Demo only: no refund or charge was made." : "The company account is unchanged. No refund or charge was made here." });
       onClose();
     } catch (failure) {
       setError(describeError(failure).message);
@@ -174,7 +175,7 @@ export function ReactivateFlow({ row, onClose }: { row: SubscriptionRow; onClose
     setFieldErrors({});
     try {
       await mutations.reactivateSubscription(row.id, { planKey: planKey || undefined, reason: "Reactivated by Super Admin" });
-      toast.success(`${row.company.name}'s subscription reactivated`, { description: ended ? "A new period starts and an invoice is open. Demo only: nothing was charged." : undefined });
+      toast.success(`${row.company.name}'s subscription reactivated`, { description: isMockMode ? (ended ? "A new period starts and an invoice is open. Demo only: nothing was charged." : undefined) : ended ? "A new period started and an invoice is open for the company to pay in Billing." : "The subscription is active again." });
       onClose();
     } catch (failure) {
       const described = describeError(failure);
@@ -216,8 +217,12 @@ export function ReactivateFlow({ row, onClose }: { row: SubscriptionRow; onClose
           </Select>
         </Field>
       ) : null}
-      <AlertBanner tone="info" title="Demo workspace">
-        {ended ? "Reactivating a cancelled or expired subscription starts a new period and opens an invoice. No payment is collected, so billing shows it as pending." : "The scheduled end is removed and the subscription continues."}
+      <AlertBanner tone="info" title={isMockMode ? "Demo workspace" : "What happens"}>
+        {ended
+          ? isMockMode
+            ? "Reactivating a cancelled or expired subscription starts a new period and opens an invoice. No payment is collected, so billing shows it as pending."
+            : "Reactivating a cancelled subscription starts a new period and opens an invoice for the company to pay in Billing. It shows as payment outstanding until it is paid."
+          : "The subscription is active again."}
       </AlertBanner>
     </FlowDialog>
   );

@@ -12,7 +12,7 @@ import { ErrorBanner, Stepper } from "@/features/companies/components/flows/flow
 import { Panel } from "@/features/companies/components/primitives";
 import { useUnsavedGuard } from "@/features/companies/hooks/use-unsaved-guard";
 import { AvailabilitySection, BasicsSection, FeaturesSection, LimitsSection, PricingSection, ReviewSummary } from "../components/plan-config";
-import { routes } from "../data/config";
+import { PLANS_MOCK_MODE, routes } from "../data/config";
 import { describeError, usePlanMutations, usePlans } from "../data/hooks";
 import { emptyPlanInput, validatePlanConfig } from "../data/selectors";
 import type { CreatePlanInput, PlanDraftInput, PlanIssue, PlanSummary } from "../data/types";
@@ -110,7 +110,7 @@ export function PlanCreatePage() {
             <span className="flex size-10 items-center justify-center rounded-sm bg-success-subtle text-success">
               <CircleCheckIcon className="size-5" aria-hidden />
             </span>
-            <p className="text-sm font-semibold text-foreground">Plan created in demo workspace</p>
+            <p className="text-sm font-semibold text-foreground">{PLANS_MOCK_MODE ? "Plan created in demo workspace" : "Plan created"}</p>
             <p className="max-w-md text-[0.8125rem] text-muted-foreground">
               {summary.plan.name} ({summary.plan.internalCode}) {published ? "was published as version 1. It now appears in the catalogue, the comparison and plan selectors, according to its availability." : "was saved as a draft. It is not available to any company until it is published."}
             </p>
@@ -129,7 +129,7 @@ export function PlanCreatePage() {
 
   return (
     <div className="space-y-3">
-      <PageHeader title="Create Plan" description="Define pricing, features, limits and availability for a new plan. Demo configuration only - nothing is charged." />
+      <PageHeader title="Create Plan" description={PLANS_MOCK_MODE ? "Define pricing, features, limits and availability for a new plan. Demo configuration only - nothing is charged." : "Define pricing, features, limits and availability for a new plan. Publishing makes it available to companies."} />
       <Panel bodyClassName="space-y-3">
         <Stepper steps={STEPS} current={step} />
         <ErrorBanner message={error} />
