@@ -111,7 +111,11 @@ export function FinancialActivityPage() {
               <SelectItem value="credit_note_approved" className="text-xs">Credit Note Approved</SelectItem>
               <SelectItem value="credit_applied" className="text-xs">Account Credit Applied</SelectItem>
               <SelectItem value="refund_requested" className="text-xs">Refund Requested</SelectItem>
+              <SelectItem value="refund_approved" className="text-xs">Refund Approved</SelectItem>
+              <SelectItem value="refund_rejected" className="text-xs">Refund Rejected</SelectItem>
+              <SelectItem value="refund_processed" className="text-xs">Refund Processed</SelectItem>
               <SelectItem value="reconciliation_reviewed" className="text-xs">Reconciliation Reviewed</SelectItem>
+              <SelectItem value="policy_updated" className="text-xs">Policy Updated</SelectItem>
               <SelectItem value="billing_account_updated" className="text-xs">Billing Account Updated</SelectItem>
             </SelectContent>
           </Select>

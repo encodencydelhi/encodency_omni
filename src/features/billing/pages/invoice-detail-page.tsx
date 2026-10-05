@@ -9,9 +9,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { formatDate } from "@/lib/utils/format";
 import { formatMoney } from "../data/money";
-import { useInvoiceDetail } from "../data/hooks";
+import { useBillingStatus, useInvoiceDetail } from "../data/hooks";
 import {
   DocumentStateBadge,
   CollectionStateBadge,
@@ -38,12 +39,14 @@ interface InvoiceDetailPageProps {
 export function InvoiceDetailPage({ invoiceId: propInvoiceId }: InvoiceDetailPageProps) {
   const params = useParams();
   const invoiceId = propInvoiceId ?? (params?.invoiceId as string) ?? "";
-  const { invoice, relatedAllocations, relatedCreditNotes, voidInvoice } = useInvoiceDetail(invoiceId);
+  const { invoice, relatedAllocations, relatedCreditNotes, voidInvoice, issueInvoice } = useInvoiceDetail(invoiceId);
+  const loadStatus = useBillingStatus();
 
   const [isDocumentOpen, setIsDocumentOpen] = useState<boolean>(false);
   const [isVoidOpen, setIsVoidOpen] = useState<boolean>(false);
 
   if (!invoice) {
+    if (loadStatus === "idle" || loadStatus === "loading") return null;
     return (
       <div className="p-8 text-center bg-card rounded-sm border border-border space-y-3">
         <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-muted-foreground">
@@ -118,6 +121,24 @@ export function InvoiceDetailPage({ invoiceId: propInvoiceId }: InvoiceDetailPag
               <PrinterIcon className="size-3.5 text-muted-foreground" />
               <span>Printable Document</span>
             </Button>
+
+            {invoice.documentState === "draft" && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    await issueInvoice(invoice.id);
+                    toast.success(`Invoice ${invoice.number} issued`);
+                  } catch (err: any) {
+                    toast.error(err.message || "Failed to issue invoice");
+                  }
+                }}
+                className="h-8 rounded-sm text-xs bg-slate-900 text-white hover:bg-slate-800 gap-1.5"
+              >
+                <span>Issue Invoice</span>
+              </Button>
+            )}
 
             {invoice.documentState !== "void" && invoice.allocatedPaymentsMinor === 0 && (
               <Button

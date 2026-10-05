@@ -10,7 +10,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils/format";
 import { formatMoney } from "../data/money";
-import { useBillingAccountDetail } from "../data/hooks";
+import { useBillingAccountDetail, useBillingStatus } from "../data/hooks";
 import { BillingKpiCard } from "../components/billing-kpi-card";
 import { EditAccountModal } from "../components/accounts/edit-account-modal";
 import {
@@ -42,11 +42,13 @@ export function BillingAccountDetailPage({ accountId: propAccountId }: BillingAc
     companyPayments,
     companyLedger,
   } = useBillingAccountDetail(accountId);
+  const loadStatus = useBillingStatus();
 
   const [isEditOpen, setIsEditOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<"invoices" | "payments" | "ledger">("invoices");
 
   if (!account) {
+    if (loadStatus === "idle" || loadStatus === "loading") return null;
     return (
       <div className="p-8 text-center bg-card rounded-sm border border-border space-y-3">
         <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-muted-foreground">

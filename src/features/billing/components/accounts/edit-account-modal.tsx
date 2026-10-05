@@ -30,6 +30,8 @@ interface EditAccountModalProps {
   onSuccess?: () => void;
 }
 
+let handleSubmitInFlight = false;
+
 export function EditAccountModal({
   account,
   isOpen,
@@ -58,7 +60,9 @@ export function EditAccountModal({
 
   if (!account) return null;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (handleSubmitInFlight) return;
+    handleSubmitInFlight = true;
     try {
       if (!legalName.trim()) {
         toast.error("Legal billing entity name is required");
@@ -69,7 +73,7 @@ export function EditAccountModal({
         return;
       }
 
-      updateBillingAccount(account.id, {
+      await updateBillingAccount(account.id, {
         legalName: legalName.trim(),
         billingEmail: billingEmail.trim(),
         billingContact: billingContact.trim(),
@@ -83,6 +87,9 @@ export function EditAccountModal({
       if (onSuccess) onSuccess();
     } catch (err: any) {
       toast.error(err.message || "Failed to update billing account");
+    }
+    finally {
+      handleSubmitInFlight = false;
     }
   };
 

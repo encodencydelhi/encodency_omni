@@ -26,8 +26,10 @@ interface VoidInvoiceDialogProps {
   invoice: Invoice | null;
   isOpen: boolean;
   onClose: () => void;
-  onConfirmVoid: (invoiceId: string, reason: string) => void;
+  onConfirmVoid: (invoiceId: string, reason: string) => void | Promise<void>;
 }
+
+let voidInFlight = false;
 
 export function VoidInvoiceDialog({
   invoice,
@@ -41,17 +43,21 @@ export function VoidInvoiceDialog({
 
   const hasAllocations = invoice.allocatedPaymentsMinor > 0;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!reason.trim()) {
       toast.error("Please provide a cancellation/void reason");
       return;
     }
+    if (voidInFlight) return;
+    voidInFlight = true;
     try {
-      onConfirmVoid(invoice.id, reason.trim());
+      await onConfirmVoid(invoice.id, reason.trim());
       toast.success(`Invoice ${invoice.number} voided successfully`);
       onClose();
     } catch (err: any) {
       toast.error(err.message || "Failed to void invoice");
+    } finally {
+      voidInFlight = false;
     }
   };
 

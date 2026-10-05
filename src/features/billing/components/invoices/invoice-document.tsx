@@ -15,6 +15,8 @@ import { formatMoney } from "../../data/money";
 import type { Invoice } from "../../data/types";
 import { PrinterIcon, DownloadIcon } from "lucide-react";
 import { exportToCsv } from "../../data/export";
+import { isMockMode } from "@/config/env";
+import { useBillingPolicies } from "../../data/hooks";
 
 interface InvoiceDocumentModalProps {
   invoice: Invoice | null;
@@ -27,6 +29,7 @@ export function InvoiceDocumentModal({
   isOpen,
   onClose,
 }: InvoiceDocumentModalProps) {
+  const { policies } = useBillingPolicies();
   if (!invoice) return null;
 
   const handlePrint = () => {
@@ -56,9 +59,11 @@ export function InvoiceDocumentModal({
             <span className="font-mono text-xs font-semibold text-slate-700">
               DOCUMENT PREVIEW: {invoice.number}
             </span>
-            <span className="px-1.5 py-0.5 rounded-sm bg-amber-100 text-amber-800 border border-amber-300 text-xs font-semibold">
-              SIMULATED DEMO RECORD
-            </span>
+            {isMockMode ? (
+              <span className="px-1.5 py-0.5 rounded-sm bg-amber-100 text-amber-800 border border-amber-300 text-xs font-semibold">
+                SIMULATED DEMO RECORD
+              </span>
+            ) : null}
           </div>
 
           <div className="flex items-center gap-2 mr-1">
@@ -230,14 +235,20 @@ export function InvoiceDocumentModal({
           </div>
 
           {/* Footer Notice */}
-          <div className="border-t border-slate-200 pt-4 text-xs text-slate-500 leading-relaxed text-center">
-            <p className="font-semibold text-slate-700">
-              SIMULATED DEMO DOCUMENT — ENCODENCY OMNIPLATFORM FINANCIAL GOVERNANCE
-            </p>
-            <p className="mt-0.5">
-              This document was generated for demonstration, testing, and operational reconciliation inside EnCodency OmniPlatform.
-            </p>
-          </div>
+          {isMockMode ? (
+            <div className="border-t border-slate-200 pt-4 text-xs text-slate-500 leading-relaxed text-center">
+              <p className="font-semibold text-slate-700">
+                SIMULATED DEMO DOCUMENT — ENCODENCY OMNIPLATFORM FINANCIAL GOVERNANCE
+              </p>
+              <p className="mt-0.5">
+                This document was generated for demonstration, testing, and operational reconciliation inside EnCodency OmniPlatform.
+              </p>
+            </div>
+          ) : policies.disclaimerText.trim() ? (
+            <div className="border-t border-slate-200 pt-4 text-xs text-slate-500 leading-relaxed text-center">
+              <p>{policies.disclaimerText}</p>
+            </div>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>
