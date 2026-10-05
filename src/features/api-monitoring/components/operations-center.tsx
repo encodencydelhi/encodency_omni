@@ -269,9 +269,26 @@ function Dependencies({ snapshot }: { snapshot: ApiMonitoringSnapshot }) {
 function ActivitySettings({ snapshot, config, setConfig }: { snapshot: ApiMonitoringSnapshot; config: ApiMonitoringConfig; setConfig: (config: ApiMonitoringConfig) => void }) {
   const [draft, setDraft] = useState(config);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const dirty = JSON.stringify(draft) !== JSON.stringify(config);
   useEffect(() => { if (!dirty) return undefined; const h = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; }; window.addEventListener("beforeunload", h); return () => window.removeEventListener("beforeunload", h); }, [dirty]);
-  return <div className="grid gap-1 xl:grid-cols-[1fr_0.9fr]"><Card><Title title="Monitoring Activity" /><div className="divide-y divide-slate-100">{snapshot.activity.map((a) => <div key={a.id} className="px-4 py-3"><p className="text-xs font-bold text-[#111C3A]">{a.type}</p><p className="text-xs text-slate-600">{a.message}</p><p className="mt-1 text-[11px] text-slate-500">{fmtDate(a.at)} - {a.source}</p></div>)}</div></Card><Card><Title title="Activity & Settings" subtitle="Configuration Persists To Backend Monitoring Policy." />{saved ? <div className="mx-4 mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-xs text-emerald-700">Supported Monitoring Configuration Saved Successfully.</div> : null}<div className="space-y-3 p-4"><label className="flex items-center justify-between gap-3 text-xs font-semibold">Capture Query Parameters<input type="checkbox" checked={draft.captureQueryParams} onChange={(e) => setDraft({ ...draft, captureQueryParams: e.target.checked })} /></label><label className="flex items-center justify-between gap-3 text-xs font-semibold">Capture Body Preview<input type="checkbox" checked={draft.captureBodyPreview} onChange={(e) => setDraft({ ...draft, captureBodyPreview: e.target.checked })} /></label><label className="text-xs font-semibold">Slow Request Threshold (Ms)<input type="number" value={draft.slowRequestThresholdMs} onChange={(e) => setDraft({ ...draft, slowRequestThresholdMs: Number(e.target.value) })} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /></label><button onClick={async () => { setConfig(draft); await updateLiveMonitoringConfig(draft); setSaved(true); }} disabled={!dirty} className="w-full rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"><Settings className="mr-1 inline size-4" />Save Monitoring Configuration</button><Coverage snapshot={snapshot} /></div></Card></div>;
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaved(false);
+    setSaveError(null);
+    const res = await updateLiveMonitoringConfig(draft);
+    setSaving(false);
+    if (res.success) {
+      setConfig(draft);
+      setSaved(true);
+    } else {
+      setSaveError(res.error || "Failed To Persist Configuration To Database.");
+    }
+  };
+
+  return <div className="grid gap-1 xl:grid-cols-[1fr_0.9fr]"><Card><Title title="Monitoring Activity" /><div className="divide-y divide-slate-100">{snapshot.activity.map((a) => <div key={a.id} className="px-4 py-3"><p className="text-xs font-bold text-[#111C3A]">{a.type}</p><p className="text-xs text-slate-600">{a.message}</p><p className="mt-1 text-[11px] text-slate-500">{fmtDate(a.at)} - {a.source}</p></div>)}</div></Card><Card><Title title="Activity & Settings" subtitle="Configuration Persists To Backend Monitoring Policy." />{saved ? <div className="mx-4 mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-2 text-xs text-emerald-700">Supported Monitoring Configuration Saved Successfully.</div> : null}{saveError ? <div className="mx-4 mt-3 rounded-md border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">{saveError}</div> : null}<div className="space-y-3 p-4"><label className="flex items-center justify-between gap-3 text-xs font-semibold">Capture Query Parameters<input type="checkbox" checked={draft.captureQueryParams} onChange={(e) => setDraft({ ...draft, captureQueryParams: e.target.checked })} /></label><label className="flex items-center justify-between gap-3 text-xs font-semibold">Capture Body Preview<input type="checkbox" checked={draft.captureBodyPreview} onChange={(e) => setDraft({ ...draft, captureBodyPreview: e.target.checked })} /></label><label className="text-xs font-semibold">Slow Request Threshold (Ms)<input type="number" value={draft.slowRequestThresholdMs} onChange={(e) => setDraft({ ...draft, slowRequestThresholdMs: Number(e.target.value) })} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /></label><button onClick={handleSave} disabled={!dirty || saving} className="w-full rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"><Settings className="mr-1 inline size-4" />{saving ? "Saving Configuration..." : "Save Monitoring Configuration"}</button><Coverage snapshot={snapshot} /></div></Card></div>;
 }
 
 function Coverage({ snapshot }: { snapshot: ApiMonitoringSnapshot }) {
@@ -317,17 +334,82 @@ export function ApiMonitoringOperationsCenter({ page = "overview", serviceId: se
   const [range, setRange] = useState<ApiTimeRange>((search.get("range") as ApiTimeRange) || "24h");
   const [customHours, setCustomHours] = useState(Number(search.get("hours")) || 24);
   const [serviceId, setServiceId] = useState(search.get("service") || "all");
-  const { snapshot, loading, isLive } = useLiveApiMonitoringSnapshot(environment, range, customHours, serviceId);
-  const [config, setConfig] = useState(snapshot.config);
+  const { snapshot, loading, isLive, error } = useLiveApiMonitoringSnapshot(environment, range, customHours, serviceId);
+  const [config, setConfig] = useState<ApiMonitoringConfig | null>(snapshot?.config ?? null);
   useEffect(() => {
-    setConfig(snapshot.config);
-  }, [snapshot.config]);
+    if (snapshot?.config) {
+      setConfig(snapshot.config);
+    }
+  }, [snapshot?.config]);
   const [servicePreview, setServicePreview] = useState<ApiService | null>(null);
   const [requestPreview, setRequestPreview] = useState<ApiRequest | null>(null);
-  const rows = requestsInRange(snapshot, range, serviceId, customHours * 60);
 
   function setEnv(env: ApiEnvironment) { setEnvironmentState(env); const p = new URLSearchParams(search.toString()); p.set("env", env); router.replace(`${window.location.pathname}?${p.toString()}`); }
   function setRangeFilter(nextRange: ApiTimeRange) { setRange(nextRange); const p = new URLSearchParams(search.toString()); p.set("range", nextRange); router.replace(`${window.location.pathname}?${p.toString()}`); }
   function setServiceFilter(id: string) { setServiceId(id); const p = new URLSearchParams(search.toString()); if (id === "all") p.delete("service"); else p.set("service", id); router.replace(`${window.location.pathname}?${p.toString()}`); }
-  return <div className="space-y-1"><Header snapshot={snapshot} range={range} setRange={setRangeFilter} customHours={customHours} setCustomHours={(hours) => { setCustomHours(hours); const p = new URLSearchParams(search.toString()); p.set("hours", String(hours)); router.replace(`${window.location.pathname}?${p.toString()}`); }} serviceId={serviceId} setServiceId={setServiceFilter} setEnvironment={setEnv} isLive={isLive} /><Tabs />{loading ? <Skeleton /> : null}{!loading && page === "overview" ? <Overview snapshot={snapshot} range={range} serviceId={serviceId} rows={rows} customMinutes={customHours * 60} onPreviewService={setServicePreview} onPreviewRequest={setRequestPreview} /> : null}{!loading && page === "explorer" ? <Explorer snapshot={snapshot} rows={rows} onPreviewService={setServicePreview} /> : null}{!loading && page === "service" && serviceParam ? <ServiceDetail snapshot={snapshot} rows={rows} serviceId={serviceParam} onPreview={setRequestPreview} /> : null}{!loading && page === "endpoint" && endpointId ? <EndpointDetail snapshot={snapshot} rows={rows} endpointId={endpointId} onPreview={setRequestPreview} /> : null}{!loading && page === "requests" ? <Requests snapshot={snapshot} rows={rows} onPreview={setRequestPreview} environment={environment} range={range} hours={customHours} serviceId={serviceId} isLive={isLive} /> : null}{!loading && page === "request" && requestId ? <RequestDetail snapshot={snapshot} requestId={requestId} /> : null}{!loading && page === "error" && errorId ? <ErrorDetail snapshot={snapshot} errorId={errorId} onPreview={setRequestPreview} /> : null}{!loading && page === "performance" ? <Performance snapshot={snapshot} rows={rows} /> : null}{!loading && page === "availability" ? <Availability snapshot={snapshot} rows={rows} /> : null}{!loading && page === "rate" ? <RateLimitPage snapshot={snapshot} /> : null}{!loading && page === "dependencies" ? <Dependencies snapshot={snapshot} /> : null}{!loading && page === "activity" ? <ActivitySettings snapshot={snapshot} config={config} setConfig={setConfig} /> : null}<ServicePreview service={servicePreview} snapshot={snapshot} onClose={() => setServicePreview(null)} /><RequestPreview request={requestPreview} snapshot={snapshot} onClose={() => setRequestPreview(null)} /></div>;
+
+  if (loading && !snapshot) {
+    return (
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-bold text-[#111C3A]">API Monitoring</h1>
+            <p className="mt-1 text-sm text-slate-600">Monitor API Traffic, Performance, Availability And Request Failures Across OmniPlatform.</p>
+          </div>
+        </div>
+        <Tabs />
+        <Skeleton />
+      </div>
+    );
+  }
+
+  if (error && !snapshot) {
+    return (
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-bold text-[#111C3A]">API Monitoring</h1>
+            <p className="mt-1 text-sm text-slate-600">Monitor API Traffic, Performance, Availability And Request Failures Across OmniPlatform.</p>
+          </div>
+        </div>
+        <Tabs />
+        <div className="rounded-lg border border-rose-200 bg-rose-50 p-6 text-rose-800">
+          <h3 className="text-base font-bold">Failed to Connect to API Telemetry Backend</h3>
+          <p className="mt-1 text-sm text-rose-700">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-md bg-rose-700 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-800"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!snapshot) return null;
+
+  const rows = requestsInRange(snapshot, range, serviceId, customHours * 60);
+
+  return (
+    <div className="space-y-1">
+      <Header snapshot={snapshot} range={range} setRange={setRangeFilter} customHours={customHours} setCustomHours={(hours) => { setCustomHours(hours); const p = new URLSearchParams(search.toString()); p.set("hours", String(hours)); router.replace(`${window.location.pathname}?${p.toString()}`); }} serviceId={serviceId} setServiceId={setServiceFilter} setEnvironment={setEnv} isLive={isLive} />
+      <Tabs />
+      {loading ? <Skeleton /> : null}
+      {!loading && page === "overview" ? <Overview snapshot={snapshot} range={range} serviceId={serviceId} rows={rows} customMinutes={customHours * 60} onPreviewService={setServicePreview} onPreviewRequest={setRequestPreview} /> : null}
+      {!loading && page === "explorer" ? <Explorer snapshot={snapshot} rows={rows} onPreviewService={setServicePreview} /> : null}
+      {!loading && page === "service" && serviceParam ? <ServiceDetail snapshot={snapshot} rows={rows} serviceId={serviceParam} onPreview={setRequestPreview} /> : null}
+      {!loading && page === "endpoint" && endpointId ? <EndpointDetail snapshot={snapshot} rows={rows} endpointId={endpointId} onPreview={setRequestPreview} /> : null}
+      {!loading && page === "requests" ? <Requests snapshot={snapshot} rows={rows} onPreview={setRequestPreview} environment={environment} range={range} hours={customHours} serviceId={serviceId} isLive={isLive} /> : null}
+      {!loading && page === "request" && requestId ? <RequestDetail snapshot={snapshot} requestId={requestId} /> : null}
+      {!loading && page === "error" && errorId ? <ErrorDetail snapshot={snapshot} errorId={errorId} onPreview={setRequestPreview} /> : null}
+      {!loading && page === "performance" ? <Performance snapshot={snapshot} rows={rows} /> : null}
+      {!loading && page === "availability" ? <Availability snapshot={snapshot} rows={rows} /> : null}
+      {!loading && page === "rate" ? <RateLimitPage snapshot={snapshot} /> : null}
+      {!loading && page === "dependencies" ? <Dependencies snapshot={snapshot} /> : null}
+      {!loading && page === "activity" ? <ActivitySettings snapshot={snapshot} config={config || snapshot.config} setConfig={setConfig} /> : null}
+      <ServicePreview service={servicePreview} snapshot={snapshot} onClose={() => setServicePreview(null)} />
+      <RequestPreview request={requestPreview} snapshot={snapshot} onClose={() => setRequestPreview(null)} />
+    </div>
+  );
 }

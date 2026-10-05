@@ -12,7 +12,6 @@ import type {
   ApiErrorLog,
   ApiMonitoringActivity,
   ApiMonitoringKpis,
-  ApiMonitoringRepository,
   ApiRequestLog,
   EndpointStatus,
   ErrorBreakdown,
@@ -23,6 +22,7 @@ import type {
   RateLimitState,
   RequestTrendPoint,
 } from "./types";
+import type { ApiMonitoringRepository } from "./repository";
 
 let cachedSnapshot: ApiMonitoringSnapshot | null = null;
 let lastFetchTime = 0;
@@ -149,7 +149,7 @@ export const liveApiMonitoringRepository: ApiMonitoringRepository = {
 
   async getEndpointById(id: string): Promise<ApiEndpoint | null> {
     const list = await this.getEndpoints();
-    return list.find((e) => e.id === id) ?? null;
+    return list.find((e: ApiEndpoint) => e.id === id) ?? null;
   },
 
   async getProviderHealth(): Promise<ProviderApiHealth[]> {
