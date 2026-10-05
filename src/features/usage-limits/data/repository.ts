@@ -8,6 +8,7 @@
  * resolves to a provider that refuses to invent usage.
  */
 import { USAGE_MOCK_MODE } from "./config";
+import { liveUsageProvider } from "./live-provider";
 import { mockUsageProvider } from "./mock-provider";
 import { unavailableUsageProvider } from "./unavailable-provider";
 import type {
@@ -95,7 +96,7 @@ export interface TrendResult {
 }
 
 export interface UsageRepository {
-  readonly mode: "mock" | "unavailable";
+  readonly mode: "mock" | "live" | "unavailable";
   getOverview(period: Period): Promise<OverviewResult>;
   getTrend(resource: ResourceKey, period: Period, scope?: { companyId?: string; clientId?: string }): Promise<TrendResult>;
   getTopConsumers(resource: ResourceKey, sort: "consumption" | "utilization"): Promise<UsageRow[]>;
@@ -115,4 +116,4 @@ export interface UsageRepository {
   resetDemoData?(): Promise<void>;
 }
 
-export const usageRepository: UsageRepository = USAGE_MOCK_MODE ? mockUsageProvider : unavailableUsageProvider;
+export const usageRepository: UsageRepository = USAGE_MOCK_MODE ? mockUsageProvider : liveUsageProvider;
