@@ -35,9 +35,16 @@ export function duration(seconds: Maybe<number>): string {
   return `${h ? `${h}:` : ""}${mm}:${String(sec).padStart(2, "0")}`;
 }
 
+/** Watch time. The input is in hours (the API's minutes are converted once in the mapper); under an hour it is shown in minutes so small numbers don't round to "0 hrs". */
 export function hours(value: Maybe<number>): string {
-  if (value === null) return DASH;
-  return `${compact(value)} hrs`;
+  if (value === null || Number.isNaN(value)) return DASH;
+  const minutes = value * 60;
+  if (minutes < 60) {
+    if (minutes > 0 && minutes < 0.5) return "<1 min";
+    return `${Math.round(minutes)} min`;
+  }
+  // One decimal under 100 hours (compact() would round 1.5 up to 2); thousands abbreviate like the other counters.
+  return `${value < 100 ? trim(value) : compact(value)} hrs`;
 }
 
 /** Amounts are shown in the currency YouTube reported them in (ISO 4217); there is no hardcoded currency. */
@@ -83,8 +90,6 @@ export function formatMetric(key: MetricKey, value: Maybe<number>): string {
       return hours(value);
     case "avgViewDuration":
       return duration(value);
-    case "ctr":
-      return percent(value);
     default:
       return compact(value);
   }

@@ -40,7 +40,6 @@ import {
 import { ErrorState, PageSkeleton } from "../components/states";
 import {
   ActionMenu,
-  ApprovalBadge,
   Button,
   Card,
   EmptyState,
@@ -210,13 +209,13 @@ function ContentManager() {
   const rowActions = (v: Video): (MenuItem | "separator")[] => {
     const unpublished = v.status === "draft" || v.status === "scheduled";
     return [
-      { label: "View details", icon: Eye, href: ytRoutes.video(v.id) },
-      { label: "Edit metadata", icon: Pencil, onSelect: () => setEditVideo(v.id), gate: can.canEditVideo },
-      { label: "Change thumbnail", icon: ImageIcon, onSelect: () => setThumbVideo(v.id), gate: can.canEditVideo },
+      { label: "View Details", icon: Eye, href: ytRoutes.video(v.id) },
+      { label: "Edit Metadata", icon: Pencil, onSelect: () => setEditVideo(v.id), gate: can.canEditVideo },
+      { label: "Change Thumbnail", icon: ImageIcon, onSelect: () => setThumbVideo(v.id), gate: can.canEditVideo },
       "separator",
-      { label: "View analytics", icon: BarChart3, href: `${ytRoutes.video(v.id)}?tab=analytics`, hidden: v.status !== "published", gate: can.canViewAnalytics },
-      { label: "View comments", icon: MessageSquare, href: `${ytRoutes.comments}?video=${v.id}`, hidden: v.status !== "published" || v.commentsEnabled === false },
-      { label: "Add to playlist", icon: ListPlus, onSelect: () => setPlaylistFor([v.id]), gate: can.canManagePlaylists },
+      { label: "View Analytics", icon: BarChart3, href: `${ytRoutes.video(v.id)}?tab=analytics`, hidden: v.status !== "published", gate: can.canViewAnalytics },
+      { label: "View Comments", icon: MessageSquare, href: `${ytRoutes.comments}?video=${v.id}`, hidden: v.status !== "published" || v.commentsEnabled === false },
+      { label: "Add To Playlist", icon: ListPlus, onSelect: () => setPlaylistFor([v.id]), gate: can.canManagePlaylists },
       {
         label: v.scheduleId && v.status === "scheduled" ? "Reschedule" : "Schedule",
         icon: CalendarClock,
@@ -224,8 +223,8 @@ function ContentManager() {
         hidden: !unpublished,
         gate: can.canSchedule,
       },
-      { label: "Publish now", icon: SendHorizonal, onSelect: () => router.push(`${ytRoutes.video(v.id)}?tab=details&confirm=publish`), hidden: !unpublished, gate: can.canPublish },
-      { label: "Open on YouTube", icon: ExternalLink, href: ytRoutes.watch(v.id), external: true, hidden: v.status !== "published" },
+      { label: "Publish Now", icon: SendHorizonal, onSelect: () => router.push(`${ytRoutes.video(v.id)}?tab=details&confirm=publish`), hidden: !unpublished, gate: can.canPublish },
+      { label: "Open On YouTube", icon: ExternalLink, href: ytRoutes.watch(v.id), external: true, hidden: v.status !== "published" },
       "separator",
       { label: "Delete", icon: Trash2, danger: true, onSelect: () => setDeleteFor([v.id]), gate: can.canDeleteVideo },
     ];
@@ -246,7 +245,7 @@ function ContentManager() {
       <Card className="overflow-visible">
         <div className="border-b border-[#EEF1F5] px-3 pt-1">
           <UnderlineTabs<SubTab>
-            label="Content type"
+            label="Content Type"
             value={subTab}
             onChange={setTab}
             items={[
@@ -265,7 +264,7 @@ function ContentManager() {
           <SelectMenu label="Type" prefix="Type:" value={values.type} onChange={(v) => set({ type: v, page: "1" })} options={[{ value: "all", label: "All" }, { value: "video", label: "Video" }, { value: "short", label: "Short" }, { value: "live", label: "Live" }]} />
           <SelectMenu label="Visibility" prefix="Visibility:" value={values.visibility} onChange={(v) => set({ visibility: v, page: "1" })} options={[{ value: "all", label: "All" }, { value: "public", label: "Public" }, { value: "unlisted", label: "Unlisted" }, { value: "private", label: "Private" }]} />
           <SelectMenu label="Status" prefix="Status:" value={values.status} onChange={(v) => set({ status: v, page: "1" })} options={[{ value: "all", label: "All" }, { value: "published", label: "Published" }, { value: "scheduled", label: "Scheduled" }, { value: "draft", label: "Draft" }, { value: "processing", label: "Processing" }, { value: "failed", label: "Failed" }]} />
-          <SelectMenu label="Date" prefix="Date:" value={values.date} onChange={(v) => set({ date: v, page: "1" })} options={[{ value: "all", label: "Any time" }, { value: "7d", label: "Last 7 days" }, { value: "28d", label: "Last 28 days" }, { value: "90d", label: "Last 90 days" }, { value: "365d", label: "Last 365 days" }]} />
+          <SelectMenu label="Date" prefix="Date:" value={values.date} onChange={(v) => set({ date: v, page: "1" })} options={[{ value: "all", label: "Any Time" }, { value: "7d", label: "Last 7 Days" }, { value: "28d", label: "Last 28 Days" }, { value: "90d", label: "Last 90 Days" }, { value: "365d", label: "Last 365 Days" }]} />
           <SelectMenu label="Playlist" prefix="Playlist:" value={values.playlist} onChange={(v) => set({ playlist: v, page: "1" })} className="max-w-[240px]" options={[{ value: "all", label: "All" }, ...playlists.map((p) => ({ value: p.id, label: p.title }))]} />
           <SelectMenu
             label="Sort"
@@ -276,11 +275,11 @@ function ContentManager() {
               set({ sort, dir });
             }}
             options={[
-              { value: "date:desc", label: "Newest first" },
-              { value: "date:asc", label: "Oldest first" },
-              { value: "views:desc", label: "Most views" },
-              { value: "watch:desc", label: "Most watch time" },
-              { value: "avd:desc", label: "Longest avg. duration" },
+              { value: "date:desc", label: "Newest First" },
+              { value: "date:asc", label: "Oldest First" },
+              { value: "views:desc", label: "Most Views" },
+              { value: "watch:desc", label: "Most Watch Time" },
+              { value: "avd:desc", label: "Longest Avg. Duration" },
               { value: "title:asc", label: "Title A–Z" },
             ]}
           />
@@ -299,15 +298,15 @@ function ContentManager() {
               onChange={(v) => set({ view: v })}
               className="hidden md:inline-flex"
               items={[
-                { value: "table", label: <span className="sr-only">Table</span>, icon: Rows3, title: "Table view" },
-                { value: "grid", label: <span className="sr-only">Grid</span>, icon: LayoutGrid, title: "Grid view" },
+                { value: "table", label: <span className="sr-only">Table</span>, icon: Rows3, title: "Table View" },
+                { value: "grid", label: <span className="sr-only">Grid</span>, icon: LayoutGrid, title: "Grid View" },
               ]}
             />
           </div>
         </div>
 
         {selected.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 border-b border-[#EEF1F5] bg-[#FFF8F8] px-3 py-2" role="region" aria-label="Bulk actions">
+          <div className="flex flex-wrap items-center gap-2 border-b border-[#EEF1F5] bg-[#FFF8F8] px-3 py-2" role="region" aria-label="Bulk Actions">
             <span className="text-[12.5px] font-semibold text-[#0F1B3D]">{selected.length} selected</span>
             <Button size="xs" variant="ghost" onClick={() => setSelected([])}>Clear</Button>
             <span className="mx-1 h-4 w-px bg-[#F5C2C7]" />
@@ -330,13 +329,13 @@ function ContentManager() {
         )}
 
         {videosState.isLoading ? (
-          <div className="space-y-2 p-4" aria-busy="true" aria-label="Loading content">{Array.from({ length: 6 }, (_, i) => <div key={i} className="h-12 animate-pulse rounded-sm bg-[#EDF1F6]" />)}</div>
+          <div className="space-y-2 p-4" aria-busy="true" aria-label="Loading Content">{Array.from({ length: 6 }, (_, i) => <div key={i} className="h-12 animate-pulse rounded-sm bg-[#EDF1F6]" />)}</div>
         ) : videosState.isError && videosState.error && videos.length === 0 ? (
           <ErrorState error={videosState.error} onRetry={videosState.refetch} title="Content couldn't load" />
         ) : videos.length === 0 ? (
-          <EmptyState icon={VideoIcon} title="No content yet" description="Upload your first video to start building your channel from OmniPlatform." action={<Button variant="primary" icon={Upload} gate={can.canUpload} href={ytRoutes.upload}>Upload your first video</Button>} />
+          <EmptyState icon={VideoIcon} title="No Content Yet" description="Upload your first video to start building your channel from OmniPlatform." action={<Button variant="primary" icon={Upload} gate={can.canUpload} href={ytRoutes.upload}>Upload Your First Video</Button>} />
         ) : filtered.length === 0 ? (
-          <EmptyState icon={Filter} title="No content matches these filters" description="Try a different search term or clear the filters to see everything." action={<Button variant="secondary" icon={X} onClick={() => { setSearch(""); reset(["view"]); }}>Clear filters</Button>} />
+          <EmptyState icon={Filter} title="No Content Matches These Filters" description="Try a different search term or clear the filters to see everything." action={<Button variant="secondary" icon={X} onClick={() => { setSearch(""); reset(["view"]); }}>Clear filters</Button>} />
         ) : values.view === "grid" ? (
           <>
             <div className="hidden grid-cols-2 gap-1 p-3 md:grid lg:grid-cols-3 2xl:grid-cols-5">
@@ -354,7 +353,7 @@ function ContentManager() {
                   <tr>
                     <th className={cn(thClass, "w-10 pl-3.5")}>
                       <Checkbox
-                        aria-label="Select all on this page"
+                        aria-label="Select All On This Page"
                         checked={allOnPage ? true : someOnPage ? "indeterminate" : false}
                         onCheckedChange={(c) => setSelected((prev) => (c ? [...new Set([...prev, ...visible.map((v) => v.id)])] : prev.filter((id) => !visible.some((v) => v.id === id))))}
                       />
@@ -365,10 +364,10 @@ function ContentManager() {
                     <th className={thClass}>Status</th>
                     <SortHeader label="Date" active={values.sort === "date"} dir={values.dir as SortDir} onClick={() => toggleSort("date")} />
                     <SortHeader label="Views" align="right" active={values.sort === "views"} dir={values.dir as SortDir} onClick={() => toggleSort("views")} />
-                    <SortHeader label="Watch time" align="right" active={values.sort === "watch"} dir={values.dir as SortDir} onClick={() => toggleSort("watch")} />
+                    <SortHeader label="Watch Time" align="right" active={values.sort === "watch"} dir={values.dir as SortDir} onClick={() => toggleSort("watch")} />
                     <SortHeader label="Comments" align="right" active={values.sort === "comments"} dir={values.dir as SortDir} onClick={() => toggleSort("comments")} />
                     <SortHeader label="Likes" align="right" active={values.sort === "likes"} dir={values.dir as SortDir} onClick={() => toggleSort("likes")} />
-                    <SortHeader label="Avg. duration" align="right" active={values.sort === "avd"} dir={values.dir as SortDir} onClick={() => toggleSort("avd")} />
+                    <SortHeader label="Avg. Duration" align="right" active={values.sort === "avd"} dir={values.dir as SortDir} onClick={() => toggleSort("avd")} />
                     <th className={cn(thClass, "pr-3.5 text-right")}><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
@@ -396,14 +395,13 @@ function ContentManager() {
                                 {v.title}
                               </Link>
                               <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                                <ApprovalBadge state={v.approval} />
                                 {v.status === "failed" ? (
                                   <Hint text={v.failureReason ?? "Processing failed"}>
                                     <span className="cursor-help truncate text-[11.5px] font-medium text-[#C81E2B]">Processing failed — re-upload required</span>
                                   </Hint>
-                                ) : v.approval === "none" ? (
+                                ) : (
                                   <span className="truncate text-[11.5px] text-[#98A2B3]">{v.description.split("\n")[0]}</span>
-                                ) : null}
+                                )}
                               </div>
                             </div>
                           </div>
@@ -437,13 +435,14 @@ function ContentManager() {
 
         {filtered.length > 0 && (
           <div className="border-t border-[#EEF1F5]">
+            <p className="px-4 pt-2.5 text-[11.5px] text-[#98A2B3]">Views, Likes and Comments are lifetime. Watch Time and Avg. Duration cover the last 365 days (since publishing for newer videos).</p>
             <Pagination page={page} pageCount={pageCount} total={filtered.length} pageSize={PAGE_SIZE} noun="items" onPage={(p) => set({ page: String(p) })} />
           </div>
         )}
         {videosState.hasMore && (
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#EEF1F5] px-4 py-2.5 text-[12px] text-[#6B7890]">
             <span>Showing the {videos.length} most recent uploads. Filters and sorting apply to what is loaded.</span>
-            <Button size="sm" variant="secondary" loading={videosState.isFetchingMore} onClick={videosState.loadMore}>Load more videos</Button>
+            <Button size="sm" variant="secondary" loading={videosState.isFetchingMore} onClick={videosState.loadMore}>Load More Videos</Button>
           </div>
         )}
       </Card>
@@ -516,7 +515,6 @@ function MobileList({ videos, selected, setSelected, rowActions }: { videos: Vid
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               <StatusBadge status={v.status} />
               <TypeBadge type={v.type} />
-              <ApprovalBadge state={v.approval} />
             </div>
             <p className="mt-1.5 text-[11.5px] text-[#6B7890]">
               {v.status === "published" ? (

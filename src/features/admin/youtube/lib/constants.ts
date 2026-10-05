@@ -1,6 +1,5 @@
 import type { YouTubeConsentCapability } from "../live/youtube-dto";
 import type {
-  ApprovalState,
   ContentType,
   GrantedKey,
   MetricKey,
@@ -39,22 +38,20 @@ export const ytRoutes = {
 } as const;
 
 export const PERIODS: { value: Period; label: string; days: number }[] = [
-  { value: "7d", label: "Last 7 days", days: 7 },
-  { value: "28d", label: "Last 28 days", days: 28 },
-  { value: "90d", label: "Last 90 days", days: 90 },
-  { value: "365d", label: "Last 365 days", days: 365 },
+  { value: "7d", label: "Last 7 Days", days: 7 },
+  { value: "28d", label: "Last 28 Days", days: 28 },
+  { value: "90d", label: "Last 90 Days", days: 90 },
+  { value: "365d", label: "Last 365 Days", days: 365 },
 ];
 
 export const METRICS: Record<MetricKey, { label: string; short: string; color: string; help: string }> = {
   views: { label: "Views", short: "Views", color: "#2563EB", help: "Legitimate views counted by YouTube." },
-  watchTime: { label: "Watch Time", short: "Watch time", color: "#7C3AED", help: "Total hours viewers spent watching." },
+  watchTime: { label: "Watch Time", short: "Watch Time", color: "#7C3AED", help: "Total time viewers spent watching." },
   subscribers: { label: "Subscribers", short: "Subscribers", color: "#E5202E", help: "Net subscribers gained (gained − lost)." },
-  avgViewDuration: { label: "Avg. View Duration", short: "Avg. duration", color: "#0E9F6E", help: "Average length of a view." },
-  impressions: { label: "Impressions", short: "Impressions", color: "#0891B2", help: "Times thumbnails were shown on YouTube." },
-  ctr: { label: "Impressions CTR", short: "CTR", color: "#D97706", help: "How often impressions turned into views." },
+  avgViewDuration: { label: "Avg. View Duration", short: "Avg. Duration", color: "#0E9F6E", help: "Average length of a view." },
 };
 
-export const METRIC_ORDER: MetricKey[] = ["views", "watchTime", "subscribers", "avgViewDuration", "impressions", "ctr"];
+export const METRIC_ORDER: MetricKey[] = ["views", "watchTime", "subscribers", "avgViewDuration"];
 
 export const TYPE_LABEL: Record<ContentType, string> = { video: "Video", short: "Short", live: "Live" };
 
@@ -70,14 +67,6 @@ export const STATUS_LABEL: Record<PublishStatus, string> = {
   draft: "Draft",
   processing: "Processing",
   failed: "Failed",
-};
-
-export const APPROVAL_LABEL: Record<ApprovalState, string> = {
-  none: "No approval",
-  pending: "Pending approval",
-  changes_requested: "Changes requested",
-  approved: "Approved",
-  rejected: "Rejected",
 };
 
 export const MODERATION_LABEL: Record<ModerationStatus, string> = {
@@ -124,11 +113,11 @@ export const TIMEZONES = ["Asia/Kolkata", "UTC", "Europe/London", "America/New_Y
  * Google scope behind it); `readChannel` is part of the initial connection and has no separate consent.
  */
 export const GRANTED_INFO: Record<GrantedKey, { label: string; description: string; consent: YouTubeConsentCapability | null }> = {
-  readChannel: { label: "Read channel", description: "Channel profile, videos, playlists and comments.", consent: null },
-  uploadVideos: { label: "Upload videos", description: "Upload new videos and set custom thumbnails.", consent: "YOUTUBE_UPLOAD_VIDEO" },
-  manageChannel: { label: "Manage videos, playlists, comments & live", description: "Edit metadata, publish, manage playlists and comments, run live broadcasts.", consent: "YOUTUBE_MANAGE_CONTENT" },
-  readAnalytics: { label: "View analytics", description: "Views, watch time, audience and traffic reports.", consent: "YOUTUBE_READ_ANALYTICS" },
-  readMonetaryAnalytics: { label: "View revenue", description: "Estimated revenue and ad reports (a separate permission).", consent: "YOUTUBE_READ_MONETARY_ANALYTICS" },
+  readChannel: { label: "Read Channel", description: "Channel profile, videos, playlists and comments.", consent: null },
+  uploadVideos: { label: "Upload Videos", description: "Upload new videos and set custom thumbnails.", consent: "YOUTUBE_UPLOAD_VIDEO" },
+  manageChannel: { label: "Manage Videos, Playlists, Comments & Live", description: "Edit metadata, publish, manage playlists and comments, run live broadcasts.", consent: "YOUTUBE_MANAGE_CONTENT" },
+  readAnalytics: { label: "View Analytics", description: "Views, watch time, audience and traffic reports.", consent: "YOUTUBE_READ_ANALYTICS" },
+  readMonetaryAnalytics: { label: "View Revenue", description: "Estimated revenue and ad reports (a separate permission).", consent: "YOUTUBE_READ_MONETARY_ANALYTICS" },
 };
 
 export const GRANTED_KEYS = Object.keys(GRANTED_INFO) as GrantedKey[];

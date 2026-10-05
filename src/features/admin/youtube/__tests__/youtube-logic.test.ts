@@ -7,6 +7,7 @@ const { evaluateCapabilities, hasRbac, ROLE_CAPABILITIES } = await import("../li
 const { safeAuthUrl, isConsentCapability, containsRawScope } = await import("../live/youtube-consent");
 const { createSingleFlight, createSubmissionKeys } = await import("../lib/submission");
 const { csvCell } = await import("../lib/csv");
+const { hours, formatMetric } = await import("../lib/format");
 const { metadataPatch, pickDraft } = await import("../lib/video-patch");
 const { channelHealth, videoOptimization } = await import("../lib/insights");
 const { toVideo, emptyChannel } = await import("../data/mappers");
@@ -35,12 +36,6 @@ describe("capabilities", () => {
     for (const key of ["canUpload", "canEditVideo", "canDeleteVideo", "canPublish", "canSchedule", "canManagePlaylists", "canDeletePlaylist", "canReplyComments", "canModerateComments", "canRemoveComments", "canGoLive", "canTransitionLive", "canViewStreamKey", "canViewAnalytics", "canViewRevenue", "canManageConnection"] as const) {
       assert.equal(c[key].allowed, true, key);
     }
-  });
-
-  it("keeps approvals and workspace settings unavailable (no backend behind them)", () => {
-    const c = caps();
-    assert.equal(c.canApprove.allowed, false);
-    assert.equal(c.canManageSettings.allowed, false);
   });
 
   it("asks for the right NAMED permission when a scope is missing", () => {
@@ -195,7 +190,7 @@ describe("insights use only real data", () => {
   });
 
   it("adds engagement and growth only with a real comparison", () => {
-    const period = (views: number, likes: number, comments: number, net: number) => ({ views, likes, comments, netSubscribers: net });
+    const period = (views: number, likes: number, comments: number, net: number) => ({ views, likes, comments, netSubscribers: net, watchTime: null, avgViewDuration: null });
     const { factors } = channelHealth(channel, [], { current: period(1000, 80, 20, 12), previous: period(1000, 50, 10, 6) });
     assert.ok(factors.some((f) => f.key === "engagement") && factors.some((f) => f.key === "growth"));
   });
@@ -204,5 +199,17 @@ describe("insights use only real data", () => {
     const v = toVideo({ id: "abcdefghijk", title: "Rivers of India: a long guide", description: "x".repeat(300), publishedAt: null, channelId: null, channelTitle: null, thumbnails: { default: null, medium: null, high: null, standard: null, maxres: null }, tags: ["a", "b", "c", "d", "e"], categoryId: "22", defaultLanguage: null, defaultAudioLanguage: null, statistics: { views: "1", likes: null, comments: null }, content: { duration: null, durationSeconds: 100, dimension: null, definition: null, caption: null, licensedContent: null }, status: { uploadStatus: "processed", privacyStatus: "public", publishAt: null, embeddable: true, madeForKids: false, selfDeclaredMadeForKids: false }, live: { liveBroadcastContent: "none" } });
     assert.ok(videoOptimization(v, ["rivers"]).factors.some((f) => f.key === "keywords"));
     assert.ok(!videoOptimization(v, []).factors.some((f) => f.key === "keywords"), "no channel keywords -> no keyword factor");
+  });
+});
+
+describe("watch time formatting", () => {
+  it("shows minutes under an hour and hours from an hour up; unknown stays a dash, never zero", () => {
+    assert.equal(hours(null), "—");
+    assert.equal(hours(0), "0 min");
+    assert.equal(hours(0.001), "<1 min");
+    assert.equal(hours(42 / 60), "42 min");
+    assert.equal(hours(1), "1 hrs");
+    assert.equal(hours(1.5), "1.5 hrs");
+    assert.equal(formatMetric("watchTime", 30 / 60), "30 min");
   });
 });

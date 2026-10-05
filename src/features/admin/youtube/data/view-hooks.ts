@@ -103,10 +103,13 @@ export function useVideoAnalyticsView(videoId: string | undefined, days: number)
   const prevRange = useMemo(() => previousPeriodRange(days), [days]);
   const current = useVideoAnalytics(videoId, range, "day", enabled);
   const previous = useVideoAnalytics(videoId, prevRange, "day", enabled);
+  // Daily reports carry no aggregate metrics (the backend leaves them null), so the totals come from "total" reports.
+  const currentTotal = useVideoAnalytics(videoId, range, "total", enabled);
+  const previousTotal = useVideoAnalytics(videoId, prevRange, "total", enabled);
 
   const data = useMemo<ChannelAnalytics>(() => {
-    const cur = toTotals(current.data?.hasData ? current.data.metrics : undefined);
-    const prev = toTotals(previous.data?.hasData ? previous.data.metrics : undefined);
+    const cur = toTotals(currentTotal.data?.hasData ? currentTotal.data.metrics : undefined);
+    const prev = toTotals(previousTotal.data?.hasData ? previousTotal.data.metrics : undefined);
     const currentSeries = fillSeries(range, current.data?.series ?? []);
     const totals = Object.fromEntries(METRIC_ORDER.map((k) => [k, { value: cur[k], previous: prev[k] }])) as ChannelAnalytics["totals"];
     const tail = currentSeries.slice(-Math.min(days, 28));
@@ -118,18 +121,20 @@ export function useVideoAnalyticsView(videoId: string | undefined, days: number)
       spark,
       hasData: Boolean(current.data?.hasData),
       rawTotals: { current: cur, previous: prev },
-      likes: { current: current.data?.metrics.likes ?? null, previous: previous.data?.metrics.likes ?? null },
-      comments: { current: current.data?.metrics.comments ?? null, previous: previous.data?.metrics.comments ?? null },
-      subscribers: { gained: current.data?.metrics.subscribersGained ?? null, lost: current.data?.metrics.subscribersLost ?? null },
+      likes: { current: currentTotal.data?.metrics.likes ?? null, previous: previousTotal.data?.metrics.likes ?? null },
+      comments: { current: currentTotal.data?.metrics.comments ?? null, previous: previousTotal.data?.metrics.comments ?? null },
+      subscribers: { gained: currentTotal.data?.metrics.subscribersGained ?? null, lost: currentTotal.data?.metrics.subscribersLost ?? null },
     };
-  }, [current.data, previous.data, range, prevRange, days]);
+  }, [current.data, previous.data, currentTotal.data, previousTotal.data, range, prevRange, days]);
 
   return {
     data,
-    isLoading: enabled && current.isPending,
+    isLoading: enabled && (current.isPending || currentTotal.isPending),
     error: current.error ? describeYouTubeError(current.error) : null,
     refetch: () => {
       void current.refetch();
+      void currentTotal.refetch();
+      void previousTotal.refetch();
       void previous.refetch();
     },
     enabled,

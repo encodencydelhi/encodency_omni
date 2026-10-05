@@ -2,45 +2,36 @@
 
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import {
-  Activity,
   AlertTriangle,
-  Bell,
   CheckCircle2,
   Check,
   KeyRound,
+  Link2,
   Minus,
   PlugZap,
   RefreshCw,
-  ShieldCheck,
-  SlidersHorizontal,
   Unplug,
-  Upload,
   UsersRound,
   XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { PageSkeleton, UnavailableState } from "../components/states";
+import { PageSkeleton } from "../components/states";
+import { LinkChannelDialog } from "../components/link-channel-dialog";
 import { SyncStatus } from "../components/workspace";
 import { Avatar, Badge, Button, Card, CardHeader, ConfirmDialog, DefinitionRow, InternalBadge, Notice, PageTitle, tdClass, thClass, yt } from "../components/ui";
 import { ROLE_CAPABILITIES, hasRbac, type RbacCapability } from "../lib/capabilities";
 import { GRANTED_INFO, GRANTED_KEYS, ytRoutes } from "../lib/constants";
 import { dateTime, relative } from "../lib/format";
-import { useReportTypes, useReportingJobs } from "../data/hooks";
 import { useYouTube } from "../store/youtube-store";
 import type { CompanySystemRole } from "@/types/domain/auth";
 import type { GrantedKey } from "../types";
 
 const SECTIONS: { id: string; label: string; icon: ComponentType<{ className?: string }> }[] = [
-  { id: "connection", label: "Connected channel", icon: PlugZap },
+  { id: "connection", label: "Connected Channel", icon: PlugZap },
   { id: "permissions", label: "Permissions", icon: KeyRound },
-  { id: "defaults", label: "Publishing defaults", icon: SlidersHorizontal },
-  { id: "upload", label: "Upload defaults", icon: Upload },
-  { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "moderation", label: "Moderation", icon: ShieldCheck },
   { id: "sync", label: "Sync", icon: RefreshCw },
-  { id: "team", label: "Team access", icon: UsersRound },
-  { id: "audit", label: "Audit log", icon: Activity },
-  { id: "danger", label: "Danger zone", icon: AlertTriangle },
+  { id: "team", label: "Team Access", icon: UsersRound },
+  { id: "danger", label: "Danger Zone", icon: AlertTriangle },
 ];
 
 export function SettingsPage() {
@@ -95,7 +86,7 @@ function Settings() {
       <PageTitle title="Settings" description="How the YouTube integration is connected, which permissions it holds and who can do what." />
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-1 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <nav aria-label="Settings sections" className="h-fit min-w-0 lg:sticky lg:top-[76px]">
+        <nav aria-label="Settings Sections" className="h-fit min-w-0 lg:sticky lg:top-[76px]">
           <Card className="scrollbar-thin flex gap-1 overflow-x-auto p-1.5 lg:flex-col">
             {SECTIONS.map((s) => (
               <a
@@ -115,28 +106,8 @@ function Settings() {
           <ConnectionSection />
           <PermissionsSection />
 
-          <Section id="defaults" title="Publishing defaults" icon={SlidersHorizontal} badge={<InternalBadge label="OmniPlatform defaults" />} description="Pre-filled for every new upload.">
-            <UnavailableState compact title="Not stored yet" description="Per-channel publishing defaults aren't saved by the backend, so nothing here can be changed. New uploads start private and you choose everything per video." />
-          </Section>
-
-          <Section id="upload" title="Upload defaults" icon={Upload} badge={<InternalBadge label="OmniPlatform defaults" />} description="Audience and advanced settings applied to new uploads.">
-            <UnavailableState compact title="Not stored yet" description="Upload defaults aren't saved by the backend. Each upload asks for its audience and license." />
-          </Section>
-
-          <Section id="notifications" title="Notifications" icon={Bell} description="Choose which YouTube events notify you in OmniPlatform and by email.">
-            <UnavailableState compact title="Not available yet" description="YouTube events don't generate OmniPlatform notifications yet. Connection problems appear in the banner at the top of every YouTube page." />
-          </Section>
-
-          <Section id="moderation" title="Moderation" icon={ShieldCheck} badge={<InternalBadge label="Internal rules" />} description="How comments are reviewed.">
-            <UnavailableState compact title="Not stored yet" description="Blocked keywords and approval rules aren't saved by the backend. Comments are moderated per video on the Comments page (approve, hold for review, remove)." />
-          </Section>
-
           <SyncSection />
           <TeamSection />
-
-          <Section id="audit" title="Audit log" icon={Activity} badge={<InternalBadge label="OmniPlatform" />} description="Every important action taken on this channel through OmniPlatform.">
-            <UnavailableState compact title="Not available yet" description="YouTube actions aren't written to a viewable audit log yet." />
-          </Section>
 
           <DangerSection />
         </div>
@@ -148,6 +119,7 @@ function Settings() {
 function ConnectionSection() {
   const { channel, connection, rawConnection, can, startConsent, syncNow, isSyncing } = useYouTube();
   const [busy, setBusy] = useState<string | null>(null);
+  const [linkOpen, setLinkOpen] = useState(false);
   const run = async (key: string, fn: () => Promise<unknown>) => {
     if (busy) return;
     setBusy(key);
@@ -158,7 +130,7 @@ function ConnectionSection() {
   const notMapped = connection.state === "not_mapped";
   const status = disconnected ? "Not connected" : notMapped ? "Connected to the company, not linked to this client" : connection.state === "token_expired" ? "Expired — reconnect required" : connection.state === "sync_failed" ? "Needs attention" : connection.state === "quota_exceeded" ? "Quota reached" : "Connected";
   return (
-    <Section id="connection" title="Connected channel" icon={PlugZap} description="The YouTube channel this client manages.">
+    <Section id="connection" title="Connected Channel" icon={PlugZap} description="The YouTube channel this client manages.">
       <div className="flex flex-col gap-4 md:flex-row md:items-start">
         <div className="flex flex-1 items-center gap-3">
           <Avatar name={channel.title} src={channel.avatarUrl || undefined} className="size-12" />
@@ -171,7 +143,7 @@ function ConnectionSection() {
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="secondary" icon={RefreshCw} loading={busy === "sync" || isSyncing} gate={can.canManageConnection} disabled={disconnected || notMapped || connection.state === "token_expired"} disabledReason="Connect and link the channel before syncing" onClick={() => run("sync", syncNow)}>Sync now</Button>
           <Button size="sm" variant={connection.state === "token_expired" || disconnected ? "primary" : "secondary"} icon={PlugZap} loading={busy === "reconnect"} gate={can.canManageConnection} onClick={() => run("reconnect", () => startConsent())}>{disconnected ? "Connect" : "Reconnect"}</Button>
-          {notMapped && <Button size="sm" variant="primary" href={ytRoutes.integrations}>Link channel</Button>}
+          {notMapped && <Button size="sm" variant="primary" icon={Link2} gate={can.canManageConnection} onClick={() => setLinkOpen(true)}>Link channel</Button>}
           <Button size="sm" variant="danger" icon={Unplug} gate={can.canManageConnection} disabled={disconnected} disabledReason="No channel connected" href="#danger">Disconnect</Button>
         </div>
       </div>
@@ -179,16 +151,17 @@ function ConnectionSection() {
         <div>
           <DefinitionRow label="Channel">{channel.title}</DefinitionRow>
           <DefinitionRow label="Channel ID" mono>{channel.id || "—"}</DefinitionRow>
-          <DefinitionRow label="Google account">{channel.googleAccount ?? rawConnection?.googleAccountName ?? "—"}</DefinitionRow>
+          <DefinitionRow label="Google Account">{channel.googleAccount ?? rawConnection?.googleAccountName ?? "—"}</DefinitionRow>
         </div>
         <div>
           <DefinitionRow label="Status">{status}</DefinitionRow>
-          <DefinitionRow label="Last sync">{connection.lastSyncedAt ? dateTime(connection.lastSyncedAt) : "Not synced yet"}</DefinitionRow>
-          <DefinitionRow label="Channel on YouTube">
+          <DefinitionRow label="Last Sync">{connection.lastSyncedAt ? dateTime(connection.lastSyncedAt) : "Not synced yet"}</DefinitionRow>
+          <DefinitionRow label="Channel On YouTube">
             {channel.id ? <a href={ytRoutes.channelOnYouTube(channel)} target="_blank" rel="noopener noreferrer" className="text-[#2563EB] hover:underline">{channel.customUrl || channel.id}</a> : "—"}
           </DefinitionRow>
         </div>
       </dl>
+      <LinkChannelDialog open={linkOpen} onOpenChange={setLinkOpen} />
     </Section>
   );
 }
@@ -231,39 +204,15 @@ function PermissionsSection() {
 }
 
 function SyncSection() {
-  const { connection, can, syncNow, isSyncing, rawConnection } = useYouTube();
-  const usable = connection.state === "connected" || connection.state === "syncing";
-  const reportTypes = useReportTypes(usable && Boolean(rawConnection?.grantedCapabilities.readAnalytics));
-  const jobs = useReportingJobs(usable && Boolean(rawConnection?.grantedCapabilities.readAnalytics));
+  const { connection, can, syncNow, isSyncing } = useYouTube();
   return (
     <Section id="sync" title="Sync" icon={RefreshCw} description="Channel data is read from YouTube when you open a page and cached briefly to save quota. Edits and replies are sent to YouTube immediately.">
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-3">
           <dl>
-            <DefinitionRow label="Last successful sync">{connection.lastSyncedAt ? `${dateTime(connection.lastSyncedAt)} (${relative(connection.lastSyncedAt)})` : "Not synced yet"}</DefinitionRow>
+            <DefinitionRow label="Last Successful Sync">{connection.lastSyncedAt ? `${dateTime(connection.lastSyncedAt)} (${relative(connection.lastSyncedAt)})` : "Not synced yet"}</DefinitionRow>
           </dl>
           <Button size="sm" variant="secondary" icon={RefreshCw} loading={isSyncing} gate={can.canManageConnection} disabled={connection.state === "token_expired" || connection.state === "disconnected" || connection.state === "not_mapped"} disabledReason="Connect and link the channel first" onClick={() => void syncNow()}>Sync now</Button>
-        </div>
-        <div className="rounded-[10px] border border-[#E4E9F0] p-3.5">
-          <p className="text-[13px] font-semibold text-[#0F1B3D]">Reporting</p>
-          <p className="mt-0.5 text-[12px] text-[#6B7890]">Bulk daily reports from the YouTube Reporting API (read-only here).</p>
-          {!rawConnection?.grantedCapabilities.readAnalytics ? (
-            <p className="mt-3 text-[12px] text-[#98A2B3]">Grant the analytics permission to see reporting jobs.</p>
-          ) : reportTypes.isPending || jobs.isPending ? (
-            <p className="mt-3 text-[12px] text-[#98A2B3]">Loading…</p>
-          ) : reportTypes.isError || jobs.isError ? (
-            <p className="mt-3 text-[12px] text-[#98A2B3]">Reporting information isn&apos;t available right now.</p>
-          ) : (
-            <ul className="mt-3 space-y-1.5 text-[12px] text-[#3C4A66]">
-              {(reportTypes.data?.items ?? []).map((t) => (
-                <li key={t.id} className="flex items-center justify-between gap-2">
-                  <span>{t.label}</span>
-                  <Badge tone={t.jobExists ? "green" : "neutral"}>{t.jobExists ? "Job exists" : t.availableAtProvider ? "Available" : "Unavailable"}</Badge>
-                </li>
-              ))}
-              {(jobs.data?.items.length ?? 0) === 0 && <li className="text-[#98A2B3]">No reporting jobs have been created.</li>}
-            </ul>
-          )}
         </div>
       </div>
     </Section>
@@ -271,10 +220,10 @@ function SyncSection() {
 }
 
 const MATRIX: { label: string; capability: RbacCapability }[] = [
-  { label: "View channel, videos and analytics", capability: "integrations:read" },
-  { label: "Edit videos, playlists and comments, create live events", capability: "content:write" },
-  { label: "Upload, publish, schedule, go live", capability: "content:publish" },
-  { label: "Delete, remove comments, sync, stream keys, connection", capability: "integrations:write" },
+  { label: "View Channel, Videos And Analytics", capability: "integrations:read" },
+  { label: "Edit Videos, Playlists and Comments, Create Live Events", capability: "content:write" },
+  { label: "Upload, Publish, Schedule, Go Live", capability: "content:publish" },
+  { label: "Delete, Remove Comments, Sync, Stream Keys, Connection", capability: "integrations:write" },
 ];
 const ROLES: { role: CompanySystemRole; label: string }[] = [
   { role: "VIEWER", label: "Viewer" },
@@ -286,7 +235,7 @@ const ROLES: { role: CompanySystemRole; label: string }[] = [
 function TeamSection() {
   const { role } = useYouTube();
   return (
-    <Section id="team" title="Team access" icon={UsersRound} badge={<InternalBadge label="RBAC" />} description="What each company role can do in YouTube. Enforced by the platform on every action, not only in the navigation.">
+    <Section id="team" title="Team Access" icon={UsersRound} badge={<InternalBadge label="RBAC" />} description="What each company role can do in YouTube. Enforced by the platform on every action, not only in the navigation.">
       <div className="space-y-4">
         <div className="scrollbar-thin overflow-x-auto rounded-[10px] border border-[#E4E9F0]">
           <table className="w-full min-w-[560px] border-separate border-spacing-0 text-left">
@@ -302,7 +251,7 @@ function TeamSection() {
                   <td className={cn(tdClass, "whitespace-normal pl-4 font-medium text-[#24324F]")}>{row.label}</td>
                   {ROLES.map((r) => (
                     <td key={r.role} className={cn(tdClass, "text-center")}>
-                      {ROLE_CAPABILITIES[r.role].includes(row.capability) ? <Check className="mx-auto size-4 text-[#12B76A]" aria-label="Allowed" /> : <Minus className="mx-auto size-4 text-[#C9D1DC]" aria-label="Not allowed" />}
+                      {ROLE_CAPABILITIES[r.role].includes(row.capability) ? <Check className="mx-auto size-4 text-[#12B76A]" aria-label="Allowed" /> : <Minus className="mx-auto size-4 text-[#C9D1DC]" aria-label="Not Allowed" />}
                     </td>
                   ))}
                 </tr>
@@ -312,7 +261,7 @@ function TeamSection() {
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-[12.5px] text-[#6B7890]">{role ? `Your role: ${ROLES.find((r) => r.role === role)?.label}. ${hasRbac(role, "content:publish") ? "You can publish." : "You can't publish or upload."}` : "Your role couldn't be determined."}</p>
-          <Button size="xs" variant="link" href="/admin/team">Manage team</Button>
+          <Button size="xs" variant="link" href="/admin/team">Manage Team</Button>
         </div>
       </div>
     </Section>

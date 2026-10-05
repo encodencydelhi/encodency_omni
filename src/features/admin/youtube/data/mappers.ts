@@ -60,6 +60,18 @@ export function countOf(value: string | number | null | undefined): Maybe<number
 
 const minutesToHours = (m: Maybe<number> | undefined): Maybe<number> => (m === null || m === undefined ? null : m / 60);
 
+/**
+ * Google returns `bannerExternalUrl` as the raw 16:9 upload (512x288), which carries wide empty bands
+ * above and below the artwork. Asking for YouTube's own desktop crop gives the 2560x424 strip it shows
+ * on the channel page: no bands, and a far sharper image. A URL that already has a size suffix is left alone.
+ */
+export function bannerDisplayUrl(url: string | null | undefined): string {
+  if (!url || !/^https:\/\//i.test(url)) return "";
+  const lastSegment = url.slice(url.lastIndexOf("/") + 1);
+  if (lastSegment.includes("=")) return url;
+  return `${url}=w2560-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj`;
+}
+
 /** Best available thumbnail URL (https only), or "" when there is none. */
 export function pickThumbnail(t: Partial<YouTubeThumbnails> | undefined | null, prefer: (keyof YouTubeThumbnails)[] = ["medium", "high", "standard", "maxres", "default"]): string {
   if (!t) return "";
@@ -122,7 +134,7 @@ export function toChannel(dto: YouTubeChannelDto, googleAccount: Maybe<string>):
     description: dto.description ?? "",
     customUrl: handle ? `youtube.com/${handle}` : `youtube.com/channel/${dto.id}`,
     avatarUrl: pickThumbnail(dto.thumbnails, ["high", "medium", "default"]),
-    bannerUrl: dto.branding.bannerUrl && /^https:\/\//i.test(dto.branding.bannerUrl) ? dto.branding.bannerUrl : "",
+    bannerUrl: bannerDisplayUrl(dto.branding.bannerUrl),
     subscriberCount: dto.statistics.subscribersHidden ? null : countOf(dto.statistics.subscribers),
     videoCount: countOf(dto.statistics.videos),
     viewCount: countOf(dto.statistics.views),
@@ -194,12 +206,9 @@ export function toVideo(dto: YouTubeVideoDto, schedule: Maybe<YouTubePublishResp
       watchTimeHours: null,
       likes: countOf(dto.statistics.likes),
       comments: countOf(dto.statistics.comments),
-      ctr: null,
-      impressions: null,
       avgViewDurationSec: null,
       subscribersGained: null,
     },
-    approval: "none",
     failureReason: status === "failed" ? failureText(dto.status.uploadStatus, schedule) : undefined,
     updatedAt: dto.publishedAt,
   };
@@ -355,20 +364,16 @@ export function toSeriesPoint(p: AnalyticsSeriesPoint): SeriesPoint {
     watchTime: minutesToHours(p.metrics.estimatedMinutesWatched),
     subscribers: netSubscribers(p.metrics),
     avgViewDuration: p.metrics.averageViewDurationSeconds ?? null,
-    impressions: null,
-    ctr: null,
   };
 }
 
-/** Metric totals for the KPI cards (null stays null; impressions/CTR are not reported by the API). */
+/** Metric totals for the KPI cards. Null stays null - never coerced to zero. */
 export function toTotals(m: AnalyticsPartialMetrics | undefined): Record<MetricKey, Maybe<number>> {
   return {
     views: m?.views ?? null,
     watchTime: minutesToHours(m?.estimatedMinutesWatched),
     subscribers: m ? netSubscribers(m) : null,
     avgViewDuration: m?.averageViewDurationSeconds ?? null,
-    impressions: null,
-    ctr: null,
   };
 }
 

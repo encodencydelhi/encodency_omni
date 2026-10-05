@@ -99,13 +99,13 @@ function usePlaylistActions() {
 
   const items = (p: Playlist): (MenuItem | "separator")[] => [
     { label: "View", icon: Eye, href: ytRoutes.playlist(p.id) },
-    { label: "Edit details", icon: Pencil, onSelect: () => setEdit(p), gate: can.canManagePlaylists, hidden: p.system },
-    { label: "Add videos", icon: ListPlus, onSelect: () => setAdd(p), gate: can.canManagePlaylists, hidden: p.system },
-    { label: "Reorder videos", icon: ArrowUpDown, onSelect: () => router.push(`${ytRoutes.playlist(p.id)}?reorder=1`), gate: can.canManagePlaylists, hidden: p.system },
-    { label: "Change visibility", icon: Globe2, onSelect: () => setEdit(p), gate: can.canManagePlaylists, hidden: p.system },
-    { label: "Open on YouTube", icon: ExternalLink, href: ytRoutes.playlistOnYouTube(p.id), external: true, hidden: p.visibility === "private" },
+    { label: "Edit Details", icon: Pencil, onSelect: () => setEdit(p), gate: can.canManagePlaylists, hidden: p.system },
+    { label: "Add Videos", icon: ListPlus, onSelect: () => setAdd(p), gate: can.canManagePlaylists, hidden: p.system },
+    { label: "Reorder Videos", icon: ArrowUpDown, onSelect: () => router.push(`${ytRoutes.playlist(p.id)}?reorder=1`), gate: can.canManagePlaylists, hidden: p.system },
+    { label: "Change Visibility", icon: Globe2, onSelect: () => setEdit(p), gate: can.canManagePlaylists, hidden: p.system },
+    { label: "Open On YouTube", icon: ExternalLink, href: ytRoutes.playlistOnYouTube(p.id), external: true, hidden: p.visibility === "private" },
     "separator",
-    { label: "Delete playlist", icon: Trash2, danger: true, onSelect: () => setRemove(p), gate: can.canDeletePlaylist, hidden: p.system },
+    { label: "Delete Playlist", icon: Trash2, danger: true, onSelect: () => setRemove(p), gate: can.canDeletePlaylist, hidden: p.system },
   ];
 
   return { items, edit, setEdit, add, setAdd, remove, setRemove };
@@ -145,22 +145,22 @@ function PlaylistsList() {
         <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
           <SearchField value={search} onChange={setSearch} loading={debounced.pending} placeholder="Search playlists" className="w-full sm:w-[240px]" />
           <SelectMenu label="Visibility" prefix="Visibility:" value={values.visibility} onChange={(v) => set({ visibility: v })} options={[{ value: "all", label: "All" }, { value: "public", label: "Public" }, { value: "unlisted", label: "Unlisted" }, { value: "private", label: "Private" }]} />
-          <SelectMenu label="Sort" prefix="Sort:" value={values.sort} onChange={(v) => set({ sort: v })} options={[{ value: "updated", label: "Newest first" }, { value: "title", label: "Title A–Z" }, { value: "videos", label: "Most videos" }]} />
+          <SelectMenu label="Sort" prefix="Sort:" value={values.sort} onChange={(v) => set({ sort: v })} options={[{ value: "updated", label: "Newest First" }, { value: "title", label: "Title A–Z" }, { value: "videos", label: "Most Videos" }]} />
           {filtersActive > 0 && <Button size="sm" variant="ghost" icon={X} onClick={() => { setSearch(""); reset(["view", "sort"]); }}>Clear filters</Button>}
-          <Segmented label="View" className="ml-auto" value={values.view} onChange={(v) => set({ view: v })} items={[{ value: "grid", label: <span className="sr-only">Grid</span>, icon: LayoutGrid, title: "Grid view" }, { value: "list", label: <span className="sr-only">List</span>, icon: Rows3, title: "List view" }]} />
+          <Segmented label="View" className="ml-auto" value={values.view} onChange={(v) => set({ view: v })} items={[{ value: "grid", label: <span className="sr-only">Grid</span>, icon: LayoutGrid, title: "Grid View" }, { value: "list", label: <span className="sr-only">List</span>, icon: Rows3, title: "List View" }]} />
         </div>
       </Card>
 
       {playlistsState.isLoading ? (
-        <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4" aria-busy="true" aria-label="Loading playlists">
+        <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4" aria-busy="true" aria-label="Loading Playlists">
           {[0, 1, 2, 3].map((i) => <Card key={i} className="overflow-hidden"><Skeleton className="aspect-video w-full rounded-none" /><div className="space-y-2 p-3"><Skeleton className="h-4 w-2/3" /><Skeleton className="h-3 w-1/2" /></div></Card>)}
         </div>
       ) : playlistsState.isError && playlistsState.error && playlists.length === 0 ? (
         <Card><ErrorState error={playlistsState.error} onRetry={playlistsState.refetch} title="Playlists couldn't load" /></Card>
       ) : playlists.length === 0 ? (
-        <Card><EmptyState icon={ListVideo} title="No playlists yet" description="Playlists you create here appear in this list. Playlists managed by YouTube itself (uploads, liked videos...) aren't shown." action={<Button variant="primary" icon={Plus} gate={can.canManagePlaylists} onClick={() => setCreateOpen(true)}>Create your first playlist</Button>} /></Card>
+        <Card><EmptyState icon={ListVideo} title="No Playlists Yet" description="Playlists you create here appear in this list. Playlists managed by YouTube itself (uploads, liked videos...) aren't shown." action={<Button variant="primary" icon={Plus} gate={can.canManagePlaylists} onClick={() => setCreateOpen(true)}>Create your first playlist</Button>} /></Card>
       ) : rows.length === 0 ? (
-        <Card><EmptyState icon={Filter} title="No playlists match" description="Try a different search or visibility." action={<Button variant="secondary" icon={X} onClick={() => { setSearch(""); reset(["view", "sort"]); }}>Clear filters</Button>} /></Card>
+        <Card><EmptyState icon={Filter} title="No Playlists Match" description="Try a different search or visibility." action={<Button variant="secondary" icon={X} onClick={() => { setSearch(""); reset(["view", "sort"]); }}>Clear filters</Button>} /></Card>
       ) : values.view === "grid" ? (
         <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {rows.map((p) => (
@@ -207,7 +207,7 @@ function PlaylistsList() {
       )}
 
       {playlistsState.hasMore && (
-        <div className="flex justify-center py-1"><Button size="sm" variant="secondary" loading={playlistsState.isFetchingMore} onClick={playlistsState.loadMore}>Load more playlists</Button></div>
+        <div className="flex justify-center py-1"><Button size="sm" variant="secondary" loading={playlistsState.isFetchingMore} onClick={playlistsState.loadMore}>Load More Playlists</Button></div>
       )}
 
       <CreatePlaylistDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={(p) => router.push(ytRoutes.playlist(p.id))} />
@@ -228,7 +228,7 @@ function PlaylistDialogs({ edit, setEdit, add, setAdd, remove, setRemove, onDele
         title={`Delete “${remove?.title ?? ""}”?`}
         description="The playlist is deleted from YouTube. The videos in it are not deleted, but links to this playlist will stop working."
         affected={remove ? [remove.itemCount === null ? "Its videos are removed from this playlist" : `${remove.itemCount} videos will be removed from this playlist`, `Visibility: ${VISIBILITY_LABEL[remove.visibility]}`] : []}
-        confirmLabel="Delete playlist"
+        confirmLabel="Delete Playlist"
         onConfirm={async () => {
           if (!remove) return false;
           const ok = await deletePlaylist(remove.id);
@@ -275,7 +275,7 @@ function EditPlaylistBody({ playlist, onClose }: { playlist: Playlist; onClose: 
       <Dialog open onOpenChange={(o) => !o && !busy && (dirty ? setConfirmDiscard(true) : onClose())}>
         <DialogContent className="w-[calc(100vw-24px)] max-w-[480px] gap-0 p-0">
           <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
-            <DialogTitle className="text-[15px] text-[#0F1B3D]">Edit playlist</DialogTitle>
+            <DialogTitle className="text-[15px] text-[#0F1B3D]">Edit Playlist</DialogTitle>
             <DialogDescription className="text-[12.5px] text-[#6B7890]">Changes are saved to YouTube.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 px-5 py-4">
@@ -318,7 +318,7 @@ function AddVideosBody({ playlist, onClose }: { playlist: Playlist; onClose: () 
     <Dialog open onOpenChange={(o) => !o && !busy && onClose()}>
       <DialogContent className="w-[calc(100vw-24px)] max-w-[540px] gap-0 p-0">
         <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
-          <DialogTitle className="text-[15px] text-[#0F1B3D]">Add videos</DialogTitle>
+          <DialogTitle className="text-[15px] text-[#0F1B3D]">Add Videos</DialogTitle>
           <DialogDescription className="line-clamp-1 text-[12.5px] text-[#6B7890]">to {playlist.title}</DialogDescription>
         </DialogHeader>
         <div className="px-5 pt-3"><SearchField value={q} onChange={setQ} placeholder="Search your videos" autoFocus /></div>
@@ -378,7 +378,7 @@ export function PlaylistDetailPage() {
   if (!playlist) {
     const notFound = ApiError.isApiError(query.error) && (query.error.status === 404 || query.error.reason === "youtube_playlist_not_found" || query.error.reason === "youtube_playlist_not_owned");
     if (query.error && !notFound) return <Card><ErrorState error={describeYouTubeError(query.error)} onRetry={() => void query.refetch()} title="Playlist couldn't load" /></Card>;
-    return <Card><EmptyState icon={ListVideo} title="Playlist not found" description="It may have been deleted on YouTube, or it isn't managed through OmniPlatform." action={<Button variant="primary" icon={ArrowLeft} href={ytRoutes.playlists}>Back to playlists</Button>} /></Card>;
+    return <Card><EmptyState icon={ListVideo} title="Playlist Not Found" description="It may have been deleted on YouTube, or it isn't managed through OmniPlatform." action={<Button variant="primary" icon={ArrowLeft} href={ytRoutes.playlists}>Back To Playlists</Button>} /></Card>;
   }
   return <PlaylistDetail playlist={playlist} />;
 }
@@ -511,18 +511,18 @@ function PlaylistDetailBody({
                 </div>
               ))}
             </dl>
-            {playlist.system && <Notice tone="neutral" title="Managed by YouTube">This list is read-only. It can only be changed in YouTube.</Notice>}
+            {playlist.system && <Notice tone="neutral" title="Managed By YouTube">This list is read-only. It can only be changed in YouTube.</Notice>}
             <div className="flex gap-2">
-              <Button size="sm" variant="primary" icon={ListPlus} gate={can.canManagePlaylists} disabled={playlist.system} disabledReason="Managed by YouTube" onClick={() => actions.setAdd(playlist)} className="flex-1">Add videos</Button>
+              <Button size="sm" variant="primary" icon={ListPlus} gate={can.canManagePlaylists} disabled={playlist.system} disabledReason="Managed by YouTube" onClick={() => actions.setAdd(playlist)} className="flex-1">Add Videos</Button>
               <Button size="sm" variant="secondary" icon={Pencil} gate={can.canManagePlaylists} disabled={playlist.system} disabledReason="Managed by YouTube" onClick={() => actions.setEdit(playlist)}>Edit</Button>
               <ActionMenu
-                label="More playlist actions"
+                label="More Playlist Actions"
                 trigger={<button type="button" className={buttonClass("secondary", "icon")}><MoreHorizontal className="size-4" /></button>}
                 items={[
-                  { label: "Open on YouTube", icon: ExternalLink, href: ytRoutes.playlistOnYouTube(playlist.id), external: true, hidden: playlist.visibility === "private" },
-                  { label: "Change visibility", icon: Globe2, onSelect: () => actions.setEdit(playlist), gate: can.canManagePlaylists, hidden: playlist.system },
+                  { label: "Open On YouTube", icon: ExternalLink, href: ytRoutes.playlistOnYouTube(playlist.id), external: true, hidden: playlist.visibility === "private" },
+                  { label: "Change Visibility", icon: Globe2, onSelect: () => actions.setEdit(playlist), gate: can.canManagePlaylists, hidden: playlist.system },
                   "separator",
-                  { label: "Delete playlist", icon: Trash2, danger: true, onSelect: () => actions.setRemove(playlist), gate: can.canDeletePlaylist, hidden: playlist.system },
+                  { label: "Delete Playlist", icon: Trash2, danger: true, onSelect: () => actions.setRemove(playlist), gate: can.canDeletePlaylist, hidden: playlist.system },
                 ]}
               />
             </div>
@@ -542,13 +542,13 @@ function PlaylistDetailBody({
               </div>
             )}
           </div>
-          {values.reorder && !dirty && canEdit && <Notice tone="blue" className="m-3" title="Reorder mode">Drag videos by the handle or use the arrow buttons, then save.</Notice>}
+          {values.reorder && !dirty && canEdit && <Notice tone="blue" className="m-3" title="Reorder Mode">Drag videos by the handle or use the arrow buttons, then save.</Notice>}
           {loading ? (
             <div className="space-y-2 p-4">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
           ) : error ? (
             <ErrorState error={describeYouTubeError(error)} onRetry={refetch} title="Playlist items couldn't load" />
           ) : list.length === 0 ? (
-            <EmptyState icon={ListVideo} title="This playlist is empty" description="Add videos so viewers can watch them in sequence." action={<Button variant="primary" icon={ListPlus} gate={can.canManagePlaylists} disabled={playlist.system} onClick={() => actions.setAdd(playlist)}>Add videos</Button>} />
+            <EmptyState icon={ListVideo} title="This Playlist Is Empty" description="Add videos so viewers can watch them in sequence." action={<Button variant="primary" icon={ListPlus} gate={can.canManagePlaylists} disabled={playlist.system} onClick={() => actions.setAdd(playlist)}>Add Videos</Button>} />
           ) : (
             <ol className="divide-y divide-[#EEF1F5]">
               {list.map((item, i) => (
@@ -614,7 +614,7 @@ function PlaylistDetailBody({
         onOpenChange={(o) => !o && setRemoveItem(null)}
         title={`Remove “${removeItem?.title ?? ""}” from this playlist?`}
         description="The video itself isn't deleted — it's only removed from this playlist."
-        confirmLabel="Remove from playlist"
+        confirmLabel="Remove From Playlist"
         onConfirm={async () => {
           if (!removeItem) return false;
           return onRemove(playlist.id, removeItem.playlistItemId);

@@ -33,7 +33,7 @@ interface Rule {
   what: string;
 }
 
-const RULES: Record<Exclude<CapabilityKey, "canApprove" | "canManageSettings">, Rule> = {
+const RULES: Record<CapabilityKey, Rule> = {
   canUpload: { rbac: "content:publish", grant: "uploadVideos", consent: "YOUTUBE_UPLOAD_VIDEO", needsConnection: true, what: "upload videos" },
   canEditVideo: { rbac: "content:write", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, what: "edit videos" },
   canDeleteVideo: { rbac: "integrations:write", grant: "manageChannel", consent: "YOUTUBE_MANAGE_CONTENT", needsConnection: true, what: "delete videos" },
@@ -103,10 +103,5 @@ export function evaluateCapabilities(input: {
 
   const map = Object.fromEntries((Object.keys(RULES) as (keyof typeof RULES)[]).map((key) => [key, evaluate(RULES[key])])) as Record<keyof typeof RULES, Capability>;
 
-  return {
-    ...map,
-    // There is no approval workflow and no stored workspace preferences behind the API: shown as unavailable, never faked.
-    canApprove: { allowed: false, reason: "Approvals aren't part of the YouTube integration." },
-    canManageSettings: { allowed: false, reason: "YouTube workspace preferences aren't stored yet, so there is nothing to change here." },
-  };
+  return map;
 }

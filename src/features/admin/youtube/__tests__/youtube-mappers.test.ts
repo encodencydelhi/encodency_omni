@@ -46,10 +46,8 @@ describe("counters", () => {
     assert.equal(v.stats.views, 10);
   });
 
-  it("never invents impressions, CTR or watch time", () => {
+  it("never invents watch time", () => {
     const v = m.toVideo(video());
-    assert.equal(v.stats.ctr, null);
-    assert.equal(v.stats.impressions, null);
     assert.equal(v.stats.watchTimeHours, null);
   });
 });
@@ -152,8 +150,6 @@ describe("analytics", () => {
     const p = m.toSeriesPoint({ date: "2026-09-10", metrics: { views: 10, estimatedMinutesWatched: 90 } });
     assert.equal(p.watchTime, 1.5);
     assert.equal(p.subscribers, null);
-    assert.equal(p.impressions, null);
-    assert.equal(p.ctr, null);
   });
 
   it("computes net subscribers only when a subscriber metric exists", () => {

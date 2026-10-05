@@ -4,9 +4,8 @@ import { format, parseISO } from "date-fns";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CircleDollarSign, ExternalLink, Gauge, IndianRupee, Info, PlayCircle, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { CapabilityState, ErrorState, PageSkeleton, UnavailableState } from "../components/states";
-import { Badge, Button, Card, CardHeader, EmptyState, Hint, Notice, PageTitle, Skeleton, TrendDelta, yt } from "../components/ui";
-import { useMonetizationCapabilities } from "../data/hooks";
+import { CapabilityState, ErrorState, PageSkeleton } from "../components/states";
+import { Button, Card, CardHeader, EmptyState, Notice, PageTitle, Skeleton, TrendDelta, yt } from "../components/ui";
 import { useChannelAnalytics, useRevenueData } from "../data/view-hooks";
 import { usePeriod } from "../hooks/use-query-state";
 import { ytRoutes } from "../lib/constants";
@@ -17,74 +16,37 @@ import type { RevenueData } from "../types";
 export function MonetizationPage() {
   const { ready, can, channel } = useYouTube();
   if (!ready) return <PageSkeleton />;
-  const studio = channel.id ? (
-    <Button variant="secondary" icon={ExternalLink} href={ytRoutes.monetizationInStudio(channel.id)} external>Open Monetization in YouTube Studio</Button>
-  ) : undefined;
+  const actions = (
+    <>
+      <Button variant="secondary" icon={Wallet} href="https://www.google.com/adsense" external>View Payments In AdSense</Button>
+      {channel.id && (
+        <Button variant="secondary" icon={ExternalLink} href={ytRoutes.monetizationInStudio(channel.id)} external>Open Monetization In YouTube Studio</Button>
+      )}
+    </>
+  );
   return (
     <div className="space-y-1">
-      <PageTitle title="Monetization" description="Estimated revenue from YouTube. Final payments are shown in AdSense." actions={studio} />
-      <ManagementCard />
+      <PageTitle title="Monetization" description="Estimated revenue from YouTube. Final payments are shown in AdSense." actions={actions} />
       {can.canViewRevenue.allowed ? (
         <RevenueSection />
       ) : (
         <Card>
-          <CapabilityState capability={can.canViewRevenue} title="Revenue data unavailable" />
+          <CapabilityState capability={can.canViewRevenue} title="Revenue Data Unavailable" />
         </Card>
       )}
     </div>
   );
 }
 
-/**
- * Monetization MANAGEMENT (eligibility, ads, partner program...) is not exposed by any supported public YouTube API, so
- * nothing here can be toggled or guessed. This card shows the backend's capability map and sends the person to YouTube Studio.
- */
-function ManagementCard() {
-  const { connection } = useYouTube();
-  const usable = connection.state === "connected" || connection.state === "syncing";
-  const caps = useMonetizationCapabilities(usable);
-  const unsupported = caps.data?.capabilities.filter((c) => c.support === "not_supported") ?? [];
-  return (
-    <Card className="flex flex-wrap items-center gap-4 p-4">
-      <span className="grid size-10 place-items-center rounded-sm bg-[#F3F5F9] text-[#6B7890]"><Info className="size-5" /></span>
-      <div className="min-w-[200px] flex-1">
-        <p className="flex items-center gap-2 text-[13.5px] font-semibold text-[#0F1B3D]">Monetization status <Badge>Managed in YouTube Studio</Badge></p>
-        <p className="mt-0.5 text-[12.5px] text-[#6B7890]">
-          YouTube doesn&apos;t expose eligibility, ad settings or Partner Program status through its public API, so OmniPlatform doesn&apos;t guess them. Revenue below is read-only reporting.
-        </p>
-        {caps.isPending && usable ? (
-          <Skeleton className="mt-2 h-4 w-64" />
-        ) : unsupported.length > 0 ? (
-          <ul className="mt-2 flex flex-wrap gap-1.5">
-            {unsupported.map((c) => (
-              <li key={c.key}><Hint text={c.note}><span><Badge>{labelOf(c.key)} · not available through the API</Badge></span></Hint></li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
-      <Button size="sm" variant="ghost" icon={Wallet} href="https://www.google.com/adsense" external>View payments in AdSense</Button>
-    </Card>
-  );
-}
-
-const CAP_LABEL: Record<string, string> = {
-  monetizationEligibility: "Eligibility",
-  videoMonetizationSettings: "Per-video monetization",
-  adConfiguration: "Ad configuration",
-  partnerProgramManagement: "Partner Program",
-  revenueSharingAndAdSense: "AdSense & revenue sharing",
-};
-const labelOf = (key: string) => CAP_LABEL[key] ?? key;
-
 export function RevenueKpis({ revenue, views, previousRevenue, label }: { revenue: RevenueData; views: number | null; previousRevenue: number | null; label: string }) {
   const c = revenue.currency;
   // RPM = revenue per 1,000 views, from the same period's views (YouTube's definition); unavailable without both.
   const rpm = revenue.estimatedRevenue !== null && views !== null && views > 0 ? (revenue.estimatedRevenue / views) * 1000 : null;
   const kpis = [
-    { label: "Estimated revenue", value: money(revenue.estimatedRevenue, c), delta: changePct(revenue.estimatedRevenue, previousRevenue), icon: IndianRupee, hint: label },
-    { label: "RPM", value: money(rpm, c, 2), delta: null, icon: Gauge, hint: "Per 1,000 views" },
-    { label: "CPM", value: money(revenue.cpm, c, 2), delta: null, icon: CircleDollarSign, hint: "Per 1,000 ad impressions" },
-    { label: "Monetized playbacks", value: compact(revenue.monetizedPlaybacks), delta: null, icon: PlayCircle, hint: "With at least one ad" },
+    { label: "Estimated Revenue", value: money(revenue.estimatedRevenue, c), delta: changePct(revenue.estimatedRevenue, previousRevenue), icon: IndianRupee, hint: label },
+    { label: "RPM", value: money(rpm, c, 2), delta: null, icon: Gauge, hint: "Per 1,000 Views" },
+    { label: "CPM", value: money(revenue.cpm, c, 2), delta: null, icon: CircleDollarSign, hint: "Per 1,000 Ad Impressions" },
+    { label: "Monetized Playbacks", value: compact(revenue.monetizedPlaybacks), delta: null, icon: PlayCircle, hint: "With At Least One Ad" },
   ];
   return (
     <div className="grid grid-cols-2 gap-1 xl:grid-cols-4">
@@ -103,10 +65,10 @@ export function RevenueTrendCard({ data, label, className }: { data: RevenueData
   const c = data.currency;
   return (
     <Card className={className}>
-      <CardHeader title="Revenue trend" description={`Estimated daily revenue · ${label}`} />
+      <CardHeader title="Revenue Trend" description={`Estimated daily revenue · ${label}`} />
       <div className="h-[260px] px-2 pb-4">
         {data.series.length === 0 ? (
-          <EmptyState compact icon={Info} title="No daily revenue reported" description="YouTube returned totals for this period but no day-by-day rows." />
+          <EmptyState compact icon={Info} title="No Daily Revenue Reported" description="YouTube returned totals for this period but no day-by-day rows." />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data.series} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
@@ -148,7 +110,7 @@ export function RevenueSection() {
 
   if (revenue.isLoading) {
     return (
-      <div className="space-y-1" aria-busy="true" aria-label="Loading revenue">
+      <div className="space-y-1" aria-busy="true" aria-label="Loading Revenue">
         <div className="grid grid-cols-2 gap-1 xl:grid-cols-4">{[0, 1, 2, 3].map((i) => <Card key={i} className="p-3.5"><Skeleton className="h-3 w-24" /><Skeleton className="mt-3 h-6 w-28" /></Card>)}</div>
         <Card className="p-4"><Skeleton className="h-[240px] w-full" /></Card>
       </div>
@@ -162,7 +124,7 @@ export function RevenueSection() {
       <Card>
         <EmptyState
           icon={Info}
-          title="No revenue reported for this period"
+          title="No Revenue Reported For This Period"
           description="YouTube returned no revenue for this date range. The channel may not be monetized or had no earnings. It's unavailable, not zero."
         />
       </Card>
@@ -172,18 +134,8 @@ export function RevenueSection() {
   return (
     <div className="space-y-1">
       <RevenueKpis revenue={data} views={channelTotals.data.totals.views.value} previousRevenue={revenue.data.previousTotal} label={label} />
-      <div className="grid gap-1 xl:grid-cols-12">
-        <RevenueTrendCard className="xl:col-span-8" data={data} label={label} />
-        <Card className="xl:col-span-4">
-          <CardHeader title="Revenue sources" />
-          <UnavailableState compact title="Not available through the API" description="YouTube's Analytics API doesn't break revenue down by source (ads, Premium, Shorts, memberships) for OmniPlatform." />
-        </Card>
-      </div>
-      <Card>
-        <CardHeader title="Top earning videos" description="Estimated revenue in the selected period" />
-        <UnavailableState compact title="Not available through the API" description="Per-video revenue isn't reported to OmniPlatform. Open YouTube Studio → Analytics → Revenue for it." />
-      </Card>
-      <Notice tone="neutral" title="About these numbers">Revenue is estimated by YouTube and can change after month-end adjustments. Amounts are shown in {data.currency}, as reported by YouTube.</Notice>
+      <RevenueTrendCard data={data} label={label} />
+      <Notice tone="neutral" title="About These Numbers">Revenue is estimated by YouTube and can change after month-end adjustments. Amounts are shown in {data.currency}, as reported by YouTube.</Notice>
     </div>
   );
 }

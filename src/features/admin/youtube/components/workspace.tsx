@@ -35,6 +35,7 @@ import { relative } from "../lib/format";
 import { useYouTube } from "../store/youtube-store";
 import type { Period } from "../types";
 import { CreatePlaylistDialog } from "./dialogs";
+import { LinkChannelDialog } from "./link-channel-dialog";
 import { ActionMenu, Badge, Button, EmptyState, SelectMenu, Skeleton, Thumb, buttonClass, useDebounced, yt } from "./ui";
 
 const TABS = [
@@ -102,7 +103,7 @@ function LoadErrorState() {
             Try again
           </Button>
         }
-        secondary={<Button variant="secondary" href={ytRoutes.settings}>Check connection</Button>}
+        secondary={<Button variant="secondary" href={ytRoutes.settings}>Check Connection</Button>}
       />
     </div>
   );
@@ -148,7 +149,7 @@ function WorkspaceHeader({ tabLabel }: { tabLabel: string }) {
             </Button>
           )}
           <ActionMenu
-            label="Create content"
+            label="Create Content"
             width={220}
             trigger={
               <button type="button" className={buttonClass("primary", "md", "h-9")}>
@@ -158,12 +159,12 @@ function WorkspaceHeader({ tabLabel }: { tabLabel: string }) {
               </button>
             }
             items={[
-              { label: "Upload video", icon: Upload, onSelect: () => router.push(ytRoutes.upload), gate: can.canUpload },
+              { label: "Upload Video", icon: Upload, onSelect: () => router.push(ytRoutes.upload), gate: can.canUpload },
               { label: "Create Short", icon: Smartphone, onSelect: () => router.push(`${ytRoutes.upload}?type=short`), gate: can.canUpload },
-              { label: "Schedule video", icon: CalendarDays, onSelect: () => router.push(`${ytRoutes.upload}?publish=schedule`), gate: can.canSchedule.allowed ? can.canUpload : can.canSchedule },
+              { label: "Schedule Video", icon: CalendarDays, onSelect: () => router.push(`${ytRoutes.upload}?publish=schedule`), gate: can.canSchedule.allowed ? can.canUpload : can.canSchedule },
               "separator",
-              { label: "Create live event", icon: Radio, onSelect: () => router.push(ytRoutes.liveCreate), gate: can.canGoLive },
-              { label: "Create playlist", icon: ListPlus, onSelect: () => setPlaylistOpen(true), gate: can.canManagePlaylists },
+              { label: "Create Live Event", icon: Radio, onSelect: () => router.push(ytRoutes.liveCreate), gate: can.canGoLive },
+              { label: "Create Playlist", icon: ListPlus, onSelect: () => setPlaylistOpen(true), gate: can.canManagePlaylists },
             ]}
           />
         </div>
@@ -178,7 +179,7 @@ function DateRangeSelect() {
   const { set } = useQueryState(useMemo(() => ({ period: "28d" }), []));
   return (
     <SelectMenu<Period>
-      label="Date range"
+      label="Date Range"
       icon={CalendarDays}
       size="md"
       align="end"
@@ -246,7 +247,7 @@ function GlobalSearch() {
         role="combobox"
         aria-expanded={showPanel}
         aria-controls="yt-search-results"
-        aria-label="Search videos, Shorts and playlists"
+        aria-label="Search Videos, Shorts And Playlists"
         placeholder="Search videos and playlists…"
         value={query}
         onChange={(e) => {
@@ -275,7 +276,7 @@ function GlobalSearch() {
         {pending && query.trim().length >= 2 ? (
           <Loader2 className="size-3.5 animate-spin text-[#98A2B3]" />
         ) : query ? (
-          <button type="button" aria-label="Clear search" onMouseDown={(e) => e.preventDefault()} onClick={() => setQuery("")} className="grid size-5 place-items-center rounded text-[#98A2B3] hover:bg-[#F1F4F8] hover:text-[#3C4A66]">
+          <button type="button" aria-label="Clear Search" onMouseDown={(e) => e.preventDefault()} onClick={() => setQuery("")} className="grid size-5 place-items-center rounded text-[#98A2B3] hover:bg-[#F1F4F8] hover:text-[#3C4A66]">
             <XCircle className="size-3.5" />
           </button>
         ) : (
@@ -337,7 +338,7 @@ function NotificationsButton() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" aria-label="YouTube notifications" className={cn(buttonClass("secondary", "icon", "relative size-9"))}>
+        <button type="button" aria-label="YouTube Notifications" className={cn(buttonClass("secondary", "icon", "relative size-9"))}>
           <Bell className="size-4" />
         </button>
       </PopoverTrigger>
@@ -428,26 +429,26 @@ function ConnectionBanner() {
   let banner: ReactNode = null;
   if (connection.state === "token_expired") {
     banner = (
-      <Strip tone="red" icon={ShieldAlert} title="YouTube connection expired" body="Publishing, replies and edits are paused until you reconnect.">
+      <Strip tone="red" icon={ShieldAlert} title="YouTube Connection Expired" body="Publishing, replies and edits are paused until you reconnect.">
         {reconnectBtn}
       </Strip>
     );
   } else if (connection.state === "quota_exceeded") {
     banner = (
-      <Strip tone="amber" icon={AlertTriangle} title="Daily YouTube API quota reached" body="Viewing cached data works normally. Uploads, edits and replies resume after the quota resets at midnight Pacific Time.">
-        <Button size="sm" variant="secondary" href={`${ytRoutes.settings}#sync`}>Open sync settings</Button>
+      <Strip tone="amber" icon={AlertTriangle} title="Daily YouTube API Quota Reached" body="Viewing cached data works normally. Uploads, edits and replies resume after the quota resets at midnight Pacific Time.">
+        <Button size="sm" variant="secondary" href={`${ytRoutes.settings}#sync`}>Open Sync Settings</Button>
       </Strip>
     );
   } else if (connection.state === "sync_failed") {
     banner = (
-      <Strip tone="amber" icon={AlertTriangle} title="YouTube reported a problem" body="Data may be out of date until the connection recovers.">
+      <Strip tone="amber" icon={AlertTriangle} title="YouTube Reported A Problem" body="Data may be out of date until the connection recovers.">
         <Button size="sm" variant="secondary" icon={RefreshCw} loading={busy} onClick={() => run(() => reload())}>Try again</Button>
       </Strip>
     );
   } else if (missing.length > 0 && (connection.state === "connected" || connection.state === "syncing")) {
     banner = (
-      <Strip tone="amber" icon={ShieldAlert} title="Some YouTube permissions are missing" body="A few actions are unavailable until you grant the missing permissions.">
-        <Button size="sm" variant="secondary" href={`${ytRoutes.settings}#permissions`}>Review permissions</Button>
+      <Strip tone="amber" icon={ShieldAlert} title="Some YouTube Permissions Are Missing" body="A few actions are unavailable until you grant the missing permissions.">
+        <Button size="sm" variant="secondary" href={`${ytRoutes.settings}#permissions`}>Review Permissions</Button>
       </Strip>
     );
   }
@@ -474,7 +475,7 @@ function DisconnectedState() {
     <div className={cn(yt.card)}>
       <EmptyState
         icon={VideoIcon}
-        title="Connect your YouTube channel"
+        title="Connect Your YouTube Channel"
         description="Connect a channel to manage videos, Shorts, playlists, comments, live streams and analytics from OmniPlatform. You'll be asked to sign in with Google and choose the permissions to grant."
         action={
           <Button
@@ -492,27 +493,36 @@ function DisconnectedState() {
             Connect YouTube channel
           </Button>
         }
-        secondary={<Button variant="secondary" href={ytRoutes.settings}>Open settings</Button>}
+        secondary={<Button variant="secondary" href={ytRoutes.settings}>Open Settings</Button>}
       />
     </div>
   );
 }
 
 function NotMappedState() {
-  const { rawConnection } = useYouTube();
+  const { rawConnection, can, startConsent } = useYouTube();
+  const [linkOpen, setLinkOpen] = useState(false);
+  const companyConnected = Boolean(rawConnection?.companyConnectionAvailable);
   return (
     <div className={cn(yt.card)}>
       <EmptyState
         icon={VideoIcon}
-        title="Link a YouTube channel to this client"
+        title="Link A YouTube Channel To This Client"
         description={
-          rawConnection?.companyConnectionAvailable
-            ? "Your company is connected to YouTube, but no channel is linked to this client yet. Link one in Integrations to continue."
+          companyConnected
+            ? "Your company is connected to YouTube, but no channel is linked to this client yet. Pick the channel this client manages to continue."
             : "Connect a YouTube account for your company, then link its channel to this client."
         }
-        action={<Button variant="primary" href={ytRoutes.integrations}>Open Integrations</Button>}
-        secondary={<Button variant="secondary" href={ytRoutes.settings}>Open settings</Button>}
+        action={
+          companyConnected ? (
+            <Button variant="primary" gate={can.canManageConnection} onClick={() => setLinkOpen(true)}>Link channel</Button>
+          ) : (
+            <Button variant="primary" gate={can.canManageConnection} onClick={() => void startConsent()}>Connect YouTube</Button>
+          )
+        }
+        secondary={<Button variant="secondary" href={ytRoutes.settings}>Open Settings</Button>}
       />
+      <LinkChannelDialog open={linkOpen} onOpenChange={setLinkOpen} />
     </div>
   );
 }
@@ -520,7 +530,7 @@ function NotMappedState() {
 function NoClientState() {
   return (
     <div className={cn(yt.card)}>
-      <EmptyState icon={VideoIcon} title="Select a client" description="YouTube is managed per client. Choose a client from the client switcher to continue." />
+      <EmptyState icon={VideoIcon} title="Select A Client" description="YouTube is managed per client. Choose a client from the client switcher to continue." />
     </div>
   );
 }
@@ -540,7 +550,7 @@ function WorkspaceTabs({ activeLabel }: { activeLabel: string }) {
 
   return (
     <div className="flex items-end justify-between gap-3 border-b border-[#E4E9F0]">
-      <nav aria-label="YouTube sections" className="scrollbar-thin -mb-px flex min-w-0 gap-0.5 overflow-x-auto">
+      <nav aria-label="YouTube Sections" className="scrollbar-thin -mb-px flex min-w-0 gap-0.5 overflow-x-auto">
         {TABS.map((t) => {
           const active = t.label === activeLabel;
           const href = period !== "28d" && PERIOD_KEEP.includes(t.label) ? `${t.href}?period=${period}` : t.href;

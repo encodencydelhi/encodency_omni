@@ -29,7 +29,7 @@ import { ApiError } from "@/types/api";
 import { cn } from "@/lib/utils/cn";
 import { ChartLegend, TrendChart, summarize, type Granularity } from "../components/charts";
 import { AddToPlaylistDialog, DeleteVideosDialog, EditMetadataSheet, FactorRow, ScheduleDialog, ScoreRing, ThumbnailManager } from "../components/dialogs";
-import { CapabilityState, ErrorState, PageSkeleton, UnavailableState } from "../components/states";
+import { CapabilityState, ErrorState, PageSkeleton } from "../components/states";
 import {
   ActionMenu,
   Badge,
@@ -58,9 +58,9 @@ import { fillSeries } from "../lib/series";
 import { useQueryState } from "../hooks/use-query-state";
 import { describeYouTubeError } from "../live/youtube-errors";
 import { METRICS, VISIBILITY_LABEL, categoryLabel, languageLabel, ytRoutes } from "../lib/constants";
-import { date, dateTime, duration, full, hours, percent, relative } from "../lib/format";
+import { date, dateTime, duration, full, hours, percent } from "../lib/format";
 import { videoOptimization } from "../lib/insights";
-import { periodRange, previousPeriodRange } from "../lib/period";
+import { periodRange } from "../lib/period";
 import { useYouTube } from "../store/youtube-store";
 import { CommentInbox } from "./comments-page";
 import type { MetricKey, Video } from "../types";
@@ -94,9 +94,9 @@ export function VideoDetailPage() {
       <Card>
         <EmptyState
           icon={VideoOff}
-          title="Video not found"
+          title="Video Not Found"
           description="It may have been deleted on YouTube or from OmniPlatform, or the link is incorrect."
-          action={<Button variant="primary" icon={ArrowLeft} href={ytRoutes.content}>Back to content</Button>}
+          action={<Button variant="primary" icon={ArrowLeft} href={ytRoutes.content}>Back To Content</Button>}
         />
       </Card>
     );
@@ -134,7 +134,7 @@ function VideoDetail({ video }: { video: Video }) {
 
       <Card className="p-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-start">
-          <button type="button" onClick={() => setThumbOpen(true)} disabled={!can.canUpload.allowed} className="group relative w-full shrink-0 rounded-sm md:w-[220px]" aria-label="Change thumbnail">
+          <button type="button" onClick={() => setThumbOpen(true)} disabled={!can.canUpload.allowed} className="group relative w-full shrink-0 rounded-sm md:w-[220px]" aria-label="Change Thumbnail">
             <Thumb src={video.thumbnailUrl} durationSec={video.durationSec} className="rounded-sm" sizes="220px" />
             {can.canUpload.allowed && (
               <span className="absolute inset-0 grid place-items-center rounded-sm bg-[#0F1B3D]/55 text-[12px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
@@ -158,21 +158,21 @@ function VideoDetail({ video }: { video: Video }) {
             <div className="mt-3.5 flex flex-wrap gap-2">
               <Button size="sm" variant="primary" icon={Pencil} gate={can.canEditVideo} onClick={() => setEditOpen(true)}>Edit details</Button>
               <Button size="sm" variant="secondary" icon={ImageIcon} gate={can.canUpload} onClick={() => setThumbOpen(true)}>Change thumbnail</Button>
-              {published && <Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.watch(video.id)} external>Open on YouTube</Button>}
+              {published && <Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.watch(video.id)} external>Open On YouTube</Button>}
               {unpublished && (
                 <Button size="sm" variant="secondary" icon={SendHorizonal} gate={can.canPublish} onClick={() => setPublishOpen(true)}>Publish now</Button>
               )}
               <ActionMenu
-                label="More video actions"
+                label="More Video Actions"
                 trigger={<button type="button" className={buttonClass("secondary", "sm")}><MoreHorizontal className="size-4" />More</button>}
                 items={[
-                  { label: "View analytics", icon: BarChart3, onSelect: () => set({ tab: "analytics" }), hidden: !published },
-                  { label: "View comments", icon: MessageSquare, onSelect: () => set({ tab: "comments" }), hidden: !published },
-                  { label: "Add to playlist", icon: ListPlus, onSelect: () => setPlaylistOpen(true), gate: can.canManagePlaylists },
+                  { label: "View Analytics", icon: BarChart3, onSelect: () => set({ tab: "analytics" }), hidden: !published },
+                  { label: "View Comments", icon: MessageSquare, onSelect: () => set({ tab: "comments" }), hidden: !published },
+                  { label: "Add To Playlist", icon: ListPlus, onSelect: () => setPlaylistOpen(true), gate: can.canManagePlaylists },
                   { label: video.scheduleId ? "Reschedule" : "Schedule", icon: CalendarClock, onSelect: () => setScheduleOpen(true), hidden: published || video.status === "processing" || video.status === "failed", gate: can.canSchedule },
-                  { label: "Copy video link", icon: Copy, onSelect: () => copyText(ytRoutes.watch(video.id), "Link copied") },
+                  { label: "Copy Video Link", icon: Copy, onSelect: () => copyText(ytRoutes.watch(video.id), "Link copied") },
                   "separator",
-                  { label: "Delete video", icon: Trash2, danger: true, onSelect: () => setDeleteOpen(true), gate: can.canDeleteVideo },
+                  { label: "Delete Video", icon: Trash2, danger: true, onSelect: () => setDeleteOpen(true), gate: can.canDeleteVideo },
                 ]}
               />
             </div>
@@ -181,15 +181,15 @@ function VideoDetail({ video }: { video: Video }) {
       </Card>
 
       {video.status === "failed" && (
-        <Notice tone="red" title="This upload failed" actions={<><Button size="sm" variant="primary" icon={Upload} gate={can.canUpload} href={ytRoutes.upload}>Re-upload</Button><Button size="sm" variant="danger" icon={Trash2} gate={can.canDeleteVideo} onClick={() => setDeleteOpen(true)}>Delete</Button></>}>
+        <Notice tone="red" title="This Upload Failed" actions={<><Button size="sm" variant="primary" icon={Upload} gate={can.canUpload} href={ytRoutes.upload}>Re-upload</Button><Button size="sm" variant="danger" icon={Trash2} gate={can.canDeleteVideo} onClick={() => setDeleteOpen(true)}>Delete</Button></>}>
           {video.failureReason ?? "YouTube couldn't process this file."}
         </Notice>
       )}
-      {video.status === "processing" && <Notice tone="blue" title="Processing on YouTube">Higher resolutions and analytics become available when processing completes.</Notice>}
+      {video.status === "processing" && <Notice tone="blue" title="Processing On YouTube">Higher resolutions and analytics become available when processing completes.</Notice>}
 
       <div className="border-b border-[#E4E9F0]">
         <UnderlineTabs<DetailTab>
-          label="Video sections"
+          label="Video Sections"
           value={tab}
           onChange={(v) => set({ tab: v })}
           items={[
@@ -207,12 +207,12 @@ function VideoDetail({ video }: { video: Video }) {
       {tab === "comments" &&
         (published ? (
           video.commentsEnabled === false ? (
-            <Card><EmptyState icon={MessageSquare} title="Comments are turned off" description="Comments are disabled for this video in YouTube Studio." /></Card>
+            <Card><EmptyState icon={MessageSquare} title="Comments Are Turned Off" description="Comments are disabled for this video in YouTube Studio." /></Card>
           ) : (
             <CommentInbox videoId={video.id} />
           )
         ) : (
-          <Card><EmptyState icon={MessageSquare} title="No comments yet" description="Comments will appear here once the video is published and viewers engage." /></Card>
+          <Card><EmptyState icon={MessageSquare} title="No Comments Yet" description="Comments will appear here once the video is published and viewers engage." /></Card>
         ))}
       {tab === "seo" && <SeoTab video={video} onEdit={() => setEditOpen(true)} onThumb={() => setThumbOpen(true)} />}
       {tab === "details" && <DetailsTab video={video} onEdit={() => setEditOpen(true)} />}
@@ -229,7 +229,7 @@ function VideoDetail({ video }: { video: Video }) {
         title={`Publish “${video.title}” now?`}
         description="The video becomes public on YouTube and subscribers may be notified. Any scheduled time is cancelled."
         affected={[`Visibility: ${VISIBILITY_LABEL[video.visibility]} → Public`, ...(video.scheduledAt ? [`Cancels schedule for ${dateTime(video.scheduledAt)}`] : [])]}
-        confirmLabel="Publish now"
+        confirmLabel="Publish Now"
         onConfirm={() => publishNow(video.id, "public")}
       />
     </div>
@@ -250,26 +250,34 @@ function Stat({ label, value, icon: Icon, sub, loading }: { label: string; value
   );
 }
 
-/** The last 28 days of the video's own analytics, plus the 28 before for comparison. Real queries; nothing is scaled from channel totals. */
+/** The video's own analytics from the publish day to today (capped at the backend's one-year limit). Real queries; nothing is scaled from channel totals. */
 function useVideoPerformance(video: Video, enabled: boolean) {
-  const range = useMemo(() => periodRange(28), []);
-  const prevRange = useMemo(() => previousPeriodRange(28), []);
+  const totalsRange = useMemo(() => {
+    const end = periodRange(1).endDate;
+    const floor = periodRange(366).startDate;
+    const published = video.publishedAt?.slice(0, 10) ?? floor;
+    return { range: { startDate: published > floor ? published : floor, endDate: end }, capped: published <= floor };
+  }, [video.publishedAt]);
+  const range = totalsRange.range;
   const current = useVideoAnalytics(video.id, range, "day", enabled);
-  const previous = useVideoAnalytics(video.id, prevRange, "day", enabled);
+  // The daily report has no aggregate (the backend leaves `metrics` null there), so the KPI totals come from a separate "total" report.
+  const totals = useVideoAnalytics(video.id, range, "total", enabled);
   return useMemo(
     () => ({
-      isLoading: enabled && current.isPending,
+      isLoading: enabled && (current.isPending || totals.isPending),
       error: current.error ? describeYouTubeError(current.error) : null,
       refetch: () => {
         void current.refetch();
-        void previous.refetch();
+        void totals.refetch();
       },
       hasData: Boolean(current.data?.hasData),
-      metrics: current.data?.metrics ?? null,
+      metrics: totals.data?.metrics ?? null,
+      totalsLabel: totalsRange.capped ? "Last 365 Days" : "Since Published",
+      rangeLabel: totalsRange.capped ? "Last 365 Days" : "Since Published",
+      days: Math.round((Date.parse(range.endDate) - Date.parse(range.startDate)) / 86_400_000) + 1,
       current: fillSeries(range, current.data?.series ?? []),
-      previous: fillSeries(prevRange, previous.data?.series ?? []),
     }),
-    [enabled, current, previous, range, prevRange],
+    [enabled, current, totals, totalsRange, range],
   );
 }
 
@@ -292,20 +300,20 @@ function OverviewTab({ video }: { video: Video }) {
           ) : (
             <div className="grid grid-cols-2 gap-1 md:grid-cols-4 xl:grid-cols-7">
               <Stat label="Views" icon={Eye} value={full(s.views)} sub="Lifetime" />
-              <Stat label="Watch time" icon={Clock} value={hours(minutes === null ? null : minutes / 60)} sub="Last 28 days" loading={perf.isLoading} />
-              <Stat label="Avg. view duration" icon={Timer} value={duration(m?.averageViewDurationSeconds ?? null)} sub="Last 28 days" loading={perf.isLoading} />
-              <Stat label="Avg. % viewed" icon={Percent} value={percent(m?.averageViewPercentage ?? null)} sub="Last 28 days" loading={perf.isLoading} />
-              <Stat label="Likes" icon={ThumbsUp} value={full(s.likes)} sub={s.likes === null ? "Hidden by the owner" : "Lifetime"} />
-              <Stat label="Comments" icon={MessageSquare} value={full(s.comments)} sub={s.comments === null ? "Comments are off" : "Lifetime"} />
-              <Stat label="Subscribers gained" icon={UserPlus} value={m?.subscribersGained === null || m?.subscribersGained === undefined ? "—" : `+${full(m.subscribersGained)}`} sub="Last 28 days" loading={perf.isLoading} />
+              <Stat label="Watch Time" icon={Clock} value={hours(minutes === null ? null : minutes / 60)} sub={perf.totalsLabel} loading={perf.isLoading} />
+              <Stat label="Avg. View Duration" icon={Timer} value={duration(m?.averageViewDurationSeconds ?? null)} sub={perf.totalsLabel} loading={perf.isLoading} />
+              <Stat label="Avg. % Viewed" icon={Percent} value={percent(m?.averageViewPercentage ?? null)} sub={perf.totalsLabel} loading={perf.isLoading} />
+              <Stat label="Likes" icon={ThumbsUp} value={full(s.likes)} sub={s.likes === null ? "Hidden By The Owner" : "Lifetime"} />
+              <Stat label="Comments" icon={MessageSquare} value={full(s.comments)} sub={s.comments === null ? "Comments Are Off" : "Lifetime"} />
+              <Stat label="Subscribers Gained" icon={UserPlus} value={m?.subscribersGained === null || m?.subscribersGained === undefined ? "—" : `+${full(m.subscribersGained)}`} sub={perf.totalsLabel} loading={perf.isLoading} />
             </div>
           )
         ) : (
-          <Card><CapabilityState capability={can.canViewAnalytics} title="Video analytics unavailable" compact /></Card>
+          <Card><CapabilityState capability={can.canViewAnalytics} title="Video Analytics Unavailable" compact /></Card>
         )
       ) : (
         <Card>
-          <EmptyState compact icon={BarChart3} title="Performance appears after publishing" description={video.status === "scheduled" ? `This video goes public ${dateTime(video.scheduledAt)}.` : "Views, watch time and engagement show up once the video is public."} />
+          <EmptyState compact icon={BarChart3} title="Performance Appears After Publishing" description={video.status === "scheduled" ? `This video goes public ${dateTime(video.scheduledAt)}.` : "Views, watch time and engagement show up once the video is public."} />
         </Card>
       )}
 
@@ -313,23 +321,28 @@ function OverviewTab({ video }: { video: Video }) {
         {analyticsOn && !perf.error && (
           <Card className="xl:col-span-8">
             <CardHeader
-              title="Performance — last 28 days"
+              title={`Performance — ${perf.rangeLabel}`}
               actions={<Segmented<MetricKey> label="Metric" value={metric} onChange={setMetric} items={(["views", "watchTime", "subscribers"] as MetricKey[]).map((k) => ({ value: k, label: METRICS[k].short }))} />}
             />
             <div className="px-4 pb-4">
-              <ChartLegend items={[{ label: METRICS[metric].label, color: METRICS[metric].color }, { label: "Previous 28 days", color: "#C9D1DC", dashed: true }]} />
+              <ChartLegend items={[{ label: METRICS[metric].label, color: METRICS[metric].color }]} />
               <div className="mt-2">
                 {perf.isLoading ? <Skeleton className="h-[240px] w-full" /> : !perf.hasData ? (
-                  <EmptyState compact icon={BarChart3} title="No data for this period" description="YouTube hasn't reported analytics for this video in the last 28 days yet." />
+                  <EmptyState compact icon={BarChart3} title="No Data For This Period" description="YouTube hasn't reported analytics for this video yet." />
                 ) : (
-                  <TrendChart current={perf.current} previous={perf.previous} metric={metric} granularity="daily" height={240} />
+                  <TrendChart current={perf.current} metric={metric} granularity={perf.days > 120 ? "weekly" : "daily"} compare={false} height={240} />
                 )}
               </div>
+              {!perf.isLoading && perf.hasData && s.views !== null && s.views > (summarize(perf.current, "views") ?? 0) && (
+                <p className="mt-2 text-[12px] leading-5 text-[#6B7890]">
+                  The graph shows {full(summarize(perf.current, "views") ?? 0)} of {full(s.views)} lifetime views. YouTube Analytics reports each day 2–3 days late, so the latest days fill in later.
+                </p>
+              )}
             </div>
           </Card>
         )}
         <Card className={cn(analyticsOn && !perf.error ? "xl:col-span-4" : "xl:col-span-12")}>
-          <CardHeader title="Video info" />
+          <CardHeader title="Video Info" />
           <dl className="px-4 pb-3">
             <DefinitionRow label="Video ID" mono>{video.id}</DefinitionRow>
             <DefinitionRow label="URL">
@@ -362,19 +375,19 @@ function AnalyticsTab({ video }: { video: Video }) {
   const [granularity, setGranularity] = useState<Granularity>("daily");
 
   if (!published) {
-    return <Card><EmptyState icon={BarChart3} title="No analytics yet" description="Analytics become available after the video is published and collects views." /></Card>;
+    return <Card><EmptyState icon={BarChart3} title="No Analytics Yet" description="Analytics become available after the video is published and collects views." /></Card>;
   }
-  if (!can.canViewAnalytics.allowed) return <Card><CapabilityState capability={can.canViewAnalytics} title="Analytics unavailable" /></Card>;
+  if (!can.canViewAnalytics.allowed) return <Card><CapabilityState capability={can.canViewAnalytics} title="Analytics Unavailable" /></Card>;
   if (perf.error) return <Card><ErrorState error={perf.error} onRetry={perf.refetch} title="Video analytics couldn't load" /></Card>;
 
   const subsGained = summarize(perf.current, "subscribers");
   const views = summarize(perf.current, "views");
   return (
-    <div className="space-y-1">
-      <Card>
+    <div className="grid gap-1 xl:grid-cols-12">
+      <Card className="xl:col-span-8">
         <CardHeader
-          title="Views & watch time"
-          description="Last 28 days vs previous 28 days"
+          title="Views & Watch Time"
+          description={perf.rangeLabel}
           actions={
             <>
               <Segmented<MetricKey> label="Metric" value={metric} onChange={setMetric} items={(["views", "watchTime", "subscribers"] as MetricKey[]).map((k) => ({ value: k, label: METRICS[k].short }))} />
@@ -384,48 +397,28 @@ function AnalyticsTab({ video }: { video: Video }) {
         />
         <div className="px-4 pb-4">
           {perf.isLoading ? <Skeleton className="h-[260px] w-full" /> : !perf.hasData ? (
-            <EmptyState compact icon={BarChart3} title="No data for this period" description="YouTube hasn't reported analytics for this video in the last 28 days yet." />
+            <EmptyState compact icon={BarChart3} title="No Data For This Period" description="YouTube hasn't reported analytics for this video yet." />
           ) : (
-            <TrendChart current={perf.current} previous={perf.previous} metric={metric} granularity={granularity} height={260} />
+            <TrendChart current={perf.current} metric={metric} granularity={granularity} compare={false} height={260} />
           )}
         </div>
       </Card>
-      <div className="grid gap-1 xl:grid-cols-12">
-        <Card className="xl:col-span-7">
-          <CardHeader title="Audience retention" description="How long viewers keep watching" />
-          <UnavailableState compact title="Not available through the API" description="YouTube's Analytics API doesn't report a per-video retention curve to OmniPlatform. Open the video in YouTube Studio to see it." />
-        </Card>
-        <Card className="xl:col-span-5">
-          <CardHeader title="Traffic sources" />
-          <UnavailableState compact title="Channel-level only" description="Traffic sources are reported for the whole channel, not per video. See Analytics → Reach." />
-        </Card>
-      </div>
-      <div className="grid gap-1 md:grid-cols-3">
-        <Card>
-          <CardHeader title="Audience" description="Age" />
-          <UnavailableState compact title="Channel-level only" description="Demographics are reported for the whole channel. See the Audience page." />
-        </Card>
-        <Card>
-          <CardHeader title="Devices" />
-          <UnavailableState compact title="Channel-level only" description="Device breakdowns are reported for the whole channel. See the Audience page." />
-        </Card>
-        <Card>
-          <CardHeader title="Subscriber impact" />
-          <div className="space-y-3 px-4 pb-4">
-            <div className="rounded-sm bg-[#ECFAF3] px-3 py-2.5">
-              <p className="text-[12px] text-[#067647]">Subscribers from this video</p>
-              <p className="text-[22px] font-semibold tabular-nums text-[#0F1B3D]">{subsGained === null ? "—" : `${subsGained >= 0 ? "+" : ""}${full(subsGained)}`}</p>
-            </div>
-            {subsGained !== null && views !== null && views > 0 ? (
-              <p className="text-[12.5px] leading-5 text-[#3C4A66]">
-                That&apos;s <b>{((subsGained / views) * 1000).toFixed(1)}</b> subscribers per 1,000 views over 28 days.
-              </p>
-            ) : (
-              <p className="text-[12.5px] leading-5 text-[#6B7890]">Not enough data to compare yet.</p>
-            )}
+      <Card className="h-fit xl:col-span-4">
+        <CardHeader title="Subscriber Impact" />
+        <div className="space-y-3 px-4 pb-4">
+          <div className="rounded-sm bg-[#ECFAF3] px-3 py-2.5">
+            <p className="text-[12px] text-[#067647]">Subscribers From This Video</p>
+            <p className="text-[22px] font-semibold tabular-nums text-[#0F1B3D]">{subsGained === null ? "—" : `${subsGained >= 0 ? "+" : ""}${full(subsGained)}`}</p>
           </div>
-        </Card>
-      </div>
+          {subsGained !== null && views !== null && views > 0 ? (
+            <p className="text-[12.5px] leading-5 text-[#3C4A66]">
+              That&apos;s <b>{((subsGained / views) * 1000).toFixed(1)}</b> subscribers per 1,000 views ({perf.rangeLabel}).
+            </p>
+          ) : (
+            <p className="text-[12.5px] leading-5 text-[#6B7890]">Not enough data to compare yet.</p>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }
@@ -447,8 +440,8 @@ function SeoTab({ video, onEdit, onThumb }: { video: Video; onEdit: () => void; 
           <p className="text-[12.5px] leading-5 text-[#6B7890]">Based on OmniPlatform&apos;s analysis of your metadata. YouTube doesn&apos;t publish an SEO score.</p>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button size="sm" variant="primary" icon={Pencil} gate={can.canEditVideo} onClick={onEdit}>Improve details</Button>
-          <Button size="sm" variant="secondary" icon={ImageIcon} gate={can.canUpload} onClick={onThumb}>New thumbnail</Button>
+          <Button size="sm" variant="primary" icon={Pencil} gate={can.canEditVideo} onClick={onEdit}>Improve Details</Button>
+          <Button size="sm" variant="secondary" icon={ImageIcon} gate={can.canUpload} onClick={onThumb}>New Thumbnail</Button>
         </div>
       </Card>
       <ul className="grid gap-1 md:grid-cols-2 xl:col-span-8">
@@ -466,8 +459,8 @@ function DetailsTab({ video, onEdit }: { video: Video; onEdit: () => void }) {
   const { can } = useYouTube();
 
   return (
-    <div className="grid gap-1 xl:grid-cols-12">
-      <Card className="xl:col-span-7">
+    <div>
+      <Card>
         <CardHeader title="Metadata" actions={<Button size="sm" variant="secondary" icon={Pencil} gate={can.canEditVideo} onClick={onEdit}>Edit</Button>} />
         <dl className="px-4 pb-3">
           <DefinitionRow label="Title">{video.title}</DefinitionRow>
@@ -480,21 +473,6 @@ function DetailsTab({ video, onEdit }: { video: Video; onEdit: () => void }) {
           <DefinitionRow label="Comments">{video.commentsEnabled === null ? "Not reported" : video.commentsEnabled && !video.madeForKids ? "On" : "Off"}</DefinitionRow>
         </dl>
       </Card>
-
-      <div className="space-y-1 xl:col-span-5">
-        <Card>
-          <CardHeader title="Approval" badge={<InternalBadge hint="Internal OmniPlatform workflow. Separate from the video's YouTube status." />} />
-          <UnavailableState compact title="Not available yet" description="Approval workflows aren't part of the YouTube integration." />
-        </Card>
-        <Card>
-          <CardHeader title="Recent changes" badge={<InternalBadge label="OmniPlatform history" />} />
-          <UnavailableState compact title="Not available yet" description="Edits are saved straight to YouTube. Version history isn't recorded." />
-        </Card>
-        <Card>
-          <CardHeader title="Activity" badge={<InternalBadge label="Audit log" />} />
-          <UnavailableState compact title="Not available yet" description={`Last published ${video.publishedAt ? relative(video.publishedAt) : "—"}. A per-video activity log isn't recorded yet.`} />
-        </Card>
-      </div>
     </div>
   );
 }

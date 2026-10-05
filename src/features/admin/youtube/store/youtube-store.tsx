@@ -7,7 +7,7 @@ import type { CompanySystemRole } from "@/types/domain/auth";
 import { useYouTubeActions, type YouTubeActions } from "../data/actions";
 import {
   YouTubeScopeContext,
-  useAnalyticsTopVideos,
+  useAnalyticsTopVideosAll,
   useChannelQuery,
   useConnectionQuery,
   usePlaylistsInfinite,
@@ -142,8 +142,9 @@ function YouTubeState({ scope, tenancyReady, hasCompany, children }: { scope: Yo
   }, [hasNextPage, isFetchingNextPage, loadedVideoPages, fetchNextPage]);
 
   const schedulesQuery = useSchedulesQuery(mapped);
-  const range = useMemo(() => periodRange(28), []);
-  const topVideos = useAnalyticsTopVideos(range, "views", mapped && can.canViewAnalytics.allowed);
+  // Watch time, average duration and subscribers come from the last 365 days (the backend's longest range): lifetime for any video younger than a year.
+  const range = useMemo(() => periodRange(366), []);
+  const topVideos = useAnalyticsTopVideosAll(range, mapped && can.canViewAnalytics.allowed);
 
   const scheduleByVideo = useMemo(() => {
     const byVideo = new Map<string, YouTubePublishResponse>();
@@ -159,12 +160,16 @@ function YouTubeState({ scope, tenancyReady, hasCompany, children }: { scope: Yo
   const videos = useMemo<Video[]>(() => {
     const dtos = videosQuery.data?.pages.flatMap((p) => p.items) ?? [];
     const byVideo = scheduleByVideo;
-    const metrics = new Map((topVideos.data?.items ?? []).map((t) => [t.videoId, t.metrics]));
+    const metrics = new Map(topVideos.items.map((t) => [t.videoId, t.metrics]));
     const seen = new Set<string>();
     return dtos
       .filter((d) => (seen.has(d.id) ? false : (seen.add(d.id), true)))
-      .map((d) => withVideoAnalytics(toVideo(d, byVideo.get(d.id) ?? null), metrics.get(d.id)));
-  }, [videosQuery.data, scheduleByVideo, topVideos.data]);
+      .map((d) => {
+        const video = withVideoAnalytics(toVideo(d, byVideo.get(d.id) ?? null), metrics.get(d.id));
+        // The whole report was read and this published video is not in it: YouTube counted no views in the range, which is a real zero.
+        return topVideos.complete && !metrics.has(d.id) && video.status === "published" ? { ...video, stats: { ...video.stats, watchTimeHours: 0 } } : video;
+      });
+  }, [videosQuery.data, scheduleByVideo, topVideos.items, topVideos.complete]);
 
   const videosState = useMemo<ListState>(
     () => ({

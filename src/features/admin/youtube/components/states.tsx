@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, type ComponentType } from "react";
-import { AlertTriangle, Hourglass, Info, KeyRound, LockKeyhole, ShieldAlert, Sparkles } from "lucide-react";
+import { AlertTriangle, Hourglass, KeyRound, LockKeyhole, ShieldAlert, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { YouTubeErrorInfo } from "../live/youtube-errors";
+import { LinkChannelDialog } from "./link-channel-dialog";
 import { ytRoutes } from "../lib/constants";
 import { useYouTube } from "../store/youtube-store";
 import type { Capability } from "../types";
@@ -11,17 +12,18 @@ import { Button, Skeleton, yt } from "./ui";
 
 const FIX_META: Record<NonNullable<Capability["fix"]>, { icon: ComponentType<{ className?: string }>; title: string }> = {
   reconnect: { icon: KeyRound, title: "Reconnect YouTube" },
-  grant: { icon: KeyRound, title: "Permission required" },
+  grant: { icon: KeyRound, title: "Permission Required" },
   connect: { icon: KeyRound, title: "Connect YouTube" },
   request_access: { icon: LockKeyhole, title: "You don't have access" },
-  enable_feature: { icon: Sparkles, title: "Not available for this channel" },
-  wait: { icon: Hourglass, title: "Temporarily unavailable" },
+  enable_feature: { icon: Sparkles, title: "Not Available For This Channel" },
+  wait: { icon: Hourglass, title: "Temporarily Unavailable" },
 };
 
 /** The one button that fixes a permission / connection problem (named consent only, never a raw scope). */
 function FixButton({ fix, grant }: { fix: NonNullable<Capability["fix"]>; grant?: Capability["grant"] }) {
   const { startConsent, can, connection } = useYouTube();
   const [busy, setBusy] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const run = async (capability?: Capability["grant"]) => {
     if (busy) return;
     setBusy(true);
@@ -33,7 +35,10 @@ function FixButton({ fix, grant }: { fix: NonNullable<Capability["fix"]>; grant?
   if (fix === "grant") return <Button size="sm" variant="primary" loading={busy} gate={can.canManageConnection} onClick={() => void run(grant)}>Grant permission</Button>;
   if (fix === "connect") {
     return connection.state === "not_mapped" ? (
-      <Button size="sm" variant="primary" href={ytRoutes.integrations}>Link channel to this client</Button>
+      <>
+        <Button size="sm" variant="primary" gate={can.canManageConnection} onClick={() => setLinkOpen(true)}>Link channel to this client</Button>
+        <LinkChannelDialog open={linkOpen} onOpenChange={setLinkOpen} />
+      </>
     ) : (
       <Button size="sm" variant="primary" loading={busy} gate={can.canManageConnection} onClick={() => void run()}>Connect YouTube</Button>
     );
@@ -71,21 +76,8 @@ export function ErrorState({ error, onRetry, title, className, compact }: { erro
       <p className="mt-1 max-w-[380px] text-[12.5px] leading-5 text-[#6B7890]">{error.message}</p>
       <div className="mt-3.5 flex flex-wrap justify-center gap-2">
         {fix && <FixButton fix={fix} grant={error.capability ?? undefined} />}
-        {onRetry && error.retryable && <Button size="sm" variant="secondary" onClick={onRetry}>Try again</Button>}
+        {onRetry && error.retryable && <Button size="sm" variant="secondary" onClick={onRetry}>Try Again</Button>}
       </div>
-    </div>
-  );
-}
-
-/** For things the YouTube API does not provide at all: said plainly, never replaced with an invented number. */
-export function UnavailableState({ title, description, compact, className }: { title: string; description: string; compact?: boolean; className?: string }) {
-  return (
-    <div className={cn("flex flex-col items-center justify-center px-6 text-center", compact ? "py-6" : "py-10", className)}>
-      <span className="grid size-10 place-items-center rounded-sm bg-[#F3F5F9] text-[#6B7890] ring-1 ring-[#E4E9F0]">
-        <Info className="size-5" />
-      </span>
-      <p className="mt-3 text-[13.5px] font-semibold text-[#0F1B3D]">{title}</p>
-      <p className="mt-1 max-w-[380px] text-[12.5px] leading-5 text-[#6B7890]">{description}</p>
     </div>
   );
 }
@@ -147,4 +139,9 @@ export function PageSkeleton({ variant = "dashboard" }: { variant?: "dashboard" 
       </div>
     </div>
   );
+}
+
+/** Under channel trend charts: YouTube Analytics reports each day 2-3 days late, so the newest days can still be empty. */
+export function AnalyticsLagNote() {
+  return <p className="mt-2 text-[12px] leading-5 text-[#6B7890]">YouTube Analytics reports each day 2–3 days late, so the latest days fill in later.</p>;
 }

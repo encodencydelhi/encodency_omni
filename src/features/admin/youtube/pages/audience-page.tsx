@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Clock, Monitor, Smartphone, Tablet, Timer, Tv, UsersRound, Eye, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { BarList, BubbleMap, Donut, LegendList, TrendChart } from "../components/charts";
-import { CapabilityState, ErrorState, PageSkeleton, UnavailableState } from "../components/states";
+import { CapabilityState, ErrorState, PageSkeleton, AnalyticsLagNote } from "../components/states";
 import { Card, CardHeader, PageTitle, Segmented, Skeleton, SortHeader, TrendDelta, UnderlineTabs, ViewLink, tdClass, thClass, yt, type SortDir } from "../components/ui";
 import { useAudienceData, useChannelAnalytics } from "../data/view-hooks";
 import { usePeriod, useQueryState, useWithPeriod } from "../hooks/use-query-state";
@@ -13,7 +13,7 @@ import { changePct, compact, duration, full, hours } from "../lib/format";
 import { useYouTube } from "../store/youtube-store";
 import type { AudienceData, GeographyRow, MetricKey } from "../types";
 
-type AudienceTab = "overview" | "demographics" | "geography" | "devices" | "activity" | "subscribers";
+type AudienceTab = "overview" | "demographics" | "geography" | "devices" | "subscribers";
 
 const DEFAULTS = { tab: "overview", geoMetric: "views", country: "" };
 
@@ -23,7 +23,7 @@ export function AudiencePage() {
   return (
     <div className="space-y-1">
       <PageTitle title="Audience" description="Who watches your content and where they are." />
-      {can.canViewAnalytics.allowed ? <Audience /> : <Card><CapabilityState capability={can.canViewAnalytics} title="Audience data unavailable" /></Card>}
+      {can.canViewAnalytics.allowed ? <Audience /> : <Card><CapabilityState capability={can.canViewAnalytics} title="Audience Data Unavailable" /></Card>}
     </div>
   );
 }
@@ -38,17 +38,17 @@ function Audience() {
 
   // YouTube's Analytics API reports channel totals for the period; unique / returning / new viewer counts are not available to OmniPlatform.
   const kpis: { label: string; key: MetricKey; value: number | null; prev: number | null; icon: LucideIcon; hint: string; format: (v: number) => string }[] = [
-    { label: "Views", key: "views", value: t.views.value, prev: t.views.previous, icon: Eye, hint: "In the selected period", format: compact },
-    { label: "Watch time", key: "watchTime", value: t.watchTime.value, prev: t.watchTime.previous, icon: Clock, hint: "Hours watched", format: (v) => hours(v) },
-    { label: "Subscribers (net)", key: "subscribers", value: t.subscribers.value, prev: t.subscribers.previous, icon: UsersRound, hint: "Gained minus lost", format: (v) => `${v >= 0 ? "+" : ""}${full(v)}` },
-    { label: "Avg. view duration", key: "avgViewDuration", value: t.avgViewDuration.value, prev: t.avgViewDuration.previous, icon: Timer, hint: "Per view", format: (v) => duration(v) },
+    { label: "Views", key: "views", value: t.views.value, prev: t.views.previous, icon: Eye, hint: "In The Selected Period", format: compact },
+    { label: "Watch Time", key: "watchTime", value: t.watchTime.value, prev: t.watchTime.previous, icon: Clock, hint: "Time Watched", format: (v) => hours(v) },
+    { label: "Subscribers (Net)", key: "subscribers", value: t.subscribers.value, prev: t.subscribers.previous, icon: UsersRound, hint: "Gained Minus Lost", format: (v) => `${v >= 0 ? "+" : ""}${full(v)}` },
+    { label: "Avg. View Duration", key: "avgViewDuration", value: t.avgViewDuration.value, prev: t.avgViewDuration.previous, icon: Timer, hint: "Per View", format: (v) => duration(v) },
   ];
 
   return (
     <div className="space-y-1">
       <div className="border-b border-[#E4E9F0]">
         <UnderlineTabs<AudienceTab>
-          label="Audience sections"
+          label="Audience Sections"
           value={tab}
           onChange={(v) => set({ tab: v })}
           items={[
@@ -56,7 +56,6 @@ function Audience() {
             { value: "demographics", label: "Demographics" },
             { value: "geography", label: "Geography" },
             { value: "devices", label: "Devices" },
-            { value: "activity", label: "Viewer activity" },
             { value: "subscribers", label: "Subscribers" },
           ]}
         />
@@ -84,7 +83,7 @@ function Audience() {
         </div>
       )}
 
-      {audience.error && tab !== "activity" ? (
+      {audience.error ? (
         <Card><ErrorState error={audience.error} onRetry={audience.refetch} title="Audience data couldn't load" /></Card>
       ) : (
         <>
@@ -92,18 +91,16 @@ function Audience() {
             <div className="grid gap-1 xl:grid-cols-12">
               <DemographicsCard className="xl:col-span-4" compactView audience={audience.data} loading={audience.isLoading} onMore={() => set({ tab: "demographics" })} />
               <GeographyCard className="xl:col-span-8" compactView metric="views" audience={audience.data} loading={audience.isLoading} onMore={() => set({ tab: "geography" })} />
-              <DevicesCard className="xl:col-span-5" audience={audience.data} loading={audience.isLoading} />
-              <ActivityCard className="xl:col-span-7" />
+              <DevicesCard className="xl:col-span-12" detailed audience={audience.data} loading={audience.isLoading} />
             </div>
           )}
           {tab === "demographics" && <DemographicsCard audience={audience.data} loading={audience.isLoading} />}
           {tab === "geography" && <GeographyCard audience={audience.data} loading={audience.isLoading} metric={values.geoMetric as GeoMetric} onMetric={(m) => set({ geoMetric: m })} selected={values.country || null} onSelect={(c) => set({ country: c === values.country ? "" : c })} />}
           {tab === "devices" && <DevicesCard detailed audience={audience.data} loading={audience.isLoading} />}
-          {tab === "activity" && <ActivityCard detailed />}
           {tab === "subscribers" && (
             <div className="grid gap-1 xl:grid-cols-12">
               <Card className="xl:col-span-8">
-                <CardHeader title="Subscriber growth" description={`${label} vs previous period`} />
+                <CardHeader title="Subscriber Growth" description={`${label} vs previous period`} />
                 <div className="grid grid-cols-3 gap-2 px-4">
                   {[
                     { label: "Gained", value: analytics.data.subscribers.gained === null ? "—" : `+${full(analytics.data.subscribers.gained)}`, tone: "text-[#067647]" },
@@ -117,11 +114,11 @@ function Audience() {
                   ))}
                 </div>
                 <div className="px-4 pb-4 pt-3">
-                  {analytics.isLoading ? <Skeleton className="h-[240px] w-full" /> : <TrendChart current={analytics.data.current} previous={analytics.data.previous} metric="subscribers" granularity={days > 90 ? "weekly" : "daily"} height={240} />}
+                  {analytics.isLoading ? <Skeleton className="h-[240px] w-full" /> : <><TrendChart current={analytics.data.current} previous={analytics.data.previous} metric="subscribers" granularity={days > 90 ? "weekly" : "daily"} height={240} /><AnalyticsLagNote /></>}
                 </div>
               </Card>
               <Card className="xl:col-span-4">
-                <CardHeader title="Views by subscriber status" />
+                <CardHeader title="Views By Subscriber Status" />
                 <div className="px-4 pb-4">
                   {audience.isLoading ? <Skeleton className="h-24 w-full" /> : audience.data.subscribed ? <BarList data={audience.data.subscribed} color="#E5202E" /> : <ThresholdNotice />}
                 </div>
@@ -151,7 +148,7 @@ function CardSkeleton() {
 function DemographicsCard({ className, compactView, onMore, audience, loading }: { className?: string; compactView?: boolean; onMore?: () => void; audience: AudienceData; loading: boolean }) {
   return (
     <Card className={className}>
-      <CardHeader title="Age & gender" description="Share of viewers" actions={onMore ? <button type="button" onClick={onMore} className="text-[12px] font-semibold text-[#2563EB] hover:underline">Details</button> : undefined} />
+      <CardHeader title="Age & Gender" description="Share of viewers" actions={onMore ? <button type="button" onClick={onMore} className="text-[12px] font-semibold text-[#2563EB] hover:underline">Details</button> : undefined} />
       {loading ? (
         <CardSkeleton />
       ) : !audience.age || !audience.gender ? (
@@ -188,11 +185,11 @@ function GeographyCard({ className, compactView, metric, onMetric, selected, onS
   return (
     <Card className={className}>
       <CardHeader
-        title="Top geographies"
+        title="Top Geographies"
         description="Where your viewers are"
         actions={
           onMore ? <button type="button" onClick={onMore} className="text-[12px] font-semibold text-[#2563EB] hover:underline">Details</button> : onMetric ? (
-            <Segmented<GeoMetric> label="Map metric" value={metric} onChange={onMetric} items={[{ value: "views", label: "Views" }, { value: "watchTimeHours", label: "Watch time" }, { value: "subscribers", label: "Subscribers" }]} />
+            <Segmented<GeoMetric> label="Map Metric" value={metric} onChange={onMetric} items={[{ value: "views", label: "Views" }, { value: "watchTimeHours", label: "Watch Time" }, { value: "subscribers", label: "Subscribers" }]} />
           ) : undefined
         }
       />
@@ -212,7 +209,7 @@ function GeographyCard({ className, compactView, metric, onMetric, selected, onS
                   <tr>
                     <th className={cn(thClass, "static pl-4")}>Country</th>
                     <SortHeader className="static" label="Views" align="right" active={sort === "views"} dir={dir} onClick={() => toggle("views")} />
-                    <SortHeader className="static" label="Watch time" align="right" active={sort === "watchTimeHours"} dir={dir} onClick={() => toggle("watchTimeHours")} />
+                    <SortHeader className="static" label="Watch Time" align="right" active={sort === "watchTimeHours"} dir={dir} onClick={() => toggle("watchTimeHours")} />
                     <SortHeader className="static pr-4" label="Subscribers" align="right" active={sort === "subscribers"} dir={dir} onClick={() => toggle("subscribers")} />
                   </tr>
                 </thead>
@@ -271,14 +268,3 @@ function DevicesCard({ className, detailed, audience, loading }: { className?: s
   );
 }
 
-function ActivityCard({ className, detailed }: { className?: string; detailed?: boolean }) {
-  return (
-    <Card className={className}>
-      <CardHeader title="When your viewers are on YouTube" description="Relative activity by day and hour" />
-      <UnavailableState
-        title="Not available through the API"
-        description={`YouTube's Analytics API doesn't report when viewers are online to OmniPlatform.${detailed ? " Open YouTube Studio → Analytics → Audience → \"When your viewers are on YouTube\" to see it." : ""}`}
-      />
-    </Card>
-  );
-}

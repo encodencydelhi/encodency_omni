@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { youtubeKeys } from "@/lib/query/keys";
 import { youtubeApi, type DateRange, type YouTubeScope } from "../live/youtube-api";
@@ -51,6 +51,42 @@ function requireScope(scope: YouTubeScope | null): YouTubeScope {
 }
 
 /* ------------------------------ connection / channel ------------------------------ */
+
+export interface LinkCandidates {
+  /** The Company's YouTube connection. Null when the Company has no YouTube login at all. */
+  integrationId: string | null;
+  accountName: string | null;
+  channels: { id: string; name: string }[];
+}
+
+/**
+ * Channels that can be linked to this Client. Only runs while the picker is open: discovery calls Google.
+ * `/integrations/youtube/connection` cannot answer this - it reports no integrationId until a channel is mapped.
+ */
+export function useLinkCandidatesQuery(enabled: boolean) {
+  const scope = useYouTubeScope();
+  return useQuery<LinkCandidates>({
+    queryKey: scope ? youtubeKeys.linkCandidates(scope) : ["youtube", "none", "link-candidates"],
+    queryFn: async ({ signal }) => {
+      const ready = requireScope(scope);
+      const overview = await youtubeApi.clientOverview(ready, signal);
+      const provider = overview.providers.find((item) => item.provider === "YOUTUBE");
+      const connection = provider?.connections[0] ?? null;
+      const integrationId = provider?.integrationId ?? connection?.integrationId ?? null;
+      if (!integrationId) return { integrationId: null, accountName: null, channels: [] };
+      const resources = await youtubeApi.discoverChannels(ready, integrationId, signal);
+      return {
+        integrationId,
+        accountName: connection?.accountName ?? null,
+        channels: resources.filter((r) => r.resourceType === "YOUTUBE_CHANNEL").map((r) => ({ id: r.externalResourceId, name: r.name })),
+      };
+    },
+    enabled: enabled && scope !== null,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    retry: shouldRetryYouTubeQuery,
+  });
+}
 
 export function useConnectionQuery() {
   const scope = useYouTubeScope();
@@ -231,6 +267,33 @@ export function useAnalyticsTopVideos(range: DateRange, sort: AnalyticsVideoSort
   return useAnalytics("top-videos", { ...range, sort, pageSize }, enabled, (s, signal) => youtubeApi.analyticsTopVideos(s, range, { sort, page: 1, pageSize }, signal));
 }
 
+/**
+ * Per-video totals for every video of the channel: the top-videos report, page by page (50 each) up to `maxPages`. `complete` is true once the report has no
+ * further page, so a video that is absent from it really had no views in the range.
+ */
+export function useAnalyticsTopVideosAll(range: DateRange, enabled: boolean, maxPages = 4) {
+  const scope = useYouTubeScope();
+  const query = useInfiniteQuery({
+    queryKey: scope ? youtubeKeys.analytics(scope, "top-videos-all", range) : ["youtube", "none", "analytics", "top-videos-all"],
+    queryFn: ({ pageParam, signal }) => youtubeApi.analyticsTopVideos(requireScope(scope), range, { sort: "views", page: pageParam, pageSize: 50 }, signal),
+    initialPageParam: 1,
+    getNextPageParam: (last) => last.nextPage ?? undefined,
+    enabled: scope !== null && enabled,
+    ...READ,
+    staleTime: 5 * 60_000,
+  });
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
+  const pages = query.data?.pages.length ?? 0;
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage && pages > 0 && pages < maxPages) void fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, pages, maxPages, fetchNextPage]);
+  return {
+    items: query.data?.pages.flatMap((p) => p.items) ?? [],
+    isPending: query.isPending,
+    complete: Boolean(query.data) && !hasNextPage,
+  };
+}
+
 export function useVideoAnalytics(videoId: string | undefined, range: DateRange, granularity: "total" | "day", enabled: boolean) {
   return useAnalytics("video", { videoId, ...range, granularity }, enabled && Boolean(videoId), (s, signal) => youtubeApi.analyticsVideo(s, videoId as string, range, granularity, signal));
 }
@@ -361,6 +424,14 @@ export function useYouTubeMutations() {
     },
   });
 
+  const linkChannel = useMutation({
+    mutationFn: (vars: { integrationId: string; channelId: string }) => youtubeApi.linkChannel(s(), vars.integrationId, vars.channelId),
+    onSuccess: () => {
+      // The whole workspace was gated on the missing mapping, so everything is re-read.
+      void qc.invalidateQueries({ queryKey: youtubeKeys.root(s()) });
+    },
+  });
+
   const initConsent = useMutation({
     mutationFn: (vars: { capability?: Parameters<typeof youtubeApi.initConsent>[1]; integrationId?: string | null }) => youtubeApi.initConsent(s(), vars.capability, vars.integrationId),
   });
@@ -468,6 +539,9 @@ export function useYouTubeMutations() {
 
   const commentsChanged = (videoId: string, commentId?: string) => {
     void qc.invalidateQueries({ queryKey: youtubeKeys.commentsOfVideo(s(), videoId) });
+    // The comment count lives on the video, so the detail page and content list re-read it too.
+    void qc.invalidateQueries({ queryKey: youtubeKeys.video(s(), videoId) });
+    void qc.invalidateQueries({ queryKey: youtubeKeys.videos(s()) });
     if (commentId) void qc.invalidateQueries({ queryKey: youtubeKeys.replies(s(), commentId) });
   };
 
@@ -532,7 +606,7 @@ export function useYouTubeMutations() {
   });
 
   return {
-    sync, initConsent, disconnect, updateVideo, deleteVideo, createUpload, setThumbnail, publish, schedule, reschedule, cancelSchedule,
+    sync, initConsent, linkChannel, disconnect, updateVideo, deleteVideo, createUpload, setThumbnail, publish, schedule, reschedule, cancelSchedule,
     createPlaylist, updatePlaylist, deletePlaylist, addPlaylistItem, removePlaylistItem, movePlaylistItem,
     replyToComment, updateComment, deleteComment, moderateComment, rejectComment,
     createBroadcast, updateBroadcast, bindBroadcast, transitionBroadcast, createStream, sendChat,

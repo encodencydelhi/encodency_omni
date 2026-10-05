@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils/cn";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ToggleRow } from "../components/dialogs";
-import { CapabilityState, ErrorState, PageSkeleton, UnavailableState } from "../components/states";
+import { CapabilityState, ErrorState, PageSkeleton } from "../components/states";
 import {
   ActionMenu,
   Avatar,
@@ -72,8 +72,8 @@ import type { LiveEvent, StreamHealth, Visibility } from "../types";
 type LiveTab = "upcoming" | "live" | "completed";
 
 const HEALTH: Record<StreamHealth, { label: string; tone: Tone; description: string }> = {
-  waiting: { label: "Waiting for stream", tone: "neutral", description: "Start streaming from your encoder using the stream key." },
-  receiving: { label: "Receiving data", tone: "blue", description: "YouTube is receiving your stream. Checking quality…" },
+  waiting: { label: "Waiting For Stream", tone: "neutral", description: "Start streaming from your encoder using the stream key." },
+  receiving: { label: "Receiving Data", tone: "blue", description: "YouTube is receiving your stream. Checking quality…" },
   healthy: { label: "Healthy", tone: "green", description: "Stream is healthy and ready to go live." },
   live: { label: "Live", tone: "red", description: "Your broadcast is live on YouTube." },
   ended: { label: "Ended", tone: "neutral", description: "The broadcast has ended." },
@@ -163,31 +163,31 @@ function Live() {
       <PageTitle
         title="Live"
         description="Schedule, run and review live streams."
-        actions={<Button variant="primary" icon={Plus} gate={can.canGoLive} href={ytRoutes.liveCreate}>Create live event</Button>}
+        actions={<Button variant="primary" icon={Plus} gate={can.canGoLive} href={ytRoutes.liveCreate}>Create Live Event</Button>}
       />
 
       <div className="border-b border-[#E4E9F0]">
         <UnderlineTabs<LiveTab>
-          label="Live streams"
+          label="Live Streams"
           value={tab}
           onChange={(v) => set({ tab: v })}
           items={[
             { value: "upcoming", label: "Upcoming", count: data.isLoading ? undefined : events.upcoming.length },
-            { value: "live", label: "Live now", count: data.isLoading ? undefined : events.live.length, icon: events.live.length ? CircleDot : undefined },
+            { value: "live", label: "Live Now", count: data.isLoading ? undefined : events.live.length, icon: events.live.length ? CircleDot : undefined },
             { value: "completed", label: "Completed", count: data.isLoading ? undefined : events.completed.length },
           ]}
         />
       </div>
 
       {data.isLoading ? (
-        <Card className="space-y-3 p-4" aria-busy="true" aria-label="Loading live events">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 w-full" />)}</Card>
+        <Card className="space-y-3 p-4" aria-busy="true" aria-label="Loading Live Events">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 w-full" />)}</Card>
       ) : data.error ? (
         <Card><ErrorState error={data.error} onRetry={data.refetch} title="Live events couldn't load" /></Card>
       ) : (
         <>
           {tab === "upcoming" &&
             (events.upcoming.length === 0 ? (
-              <Card><EmptyState icon={Radio} title="No live events scheduled" description="Schedule your first live stream so viewers can set reminders." action={<Button variant="primary" icon={Plus} gate={can.canGoLive} href={ytRoutes.liveCreate}>Schedule a live stream</Button>} /></Card>
+              <Card><EmptyState icon={Radio} title="No Live Events Scheduled" description="Schedule your first live stream so viewers can set reminders." action={<Button variant="primary" icon={Plus} gate={can.canGoLive} href={ytRoutes.liveCreate}>Schedule A Live Stream</Button>} /></Card>
             ) : (
               <Card>
                 <ul className="divide-y divide-[#EEF1F5]">
@@ -222,10 +222,10 @@ function Live() {
                             trigger={<button type="button" className={buttonClass("ghost", "icon")}><MoreHorizontal className="size-4" /></button>}
                             items={[
                               { label: "Edit", icon: Pencil, onSelect: () => setEditing(e), gate: can.canGoLive },
-                              { label: "View setup", icon: Settings2, onSelect: () => set({ setup: e.id }) },
-                              { label: "Open in YouTube Studio", icon: ExternalLink, href: ytRoutes.studio, external: true },
+                              { label: "View Setup", icon: Settings2, onSelect: () => set({ setup: e.id }) },
+                              { label: "Open In YouTube Studio", icon: ExternalLink, href: ytRoutes.studio, external: true },
                               "separator",
-                              { label: "Delete in YouTube Studio", icon: Trash2, danger: true, href: ytRoutes.studio, external: true },
+                              { label: "Delete In YouTube Studio", icon: Trash2, danger: true, href: ytRoutes.studio, external: true },
                             ]}
                           />
                         </div>
@@ -245,7 +245,7 @@ function Live() {
 
           {tab === "completed" &&
             (events.completed.length === 0 ? (
-              <Card><EmptyState icon={VideoIcon} title="No completed streams" description="Replays appear here after a broadcast ends." /></Card>
+              <Card><EmptyState icon={VideoIcon} title="No Completed Streams" description="Replays appear here after a broadcast ends." /></Card>
             ) : (
               <Card>
                 <ul className="divide-y divide-[#EEF1F5]">
@@ -273,7 +273,7 @@ function Live() {
                   ))}
                 </ul>
                 {data.hasMoreCompleted && (
-                  <div className="flex justify-center border-t border-[#EEF1F5] py-2.5"><Button size="sm" variant="secondary" loading={data.loadingMoreCompleted} onClick={data.loadMoreCompleted}>Load more</Button></div>
+                  <div className="flex justify-center border-t border-[#EEF1F5] py-2.5"><Button size="sm" variant="secondary" loading={data.loadingMoreCompleted} onClick={data.loadMoreCompleted}>Load More</Button></div>
                 )}
                 <p className="border-t border-[#EEF1F5] px-4 py-2 text-[11.5px] text-[#98A2B3]">Peak viewers, view counts and chat totals aren&apos;t reported by YouTube&apos;s API; open the replay&apos;s analytics for its views.</p>
               </Card>
@@ -290,7 +290,7 @@ function Live() {
         title={`Go live with “${starting?.title ?? ""}”?`}
         description="Your stream becomes visible to its audience immediately. Subscribers with notifications on may be alerted."
         affected={starting ? [`Visibility: ${VISIBILITY_LABEL[starting.visibility]}`, `Chat: ${starting.enableChat ? "On" : "Off"}`] : []}
-        confirmLabel="Go live"
+        confirmLabel="Go Live"
         onConfirm={async () => {
           if (!starting) return false;
           const ok = await startLiveEvent(starting.id);
@@ -304,7 +304,7 @@ function Live() {
         title={`End “${ending?.title ?? ""}”?`}
         description="The broadcast stops for all viewers and can't be resumed. The replay will be processed and saved to your channel."
         affected={ending ? ["Live chat closes"] : []}
-        confirmLabel="End stream"
+        confirmLabel="End Stream"
         onConfirm={async () => {
           if (!ending) return false;
           const ok = await endLiveEvent(ending.id);
@@ -339,8 +339,8 @@ function LiveNowCard({ event, onEnd, onSetup }: { event: LiveEvent; onEnd: () =>
           {[
             { label: "Started", value: event.actualStart ? relative(event.actualStart) : "—", icon: Clock3 },
             { label: "Visibility", value: VISIBILITY_LABEL[event.visibility], icon: Eye },
-            { label: "Live chat", value: event.enableChat ? "On" : "Off", icon: MessageSquare },
-            { label: "Stream health", value: HEALTH[event.health].label, icon: Wifi },
+            { label: "Live Chat", value: event.enableChat ? "On" : "Off", icon: MessageSquare },
+            { label: "Stream Health", value: HEALTH[event.health].label, icon: Wifi },
           ].map((s) => (
             <div key={s.label} className="bg-white px-4 py-3">
               <p className="flex items-center gap-1.5 text-[11.5px] text-[#6B7890]"><s.icon className="size-3.5" />{s.label}</p>
@@ -350,12 +350,11 @@ function LiveNowCard({ event, onEnd, onSetup }: { event: LiveEvent; onEnd: () =>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.studio} external>Open in YouTube Studio</Button>
-            <Button size="sm" variant="secondary" icon={Settings2} onClick={onSetup}>Stream setup</Button>
+            <Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.studio} external>Open In YouTube Studio</Button>
+            <Button size="sm" variant="secondary" icon={Settings2} onClick={onSetup}>Stream Setup</Button>
           </div>
-          <Button size="sm" variant="dangerSolid" icon={Square} gate={can.canTransitionLive} onClick={onEnd}>End stream</Button>
+          <Button size="sm" variant="dangerSolid" icon={Square} gate={can.canTransitionLive} onClick={onEnd}>End Stream</Button>
         </div>
-        <p className="border-t border-[#EEF1F5] px-4 py-2 text-[11.5px] text-[#98A2B3]">Concurrent viewers aren&apos;t reported by YouTube&apos;s API; see them in YouTube Studio.</p>
       </Card>
       <LiveChat event={event} className="xl:col-span-4" />
     </div>
@@ -376,8 +375,8 @@ function LiveChat({ event, className }: { event: LiveEvent; className?: string }
   if (!event.enableChat) {
     return (
       <Card className={className}>
-        <CardHeader title="Live chat" />
-        <EmptyState compact icon={MessageSquare} title="Chat is turned off" description="Enable live chat for this broadcast in YouTube Studio." action={<Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.studio} external>Open YouTube Studio</Button>} />
+        <CardHeader title="Live Chat" />
+        <EmptyState compact icon={MessageSquare} title="Chat Is Turned Off" description="Enable live chat for this broadcast in YouTube Studio." action={<Button size="sm" variant="secondary" icon={ExternalLink} href={ytRoutes.studio} external>Open YouTube Studio</Button>} />
       </Card>
     );
   }
@@ -393,7 +392,7 @@ function LiveChat({ event, className }: { event: LiveEvent; className?: string }
 
   return (
     <Card className={cn("flex h-[520px] flex-col", className)}>
-      <CardHeader title="Live chat" description="Updates every few seconds" actions={<Button size="xs" variant="ghost" icon={ExternalLink} href={ytRoutes.studio} external>Pop out</Button>} />
+      <CardHeader title="Live Chat" description="Updates every few seconds" actions={<Button size="xs" variant="ghost" icon={ExternalLink} href={ytRoutes.studio} external>Pop Out</Button>} />
       <div className="scrollbar-thin flex-1 space-y-2.5 overflow-y-auto border-y border-[#EEF1F5] px-4 py-3">
         {chat.isPending ? (
           <div className="space-y-2">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-5 w-full" />)}</div>
@@ -423,7 +422,7 @@ function LiveChat({ event, className }: { event: LiveEvent; className?: string }
       >
         <label htmlFor="live-chat" className="sr-only">Chat as {channel.title}</label>
         <input id="live-chat" className={yt.input} value={text} onChange={(e) => setText(e.target.value)} placeholder={can.canReplyComments.allowed ? `Chat as ${channel.title}…` : "You can't post in chat"} disabled={!can.canReplyComments.allowed || busy} maxLength={200} />
-        <Button type="submit" size="icon" variant="primary" aria-label="Send message" loading={busy} gate={can.canReplyComments} disabled={!text.trim()} className="size-9"><Send className="size-4" /></Button>
+        <Button type="submit" size="icon" variant="primary" aria-label="Send Message" loading={busy} gate={can.canReplyComments} disabled={!text.trim()} className="size-9"><Send className="size-4" /></Button>
       </form>
     </Card>
   );
@@ -434,7 +433,7 @@ function SetupDrawer({ event, stream, onClose, onGoLive }: { event: LiveEvent | 
     <Sheet open={event !== null} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-full max-w-[520px] sm:max-w-[520px]">
         <SheetHeader>
-          <SheetTitle className="text-[15px] text-[#0F1B3D]">Stream setup</SheetTitle>
+          <SheetTitle className="text-[15px] text-[#0F1B3D]">Stream Setup</SheetTitle>
           <SheetDescription className="line-clamp-1 text-[12.5px]">{event?.title}</SheetDescription>
         </SheetHeader>
         {event && <SetupBody key={event.id} event={event} stream={stream} onGoLive={onGoLive} />}
@@ -471,7 +470,7 @@ function SetupBody({ event, stream, onGoLive }: { event: LiveEvent; stream: YouT
     <SheetBody className="space-y-5">
       <div>
         <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Connection status</p>
-        <ol className="flex items-center gap-1" aria-label="Stream status">
+        <ol className="flex items-center gap-1" aria-label="Stream Status">
           {HEALTH_STEPS.map((h, i) => (
             <li key={h} className="flex flex-1 flex-col items-center gap-1 text-center">
               <span className={cn("grid size-6 place-items-center rounded-sm text-[10px] font-bold", i < step ? "bg-[#12B76A] text-white" : i === step ? (h === "live" ? "bg-[#E5202E] text-white" : "bg-[#0F1B3D] text-white") : "bg-[#F1F4F8] text-[#98A2B3]")}>
@@ -487,36 +486,32 @@ function SetupBody({ event, stream, onGoLive }: { event: LiveEvent; stream: YouT
       <div className="space-y-3">
         <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Encoder settings</p>
         {!event.streamId ? (
-          <Notice tone="amber" title="No stream is attached" actions={<Button size="sm" variant="primary" loading={attaching} gate={can.canGoLive} onClick={async () => { if (attaching) return; setAttaching(true); await attachStream(event.id, event.title); setAttaching(false); }}>Create & attach stream</Button>}>
+          <Notice tone="amber" title="No Stream Is Attached" actions={<Button size="sm" variant="primary" loading={attaching} gate={can.canGoLive} onClick={async () => { if (attaching) return; setAttaching(true); await attachStream(event.id, event.title); setAttaching(false); }}>Create & attach stream</Button>}>
             This event has no encoder connection yet. Creating one makes a reusable stream on your channel.
           </Notice>
         ) : credentials ? (
           <>
             <SecretField label="Stream URL" value={credentials.ingestionAddress ?? credentials.rtmpsIngestionAddress ?? ""} masked={false} />
-            <SecretField label="Stream key" value={credentials.streamName ?? ""} />
+            <SecretField label="Stream Key" value={credentials.streamName ?? ""} />
             <Button size="sm" variant="ghost" icon={EyeOff} onClick={() => setCredentials(null)}>Hide encoder settings</Button>
           </>
         ) : can.canViewStreamKey.allowed ? (
           <Button size="sm" variant="secondary" icon={Eye} loading={loading} onClick={() => void reveal()}>Reveal stream URL and key</Button>
         ) : (
-          <Notice tone="amber" title="Stream key hidden">{can.canViewStreamKey.reason}</Notice>
+          <Notice tone="amber" title="Stream Key Hidden">{can.canViewStreamKey.reason}</Notice>
         )}
         <p className="text-[12px] leading-5 text-[#6B7890]">Paste these into OBS, Streamlabs or your hardware encoder. Never share the stream key — anyone with it can stream to your channel. It&apos;s fetched only when you ask and is never saved by OmniPlatform.</p>
       </div>
 
-      <div className="rounded-[10px] border border-[#E4E9F0]">
-        <div className="flex items-center justify-between px-3.5 py-3">
-          <span className="text-[13px] font-semibold text-[#0F1B3D]">Latency</span>
-          <span className="text-[12px] text-[#98A2B3]">Set in YouTube Studio</span>
-        </div>
-        <div className="border-t border-[#EEF1F5]"><ToggleRow label="DVR" description="Chosen when the event was created." checked={event.enableDvr === true} disabled onChange={() => undefined} /></div>
-        <div className="border-t border-[#EEF1F5]"><ToggleRow label="Live chat" description="Turn chat on or off in YouTube Studio." checked={event.enableChat} disabled onChange={() => undefined} /></div>
+      <div className="divide-y divide-[#EEF1F5] rounded-[10px] border border-[#E4E9F0]">
+        <ToggleRow label="DVR" description="Chosen when the event was created." checked={event.enableDvr === true} disabled onChange={() => undefined} />
+        <ToggleRow label="Live Chat" description="Reported by YouTube for this broadcast." checked={event.enableChat} disabled onChange={() => undefined} />
       </div>
 
       {event.lifecycle === "upcoming" && (
         <Button variant="primary" icon={Play} className="w-full" gate={can.canTransitionLive} disabled={!(event.health === "receiving" || event.health === "healthy")} disabledReason="Waiting for your encoder to connect" onClick={() => onGoLive(event)}>Go live</Button>
       )}
-      {stream && stream.health === "bad" && <Notice tone="amber" title="Stream health is poor">YouTube reports problems with the incoming video. Check your encoder settings.</Notice>}
+      {stream && stream.health === "bad" && <Notice tone="amber" title="Stream Health Is Poor">YouTube reports problems with the incoming video. Check your encoder settings.</Notice>}
     </SheetBody>
   );
 }
@@ -561,7 +556,7 @@ function EditLiveBody({ event, onClose }: { event: LiveEvent; onClose: () => voi
     <Dialog open onOpenChange={(o) => !o && !busy && onClose()}>
       <DialogContent className="w-[calc(100vw-24px)] max-w-[500px] gap-0 p-0">
         <DialogHeader className="border-b border-[#EEF1F5] px-5 py-4">
-          <DialogTitle className="text-[15px] text-[#0F1B3D]">Edit live event</DialogTitle>
+          <DialogTitle className="text-[15px] text-[#0F1B3D]">Edit Live Event</DialogTitle>
           <DialogDescription className="text-[12.5px] text-[#6B7890]">Updates the scheduled broadcast on YouTube.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 px-5 py-4">
@@ -593,7 +588,7 @@ function EditLiveBody({ event, onClose }: { event: LiveEvent; onClose: () => voi
 /* Create live                                                         */
 /* ------------------------------------------------------------------ */
 
-const CREATE_STEPS = ["Live details", "Stream settings", "Schedule", "Thumbnail", "Visibility", "Review"] as const;
+const CREATE_STEPS = ["Live details", "Stream settings", "Schedule", "Visibility", "Review"] as const;
 type CreateStep = (typeof CREATE_STEPS)[number];
 
 export function LiveCreatePage() {
@@ -668,7 +663,7 @@ function LiveCreate() {
     <div className="space-y-1">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Button size="icon" variant="ghost" aria-label="Back to live" onClick={() => navigate(ytRoutes.live)}><ArrowLeft className="size-4" /></Button>
+          <Button size="icon" variant="ghost" aria-label="Back To Live" onClick={() => navigate(ytRoutes.live)}><ArrowLeft className="size-4" /></Button>
           <div>
             <h2 className="text-[17px] font-semibold text-[#0F1B3D]">Create live event</h2>
             <p className="text-[12.5px] text-[#6B7890]">Step {idx + 1} of {CREATE_STEPS.length} · {step}</p>
@@ -707,13 +702,11 @@ function LiveCreate() {
             )}
             {step === "Stream settings" && (
               <>
-                <Notice tone="blue" title="Stream key">A reusable stream is created and attached when you create the event. Its URL and key are shown in Stream setup, only when you ask for them.</Notice>
+                <Notice tone="blue" title="Stream Key">A reusable stream is created and attached when you create the event. Its URL and key are shown in Stream setup, only when you ask for them.</Notice>
                 <div className="divide-y divide-[#EEF1F5] rounded-[10px] border border-[#E4E9F0]">
                   <ToggleRow label="Enable DVR" description="Viewers can pause and rewind while you're live." checked={form.enableDvr} onChange={(c) => set("enableDvr", c)} />
-                  <ToggleRow label="Made for kids" description="Required by COPPA. Turns off comments and live chat features for kids' content." checked={form.madeForKids} onChange={(c) => set("madeForKids", c)} />
-                  <ToggleRow label="Live chat" description="Chat is on by default; change it in YouTube Studio." checked disabled onChange={() => undefined} />
+                  <ToggleRow label="Made For Kids" description="Required by COPPA. Turns off comments and live chat features for kids' content." checked={form.madeForKids} onChange={(c) => set("madeForKids", c)} />
                 </div>
-                <p className="text-[12px] text-[#98A2B3]">Latency mode is set in YouTube Studio.</p>
               </>
             )}
             {step === "Schedule" && (
@@ -721,13 +714,10 @@ function LiveCreate() {
                 <div className="grid gap-3 sm:grid-cols-3">
                   <FormField label="Date" htmlFor="lc-date"><input id="lc-date" type="date" className={yt.input} value={form.day} min={format(new Date(), "yyyy-MM-dd")} onChange={(e) => set("day", e.target.value)} /></FormField>
                   <FormField label="Time" htmlFor="lc-time"><input id="lc-time" type="time" className={yt.input} value={form.time} onChange={(e) => set("time", e.target.value)} /></FormField>
-                  <FormField label="Time zone"><SelectMenu label="Time zone" size="md" fullWidth disabled value={zone} onChange={() => undefined} options={[{ value: zone, label: zone }]} /></FormField>
+                  <FormField label="Time Zone"><SelectMenu label="Time Zone" size="md" fullWidth disabled value={zone} onChange={() => undefined} options={[{ value: zone, label: zone }]} /></FormField>
                 </div>
                 {errors.Schedule ? <Notice tone="amber" title={errors.Schedule} /> : <Notice tone="blue" title={`Starts ${format(when, "EEEE, MMM d 'at' h:mm a")}`}>Viewers can set a reminder from the watch page. You can go live any time once your encoder connects.</Notice>}
               </>
-            )}
-            {step === "Thumbnail" && (
-              <UnavailableState title="Set the thumbnail after creating the event" description="Live thumbnails aren't set while creating a broadcast through the API. Once the event exists, open it in YouTube Studio to upload one." />
             )}
             {step === "Visibility" && (
               <div className="space-y-2">
@@ -739,11 +729,11 @@ function LiveCreate() {
             {step === "Review" && (
               <>
                 {blocking.length > 0 ? (
-                  <Notice tone="red" title="Fix these before creating the event">
+                  <Notice tone="red" title="Fix These Before Creating The Event">
                     <ul>{blocking.map(([s, e]) => <li key={s}><button type="button" className="text-[#1D4ED8] hover:underline" onClick={() => setStep(s)}>{s} — {e}</button></li>)}</ul>
                   </Notice>
                 ) : (
-                  <Notice tone="blue" title="Ready to schedule" />
+                  <Notice tone="blue" title="Ready To Schedule" />
                 )}
                 <dl className="divide-y divide-[#EEF1F5] rounded-[10px] border border-[#E4E9F0]">
                   {([
