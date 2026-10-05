@@ -3,7 +3,9 @@
  * Repository Interface & Async Implementation
  */
 
+import { env } from "@/config/env";
 import * as store from "./mock/store";
+import { liveApiMonitoringRepository } from "./live-adapter";
 import type {
   ApiEndpoint,
   ApiErrorLog,
@@ -32,7 +34,7 @@ export interface ApiMonitoringRepository {
   resetDemo(): Promise<void>;
 }
 
-export const apiMonitoringRepository: ApiMonitoringRepository = {
+const mockApiMonitoringRepository: ApiMonitoringRepository = {
   getKpis: () => store.getKpis(),
   getEndpoints: () => store.getEndpoints(),
   getEndpointById: (id) => store.getEndpointById(id),
@@ -46,3 +48,6 @@ export const apiMonitoringRepository: ApiMonitoringRepository = {
   updateRateLimitState: (endpointId, state) => store.updateRateLimitState(endpointId, state),
   resetDemo: () => store.resetDemo(),
 };
+
+export const apiMonitoringRepository: ApiMonitoringRepository =
+  env.dataSource === "api" ? liveApiMonitoringRepository : mockApiMonitoringRepository;
