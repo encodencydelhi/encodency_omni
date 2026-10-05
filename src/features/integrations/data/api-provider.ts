@@ -26,7 +26,12 @@
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/types/api";
 import type { IntegrationsRepository } from "./repository";
-import type { IntegrationProvider, ProviderConfiguration } from "./types";
+import type {
+  IntegrationActivity,
+  IntegrationProvider,
+  IntegrationsKpis,
+  ProviderConfiguration,
+} from "./types";
 
 /* ------------------------------------------------------------------ */
 /* Backend DTO (mirrors providers/provider.types.ts)                  */
@@ -138,6 +143,80 @@ export function createApiIntegrationsProvider(fallback: IntegrationsRepository):
         return fallback.getProviderById(id);
       } catch (error) {
         if (shouldFallBack(error)) return fallback.getProviderById(id);
+        throw error;
+      }
+    },
+
+    async getOverviewKpis(): Promise<IntegrationsKpis> {
+      try {
+        const [registry, superAdminSummary] = await Promise.all([
+          fetchRegistry().catch(() => [] as BackendOAuthProvider[]),
+          apiClient
+            .request<{ metrics?: { integrations?: { value: number; state: string } } }>({
+              method: "GET",
+              path: "/super-admin/dashboard/summary",
+            })
+            .catch(() => null),
+        ]);
+
+        const baseKpis = await fallback.getOverviewKpis();
+        const liveCount = registry.length > 0 ? registry.length : baseKpis.liveProviders;
+        const activeConn =
+          superAdminSummary?.metrics?.integrations?.state === "live"
+            ? superAdminSummary.metrics.integrations.value
+            : baseKpis.activeConnections;
+
+        return {
+          ...baseKpis,
+          liveProviders: liveCount,
+          activeConnections: activeConn,
+          healthyConnections: activeConn,
+        };
+      } catch (error) {
+        if (shouldFallBack(error)) return fallback.getOverviewKpis();
+        throw error;
+      }
+    },
+
+    async getActivities(): Promise<IntegrationActivity[]> {
+      try {
+        const logsRes = await apiClient
+          .request<{
+            items: Array<{
+              id: string;
+              action: string;
+              resourceType: string;
+              resourceId?: string;
+              outcome: string;
+              createdAt: string;
+              userEmail?: string;
+              userName?: string;
+            }>;
+          }>({
+            method: "GET",
+            path: "/super-admin/audit-logs",
+          })
+          .catch(() => null);
+
+        if (logsRes && Array.isArray(logsRes.items) && logsRes.items.length > 0) {
+          return logsRes.items.slice(0, 8).map((log) => ({
+            id: log.id,
+            timestamp: log.createdAt,
+            actor: {
+              id: log.id,
+              name: log.userName ?? log.userEmail ?? "Platform Admin",
+              email: log.userEmail ?? "admin@encodency.com",
+              type: "super_admin",
+            },
+            eventType: "provider_config_updated",
+            providerId: "system",
+            description: `${log.action} on ${log.resourceType}`,
+            result: log.outcome === "SUCCESS" ? "success" : "warning",
+          }));
+        }
+        return fallback.getActivities();
+      } catch (error) {
+        if (shouldFallBack(error)) return fallback.getActivities();
         throw error;
       }
     },

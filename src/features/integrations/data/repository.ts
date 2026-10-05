@@ -218,6 +218,8 @@ const mockIntegrationsProvider: IntegrationsRepository = {
   },
 };
 
-export const integrationsRepository: IntegrationsRepository = INTEGRATIONS_MOCK_MODE
-  ? mockIntegrationsProvider
-  : createApiIntegrationsProvider(mockIntegrationsProvider);
+const useLiveIntegrations = !INTEGRATIONS_MOCK_MODE || process.env.NEXT_PUBLIC_DATA_SOURCE === "api";
+
+export const integrationsRepository: IntegrationsRepository = useLiveIntegrations
+  ? createApiIntegrationsProvider(mockIntegrationsProvider)
+  : mockIntegrationsProvider;
