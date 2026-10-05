@@ -20,8 +20,8 @@ import type {
   VersionStatus,
 } from "./types";
 
-/** Mock mode is the app-wide setting Companies already reuses: one dataset, one switch. */
-export const PLANS_MOCK_MODE = COMPANIES_MOCK_MODE;
+/** Mock mode: allow plans & subscriptions to operate seamlessly in dev. */
+export const PLANS_MOCK_MODE = process.env.NEXT_PUBLIC_PLANS_MOCK_MODE === "false" ? false : true;
 
 export const SESSION_STORAGE_KEYS = {
   planState: "omni.plans.demo-state.v1",

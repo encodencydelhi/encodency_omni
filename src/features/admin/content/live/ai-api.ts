@@ -85,4 +85,23 @@ export const aiApi = {
       signal,
     });
   },
+
+  /**
+   * POST /api/v1/ai/generate-image
+   * Generates AI image strictly via backend AI service.
+   * Scoped to company level via `x-company-id`.
+   */
+  async generateImage(
+    companyId: string,
+    payload: { prompt: string; style?: string },
+    signal?: AbortSignal,
+  ): Promise<{ success: boolean; image: { url: string; alt: string; author: string }; provider: string; prompt: string }> {
+    return apiClient.request({
+      method: "POST",
+      path: "/ai/generate-image",
+      headers: companyScopeHeaders(companyId),
+      body: payload,
+      signal,
+    });
+  },
 };

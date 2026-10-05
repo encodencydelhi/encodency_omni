@@ -1,6 +1,6 @@
 /**
  * AI Visual Generator Service for Content Studio
- * Exclusively generates 100% custom images using OpenAI (no stock fetching or fallbacks).
+ * Calls backend /api/v1/ai/generate-image service.
  */
 
 export interface AiGeneratedVisual {
@@ -24,23 +24,29 @@ export const PRESET_STYLE_LABELS = [
 export type PresetStyle = typeof PRESET_STYLE_LABELS[number];
 
 /**
- * Pure AI image generation via /api/ai-image (OpenAI gpt-image-1).
- * Strictly generates from the prompt. Does NOT fetch stock images.
+ * Pure AI image generation via backend /api/v1/ai/generate-image.
+ * Strictly generates from prompt via backend.
  */
 export async function fetchDynamicAiVisual(
   topic: string,
   style: string = "Realistic",
   variationIndex: number = 0,
   customPrompt?: string,
+  companyId?: string,
 ): Promise<AiGeneratedVisual | null> {
   const query = customPrompt?.trim() || topic.trim();
   if (!query) return null;
 
   try {
-    const res = await fetch("/api/ai-image", {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (companyId) {
+      headers["x-company-id"] = companyId;
+    }
+
+    const res = await fetch("/api/v1/ai/generate-image", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: query, style, variation: variationIndex }),
+      headers,
+      body: JSON.stringify({ prompt: query, style }),
     });
 
     if (res.ok) {
@@ -54,12 +60,12 @@ export async function fetchDynamicAiVisual(
           style,
           category: "ai-generated",
           aspectRatio: "1:1",
-          id: `openai-${Date.now()}-${variationIndex}`,
+          id: `ai-${Date.now()}-${variationIndex}`,
         };
       }
     } else {
       const err = await res.json().catch(() => ({}));
-      console.error("OpenAI image generation error:", err);
+      console.error("Backend image generation error:", err);
     }
   } catch (err) {
     console.error("fetchDynamicAiVisual network error:", err);
