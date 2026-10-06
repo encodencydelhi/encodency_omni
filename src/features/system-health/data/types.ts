@@ -10,7 +10,7 @@ export type ImpactConfidence = "confirmed" | "potential" | "unknown";
 export interface MonitoringSource {
   id: string;
   name: string;
-  kind: "demo_observation" | "api_summary" | "job_summary" | "integration_summary" | "maintenance_schedule";
+  kind: "operational_snapshot" | "demo_observation" | "api_summary" | "job_summary" | "integration_summary" | "maintenance_schedule";
   freshnessThresholdMinutes: number;
   backendConnected: boolean;
 }

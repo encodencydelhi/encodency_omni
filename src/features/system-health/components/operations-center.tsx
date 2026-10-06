@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -26,8 +26,7 @@ import type { HealthCheckResponse } from "@/types/domain/system-health";
 import { cn } from "@/lib/utils/cn";
 import { ROUTES } from "@/config/routes";
 import { SYSTEM_HEALTH_CAPABILITIES } from "../data/capabilities";
-import { buildSystemHealthSnapshot } from "../data/mock-provider";
-import { makeIncident, transitionLabel } from "../data/repository";
+import { systemHealthRepository, transitionLabel, type CreateIncidentInput } from "../data/repository";
 import {
   activeIncidents,
   dependenciesForService,
@@ -229,8 +228,8 @@ function Header({ snapshot, setEnvironment, exportJson }: { snapshot: SystemHeal
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Badge className={state === "Partial Outage" ? healthTone.unavailable : state === "Degraded" ? healthTone.degraded : state === "Unknown" ? healthTone.unknown : healthTone.healthy}><HeartPulse className="mr-1 size-3" />{state}</Badge>
-            <Badge className="border-indigo-200 bg-indigo-50 text-indigo-700">Demo Monitoring Data</Badge>
-            <Badge className="border-slate-200 bg-slate-50 text-slate-700">Production Telemetry Not Connected</Badge>
+            <Badge className="border-indigo-200 bg-indigo-50 text-indigo-700">Backend Monitoring Data</Badge>
+            <Badge className="border-slate-200 bg-slate-50 text-slate-700">Operational Snapshot Connected</Badge>
             <span className="text-xs text-slate-500">Last observation context: {formatDate(snapshot.generatedAt)} - {snapshot.timezone}</span>
           </div>
           <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
@@ -600,7 +599,7 @@ function DependenciesPage({ snapshot }: { snapshot: SystemHealthSnapshotV2 }) {
   );
 }
 
-function CreateIncidentModal({ snapshot, open, onClose, onCreate }: { snapshot: SystemHealthSnapshotV2; open: boolean; onClose: () => void; onCreate: (incident: IncidentRecord) => void }) {
+function CreateIncidentModal({ snapshot, open, onClose, onCreate }: { snapshot: SystemHealthSnapshotV2; open: boolean; onClose: () => void; onCreate: (incident: CreateIncidentInput) => Promise<void> }) {
   const owners = STAFF_MEMBERS.filter((staff) => staff.status === "active" && (staff.role === "super_admin" || staff.role === "technical_admin" || staff.role === "support"));
   const [title, setTitle] = useState("");
   const [serviceId, setServiceId] = useState(snapshot.services[0]?.id ?? "");
@@ -614,31 +613,35 @@ function CreateIncidentModal({ snapshot, open, onClose, onCreate }: { snapshot: 
     if (dirty && !window.confirm("Discard this incident draft?")) return;
     setTitle(""); setSummary(""); setError(""); onClose();
   }
-  function submit() {
+  async function submit() {
     if (!title.trim() || !serviceId || !ownerId || !summary.trim()) {
       setError("Title, service, owner and summary are required.");
       return;
     }
     const owner = owners.find((item) => item.id === ownerId);
-    onCreate(makeIncident({ title, primaryServiceId: serviceId, affectedServiceIds: [], priority, ownerId, ownerName: owner?.name ?? "Unassigned", summary }, Date.now() % 1000));
-    setTitle(""); setSummary(""); setError(""); onClose();
+    try {
+      await onCreate({ title, primaryServiceId: serviceId, affectedServiceIds: [], priority, ownerId, ownerName: owner?.name ?? "Unassigned", summary });
+      setTitle(""); setSummary(""); setError(""); onClose();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Unable to create incident.");
+    }
   }
-  return <Modal title="Create Demo Incident" open={open} onClose={closeWithGuard}><div className="space-y-3"><p className="text-xs text-slate-600">Creates a frontend demo incident record. It does not change service health or trigger production notifications.</p>{error ? <div className="rounded-md border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">{error}</div> : null}<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Incident title" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><textarea value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="Known symptoms and investigation context" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><div className="grid gap-2 sm:grid-cols-3"><select value={serviceId} onChange={(event) => setServiceId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">{snapshot.services.map((service) => <option value={service.id} key={service.id}>{service.name}</option>)}</select><select value={priority} onChange={(event) => setPriority(event.target.value as IncidentPriority)} className="rounded-md border border-slate-200 px-2 py-2 text-sm"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select><select value={ownerId} onChange={(event) => setOwnerId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">{owners.map((owner) => <option value={owner.id} key={owner.id}>{owner.name}</option>)}</select></div><div className="flex justify-end gap-2"><button type="button" onClick={closeWithGuard} className="rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold">Cancel</button><button type="button" onClick={submit} className="rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">Create Incident</button></div></div></Modal>;
+  return <Modal title="Create Incident" open={open} onClose={closeWithGuard}><div className="space-y-3"><p className="text-xs text-slate-600">Creates a persisted incident record. It does not change service health or trigger production notifications.</p>{error ? <div className="rounded-md border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">{error}</div> : null}<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Incident title" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><textarea value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="Known symptoms and investigation context" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><div className="grid gap-2 sm:grid-cols-3"><select value={serviceId} onChange={(event) => setServiceId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">{snapshot.services.map((service) => <option value={service.id} key={service.id}>{service.name}</option>)}</select><select value={priority} onChange={(event) => setPriority(event.target.value as IncidentPriority)} className="rounded-md border border-slate-200 px-2 py-2 text-sm"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select><select value={ownerId} onChange={(event) => setOwnerId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">{owners.map((owner) => <option value={owner.id} key={owner.id}>{owner.name}</option>)}</select></div><div className="flex justify-end gap-2"><button type="button" onClick={closeWithGuard} className="rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold">Cancel</button><button type="button" onClick={submit} className="rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">Create Incident</button></div></div></Modal>;
 }
 
-function IncidentsPage({ snapshot, incidents, setIncidents }: { snapshot: SystemHealthSnapshotV2; incidents: IncidentRecord[]; setIncidents: (incidents: IncidentRecord[]) => void }) {
+function IncidentsPage({ snapshot, incidents, onCreateIncident }: { snapshot: SystemHealthSnapshotV2; incidents: IncidentRecord[]; onCreateIncident: (incident: CreateIncidentInput) => Promise<void> }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState(useSearchParams().get("state") ?? "all");
   const visible = incidents.filter((incident) => filter === "all" || (filter === "active" ? incident.state !== "resolved" : incident.state === filter));
   return (
     <>
       <Card><CardTitle title="Incidents Directory" subtitle="Managed incident records and workflow state." action={<div className="flex gap-2"><button type="button" onClick={() => downloadFile("system-health-incidents.csv", toCsv(visible.map((incident) => ({ reference: incident.reference, title: incident.title, priority: incident.priority, state: incident.state, owner: incident.ownerName }))), "text/csv")} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold"><Download className="size-4" />Export</button><button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white"><Plus className="size-4" />Create Incident</button></div>} /><div className="border-b border-slate-100 p-3"><select value={filter} onChange={(event) => setFilter(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-xs"><option value="all">All incidents</option><option value="active">Active incidents</option><option value="investigating">Investigating</option><option value="identified">Identified</option><option value="monitoring_recovery">Monitoring Recovery</option><option value="resolved">Resolved</option></select></div><IncidentList snapshot={{ ...snapshot, incidents }} incidents={visible} /></Card>
-      <CreateIncidentModal snapshot={snapshot} open={open} onClose={() => setOpen(false)} onCreate={(incident) => setIncidents([incident, ...incidents])} />
+      <CreateIncidentModal snapshot={snapshot} open={open} onClose={() => setOpen(false)} onCreate={onCreateIncident} />
     </>
   );
 }
 
-function AddImpactModal({ snapshot, incident, open, onClose, onAdd }: { snapshot: SystemHealthSnapshotV2; incident: IncidentRecord; open: boolean; onClose: () => void; onAdd: (impact: ImpactRecord) => void }) {
+function AddImpactModal({ snapshot, incident, open, onClose, onAdd }: { snapshot: SystemHealthSnapshotV2; incident: IncidentRecord; open: boolean; onClose: () => void; onAdd: (impact: Omit<ImpactRecord, "id" | "incidentId">) => Promise<void> }) {
   const [confidence, setConfidence] = useState<ImpactConfidence>("potential");
   const [area, setArea] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -652,13 +655,13 @@ function AddImpactModal({ snapshot, incident, open, onClose, onAdd }: { snapshot
     if (dirty && !window.confirm("Discard this impact draft?")) return;
     setArea(""); setCompanyName(""); setClientName(""); setWorkflow(""); setEvidence(""); setError(""); onClose();
   }
-  function submit() {
+  async function submit() {
     if (!area.trim() || !workflow.trim() || !evidence.trim()) {
       setError("Affected area, workflow and evidence source are required.");
       return;
     }
-    onAdd({
-      id: `imp-demo-${Date.now()}`,
+    try {
+      await onAdd({
       confidence,
       area,
       companyId: companyName.trim() ? `cmp_demo_${companyName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}` : null,
@@ -667,14 +670,16 @@ function AddImpactModal({ snapshot, incident, open, onClose, onAdd }: { snapshot
       workflow,
       evidence,
       serviceId: incident.primaryServiceId,
-      incidentId: incident.id,
     });
-    setArea(""); setCompanyName(""); setClientName(""); setWorkflow(""); setEvidence(""); setError(""); onClose();
+      setArea(""); setCompanyName(""); setClientName(""); setWorkflow(""); setEvidence(""); setError(""); onClose();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Unable to add impact.");
+    }
   }
   return (
     <Modal title="Add Incident Impact" open={open} onClose={closeWithGuard}>
       <div className="space-y-3">
-        <p className="text-xs text-slate-600">Adds a frontend impact record for {incident.reference}. Confirmed impact requires a concrete evidence source.</p>
+        <p className="text-xs text-slate-600">Adds a persisted impact record for {incident.reference}. Confirmed impact requires a concrete evidence source.</p>
         {error ? <div className="rounded-md border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">{error}</div> : null}
         <div className="grid gap-2 sm:grid-cols-2">
           <select value={confidence} onChange={(event) => setConfidence(event.target.value as ImpactConfidence)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">
@@ -713,18 +718,21 @@ function IncidentDetailPage({ snapshot, incidents, setIncidents, setImpacts, inc
   const dirty = note.trim().length > 0 || resolution.trim().length > 0;
   useBeforeUnload(dirty);
   const update = (next: IncidentRecord) => setIncidents(incidents.map((item) => item.id === currentIncident.id ? next : item));
-  function addNote() {
+  async function addNote() {
     if (!note.trim()) return;
-    update({ ...currentIncident, timeline: [{ id: `${currentIncident.id}-${Date.now()}`, at: new Date().toISOString(), actor: currentIncident.ownerName ?? "Super Admin", type: "update", note }, ...currentIncident.timeline], currentFindings: note });
+    const next = await systemHealthRepository.addIncidentUpdate(currentIncident.id, note);
+    update(next);
     setNote("");
   }
-  function changeState(state: IncidentState) {
-    update({ ...currentIncident, state, resolvedAt: state === "resolved" ? new Date().toISOString() : currentIncident.resolvedAt, recoveryEvidence: state === "resolved" ? resolution || "Resolved in frontend demo workflow after evidence review." : currentIncident.recoveryEvidence, timeline: [{ id: `${currentIncident.id}-${Date.now()}`, at: new Date().toISOString(), actor: currentIncident.ownerName ?? "Super Admin", type: state === "resolved" ? "resolution" : "state_change", note: `State changed to ${transitionLabel(state)}. Service health was not automatically changed.` }, ...currentIncident.timeline] });
+  async function changeState(state: IncidentState) {
+    const next = await systemHealthRepository.changeIncidentState(currentIncident.id, state, resolution);
+    update(next);
     setResolution("");
   }
-  function addImpact(impact: ImpactRecord) {
-    const next = { ...currentIncident, impactIds: [...currentIncident.impactIds, impact.id], timeline: [{ id: `${currentIncident.id}-${Date.now()}`, at: new Date().toISOString(), actor: currentIncident.ownerName ?? "Super Admin", type: "impact_update" as const, note: `${label(impact.confidence)} recorded for ${impact.area}.` }, ...currentIncident.timeline] };
-    setImpacts([impact, ...snapshot.impacts]);
+  async function addImpact(impact: Omit<ImpactRecord, "id" | "incidentId">) {
+    const saved = await systemHealthRepository.addIncidentImpact(currentIncident.id, impact);
+    const next = { ...currentIncident, impactIds: [...currentIncident.impactIds, saved.id], timeline: [{ id: `${currentIncident.id}-${Date.now()}`, at: new Date().toISOString(), actor: currentIncident.ownerName ?? "Super Admin", type: "impact_update" as const, note: `${label(saved.confidence)} recorded for ${saved.area}.` }, ...currentIncident.timeline] };
+    setImpacts([saved, ...snapshot.impacts]);
     update(next);
   }
   return (
@@ -732,7 +740,7 @@ function IncidentDetailPage({ snapshot, incidents, setIncidents, setImpacts, inc
       <Link href={`${BASE}/incidents`} className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-[#111C3A]"><ArrowLeft className="size-4" />Back to Incidents</Link>
       <Card className="p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase text-slate-500">{currentIncident.reference}</p><h2 className="text-xl font-bold text-[#111C3A]">{currentIncident.title}</h2><p className="mt-1 max-w-3xl text-sm text-slate-600">{currentIncident.summary}</p></div><div className="flex gap-1"><Badge className={priorityTone[currentIncident.priority]}>{label(currentIncident.priority)}</Badge><Badge className={stateTone[currentIncident.state]}>{transitionLabel(currentIncident.state)}</Badge></div></div><div className="mt-4 grid gap-1 sm:grid-cols-4"><MiniMetric label="Primary Service" value={service?.name ?? "Unknown"} /><MiniMetric label="Owner" value={currentIncident.ownerName ?? "Unassigned"} /><MiniMetric label="Detected" value={formatDate(currentIncident.detectedAt)} /><MiniMetric label="Resolved" value={formatDate(currentIncident.resolvedAt)} /></div></Card>
       <div className="grid gap-1 xl:grid-cols-[1fr_0.85fr]">
-        <Card><CardTitle title="Incident Timeline" subtitle="Chronological updates recorded in frontend demo state." /><div className="space-y-2 p-4">{currentIncident.timeline.map((entry) => <div key={entry.id} className="rounded-md border border-slate-200 p-3"><p className="text-xs font-bold text-[#111C3A]">{label(entry.type)} - {entry.actor}</p><p className="mt-1 text-xs text-slate-600">{entry.note}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(entry.at)}</p></div>)}</div></Card>
+        <Card><CardTitle title="Incident Timeline" subtitle="Chronological updates recorded in the operational incident record." /><div className="space-y-2 p-4">{currentIncident.timeline.map((entry) => <div key={entry.id} className="rounded-md border border-slate-200 p-3"><p className="text-xs font-bold text-[#111C3A]">{label(entry.type)} - {entry.actor}</p><p className="mt-1 text-xs text-slate-600">{entry.note}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(entry.at)}</p></div>)}</div></Card>
         <Card><CardTitle title="Incident Workflow" subtitle="Updates never imply infrastructure repair." /><div className="space-y-3 p-4"><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Add investigation update" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><button type="button" onClick={addNote} className="w-full rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">Add Incident Update</button><select value={currentIncident.state} onChange={(event) => changeState(event.target.value as IncidentState)} className="w-full rounded-md border border-slate-200 px-2 py-2 text-sm"><option value="investigating">Investigating</option><option value="identified">Identified</option><option value="monitoring_recovery">Monitoring Recovery</option><option value="resolved">Resolved</option></select><textarea value={resolution} onChange={(event) => setResolution(event.target.value)} placeholder="Recovery evidence for resolution review" className="min-h-20 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><p className="text-[11px] text-slate-500">Resolving this incident changes only the incident workflow. It does not mark any service healthy.</p></div></Card>
       </div>
       <Card><CardTitle title="Incident Impact" action={<button type="button" onClick={() => setImpactOpen(true)} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold"><Plus className="size-4" />Add Impact</button>} /><ImpactTable snapshot={snapshot} impacts={snapshot.impacts.filter((impact) => currentIncident.impactIds.includes(impact.id))} /></Card>
@@ -765,7 +773,7 @@ function ActivityMonitoringPage({ snapshot }: { snapshot: SystemHealthSnapshotV2
       <TenancyHarnessCard />
       <div className="grid gap-1 xl:grid-cols-[1fr_0.9fr]">
         <Card><CardTitle title="Health Activity" subtitle="Monitoring events stay in System Health activity, not high-impact audit history." /><ActivityTable snapshot={snapshot} activity={snapshot.activity} /></Card>
-        <Card><CardTitle title="Monitoring Coverage" subtitle="Every source is clearly labelled as demo-backed until backend telemetry is connected." /><div className="divide-y divide-slate-100">{snapshot.sources.map((source) => <div key={source.id} className="px-4 py-3"><div className="flex items-center justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{source.name}</p><Badge className={source.backendConnected ? healthTone.healthy : freshnessTone.stale}>{source.backendConnected ? "Backend Connected" : "Demo Only"}</Badge></div><p className="mt-1 text-xs text-slate-600">{label(source.kind)} - freshness threshold {source.freshnessThresholdMinutes} min</p></div>)}</div></Card>
+        <Card><CardTitle title="Monitoring Coverage" subtitle="Every source is labelled by backend connectivity and freshness threshold." /><div className="divide-y divide-slate-100">{snapshot.sources.map((source) => <div key={source.id} className="px-4 py-3"><div className="flex items-center justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{source.name}</p><Badge className={source.backendConnected ? healthTone.healthy : freshnessTone.stale}>{source.backendConnected ? "Backend Connected" : "Connector Pending"}</Badge></div><p className="mt-1 text-xs text-slate-600">{label(source.kind)} - freshness threshold {source.freshnessThresholdMinutes} min</p></div>)}</div></Card>
       </div>
     </div>
   );
@@ -875,20 +883,33 @@ export function SystemHealthOperationsCenter({ page, serviceId, incidentId }: { 
   const [environment, setEnvironmentState] = useState<HealthEnvironment>(["development", "staging", "production"].includes(initialEnv) ? initialEnv : "production");
   const [loading, setLoading] = useState(true);
   const [preview, setPreview] = useState<ServiceRecord | null>(null);
-  const snapshot = useMemo(() => buildSystemHealthSnapshot(environment), [environment]);
-  const [incidents, setIncidents] = useState<IncidentRecord[]>(snapshot.incidents);
-  const [impacts, setImpacts] = useState<ImpactRecord[]>(snapshot.impacts);
+  const [snapshot, setSnapshot] = useState<SystemHealthSnapshotV2 | null>(null);
+  const [incidents, setIncidents] = useState<IncidentRecord[]>([]);
+  const [impacts, setImpacts] = useState<ImpactRecord[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
   useEffect(() => {
-    const next = buildSystemHealthSnapshot(environment);
-    setIncidents(next.incidents);
-    setImpacts(next.impacts);
-  }, [environment]);
-  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    const timer = window.setTimeout(() => setLoading(false), 180);
-    return () => window.clearTimeout(timer);
+    setLoadError(null);
+    systemHealthRepository.loadSnapshot(environment)
+      .then((next) => {
+        if (cancelled) return;
+        setSnapshot(next);
+        setIncidents(next.incidents);
+        setImpacts(next.impacts);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setLoadError(error instanceof Error ? error.message : "Unable to load System Health.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [environment, page, serviceId, incidentId]);
-  const workingSnapshot = { ...snapshot, incidents, impacts };
+  const workingSnapshot = snapshot ? { ...snapshot, incidents, impacts } : null;
   function setEnvironment(env: HealthEnvironment) {
     setEnvironmentState(env);
     const params = new URLSearchParams(search.toString());
@@ -896,24 +917,31 @@ export function SystemHealthOperationsCenter({ page, serviceId, incidentId }: { 
     router.replace(`${window.location.pathname}?${params.toString()}`);
   }
   function exportJson() {
-    downloadFile(`system-health-${environment}.json`, JSON.stringify({ ...workingSnapshot, limitation: "Demo Monitoring Data - Production Telemetry Not Connected" }, null, 2), "application/json");
+    if (!workingSnapshot) return;
+    downloadFile(`system-health-${environment}.json`, JSON.stringify({ ...workingSnapshot, limitation: "Operational telemetry snapshot" }, null, 2), "application/json");
+  }
+  async function createIncident(input: CreateIncidentInput) {
+    const incident = await systemHealthRepository.createIncident(input);
+    setIncidents((current) => [incident, ...current]);
   }
   return (
     <div className="space-y-1">
-      <Header snapshot={workingSnapshot} setEnvironment={setEnvironment} exportJson={exportJson} />
+      {workingSnapshot ? <Header snapshot={workingSnapshot} setEnvironment={setEnvironment} exportJson={exportJson} /> : null}
       <Tabs />
       {!SYSTEM_HEALTH_CAPABILITIES.canViewSystemHealth ? <NotFound title="Insufficient Capability" body="Your role cannot view System Health." href={ROUTES.superAdmin.dashboard} /> : null}
       {loading ? <PageSkeleton title={`Loading ${page ?? "overview"}`} /> : null}
-      {!loading && page === "services" ? <ServicesPage snapshot={workingSnapshot} openPreview={setPreview} /> : null}
-      {!loading && page === "service-detail" && serviceId ? <ServiceDetailPage snapshot={workingSnapshot} serviceId={serviceId} /> : null}
-      {!loading && page === "dependencies" ? <DependenciesPage snapshot={workingSnapshot} /> : null}
-      {!loading && page === "incidents" ? <IncidentsPage snapshot={workingSnapshot} incidents={incidents} setIncidents={setIncidents} /> : null}
-      {!loading && page === "incident-detail" && incidentId ? <IncidentDetailPage snapshot={workingSnapshot} incidents={incidents} setIncidents={setIncidents} setImpacts={setImpacts} incidentId={incidentId} /> : null}
-      {!loading && page === "impact" ? <ImpactAvailabilityPage snapshot={workingSnapshot} /> : null}
-      {!loading && page === "maintenance" ? <MaintenancePage snapshot={workingSnapshot} /> : null}
-      {!loading && page === "activity" ? <ActivityMonitoringPage snapshot={workingSnapshot} /> : null}
-      {!loading && (!page || page === "overview") ? <Overview snapshot={workingSnapshot} openPreview={setPreview} /> : null}
-      <ServicePreview snapshot={workingSnapshot} service={preview} onClose={() => setPreview(null)} />
+      {!loading && loadError ? <NotFound title="System Health Unavailable" body={loadError} href={ROUTES.superAdmin.dashboard} /> : null}
+      {!loading && !workingSnapshot && !loadError ? <PageSkeleton title={`Loading ${page ?? "overview"}`} /> : null}
+      {!loading && workingSnapshot && page === "services" ? <ServicesPage snapshot={workingSnapshot} openPreview={setPreview} /> : null}
+      {!loading && workingSnapshot && page === "service-detail" && serviceId ? <ServiceDetailPage snapshot={workingSnapshot} serviceId={serviceId} /> : null}
+      {!loading && workingSnapshot && page === "dependencies" ? <DependenciesPage snapshot={workingSnapshot} /> : null}
+      {!loading && workingSnapshot && page === "incidents" ? <IncidentsPage snapshot={workingSnapshot} incidents={incidents} onCreateIncident={createIncident} /> : null}
+      {!loading && workingSnapshot && page === "incident-detail" && incidentId ? <IncidentDetailPage snapshot={workingSnapshot} incidents={incidents} setIncidents={setIncidents} setImpacts={setImpacts} incidentId={incidentId} /> : null}
+      {!loading && workingSnapshot && page === "impact" ? <ImpactAvailabilityPage snapshot={workingSnapshot} /> : null}
+      {!loading && workingSnapshot && page === "maintenance" ? <MaintenancePage snapshot={workingSnapshot} /> : null}
+      {!loading && workingSnapshot && page === "activity" ? <ActivityMonitoringPage snapshot={workingSnapshot} /> : null}
+      {!loading && workingSnapshot && (!page || page === "overview") ? <Overview snapshot={workingSnapshot} openPreview={setPreview} /> : null}
+      {workingSnapshot ? <ServicePreview snapshot={workingSnapshot} service={preview} onClose={() => setPreview(null)} /> : null}
     </div>
   );
 }
