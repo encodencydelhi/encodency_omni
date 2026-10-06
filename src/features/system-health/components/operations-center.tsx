@@ -925,7 +925,7 @@ export function SystemHealthOperationsCenter({ page, serviceId, incidentId }: { 
     setIncidents((current) => [incident, ...current]);
   }
   return (
-    <div className="space-y-1">
+    <div className="space-y-1 capitalize">
       {workingSnapshot ? <Header snapshot={workingSnapshot} setEnvironment={setEnvironment} exportJson={exportJson} /> : null}
       <Tabs />
       {!SYSTEM_HEALTH_CAPABILITIES.canViewSystemHealth ? <NotFound title="Insufficient Capability" body="Your role cannot view System Health." href={ROUTES.superAdmin.dashboard} /> : null}
