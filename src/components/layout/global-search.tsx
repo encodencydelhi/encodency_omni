@@ -3,13 +3,12 @@
 import { Building2Icon, SearchIcon, UserIcon, FolderIcon, ServerIcon, ReceiptIcon, HeadsetIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ROUTES } from "@/config/routes";
-import { useCompanies } from "@/features/companies/hooks/use-companies";
-import { COMPANY_STATUS } from "@/types/domain/company";
-import { PLAN_TIER } from "@/types/domain/plan";
+import { superAdminCompaniesApi } from "@/features/companies/live/super-admin-companies-api";
 
 const MIN_QUERY_LENGTH = 1;
 const DEBOUNCE_MS = 250;
@@ -40,13 +39,14 @@ export function GlobalSearch() {
 
   const isActive = debounced.length >= MIN_QUERY_LENGTH;
 
-  const { data, isFetching } = useCompanies({
-    search: debounced,
-    pageSize: 6,
-    ...(isActive ? {} : { page: 1 }),
+  const { data, isFetching } = useQuery({
+    queryKey: ["global-search", "companies", debounced],
+    queryFn: () => superAdminCompaniesApi.list({ page: 1, limit: 6, search: debounced }),
+    enabled: isActive,
+    staleTime: 30_000,
   });
 
-  const results = isActive ? (data?.data ?? []) : [];
+  const results = isActive ? (data?.items ?? []) : [];
 
   const goTo = (href: string) => {
     setOpen(false);
@@ -138,11 +138,11 @@ export function GlobalSearch() {
                             {company.name}
                           </p>
                           <p className="text-[12px] text-slate-500 leading-tight mt-0.5">
-                            Company • {PLAN_TIER[company.planTier].label} Plan
+                            Company
                           </p>
                         </div>
-                        <Badge tone={COMPANY_STATUS[company.status].tone} className="hidden sm:inline-flex">
-                          {COMPANY_STATUS[company.status].label}
+                        <Badge tone={company.status === "ACTIVE" ? "success" : "neutral"} className="hidden sm:inline-flex">
+                          {company.status === "ACTIVE" ? "Active" : "Archived"}
                         </Badge>
                       </button>
                     </li>

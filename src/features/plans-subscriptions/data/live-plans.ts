@@ -11,9 +11,12 @@ import { superAdminAuditLogsApi, type SuperAdminAuditLogItem } from "@/features/
 import { ApiError } from "@/types/api";
 import type { PlanKey } from "@/types/domain/plan";
 import type { BillingCycle } from "@/types/domain/subscription";
-import type { CompanyAccountStatus, CompanySubscriptionStatus, UsageResource } from "@/features/companies/data/types";
-import { superAdminPlansApi, type BackendPlan, type BackendSubscription } from "../live/super-admin-plans-api";
-import { FEATURES, RESOURCES, ruleToLimit } from "./catalogue";
+import type { CompanyAccountStatus, CompanySubscriptionStatus, CompanyUsageOverride, UsageResource } from "@/features/companies/data/types";
+import { liveUsageProvider } from "@/features/usage-limits/data/live-provider";
+import type { OverrideRow as UsageOverrideRow, UsageRow } from "@/features/usage-limits/data/types";
+import { superAdminPlansApi, type BackendPlan, type BackendSubscription, type BackendUsageOverride } from "../live/super-admin-plans-api";
+import { FEATURES, RESOURCES, limitToRule, ruleToLimit } from "./catalogue";
+import { activeOverrideAt, overrideRuleLabel, overrideValueFor } from "./entitlements";
 import {
   applySubscriptionQuery,
   computeAdoption,
@@ -63,6 +66,7 @@ import type {
   TrialRow,
   UsageRisk,
   VersionImpact,
+  ResourceKey,
 } from "./types";
 import type { CompaniesLite, PlanDetailData, PlanListResult, PlansRepository, SubscriptionFacets, TrialQuery } from "./repository";
 
@@ -267,14 +271,36 @@ function statusOf(used: number, limit: number): EntitlementStatus {
   return ratio > 1 ? "exceeded" : ratio >= 0.9 ? "near_limit" : ratio >= 0.75 ? "high" : "within";
 }
 
-export function entitlementsOf(plan: BackendPlan, usage: LiveSubscription["usage"]): EntitlementRow[] {
+export interface EntitlementContext {
+  /** Overrides granted to the company, as recorded by the Usage & Limits backend. */
+  overrides?: readonly CompanyUsageOverride[];
+  /** Live usage rows (base allowance + reading per resource) for the company. */
+  rows?: readonly UsageRow[];
+  /** Evaluation instant; injected by tests, now by default. */
+  now?: number;
+}
+
+export function entitlementsOf(plan: BackendPlan, usage: LiveSubscription["usage"], context: EntitlementContext = {}): EntitlementRow[] {
   const limits = limitsOf(plan);
   const features = featuresOf(plan);
   const measured: Record<string, number | undefined> = { Clients: usage?.currentClients, aiCredits: usage?.currentAiTokens };
+  const now = context.now ?? Date.now();
+  const rowsByResource = new Map((context.rows ?? []).map((row) => [row.resource, row]));
   const resources = RESOURCES.map((def): EntitlementRow => {
-    const base = limits[def.key]!;
-    const used = measured[def.key] ?? null;
+    const liveRow = def.usageResource ? rowsByResource.get(def.usageResource) : undefined;
+    // The usage module reads the allowance straight from the plan row, so when it
+    // is available it is the base for this subscription — not the two caps the
+    // plans API happens to expose.
+    const planRule = (liveRow && liveRow.base !== null ? limitToRule(liveRow.base) : limits[def.key])!;
+    const planLimit = ruleToLimit(planRule);
+    const used = liveRow ? liveRow.used : measured[def.key] ?? null;
+    const override =
+      def.usageResource && context.overrides ? activeOverrideAt(context.overrides, def.usageResource, now, planLimit) : null;
+    // Without a usage row the plans API may have no cap for this resource; the
+    // override itself then records the allowance it was granted against.
+    const base = !liveRow && override?.baseLimit != null ? limitToRule(override.baseLimit) : planRule;
     const limit = ruleToLimit(base);
+    const effectiveValue = override ? overrideValueFor(override, limit) : limit;
     return {
       key: def.key,
       kind: "resource",
@@ -284,11 +310,18 @@ export function entitlementsOf(plan: BackendPlan, usage: LiveSubscription["usage
       resetPeriod: def.resetPeriod,
       base,
       baseEnabled: null,
-      override: null,
-      effective: { baseValue: limit, baseRule: base, effectiveValue: limit, override: null, ruleApplied: "base", afterExpiryValue: limit },
+      override,
+      effective: {
+        baseValue: limit,
+        baseRule: base,
+        effectiveValue,
+        override,
+        ruleApplied: override ? overrideRuleLabel(override) : "base",
+        afterExpiryValue: limit,
+      },
       effectiveEnabled: null,
       used,
-      status: used === null ? "not_metered" : limit === null ? "within" : statusOf(used, limit),
+      status: used === null ? "not_metered" : effectiveValue === null ? "within" : statusOf(used, effectiveValue),
       usageResource: def.usageResource,
       dependencies: [],
     };
@@ -311,6 +344,25 @@ export function entitlementsOf(plan: BackendPlan, usage: LiveSubscription["usage
     dependencies: def.dependencies,
   }));
   return [...resources, ...flags];
+}
+
+/** A Usage & Limits override row as the Plans & Subscriptions screens model it. */
+function toCompanyOverride(row: UsageOverrideRow): CompanyUsageOverride {
+  return {
+    id: row.id,
+    companyId: row.companyId,
+    resource: row.resource as UsageResource,
+    baseLimit: row.base,
+    overrideLimit: row.effective ?? row.amount,
+    reason: row.reason,
+    startsAt: row.startsAt,
+    expiresAt: row.expiresAt,
+    approvedBy: row.approvedBy,
+    createdAt: row.raw?.createdAt ?? row.startsAt,
+    rule: row.rule,
+    delta: row.rule === "additive" ? row.amount : undefined,
+    revokedAt: row.revokedAt,
+  };
 }
 
 /* ---- history from the audit trail ---- */
@@ -568,7 +620,13 @@ export class LivePlansRepository implements PlansRepository {
     const [raw, { plans }] = await Promise.all([superAdminPlansApi.getSubscription(id) as Promise<LiveSubscription>, this.load()]);
     const backendPlan = plans.find((plan) => plan.id === raw.planId) ?? raw.plan ?? null;
     const row = toRow(raw);
-    const entitlements = backendPlan ? entitlementsOf(backendPlan, raw.usage) : [];
+    // Overrides and live base allowances come from the Usage & Limits API. A
+    // failure there degrades this detail to plan-only entitlements, never to
+    // invented numbers.
+    const usageDetail = await liveUsageProvider.getCompanyUsage(raw.companyId).catch(() => null);
+    const overrides = (usageDetail?.overrides ?? []).map(toCompanyOverride);
+    const usageRows = usageDetail?.summary.rows ?? [];
+    const entitlements = backendPlan ? entitlementsOf(backendPlan, raw.usage, { overrides, rows: usageRows }) : [];
     const metered = entitlements.filter((item) => item.kind === "resource" && item.used !== null && item.effective?.effectiveValue !== null && item.effective !== null);
     const ratio = (item: EntitlementRow) => (item.used ?? 0) / Math.max(item.effective?.effectiveValue ?? 1, 1);
     const top = [...metered].sort((a, b) => ratio(b) - ratio(a))[0];
@@ -586,7 +644,7 @@ export class LivePlansRepository implements PlansRepository {
       plan: backendPlan ? toPlatformPlan(backendPlan) : null,
       version: backendPlan ? versionOf(backendPlan) : null,
       entitlements,
-      overrides: [],
+      overrides,
       scheduled: [],
       history,
       usageSummary: {
@@ -815,12 +873,31 @@ export class LivePlansRepository implements PlansRepository {
     throw notSupported("Scheduled changes aren't supported by the backend.");
   }
 
-  async grantOverride(_id: string, _input: OverrideInput, _actor: Actor): Promise<SubscriptionDetail> {
-    throw notSupported("Limit overrides aren't supported by the backend yet.");
+  async grantOverride(subscriptionId: string, input: OverrideInput, actor: MutationActor): Promise<SubscriptionDetail> {
+    const resource = RESOURCES.find((def) => def.key === input.resource)?.usageResource ?? null;
+    if (!resource) throw invalid("The backend keeps no allowance for that resource, so it cannot be overridden.");
+    if (input.value <= 0) throw invalid("An override amount must be greater than zero.");
+    if (!(input.expiresAt > input.startsAt)) throw invalid("The expiry must be after the start date.");
+    const raw = (await superAdminPlansApi.getSubscription(subscriptionId)) as LiveSubscription;
+    await superAdminPlansApi.createUsageOverride({
+      subscriptionId,
+      companyId: raw.companyId,
+      resource,
+      rule: input.rule,
+      amount: input.value,
+      startsAt: input.startsAt,
+      expiresAt: input.expiresAt,
+      reason: input.reason,
+      approvedBy: input.approvedBy,
+      actor,
+    });
+    return this.getSubscription(subscriptionId);
   }
 
-  async revokeOverride(_id: string, _overrideId: string, _input: { reason: string }, _actor: Actor): Promise<SubscriptionDetail> {
-    throw notSupported("Limit overrides aren't supported by the backend yet.");
+  async revokeOverride(subscriptionId: string, overrideId: string, input: { reason: string }, actor: MutationActor): Promise<SubscriptionDetail> {
+    if (!input.reason.trim()) throw invalid("A reason is required to revoke an override.");
+    await superAdminPlansApi.revokeUsageOverride(overrideId, { reason: input.reason, actor });
+    return this.getSubscription(subscriptionId);
   }
 
   async savePolicy(policy: SubscriptionPolicy, _actor: Actor): Promise<SubscriptionPolicy> {

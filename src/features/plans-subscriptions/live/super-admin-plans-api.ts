@@ -64,6 +64,42 @@ export interface AssignSubscriptionPayload {
   planId: string;
 }
 
+/** A company-specific limit override as the Usage & Limits API stores it. */
+export interface BackendUsageOverride {
+  id: string;
+  companyId: string;
+  subscriptionId: string;
+  resource: string;
+  rule: "absolute" | "additive";
+  amount: number;
+  base: number | null;
+  effective: number | null;
+  startsAt: string;
+  expiresAt: string;
+  revokedAt: string | null;
+  status: "scheduled" | "active" | "expired" | "revoked";
+  approvedBy: string;
+  reason: string;
+}
+
+export interface CreateUsageOverridePayload {
+  subscriptionId: string;
+  companyId: string;
+  resource: string;
+  rule: "absolute" | "additive";
+  amount: number;
+  startsAt: string;
+  expiresAt: string;
+  reason: string;
+  approvedBy: string;
+  actor: { id: string; name: string };
+}
+
+export interface RevokeUsageOverridePayload {
+  reason: string;
+  actor: { id: string; name: string };
+}
+
 /** The platform subscription policy as the backend stores it (plan chosen by its key). */
 export interface BackendSubscriptionPolicy {
   policy: {
@@ -188,5 +224,37 @@ export const superAdminPlansApi = {
       path: `/super-admin/subscriptions/${encodeURIComponent(id)}/cancel`,
       signal,
     });
+  },
+
+  /** POST /api/v1/super-admin/usage/overrides — grants a company-specific limit override. */
+  createUsageOverride(payload: CreateUsageOverridePayload, signal?: AbortSignal): Promise<BackendUsageOverride> {
+    return apiClient.request<BackendUsageOverride>({
+      method: "POST",
+      path: "/super-admin/usage/overrides",
+      body: payload,
+      signal,
+    });
+  },
+
+  /** POST /api/v1/super-admin/usage/overrides/:id/revoke — ends an override immediately. */
+  revokeUsageOverride(id: string, payload: RevokeUsageOverridePayload, signal?: AbortSignal): Promise<BackendUsageOverride> {
+    return apiClient.request<BackendUsageOverride>({
+      method: "POST",
+      path: `/super-admin/usage/overrides/${encodeURIComponent(id)}/revoke`,
+      body: payload,
+      signal,
+    });
+  },
+
+  /** GET /api/v1/super-admin/usage/overrides?company= — every override granted to one company. */
+  listUsageOverrides(companyId: string, signal?: AbortSignal): Promise<BackendUsageOverride[]> {
+    return apiClient
+      .request<{ rows: BackendUsageOverride[] }>({
+        method: "GET",
+        path: "/super-admin/usage/overrides",
+        query: { company: companyId },
+        signal,
+      })
+      .then((page) => page.rows);
   },
 };

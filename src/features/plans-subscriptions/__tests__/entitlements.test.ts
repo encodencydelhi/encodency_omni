@@ -39,7 +39,7 @@ describe("limit semantics", () => {
     assert.equal(ruleToLimit({ kind: "custom", value: 40 }), 40);
     assert.deepEqual(limitToRule(null), { kind: "unlimited", value: null });
     assert.deepEqual(limitToRule(0), { kind: "none", value: null });
-    assert.equal(formatRule({ kind: "none", value: null }), "Not available");
+    assert.equal(formatRule({ kind: "none", value: null }), "Not Available");
     assert.equal(formatRule({ kind: "unlimited", value: null }), "Unlimited");
     assert.match(formatRule({ kind: "custom", value: 1000 }, "GB"), /custom/);
   });

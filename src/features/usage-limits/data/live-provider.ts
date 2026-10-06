@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api/client";
+import type { QueryParams } from "@/lib/api/transport";
 import type {
   AlertDetail,
   AlertsResult,
@@ -27,6 +28,58 @@ import type {
   CompanyUsageResult,
   EventResult,
 } from "./types";
+
+/** The backend caps `limit` at 100 per request; larger asks are paged through. */
+const MAX_LIMIT = 100;
+const DEFAULT_LIMIT = 20;
+/** Guards the export buttons (pageSize 5000) from unbounded request loops. */
+const MAX_PAGES_PER_CALL = 100;
+
+type BackendPage<T, Meta = Record<string, never>> = {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+} & Meta;
+
+type CompaniesMeta = Pick<CompanyUsageResult, "counts" | "facets">;
+type EventsMeta = Pick<EventResult, "facets">;
+
+/**
+ * The backend speaks `{ items, total, page, limit }` with a hard 100-row cap.
+ * The feature contract is `{ rows, total, page, pageSize }`, so requests with
+ * a larger pageSize are read through in `MAX_LIMIT` chunks and re-joined here.
+ */
+async function requestUsagePage<T, Meta = Record<string, never>>(
+  path: string,
+  query: QueryParams,
+  page: number,
+  pageSize: number,
+): Promise<{ rows: T[]; total: number; first: BackendPage<T, Meta> }> {
+  const limit = Math.min(pageSize, MAX_LIMIT);
+  const first = await apiClient.request<BackendPage<T, Meta>>({
+    method: "GET",
+    path,
+    query: { ...query, page, limit },
+  });
+  const rows = [...first.items];
+  let cursor = page + 1;
+  while (
+    rows.length < pageSize &&
+    rows.length < first.total &&
+    cursor - page < MAX_PAGES_PER_CALL
+  ) {
+    const next = await apiClient.request<BackendPage<T, Meta>>({
+      method: "GET",
+      path,
+      query: { ...query, page: cursor, limit },
+    });
+    if (!next.items.length) break;
+    rows.push(...next.items);
+    cursor += 1;
+  }
+  return { rows: rows.slice(0, pageSize), total: first.total, first };
+}
 
 /**
  * 100% Live Backend Provider for Super Admin Usage & Limits.
@@ -73,11 +126,21 @@ export const liveUsageProvider: UsageRepository = {
   },
 
   async listCompanyUsage(query: CompanyUsageQuery): Promise<CompanyUsageResult> {
-    return apiClient.request<CompanyUsageResult>({
-      method: "GET",
-      path: "/super-admin/usage/companies",
-      query: query as any,
-    });
+    const { page = 1, pageSize = DEFAULT_LIMIT, ...filters } = query;
+    const { rows, total, first } = await requestUsagePage<UsageRow, CompaniesMeta>(
+      "/super-admin/usage/companies",
+      filters as QueryParams,
+      page,
+      pageSize,
+    );
+    return {
+      rows,
+      total,
+      page,
+      pageSize,
+      counts: first.counts,
+      facets: first.facets,
+    };
   },
 
   async getCompanyUsage(companyId: string): Promise<CompanyUsageDetail> {
@@ -118,7 +181,7 @@ export const liveUsageProvider: UsageRepository = {
     return apiClient.request<AlertsResult>({
       method: "GET",
       path: "/super-admin/usage/alerts",
-      query: query as any,
+      query: query as QueryParams,
     });
   },
 
@@ -145,7 +208,7 @@ export const liveUsageProvider: UsageRepository = {
     return apiClient.request<OverridesResult>({
       method: "GET",
       path: "/super-admin/usage/overrides",
-      query: query as any,
+      query: query as QueryParams,
     });
   },
 
@@ -164,11 +227,20 @@ export const liveUsageProvider: UsageRepository = {
   },
 
   async listEvents(query: EventQuery): Promise<EventResult> {
-    return apiClient.request<EventResult>({
-      method: "GET",
-      path: "/super-admin/usage/events",
-      query: query as any,
-    });
+    const { page = 1, pageSize = DEFAULT_LIMIT, ...filters } = query;
+    const { rows, total, first } = await requestUsagePage<UsageEvent, EventsMeta>(
+      "/super-admin/usage/events",
+      filters as QueryParams,
+      page,
+      pageSize,
+    );
+    return {
+      rows,
+      total,
+      page,
+      pageSize,
+      facets: first.facets,
+    };
   },
 
   async getEvent(id: string): Promise<UsageEvent> {

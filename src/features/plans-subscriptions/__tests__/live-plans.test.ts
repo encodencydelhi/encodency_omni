@@ -76,6 +76,9 @@ beforeEach(() => {
   api.changePlan = record("changePlan");
   api.cancelSubscription = record("cancelSubscription");
   api.reactivateSubscription = record("reactivateSubscription");
+  api.createUsageOverride = record("createUsageOverride");
+  api.revokeUsageOverride = record("revokeUsageOverride");
+  api.listUsageOverrides = async () => [];
   audit.list = async () => ({ items: [], total: 0, page: 1, limit: 20 });
 });
 
@@ -374,13 +377,50 @@ describe("the live repository writes", () => {
       repo.extendTrial("s1", { days: 3, reason: "x" }, actor),
       repo.convertTrial("s1", { planKey: "growth", billingCycle: "monthly" }, actor),
       repo.endTrial("s1", { reason: "x" }, actor),
-      repo.grantOverride("s1", {} as never, actor),
-      repo.revokeOverride("s1", "o1", { reason: "x" }, actor),
       repo.cancelScheduledChange("s1", { target: "cancellation", reason: "x" }, actor),
       repo.rescheduleChange("s1", { effectiveAt: "", reason: "x" }, actor),
     ]) {
       assert.equal((await reason(attempt)).reason, "not_supported_by_backend");
     }
+  });
+
+  it("grants and revokes a company-specific override through the usage API, and refuses what the backend does not track", async () => {
+    const repo = new live.LivePlansRepository();
+    const detail = await repo.grantOverride(
+      "s1",
+      { resource: "aiCredits", rule: "additive", value: 500, startsAt: "2026-10-01T00:00:00.000Z", expiresAt: "2026-11-01T00:00:00.000Z", reason: "Pilot campaign", approvedBy: "Renu Balakrishnan" },
+      actor,
+    );
+    const grant = calls.find((call) => call.fn === "createUsageOverride");
+    assert.ok(grant, "the grant reaches the usage overrides API");
+    const payload = grant.args[0] as { subscriptionId: string; companyId: string; resource: string; rule: string; amount: number; approvedBy: string };
+    assert.equal(payload.subscriptionId, "s1");
+    assert.equal(payload.companyId, "c1");
+    assert.equal(payload.resource, "aiCredits", "the plan resource key is mapped to the usage resource key");
+    assert.equal(payload.rule, "additive");
+    assert.equal(payload.amount, 500);
+    assert.equal(payload.approvedBy, "Renu Balakrishnan");
+    assert.equal(detail.row.id, "s1", "the caller gets the reloaded subscription detail");
+
+    await repo.revokeOverride("s1", "ovr_1", { reason: "No longer needed" }, actor);
+    const revoke = calls.find((call) => call.fn === "revokeUsageOverride");
+    assert.ok(revoke, "the revocation reaches the usage overrides API");
+    assert.equal(revoke.args[0], "ovr_1");
+    assert.deepEqual(revoke.args[1], { reason: "No longer needed", actor });
+
+    const refused = await repo
+      .grantOverride(
+        "s1",
+        { resource: "whatsappMessages", rule: "absolute", value: 10, startsAt: "2026-10-01T00:00:00.000Z", expiresAt: "2026-11-01T00:00:00.000Z", reason: "x", approvedBy: "y" },
+        actor,
+      )
+      .catch((error: unknown) => error);
+    assert.ok(ApiError.isApiError(refused) && refused.code === "VALIDATION_FAILED", `expected a validation failure, got ${String(refused)}`);
+    assert.equal(calls.filter((call) => call.fn === "createUsageOverride").length, 1, "nothing is sent for a resource the backend does not track");
+
+    const noReason = await repo.revokeOverride("s1", "ovr_1", { reason: "   " }, actor).catch((error: unknown) => error);
+    assert.ok(ApiError.isApiError(noReason) && noReason.code === "VALIDATION_FAILED", `expected a validation failure, got ${String(noReason)}`);
+    assert.equal(calls.filter((call) => call.fn === "revokeUsageOverride").length, 1, "a revocation without a reason is never sent");
   });
 
   it("a failed backend call fails the action: no mock success afterwards", async () => {
