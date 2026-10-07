@@ -17,7 +17,7 @@ export function RolesPage() {
   const [filters, setFilters] = useState<RoleFilters>(initialFilters);
   const [guideOpen, setGuideOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
-  const [selectedCompare, setSelectedCompare] = useState<string[]>(["organization-admin", "marketing-manager"]);
+  const [selectedCompare, setSelectedCompare] = useState<string[]>([]);
   const shown = useMemo(() => filterRoles(roles, filters), [roles, filters]);
   const stats = roleStats(roles);
 

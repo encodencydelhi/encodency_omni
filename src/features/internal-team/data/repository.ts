@@ -15,102 +15,19 @@ import type {
   StaffLifecycleEvent,
   StaffListQuery,
   StaffListResult,
+  CoverageResult,
+  ScheduleAccessReviewInput,
+  UpdateStaffProfileInput,
   StaffMember,
   SuspendStaffInput,
 } from "./types";
 import { STAFF_MEMBERS, STAFF_INVITATIONS, STAFF_ACCESS_REVIEWS, STAFF_ACTIVITIES, STAFF_LIFECYCLE_EVENTS, COMPANY_POOL_EXPORT } from "./mock-data";
 import { filterStaff, sortStaff, paginateStaff, computeStaffKpis, computeInvitationKpis, computeAccessReviewKpis } from "./selectors";
-import { getMfaState } from "./config";
-import { apiClient } from "@/lib/api/client";
-import { ApiError } from "@/types/api";
-import {
-  superAdminUsersApi,
-  type SuperAdminUserDetail,
-  type SuperAdminUserSummary,
-} from "@/features/users/live/super-admin-users-api";
+import { TEAM_MOCK_MODE } from "./config";
+import { liveInternalTeamRepository } from "./live-repository";
 import type { InternalRole } from "@/types/domain/team";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-const PLATFORM_ROLE_TO_INTERNAL: Record<string, InternalRole> = {
-  SUPER_ADMIN: "super_admin",
-  SUPPORT: "support",
-  USER: "operations",
-};
-
-/** Network / 5xx / 404 fall back to the bundled dataset; auth and validation stay loud. */
-function canFallBack(error: unknown): boolean {
-  if (!ApiError.isApiError(error)) return true;
-  return error.status === 0 || error.status === 404 || error.status >= 500;
-}
-
-function toStaffMember(user: SuperAdminUserSummary | SuperAdminUserDetail): StaffMember {
-  const memberships = "memberships" in user ? user.memberships : [];
-  const role: InternalRole = PLATFORM_ROLE_TO_INTERNAL[user.platformRole] ?? "operations";
-  const primary = memberships[0];
-
-  return {
-    id: user.id,
-    name: user.name || user.email.split("@")[0] || user.email,
-    email: user.email,
-    avatarUrl: user.avatarUrl,
-    jobTitle: primary?.jobTitle ?? "",
-    department: primary?.department ?? "",
-    role,
-    status: user.status === "ACTIVE" ? "active" : "suspended",
-    mfaEnabled: user.mfaEnabled,
-    mfaState: getMfaState(user.mfaEnabled),
-    lastActiveAt: user.updatedAt,
-    createdAt: user.createdAt,
-    globalUserId: user.id,
-    assignments: memberships.map((membership) => ({
-      id: membership.membershipId,
-      staffId: user.id,
-      companyId: membership.company.id,
-      companyName: membership.company.name,
-      responsibility: "primary_owner" as const,
-      assignedAt: membership.createdAt,
-      assignedBy: "",
-      status: "active" as const,
-    })),
-    accessReviewStatus: "not_scheduled",
-    nextReviewDate: null,
-    privilegedAccess: user.platformRole === "SUPER_ADMIN",
-    effectiveCapabilities: computeEffectiveCapabilities(role),
-    sensitiveCapabilities: computeSensitiveCapabilities(role),
-  };
-}
-
-/** GET /super-admin/users is capped at 100 rows per page, so the directory walks every page. */
-async function fetchAllLiveStaff(): Promise<StaffMember[]> {
-  const members: StaffMember[] = [];
-  let page = 1;
-  let total = Number.POSITIVE_INFINITY;
-
-  while (members.length < total && page <= 50) {
-    const response = await superAdminUsersApi.list({ page, limit: 100 });
-    total = response.total;
-    if (!response.items.length) break;
-    members.push(...response.items.map(toStaffMember));
-    page += 1;
-  }
-
-  return members;
-}
-
-async function fetchCompanyCount(): Promise<number> {
-  try {
-    const response = await apiClient.request<{ total?: number }>({
-      method: "GET",
-      path: "/super-admin/companies",
-      query: { page: 1, limit: 1 },
-    });
-    return typeof response?.total === "number" ? response.total : COMPANY_POOL_EXPORT.length;
-  } catch (error) {
-    if (canFallBack(error)) return COMPANY_POOL_EXPORT.length;
-    throw error;
-  }
-}
 
 const staffStore: StaffMember[] = [...STAFF_MEMBERS];
 const invitationStore: StaffInvitation[] = [...STAFF_INVITATIONS];
@@ -135,6 +52,11 @@ export interface InternalTeamRepository {
   deactivateStaff(input: DeactivateStaffInput): Promise<StaffMember>;
   getStaffActivity(staffId: string): Promise<StaffActivity[]>;
   getStaffLifecycleEvents(staffId: string): Promise<StaffLifecycleEvent[]>;
+  resendInvitation(id: string): Promise<StaffInvitation>;
+  updateStaffProfile(input: UpdateStaffProfileInput): Promise<StaffMember>;
+  scheduleAccessReview(input: ScheduleAccessReviewInput): Promise<void>;
+  endAssignment(assignmentId: string): Promise<void>;
+  listCoverage(): Promise<CoverageResult>;
 }
 
 function computeEffectiveCapabilities(role: string): string[] {
@@ -184,54 +106,27 @@ function cloneStaffMember(original: StaffMember, overrides?: Partial<StaffMember
   return overrides ? { ...base, ...overrides } : base;
 }
 
-export const internalTeamRepository: InternalTeamRepository = {
+const mockInternalTeamRepository: InternalTeamRepository = {
   async listStaff(query) {
-    let source = staffStore;
-    let companyCount = COMPANY_POOL_EXPORT.length;
-    try {
-      const [liveStaff, liveCompanyCount] = await Promise.all([fetchAllLiveStaff(), fetchCompanyCount()]);
-      source = liveStaff;
-      companyCount = liveCompanyCount;
-      staffStore.splice(0, staffStore.length, ...liveStaff);
-    } catch (error) {
-      if (!canFallBack(error)) throw error;
-    }
-
-    const filtered = filterStaff(source, query);
+    await sleep(120);
+    const filtered = filterStaff(staffStore, query);
     const sorted = sortStaff(filtered, query.sort);
     const page = query.page || 1;
     const pageSize = query.pageSize || 10;
     const items = paginateStaff(sorted, page, pageSize);
-    const kpis = computeStaffKpis(source, invitationStore, companyCount);
+    const kpis = computeStaffKpis(staffStore, invitationStore, COMPANY_POOL_EXPORT.length);
     return { items, total: sorted.length, page, pageSize, pageCount: Math.ceil(sorted.length / pageSize), kpis };
   },
 
   async getStaff(id) {
-    try {
-      const detail = await superAdminUsersApi.get(id);
-      const mapped = toStaffMember(detail);
-      const index = staffStore.findIndex((s) => s.id === id);
-      if (index === -1) staffStore.push(mapped);
-      else staffStore[index] = mapped;
-      return mapped;
-    } catch (error) {
-      if (!canFallBack(error)) throw error;
-      await sleep(100);
-      const found = staffStore.find((s) => s.id === id);
-      return found ? cloneStaffMember(found) : null;
-    }
+    await sleep(100);
+    const found = staffStore.find((s) => s.id === id);
+    return found ? cloneStaffMember(found) : null;
   },
 
   async getStaffKpis() {
-    try {
-      const [liveStaff, liveCompanyCount] = await Promise.all([fetchAllLiveStaff(), fetchCompanyCount()]);
-      staffStore.splice(0, staffStore.length, ...liveStaff);
-      return computeStaffKpis(liveStaff, invitationStore, liveCompanyCount);
-    } catch (error) {
-      if (!canFallBack(error)) throw error;
-      await sleep(80);
-      return computeStaffKpis(staffStore, invitationStore, COMPANY_POOL_EXPORT.length);
-    }
+    await sleep(80);
+    return computeStaffKpis(staffStore, invitationStore, COMPANY_POOL_EXPORT.length);
   },
 
   async listInvitations(query) {
@@ -453,4 +348,73 @@ export const internalTeamRepository: InternalTeamRepository = {
     await sleep(100);
     return STAFF_LIFECYCLE_EVENTS.filter((e) => e.staffId === staffId);
   },
+
+  async resendInvitation(id) {
+    await sleep(150);
+    const idx = invitationStore.findIndex((i) => i.id === id);
+    if (idx === -1) throw new Error("Invitation not found");
+    const renewed: StaffInvitation = { ...invitationStore[idx]!, status: "pending", expiresAt: new Date(Date.now() + 14 * 86400000).toISOString() };
+    invitationStore[idx] = renewed;
+    return renewed;
+  },
+
+  async updateStaffProfile(input) {
+    await sleep(150);
+    const idx = staffStore.findIndex((s) => s.id === input.staffId);
+    if (idx === -1) throw new Error("Staff member not found");
+    const original = staffStore[idx]!;
+    const updated = cloneStaffMember(original, {
+      name: input.name ?? original.name,
+      jobTitle: input.jobTitle ?? original.jobTitle,
+      department: input.department ?? original.department,
+    });
+    staffStore[idx] = updated;
+    return cloneStaffMember(updated);
+  },
+
+  async scheduleAccessReview(input) {
+    await sleep(150);
+    const idx = staffStore.findIndex((s) => s.id === input.staffId);
+    if (idx === -1) throw new Error("Staff member not found");
+    staffStore[idx] = cloneStaffMember(staffStore[idx]!, { accessReviewStatus: "upcoming", nextReviewDate: input.dueAt });
+  },
+
+  async endAssignment(assignmentId) {
+    await sleep(150);
+    const idx = staffStore.findIndex((s) => s.assignments.some((a) => a.id === assignmentId));
+    if (idx === -1) throw new Error("Assignment not found");
+    const original = staffStore[idx]!;
+    staffStore[idx] = cloneStaffMember(original, { assignments: original.assignments.map((a) => (a.id === assignmentId ? { ...a, status: "inactive" as const } : a)) });
+  },
+
+  async listCoverage() {
+    await sleep(100);
+    const items = COMPANY_POOL_EXPORT.map((company) => {
+      const held = staffStore.flatMap((s) => s.assignments.filter((a) => a.companyId === company.id && a.status === "active").map((a) => ({ a, s })));
+      const pick = (kind: string) => {
+        const hit = held.find((h) => h.a.responsibility === kind);
+        return hit ? { id: hit.s.id, name: hit.s.name } : null;
+      };
+      const primary = held.find((h) => h.a.responsibility === "primary_owner");
+      const backup = held.find((h) => h.a.responsibility === "backup_owner");
+      let status: CoverageResult["items"][number]["status"] = "complete";
+      if (!primary) status = "missing_primary";
+      else if (primary.s.status !== "active") status = "staff_inactive";
+      else if (!backup) status = "missing_backup";
+      return { companyId: company.id, companyName: company.name, primaryOwner: pick("primary_owner"), backupOwner: pick("backup_owner"), supportOwner: pick("support_owner"), assignmentCount: held.length, status };
+    });
+    return {
+      items,
+      kpis: {
+        companiesRequiringCoverage: items.length,
+        companiesWithPrimaryOwner: items.filter((i) => i.primaryOwner).length,
+        unassignedCompanies: items.filter((i) => i.assignmentCount === 0).length,
+        companiesWithoutBackup: items.filter((i) => i.primaryOwner && !i.backupOwner).length,
+        staffWithAssignments: new Set(staffStore.filter((s) => s.assignments.some((a) => a.status === "active")).map((s) => s.id)).size,
+        assignmentsNeedingReassignment: items.filter((i) => i.status === "staff_inactive").length,
+      },
+    };
+  },
 };
+
+export const internalTeamRepository: InternalTeamRepository = TEAM_MOCK_MODE ? mockInternalTeamRepository : liveInternalTeamRepository;

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { Suspense, useMemo } from "react";
 import { Download, Grid2X2, Plus } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import { adSets, campaigns, getCampaign } from "@/features/admin/meta-ads/data";
+import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import {
   cpl,
   money,
@@ -49,6 +49,7 @@ const DEFAULTS = {
 };
 
 function AdSetsView() {
+  const { adSets, campaigns, getCampaign } = useAdsData();
   /** Links such as "View Ad Sets" from a campaign arrive as ?campaign=<id>. */
   const { values, setFilter, reset, isFiltered } = useFilters(DEFAULTS, {
     campaign: (v) => getCampaign(v)?.name ?? v,
@@ -82,7 +83,7 @@ function AdSetsView() {
         return false;
       return true;
     });
-  }, [values]);
+  }, [values, adSets, getCampaign]);
 
   const placementOptions = useMemo(
     () => [
@@ -90,9 +91,7 @@ function AdSetsView() {
       ...Array.from(
         new Set(adSets.flatMap((s) => s.placements.filter((p) => p.enabled).map((p) => p.placement))),
       ).sort(),
-    ],
-    [],
-  );
+    ], [adSets]);
 
   return (
     <AdsWorkspace>

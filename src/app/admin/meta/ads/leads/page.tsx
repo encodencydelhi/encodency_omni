@@ -11,19 +11,9 @@ import {
   UserPlus,
   UsersRound,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import {
-  adSets,
-  ads,
-  campaigns,
-  getAd,
-  getAdSet,
-  getCampaign,
-  getForm,
-  instantForms,
-  leads,
-} from "@/features/admin/meta-ads/data";
+import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
 import {
   dateTime,
   LEAD_STAGE_TONE,
@@ -86,9 +76,10 @@ const PIPELINE: LeadStage[] = [
 
 const TERMINAL: LeadStage[] = ["Lost", "Spam"];
 
+/** "My Leads" needs a lead owner, which Meta does not provide; live mode omits the tab. */
 const TABS = [
   { id: "all", label: "All Leads" },
-  { id: "mine", label: "My Leads" },
+  ...(LIVE ? [] : [{ id: "mine", label: "My Leads" }]),
   { id: "qualified", label: "Qualified" },
   { id: "converted", label: "Converted" },
   { id: "lost", label: "Lost" },
@@ -98,6 +89,7 @@ const TABS = [
 const CURRENT_USER = "Amit Sharma";
 
 function LeadsView() {
+  const { adSets, ads, campaigns, getAd, getAdSet, getCampaign, getForm, instantForms, leads } = useAdsData();
   const { values, setFilter, setFilters, reset, isFiltered } = useFilters(DEFAULTS, {
     // "View Leads" links from campaigns, ad sets, ads and forms carry ids.
     campaign: (v) => getCampaign(v)?.name ?? v,
@@ -154,7 +146,7 @@ function LeadsView() {
       if (values.score === "Low (below 50)" && l.score >= 50) return false;
       return true;
     });
-  }, [values]);
+  }, [values, getAd, getAdSet, getCampaign, getForm, leads]);
 
   const kpis = useMemo(() => {
     const qualified = leads.filter((l) =>
@@ -176,21 +168,17 @@ function LeadsView() {
       avgCpl: totalLeads ? spend / totalLeads : 0,
       avgResponse,
     };
-  }, []);
+  }, [campaigns, leads]);
 
   const pipelineCounts = useMemo(
     () =>
       [...PIPELINE, ...TERMINAL].map((stage) => ({
         stage,
         count: leads.filter((l) => l.stage === stage).length,
-      })),
-    [],
-  );
+      })), [leads]);
 
   const owners = useMemo(
-    () => Array.from(new Set(leads.map((l) => l.owner))).sort(),
-    [],
-  );
+    () => Array.from(new Set(leads.map((l) => l.owner))).sort(), [leads]);
 
   const adSetOptions = useMemo(() => {
     const scoped =
@@ -202,7 +190,7 @@ function LeadsView() {
             getCampaign(s.campaignId)?.name === values.campaign,
         );
     return [DEFAULTS.adset, ...scoped.map((s) => s.name)];
-  }, [values.campaign]);
+  }, [values.campaign, adSets, getCampaign]);
 
   const adOptions = useMemo(() => {
     const scoped =
@@ -212,7 +200,7 @@ function LeadsView() {
           (a) => a.adSetId === values.adset || getAdSet(a.adSetId)?.name === values.adset,
         );
     return [DEFAULTS.ad, ...scoped.map((a) => a.name)];
-  }, [values.adset]);
+  }, [values.adset, ads, getAdSet]);
 
   const paged = usePagination(rows, 10);
   const allSelected = rows.length > 0 && selected.length === rows.length;
@@ -233,17 +221,17 @@ function LeadsView() {
       <section className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
         <KpiCard label="Total Leads" value={num(kpis.total)} icon={UsersRound} />
         <KpiCard label="New Today" value={num(kpis.newToday)} icon={UserPlus} tone="blue" />
-        <KpiCard label="Qualified Leads" value={num(kpis.qualified)} icon={CheckCircle2} tone="green" />
+        <KpiCard label="Qualified Leads" value={LIVE ? "—" : num(kpis.qualified)} icon={CheckCircle2} tone="green" />
         <KpiCard
           label="Conversion Rate"
-          value={pct(kpis.conversion, 1)}
+          value={LIVE ? "—" : pct(kpis.conversion, 1)}
           icon={Percent}
           hint="Converted leads divided by all leads."
         />
         <KpiCard label="Avg. CPL" value={moneyPrecise(kpis.avgCpl)} icon={Target} />
         <KpiCard
           label="Avg. Response Time"
-          value={`${Math.round(kpis.avgResponse)} min`}
+          value={LIVE ? "—" : `${Math.round(kpis.avgResponse)} min`}
           icon={Clock}
           tone={kpis.avgResponse > 60 ? "amber" : "green"}
           hint="Time between submission and first outbound contact."
@@ -481,7 +469,7 @@ function LeadsView() {
                     />
                   </Td>
                   <Td>
-                    <EntityLink href={`${ADS_ROOT}/leads/${l.id}`} name={l.name} sub={`${l.id} · ${l.city}`} maxWidth={180} />
+                    <EntityLink href={`${ADS_ROOT}/leads/${l.id}`} name={l.name} sub={[l.id, l.city].filter(Boolean).join(" · ")} maxWidth={180} />
                   </Td>
                   <Td>
                     {l.phone}
@@ -525,17 +513,21 @@ function LeadsView() {
                     <ToneChip tone={LEAD_STAGE_TONE[l.stage] ?? "slate"}>{l.stage}</ToneChip>
                   </Td>
                   <Td>
-                    <span className="flex items-center gap-2">
-                      <strong className={cn("tabular-nums", TONE_CLASS[scoreTone(l.score)].text)}>
-                        {l.score}
-                      </strong>
-                      <Meter value={l.score} tone={scoreTone(l.score)} className="w-14" />
-                    </span>
+                    {LIVE ? (
+                      <span className="text-slate-400">—</span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <strong className={cn("tabular-nums", TONE_CLASS[scoreTone(l.score)].text)}>
+                          {l.score}
+                        </strong>
+                        <Meter value={l.score} tone={scoreTone(l.score)} className="w-14" />
+                      </span>
+                    )}
                   </Td>
                   <Td>
                     <span className="flex items-center gap-1.5">
-                      <Avatar name={l.owner} />
-                      {l.owner}
+                      {l.owner ? <Avatar name={l.owner} /> : null}
+                      {l.owner || "Unassigned"}
                     </span>
                   </Td>
                   <Td>{dateTime(l.submittedAt)}</Td>

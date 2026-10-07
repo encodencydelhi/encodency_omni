@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ROUTES } from "@/config/routes";
 import { formatRelativeTime, getInitials } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
-import { getStaffAvatarColor } from "../data/config";
+import { getStaffAvatarColor, TEAM_MOCK_MODE } from "../data/config";
 import { StaffRoleBadge, StaffStatusBadge, MfaStateBadge, AccessReviewStatusBadge, PrivilegedBadge } from "./staff-status-badges";
 import type { StaffMember } from "../data/types";
 import { useStaffCapabilities } from "../data/capability-provider";
@@ -98,10 +98,10 @@ export function StaffTable({
                       </div>
                     </TableCell>
                     <TableCell className="py-2"><StaffRoleBadge role={member.role} /></TableCell>
-                    <TableCell className="py-2 text-xs text-slate-600 truncate max-w-[120px]">{member.department}</TableCell>
+                    <TableCell className="py-2 text-xs text-slate-600 truncate max-w-[120px]">{member.department || "—"}</TableCell>
                     <TableCell className="py-2"><StaffStatusBadge status={member.status} /></TableCell>
                     <TableCell className="py-2">
-                      <span className="text-xs font-medium text-slate-700">{activeAssignments.length} Companies</span>
+                      <span className="text-xs font-medium text-slate-700">{activeAssignments.length} {activeAssignments.length === 1 ? "Company" : "Companies"}</span>
                     </TableCell>
                     <TableCell className="py-2"><MfaStateBadge state={member.mfaState} /></TableCell>
                     <TableCell className="py-2 text-xs text-slate-500 whitespace-nowrap">
@@ -150,7 +150,7 @@ export function StaffTable({
                                 </DropdownMenuItem>
                               ) : (
                                 <DropdownMenuItem onClick={() => onSuspend?.(member)} className="gap-2 cursor-pointer text-rose-600 font-medium">
-                                  <BanIcon className="size-3.5" /> <span>Suspend Staff</span>
+                                  <BanIcon className="size-3.5" /> <span>{TEAM_MOCK_MODE ? "Suspend Staff" : "Deactivate Staff"}</span>
                                 </DropdownMenuItem>
                               )}
                             </>

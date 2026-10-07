@@ -8,10 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { INTERNAL_ROLE, type InternalRole } from "@/types/domain/team";
-import { DEPARTMENTS, ASSIGNMENT_RESPONSIBILITIES, COMPANY_POOL_EXPORT } from "../data/config";
+import { INTERNAL_ROLE } from "@/types/domain/team";
+import { DEPARTMENTS, ASSIGNMENT_RESPONSIBILITIES, STAFF_ROLE_KEYS, TEAM_MOCK_MODE } from "../data/config";
+import { useCompanyPool } from "../data/company-pool";
+import { InviteLinkDialog } from "./invite-link-dialog";
 import { useTeamMutations } from "../data/hooks";
-import type { AssignmentResponsibility, CreateStaffInvitationInput } from "../data/types";
+import type { AssignmentResponsibility, CreateStaffInvitationInput, StaffInvitation } from "../data/types";
 
 interface InviteStaffWizardProps {
   open: boolean;
@@ -29,6 +31,8 @@ export function InviteStaffWizard({ open, onOpenChange }: InviteStaffWizardProps
     companyId: "", responsibility: "support_owner",
   });
   const mutations = useTeamMutations();
+  const pool = useCompanyPool();
+  const [created, setCreated] = useState<StaffInvitation | null>(null);
 
   const canNext = () => {
     if (step === 0) return form.name.trim().length > 0 && form.email.trim().length > 0;
@@ -41,7 +45,7 @@ export function InviteStaffWizard({ open, onOpenChange }: InviteStaffWizardProps
 
   const handleAddAssignment = () => {
     if (!newAssignment.companyId) return;
-    const company = COMPANY_POOL_EXPORT.find((c) => c.id === newAssignment.companyId);
+    const company = pool.find((c) => c.id === newAssignment.companyId);
     if (!company) return;
     setForm((prev) => ({
       ...prev,
@@ -55,15 +59,21 @@ export function InviteStaffWizard({ open, onOpenChange }: InviteStaffWizardProps
   };
 
   const handleSubmit = async () => {
-    await mutations.createInvitation.mutateAsync(form);
-    onOpenChange(false);
-    setStep(0);
-    setForm({ name: "", email: "", department: "", jobTitle: "", role: "support", companyAssignments: [] });
+    try {
+      const invitation = await mutations.createInvitation.mutateAsync(form);
+      onOpenChange(false);
+      setStep(0);
+      setForm({ name: "", email: "", department: "", jobTitle: "", role: "support", companyAssignments: [] });
+      if (invitation.acceptLink) setCreated(invitation);
+    } catch {
+      // The mutation already reported the reason; keep the wizard open so nothing typed is lost.
+    }
   };
 
   const roleMeta = INTERNAL_ROLE[form.role];
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full max-w-xl p-0">
         <SheetHeader>
@@ -120,7 +130,7 @@ export function InviteStaffWizard({ open, onOpenChange }: InviteStaffWizardProps
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-slate-900">Platform Role</h3>
               <div className="space-y-1.5">
-                {(Object.keys(INTERNAL_ROLE) as InternalRole[]).map((r) => {
+                {STAFF_ROLE_KEYS.map((r) => {
                   const meta = INTERNAL_ROLE[r];
                   const isSelected = form.role === r;
                   return (
@@ -147,6 +157,15 @@ export function InviteStaffWizard({ open, onOpenChange }: InviteStaffWizardProps
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-slate-900">Effective Capabilities</h3>
               <p className="text-xs text-slate-500">Preview of what <strong>{roleMeta?.label || form.role}</strong> can access:</p>
+              {!TEAM_MOCK_MODE ? (
+                <div className="rounded-sm border border-border p-3 text-xs text-slate-600 space-y-1.5">
+                  {form.role === "super_admin" ? (
+                    <p>Super Admin can use <strong>every</strong> Super Admin console module, including Companies, Users, Billing, Integrations and the Internal Team itself.</p>
+                  ) : (
+                    <p>Support accounts can sign in and complete two-factor setup, but <strong>no Super Admin console module is enabled for them yet</strong>. Choose Super Admin if this person needs to work in the console.</p>
+                  )}
+                </div>
+              ) : (
               <div className="rounded-sm border border-border p-3 space-y-2 max-h-[300px] overflow-y-auto">
                 {["Dashboard", "Companies", "Users", "Clients", "Internal Team", "Plans & Subscriptions", "Billing & Payments", "Usage & Limits", "Integrations", "System Health", "Jobs & Queues", "API Monitoring", "Webhooks", "Feature Flags", "Audit Logs", "Support & Tickets", "Notifications", "Global Settings"].map((module) => {
                   const caps = INTERNAL_ROLE[form.role] ? ["companies:read", "users:read", "platform:read", "billing:read"] : [];
@@ -159,6 +178,7 @@ export function InviteStaffWizard({ open, onOpenChange }: InviteStaffWizardProps
                   );
                 })}
               </div>
+              )}
               {roleMeta && (
                 <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded-sm p-2">
                   Assigning this role grants platform-level capabilities. This is separate from company memberships.
@@ -178,7 +198,7 @@ export function InviteStaffWizard({ open, onOpenChange }: InviteStaffWizardProps
                 <Select value={newAssignment.companyId} onValueChange={(v) => setNewAssignment({ ...newAssignment, companyId: v })}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Company" /></SelectTrigger>
                   <SelectContent>
-                    {COMPANY_POOL_EXPORT.filter((c) => !form.companyAssignments.some((a) => a.companyId === c.id)).map((c) => (
+                    {pool.filter((c) => !form.companyAssignments.some((a) => a.companyId === c.id)).map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -241,7 +261,9 @@ export function InviteStaffWizard({ open, onOpenChange }: InviteStaffWizardProps
                 </div>
               </div>
               <p className="text-[11px] text-sky-600 bg-sky-50 border border-sky-200 rounded-sm p-2">
-                A demo invitation will be created. No real email will be sent.
+                {TEAM_MOCK_MODE
+                  ? "A demo invitation will be created. No real email will be sent."
+                  : "An invitation email is sent now and its link is valid for 48 hours. The person sets their own password and enrols two-factor authentication when they accept."}
               </p>
             </div>
           )}
@@ -269,5 +291,7 @@ export function InviteStaffWizard({ open, onOpenChange }: InviteStaffWizardProps
         </SheetFooter>
       </SheetContent>
     </Sheet>
+    <InviteLinkDialog invitation={created} onClose={() => setCreated(null)} />
+    </>
   );
 }

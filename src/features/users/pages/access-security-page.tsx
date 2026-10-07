@@ -63,6 +63,7 @@ import {
   useSecurityUsers,
   useUserKpis,
 } from "../data/hooks";
+import { USERS_MOCK_MODE } from "../data/config";
 import type { UserAggregate } from "../data/types";
 import { UserCapabilitiesProvider, useUserCapabilities } from "../data/capability-provider";
 import { ErrorState } from "@/components/shared/error-state";
@@ -106,12 +107,14 @@ function AccessSecurityContent() {
 
   // Security KPIs
   const totalEligible = kpis?.totalUsers ?? securityUsers.length;
-  const twoFactorEnabled = securityUsers.filter((u) => u.security.mfaEnabled).length;
-  const twoFactorMissingRequired = securityUsers.filter(
-    (u) => u.security.twoFactorRequired && !u.security.mfaEnabled,
-  ).length;
+  const twoFactorEnabled = USERS_MOCK_MODE ? securityUsers.filter((u) => u.security.mfaEnabled).length : (kpis?.twoFactorEnabled ?? 0);
+  const twoFactorMissingRequired = USERS_MOCK_MODE
+    ? securityUsers.filter((u) => u.security.twoFactorRequired && !u.security.mfaEnabled).length
+    : Math.max(0, (kpis?.twoFactorTotal ?? 0) - (kpis?.twoFactorEnabled ?? 0));
   const lockedAccounts = securityUsers.filter((u) => u.security.isLocked).length;
-  const suspendedAccounts = securityUsers.filter((u) => u.identity.globalStatus === "suspended").length;
+  const suspendedAccounts = USERS_MOCK_MODE
+    ? securityUsers.filter((u) => u.identity.globalStatus === "suspended").length
+    : (kpis?.suspendedUsers ?? 0);
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto pb-12 min-w-0">
@@ -159,10 +162,11 @@ function AccessSecurityContent() {
           </div>
           <div>
             <div className="text-xl font-bold text-amber-700">{twoFactorMissingRequired}</div>
-            <div className="text-xs text-amber-800/80">Policy mandated</div>
+            <div className="text-xs text-amber-800/80">{USERS_MOCK_MODE ? "Policy mandated" : "Active accounts without 2FA"}</div>
           </div>
         </div>
 
+        {USERS_MOCK_MODE && (
         <div className="p-3 rounded-lg border border-rose-200 bg-rose-50/30 h-full min-h-[92px] flex flex-col justify-between shadow-2xs">
           <div className="flex items-center justify-between text-xs uppercase font-bold text-rose-700">
             <span>Locked Accounts</span>
@@ -173,6 +177,7 @@ function AccessSecurityContent() {
             <div className="text-xs text-rose-800/80">Failed login threshold</div>
           </div>
         </div>
+        )}
 
         <div className="p-3 rounded-lg border border-border bg-white h-full min-h-[92px] flex flex-col justify-between shadow-2xs">
           <div className="flex items-center justify-between text-xs uppercase font-bold text-slate-500">
@@ -280,7 +285,7 @@ function AccessSecurityContent() {
             <SelectContent>
               <SelectItem value="all">All 2FA</SelectItem>
               <SelectItem value="enabled">2FA Active</SelectItem>
-              <SelectItem value="required_not_configured">Required · Missing</SelectItem>
+              {USERS_MOCK_MODE && <SelectItem value="required_not_configured">Required · Missing</SelectItem>}
               <SelectItem value="not_enabled">Not Enabled</SelectItem>
             </SelectContent>
           </Select>
@@ -293,7 +298,7 @@ function AccessSecurityContent() {
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="suspended">Suspended</SelectItem>
-              <SelectItem value="deactivated">Deactivated</SelectItem>
+              {USERS_MOCK_MODE && <SelectItem value="deactivated">Deactivated</SelectItem>}
             </SelectContent>
           </Select>
 
@@ -325,7 +330,7 @@ function AccessSecurityContent() {
               <TableHead className="min-w-[220px]">User</TableHead>
               <TableHead className="min-w-[140px]">Company Access</TableHead>
               <TableHead className="min-w-[120px]">2FA Status</TableHead>
-              <TableHead className="min-w-[100px]">Policy Mandate</TableHead>
+              {USERS_MOCK_MODE && <TableHead className="min-w-[100px]">Policy Mandate</TableHead>}
               <TableHead className="min-w-[105px]">Last Login</TableHead>
               <TableHead className="min-w-[100px]">Security Posture</TableHead>
               <TableHead className="min-w-[90px]">Account</TableHead>
@@ -339,14 +344,14 @@ function AccessSecurityContent() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, idx) => (
                 <TableRow key={idx} className="animate-pulse h-12">
-                  <TableCell colSpan={8} className="py-3 px-4">
+                  <TableCell colSpan={USERS_MOCK_MODE ? 8 : 7} className="py-3 px-4">
                     <div className="h-4 bg-slate-100 rounded w-2/3" />
                   </TableCell>
                 </TableRow>
               ))
             ) : securityUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-slate-400 text-xs italic">
+                <TableCell colSpan={USERS_MOCK_MODE ? 8 : 7} className="py-8 text-center text-slate-400 text-xs italic">
                   No accounts match the active security filters.
                 </TableCell>
               </TableRow>
@@ -376,6 +381,7 @@ function AccessSecurityContent() {
                     </TableCell>
 
                     {/* 2FA Requirement */}
+                    {USERS_MOCK_MODE && (
                     <TableCell className="py-2.5">
                       {u.security.twoFactorRequired ? (
                         <span className="text-xs font-semibold text-amber-700">
@@ -385,6 +391,7 @@ function AccessSecurityContent() {
                         <span className="text-xs text-slate-400">Optional</span>
                       )}
                     </TableCell>
+                    )}
 
                     {/* Last Login */}
                     <TableCell className="py-2.5 text-slate-500 whitespace-nowrap">
@@ -422,8 +429,9 @@ function AccessSecurityContent() {
                             <span>Open User Security</span>
                           </DropdownMenuItem>
 
-                          {capabilities.canRequire2FA && (
+                          {capabilities.canRequirePasswordReset && (
                             <>
+                              {USERS_MOCK_MODE && capabilities.canRequire2FA && (
                               <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedUser(u);
@@ -434,6 +442,7 @@ function AccessSecurityContent() {
                                 <KeyRoundIcon className="size-3.5 text-slate-500" />
                                 <span>{u.security.twoFactorRequired ? "Relax 2FA Policy" : "Require 2FA"}</span>
                               </DropdownMenuItem>
+                              )}
 
                               <DropdownMenuItem
                                 onClick={() => {

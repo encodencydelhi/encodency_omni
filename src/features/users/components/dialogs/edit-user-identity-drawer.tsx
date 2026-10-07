@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useUnsavedGuard } from "../../hooks/use-unsaved-guard";
-import { useUserMutations } from "../../data/hooks";
+import { USERS_MOCK_MODE } from "../../data/config";
+import { useUser, useUserMutations } from "../../data/hooks";
 import type { UserAggregate } from "../../data/types";
 
 interface EditUserIdentityDrawerProps {
@@ -30,11 +31,14 @@ interface EditUserIdentityDrawerProps {
 }
 
 export function EditUserIdentityDrawer({
-  user,
+  user: listedUser,
   open,
   onOpenChange,
 }: EditUserIdentityDrawerProps) {
   const mutations = useUserMutations();
+  // The directory row does not carry the phone number: load the full account so saving never blanks a stored value.
+  const full = useUser(open && !USERS_MOCK_MODE && listedUser ? listedUser.identity.id : "");
+  const user = USERS_MOCK_MODE ? listedUser : (full.data ?? null);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -57,9 +61,10 @@ export function EditUserIdentityDrawer({
     return (
       name.trim() !== user.identity.name ||
       (phone.trim() || null) !== (user.identity.phone ?? null) ||
-      (avatarUrl.trim() || null) !== (user.identity.avatarUrl ?? null) ||
-      theme !== (user.identity.themePreference ?? "system") ||
-      notifications !== (user.identity.notificationsEnabled ?? true)
+      (USERS_MOCK_MODE &&
+        ((avatarUrl.trim() || null) !== (user.identity.avatarUrl ?? null) ||
+          theme !== (user.identity.themePreference ?? "system") ||
+          notifications !== (user.identity.notificationsEnabled ?? true)))
     );
   }, [user, name, phone, avatarUrl, theme, notifications]);
 
@@ -69,7 +74,22 @@ export function EditUserIdentityDrawer({
     label: "user identity changes",
   });
 
-  if (!user) return null;
+  if (!listedUser) return null;
+  if (!user) {
+    // Live mode: wait for the full account before showing editable fields.
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="right" className="sm:max-w-md w-full p-0 flex flex-col">
+          <SheetHeader className="p-5 border-b border-slate-200 text-left">
+            <SheetTitle className="text-base font-bold">Edit User Identity</SheetTitle>
+            <SheetDescription className="text-xs text-slate-600">
+              {full.isError ? "The account could not be loaded. Close this panel and try again." : "Loading account…"}
+            </SheetDescription>
+          </SheetHeader>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   const handleSave = () => {
     mutations.updateUserIdentity.mutate(
@@ -77,7 +97,7 @@ export function EditUserIdentityDrawer({
         userId: user.identity.id,
         name: name.trim(),
         phone: phone.trim() || null,
-        avatarUrl: avatarUrl.trim() || null,
+        avatarUrl: USERS_MOCK_MODE ? avatarUrl.trim() || null : user.identity.avatarUrl,
         themePreference: theme,
         notificationsEnabled: notifications,
       },
@@ -145,6 +165,7 @@ export function EditUserIdentityDrawer({
             />
           </div>
 
+          {USERS_MOCK_MODE && (
           <div className="space-y-1.5">
             <Label htmlFor="edit-avatar" className="text-xs font-semibold">
               Avatar Image URL
@@ -157,7 +178,9 @@ export function EditUserIdentityDrawer({
               className="h-8.5 text-xs"
             />
           </div>
+          )}
 
+          {USERS_MOCK_MODE && (
           <div className="pt-2 border-t border-border space-y-3">
             <span className="font-semibold text-slate-800 block">
               Display & Delivery Preferences
@@ -195,6 +218,7 @@ export function EditUserIdentityDrawer({
               />
             </div>
           </div>
+          )}
         </SheetBody>
 
         <div className="p-3 border-t border-border bg-slate-50 flex items-center justify-end gap-2">

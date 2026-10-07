@@ -103,9 +103,9 @@ export type Ad = {
   pixel: string;
   pixelEvents: string[];
   utm: string;
-  qualityRanking: Ranking;
-  engagementRanking: Ranking;
-  conversionRanking: Ranking;
+  qualityRanking: Ranking | null;
+  engagementRanking: Ranking | null;
+  conversionRanking: Ranking | null;
   reviewNote: string | null;
   metrics: Metrics;
   lastEdited: string;
@@ -124,7 +124,8 @@ export type InstantForm = {
   id: string;
   name: string;
   status: EntityStatus;
-  type: "More volume" | "Higher intent" | "Rich creative";
+  /** Meta does not report the form type through the API; empty in live mode. */
+  type: "More volume" | "Higher intent" | "Rich creative" | "";
   language: string;
   introHeadline: string;
   introBody: string;

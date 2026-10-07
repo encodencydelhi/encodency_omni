@@ -43,6 +43,8 @@ export interface StaffInvitation {
   status: InvitationStatus;
   companyAssignments: Array<{ companyId: string; companyName: string; responsibility: AssignmentResponsibility }>;
   acceptedUserId: string | null;
+  /** One-time link to the acceptance page. Only known right after the invitation is created or resent. */
+  acceptLink?: string;
 }
 
 export interface StaffAccessReview {
@@ -78,7 +80,7 @@ export interface StaffActivity {
 export interface StaffLifecycleEvent {
   id: string;
   staffId: string;
-  eventType: "invited" | "activated" | "role_changed" | "suspended" | "reactivated" | "deactivated" | "assignment_added" | "assignment_removed" | "review_completed";
+  eventType: "invited" | "activated" | "role_changed" | "suspended" | "reactivated" | "deactivated" | "assignment_added" | "assignment_removed" | "review_completed" | "review_scheduled" | "profile_updated";
   timestamp: string;
   actor: { id: string; name: string };
   details: string;
@@ -100,6 +102,7 @@ export interface StaffMember {
   lastActiveAt: string | null;
   createdAt: string;
   globalUserId: string;
+  phone?: string | null;
   assignments: StaffAssignment[];
   accessReviewStatus: AccessReviewStatus;
   nextReviewDate: string | null;
@@ -143,6 +146,8 @@ export interface AccessReviewKpis {
   mfaActionRequired: number;
   suspendedWithAssignments: number;
   tempAccessExpiring: number;
+  /** Active staff with no review scheduled (live mode). */
+  notScheduled?: number;
 }
 
 export interface StaffListQuery {
@@ -164,6 +169,8 @@ export interface StaffListResult {
   pageSize: number;
   pageCount: number;
   kpis: StaffKpis;
+  /** Departments present in the directory (live mode), for the filter. */
+  departments?: string[];
 }
 
 export interface StaffCapabilities {
@@ -229,4 +236,39 @@ export interface DeactivateStaffInput {
   staffId: string;
   reason: string;
   reassignmentPlan: Array<{ companyId: string; newOwnerId: string }>;
+  /** Live mode: hand individual assignments to someone else; the rest end. */
+  reassignments?: Array<{ assignmentId: string; newStaffId: string }>;
+}
+
+export interface UpdateStaffProfileInput {
+  staffId: string;
+  name?: string;
+  phone?: string;
+  jobTitle?: string;
+  department?: string;
+}
+
+export interface ScheduleAccessReviewInput {
+  staffId: string;
+  dueAt: string;
+}
+
+export interface CoverageStaffRef {
+  id: string;
+  name: string;
+}
+
+export interface CoverageRow {
+  companyId: string;
+  companyName: string;
+  primaryOwner: CoverageStaffRef | null;
+  backupOwner: CoverageStaffRef | null;
+  supportOwner: CoverageStaffRef | null;
+  assignmentCount: number;
+  status: CoverageStatus;
+}
+
+export interface CoverageResult {
+  items: CoverageRow[];
+  kpis: CoverageKpi;
 }

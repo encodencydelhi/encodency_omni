@@ -24,17 +24,9 @@ import {
   UsersRound,
   WalletCards,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import {
-  activityLog,
-  adSetsOfCampaign,
-  adsOfCampaign,
-  getCampaign,
-  getCreative,
-  issues,
-  leadsOf,
-} from "@/features/admin/meta-ads/data";
+import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
 import {
   conversionRate,
   cpl,
@@ -84,12 +76,13 @@ import {
   AdsWorkspace,
   DetailBar,
 } from "@/features/admin/meta-ads/components/workspace";
-import type { Platform } from "@/features/admin/meta-ads/types";
+import type { Ad, AdSet, Campaign, Issue, Platform } from "@/features/admin/meta-ads/types";
 
 const TABS = ["overview", "adsets", "ads", "leads", "performance", "activity"] as const;
 type Tab = (typeof TABS)[number];
 
 function CampaignDetail({ campaignId }: { campaignId: string }) {
+  const { adSetsOfCampaign, adsOfCampaign, getCampaign, issues, leadsOf } = useAdsData();
   const params = useSearchParams();
   const requested = params?.get("tab");
   const tab: Tab = TABS.includes(requested as Tab) ? (requested as Tab) : "overview";
@@ -174,10 +167,12 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
                   {date(campaign.start)} — {campaign.end ? date(campaign.end) : "Ongoing"}
                 </dd>
               </span>
-              <span>
-                <dt className="inline font-semibold text-[#475569]">Owner:</dt>{" "}
-                <dd className="inline">{campaign.owner}</dd>
-              </span>
+              {campaign.owner && (
+                <span>
+                  <dt className="inline font-semibold text-[#475569]">Owner:</dt>{" "}
+                  <dd className="inline">{campaign.owner}</dd>
+                </span>
+              )}
               <span className="flex items-center gap-1.5">
                 <dt className="font-semibold text-[#475569]">Platforms:</dt>
                 <dd>
@@ -191,7 +186,7 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
               <span>
                 <dt className="inline font-semibold text-[#475569]">Last edited:</dt>{" "}
                 <dd className="inline">
-                  {relative(campaign.lastEdited)} by {campaign.lastEditedBy}
+                  {relative(campaign.lastEdited)}{campaign.lastEditedBy ? ` by ${campaign.lastEditedBy}` : ""}
                 </dd>
               </span>
             </dl>
@@ -273,10 +268,10 @@ function OverviewTab({
   campaignAds,
   openIssues,
 }: {
-  campaign: NonNullable<ReturnType<typeof getCampaign>>;
-  sets: ReturnType<typeof adSetsOfCampaign>;
-  campaignAds: ReturnType<typeof adsOfCampaign>;
-  openIssues: typeof issues;
+  campaign: Campaign;
+  sets: AdSet[];
+  campaignAds: Ad[];
+  openIssues: Issue[];
 }) {
   const m = campaign.metrics;
   const hasData = m.impressions > 0;
@@ -299,7 +294,8 @@ function OverviewTab({
   const placementRows = Object.entries(placements).sort((a, b) => b[1].spend - a[1].spend);
   const placementTotal = placementRows.reduce((t, [, v]) => t + v.spend, 0) || 1;
 
-  const spendPct = campaign.spendCap ? (m.spend / campaign.spendCap) * 100 : 0;
+  const hasCap = campaign.spendCap > 0;
+  const spendPct = hasCap ? (m.spend / campaign.spendCap) * 100 : 0;
   const projected = campaign.budgetType === "Daily" ? campaign.budget * 30 : campaign.budget;
 
   const pendingReview = campaignAds.filter((a) => a.status === "in_review").length;
@@ -320,7 +316,7 @@ function OverviewTab({
       )}
 
       <section className="grid grid-cols-2 gap-2 md:grid-cols-4 2xl:grid-cols-8">
-        <KpiCard label="Amount Spent" value={money(m.spend)} icon={WalletCards} sub={`of ${money(campaign.spendCap)} cap`} />
+        <KpiCard label="Amount Spent" value={money(m.spend)} icon={WalletCards} sub={hasCap ? `of ${money(campaign.spendCap)} cap` : "No spend cap set"} />
         <KpiCard label="Impressions" value={num(m.impressions)} icon={BarChart3} sub={hasData ? `Frequency ${frequency(m).toFixed(2)}` : "No delivery yet"} />
         <KpiCard label="Reach" value={num(m.reach)} icon={Radio} sub="Unique accounts" />
         <KpiCard label="Clicks" value={num(m.clicks)} icon={MousePointerClick} sub="All clicks" />
@@ -361,7 +357,7 @@ function OverviewTab({
             <Field label="Bid Strategy" value={campaign.bidStrategy} />
             <Field label="Special Ad Category" value={campaign.specialCategory} />
             <Field label="Optimisation" value={campaign.optimization} />
-            <Field label="Spend Cap" value={money(campaign.spendCap)} />
+            <Field label="Spend Cap" value={hasCap ? money(campaign.spendCap) : "None"} />
           </dl>
         </Panel>
       </div>
@@ -396,13 +392,13 @@ function OverviewTab({
             </div>
             <Meter value={spendPct} tone={spendPct > 85 ? "amber" : "blue"} className="mt-1.5" />
             <p className="mt-1 text-[9px] text-[#94a3b8]">
-              {pct(spendPct, 1)} of the {money(campaign.spendCap)} spend cap
+              {hasCap ? `${pct(spendPct, 1)} of the ${money(campaign.spendCap)} spend cap` : "No spend cap is set on this campaign"}
             </p>
           </div>
           <dl>
-            <Field label="Remaining" value={money(Math.max(campaign.spendCap - m.spend, 0))} />
+            <Field label="Remaining" value={hasCap ? money(Math.max(campaign.spendCap - m.spend, 0)) : "—"} />
             <Field label="Projected 30-day spend" value={money(projected)} />
-            <Field label="Pacing" value={spendPct > 85 ? "Ahead of schedule" : "On track"} />
+            <Field label="Pacing" value={!hasCap ? "—" : spendPct > 85 ? "Ahead of schedule" : "On track"} />
           </dl>
         </Panel>
 
@@ -429,6 +425,7 @@ function OverviewTab({
         </Panel>
       </div>
 
+      {!LIVE && (
       <Panel
         title="AI Recommendations & Growth Actions"
         icon={<Sparkles className="size-4 text-amber-500" />}
@@ -515,14 +512,15 @@ function OverviewTab({
           })}
         </ul>
       </Panel>
+      )}
     </div>
   );
 }
 
 function buildRecommendations(
-  campaign: NonNullable<ReturnType<typeof getCampaign>>,
-  sets: ReturnType<typeof adSetsOfCampaign>,
-  campaignAds: ReturnType<typeof adsOfCampaign>,
+  campaign: Campaign,
+  sets: AdSet[],
+  campaignAds: Ad[],
 ) {
   const recs: {
     title: string;
@@ -614,7 +612,7 @@ function AdSetsTab({
   sets,
 }: {
   campaignId: string;
-  sets: ReturnType<typeof adSetsOfCampaign>;
+  sets: AdSet[];
 }) {
   return (
     <section className={cn(card, "overflow-hidden")}>
@@ -719,9 +717,10 @@ function AdsTab({
   campaignAds,
   campaignId,
 }: {
-  campaignAds: ReturnType<typeof adsOfCampaign>;
+  campaignAds: Ad[];
   campaignId: string;
 }) {
+  const { getCreative } = useAdsData();
   return (
     <section className={cn(card, "overflow-hidden")}>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/40 bg-gradient-to-r from-white/40 to-transparent px-5 py-3.5">
@@ -825,6 +824,7 @@ function AdsTab({
 /* ------------------------------------------------------------------ */
 
 function LeadsTab({ campaignId, campaignName }: { campaignId: string; campaignName: string }) {
+  const { leadsOf } = useAdsData();
   const rows = leadsOf({ campaignId });
   return (
     <section className={cn(card, "overflow-hidden")}>
@@ -871,8 +871,8 @@ function LeadsTab({ campaignId, campaignName }: { campaignId: string; campaignNa
                   </Link>
                 </Td>
                 <Td>{l.stage}</Td>
-                <Td>{l.score}</Td>
-                <Td>{l.owner}</Td>
+                <Td>{l.score || "—"}</Td>
+                <Td>{l.owner || "—"}</Td>
                 <Td>{dateTime(l.submittedAt)}</Td>
               </Tr>
             ))}
@@ -891,8 +891,8 @@ function PerformanceTab({
   campaign,
   sets,
 }: {
-  campaign: NonNullable<ReturnType<typeof getCampaign>>;
-  sets: ReturnType<typeof adSetsOfCampaign>;
+  campaign: Campaign;
+  sets: AdSet[];
 }) {
   const m = campaign.metrics;
   const formOpens = Math.round(m.clicks * 0.62);
@@ -944,6 +944,7 @@ function PerformanceTab({
 /* ------------------------------------------------------------------ */
 
 function ActivityTab({ campaignName }: { campaignName: string }) {
+  const { activityLog } = useAdsData();
   const rows = activityLog.filter((a) => a.campaign === campaignName);
   return (
     <section className={cn(card, "overflow-hidden")}>

@@ -4,16 +4,10 @@ import { MoreHorizontalIcon, UserPlusIcon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { StaffMember } from "../data/types";
+import { TEAM_MOCK_MODE } from "../data/config";
+import type { CoverageRow } from "../data/types";
 
-interface CompanyCoverage {
-  companyId: string;
-  companyName: string;
-  primaryOwner: StaffMember | null;
-  backupOwner: StaffMember | null;
-  supportOwner: StaffMember | null;
-  status: "complete" | "missing_primary" | "missing_backup" | "staff_inactive";
-}
+type CompanyCoverage = CoverageRow;
 
 interface CoverageTableProps {
   coverage: CompanyCoverage[];
@@ -28,6 +22,7 @@ export function CoverageTable({ coverage, isLoading, onAssignOwner }: CoverageTa
       case "missing_primary": return <Badge tone="warning" className="text-2xs">Missing Primary</Badge>;
       case "missing_backup": return <Badge tone="info" className="text-2xs">Missing Backup</Badge>;
       case "staff_inactive": return <Badge tone="danger" className="text-2xs">Staff Inactive</Badge>;
+      case "needs_reassignment": return <Badge tone="warning" className="text-2xs">Needs Reassignment</Badge>;
     }
   };
 
@@ -40,7 +35,7 @@ export function CoverageTable({ coverage, isLoading, onAssignOwner }: CoverageTa
               <TableHead className="px-3">Company</TableHead>
               <TableHead className="px-3">Primary Owner</TableHead>
               <TableHead className="px-3">Backup Owner</TableHead>
-              <TableHead className="px-3">Support Owner</TableHead>
+              <TableHead className="px-3">{TEAM_MOCK_MODE ? "Support Owner" : "Assignments"}</TableHead>
               <TableHead className="px-3">Coverage</TableHead>
               <TableHead className="w-12 text-right pr-3"><span className="sr-only">Actions</span></TableHead>
             </TableRow>
@@ -75,10 +70,10 @@ export function CoverageTable({ coverage, isLoading, onAssignOwner }: CoverageTa
                     )}
                   </TableCell>
                   <TableCell className="py-2">
-                    {c.supportOwner ? (
-                      <span className="text-slate-700">{c.supportOwner.name}</span>
+                    {TEAM_MOCK_MODE ? (
+                      c.supportOwner ? <span className="text-slate-700">{c.supportOwner.name}</span> : <span className="text-slate-400 italic">—</span>
                     ) : (
-                      <span className="text-slate-400 italic">—</span>
+                      <span className="text-slate-600">{c.assignmentCount}</span>
                     )}
                   </TableCell>
                   <TableCell className="py-2">{getStatusBadge(c.status)}</TableCell>

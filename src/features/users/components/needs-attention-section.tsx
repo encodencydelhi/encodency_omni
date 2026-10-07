@@ -1,3 +1,4 @@
+import { USERS_MOCK_MODE } from "../data/config";
 import {
   AlertCircleIcon,
   AlertTriangleIcon,
@@ -61,7 +62,7 @@ export function NeedsAttentionSection({
             Needs Operational Attention ({items.length})
           </h3>
           <span className="text-xs text-amber-800/80 hidden sm:inline">
-            Policy gaps, lockouts & orphaned ownership
+            {USERS_MOCK_MODE ? "Policy gaps, lockouts & orphaned ownership" : "Missing two-factor, Companies without an Owner & stale invitations"}
           </span>
         </div>
 

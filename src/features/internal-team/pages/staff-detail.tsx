@@ -8,16 +8,19 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ROUTES } from "@/config/routes";
-import { INTERNAL_ROLE, ROLE_PERMISSIONS } from "@/types/domain/team";
+import { INTERNAL_ROLE } from "@/types/domain/team";
 import { cn } from "@/lib/utils/cn";
 import { formatDate, formatRelativeTime, getInitials } from "@/lib/utils/format";
 import { StaffCapabilitiesProvider, useStaffCapabilities } from "../data/capability-provider";
 import { useStaff, useStaffActivity, useStaffLifecycle, useTeamMutations } from "../data/hooks";
-import { getStaffAvatarColor } from "../data/config";
+import { getRolePermissions, getStaffAvatarColor, STAFF_STATUS_REGISTRY, TEAM_MOCK_MODE } from "../data/config";
 import { StaffStatusBadge, StaffRoleBadge, MfaStateBadge, AccessReviewStatusBadge, PrivilegedBadge } from "../components/staff-status-badges";
 import { RoleChangeDrawer } from "../components/role-change-drawer";
 import { SuspendStaffDialog, ReactivateStaffDialog, DeactivateStaffDialog } from "../components/lifecycle-dialogs";
 import { AssignmentDrawer } from "../components/assignment-drawer";
+import { AccessReviewCompleteDialog } from "../components/access-review-dialog";
+import { EditStaffProfileDialog, ReassignAssignmentDialog, ScheduleReviewDialog } from "../components/staff-live-dialogs";
+import type { StaffAssignment } from "../data/types";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/shared/empty-state";
 
@@ -46,6 +49,10 @@ function StaffDetailContent() {
   const [reactivateOpen, setReactivateOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [reassignTarget, setReassignTarget] = useState<StaffAssignment | null>(null);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [completeOpen, setCompleteOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -66,7 +73,12 @@ function StaffDetailContent() {
 
   const activeAssignments = member.assignments.filter((a) => a.status === "active");
   const roleMeta = INTERNAL_ROLE[member.role];
-  const capabilities = ROLE_PERMISSIONS[member.role];
+  const capabilities = getRolePermissions(member.role);
+  const reviewOpenable = member.accessReviewStatus !== "not_scheduled" && member.accessReviewStatus !== "completed";
+  const reviewForDialog = {
+    id: member.id, staffId: member.id, staffName: member.name, staffEmail: member.email, role: member.role, department: member.department,
+    mfaState: member.mfaState, lastReviewDate: null, nextReviewDate: member.nextReviewDate, status: member.accessReviewStatus, reviewer: null, notes: null, outcome: null,
+  };
   const sensitivePerms = capabilities.filter((p) => ["settings:write", "flags:write", "users:write", "billing:write", "platform:write"].includes(p));
 
   return (
@@ -89,7 +101,7 @@ function StaffDetailContent() {
               <h1 className="text-xl font-bold tracking-tight text-slate-900">{member.name}</h1>
               <PrivilegedBadge privileged={member.privilegedAccess} />
             </div>
-            <p className="text-xs text-slate-500">{member.email} &middot; {member.jobTitle} &middot; {member.department}</p>
+            <p className="text-xs text-slate-500">{[member.email, member.jobTitle, member.department].filter(Boolean).join(" · ")}</p>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[11px] text-slate-400 font-mono">{member.id}</span>
               <StaffRoleBadge role={member.role} />
@@ -98,6 +110,9 @@ function StaffDetailContent() {
           </div>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
+          {caps.canEditStaffProfile && (
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setEditProfileOpen(true)}>Edit Profile</Button>
+          )}
           {caps.canChangePlatformRole && (
             <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setRoleChangeOpen(true)}>Change Role</Button>
           )}
@@ -109,8 +124,8 @@ function StaffDetailContent() {
             )
           ) : (
             caps.canSuspendStaff && (
-              <Button variant="outline" size="sm" className="h-8 text-xs text-rose-600 border-rose-200 hover:bg-rose-50" onClick={() => setSuspendOpen(true)}>
-                <BanIcon className="size-3.5 mr-1" /> Suspend
+              <Button variant="outline" size="sm" className="h-8 text-xs text-rose-600 border-rose-200 hover:bg-rose-50" onClick={() => (TEAM_MOCK_MODE ? setSuspendOpen(true) : setDeactivateOpen(true))}>
+                <BanIcon className="size-3.5 mr-1" /> {TEAM_MOCK_MODE ? "Suspend" : "Deactivate"}
               </Button>
             )
           )}
@@ -121,7 +136,7 @@ function StaffDetailContent() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         {[
           { label: "ROLE", value: roleMeta?.label || member.role, color: "text-blue-700", icon: BriefcaseIcon, iconBg: "bg-blue-50 text-blue-600" },
-          { label: "STATUS", value: member.status, color: member.status === "active" ? "text-emerald-700" : "text-rose-700", icon: member.status === "active" ? CheckCircle2Icon : BanIcon, iconBg: member.status === "active" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600" },
+          { label: "STATUS", value: STAFF_STATUS_REGISTRY[member.status].label, color: member.status === "active" ? "text-emerald-700" : "text-rose-700", icon: member.status === "active" ? CheckCircle2Icon : BanIcon, iconBg: member.status === "active" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600" },
           { label: "COMPANIES", value: activeAssignments.length, color: "text-violet-700", icon: Building2Icon, iconBg: "bg-violet-50 text-violet-600" },
           { label: "MFA", value: member.mfaState === "enrolled" ? "Enrolled" : "Required", color: member.mfaState === "enrolled" ? "text-emerald-700" : "text-amber-700", icon: KeyRoundIcon, iconBg: member.mfaState === "enrolled" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600" },
           { label: "ACCESS REVIEW", value: member.accessReviewStatus.replace(/_/g, " "), color: "text-slate-700", icon: ClipboardCheckIcon, iconBg: "bg-slate-50 text-slate-600" },
@@ -161,9 +176,9 @@ function StaffDetailContent() {
                   ["Full Name", member.name],
                   ["Work Email", member.email],
                   ["Staff ID", member.id],
-                  ["Department", member.department],
-                  ["Job Title", member.jobTitle],
-                  ["Global User ID", member.globalUserId],
+                  ["Department", member.department || "—"],
+                  ["Job Title", member.jobTitle || "—"],
+                  ...(TEAM_MOCK_MODE ? [["Global User ID", member.globalUserId]] : [["Phone", member.phone || "—"]]),
                   ["Joined", formatDate(member.createdAt)],
                 ].map(([label, value]) => (
                   <div key={label} className="flex items-center justify-between py-1 border-b border-border/50 last:border-0">
@@ -188,7 +203,11 @@ function StaffDetailContent() {
                 </div>
                 <div className="py-1 border-b border-border/50">
                   <span className="text-slate-500 block mb-1">Effective Capabilities</span>
-                  <div className="flex flex-wrap gap-1">{capabilities.slice(0, 8).map((p) => <Badge key={p} tone="info" className="text-2xs">{p}</Badge>)}</div>
+                  {capabilities.length === 0 ? (
+                    <p className="text-slate-400 italic">No console modules are enabled for this role yet.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">{capabilities.slice(0, 8).map((p) => <Badge key={p} tone="info" className="text-2xs">{p}</Badge>)}</div>
+                  )}
                 </div>
                 {sensitivePerms.length > 0 && (
                   <div className="py-1">
@@ -286,7 +305,15 @@ function StaffDetailContent() {
                       <span className="font-medium text-slate-900 block">{a.companyName}</span>
                       <span className="text-slate-500">Assigned {formatDate(a.assignedAt)}</span>
                     </div>
-                    <Badge tone="info" className="text-2xs shrink-0 ml-2">{a.responsibility.replace(/_/g, " ")}</Badge>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      <Badge tone="info" className="text-2xs">{a.responsibility.replace(/_/g, " ")}</Badge>
+                      {caps.canAssignCompanies && (
+                        <>
+                          <Button variant="outline" size="sm" className="h-6 px-2 text-[11px]" onClick={() => setReassignTarget(a)}>Reassign</Button>
+                          <Button variant="outline" size="sm" className="h-6 px-2 text-[11px] text-rose-600 border-rose-200 hover:bg-rose-50" disabled={mutations.endAssignment.isPending} onClick={() => mutations.endAssignment.mutate(a.id)}>End</Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -301,7 +328,7 @@ function StaffDetailContent() {
             <div className="space-y-2 text-xs">
               <div className="flex items-center justify-between py-2 border-b border-border/50">
                 <span className="text-slate-500">Global Identity Status</span>
-                <Badge tone="success">Active</Badge>
+                <Badge tone={member.status === "active" ? "success" : "danger"}>{member.status === "active" ? "Active" : "Deactivated"}</Badge>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-border/50">
                 <span className="text-slate-500">Staff Membership Status</span>
@@ -313,7 +340,15 @@ function StaffDetailContent() {
               </div>
               <div className="flex items-center justify-between py-2 border-b border-border/50">
                 <span className="text-slate-500">Access Review</span>
-                <AccessReviewStatusBadge status={member.accessReviewStatus} />
+                <div className="flex items-center gap-2">
+                  <AccessReviewStatusBadge status={member.accessReviewStatus} />
+                  {caps.canConductAccessReviews && member.status === "active" && member.accessReviewStatus === "not_scheduled" && (
+                    <Button variant="outline" size="sm" className="h-6 px-2 text-[11px]" onClick={() => setScheduleOpen(true)}>Schedule</Button>
+                  )}
+                  {caps.canConductAccessReviews && member.status === "active" && reviewOpenable && (
+                    <Button variant="outline" size="sm" className="h-6 px-2 text-[11px]" onClick={() => setCompleteOpen(true)}>Complete Review</Button>
+                  )}
+                </div>
               </div>
               <div className="flex items-center justify-between py-2">
                 <span className="text-slate-500">Last Active</span>
@@ -358,11 +393,11 @@ function StaffDetailContent() {
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between py-1 border-b border-border/50">
                   <span className="text-slate-500">Department</span>
-                  <span className="text-slate-900">{member.department}</span>
+                  <span className="text-slate-900">{member.department || "—"}</span>
                 </div>
                 <div className="flex items-center justify-between py-1 border-b border-border/50">
                   <span className="text-slate-500">Job Title</span>
-                  <span className="text-slate-900">{member.jobTitle}</span>
+                  <span className="text-slate-900">{member.jobTitle || "—"}</span>
                 </div>
                 <div className="flex items-center justify-between py-1">
                   <span className="text-slate-500">Staff Code</span>
@@ -382,14 +417,14 @@ function StaffDetailContent() {
                   )
                 ) : (
                   <>
-                    {caps.canSuspendStaff && (
+                    {TEAM_MOCK_MODE && caps.canSuspendStaff && (
                       <Button variant="outline" size="sm" className="h-8 text-xs text-amber-600 border-amber-200 hover:bg-amber-50 w-full justify-start" onClick={() => setSuspendOpen(true)}>
                         <BanIcon className="size-3.5 mr-2" /> Suspend Staff Access
                       </Button>
                     )}
                     {caps.canDeactivateStaff && (
                       <Button variant="outline" size="sm" className="h-8 text-xs text-rose-600 border-rose-200 hover:bg-rose-50 w-full justify-start" onClick={() => setDeactivateOpen(true)}>
-                        <Trash2Icon className="size-3.5 mr-2" /> Deactivate Staff Member
+                        <Trash2Icon className="size-3.5 mr-2" /> {TEAM_MOCK_MODE ? "Deactivate Staff Member" : "Deactivate Account"}
                       </Button>
                     )}
                   </>
@@ -425,7 +460,11 @@ function StaffDetailContent() {
       <RoleChangeDrawer member={member} open={roleChangeOpen} onOpenChange={setRoleChangeOpen} onConfirm={(id, role, reason) => { mutations.changeRole.mutate({ staffId: id, newRole: role, reason }); setRoleChangeOpen(false); }} isPending={mutations.changeRole.isPending} />
       <SuspendStaffDialog member={member} open={suspendOpen} onOpenChange={setSuspendOpen} onConfirm={(id, reason) => { mutations.suspendStaff.mutate({ staffId: id, reason }); setSuspendOpen(false); }} isPending={mutations.suspendStaff.isPending} />
       <ReactivateStaffDialog member={member} open={reactivateOpen} onOpenChange={setReactivateOpen} onConfirm={(id, reason) => { mutations.reactivateStaff.mutate({ staffId: id, reason }); setReactivateOpen(false); }} isPending={mutations.reactivateStaff.isPending} />
-      <DeactivateStaffDialog member={member} open={deactivateOpen} onOpenChange={setDeactivateOpen} onConfirm={(id, reason) => { mutations.deactivateStaff.mutate({ staffId: id, reason, reassignmentPlan: [] }); setDeactivateOpen(false); }} isPending={mutations.deactivateStaff.isPending} />
+      <DeactivateStaffDialog member={member} open={deactivateOpen} onOpenChange={setDeactivateOpen} onConfirm={(id, reason, reassignments) => mutations.deactivateStaff.mutate({ staffId: id, reason, reassignmentPlan: [], reassignments })} isPending={mutations.deactivateStaff.isPending} />
+      <EditStaffProfileDialog member={member} open={editProfileOpen} onOpenChange={setEditProfileOpen} onConfirm={(input) => mutations.updateProfile.mutate({ staffId: member.id, ...input })} isPending={mutations.updateProfile.isPending} />
+      <ReassignAssignmentDialog assignment={reassignTarget} open={reassignTarget !== null} onOpenChange={(o) => !o && setReassignTarget(null)} onConfirm={(assignmentId, newStaffId, reason) => mutations.reassignCompany.mutate({ assignmentId, newStaffId, reason })} isPending={mutations.reassignCompany.isPending} />
+      <ScheduleReviewDialog member={{ id: member.id, name: member.name }} open={scheduleOpen} onOpenChange={setScheduleOpen} onConfirm={(staffId, dueAt) => mutations.scheduleReview.mutate({ staffId, dueAt })} isPending={mutations.scheduleReview.isPending} />
+      <AccessReviewCompleteDialog review={reviewForDialog} open={completeOpen} onOpenChange={setCompleteOpen} onConfirm={(input) => { mutations.completeAccessReview.mutate(input); setCompleteOpen(false); }} isPending={mutations.completeAccessReview.isPending} />
       <AssignmentDrawer member={member} open={assignOpen} onOpenChange={setAssignOpen} onConfirm={(staffId, companyId, companyName, responsibility) => { mutations.assignCompany.mutate({ staffId, companyId, companyName, responsibility }); setAssignOpen(false); }} isPending={mutations.assignCompany.isPending} />
     </div>
   );

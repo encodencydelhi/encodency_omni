@@ -10,6 +10,9 @@ import { useStaffInvitations, useInvitationKpis, useTeamMutations } from "../dat
 import { StaffNav } from "../components/staff-nav";
 import { InvitationTable } from "../components/invitation-table";
 import { InviteStaffWizard } from "../components/invite-staff-wizard";
+import { InviteLinkDialog } from "../components/invite-link-dialog";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import type { StaffInvitation } from "../data/types";
 
 function InvitationsContent() {
   const caps = useStaffCapabilities();
@@ -17,6 +20,8 @@ function InvitationsContent() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [revokeTarget, setRevokeTarget] = useState<StaffInvitation | null>(null);
+  const [linkInvitation, setLinkInvitation] = useState<StaffInvitation | null>(null);
 
   const { data: invitations, isLoading } = useStaffInvitations({ search: search || undefined, status: statusFilter === "all" ? undefined : statusFilter });
   const { data: kpis } = useInvitationKpis();
@@ -88,9 +93,22 @@ function InvitationsContent() {
       <InvitationTable
         invitations={invitations ?? []}
         isLoading={isLoading}
-        onRevoke={(inv) => mutations.revokeInvitation.mutate(inv.id)}
-        onResend={(inv) => mutations.revokeInvitation.mutate(inv.id)}
+        onRevoke={(inv) => setRevokeTarget(inv)}
+        onResend={(inv) => mutations.resendInvitation.mutate(inv.id, { onSuccess: (res) => { if (res.acceptLink) setLinkInvitation(res); } })}
       />
+
+      <ConfirmDialog
+        open={revokeTarget !== null}
+        onOpenChange={(o) => !o && setRevokeTarget(null)}
+        title="Revoke invitation?"
+        description={`The link sent to ${revokeTarget?.email ?? ""} stops working immediately. You can invite them again later.`}
+        confirmLabel="Revoke Invitation"
+        variant="destructive"
+        isPending={mutations.revokeInvitation.isPending}
+        onConfirm={() => { if (revokeTarget) mutations.revokeInvitation.mutate(revokeTarget.id, { onSuccess: () => setRevokeTarget(null) }); }}
+      />
+
+      <InviteLinkDialog invitation={linkInvitation} title="Invitation renewed" onClose={() => setLinkInvitation(null)} />
 
       <InviteStaffWizard open={inviteOpen} onOpenChange={setInviteOpen} />
     </div>

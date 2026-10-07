@@ -1,7 +1,8 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { INTERNAL_ROLE, ROLE_PERMISSIONS, type InternalRole, type Permission } from "@/types/domain/team";
+import { INTERNAL_ROLE, type InternalRole, type Permission } from "@/types/domain/team";
+import { getRolePermissions, STAFF_ROLE_KEYS } from "../data/config";
 
 const MODULES = [
   { label: "Dashboard", permissions: ["companies:read"] },
@@ -26,7 +27,7 @@ const MODULES = [
 
 const SENSITIVE_PERMISSIONS: Permission[] = ["settings:write", "flags:write", "users:write", "billing:write", "platform:write"];
 
-const roles: InternalRole[] = ["super_admin", "technical_admin", "support", "finance", "operations"];
+const roles: InternalRole[] = STAFF_ROLE_KEYS;
 
 export function CapabilityMatrix() {
   return (
@@ -48,7 +49,7 @@ export function CapabilityMatrix() {
               <tr key={mod.label} className="hover:bg-slate-50/50">
                 <td className="px-3 py-2 font-medium text-slate-700">{mod.label}</td>
                 {roles.map((r) => {
-                  const perms = ROLE_PERMISSIONS[r];
+                  const perms = getRolePermissions(r);
                   const hasAny = mod.permissions.some((p) => perms.includes(p as Permission));
                   const hasAll = mod.permissions.every((p) => perms.includes(p as Permission));
                   const isSensitive = mod.permissions.some((p) => SENSITIVE_PERMISSIONS.includes(p as Permission));
@@ -76,8 +77,8 @@ export function CapabilityMatrix() {
 }
 
 export function RoleComparison({ roleA, roleB }: { roleA: InternalRole; roleB: InternalRole }) {
-  const permsA = ROLE_PERMISSIONS[roleA];
-  const permsB = ROLE_PERMISSIONS[roleB];
+  const permsA = getRolePermissions(roleA);
+  const permsB = getRolePermissions(roleB);
   const allPerms = Array.from(new Set([...permsA, ...permsB]));
   const addedInB = allPerms.filter((p) => !permsA.includes(p) && permsB.includes(p));
   const removedInB = allPerms.filter((p) => permsA.includes(p) && !permsB.includes(p));

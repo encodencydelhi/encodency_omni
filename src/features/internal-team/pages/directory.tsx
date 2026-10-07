@@ -16,8 +16,8 @@ import { StaffTable } from "../components/staff-table";
 import { StaffQuickPreview } from "../components/staff-quick-preview";
 import { InviteStaffWizard } from "../components/invite-staff-wizard";
 import { RoleChangeDrawer } from "../components/role-change-drawer";
-import { SuspendStaffDialog, ReactivateStaffDialog } from "../components/lifecycle-dialogs";
-import { exportStaffToCsv } from "../data/config";
+import { SuspendStaffDialog, ReactivateStaffDialog, DeactivateStaffDialog } from "../components/lifecycle-dialogs";
+import { exportStaffToCsv, TEAM_MOCK_MODE } from "../data/config";
 
 function DirectoryContent() {
   const router = useRouter();
@@ -55,7 +55,10 @@ function DirectoryContent() {
   const handleKpiSelect = (id: string) => {
     if (id === "all") setQuery({ page: 1, pageSize: 10, sort: "recently_active" });
     else if (id === "active") setQuery((q) => ({ ...q, status: "active", page: 1 }));
-    else if (id === "invited") setQuery((q) => ({ ...q, status: "invited", page: 1 }));
+    else if (id === "invited") {
+      if (TEAM_MOCK_MODE) setQuery((q) => ({ ...q, status: "invited", page: 1 }));
+      else router.push(`${ROUTES.superAdmin.team}/invitations`);
+    }
     else if (id === "suspended") setQuery((q) => ({ ...q, status: "suspended", page: 1 }));
     else if (id === "mfa") setQuery((q) => ({ ...q, mfaState: "setup_required", page: 1 }));
     else if (id === "reviews") setQuery((q) => ({ ...q, accessReviewStatus: "due", page: 1 }));
@@ -65,7 +68,8 @@ function DirectoryContent() {
   const handleClearFilters = () => setQuery({ page: 1, pageSize: 10, sort: "recently_active" });
 
   const handleExport = () => {
-    exportStaffToCsv(staff, `internal-team-${new Date().toISOString().split("T")[0]}.csv`);
+    const chosen = selectedIds.length ? staff.filter((s) => selectedIds.includes(s.id)) : staff;
+    exportStaffToCsv(chosen, `internal-team-${new Date().toISOString().split("T")[0]}.csv`);
   };
 
   return (
@@ -118,7 +122,7 @@ function DirectoryContent() {
       <StaffNav />
 
       {/* Filter Toolbar */}
-      <StaffFilterToolbar query={query} onQueryChange={(q) => setQuery((prev) => ({ ...prev, ...q, page: 1 }))} activeFilterCount={activeFilterCount} onClearFilters={handleClearFilters} />
+      <StaffFilterToolbar query={query} onQueryChange={(q) => setQuery((prev) => ({ ...prev, ...q, page: 1 }))} activeFilterCount={activeFilterCount} onClearFilters={handleClearFilters} departments={listResult?.departments} />
 
       {/* Staff Table */}
       <StaffTable
@@ -155,8 +159,12 @@ function DirectoryContent() {
       {/* Role Change Drawer */}
       <RoleChangeDrawer member={roleChangeMember} open={roleChangeOpen} onOpenChange={setRoleChangeOpen} onConfirm={(id, role, reason) => { mutations.changeRole.mutate({ staffId: id, newRole: role, reason }); setRoleChangeOpen(false); }} isPending={mutations.changeRole.isPending} />
 
-      {/* Suspend Dialog */}
-      <SuspendStaffDialog member={suspendMember} open={suspendOpen} onOpenChange={setSuspendOpen} onConfirm={(id, reason) => { mutations.suspendStaff.mutate({ staffId: id, reason }); setSuspendOpen(false); }} isPending={mutations.suspendStaff.isPending} />
+      {/* Suspend (demo) / Deactivate (live) */}
+      {TEAM_MOCK_MODE ? (
+        <SuspendStaffDialog member={suspendMember} open={suspendOpen} onOpenChange={setSuspendOpen} onConfirm={(id, reason) => { mutations.suspendStaff.mutate({ staffId: id, reason }); setSuspendOpen(false); }} isPending={mutations.suspendStaff.isPending} />
+      ) : (
+        <DeactivateStaffDialog member={suspendMember} open={suspendOpen} onOpenChange={setSuspendOpen} onConfirm={(id, reason, reassignments) => mutations.deactivateStaff.mutate({ staffId: id, reason, reassignmentPlan: [], reassignments })} isPending={mutations.deactivateStaff.isPending} />
+      )}
 
       {/* Reactivate Dialog */}
       <ReactivateStaffDialog member={reactivateMember} open={reactivateOpen} onOpenChange={setReactivateOpen} onConfirm={(id, reason) => { mutations.reactivateStaff.mutate({ staffId: id, reason }); setReactivateOpen(false); }} isPending={mutations.reactivateStaff.isPending} />

@@ -29,10 +29,11 @@ export function AcceptInvitationView() {
   const [validation, setValidation] = useState<InvitationValidationResponse | null>(null);
   const [isValidating, setIsValidating] = useState(true);
 
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<{ password?: string; confirmPassword?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ name?: string; password?: string; confirmPassword?: string }>({});
   const [submitError, setSubmitError] = useState("");
   const [isPending, setIsPending] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -73,9 +74,10 @@ export function AcceptInvitationView() {
     setSubmitError("");
 
     const parsed = acceptInvitationSchema.safeParse({ password, confirmPassword });
-    if (!parsed.success) {
+    if (!parsed.success || !fullName.trim()) {
       const errors: typeof fieldErrors = {};
-      for (const issue of parsed.error.issues) errors[issue.path[0] as keyof typeof fieldErrors] ??= issue.message;
+      if (!fullName.trim()) errors.name = "Enter your full name.";
+      if (!parsed.success) for (const issue of parsed.error.issues) errors[issue.path[0] as keyof typeof fieldErrors] ??= issue.message;
       setFieldErrors(errors);
       return;
     }
@@ -83,7 +85,7 @@ export function AcceptInvitationView() {
 
     setIsPending(true);
     try {
-      await teamApi.acceptInvitation(token, parsed.data.password);
+      await teamApi.acceptInvitation(token, parsed.data.password, fullName);
       setOutcome({ kind: "accepted" });
     } catch (error) {
       if (ApiError.isApiError(error)) {
@@ -265,6 +267,20 @@ export function AcceptInvitationView() {
         </p>
 
         <form onSubmit={onAcceptNewUser} noValidate className="mt-7">
+          <AuthField id="invite-name" label="Full name" icon={MailPlusIcon} error={fieldErrors.name} className="mb-4">
+            <input
+              id="invite-name"
+              type="text"
+              autoComplete="name"
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              disabled={isPending}
+              maxLength={200}
+              aria-invalid={Boolean(fieldErrors.name)}
+              className={AUTH_INPUT_CLASS}
+            />
+          </AuthField>
+
           <AuthField
             id="invite-password"
             label="Password"

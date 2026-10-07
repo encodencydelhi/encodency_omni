@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { TEAM_LIVE } from "../team-data/live-team";
 import { useTeam } from "../team-data/team-store";
+import { MemberDetailLivePage } from "./member-detail-live-page";
 import type { AccessLevel, ClientAccess, Member } from "../team-data/types";
 
 const tabs = ["Overview", "Access", "Work", "Activity", "Security"] as const;
@@ -16,6 +18,10 @@ const clients = [{ id: "c-1", name: "Moksha Sewa" }, { id: "c-2", name: "CityIni
 const modules = ["CRM", "Campaigns", "Meta", "Instagram", "LinkedIn", "Google Business", "WhatsApp", "YouTube", "X", "Website", "SEO", "Automation", "Analytics", "Reports"];
 
 export function MemberDetailPage({ memberId }: { memberId: string }) {
+  return TEAM_LIVE ? <MemberDetailLivePage memberId={memberId} /> : <MemberDetailDemoPage memberId={memberId} />;
+}
+
+function MemberDetailDemoPage({ memberId }: { memberId: string }) {
   const router = useRouter(); const { members, activity, isLoading, updateMember } = useTeam();
   const member = members.find((item) => item.id === memberId); const [tab, setTab] = useState<(typeof tabs)[number]>("Overview"); const [accessOpen, setAccessOpen] = useState(false); const [editing, setEditing] = useState<ClientAccess | null>(null); const [confirm, setConfirm] = useState<null | "suspend" | "sessions">(null); const [profileOpen, setProfileOpen] = useState(false);
   if (isLoading) return <div className="h-80 animate-pulse rounded-lg bg-[#F1F3F4]" />;

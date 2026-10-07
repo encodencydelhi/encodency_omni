@@ -74,11 +74,11 @@ export function StaffQuickPreview({ member, open, onOpenChange }: StaffQuickPrev
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-500">Department</span>
-                <span className="text-slate-700 font-medium">{member.department}</span>
+                <span className="text-slate-700 font-medium">{member.department || "—"}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-500">Job Title</span>
-                <span className="text-slate-700 font-medium">{member.jobTitle}</span>
+                <span className="text-slate-700 font-medium">{member.jobTitle || "—"}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-500">Privileged Access</span>

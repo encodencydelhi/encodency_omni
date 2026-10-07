@@ -42,6 +42,7 @@ export interface UserSecurityProfile {
   mfaEnabled: boolean;
   twoFactorRequired: boolean;
   twoFactorStatus: TwoFactorStatus;
+  /** Not tracked by the platform: empty in live mode. */
   passwordLastChanged: string;
   lastSuccessfulLogin: string | null;
   failedLoginAttempts: number;
@@ -85,6 +86,8 @@ export interface UserInvitation {
   role: OrganisationRole;
   clientAccessScope: "all" | "selected";
   clientAccessIds: string[];
+  /** Number of Clients the invitation grants (the ids themselves are not exposed in live mode). */
+  clientAccessCount?: number;
   invitedBy: { id: string; name: string; email: string };
   sentAt: string;
   expiresAt: string;
@@ -281,7 +284,21 @@ export interface UpdateUserIdentityInput {
 export interface UserAccountLifecycleEvent {
   id: string;
   userId: string;
-  eventType: "created" | "activated" | "suspended" | "reactivated" | "deactivated" | "ownership_transferred" | "membership_added" | "membership_removed";
+  eventType:
+    | "created"
+    | "activated"
+    | "suspended"
+    | "reactivated"
+    | "deactivated"
+    | "ownership_transferred"
+    | "membership_added"
+    | "membership_removed"
+    | "membership_role_changed"
+    | "membership_access_changed"
+    | "sessions_revoked"
+    | "password_reset"
+    | "profile_updated"
+    | "other";
   timestamp: string;
   actor: { id: string; name: string };
   companyId?: string;

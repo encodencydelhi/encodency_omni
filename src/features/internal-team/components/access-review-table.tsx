@@ -33,9 +33,10 @@ interface AccessReviewTableProps {
   reviews: StaffAccessReview[];
   isLoading?: boolean;
   onCompleteReview?: (review: StaffAccessReview) => void;
+  onScheduleReview?: (review: StaffAccessReview) => void;
 }
 
-export function AccessReviewTable({ reviews, isLoading, onCompleteReview }: AccessReviewTableProps) {
+export function AccessReviewTable({ reviews, isLoading, onCompleteReview, onScheduleReview }: AccessReviewTableProps) {
   const router = useRouter();
 
   return (
@@ -73,6 +74,7 @@ export function AccessReviewTable({ reviews, isLoading, onCompleteReview }: Acce
               reviews.map((review) => {
                 const profileUrl = `${ROUTES.superAdmin.team}/${review.staffId}`;
                 const isDue = review.status === "due" || review.status === "overdue";
+                const unscheduled = review.status === "not_scheduled";
 
                 return (
                   <TableRow
@@ -124,6 +126,18 @@ export function AccessReviewTable({ reviews, isLoading, onCompleteReview }: Acce
                     </TableCell>
                     <TableCell className="py-2 text-right pr-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5">
+                        {unscheduled && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onScheduleReview?.(review)}
+                            className="h-6 px-2 text-[11px] font-medium text-slate-700 gap-1 rounded-sm shrink-0"
+                            title="Schedule an access review"
+                          >
+                            <span>Schedule</span>
+                          </Button>
+                        )}
                         {isDue && (
                           <Button
                             type="button"
@@ -154,13 +168,20 @@ export function AccessReviewTable({ reviews, isLoading, onCompleteReview }: Acce
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
 
-                            <DropdownMenuItem
-                              onClick={() => onCompleteReview?.(review)}
-                              className="gap-2 cursor-pointer text-blue-600 font-medium"
-                            >
-                              <CheckCircle2Icon className="size-3.5 text-blue-600" />
-                              <span>{isDue ? "Complete Access Review" : "Conduct Access Review"}</span>
-                            </DropdownMenuItem>
+                            {unscheduled ? (
+                              <DropdownMenuItem onClick={() => onScheduleReview?.(review)} className="gap-2 cursor-pointer text-blue-600 font-medium">
+                                <CheckCircle2Icon className="size-3.5 text-blue-600" />
+                                <span>Schedule Access Review</span>
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() => onCompleteReview?.(review)}
+                                className="gap-2 cursor-pointer text-blue-600 font-medium"
+                              >
+                                <CheckCircle2Icon className="size-3.5 text-blue-600" />
+                                <span>{isDue ? "Complete Access Review" : "Conduct Access Review"}</span>
+                              </DropdownMenuItem>
+                            )}
 
                             <DropdownMenuSeparator />
 

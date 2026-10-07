@@ -5,7 +5,7 @@ import Image from "next/image";
 import { FaFacebookF, FaInstagram, FaMeta } from "react-icons/fa6";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -40,13 +40,8 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  getAd,
-  getAdSet,
-  getCampaign,
-  getCreative,
-  getForm,
-} from "@/features/admin/meta-ads/data";
+import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
+import { ReadOnlyNotice } from "@/features/admin/meta-ads/components/read-only-notice";
 
 type Step = "campaign" | "adset" | "ad" | "form" | "review";
 
@@ -88,6 +83,7 @@ const input =
  * builder opens on the requested step instead of always restarting at step 1.
  */
 function useEntryContext() {
+  const { getAd, getAdSet, getCampaign, getCreative, getForm } = useAdsData();
   const params = useSearchParams();
   const requested = params?.get("step");
   const initialStep: Step = order.includes(requested as Step)
@@ -331,6 +327,7 @@ function CreateAdsManagerInner() {
 }
 
 export default function CreateAdsManager() {
+  if (LIVE) return <ReadOnlyNotice what="Creating a campaign" />;
   return (
     <Suspense fallback={<div className="h-dvh w-full bg-[#f6f8fb]" />}>
       <CreateAdsManagerInner />

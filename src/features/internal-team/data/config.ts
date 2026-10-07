@@ -1,6 +1,6 @@
 import { ROUTES } from "@/config/routes";
 import type { StatusRegistry } from "@/types/common";
-import type { TeamMemberStatus } from "@/types/domain/team";
+import { INTERNAL_ROLE, ROLE_PERMISSIONS, type InternalRole, type Permission, TEAM_MEMBER_STATUS, type TeamMemberStatus } from "@/types/domain/team";
 import type { AccessReviewStatus, AssignmentResponsibility, InvitationStatus, MfaState } from "./types";
 
 export const COMPANY_POOL_EXPORT = [
@@ -22,6 +22,28 @@ export const COMPANY_POOL_EXPORT = [
 export const TEAM_MOCK_MODE = process.env.NEXT_PUBLIC_DATA_SOURCE !== "api";
 export const MOCK_REFERENCE_TIME = new Date("2026-09-19T12:00:00Z").getTime();
 export const SESSION_STORAGE_KEYS = { internalTeamStore: "encodency_internal_team_v1" } as const;
+
+/**
+ * Platform roles that exist for staff today. The backend knows Super Admin and Support only; the other roles in
+ * `INTERNAL_ROLE` are part of the bundled demo data.
+ */
+const LIVE_STAFF_ROLES: InternalRole[] = ["super_admin", "support"];
+export const STAFF_ROLE_KEYS: InternalRole[] = TEAM_MOCK_MODE ? (Object.keys(INTERNAL_ROLE) as InternalRole[]) : LIVE_STAFF_ROLES;
+
+/** Status wording: the platform has one account-level switch, so "suspended" reads "Deactivated" in live mode. */
+export const STAFF_STATUS_REGISTRY = {
+  ...TEAM_MEMBER_STATUS,
+  suspended: TEAM_MOCK_MODE ? TEAM_MEMBER_STATUS.suspended : { label: "Deactivated", tone: "danger" as const },
+} as const;
+
+/**
+ * What a role can do in the Super Admin console. Live: Super Admin has everything; Support accounts can sign in but no
+ * console module is enabled for them yet (every console API is Super Admin only).
+ */
+export function getRolePermissions(role: InternalRole): readonly Permission[] {
+  if (TEAM_MOCK_MODE) return ROLE_PERMISSIONS[role];
+  return role === "super_admin" ? ROLE_PERMISSIONS.super_admin : [];
+}
 
 export const TEAM_MEMBER_STATUS_CONFIG = {
   active: { label: "Active", tone: "success", description: "Active platform staff member" },

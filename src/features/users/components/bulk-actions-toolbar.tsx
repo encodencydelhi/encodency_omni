@@ -6,11 +6,13 @@ import {
   XIcon,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import { exportUsersToCsv } from "../data/config";
+import { exportUsersToCsv, USERS_MOCK_MODE } from "../data/config";
 import { useUserMutations } from "../data/hooks";
 import type { UserAggregate } from "../data/types";
+import { NotifyUsersDialog } from "./dialogs/notify-users-dialog";
 
 interface BulkActionsToolbarProps {
   selectedUsers: UserAggregate[];
@@ -24,6 +26,7 @@ export function BulkActionsToolbar({
 }: BulkActionsToolbarProps) {
   const mutations = useUserMutations();
   const [suspendingOpen, setSuspendingOpen] = useState(false);
+  const [notifyOpen, setNotifyOpen] = useState(false);
 
   if (selectedUsers.length === 0) return null;
 
@@ -48,8 +51,11 @@ export function BulkActionsToolbar({
   };
 
   const handleNotify = () => {
-    const { toast } = require("sonner");
-    toast.success(`Account notification queued for ${count} users.`);
+    if (USERS_MOCK_MODE) {
+      toast.success(`Account notification queued for ${count} users.`);
+      return;
+    }
+    setNotifyOpen(true);
   };
 
   const handleConfirmSuspend = () => {
@@ -69,7 +75,7 @@ export function BulkActionsToolbar({
 
   return (
     <>
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-white text-slate-900 rounded-xl shadow-2xl px-4 py-2 flex items-center gap-3 border border-slate-200/90 ring-1 ring-slate-950/5 animate-in fade-in slide-in-from-bottom-3 duration-200">
+      <div className="fixed bottom-14 left-1/2 -translate-x-1/2 z-50 bg-white text-slate-900 rounded-xl shadow-2xl px-4 py-2 flex items-center gap-3 border border-slate-200/90 ring-1 ring-slate-950/5 animate-in fade-in slide-in-from-bottom-3 duration-200">
         <div className="flex items-center gap-2 border-r border-slate-200 pr-3">
           <span className="bg-blue-50 text-blue-700 font-bold rounded-full size-5.5 flex items-center justify-center text-xs border border-blue-200">
             {count}
@@ -91,6 +97,7 @@ export function BulkActionsToolbar({
             <span>Export</span>
           </Button>
 
+          {USERS_MOCK_MODE && (
           <Button
             type="button"
             variant="outline"
@@ -102,6 +109,7 @@ export function BulkActionsToolbar({
             <KeyRoundIcon className="size-3" />
             <span>Require 2FA</span>
           </Button>
+          )}
 
           <Button
             type="button"
@@ -135,6 +143,13 @@ export function BulkActionsToolbar({
           <XIcon className="size-3.5" />
         </button>
       </div>
+
+      <NotifyUsersDialog
+        userIds={selectedUsers.map((u) => u.identity.id)}
+        open={notifyOpen}
+        onOpenChange={setNotifyOpen}
+        onSent={onClearSelection}
+      />
 
       <ConfirmDialog
         open={suspendingOpen}

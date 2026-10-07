@@ -16,14 +16,9 @@ import {
   TrendingDown,
   UsersRound,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import {
-  adsOfForm,
-  campaignsOfForm,
-  getForm,
-  leadsOf,
-} from "@/features/admin/meta-ads/data";
+import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import { dateTime, num, pct, relative } from "@/features/admin/meta-ads/format";
 import { InstantFormPreview } from "@/features/admin/meta-ads/components/previews";
 import {
@@ -55,6 +50,7 @@ import {
 } from "@/features/admin/meta-ads/components/workspace";
 
 export default function Page({ params }: { params: Promise<{ formId: string }> }) {
+  const { adsOfForm, campaignsOfForm, getForm, leadsOf } = useAdsData();
   const { formId } = use(params);
   const form = getForm(formId);
 
@@ -117,7 +113,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
               <StatusChip status={form.status} />
             </h1>
             <p className="mt-1 text-xs font-medium text-slate-600">
-              {form.type} · {form.language} · {form.questions.length} questions · updated{" "}
+              {[form.type, form.language].filter(Boolean).join(" · ")} · {form.questions.length} questions · updated{" "}
               {relative(form.lastUpdated)}
             </p>
           </div>
@@ -191,7 +187,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
         <div className="space-y-3">
           <Panel title="Form Setup" icon={<FileText className="size-4 text-[#1877f2]" />}>
             <dl>
-              <Field label="Form Type" value={form.type} />
+              <Field label="Form Type" value={form.type || "—"} />
               <Field label="Language" value={form.language} />
               <Field label="Intro headline" value={form.introHeadline} />
               <Field

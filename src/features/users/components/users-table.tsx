@@ -38,6 +38,7 @@ import { SecurityStatusBadge, UserStatusBadge } from "./status-badges";
 import { UserIdentityCell } from "./user-identity-cell";
 import type { UserAggregate } from "../data/types";
 import { useUserCapabilities } from "../data/capability-provider";
+import { USERS_MOCK_MODE } from "../data/config";
 
 interface UsersTableProps {
   users: UserAggregate[];
@@ -137,10 +138,7 @@ export function UsersTable({
                 >
                   <TableCell
                     className="w-10 px-3 py-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleSelect(u);
-                    }}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <Checkbox
                       checked={isSelected}
@@ -263,16 +261,18 @@ export function UsersTable({
                           </>
                         )}
 
-                        {capabilities.canRequire2FA && (
+                        {(capabilities.canRequire2FA || capabilities.canRequirePasswordReset || capabilities.canRevokeSessions) && (
                           <>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => onRequire2faClick?.(u)}
-                              className="gap-2 cursor-pointer"
-                            >
-                              <ShieldCheckIcon className="size-3.5 text-slate-500" />
-                              <span>{u.security.twoFactorRequired ? "Relax 2FA Policy" : "Require 2FA Policy"}</span>
-                            </DropdownMenuItem>
+                            {USERS_MOCK_MODE && capabilities.canRequire2FA && (
+                              <DropdownMenuItem
+                                onClick={() => onRequire2faClick?.(u)}
+                                className="gap-2 cursor-pointer"
+                              >
+                                <ShieldCheckIcon className="size-3.5 text-slate-500" />
+                                <span>{u.security.twoFactorRequired ? "Relax 2FA Policy" : "Require 2FA Policy"}</span>
+                              </DropdownMenuItem>
+                            )}
 
                             <DropdownMenuItem
                               onClick={() => onRequireResetClick?.(u)}
@@ -287,7 +287,7 @@ export function UsersTable({
                               className="gap-2 cursor-pointer text-amber-700"
                             >
                               <LogOutIcon className="size-3.5" />
-                              <span>Revoke Sessions ({u.activeSessionsCount})</span>
+                              <span>{USERS_MOCK_MODE ? `Revoke Sessions (${u.activeSessionsCount})` : "Revoke Sessions"}</span>
                             </DropdownMenuItem>
                           </>
                         )}

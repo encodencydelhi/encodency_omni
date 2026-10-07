@@ -3,11 +3,11 @@
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import type { AccessReviewStatus, InvitationStatus, MfaState } from "../data/types";
-import { ACCESS_REVIEW_STATUS, INVITATION_STATUS_CONFIG, MFA_STATE_CONFIG } from "../data/config";
-import { INTERNAL_ROLE, TEAM_MEMBER_STATUS, type TeamMemberStatus } from "@/types/domain/team";
+import { ACCESS_REVIEW_STATUS, INVITATION_STATUS_CONFIG, MFA_STATE_CONFIG, STAFF_STATUS_REGISTRY } from "../data/config";
+import { INTERNAL_ROLE, type TeamMemberStatus } from "@/types/domain/team";
 
 export function StaffStatusBadge({ status }: { status: TeamMemberStatus }) {
-  return <StatusBadge registry={TEAM_MEMBER_STATUS} status={status} withDot />;
+  return <StatusBadge registry={STAFF_STATUS_REGISTRY} status={status} withDot />;
 }
 
 export function StaffRoleBadge({ role }: { role: string }) {

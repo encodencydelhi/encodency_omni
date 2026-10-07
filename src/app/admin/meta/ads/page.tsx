@@ -24,15 +24,8 @@ import {
   WalletCards,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import {
-  activityLog,
-  adSets,
-  ads,
-  campaigns,
-  instantForms,
-  leads,
-  sumMetrics,
-} from "@/features/admin/meta-ads/data";
+import { sumMetrics } from "@/features/admin/meta-ads/data";
+import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
 import {
   cpc,
   conversionRate,
@@ -256,14 +249,19 @@ function ConnectionGate({ state }: { state: Exclude<ConnectionState, "connected"
 }
 
 function Overview() {
+  const { activityLog, adSets, ads, campaigns, instantForms, leads, period } = useAdsData();
+  const periodDays = period === "7d" ? 7 : period === "90d" ? 90 : 30;
+  const periodLabel = LIVE ? `Last ${periodDays} Days` : "Last 30 Days";
   const params = useSearchParams();
   const connection = (params?.get("connection") ?? "connected") as ConnectionState;
 
-  const totals = useMemo(() => sumMetrics(campaigns), []);
-  const active = useMemo(
-    () => campaigns.filter((c) => c.status === "active" || c.status === "learning"),
-    [],
+  const totals = useMemo(() => sumMetrics(campaigns), [campaigns]);
+  const dailyBudget = useMemo(
+    () => campaigns.filter((c) => (c.status === "active" || c.status === "learning") && c.budgetType === "Daily").reduce((t, c) => t + c.budget, 0),
+    [campaigns],
   );
+  const active = useMemo(
+    () => campaigns.filter((c) => c.status === "active" || c.status === "learning"), [campaigns]);
 
   /** Placement spend rolled up from every enabled placement on every ad set. */
   const placementRows = useMemo(() => {
@@ -284,16 +282,14 @@ function Overview() {
       .sort((a, b) => b.spend - a.spend);
     const total = rows.reduce((t, r) => t + r.spend, 0) || 1;
     return rows.map((r) => ({ ...r, share: (r.spend / total) * 100 }));
-  }, []);
+  }, [adSets]);
 
   const topCampaigns = useMemo(
     () =>
       [...campaigns]
         .filter((c) => c.metrics.leads > 0)
         .sort((a, b) => cpl(a.metrics) - cpl(b.metrics))
-        .slice(0, 5),
-    [],
-  );
+        .slice(0, 5), [campaigns]);
 
   if (connection !== "connected") {
     return (
@@ -330,13 +326,21 @@ function Overview() {
             Real-Time Campaign Performance
           </h2>
           <span className="rounded-sm border border-slate-200 bg-white px-2 py-0.5 text-[10.5px] font-semibold text-slate-600 shadow-2xs">
-            Last 30 Days
+            {periodLabel}
           </span>
         </div>
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-          <span>Target CPL: <strong className="text-slate-900">&lt; ₹180</strong></span>
-          <span className="h-3 w-px bg-slate-300" />
-          <span>Daily Budget: <strong className="text-slate-900">₹15.00L</strong></span>
+          {LIVE ? (
+            <span>
+              Daily budget of active campaigns: <strong className="text-slate-900">{money(dailyBudget)}</strong>
+            </span>
+          ) : (
+            <>
+              <span>Target CPL: <strong className="text-slate-900">&lt; ₹180</strong></span>
+              <span className="h-3 w-px bg-slate-300" />
+              <span>Daily Budget: <strong className="text-slate-900">₹15.00L</strong></span>
+            </>
+          )}
         </div>
       </div>
 
@@ -346,14 +350,14 @@ function Overview() {
           title="Total Ad Spend"
           value={money(totals.spend)}
           subtitle="Ad spend deployed across Meta network"
-          change="+14.2%"
+          change={LIVE ? undefined : "+14.2%"}
           changePositive={true}
           icon={WalletCards}
           gradient="bg-gradient-to-tr from-blue-600 to-indigo-600"
           borderGlow="hover:border-blue-400"
           cornerGlow="bg-blue-500"
-          footerMetric={{ label: "Daily Avg", value: "₹95,133/day" }}
-          badgeText="Pacing Normal"
+          footerMetric={{ label: "Daily Avg", value: LIVE ? `${money(totals.spend / periodDays)}/day` : "₹95,133/day" }}
+          badgeText={LIVE ? undefined : "Pacing Normal"}
           hint="Total spend across all Facebook & Instagram placements"
         />
 
@@ -361,29 +365,29 @@ function Overview() {
           title="Total Leads Generated"
           value={`${num(totals.leads)} Leads`}
           subtitle="Direct submissions via Instant Forms"
-          change="+22.8%"
+          change={LIVE ? undefined : "+22.8%"}
           changePositive={true}
           icon={UsersRound}
           gradient="bg-gradient-to-tr from-emerald-600 to-teal-500"
           borderGlow="hover:border-emerald-400"
           cornerGlow="bg-emerald-500"
           footerMetric={{ label: "Click-to-Lead", value: orDash(conversionRate(totals), (v) => pct(v, 2)) }}
-          badgeText="High Quality"
-          hint="Verified CRM leads captured with contact details"
+          badgeText={LIVE ? undefined : "High Quality"}
+          hint="Leads Meta attributes to your ads in this period"
         />
 
         <MasterKpiCard
           title="Avg. Cost Per Lead (CPL)"
           value={orDash(cpl(totals), moneyPrecise)}
-          subtitle="Target threshold: ₹180.00 / lead"
-          change="-20.8%"
+          subtitle={LIVE ? "Total spend ÷ total leads" : "Target threshold: ₹180.00 / lead"}
+          change={LIVE ? undefined : "-20.8%"}
           changePositive={true}
           icon={Target}
           gradient="bg-gradient-to-tr from-amber-500 to-orange-500"
           borderGlow="hover:border-amber-400"
           cornerGlow="bg-amber-500"
-          footerMetric={{ label: "Efficiency", value: "Top 5% Tier" }}
-          badgeText="Optimal"
+          footerMetric={LIVE ? undefined : { label: "Efficiency", value: "Top 5% Tier" }}
+          badgeText={LIVE ? undefined : "Optimal"}
           hint="Total investment divided by total acquired leads"
         />
 
@@ -397,8 +401,8 @@ function Overview() {
           gradient="bg-gradient-to-tr from-purple-600 to-violet-500"
           borderGlow="hover:border-purple-400"
           cornerGlow="bg-purple-500"
-          footerMetric={{ label: "Frequency", value: "1.28x" }}
-          badgeText="High Intent"
+          footerMetric={{ label: "Frequency", value: LIVE ? (totals.reach ? `${(totals.impressions / totals.reach).toFixed(2)}x` : "—") : "1.28x" }}
+          badgeText={LIVE ? undefined : "High Intent"}
           hint="Unique individual accounts reached across FB & IG"
         />
       </section>
@@ -451,8 +455,17 @@ function Overview() {
           <div className="min-w-0 flex-1">
             <span className="block text-[10.5px] font-semibold text-slate-500">Active Ad Sets</span>
             <div className="flex items-center gap-1.5">
-              <strong className="text-sm font-normal text-slate-900">{adSets.length} Placements</strong>
-              <span className="text-[10px] font-semibold text-purple-700">· 100% Live</span>
+              {LIVE ? (
+                <>
+                  <strong className="text-sm font-normal text-slate-900">{adSets.filter((s) => s.status === "active" || s.status === "learning").length} Delivering</strong>
+                  <span className="text-[10px] font-semibold text-slate-400">/ {adSets.length} total</span>
+                </>
+              ) : (
+                <>
+                  <strong className="text-sm font-normal text-slate-900">{adSets.length} Placements</strong>
+                  <span className="text-[10px] font-semibold text-purple-700">· 100% Live</span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -506,7 +519,7 @@ function Overview() {
                   <EntityLink
                     href={`${ADS_ROOT}/campaigns/${c.id}`}
                     name={c.name}
-                    sub={`Owner · ${c.owner}`}
+                    sub={c.owner ? `Owner · ${c.owner}` : undefined}
                   />
                 </Td>
                 <Td>
@@ -547,7 +560,7 @@ function Overview() {
                 <Td numeric>{orDash(conversionRate(c.metrics), (v) => pct(v, 1))}</Td>
                 <Td>
                   <span className="font-semibold text-slate-800">{relative(c.lastEdited)}</span>
-                  <span className="block text-[10px] font-medium text-slate-500">by {c.lastEditedBy}</span>
+                  {c.lastEditedBy && <span className="block text-[10px] font-medium text-slate-500">by {c.lastEditedBy}</span>}
                 </Td>
                 <Td>
                   <RowMenu

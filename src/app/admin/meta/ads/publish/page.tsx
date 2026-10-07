@@ -15,9 +15,10 @@ import {
   RefreshCw,
   ShieldAlert,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import { adSetsOfCampaign, adsOfCampaign, getCampaign, getForm } from "@/features/admin/meta-ads/data";
+import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
+import { ReadOnlyNotice } from "@/features/admin/meta-ads/components/read-only-notice";
 import { dateTime, money } from "@/features/admin/meta-ads/format";
 import {
   btn,
@@ -85,6 +86,7 @@ const STATES: Record<
 };
 
 function PublishResult() {
+  const { adSetsOfCampaign, adsOfCampaign, getCampaign, getForm } = useAdsData();
   const params = useSearchParams();
   const requested = params?.get("status") as PublishState | null;
   const state: PublishState =
@@ -353,6 +355,7 @@ function PublishResult() {
 }
 
 export default function PublishPage() {
+  if (LIVE) return <ReadOnlyNotice what="Publishing" />;
   return (
     <Suspense fallback={<SkeletonKpis count={4} />}>
       <PublishResult />

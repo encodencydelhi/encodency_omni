@@ -147,7 +147,7 @@ export function UsageOverviewPage() {
                     {trend.data.previousTotal !== null && trend.data.previousTotal > 0 ? ` - ${trend.data.total >= trend.data.previousTotal ? "up" : "down"} ${Math.abs(Math.round(((trend.data.total - trend.data.previousTotal) / trend.data.previousTotal) * 100))}% on the previous ${period.toUpperCase()}` : ""}
                     {` - peak ${number(trend.data.peak)} in one ${period === "90d" ? "week" : "day"}`}
                   </p>
-                  <TrendAreaChart series={[{ key: chartMetric, label: `${RESOURCE_BY_KEY[chartMetric].name} (${RESOURCE_BY_KEY[chartMetric].unit})`, color: CHART_COLORS[1] ?? "#2563eb", data: trend.data.points.map((point) => ({ date: point.at, value: point.value })) }]} height={220} tickInterval={period === "7d" ? 0 : period === "30d" ? 4 : 1} />
+                  <TrendAreaChart series={[{ key: chartMetric, label: `${RESOURCE_BY_KEY[chartMetric].name} (${RESOURCE_BY_KEY[chartMetric].unit})`, color: CHART_COLORS[1] ?? "#2563eb", data: trend.data.points.map((point) => ({ date: point.at, value: point.value })) }]} height={220} tickInterval={period === "7d" ? 0 : period === "30d" ? 4 : 13} />
                 </>
               ) : (
                 <EmptyState icon={CheckCircle2Icon} size="sm" title="No Consumption Recorded" description={trend.data.unavailable ?? `No ${RESOURCE_BY_KEY[chartMetric].name.toLowerCase()} events in this period.`} />

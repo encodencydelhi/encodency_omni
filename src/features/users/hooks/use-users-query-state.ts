@@ -66,7 +66,7 @@ export function useUsersQueryState() {
 
   const filters = useMemo<UserFilters>(() => {
     const result: UserFilters = {};
-    const companyId = searchParams.get("company");
+    const companyId = searchParams.get("companyId") ?? searchParams.get("company");
     const status = searchParams.get("status");
     const role = searchParams.get("role");
     const twoFactor = searchParams.get("twoFactor");
@@ -143,7 +143,7 @@ export function useUsersQueryState() {
     commit((params) => {
       const keysToDelete = [
         "search", "page", "pageSize", "sort",
-        "company", "status", "role", "twoFactor", "lastActive",
+        "company", "companyId", "status", "role", "twoFactor", "lastActive",
         "multiCompanyOnly", "ownerOnly", "adminOnly", "noActiveMembership", "accessIssues",
       ];
       for (const key of keysToDelete) params.delete(key);

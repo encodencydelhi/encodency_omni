@@ -20,7 +20,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useUnsavedGuard } from "../../hooks/use-unsaved-guard";
 import { useUserMutations } from "../../data/hooks";
-import { getAllRawUsers } from "../../data/mock/store";
+import { useUsersDirectory } from "../../data/directory";
 import type { CompanyMembership } from "../../data/types";
 
 interface TransferOwnershipModalProps {
@@ -39,6 +39,7 @@ export function TransferOwnershipModal({
   onTransferred,
 }: TransferOwnershipModalProps) {
   const mutations = useUserMutations();
+  const allUsers = useUsersDirectory();
   const [newOwnerUserId, setNewOwnerUserId] = useState<string>("");
   const [reason, setReason] = useState<string>("");
 
@@ -56,10 +57,10 @@ export function TransferOwnershipModal({
   if (!membership) return null;
 
   // Find eligible replacement members who belong to the SAME company
-  const allUsers = getAllRawUsers();
   const eligibleMembers = allUsers.filter(
     (u) =>
       u.identity.id !== membership.userId &&
+      u.identity.globalStatus === "active" &&
       u.memberships.some((m) => m.companyId === membership.companyId && m.status === "active"),
   );
 

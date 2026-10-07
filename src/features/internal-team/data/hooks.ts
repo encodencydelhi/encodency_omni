@@ -2,6 +2,8 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { INTERNAL_ROLE } from "@/types/domain/team";
+import { TEAM_MOCK_MODE } from "./config";
 import { internalTeamRepository } from "./repository";
 import type {
   AssignCompanyInput,
@@ -11,8 +13,10 @@ import type {
   DeactivateStaffInput,
   ReassignCompanyInput,
   ReactivateStaffInput,
+  ScheduleAccessReviewInput,
   StaffListQuery,
   SuspendStaffInput,
+  UpdateStaffProfileInput,
 } from "./types";
 
 const ROOT = ["internal-team"] as const;
@@ -28,6 +32,7 @@ export const teamKeys = {
   accessReviewKpis: [...ROOT, "access-review-kpis"] as const,
   activity: (staffId: string) => [...ROOT, "activity", staffId] as const,
   lifecycle: (staffId: string) => [...ROOT, "lifecycle", staffId] as const,
+  coverage: [...ROOT, "coverage"] as const,
 };
 
 export function useStaffList(query: StaffListQuery) {
@@ -97,13 +102,20 @@ export function useStaffLifecycle(staffId: string) {
   });
 }
 
+export function useCoverage() {
+  return useQuery({
+    queryKey: teamKeys.coverage,
+    queryFn: () => internalTeamRepository.listCoverage(),
+  });
+}
+
 export function useTeamMutations() {
   const qc = useQueryClient();
   const invalidate = () => void qc.invalidateQueries({ queryKey: teamKeys.all });
 
   const createInvitation = useMutation({
     mutationFn: (input: CreateStaffInvitationInput) => internalTeamRepository.createInvitation(input),
-    onSuccess: (res) => { invalidate(); toast.success(`Invitation created for ${res.name}`); },
+    onSuccess: (res) => { invalidate(); toast.success(TEAM_MOCK_MODE ? `Invitation created for ${res.name}` : `Invitation sent to ${res.email}`); },
     onError: (err: Error) => { toast.error(err.message || "Failed to create invitation."); },
   });
 
@@ -115,7 +127,7 @@ export function useTeamMutations() {
 
   const changeRole = useMutation({
     mutationFn: (input: ChangeStaffRoleInput) => internalTeamRepository.changeRole(input),
-    onSuccess: (res) => { invalidate(); toast.success(`Role changed to ${res.role} for ${res.name}`); },
+    onSuccess: (res) => { invalidate(); toast.success(`Role changed to ${INTERNAL_ROLE[res.role]?.label ?? res.role} for ${res.name}`); },
     onError: (err: Error) => { toast.error(err.message || "Failed to change role."); },
   });
 
@@ -137,6 +149,30 @@ export function useTeamMutations() {
     onError: (err: Error) => { toast.error(err.message || "Failed to complete review."); },
   });
 
+  const resendInvitation = useMutation({
+    mutationFn: (id: string) => internalTeamRepository.resendInvitation(id),
+    onSuccess: (res) => { invalidate(); toast.success(`Invitation resent to ${res.email}`); },
+    onError: (err: Error) => { toast.error(err.message || "Failed to resend invitation."); },
+  });
+
+  const updateProfile = useMutation({
+    mutationFn: (input: UpdateStaffProfileInput) => internalTeamRepository.updateStaffProfile(input),
+    onSuccess: (res) => { invalidate(); toast.success(`Profile updated for ${res.name}`); },
+    onError: (err: Error) => { toast.error(err.message || "Failed to update profile."); },
+  });
+
+  const scheduleReview = useMutation({
+    mutationFn: (input: ScheduleAccessReviewInput) => internalTeamRepository.scheduleAccessReview(input),
+    onSuccess: () => { invalidate(); toast.success("Access review scheduled."); },
+    onError: (err: Error) => { toast.error(err.message || "Failed to schedule review."); },
+  });
+
+  const endAssignment = useMutation({
+    mutationFn: (assignmentId: string) => internalTeamRepository.endAssignment(assignmentId),
+    onSuccess: () => { invalidate(); toast.success("Assignment ended."); },
+    onError: (err: Error) => { toast.error(err.message || "Failed to end assignment."); },
+  });
+
   const suspendStaff = useMutation({
     mutationFn: (input: SuspendStaffInput) => internalTeamRepository.suspendStaff(input),
     onSuccess: (res) => { invalidate(); toast.success(`${res.name} suspended.`); },
@@ -156,7 +192,7 @@ export function useTeamMutations() {
   });
 
   return {
-    createInvitation, revokeInvitation, changeRole, assignCompany,
+    createInvitation, revokeInvitation, resendInvitation, changeRole, assignCompany, updateProfile, scheduleReview, endAssignment,
     reassignCompany, completeAccessReview, suspendStaff, reactivateStaff, deactivateStaff,
   };
 }

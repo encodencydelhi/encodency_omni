@@ -6,9 +6,15 @@ import { MoreHorizontal, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { TEAM_LIVE } from "../team-data/live-team";
 import { useTeam } from "../team-data/team-store";
+import { GroupsLivePage } from "./groups-live-pages";
 
 export function GroupsPage() {
+  return TEAM_LIVE ? <GroupsLivePage /> : <GroupsDemoPage />;
+}
+
+function GroupsDemoPage() {
   const { groups, members, isLoading, updateGroup } = useTeam();
   const [q, setQ] = useState("");
   const shown = useMemo(() => groups.filter((g) => !g.archived && `${g.name} ${g.description}`.toLowerCase().includes(q.toLowerCase())), [groups, q]);

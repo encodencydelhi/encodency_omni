@@ -4,6 +4,7 @@ import {
   AlertTriangleIcon, Building2Icon, CheckCircle2Icon, MailIcon, ShieldAlertIcon, ShieldCheckIcon, UserCheckIcon, UsersIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { TEAM_MOCK_MODE } from "../data/config";
 import type { StaffKpis } from "../data/types";
 
 interface StaffKpiCardsProps {
@@ -18,7 +19,7 @@ export function StaffKpiCards({ kpis, activeFilter, onSelectFilter, className }:
     { id: "all", label: "TOTAL STAFF", value: kpis.totalStaff, sub: "Platform team members", icon: UsersIcon, color: "text-blue-700", iconBg: "bg-blue-50 text-blue-600 border-blue-100", activeRing: "border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/30", bar: "bg-blue-500" },
     { id: "active", label: "ACTIVE", value: kpis.activeStaff, sub: "In good standing", icon: CheckCircle2Icon, color: "text-emerald-700", iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100", activeRing: "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30", bar: "bg-emerald-500" },
     { id: "invited", label: "PENDING", value: kpis.pendingInvitations, sub: "Awaiting acceptance", icon: MailIcon, color: "text-sky-700", iconBg: "bg-sky-50 text-sky-600 border-sky-100", activeRing: "border-sky-500 ring-2 ring-sky-500/20 bg-sky-50/30", bar: "bg-sky-500" },
-    { id: "suspended", label: "SUSPENDED", value: kpis.suspendedStaff, sub: "Access revoked", icon: ShieldAlertIcon, color: "text-rose-700", iconBg: "bg-rose-50 text-rose-600 border-rose-100", activeRing: "border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30", bar: "bg-rose-500" },
+    { id: "suspended", label: TEAM_MOCK_MODE ? "SUSPENDED" : "DEACTIVATED", value: kpis.suspendedStaff, sub: "Access revoked", icon: ShieldAlertIcon, color: "text-rose-700", iconBg: "bg-rose-50 text-rose-600 border-rose-100", activeRing: "border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30", bar: "bg-rose-500" },
     { id: "mfa", label: "MFA ACTION", value: kpis.mfaActionRequired, sub: "Setup required", icon: ShieldCheckIcon, color: "text-amber-700", iconBg: "bg-amber-50 text-amber-600 border-amber-100", activeRing: "border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/30", bar: "bg-amber-500" },
     { id: "reviews", label: "REVIEWS DUE", value: kpis.accessReviewsDue, sub: "Access review needed", icon: AlertTriangleIcon, color: kpis.accessReviewsDue > 0 ? "text-orange-700" : "text-slate-600", iconBg: "bg-orange-50 text-orange-600 border-orange-100", activeRing: "border-orange-500 ring-2 ring-orange-500/20 bg-orange-50/30", bar: "bg-orange-500" },
     { id: "assigned", label: "ASSIGNED", value: kpis.assignedCompanies, sub: "Companies covered", icon: Building2Icon, color: "text-violet-700", iconBg: "bg-violet-50 text-violet-600 border-violet-100", activeRing: "border-violet-500 ring-2 ring-violet-500/20 bg-violet-50/30", bar: "bg-violet-500" },

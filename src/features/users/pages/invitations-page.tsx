@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import {
   AlertCircleIcon,
   BanIcon,
@@ -56,7 +57,7 @@ import { formatDate } from "@/lib/utils/format";
 import { ORGANISATION_ROLE } from "@/types/domain/user";
 import { InviteUserWizard } from "../components/dialogs/invite-user-wizard";
 import { UsersNav } from "../components/users-nav";
-import { INVITATION_STATUS } from "../data/config";
+import { INVITATION_STATUS, USERS_MOCK_MODE } from "../data/config";
 import { useInvitations, useUserMutations } from "../data/hooks";
 import type { UserInvitation } from "../data/types";
 import { UserCapabilitiesProvider, useUserCapabilities } from "../data/capability-provider";
@@ -80,6 +81,7 @@ function InvitationsContent() {
   const [inviteWizardOpen, setInviteWizardOpen] = useState(false);
 
   // Detail drawer
+  const [revokeTarget, setRevokeTarget] = useState<UserInvitation | null>(null);
   const [selectedInvite, setSelectedInvite] = useState<UserInvitation | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -310,7 +312,7 @@ function InvitationsContent() {
                     {/* Recipient */}
                     <TableCell className="py-2.5">
                       <div className="font-semibold text-slate-800">{inv.name}</div>
-                      <div className="text-xs text-slate-400">{inv.email}</div>
+                      {inv.name !== inv.email && <div className="text-xs text-slate-400">{inv.email}</div>}
                     </TableCell>
 
                     {/* Target Company */}
@@ -336,7 +338,7 @@ function InvitationsContent() {
                       {inv.clientAccessScope === "all" ? (
                         <span className="text-emerald-700 font-medium">All Clients</span>
                       ) : (
-                        <span>{inv.clientAccessIds.length} Selected</span>
+                        <span>{inv.clientAccessCount ?? inv.clientAccessIds.length} Selected</span>
                       )}
                     </TableCell>
 
@@ -424,7 +426,7 @@ function InvitationsContent() {
 
                           {capabilities.canInviteUsers && inv.status === "pending" && (
                             <DropdownMenuItem
-                              onClick={() => mutations.revokeInvitation.mutate(inv.id)}
+                              onClick={() => setRevokeTarget(inv)}
                               className="cursor-pointer gap-2 text-rose-600"
                             >
                               <BanIcon className="size-3.5" />
@@ -458,10 +460,12 @@ function InvitationsContent() {
           {selectedInvite && (
             <SheetBody className="p-4 space-y-4 flex-1 overflow-y-auto text-xs">
               <div className="rounded border border-border p-3.5 bg-slate-50/70 space-y-2">
+                {USERS_MOCK_MODE && (
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500">Recipient Name</span>
                   <span className="font-semibold text-slate-800">{selectedInvite.name}</span>
                 </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500">Email</span>
                   <span className="font-semibold text-slate-800">{selectedInvite.email}</span>
@@ -479,15 +483,17 @@ function InvitationsContent() {
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500">Client Scope</span>
                   <span className="font-semibold text-slate-800">
-                    {selectedInvite.clientAccessScope === "all" ? "All Clients" : `${selectedInvite.clientAccessIds.length} Selected`}
+                    {selectedInvite.clientAccessScope === "all" ? "All Clients" : `${selectedInvite.clientAccessCount ?? selectedInvite.clientAccessIds.length} Selected`}
                   </span>
                 </div>
+                {USERS_MOCK_MODE && (
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500">2FA Requirement</span>
                   <span className="font-semibold text-slate-800">
                     {selectedInvite.requires2fa ? "Mandatory" : "Optional"}
                   </span>
                 </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500">Sent Date</span>
                   <span className="text-slate-700">{formatDate(selectedInvite.sentAt)}</span>
@@ -542,6 +548,18 @@ function InvitationsContent() {
         open={inviteWizardOpen}
         onOpenChange={setInviteWizardOpen}
         companyOptions={companyOptions}
+      />
+      <ConfirmDialog
+        open={revokeTarget !== null}
+        onOpenChange={(o) => !o && setRevokeTarget(null)}
+        title="Revoke invitation?"
+        description={`The link sent to ${revokeTarget?.email ?? ""} stops working immediately. You can invite them again later.`}
+        confirmLabel="Revoke Invitation"
+        variant="destructive"
+        isPending={mutations.revokeInvitation.isPending}
+        onConfirm={() => {
+          if (revokeTarget) mutations.revokeInvitation.mutate(revokeTarget.id, { onSuccess: () => setRevokeTarget(null) });
+        }}
       />
     </div>
   );

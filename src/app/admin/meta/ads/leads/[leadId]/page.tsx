@@ -19,15 +19,9 @@ import {
   UserPlus,
   UsersRound,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import {
-  getAd,
-  getAdSet,
-  getCampaign,
-  getForm,
-  getLead,
-} from "@/features/admin/meta-ads/data";
+import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
 import {
   date,
   dateTime,
@@ -87,6 +81,7 @@ const TIMELINE_ICON: Record<string, typeof Phone> = {
 };
 
 export default function Page({ params }: { params: Promise<{ leadId: string }> }) {
+  const { getAd, getAdSet, getCampaign, getForm, getLead } = useAdsData();
   const { leadId } = use(params);
   const lead = getLead(leadId);
   const [tab, setTab] = useState<CentreTab>("timeline");
@@ -150,8 +145,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
               <ToneChip tone={LEAD_STAGE_TONE[lead.stage] ?? "slate"}>{lead.stage}</ToneChip>
             </h1>
             <p className="mt-1 text-xs font-medium text-slate-600">
-              {lead.id} · {lead.city}
-              {lead.company !== "—" && ` · ${lead.company}`} · submitted{" "}
+              {[lead.id, lead.city, lead.company && lead.company !== "—" ? lead.company : ""].filter(Boolean).join(" · ")} · submitted{" "}
               {dateTime(lead.submittedAt)}
             </p>
           </div>
@@ -228,7 +222,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
               <Field label="Phone" value={lead.phone} />
               <Field label="Email" value={<span className="break-all">{lead.email}</span>} />
               <Field label="Location" value={lead.city} />
-              <Field label="Company" value={lead.company} />
+              <Field label="Company" value={lead.company || "—"} />
               <Field
                 label="Interests"
                 value={
@@ -236,7 +230,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
                   "—"
                 }
               />
-              <Field label="Preferred contact time" value="Evenings (6 – 9 PM)" />
+              <Field label="Preferred contact time" value={LIVE ? "—" : "Evenings (6 – 9 PM)"} />
             </dl>
           </Panel>
 
@@ -277,7 +271,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
                 label="Privacy policy"
                 value={form?.privacyUrl ? "Accepted" : "Missing on form"}
               />
-              <Field label="Data retention" value="24 months" />
+              <Field label="Data retention" value={LIVE ? "—" : "24 months"} />
             </dl>
           </Panel>
         </div>
@@ -489,16 +483,24 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
         {/* RIGHT — scoring and guidance */}
         <div className="space-y-3">
           <Panel title="Lead Score" icon={<Gauge className="size-4 text-[#1877f2]" />}>
-            <div className="flex items-end justify-between gap-2">
-              <strong className="text-[28px] font-semibold leading-none">{lead.score}</strong>
-              <ToneChip tone={scoreTone(lead.score)}>{scoreLabel(lead.score)} quality</ToneChip>
-            </div>
-            <Meter value={lead.score} tone={scoreTone(lead.score)} className="mt-2" />
-            <dl className="mt-3">
-              <Field label="Conversion likelihood" value={`${Math.min(lead.score + 6, 99)}%`} />
-              <Field label="Source quality" value={form?.type ?? "—"} />
-              <Field label="Contactability" value={lead.phone === "—" ? "No phone" : "Phone verified"} />
-            </dl>
+            {LIVE ? (
+              <p className="text-[11px] font-medium text-[#64748b]">
+                Meta does not score leads. Scoring and conversion likelihood need CRM data and are not available here.
+              </p>
+            ) : (
+              <>
+                <div className="flex items-end justify-between gap-2">
+                  <strong className="text-[28px] font-semibold leading-none">{lead.score}</strong>
+                  <ToneChip tone={scoreTone(lead.score)}>{scoreLabel(lead.score)} quality</ToneChip>
+                </div>
+                <Meter value={lead.score} tone={scoreTone(lead.score)} className="mt-2" />
+                <dl className="mt-3">
+                  <Field label="Conversion likelihood" value={`${Math.min(lead.score + 6, 99)}%`} />
+                  <Field label="Source quality" value={form?.type ?? "—"} />
+                  <Field label="Contactability" value={lead.phone === "—" ? "No phone" : "Phone verified"} />
+                </dl>
+              </>
+            )}
           </Panel>
 
           <Panel title="Source Attribution" icon={<Target className="size-4 text-[#1877f2]" />}>

@@ -30,16 +30,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { adSets, ads, campaigns, instantForms, issues } from "../data";
+import { toast } from "sonner";
+import { integrationsApi } from "@/features/admin/integrations/live/integrations-api";
+import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
+import { LIVE, useAdsData, type AdsStatus } from "../data-source";
 import { btn, btnPrimary } from "./ui";
 
-const DATE_RANGES = [
-  "Last 7 days",
-  "Last 30 days",
-  "Last 90 days",
-  "This month",
-  "Lifetime",
-];
+/** Live mode reports through Meta's 7/30/90-day presets only; the demo data also has the two extra ranges. */
+const DATE_RANGES = LIVE ? ["Last 7 days", "Last 30 days", "Last 90 days"] : ["Last 7 days", "Last 30 days", "Last 90 days", "This month", "Lifetime"];
 
 /**
  * Writes the chosen range to `?range=`, which the reporting pages read through
@@ -83,6 +81,107 @@ function DateRangeControl() {
 
 export const ADS_ROOT = "/admin/meta/ads";
 
+const STATE_COPY: Record<Exclude<AdsStatus, "ready" | "loading">, { title: string; body: string; action?: { label: string; href: string } }> = {
+  no_company: { title: "Select a company", body: "Choose the company whose Meta ad account you want to see." },
+  not_connected: { title: "Connect Meta to see your ads", body: "No Meta login is connected for this company yet. Connect it in Integrations, then return here.", action: { label: "Open Integrations", href: "/admin/integrations" } },
+  reconnect: { title: "Reconnect Meta", body: "The Meta login for this company expired or was revoked. Reconnect it to read ad data again.", action: { label: "Open Integrations", href: "/admin/integrations" } },
+  permission: { title: "Meta needs more permissions", body: "Meta refused access to ad data. Reconnect Meta and approve the ads permissions (ads_read, leads_retrieval).", action: { label: "Open Integrations", href: "/admin/integrations" } },
+  no_accounts: { title: "No ad accounts found", body: "The connected Meta login does not have access to any ad account. Add it to an ad account in Meta Business Settings, then refresh." },
+  error: { title: "Meta Ads could not be loaded", body: "Something went wrong while talking to Meta. Try again in a moment." },
+};
+
+/** Starts Meta's login (same call the Integrations page makes) and sends the browser to Facebook. */
+async function connectMeta(): Promise<void> {
+  const companyId = getStoredCompanyId();
+  if (!companyId) {
+    toast.error("Select a company before connecting Meta.");
+    return;
+  }
+  try {
+    const { authUrl } = await integrationsApi.initOAuth(companyId, "META");
+    window.location.assign(authUrl);
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : "Unable to start the Meta connection.");
+  }
+}
+
+function StatePanel({ status, message, onRetry }: { status: Exclude<AdsStatus, "ready">; message: string | null; onRetry: () => void }) {
+  if (status === "loading") {
+    return (
+      <div className="space-y-3" role="status" aria-label="Loading Meta Ads">
+        <div className="h-24 animate-pulse rounded-2xl border border-slate-200 bg-white" />
+        <div className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-white" />
+      </div>
+    );
+  }
+  const copy = STATE_COPY[status];
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-2xs" role="alert">
+      <h2 className="text-base font-semibold text-slate-900">{copy.title}</h2>
+      <p className="mx-auto mt-1.5 max-w-md text-xs font-medium text-slate-600">{status === "error" && message ? message : copy.body}</p>
+      <div className="mt-4 flex justify-center gap-2">
+        {(status === "not_connected" || status === "reconnect" || status === "permission") && (
+          <button type="button" onClick={() => void connectMeta()} className={btnPrimary}>
+            {status === "not_connected" ? "Connect Meta" : "Reconnect Meta"}
+          </button>
+        )}
+        {copy.action && (
+          <Link href={copy.action.href} className={btn}>
+            {copy.action.label}
+          </Link>
+        )}
+        {(status === "error" || status === "no_accounts") && (
+          <button type="button" onClick={onRetry} className={btn}>
+            Try again
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Live: the real ad account (switchable), first Page and Instagram account. Demo: the original sample chips. */
+function AssetChips() {
+  const ads = useAdsData();
+  if (!LIVE) {
+    return (
+      <>
+        <AssetChip label="Ad Account" value="Namo Gange Official" href={`${ADS_ROOT}/assets#ad-account`} icon={<FaMeta className="size-3 text-[#0866ff]" />} />
+        <AssetChip label="Page" value="Namo Gange" href={`${ADS_ROOT}/assets#facebook-page`} icon={<FaFacebookF className="size-3 text-[#1877f2]" />} />
+        <AssetChip label="Instagram" value="@namogangetrust" href={`${ADS_ROOT}/assets#instagram`} warning="Reconnect" icon={<FaInstagram className="size-3 text-[#d946ef]" />} />
+      </>
+    );
+  }
+  const current = ads.accounts.find((a) => a.id === ads.accountId);
+  const page = ads.connectedAssets.find((a) => a.group === "Facebook Page");
+  const instagram = ads.connectedAssets.find((a) => a.group === "Instagram Business");
+  return (
+    <>
+      {ads.accounts.length > 1 ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger className={cn(btn, "h-8.5 gap-2 px-3 text-xs font-semibold text-slate-800")} aria-label="Change ad account">
+            <FaMeta className="size-3 text-[#0866ff]" />
+            <span className="max-w-[170px] truncate">{current?.name ?? "Ad account"}</span>
+            <ChevronDown className="size-3.5 text-slate-500" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[220px]">
+            {ads.accounts.map((account) => (
+              <DropdownMenuItem key={account.id} onSelect={() => ads.setAccountId(account.id)} className={cn("text-xs font-medium", account.id === ads.accountId ? "bg-blue-50/60 font-semibold text-blue-600" : "text-slate-700")}>
+                {account.name}
+                <span className="ml-2 text-[10px] text-slate-500">{account.currency}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        current && <AssetChip label="Ad Account" value={current.name} href={`${ADS_ROOT}/assets#ad-account`} icon={<FaMeta className="size-3 text-[#0866ff]" />} />
+      )}
+      {page && <AssetChip label="Page" value={page.name} href={`${ADS_ROOT}/assets#facebook-page`} icon={<FaFacebookF className="size-3 text-[#1877f2]" />} />}
+      {instagram && <AssetChip label="Instagram" value={instagram.name} href={`${ADS_ROOT}/assets#instagram`} icon={<FaInstagram className="size-3 text-[#d946ef]" />} />}
+    </>
+  );
+}
+
 type NavItem = {
   label: string;
   href: string;
@@ -121,6 +220,7 @@ type SearchHit = {
 
 /** Global search across campaigns, ad sets, ads and forms. */
 function useSearchHits(query: string): SearchHit[] {
+  const { campaigns, adSets, ads, instantForms } = useAdsData();
   return useMemo(() => {
     const q = query.trim().toLowerCase();
     if (q.length < 2) return [];
@@ -153,7 +253,7 @@ function useSearchHits(query: string): SearchHit[] {
         hits.push({ type: "Instant Form", name: f.name, href: `${ADS_ROOT}/forms/${f.id}`, context: f.type });
     }
     return hits.slice(0, 8);
-  }, [query]);
+  }, [query, campaigns, adSets, ads, instantForms]);
 }
 
 function GlobalSearch() {
@@ -268,8 +368,8 @@ export function AdsWorkspace({
   showDateRange?: boolean;
 }) {
   const pathname = usePathname() ?? ADS_ROOT;
-  const openIssues = issues.filter((i) => !i.resolved).length;
-  const instagram = { needsReauth: true };
+  const ads = useAdsData();
+  const openIssues = ads.issues.filter((i) => !i.resolved).length;
 
   return (
     <div className="relative min-h-screen w-full font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
@@ -297,43 +397,49 @@ export function AdsWorkspace({
           <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2.5">
             <GlobalSearch />
             {showDateRange && <DateRangeControl />}
-            {actions ?? (
-              <Link href={`${ADS_ROOT}/create`} className={cn(btnPrimary, "h-10 font-semibold")}>
-                <Plus className="size-4" />
-                Create Campaign
-              </Link>
-            )}
+            {actions ??
+              (LIVE ? (
+                <button
+                  type="button"
+                  onClick={() => toast.info("Creating campaigns from here is not available yet. Create them in Meta Ads Manager; they appear here after the next refresh.")}
+                  className={cn(btnPrimary, "h-10 font-semibold opacity-60")}
+                  aria-disabled="true"
+                >
+                  <Plus className="size-4" />
+                  Create Campaign
+                </button>
+              ) : (
+                <Link href={`${ADS_ROOT}/create`} className={cn(btnPrimary, "h-10 font-semibold")}>
+                  <Plus className="size-4" />
+                  Create Campaign
+                </Link>
+              ))}
           </div>
         </header>
 
         {/* Row 2 — which Meta assets this workspace is acting on. */}
         <div className="mb-3.5 flex flex-wrap items-center gap-2">
-          <span className="flex h-8.5 shrink-0 items-center gap-1.5 rounded-sm border border-emerald-300 bg-emerald-50 px-2.5 shadow-2xs">
-            <CheckCircle2 className="size-4 fill-emerald-600 text-white" aria-hidden="true" />
-            <span className="whitespace-nowrap text-xs font-semibold text-emerald-800">
-              Meta Connected
+          {!LIVE || ads.status === "ready" ? (
+            <span className="flex h-8.5 shrink-0 items-center gap-1.5 rounded-sm border border-emerald-300 bg-emerald-50 px-2.5 shadow-2xs">
+              <CheckCircle2 className="size-4 fill-emerald-600 text-white" aria-hidden="true" />
+              <span className="whitespace-nowrap text-xs font-semibold text-emerald-800">Meta Connected</span>
             </span>
-          </span>
+          ) : (
+            <span className="flex h-8.5 shrink-0 items-center gap-1.5 rounded-sm border border-amber-300 bg-amber-50 px-2.5 shadow-2xs">
+              <AlertTriangle className="size-4 text-amber-700" aria-hidden="true" />
+              <span className="whitespace-nowrap text-xs font-semibold text-amber-900">{ads.status === "loading" ? "Connecting to Meta…" : "Meta not ready"}</span>
+            </span>
+          )}
           <span className="h-5 w-px shrink-0 bg-slate-300" aria-hidden="true" />
-          <AssetChip
-            label="Ad Account"
-            value="Namo Gange Official"
-            href={`${ADS_ROOT}/assets#ad-account`}
-            icon={<FaMeta className="size-3 text-[#0866ff]" />}
-          />
-          <AssetChip
-            label="Page"
-            value="Namo Gange"
-            href={`${ADS_ROOT}/assets#facebook-page`}
-            icon={<FaFacebookF className="size-3 text-[#1877f2]" />}
-          />
-          <AssetChip
-            label="Instagram"
-            value="@namogangetrust"
-            href={`${ADS_ROOT}/assets#instagram`}
-            warning={instagram.needsReauth ? "Reconnect" : undefined}
-            icon={<FaInstagram className="size-3 text-[#d946ef]" />}
-          />
+          {(!LIVE || ads.status === "ready") && <AssetChips />}
+          {LIVE && ads.status === "ready" && (
+            <span className="ml-auto flex items-center gap-2 text-[11px] font-medium text-slate-500">
+              {ads.refetching ? "Refreshing…" : ads.syncedAt ? `Synced ${new Date(ads.syncedAt).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}` : null}
+              <button type="button" onClick={ads.refresh} className="rounded-sm border border-slate-200 bg-white px-2 py-1 font-semibold text-slate-700 hover:bg-slate-50">
+                Refresh
+              </button>
+            </span>
+          )}
         </div>
 
         {/* The fade on the right edge signals that the section list scrolls when it does not fit */}
@@ -374,7 +480,7 @@ export function AdsWorkspace({
           />
         </div>
 
-        {children}
+        {LIVE && ads.status !== "ready" ? <StatePanel status={ads.status} message={ads.errorMessage} onRetry={ads.refresh} /> : children}
       </div>
     </div>
   );

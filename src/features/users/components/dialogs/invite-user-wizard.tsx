@@ -33,9 +33,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ROUTES } from "@/config/routes";
 import { ORGANISATION_ROLE, type OrganisationRole } from "@/types/domain/user";
-import { ALLOWED_COMPANY_ROLES } from "../../data/config";
+import { ALLOWED_COMPANY_ROLES, USERS_MOCK_MODE } from "../../data/config";
 import { useUserMutations } from "../../data/hooks";
 import { getAllInvitations, getAllRawUsers } from "../../data/mock/store";
+import { InviteUserLive } from "./invite-user-live";
 
 interface InviteUserWizardProps {
   open: boolean;
@@ -44,7 +45,7 @@ interface InviteUserWizardProps {
   onSwitchToAddMembership?: (userId: string) => void;
 }
 
-export function InviteUserWizard({
+function InviteUserWizardDemo({
   open,
   onOpenChange,
   companyOptions,
@@ -543,4 +544,8 @@ export function InviteUserWizard({
       </SheetContent>
     </Sheet>
   );
+}
+
+export function InviteUserWizard(props: InviteUserWizardProps) {
+  return USERS_MOCK_MODE ? <InviteUserWizardDemo {...props} /> : <InviteUserLive {...props} />;
 }

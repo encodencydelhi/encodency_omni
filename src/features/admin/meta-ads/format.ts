@@ -5,18 +5,21 @@ import type { EntityStatus, Metrics } from "./types";
  * Indian digit grouping (₹1,24,532) everywhere in the workspace.
  */
 
-const inr = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
+/**
+ * The currency of the ad account being shown. Mock data is INR; live mode sets
+ * the real account currency (`setAdsCurrency`) before any page renders money.
+ */
+let currency = "INR";
+let inr = new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 });
+let inrPrecise = new Intl.NumberFormat("en-IN", { style: "currency", currency, minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const inrPrecise = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
+export function setAdsCurrency(code: string | null | undefined): void {
+  const next = code && /^[A-Z]{3}$/.test(code) ? code : "INR";
+  if (next === currency) return;
+  currency = next;
+  inr = new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 });
+  inrPrecise = new Intl.NumberFormat("en-IN", { style: "currency", currency, minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 const indianNumber = new Intl.NumberFormat("en-IN");
 
@@ -82,9 +85,12 @@ const TIME = new Intl.DateTimeFormat("en-IN", {
   hour12: true,
 });
 
-export const date = (iso: string) => DATE.format(new Date(iso));
-export const dateTime = (iso: string) => DATE_TIME.format(new Date(iso));
-export const time = (iso: string) => TIME.format(new Date(iso));
+const valid = (iso: string) => Boolean(iso) && Number.isFinite(new Date(iso).getTime());
+
+/** Live data can lack a timestamp; render a dash instead of "Invalid Date". */
+export const date = (iso: string) => (valid(iso) ? DATE.format(new Date(iso)) : "—");
+export const dateTime = (iso: string) => (valid(iso) ? DATE_TIME.format(new Date(iso)) : "—");
+export const time = (iso: string) => (valid(iso) ? TIME.format(new Date(iso)) : "—");
 
 /**
  * The dataset is pinned to a demo "today" so relative labels stay stable
@@ -92,7 +98,14 @@ export const time = (iso: string) => TIME.format(new Date(iso));
  */
 export const DEMO_NOW = new Date("2026-09-14T15:00:00+05:30").getTime();
 
-export function relative(iso: string, now: number = DEMO_NOW): string {
+/** Live mode measures "x ago" against the real clock instead of the demo pin. */
+let liveClock = false;
+export function setAdsLiveClock(on: boolean): void {
+  liveClock = on;
+}
+
+export function relative(iso: string, now: number = liveClock ? Date.now() : DEMO_NOW): string {
+  if (!valid(iso)) return "—";
   const diff = now - new Date(iso).getTime();
   const minutes = Math.round(diff / 60000);
   if (minutes < 1) return "just now";

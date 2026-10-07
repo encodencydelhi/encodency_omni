@@ -4,11 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TEAM_LIVE } from "../team-data/live-team";
 import { useTeam } from "../team-data/team-store";
+import { GroupDetailLivePage } from "./groups-live-pages";
 
 const tabs = ["Overview", "Members", "Clients", "Work", "Activity"] as const;
 
 export function GroupDetailPage({ groupId }: { groupId: string }) {
+  return TEAM_LIVE ? <GroupDetailLivePage groupId={groupId} /> : <GroupDetailDemoPage groupId={groupId} />;
+}
+
+function GroupDetailDemoPage({ groupId }: { groupId: string }) {
   const { groups, members, activity, isLoading, updateGroup } = useTeam();
   const [tab, setTab] = useState<(typeof tabs)[number]>("Overview");
   const group = groups.find((g) => g.id === groupId);

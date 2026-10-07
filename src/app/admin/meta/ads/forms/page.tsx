@@ -9,16 +9,9 @@ import {
   Plus,
   UsersRound,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import {
-  adsOfForm,
-  campaigns,
-  campaignsOfForm,
-  getCampaign,
-  instantForms,
-  leadsOf,
-} from "@/features/admin/meta-ads/data";
+import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
 import { num, pct, relative } from "@/features/admin/meta-ads/format";
 import { useFilters } from "@/features/admin/meta-ads/use-filters";
 import {
@@ -62,6 +55,7 @@ const TABS = [
 ];
 
 function FormsView() {
+  const { adsOfForm, campaigns, campaignsOfForm, getCampaign, instantForms, leadsOf } = useAdsData();
   const { values, setFilter, reset, isFiltered } = useFilters(DEFAULTS, {
     campaign: (v) => getCampaign(v)?.name ?? v,
   });
@@ -81,7 +75,7 @@ function FormsView() {
       }
       return true;
     });
-  }, [values]);
+  }, [values, campaignsOfForm, instantForms]);
 
   const totals = useMemo(() => {
     const submissions = instantForms.reduce((t, f) => t + f.submissions, 0);
@@ -94,7 +88,7 @@ function FormsView() {
       completion: opens ? (submissions / opens) * 100 : 0,
       qualification: submissions ? (qualified / submissions) * 100 : 0,
     };
-  }, []);
+  }, [instantForms]);
 
   return (
     <AdsWorkspace
@@ -111,13 +105,13 @@ function FormsView() {
         <KpiCard label="Total Submissions" value={num(totals.submissions)} icon={UsersRound} />
         <KpiCard
           label="Completion Rate"
-          value={pct(totals.completion, 1)}
+          value={LIVE ? "—" : pct(totals.completion, 1)}
           icon={Percent}
           hint="Submissions divided by form opens."
         />
         <KpiCard
           label="Qualification Rate"
-          value={pct(totals.qualification, 1)}
+          value={LIVE ? "—" : pct(totals.qualification, 1)}
           icon={Percent}
           hint="Leads meeting your qualification rules, divided by all submissions."
         />
@@ -228,7 +222,7 @@ function FormsView() {
                         sub={`${f.language} · ${leadsOf({ formId: f.id }).length} leads in CRM`}
                       />
                     </Td>
-                    <Td>{f.type}</Td>
+                    <Td>{f.type || "—"}</Td>
                     <Td>
                       {linkedCampaigns.length === 0 ? (
                         <span className="text-[#94a3b8]">Not in use</span>
@@ -266,9 +260,9 @@ function FormsView() {
                     </Td>
                     <Td>{f.questions.length}</Td>
                     <Td numeric>{num(f.submissions)}</Td>
-                    <Td numeric>{f.opens ? pct(completion, 1) : "—"}</Td>
+                    <Td numeric>{!LIVE && f.opens ? pct(completion, 1) : "—"}</Td>
                     <Td numeric>
-                      {f.submissions ? (
+                      {!LIVE && f.submissions ? (
                         <ToneChip tone={qualified >= 60 ? "green" : qualified >= 40 ? "amber" : "red"}>
                           {pct(qualified, 0)}
                         </ToneChip>

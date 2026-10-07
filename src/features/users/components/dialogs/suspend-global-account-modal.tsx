@@ -12,7 +12,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useUserMutations } from "../../data/hooks";
-import { getAllRawUsers } from "../../data/mock/store";
+import { useUsersDirectory } from "../../data/directory";
 import type { UserAggregate } from "../../data/types";
 
 interface SuspendGlobalAccountModalProps {
@@ -28,11 +28,11 @@ export function SuspendGlobalAccountModal({
   onOpenChange,
 }: SuspendGlobalAccountModalProps) {
   const mutations = useUserMutations();
+  const allUsers = useUsersDirectory();
   const [reason, setReason] = useState("");
 
   if (!user) return null;
 
-  const allUsers = getAllRawUsers();
 
   // Check sole owner protection across all active memberships
   let soleOwnedCompany: string | null = null;

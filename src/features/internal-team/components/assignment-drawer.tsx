@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/cn";
-import { COMPANY_POOL_EXPORT, ASSIGNMENT_RESPONSIBILITIES } from "../data/config";
+import { ASSIGNMENT_RESPONSIBILITIES } from "../data/config";
+import { useCompanyPool } from "../data/company-pool";
+import { INTERNAL_ROLE } from "@/types/domain/team";
 import { getStaffAvatarColor } from "../data/config";
 import { getInitials } from "@/lib/utils/format";
 import type { AssignmentResponsibility, StaffMember } from "../data/types";
@@ -23,15 +25,16 @@ interface AssignmentDrawerProps {
 }
 
 export function AssignmentDrawer({ member, open, onOpenChange, onConfirm, isPending }: AssignmentDrawerProps) {
+  const pool = useCompanyPool();
   const [companyId, setCompanyId] = useState("");
   const [responsibility, setResponsibility] = useState<AssignmentResponsibility>("support_owner");
   if (!member) return null;
 
   const assignedCompanyIds = new Set(member.assignments.filter((a) => a.status === "active").map((a) => a.companyId));
-  const availableCompanies = COMPANY_POOL_EXPORT.filter((c) => !assignedCompanyIds.has(c.id));
+  const availableCompanies = pool.filter((c) => !assignedCompanyIds.has(c.id));
 
   const handleConfirm = () => {
-    const company = COMPANY_POOL_EXPORT.find((c) => c.id === companyId);
+    const company = pool.find((c) => c.id === companyId);
     if (!company) return;
     onConfirm(member.id, company.id, company.name, responsibility);
     setCompanyId("");
@@ -53,7 +56,7 @@ export function AssignmentDrawer({ member, open, onOpenChange, onConfirm, isPend
             </Avatar>
             <div>
               <p className="text-sm font-semibold text-slate-900">{member.name}</p>
-              <p className="text-xs text-slate-500">{member.role}</p>
+              <p className="text-xs text-slate-500">{INTERNAL_ROLE[member.role]?.label ?? member.role}</p>
             </div>
           </div>
 

@@ -1,3 +1,4 @@
+import { USERS_MOCK_MODE } from "../../data/config";
 import { KeyRoundIcon, LogOutIcon, MailIcon, UnlockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -105,8 +106,11 @@ export function RequirePasswordResetDialog({ user, open, onOpenChange }: Securit
 
         <div className="py-2 text-xs text-slate-600 space-y-2">
           <p>
-            An administrative password reset demand will be issued for <strong>{user.identity.email}</strong>.
-            The user will be required to create a new password upon their next sign-in attempt.
+            {USERS_MOCK_MODE ? (
+              <>An administrative password reset demand will be issued for <strong>{user.identity.email}</strong>. The user will be required to create a new password upon their next sign-in attempt.</>
+            ) : (
+              <>A password reset email will be sent to <strong>{user.identity.email}</strong>. Their current password keeps working until they choose a new one from that email.</>
+            )}
           </p>
         </div>
 

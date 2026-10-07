@@ -1,14 +1,9 @@
 import { USERS_MOCK_MODE } from "./config";
 import { mockUsersProvider } from "./mock-provider";
-import {
-  superAdminUsersApi,
-  type SuperAdminUserSummary,
-  type SuperAdminUserDetail,
-} from "../live/super-admin-users-api";
+import { liveUsersProvider } from "./live-provider";
 import type {
   AddMembershipInput,
   ChangeRoleInput,
-  CompanyMembership,
   CreateInvitationInput,
   RemoveMembershipInput,
   TransferOwnershipInput,
@@ -24,7 +19,6 @@ import type {
   UserListResult,
   UserSecurityEvent,
 } from "./types";
-import type { OrganisationRole } from "@/types/domain/user";
 
 export interface UsersRepository {
   listUsers(query?: UserListQuery): Promise<UserListResult>;
@@ -57,144 +51,8 @@ export interface UsersRepository {
   bulkAction(
     action: "export" | "require_2fa" | "notify" | "suspend",
     userIds: string[],
-    params?: { reason?: string },
+    params?: { reason?: string; title?: string; message?: string },
   ): Promise<{ affectedCount: number; message: string }>;
 }
 
-function toAggregateFromSummary(u: SuperAdminUserSummary, detail?: SuperAdminUserDetail): UserAggregate {
-  const memberships: CompanyMembership[] = (detail?.memberships ?? []).map((m) => {
-    const sysLower = m.systemRole.toLowerCase();
-    const role: OrganisationRole =
-      sysLower === "owner" ? "owner" :
-      sysLower === "admin" ? "admin" :
-      sysLower === "manager" ? "marketing_manager" :
-      sysLower === "viewer" ? "viewer" : "viewer";
-
-    return {
-      id: m.membershipId,
-      userId: u.id,
-      companyId: m.company.id,
-      companyName: m.company.name,
-      companySlug: m.company.name.toLowerCase().replace(/[^a-z0-9]/g, "-"),
-      role,
-      status: m.company.status === "ACTIVE" ? "active" : "suspended",
-      clientAccess: {
-        scope: "all",
-        clientIds: [],
-        clients: [],
-      },
-      joinedAt: m.createdAt,
-      updatedAt: m.createdAt,
-      isOwner: m.systemRole === "OWNER",
-    };
-  });
-
-  return {
-    identity: {
-      id: u.id,
-      name: u.name ?? u.email.split("@")[0] ?? "User",
-      email: u.email,
-      phone: null,
-      avatarUrl: u.avatarUrl,
-      globalStatus: u.status === "DEACTIVATED" ? "suspended" : "active",
-      emailVerified: true,
-      createdAt: u.createdAt,
-      lastLoginAt: u.updatedAt,
-    },
-    memberships,
-    security: {
-      mfaEnabled: u.mfaEnabled,
-      twoFactorRequired: false,
-      twoFactorStatus: u.mfaEnabled ? "enabled" : "not_enabled",
-      passwordLastChanged: u.createdAt,
-      lastSuccessfulLogin: u.updatedAt,
-      failedLoginAttempts: 0,
-      isLocked: false,
-      sessions: [],
-      securityWarnings: [],
-    },
-    ownedResources: [],
-    recentActivity: [],
-    totalClientsCount: detail?.memberships.reduce((acc, m) => acc + (m.clientAccessCount || 0), 0) ?? 0,
-    activeSessionsCount: 1,
-    hasOwnerAccess: memberships.some((m) => m.isOwner),
-    hasAdminAccess: memberships.some((m) => m.role === "admin" || m.isOwner) || u.platformRole === "SUPER_ADMIN",
-    securityPosture: "healthy",
-  };
-}
-
-const apiUsersProvider: UsersRepository = {
-  ...mockUsersProvider,
-
-  async listUsers(query: UserListQuery = {}): Promise<UserListResult> {
-    const page = query.page ?? 1;
-    const limit = query.pageSize ?? 20;
-    const search = query.filters?.search;
-    const companyId = query.filters?.companyId;
-    let systemRole: "OWNER" | "ADMIN" | "MANAGER" | "VIEWER" | undefined;
-
-    if (query.filters?.role) {
-      if (query.filters.role === "owner") systemRole = "OWNER";
-      else if (query.filters.role === "admin") systemRole = "ADMIN";
-      else if (query.filters.role === "marketing_manager") systemRole = "MANAGER";
-      else if (query.filters.role === "viewer") systemRole = "VIEWER";
-    }
-
-    const res = await superAdminUsersApi.list({
-      page,
-      limit,
-      search,
-      companyId,
-      systemRole,
-    });
-
-    const items = res.items.map((u) => toAggregateFromSummary(u));
-
-    return {
-      items,
-      total: res.total,
-      page: res.page,
-      pageSize: res.limit,
-      pageCount: Math.ceil(res.total / res.limit) || 1,
-      kpis: {
-        totalUsers: res.total,
-        activeUsers: res.items.filter((i) => i.status !== "DEACTIVATED").length,
-        pendingInvites: 0,
-        suspendedUsers: res.items.filter((i) => i.status === "DEACTIVATED").length,
-        twoFactorEnabled: res.items.filter((i) => i.mfaEnabled).length,
-        twoFactorTotal: res.total,
-        inactive30PlusDays: 0,
-        multiCompanyUsers: res.items.filter((i) => i.companyCount > 1).length,
-        needsAttentionCount: 0,
-      },
-    };
-  },
-
-  async getUser(id: string): Promise<UserAggregate> {
-    const detail = await superAdminUsersApi.get(id);
-    return toAggregateFromSummary(detail, detail);
-  },
-
-  async suspendGlobalAccount(userId: string): Promise<UserAggregate> {
-    await superAdminUsersApi.setStatus(userId, "DEACTIVATED");
-    return this.getUser(userId);
-  },
-
-  async reactivateGlobalAccount(userId: string): Promise<UserAggregate> {
-    await superAdminUsersApi.setStatus(userId, "ACTIVE");
-    return this.getUser(userId);
-  },
-
-  async revokeAllSessions(userId: string): Promise<UserAggregate> {
-    await superAdminUsersApi.revokeSessions(userId);
-    return this.getUser(userId);
-  },
-
-  async requirePasswordReset(userId: string): Promise<void> {
-    await superAdminUsersApi.passwordReset(userId);
-  },
-};
-
-export const usersRepository: UsersRepository = USERS_MOCK_MODE
-  ? mockUsersProvider
-  : apiUsersProvider;
+export const usersRepository: UsersRepository = USERS_MOCK_MODE ? mockUsersProvider : liveUsersProvider;

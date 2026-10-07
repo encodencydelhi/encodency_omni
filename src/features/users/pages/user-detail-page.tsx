@@ -76,6 +76,7 @@ import { TransferOwnershipModal } from "../components/dialogs/transfer-ownership
 import {
   SECURITY_POSTURE,
   type UserDetailTabId,
+  USERS_MOCK_MODE,
 } from "../data/config";
 import {
   useSecurityEvents,
@@ -424,10 +425,14 @@ export function UserDetailPage() {
                   <span>Issue Password Reset</span>
                 </DropdownMenuItem>
 
+{USERS_MOCK_MODE && (
+<>
                 <DropdownMenuItem onClick={() => setIsRequire2faOpen(true)} className="gap-2">
                   <ShieldAlertIcon className="size-3.5 text-blue-600" />
                   <span>{user.security.twoFactorRequired ? "Relax 2FA Requirement" : "Enforce Mandatory 2FA"}</span>
                 </DropdownMenuItem>
+</>
+)}
 
                 {user.security.isLocked && (
                   <DropdownMenuItem onClick={() => setIsUnlockAccountOpen(true)} className="gap-2 text-emerald-600 font-medium">
@@ -559,6 +564,8 @@ export function UserDetailPage() {
           </div>
         </button>
 
+{USERS_MOCK_MODE && (
+<>
         <div className="rounded-md border border-slate-200 bg-white p-3 h-full min-h-[92px] text-left flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-400 mb-1">
             <span className="text-xs font-medium text-slate-500">Owned Resources</span>
@@ -573,6 +580,8 @@ export function UserDetailPage() {
             </p>
           </div>
         </div>
+</>
+)}
       </div>
 
       {/* 4. Tab Navigation */}
@@ -656,6 +665,8 @@ export function UserDetailPage() {
                   <span className="text-slate-500">Phone Number:</span>
                   <span className="font-semibold text-slate-800">{user.identity.phone || "Not set"}</span>
                 </div>
+{USERS_MOCK_MODE && (
+<>
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">Timezone:</span>
                   <span className="font-semibold text-slate-800">Asia/Kolkata (IST)</span>
@@ -666,6 +677,8 @@ export function UserDetailPage() {
                     Email & Password
                   </span>
                 </div>
+</>
+)}
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">Created Date:</span>
                   <span className="font-semibold text-slate-800">{new Date(user.identity.createdAt).toLocaleString()}</span>
@@ -703,18 +716,24 @@ export function UserDetailPage() {
                   <span className="text-slate-500">Two-Factor Authentication:</span>
                   <TwoFactorStatusBadge status={user.security.twoFactorStatus} />
                 </div>
+{USERS_MOCK_MODE && (
+<>
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">Organization 2FA Policy:</span>
                   <span className="font-semibold text-slate-800">
                     {user.security.twoFactorRequired ? "Enforced (Mandatory)" : "Optional"}
                   </span>
                 </div>
+</>
+)}
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">Active Live Sessions:</span>
                   <span className="font-semibold text-slate-800">
                     {user.activeSessionsCount} concurrent device(s)
                   </span>
                 </div>
+{USERS_MOCK_MODE && (
+<>
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="text-slate-500">Failed Sign-in Attempts:</span>
                   <span className={`font-semibold ${user.security.failedLoginAttempts > 0 ? "text-amber-600" : "text-slate-800"}`}>
@@ -727,6 +746,8 @@ export function UserDetailPage() {
                     {user.security.isLocked ? "Locked (Threshold Exceeded)" : "Normal (Unlocked)"}
                   </span>
                 </div>
+</>
+)}
                 <div className="flex justify-between py-1">
                   <span className="text-slate-500">Overall Security Posture:</span>
                   <SecurityPostureBadge posture={user.securityPosture} />
@@ -735,6 +756,8 @@ export function UserDetailPage() {
             </Card>
           </div>
 
+{USERS_MOCK_MODE && (
+<>
           {/* Owned Workflows & Resources */}
           <Card className="shadow-xs">
             <CardHeader className="pb-3 border-b border-slate-100">
@@ -796,6 +819,8 @@ export function UserDetailPage() {
               )}
             </CardContent>
           </Card>
+</>
+)}
 
           {/* Company Memberships Preview & Recent Activity */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-stretch">
@@ -1001,6 +1026,8 @@ export function UserDetailPage() {
                       </p>
                     </div>
 
+{USERS_MOCK_MODE && (
+<>
                     <div className="rounded border border-slate-100 p-2.5 bg-slate-50/50 space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-slate-700 flex items-center gap-2">
@@ -1017,6 +1044,8 @@ export function UserDetailPage() {
                           : "No active workflows or automations authored in this organization."}
                       </p>
                     </div>
+</>
+)}
                   </div>
 
                   {/* Actions Bar for this specific company */}
@@ -1140,6 +1169,8 @@ export function UserDetailPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+{USERS_MOCK_MODE && (
+<>
               <Button
                 variant="outline"
                 size="sm"
@@ -1149,6 +1180,8 @@ export function UserDetailPage() {
                 <KeyRoundIcon className="size-3.5 mr-1 text-slate-500" />
                 {user.security.twoFactorRequired ? "Relax 2FA Requirement" : "Enforce Mandatory 2FA"}
               </Button>
+</>
+)}
 
               <Button
                 variant="outline"
@@ -1239,7 +1272,7 @@ export function UserDetailPage() {
                           <div className="flex flex-wrap items-center gap-x-3 text-xs text-slate-400">
                             <span>IP: <code className="font-mono text-slate-600">{sess.ip}</code></span>
                             <span>•</span>
-                            <span>Location: {sess.location}</span>
+                            {USERS_MOCK_MODE && <span>Location: {sess.location}</span>}
                             <span>•</span>
                             <span>Last Active: {new Date(sess.lastActiveAt).toLocaleString()}</span>
                           </div>

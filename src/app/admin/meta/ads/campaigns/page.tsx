@@ -13,9 +13,9 @@ import {
   Plus,
   SlidersHorizontal,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import { campaigns } from "@/features/admin/meta-ads/data";
+import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import {
   conversionRate,
   cpl,
@@ -88,6 +88,8 @@ const COLUMNS = [
 const PAUSABLE: EntityStatus[] = ["active", "learning", "scheduled"];
 
 function CampaignsView() {
+  const { campaigns, connectedAssets } = useAdsData();
+  const assetNames = (group: string, field: "name" | "handle" = "name") => connectedAssets.filter((a) => a.group === group).map((a) => (field === "handle" ? a.handle || a.name : a.name));
   const { values, setFilter, reset, isFiltered } = useFilters(DEFAULTS);
   const [selected, setSelected] = useState<string[]>([]);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
@@ -111,7 +113,7 @@ function CampaignsView() {
         return false;
       return true;
     });
-  }, [values]);
+  }, [values, campaigns]);
 
   const paged = usePagination(rows, 10);
   const allSelected = rows.length > 0 && selected.length === rows.length;
@@ -274,21 +276,21 @@ function CampaignsView() {
               label="Ad account"
               value={values.account}
               onChange={(v) => setFilter("account", v)}
-              options={["All Ad Accounts", "Namo Gange Official"]}
+              options={["All Ad Accounts", ...assetNames("Ad Account")]}
               minWidth={200}
             />
             <FilterSelect
               label="Facebook Page"
               value={values.page}
               onChange={(v) => setFilter("page", v)}
-              options={["All Facebook Pages", "Namo Gange"]}
+              options={["All Facebook Pages", ...assetNames("Facebook Page")]}
               minWidth={200}
             />
             <FilterSelect
               label="Instagram account"
               value={values.instagram}
               onChange={(v) => setFilter("instagram", v)}
-              options={["All Instagram Accounts", "@namogangetrust"]}
+              options={["All Instagram Accounts", ...assetNames("Instagram Business", "handle")]}
               minWidth={210}
             />
           </div>
@@ -363,7 +365,7 @@ function CampaignsView() {
                       <StatusChip status={c.status} />
                     </Td>
                     <Td>
-                      <EntityLink href={href} name={c.name} sub={`Owner · ${c.owner}`} />
+                      <EntityLink href={href} name={c.name} sub={c.owner ? `Owner · ${c.owner}` : undefined} />
                     </Td>
                     <Td>{c.objective}</Td>
                     <Td>
@@ -388,9 +390,11 @@ function CampaignsView() {
                     <Td numeric>{orDash(conversionRate(m), (v) => pct(v))}</Td>
                     <Td>
                       {relative(c.lastEdited)}
-                      <span className="block text-[9px] text-[#64748b]">
-                        by {c.lastEditedBy}
-                      </span>
+                      {c.lastEditedBy && (
+                        <span className="block text-[9px] text-[#64748b]">
+                          by {c.lastEditedBy}
+                        </span>
+                      )}
                     </Td>
                     <Td>
                       <RowMenu

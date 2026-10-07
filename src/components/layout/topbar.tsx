@@ -9,10 +9,13 @@ import { GlobalSearch } from "./global-search";
 import Image from "next/image";
 import { cn } from "@/lib/utils/cn";
 import { getUserDisplay } from "@/lib/utils/user-display";
+import { useState } from "react";
+import { MyProfileDialog } from "./my-profile-dialog";
 
 export function Topbar() {
   const { setMobileOpen, toggleCollapsed, isCollapsed } = useSidebar();
   const { user, logout } = useAuth();
+  const [profileOpen, setProfileOpen] = useState(false);
   const { fullName, firstName, email: userEmail, initials } = getUserDisplay(user);
 
   return (
@@ -130,7 +133,7 @@ export function Topbar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="rounded-sm cursor-pointer">My Profile</DropdownMenuItem>
+            <DropdownMenuItem className="rounded-sm cursor-pointer" onSelect={() => setProfileOpen(true)}>My Profile</DropdownMenuItem>
             <DropdownMenuItem className="rounded-sm cursor-pointer">Security</DropdownMenuItem>
             <DropdownMenuItem className="rounded-sm cursor-pointer">Preferences</DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -138,6 +141,7 @@ export function Topbar() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      <MyProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
     </header>
   );
 }

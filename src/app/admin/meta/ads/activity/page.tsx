@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { Suspense, useMemo } from "react";
 import { Activity, Download } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import { activityLog } from "@/features/admin/meta-ads/data";
+import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import { date, dateTime, time } from "@/features/admin/meta-ads/format";
 import { useFilters } from "@/features/admin/meta-ads/use-filters";
 import {
@@ -43,6 +43,7 @@ const SOURCE_TONE = {
 } as const;
 
 function ActivityView() {
+  const { activityLog } = useAdsData();
   const { values, setFilter, reset, isFiltered } = useFilters(DEFAULTS);
 
   const rows = useMemo(() => {
@@ -59,7 +60,7 @@ function ActivityView() {
       if (values.campaign !== DEFAULTS.campaign && a.campaign !== values.campaign) return false;
       return true;
     });
-  }, [values]);
+  }, [values, activityLog]);
 
   /** Group by calendar day so the log reads as a timeline. */
   const grouped = useMemo(() => {
@@ -79,9 +80,7 @@ function ActivityView() {
       campaigns: Array.from(
         new Set(activityLog.map((a) => a.campaign).filter((c): c is string => Boolean(c))),
       ),
-    }),
-    [],
-  );
+    }), [activityLog]);
 
   return (
     <AdsWorkspace

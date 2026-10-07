@@ -1,5 +1,6 @@
 import { FolderIcon } from "lucide-react";
 import { useState } from "react";
+import { USERS_MOCK_MODE } from "../data/config";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { CompanyMembership } from "../data/types";
 
@@ -16,6 +17,9 @@ export function ClientAccessPopover({
   const [open, setOpen] = useState(false);
 
   if (totalClients === 0) {
+    if (!USERS_MOCK_MODE && memberships.some((m) => m.clientAccess.scope === "all")) {
+      return <span className="text-xs text-slate-600 whitespace-nowrap">All clients</span>;
+    }
     return <span className="text-xs text-slate-400 whitespace-nowrap">0 clients</span>;
   }
 

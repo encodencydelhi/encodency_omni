@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { INTERNAL_ROLE, type InternalRole, type TeamMemberStatus } from "@/types/domain/team";
-import { DEPARTMENTS, TEAM_SORT_OPTIONS } from "../data/config";
+import { DEPARTMENTS, STAFF_ROLE_KEYS, TEAM_MOCK_MODE, TEAM_SORT_OPTIONS } from "../data/config";
 import type { StaffListQuery } from "../data/types";
 
 interface StaffFilterToolbarProps {
@@ -13,15 +13,18 @@ interface StaffFilterToolbarProps {
   onQueryChange: (query: Partial<StaffListQuery>) => void;
   activeFilterCount: number;
   onClearFilters: () => void;
+  /** Departments present in the directory (live mode). */
+  departments?: string[];
 }
 
-export function StaffFilterToolbar({ query, onQueryChange, activeFilterCount, onClearFilters }: StaffFilterToolbarProps) {
+export function StaffFilterToolbar({ query, onQueryChange, activeFilterCount, onClearFilters, departments }: StaffFilterToolbarProps) {
+  const departmentOptions: readonly string[] = TEAM_MOCK_MODE ? DEPARTMENTS : Array.from(new Set([...(departments ?? []), ...(query.department ? [query.department] : [])]));
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
       <div className="relative flex-1 min-w-0">
         <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
         <Input
-          placeholder="Search staff name, email, role or staff ID..."
+          placeholder={TEAM_MOCK_MODE ? "Search staff name, email, role or staff ID..." : "Search by name, email, job title or department..."}
           value={query.search || ""}
           onChange={(e) => onQueryChange({ search: e.target.value })}
           className="h-8 pl-8 text-xs bg-white"
@@ -34,7 +37,7 @@ export function StaffFilterToolbar({ query, onQueryChange, activeFilterCount, on
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
-            {(Object.keys(INTERNAL_ROLE) as InternalRole[]).map((r) => (
+            {STAFF_ROLE_KEYS.map((r) => (
               <SelectItem key={r} value={r}>{INTERNAL_ROLE[r].label}</SelectItem>
             ))}
           </SelectContent>
@@ -47,8 +50,8 @@ export function StaffFilterToolbar({ query, onQueryChange, activeFilterCount, on
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="invited">Invited</SelectItem>
-            <SelectItem value="suspended">Suspended</SelectItem>
+            {TEAM_MOCK_MODE && <SelectItem value="invited">Invited</SelectItem>}
+            <SelectItem value="suspended">{TEAM_MOCK_MODE ? "Suspended" : "Deactivated"}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -58,7 +61,7 @@ export function StaffFilterToolbar({ query, onQueryChange, activeFilterCount, on
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Departments</SelectItem>
-            {DEPARTMENTS.map((d) => (
+            {departmentOptions.map((d) => (
               <SelectItem key={d} value={d}>{d}</SelectItem>
             ))}
           </SelectContent>

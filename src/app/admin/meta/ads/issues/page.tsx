@@ -10,7 +10,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { issues } from "@/features/admin/meta-ads/data";
+import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import { dateTime, relative } from "@/features/admin/meta-ads/format";
 import { useFilters } from "@/features/admin/meta-ads/use-filters";
 import {
@@ -60,6 +60,7 @@ const SEVERITY: Record<
 };
 
 function IssuesView() {
+  const { issues } = useAdsData();
   const { values, setFilter, reset, isFiltered } = useFilters(DEFAULTS);
 
   const rows = useMemo(() => {
@@ -77,7 +78,7 @@ function IssuesView() {
       if (values.campaign !== DEFAULTS.campaign && i.campaign !== values.campaign) return false;
       return true;
     });
-  }, [values]);
+  }, [values, issues]);
 
   const open = issues.filter((i) => !i.resolved);
   const counts = {
@@ -91,9 +92,7 @@ function IssuesView() {
     () => [
       DEFAULTS.campaign,
       ...Array.from(new Set(issues.map((i) => i.campaign).filter((c): c is string => Boolean(c)))),
-    ],
-    [],
-  );
+    ], [issues]);
 
   return (
     <AdsWorkspace>

@@ -3,6 +3,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ApiError } from "@/types/api";
+import { USERS_MOCK_MODE } from "./config";
 import { usersRepository } from "./repository";
 
 function notifyMutationError(fallback: string, err: unknown) {
@@ -119,7 +120,7 @@ export function useUserMutations() {
     mutationFn: (input: CreateInvitationInput) => usersRepository.createInvitation(input),
     onSuccess: (res) => {
       invalidateAll();
-      toast.success(`Demo invitation created for ${res.name} (${res.email})`);
+      toast.success(USERS_MOCK_MODE ? `Demo invitation created for ${res.name} (${res.email})` : `Invitation sent to ${res.email}`);
     },
     onError: (err: unknown) => notifyMutationError("Failed to create invitation.", err),
   });
@@ -192,7 +193,7 @@ export function useUserMutations() {
     mutationFn: (input: RemoveMembershipInput) => usersRepository.removeMembership(input),
     onSuccess: () => {
       invalidateAll();
-      toast.success("Company membership removed and resources reassigned.");
+      toast.success(USERS_MOCK_MODE ? "Company membership removed and resources reassigned." : "Company membership removed.");
     },
     onError: (err: unknown) => notifyMutationError("Failed to remove membership.", err),
   });
@@ -239,7 +240,7 @@ export function useUserMutations() {
     mutationFn: (userId: string) => usersRepository.requirePasswordReset(userId),
     onSuccess: () => {
       invalidateAll();
-      toast.success("Password reset demand recorded for next login.");
+      toast.success(USERS_MOCK_MODE ? "Password reset demand recorded for next login." : "Password reset email sent.");
     },
     onError: (err: unknown) => notifyMutationError("Failed to send password reset.", err),
   });
@@ -289,7 +290,7 @@ export function useUserMutations() {
     }: {
       action: "export" | "require_2fa" | "notify" | "suspend";
       userIds: string[];
-      params?: { reason?: string };
+      params?: { reason?: string; title?: string; message?: string };
     }) => usersRepository.bulkAction(action, userIds, params),
     onSuccess: (res) => {
       invalidateAll();

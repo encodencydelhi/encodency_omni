@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { AdImage } from "./ad-image";
 import { FaFacebookF, FaInstagram } from "react-icons/fa6";
 import {
   Bookmark,
@@ -66,7 +66,7 @@ export function AdPreview({
 
       <div className="relative aspect-[4/5] w-full bg-slate-100 overflow-hidden">
         {creative ? (
-          <Image
+          <AdImage
             src={creative.src}
             alt={creative.name}
             fill

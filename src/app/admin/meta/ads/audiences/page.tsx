@@ -10,9 +10,9 @@ import {
   RefreshCw,
   UsersRound,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import { audiences, getAdSet } from "@/features/admin/meta-ads/data";
+import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import { compactNum, num, pct, relative } from "@/features/admin/meta-ads/format";
 import { useFilters } from "@/features/admin/meta-ads/use-filters";
 import {
@@ -61,6 +61,7 @@ const STATUS_TONE = {
 } as const;
 
 function AudiencesView() {
+  const { audiences } = useAdsData();
   const { values, setFilter, reset, isFiltered } = useFilters(DEFAULTS);
 
   const rows = useMemo(() => {
@@ -72,7 +73,7 @@ function AudiencesView() {
       if (values.status !== DEFAULTS.status && a.status !== values.status) return false;
       return true;
     });
-  }, [values]);
+  }, [values, audiences]);
 
   const kpis = useMemo(
     () => ({
@@ -81,9 +82,7 @@ function AudiencesView() {
       active: audiences.filter((a) => a.status === "Ready").length,
       issues: audiences.filter((a) => a.status === "Sync failed" || a.status === "Too small")
         .length,
-    }),
-    [],
-  );
+    }), [audiences]);
 
   const sourceOptions = useMemo(
     () => [
@@ -92,7 +91,7 @@ function AudiencesView() {
         new Set(audiences.filter((a) => a.kind === values.tab).map((a) => a.source)),
       ).sort(),
     ],
-    [values.tab],
+    [values.tab, audiences],
   );
 
   return (
@@ -201,6 +200,7 @@ function AudiencesView() {
 }
 
 function UsedIn({ audience }: { audience: Audience }) {
+  const { getAdSet } = useAdsData();
   if (audience.usedIn.length === 0)
     return <span className="text-[#94a3b8]">Not in use</span>;
   return (

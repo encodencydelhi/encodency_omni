@@ -12,7 +12,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useUserMutations } from "../../data/hooks";
-import { getAllRawUsers } from "../../data/mock/store";
+import { useUsersDirectory } from "../../data/directory";
 import type { CompanyMembership } from "../../data/types";
 
 interface SuspendMembershipModalProps {
@@ -31,11 +31,11 @@ export function SuspendMembershipModal({
   onSoleOwnerBlocked,
 }: SuspendMembershipModalProps) {
   const mutations = useUserMutations();
+  const allUsers = useUsersDirectory();
   const [reason, setReason] = useState("");
 
   if (!membership) return null;
 
-  const allUsers = getAllRawUsers();
   const isSoleOwner =
     membership.role === "owner" &&
     allUsers.filter(

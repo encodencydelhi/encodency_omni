@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { USERS_MOCK_MODE } from "../../data/config";
+import { useCompanyClients } from "../../data/directory";
 import { useUnsavedGuard } from "../../hooks/use-unsaved-guard";
 import { useUserMutations } from "../../data/hooks";
 import type { CompanyMembership } from "../../data/types";
@@ -30,6 +32,7 @@ export function ManageClientAccessModal({
   onOpenChange,
 }: ManageClientAccessModalProps) {
   const mutations = useUserMutations();
+  const liveClients = useCompanyClients(membership?.companyId);
 
   const [scope, setScope] = useState<"all" | "selected">("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -61,18 +64,22 @@ export function ManageClientAccessModal({
   if (!membership) return null;
 
   // Mock pool of all clients in this company (strictly scoped!)
-  const availableCompanyClients = [
-    { id: `prj_${membership.companyId}_1`, name: `${membership.companyName} Primary Brand` },
-    { id: `prj_${membership.companyId}_2`, name: `${membership.companyName} Secondary Brand` },
-    { id: `prj_${membership.companyId}_3`, name: `${membership.companyName} Special Projects` },
-  ];
+  const availableCompanyClients = USERS_MOCK_MODE
+    ? [
+        { id: `prj_${membership.companyId}_1`, name: `${membership.companyName} Primary Brand` },
+        { id: `prj_${membership.companyId}_2`, name: `${membership.companyName} Secondary Brand` },
+        { id: `prj_${membership.companyId}_3`, name: `${membership.companyName} Special Projects` },
+      ]
+    : (liveClients.data ?? []);
+  // Owners and Admins always reach every Client of their Company; only Managers and Viewers are limited to a list.
+  const inherentAccess = !USERS_MOCK_MODE && (membership.role === "owner" || membership.role === "admin");
 
   const handleSave = () => {
     mutations.updateClientAccess.mutate(
       {
         membershipId: membership.id,
         clientAccessScope: scope,
-        clientAccessIds: scope === "all" ? [] : selectedIds,
+        clientAccessIds: USERS_MOCK_MODE ? (scope === "all" ? [] : selectedIds) : scope === "all" ? availableCompanyClients.map((c) => c.id) : selectedIds,
       },
       {
         onSuccess: () => {
@@ -97,6 +104,13 @@ export function ManageClientAccessModal({
         </DialogHeader>
 
         <div className="space-y-4 py-2 text-xs">
+          {inherentAccess ? (
+            <p className="rounded border border-border bg-slate-50/60 p-3 text-slate-600">
+              {membership.role === "owner" ? "Owners" : "Admins"} automatically reach every Client of {membership.companyName}, now and in the future.
+              To limit this person to specific Clients, change their role to Manager or Viewer first.
+            </p>
+          ) : (
+          <>
           <RadioGroup
             value={scope}
             onValueChange={(val) => setScope(val as "all" | "selected")}
@@ -153,7 +167,12 @@ export function ManageClientAccessModal({
                   );
                 })}
               </div>
+              {!USERS_MOCK_MODE && availableCompanyClients.length === 0 && !liveClients.isLoading && (
+                <p className="text-xs text-amber-700">This Company has no Clients yet.</p>
+              )}
             </div>
+          )}
+          </>
           )}
         </div>
 
@@ -172,7 +191,7 @@ export function ManageClientAccessModal({
             type="button"
             variant="default"
             size="sm"
-            disabled={mutations.updateClientAccess.isPending}
+            disabled={inherentAccess || !dirty || mutations.updateClientAccess.isPending || (!USERS_MOCK_MODE && liveClients.isLoading)}
             onClick={handleSave}
             className="text-xs gap-1.5 bg-blue-600 hover:bg-blue-700"
           >

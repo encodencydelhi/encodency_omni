@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { FaFacebookF, FaInstagram, FaMeta } from "react-icons/fa6";
 import { Database, Info, Plug, RefreshCw, Search, Unplug } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import { connectedAssets } from "@/features/admin/meta-ads/data";
+import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import { date, dateTime, relative } from "@/features/admin/meta-ads/format";
 import {
   TableShell,
@@ -29,13 +29,15 @@ const GROUP_ICONS: Record<ConnectedAsset["group"], React.ReactNode> = {
 
 type FilterTab = "All" | "Connected" | "Needs Attention" | "Syncing" | "Disconnected";
 
-const TAB_META: Record<FilterTab, { count: number; dotColor: string }> = {
-  All: { count: connectedAssets.length, dotColor: "" },
-  Connected: { count: connectedAssets.filter((a) => a.status === "Connected").length, dotColor: "bg-[#059669]" },
-  "Needs Attention": { count: connectedAssets.filter((a) => a.status !== "Connected" && a.status !== "Syncing").length, dotColor: "bg-[#d97706]" },
-  Syncing: { count: connectedAssets.filter((a) => a.status === "Syncing").length, dotColor: "bg-[#2563eb]" },
-  Disconnected: { count: connectedAssets.filter((a) => a.status === "Disconnected").length, dotColor: "bg-[#dc2626]" },
-};
+function tabMeta(assets: ConnectedAsset[]): Record<FilterTab, { count: number; dotColor: string }> {
+  return {
+    All: { count: assets.length, dotColor: "" },
+    Connected: { count: assets.filter((a) => a.status === "Connected").length, dotColor: "bg-[#059669]" },
+    "Needs Attention": { count: assets.filter((a) => a.status !== "Connected" && a.status !== "Syncing").length, dotColor: "bg-[#d97706]" },
+    Syncing: { count: assets.filter((a) => a.status === "Syncing").length, dotColor: "bg-[#2563eb]" },
+    Disconnected: { count: assets.filter((a) => a.status === "Disconnected").length, dotColor: "bg-[#dc2626]" },
+  };
+}
 
 const HEALTH_ITEMS: { status: ConnectedAsset["status"]; description: string; dotColor: string }[] = [
   { status: "Connected", description: "Everything is authorised and syncing normally.", dotColor: "bg-[#059669]" },
@@ -47,6 +49,8 @@ const HEALTH_ITEMS: { status: ConnectedAsset["status"]; description: string; dot
 ];
 
 export default function AssetsPage() {
+  const { connectedAssets } = useAdsData();
+  const TAB_META = tabMeta(connectedAssets);
   const [activeTab, setActiveTab] = useState<FilterTab>("All");
   const [search, setSearch] = useState("");
 

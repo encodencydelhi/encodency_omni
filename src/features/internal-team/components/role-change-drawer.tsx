@@ -8,8 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils/cn";
-import { INTERNAL_ROLE, type InternalRole, ROLE_PERMISSIONS } from "@/types/domain/team";
-import { getStaffAvatarColor } from "../data/config";
+import { INTERNAL_ROLE, type InternalRole } from "@/types/domain/team";
+import { getRolePermissions, getStaffAvatarColor, STAFF_ROLE_KEYS } from "../data/config";
 import { getInitials } from "@/lib/utils/format";
 import { StaffRoleBadge } from "./staff-status-badges";
 import type { StaffMember } from "../data/types";
@@ -23,12 +23,13 @@ interface RoleChangeDrawerProps {
 }
 
 export function RoleChangeDrawer({ member, open, onOpenChange, onConfirm, isPending }: RoleChangeDrawerProps) {
-  const [newRole, setNewRole] = useState<InternalRole>("support");
+  const [picked, setPicked] = useState<InternalRole | null>(null);
   const [reason, setReason] = useState("");
   if (!member) return null;
 
-  const currentPerms = ROLE_PERMISSIONS[member.role];
-  const newPerms = ROLE_PERMISSIONS[newRole];
+  const newRole: InternalRole = picked ?? STAFF_ROLE_KEYS.find((r) => r !== member.role) ?? member.role;
+  const currentPerms = getRolePermissions(member.role);
+  const newPerms = getRolePermissions(newRole);
   const addedPerms = newPerms.filter((p) => !currentPerms.includes(p));
   const removedPerms = currentPerms.filter((p) => !newPerms.includes(p));
 
@@ -55,7 +56,7 @@ export function RoleChangeDrawer({ member, open, onOpenChange, onConfirm, isPend
           <div className="grid gap-1.5">
             <Label className="text-xs font-semibold">New Platform Role</Label>
             <div className="grid grid-cols-2 gap-1.5">
-              {(Object.keys(INTERNAL_ROLE) as InternalRole[]).map((r) => {
+              {STAFF_ROLE_KEYS.map((r) => {
                 const meta = INTERNAL_ROLE[r];
                 const isSelected = newRole === r;
                 const isCurrent = member.role === r;
@@ -63,7 +64,7 @@ export function RoleChangeDrawer({ member, open, onOpenChange, onConfirm, isPend
                   <button
                     key={r}
                     type="button"
-                    onClick={() => setNewRole(r)}
+                    onClick={() => setPicked(r)}
                     disabled={isCurrent}
                     className={cn(
                       "text-left p-2.5 rounded-sm border text-xs transition-all",
@@ -111,7 +112,7 @@ export function RoleChangeDrawer({ member, open, onOpenChange, onConfirm, isPend
         <SheetFooter>
           <div className="flex items-center justify-between w-full">
             <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button size="sm" className="h-8 text-xs bg-blue-600 hover:bg-blue-700" onClick={() => onConfirm(member.id, newRole, reason)} disabled={newRole === member.role || !reason.trim() || isPending}>
+            <Button size="sm" className="h-8 text-xs bg-blue-600 hover:bg-blue-700" onClick={() => onConfirm(member.id, newRole, reason)} disabled={newRole === member.role || reason.trim().length < 3 || isPending}>
               {isPending ? "Changing..." : "Confirm Role Change"}
             </Button>
           </div>

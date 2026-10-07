@@ -30,7 +30,7 @@ export function toAuthenticatedUser(profile: CurrentUserResponse): Authenticated
   return {
     id: profile.id,
     email: profile.email,
-    name: profile.email,
+    name: profile.name?.trim() || profile.email,
     avatarUrl: profile.avatarUrl ?? profile.avatar?.url ?? null,
     role: isSuperAdmin ? "super_admin" : null,
     platformRole: isSuperAdmin ? "SUPER_ADMIN" : null,

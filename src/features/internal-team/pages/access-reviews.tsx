@@ -9,6 +9,8 @@ import { useAccessReviews, useAccessReviewKpis, useTeamMutations } from "../data
 import { StaffNav } from "../components/staff-nav";
 import { AccessReviewTable } from "../components/access-review-table";
 import { AccessReviewCompleteDialog } from "../components/access-review-dialog";
+import { ScheduleReviewDialog } from "../components/staff-live-dialogs";
+import { TEAM_MOCK_MODE } from "../data/config";
 import type { StaffAccessReview, CompleteAccessReviewInput } from "../data/types";
 
 function AccessReviewsContent() {
@@ -17,6 +19,7 @@ function AccessReviewsContent() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [completeReview, setCompleteReview] = useState<StaffAccessReview | null>(null);
   const [completeOpen, setCompleteOpen] = useState(false);
+  const [scheduleTarget, setScheduleTarget] = useState<StaffAccessReview | null>(null);
 
   const { data: reviews, isLoading } = useAccessReviews({ search: search || undefined, status: statusFilter === "all" ? undefined : statusFilter });
   const { data: kpis } = useAccessReviewKpis();
@@ -49,8 +52,12 @@ function AccessReviewsContent() {
             { label: "OVERDUE", value: kpis.overdueReviews, color: kpis.overdueReviews > 0 ? "text-rose-700" : "text-slate-600", icon: AlertTriangleIcon, iconBg: kpis.overdueReviews > 0 ? "bg-rose-50 text-rose-600" : "bg-slate-50 text-slate-500" },
             { label: "PRIVILEGED", value: kpis.privilegedStaff, color: "text-violet-700", icon: ShieldCheckIcon, iconBg: "bg-violet-50 text-violet-600" },
             { label: "MFA ACTION", value: kpis.mfaActionRequired, color: "text-amber-700", icon: ShieldAlertIcon, iconBg: "bg-amber-50 text-amber-600" },
-            { label: "SUSPENDED+ASSIGNED", value: kpis.suspendedWithAssignments, color: kpis.suspendedWithAssignments > 0 ? "text-rose-700" : "text-slate-600", icon: UserXIcon, iconBg: kpis.suspendedWithAssignments > 0 ? "bg-rose-50 text-rose-600" : "bg-slate-50 text-slate-500" },
-            { label: "TEMP EXPIRING", value: kpis.tempAccessExpiring, color: "text-slate-600", icon: TimerIcon, iconBg: "bg-slate-50 text-slate-500" },
+            ...(TEAM_MOCK_MODE
+              ? [
+                  { label: "SUSPENDED+ASSIGNED", value: kpis.suspendedWithAssignments, color: kpis.suspendedWithAssignments > 0 ? "text-rose-700" : "text-slate-600", icon: UserXIcon, iconBg: kpis.suspendedWithAssignments > 0 ? "bg-rose-50 text-rose-600" : "bg-slate-50 text-slate-500" },
+                  { label: "TEMP EXPIRING", value: kpis.tempAccessExpiring, color: "text-slate-600", icon: TimerIcon, iconBg: "bg-slate-50 text-slate-500" },
+                ]
+              : [{ label: "NOT SCHEDULED", value: kpis.notScheduled ?? 0, color: (kpis.notScheduled ?? 0) > 0 ? "text-amber-700" : "text-slate-600", icon: TimerIcon, iconBg: "bg-slate-50 text-slate-500" }]),
           ].map((k) => (
             <div key={k.label} className="rounded-sm border border-border bg-white p-3 shadow-2xs flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -88,6 +95,15 @@ function AccessReviewsContent() {
         reviews={reviews ?? []}
         isLoading={isLoading}
         onCompleteReview={(review) => { setCompleteReview(review); setCompleteOpen(true); }}
+        onScheduleReview={(review) => setScheduleTarget(review)}
+      />
+
+      <ScheduleReviewDialog
+        member={scheduleTarget ? { id: scheduleTarget.staffId, name: scheduleTarget.staffName } : null}
+        open={scheduleTarget !== null}
+        onOpenChange={(o) => !o && setScheduleTarget(null)}
+        onConfirm={(staffId, dueAt) => mutations.scheduleReview.mutate({ staffId, dueAt })}
+        isPending={mutations.scheduleReview.isPending}
       />
 
       <AccessReviewCompleteDialog

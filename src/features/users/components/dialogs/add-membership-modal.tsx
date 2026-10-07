@@ -26,9 +26,9 @@ import {
 } from "@/components/ui/select";
 import { ROUTES } from "@/config/routes";
 import { ORGANISATION_ROLE, type OrganisationRole } from "@/types/domain/user";
-import { ALLOWED_COMPANY_ROLES } from "../../data/config";
+import { ALLOWED_COMPANY_ROLES, USERS_MOCK_MODE } from "../../data/config";
+import { useCompanyClients, useUsersDirectory } from "../../data/directory";
 import { useUserMutations } from "../../data/hooks";
-import { getAllRawUsers } from "../../data/mock/store";
 import type { UserAggregate } from "../../data/types";
 
 interface AddMembershipModalProps {
@@ -48,7 +48,9 @@ export function AddMembershipModal({
   const mutations = useUserMutations();
 
   const [selectedUserId, setSelectedUserId] = useState(user?.identity.id ?? "");
-  const [companyId, setCompanyId] = useState(companyOptions[0]?.id ?? "");
+  const [pickedCompanyId, setCompanyId] = useState("");
+  // The Company list loads after this dialog mounts, so fall back to its first entry until one is picked.
+  const companyId = pickedCompanyId || companyOptions[0]?.id || "";
   const [role, setRole] = useState<OrganisationRole>("marketing_manager");
   const [clientAccessScope, setClientAccessScope] = useState<"all" | "selected">("all");
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
@@ -59,7 +61,8 @@ export function AddMembershipModal({
     }
   }, [user]);
 
-  const allRawUsers = getAllRawUsers();
+  const allRawUsers = useUsersDirectory();
+  const liveClients = useCompanyClients(companyId);
   const currentUser = allRawUsers.find((u) => u.identity.id === selectedUserId);
 
   const alreadyMember = currentUser?.memberships.some((m) => m.companyId === companyId);
@@ -68,10 +71,17 @@ export function AddMembershipModal({
   const selectedCompany = companyOptions.find((c) => c.id === companyId);
   const selectedCompanyName = selectedCompany?.name ?? "Company";
 
-  const availableClients = [
-    { id: `prj_${companyId}_1`, name: `${selectedCompanyName} Primary` },
-    { id: `prj_${companyId}_2`, name: `${selectedCompanyName} Secondary` },
-  ];
+  const availableClients = USERS_MOCK_MODE
+    ? [
+        { id: `prj_${companyId}_1`, name: `${selectedCompanyName} Primary` },
+        { id: `prj_${companyId}_2`, name: `${selectedCompanyName} Secondary` },
+      ]
+    : (liveClients.data ?? []);
+  // Owners and Admins reach every Client; Managers and Viewers get exactly the Clients ticked here.
+  const reachesAllClients = !USERS_MOCK_MODE && (role === "owner" || role === "admin");
+  const clientIdsToSend = USERS_MOCK_MODE
+    ? clientAccessScope === "all" ? [] : selectedClientIds
+    : reachesAllClients ? [] : clientAccessScope === "all" ? availableClients.map((c) => c.id) : selectedClientIds;
 
   const handleConfirm = () => {
     if (!currentUser || alreadyMember) return;
@@ -82,7 +92,7 @@ export function AddMembershipModal({
         companyId,
         role,
         clientAccessScope,
-        clientAccessIds: clientAccessScope === "all" ? [] : selectedClientIds,
+        clientAccessIds: clientIdsToSend,
       },
       {
         onSuccess: () => {
@@ -193,6 +203,11 @@ export function AddMembershipModal({
                 </Select>
               </div>
 
+              {reachesAllClients ? (
+                <p className="pt-1 border-t border-border text-xs text-slate-500">
+                  {role === "owner" ? "Owners" : "Admins"} can reach every Client of the Company, so no Client selection is needed.
+                </p>
+              ) : (
               <div className="space-y-2 pt-1 border-t border-border">
                 <Label className="text-xs font-semibold">Client Access Scope</Label>
                 <RadioGroup
@@ -236,7 +251,11 @@ export function AddMembershipModal({
                     })}
                   </div>
                 )}
+                {!USERS_MOCK_MODE && availableClients.length === 0 && !liveClients.isLoading && (
+                  <p className="text-xs text-amber-700">This Company has no Clients yet, so this person will not see any until one is added.</p>
+                )}
               </div>
+              )}
             </>
           )}
         </div>
@@ -256,7 +275,13 @@ export function AddMembershipModal({
             type="button"
             variant="default"
             size="sm"
-            disabled={alreadyMember || !currentUser || mutations.addCompanyMembership.isPending}
+            disabled={
+              alreadyMember ||
+              !currentUser ||
+              !companyId ||
+              mutations.addCompanyMembership.isPending ||
+              (!USERS_MOCK_MODE && !reachesAllClients && clientAccessScope === "selected" && selectedClientIds.length === 0)
+            }
             onClick={handleConfirm}
             className="text-xs gap-2 bg-blue-600 hover:bg-blue-700"
           >

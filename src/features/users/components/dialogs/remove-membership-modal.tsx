@@ -22,8 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { USERS_MOCK_MODE } from "../../data/config";
 import { useUserMutations } from "../../data/hooks";
-import { getAllRawUsers } from "../../data/mock/store";
+import { useUsersDirectory } from "../../data/directory";
 import type { CompanyMembership, OwnedResource } from "../../data/types";
 
 interface RemoveMembershipModalProps {
@@ -44,12 +45,12 @@ export function RemoveMembershipModal({
   onSoleOwnerBlocked,
 }: RemoveMembershipModalProps) {
   const mutations = useUserMutations();
+  const allUsers = useUsersDirectory();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [reassignUserId, setReassignUserId] = useState<string>("");
 
   if (!membership) return null;
 
-  const allUsers = getAllRawUsers();
   const companyResources = ownedResources.filter((r) => r.companyId === membership.companyId);
 
   // Check sole owner rule
@@ -166,12 +167,14 @@ export function RemoveMembershipModal({
                       {membership.clientAccess.clients.length} clients
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Owned Resources:</span>
-                    <span className="font-semibold text-slate-800">
-                      {companyResources.length} items
-                    </span>
-                  </div>
+                  {USERS_MOCK_MODE && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Owned Resources:</span>
+                      <span className="font-semibold text-slate-800">
+                        {companyResources.length} items
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded p-2.5 bg-amber-50 border border-amber-200 text-amber-900 text-xs">
@@ -246,7 +249,7 @@ export function RemoveMembershipModal({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setStep((s) => (s - 1) as any)}
+                  onClick={() => setStep((s) => (USERS_MOCK_MODE ? s - 1 : 1) as 1 | 2 | 3)}
                   className="text-xs gap-2 mr-auto"
                 >
                   <ChevronLeftIcon className="size-3" />
@@ -270,7 +273,7 @@ export function RemoveMembershipModal({
                   variant="default"
                   size="sm"
                   disabled={step === 2 && companyResources.length > 0 && !reassignUserId}
-                  onClick={() => setStep((s) => (s + 1) as any)}
+                  onClick={() => setStep((s) => (USERS_MOCK_MODE ? s + 1 : 3) as 1 | 2 | 3)}
                   className="text-xs gap-2"
                 >
                   <span>Continue</span>

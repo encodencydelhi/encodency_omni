@@ -1,4 +1,7 @@
-export const ROLES_MOCK_MODE = true;
+import { env } from "@/config/env";
+
+/** Demo roles only when the app runs on mock data; with the real backend the page reads `GET /team/roles`. */
+export const ROLES_MOCK_MODE = env.dataSource !== "api";
 
 export const MODULES = [
   "CRM",

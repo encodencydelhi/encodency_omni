@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatDate, getInitials } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
-import { getStaffAvatarColor } from "../data/config";
+import { getStaffAvatarColor, TEAM_MOCK_MODE } from "../data/config";
 import { StaffRoleBadge, InvitationStatusBadge } from "./staff-status-badges";
 import type { StaffInvitation } from "../data/types";
 
@@ -57,12 +57,12 @@ export function InvitationTable({ invitations, isLoading, onRevoke, onResend }: 
                       </Avatar>
                       <div className="min-w-0">
                         <span className="font-semibold text-slate-900 truncate block">{inv.name}</span>
-                        <span className="text-[11px] text-slate-500 truncate block">{inv.email}</span>
+                        {inv.name !== inv.email && <span className="text-[11px] text-slate-500 truncate block">{inv.email}</span>}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="py-2"><StaffRoleBadge role={inv.role} /></TableCell>
-                  <TableCell className="py-2 text-xs text-slate-600">{inv.department}</TableCell>
+                  <TableCell className="py-2 text-xs text-slate-600">{inv.department || "—"}</TableCell>
                   <TableCell className="py-2 text-xs text-slate-600">{inv.invitedBy.name}</TableCell>
                   <TableCell className="py-2 text-xs text-slate-500 whitespace-nowrap">{formatDate(inv.createdAt)}</TableCell>
                   <TableCell className="py-2 text-xs text-slate-500 whitespace-nowrap">{formatDate(inv.expiresAt)}</TableCell>
@@ -83,13 +83,13 @@ export function InvitationTable({ invitations, isLoading, onRevoke, onResend }: 
                               <XCircleIcon className="size-3.5" /> Revoke Invitation
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => onResend?.(inv)} className="gap-2 cursor-pointer">
-                              <RotateCwIcon className="size-3.5 text-slate-500" /> Resend (Demo)
+                              <RotateCwIcon className="size-3.5 text-slate-500" /> {TEAM_MOCK_MODE ? "Resend (Demo)" : "Resend Invitation"}
                             </DropdownMenuItem>
                           </>
                         )}
                         {inv.status === "expired" && (
                           <DropdownMenuItem onClick={() => onResend?.(inv)} className="gap-2 cursor-pointer">
-                            <RotateCwIcon className="size-3.5 text-slate-500" /> Re-invite
+                            <RotateCwIcon className="size-3.5 text-slate-500" /> Send New Invitation
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>

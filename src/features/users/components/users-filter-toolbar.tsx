@@ -21,7 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ALLOWED_COMPANY_ROLES, exportUsersToCsv, USER_SORT_OPTIONS } from "../data/config";
+import { ALLOWED_COMPANY_ROLES, exportUsersToCsv, USER_SORT_OPTIONS, USERS_MOCK_MODE } from "../data/config";
 import type { UserAggregate, UserFilters, UserSortField } from "../data/types";
 
 interface UsersFilterToolbarProps {
@@ -64,7 +64,7 @@ export function UsersFilterToolbar({
           <Input
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search name, email, user ID or company..."
+            placeholder={USERS_MOCK_MODE ? "Search name, email, user ID or company..." : "Search by name or email..."}
             className="h-8.5 pl-8 pr-2.5 text-xs bg-white border-slate-200"
           />
         </div>
@@ -97,9 +97,9 @@ export function UsersFilterToolbar({
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="invited">Invited</SelectItem>
+              {USERS_MOCK_MODE && <SelectItem value="invited">Invited</SelectItem>}
               <SelectItem value="suspended">Suspended</SelectItem>
-              <SelectItem value="deactivated">Deactivated</SelectItem>
+              {USERS_MOCK_MODE && <SelectItem value="deactivated">Deactivated</SelectItem>}
             </SelectContent>
           </Select>
 
@@ -131,7 +131,7 @@ export function UsersFilterToolbar({
               <SelectItem value="all">All 2FA</SelectItem>
               <SelectItem value="enabled">2FA Active</SelectItem>
               <SelectItem value="not_enabled">Not Enabled</SelectItem>
-              <SelectItem value="required">Policy Required</SelectItem>
+              {USERS_MOCK_MODE && <SelectItem value="required">Policy Required</SelectItem>}
             </SelectContent>
           </Select>
 
@@ -184,7 +184,7 @@ export function UsersFilterToolbar({
                 checked={filters.adminOnly ?? false}
                 onCheckedChange={(checked) => onFilterChange("adminOnly", checked || undefined)}
               >
-                Admins & Managers
+                {USERS_MOCK_MODE ? "Admins & Managers" : "Admins"}
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={filters.noActiveMembership ?? false}

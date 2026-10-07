@@ -7,7 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { invitationLink } from "../live/team-api";
+import { TEAM_LIVE } from "../team-data/live-team";
 import { useTeam } from "../team-data/team-store";
+import { InviteMemberLive } from "./invite-live";
+import { GroupFormSheet, useTeamAuthority } from "./team-live-dialogs";
 import type { Invitation } from "../team-data/types";
 import type { AccessLevel } from "../team-data/types";
 import { ApiError } from "@/types/api";
@@ -17,6 +20,10 @@ const CLIENTS = [{ id: "c-1", name: "Moksha Sewa" }, { id: "c-2", name: "CityIni
 const ROLES = [{ id: "org-admin", name: "Organization Admin" }, { id: "social-manager", name: "Social Media Manager" }, { id: "seo-manager", name: "SEO Manager" }, { id: "contributor", name: "Contributor" }, { id: "analyst", name: "Analyst" }];
 
 export function InviteMemberButton({ compact = false }: { compact?: boolean }) {
+  return TEAM_LIVE ? <InviteMemberLive compact={compact} /> : <InviteMemberDemo compact={compact} />;
+}
+
+function InviteMemberDemo({ compact = false }: { compact?: boolean }) {
   const { invitations, members, groups, inviteMember } = useTeam();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
@@ -79,6 +86,13 @@ export function InviteMemberButton({ compact = false }: { compact?: boolean }) {
 }
 
 export function CreateGroupButton({ compact = false }: { compact?: boolean }) {
+  const { canManage } = useTeamAuthority();
+  const [liveOpen, setLiveOpen] = useState(false);
+  if (TEAM_LIVE) return canManage ? <><Button size="sm" variant="outline" onClick={() => setLiveOpen(true)}><Users />{compact ? "Group" : "Create Group"}</Button><GroupFormSheet open={liveOpen} onClose={() => setLiveOpen(false)} /></> : null;
+  return <CreateGroupDemo compact={compact} />;
+}
+
+function CreateGroupDemo({ compact = false }: { compact?: boolean }) {
   const { members, createGroup } = useTeam();
   const [open, setOpen] = useState(false); const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", leadId: "mem-1", memberIds: [] as string[], clientIds: [] as string[] });

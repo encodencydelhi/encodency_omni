@@ -15,17 +15,10 @@ import {
   UsersRound,
   WalletCards,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import {
-  adSets,
-  ads,
-  campaigns,
-  getAdSet,
-  getCampaign,
-  instantForms,
-  sumMetrics,
-} from "@/features/admin/meta-ads/data";
+import { sumMetrics } from "@/features/admin/meta-ads/data";
+import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
 import {
   compactNum,
   conversionRate,
@@ -132,6 +125,8 @@ const BREAKDOWNS: Record<string, { label: string; share: number }[]> = {
 };
 
 function AnalyticsView() {
+  const { adSets, ads, campaigns, getAdSet, getCampaign, instantForms, accounts, accountId } = useAdsData();
+  const adAccountName = accounts.find((a) => a.id === accountId)?.name ?? "Namo Gange Official";
   const { values, setFilter, setFilters, reset, isFiltered } = useFilters(DEFAULTS, {
     campaign: (v) => getCampaign(v)?.name ?? v,
     adset: (v) => getAdSet(v)?.name ?? v,
@@ -153,7 +148,7 @@ function AnalyticsView() {
         if (values.q && !c.name.toLowerCase().includes(values.q.toLowerCase())) return false;
         return true;
       }),
-    [values],
+    [values, campaigns],
   );
 
   const totals: Metrics = useMemo(() => sumMetrics(scopedCampaigns), [scopedCampaigns]);
@@ -184,7 +179,7 @@ function AnalyticsView() {
       .map(([placement, v]) => ({ placement, ...v }))
       .filter((row) => row.spend > 0)
       .sort((a, b) => b.spend - a.spend);
-  }, [scopedCampaigns, values.adset]);
+  }, [scopedCampaigns, values.adset, adSets]);
 
   const objectiveMix = useMemo(() => {
     const map = new Map<string, number>();
@@ -213,7 +208,7 @@ function AnalyticsView() {
           };
         })
         .sort((a, b) => b.qualityPct - a.qualityPct),
-    [scopedCampaigns],
+    [scopedCampaigns, ads, instantForms],
   );
 
   const formOpens = Math.round(totals.clicks * 0.62);
@@ -259,7 +254,7 @@ function AnalyticsView() {
             title="Manage this ad account"
           >
             <span className="text-[9px] font-semibold text-[#64748b]">Ad account</span>
-            <span className="truncate">Namo Gange Official</span>
+            <span className="truncate">{adAccountName}</span>
           </Link>
           <FilterSelect
             label="Date range"
@@ -378,14 +373,23 @@ function AnalyticsView() {
 
             <Panel title="Conversion Funnel" icon={<Target className="size-4 text-[#10b981]" />}>
               <FunnelBars
-                steps={[
-                  { label: "Impressions", value: totals.impressions },
-                  { label: "Clicks", value: totals.clicks },
-                  { label: "Form opens", value: formOpens },
-                  { label: "Leads", value: totals.leads },
-                  { label: "Qualified leads", value: qualified },
-                  { label: "Converted", value: converted },
-                ]}
+                // Form opens / qualified / converted are not reported by Meta's API, so live mode shows only measured steps.
+                steps={
+                  LIVE
+                    ? [
+                        { label: "Impressions", value: totals.impressions },
+                        { label: "Clicks", value: totals.clicks },
+                        { label: "Leads", value: totals.leads },
+                      ]
+                    : [
+                        { label: "Impressions", value: totals.impressions },
+                        { label: "Clicks", value: totals.clicks },
+                        { label: "Form opens", value: formOpens },
+                        { label: "Leads", value: totals.leads },
+                        { label: "Qualified leads", value: qualified },
+                        { label: "Converted", value: converted },
+                      ]
+                }
               />
             </Panel>
           </div>

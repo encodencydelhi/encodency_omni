@@ -42,6 +42,7 @@ import { ROUTES } from "@/config/routes";
 import { useCompanyRefs } from "@/features/companies/hooks/use-companies";
 import { formatDate, formatRelativeTime } from "@/lib/utils/format";
 import { UsersNav } from "../components/users-nav";
+import { USERS_MOCK_MODE } from "../data/config";
 import { useUserActivities, useUserKpis } from "../data/hooks";
 import type { UserActivity } from "../data/types";
 import { UserCapabilitiesProvider } from "../data/capability-provider";
@@ -185,7 +186,7 @@ function UserActivityContent() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search action, user, company or summary..."
+            placeholder={USERS_MOCK_MODE ? "Search action, user, company or summary..." : "Search by action, e.g. role updated..."}
             className="h-8.5 pl-8 text-xs bg-white border-border"
           />
         </div>

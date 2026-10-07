@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { AdImage } from "@/features/admin/meta-ads/components/ad-image";
 import Link from "next/link";
 import { Suspense, use } from "react";
 import { useSearchParams } from "next/navigation";
@@ -23,17 +23,9 @@ import {
   UsersRound,
   WalletCards,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import {
-  activityLog,
-  getAd,
-  getAdSet,
-  getCampaign,
-  getCreative,
-  getForm,
-  leadsOf,
-} from "@/features/admin/meta-ads/data";
+import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import {
   conversionRate,
   cpl,
@@ -91,6 +83,7 @@ const RANKING_TONE: Record<Ranking, "green" | "slate" | "red"> = {
 };
 
 function AdDetail({ adId }: { adId: string }) {
+  const { activityLog, getAd, getAdSet, getCampaign, getCreative, getForm, leadsOf } = useAdsData();
   const params = useSearchParams();
   const requested = params?.get("tab");
   const tab: Tab = TABS.includes(requested as Tab) ? (requested as Tab) : "overview";
@@ -314,11 +307,11 @@ function AdDetail({ adId }: { adId: string }) {
                     ["Quality", ad.qualityRanking],
                     ["Engagement rate", ad.engagementRanking],
                     ["Conversion rate", ad.conversionRanking],
-                  ] as [string, Ranking][]
+                  ] as [string, Ranking | null][]
                 ).map(([label, value]) => (
                   <li key={label} className="flex items-center justify-between gap-2 text-[10px]">
                     <span className="text-[#64748b]">{label}</span>
-                    <ToneChip tone={RANKING_TONE[value]}>{value}</ToneChip>
+                    {value ? <ToneChip tone={RANKING_TONE[value]}>{value}</ToneChip> : <span className="font-medium text-[#94a3b8]">Not ranked yet</span>}
                   </li>
                 ))}
               </ul>
@@ -334,7 +327,7 @@ function AdDetail({ adId }: { adId: string }) {
                   {form.name}
                 </Link>
                 <dl className="mt-2">
-                  <Field label="Type" value={form.type} />
+                  <Field label="Type" value={form.type || "—"} />
                   <Field label="Questions" value={form.questions.length} />
                   <Field label="Submissions" value={num(form.submissions)} />
                   <Field
@@ -361,7 +354,7 @@ function AdDetail({ adId }: { adId: string }) {
         <div className="grid gap-3 lg:grid-cols-[320px_1fr]">
           <Panel title="Media" icon={<ImageIcon className="size-4 text-[#1877f2]" />}>
             <div className="relative aspect-square w-full overflow-hidden rounded-sm border border-[#e5eaf1] bg-[#f7f9fc]">
-              <Image src={creative.src} alt={creative.name} fill sizes="320px" className="object-cover" />
+              <AdImage src={creative.src} alt={creative.name} fill sizes="320px" className="object-cover" />
             </div>
             <dl className="mt-3">
               <Field label="Creative" value={creative.name} href={`${ADS_ROOT}/creative?creative=${creative.id}`} />

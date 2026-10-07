@@ -90,9 +90,13 @@ export const USER_SORT_OPTIONS = [
 ] as const;
 
 /** Permitted company roles that a platform admin can assign to a company member. */
-export const ALLOWED_COMPANY_ROLES = (Object.keys(ORGANISATION_ROLE) as OrganisationRole[]).map((role) => ({
+const LIVE_COMPANY_ROLES: OrganisationRole[] = ["owner", "admin", "marketing_manager", "viewer"];
+
+export const ALLOWED_COMPANY_ROLES = (Object.keys(ORGANISATION_ROLE) as OrganisationRole[])
+  .filter((role) => USERS_MOCK_MODE || LIVE_COMPANY_ROLES.includes(role))
+  .map((role) => ({
   value: role,
-  label: ORGANISATION_ROLE[role].label,
+  label: !USERS_MOCK_MODE && role === "marketing_manager" ? "Manager" : ORGANISATION_ROLE[role].label,
   tone: ORGANISATION_ROLE[role].tone,
 }));
 
@@ -110,7 +114,6 @@ export function exportUsersToCsv(users: UserAggregate[], filename = "omniplatfor
     "Companies List",
     "Assigned Clients Count",
     "2FA Status",
-    "Email Verified",
     "Last Login At",
     "Joined Date",
   ];
@@ -124,7 +127,6 @@ export function exportUsersToCsv(users: UserAggregate[], filename = "omniplatfor
     `"${u.memberships.map((m) => `${m.companyName} (${ORGANISATION_ROLE[m.role]?.label || m.role})`).join("; ")}"`,
     `"${u.totalClientsCount}"`,
     `"${TWO_FACTOR_STATUS[u.security.twoFactorStatus].label}"`,
-    `"${u.identity.emailVerified ? "Yes" : "No"}"`,
     `"${u.identity.lastLoginAt || "Never"}"`,
     `"${u.identity.createdAt}"`,
   ]);
@@ -149,7 +151,6 @@ export function exportUsersToJson(users: UserAggregate[], filename = "omniplatfo
     email: u.identity.email,
     phone: u.identity.phone,
     status: u.identity.globalStatus,
-    emailVerified: u.identity.emailVerified,
     joinedAt: u.identity.createdAt,
     lastLoginAt: u.identity.lastLoginAt,
     memberships: u.memberships.map((m) => ({

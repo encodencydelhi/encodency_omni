@@ -1,19 +1,12 @@
 "use client";
 
-import Image from "next/image";
+import { AdImage } from "@/features/admin/meta-ads/components/ad-image";
 import Link from "next/link";
 import { Suspense, useMemo } from "react";
 import { Download, FileImage, Plus } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import {
-  adSets,
-  ads,
-  campaigns,
-  getAdSet,
-  getCampaign,
-  getCreative,
-} from "@/features/admin/meta-ads/data";
+import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import {
   cpl,
   ctr,
@@ -48,7 +41,7 @@ import {
   ADS_ROOT,
   AdsWorkspace,
 } from "@/features/admin/meta-ads/components/workspace";
-import type { Platform } from "@/features/admin/meta-ads/types";
+import type { AdSet, Platform } from "@/features/admin/meta-ads/types";
 
 const DEFAULTS = {
   q: "",
@@ -61,8 +54,7 @@ const DEFAULTS = {
 };
 
 /** An ad inherits the platforms its ad set actually delivers on. */
-function platformsOfAd(adSetId: string): Platform[] {
-  const set = getAdSet(adSetId);
+function platformsOfAd(set: AdSet | undefined): Platform[] {
   if (!set) return [];
   return Array.from(
     new Set(set.placements.filter((p) => p.enabled).map((p) => p.platform)),
@@ -70,6 +62,7 @@ function platformsOfAd(adSetId: string): Platform[] {
 }
 
 function AdsView() {
+  const { adSets, ads, campaigns, getAdSet, getCampaign, getCreative } = useAdsData();
   const { values, setFilter, setFilters, reset, isFiltered } = useFilters(DEFAULTS, {
     // Cross-page links carry ids; the selects list names.
     campaign: (v) => getCampaign(v)?.name ?? v,
@@ -99,12 +92,12 @@ function AdsView() {
       if (values.delivery === "Not delivering" && a.status === "active") return false;
       if (
         values.platform !== DEFAULTS.platform &&
-        !platformsOfAd(a.adSetId).includes(values.platform.toLowerCase() as Platform)
+        !platformsOfAd(getAdSet(a.adSetId)).includes(values.platform.toLowerCase() as Platform)
       )
         return false;
       return true;
     });
-  }, [values]);
+  }, [values, ads, getAdSet, getCampaign]);
 
   /** The ad set filter narrows to the selected campaign when one is chosen. */
   const adSetOptions = useMemo(() => {
@@ -117,7 +110,7 @@ function AdsView() {
             getCampaign(s.campaignId)?.name === values.campaign,
         );
     return [DEFAULTS.adset, ...scoped.map((s) => s.name)];
-  }, [values.campaign]);
+  }, [values.campaign, adSets, getCampaign]);
 
   const paged = usePagination(rows, 10);
 
@@ -243,7 +236,7 @@ function AdsView() {
                     <Td>
                       <span className="block size-9 overflow-hidden rounded border border-[#e5eaf1] bg-[#f7f9fc]">
                         {creative && (
-                          <Image
+                          <AdImage
                             src={creative.src}
                             alt={creative.name}
                             width={36}
@@ -280,7 +273,7 @@ function AdsView() {
                     </Td>
                     <Td>{a.format}</Td>
                     <Td>
-                      <PlatformIcons platforms={platformsOfAd(a.adSetId)} />
+                      <PlatformIcons platforms={platformsOfAd(getAdSet(a.adSetId))} />
                     </Td>
                     <Td>
                       <DeliveryCell status={a.status} />

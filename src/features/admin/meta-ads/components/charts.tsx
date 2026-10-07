@@ -17,7 +17,7 @@ import {
   YAxis,
 } from "recharts";
 import { compactNum, money } from "../format";
-import { trendSeries } from "../data";
+import { useAdsData } from "../data-source";
 
 /**
  * One palette for every chart in the workspace: blue = spend, green = leads,
@@ -68,11 +68,13 @@ export function ChartLegend({
 /** Spend / leads / CPL over the reporting window. */
 export function PerformanceTrend({
   height,
-  data = trendSeries,
+  data: given,
 }: {
   height?: number | string;
-  data?: typeof trendSeries;
+  data?: ReturnType<typeof useAdsData>["trendSeries"];
 }) {
+  const { trendSeries } = useAdsData();
+  const data = given ?? trendSeries;
   return (
     <div className="flex h-full flex-col">
       <ChartLegend
@@ -98,14 +100,14 @@ export function PerformanceTrend({
             <Area
               type="monotone"
               dataKey="spend"
-              name="Spend (₹)"
+              name="Spend"
               stroke={SERIES.spend}
               strokeWidth={2}
               fill="url(#spendFill)"
               dot={false}
             />
             <Line type="monotone" dataKey="leads" name="Leads" stroke={SERIES.leads} strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="cpl" name="CPL (₹)" stroke={SERIES.cpl} strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="cpl" name="CPL" stroke={SERIES.cpl} strokeWidth={2} dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

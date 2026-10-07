@@ -11,13 +11,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TEAM_LIVE } from "../team-data/live-team";
 import { useTeam } from "../team-data/team-store";
+import { MembersLivePage } from "./members-live-page";
 import type { Member, MemberStatus } from "../team-data/types";
 
 const statusStyle: Record<MemberStatus, string> = { active: "border-emerald-200 bg-emerald-50 text-emerald-700", invited: "border-blue-200 bg-blue-50 text-blue-700", suspended: "border-red-200 bg-red-50 text-red-700", deactivated: "border-slate-200 bg-slate-100 text-slate-600" };
 const workStyle = { available: "text-emerald-700", normal: "text-blue-700", busy: "text-amber-700", overloaded: "text-red-700" };
 
 export function MembersPage() {
+  return TEAM_LIVE ? <MembersLivePage /> : <MembersDemoPage />;
+}
+
+function MembersDemoPage() {
   const { members, groups, invitations, activity, isLoading, error, refresh, updateMember, removeMember } = useTeam();
   const [query, setQuery] = useState(""); const [role, setRole] = useState("all"); const [status, setStatus] = useState("all"); const [group, setGroup] = useState("all"); const [client, setClient] = useState("all"); const [sort, setSort] = useState("name"); const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string[]>([]); const [preview, setPreview] = useState<Member | null>(null); const [removeTarget, setRemoveTarget] = useState<Member | null>(null); const [removeStep, setRemoveStep] = useState(1); const [replacement, setReplacement] = useState("");

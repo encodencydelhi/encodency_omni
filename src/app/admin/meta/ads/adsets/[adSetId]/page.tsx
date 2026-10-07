@@ -21,15 +21,9 @@ import {
   UsersRound,
   WalletCards,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import {
-  activityLog,
-  adsOfAdSet,
-  getAdSet,
-  getCampaign,
-  getCreative,
-} from "@/features/admin/meta-ads/data";
+import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import {
   conversionRate,
   cpl,
@@ -78,6 +72,7 @@ const TABS = ["overview", "audience", "placements", "ads", "performance", "activ
 type Tab = (typeof TABS)[number];
 
 function AdSetDetail({ adSetId }: { adSetId: string }) {
+  const { activityLog, adsOfAdSet, getAdSet, getCampaign, getCreative } = useAdsData();
   const params = useSearchParams();
   const requested = params?.get("tab");
   const tab: Tab = TABS.includes(requested as Tab) ? (requested as Tab) : "overview";

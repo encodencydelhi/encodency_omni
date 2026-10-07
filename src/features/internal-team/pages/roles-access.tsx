@@ -5,6 +5,7 @@ import { ShieldCheckIcon, LayersIcon, LockIcon, CrownIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { INTERNAL_ROLE, type InternalRole } from "@/types/domain/team";
+import { STAFF_ROLE_KEYS, TEAM_MOCK_MODE } from "../data/config";
 import { StaffCapabilitiesProvider } from "../data/capability-provider";
 import { StaffNav } from "../components/staff-nav";
 import { CapabilityMatrix, RoleComparison } from "../components/capability-matrix";
@@ -13,7 +14,7 @@ function RolesContent() {
   const [compareA, setCompareA] = useState<InternalRole>("super_admin");
   const [compareB, setCompareB] = useState<InternalRole>("support");
 
-  const roles = Object.keys(INTERNAL_ROLE) as InternalRole[];
+  const roles = STAFF_ROLE_KEYS;
   const totalRoles = roles.length;
   const protectedRoles = 1; // super_admin
   const privilegedCount = roles.filter((r) => r === "super_admin" || r === "technical_admin").length;
@@ -71,6 +72,12 @@ function RolesContent() {
           })}
         </div>
       </div>
+
+      {!TEAM_MOCK_MODE && (
+        <p className="text-xs text-slate-600 rounded-sm border border-border bg-slate-50 p-3">
+          Staff accounts have two platform roles today. Super Admin can use every Super Admin console module. Support accounts can sign in, but no console module is enabled for them yet, so they show no access below.
+        </p>
+      )}
 
       {/* Capability Matrix */}
       <div>

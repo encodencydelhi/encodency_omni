@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { AdImage } from "@/features/admin/meta-ads/components/ad-image";
 import Link from "next/link";
 import { Suspense, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -10,14 +10,9 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import {
-  campaigns,
-  creatives,
-  getAd,
-  getCreative,
-} from "@/features/admin/meta-ads/data";
+import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import {
   cpl,
   ctr,
@@ -79,6 +74,7 @@ const PERFORMANCE_TONE: Record<Creative["performance"], Tone> = {
 };
 
 function CreativeView() {
+  const { campaigns, creatives, getAd, getCreative } = useAdsData();
   const router = useRouter();
   const { values, setFilter, reset, isFiltered } = useFilters(DEFAULTS);
 
@@ -107,7 +103,7 @@ function CreativeView() {
       }
       return true;
     });
-  }, [values]);
+  }, [values, campaigns, creatives, getAd]);
 
   const selected = values.creative ? getCreative(values.creative) : undefined;
 
@@ -117,9 +113,7 @@ function CreativeView() {
       used: creatives.filter((c) => c.usedInAds.length > 0).length,
       top: creatives.filter((c) => c.performance === "Top performer").length,
       unused: creatives.filter((c) => c.usedInAds.length === 0).length,
-    }),
-    [],
-  );
+    }), [creatives]);
 
   return (
     <AdsWorkspace
@@ -239,7 +233,7 @@ function CreativeView() {
                       className="relative block aspect-square w-full bg-[#f1f5f9]"
                       aria-label={`Preview ${c.name}`}
                     >
-                      <Image
+                      <AdImage
                         src={c.src}
                         alt={c.name}
                         fill
@@ -331,7 +325,7 @@ function CreativeView() {
               }
             >
               <div className="relative aspect-square w-full overflow-hidden rounded-sm border border-[#e5eaf1] bg-[#f7f9fc]">
-                <Image src={selected.src} alt={selected.name} fill sizes="320px" className="object-cover" />
+                <AdImage src={selected.src} alt={selected.name} fill sizes="320px" className="object-cover" />
               </div>
               <dl className="mt-3">
                 <Field label="Type" value={selected.type} />
@@ -373,7 +367,7 @@ function CreativeView() {
                         variant.className,
                       )}
                     >
-                      <Image src={selected.src} alt="" fill sizes="90px" className="object-cover" />
+                      <AdImage src={selected.src} alt="" fill sizes="90px" className="object-cover" />
                     </span>
                     <span className="mt-1 block text-center text-[8px] text-[#64748b]">
                       {variant.label}
