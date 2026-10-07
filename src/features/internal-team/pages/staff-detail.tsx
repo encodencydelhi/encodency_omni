@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ArrowLeftIcon, BanIcon, CheckCircle2Icon, Building2Icon, ClockIcon, Trash2Icon, BriefcaseIcon, KeyRoundIcon, ClipboardCheckIcon } from "lucide-react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -37,13 +37,9 @@ function StaffDetailContent() {
   const { data: lifecycle = [] } = useStaffLifecycle(staffId);
 
   const urlTab = searchParams?.get("tab");
-  const [tab, setTab] = useState(urlTab || "overview");
-
-  useEffect(() => {
-    if (urlTab) {
-      setTab(urlTab);
-    }
-  }, [urlTab]);
+  // A tab picked by hand wins; otherwise follow the ?tab= link (row menus deep-link into tabs).
+  const [pickedTab, setTab] = useState<string | null>(null);
+  const tab = pickedTab ?? urlTab ?? "overview";
   const [roleChangeOpen, setRoleChangeOpen] = useState(false);
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [reactivateOpen, setReactivateOpen] = useState(false);

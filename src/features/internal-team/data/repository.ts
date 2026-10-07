@@ -25,7 +25,6 @@ import { STAFF_MEMBERS, STAFF_INVITATIONS, STAFF_ACCESS_REVIEWS, STAFF_ACTIVITIE
 import { filterStaff, sortStaff, paginateStaff, computeStaffKpis, computeInvitationKpis, computeAccessReviewKpis } from "./selectors";
 import { TEAM_MOCK_MODE } from "./config";
 import { liveInternalTeamRepository } from "./live-repository";
-import type { InternalRole } from "@/types/domain/team";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

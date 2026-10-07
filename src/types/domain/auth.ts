@@ -16,6 +16,8 @@ export interface CompanyMembershipSummary {
   systemRole: CompanySystemRole;
   jobTitle?: string | null;
   department?: string | null;
+  /** True while a Company Owner or Admin has suspended this person's access to the Company. */
+  suspended?: boolean;
 }
 
 export interface SafeAssetSummary {

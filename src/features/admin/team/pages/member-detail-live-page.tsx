@@ -6,18 +6,19 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ChangeRoleDialog, GroupMembershipDialog, ProfileDialog, reasonOf, RemoveMemberDialog, useTeamAuthority } from "../components/team-live-dialogs";
+import { ChangeRoleDialog, GroupMembershipDialog, ProfileDialog, reasonOf, RemoveMemberDialog, SuspendMemberDialog, useReactivateMember, useTeamAuthority } from "../components/team-live-dialogs";
 import { useTeam } from "../team-data/team-store";
 import type { Member } from "../team-data/types";
 
 const tabs = ["Overview", "Access", "Activity"] as const;
-type Dlg = null | "role" | "profile" | "groups" | "remove";
+type Dlg = null | "role" | "profile" | "groups" | "remove" | "suspend";
 
 /** One member against the real backend. Tasks, workload and per-person security are not tracked there, so they are not shown. */
 export function MemberDetailLivePage({ memberId }: { memberId: string }) {
   const router = useRouter();
   const { members, clients, activity, isLoading, setClientAccess } = useTeam();
   const { membershipId, canManage } = useTeamAuthority();
+  const reactivate = useReactivateMember();
   const [tab, setTab] = useState<(typeof tabs)[number]>("Overview");
   const [dialog, setDialog] = useState<Dlg>(null);
   const [busyClient, setBusyClient] = useState<string | null>(null);
@@ -45,6 +46,7 @@ export function MemberDetailLivePage({ memberId }: { memberId: string }) {
   return (
     <div className="space-y-3">
       <Button variant="ghost" size="sm" onClick={() => router.back()}><ArrowLeft />Back</Button>
+      {member.status === "suspended" && <p role="status" className="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700">Access to this company is suspended{member.suspensionReason ? `: ${member.suspensionReason}` : ""}. Nothing was removed; reactivate to restore it.</p>}
       <section className="rounded-lg border border-[#E8EAED] bg-white p-4 shadow-[0_1px_2px_rgba(60,64,67,0.08)]">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
@@ -58,6 +60,9 @@ export function MemberDetailLivePage({ memberId }: { memberId: string }) {
           <div className="flex flex-wrap gap-1">
             {(canManage || isSelf) && <Button size="sm" variant="outline" onClick={() => setDialog("profile")}>Edit profile</Button>}
             {canManage && <Button size="sm" variant="outline" onClick={() => setDialog("role")}>Change role</Button>}
+            {canManage && !isSelf && (member.status === "suspended"
+              ? <Button size="sm" variant="outline" onClick={() => void reactivate(member)}>Reactivate access</Button>
+              : <Button size="sm" variant="outline" onClick={() => setDialog("suspend")}>Suspend access</Button>)}
             {canManage && !isSelf && <Button size="sm" variant="destructive" onClick={() => setDialog("remove")}>Remove</Button>}
           </div>
         </div>
@@ -102,6 +107,7 @@ export function MemberDetailLivePage({ memberId }: { memberId: string }) {
       <ChangeRoleDialog members={[member]} open={dialog === "role"} onClose={() => setDialog(null)} />
       <ProfileDialog member={member} open={dialog === "profile"} onClose={() => setDialog(null)} />
       <GroupMembershipDialog members={[member]} open={dialog === "groups"} onClose={() => setDialog(null)} />
+      <SuspendMemberDialog member={member} open={dialog === "suspend"} onClose={() => setDialog(null)} />
       <RemoveMemberDialog member={member} open={dialog === "remove"} onClose={() => setDialog(null)} onDone={() => router.replace("/admin/team")} />
     </div>
   );

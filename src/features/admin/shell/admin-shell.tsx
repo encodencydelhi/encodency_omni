@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { AdminRouteGuard } from "@/features/auth/components/admin-route-guard";
+import { SuspendedAccessGate } from "@/features/auth/components/suspended-access-gate";
 import { AdminProvider, useAdminContext } from "./admin-context";
 import { AdminFooter } from "./admin-footer";
 import { AdminSidebar } from "./admin-sidebar";
@@ -57,9 +58,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     // Signed-in check from the server session (GET /users/me); unauthenticated visitors go to /login.
     <AdminRouteGuard>
-      <AdminProvider>
-        <Shell>{children}</Shell>
-      </AdminProvider>
+      <SuspendedAccessGate>
+        <AdminProvider>
+          <Shell>{children}</Shell>
+        </AdminProvider>
+      </SuspendedAccessGate>
     </AdminRouteGuard>
   ); 
 }

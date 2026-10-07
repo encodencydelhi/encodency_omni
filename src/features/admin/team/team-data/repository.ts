@@ -270,8 +270,8 @@ export const teamRepository = {
     members = members.map((m) => membershipIds.includes(m.id) ? { ...m, clientAccess: grant ? [...m.clientAccess.filter((a) => a.clientId !== clientId), { clientId, clientName: clientId, accessLevel: "full" as const, grantedAt: new Date().toISOString() }] : m.clientAccess.filter((a) => a.clientId !== clientId) } : m);
   },
 
-  async suspendMember(id: string): Promise<void> {
-    if (LIVE) throw new Error("Suspending a member is not supported by the backend.");
+  async suspendMember(id: string, reason?: string): Promise<void> {
+    if (LIVE) return live.suspendMember(id, reason);
     members = members.map((m) => (m.id === id ? { ...m, status: "suspended" } : m));
   },
 
@@ -281,7 +281,7 @@ export const teamRepository = {
   },
   
   async reactivateMember(id: string): Promise<void> {
-    if (LIVE) throw new Error("Reactivating a member is not supported by the backend.");
+    if (LIVE) return live.reactivateMember(id);
     members = members.map((m) => (m.id === id ? { ...m, status: "active" } : m));
   },
 

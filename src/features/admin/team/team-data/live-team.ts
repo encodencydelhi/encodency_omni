@@ -31,14 +31,15 @@ export function toLiveMember(row: TeamMemberRecord): Member {
   const email = row.user.email;
   return {
     id: row.id,
-    name: row.user.name || email.split("@")[0] || email,
+    name: row.user.name?.trim() || email,
     email,
     jobTitle: row.jobTitle || undefined,
     department: row.department || undefined,
     avatarUrl: row.user.avatarUrl ?? null,
     roleId,
     roleName: roleName(roleId),
-    status: "active",
+    status: row.suspendedAt ? "suspended" : "active",
+    suspensionReason: row.suspensionReason ?? undefined,
     joinedAt: row.createdAt,
     // The backend does not track presence, tasks, approvals or per-person security for the Company roster.
     lastActiveAt: null,
@@ -106,6 +107,14 @@ export async function updateGroup(id: string, patch: Partial<TeamGroup>): Promis
     ...(patch.memberIds !== undefined ? { memberIds: patch.memberIds } : {}),
     ...(patch.clients !== undefined ? { clientIds: patch.clients.map((client) => client.id) } : {}),
   });
+}
+
+export async function suspendMember(id: string, reason?: string): Promise<void> {
+  await teamApi.suspendMember(companyId(), id, reason);
+}
+
+export async function reactivateMember(id: string): Promise<void> {
+  await teamApi.reactivateMember(companyId(), id);
 }
 
 export async function removeMember(id: string): Promise<void> {

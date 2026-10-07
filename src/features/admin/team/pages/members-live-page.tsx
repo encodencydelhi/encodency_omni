@@ -10,18 +10,19 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChangeRoleDialog, ClientAccessDialog, GroupMembershipDialog, ProfileDialog, RemoveMemberDialog, useTeamAuthority } from "../components/team-live-dialogs";
+import { ChangeRoleDialog, ClientAccessDialog, GroupMembershipDialog, ProfileDialog, RemoveMemberDialog, SuspendMemberDialog, useReactivateMember, useTeamAuthority } from "../components/team-live-dialogs";
 import { SYSTEM_ROLES } from "../team-data/live-team";
 import { useTeam } from "../team-data/team-store";
 import type { Member } from "../team-data/types";
 
 const PAGE_SIZE = 10;
-type Dialog = null | { kind: "role" | "access" | "groups" | "profile" | "remove"; members: Member[]; mode?: "grant" | "revoke" };
+type Dialog = null | { kind: "role" | "access" | "groups" | "profile" | "remove" | "suspend"; members: Member[]; mode?: "grant" | "revoke" };
 
 /** The Team roster against the real backend: only what the backend knows, and every control saves for real. */
 export function MembersLivePage() {
   const { members, groups, clients, invitations, activity, isLoading, error, refresh } = useTeam();
   const { membershipId, canManage } = useTeamAuthority();
+  const reactivate = useReactivateMember();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [role, setRole] = useState("all");
@@ -138,6 +139,11 @@ export function MembersLivePage() {
                             {member.id !== membershipId && (
                               <>
                                 <DropdownMenuSeparator />
+                                {member.status === "suspended" ? (
+                                  <DropdownMenuItem onSelect={() => void reactivate(member)}>Reactivate access</DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem onSelect={() => open("suspend", [member])}>Suspend access</DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem variant="destructive" onSelect={() => open("remove", [member])}>Remove from company</DropdownMenuItem>
                               </>
                             )}
@@ -195,6 +201,7 @@ export function MembersLivePage() {
       <ClientAccessDialog members={dialog?.kind === "access" ? dialog.members : []} open={dialog?.kind === "access"} initialMode={dialog?.mode} onClose={() => setDialog(null)} />
       <GroupMembershipDialog members={dialog?.kind === "groups" ? dialog.members : []} open={dialog?.kind === "groups"} onClose={() => setDialog(null)} />
       <ProfileDialog member={dialog?.kind === "profile" ? dialog.members[0]! : null} open={dialog?.kind === "profile"} onClose={() => setDialog(null)} />
+      <SuspendMemberDialog member={dialog?.kind === "suspend" ? dialog.members[0]! : null} open={dialog?.kind === "suspend"} onClose={() => setDialog(null)} />
       <RemoveMemberDialog member={dialog?.kind === "remove" ? dialog.members[0]! : null} open={dialog?.kind === "remove"} onClose={() => setDialog(null)} onDone={() => setSelected((ids) => ids.filter((id) => id !== dialog?.members[0]?.id))} />
     </div>
   );
@@ -205,7 +212,7 @@ function Identity({ member, you }: { member: Member; you: boolean }) {
     <div className="flex items-center gap-2.5">
       <Avatar name={member.name} />
       <div className="min-w-0">
-        <p className="font-medium text-[#202124]">{member.name}{you && <span className="ml-1.5 rounded-sm bg-blue-50 px-1 py-0.5 text-[10px] font-semibold text-blue-700">You</span>}</p>
+        <p className="font-medium text-[#202124]">{member.name}{you && <span className="ml-1.5 rounded-sm bg-blue-50 px-1 py-0.5 text-[10px] font-semibold text-blue-700">You</span>}{member.status === "suspended" && <span title={member.suspensionReason ?? "Access suspended"} className="ml-1.5 rounded-sm bg-red-50 px-1 py-0.5 text-[10px] font-semibold text-red-700">Suspended</span>}</p>
         <p className="max-w-[260px] truncate text-[11px] text-[#5F6368]">{member.email}{member.jobTitle ? ` · ${member.jobTitle}` : ""}</p>
       </div>
     </div>

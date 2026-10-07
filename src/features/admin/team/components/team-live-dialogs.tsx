@@ -372,6 +372,70 @@ function RemoveMemberDialogBody({ member, onClose, onDone }: { member: Member | 
   );
 }
 
+/* ---------------------------- suspend / reactivate ---------------------------- */
+
+export function SuspendMemberDialog(props: { member: Member | null; open: boolean; onClose: () => void; onDone?: () => void }) {
+  return props.open ? <SuspendMemberDialogBody {...props} /> : null;
+}
+
+function SuspendMemberDialogBody({ member, onClose, onDone }: { member: Member | null; onClose: () => void; onDone?: () => void }) {
+  const { suspendMember } = useTeam();
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const submit = async () => {
+    if (!member) return;
+    setBusy(true);
+    setError("");
+    try {
+      await suspendMember(member.id, reason.trim() || undefined);
+      toast.success(`${member.name}'s access was suspended`);
+      onDone?.();
+      onClose();
+    } catch (err) {
+      setError(reasonOf(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={(value) => !value && !busy && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Suspend {member?.name}</DialogTitle>
+          <DialogDescription>
+            They cannot open this company until you reactivate them. Nothing is removed: their role, client access and group memberships stay as they are, and other companies are not affected.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-1.5">
+          <Label htmlFor="suspend-reason">Reason (optional)</Label>
+          <Input id="suspend-reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} placeholder="Shown to owners and admins" />
+        </div>
+        {error && <p className="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700">{error}</p>}
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose} disabled={busy}>Cancel</Button>
+          <Button variant="destructive" onClick={submit} disabled={busy}>{busy ? "Suspending…" : "Suspend access"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** One click, no dialog: reactivating only restores what was already there. */
+export function useReactivateMember() {
+  const { reactivateMember } = useTeam();
+  return async (member: Member) => {
+    try {
+      await reactivateMember(member.id);
+      toast.success(`${member.name}'s access was restored`);
+    } catch (err) {
+      toast.error(reasonOf(err));
+    }
+  };
+}
+
 /* ----------------------------- profile ----------------------------- */
 
 /** Job title and department of one member, saved through PATCH /team/members/:id/profile. */

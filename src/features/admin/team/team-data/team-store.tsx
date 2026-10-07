@@ -20,7 +20,7 @@ interface TeamState {
 interface TeamContextType extends TeamState {
   refresh: () => Promise<void>;
   inviteMember: (invite: Omit<Invitation, "id" | "status" | "sentAt">) => Promise<Invitation>;
-  suspendMember: (id: string) => Promise<void>;
+  suspendMember: (id: string, reason?: string) => Promise<void>;
   reactivateMember: (id: string) => Promise<void>;
   deactivateMember: (id: string) => Promise<void>;
   createGroup: (group: Omit<TeamGroup, "id" | "updatedAt" | "activeTasks" | "memberCount" | "clientCount">) => Promise<void>;
@@ -94,8 +94,8 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     return created;
   }, [refresh]);
 
-  const suspendMember = useCallback(async (id: string) => {
-    await teamRepository.suspendMember(id);
+  const suspendMember = useCallback(async (id: string, reason?: string) => {
+    await teamRepository.suspendMember(id, reason);
     await refresh();
   }, [refresh]);
 

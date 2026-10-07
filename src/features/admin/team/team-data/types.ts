@@ -76,6 +76,8 @@ export interface Member {
   ownedResources: OwnedResource[];
   security: MemberSecurity;
   isOrgAdmin?: boolean;
+  /** Why access was suspended (live mode), when a reason was given. */
+  suspensionReason?: string;
 }
 
 export interface Invitation {

@@ -17,6 +17,9 @@ export interface TeamMemberRecord {
   };
   /** Clients this member has explicit access to (names only). */
   clientAccess?: Array<{ clientId: string; clientName: string }>;
+  /** Set while the member's access to this Company is suspended. */
+  suspendedAt?: string | null;
+  suspensionReason?: string | null;
 }
 
 /** Validation response from POST /invitations/validate */
@@ -143,6 +146,16 @@ export const teamApi = {
   /** DELETE /team/members/:membershipId - removes the member from this Company only. */
   removeMember(companyId: string, membershipId: string): Promise<{ membershipId: string; removed: true }> {
     return apiClient.request({ method: "DELETE", path: `/team/members/${encodeURIComponent(membershipId)}`, headers: companyScopeHeaders(companyId) });
+  },
+
+  /** POST /team/members/:membershipId/suspend - blocks access to this Company without removing anything (team:manage). */
+  suspendMember(companyId: string, membershipId: string, reason?: string): Promise<unknown> {
+    return apiClient.request({ method: "POST", path: `/team/members/${encodeURIComponent(membershipId)}/suspend`, body: reason ? { reason } : {}, headers: companyScopeHeaders(companyId) });
+  },
+
+  /** POST /team/members/:membershipId/reactivate - restores a suspended member (team:manage). */
+  reactivateMember(companyId: string, membershipId: string): Promise<unknown> {
+    return apiClient.request({ method: "POST", path: `/team/members/${encodeURIComponent(membershipId)}/reactivate`, headers: companyScopeHeaders(companyId) });
   },
 
   /** POST /clients/:id/members - gives members explicit access to one Client (team:manage). */
