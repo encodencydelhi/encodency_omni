@@ -305,6 +305,161 @@
     background: #475569;
   }
 
+  .profile-lottie-avatar {
+    position: relative;
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 48%, #e0e7ff 100%);
+    box-shadow: 0 8px 20px rgb(37 99 235 / 0.18), inset 0 0 0 1px rgb(191 219 254 / 0.9);
+    isolation: isolate;
+  }
+
+  .profile-lottie-avatar::before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    background: conic-gradient(from 0deg, #2563eb, #22c55e, #a855f7, #2563eb);
+    opacity: 0.75;
+    animation: profile-lottie-spin 3.4s linear infinite;
+    z-index: -1;
+  }
+
+  .profile-lottie-avatar::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: inherit;
+    background: radial-gradient(circle at 35% 25%, rgb(255 255 255 / 0.9), rgb(37 99 235 / 0.12) 58%, rgb(29 78 216 / 0.22));
+    animation: profile-lottie-breathe 2.4s ease-in-out infinite;
+    z-index: 0;
+  }
+
+  .profile-lottie-avatar--small {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .profile-lottie-avatar--large {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .profile-lottie-core {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    overflow: hidden;
+    border-radius: inherit;
+    color: #ffffff;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 58%, #7c3aed 100%);
+  }
+
+  .profile-lottie-orbit {
+    position: absolute;
+    border-radius: 9999px;
+    border: 1px solid rgb(255 255 255 / 0.48);
+  }
+
+  .profile-lottie-orbit-one {
+    width: 72%;
+    height: 38%;
+    transform: rotate(-24deg);
+    animation: profile-lottie-tilt-one 2.2s ease-in-out infinite;
+  }
+
+  .profile-lottie-orbit-two {
+    width: 38%;
+    height: 72%;
+    transform: rotate(28deg);
+    animation: profile-lottie-tilt-two 2.6s ease-in-out infinite;
+  }
+
+  .profile-lottie-dot {
+    position: absolute;
+    width: 0.28rem;
+    height: 0.28rem;
+    border-radius: 9999px;
+    background: #ffffff;
+    box-shadow: 0 0 10px rgb(255 255 255 / 0.9);
+  }
+
+  .profile-lottie-dot-one {
+    top: 21%;
+    right: 21%;
+    animation: profile-lottie-float-one 1.8s ease-in-out infinite;
+  }
+
+  .profile-lottie-dot-two {
+    bottom: 22%;
+    left: 23%;
+    background: #bbf7d0;
+    animation: profile-lottie-float-two 2.1s ease-in-out infinite;
+  }
+
+  @keyframes profile-lottie-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  @keyframes profile-lottie-breathe {
+    0%,
+    100% {
+      transform: scale(0.94);
+      opacity: 0.62;
+    }
+    50% {
+      transform: scale(1.04);
+      opacity: 0.95;
+    }
+  }
+
+  @keyframes profile-lottie-tilt-one {
+    0%,
+    100% {
+      transform: rotate(-24deg) scaleX(1);
+    }
+    50% {
+      transform: rotate(18deg) scaleX(0.88);
+    }
+  }
+
+  @keyframes profile-lottie-tilt-two {
+    0%,
+    100% {
+      transform: rotate(28deg) scaleY(1);
+    }
+    50% {
+      transform: rotate(-18deg) scaleY(0.88);
+    }
+  }
+
+  @keyframes profile-lottie-float-one {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(-5px, 4px, 0) scale(0.72);
+    }
+  }
+
+  @keyframes profile-lottie-float-two {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(0.75);
+    }
+    50% {
+      transform: translate3d(5px, -4px, 0) scale(1.08);
+    }
+  }
+
   /* Enforce minimum 12px font size in admin shell */
   .admin-shell [class*="text-[6"],
   .admin-shell [class*="text-[7"],

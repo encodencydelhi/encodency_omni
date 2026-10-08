@@ -105,18 +105,22 @@ export function Topbar() {
               className="group flex h-10 items-center gap-1.5 rounded-full border border-slate-200 bg-white p-1 pl-1.5 shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
               aria-label="Open account menu"
             >
-              <div className="relative grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-blue-50 via-white to-indigo-100 ring-1 ring-blue-100 transition-all group-hover:ring-blue-200">
+              <div className="profile-lottie-avatar profile-lottie-avatar--small">
                 {user?.avatarUrl ? (
                   <Image
                     src={user.avatarUrl}
                     alt={fullName}
                     width={32}
                     height={32}
-                    className="size-full object-cover"
+                    className="relative z-10 size-full rounded-full object-cover"
                   />
                 ) : (
-                  <div className="grid size-full place-items-center bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white">
-                    <UserRound className="size-[18px]" />
+                  <div className="profile-lottie-core">
+                    <span className="profile-lottie-orbit profile-lottie-orbit-one" />
+                    <span className="profile-lottie-orbit profile-lottie-orbit-two" />
+                    <span className="profile-lottie-dot profile-lottie-dot-one" />
+                    <span className="profile-lottie-dot profile-lottie-dot-two" />
+                    <UserRound className="relative z-10 size-[18px]" />
                   </div>
                 )}
                 <span className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-white bg-emerald-500" />
@@ -127,12 +131,16 @@ export function Topbar() {
           <DropdownMenuContent align="end" className="w-64 rounded-lg border-slate-200 p-1.5 shadow-xl shadow-slate-900/10">
             <DropdownMenuLabel className="font-normal p-2 normal-case tracking-normal">
               <div className="flex items-center gap-3">
-                <div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-blue-50 via-white to-indigo-100 ring-1 ring-blue-100">
+                <div className="profile-lottie-avatar profile-lottie-avatar--large">
                   {user?.avatarUrl ? (
-                    <Image src={user.avatarUrl} alt={fullName} width={40} height={40} className="size-full object-cover" />
+                    <Image src={user.avatarUrl} alt={fullName} width={40} height={40} className="relative z-10 size-full rounded-full object-cover" />
                   ) : (
-                    <div className="grid size-full place-items-center bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white">
-                      <UserRound className="size-5" />
+                    <div className="profile-lottie-core">
+                      <span className="profile-lottie-orbit profile-lottie-orbit-one" />
+                      <span className="profile-lottie-orbit profile-lottie-orbit-two" />
+                      <span className="profile-lottie-dot profile-lottie-dot-one" />
+                      <span className="profile-lottie-dot profile-lottie-dot-two" />
+                      <UserRound className="relative z-10 size-5" />
                     </div>
                   )}
                 </div>
