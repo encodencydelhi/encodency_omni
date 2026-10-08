@@ -23,6 +23,7 @@ import {
   CalendarPlus,
   CalendarRange,
   ChevronDown,
+  ExternalLink,
   Link2,
   Megaphone,
   PenLine,
@@ -36,7 +37,12 @@ import {
 import { ChannelLogo } from "../../shared/channel-logo";
 import { cn } from "@/lib/utils/cn";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
-import { integrationsApi, type ProviderOverview } from "@/features/admin/integrations/live/integrations-api";
+import {
+  integrationsApi,
+  type BackendResourceType,
+  type DiscoveredResource,
+  type ProviderOverview,
+} from "@/features/admin/integrations/live/integrations-api";
 import type { ScheduledPost } from "@/features/admin/content/live/scheduling-api";
 import {
   metaProvider,
@@ -90,6 +96,11 @@ interface AccountRow {
   type: string;
   connected: boolean;
   reconnect: boolean;
+  href: string;
+  mapLabel: string;
+  canMap: boolean;
+  provider: ProviderOverview | null;
+  resourceType: BackendResourceType;
   metrics: Array<[string, string]>;
 }
 
@@ -167,15 +178,22 @@ function formatTime(value: string): string {
 }
 
 function accountRow(provider: ProviderOverview | null, channel: PlatformName, type: string): AccountRow {
+  const connection = provider?.connections[0] ?? null;
+  const mapped = provider?.resources[0] ?? null;
   return {
     id: channel,
     channel,
-    name: provider?.resources[0]?.externalResourceId
-      ? `${type} · ${provider.resources[0].externalResourceId}`
-      : type,
+    name: mapped?.externalResourceId
+      ? `${type} · ${mapped.externalResourceId}`
+      : connection?.accountName ?? connection?.accountEmail ?? type,
     type: provider ? STATE_COPY[provider.state] : "Setup required",
     connected: provider?.state === "connected",
     reconnect: Boolean(provider?.reconnectRequired),
+    href: channel === "Facebook" ? "/admin/meta/facebook" : "/admin/meta/instagram",
+    mapLabel: channel === "Facebook" ? "Map Page" : "Map Instagram",
+    canMap: Boolean(provider?.companyConnectionAvailable && provider.mappedResourceCount === 0 && provider.connections.length > 0),
+    provider,
+    resourceType: channel === "Facebook" ? "FACEBOOK_PAGE" : "INSTAGRAM_ACCOUNT",
     metrics: [
       [String(provider?.mappedResourceCount ?? 0), "Mapped"],
       [provider?.health ? provider.health.replace("_", " ") : "—", "Health"],
@@ -185,11 +203,19 @@ function accountRow(provider: ProviderOverview | null, channel: PlatformName, ty
   };
 }
 
+function emptyMetaResourceMessage(channel: PlatformName): string {
+  const target = channel === "Facebook" ? "Facebook Page" : "Instagram Business account";
+  return `Meta is connected, but this login did not return any ${target}. Reconnect Meta and allow Page access, or use a Meta user that manages the Page.`;
+}
+
 /* ── page ───────────────────────────────────────────────────────────────── */
 
 export function MetaChannelPage() {
   const { companyId, clientId, isReady } = useTenancyContext();
   const [connecting, setConnecting] = useState(false);
+  const [mapping, setMapping] = useState<PlatformName | null>(null);
+  const [activePlatform, setActivePlatform] = useState<PlatformName>("Facebook");
+  const [picker, setPicker] = useState<{ channel: PlatformName; resources: DiscoveredResource[]; error: string | null } | null>(null);
 
   const enabled = isReady && Boolean(companyId) && Boolean(clientId);
   const overviewQuery = useMetaOverview(companyId, clientId, enabled);
@@ -226,6 +252,50 @@ export function MetaChannelPage() {
     }
   };
 
+  const openMapper = async (account: AccountRow) => {
+    if (!companyId || !clientId || !account.provider?.connections[0]?.integrationId) {
+      toast.error("Connect Meta and select a Client before mapping accounts.");
+      return;
+    }
+    setMapping(account.channel);
+    try {
+      const integrationId = account.provider.connections[0].integrationId;
+      const resources = await integrationsApi.discoverResources(companyId, integrationId);
+      const filtered = resources.filter((item) => item.resourceType === account.resourceType);
+      setPicker({
+        channel: account.channel,
+        resources: filtered,
+        error: filtered.length === 0 ? emptyMetaResourceMessage(account.channel) : null,
+      });
+      if (filtered.length === 0) toast.error(emptyMetaResourceMessage(account.channel));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : `Unable to load ${account.channel} profiles.`;
+      setPicker({ channel: account.channel, resources: [], error: message });
+      toast.error(message);
+    } finally {
+      setMapping(null);
+    }
+  };
+
+  const mapResource = async (account: AccountRow, resource: DiscoveredResource) => {
+    if (!companyId || !clientId || !account.provider?.connections[0]?.integrationId) return;
+    setMapping(account.channel);
+    try {
+      await integrationsApi.mapResource(companyId, account.provider.connections[0].integrationId, {
+        clientId,
+        externalResourceId: resource.externalResourceId,
+        resourceType: resource.resourceType,
+      });
+      toast.success(`${resource.name || account.channel} mapped to this Client.`);
+      setPicker(null);
+      refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : `Unable to map ${resource.name}.`);
+    } finally {
+      setMapping(null);
+    }
+  };
+
   const scopeNotice = !isReady
     ? null
     : !companyId
@@ -250,6 +320,7 @@ export function MetaChannelPage() {
     accountRow(meta, "Facebook", "Facebook Page"),
     accountRow(instagram, "Instagram", "Instagram Business"),
   ];
+  const activeAccount = accounts.find((account) => account.channel === activePlatform) ?? accounts[0]!;
 
   const attention: AttentionRow[] = [];
   for (const provider of [meta, instagram]) {
@@ -359,12 +430,23 @@ export function MetaChannelPage() {
 
       <div className="grid items-start gap-2 [&>section]:h-[232px] xl:grid-cols-[1.5fr_1fr_.86fr]">
         <PerformanceOverview />
-        <ConnectedAccounts rows={accounts} loading={overviewQuery.isLoading} onConnect={connectMeta} connecting={connecting} />
+        <ConnectedAccounts
+          rows={accounts}
+          active={activePlatform}
+          onSelect={setActivePlatform}
+          loading={overviewQuery.isLoading}
+          onConnect={connectMeta}
+          connecting={connecting}
+          onMap={openMapper}
+          onMapResource={mapResource}
+          mapping={mapping}
+          picker={picker}
+        />
         <NeedsAttention rows={attention} loading={overviewQuery.isLoading || postsQuery.isLoading} />
       </div>
 
       <div className="grid items-start gap-2 [&>section]:h-[236px] xl:grid-cols-[1.16fr_1.2fr_.64fr]">
-        <TopPosts rows={published} loading={postsQuery.isLoading} />
+        <TopPosts rows={published.filter((post) => post.platform === activeAccount.channel)} loading={postsQuery.isLoading} platform={activeAccount.channel} />
         <CampaignPerformance rows={campaigns} loading={campaignsQuery.isLoading} />
         <QuickActions onConnect={connectMeta} connecting={connecting} />
       </div>
@@ -684,15 +766,28 @@ function PerformanceOverview() {
 
 function ConnectedAccounts({
   rows,
+  active,
+  onSelect,
   loading,
   onConnect,
   connecting,
+  onMap,
+  onMapResource,
+  mapping,
+  picker,
 }: {
   rows: AccountRow[];
+  active: PlatformName;
+  onSelect: (platform: PlatformName) => void;
   loading: boolean;
   onConnect: () => void;
   connecting: boolean;
+  onMap: (account: AccountRow) => void;
+  onMapResource: (account: AccountRow, resource: DiscoveredResource) => void;
+  mapping: PlatformName | null;
+  picker: { channel: PlatformName; resources: DiscoveredResource[]; error: string | null } | null;
 }) {
+  const pickerAccount = picker ? rows.find((row) => row.channel === picker.channel) : null;
   return (
     <Box
       title="Connected Accounts"
@@ -700,6 +795,24 @@ function ConnectedAccounts({
       onAction={onConnect}
       subtitle="GET /integrations/overview"
     >
+      <div className="grid grid-cols-2 gap-1 border-b border-[#EDF1F5] p-1.5">
+        {rows.map((account) => (
+          <button
+            key={account.id}
+            type="button"
+            onClick={() => onSelect(account.channel)}
+            className={cn(
+              "flex items-center justify-center gap-1.5 rounded-sm px-2 py-1.5 text-[11px] font-semibold transition-colors",
+              active === account.channel
+                ? "bg-[#EAF3FF] text-[#1769DF]"
+                : "text-[#52617D] hover:bg-[#F8FAFD]",
+            )}
+          >
+            <ChannelLogo channel={account.channel} className="size-4 bg-transparent" />
+            {account.channel}
+          </button>
+        ))}
+      </div>
       <div className="scrollbar-thin flex min-h-0 flex-1 flex-col divide-y divide-[#EDF1F5] overflow-y-auto">
         {loading && <p className="px-3 py-6 text-[11px] text-[#7C89A2]">Loading connections…</p>}
         {!loading &&
@@ -711,6 +824,25 @@ function ConnectedAccounts({
                   <p className="truncate text-[11px] font-semibold leading-4 text-[#172044]">{account.name}</p>
                   <p className="truncate text-[11px] leading-3 text-[#7C89A2]">{account.type}</p>
                 </div>
+                {account.canMap && (
+                  <button
+                    type="button"
+                    onClick={() => onMap(account)}
+                    disabled={mapping === account.channel}
+                    className="shrink-0 rounded-sm border border-[#CFE0F7] bg-[#F5F9FF] px-1.5 py-0.5 text-[11px] font-semibold text-[#1769DF] hover:bg-[#EAF3FF] disabled:opacity-60"
+                  >
+                    {mapping === account.channel ? "Mapping..." : account.mapLabel}
+                  </button>
+                )}
+                {account.connected && (
+                  <Link
+                    href={account.href}
+                    className="grid size-5 shrink-0 place-items-center rounded-sm border border-[#DDE4ED] text-[#52617D] hover:bg-[#F8FAFD]"
+                    aria-label={`Open ${account.channel}`}
+                  >
+                    <ExternalLink className="size-3" />
+                  </Link>
+                )}
                 <span
                   className={cn(
                     "flex shrink-0 items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-[11px] font-semibold",
@@ -733,6 +865,33 @@ function ConnectedAccounts({
                   </span>
                 ))}
               </div>
+              {picker?.channel === account.channel && (
+                <div className="mt-2 rounded-sm border border-[#DDE7F3] bg-[#F8FAFD] p-2">
+                  <p className="text-[11px] font-semibold text-[#172044]">Choose {account.channel} profile to map</p>
+                  {picker.error && <p className="mt-1 text-[11px] text-[#B45309]">{picker.error}</p>}
+                  {picker.resources.length > 0 && pickerAccount && (
+                    <div className="mt-2 space-y-1">
+                      {picker.resources.map((resource) => (
+                        <button
+                          key={`${resource.resourceType}:${resource.externalResourceId}`}
+                          type="button"
+                          onClick={() => onMapResource(pickerAccount, resource)}
+                          disabled={mapping === account.channel}
+                          className="flex w-full items-center justify-between gap-2 rounded-sm border border-[#DDE4ED] bg-white px-2 py-1.5 text-left text-[11px] hover:border-[#1769DF] hover:bg-[#F5F9FF] disabled:opacity-60"
+                        >
+                          <span className="min-w-0">
+                            <b className="block truncate text-[#172044]">{resource.name}</b>
+                            <small className="block truncate text-[#7C89A2]">{resource.externalResourceId}</small>
+                          </span>
+                          <span className="shrink-0 font-semibold text-[#1769DF]">
+                            {mapping === account.channel ? "Mapping..." : "Map"}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         {!loading && rows.every((row) => !row.connected) && (
@@ -785,7 +944,7 @@ function NeedsAttention({ rows, loading }: { rows: AttentionRow[]; loading: bool
 
 const postCols = "grid-cols-[1.5fr_.42fr_.62fr_.72fr]";
 
-function TopPosts({ rows, loading }: { rows: PostRow[]; loading: boolean }) {
+function TopPosts({ rows, loading, platform }: { rows: PostRow[]; loading: boolean; platform: PlatformName }) {
   const router = useRouter();
   return (
     <Box
@@ -795,7 +954,7 @@ function TopPosts({ rows, loading }: { rows: PostRow[]; loading: boolean }) {
       onAction={() => {
         router.push("/admin/content");
       }}
-      empty={!loading && rows.length === 0 ? "No published posts yet for this Client." : undefined}
+      empty={!loading && rows.length === 0 ? `No published ${platform} posts yet for this Client.` : undefined}
     >
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-2">
         <div className={cn("sticky top-0 z-10 grid gap-1 bg-white py-1 text-[11px] text-[#7A87A0]", postCols)}>

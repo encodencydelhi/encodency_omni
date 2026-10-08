@@ -176,8 +176,16 @@ function AssetChips() {
       ) : (
         current && <AssetChip label="Ad Account" value={current.name} href={`${ADS_ROOT}/assets#ad-account`} icon={<FaMeta className="size-3 text-[#0866ff]" />} />
       )}
-      {page && <AssetChip label="Page" value={page.name} href={`${ADS_ROOT}/assets#facebook-page`} icon={<FaFacebookF className="size-3 text-[#1877f2]" />} />}
-      {instagram && <AssetChip label="Instagram" value={instagram.name} href={`${ADS_ROOT}/assets#instagram`} icon={<FaInstagram className="size-3 text-[#d946ef]" />} />}
+      {page ? (
+        <AssetChip label="Page" value={page.name} href={`${ADS_ROOT}/assets#facebook-page`} icon={<FaFacebookF className="size-3 text-[#1877f2]" />} />
+      ) : (
+        <AssetChip label="Page" value="Not mapped" href="/admin/meta" warning="Map" icon={<FaFacebookF className="size-3 text-[#1877f2]" />} />
+      )}
+      {instagram ? (
+        <AssetChip label="Instagram" value={instagram.name} href={`${ADS_ROOT}/assets#instagram`} icon={<FaInstagram className="size-3 text-[#d946ef]" />} />
+      ) : (
+        <AssetChip label="Instagram" value="Not mapped" href="/admin/meta" warning="Map" icon={<FaInstagram className="size-3 text-[#d946ef]" />} />
+      )}
     </>
   );
 }
