@@ -7,10 +7,12 @@ import {
   IndianRupeeIcon,
   LayersIcon,
   PlugIcon,
+  ShieldAlertIcon,
   ShieldCheckIcon,
   UsersIcon,
   type LucideIcon,
 } from "lucide-react";
+import { isMockMode } from "@/config/env";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils/cn";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/utils/format";
@@ -30,6 +32,7 @@ const METRIC_PRESENTATION: Record<
   connectedIntegrations: { label: "Connected Integrations", icon: PlugIcon, accent: "bg-neutral-subtle text-neutral" },
   runningJobs: { label: "Running Jobs", icon: ClockIcon, accent: "bg-primary-subtle text-primary" },
   systemUptime: { label: "System Uptime", icon: ShieldCheckIcon, accent: "bg-success-subtle text-success" },
+  openIncidents: { label: "Open Incidents", icon: ShieldAlertIcon, accent: "bg-danger-subtle text-danger" },
 };
 
 /** Display order. The first row is scale, the second is operations. */
@@ -41,7 +44,7 @@ const METRIC_ORDER: DashboardMetricKey[] = [
   "monthlyRevenue",
   "connectedIntegrations",
   "runningJobs",
-  "systemUptime",
+  isMockMode ? "systemUptime" : "openIncidents",
 ];
 
 function formatValue(metric: DashboardMetric): string {

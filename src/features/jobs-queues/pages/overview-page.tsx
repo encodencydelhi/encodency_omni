@@ -20,14 +20,15 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatNumber, formatDateTime, formatRelativeTime, formatDuration } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
-import { useJobsOverview, useResetJobsDemo } from "../data/hooks";
-import { JOB_LIFECYCLE_META, MOCK_ENVIRONMENT, JOBS_DATA_SOURCE, JOBS_WORKER_STATUS, QUEUE_STATE_META } from "../data/config";
+import { useJobsOverview, useRefreshJobs, useResetJobsDemo } from "../data/hooks";
+import { JOB_LIFECYCLE_META, MOCK_ENVIRONMENT, JOBS_MOCK_MODE, JOBS_DATA_SOURCE, JOBS_WORKER_STATUS, QUEUE_STATE_META } from "../data/config";
 import { JobsKpiCards } from "../components";
 import { ErrorState } from "@/components/shared/error-state";
 
 export function OverviewPage() {
   const { data: overview, isLoading, error, refetch } = useJobsOverview();
   const resetDemo = useResetJobsDemo();
+  const refresh = useRefreshJobs();
   const now = new Date().toLocaleString();
 
   if (error && !overview) {
@@ -70,23 +71,34 @@ export function OverviewPage() {
               System Health
             </Link>
           </Button>
-          <Button variant="outline" size="sm" className="text-xs h-8 font-semibold bg-white text-slate-700" onClick={() => resetDemo.mutate()} disabled={resetDemo.isPending}>
-            <RefreshCwIcon className={cn("size-3.5 mr-1.5 text-slate-500", resetDemo.isPending && "animate-spin")} />
-            Reset Demo
-          </Button>
+          {JOBS_MOCK_MODE ? (
+            <Button variant="outline" size="sm" className="text-xs h-8 font-semibold bg-white text-slate-700" onClick={() => resetDemo.mutate()} disabled={resetDemo.isPending}>
+              <RefreshCwIcon className={cn("size-3.5 mr-1.5 text-slate-500", resetDemo.isPending && "animate-spin")} />
+              Reset Demo
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" className="text-xs h-8 font-semibold bg-white text-slate-700" onClick={refresh}>
+              <RefreshCwIcon className="size-3.5 mr-1.5 text-slate-500" />
+              Refresh
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Operational Context Bar */}
       <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 bg-slate-50 rounded-sm border border-slate-200/80 px-3 py-2">
-        <span className="font-medium">Environment:</span>
-        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
-        <span className="text-slate-300">|</span>
+        {JOBS_MOCK_MODE && (
+          <>
+            <span className="font-medium">Environment:</span>
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
+            <span className="text-slate-300">|</span>
+          </>
+        )}
         <span className="font-medium">Job Data Source:</span>
         <span>{JOBS_DATA_SOURCE}</span>
         <span className="text-slate-300">|</span>
-        <span className="font-medium">Worker Backend:</span>
-        <span className="text-amber-600">{JOBS_WORKER_STATUS}</span>
+        <span className="font-medium">Workers:</span>
+        <span className={JOBS_MOCK_MODE ? "text-amber-600" : "text-slate-700"}>{JOBS_WORKER_STATUS}</span>
         <span className="text-slate-300">|</span>
         <span className="font-medium">Last Updated:</span>
         <span>{now}</span>

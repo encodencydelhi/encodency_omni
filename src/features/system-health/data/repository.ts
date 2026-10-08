@@ -8,21 +8,50 @@ export interface CreateIncidentInput {
   primaryServiceId: string;
   affectedServiceIds: string[];
   ownerId: string;
-  ownerName: string;
   summary: string;
 }
 
+/** Companies and clients are picked from the platform, never typed: the backend resolves their names. */
+export interface AddImpactInput {
+  confidence: ImpactRecord["confidence"];
+  area: string;
+  companyId: string | null;
+  clientId: string | null;
+  workflow: string;
+  evidence: string;
+  serviceId?: string;
+}
+
+export interface IncidentOwner {
+  id: string;
+  name: string;
+  role: string;
+}
+
+export interface ImpactTargets {
+  companies: Array<{ id: string; name: string; clients: Array<{ id: string; name: string }> }>;
+}
+
 export interface SystemHealthRepository {
-  loadSnapshot(environment: HealthEnvironment): Promise<SystemHealthSnapshotV2>;
+  /** Without an environment the backend answers for the one it is running in. */
+  loadSnapshot(environment?: HealthEnvironment): Promise<SystemHealthSnapshotV2>;
+  listOwners(): Promise<IncidentOwner[]>;
+  getImpactTargets(): Promise<ImpactTargets>;
   createIncident(input: CreateIncidentInput): Promise<IncidentRecord>;
   addIncidentUpdate(id: string, note: string): Promise<IncidentRecord>;
   changeIncidentState(id: string, state: IncidentState, resolution?: string): Promise<IncidentRecord>;
-  addIncidentImpact(id: string, impact: Omit<ImpactRecord, "id" | "incidentId">): Promise<ImpactRecord>;
+  addIncidentImpact(id: string, impact: AddImpactInput): Promise<ImpactRecord>;
 }
 
 export class MockSystemHealthRepository implements SystemHealthRepository {
-  async loadSnapshot(environment: HealthEnvironment) {
+  async loadSnapshot(environment: HealthEnvironment = "production") {
     return buildSystemHealthSnapshot(environment);
+  }
+  async listOwners() {
+    return [{ id: "demo-owner", name: "Demo Owner", role: "Super Admin" }];
+  }
+  async getImpactTargets() {
+    return { companies: [] };
   }
   async createIncident(input: CreateIncidentInput) {
     return makeIncident(input, Date.now() % 1000);
@@ -39,14 +68,20 @@ export class MockSystemHealthRepository implements SystemHealthRepository {
     if (!incident) throw new Error("Incident not found.");
     return { ...incident, state, resolvedAt: state === "resolved" ? new Date().toISOString() : incident.resolvedAt, recoveryEvidence: state === "resolved" ? resolution || "Resolved after evidence review." : incident.recoveryEvidence };
   }
-  async addIncidentImpact(id: string, impact: Omit<ImpactRecord, "id" | "incidentId">) {
-    return { ...impact, id: `imp-demo-${Date.now()}`, incidentId: id };
+  async addIncidentImpact(id: string, impact: AddImpactInput) {
+    return { id: `imp-demo-${Date.now()}`, incidentId: id, confidence: impact.confidence, area: impact.area, companyId: impact.companyId, companyName: null, clientName: null, workflow: impact.workflow, evidence: impact.evidence, serviceId: impact.serviceId ?? "svc-core-api" };
   }
 }
 
 export class LiveSystemHealthRepository implements SystemHealthRepository {
-  async loadSnapshot(environment: HealthEnvironment) {
-    return apiClient.request<SystemHealthSnapshotV2>({ method: "GET", path: "/super-admin/system-health/snapshot", query: { environment } });
+  async loadSnapshot(environment?: HealthEnvironment) {
+    return apiClient.request<SystemHealthSnapshotV2>({ method: "GET", path: "/super-admin/system-health/snapshot", query: environment ? { environment } : undefined });
+  }
+  async listOwners() {
+    return apiClient.request<IncidentOwner[]>({ method: "GET", path: "/super-admin/system-health/owners" });
+  }
+  async getImpactTargets() {
+    return apiClient.request<ImpactTargets>({ method: "GET", path: "/super-admin/system-health/impact-targets" });
   }
   async createIncident(input: CreateIncidentInput) {
     return apiClient.request<IncidentRecord>({ method: "POST", path: "/super-admin/system-health/incidents", body: input });
@@ -57,7 +92,7 @@ export class LiveSystemHealthRepository implements SystemHealthRepository {
   async changeIncidentState(id: string, state: IncidentState, resolution?: string) {
     return apiClient.request<IncidentRecord>({ method: "PATCH", path: `/super-admin/system-health/incidents/${id}/state`, body: { state, resolution } });
   }
-  async addIncidentImpact(id: string, impact: Omit<ImpactRecord, "id" | "incidentId">) {
+  async addIncidentImpact(id: string, impact: AddImpactInput) {
     return apiClient.request<ImpactRecord>({ method: "POST", path: `/super-admin/system-health/incidents/${id}/impacts`, body: impact });
   }
 }
@@ -79,12 +114,12 @@ export function makeIncident(input: CreateIncidentInput, index: number): Inciden
     detectedAt: at,
     resolvedAt: null,
     ownerId: input.ownerId,
-    ownerName: input.ownerName,
+    ownerName: "Demo Owner",
     summary: input.summary,
     currentFindings: "New demo incident awaiting investigation update.",
     recoveryEvidence: "",
     impactIds: [],
-    timeline: [{ id: `${id}-tl-1`, at, actor: input.ownerName, type: "created", note: "Created in frontend demo state. No production monitor was changed." }],
+    timeline: [{ id: `${id}-tl-1`, at, actor: "Demo Owner", type: "created", note: "Created in frontend demo state. No production monitor was changed." }],
   };
 }
 

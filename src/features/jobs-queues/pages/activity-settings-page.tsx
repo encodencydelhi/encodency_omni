@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils/cn";
 import { formatDateTime, formatRelativeTime } from "@/lib/utils/format";
 import { useJobsOverview } from "../data/hooks";
 import { ErrorState } from "@/components/shared/error-state";
-import { MOCK_ENVIRONMENT, JOBS_DATA_SOURCE } from "../data/config";
+import { MOCK_ENVIRONMENT, JOBS_MOCK_MODE, JOBS_DATA_SOURCE } from "../data/config";
 
 export function ActivitySettingsPage() {
   const { data: overview, isLoading, error, refetch } = useJobsOverview();
@@ -30,9 +30,13 @@ export function ActivitySettingsPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 bg-slate-50 rounded-sm border border-slate-200/80 px-3 py-2 mb-4">
-        <span className="font-medium">Environment:</span>
-        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
-        <span className="text-slate-300">|</span>
+        {JOBS_MOCK_MODE && (
+          <>
+            <span className="font-medium">Environment:</span>
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
+            <span className="text-slate-300">|</span>
+          </>
+        )}
         <span className="font-medium">Data Source:</span>
         <span>{JOBS_DATA_SOURCE}</span>
       </div>
@@ -51,6 +55,11 @@ export function ActivitySettingsPage() {
               </div>
             ) : (
               <div className="space-y-0 max-h-[600px] overflow-y-auto">
+                {overview.recentActivity.length === 0 && (
+                  <p className="py-8 text-center text-xs text-slate-500">
+                    Nothing yet. Retries, cancellations and queue pauses done here are listed with who did them and why.
+                  </p>
+                )}
                 {overview.recentActivity.map((act) => (
                   <div key={act.id} className="flex flex-col py-3 px-2 border-b border-slate-100 last:border-0 hover:bg-slate-50 rounded-sm transition-colors">
                     <div className="flex items-center justify-between mb-1">
@@ -79,25 +88,30 @@ export function ActivitySettingsPage() {
           <div className="rounded-sm border border-slate-200/90 bg-white p-4 shadow-2xs">
             <div className="flex items-center gap-2 mb-4">
               <SettingsIcon className="size-4 text-slate-700" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">Global Queue Configuration</h2>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900">{JOBS_MOCK_MODE ? "Global Queue Configuration" : "Queue Configuration"}</h2>
             </div>
             <div className="space-y-3">
-              {[
-                { label: "Default Retention Policy", value: "7 days for completed, 30 days for failed" },
-                { label: "Global Concurrency Limit", value: "1,000 concurrent jobs" },
-                { label: "Stale Worker Timeout", value: "5 minutes without heartbeat" },
-              ].map(setting => (
+              {(JOBS_MOCK_MODE
+                ? [
+                    { label: "Default Retention Policy", value: "7 days for completed, 30 days for failed" },
+                    { label: "Global Concurrency Limit", value: "1,000 concurrent jobs" },
+                    { label: "Stale Worker Timeout", value: "5 minutes without heartbeat" },
+                  ]
+                : (overview?.queues ?? []).map((q) => ({ label: `${q.name} retries`, value: q.retryPolicy }))
+              ).map(setting => (
                 <div key={setting.label} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
                   <span className="text-xs font-medium text-slate-600">{setting.label}</span>
                   <span className="text-xs font-bold text-slate-900">{setting.value}</span>
                 </div>
               ))}
               <div className="pt-2">
-                <p className="text-xs text-slate-500 italic">Configuration is managed via infrastructure as code. Contact DevOps to request changes.</p>
+                <p className="text-xs text-slate-500 italic">{JOBS_MOCK_MODE ? "Configuration is managed via infrastructure as code. Contact DevOps to request changes." : "Queue settings live in the application code and are changed by a deployment, not from this page."}</p>
               </div>
             </div>
           </div>
 
+          {JOBS_MOCK_MODE && (
+            <>
           <div className="rounded-sm border border-slate-200/90 bg-white p-4 shadow-2xs">
             <div className="flex items-center gap-2 mb-4">
               <ShieldIcon className="size-4 text-slate-700" />
@@ -145,6 +159,8 @@ export function ActivitySettingsPage() {
                </div>
             </div>
           </div>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePlatformIdentity } from "@/features/global-settings/data/hooks";
+import { isMockMode } from "@/config/env";
 import { cn } from "@/lib/utils/cn";
 import { formatTime } from "@/lib/utils/format";
 import { DASHBOARD_RANGES, type DashboardRange } from "../services/dashboard-service";
@@ -50,9 +51,14 @@ export function DashboardHeader({
           Platform Overview
         </h1>
         <p className="text-[0.8125rem] text-muted-foreground">
-          Platform metrics and system health for {identity.name}. Tiles marked
-          <span className="mx-1 inline-flex items-center rounded-sm border border-amber-200 bg-amber-50 px-1.5 py-px text-[11px] font-medium text-amber-700">Demo data</span>
-          show sample figures, not live aggregates.
+          Platform metrics and system health for {identity.name}.
+          {isMockMode ? (
+            <>
+              {" "}Tiles marked
+              <span className="mx-1 inline-flex items-center rounded-sm border border-amber-200 bg-amber-50 px-1.5 py-px text-[11px] font-medium text-amber-700">Demo data</span>
+              show sample figures, not live aggregates.
+            </>
+          ) : null}
         </p>
       </div>
 

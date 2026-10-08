@@ -103,9 +103,9 @@ export function useJobsOverview() {
 export function useRequestJobRetry() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (jobId: string) => jobsQueuesRepository.requestJobRetry(jobId),
+    mutationFn: ({ jobId, reason }: { jobId: string; reason?: string }) => jobsQueuesRepository.requestJobRetry(jobId, reason),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.recoveryRequests() });
+      qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.all });
     },
   });
 }
@@ -124,11 +124,9 @@ export function useUpdateRecoveryRequestState() {
 export function useCancelJob() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (jobId: string) => jobsQueuesRepository.cancelJob(jobId),
+    mutationFn: ({ jobId, reason }: { jobId: string; reason?: string }) => jobsQueuesRepository.cancelJob(jobId, reason),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.jobs() });
-      qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.overview() });
-      qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.activity() });
+      qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.all });
     },
   });
 }
@@ -136,7 +134,7 @@ export function useCancelJob() {
 export function usePauseQueue() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (queueId: string) => jobsQueuesRepository.pauseQueue(queueId),
+    mutationFn: ({ queueId, reason }: { queueId: string; reason?: string }) => jobsQueuesRepository.pauseQueue(queueId, reason),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.queues() });
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.queueStats() });
@@ -150,7 +148,7 @@ export function usePauseQueue() {
 export function useResumeQueue() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (queueId: string) => jobsQueuesRepository.resumeQueue(queueId),
+    mutationFn: ({ queueId, reason }: { queueId: string; reason?: string }) => jobsQueuesRepository.resumeQueue(queueId, reason),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.queues() });
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.queueStats() });
@@ -169,4 +167,10 @@ export function useResetJobsDemo() {
       qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.all });
     },
   });
+}
+
+/** Re-reads every Jobs & Queues panel from the backend (live mode has no demo data to reset). */
+export function useRefreshJobs() {
+  const qc = useQueryClient();
+  return () => qc.invalidateQueries({ queryKey: JOBS_QUERY_KEYS.all });
 }

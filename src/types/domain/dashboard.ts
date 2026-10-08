@@ -11,6 +11,7 @@ export const DASHBOARD_METRIC = {
   connectedIntegrations: "connectedIntegrations",
   runningJobs: "runningJobs",
   systemUptime: "systemUptime",
+  openIncidents: "openIncidents",
 } as const;
 
 export type DashboardMetricKey = keyof typeof DASHBOARD_METRIC;
@@ -51,6 +52,7 @@ export const ACTIVITY_KIND = {
   integration_connected: "integration_connected",
   ticket_opened: "ticket_opened",
   payment_failed: "payment_failed",
+  other: "other",
 } as const;
 
 export type ActivityKind = keyof typeof ACTIVITY_KIND;
@@ -79,15 +81,16 @@ export interface LatestSignup {
   id: string;
   name: string;
   timeAgo: string;
-  tier: PlanTier | "trial";
+  /** A core tier, "trial", or the name of any plan created in Plans & Subscriptions. */
+  tier: string;
 }
 
 export interface ApiUsageSnapshot {
   totalRequests: number;
-  requestDelta: MetricDelta;
-  successRate: number;
+  requestDelta: MetricDelta | null;
+  successRate: number | null;
   failedRequests: number;
-  avgResponseMs: number;
+  avgResponseMs: number | null;
   series: number[];
 }
 
@@ -113,7 +116,7 @@ export interface DashboardSnapshot {
   };
   subscriptionDistribution: {
     activeTotal: number;
-    segments: Array<{ tier: PlanTier; label: string; companies: number }>;
+    segments: Array<{ tier: string; label: string; companies: number }>;
   };
 
   recentActivity: DashboardActivity[];

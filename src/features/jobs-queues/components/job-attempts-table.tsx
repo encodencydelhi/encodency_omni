@@ -81,10 +81,10 @@ export function JobAttemptsTable({ attempts, onOpenAttempt }: JobAttemptsTablePr
                     <td className="py-2 px-3 text-xs text-slate-500 whitespace-nowrap">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span>{formatDateTime(attempt.startedAt)}</span>
+                          <span>{attempt.startedAt ? formatDateTime(attempt.startedAt) : "—"}</span>
                         </TooltipTrigger>
                         <TooltipContent className="text-xs">
-                          {formatDateTime(attempt.startedAt)}
+                          {attempt.startedAt ? formatDateTime(attempt.startedAt) : "Time not kept for earlier attempts"}
                         </TooltipContent>
                       </Tooltip>
                     </td>

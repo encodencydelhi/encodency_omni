@@ -5,6 +5,7 @@
 
 "use client";
 
+import { useState } from "react";
 import {
   AlertTriangleIcon,
   SaveIcon,
@@ -16,6 +17,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Sheet,
   SheetContent,
@@ -27,15 +30,18 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils/cn";
 import { formatNumber, formatDuration, formatDateTime } from "@/lib/utils/format";
-import { FAILURE_CLASSIFICATION_META, RETRY_ELIGIBILITY_META, JOB_LIFECYCLE_META } from "../data/config";
+import { FAILURE_CLASSIFICATION_META, RETRY_ELIGIBILITY_META, JOB_LIFECYCLE_META, JOBS_MOCK_MODE } from "../data/config";
+import { MIN_REASON_LENGTH } from "./reason-dialog";
 import type { JobRecord } from "../data/types";
 
 interface RetryReviewDrawerProps {
   job: JobRecord | null;
   isOpen: boolean;
   onClose: () => void;
-  onRequestRetry: (job: JobRecord) => void;
+  onRequestRetry: (job: JobRecord, reason: string) => void;
   onCancel: (job: JobRecord) => void;
+  /** A retry is being sent to the backend. */
+  isPending?: boolean;
 }
 
 function getRiskBadge(risk: "safe" | "unknown" | "risky", label: string) {
@@ -60,14 +66,22 @@ function getRiskBadge(risk: "safe" | "unknown" | "risky", label: string) {
   );
 }
 
-export function RetryReviewDrawer({
+export function RetryReviewDrawer(props: RetryReviewDrawerProps) {
+  if (!props.job) return null;
+  // Keyed by job so the typed reason never carries over to another job.
+  return <RetryReviewContent key={props.job.id} {...props} job={props.job} />;
+}
+
+function RetryReviewContent({
   job,
   isOpen,
   onClose,
   onRequestRetry,
   onCancel,
-}: RetryReviewDrawerProps) {
-  if (!job) return null;
+  isPending = false,
+}: Omit<RetryReviewDrawerProps, "job"> & { job: JobRecord }) {
+  const [typedReason, setTypedReason] = useState("");
+  const canSend = JOBS_MOCK_MODE || (job.retryEligibility === "retryable" && typedReason.trim().length >= MIN_REASON_LENGTH);
 
   const failureMeta = job.failureClassification
     ? FAILURE_CLASSIFICATION_META[job.failureClassification]
@@ -182,12 +196,24 @@ export function RetryReviewDrawer({
             >
               Retry: {eligibilityMeta.label}
             </span>
-            {getRiskBadge(idempotencyRisk, `Idempotency: ${idempotencyRisk}`)}
-            {getRiskBadge(sideEffectRisk, `Side-Effect: ${sideEffectRisk}`)}
+            {JOBS_MOCK_MODE && getRiskBadge(idempotencyRisk, `Idempotency: ${idempotencyRisk}`)}
+            {JOBS_MOCK_MODE && getRiskBadge(sideEffectRisk, `Side-Effect: ${sideEffectRisk}`)}
           </div>
 
+          {!JOBS_MOCK_MODE && (
+            <div className="rounded-sm border border-amber-300 bg-amber-50/80 p-3">
+              <div className="flex items-center gap-1.5 text-amber-800 font-bold text-xs mb-1">
+                <AlertTriangleIcon className="size-3.5 text-amber-600" />
+                <span>Runs the job again</span>
+              </div>
+              <p className="text-xs text-amber-700 leading-relaxed">
+                The job goes back to the queue and runs from the start. If it may have partly finished at the provider (a post, a payment), check the result there first.
+              </p>
+            </div>
+          )}
+
           {/* Side-Effect Warning */}
-          {sideEffectRisk === "risky" && (
+          {JOBS_MOCK_MODE && sideEffectRisk === "risky" && (
             <div className="rounded-sm border border-amber-300 bg-amber-50/80 p-3">
               <div className="flex items-center gap-1.5 text-amber-800 font-bold text-xs mb-1">
                 <AlertTriangleIcon className="size-3.5 text-amber-600" />
@@ -200,12 +226,14 @@ export function RetryReviewDrawer({
           )}
 
           {/* Current Dependency State */}
-          <div className="rounded-sm border border-slate-200/90 p-3 bg-white">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-              Current Dependency State
-            </p>
-            <p className="text-sm font-medium text-slate-700">{dependencyState}</p>
-          </div>
+          {JOBS_MOCK_MODE && (
+            <div className="rounded-sm border border-slate-200/90 p-3 bg-white">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+                Current Dependency State
+              </p>
+              <p className="text-sm font-medium text-slate-700">{dependencyState}</p>
+            </div>
+          )}
 
           {/* Proposed Action & Reason */}
           <div className="rounded-sm border border-slate-200/90 p-3 bg-white">
@@ -214,13 +242,30 @@ export function RetryReviewDrawer({
             </p>
             <p className="text-sm font-medium text-slate-700">{proposedAction}</p>
             <div className="mt-2">
-              <p className="text-xs text-slate-500">Reason</p>
-              <p className="text-xs font-medium text-slate-700 mt-0.5">{reason}</p>
+              {JOBS_MOCK_MODE ? (
+                <>
+                  <p className="text-xs text-slate-500">Reason</p>
+                  <p className="text-xs font-medium text-slate-700 mt-0.5">{reason}</p>
+                </>
+              ) : (
+                <div className="space-y-1.5">
+                  <Label htmlFor="retry-reason" className="text-xs font-semibold text-slate-600">Reason</Label>
+                  <Textarea
+                    id="retry-reason"
+                    value={typedReason}
+                    maxLength={300}
+                    rows={3}
+                    placeholder="Why is this job being retried? Kept in the audit trail."
+                    onChange={(e) => setTypedReason(e.target.value)}
+                    className="text-xs"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
           {/* Required Approval */}
-          {requiresApproval && (
+          {JOBS_MOCK_MODE && requiresApproval && (
             <div className="rounded-sm border border-blue-200 bg-blue-50/50 p-3">
               <p className="text-xs font-bold text-blue-800 mb-0.5">Required Approval</p>
               <p className="text-xs text-blue-700">
@@ -256,26 +301,29 @@ export function RetryReviewDrawer({
               onClick={() => onCancel(job)}
             >
               <XIcon className="size-3.5 mr-1.5" />
-              Cancel
+              {JOBS_MOCK_MODE ? "Cancel" : "Close"}
             </Button>
             <div className="flex-1" />
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs h-8 font-semibold text-slate-700"
-              onClick={() => onRequestRetry(job)}
-            >
-              <SaveIcon className="size-3.5 mr-1.5" />
-              Save Draft
-            </Button>
+            {JOBS_MOCK_MODE && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-8 font-semibold text-slate-700"
+                onClick={() => onRequestRetry(job, "")}
+              >
+                <SaveIcon className="size-3.5 mr-1.5" />
+                Save Draft
+              </Button>
+            )}
             <Button
               variant="default"
               size="sm"
               className="text-xs h-8 font-semibold"
-              onClick={() => onRequestRetry(job)}
+              disabled={!canSend || isPending}
+              onClick={() => onRequestRetry(job, typedReason.trim())}
             >
               <SendIcon className="size-3.5 mr-1.5" />
-              Create Demo Request
+              {JOBS_MOCK_MODE ? "Create Demo Request" : isPending ? "Retrying…" : "Retry Job"}
             </Button>
           </div>
         </SheetFooter>

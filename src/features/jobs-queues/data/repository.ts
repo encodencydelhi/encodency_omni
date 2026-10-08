@@ -39,11 +39,11 @@ export interface JobsQueuesRepository {
   getActivity(): Promise<JobActivity[]>;
   getProcessingTrend(): Promise<ProcessingTrendPoint[]>;
   getOverview(): Promise<JobsOverviewData>;
-  requestJobRetry(jobId: string): Promise<RecoveryRequest | null>;
+  requestJobRetry(jobId: string, reason?: string): Promise<RecoveryRequest | null>;
   updateRecoveryRequestState(requestId: string, state: RetryRequestState, notes?: string): Promise<RecoveryRequest | null>;
-  cancelJob(jobId: string): Promise<JobRecord | null>;
-  pauseQueue(queueId: string): Promise<QueueDefinition | null>;
-  resumeQueue(queueId: string): Promise<QueueDefinition | null>;
+  cancelJob(jobId: string, reason?: string): Promise<JobRecord | null>;
+  pauseQueue(queueId: string, reason?: string): Promise<QueueDefinition | null>;
+  resumeQueue(queueId: string, reason?: string): Promise<QueueDefinition | null>;
   resetDemo(): Promise<void>;
 }
 
@@ -78,4 +78,4 @@ const mockJobsQueuesProvider: JobsQueuesRepository = {
 
 export const jobsQueuesRepository: JobsQueuesRepository = JOBS_MOCK_MODE
   ? mockJobsQueuesProvider
-  : createApiJobsQueuesProvider(mockJobsQueuesProvider);
+  : createApiJobsQueuesProvider();

@@ -18,10 +18,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
 import { formatNumber } from "@/lib/utils/format";
-import { useQueues, usePauseQueue, useResumeQueue, useResetJobsDemo } from "../data/hooks";
-import { QUEUE_STATE_META, MOCK_ENVIRONMENT, JOBS_DATA_SOURCE } from "../data/config";
+import { useQueues, usePauseQueue, useResumeQueue, useResetJobsDemo, useRefreshJobs } from "../data/hooks";
+import { QUEUE_STATE_META, MOCK_ENVIRONMENT, JOBS_MOCK_MODE, JOBS_DATA_SOURCE } from "../data/config";
 import type { QueueDefinition } from "../data/types";
-import { JobsKpiCards, QueueTable, QueuePreviewDrawer } from "../components";
+import { JobsKpiCards, QueueTable, QueuePreviewDrawer, ReasonDialog } from "../components";
+import { jobsErrorMessage } from "../data/errors";
 import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 
@@ -31,10 +32,12 @@ export function QueuesPage() {
   const pauseMutation = usePauseQueue();
   const resumeMutation = useResumeQueue();
   const resetDemo = useResetJobsDemo();
+  const refresh = useRefreshJobs();
 
   const [search, setSearch] = useState("");
   const [previewQueue, setPreviewQueue] = useState<QueueDefinition | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [reasonFor, setReasonFor] = useState<{ queue: QueueDefinition; pause: boolean } | null>(null);
 
   const filtered = useMemo(() => {
     if (!search) return queues;
@@ -73,17 +76,36 @@ export function QueuesPage() {
   };
 
   const handlePauseResume = (queue: QueueDefinition) => {
-    if (queue.operationalState === "running") {
-      pauseMutation.mutate(queue.id, {
-        onSuccess: () => toast.success(`Pause request drafted for "${queue.name}"`),
-        onError: () => toast.error("Failed to draft pause request"),
-      });
-    } else if (queue.operationalState === "paused") {
-      resumeMutation.mutate(queue.id, {
-        onSuccess: () => toast.success(`Resume request drafted for "${queue.name}"`),
-        onError: () => toast.error("Failed to draft resume request"),
-      });
+    if (queue.operationalState !== "running" && queue.operationalState !== "paused") return;
+    const pause = queue.operationalState === "running";
+    if (!JOBS_MOCK_MODE) {
+      setReasonFor({ queue, pause });
+      return;
     }
+    (pause ? pauseMutation : resumeMutation).mutate(
+      { queueId: queue.id },
+      {
+        onSuccess: () => toast.success(`${pause ? "Pause" : "Resume"} request drafted for "${queue.name}"`),
+        onError: () => toast.error(`Failed to draft ${pause ? "pause" : "resume"} request`),
+      },
+    );
+  };
+
+  const confirmPauseResume = (reason: string) => {
+    if (!reasonFor) return;
+    const { queue, pause } = reasonFor;
+    (pause ? pauseMutation : resumeMutation).mutate(
+      { queueId: queue.id, reason },
+      {
+        onSuccess: () => {
+          toast.success(pause ? `"${queue.name}" is paused. New jobs wait until it is resumed.` : `"${queue.name}" is running again.`);
+          setReasonFor(null);
+          setPreviewOpen(false);
+          setPreviewQueue(null);
+        },
+        onError: (error) => toast.error(jobsErrorMessage(error, `Could not ${pause ? "pause" : "resume"} the queue`)),
+      },
+    );
   };
 
   if (error && !isLoading) {
@@ -109,17 +131,28 @@ export function QueuesPage() {
               View Backlog
             </Link>
           </Button>
-          <Button variant="outline" size="sm" className="text-xs h-8 font-semibold bg-white text-slate-700" onClick={() => resetDemo.mutate()} disabled={resetDemo.isPending}>
-            <RefreshCwIcon className={cn("size-3.5 mr-1.5 text-slate-500", resetDemo.isPending && "animate-spin")} />
-            Reset Demo
-          </Button>
+          {JOBS_MOCK_MODE ? (
+            <Button variant="outline" size="sm" className="text-xs h-8 font-semibold bg-white text-slate-700" onClick={() => resetDemo.mutate()} disabled={resetDemo.isPending}>
+              <RefreshCwIcon className={cn("size-3.5 mr-1.5 text-slate-500", resetDemo.isPending && "animate-spin")} />
+              Reset Demo
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" className="text-xs h-8 font-semibold bg-white text-slate-700" onClick={refresh}>
+              <RefreshCwIcon className="size-3.5 mr-1.5 text-slate-500" />
+              Refresh
+            </Button>
+          )}
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 bg-slate-50 rounded-sm border border-slate-200/80 px-3 py-2">
-        <span className="font-medium">Environment:</span>
-        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
-        <span className="text-slate-300">|</span>
+        {JOBS_MOCK_MODE && (
+          <>
+            <span className="font-medium">Environment:</span>
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
+            <span className="text-slate-300">|</span>
+          </>
+        )}
         <span className="font-medium">Data Source:</span>
         <span>{JOBS_DATA_SOURCE}</span>
         <span className="text-slate-300">|</span>
@@ -178,6 +211,22 @@ export function QueuesPage() {
         onClose={() => { setPreviewOpen(false); setPreviewQueue(null); }}
         onOpenFull={handleOpenFull}
         onPauseResume={handlePauseResume}
+      />
+
+      <ReasonDialog
+        open={reasonFor !== null}
+        onOpenChange={(open) => !open && setReasonFor(null)}
+        title={reasonFor?.pause ? `Pause ${reasonFor.queue.name}?` : `Resume ${reasonFor?.queue.name ?? ""}?`}
+        description={
+          reasonFor?.pause
+            ? "Workers stop picking up new jobs from this queue. Jobs already running finish, and waiting jobs stay waiting."
+            : "Workers start picking up waiting jobs from this queue again."
+        }
+        confirmLabel={reasonFor?.pause ? "Pause Queue" : "Resume Queue"}
+        pendingLabel={reasonFor?.pause ? "Pausing…" : "Resuming…"}
+        isPending={pauseMutation.isPending || resumeMutation.isPending}
+        destructive={reasonFor?.pause}
+        onConfirm={confirmPauseResume}
       />
     </div>
   );

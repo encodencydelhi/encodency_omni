@@ -5,10 +5,16 @@ import { ChevronLeft, ChevronRight, Filter, MoreVertical, Edit2, BarChart2, Mega
 import { ChannelLogo } from "../shared/channel-logo";
 import { useCalendarContent } from "../shared/use-admin-workspace";
 import { cn } from "@/lib/utils/cn";
+import { isMockMode } from "@/config/env";
+import { LiveContentCalendar } from "./live-content-calendar";
 
 const days = Array.from({ length: 35 }, (_, index) => index - 1);
 
 export function ContentCalendarPage() {
+   return isMockMode ? <MockContentCalendarPage /> : <LiveContentCalendar />;
+}
+
+function MockContentCalendarPage() {
    const { data = [] } = useCalendarContent();
    const [view, setView] = useState<"Month" | "Week" | "List">("Month");
 

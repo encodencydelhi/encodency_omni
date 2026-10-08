@@ -929,8 +929,31 @@ describe("draftsApi (TASK-11A contracts)", () => {
   });
 });
 
-describe("dashboardService (Data Integrity & Super Admin Jobs)", () => {
-  it("GET /super-admin/jobs/stats is called and live vs unsupported metrics are clearly separated", async () => {
+describe("dashboardService (real platform aggregates)", () => {
+  const OVERVIEW = {
+    generatedAt: "2026-10-08T10:00:00.000Z",
+    range: { key: "30d", days: 30, from: "2026-09-08T10:00:00.000Z", to: "2026-10-08T10:00:00.000Z" },
+    metrics: {
+      companies: { total: 7, active: 6, newInRange: 2, changePercent: 100 },
+      users: { total: 20, deactivated: 1, newInRange: 5, changePercent: null },
+      clients: { total: 12, newInRange: 3, changePercent: -25 },
+      subscriptions: { active: 5, pastDue: 1, suspended: 0, canceled: 0 },
+      mrr: { amountMinor: 900000, currency: "INR" },
+      integrations: { connected: 4, needAttention: 1 },
+      incidents: { open: 2 },
+    },
+    companyGrowth: { total: 7, series: [{ month: "2026-09", value: 3 }, { month: "2026-10", value: 2 }] },
+    revenue: { mrrMinor: 900000, currency: "INR", collectedSeries: [{ month: "2026-10", value: 1234 }] },
+    subscriptionDistribution: { activeTotal: 5, segments: [{ key: "p1", label: "Growth", companies: 5 }] },
+    latestSignups: [{ id: "c1", name: "Acme", createdAt: "2026-10-08T09:00:00.000Z", plan: "Growth", subscriptionStatus: "ACTIVE" }],
+    apiUsage: { totalRequests: 100, changePercent: 10, successRate: 98.5, failedRequests: 2, serverErrors: 1, avgResponseMs: 120, series: [1, 2, 3] },
+    integrationStatus: [{ id: "META", name: "Meta", status: "Connected", connections: 3, needAttention: 0 }],
+    attention: [{ id: "att_past_due", title: "Subscriptions past due", detail: "1 company subscription is overdue", severity: "critical", count: 1, href: "/super-admin/billing", actionLabel: "Review billing" }],
+    recentActivity: [{ id: "a1", kind: "company_registered", action: "company.created", title: "Company created", actor: "Manish Sirohi", companyName: "Acme", outcome: "SUCCESS", createdAt: "2026-10-08T09:30:00.000Z" }],
+  };
+
+  it("reads the platform overview and the queue stats, and marks every tile live", async () => {
+    responses.push({ status: 200, body: OVERVIEW });
     responses.push({
       status: 200,
       body: {
@@ -944,20 +967,39 @@ describe("dashboardService (Data Integrity & Super Admin Jobs)", () => {
 
     const snapshot = await dashboardService.getSnapshot("30d");
 
-    assert.equal(calls[0]!.url, "/api/v1/super-admin/jobs/stats");
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/dashboard/overview?range=30d");
     assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(calls[1]!.url, "/api/v1/super-admin/jobs/stats");
 
-    const runningJobsMetric = snapshot.metrics.find((m) => m.key === "runningJobs");
-    assert.ok(runningJobsMetric, "runningJobs metric must be present");
-    assert.equal(runningJobsMetric.value, 6, "Total active jobs should sum active counts from reachable queues (2 + 4 = 6)");
-    assert.equal(runningJobsMetric.isLive, true, "runningJobs must be marked isLive: true");
+    const metric = (key: string) => snapshot.metrics.find((m) => m.key === key);
+    assert.equal(metric("totalCompanies")!.value, 7);
+    assert.deepEqual(metric("totalCompanies")!.delta, { changePercent: 100, direction: "up-is-good" });
+    assert.equal(metric("totalUsers")!.delta, null, "no earlier period means no trend");
+    assert.equal(metric("monthlyRevenue")!.value, 900000);
+    assert.equal(metric("monthlyRevenue")!.currency, "INR");
+    assert.equal(metric("runningJobs")!.value, 6, "active jobs of the reachable queues (2 + 4)");
+    assert.equal(metric("openIncidents")!.value, 2);
+    assert.equal(metric("systemUptime"), undefined, "uptime history is not tracked, so the tile is not shown");
+    assert.ok(snapshot.metrics.every((m) => m.isLive === true));
 
-    const unsupportedMetric = snapshot.metrics.find((m) => m.key === "totalCompanies");
-    assert.ok(unsupportedMetric, "totalCompanies metric must be present");
-    assert.equal(unsupportedMetric.isLive, false, "Unsupported metric must be marked isLive: false");
+    assert.deepEqual(snapshot.companyGrowth.series.map((p) => p.month), ["Sep", "Oct"]);
+    assert.equal(snapshot.subscriptionDistribution.segments[0]!.label, "Growth");
+    assert.equal(snapshot.latestSignups[0]!.tier, "Growth");
+    assert.equal(snapshot.apiUsage.successRate, 98.5);
+    assert.ok(snapshot.attention.some((a) => a.id === "att_past_due"));
+    assert.ok(snapshot.attention.some((a) => a.id === "att_failed_jobs"), "failed jobs from the queues are listed");
+    assert.equal(snapshot.recentActivity[0]!.detail, "Manish Sirohi · Acme");
   });
 
-  it("dashboardService propagates API failure without silent mock fallback", async () => {
+  it("still shows the dashboard when the queue stats are unreachable (no running-jobs tile)", async () => {
+    responses.push({ status: 200, body: OVERVIEW });
+    responses.push({ status: 503, body: { message: "Redis down", code: "SERVICE_UNAVAILABLE" } });
+    const snapshot = await dashboardService.getSnapshot("30d");
+    assert.equal(snapshot.metrics.find((m) => m.key === "runningJobs"), undefined);
+    assert.equal(snapshot.metrics.find((m) => m.key === "totalCompanies")!.value, 7);
+  });
+
+  it("propagates an overview failure without any silent demo data", async () => {
     responses.push({
       status: 500,
       body: { message: "Internal server error", code: "INTERNAL_ERROR" },

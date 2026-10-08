@@ -6,7 +6,7 @@ import { Sheet, SheetBody, SheetContent, SheetDescription, SheetHeader, SheetTit
 import { KeyValue } from "@/features/companies/components/primitives";
 import { formatDateTime } from "@/lib/utils/format";
 import { RESOURCE_BY_KEY } from "../data/catalogue";
-import { usageRoutes } from "../data/config";
+import { USAGE_MOCK_MODE, usageRoutes } from "../data/config";
 import { useEvent } from "../data/hooks";
 import { number } from "../lib/format";
 import { ProcessingBadge } from "./badges";
@@ -46,7 +46,7 @@ export function EventDrawer({ eventId, onClose }: { eventId: string | null; onCl
                 <KeyValue label="Idempotency reference"><code className="break-all text-[11px]">{event.idempotencyKey}</code></KeyValue>
                 <KeyValue label="Related reference"><code className="break-all text-[11px]">{event.reference}</code></KeyValue>
               </dl>
-              <p className="text-2xs text-muted-foreground">Demo operational data. Request payloads, credentials and secrets are never stored or shown.</p>
+              <p className="text-2xs text-muted-foreground">{USAGE_MOCK_MODE ? "Demo operational data. " : ""}Request payloads, credentials and secrets are never stored or shown.</p>
               <Link href={usageRoutes.companyUsage(event.companyId, event.resource)} className="text-2xs font-medium text-primary hover:underline">Review affected company usage</Link>
             </div>
           )}

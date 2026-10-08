@@ -23,10 +23,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils/cn";
 import { formatNumber } from "@/lib/utils/format";
 import { useJobs, useQueues, useRequestJobRetry } from "../data/hooks";
-import { JOB_LIFECYCLE_META, MOCK_ENVIRONMENT, JOBS_DATA_SOURCE } from "../data/config";
+import { JOB_LIFECYCLE_META, MOCK_ENVIRONMENT, JOBS_MOCK_MODE, JOBS_DATA_SOURCE } from "../data/config";
 import { filterJobs, getDistinctQueues, getDistinctCompanies, paginate, DEFAULT_JOB_FILTERS, type JobFilters } from "../data/selectors";
 import type { JobRecord } from "../data/types";
 import { JobsTable, JobPreviewDrawer, RetryReviewDrawer } from "../components";
+import { jobsErrorMessage } from "../data/errors";
+import { toast } from "sonner";
 
 const QUICK_FILTERS: Array<{ label: string; value: string }> = [
   { label: "All", value: "all" },
@@ -38,6 +40,9 @@ const QUICK_FILTERS: Array<{ label: string; value: string }> = [
   { label: "Succeeded", value: "succeeded" },
   { label: "Scheduled", value: "scheduled" },
 ];
+
+/** No dead-letter queue exists in live mode: a job that used all its attempts stays Failed. */
+const visibleQuickFilters = () => QUICK_FILTERS.filter((f) => JOBS_MOCK_MODE || f.value !== "dead_lettered");
 
 const SORT_OPTIONS: Array<{ value: JobFilters["sortBy"]; label: string }> = [
   { value: "newest", label: "Newest First" },
@@ -145,11 +150,18 @@ export function AllJobsPage() {
     setRetryJob(null);
   }, []);
 
-  const handleSubmitRetry = useCallback((job?: JobRecord) => {
-    const target = job ?? retryJob;
-    if (target) retryMutation.mutate(target.id);
-    setRetryJob(null);
-  }, [retryJob, retryMutation]);
+  const handleSubmitRetry = useCallback((job: JobRecord, reason: string) => {
+    retryMutation.mutate(
+      { jobId: job.id, reason },
+      {
+        onSuccess: () => {
+          toast.success(JOBS_MOCK_MODE ? "Retry request submitted" : "Job queued to run again");
+          setRetryJob(null);
+        },
+        onError: (error) => toast.error(jobsErrorMessage(error, "Could not retry the job")),
+      },
+    );
+  }, [retryMutation]);
 
   const hasActiveFilters =
     filters.query !== "" ||
@@ -183,9 +195,13 @@ export function AllJobsPage() {
 
       {/* Operational Context Bar */}
       <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 bg-slate-50 rounded-sm border border-slate-200/80 px-3 py-2">
-        <span className="font-medium">Environment:</span>
-        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
-        <span className="text-slate-300">|</span>
+        {JOBS_MOCK_MODE && (
+          <>
+            <span className="font-medium">Environment:</span>
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
+            <span className="text-slate-300">|</span>
+          </>
+        )}
         <span className="font-medium">Job Data Source:</span>
         <span>{JOBS_DATA_SOURCE}</span>
         <span className="text-slate-300">|</span>
@@ -203,7 +219,7 @@ export function AllJobsPage() {
           { label: "Succeeded", value: stateCounts.succeeded, color: "green", icon: CheckCircle2Icon },
           { label: "Failed", value: stateCounts.failed, color: "red", icon: XCircleIcon },
           { label: "Dead Lettered", value: stateCounts.dead_lettered, color: "rose", icon: AlertTriangleIcon },
-        ].map((item) => {
+        ].filter((item) => JOBS_MOCK_MODE || item.label !== "Dead Lettered").map((item) => {
           const Icon = item.icon;
           return (
             <div
@@ -354,7 +370,7 @@ export function AllJobsPage() {
 
         {/* Quick Filter Pills */}
         <div className="flex items-center gap-1.5 flex-wrap border-b border-[#E2E8F0] pb-0">
-          {QUICK_FILTERS.map((pf) => (
+          {visibleQuickFilters().map((pf) => (
             <button
               key={pf.value}
               onClick={() => handleQuickFilter(pf.value)}
@@ -427,6 +443,7 @@ export function AllJobsPage() {
         onClose={() => setRetryJob(null)}
         onRequestRetry={handleSubmitRetry}
         onCancel={handleCancelRetry}
+        isPending={retryMutation.isPending}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, Menu, Plus, Search } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Plus, Search, Settings, Upload, UserRound, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { NotificationsMenu } from "@/components/layout/notifications-menu";
 import { useAdminContext } from "./admin-context";
@@ -159,40 +159,50 @@ export function AdminTopbar() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2.5 rounded-[10px] p-1.5 pr-3 hover:bg-slate-100/80 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 group">
-              <div className="relative shrink-0">
+            <button
+              className="group flex h-10 items-center gap-1.5 rounded-full border border-slate-200 bg-white p-1 pl-1.5 shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+              aria-label="Open account menu"
+            >
+              <div className="relative grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-blue-50 via-white to-indigo-100 ring-1 ring-blue-100 transition-all group-hover:ring-blue-200">
                 {user?.avatarUrl ? (
                   <Image
                     src={user.avatarUrl}
                     alt={fullName}
                     width={32}
                     height={32}
-                    className="rounded-[8px] object-cover border border-slate-200 bg-slate-50 shadow-xs group-hover:border-slate-300 transition-colors"
+                    className="size-full object-cover"
                   />
                 ) : (
-                  <div className="size-8 rounded-[8px] bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white flex items-center justify-center font-bold text-[12px] shadow-xs border border-blue-600">
-                    {initials}
+                  <div className="grid size-full place-items-center bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white">
+                    <UserRound className="size-[18px]" />
                   </div>
                 )}
+                <span className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-white bg-emerald-500" />
               </div>
-              <span className="hidden text-left xl:block">
-                <span className="block text-[14px] font-semibold tracking-tight text-[#0f172a]">
-                  {fullName}
-                </span>
-              </span>
-              <ChevronDown className="hidden size-4 text-slate-400 group-hover:text-slate-600 transition-colors xl:block" />
+              <ChevronDown className="mr-1 size-4 text-slate-400 transition-colors group-hover:text-blue-600" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 rounded-sm">
+          <DropdownMenuContent align="end" className="w-64 rounded-lg border-slate-200 p-1.5 shadow-xl shadow-slate-900/10">
             <DropdownMenuLabel className="font-normal p-2 normal-case tracking-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none text-[#18181B]">{fullName}</p>
-                <p className="text-xs leading-none text-[#A1A1AA]">{userEmail}</p>
+              <div className="flex items-center gap-3">
+                <div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-blue-50 via-white to-indigo-100 ring-1 ring-blue-100">
+                  {user?.avatarUrl ? (
+                    <Image src={user.avatarUrl} alt={fullName} width={40} height={40} className="size-full object-cover" />
+                  ) : (
+                    <div className="grid size-full place-items-center bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white">
+                      <UserRound className="size-5" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold leading-none text-[#18181B]">{fullName || initials}</p>
+                  <p className="mt-1 truncate text-xs leading-none text-[#71717A]">{userEmail}</p>
+                </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="rounded-sm cursor-pointer">
-              <Link href="/admin/settings">Profile settings</Link>
+            <DropdownMenuItem asChild className="gap-2 rounded-md cursor-pointer">
+              <Link href="/admin/settings"><UserRound className="size-4" />Profile settings</Link>
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={(e) => {
@@ -200,8 +210,9 @@ export function AdminTopbar() {
                 fileInputRef.current?.click();
               }}
               disabled={uploadingAvatar}
-              className="rounded-sm cursor-pointer"
+              className="gap-2 rounded-md cursor-pointer"
             >
+              <Upload className="size-4" />
               {user?.avatarUrl ? "Change avatar..." : "Upload avatar..."}
             </DropdownMenuItem>
             {user?.avatarUrl && (
@@ -211,16 +222,17 @@ export function AdminTopbar() {
                   void handleAvatarRemove();
                 }}
                 disabled={uploadingAvatar}
-                className="rounded-sm cursor-pointer text-red-600 focus:text-red-600"
+                className="gap-2 rounded-md cursor-pointer text-red-600 focus:text-red-600"
               >
+                <X className="size-4" />
                 Remove avatar
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem asChild className="rounded-sm cursor-pointer">
-              <Link href="/admin/settings">Organization settings</Link>
+            <DropdownMenuItem asChild className="gap-2 rounded-md cursor-pointer">
+              <Link href="/admin/settings"><Settings className="size-4" />Organization settings</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="rounded-sm cursor-pointer text-red-600 focus:text-red-600" onSelect={() => void logout()}>Sign out</DropdownMenuItem>
+            <DropdownMenuItem className="gap-2 rounded-md cursor-pointer text-red-600 focus:text-red-600" onSelect={() => void logout()}><LogOut className="size-4" />Sign out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

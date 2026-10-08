@@ -6,6 +6,7 @@ export type AuditCategory =
   | "users_access"
   | "internal_team"
   | "clients"
+  | "content_campaigns"
   | "plans_subscriptions"
   | "billing"
   | "usage_limits"

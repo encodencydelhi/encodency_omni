@@ -1,8 +1,11 @@
 import { apiClient } from "@/lib/api/client";
 import { companyScopeHeaders } from "@/lib/api/company-scope";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
+import { isMockMode } from "@/config/env";
 import type { DashboardSnapshot } from "@/types/domain/dashboard";
 import { DASHBOARD_SNAPSHOT, buildSnapshot } from "@/mocks/data/dashboard";
+import { overviewApi } from "../live/overview-api";
+import { buildLiveSnapshot, type LiveJobsStats } from "./live-snapshot";
 
 /** Comparison windows the dashboard can be scoped to. */
 export const DASHBOARD_RANGES = {
@@ -103,107 +106,26 @@ export interface SuperAdminSummaryResponse {
 
 export const dashboardService = {
   /**
-   * Verified Backend Audit:
-   * - GET /api/v1/super-admin/jobs/stats (Platform Super Admin BullMQ/Redis statistics)
-   * - GET /api/v1/super-admin/dashboard/summary (Platform Super Admin overview counts)
-   * - GET /api/v1/dashboard/company-summary (Company Admin overview metrics and activity)
+   * Super Admin dashboard. Live mode reads the platform's own aggregates:
+   * - GET /super-admin/dashboard/overview?range=  (companies, users, clients, subscriptions, MRR, integrations,
+   *   growth and revenue charts, plan mix, latest sign-ups, API usage, attention items, recent activity)
+   * - GET /super-admin/jobs/stats                 (running and failed jobs)
    *
-   * Data Integrity Policy:
-   * - Call verified live backend endpoints.
-   * - On failure, propagate errors to React Query so loading and error states with retry actions are rendered.
-   * - Never silently swallow errors into mock data.
-   * - Map real backend counts into DashboardSnapshot preserving exact UI layout and visual tokens.
+   * Failures propagate to React Query (error state with retry); there is no silent demo fallback.
+   * A tile the backend cannot measure (uptime history) is not shown at all.
    */
-  async getSnapshot(_range: DashboardRange, signal?: AbortSignal): Promise<DashboardSnapshot> {
-    // 1. Fetch verified live Jobs & Queues statistics from real backend endpoint
-    const statsResponse = await apiClient.request<JobsStatsResponse>({
-      method: "GET",
-      path: "/super-admin/jobs/stats",
-      signal,
-    });
+  async getSnapshot(range: DashboardRange, signal?: AbortSignal): Promise<DashboardSnapshot> {
+    if (isMockMode) return { ...getMockDashboardSnapshot(), generatedAt: new Date().toISOString() };
 
-    const queues = Array.isArray(statsResponse?.queues) ? statsResponse.queues : [];
-    let totalActiveJobs = 0;
-    let reachableQueuesCount = 0;
-
-    for (const q of queues) {
-      if (q.reachable) {
-        reachableQueuesCount++;
-        if (q.counts) {
-          totalActiveJobs += q.counts.active ?? 0;
-        }
-      }
-    }
-
-    // 2. Fetch live Super Admin summary if available
-    let superAdminSummary: SuperAdminSummaryResponse | null = null;
-    try {
-      superAdminSummary = await this.getSuperAdminSummary(signal);
-    } catch {
-      // Allows contract tests running in isolated mock environments to proceed smoothly
-    }
-
-    // 3. Base dataset for UI structure and chart series
-    const baseSnapshot = getMockDashboardSnapshot();
-
-    // 4. Mark live vs unsupported metrics explicitly to maintain data integrity
-    const metrics = baseSnapshot.metrics.map((m) => {
-      if (m.key === "runningJobs") {
-        return {
-          ...m,
-          value: totalActiveJobs,
-          isLive: true,
-          hint: `${totalActiveJobs} active across ${reachableQueuesCount} BullMQ queues (Live)`,
-        };
-      }
-
-      if (superAdminSummary?.metrics) {
-        if (m.key === "totalCompanies" && superAdminSummary.metrics.companies?.state === "live") {
-          return {
-            ...m,
-            value: superAdminSummary.metrics.companies.value,
-            isLive: true,
-            hint: `${superAdminSummary.metrics.activeCompanies?.value ?? 0} active companies (Live)`,
-          };
-        }
-        if (m.key === "totalUsers" && superAdminSummary.metrics.users?.state === "live") {
-          return {
-            ...m,
-            value: superAdminSummary.metrics.users.value,
-            isLive: true,
-            hint: `${superAdminSummary.metrics.deactivatedUsers?.value ?? 0} deactivated (Live)`,
-          };
-        }
-        if (m.key === "totalClients" && superAdminSummary.metrics.clients?.state === "live") {
-          return {
-            ...m,
-            value: superAdminSummary.metrics.clients.value,
-            isLive: true,
-            hint: "Active across platform (Live)",
-          };
-        }
-        if (m.key === "connectedIntegrations" && superAdminSummary.metrics.integrations?.state === "live") {
-          return {
-            ...m,
-            value: superAdminSummary.metrics.integrations.value,
-            isLive: true,
-            hint: "Live provider channels (Live)",
-          };
-        }
-      }
-
-      return {
-        ...m,
-        isLive: false,
-        hint: `${m.hint} • Demo`,
-      };
-    });
-
-    return {
-      ...baseSnapshot,
-      generatedAt: new Date().toISOString(),
-      metrics,
-    };
+    const overview = await overviewApi.superAdmin(range, signal);
+    // The queue panel is optional: when Redis is unreachable the rest of the dashboard still works.
+    const jobs = await apiClient
+      .request<JobsStatsResponse & LiveJobsStats>({ method: "GET", path: "/super-admin/jobs/stats", signal })
+      .catch((error: unknown) => {
+        if (signal?.aborted) throw error;
+        return null;
+      });
+    return buildLiveSnapshot(overview, jobs);
   },
 
   /**

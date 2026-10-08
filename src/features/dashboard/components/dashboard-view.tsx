@@ -5,8 +5,11 @@ import { useCallback, useMemo } from "react";
 import type { DashboardSnapshot } from "@/types/domain/dashboard";
 import { AlertBanner } from "@/components/shared/alert-banner";
 import { ErrorState } from "@/components/shared/error-state";
+import { isMockMode } from "@/config/env";
 import { useDashboard } from "../hooks/use-dashboard";
+import { EMPTY_SNAPSHOT } from "../services/live-snapshot";
 import {
+  DASHBOARD_RANGES,
   DEFAULT_DASHBOARD_RANGE,
   getMockDashboardSnapshot,
   isDashboardRange,
@@ -54,7 +57,7 @@ export function DashboardView() {
     if (data && Array.isArray(data.metrics) && data.metrics.length > 0) {
       return data;
     }
-    return getMockDashboardSnapshot();
+    return isMockMode ? getMockDashboardSnapshot() : EMPTY_SNAPSHOT;
   }, [data]);
 
   if (error) {
@@ -87,14 +90,16 @@ export function DashboardView() {
           isRefreshing={isFetching}
         />
 
-        <AlertBanner tone="info" className="my-1">
-          <span>
-            <strong>Data Integrity Notice:</strong> Platform overview aggregation (
-            <code className="text-2xs font-mono">/dashboard</code>) is pending backend implementation. Scale and
-            revenue metrics are displayed in demo/simulated mode. Jobs &amp; Queues statistics are wired to the live
-            BullMQ/Redis backend.
-          </span>
-        </AlertBanner>
+        {isMockMode ? (
+          <AlertBanner tone="info" className="my-1">
+            <span>
+              <strong>Data Integrity Notice:</strong> Platform overview aggregation (
+              <code className="text-2xs font-mono">/dashboard</code>) is pending backend implementation. Scale and
+              revenue metrics are displayed in demo/simulated mode. Jobs &amp; Queues statistics are wired to the live
+              BullMQ/Redis backend.
+            </span>
+          </AlertBanner>
+        ) : null}
 
         <DashboardMetrics metrics={snapshot.metrics} isLoading={isPending} />
 
@@ -110,7 +115,7 @@ export function DashboardView() {
         <div className="grid gap-1 xl:grid-cols-4">
           <PlanDistributionPanel distribution={snapshot.subscriptionDistribution} isLoading={isPending} />
           <LatestSignupsPanel signups={snapshot.latestSignups} isLoading={isPending} />
-          <ApiUsagePanel usage={snapshot.apiUsage} isLoading={isPending} />
+          <ApiUsagePanel usage={snapshot.apiUsage} isLoading={isPending} rangeLabel={DASHBOARD_RANGES[range].label} />
           <IntegrationStatusPanel integrations={snapshot.integrationStatus} isLoading={isPending} />
         </div>
 

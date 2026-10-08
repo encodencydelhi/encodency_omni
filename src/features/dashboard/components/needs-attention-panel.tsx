@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertTriangleIcon,
   ArrowRightIcon,
   CircleCheckIcon,
   CreditCardIcon,
@@ -29,6 +30,9 @@ const ITEM_ICONS: Record<string, LucideIcon> = {
   att_payments: CreditCardIcon,
   att_tokens: KeyRoundIcon,
   att_sla: TimerIcon,
+  att_incidents: AlertTriangleIcon,
+  att_past_due: CreditCardIcon,
+  att_usage: TimerIcon,
 };
 
 const SEVERITY_ACCENT: Record<NotificationSeverity, string> = {
@@ -88,7 +92,7 @@ export function NeedsAttentionPanel({ items, isLoading }: NeedsAttentionPanelPro
         <EmptyState
           icon={CircleCheckIcon}
           title="Nothing needs attention"
-          description="Integrations, queues, payments and SLAs are all inside their thresholds."
+          description="Integrations, queues, payments and incidents are all inside their thresholds."
           size="sm"
         />
       ) : (

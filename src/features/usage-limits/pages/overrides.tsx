@@ -129,7 +129,7 @@ export function OverridesPage() {
           />
         </Panel>
       )}
-      <p className="text-2xs text-muted-foreground">Scheduled overrides cannot be edited in place; revoke and create a new one. Expiry is evaluated against the demo clock: no real expiry job runs in this frontend phase.</p>
+      <p className="text-2xs text-muted-foreground">Scheduled overrides cannot be edited in place; revoke and create a new one.{USAGE_MOCK_MODE ? " Expiry is evaluated against the demo clock: no real expiry job runs in this frontend phase." : " An override stops counting at its expiry time."}</p>
 
       <OverrideDrawer row={opened} onClose={() => url.set({ open: null })} canManage={canManage} onRevoke={(row) => { url.set({ open: null }); setRevoking(row); }} />
       {creating ? <CreateOverrideDialog companies={data?.facets.companies ?? []} subscriptions={subscriptions} initial={creating} onClose={() => setCreating(null)} /> : null}

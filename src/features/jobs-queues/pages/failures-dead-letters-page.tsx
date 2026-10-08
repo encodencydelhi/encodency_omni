@@ -13,14 +13,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
 import { formatNumber } from "@/lib/utils/format";
-import { useJobs } from "../data/hooks";
-import { MOCK_ENVIRONMENT, JOBS_DATA_SOURCE } from "../data/config";
+import { useJobs, useRequestJobRetry } from "../data/hooks";
+import { jobsErrorMessage } from "../data/errors";
+import { toast } from "sonner";
+import { MOCK_ENVIRONMENT, JOBS_MOCK_MODE, JOBS_DATA_SOURCE } from "../data/config";
 import type { JobRecord } from "../data/types";
 import { JobsTable, JobPreviewDrawer, RetryReviewDrawer } from "../components";
 
 export function FailuresDeadLettersPage() {
   const router = useRouter();
   const { data: allJobs = [], isLoading: jobsLoading } = useJobs();
+  const retryMutation = useRequestJobRetry();
 
   const [search, setSearch] = useState("");
   const [previewJob, setPreviewJob] = useState<JobRecord | null>(null);
@@ -46,8 +49,8 @@ export function FailuresDeadLettersPage() {
     return [
       { label: "Failed Jobs", value: failures.filter((j) => j.lifecycleState === "failed").length, tone: "danger", icon: CircleAlertIcon },
       { label: "Retry Waiting", value: failures.filter((j) => j.lifecycleState === "retry_waiting").length, tone: "warning", icon: TimerResetIcon },
-      { label: "Dead Lettered", value: failures.filter((j) => j.lifecycleState === "dead_lettered").length, tone: "danger", icon: MailboxIcon },
-      { label: "Recovery Pending", value: 0, tone: "info", icon: ShieldAlertIcon }, // Mocked value based on recovery requests
+      ...(JOBS_MOCK_MODE ? [{ label: "Dead Lettered", value: failures.filter((j) => j.lifecycleState === "dead_lettered").length, tone: "danger", icon: MailboxIcon }] : []),
+      ...(JOBS_MOCK_MODE ? [{ label: "Recovery Pending", value: 0, tone: "info", icon: ShieldAlertIcon }] : []),
     ];
   }, [failures]);
 
@@ -71,9 +74,13 @@ export function FailuresDeadLettersPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 bg-slate-50 rounded-sm border border-slate-200/80 px-3 py-2">
-        <span className="font-medium">Environment:</span>
-        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
-        <span className="text-slate-300">|</span>
+        {JOBS_MOCK_MODE && (
+          <>
+            <span className="font-medium">Environment:</span>
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
+            <span className="text-slate-300">|</span>
+          </>
+        )}
         <span className="font-medium">Data Source:</span>
         <span>{JOBS_DATA_SOURCE}</span>
         <span className="text-slate-300">|</span>
@@ -81,7 +88,7 @@ export function FailuresDeadLettersPage() {
         <span className="font-semibold">{formatNumber(failures.length)}</span>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 items-stretch">
+      <div className={cn("grid grid-cols-2 gap-2 items-stretch", JOBS_MOCK_MODE ? "sm:grid-cols-4" : "sm:grid-cols-2")}>
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
@@ -146,8 +153,20 @@ export function FailuresDeadLettersPage() {
         job={retryJob}
         isOpen={retryJob !== null}
         onClose={() => setRetryJob(null)}
-        onRequestRetry={() => setRetryJob(null)}
+        onRequestRetry={(job, reason) =>
+          retryMutation.mutate(
+            { jobId: job.id, reason },
+            {
+              onSuccess: () => {
+                toast.success(JOBS_MOCK_MODE ? "Retry request submitted" : "Job queued to run again");
+                setRetryJob(null);
+              },
+              onError: (error) => toast.error(jobsErrorMessage(error, "Could not retry the job")),
+            },
+          )
+        }
         onCancel={() => setRetryJob(null)}
+        isPending={retryMutation.isPending}
       />
     </div>
   );

@@ -93,11 +93,9 @@ export const RETRY_ELIGIBILITY_META: Record<
 export const MOCK_ENVIRONMENT = "development" as const;
 /** Single mock flag for this feature, same pattern as `COMPANIES_MOCK_MODE`. */
 export const JOBS_MOCK_MODE = isMockMode;
-export const JOBS_DATA_SOURCE = isMockMode
-  ? "Demo Job Data"
-  : "Live Redis queue stats · demo job records";
-/** No worker-liveness API exists in either mode. */
-export const JOBS_WORKER_STATUS = "Worker Backend Not Connected";
+export const JOBS_DATA_SOURCE = isMockMode ? "Demo Job Data" : "Live platform queues (Redis)";
+/** Worker line of the overview context bar. */
+export const JOBS_WORKER_STATUS = isMockMode ? "Worker Backend Not Connected" : "Workers connected to Redis";
 
 export const TIME_PERIOD_OPTIONS = [
   { value: "24h", label: "Last 24 Hours" },

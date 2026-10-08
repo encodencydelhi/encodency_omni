@@ -25,9 +25,10 @@ import { cn } from "@/lib/utils/cn";
 import { formatNumber, formatDateTime, formatDuration, formatRelativeTime } from "@/lib/utils/format";
 import { useJob, useJobAttempts, useRequestJobRetry, useCancelJob } from "../data/hooks";
 import { jobsQueuesRepository } from "../data/repository";
-import { JOB_LIFECYCLE_META, JOB_PRIORITY_META, FAILURE_CLASSIFICATION_META, RETRY_ELIGIBILITY_META, MOCK_ENVIRONMENT } from "../data/config";
+import { JOB_LIFECYCLE_META, JOB_PRIORITY_META, FAILURE_CLASSIFICATION_META, RETRY_ELIGIBILITY_META, MOCK_ENVIRONMENT, JOBS_MOCK_MODE } from "../data/config";
+import { jobsErrorMessage } from "../data/errors";
 import type { JobRecord, JobAttempt } from "../data/types";
-import { JobDetailHeader, JobAttemptsTable, RetryReviewDrawer } from "../components";
+import { JobDetailHeader, JobAttemptsTable, RetryReviewDrawer, ReasonDialog } from "../components";
 import { toast } from "sonner";
 
 const STATE_TONE_MAP: Record<string, string> = {
@@ -56,6 +57,7 @@ export function JobDetailPage() {
   const cancelMutation = useCancelJob();
 
   const [retryDrawerOpen, setRetryDrawerOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
   const [retryTarget, setRetryTarget] = useState<JobRecord | null>(null);
   const [selectedAttempt, setSelectedAttempt] = useState<JobAttempt | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
@@ -78,6 +80,21 @@ export function JobDetailPage() {
         <p className="text-xs text-slate-500">Provide a valid job ID to view details.</p>
         <Button variant="outline" size="sm" asChild className="text-xs h-8 font-semibold">
           <Link href="/super-admin/jobs">Back to Jobs</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (!jobLoading && !job) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
+        <AlertTriangleIcon className="size-10 text-amber-500" />
+        <h2 className="text-sm font-bold text-slate-900">Job not found</h2>
+        <p className="text-xs text-slate-500 max-w-sm text-center">
+          It may have been cancelled, or removed from the queue after it finished.
+        </p>
+        <Button variant="outline" size="sm" asChild className="text-xs h-8 font-semibold">
+          <Link href="/super-admin/jobs?tab=jobs">Back to Jobs</Link>
         </Button>
       </div>
     );
@@ -107,21 +124,39 @@ export function JobDetailPage() {
   };
 
   const handleCancel = (j: JobRecord) => {
-    cancelMutation.mutate(j.id, {
+    if (!JOBS_MOCK_MODE) {
+      setCancelOpen(true);
+      return;
+    }
+    cancelMutation.mutate({ jobId: j.id }, {
       onSuccess: () => toast.success("Cancellation request recorded"),
       onError: () => toast.error("Failed to record cancellation request"),
     });
   };
 
-  const handleSubmitRetry = () => {
-    if (!retryTarget) return;
-    retryMutation.mutate(retryTarget.id, {
+  const confirmCancel = (reason: string) => {
+    cancelMutation.mutate({ jobId: job.id, reason }, {
       onSuccess: () => {
-        toast.success("Retry request submitted");
-        setRetryDrawerOpen(false);
-        setRetryTarget(null);
+        toast.success("Job cancelled. It will not run.");
+        setCancelOpen(false);
+        router.push("/super-admin/jobs?tab=jobs");
       },
-      onError: () => toast.error("Failed to submit retry request"),
+      onError: (error) => toast.error(jobsErrorMessage(error, "Could not cancel the job")),
+    });
+  };
+
+  const closeRetryDrawer = () => {
+    setRetryDrawerOpen(false);
+    setRetryTarget(null);
+  };
+
+  const handleSubmitRetry = (j: JobRecord, reason: string) => {
+    retryMutation.mutate({ jobId: j.id, reason }, {
+      onSuccess: () => {
+        toast.success(JOBS_MOCK_MODE ? "Retry request submitted" : "Job queued to run again");
+        closeRetryDrawer();
+      },
+      onError: (error) => toast.error(jobsErrorMessage(error, "Could not retry the job")),
     });
   };
 
@@ -273,8 +308,8 @@ export function JobDetailPage() {
                 </p>
               </div>
               <div className="rounded-sm border border-slate-200/90 p-3 bg-slate-50/50">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Environment</p>
-                <span className="px-2 py-0.5 rounded-sm bg-blue-50 text-blue-700 font-semibold text-xs mt-1 inline-flex">{MOCK_ENVIRONMENT}</span>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{JOBS_MOCK_MODE ? "Environment" : "Queue"}</p>
+                <span className="px-2 py-0.5 rounded-sm bg-blue-50 text-blue-700 font-semibold text-xs mt-1 inline-flex">{JOBS_MOCK_MODE ? MOCK_ENVIRONMENT : job.queue}</span>
               </div>
             </div>
             <p className="text-xs text-slate-500 mt-2">{eligibilityMeta.description}</p>
@@ -437,7 +472,7 @@ export function JobDetailPage() {
                 { label: "Job ID", value: job.id, mono: true },
                 { label: "Queue", value: job.queue, mono: true },
                 { label: "Job Type", value: job.type },
-                { label: "Environment", value: MOCK_ENVIRONMENT },
+                { label: JOBS_MOCK_MODE ? "Environment" : "Backend", value: JOBS_MOCK_MODE ? MOCK_ENVIRONMENT : "BullMQ" },
                 { label: "Correlation ID", value: job.correlationId ?? "—", mono: true },
                 { label: "Idempotency Key", value: job.idempotencyKey ?? "—", mono: true },
                 { label: "Priority", value: job.priority },
@@ -453,6 +488,12 @@ export function JobDetailPage() {
                 </div>
               ))}
             </div>
+            {!JOBS_MOCK_MODE && Object.keys(job.payload).length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Payload</p>
+                <pre className="max-h-64 overflow-auto rounded-sm border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">{JSON.stringify(job.payload, null, 2)}</pre>
+              </div>
+            )}
           </div>
         </TabsContent>
       </Tabs>
@@ -460,9 +501,22 @@ export function JobDetailPage() {
       <RetryReviewDrawer
         job={retryTarget}
         isOpen={retryDrawerOpen}
-        onClose={() => { setRetryDrawerOpen(false); setRetryTarget(null); }}
+        onClose={closeRetryDrawer}
         onRequestRetry={handleSubmitRetry}
-        onCancel={handleCancel}
+        onCancel={JOBS_MOCK_MODE ? handleCancel : closeRetryDrawer}
+        isPending={retryMutation.isPending}
+      />
+
+      <ReasonDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        title="Cancel this job?"
+        description="The job is removed from the queue and will not run. This cannot be undone."
+        confirmLabel="Cancel Job"
+        pendingLabel="Cancelling…"
+        isPending={cancelMutation.isPending}
+        destructive
+        onConfirm={confirmCancel}
       />
     </div>
   );

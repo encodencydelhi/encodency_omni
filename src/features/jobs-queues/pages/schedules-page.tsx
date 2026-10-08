@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils/cn";
 import { formatNumber, formatDateTime, formatRelativeTime } from "@/lib/utils/format";
 import { useSchedules, useJobs } from "../data/hooks";
-import { SCHEDULE_STATE_META, MOCK_ENVIRONMENT, JOBS_DATA_SOURCE } from "../data/config";
+import { SCHEDULE_STATE_META, MOCK_ENVIRONMENT, JOBS_MOCK_MODE, JOBS_DATA_SOURCE } from "../data/config";
 import type { JobSchedule } from "../data/types";
 
 const STATE_TONE_MAP: Record<string, string> = {
@@ -71,9 +71,13 @@ export function SchedulesPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 bg-slate-50 rounded-sm border border-slate-200/80 px-3 py-2">
-        <span className="font-medium">Environment:</span>
-        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
-        <span className="text-slate-300">|</span>
+        {JOBS_MOCK_MODE && (
+          <>
+            <span className="font-medium">Environment:</span>
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-sm font-semibold">{MOCK_ENVIRONMENT}</span>
+            <span className="text-slate-300">|</span>
+          </>
+        )}
         <span className="font-medium">Data Source:</span>
         <span>{JOBS_DATA_SOURCE}</span>
         <span className="text-slate-300">|</span>

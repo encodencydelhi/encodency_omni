@@ -5,6 +5,7 @@ import { ChartSkeleton } from "@/components/shared/loading-state";
 import { SectionCard } from "@/components/shared/section-card";
 import { formatCompactNumber, formatCurrency, formatNumber } from "@/lib/utils/format";
 import type { DashboardSnapshot } from "@/types/domain/dashboard";
+import { isMockMode } from "@/config/env";
 import { DemoTag } from "./demo-tag";
 
 /** Recharts is heavy and client-only, so both charts are code-split. */
@@ -28,7 +29,7 @@ export function CompanyGrowthChart({
   return (
     <SectionCard
       title="Company Growth"
-      description="Total companies added over time"
+      description={isMockMode ? "Total companies added over time" : "New companies added each month"}
       action={
         <span className="flex items-center gap-2 text-2xs text-muted-foreground">
           Total <span className="font-semibold text-foreground">{formatNumber(growth.total)}</span>
@@ -58,7 +59,7 @@ export function RevenueChart({
   return (
     <SectionCard
       title="Revenue Overview"
-      description="Monthly recurring revenue (MRR)"
+      description={isMockMode ? "Monthly recurring revenue (MRR)" : "Paid invoices per month. The figure on the right is today's MRR."}
       action={
         <span className="flex items-center gap-2 text-2xs font-semibold text-foreground">
           {formatCurrency(revenue.mrrMinor, revenue.currency, { compact: true })}
@@ -69,7 +70,7 @@ export function RevenueChart({
       {isLoading ? (
         <ChartSkeleton />
       ) : (
-        <MonthlyAreaChart data={revenue.series} valueLabel="MRR" formatValue={formatAxis} height={140} />
+        <MonthlyAreaChart data={revenue.series} valueLabel={isMockMode ? "MRR" : "Collected"} formatValue={formatAxis} height={140} />
       )}
     </SectionCard>
   );

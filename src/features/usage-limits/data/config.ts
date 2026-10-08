@@ -4,12 +4,14 @@
  * nested route under it, so refresh, Back and deep links land where they were.
  */
 import { ROUTES } from "@/config/routes";
+import { isMockMode } from "@/config/env";
 import { COMPANIES_MOCK_MODE } from "@/features/companies/data/config";
 import type { Tone } from "@/types/common";
 import type { AlertSeverity, AlertStatus, AlertType, OverrideStatus, Period, ProcessingStatus, ResourceKey, SourceStatus, UtilizationState } from "./types";
 
-/** The app-wide mock switch: allow usage & limits to operate seamlessly in dev. */
-export const USAGE_MOCK_MODE = process.env.NEXT_PUBLIC_USAGE_MOCK_MODE === "false" ? false : true;
+/** Follows the app-wide data source; `NEXT_PUBLIC_USAGE_MOCK_MODE=true|false` overrides it for this module only. */
+const USAGE_MOCK_OVERRIDE = process.env.NEXT_PUBLIC_USAGE_MOCK_MODE;
+export const USAGE_MOCK_MODE = USAGE_MOCK_OVERRIDE === "true" ? true : USAGE_MOCK_OVERRIDE === "false" ? false : isMockMode;
 
 export const SESSION_STORAGE_KEYS = { state: "omni.usage-limits.demo-state.v1" } as const;
 

@@ -28,6 +28,7 @@ const ACTIVITY_PRESENTATION: Record<ActivityKind, { icon: LucideIcon; accent: st
   integration_connected: { icon: PlugIcon, accent: "bg-neutral-subtle text-neutral" },
   ticket_opened: { icon: LifeBuoyIcon, accent: "bg-primary-subtle text-primary" },
   payment_failed: { icon: CreditCardIcon, accent: "bg-danger-subtle text-danger" },
+  other: { icon: ActivityIcon, accent: "bg-neutral-subtle text-neutral" },
 };
 
 interface RecentActivityProps {

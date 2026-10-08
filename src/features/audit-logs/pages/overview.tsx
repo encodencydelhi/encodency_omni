@@ -71,7 +71,7 @@ export function AuditOverviewPage() {
 
       <div className="flex flex-wrap items-center gap-1.5">
         <RangeControl />
-        <FilterSelect label="Environment" value={environment ?? undefined} options={ENVIRONMENTS.map((item) => ({ value: item.value, label: item.label }))} onChange={(value) => url.set({ env: value })} />
+        {AUDIT_MOCK_MODE ? <FilterSelect label="Environment" value={environment ?? undefined} options={ENVIRONMENTS.map((item) => ({ value: item.value, label: item.label }))} onChange={(value) => url.set({ env: value })} /> : null}
         <Button variant="outline" size="sm" onClick={() => void queryClient.invalidateQueries({ queryKey: auditKeys.all })} disabled={refreshing}>
           <RefreshCwIcon className={cn(refreshing && "animate-spin")} />Refresh
         </Button>
@@ -186,7 +186,7 @@ export function AuditOverviewPage() {
             </Panel>
           </div>
 
-          <Panel title="Audit Source" description="What this trail is built from. Frontend demo records are not production audit evidence.">
+          <Panel title="Audit Source" description={AUDIT_MOCK_MODE ? "What this trail is built from. Frontend demo records are not production audit evidence." : "What this trail is built from."}>
             <dl className="grid grid-cols-1 gap-x-6 gap-y-1 text-[0.8125rem] sm:grid-cols-2 lg:grid-cols-4">
               {[
                 ["Data Source", data.source.dataSource],

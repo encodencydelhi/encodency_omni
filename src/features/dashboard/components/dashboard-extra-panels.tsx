@@ -13,6 +13,8 @@ import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils/cn";
 import type { DashboardSnapshot } from "@/types/domain/dashboard";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { isMockMode } from "@/config/env";
+import { ChannelLogo } from "@/features/admin/shared/channel-logo";
 import { DemoTag } from "./demo-tag";
 
 const PLAN_COLORS: Record<string, string> = {
@@ -21,6 +23,10 @@ const PLAN_COLORS: Record<string, string> = {
   agency: "bg-[#f59e0b]",
   enterprise: "bg-[#8b5cf6]",
 };
+
+/** Plans created in Plans & Subscriptions have no fixed colour: they take one from this list by position. */
+const FALLBACK_PLAN_COLORS = ["bg-[#3b82f6]", "bg-[#10b981]", "bg-[#f59e0b]", "bg-[#8b5cf6]", "bg-[#ef4444]", "bg-[#14b8a6]"];
+const planColor = (tier: string, index: number) => PLAN_COLORS[tier] ?? FALLBACK_PLAN_COLORS[index % FALLBACK_PLAN_COLORS.length];
 
 const TIER_BADGE: Record<string, string> = {
   trial: "bg-[#dcfce7] text-[#166534]",
@@ -114,16 +120,19 @@ export function PlanDistributionPanel({
           <CardSkeleton lines={4} />
         ) : (
           <div className="flex flex-col gap-4">
-            {distribution.segments.map((segment) => {
+            {distribution.segments.length === 0 && (
+              <p className="text-center text-[13px] text-slate-500">No active subscriptions yet.</p>
+            )}
+            {distribution.segments.map((segment, index) => {
               const percent = distribution.activeTotal > 0 ? Math.round((segment.companies / distribution.activeTotal) * 100) : 0;
               return (
                 <div key={segment.tier} className="flex items-center text-[13px]">
                   <div className="flex w-[80px] items-center gap-2 shrink-0">
-                    <div className={cn("size-2.5 rounded-sm shrink-0", PLAN_COLORS[segment.tier])} />
+                    <div className={cn("size-2.5 rounded-sm shrink-0", planColor(segment.tier, index))} />
                     <span className="text-slate-600 capitalize truncate">{segment.label}</span>
                   </div>
                   <div className="h-2 flex-1 overflow-hidden rounded-sm bg-slate-100 mx-2">
-                    <div className={cn("h-full rounded-sm", PLAN_COLORS[segment.tier])} style={{ width: `${percent}%` }} />
+                    <div className={cn("h-full rounded-sm", planColor(segment.tier, index))} style={{ width: `${percent}%` }} />
                   </div>
                   <div className="flex w-[52px] shrink-0 items-center justify-end gap-2 font-semibold text-slate-800">
                     <span>{segment.companies}</span>
@@ -164,6 +173,7 @@ export function LatestSignupsPanel({
           <CardSkeleton lines={5} />
         ) : (
           <ul className="flex flex-col gap-3 mt-1">
+            {signups.length === 0 && <li className="text-center text-[13px] text-slate-500">No companies yet.</li>}
             {signups.map((signup) => (
               <li key={signup.id} className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -175,7 +185,7 @@ export function LatestSignupsPanel({
                     <span className="text-xs text-slate-400 whitespace-nowrap">{signup.timeAgo}</span>
                   </div>
                 </div>
-                <span className={cn("shrink-0 inline-flex h-[24px] px-2.5 items-center justify-center rounded-sm text-[10px] font-semibold capitalize tracking-wide", TIER_BADGE[signup.tier])}>
+                <span className={cn("shrink-0 inline-flex h-[24px] px-2.5 items-center justify-center rounded-sm text-[10px] font-semibold capitalize tracking-wide", TIER_BADGE[signup.tier] ?? "bg-slate-100 text-slate-700")}>
                   {signup.tier}
                 </span>
               </li>
@@ -190,9 +200,11 @@ export function LatestSignupsPanel({
 export function ApiUsagePanel({
   usage,
   isLoading,
+  rangeLabel = "Last 30 days",
 }: {
   usage: DashboardSnapshot["apiUsage"];
   isLoading: boolean;
+  rangeLabel?: string;
 }) {
   return (
     <Card className="flex flex-col h-[280px] rounded-2xl shadow-sm border-slate-200">
@@ -203,9 +215,13 @@ export function ApiUsagePanel({
           </div>
           <h3 className="text-[14px] font-semibold text-slate-800 tracking-tight truncate">API Usage Snapshot</h3> <DemoTag />
         </div>
-        <select className="text-[11px] border border-slate-200 rounded-sm px-1.5 py-1 bg-white text-slate-500 font-medium outline-none shrink-0 cursor-pointer">
-          <option>Last 30 days</option>
-        </select>
+        {isMockMode ? (
+          <select className="text-[11px] border border-slate-200 rounded-sm px-1.5 py-1 bg-white text-slate-500 font-medium outline-none shrink-0 cursor-pointer">
+            <option>Last 30 days</option>
+          </select>
+        ) : (
+          <span className="text-[11px] font-medium text-slate-500 shrink-0">{rangeLabel}</span>
+        )}
       </CardHeader>
       <CardContent className="flex-1 flex flex-col overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-sm">
         {isLoading ? (
@@ -219,14 +235,18 @@ export function ApiUsagePanel({
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] text-slate-500 font-medium">API requests</span>
-                  <span className="text-[11px] font-semibold text-[#10b981] flex items-center">
-                    ↑ {usage.requestDelta.changePercent}%
-                  </span>
+                  {usage.requestDelta ? (
+                    <span className={cn("text-[11px] font-semibold flex items-center", usage.requestDelta.changePercent >= 0 ? "text-[#10b981]" : "text-red-500")}>
+                      {usage.requestDelta.changePercent >= 0 ? "↑" : "↓"} {Math.abs(usage.requestDelta.changePercent)}%
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-slate-400">no earlier period to compare</span>
+                  )}
                 </div>
               </div>
               <div className="flex items-end gap-[2px] h-12 w-full shrink-0">
                 {usage.series.map((val, i) => (
-                  <div key={i} className="flex-1 bg-[#bfdbfe] rounded-[1px]" style={{ height: `${Math.max((val / Math.max(...usage.series)) * 100, 15)}%` }} />
+                  <div key={i} className="flex-1 bg-[#bfdbfe] rounded-[1px]" style={{ height: `${Math.max((val / Math.max(...usage.series, 1)) * 100, 15)}%` }} />
                 ))}
               </div>
             </div>
@@ -234,7 +254,7 @@ export function ApiUsagePanel({
             <div className="mt-auto pt-4 border-t border-slate-100 grid grid-cols-3 gap-1">
               <div className="flex flex-col">
                 <span className="text-[11px] text-slate-400 font-medium mb-0.5 whitespace-nowrap">Success Rate</span>
-                <span className="text-base font-semibold text-[#10b981]">{usage.successRate}%</span>
+                <span className="text-base font-semibold text-[#10b981]">{usage.successRate === null ? "—" : `${usage.successRate}%`}</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-[11px] text-slate-400 font-medium mb-0.5 whitespace-nowrap">Failed Req</span>
@@ -242,7 +262,7 @@ export function ApiUsagePanel({
               </div>
               <div className="flex flex-col">
                 <span className="text-[11px] text-slate-400 font-medium mb-0.5 whitespace-nowrap">Avg Resp</span>
-                <span className="text-base font-semibold text-slate-800">{usage.avgResponseMs} ms</span>
+                <span className="text-base font-semibold text-slate-800">{usage.avgResponseMs === null ? "—" : `${usage.avgResponseMs} ms`}</span>
               </div>
             </div>
           </>
@@ -277,12 +297,15 @@ export function IntegrationStatusPanel({
           <CardSkeleton lines={5} />
         ) : (
           <ul className="flex flex-col mt-1">
+            {integrations.length === 0 && <li className="py-2.5 text-center text-[13px] text-slate-500">No integrations connected yet.</li>}
             {integrations.map((integration, index) => (
               <li key={integration.id} className={cn("flex items-center justify-between text-[13px] py-2.5", index !== 0 && "border-t border-slate-100")}>
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="size-6 shrink-0 flex items-center justify-center">
                     {IntegrationLogos[integration.name] ? (
                       IntegrationLogos[integration.name]
+                    ) : !isMockMode ? (
+                      <ChannelLogo channel={integration.name} className="size-5" />
                     ) : (
                       <div className="size-5 bg-slate-100 rounded flex items-center justify-center text-[10px] font-semibold text-slate-600">
                         {integration.name[0]}

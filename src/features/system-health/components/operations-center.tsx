@@ -18,7 +18,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import { STAFF_MEMBERS } from "@/features/internal-team/data/mock-data";
+import { useQuery } from "@tanstack/react-query";
 import { ApiError } from "@/types/api";
 import { systemHealthService } from "../services/system-health-service";
 import { TenancyHarnessCard } from "./tenancy-harness-card";
@@ -26,7 +26,7 @@ import type { HealthCheckResponse } from "@/types/domain/system-health";
 import { cn } from "@/lib/utils/cn";
 import { ROUTES } from "@/config/routes";
 import { SYSTEM_HEALTH_CAPABILITIES } from "../data/capabilities";
-import { systemHealthRepository, transitionLabel, type CreateIncidentInput } from "../data/repository";
+import { systemHealthRepository, transitionLabel, type AddImpactInput, type CreateIncidentInput } from "../data/repository";
 import {
   activeIncidents,
   dependenciesForService,
@@ -138,17 +138,27 @@ function toCsv(rows: Array<Record<string, string | number | null>>) {
   return [keys.join(","), ...rows.map((row) => keys.map((key) => `"${String(row[key] ?? "").replaceAll('"', '""')}"`).join(","))].join("\n");
 }
 
+/** Keeps the latest close handler without re-running effects that must only run when the panel opens. */
+function useLatest<T>(value: T) {
+  const ref = useRef(value);
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref;
+}
+
 function Drawer({ title, open, onClose, children }: { title: string; open: boolean; onClose: () => void; children: React.ReactNode }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useLatest(onClose);
   useEffect(() => {
     if (!open) return undefined;
     closeRef.current?.focus();
     const handler = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") onCloseRef.current();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+  }, [open, onCloseRef]);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/30" role="dialog" aria-modal="true" onClick={onClose}>
@@ -165,15 +175,17 @@ function Drawer({ title, open, onClose, children }: { title: string; open: boole
 
 function Modal({ title, open, onClose, children }: { title: string; open: boolean; onClose: () => void; children: React.ReactNode }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useLatest(onClose);
   useEffect(() => {
     if (!open) return undefined;
+    // Focus the dialog once, when it opens. Re-focusing on every re-render would pull the cursor out of the field being typed in.
     closeRef.current?.focus();
     const handler = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") onCloseRef.current();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+  }, [open, onCloseRef]);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/30 p-4" role="dialog" aria-modal="true" onClick={onClose}>
@@ -228,8 +240,8 @@ function Header({ snapshot, setEnvironment, exportJson }: { snapshot: SystemHeal
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Badge className={state === "Partial Outage" ? healthTone.unavailable : state === "Degraded" ? healthTone.degraded : state === "Unknown" ? healthTone.unknown : healthTone.healthy}><HeartPulse className="mr-1 size-3" />{state}</Badge>
-            <Badge className="border-indigo-200 bg-indigo-50 text-indigo-700">Backend Monitoring Data</Badge>
-            <Badge className="border-slate-200 bg-slate-50 text-slate-700">Operational Snapshot Connected</Badge>
+            <Badge className="border-indigo-200 bg-indigo-50 text-indigo-700">Live platform checks</Badge>
+            <Badge className="border-slate-200 bg-slate-50 text-slate-700">{snapshot.sources.filter((s) => s.backendConnected).length} of {snapshot.sources.length} sources connected</Badge>
             <span className="text-xs text-slate-500">Last observation context: {formatDate(snapshot.generatedAt)} - {snapshot.timezone}</span>
           </div>
           <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
@@ -366,7 +378,7 @@ function Overview({ snapshot, openPreview }: { snapshot: SystemHealthSnapshotV2;
     <div className="space-y-1">
       <Kpis snapshot={snapshot} />
       <div className="grid gap-1 xl:grid-cols-[1.4fr_1fr]">
-        <Card><CardTitle title="Service Health Overview" subtitle="Registered services and their latest demo observations." action={<ButtonLink href={`${BASE}/services`}>View All</ButtonLink>} /><ServiceTable snapshot={snapshot} services={services} onPreview={openPreview} /></Card>
+        <Card><CardTitle title="Service Health Overview" subtitle="Registered services and their latest observations." action={<ButtonLink href={`${BASE}/services`}>View All</ButtonLink>} /><ServiceTable snapshot={snapshot} services={services} onPreview={openPreview} /></Card>
         <Card><CardTitle title="Active Incidents" subtitle="Managed incident records, separate from raw health state." action={<ButtonLink href={`${BASE}/incidents`}>View All</ButtonLink>} /><IncidentList snapshot={snapshot} incidents={active} compact /></Card>
       </div>
       <div className="grid gap-1 xl:grid-cols-2">
@@ -600,11 +612,12 @@ function DependenciesPage({ snapshot }: { snapshot: SystemHealthSnapshotV2 }) {
 }
 
 function CreateIncidentModal({ snapshot, open, onClose, onCreate }: { snapshot: SystemHealthSnapshotV2; open: boolean; onClose: () => void; onCreate: (incident: CreateIncidentInput) => Promise<void> }) {
-  const owners = STAFF_MEMBERS.filter((staff) => staff.status === "active" && (staff.role === "super_admin" || staff.role === "technical_admin" || staff.role === "support"));
+  const { data: owners = [] } = useQuery({ queryKey: ["system-health", "owners"], queryFn: () => systemHealthRepository.listOwners(), enabled: open, staleTime: 60_000 });
   const [title, setTitle] = useState("");
   const [serviceId, setServiceId] = useState(snapshot.services[0]?.id ?? "");
   const [priority, setPriority] = useState<IncidentPriority>("medium");
-  const [ownerId, setOwnerId] = useState(owners[0]?.id ?? "");
+  const [pickedOwner, setPickedOwner] = useState("");
+  const ownerId = pickedOwner || owners[0]?.id || "";
   const [summary, setSummary] = useState("");
   const [error, setError] = useState("");
   const dirty = title.trim().length > 0 || summary.trim().length > 0;
@@ -618,15 +631,14 @@ function CreateIncidentModal({ snapshot, open, onClose, onCreate }: { snapshot: 
       setError("Title, service, owner and summary are required.");
       return;
     }
-    const owner = owners.find((item) => item.id === ownerId);
     try {
-      await onCreate({ title, primaryServiceId: serviceId, affectedServiceIds: [], priority, ownerId, ownerName: owner?.name ?? "Unassigned", summary });
+      await onCreate({ title, primaryServiceId: serviceId, affectedServiceIds: [], priority, ownerId, summary });
       setTitle(""); setSummary(""); setError(""); onClose();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Unable to create incident.");
     }
   }
-  return <Modal title="Create Incident" open={open} onClose={closeWithGuard}><div className="space-y-3"><p className="text-xs text-slate-600">Creates a persisted incident record. It does not change service health or trigger production notifications.</p>{error ? <div className="rounded-md border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">{error}</div> : null}<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Incident title" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><textarea value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="Known symptoms and investigation context" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><div className="grid gap-2 sm:grid-cols-3"><select value={serviceId} onChange={(event) => setServiceId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">{snapshot.services.map((service) => <option value={service.id} key={service.id}>{service.name}</option>)}</select><select value={priority} onChange={(event) => setPriority(event.target.value as IncidentPriority)} className="rounded-md border border-slate-200 px-2 py-2 text-sm"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select><select value={ownerId} onChange={(event) => setOwnerId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">{owners.map((owner) => <option value={owner.id} key={owner.id}>{owner.name}</option>)}</select></div><div className="flex justify-end gap-2"><button type="button" onClick={closeWithGuard} className="rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold">Cancel</button><button type="button" onClick={submit} className="rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">Create Incident</button></div></div></Modal>;
+  return <Modal title="Create Incident" open={open} onClose={closeWithGuard}><div className="space-y-3"><p className="text-xs text-slate-600">Creates a persisted incident record. It does not change service health or trigger production notifications.</p>{error ? <div className="rounded-md border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">{error}</div> : null}<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Incident title" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><textarea value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="Known symptoms and investigation context" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><div className="grid gap-2 sm:grid-cols-3"><select value={serviceId} onChange={(event) => setServiceId(event.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-sm">{snapshot.services.map((service) => <option value={service.id} key={service.id}>{service.name}</option>)}</select><select value={priority} onChange={(event) => setPriority(event.target.value as IncidentPriority)} className="rounded-md border border-slate-200 px-2 py-2 text-sm"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select><select value={ownerId} onChange={(event) => setPickedOwner(event.target.value)} aria-label="Owner" className="rounded-md border border-slate-200 px-2 py-2 text-sm">{owners.map((owner) => <option value={owner.id} key={owner.id}>{owner.name} ({owner.role})</option>)}</select></div><div className="flex justify-end gap-2"><button type="button" onClick={closeWithGuard} className="rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold">Cancel</button><button type="button" onClick={submit} className="rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">Create Incident</button></div></div></Modal>;
 }
 
 function IncidentsPage({ snapshot, incidents, onCreateIncident }: { snapshot: SystemHealthSnapshotV2; incidents: IncidentRecord[]; onCreateIncident: (incident: CreateIncidentInput) => Promise<void> }) {
@@ -641,11 +653,13 @@ function IncidentsPage({ snapshot, incidents, onCreateIncident }: { snapshot: Sy
   );
 }
 
-function AddImpactModal({ snapshot, incident, open, onClose, onAdd }: { snapshot: SystemHealthSnapshotV2; incident: IncidentRecord; open: boolean; onClose: () => void; onAdd: (impact: Omit<ImpactRecord, "id" | "incidentId">) => Promise<void> }) {
+function AddImpactModal({ snapshot, incident, open, onClose, onAdd }: { snapshot: SystemHealthSnapshotV2; incident: IncidentRecord; open: boolean; onClose: () => void; onAdd: (impact: AddImpactInput) => Promise<void> }) {
+  const { data: targets } = useQuery({ queryKey: ["system-health", "impact-targets"], queryFn: () => systemHealthRepository.getImpactTargets(), enabled: open, staleTime: 60_000 });
   const [confidence, setConfidence] = useState<ImpactConfidence>("potential");
   const [area, setArea] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [clientName, setClientName] = useState("");
+  const clients = targets?.companies.find((company) => company.id === companyName)?.clients ?? [];
   const [workflow, setWorkflow] = useState("");
   const [evidence, setEvidence] = useState("");
   const [error, setError] = useState("");
@@ -664,9 +678,8 @@ function AddImpactModal({ snapshot, incident, open, onClose, onAdd }: { snapshot
       await onAdd({
       confidence,
       area,
-      companyId: companyName.trim() ? `cmp_demo_${companyName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}` : null,
-      companyName: companyName.trim() || null,
-      clientName: clientName.trim() || null,
+      companyId: companyName || null,
+      clientId: companyName && clientName ? clientName : null,
       workflow,
       evidence,
       serviceId: incident.primaryServiceId,
@@ -693,8 +706,14 @@ function AddImpactModal({ snapshot, incident, open, onClose, onAdd }: { snapshot
         </div>
         <input value={area} onChange={(event) => setArea(event.target.value)} placeholder="Affected area" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
         <div className="grid gap-2 sm:grid-cols-2">
-          <input value={companyName} onChange={(event) => setCompanyName(event.target.value)} placeholder="Company name, if known" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
-          <input value={clientName} onChange={(event) => setClientName(event.target.value)} placeholder="Client name, if known" className="rounded-md border border-slate-200 px-3 py-2 text-sm" />
+          <select value={companyName} onChange={(event) => { setCompanyName(event.target.value); setClientName(""); }} aria-label="Company" className="rounded-md border border-slate-200 px-2 py-2 text-sm">
+            <option value="">Company, if known</option>
+            {(targets?.companies ?? []).map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}
+          </select>
+          <select value={clientName} onChange={(event) => setClientName(event.target.value)} disabled={!companyName || clients.length === 0} aria-label="Client" className="rounded-md border border-slate-200 px-2 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-400">
+            <option value="">{companyName && clients.length === 0 ? "No clients in this company" : "Client, if known"}</option>
+            {clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}
+          </select>
         </div>
         <input value={workflow} onChange={(event) => setWorkflow(event.target.value)} placeholder="Workflow, e.g. Scheduled publishing" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
         <textarea value={evidence} onChange={(event) => setEvidence(event.target.value)} placeholder="Evidence source, not speculation" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
@@ -712,7 +731,7 @@ function IncidentDetailPage({ snapshot, incidents, setIncidents, setImpacts, inc
   const [note, setNote] = useState("");
   const [resolution, setResolution] = useState("");
   const [impactOpen, setImpactOpen] = useState(false);
-  if (!incident) return <NotFound title="Incident Not Found" body="The incident reference is not present in the shared demo state." href={`${BASE}/incidents`} />;
+  if (!incident) return <NotFound title="Incident Not Found" body="This incident does not exist, or it was removed." href={`${BASE}/incidents`} />;
   const currentIncident = incident;
   const service = snapshot.services.find((item) => item.id === currentIncident.primaryServiceId);
   const dirty = note.trim().length > 0 || resolution.trim().length > 0;
@@ -729,7 +748,7 @@ function IncidentDetailPage({ snapshot, incidents, setIncidents, setImpacts, inc
     update(next);
     setResolution("");
   }
-  async function addImpact(impact: Omit<ImpactRecord, "id" | "incidentId">) {
+  async function addImpact(impact: AddImpactInput) {
     const saved = await systemHealthRepository.addIncidentImpact(currentIncident.id, impact);
     const next = { ...currentIncident, impactIds: [...currentIncident.impactIds, saved.id], timeline: [{ id: `${currentIncident.id}-${Date.now()}`, at: new Date().toISOString(), actor: currentIncident.ownerName ?? "Super Admin", type: "impact_update" as const, note: `${label(saved.confidence)} recorded for ${saved.area}.` }, ...currentIncident.timeline] };
     setImpacts([saved, ...snapshot.impacts]);
@@ -762,7 +781,7 @@ function ImpactAvailabilityPage({ snapshot }: { snapshot: SystemHealthSnapshotV2
 
 function MaintenancePage({ snapshot, compact = false }: { snapshot: SystemHealthSnapshotV2; compact?: boolean }) {
   return (
-    <Card><CardTitle title={compact ? "Upcoming Maintenance" : "Maintenance"} subtitle="Maintenance visibility reads the Global Settings-owned schedule." action={!compact ? <ButtonLink href={`${ROUTES.superAdmin.settings}/maintenance`}><Wrench className="size-4" />Open Global Settings</ButtonLink> : <ButtonLink href={`${BASE}/maintenance`}>View</ButtonLink>} /><div className="divide-y divide-slate-100">{snapshot.maintenance.map((item) => <div key={item.id} className="px-4 py-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{item.title}</p><Badge className={item.state === "in_progress" ? freshnessTone.stale : healthTone.unknown}>{label(item.state)}</Badge></div><p className="mt-1 text-xs text-slate-600">{item.scope}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(item.startsAt)} to {formatDate(item.endsAt)} - Source: Global Settings</p></div>)}</div></Card>
+    <Card><CardTitle title={compact ? "Upcoming Maintenance" : "Maintenance"} subtitle="Planned maintenance windows. Scheduling them belongs to Global Settings, which is not connected yet." action={!compact ? <ButtonLink href={`${ROUTES.superAdmin.settings}/maintenance`}><Wrench className="size-4" />Open Global Settings</ButtonLink> : <ButtonLink href={`${BASE}/maintenance`}>View</ButtonLink>} /><div className="divide-y divide-slate-100">{snapshot.maintenance.length === 0 ? <p className="px-4 py-6 text-center text-xs text-slate-500">No maintenance windows are recorded.</p> : null}{snapshot.maintenance.map((item) => <div key={item.id} className="px-4 py-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{item.title}</p><Badge className={item.state === "in_progress" ? freshnessTone.stale : healthTone.unknown}>{label(item.state)}</Badge></div><p className="mt-1 text-xs text-slate-600">{item.scope}</p><p className="mt-1 text-[11px] text-slate-500">{formatDate(item.startsAt)} to {formatDate(item.endsAt)} - Source: Global Settings</p></div>)}</div></Card>
   );
 }
 
@@ -879,8 +898,9 @@ function ApiProbesCard() {
 export function SystemHealthOperationsCenter({ page, serviceId, incidentId }: { page?: "overview" | "services" | "service-detail" | "dependencies" | "incidents" | "incident-detail" | "impact" | "maintenance" | "activity"; serviceId?: string; incidentId?: string }) {
   const router = useRouter();
   const search = useSearchParams();
-  const initialEnv = (search.get("env") as HealthEnvironment | null) ?? "production";
-  const [environment, setEnvironmentState] = useState<HealthEnvironment>(["development", "staging", "production"].includes(initialEnv) ? initialEnv : "production");
+  const initialEnv = search.get("env") as HealthEnvironment | null;
+  // No environment in the address means "the one this deployment runs in"; the backend names it in the snapshot.
+  const [environment, setEnvironmentState] = useState<HealthEnvironment | undefined>(initialEnv && ["development", "staging", "production"].includes(initialEnv) ? initialEnv : undefined);
   const [loading, setLoading] = useState(true);
   const [preview, setPreview] = useState<ServiceRecord | null>(null);
   const [snapshot, setSnapshot] = useState<SystemHealthSnapshotV2 | null>(null);
@@ -918,7 +938,7 @@ export function SystemHealthOperationsCenter({ page, serviceId, incidentId }: { 
   }
   function exportJson() {
     if (!workingSnapshot) return;
-    downloadFile(`system-health-${environment}.json`, JSON.stringify({ ...workingSnapshot, limitation: "Operational telemetry snapshot" }, null, 2), "application/json");
+    downloadFile(`system-health-${workingSnapshot.environment}.json`, JSON.stringify({ ...workingSnapshot, limitation: "Operational telemetry snapshot" }, null, 2), "application/json");
   }
   async function createIncident(input: CreateIncidentInput) {
     const incident = await systemHealthRepository.createIncident(input);

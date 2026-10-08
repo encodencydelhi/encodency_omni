@@ -22,6 +22,8 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import { PostDetailModal } from "@/features/admin/shared/post-detail-modal";
+import { isMockMode } from "@/config/env";
+import { LiveContentCalendar } from "@/features/admin/calendar/live-content-calendar";
 
 type EventType = "fb" | "ig" | "li" | "yt" | "wa" | "gmb" | "link";
 
@@ -350,7 +352,11 @@ function ChannelIcon({
   );
 }
 
-export default function ContentCalendar() {
+export default function CalendarRoute() {
+  return isMockMode ? <ContentCalendar /> : <LiveContentCalendar />;
+}
+
+function ContentCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [view, setView] = useState<"Month" | "Week" | "List">("Month");
 

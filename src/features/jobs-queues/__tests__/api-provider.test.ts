@@ -1,13 +1,8 @@
 /**
- * With mock mode off the repository resolves to the real API provider
- * (`GET /super-admin/jobs/stats`) with the demo provider injected as the
- * fallback the owner approved on 2026-09-24: unreachable backend or no rows →
- * show the mock data instead of an empty panel. 401/403 still propagate (they
- * cannot be exercised here without a live server; covered by the live API
- * contract suite when the backend is up).
+ * With mock mode off the repository resolves to the real API provider. There is no demo fallback any more:
+ * everything is mapped from `/super-admin/jobs/*`. These tests cover the pure mapping (no server needed).
  *
- * `node --test` runs each file in its own process, so the environment set
- * here cannot leak into the other suites.
+ * `node --test` runs each file in its own process, so the environment set here cannot leak into other suites.
  */
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
@@ -15,174 +10,86 @@ import { describe, it } from "node:test";
 process.env.NEXT_PUBLIC_DATA_SOURCE = "api";
 const { jobsQueuesRepository } = await import("../data/repository");
 const { JOBS_MOCK_MODE, JOBS_DATA_SOURCE } = await import("../data/config");
-const {
-  toQueueDefinition,
-  buildOverviewFromStats,
-  shouldFallBack,
-} = await import("../data/api-provider");
-const { ApiError } = await import("@/types/api");
+const { toJobRecord, toLifecycle, toQueueDefinition, toWorkerRecord, toSchedule, toActivity } = await import("../data/api-provider");
 
-type QueueStats = import("../data/types").QueueStats;
+type WireJobSummary = import("../live/jobs-ops-api").WireJobSummary;
+type WireQueueOverview = import("../live/jobs-ops-api").WireQueueOverview;
 
-const SAMPLE_STATS: QueueStats[] = [
-  {
-    queue: "notifications",
-    reachable: true,
-    counts: { waiting: 3, active: 1, completed: 40, failed: 2, delayed: 5 },
-    recentFailed: [
-      { id: "job_1", name: "notify:digest-email", attemptsMade: 3, failedReason: "SMTP timeout" },
-    ],
-  },
-  {
-    queue: "publishing",
-    reachable: true,
-    counts: { waiting: 0, active: 0, completed: 10, failed: 0, delayed: 0 },
-    recentFailed: [],
-  },
-  {
-    queue: "crawler",
-    reachable: false,
-    error: "Redis did not respond within 3000ms",
-  },
-  {
-    queue: "billing-events",
-    reachable: true,
-    counts: { waiting: 1, active: 0, completed: 7, failed: 1, delayed: 0 },
-    recentFailed: [],
-  },
-];
+const job = (over: Partial<WireJobSummary> = {}): WireJobSummary => ({
+  key: "crawler~12", id: "12", queue: "crawler", name: "crawl-site", state: "waiting", priority: 0, attemptsMade: 0, maxAttempts: 3,
+  createdAt: "2026-10-08T10:00:00.000Z", processedAt: null, finishedAt: null, runAt: null, failedReason: null, failure: null,
+  companyId: null, companyName: null, clientId: null, clientName: null, retryable: false, cancellable: true, ...over,
+});
 
 describe("api mode", () => {
   it("turns the single mock flag off and wires the API provider", () => {
     assert.equal(JOBS_MOCK_MODE, false);
     assert.equal(jobsQueuesRepository.mode, "api");
+    assert.equal(JOBS_DATA_SOURCE, "Live platform queues (Redis)");
   });
 
-  it("labels the data source as live in API mode", () => {
-    assert.equal(JOBS_DATA_SOURCE, "Live Redis queue stats · demo job records");
+  it("maps queue states to lifecycle states", () => {
+    assert.equal(toLifecycle(job({ state: "active" })), "running");
+    assert.equal(toLifecycle(job({ state: "completed" })), "succeeded");
+    assert.equal(toLifecycle(job({ state: "failed" })), "failed");
+    assert.equal(toLifecycle(job({ state: "delayed" })), "scheduled");
+    assert.equal(toLifecycle(job({ state: "delayed", attemptsMade: 1 })), "retry_waiting");
+    assert.equal(toLifecycle(job({ state: "prioritized" })), "waiting");
   });
 
-  it("falls back to demo stats when the backend is unreachable", async () => {
-    const stats = await jobsQueuesRepository.getQueueStats();
-    assert.ok(Array.isArray(stats));
-    assert.ok(stats.length > 0, "expected the mock fallback to supply stats");
+  it("maps a failed job with its company and retry eligibility", () => {
+    const record = toJobRecord(job({ state: "failed", attemptsMade: 3, failedReason: "Request timed out", failure: "execution_timeout", retryable: true, companyId: "c1", companyName: "Acme Co", processedAt: "2026-10-08T10:00:01.000Z", finishedAt: "2026-10-08T10:00:03.000Z" }));
+    assert.equal(record.id, "crawler~12");
+    assert.equal(record.lifecycleState, "failed");
+    assert.equal(record.retryEligibility, "retryable");
+    assert.equal(record.failureClassification, "execution_timeout");
+    assert.deepEqual(record.company, { id: "c1", name: "Acme Co" });
+    assert.equal(record.durationMs, 2000);
+    assert.equal(toJobRecord(job({ state: "failed", retryable: false })).retryEligibility, "non_retryable");
+    assert.equal(toJobRecord(job()).retryEligibility, "unknown");
   });
 
-  it("falls back to demo queues when the backend is unreachable", async () => {
-    const queues = await jobsQueuesRepository.getQueues();
-    assert.ok(Array.isArray(queues));
-    assert.ok(queues.length > 0, "expected the mock fallback to supply queues");
+  it("reports a paused or unreachable queue as it is, and never invents policies", () => {
+    const base: WireQueueOverview = { queue: "crawler", reachable: true, paused: true, counts: { waiting: 4, active: 1, completed: 9, failed: 2, delayed: 3 }, workers: 2, maxAttempts: 3, jobNames: ["crawl-site"], retryWaiting: 1 };
+    const queue = toQueueDefinition(base);
+    assert.equal(queue.operationalState, "paused");
+    assert.equal(queue.registeredWorkers, 2);
+    assert.equal(queue.retryWaiting, 1);
+    assert.equal(queue.deadLettered, 0);
+    assert.equal(queue.retryPolicy, "Up to 3 attempts");
+    assert.deepEqual(queue.jobTypes, ["crawl-site"]);
+    const down = toQueueDefinition({ queue: "publishing", reachable: false, error: "Redis did not respond" });
+    assert.equal(down.operationalState, "unknown");
+    assert.match(down.purpose, /unreachable/i);
+    assert.equal(down.waiting, 0);
   });
 
-  it("falls back to the demo overview when the backend is unreachable", async () => {
-    const overview = await jobsQueuesRepository.getOverview();
-    assert.ok(overview.queues.length > 0);
-    assert.ok(overview.kpis.totalJobs > 0);
+  it("maps connected workers, delayed jobs and operator activity", () => {
+    const now = Date.parse("2026-10-08T12:00:00.000Z");
+    const worker = toWorkerRecord({ id: "crawler~7", queue: "crawler", address: "127.0.0.1:1", name: null, connectedSeconds: 3600, idleSeconds: 30 }, now);
+    assert.equal(worker.liveness, "online");
+    assert.deepEqual(worker.assignedQueues, ["crawler"]);
+    assert.equal(worker.registeredAt, "2026-10-08T11:00:00.000Z");
+    assert.equal(worker.lastHeartbeat, "2026-10-08T11:59:30.000Z");
+
+    const past = toSchedule({ id: "crawler~9", queue: "crawler", name: "crawl-site", kind: "delayed", runAt: "2026-10-08T11:00:00.000Z", recurrence: null, timezone: "UTC", jobKey: "crawler~9", companyId: null, companyName: null, clientId: null, clientName: null, attemptsMade: 0 }, now);
+    assert.equal(past.scheduleState, "due");
+    assert.equal(past.jobId, "crawler~9");
+    const future = toSchedule({ ...{ id: "x", queue: "crawler", name: "n", kind: "repeat" as const, runAt: "2026-10-09T00:00:00.000Z", recurrence: "0 0 * * *", timezone: "UTC", jobKey: null, companyId: null, companyName: null, clientId: null, clientName: null, attemptsMade: 0 } }, now);
+    assert.equal(future.scheduleState, "upcoming");
+    assert.equal(future.recurrenceRule, "0 0 * * *");
+
+    const activity = toActivity({ id: "a1", at: "2026-10-08T11:00:00.000Z", action: "queue.paused", queue: "crawler", jobKey: null, jobName: null, reason: "Provider outage", actor: "Manish Sirohi", outcome: "SUCCESS" });
+    assert.equal(activity.result, "success");
+    assert.match(activity.details, /Queue paused: crawler/);
+    assert.match(activity.details, /Provider outage/);
   });
 
-  it("still delegates methods the backend does not serve to the fallback", async () => {
-    const jobs = await jobsQueuesRepository.getJobs();
-    assert.ok(jobs.length > 0, "job lists come from the demo fallback");
-    const workers = await jobsQueuesRepository.getWorkers();
-    assert.ok(workers.length > 0);
-  });
-});
-
-describe("fallback policy", () => {
-  it("falls back for network, 404 and 5xx errors", () => {
-    assert.equal(shouldFallBack(new ApiError({ code: "NETWORK_ERROR", message: "down", status: 0 })), true);
-    assert.equal(shouldFallBack(new ApiError({ code: "NOT_FOUND", message: "missing", status: 404 })), true);
-    assert.equal(shouldFallBack(new ApiError({ code: "UNKNOWN", message: "boom", status: 503 })), true);
-    assert.equal(shouldFallBack(new Error("not an ApiError")), true);
-  });
-
-  it("propagates auth and validation errors instead of falling back", () => {
-    assert.equal(shouldFallBack(new ApiError({ code: "UNAUTHORIZED", message: "no", status: 401 })), false);
-    assert.equal(shouldFallBack(new ApiError({ code: "FORBIDDEN", message: "no", status: 403 })), false);
-    assert.equal(shouldFallBack(new ApiError({ code: "BAD_REQUEST", message: "bad", status: 400 })), false);
-    assert.equal(shouldFallBack(new ApiError({ code: "RATE_LIMITED", message: "slow", status: 429 })), false);
-  });
-});
-
-describe("stats → QueueDefinition mapping", () => {
-  it("maps a reachable queue's counts onto the UI shape", () => {
-    const def = toQueueDefinition(SAMPLE_STATS[0]!);
-    assert.equal(def.id, "notifications");
-    assert.equal(def.name, "Notifications");
-    assert.equal(def.category, "Communication");
-    assert.equal(def.operationalState, "running");
-    assert.equal(def.waiting, 3);
-    assert.equal(def.running, 1);
-    assert.equal(def.delayed, 5);
-    assert.equal(def.failed, 2);
-    assert.equal(def.succeededLast24h, 40);
-    assert.equal(def.retryWaiting, 0);
-    assert.equal(def.deadLettered, 0);
-    assert.equal(def.oldestWaitingAt, null);
-    assert.equal(def.registeredWorkers, 0);
-    assert.equal(def.priorityPolicy, "Not exposed by the stats API");
-  });
-
-  it("marks an unreachable queue as unknown with the error as purpose", () => {
-    const def = toQueueDefinition(SAMPLE_STATS[2]!);
-    assert.equal(def.id, "crawler");
-    assert.equal(def.operationalState, "unknown");
-    assert.match(def.purpose, /unreachable/i);
-    assert.match(def.purpose, /Redis/);
-    assert.equal(def.waiting, 0);
-    assert.equal(def.running, 0);
-  });
-
-  it("uses a sensible fallback meta for an unknown queue name", () => {
-    const def = toQueueDefinition({ queue: "mystery-queue", reachable: true, counts: { waiting: 1, active: 0, completed: 0, failed: 0, delayed: 0 } });
-    assert.equal(def.id, "mystery-queue");
-    assert.equal(def.name, "mystery-queue");
-    assert.equal(def.category, "General");
-  });
-});
-
-describe("stats → overview mapping", () => {
-  const overview = buildOverviewFromStats(SAMPLE_STATS);
-
-  it("recomputes queue KPIs from live counts", () => {
-    // waiting: 3+0+0+1, running: 1+0+0+0, scheduled(delayed): 5+0+0+0,
-    // succeeded: 40+10+0+7, failed: 2+0+0+1
-    assert.equal(overview.kpis.waiting, 4);
-    assert.equal(overview.kpis.running, 1);
-    assert.equal(overview.kpis.scheduled, 5);
-    assert.equal(overview.kpis.succeeded, 57);
-    assert.equal(overview.kpis.failed, 3);
-    assert.equal(overview.kpis.activeQueues, 3);
-    assert.equal(overview.kpis.retryWaiting, 0);
-    assert.equal(overview.kpis.deadLettered, 0);
-  });
-
-  it("exposes recentFailed samples as failure rows", () => {
-    assert.equal(overview.failuresRequiringAttention.length, 1);
-    const row = overview.failuresRequiringAttention[0]!;
-    assert.equal(row.id, "job_1");
-    assert.equal(row.type, "notify:digest-email");
-    assert.equal(row.queue, "notifications");
-    assert.equal(row.lifecycleState, "failed");
-    assert.equal(row.errorMessage, "SMTP timeout");
-    assert.equal(row.attempts, 3);
-    assert.equal(row.retryEligibility, "unknown");
-  });
-
-  it("leaves sections the stats API does not serve empty rather than inventing them", () => {
-    assert.deepEqual(overview.processingTrend, []);
-    assert.deepEqual(overview.workers, []);
-    assert.deepEqual(overview.recentActivity, []);
-    assert.deepEqual(overview.upcomingScheduled, []);
-    assert.equal(overview.kpis.totalWorkers, 0);
-    assert.equal(overview.kpis.onlineWorkers, 0);
-  });
-
-  it("maps every queue in the stats response", () => {
-    assert.equal(overview.queues.length, SAMPLE_STATS.length);
-    assert.deepEqual(
-      overview.queues.map((q) => q.id),
-      SAMPLE_STATS.map((s) => s.queue)
-    );
+  it("has no approval workflow, workflows or dependencies to show", async () => {
+    assert.deepEqual(await jobsQueuesRepository.getRecoveryRequests(), []);
+    assert.deepEqual(await jobsQueuesRepository.getQueueOperationalControls(), []);
+    assert.deepEqual(await jobsQueuesRepository.getWorkflows(), []);
+    assert.deepEqual(await jobsQueuesRepository.getDependencies("crawler~1"), []);
+    assert.equal(await jobsQueuesRepository.getWorkflowById("x"), null);
   });
 });

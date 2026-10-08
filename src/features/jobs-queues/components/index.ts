@@ -9,3 +9,4 @@ export { WorkerTable } from "./worker-table";
 export { WorkerDetailDrawer } from "./worker-detail-drawer";
 export { JobsQueuesOperationsCenter } from "./operations-center";
 export { RetryReviewDrawer } from "./retry-review-drawer";
+export { ReasonDialog } from "./reason-dialog";

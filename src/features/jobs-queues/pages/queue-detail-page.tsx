@@ -14,10 +14,11 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils/cn";
 import { formatNumber, formatDateTime, formatDuration, formatRelativeTime } from "@/lib/utils/format";
-import { useQueue, useJobs, usePauseQueue, useResumeQueue } from "../data/hooks";
-import { QUEUE_STATE_META, MOCK_ENVIRONMENT } from "../data/config";
+import { useQueue, useJobs, usePauseQueue, useResumeQueue, useWorkers, useActivity, useRefreshJobs, useRequestJobRetry } from "../data/hooks";
+import { QUEUE_STATE_META, JOBS_MOCK_MODE } from "../data/config";
+import { jobsErrorMessage } from "../data/errors";
 import type { JobRecord } from "../data/types";
-import { JobsTable, JobPreviewDrawer } from "../components";
+import { JobsTable, JobPreviewDrawer, ReasonDialog, RetryReviewDrawer } from "../components";
 import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
 
@@ -38,14 +39,20 @@ export function QueueDetailPage() {
   const { data: allJobs = [], isLoading: jobsLoading } = useJobs();
   const pauseMutation = usePauseQueue();
   const resumeMutation = useResumeQueue();
+  const retryMutation = useRequestJobRetry();
+  const { data: allWorkers = [], isLoading: workersLoading } = useWorkers();
+  const { data: allActivity = [], isLoading: activityLoading } = useActivity();
+  const refresh = useRefreshJobs();
 
+  const [reasonOpen, setReasonOpen] = useState(false);
+  const [retryJob, setRetryJob] = useState<JobRecord | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [previewJob, setPreviewJob] = useState<JobRecord | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const queueJobs = useMemo(() => {
     if (!queue) return [];
-    return allJobs.filter((j) => j.queue === queue.name);
+    return allJobs.filter((j) => j.queue === queue.id || j.queue === queue.name);
   }, [allJobs, queue]);
 
   const failedJobs = useMemo(() => queueJobs.filter((j) => j.lifecycleState === "failed" || j.lifecycleState === "dead_lettered"), [queueJobs]);
@@ -78,18 +85,49 @@ export function QueueDetailPage() {
   const stateMeta = QUEUE_STATE_META[queue.operationalState];
   const canPauseResume = queue.operationalState === "running" || queue.operationalState === "paused";
 
+  const pausing = queue.operationalState === "running";
+  const queueWorkers = allWorkers.filter((w) => w.assignedQueues.includes(queue.id));
+  const queueActivity = allActivity.filter((a) => a.queue === queue.id);
+
   const handlePauseResume = () => {
-    if (queue.operationalState === "running") {
-      pauseMutation.mutate(queue.id, {
-        onSuccess: () => toast.success(`Pause request drafted for "${queue.name}"`),
-        onError: () => toast.error("Failed to draft pause request"),
-      });
-    } else if (queue.operationalState === "paused") {
-      resumeMutation.mutate(queue.id, {
-        onSuccess: () => toast.success(`Resume request drafted for "${queue.name}"`),
-        onError: () => toast.error("Failed to draft resume request"),
-      });
+    if (!canPauseResume) return;
+    if (!JOBS_MOCK_MODE) {
+      setReasonOpen(true);
+      return;
     }
+    (pausing ? pauseMutation : resumeMutation).mutate(
+      { queueId: queue.id },
+      {
+        onSuccess: () => toast.success(`${pausing ? "Pause" : "Resume"} request drafted for "${queue.name}"`),
+        onError: () => toast.error(`Failed to draft ${pausing ? "pause" : "resume"} request`),
+      },
+    );
+  };
+
+  const confirmPauseResume = (reason: string) => {
+    (pausing ? pauseMutation : resumeMutation).mutate(
+      { queueId: queue.id, reason },
+      {
+        onSuccess: () => {
+          toast.success(pausing ? `"${queue.name}" is paused. New jobs wait until it is resumed.` : `"${queue.name}" is running again.`);
+          setReasonOpen(false);
+        },
+        onError: (error) => toast.error(jobsErrorMessage(error, `Could not ${pausing ? "pause" : "resume"} the queue`)),
+      },
+    );
+  };
+
+  const submitRetry = (job: JobRecord, reason: string) => {
+    retryMutation.mutate(
+      { jobId: job.id, reason },
+      {
+        onSuccess: () => {
+          toast.success(JOBS_MOCK_MODE ? "Retry request submitted" : "Job queued to run again");
+          setRetryJob(null);
+        },
+        onError: (error) => toast.error(jobsErrorMessage(error, "Could not retry the job")),
+      },
+    );
   };
 
   return (
@@ -136,7 +174,7 @@ export function QueueDetailPage() {
               )}
             </Button>
           )}
-          <Button variant="outline" size="sm" className="text-xs h-8 font-semibold bg-white text-slate-700" onClick={() => router.refresh()}>
+          <Button variant="outline" size="sm" className="text-xs h-8 font-semibold bg-white text-slate-700" onClick={refresh}>
             <RefreshCwIcon className="size-3.5 mr-1.5 text-slate-500" />
             Refresh
           </Button>
@@ -161,7 +199,7 @@ export function QueueDetailPage() {
                   { label: "Queue ID", value: queue.id, mono: true },
                   { label: "Name", value: queue.name },
                   { label: "Category", value: queue.category },
-                  { label: "Environment", value: queue.environment },
+                  ...(JOBS_MOCK_MODE ? [{ label: "Environment", value: queue.environment }] : []),
                   { label: "Worker Group", value: queue.workerGroup },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center justify-between py-1 border-b border-slate-100 last:border-0">
@@ -181,7 +219,7 @@ export function QueueDetailPage() {
                   { label: "Delayed", value: queue.delayed, color: "text-slate-600" },
                   { label: "Failed", value: queue.failed, color: queue.failed > 0 ? "text-red-600" : "text-slate-600" },
                   { label: "Retry Waiting", value: queue.retryWaiting, color: "text-orange-600" },
-                  { label: "Dead Lett.", value: queue.deadLettered, color: queue.deadLettered > 0 ? "text-red-600" : "text-slate-600" },
+                  ...(JOBS_MOCK_MODE ? [{ label: "Dead Lett.", value: queue.deadLettered, color: queue.deadLettered > 0 ? "text-red-600" : "text-slate-600" }] : []),
                 ].map((m) => (
                   <div key={m.label} className="rounded-sm border border-slate-200/90 p-2.5 bg-slate-50/50">
                     <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{m.label}</p>
@@ -195,7 +233,7 @@ export function QueueDetailPage() {
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">Job Counts</h3>
               <div className="space-y-2">
                 {[
-                  { label: "Succeeded (24h)", value: queue.succeededLast24h },
+                  { label: JOBS_MOCK_MODE ? "Succeeded (24h)" : "Succeeded (kept)", value: queue.succeededLast24h },
                   { label: "Registered Workers", value: queue.registeredWorkers },
                   { label: "Total Jobs", value: queue.waiting + queue.running + queue.delayed + queue.failed + queue.succeededLast24h },
                 ].map((item) => (
@@ -234,7 +272,27 @@ export function QueueDetailPage() {
         <TabsContent value="workers" className="mt-2">
           <div className="rounded-sm border border-slate-200/90 bg-white p-4 shadow-2xs">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">Assigned Workers</h3>
-            {queue.registeredWorkers > 0 ? (
+            {!JOBS_MOCK_MODE ? (
+              workersLoading ? (
+                <div className="h-10 bg-slate-50 rounded-sm animate-pulse" />
+              ) : queueWorkers.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-xs text-slate-500">No workers are connected to this queue right now.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {queueWorkers.map((w) => (
+                    <div key={w.id} className="flex items-center justify-between py-2 px-2 rounded-sm hover:bg-slate-50 border-b border-slate-100 last:border-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-medium text-slate-900">{w.id}</span>
+                        <span className="px-1.5 py-0.5 rounded-sm bg-emerald-50 text-emerald-700 text-xs font-semibold">online</span>
+                      </div>
+                      <span className="text-xs text-slate-500">Connected {formatRelativeTime(w.registeredAt)}</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : queue.registeredWorkers > 0 ? (
               <div className="space-y-2">
                 {Array.from({ length: queue.registeredWorkers }).map((_, i) => (
                   <div key={i} className="flex items-center justify-between py-2 px-2 rounded-sm hover:bg-slate-50 border-b border-slate-100 last:border-0">
@@ -289,13 +347,20 @@ export function QueueDetailPage() {
           <div className="rounded-sm border border-slate-200/90 bg-white p-4 shadow-2xs">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">Queue Activity</h3>
             <div className="space-y-0">
-              {[
-                { event: "Queue registered", time: queue.id, result: "info" },
-                { event: "State: running", time: "Current state", result: "success" },
-                { event: `${queue.registeredWorkers} worker(s) assigned`, time: queue.workerGroup, result: "info" },
-                { event: `Priority policy: ${queue.priorityPolicy}`, time: "Config", result: "info" },
-                { event: `Timeout policy: ${queue.timeoutPolicy}`, time: "Config", result: "info" },
-              ].map((act, i) => (
+              {!JOBS_MOCK_MODE && activityLoading && <div className="h-10 bg-slate-50 rounded-sm animate-pulse" />}
+              {!JOBS_MOCK_MODE && !activityLoading && queueActivity.length === 0 && (
+                <p className="py-6 text-center text-xs text-slate-500">Nobody has paused, resumed or changed jobs in this queue yet.</p>
+              )}
+              {(JOBS_MOCK_MODE
+                ? [
+                    { event: "Queue registered", time: queue.id, result: "info" },
+                    { event: "State: running", time: "Current state", result: "success" },
+                    { event: `${queue.registeredWorkers} worker(s) assigned`, time: queue.workerGroup, result: "info" },
+                    { event: `Priority policy: ${queue.priorityPolicy}`, time: "Config", result: "info" },
+                    { event: `Timeout policy: ${queue.timeoutPolicy}`, time: "Config", result: "info" },
+                  ]
+                : queueActivity.map((a) => ({ event: a.details, time: formatDateTime(a.timestamp), result: a.result }))
+              ).map((act, i) => (
                 <div key={i} className="flex items-center justify-between py-2 px-2 rounded-sm hover:bg-slate-50 border-b border-slate-100 last:border-0">
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-slate-900 truncate">{act.event}</p>
@@ -318,7 +383,36 @@ export function QueueDetailPage() {
         isOpen={previewOpen}
         onClose={() => { setPreviewOpen(false); setPreviewJob(null); }}
         onOpenFull={(j) => router.push(`/super-admin/jobs?view=job&jobId=${encodeURIComponent(j.id)}`)}
-        onRequestRetry={() => {}}
+        onRequestRetry={(j) => {
+          setPreviewOpen(false);
+          setPreviewJob(null);
+          setRetryJob(j);
+        }}
+      />
+
+      <RetryReviewDrawer
+        job={retryJob}
+        isOpen={retryJob !== null}
+        onClose={() => setRetryJob(null)}
+        onRequestRetry={submitRetry}
+        onCancel={() => setRetryJob(null)}
+        isPending={retryMutation.isPending}
+      />
+
+      <ReasonDialog
+        open={reasonOpen}
+        onOpenChange={setReasonOpen}
+        title={pausing ? `Pause ${queue.name}?` : `Resume ${queue.name}?`}
+        description={
+          pausing
+            ? "Workers stop picking up new jobs from this queue. Jobs already running finish, and waiting jobs stay waiting."
+            : "Workers start picking up waiting jobs from this queue again."
+        }
+        confirmLabel={pausing ? "Pause Queue" : "Resume Queue"}
+        pendingLabel={pausing ? "Pausing…" : "Resuming…"}
+        isPending={pauseMutation.isPending || resumeMutation.isPending}
+        destructive={pausing}
+        onConfirm={confirmPauseResume}
       />
     </div>
   );

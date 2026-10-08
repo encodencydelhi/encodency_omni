@@ -65,7 +65,11 @@ export function AuditSettingsPage() {
         <>
           {section === "coverage" ? (
             <div className="space-y-1">
-              <AlertBanner tone="warning" title="Coverage Is Not Verified">Having demo events for a module does not mean production audit collection is implemented. Instrumentation must be verified against each real service.</AlertBanner>
+              {AUDIT_MOCK_MODE ? (
+                <AlertBanner tone="warning" title="Coverage Is Not Verified">Having demo events for a module does not mean production audit collection is implemented. Instrumentation must be verified against each real service.</AlertBanner>
+              ) : (
+                <AlertBanner tone="info" title="Counts come from the real audit trail">A module with no recorded events may simply not have been used yet. The gaps listed below are services that do not record audit events at all.</AlertBanner>
+              )}
               <Panel title="Audit Coverage" description="The key events each module is expected to emit, and what this frontend can see of them." flush>
                 <MiniTable
                   caption="Audit coverage by module"
@@ -76,7 +80,7 @@ export function AuditSettingsPage() {
                     { id: "expected", header: "Expected Key Events", hideBelow: "md", cell: (row) => <span className="block max-w-72 text-2xs text-muted-foreground">{row.expectedEvents.join(", ")}</span> },
                     { id: "collection", header: "Collection Configuration", cell: (row) => <div><Badge tone={COLLECTION_STATE[row.collection].tone}>{COLLECTION_STATE[row.collection].label}</Badge><p className="mt-0.5 max-w-56 text-2xs text-muted-foreground">{row.note}</p></div> },
                     { id: "verification", header: "Verification", hideBelow: "lg", cell: (row) => <Badge tone={row.verification === "pending" ? "info" : "neutral"}>{row.verification === "pending" ? "Pending" : "Not Verified"}</Badge> },
-                    { id: "last", header: "Last Recorded Event", hideBelow: "lg", cell: (row) => (row.lastRecordedAt ? <span className="whitespace-nowrap text-2xs">{utcShort(row.lastRecordedAt)}<span className="block text-muted-foreground">{row.recordedCount} in demo</span></span> : <span className="text-2xs text-muted-foreground">None Recorded</span>) },
+                    { id: "last", header: "Last Recorded Event", hideBelow: "lg", cell: (row) => (row.lastRecordedAt ? <span className="whitespace-nowrap text-2xs">{utcShort(row.lastRecordedAt)}<span className="block text-muted-foreground">{row.recordedCount} {AUDIT_MOCK_MODE ? "in demo" : "recorded"}</span></span> : <span className="text-2xs text-muted-foreground">None Recorded</span>) },
                     { id: "actions", header: <span className="sr-only">Actions</span>, align: "right", cell: (row) => (<span className="inline-flex gap-1">{row.recordedCount > 0 ? <Button size="sm" variant="ghost" onClick={() => router.push(auditRoutes.events({ module: row.module, range: "custom", from: "2000-01-01", to: "2099-12-31" }))}>View Events</Button> : null}{row.href ? <Button asChild size="sm" variant="ghost"><Link href={row.href}>Open Module</Link></Button> : null}</span>) },
                   ]}
                 />
@@ -94,14 +98,14 @@ export function AuditSettingsPage() {
           {section === "retention" ? (
             <Panel title="Retention Policy Reference" description="Read from Global Settings. There is no second retention editor here." action={<Button asChild size="sm"><Link href={data.retention.policyHref}><ExternalLinkIcon />Open Global Settings: Data &amp; Privacy</Link></Button>}>
               <dl className="divide-y divide-border">
-                <KeyValue label="Current Retention Policy">{data.retention.retentionDays} days</KeyValue>
+                <KeyValue label="Current Retention Policy">{data.retention.retentionDays > 0 ? `${data.retention.retentionDays} days` : "Kept indefinitely"}</KeyValue>
                 <KeyValue label="Effective Since">{data.retention.effectiveSince ? utcShort(data.retention.effectiveSince) : "Not recorded"}</KeyValue>
                 <KeyValue label="Policy Owner">{data.retention.owner}</KeyValue>
                 <KeyValue label="Archive Behavior">{data.retention.archiveBehavior}</KeyValue>
                 <KeyValue label="Expiry / Deletion Policy">{data.retention.expiryPolicy}</KeyValue>
                 <KeyValue label="Legal Hold Reference">{data.retention.legalHold}</KeyValue>
               </dl>
-              <AlertBanner tone="info" className="mt-2">This is a configured policy, not a verified legal or compliance requirement. Actual cleanup needs backend enforcement, and none runs in this frontend phase.</AlertBanner>
+              <AlertBanner tone="info" className="mt-2">{AUDIT_MOCK_MODE ? "This is a configured policy, not a verified legal or compliance requirement. Actual cleanup needs backend enforcement, and none runs in this frontend phase." : "The platform never deletes audit records. If a retention limit is needed later, it has to be built and enforced in the backend."}</AlertBanner>
             </Panel>
           ) : null}
 
@@ -115,7 +119,7 @@ export function AuditSettingsPage() {
                 <KeyValue label="Sensitive Field Redaction">{data.exportGovernance.redaction}</KeyValue>
                 <KeyValue label="Approval Requirement">{data.exportGovernance.approval}</KeyValue>
                 <KeyValue label="Export Activity Logging">{data.exportGovernance.loggingPolicy}</KeyValue>
-                <KeyValue label="Exports Logged This Session">{data.exportGovernance.loggedExports}</KeyValue>
+                <KeyValue label={AUDIT_MOCK_MODE ? "Exports Logged This Session" : "Exports Logged"}>{data.exportGovernance.loggedExports}</KeyValue>
               </dl>
               {data.exportGovernance.loggedExports > 0 ? <Button asChild size="sm" variant="outline" className="mt-2"><Link href={auditRoutes.events({ q: "Audit Export", range: "custom", from: "2000-01-01", to: "2099-12-31" })}>View Export Events</Link></Button> : null}
             </Panel>
@@ -123,7 +127,7 @@ export function AuditSettingsPage() {
 
           {section === "status" ? (
             <div className="space-y-1">
-              <Panel title="Audit System Status" description="What is actually connected. In this frontend phase most of it is not.">
+              <Panel title="Audit System Status" description={AUDIT_MOCK_MODE ? "What is actually connected. In this frontend phase most of it is not." : "What the audit system is doing right now."}>
                 <dl className="divide-y divide-border">
                   <KeyValue label="Audit Data Source">{data.status.dataSource}</KeyValue>
                   <KeyValue label="Backend Ingestion Connection">{data.status.ingestion}</KeyValue>

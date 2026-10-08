@@ -191,7 +191,7 @@ export function EventDetailPage({ eventId }: { eventId: string }) {
           )}
         </Panel>
 
-        <Panel title="Audit Integrity Status" description="Whether this event's storage has been verified. Presence in the demo is not proof.">
+        <Panel title="Audit Integrity Status" description={AUDIT_MOCK_MODE ? "Whether this event's storage has been verified. Presence in the demo is not proof." : "Whether this event's storage has been verified."}>
           <div className="flex items-center gap-2"><IntegrityBadge status={event.integrity.status} /></div>
           <p className="mt-1.5 text-[0.8125rem] text-muted-foreground">{event.integrity.note}</p>
           <AlertBanner tone="info" className="mt-2">Verified is shown only when a real backend supplies verifiable evidence. No checksum is displayed because none was genuinely computed.</AlertBanner>

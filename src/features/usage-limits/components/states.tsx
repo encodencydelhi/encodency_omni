@@ -15,7 +15,7 @@ export function UsageError({ subject, error, onRetry, back = { href: usageRoutes
   const notFound = api?.code === "NOT_FOUND";
   const notConnected = api?.code === "SERVICE_UNAVAILABLE" && !USAGE_MOCK_MODE;
   const title = notFound ? `${subject} Not Found` : notConnected ? "Usage Service Not Connected" : `${subject} Unavailable`;
-  const description = notFound ? "It does not exist, or it was removed from this demo workspace. Check the link or go back." : (api?.message ?? "The request did not complete. Nothing was changed.");
+  const description = notFound ? (USAGE_MOCK_MODE ? "It does not exist, or it was removed from this demo workspace. Check the link or go back." : "It does not exist, or it was removed. Check the link or go back.") : (api?.message ?? "The request did not complete. Nothing was changed.");
   const Icon = notFound ? SearchXIcon : notConnected ? PlugZapIcon : AlertTriangleIcon;
   return (
     <div className={cn("rounded-sm border border-border bg-card", className)} role="alert">

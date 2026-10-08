@@ -1,5 +1,6 @@
 "use client";
 
+import { AUDIT_MOCK_MODE } from "../data/config";
 import { Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -72,7 +73,7 @@ export function CreateInvestigationDrawer({ initialEventIds = [], labels = {}, d
     setGeneral(null);
     try {
       const created = await mutations.createInvestigation(form);
-      toast.success(`${created.id} Created`, { description: "Demo investigation. It groups audit events for review and does not change them." });
+      toast.success(`${created.id} Created`, { description: AUDIT_MOCK_MODE ? "Demo investigation. It groups audit events for review and does not change them." : "It groups audit events for review and never changes them." });
       onClose();
       router.push(auditRoutes.investigation(created.id));
     } catch (failure) {
@@ -168,7 +169,7 @@ export function CreateInvestigationDrawer({ initialEventIds = [], labels = {}, d
             <Button variant="ghost" onClick={() => guard.requestClose()} disabled={busy}>Cancel</Button>
             <div className="flex items-center gap-1.5">
               {step === 1 ? <Button variant="outline" onClick={() => setStep(0)} disabled={busy}>Back</Button> : null}
-              {step === 0 ? <Button onClick={review}>Review</Button> : <Button onClick={() => void create()} disabled={busy}>{busy ? <Loader2Icon className="animate-spin" /> : null}Create Demo Investigation</Button>}
+              {step === 0 ? <Button onClick={review}>Review</Button> : <Button onClick={() => void create()} disabled={busy}>{busy ? <Loader2Icon className="animate-spin" /> : null}{AUDIT_MOCK_MODE ? "Create Demo Investigation" : "Create Investigation"}</Button>}
             </div>
           </SheetFooter>
         </SheetContent>

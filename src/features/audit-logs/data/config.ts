@@ -88,6 +88,7 @@ export const CATEGORY: Record<AuditCategory, { label: string; bar: string }> = {
   users_access: { label: "Users & Access", bar: "bg-info" },
   internal_team: { label: "Internal Team", bar: "bg-[#7C3AED]" },
   clients: { label: "Clients", bar: "bg-[#0891B2]" },
+  content_campaigns: { label: "Content & Campaigns", bar: "bg-[#2563EB]" },
   plans_subscriptions: { label: "Plans & Subscriptions", bar: "bg-success" },
   billing: { label: "Billing & Payments", bar: "bg-warning" },
   usage_limits: { label: "Usage & Limits", bar: "bg-[#EA580C]" },
@@ -96,6 +97,10 @@ export const CATEGORY: Record<AuditCategory, { label: string; bar: string }> = {
   global_settings: { label: "Global Settings", bar: "bg-[#475569]" },
   support_operations: { label: "Support & Operations", bar: "bg-neutral" },
 };
+
+/** Filter choices the real audit trail can answer (the demo data has more states than the platform records). */
+const LIVE_CATEGORIES = new Set<AuditCategory>(["authentication", "companies", "users_access", "internal_team", "clients", "content_campaigns", "plans_subscriptions", "billing", "integrations", "support_operations"]);
+export const CATEGORY_FILTER_OPTIONS = (Object.entries(CATEGORY) as Array<[AuditCategory, { label: string; bar: string }]>).filter(([key]) => AUDIT_MOCK_MODE || LIVE_CATEGORIES.has(key));
 
 export const OUTCOME: Record<AuditOutcome, { label: string; tone: Tone }> = {
   success: { label: "Success", tone: "success" },
@@ -174,13 +179,16 @@ export const QUICK_FILTERS = [
   { value: "config", label: "Configuration Changes" },
 ] as const;
 
-export const EVENT_SORTS = [
+const ALL_EVENT_SORTS = [
   { value: "newest", label: "Newest First" },
   { value: "oldest", label: "Oldest First" },
   { value: "priority", label: "Review Priority" },
   { value: "category", label: "Category" },
   { value: "actor", label: "Actor" },
 ] as const;
+
+/** The real audit trail sorts by time or actor; priority and category order only exist in the demo data. */
+export const EVENT_SORTS = AUDIT_MOCK_MODE ? ALL_EVENT_SORTS : ALL_EVENT_SORTS.filter((item) => ["newest", "oldest", "actor"].includes(item.value));
 
 export const INVESTIGATION_SORTS = [
   { value: "updated", label: "Recently Updated" },
