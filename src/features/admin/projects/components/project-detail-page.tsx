@@ -13,6 +13,7 @@ import {
   Check, Workflow, UsersRound, FileCheck2, Gauge, Zap
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../shared/integration-pending-banner";
 import {
   FaInstagram, FaLinkedin, FaWhatsapp, FaYoutube, FaGoogle
 } from "react-icons/fa";
@@ -151,6 +152,7 @@ function ClientHeader({ activeTab, setActiveTab }: { activeTab: string; setActiv
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="m-0 text-[23px] font-semibold tracking-[-.7px] text-[#111d4a]">Moksha Sewa</h1>
                 <span className="rounded-sm bg-[#e2faf0] px-2.5 py-1 text-[11px] font-semibold text-[#1aad7a]">● Active</span>
+                <IntegrationPendingBadge />
               </div>
               <p className="mt-1 text-[11px] font-semibold text-[#66748d]">End-to-end support for dignified funeral services.</p>
               <div className="mt-5 flex flex-wrap gap-x-7 gap-y-2 text-[11px] font-semibold text-[#65728b]">
@@ -559,6 +561,12 @@ function App({ projectId: _projectId }: { projectId?: string } = {}) {
     <div className="bg-[#f4f7fb] font-sans text-[#26324d]">
       <div className="">
         <ClientHeader activeTab={activeTab} setActiveTab={setActiveTab} />
+        <div className="mt-2.5">
+          <IntegrationPendingBanner
+            moduleName="Client Detail"
+            description="This client workspace is a static preview: profile, KPIs, contacts, channels and the activity timeline are sample records kept in local state until client CRUD lands on the backend."
+          />
+        </div>
         <div className="mt-2.5 space-y-2.5">{content}</div>
       </div>
     </div>

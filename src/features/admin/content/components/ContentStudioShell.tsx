@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Send, Bookmark, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../shared/integration-pending-banner";
 import type { Tab } from "../types/content.types";
 import { CreateContentTab } from "./CreateContentTab";
 import { AIAssistantTab } from "./AIAssistantTab";
@@ -53,7 +54,9 @@ export default function ContentStudioShell() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-[20px] font-semibold tracking-tight text-[#111B43]">Content Studio</h1>
+          <h1 className="text-[20px] font-semibold tracking-tight text-[#111B43]">
+            Content Studio <IntegrationPendingBadge label="AI & Templates Preview" />
+          </h1>
           <p className="mt-0.5 text-[11.5px] text-[#687797]">Create, customize and publish content across all your channels.</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -65,6 +68,13 @@ export default function ContentStudioShell() {
           </button>
         </div>
       </div>
+
+      <IntegrationPendingBanner
+        moduleName="Content Studio"
+        compact
+        badgeText="Preview Tabs"
+        description="Templates, Content Ideas and the AI Assistant are sample content — nothing is generated or stored by the server. Create, Saved Drafts and Approvals save through the backend."
+      />
 
       {/* Tabs */}
       <div className="border-b border-[#E2E8F0]">

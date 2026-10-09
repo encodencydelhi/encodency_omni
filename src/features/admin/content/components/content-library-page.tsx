@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Clock3, Copy, FileText, ImageIcon, Loader2, MoreHorizontal, Search, Sparkles, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../shared/integration-pending-banner";
 import { draftsApi, type DraftSummaryRecord } from "../live/drafts-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 
@@ -32,9 +33,22 @@ export function ContentLibraryPage({ view }: { view: View }) {
   return (
     <div className="mx-auto max-w-[1400px] space-y-5 pb-10">
       <header className="flex items-start justify-between gap-4">
-        <div><h1 className="text-[26px] font-semibold tracking-tight">Content Studio</h1><p className="mt-0.5 text-[13px] text-muted-foreground">Create, customize and publish content across all your channels.</p></div>
+        <div>
+          <h1 className="text-[26px] font-semibold tracking-tight">
+            Content Studio {view === "drafts" ? null : <IntegrationPendingBadge label="Sample Content" />}
+          </h1>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">Create, customize and publish content across all your channels.</p>
+        </div>
         <Link href="/admin/content" className="flex h-9 items-center gap-2 rounded-sm bg-[#e20611] px-4 text-[13px] font-semibold text-white"><FileText className="size-4" />Create Post</Link>
       </header>
+      {view === "drafts" ? null : (
+        <IntegrationPendingBanner
+          moduleName="Content Library"
+          compact
+          badgeText="Preview"
+          description="Templates and the AI Assistant show sample content — nothing is generated or stored by the server. Saved Drafts is loaded from the backend."
+        />
+      )}
       <nav className="flex items-center gap-7 border-b">
         {tabs.map(([label, href, id]) => <Link key={id} href={href} className={cn("border-b-2 pb-2.5 text-[13px] font-semibold", view === id ? "border-[#e20611] text-[#e20611]" : "border-transparent text-muted-foreground hover:text-foreground")}>{label}</Link>)}
       </nav>

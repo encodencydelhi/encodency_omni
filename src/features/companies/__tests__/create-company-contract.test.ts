@@ -270,7 +270,7 @@ describe("POST /super-admin/companies (Create Company wizard)", () => {
 
     queueHappyPath();
     await companiesRepository.createCompany({ ...input, country: "Spain" }, ACTOR);
-    assert.deepEqual((bodyOf(calls[1]!) as { address?: unknown }).address, { country: "ES" });
+    assert.deepEqual((bodyOf(calls[2]!) as { address?: unknown }).address, { country: "ES" });
   });
 
   it("caps over-long free-text fields instead of letting the DTO answer 400", async () => {

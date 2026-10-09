@@ -10,6 +10,8 @@ import {
   ChevronLeft, ChevronRight, Target, AlertCircle, RefreshCw, Loader2
 } from "lucide-react";
 import { ChannelLogo } from "@/features/admin/shared/channel-logo";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "@/features/admin/shared/integration-pending-banner";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "@/features/admin/shared/integration-pending-banner";
 import { campaignsApi, type CampaignRecord, isRevisionConflict } from "./live/campaigns-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";
@@ -98,13 +100,19 @@ function ChannelIcon({ channel, size = 18 }: { channel: string; size?: number })
   return <ChannelLogo channel={channel} className={`h-[${size}px] w-[${size}px]`} />;
 }
 
-function SectionHeader({ title, action = "View all" }: { title: string; action?: string }) {
+function SectionHeader({ title, action = "View all", sample = false }: { title: string; action?: string; sample?: boolean }) {
   return (
     <div className="flex h-10 items-start justify-between px-3 pt-2.5">
       <h2 className="m-0 text-[11px] font-[750] leading-[1.2] text-[#17223d]">{title}</h2>
-      <button className="flex items-center gap-[3px] border-0 bg-transparent p-0 text-[12px] font-semibold text-[#df2832]">
-        {action}<ArrowUpRight size={11} />
-      </button>
+      {sample ? (
+        <span className="rounded-full border border-[#e5e9ef] bg-[#f6f8fb] px-2 py-0.5 text-[9.5px] font-semibold text-[#7a8497]">
+          Sample data
+        </span>
+      ) : (
+        <button className="flex items-center gap-[3px] border-0 bg-transparent p-0 text-[12px] font-semibold text-[#df2832]">
+          {action}<ArrowUpRight size={11} />
+        </button>
+      )}
     </div>
   );
 }
@@ -351,7 +359,9 @@ export function CampaignsPage() {
             <div className="mb-0.5 flex items-center gap-2 text-[10px] text-[#758198]">
               <span>Dashboard</span><ChevronRight size={10} /><b className="text-[#26314a]">Campaigns</b>
             </div>
-            <h1 className="m-0 text-[24px] font-[780] leading-[1.05] tracking-[-.7px]">Campaigns</h1>
+            <h1 className="m-0 text-[24px] font-[780] leading-[1.05] tracking-[-.7px]">
+              Campaigns <IntegrationPendingBadge label="Insights Sample Data" />
+            </h1>
             <p className="mt-[5px] text-[11px] text-[#718097]">Plan, manage and track multi-channel marketing campaigns.</p>
           </div>
 
@@ -365,6 +375,13 @@ export function CampaignsPage() {
             <div className="absolute inset-y-0 right-0 w-[55%] bg-[radial-gradient(circle_at_78%_38%,rgba(227,30,39,.13)_0_17px,transparent_18px),radial-gradient(circle_at_89%_58%,rgba(227,30,39,.08)_0_28px,transparent_29px)]" />
           </div>
         </header>
+
+        <div className="mb-2.5">
+          <IntegrationPendingBanner
+            moduleName="Campaigns"
+            description="Campaign rows and the KPI cards are loaded from the backend; the performance chart, top-performing list, channel split and milestone widgets below are sample data kept in local state until campaign analytics are exposed by the API."
+          />
+        </div>
 
         {/* Stats */}
         <section className="mb-2.5 grid grid-cols-2 gap-[9px] lg:grid-cols-6">
@@ -541,7 +558,7 @@ export function CampaignsPage() {
         {/* Bottom panels */}
         <section className="mt-2.5 grid grid-cols-1 gap-[9px] md:grid-cols-2 xl:grid-cols-[1.1fr_1.25fr_.92fr_1fr]">
           <article className="h-[280px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
-            <SectionHeader title="Campaign Performance Overview" />
+            <SectionHeader title="Campaign Performance Overview" sample />
             <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-0.5 text-[11px] text-[#657189]">
               <div className="flex gap-3">
                 <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-sm bg-[#e4252e]" />Leads</span>
@@ -554,7 +571,7 @@ export function CampaignsPage() {
           </article>
 
           <article className="h-[280px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
-            <SectionHeader title="Top Performing Campaigns" />
+            <SectionHeader title="Top Performing Campaigns" sample />
             <div className="px-3 pt-1">
               {topCampaigns.map(([name, meta, score, tone], i) => (
                 <div className="grid min-h-10 grid-cols-[22px_1fr_32px] items-center gap-2 border-b border-[#f0f2f5] py-2 last:border-0" key={name}>
@@ -578,7 +595,7 @@ export function CampaignsPage() {
           </article>
 
           <article className="h-[280px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
-            <SectionHeader title="Channel Contribution" />
+            <SectionHeader title="Channel Contribution" sample />
             <div className="flex items-center justify-center gap-[20px] px-2 py-2">
               <div className="relative h-[118px] w-[118px] shrink-0">
                 <svg
@@ -659,7 +676,7 @@ export function CampaignsPage() {
           </article>
 
           <article className="h-[280px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
-            <SectionHeader title="Upcoming Campaign Milestones" />
+            <SectionHeader title="Upcoming Campaign Milestones" sample />
             <div className="px-3">
               {milestones.map(([title, meta, tone]) => (
                 <div key={title} className="grid min-h-[34px] grid-cols-[23px_1fr] items-center gap-[7px] border-b border-[#f0f2f5] last:border-0">

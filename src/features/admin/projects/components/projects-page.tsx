@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowDownUp, BarChart3, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clock3, Filter, Link2, Megaphone, MoreVertical, Plus, Search, UsersRound, Globe } from "lucide-react";
 import { ChannelLogo } from "../../shared/channel-logo";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../shared/integration-pending-banner";
 import { useClients } from "../hooks/use-projects";
 import { cn } from "@/lib/utils/cn";
 
@@ -26,7 +27,9 @@ export function ClientsPage() {
             <ChevronRight className="mx-0.5 h-3 w-3" />
             <strong className="text-foreground font-semibold">Clients</strong>
           </div>
-          <h1 className="text-[22px] font-semibold tracking-tight text-foreground">Clients</h1>
+          <h1 className="text-[22px] font-semibold tracking-tight text-foreground">
+            Clients <IntegrationPendingBadge />
+          </h1>
           <p className="mt-0.5 text-[11px] text-muted-foreground">Manage all your brands and marketing Clients in one place.</p>
         </div>
 
@@ -54,6 +57,11 @@ export function ClientsPage() {
           </div>
         </div>
       </div>
+
+      <IntegrationPendingBanner
+        moduleName="Clients"
+        description="Client records, KPI cards and channel totals below are interactive sample data kept in local state — client CRUD, logo upload and member sync go live with the backend integration."
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-2 md:grid-cols-5">

@@ -15,6 +15,7 @@ import { ChannelsRail, ChannelsStep } from "./steps/step-channels";
 import { MarketingRail, MarketingStep } from "./steps/step-marketing";
 import { TeamRail, TeamStep } from "./steps/step-team";
 import { ReviewRail, ReviewStep } from "./steps/step-review";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../../shared/integration-pending-banner";
 import { cn } from "@/lib/utils/cn";
 
 export function AddClientPage() {
@@ -36,6 +37,10 @@ export function AddClientPage() {
   return (
     <div className="space-y-2.5 pb-10">
       <Header />
+      <IntegrationPendingBanner
+        moduleName="Add Client"
+        description="This wizard is a guided preview — nothing is sent to a server yet. Finishing it returns you to the Clients list without creating a record; client creation goes live with the backend integration."
+      />
       <Stepper step={step} onSelect={goTo} />
 
       <div className="grid items-start gap-2.5 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -85,7 +90,7 @@ function Header() {
       <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-[28px] font-semibold leading-9 tracking-[-0.025em] text-[#111827]">
-            Add New Client
+            Add New Client <IntegrationPendingBadge />
           </h1>
           <p className="mt-0.5 text-[12.5px] text-[#6B7280]">
             Set up a new client and start managing their digital presence in one place.
