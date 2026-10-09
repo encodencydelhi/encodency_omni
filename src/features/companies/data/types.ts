@@ -592,6 +592,13 @@ export interface CompanySummary {
   health: CompanyHealth;
   attention: CompanyAttentionItem[];
   onboarding: CompanyOnboardingStatus;
+  /**
+   * Result of the post-create `PATCH /settings/organization` consistency pass.
+   * `undefined` = not attempted or an expected 403 (Super Admin has no
+   * membership in the new company; the create DTO already wrote the fields).
+   * `false` = real failure the operator must be told about.
+   */
+  organizationProfileSaved?: boolean;
   internalOwners: {
     accountManager: StaffRef | null;
     supportOwner: StaffRef | null;

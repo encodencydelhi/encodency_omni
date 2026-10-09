@@ -161,7 +161,8 @@ export function useCompanyMutations() {
     };
 
     return {
-      createCompany: (input: CreateCompanyInput) => done(repo.createCompany(input, actor)),
+      createCompany: (input: CreateCompanyInput, options?: { idempotencyKey?: string }) =>
+        done(repo.createCompany(input, actor, options)),
       updateCompany: (id: string, input: UpdateCompanyInput) => done(repo.updateCompany(id, input, actor)),
       suspendCompanies: (ids: string[], input: { reason: SuspensionReason; note: string }) => done(repo.suspendCompanies(ids, input, actor)),
       reactivateCompanies: (ids: string[], input: { note: string }) => done(repo.reactivateCompanies(ids, input, actor)),

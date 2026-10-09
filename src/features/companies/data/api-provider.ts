@@ -464,6 +464,11 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         input.workspace?.currency
       );
 
+      // Step 2: write the same profile fields through the organization API, in the
+      // new company's context. The create DTO already persisted every one of them —
+      // this is a consistency pass, not the source of truth — so its failure must
+      // never make a successful create look failed.
+      let organizationProfileSaved: boolean | undefined;
       if (hasOrgFields && created.id) {
         try {
           const org = await organizationApi.get(created.id);
@@ -480,14 +485,31 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
             ...(input.workspace?.currency ? { currency: input.workspace.currency } : {}),
           };
           await organizationApi.update(created.id, updatePayload);
+          organizationProfileSaved = true;
         } catch (orgErr) {
-          // If the caller lacks company tenant membership in this session,
-          // the company creation remains successful; organization settings will be updated by the owner
-          console.warn("Option B: /settings/organization populate step skipped or deferred:", orgErr);
+          // A platform Super Admin is not a member of the company it just created,
+          // so /settings/organization answers 403 by design — the profile already
+          // lives on the Company row from the create payload. Anything else is a
+          // real failure the operator must see (create still succeeded).
+          const status = orgErr instanceof ApiError ? orgErr.status : undefined;
+          if (status === 403) {
+            organizationProfileSaved = undefined;
+          } else {
+            organizationProfileSaved = false;
+            console.warn({
+              msg: "company_create.organization_profile_update_failed",
+              companyId: created.id,
+              status,
+              error: orgErr instanceof Error ? orgErr.message : String(orgErr),
+            });
+          }
         }
       }
 
       const summary = toCompanySummary(created);
+      if (organizationProfileSaved !== undefined) {
+        summary.organizationProfileSaved = organizationProfileSaved;
+      }
       // The backend provisions the subscription inside the create transaction but
       // does not echo it back, so the tier the operator just chose is reported
       // from the request instead of the "Starter" default.
