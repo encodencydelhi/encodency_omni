@@ -391,18 +391,6 @@ export function useSettings() {
     }
   };
 
-  const handleRequestExport = async (categories: string[]) => {
-    try {
-      const req = await SettingsRepository.requestExport(categories);
-      await fetchSettings();
-      toast.success("Data export initiated. You will be notified when the download is ready.");
-      return req;
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to request export.");
-      throw err;
-    }
-  };
-
   const handleTransferOwnership = async (newOwnerName: string, newOwnerEmail: string) => {
     try {
       await SettingsRepository.transferOwnership(newOwnerName, newOwnerEmail);
@@ -463,7 +451,6 @@ export function useSettings() {
     updatePreferences,
     updateDataPrivacy,
     handleResetPreferences,
-    handleRequestExport,
     handleTransferOwnership,
     handleDeactivate,
     handleDeleteOrganization,

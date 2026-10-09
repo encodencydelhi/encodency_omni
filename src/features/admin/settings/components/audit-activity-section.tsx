@@ -16,6 +16,8 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [activeItem, setActiveItem] = useState<SettingsActivityItem | null>(null);
 
+  const people = useMemo(() => Array.from(new Set(activities.map((item) => item.user.name))).sort((a, b) => a.localeCompare(b)), [activities]);
+
   const filteredLogs = useMemo(() => {
     return filterActivityLogs(activities, {
       query: searchQuery,
@@ -33,9 +35,9 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
               <History className="size-3.5" />
             </div>
             <div>
-              <h3 className="text-[13px] font-bold text-[#0F172A]">Settings Configuration Audit Trail</h3>
+              <h3 className="text-[13px] font-bold text-[#0F172A]">Organization Activity</h3>
               <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">
-                Immutable record of administrative setting changes, policy modifications, and domain adjustments.
+                What your team did in this Company, read from the audit log (visible to Owners and Admins). Newest first.
               </p>
             </div>
           </div>
@@ -64,15 +66,9 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
               onChange={(e) => setSelectedSection(e.target.value as any)}
               className="h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[11.5px] font-normal text-[#0F172A] focus:outline-none focus:border-[#2563EB] cursor-pointer shadow-2xs"
             >
-              <option value="all">All Sections</option>
+              <option value="all">All Activity</option>
               <option value="organization">Organization</option>
-              <option value="workspace">Workspace</option>
-              <option value="branding">Branding</option>
-              <option value="notifications">Notifications</option>
-              <option value="security">Security</option>
-              <option value="preferences">Preferences</option>
-              <option value="data-privacy">Data & Privacy</option>
-              <option value="danger">Danger Zone</option>
+              <option value="audit">Everything Else</option>
             </select>
 
             {/* User Filter */}
@@ -81,10 +77,12 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
               onChange={(e) => setSelectedUser(e.target.value)}
               className="h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[11.5px] font-normal text-[#0F172A] focus:outline-none focus:border-[#2563EB] cursor-pointer shadow-2xs"
             >
-              <option value="all">All Administrators</option>
-              <option value="Manish">Manish Sirohi (Owner)</option>
-              <option value="Priya">Priya Sharma</option>
-              <option value="Amit">Amit Singh</option>
+              <option value="all">Everyone</option>
+              {people.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
             </select>
           </div>
         </div>

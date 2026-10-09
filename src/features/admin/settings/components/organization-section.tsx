@@ -187,7 +187,7 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
               value={data.legalName}
               onChange={(e) => onChange({ legalName: e.target.value })}
               disabled={!capabilities.canEditOrganization}
-              placeholder="e.g. Namo Gange Public Charitable Trust"
+              placeholder="e.g. Acme Public Charitable Trust"
               className="w-full h-8 px-3 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 shadow-2xs placeholder:text-[#94A3B8]"
             />
             <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Used for tax invoices, contracts, and receipts.</span>
@@ -202,7 +202,7 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
               value={data.displayName}
               onChange={(e) => onChange({ displayName: e.target.value })}
               disabled={!capabilities.canEditOrganization}
-              placeholder="e.g. Namo Gange"
+              placeholder="e.g. Acme"
               className="w-full h-8 px-3 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 shadow-2xs placeholder:text-[#94A3B8]"
             />
             <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Short title shown across top navigation & emails.</span>
@@ -218,6 +218,10 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
               disabled={!capabilities.canEditOrganization}
               className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
             >
+              <option value="">Select An Industry</option>
+              {data.industry && !["Healthcare, Ayurveda & Non-Profit", "Digital Marketing Agency", "E-Commerce & Retail", "Technology & SaaS", "Education & Academy", "Hospitality & Travel"].includes(data.industry) && (
+                <option value={data.industry}>{data.industry}</option>
+              )}
               <option value="Healthcare, Ayurveda & Non-Profit">Healthcare, Ayurveda & Non-Profit</option>
               <option value="Digital Marketing Agency">Digital Marketing Agency</option>
               <option value="E-Commerce & Retail">E-Commerce & Retail</option>
@@ -237,7 +241,7 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
               value={data.website}
               onChange={(e) => onChange({ website: e.target.value })}
               disabled={!capabilities.canEditOrganization}
-              placeholder="https://namogange.org"
+              placeholder="https://yourcompany.com"
               className="w-full h-8 px-3 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 shadow-2xs placeholder:text-[#94A3B8]"
             />
             <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Verified primary domain connected to Search Console.</span>
@@ -252,7 +256,7 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
               value={data.contactEmail}
               onChange={(e) => onChange({ contactEmail: e.target.value })}
               disabled={!capabilities.canEditOrganization}
-              placeholder="contact@namogange.org"
+              placeholder="contact@yourcompany.com"
               className="w-full h-8 px-3 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 shadow-2xs placeholder:text-[#94A3B8]"
             />
             <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Receives system alerts, billing notices, and reports.</span>
@@ -311,7 +315,7 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
               value={data.address.address}
               onChange={(e) => onChange({ address: { ...data.address, address: e.target.value } })}
               disabled={!capabilities.canEditOrganization}
-              placeholder="e.g. 12/4, Institutional Area, Lodhi Road"
+              placeholder="e.g. 12/4, Main Road"
               className="w-full h-8 px-3 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 shadow-2xs placeholder:text-[#94A3B8]"
             />
           </div>
@@ -404,12 +408,12 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
 
           <div className="bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg p-2.5 space-y-1 shadow-2xs">
             <span className="text-[9.5px] font-bold uppercase tracking-wider text-[#64748B]">Creation Date</span>
-            <div className="font-semibold text-[#0F172A] text-[11.5px]">{data.metadata.createdAt}</div>
+            <div className="font-semibold text-[#0F172A] text-[11.5px]">{data.metadata.createdAt || "—"}</div>
           </div>
 
           <div className="bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg p-2.5 space-y-1 shadow-2xs">
             <span className="text-[9.5px] font-bold uppercase tracking-wider text-[#64748B]">Account Owner</span>
-            <div className="font-semibold text-[#0F172A] text-[11.5px] truncate">{data.metadata.owner}</div>
+            <div className="font-semibold text-[#0F172A] text-[11.5px] truncate">{data.metadata.owner || "—"}</div>
           </div>
         </div>
 
@@ -419,7 +423,7 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#334155]">Current Plan:</span>
             <div className="font-bold text-[#059669] text-[11.5px] flex items-center gap-1.5 whitespace-nowrap shrink-0">
               <span className="size-2 rounded-full bg-[#10B981] shrink-0 animate-pulse"></span>
-              <span className="whitespace-nowrap font-bold">{data.metadata.currentPlan}</span>
+              <span className="whitespace-nowrap font-bold">{data.metadata.currentPlan || "No Active Plan"}</span>
             </div>
           </div>
           <Link

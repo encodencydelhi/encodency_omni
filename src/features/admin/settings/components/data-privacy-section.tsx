@@ -1,19 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Download, ShieldCheck, Clock, FileArchive, CheckCircle2 } from "lucide-react";
+import { Download, ShieldCheck, Clock, FileArchive } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { DataPrivacySettings, DataExportRequest } from "../settings-data/types";
+import { DataPrivacySettings } from "../settings-data/types";
 import { useSettingsCapability } from "../settings-data/capability-provider";
 import { ExportDataModal } from "./export-data-modal";
 
 interface DataPrivacySectionProps {
   data: DataPrivacySettings;
   onChange: (partial: Partial<DataPrivacySettings>) => void;
-  onRequestExport: (categories: string[]) => Promise<DataExportRequest>;
+  organizationName: string;
 }
 
-export function DataPrivacySection({ data, onChange, onRequestExport }: DataPrivacySectionProps) {
+export function DataPrivacySection({ data, onChange, organizationName }: DataPrivacySectionProps) {
   const { capabilities } = useSettingsCapability();
   const [exportModalOpen, setExportModalOpen] = useState(false);
 
@@ -111,8 +111,8 @@ export function DataPrivacySection({ data, onChange, onRequestExport }: DataPriv
         </div>
 
         <div className="bg-[#F8FAFD] border border-[#DDE4ED] rounded-xl p-2.5 text-[10.5px] text-[#64748B] font-normal shadow-2xs">
-          <span className="font-bold text-[#0F172A]">Policy Enforcement: </span>
-          Retention pruning runs daily at 02:00 AM UTC. Complies with GDPR Right-to-be-Forgotten & ISO 27001 data lifecycles.
+          <span className="font-bold text-[#0F172A]">Saved On This Device: </span>
+          These retention and privacy choices are kept in this browser only. The platform does not delete your data on a schedule yet, and audit records are permanent.
         </div>
       </section>
 
@@ -125,7 +125,7 @@ export function DataPrivacySection({ data, onChange, onRequestExport }: DataPriv
             </div>
             <div>
               <h3 className="text-[13px] font-bold text-[#0F172A]">Organization Full Archive Export</h3>
-              <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">Download complete portability archives of content, CRM records, and configurations.</p>
+              <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">Download your organization profile, team, clients, plan and recent activity as a JSON file. Created on demand from your live data.</p>
             </div>
           </div>
 
@@ -135,77 +135,13 @@ export function DataPrivacySection({ data, onChange, onRequestExport }: DataPriv
             disabled={!capabilities.canManagePrivacy}
             className="px-4 py-1.5 min-w-[230px] rounded-lg bg-[#2563EB] hover:bg-blue-600 text-white text-[11px] font-semibold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 self-start sm:self-auto whitespace-nowrap transition-all"
           >
-            <Download className="size-3.5" /> Request Organization Export
+            <Download className="size-3.5" /> Export Organization Data
           </button>
         </div>
 
-        {/* Recent Exports Table */}
-        <div className="space-y-1.5">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">Recent Export Packages</div>
-          <div className="border border-[#CBD5E1] rounded-xl overflow-x-auto text-[11px] shadow-2xs">
-            <table className="w-full text-left min-w-[640px]">
-              <thead className="bg-[#F8FAFD] text-[9.5px] font-bold uppercase text-[#64748B] border-b border-[#CBD5E1]">
-                <tr>
-                  <th className="py-2 px-3 w-[130px] whitespace-nowrap">Export ID</th>
-                  <th className="py-2 px-3 w-[220px] min-w-[210px] whitespace-nowrap">Date Requested</th>
-                  <th className="py-2 px-3 min-w-[180px]">Categories</th>
-                  <th className="py-2 px-3 w-[110px] whitespace-nowrap">Status</th>
-                  <th className="py-2 px-3 w-[100px] text-right whitespace-nowrap">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#F1F5F9] bg-white">
-                {data.recentExports.map((exp) => (
-                  <tr key={exp.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-2.5 px-3 font-mono text-[10.5px] font-semibold text-[#0F172A] whitespace-nowrap">
-                      {exp.id}
-                    </td>
-                    <td className="py-2.5 px-3 text-[#334155] font-normal whitespace-nowrap w-[220px] min-w-[210px]">
-                      {exp.requestedAt}
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <div className="flex flex-wrap gap-1">
-                        {exp.categories.map((c) => (
-                          <span key={c} className="px-1.5 py-0.2 rounded bg-slate-100 text-[9.5px] font-medium text-[#334155] border border-slate-200">
-                            {c}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <CheckCircle2 className="size-3" /> Ready
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const jsonContent = "data:text/json;charset=utf-8," + encodeURIComponent(
-                            JSON.stringify({
-                              organization: "Namo Gange Trust",
-                              exportId: exp.id,
-                              requestedAt: exp.requestedAt,
-                              categories: exp.categories,
-                            })
-                          );
-                          const link = document.createElement("a");
-                          link.href = jsonContent;
-                          link.download = `${exp.id}.json`;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }}
-                        className="text-[#2563EB] hover:underline font-semibold text-[10.5px] inline-flex items-center gap-1 cursor-pointer"
-                      >
-                        <Download className="size-3" /> Download
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">
+          Exports are generated in your browser the moment you ask for them and are not stored on any server, so there is no list of old exports. Each category is read live with your own permissions.
+        </p>
       </section>
 
       {/* SECTION 3: PRIVACY & TELEMETRY */}
@@ -281,7 +217,7 @@ export function DataPrivacySection({ data, onChange, onRequestExport }: DataPriv
       <ExportDataModal
         open={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
-        onRequestExport={onRequestExport}
+        organizationName={organizationName}
       />
     </div>
   );

@@ -179,7 +179,7 @@ export function TransferOwnershipModal({
             onChange={(e) => setAgreed(e.target.checked)}
             className="rounded border-gray-300 text-blue-600 size-3.5 mt-0.5"
           />
-          <span>I understand that I am relinquishing ultimate ownership authority over Namo Gange Trust.</span>
+          <span>I understand that I am relinquishing ultimate ownership authority over this organization.</span>
         </label>
 
         <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#F1F5F9]">

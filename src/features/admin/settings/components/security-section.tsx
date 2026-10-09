@@ -77,8 +77,8 @@ export function SecuritySection({ policy, summary, onChange }: SecuritySectionPr
           {/* Clean Single-Line Timestamp Pill */}
           <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F8FAFD] border border-[#DDE4ED] text-[10.5px] text-[#64748B] font-medium shrink-0 whitespace-nowrap shadow-2xs">
             <Clock className="size-3 text-[#2563EB] shrink-0" />
-            <span>Modified {summary.lastSecurityPolicyChange}</span>
-            <span className="font-semibold text-[#0F172A]">• {summary.lastChangedBy}</span>
+            <span>{summary.available ? `${summary.members} active members` : "Team security numbers"}</span>
+            <span className="font-semibold text-[#0F172A]">• {summary.available ? `2FA ${summary.twoFactorRate}%` : "Owners & Admins only"}</span>
           </div>
         </div>
 

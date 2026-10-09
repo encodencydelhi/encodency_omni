@@ -49,14 +49,17 @@ export function ActivityDetailDrawer({ activity, onClose }: ActivityDetailDrawer
                 <span className="text-[#64748B] font-medium block">Timestamp</span>
                 <span className="font-normal text-[#0F172A]">{activity.timestamp}</span>
               </div>
-              <div>
-                <span className="text-[#64748B] font-medium block">Origin IP</span>
-                <span className="font-mono font-normal text-[#0F172A] truncate block">{activity.ipAddress}</span>
-              </div>
+              {activity.ipAddress && (
+                <div>
+                  <span className="text-[#64748B] font-medium block">Origin IP</span>
+                  <span className="font-mono font-normal text-[#0F172A] truncate block">{activity.ipAddress}</span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Diff comparison */}
+          {/* Diff comparison (only when a before/after value is known) */}
+          {(activity.previousValue || activity.newValue) && (
           <div className="space-y-1.5">
             <div className="text-[9.5px] font-semibold uppercase tracking-wider text-[#64748B]">
               Configuration Diff ({activity.settingName})
@@ -74,6 +77,7 @@ export function ActivityDetailDrawer({ activity, onClose }: ActivityDetailDrawer
               </div>
             </div>
           </div>
+          )}
 
           {/* Section & Reason */}
           <div className="space-y-1.5 text-[10.5px]">

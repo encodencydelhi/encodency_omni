@@ -24,7 +24,7 @@ export interface OrganizationMetadata {
   owner: string;
   ownerEmail: string;
   currentPlan: string;
-  planStatus: "Active" | "Past Due" | "Trialing";
+  planStatus: string;
   totalMembers: number;
   totalClients: number;
   revision?: number;
@@ -48,7 +48,7 @@ export interface OrganizationProfile {
 
 export interface WorkspaceDefaults {
   primaryClient: string;
-  defaultClientAfterLogin: "Moksha Sewa" | "Last Used Client" | "Prompt Every Time";
+  defaultClientAfterLogin: string;
   rememberLastSelectedClient: boolean;
   defaultWorkspaceLandingPage: "Dashboard" | "Last Used Client" | "Primary Client" | "CRM" | "Analytics";
   defaultDateRange: "Last 7 days" | "Last 30 days" | "Last 90 days" | "Month to date" | "Year to date";
@@ -108,13 +108,17 @@ export interface SecurityPolicy {
   };
 }
 
+/** Real sign-in security numbers of the Company's members (GET /team/members/security-summary, Owners and Admins only). */
 export interface SecuritySummary {
-  twoFactorAdoptionRate: number; // e.g. 88%
-  adminsWithout2FA: number;
-  activeSessionsCount: number;
-  lastSecurityPolicyChange: string;
-  lastChangedBy: string;
-  securityScore: number; // 0 - 100
+  /** false when the signed-in person may not see these numbers or the server could not be reached. */
+  available: boolean;
+  members: number;
+  suspended: number;
+  twoFactorEnabled: number;
+  /** Share of active members with 2FA on, 0-100. */
+  twoFactorRate: number;
+  privilegedMembers: number;
+  privilegedWithoutTwoFactor: number;
 }
 
 export interface LocalePreferences {

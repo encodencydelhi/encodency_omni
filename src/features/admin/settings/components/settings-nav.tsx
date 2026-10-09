@@ -44,7 +44,7 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export function SettingsNav({ activeSection, onSelectSection, isSectionDirty }: SettingsNavProps) {
-  const { currentRole, switchRole } = useSettingsCapability();
+  const { currentRole } = useSettingsCapability();
 
   return (
     <aside className="w-full md:w-[215px] lg:w-[225px] shrink-0 space-y-2">
@@ -110,47 +110,28 @@ export function SettingsNav({ activeSection, onSelectSection, isSectionDirty }: 
         })}
       </nav>
 
-      {/* Role / Capability Switcher Box */}
+      {/* Your role: read from your real membership, it cannot be switched here */}
       <div className="bg-gradient-to-br from-[#F8FAFD] to-[#F1F5F9] border border-[#DDE4ED] rounded-xl p-2.5 text-[11px] space-y-1.5 shadow-2xs">
         <div className="flex items-center justify-between text-[#334155]">
           <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
-            <Shield className="size-3 text-blue-600" /> Active Role
+            <Shield className="size-3 text-blue-600" /> Your Role
           </span>
           <span className="text-[9.5px] font-semibold text-[#059669] bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-300">
             Verified
           </span>
         </div>
 
-        <div className="flex items-center justify-between gap-1 pt-0.5">
-          <button
-            type="button"
-            onClick={() => switchRole("Organization Owner")}
-            className={cn(
-              "flex-1 py-1 px-1.5 rounded-md text-[10px] transition-all cursor-pointer border text-center font-semibold",
-              currentRole === "Organization Owner"
-                ? "bg-white text-[#0F172A] border-[#CBD5E1] shadow-xs"
-                : "bg-transparent text-[#64748B] border-transparent hover:bg-slate-200/70 hover:text-[#0F172A]"
-            )}
-          >
-            Owner
-          </button>
-          <button
-            type="button"
-            onClick={() => switchRole("Organization Admin")}
-            className={cn(
-              "flex-1 py-1 px-1.5 rounded-md text-[10px] transition-all cursor-pointer border text-center font-semibold",
-              currentRole === "Organization Admin"
-                ? "bg-white text-[#0F172A] border-[#CBD5E1] shadow-xs"
-                : "bg-transparent text-[#64748B] border-transparent hover:bg-slate-200/70 hover:text-[#0F172A]"
-            )}
-          >
-            Admin
-          </button>
+        <div className="pt-0.5">
+          <span className="inline-block rounded-md border border-[#CBD5E1] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#0F172A] shadow-xs">
+            {currentRole.replace("Organization ", "")}
+          </span>
         </div>
         <p className="text-[9.5px] text-[#64748B] font-normal leading-relaxed pt-0.5">
           {currentRole === "Organization Owner"
             ? "Full access including Transfer, Deactivation & Deletion."
-            : "Admin access. High-risk danger actions are restricted to Owner."}
+            : currentRole === "Organization Admin"
+              ? "Admin access. High-risk danger actions are restricted to the Owner."
+              : "Read-only. Only an Owner or Admin can change organization settings."}
         </p>
       </div>
     </aside>
