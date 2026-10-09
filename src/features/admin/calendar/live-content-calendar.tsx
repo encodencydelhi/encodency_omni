@@ -644,7 +644,7 @@ function PostDetailsBody({ post, startConfirm, onClose }: { post: CalendarPost; 
   const { setClientId } = useTenancyContext();
   const [confirming, setConfirming] = useState(startConfirm);
   const reason = describeScheduleErrorCode(post.failureCode) ?? describeScheduleErrorCode(post.lastErrorCode);
-  const meta = SCHEDULED_POST_STATUS_META[post.status];
+  const meta = post.status === "DRAFT" ? DRAFT_META : SCHEDULED_POST_STATUS_META[post.status];
 
   const rows: Array<[string, string]> = [
     ["Client", post.clientName ?? "—"],
