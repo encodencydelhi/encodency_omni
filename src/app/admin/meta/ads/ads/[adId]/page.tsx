@@ -65,6 +65,7 @@ import {
   Th,
   ToneChip,
   Tr,
+  PagedRows,
 } from "@/features/admin/meta-ads/components/ui";
 import {
   ADS_ROOT,
@@ -222,7 +223,7 @@ function AdDetail({ adId }: { adId: string }) {
         <div className="grid gap-3 xl:grid-cols-[1fr_360px_300px]">
           {/* LEFT — creative and copy details */}
           <div className="space-y-3">
-            <section className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <section className="grid grid-cols-2 gap-1 md:grid-cols-4">
               <KpiCard label="Spend" value={money(m.spend)} icon={WalletCards} />
               <KpiCard label="Impressions" value={num(m.impressions)} icon={BarChart3} />
               <KpiCard label="Reach" value={num(m.reach)} icon={Radio} />
@@ -494,7 +495,8 @@ function AdDetail({ adId }: { adId: string }) {
               compact
             />
           ) : (
-            <TableShell minWidth={860}>
+            <PagedRows rows={adLeads} size={8} noun="leads">{(pagedRows) => (
+<TableShell minWidth={860}>
               <thead>
                 <tr>
                   {["Lead", "Contact", "Form", "Stage", "Score", "Owner", "Submitted"].map((h) => (
@@ -503,7 +505,7 @@ function AdDetail({ adId }: { adId: string }) {
                 </tr>
               </thead>
               <tbody>
-                {adLeads.map((l) => (
+                {pagedRows.map((l) => (
                   <Tr key={l.id}>
                     <Td>
                       <EntityLink href={`${ADS_ROOT}/leads/${l.id}`} name={l.name} sub={l.id} />
@@ -525,6 +527,7 @@ function AdDetail({ adId }: { adId: string }) {
                 ))}
               </tbody>
             </TableShell>
+)}</PagedRows>
           )}
         </section>
       )}
@@ -546,8 +549,9 @@ function AdDetail({ adId }: { adId: string }) {
                 />
               );
             return (
-              <ol className="divide-y divide-[#eef2f7]">
-                {rows.map((a) => (
+              <PagedRows rows={rows} size={10} noun="changes">{(pagedRows) => (
+<ol className="divide-y divide-[#eef2f7]">
+                {pagedRows.map((a) => (
                   <li key={a.id} className="flex flex-wrap items-start gap-3 px-3 py-2.5">
                     <span className="w-[150px] shrink-0 text-[10px] text-[#64748b]">{dateTime(a.at)}</span>
                     <span className="min-w-[200px] flex-1 text-[11px] font-semibold">
@@ -564,6 +568,7 @@ function AdDetail({ adId }: { adId: string }) {
                   </li>
                 ))}
               </ol>
+)}</PagedRows>
             );
           })()}
         </section>

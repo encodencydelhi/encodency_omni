@@ -345,7 +345,7 @@ function Overview() {
       </div>
 
       {/* Top 4 Master KPI Cards */}
-      <section className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="mb-2 grid grid-cols-1 gap-1 sm:grid-cols-2 xl:grid-cols-4">
         <MasterKpiCard
           title="Total Ad Spend"
           value={money(totals.spend)}
@@ -408,7 +408,7 @@ function Overview() {
       </section>
 
       {/* Secondary Quick Metrics Strip */}
-      <section className="mb-2 grid grid-cols-2 gap-2 md:grid-cols-4">
+      <section className="mb-2 grid grid-cols-2 gap-1 md:grid-cols-4">
         <div className="flex items-center gap-3 rounded-sm border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-2xs">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-blue-50 text-blue-600 ring-1 ring-blue-500/15">
             <Megaphone className="size-4" />
@@ -582,7 +582,7 @@ function Overview() {
       </section>
 
       {/* Grid of 4 Insight Panels */}
-      <section className="grid items-stretch gap-2 xl:grid-cols-2 2xl:grid-cols-4">
+      <section className="grid items-stretch gap-1 xl:grid-cols-2 2xl:grid-cols-4">
         <Panel
           className="flex h-full flex-col shadow-sm"
           bodyClassName="flex-1 min-h-0 min-w-0"
@@ -711,7 +711,7 @@ function Overview() {
       </section>
 
       {/* Quick Navigation Cards */}
-      <section className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-2 grid gap-1 md:grid-cols-2 xl:grid-cols-4">
         {[
           {
             label: "Ad Sets",

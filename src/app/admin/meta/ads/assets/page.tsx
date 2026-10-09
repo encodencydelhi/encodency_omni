@@ -3,28 +3,43 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FaFacebookF, FaInstagram, FaMeta } from "react-icons/fa6";
-import { Database, Info, Plug, RefreshCw, Search, Unplug } from "lucide-react";
+import { ArrowUpRight, Database, Info, LogOut, Plug, RefreshCw, Search, Unplug } from "lucide-react";
 import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
-import { useAdsData } from "@/features/admin/meta-ads/data-source";
+import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
 import { date, dateTime, relative } from "@/features/admin/meta-ads/format";
 import {
+  btn,
+  btnPrimary,
+  PagedFooter,
   TableShell,
   Th,
   Tr,
   Td,
 } from "@/features/admin/meta-ads/components/ui";
+import { usePagination } from "@/features/admin/meta-ads/use-filters";
+import { useMeta } from "@/features/admin/meta/connection-context";
+import { DisconnectDialog } from "@/features/admin/meta/components/connection-dialogs";
+import { InlineNotice } from "@/features/admin/meta/ui";
 import {
   ADS_ROOT,
   AdsWorkspace,
 } from "@/features/admin/meta-ads/components/workspace";
 import type { ConnectedAsset } from "@/features/admin/meta-ads/types";
+import type { MetaProduct } from "@/features/admin/meta/permissions";
 
 const GROUP_ICONS: Record<ConnectedAsset["group"], React.ReactNode> = {
   "Ad Account": <FaMeta className="size-4 text-[#0866ff]" />,
   "Facebook Page": <FaFacebookF className="size-4 text-[#1877f2]" />,
   "Instagram Business": <FaInstagram className="size-4 text-[#d946ef]" />,
   "Pixel / Data Source": <Database className="size-4 text-[#7c3aed]" />,
+};
+
+const PRODUCT_OF_GROUP: Record<ConnectedAsset["group"], MetaProduct> = {
+  "Ad Account": "ads",
+  "Pixel / Data Source": "ads",
+  "Facebook Page": "facebook",
+  "Instagram Business": "instagram",
 };
 
 type FilterTab = "All" | "Connected" | "Needs Attention" | "Syncing" | "Disconnected";
@@ -49,7 +64,9 @@ const HEALTH_ITEMS: { status: ConnectedAsset["status"]; description: string; dot
 ];
 
 export default function AssetsPage() {
-  const { connectedAssets } = useAdsData();
+  const { connectedAssets, refresh, refetching } = useAdsData();
+  const meta = useMeta();
+  const [disconnectOpen, setDisconnectOpen] = useState(false);
   const TAB_META = tabMeta(connectedAssets);
   const [activeTab, setActiveTab] = useState<FilterTab>("All");
   const [search, setSearch] = useState("");
@@ -70,6 +87,39 @@ export default function AssetsPage() {
     }
     return true;
   });
+  const paged = usePagination(filtered, 8);
+  const hasPage = connectedAssets.some((a) => a.group === "Facebook Page");
+
+  /** Live mode: every button here does something real. Demo mode keeps its sample toasts. */
+  const liveActions = (asset: ConnectedAsset) => {
+    const account = asset.assetId.replace(/^act_/, "");
+    const links: Record<ConnectedAsset["group"], { label: string; href: string; external?: boolean }> = {
+      "Ad Account": { label: "Open in Ads Manager", href: `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${account}`, external: true },
+      "Facebook Page": { label: "Open Facebook workspace", href: "/admin/meta/facebook" },
+      "Instagram Business": { label: "Open Instagram workspace", href: "/admin/meta/instagram" },
+      "Pixel / Data Source": { label: "Open Events Manager", href: "https://business.facebook.com/events_manager2", external: true },
+    };
+    const link = links[asset.group];
+    return (
+      <div className="flex items-center justify-end gap-1.5">
+        {asset.status !== "Connected" && asset.status !== "Syncing" && (
+          <button type="button" onClick={() => void meta.connect()} className="rounded-sm bg-[#2563eb] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#1d4ed8] transition-colors">
+            Reconnect
+          </button>
+        )}
+        {link.external ? (
+          <a href={link.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-sm border border-[#e2e8f0] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors">
+            {link.label}
+            <ArrowUpRight className="size-3" />
+          </a>
+        ) : (
+          <Link href={link.href} className="rounded-sm border border-[#e2e8f0] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors">
+            {link.label}
+          </Link>
+        )}
+      </div>
+    );
+  };
 
   const renderToneChip = (status: ConnectedAsset["status"]) => {
     const chipStyles: Record<ConnectedAsset["status"], { bg: string; text: string; border: string; dot: string }> = {
@@ -113,6 +163,39 @@ export default function AssetsPage() {
         </div>
       </div>
 
+      {LIVE && (
+        <section className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-[#e2e8f0] bg-white p-3.5 shadow-sm" aria-label="Meta connection">
+          <div className="min-w-0">
+            <p className="text-[12px] font-bold text-[#0f172a]">Meta login{meta.connection?.accountName ? `: ${meta.connection.accountName}` : ""}</p>
+            <p className="text-[11px] text-[#475569]">One login powers Ads, Facebook and Instagram. Reconnect to change permissions or Pages; disconnect to stop using it.</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <button type="button" onClick={refresh} className={btn}>
+              <RefreshCw className={cn("size-3.5", refetching && "animate-spin")} />
+              Refresh data
+            </button>
+            <button type="button" onClick={() => void meta.connect()} className={btnPrimary}>
+              Reconnect
+            </button>
+            <Link href="/admin/meta/settings" className={btn}>
+              Meta settings
+            </Link>
+            <button type="button" onClick={() => setDisconnectOpen(true)} className="inline-flex items-center gap-1.5 rounded-sm border border-[#fecaca] bg-white px-3 py-1.5 text-[11.5px] font-semibold text-[#dc2626] hover:bg-[#fef2f2]">
+              <LogOut className="size-3.5" />
+              Disconnect
+            </button>
+          </div>
+        </section>
+      )}
+
+      {LIVE && !hasPage && (
+        <div className="mb-4">
+          <InlineNotice tone="amber" title="No Facebook Page came back with this login" action={<Link href="/admin/meta/facebook" className={btn}>See how to fix</Link>}>
+            Ads that run on a Page and lead forms need a Page this login manages. Give the login access to the Page in Meta Business Settings, then reconnect.
+          </InlineNotice>
+        </div>
+      )}
+
       <div className="mb-3 flex flex-wrap gap-2">
         {(Object.keys(TAB_META) as FilterTab[]).map((tab) => {
           const meta = TAB_META[tab];
@@ -155,7 +238,7 @@ export default function AssetsPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((asset) => (
+            {paged.visible.map((asset) => (
               <Tr key={asset.id} className="border-b border-[#f1f5f9] last:border-0">
                 <Td>
                   <div className="flex items-center gap-3">
@@ -177,7 +260,7 @@ export default function AssetsPage() {
                     </div>
                     <div className="flex items-center gap-2 text-[11px]">
                       <span className="text-[#64748b]">Connected on</span>
-                      <span className="text-[#334155]">{date(asset.connectedOn)}</span>
+                      <span className="text-[#334155]">{asset.connectedOn ? date(asset.connectedOn) : "—"}</span>
                     </div>
                     <div className="flex items-center gap-2 text-[11px]">
                       <span className="text-[#64748b]">Last sync</span>
@@ -187,6 +270,21 @@ export default function AssetsPage() {
                 </Td>
                 <Td>
                   <div className="flex flex-wrap gap-1">
+                    {LIVE &&
+                      meta.scopes
+                        .filter((scope) => scope.products.includes(PRODUCT_OF_GROUP[asset.group]) && scope.essential)
+                        .map((scope) => (
+                          <span
+                            key={scope.scope}
+                            title={scope.state === "granted" ? scope.unlocks : `Not granted: ${scope.unlocks}`}
+                            className={cn(
+                              "rounded-sm border px-2 py-0.5 text-[10px] font-medium",
+                              scope.state === "granted" ? "border-[#e2e8f0] bg-[#f8fafc] text-[#334155]" : "border-[#fde68a] bg-[#fef3c7] text-[#92400e]",
+                            )}
+                          >
+                            {scope.scope}
+                          </span>
+                        ))}
                     {asset.permissions.map((p) => (
                       <span key={p} className="rounded-sm border border-[#e2e8f0] bg-[#f8fafc] px-2 py-0.5 text-[10px] font-medium text-[#334155]">
                         {p}
@@ -200,7 +298,10 @@ export default function AssetsPage() {
                   </div>
                 </Td>
                 <Td>
-                  <div className="flex items-center justify-end gap-1.5">
+                  {LIVE ? (
+                    liveActions(asset)
+                  ) : (
+                    <div className="flex items-center justify-end gap-1.5">
                     {asset.status !== "Connected" && asset.status !== "Syncing" ? (
                       <button
                         type="button"
@@ -246,12 +347,16 @@ export default function AssetsPage() {
                       Disconnect
                     </button>
                   </div>
+                  )}
                 </Td>
               </Tr>
             ))}
           </tbody>
         </TableShell>
+        <PagedFooter paged={paged} noun="assets" />
       </div>
+
+      <DisconnectDialog open={disconnectOpen} onOpenChange={setDisconnectOpen} />
 
       <section className="mt-4 rounded-sm border border-[#e2e8f0] bg-white p-4 shadow-sm">
         <div className="mb-3 flex items-center gap-2">

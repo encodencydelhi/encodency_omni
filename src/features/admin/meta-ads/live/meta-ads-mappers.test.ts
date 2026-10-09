@@ -95,6 +95,56 @@ describe("meta ads snapshot mapper", () => {
     assert.equal(refused.issues.find((i) => i.id === "ad-a1")!.detail, "Policy");
   });
 
+  it("explains why Meta flagged an entity and where to fix it, with Meta's own words", () => {
+    const flagged = snapshot({
+      ads: ds([
+        { id: "a9", adSetId: "s1", campaignId: "c1", name: "Billing ad", status: "error", format: null, creativeId: null, thumbnailUrl: null, destination: null, primaryText: null, headline: null, description: null, cta: null, pageId: null, instagramActorId: null, utm: null, formId: null, qualityRanking: null, engagementRanking: null, conversionRanking: null, reviewNote: null, effectiveStatus: "PENDING_BILLING_INFO", issues: [{ level: "ad", summary: "Payment method missing", message: "Add a payment method" }], lastEdited: "2026-10-02T00:00:00Z", metrics: metrics(0) },
+      ]),
+    });
+    const issue = mapSnapshot(flagged, []).issues.find((i) => i.id === "ad-a9")!;
+    assert.equal(issue.kind, "Ad");
+    assert.equal(issue.severity, "blocking");
+    assert.equal(issue.statusLabel, "Billing information needed");
+    assert.deepEqual(issue.reasons, [{ summary: "Payment method missing", message: "Add a payment method" }]);
+    assert.match(issue.advice ?? "", /payment method/i);
+    assert.equal(issue.externalHref, "https://adsmanager.facebook.com/adsmanager/manage/ads?act=1&selected_ad_ids=a9");
+  });
+
+  it("reports a closed ad account with Meta's reason, a stale pixel only while something runs, and a throttled dataset", () => {
+    const closed = mapSnapshot(
+      snapshot({
+        account: { id: "act_1", accountId: "1", name: "Main", currency: "INR", timezone: null, status: "CLOSED", disableReason: 7, amountSpent: null, business: null },
+        pixels: ds([{ id: "px1", name: "Pixel", lastFiredAt: "2026-09-01T00:00:00Z" }]),
+        audiences: ds([{ id: "au3", name: "Tiny", kind: "custom", source: "Customer List", sizeLower: 1, sizeUpper: 2, similarity: null, country: null, locations: [], status: "Too small", lastSync: null }]),
+        adSets: { state: "rate_limited", data: [], reason: "rate_limited" },
+      }),
+      [],
+    );
+    const byId = new Map(closed.issues.map((i) => [i.id, i]));
+    assert.match(byId.get("account-status")!.detail, /Permanently closed/);
+    assert.equal(byId.get("pixel-px1")!.kind, "Pixel");
+    assert.equal(byId.get("audience-au3")!.kind, "Audience");
+    assert.equal(byId.get("rate_limited-adSets")!.severity, "warning");
+
+    const idle = mapSnapshot(snapshot({ campaigns: ds([]), pixels: ds([{ id: "px1", name: "Pixel", lastFiredAt: null }]) }), []);
+    assert.equal(idle.issues.some((i) => i.id === "pixel-px1"), false);
+  });
+
+  it("raises a quality warning only for an active ad that ranks below average and has delivered", () => {
+    const base = { adSetId: "s1", campaignId: "c1", format: null, creativeId: null, thumbnailUrl: null, destination: null, primaryText: null, headline: null, description: null, cta: null, pageId: null, instagramActorId: null, utm: null, formId: null, engagementRanking: "Average" as const, conversionRanking: null, reviewNote: null, lastEdited: null };
+    const data2 = mapSnapshot(
+      snapshot({
+        ads: ds([
+          { ...base, id: "q1", name: "Weak", status: "active", qualityRanking: "Below average", metrics: metrics(10) },
+          { ...base, id: "q2", name: "Paused weak", status: "paused", qualityRanking: "Below average", metrics: metrics(10) },
+          { ...base, id: "q3", name: "Fine", status: "active", qualityRanking: "Average", metrics: metrics(10) },
+        ]),
+      }),
+      [],
+    );
+    assert.deepEqual(data2.issues.filter((i) => i.id.startsWith("ad-quality")).map((i) => i.id), ["ad-quality-q1"]);
+  });
+
   it("lists the ad account, pages, Instagram and pixels as assets", () => {
     assert.deepEqual(data.connectedAssets.map((a) => a.group), ["Ad Account", "Facebook Page", "Instagram Business", "Pixel / Data Source"]);
     assert.equal(data.connectedAssets[2]!.name, "@brand");

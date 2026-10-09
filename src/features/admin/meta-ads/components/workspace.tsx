@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { integrationsApi } from "@/features/admin/integrations/live/integrations-api";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { LIVE, useAdsData, type AdsStatus } from "../data-source";
+import { MetaProductNav } from "@/features/admin/meta/ui";
 import { btn, btnPrimary } from "./ui";
 
 /** Live mode reports through Meta's 7/30/90-day presets only; the demo data also has the two extra ranges. */
@@ -83,9 +84,10 @@ export const ADS_ROOT = "/admin/meta/ads";
 
 const STATE_COPY: Record<Exclude<AdsStatus, "ready" | "loading">, { title: string; body: string; action?: { label: string; href: string } }> = {
   no_company: { title: "Select a company", body: "Choose the company whose Meta ad account you want to see." },
-  not_connected: { title: "Connect Meta to see your ads", body: "No Meta login is connected for this company yet. Connect it in Integrations, then return here.", action: { label: "Open Integrations", href: "/admin/integrations" } },
-  reconnect: { title: "Reconnect Meta", body: "The Meta login for this company expired or was revoked. Reconnect it to read ad data again.", action: { label: "Open Integrations", href: "/admin/integrations" } },
-  permission: { title: "Meta needs more permissions", body: "Meta refused access to ad data. Reconnect Meta and approve the ads permissions (ads_read, leads_retrieval).", action: { label: "Open Integrations", href: "/admin/integrations" } },
+  not_connected: { title: "Connect Meta to see your ads", body: "No Meta login is connected for this company yet. Connect it, then return here.", action: { label: "Open Meta settings", href: "/admin/meta/settings" } },
+  reconnect: { title: "Reconnect Meta", body: "The Meta login for this company expired or was revoked. Reconnect it to read ad data again.", action: { label: "Open Meta settings", href: "/admin/meta/settings" } },
+  permission: { title: "Meta needs more permissions", body: "Meta refused access to ad data. Reconnect Meta and approve the ads permissions (ads_read, leads_retrieval).", action: { label: "Open Meta settings", href: "/admin/meta/settings" } },
+  rate_limited: { title: "Meta is limiting requests for this ad account", body: "Meta gives every ad account a small request budget and this one is used up for now. Your other ad accounts are not affected: pick another one above, or wait and this page retries by itself." },
   no_accounts: { title: "No ad accounts found", body: "The connected Meta login does not have access to any ad account. Add it to an ad account in Meta Business Settings, then refresh." },
   error: { title: "Meta Ads could not be loaded", body: "Something went wrong while talking to Meta. Try again in a moment." },
 };
@@ -105,20 +107,27 @@ async function connectMeta(): Promise<void> {
   }
 }
 
-function StatePanel({ status, message, onRetry }: { status: Exclude<AdsStatus, "ready">; message: string | null; onRetry: () => void }) {
+function waitText(seconds: number | null): string {
+  if (!seconds) return "a few minutes";
+  if (seconds < 90) return "about a minute";
+  return `about ${Math.ceil(seconds / 60)} minutes`;
+}
+
+function StatePanel({ status, message, onRetry, retryAfterSeconds }: { status: Exclude<AdsStatus, "ready">; message: string | null; onRetry: () => void; retryAfterSeconds: number | null }) {
   if (status === "loading") {
     return (
       <div className="space-y-3" role="status" aria-label="Loading Meta Ads">
-        <div className="h-24 animate-pulse rounded-2xl border border-slate-200 bg-white" />
-        <div className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-white" />
+        <div className="h-24 animate-pulse rounded-sm border border-slate-200 bg-white" />
+        <div className="h-64 animate-pulse rounded-sm border border-slate-200 bg-white" />
       </div>
     );
   }
   const copy = STATE_COPY[status];
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-2xs" role="alert">
+    <div className="rounded-sm border border-slate-200 bg-white p-8 text-center shadow-2xs" role="alert">
       <h2 className="text-base font-semibold text-slate-900">{copy.title}</h2>
       <p className="mx-auto mt-1.5 max-w-md text-xs font-medium text-slate-600">{status === "error" && message ? message : copy.body}</p>
+      {status === "rate_limited" && <p className="mx-auto mt-1.5 max-w-md text-xs font-semibold text-amber-800">Meta asked us to wait {waitText(retryAfterSeconds)}. Nothing is lost: the last data you saw is kept.</p>}
       <div className="mt-4 flex justify-center gap-2">
         {(status === "not_connected" || status === "reconnect" || status === "permission") && (
           <button type="button" onClick={() => void connectMeta()} className={btnPrimary}>
@@ -130,7 +139,7 @@ function StatePanel({ status, message, onRetry }: { status: Exclude<AdsStatus, "
             {copy.action.label}
           </Link>
         )}
-        {(status === "error" || status === "no_accounts") && (
+        {(status === "error" || status === "no_accounts" || status === "rate_limited") && (
           <button type="button" onClick={onRetry} className={btn}>
             Try again
           </button>
@@ -141,7 +150,7 @@ function StatePanel({ status, message, onRetry }: { status: Exclude<AdsStatus, "
 }
 
 /** Live: the real ad account (switchable), first Page and Instagram account. Demo: the original sample chips. */
-function AssetChips() {
+function AssetChips({ onlyAccount = false }: { onlyAccount?: boolean }) {
   const ads = useAdsData();
   if (!LIVE) {
     return (
@@ -176,15 +185,15 @@ function AssetChips() {
       ) : (
         current && <AssetChip label="Ad Account" value={current.name} href={`${ADS_ROOT}/assets#ad-account`} icon={<FaMeta className="size-3 text-[#0866ff]" />} />
       )}
-      {page ? (
+      {onlyAccount ? null : page ? (
         <AssetChip label="Page" value={page.name} href={`${ADS_ROOT}/assets#facebook-page`} icon={<FaFacebookF className="size-3 text-[#1877f2]" />} />
       ) : (
-        <AssetChip label="Page" value="Not mapped" href="/admin/meta" warning="Map" icon={<FaFacebookF className="size-3 text-[#1877f2]" />} />
+        <AssetChip label="Page" value="Not available" href="/admin/meta/facebook" warning="Fix" icon={<FaFacebookF className="size-3 text-[#1877f2]" />} />
       )}
-      {instagram ? (
+      {onlyAccount ? null : instagram ? (
         <AssetChip label="Instagram" value={instagram.name} href={`${ADS_ROOT}/assets#instagram`} icon={<FaInstagram className="size-3 text-[#d946ef]" />} />
       ) : (
-        <AssetChip label="Instagram" value="Not mapped" href="/admin/meta" warning="Map" icon={<FaInstagram className="size-3 text-[#d946ef]" />} />
+        <AssetChip label="Instagram" value="Not available" href="/admin/meta/instagram" warning="Fix" icon={<FaInstagram className="size-3 text-[#d946ef]" />} />
       )}
     </>
   );
@@ -385,10 +394,11 @@ export function AdsWorkspace({
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:32px_32px] opacity-40" />
 
       <div className="relative z-0">
+        <MetaProductNav className="mb-3.5" />
         {/* Row 1 — identity, search and the primary actions. */}
         <header className="mb-3.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <Link href={ADS_ROOT} className="flex shrink-0 items-center gap-3 group">
-            <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-2xs group-hover:border-blue-300 transition-colors">
+            <div className="flex items-center gap-1.5 p-1.5 rounded-sm bg-white border border-slate-200 shadow-2xs group-hover:border-blue-300 transition-colors">
               <FaMeta className="size-7 shrink-0 text-[#0866ff]" aria-hidden="true" />
               <FaInstagram className="size-5.5 shrink-0 text-[#d946ef]" aria-hidden="true" />
             </div>
@@ -435,11 +445,11 @@ export function AdsWorkspace({
           ) : (
             <span className="flex h-8.5 shrink-0 items-center gap-1.5 rounded-sm border border-amber-300 bg-amber-50 px-2.5 shadow-2xs">
               <AlertTriangle className="size-4 text-amber-700" aria-hidden="true" />
-              <span className="whitespace-nowrap text-xs font-semibold text-amber-900">{ads.status === "loading" ? "Connecting to Meta…" : "Meta not ready"}</span>
+              <span className="whitespace-nowrap text-xs font-semibold text-amber-900">{ads.status === "loading" ? "Connecting to Meta…" : ads.status === "rate_limited" ? "Meta is limiting requests" : "Meta not ready"}</span>
             </span>
           )}
           <span className="h-5 w-px shrink-0 bg-slate-300" aria-hidden="true" />
-          {(!LIVE || ads.status === "ready") && <AssetChips />}
+          {(!LIVE || ads.status === "ready" || ((ads.status === "rate_limited" || ads.status === "error") && ads.accounts.length > 0)) && <AssetChips onlyAccount={LIVE && ads.status !== "ready"} />}
           {LIVE && ads.status === "ready" && (
             <span className="ml-auto flex items-center gap-2 text-[11px] font-medium text-slate-500">
               {ads.refetching ? "Refreshing…" : ads.syncedAt ? `Synced ${new Date(ads.syncedAt).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}` : null}
@@ -454,7 +464,7 @@ export function AdsWorkspace({
         <div className="relative mb-5">
           <nav
             aria-label="Ads Manager sections"
-            className="flex gap-1.5 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden after:content-[''] after:w-12 after:shrink-0"
+            className="flex gap-1.5 overflow-x-auto rounded-sm border border-slate-200 bg-white p-1.5 shadow-2xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden after:content-[''] after:w-12 after:shrink-0"
           >
             {NAV.map(({ label, href, icon: Icon, exact }) => {
               const current = isCurrent(pathname, href, exact);
@@ -488,7 +498,16 @@ export function AdsWorkspace({
           />
         </div>
 
-        {LIVE && ads.status !== "ready" ? <StatePanel status={ads.status} message={ads.errorMessage} onRetry={ads.refresh} /> : children}
+        {LIVE && ads.status === "ready" && ads.stale && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-sm border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-xs font-medium text-amber-900" role="status">
+            <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
+            <span>
+              Showing data from {ads.syncedAt ? new Date(ads.syncedAt).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }) : "earlier"} because Meta is limiting requests for this ad account.
+              It refreshes by itself when Meta allows. Other ad accounts are not affected.
+            </span>
+          </div>
+        )}
+        {LIVE && ads.status !== "ready" ? <StatePanel status={ads.status} message={ads.errorMessage} onRetry={ads.refresh} retryAfterSeconds={ads.retryAfterSeconds} /> : children}
       </div>
     </div>
   );
@@ -505,7 +524,7 @@ export function DetailBar({
   return (
     <div
       className={cn(
-        "mb-4.5 rounded-2xl border border-slate-200 bg-white p-4.5 shadow-2xs",
+        "mb-4.5 rounded-sm border border-slate-200 bg-white p-4.5 shadow-2xs",
         className,
       )}
     >

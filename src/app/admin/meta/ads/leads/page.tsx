@@ -218,7 +218,7 @@ function LeadsView() {
         </button>
       }
     >
-      <section className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
+      <section className="mb-3 grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-6">
         <KpiCard label="Total Leads" value={num(kpis.total)} icon={UsersRound} />
         <KpiCard label="New Today" value={num(kpis.newToday)} icon={UserPlus} tone="blue" />
         <KpiCard label="Qualified Leads" value={LIVE ? "—" : num(kpis.qualified)} icon={CheckCircle2} tone="green" />

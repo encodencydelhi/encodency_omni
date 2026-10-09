@@ -13,7 +13,7 @@ import type {
   Placement,
   Platform,
 } from "../types";
-import type { ApiActivity, ApiAd, ApiAdSet, ApiAudience, ApiCampaign, ApiCreative, ApiForm, ApiLead, ApiMetrics, ApiSnapshot, DatasetState } from "./meta-ads-api";
+import type { ApiActivity, ApiAd, ApiDeliveryIssue, ApiAdSet, ApiAudience, ApiCampaign, ApiCreative, ApiForm, ApiLead, ApiMetrics, ApiSnapshot, DatasetState } from "./meta-ads-api";
 
 /**
  * Backend DTOs -> the view models every Ads page already renders.
@@ -270,17 +270,67 @@ const DATASET_LABEL: Record<string, string> = {
   activity: "Activity log",
 };
 
+/** Meta's `disable_reason` codes, in plain words. */
+export const DISABLE_REASON: Record<number, string> = {
+  1: "Ads integrity policy",
+  2: "Ads IP review",
+  3: "Payment risk review",
+  4: "Gray account shut down",
+  5: "Ads AFC review",
+  6: "Business integrity review",
+  7: "Permanently closed",
+  8: "Unused reseller account",
+  9: "Unused account",
+  10: "Umbrella ad account",
+  11: "Business Manager integrity policy",
+  12: "Misrepresented ad account",
+  13: "Legal entity de-shared",
+  14: "Under review",
+  15: "Compromised ad account",
+};
+
+/** What Meta's delivery status means and what to do about it. */
+const DELIVERY_STATUS: Record<string, { label: string; advice: string }> = {
+  WITH_ISSUES: { label: "With issues", advice: "Open it in Meta Ads Manager, read the problem Meta lists and fix it. Delivery resumes after Meta re-checks it." },
+  DISAPPROVED: { label: "Not approved", advice: "Edit the ad so it meets Meta's advertising policies, or ask for a review in Ads Manager." },
+  PENDING_BILLING_INFO: { label: "Billing information needed", advice: "Add or fix a payment method in Meta Business Settings → Payments. Nothing delivers until billing is valid." },
+};
+const FALLBACK_ADVICE = "Open it in Meta Ads Manager for the full reason.";
+const STALE_PIXEL_DAYS = 7;
+
+const titleOf = (value: string) => value.toLowerCase().replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+
+function adsManagerUrl(snapshot: ApiSnapshot, section: "campaigns" | "adsets" | "ads", id: string): string {
+  const account = (snapshot.account.accountId ?? snapshot.account.id).replace(/^act_/, "");
+  const param = { campaigns: "selected_campaign_ids", adsets: "selected_adset_ids", ads: "selected_ad_ids" }[section];
+  return `https://adsmanager.facebook.com/adsmanager/manage/${section}?act=${account}&${param}=${id}`;
+}
+
+function firstReason(issues: ApiDeliveryIssue[] | undefined): string | null {
+  const first = issues?.[0];
+  return first ? `${first.summary}${first.message ? ` — ${first.message}` : ""}` : null;
+}
+
 function deriveIssues(snapshot: ApiSnapshot, campaigns: Campaign[], adSets: AdSet[], ads: Ad[]): Issue[] {
+  void adSets;
+  void ads;
   const issues: Issue[] = [];
   const at = snapshot.syncedAt;
   const campaignName = (id: string) => campaigns.find((c) => c.id === id)?.name ?? null;
+  const flagged = (status: string) => status === "rejected" || status === "error";
 
   if (snapshot.account.status && snapshot.account.status !== "ACTIVE") {
+    const reason = snapshot.account.disableReason ? (DISABLE_REASON[snapshot.account.disableReason] ?? `Code ${snapshot.account.disableReason}`) : null;
     issues.push({
       id: "account-status",
       severity: "blocking",
-      title: `Ad account is ${snapshot.account.status.toLowerCase().replace(/_/g, " ")}`,
-      detail: "Meta is not delivering ads for this account until its status is resolved in Business Settings.",
+      kind: "Ad account",
+      title: `Ad account is ${titleOf(snapshot.account.status).toLowerCase()}`,
+      detail: reason ? `Meta reports: ${reason}. No ads deliver until it is resolved.` : "Meta is not delivering ads for this account until its status is resolved in Business Settings.",
+      reasons: reason ? [{ summary: reason, message: null }] : [],
+      statusLabel: titleOf(snapshot.account.status),
+      advice: "Open Meta Business Settings → Ad accounts → Account quality, resolve what is listed, then refresh here.",
+      externalHref: "https://business.facebook.com/settings/ad-accounts",
       entityLabel: snapshot.account.name,
       entityHref: `${ADS_ROOT}/assets#ad-account`,
       campaign: null,
@@ -291,53 +341,145 @@ function deriveIssues(snapshot: ApiSnapshot, campaigns: Campaign[], adSets: AdSe
     });
   }
 
-  for (const ad of ads) {
-    if (ad.status !== "rejected" && ad.status !== "error") continue;
-    issues.push({
-      id: `ad-${ad.id}`,
-      severity: ad.status === "rejected" ? "policy" : "blocking",
-      title: ad.status === "rejected" ? "Ad was not approved" : "Ad has delivery issues",
-      detail: ad.reviewNote ?? "Meta flagged this ad. Open it in Ads Manager for the full reason.",
-      entityLabel: ad.name,
-      entityHref: `${ADS_ROOT}/ads/${ad.id}`,
-      campaign: campaignName(ad.campaignId),
-      detected: ad.lastEdited || at,
-      resolved: false,
-      actionLabel: "Open ad",
-      actionHref: `${ADS_ROOT}/ads/${ad.id}`,
-    });
+  for (const row of snapshot.ads.data) {
+    const delivery = row.effectiveStatus ? DELIVERY_STATUS[row.effectiveStatus] : undefined;
+    if (flagged(row.status)) {
+      const rejected = row.status === "rejected";
+      issues.push({
+        id: `ad-${row.id}`,
+        severity: rejected ? "policy" : "blocking",
+        kind: "Ad",
+        title: rejected ? "Ad was not approved" : delivery ? `Ad: ${delivery.label.toLowerCase()}` : "Ad has delivery issues",
+        detail: row.reviewNote ?? delivery?.advice ?? "Meta flagged this ad. Open it in Ads Manager for the full reason.",
+        reasons: (row.issues ?? []).map(({ summary, message }) => ({ summary, message })),
+        statusLabel: delivery?.label ?? (row.effectiveStatus ? titleOf(row.effectiveStatus) : null),
+        advice: delivery?.advice ?? FALLBACK_ADVICE,
+        externalHref: adsManagerUrl(snapshot, "ads", row.id),
+        entityLabel: row.name,
+        entityHref: `${ADS_ROOT}/ads/${row.id}`,
+        campaign: campaignName(row.campaignId),
+        detected: row.lastEdited || at,
+        resolved: false,
+        actionLabel: "Open ad",
+        actionHref: `${ADS_ROOT}/ads/${row.id}`,
+      });
+    } else if (row.qualityRanking === "Below average" && row.metrics.impressions > 0 && row.status === "active") {
+      issues.push({
+        id: `ad-quality-${row.id}`,
+        severity: "warning",
+        kind: "Ad",
+        title: "Ad quality ranking is below average",
+        detail: "Meta ranks this ad below ads competing for the same audience. It can raise your cost per result.",
+        reasons: [{ summary: "Quality ranking: below average", message: row.engagementRanking ? `Engagement ranking: ${row.engagementRanking.toLowerCase()}` : null }],
+        statusLabel: "Active",
+        advice: "Try a clearer image or video, shorter text, or a tighter audience, then compare results.",
+        externalHref: adsManagerUrl(snapshot, "ads", row.id),
+        entityLabel: row.name,
+        entityHref: `${ADS_ROOT}/ads/${row.id}`,
+        campaign: campaignName(row.campaignId),
+        detected: at,
+        resolved: false,
+        actionLabel: "Open ad",
+        actionHref: `${ADS_ROOT}/ads/${row.id}`,
+      });
+    }
   }
-  for (const campaign of campaigns) {
-    if (campaign.status !== "rejected" && campaign.status !== "error") continue;
+
+  for (const row of snapshot.campaigns.data) {
+    if (!flagged(row.status)) continue;
+    const delivery = row.effectiveStatus ? DELIVERY_STATUS[row.effectiveStatus] : undefined;
     issues.push({
-      id: `campaign-${campaign.id}`,
+      id: `campaign-${row.id}`,
       severity: "blocking",
-      title: "Campaign has delivery issues",
-      detail: "Meta reports a problem with this campaign (billing or review).",
-      entityLabel: campaign.name,
-      entityHref: `${ADS_ROOT}/campaigns/${campaign.id}`,
-      campaign: campaign.name,
-      detected: campaign.lastEdited || at,
+      kind: "Campaign",
+      title: delivery ? `Campaign: ${delivery.label.toLowerCase()}` : "Campaign has delivery issues",
+      detail: firstReason(row.issues) ?? delivery?.advice ?? "Meta reports a problem with this campaign (billing or review).",
+      reasons: (row.issues ?? []).map(({ summary, message }) => ({ summary, message })),
+      statusLabel: delivery?.label ?? (row.effectiveStatus ? titleOf(row.effectiveStatus) : null),
+      advice: delivery?.advice ?? FALLBACK_ADVICE,
+      externalHref: adsManagerUrl(snapshot, "campaigns", row.id),
+      entityLabel: row.name,
+      entityHref: `${ADS_ROOT}/campaigns/${row.id}`,
+      campaign: row.name,
+      detected: row.lastEdited || at,
       resolved: false,
       actionLabel: "Open campaign",
-      actionHref: `${ADS_ROOT}/campaigns/${campaign.id}`,
+      actionHref: `${ADS_ROOT}/campaigns/${row.id}`,
     });
   }
-  for (const set of adSets) {
-    if (set.status !== "rejected" && set.status !== "error") continue;
+
+  for (const row of snapshot.adSets.data) {
+    if (!flagged(row.status)) continue;
+    const delivery = row.effectiveStatus ? DELIVERY_STATUS[row.effectiveStatus] : undefined;
     issues.push({
-      id: `adset-${set.id}`,
+      id: `adset-${row.id}`,
       severity: "warning",
-      title: "Ad set has delivery issues",
-      detail: "Meta reports a problem with this ad set.",
-      entityLabel: set.name,
-      entityHref: `${ADS_ROOT}/adsets/${set.id}`,
-      campaign: campaignName(set.campaignId),
-      detected: set.lastEdited || at,
+      kind: "Ad set",
+      title: delivery ? `Ad set: ${delivery.label.toLowerCase()}` : "Ad set has delivery issues",
+      detail: firstReason(row.issues) ?? delivery?.advice ?? "Meta reports a problem with this ad set.",
+      reasons: (row.issues ?? []).map(({ summary, message }) => ({ summary, message })),
+      statusLabel: delivery?.label ?? (row.effectiveStatus ? titleOf(row.effectiveStatus) : null),
+      advice: delivery?.advice ?? FALLBACK_ADVICE,
+      externalHref: adsManagerUrl(snapshot, "adsets", row.id),
+      entityLabel: row.name,
+      entityHref: `${ADS_ROOT}/adsets/${row.id}`,
+      campaign: campaignName(row.campaignId),
+      detected: row.lastEdited || at,
       resolved: false,
       actionLabel: "Open ad set",
-      actionHref: `${ADS_ROOT}/adsets/${set.id}`,
+      actionHref: `${ADS_ROOT}/adsets/${row.id}`,
     });
+  }
+
+  for (const audience of snapshot.audiences.data) {
+    if (audience.status !== "Sync failed" && audience.status !== "Too small") continue;
+    const failed = audience.status === "Sync failed";
+    issues.push({
+      id: `audience-${audience.id}`,
+      severity: "warning",
+      kind: "Audience",
+      title: failed ? "Audience failed to update" : "Audience is too small to deliver",
+      detail: failed ? "Meta could not refresh this audience, so ads using it may not reach the right people." : "Meta needs a larger audience before it will deliver ads to it.",
+      reasons: [{ summary: audience.status, message: null }],
+      statusLabel: audience.status,
+      advice: failed ? "Re-upload or re-create the audience source in Meta Audiences." : "Widen the audience (more sources, a higher lookalike percentage) in Meta Audiences.",
+      externalHref: "https://adsmanager.facebook.com/adsmanager/audiences",
+      entityLabel: audience.name,
+      entityHref: `${ADS_ROOT}/audiences`,
+      campaign: null,
+      detected: audience.lastSync ?? at,
+      resolved: false,
+      actionLabel: "View audiences",
+      actionHref: `${ADS_ROOT}/audiences`,
+    });
+  }
+
+  // A pixel that stopped firing only matters when something is running that should be tracked by it.
+  const running = snapshot.campaigns.data.some((c) => c.status === "active" || c.status === "learning");
+  if (running) {
+    for (const pixel of snapshot.pixels.data) {
+      const last = pixel.lastFiredAt ? Date.parse(pixel.lastFiredAt) : NaN;
+      const days = Number.isFinite(last) ? Math.floor((Date.parse(at) - last) / 86_400_000) : null;
+      if (days !== null && days < STALE_PIXEL_DAYS) continue;
+      issues.push({
+        id: `pixel-${pixel.id}`,
+        severity: "warning",
+        kind: "Pixel",
+        title: days === null ? "Pixel has never fired" : `Pixel has not fired for ${days} days`,
+        detail: "Conversions on your website are not being tracked, so website-conversion campaigns cannot optimise.",
+        reasons: [{ summary: days === null ? "No events received" : `Last event ${days} days ago`, message: null }],
+        statusLabel: days === null ? "Never fired" : "Inactive",
+        advice: "Check that the Meta Pixel code is still installed on the site (Events Manager → Test events).",
+        externalHref: "https://business.facebook.com/events_manager2",
+        entityLabel: pixel.name ?? pixel.id,
+        entityHref: `${ADS_ROOT}/assets`,
+        campaign: null,
+        detected: pixel.lastFiredAt ?? at,
+        resolved: false,
+        actionLabel: "View assets",
+        actionHref: `${ADS_ROOT}/assets`,
+      });
+    }
   }
 
   const states: Array<[string, DatasetState]> = [
@@ -350,21 +492,27 @@ function deriveIssues(snapshot: ApiSnapshot, campaigns: Campaign[], adSets: AdSe
     ["activity", snapshot.activity.state],
   ];
   for (const [key, state] of states) {
-    if (state === "permission_required") {
-      issues.push({
-        id: `permission-${key}`,
-        severity: "connection",
-        title: `${DATASET_LABEL[key]} need more Meta permissions`,
-        detail: "Meta refused this data. Reconnect Meta and approve the ads and lead permissions.",
-        entityLabel: "Meta connection",
-        entityHref: "/admin/integrations",
-        campaign: null,
-        detected: at,
-        resolved: false,
-        actionLabel: "Reconnect Meta",
-        actionHref: "/admin/integrations",
-      });
-    }
+    if (state === "live" || state === "empty") continue;
+    const label = DATASET_LABEL[key] ?? key;
+    const permission = state === "permission_required";
+    issues.push({
+      id: `${permission ? "permission" : state}-${key}`,
+      severity: permission ? "connection" : "warning",
+      kind: "Connection",
+      title: permission ? `${label} need more Meta permissions` : state === "rate_limited" ? `Meta is limiting requests — ${label.toLowerCase()} may be incomplete` : `${label} could not be loaded`,
+      detail: permission ? "Meta refused this data. Reconnect Meta and approve the ads and lead permissions." : state === "rate_limited" ? "Meta temporarily blocked further reads for this ad account. The data returns on its own in a few minutes." : "Meta did not return this data. It is retried on the next refresh.",
+      reasons: [{ summary: permission ? "Permission missing" : state === "rate_limited" ? "Rate limited by Meta" : "Temporarily unavailable", message: null }],
+      statusLabel: titleOf(state),
+      advice: permission ? "Open Meta settings and reconnect, keeping every permission ticked." : "Wait a few minutes and use Refresh. Repeated refreshes make Meta's limit last longer.",
+      externalHref: null,
+      entityLabel: "Meta connection",
+      entityHref: "/admin/meta/settings",
+      campaign: null,
+      detected: at,
+      resolved: false,
+      actionLabel: permission ? "Reconnect Meta" : "Open settings",
+      actionHref: "/admin/meta/settings",
+    });
   }
   return issues;
 }

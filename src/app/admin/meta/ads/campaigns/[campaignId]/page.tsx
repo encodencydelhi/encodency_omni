@@ -70,6 +70,7 @@ import {
   Td,
   Th,
   Tr,
+  PagedRows,
 } from "@/features/admin/meta-ads/components/ui";
 import {
   ADS_ROOT,
@@ -315,7 +316,7 @@ function OverviewTab({
         />
       )}
 
-      <section className="grid grid-cols-2 gap-2 md:grid-cols-4 2xl:grid-cols-8">
+      <section className="grid grid-cols-2 gap-1 md:grid-cols-4 2xl:grid-cols-8">
         <KpiCard label="Amount Spent" value={money(m.spend)} icon={WalletCards} sub={hasCap ? `of ${money(campaign.spendCap)} cap` : "No spend cap set"} />
         <KpiCard label="Impressions" value={num(m.impressions)} icon={BarChart3} sub={hasData ? `Frequency ${frequency(m).toFixed(2)}` : "No delivery yet"} />
         <KpiCard label="Reach" value={num(m.reach)} icon={Radio} sub="Unique accounts" />
@@ -442,7 +443,7 @@ function OverviewTab({
             return (
               <li
                 key={rec.title}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4.5 shadow-2xs transition-all duration-300 hover:-translate-y-1 hover:border-blue-400 hover:shadow-lg"
+                className="group relative flex flex-col justify-between overflow-hidden rounded-sm border border-slate-200/90 bg-white p-4.5 shadow-2xs transition-all duration-300 hover:-translate-y-1 hover:border-blue-400 hover:shadow-lg"
               >
                 {/* Top accent gradient bar */}
                 <div
@@ -637,7 +638,8 @@ function AdSetsTab({
           action={{ label: "Create Ad Set", href: `${ADS_ROOT}/create?campaign=${campaignId}&step=adset` }}
         />
       ) : (
-        <TableShell minWidth={1160}>
+        <PagedRows rows={sets} size={8} noun="ad sets">{(pagedRows) => (
+<TableShell minWidth={1160}>
           <thead>
             <tr>
               {["Ad Set", "Status", "Audience", "Placements", "Schedule", "Budget"].map((h) => (
@@ -653,7 +655,7 @@ function AdSetsTab({
             </tr>
           </thead>
           <tbody>
-            {sets.map((s) => (
+            {pagedRows.map((s) => (
               <Tr key={s.id}>
                 <Td>
                   <EntityLink
@@ -704,6 +706,7 @@ function AdSetsTab({
             ))}
           </tbody>
         </TableShell>
+)}</PagedRows>
       )}
     </section>
   );
@@ -744,7 +747,8 @@ function AdsTab({
           action={{ label: "Create Ad", href: `${ADS_ROOT}/create?campaign=${campaignId}&step=ad` }}
         />
       ) : (
-        <TableShell minWidth={1180}>
+        <PagedRows rows={campaignAds} size={8} noun="ads">{(pagedRows) => (
+<TableShell minWidth={1180}>
           <thead>
             <tr>
               <Th className="w-14">Creative</Th>
@@ -760,7 +764,7 @@ function AdsTab({
             </tr>
           </thead>
           <tbody>
-            {campaignAds.map((a) => {
+            {pagedRows.map((a) => {
               const creative = getCreative(a.creativeId);
               return (
                 <Tr key={a.id}>
@@ -814,6 +818,7 @@ function AdsTab({
             })}
           </tbody>
         </TableShell>
+)}</PagedRows>
       )}
     </section>
   );
@@ -842,7 +847,8 @@ function LeadsTab({ campaignId, campaignName }: { campaignId: string; campaignNa
           compact
         />
       ) : (
-        <TableShell minWidth={900}>
+        <PagedRows rows={rows} size={8} noun="leads">{(pagedRows) => (
+<TableShell minWidth={900}>
           <thead>
             <tr>
               {["Lead", "Contact", "Ad Set", "Ad", "Stage", "Score", "Owner", "Submitted"].map((h) => (
@@ -851,7 +857,7 @@ function LeadsTab({ campaignId, campaignName }: { campaignId: string; campaignNa
             </tr>
           </thead>
           <tbody>
-            {rows.map((l) => (
+            {pagedRows.map((l) => (
               <Tr key={l.id}>
                 <Td>
                   <EntityLink href={`${ADS_ROOT}/leads/${l.id}`} name={l.name} sub={l.id} />
@@ -878,6 +884,7 @@ function LeadsTab({ campaignId, campaignName }: { campaignId: string; campaignNa
             ))}
           </tbody>
         </TableShell>
+)}</PagedRows>
       )}
     </section>
   );

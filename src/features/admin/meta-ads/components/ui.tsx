@@ -32,6 +32,7 @@ import {
   TONE_CLASS,
   type StatusTone,
 } from "../format";
+import { usePagination } from "../use-filters";
 import type { EntityStatus, Platform } from "../types";
 
 /* ------------------------------------------------------------------ */
@@ -47,7 +48,7 @@ export const btnPrimary =
   "inline-flex h-9 items-center justify-center gap-2 rounded-sm bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 px-5 text-[11.5px] font-semibold text-white shadow-[0_4px_14px_rgba(37,99,235,0.35)] ring-1 ring-white/20 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
 
 export const card =
-  "rounded-2xl border border-slate-200/90 bg-white shadow-[0_4px_20px_rgba(15,23,42,0.05),0_1px_3px_rgba(15,23,42,0.03)] transition-all duration-300 hover:border-slate-300 hover:shadow-[0_8px_30px_rgba(15,23,42,0.08)]";
+  "rounded-sm border border-slate-200/90 bg-white shadow-[0_4px_20px_rgba(15,23,42,0.05),0_1px_3px_rgba(15,23,42,0.03)] transition-all duration-300 hover:border-slate-300 hover:shadow-[0_8px_30px_rgba(15,23,42,0.08)]";
 
 /* ------------------------------------------------------------------ */
 /* Status                                                              */
@@ -483,7 +484,8 @@ export function FilterSelect({
           "w-full cursor-pointer appearance-none justify-start pr-8 text-left font-medium text-slate-800",
         )}
       >
-        {options.map((option) => (
+        {/* Names are not unique (Meta auto-names boosted posts after their caption), so de-duplicate before keying. */}
+        {Array.from(new Set(options)).map((option) => (
           <option key={option} value={option}>
             {option}
           </option>
@@ -734,7 +736,7 @@ export function EmptyState({
         compact ? "min-h-[160px]" : "min-h-[280px]",
       )}
     >
-      <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-500/20">
+      <span className="mb-4 flex size-14 items-center justify-center rounded-sm bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-500/20">
         <Icon className="size-6" aria-hidden="true" />
       </span>
       <h3 className="text-base font-semibold tracking-tight text-slate-900">{title}</h3>
@@ -807,6 +809,65 @@ export function Pagination({
         </div>
       )}
     </div>
+  );
+}
+
+/** `usePagination()` result -> the shared footer, so every list wires it identically. */
+export function PagedFooter({
+  paged,
+  noun,
+}: {
+  paged: {
+    page: number;
+    pageCount: number;
+    from: number;
+    to: number;
+    total: number;
+    canPrevious: boolean;
+    canNext: boolean;
+    previous: () => void;
+    next: () => void;
+  };
+  noun: string;
+}) {
+  if (paged.total === 0) return null;
+  return (
+    <Pagination
+      page={paged.page}
+      pageCount={paged.pageCount}
+      from={paged.from}
+      to={paged.to}
+      total={paged.total}
+      noun={noun}
+      canPrevious={paged.canPrevious}
+      canNext={paged.canNext}
+      onPrevious={paged.previous}
+      onNext={paged.next}
+    />
+  );
+}
+
+/**
+ * Paginates `rows` for any list or table. Keeps its own page state, so a list inside a conditional branch or a
+ * detail tab never breaks the hook order of the page that renders it.
+ */
+export function PagedRows<T>({
+  rows,
+  size = 8,
+  noun,
+  children,
+}: {
+  rows: T[];
+  size?: number;
+  noun: string;
+  children: (visible: T[]) => ReactNode;
+}) {
+  const paged = usePagination(rows, size);
+  return (
+    <>
+      {children(paged.visible)}
+      <PagedFooter paged={paged} noun={noun} />
+    </>
   );
 }
 

@@ -55,6 +55,7 @@ import {
   Th,
   ToneChip,
   Tr,
+  PagedRows,
 } from "@/features/admin/meta-ads/components/ui";
 import {
   ADS_ROOT,
@@ -342,7 +343,7 @@ function AnalyticsView() {
         />
       ) : (
         <div className="space-y-3">
-          <section className="grid grid-cols-2 gap-2 md:grid-cols-4 2xl:grid-cols-8">
+          <section className="grid grid-cols-2 gap-1 md:grid-cols-4 2xl:grid-cols-8">
             <KpiCard label="Spend" value={money(totals.spend)} icon={WalletCards} />
             <KpiCard label="Impressions" value={compactNum(totals.impressions)} icon={BarChart3} sub={num(totals.impressions)} />
             <KpiCard label="Reach" value={compactNum(totals.reach)} icon={Radio} sub={num(totals.reach)} />
@@ -454,7 +455,8 @@ function AnalyticsView() {
           </div>
 
           <Panel title="Campaign Performance" icon={<BarChart3 className="size-4 text-[#1877f2]" />} bodyClassName="p-0">
-            <TableShell minWidth={1180}>
+            <PagedRows rows={scopedCampaigns} size={8} noun="campaigns">{(pagedRows) => (
+<TableShell minWidth={1180}>
               <thead>
                 <tr>
                   <Th>Campaign</Th>
@@ -467,7 +469,7 @@ function AnalyticsView() {
                 </tr>
               </thead>
               <tbody>
-                {scopedCampaigns.map((c) => (
+                {pagedRows.map((c) => (
                   <Tr key={c.id}>
                     <Td>
                       <Link
@@ -491,6 +493,7 @@ function AnalyticsView() {
                 ))}
               </tbody>
             </TableShell>
+)}</PagedRows>
           </Panel>
 
           <div className="grid gap-3 lg:grid-cols-2">

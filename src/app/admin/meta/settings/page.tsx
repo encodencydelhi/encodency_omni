@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { FacebookWorkspacePage } from "@/features/admin/meta/pages/facebook-page";
+import { MetaSettingsPage } from "@/features/admin/meta/pages/settings-page";
 
 export default function Page() {
   return (
     <Suspense fallback={null}>
-      <FacebookWorkspacePage />
+      <MetaSettingsPage />
     </Suspense>
   );
 }

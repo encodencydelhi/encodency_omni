@@ -22,7 +22,7 @@ import {
   orDash,
   pct,
 } from "@/features/admin/meta-ads/format";
-import { useFilters } from "@/features/admin/meta-ads/use-filters";
+import { useFilters, usePagination } from "@/features/admin/meta-ads/use-filters";
 import {
   btn,
   btnPrimary,
@@ -36,6 +36,7 @@ import {
   Panel,
   RowMenu,
   SearchInput,
+  PagedFooter,
   SkeletonTable,
   StatusChip,
   Tag,
@@ -104,6 +105,7 @@ function CreativeView() {
       return true;
     });
   }, [values, campaigns, creatives, getAd]);
+  const paged = usePagination(rows, 12);
 
   const selected = values.creative ? getCreative(values.creative) : undefined;
 
@@ -129,7 +131,7 @@ function CreativeView() {
         </button>
       }
     >
-      <section className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+      <section className="mb-3 grid grid-cols-2 gap-1 md:grid-cols-4">
         <KpiCard label="Total Creatives" value={kpis.total} icon={Images} />
         <KpiCard label="In Use" value={kpis.used} icon={Images} tone="blue" />
         <KpiCard label="Top Performers" value={kpis.top} icon={Images} tone="green" />
@@ -217,7 +219,7 @@ function CreativeView() {
             />
           ) : (
             <ul className="grid grid-cols-2 gap-2.5 p-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-              {rows.map((c) => (
+              {paged.visible.map((c) => (
                 <li key={c.id}>
                   <article
                     className={cn(
@@ -306,6 +308,7 @@ function CreativeView() {
               ))}
             </ul>
           )}
+          <PagedFooter paged={paged} noun="creatives" />
         </section>
 
         {selected && (

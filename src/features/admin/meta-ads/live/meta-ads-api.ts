@@ -38,6 +38,12 @@ export interface ApiAdAccount {
   business: string | null;
 }
 
+export interface ApiDeliveryIssue {
+  level: string | null;
+  summary: string;
+  message: string | null;
+}
+
 export interface ApiCampaign {
   id: string;
   name: string;
@@ -53,6 +59,8 @@ export interface ApiCampaign {
   created: string | null;
   lastEdited: string | null;
   spendCap: number | null;
+  effectiveStatus?: string | null;
+  issues?: ApiDeliveryIssue[];
   metrics: ApiMetrics;
 }
 
@@ -78,6 +86,8 @@ export interface ApiAdSet {
   placements: ApiPlatform[];
   pageId: string | null;
   lastEdited: string | null;
+  effectiveStatus?: string | null;
+  issues?: ApiDeliveryIssue[];
   metrics: ApiMetrics;
 }
 
@@ -104,6 +114,8 @@ export interface ApiAd {
   conversionRanking: ApiRanking | null;
   reviewNote: string | null;
   lastEdited: string | null;
+  effectiveStatus?: string | null;
+  issues?: ApiDeliveryIssue[];
   metrics: ApiMetrics;
 }
 
@@ -173,7 +185,16 @@ export interface ApiLead {
   answers: Array<{ question: string; answer: string }>;
 }
 
+/** How the backend served a read: just loaded, a recent copy, or an older copy because Meta is throttling. */
+export interface ApiFreshness {
+  source: "live" | "cache" | "stale";
+  ageSeconds: number;
+  /** While Meta's throttle holds: seconds until the backend calls Meta again. */
+  blockedForSeconds: number | null;
+}
+
 export interface ApiSnapshot {
+  freshness?: ApiFreshness;
   period: "7d" | "30d" | "90d";
   syncedAt: string;
   account: ApiAdAccount;
@@ -191,9 +212,36 @@ export interface ApiSnapshot {
 }
 
 export interface ApiAccountsResponse {
+  freshness?: ApiFreshness;
   integrationId: string;
   connectedAs: string | null;
   items: ApiAdAccount[];
+}
+
+export interface ApiAdsOverviewAccount {
+  id: string;
+  name: string;
+  currency: string | null;
+  status: string | null;
+  state: DatasetState;
+  reason: string | null;
+  metrics: ApiMetrics;
+  campaigns: { total: number; active: number };
+}
+
+/** Lifetime totals per ad account and overall (light call: no ads, creatives or targeting). */
+export interface ApiAdsOverview {
+  freshness?: ApiFreshness;
+  accounts: ApiAdsOverviewAccount[];
+  totals: {
+    spendByCurrency: Record<string, number>;
+    leads: number;
+    impressions: number;
+    clicks: number;
+    campaigns: number;
+    activeCampaigns: number;
+    accountsActive: number;
+  };
 }
 
 export type ApiPeriod = "7d" | "30d" | "90d";
@@ -201,13 +249,16 @@ export type ApiPeriod = "7d" | "30d" | "90d";
 const BASE = "/integrations/meta-ads";
 
 export const metaAdsApi = {
-  accounts(companyId: string, signal?: AbortSignal): Promise<ApiAccountsResponse> {
-    return apiClient.request<ApiAccountsResponse>({ method: "GET", path: `${BASE}/accounts`, headers: companyScopeHeaders(companyId), signal });
+  overview(companyId: string, signal?: AbortSignal, refresh = false): Promise<ApiAdsOverview> {
+    return apiClient.request<ApiAdsOverview>({ method: "GET", path: `${BASE}/overview`, query: refresh ? { refresh: "true" } : undefined, headers: companyScopeHeaders(companyId), signal });
   },
-  snapshot(companyId: string, adAccountId: string, period: ApiPeriod, signal?: AbortSignal): Promise<ApiSnapshot> {
-    return apiClient.request<ApiSnapshot>({ method: "GET", path: `${BASE}/snapshot`, query: { adAccountId, period }, headers: companyScopeHeaders(companyId), signal });
+  accounts(companyId: string, signal?: AbortSignal, refresh = false): Promise<ApiAccountsResponse> {
+    return apiClient.request<ApiAccountsResponse>({ method: "GET", path: `${BASE}/accounts`, query: refresh ? { refresh: "true" } : undefined, headers: companyScopeHeaders(companyId), signal });
   },
-  leads(companyId: string, signal?: AbortSignal): Promise<{ items: ApiLead[]; partial: boolean }> {
-    return apiClient.request<{ items: ApiLead[]; partial: boolean }>({ method: "GET", path: `${BASE}/leads`, query: { limit: 100 }, headers: companyScopeHeaders(companyId), signal });
+  snapshot(companyId: string, adAccountId: string, period: ApiPeriod, signal?: AbortSignal, refresh = false): Promise<ApiSnapshot> {
+    return apiClient.request<ApiSnapshot>({ method: "GET", path: `${BASE}/snapshot`, query: { adAccountId, period, ...(refresh ? { refresh: "true" } : {}) }, headers: companyScopeHeaders(companyId), signal });
+  },
+  leads(companyId: string, signal?: AbortSignal, refresh = false): Promise<{ items: ApiLead[]; partial: boolean }> {
+    return apiClient.request<{ items: ApiLead[]; partial: boolean }>({ method: "GET", path: `${BASE}/leads`, query: { limit: 100, ...(refresh ? { refresh: "true" } : {}) }, headers: companyScopeHeaders(companyId), signal });
   },
 };

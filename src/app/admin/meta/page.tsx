@@ -1,5 +1,10 @@
-import { MetaChannelPage } from "@/features/admin/channels/components/meta-channel-page";
+import { Suspense } from "react";
+import { MetaOverviewPage } from "@/features/admin/meta/pages/overview-page";
 
 export default function Page() {
-  return <MetaChannelPage />;
+  return (
+    <Suspense fallback={null}>
+      <MetaOverviewPage />
+    </Suspense>
+  );
 }

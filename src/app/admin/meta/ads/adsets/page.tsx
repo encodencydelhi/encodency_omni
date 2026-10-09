@@ -15,7 +15,7 @@ import {
   relative,
   STATUS_LABEL,
 } from "@/features/admin/meta-ads/format";
-import { useFilters } from "@/features/admin/meta-ads/use-filters";
+import { useFilters, usePagination } from "@/features/admin/meta-ads/use-filters";
 import {
   btn,
   btnPrimary,
@@ -27,6 +27,7 @@ import {
   FilterSelect,
   RowMenu,
   SearchInput,
+  PagedFooter,
   SkeletonTable,
   StatusChip,
   TableShell,
@@ -84,6 +85,7 @@ function AdSetsView() {
       return true;
     });
   }, [values, adSets, getCampaign]);
+  const paged = usePagination(rows, 10);
 
   const placementOptions = useMemo(
     () => [
@@ -217,7 +219,7 @@ function AdSetsView() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((s) => {
+              {paged.visible.map((s) => {
                 const campaign = getCampaign(s.campaignId);
                 const enabled = s.placements.filter((p) => p.enabled);
                 return (
@@ -319,11 +321,7 @@ function AdSetsView() {
           </TableShell>
         )}
 
-        {rows.length > 0 && (
-          <div className="border-t border-slate-200 bg-slate-50/50 px-4 py-3 text-xs font-medium text-slate-600">
-            Showing <strong className="font-semibold text-slate-900">{rows.length}</strong> of <strong className="font-semibold text-slate-900">{adSets.length}</strong> ad sets
-          </div>
-        )}
+        <PagedFooter paged={paged} noun="ad sets" />
       </section>
     </AdsWorkspace>
   );

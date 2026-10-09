@@ -13,7 +13,7 @@ import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
 import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
 import { num, pct, relative } from "@/features/admin/meta-ads/format";
-import { useFilters } from "@/features/admin/meta-ads/use-filters";
+import { useFilters, usePagination } from "@/features/admin/meta-ads/use-filters";
 import {
   btn,
   btnPrimary,
@@ -26,6 +26,7 @@ import {
   LinkTabs,
   RowMenu,
   SearchInput,
+  PagedFooter,
   SkeletonTable,
   StatusChip,
   TableShell,
@@ -76,6 +77,7 @@ function FormsView() {
       return true;
     });
   }, [values, campaignsOfForm, instantForms]);
+  const paged = usePagination(rows, 10);
 
   const totals = useMemo(() => {
     const submissions = instantForms.reduce((t, f) => t + f.submissions, 0);
@@ -99,7 +101,7 @@ function FormsView() {
         </Link>
       }
     >
-      <section className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
+      <section className="mb-3 grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-5">
         <KpiCard label="Total Forms" value={totals.total} icon={FileText} />
         <KpiCard label="Active Forms" value={totals.active} icon={CheckCircle2} tone="green" />
         <KpiCard label="Total Submissions" value={num(totals.submissions)} icon={UsersRound} />
@@ -208,7 +210,7 @@ function FormsView() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((f) => {
+              {paged.visible.map((f) => {
                 const linkedCampaigns = campaignsOfForm(f.id);
                 const linkedAds = adsOfForm(f.id);
                 const completion = f.opens ? (f.submissions / f.opens) * 100 : 0;
@@ -304,6 +306,7 @@ function FormsView() {
             </tbody>
           </TableShell>
         )}
+        <PagedFooter paged={paged} noun="forms" />
       </section>
     </AdsWorkspace>
   );

@@ -61,6 +61,7 @@ import {
   Th,
   ToneChip,
   Tr,
+  PagedRows,
 } from "@/features/admin/meta-ads/components/ui";
 import {
   ADS_ROOT,
@@ -202,7 +203,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
 
       {tab === "overview" && (
         <div className="space-y-3">
-          <section className="grid grid-cols-2 gap-2 md:grid-cols-4 2xl:grid-cols-7">
+          <section className="grid grid-cols-2 gap-1 md:grid-cols-4 2xl:grid-cols-7">
             <KpiCard label="Spend" value={money(m.spend)} icon={WalletCards} />
             <KpiCard label="Reach" value={num(m.reach)} icon={Radio} />
             <KpiCard label="Impressions" value={num(m.impressions)} icon={BarChart3} />
@@ -404,7 +405,8 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
               action={{ label: "Create Ad", href: `${ADS_ROOT}/create?adset=${adSet.id}&step=ad` }}
             />
           ) : (
-            <TableShell minWidth={1000}>
+            <PagedRows rows={setAds} size={8} noun="ads">{(pagedRows) => (
+<TableShell minWidth={1000}>
               <thead>
                 <tr>
                   <Th className="w-14">Creative</Th>
@@ -420,7 +422,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
                 </tr>
               </thead>
               <tbody>
-                {setAds.map((a) => {
+                {pagedRows.map((a) => {
                   const creative = getCreative(a.creativeId);
                   return (
                     <Tr key={a.id}>
@@ -467,6 +469,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
                 })}
               </tbody>
             </TableShell>
+)}</PagedRows>
           )}
         </section>
       )}
@@ -515,8 +518,9 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
                 />
               );
             return (
-              <ol className="divide-y divide-[#eef2f7]">
-                {rows.map((a) => (
+              <PagedRows rows={rows} size={10} noun="changes">{(pagedRows) => (
+<ol className="divide-y divide-[#eef2f7]">
+                {pagedRows.map((a) => (
                   <li key={a.id} className="flex flex-wrap items-start gap-3 px-3 py-2.5">
                     <span className="w-[150px] shrink-0 text-[10px] text-[#64748b]">{dateTime(a.at)}</span>
                     <span className="min-w-[200px] flex-1 text-[11px] font-semibold">
@@ -533,6 +537,7 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
                   </li>
                 ))}
               </ol>
+)}</PagedRows>
             );
           })()}
           <div className="border-t border-[#dde5ee] px-3 py-2.5">

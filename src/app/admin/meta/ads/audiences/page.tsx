@@ -14,7 +14,7 @@ import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
 import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import { compactNum, num, pct, relative } from "@/features/admin/meta-ads/format";
-import { useFilters } from "@/features/admin/meta-ads/use-filters";
+import { useFilters, usePagination } from "@/features/admin/meta-ads/use-filters";
 import {
   btn,
   btnPrimary,
@@ -25,6 +25,7 @@ import {
   KpiCard,
   LinkTabs,
   RowMenu,
+  PagedFooter,
   SearchInput,
   SkeletonTable,
   TableShell,
@@ -74,6 +75,7 @@ function AudiencesView() {
       return true;
     });
   }, [values, audiences]);
+  const paged = usePagination(rows, 10);
 
   const kpis = useMemo(
     () => ({
@@ -108,7 +110,7 @@ function AudiencesView() {
         </button>
       }
     >
-      <section className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+      <section className="mb-3 grid grid-cols-2 gap-1 md:grid-cols-4">
         <KpiCard label="Total Audiences" value={kpis.total} icon={UsersRound} />
         <KpiCard label="Used in Campaigns" value={kpis.used} icon={Layers} />
         <KpiCard label="Ready" value={kpis.active} icon={CheckCircle2} tone="green" />
@@ -188,12 +190,13 @@ function AudiencesView() {
             compact={isFiltered}
           />
         ) : values.tab === "saved" ? (
-          <SavedTable rows={rows} />
+          <SavedTable rows={paged.visible} />
         ) : values.tab === "custom" ? (
-          <CustomTable rows={rows} />
+          <CustomTable rows={paged.visible} />
         ) : (
-          <LookalikeTable rows={rows} />
+          <LookalikeTable rows={paged.visible} />
         )}
+        <PagedFooter paged={paged} noun="audiences" />
       </section>
     </AdsWorkspace>
   );

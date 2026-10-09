@@ -7,7 +7,7 @@ import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
 import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import { date, dateTime, time } from "@/features/admin/meta-ads/format";
-import { useFilters } from "@/features/admin/meta-ads/use-filters";
+import { useFilters, usePagination } from "@/features/admin/meta-ads/use-filters";
 import {
   Avatar,
   btn,
@@ -16,6 +16,7 @@ import {
   FilterBar,
   FilterSelect,
   SearchInput,
+  PagedFooter,
   SkeletonTable,
   TableShell,
   Tag,
@@ -62,15 +63,17 @@ function ActivityView() {
     });
   }, [values, activityLog]);
 
+  const paged = usePagination(rows, 25);
+
   /** Group by calendar day so the log reads as a timeline. */
   const grouped = useMemo(() => {
     const map = new Map<string, ActivityEntry[]>();
-    for (const entry of rows) {
+    for (const entry of paged.visible) {
       const day = entry.at.slice(0, 10);
       map.set(day, [...(map.get(day) ?? []), entry]);
     }
     return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]));
-  }, [rows]);
+  }, [paged.visible]);
 
   const options = useMemo(
     () => ({
@@ -224,11 +227,7 @@ function ActivityView() {
           </div>
         )}
 
-        {rows.length > 0 && (
-          <div className="border-t border-[#dde5ee] px-3 py-2.5 text-[10px] text-[#64748b]">
-            Showing {rows.length} of {activityLog.length} entries · click any entity to open it
-          </div>
-        )}
+        <PagedFooter paged={paged} noun="entries" />
       </section>
     </AdsWorkspace>
   );

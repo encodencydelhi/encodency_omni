@@ -220,6 +220,14 @@ export type Issue = {
   resolved: boolean;
   actionLabel: string;
   actionHref: string;
+  /** Live data only: what kind of thing is affected, why Meta flagged it, what to do, and where to fix it. */
+  kind?: "Ad" | "Ad set" | "Campaign" | "Ad account" | "Connection" | "Audience" | "Pixel";
+  reasons?: Array<{ summary: string; message: string | null }>;
+  /** Meta's own delivery status in plain words, e.g. "With issues". */
+  statusLabel?: string | null;
+  advice?: string;
+  /** Deep link into Meta's own Ads Manager, when there is one. */
+  externalHref?: string | null;
 };
 
 export type ActivityEntry = {

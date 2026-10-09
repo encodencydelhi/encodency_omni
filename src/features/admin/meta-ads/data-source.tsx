@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { env } from "@/config/env";
 import { getStoredCompanyId, TENANCY_CHANGE_EVENT } from "@/lib/api/tenancy-storage";
 import { ApiError } from "@/types/api";
@@ -21,7 +21,7 @@ import type { Ad, AdSet, Campaign, Creative, InstantForm, Lead, Metrics } from "
  * Live mode never falls back to demo rows: a failure is a state (`not_connected`, `reconnect`, `error`), not made-up data.
  */
 
-export type AdsStatus = "loading" | "ready" | "no_company" | "not_connected" | "reconnect" | "permission" | "no_accounts" | "error";
+export type AdsStatus = "loading" | "ready" | "no_company" | "not_connected" | "reconnect" | "permission" | "rate_limited" | "no_accounts" | "error";
 
 export interface AdsDataContextValue extends AdsData {
   mode: "live" | "demo";
@@ -34,6 +34,10 @@ export interface AdsDataContextValue extends AdsData {
   syncedAt: string | null;
   refetching: boolean;
   refresh: () => void;
+  /** Rate limited: seconds Meta asked us to wait (null when unknown or not rate limited). */
+  retryAfterSeconds: number | null;
+  /** Set when an older copy is shown because Meta is limiting requests. */
+  stale: { ageSeconds: number; blockedForSeconds: number | null } | null;
   /** Per-dataset state from the backend (live only); `null` in demo mode. */
   datasets: Partial<Record<"campaigns" | "adSets" | "ads" | "creatives" | "audiences" | "forms" | "activity" | "trend", DatasetState>> | null;
   leadsState: "loading" | "ready" | "error" | "idle";
@@ -86,7 +90,15 @@ function statusOfError(error: unknown): AdsStatus {
   const reason = reasonOf(error);
   if (reason === "provider_not_connected") return "not_connected";
   if (reason === "provider_permission_required") return "permission";
+  if (reason === "provider_rate_limited") return "rate_limited";
   return "error";
+}
+
+/** Meta's own "come back in N seconds", carried on the 503 the backend answers with while a limit holds. */
+function retryAfterOf(error: unknown): number | null {
+  if (!ApiError.isApiError(error)) return null;
+  const value = error.details?.retryAfterSeconds;
+  return typeof value === "number" && value > 0 ? value : 60;
 }
 
 function messageOf(error: unknown): string {
@@ -125,6 +137,10 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [chosenAccount, setChosenAccount] = useState<string | null>(null);
 
+  // An explicit Refresh asks the server to bypass its short cache (it still enforces a cool-down).
+  const forceUntil = useRef(0);
+  const takeForce = () => Date.now() < forceUntil.current;
+
   useEffect(() => {
     if (!LIVE) return;
     const sync = () => setCompanyId(getStoredCompanyId() || null);
@@ -143,7 +159,7 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
   const accountsQuery = useQuery({
     queryKey: ["meta-ads", companyId, "accounts"],
     enabled: LIVE && Boolean(companyId),
-    queryFn: ({ signal }) => metaAdsApi.accounts(companyId!, signal),
+    queryFn: ({ signal }) => metaAdsApi.accounts(companyId!, signal, takeForce()),
     staleTime: 60_000,
     refetchOnWindowFocus: false,
     retry: false,
@@ -154,13 +170,14 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
   const accountId = useMemo(() => {
     const wanted = chosenAccount ?? stored;
     if (wanted && accounts.some((a) => a.id === wanted)) return wanted;
-    return accounts[0]?.id ?? null;
+    // A CLOSED / disabled account is usually listed first by Meta; open on one that can actually run ads.
+    return (accounts.find((a) => a.status === "ACTIVE") ?? accounts[0])?.id ?? null;
   }, [accounts, chosenAccount, stored]);
 
   const snapshotQuery = useQuery<ApiSnapshot>({
     queryKey: ["meta-ads", companyId, "snapshot", accountId, period],
     enabled: LIVE && Boolean(companyId) && Boolean(accountId),
-    queryFn: ({ signal }) => metaAdsApi.snapshot(companyId!, accountId!, period, signal),
+    queryFn: ({ signal }) => metaAdsApi.snapshot(companyId!, accountId!, period, signal, takeForce()),
     staleTime: 60_000,
     refetchOnWindowFocus: false,
     retry: false,
@@ -170,7 +187,7 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
   const leadsQuery = useQuery({
     queryKey: ["meta-ads", companyId, "leads", accountId],
     enabled: LIVE && Boolean(companyId) && hasForms,
-    queryFn: ({ signal }) => metaAdsApi.leads(companyId!, signal),
+    queryFn: ({ signal }) => metaAdsApi.leads(companyId!, signal, takeForce()),
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
     retry: false,
@@ -192,8 +209,18 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
   );
 
   const refresh = useCallback(() => {
+    forceUntil.current = Date.now() + 3000;
     void queryClient.invalidateQueries({ queryKey: ["meta-ads", companyId] });
   }, [queryClient, companyId]);
+
+  // While Meta's limit holds, try again by ourselves once the wait it asked for is over (and never sooner).
+  const limited = accountsQuery.isError ? accountsQuery.error : snapshotQuery.isError ? snapshotQuery.error : null;
+  const limitedFor = limited && reasonOf(limited) === "provider_rate_limited" ? retryAfterOf(limited) : null;
+  useEffect(() => {
+    if (!limitedFor) return;
+    const timer = window.setTimeout(() => void queryClient.invalidateQueries({ queryKey: ["meta-ads", companyId] }), (limitedFor + 3) * 1000);
+    return () => window.clearTimeout(timer);
+  }, [limitedFor, queryClient, companyId, accountsQuery.errorUpdatedAt, snapshotQuery.errorUpdatedAt]);
 
   const value = useMemo<AdsDataContextValue>(() => {
     if (!LIVE) {
@@ -224,6 +251,8 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
         syncedAt: null,
         refetching: false,
         refresh: () => undefined,
+        retryAfterSeconds: null,
+        stale: null,
         datasets: null,
         leadsState: "ready",
       };
@@ -243,6 +272,10 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
     // A revoked/expired token surfaces as 409 provider_not_connected once the connection exists; tell the two apart by message.
     if (status === "not_connected" && /reconnected/i.test(errorMessage ?? "")) status = "reconnect";
 
+    const limitError = accountsQuery.isError ? accountsQuery.error : snapshotQuery.isError ? snapshotQuery.error : null;
+    const retryAfterSeconds = status === "rate_limited" ? retryAfterOf(limitError) : null;
+    const stale = snapshot?.freshness?.source === "stale" ? { ageSeconds: snapshot.freshness.ageSeconds, blockedForSeconds: snapshot.freshness.blockedForSeconds } : null;
+
     const totals = snapshot ? { spend: Math.round(snapshot.totals.spend * 100), impressions: snapshot.totals.impressions, reach: snapshot.totals.reach, clicks: snapshot.totals.clicks, leads: snapshot.totals.leads } : { spend: 0, impressions: 0, reach: 0, clicks: 0, leads: 0 };
 
     return {
@@ -259,6 +292,8 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
       syncedAt: snapshot?.syncedAt ?? null,
       refetching: snapshotQuery.isFetching && Boolean(snapshot),
       refresh,
+      retryAfterSeconds,
+      stale,
       datasets: snapshot
         ? {
             campaigns: snapshot.campaigns.state,

@@ -80,11 +80,14 @@ export function useFilters<T extends Record<string, string>>(
  * changes size, so filtering never strands the user on an empty page.
  */
 export function usePagination<T>(rows: T[], pageSize = 10) {
-  const [page, setPage] = useState(1);
+  // Any change in the number of rows (filter, search, tab) starts again from page 1.
+  const [state, setState] = useState({ page: 1, size: rows.length });
+  if (state.size !== rows.length) setState({ page: 1, size: rows.length });
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
-  const current = Math.min(page, pageCount);
+  const current = Math.min(state.page, pageCount);
   const start = (current - 1) * pageSize;
   const visible = rows.slice(start, start + pageSize);
+  const goTo = (page: number) => setState((s) => ({ ...s, page: Math.max(1, Math.min(pageCount, page)) }));
 
   return {
     visible,
@@ -95,7 +98,8 @@ export function usePagination<T>(rows: T[], pageSize = 10) {
     total: rows.length,
     canPrevious: current > 1,
     canNext: current < pageCount,
-    previous: () => setPage((p) => Math.max(1, Math.min(p, pageCount) - 1)),
-    next: () => setPage((p) => Math.min(pageCount, Math.min(p, pageCount) + 1)),
+    previous: () => goTo(current - 1),
+    next: () => goTo(current + 1),
+    goTo,
   };
 }

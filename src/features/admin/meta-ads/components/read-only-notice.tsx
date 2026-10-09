@@ -11,7 +11,7 @@ import { btn, btnPrimary } from "./ui";
 export function ReadOnlyNotice({ what }: { what: string }) {
   return (
     <AdsWorkspace actions={<span />} showDateRange={false}>
-      <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-2xs">
+      <div className="mx-auto max-w-xl rounded-sm border border-slate-200 bg-white p-8 text-center shadow-2xs">
         <h1 className="text-base font-semibold text-slate-900">{what} is not available yet</h1>
         <p className="mt-1.5 text-xs font-medium text-slate-600">
           This workspace reads your real campaigns, ad sets, ads, audiences, forms and leads from Meta. Creating or changing them is not

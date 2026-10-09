@@ -42,6 +42,7 @@ import {
   Th,
   ToneChip,
   Tr,
+  PagedRows,
 } from "@/features/admin/meta-ads/components/ui";
 import {
   ADS_ROOT,
@@ -160,7 +161,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
         />
       )}
 
-      <section className="my-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+      <section className="my-3 grid grid-cols-2 gap-1 md:grid-cols-4">
         <KpiCard label="Submissions" value={num(form.submissions)} icon={UsersRound} tone="green" />
         <KpiCard
           label="Completion Rate"
@@ -333,7 +334,8 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
             {linkedAds.length === 0 ? (
               <p className="p-3 text-[10px] text-[#94a3b8]">No ads use this form yet.</p>
             ) : (
-              <TableShell minWidth={420}>
+              <PagedRows rows={linkedAds} size={6} noun="ads">{(pagedRows) => (
+<TableShell minWidth={420}>
                 <thead>
                   <tr>
                     <Th>Ad</Th>
@@ -342,7 +344,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
                   </tr>
                 </thead>
                 <tbody>
-                  {linkedAds.map((a) => (
+                  {pagedRows.map((a) => (
                     <Tr key={a.id}>
                       <Td>
                         <EntityLink href={`${ADS_ROOT}/ads/${a.id}`} name={a.name} maxWidth={160} />
@@ -355,6 +357,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
                   ))}
                 </tbody>
               </TableShell>
+)}</PagedRows>
             )}
           </Panel>
         </div>
@@ -375,7 +378,8 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
             compact
           />
         ) : (
-          <TableShell minWidth={820}>
+          <PagedRows rows={formLeads} size={8} noun="leads">{(pagedRows) => (
+<TableShell minWidth={820}>
             <thead>
               <tr>
                 {["Lead", "Contact", "Campaign", "Ad", "Stage", "Score", "Submitted"].map((h) => (
@@ -384,7 +388,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
               </tr>
             </thead>
             <tbody>
-              {formLeads.map((l) => (
+              {pagedRows.map((l) => (
                 <Tr key={l.id}>
                   <Td>
                     <EntityLink href={`${ADS_ROOT}/leads/${l.id}`} name={l.name} sub={l.id} />
@@ -410,6 +414,7 @@ export default function Page({ params }: { params: Promise<{ formId: string }> }
               ))}
             </tbody>
           </TableShell>
+)}</PagedRows>
         )}
       </section>
     </AdsWorkspace>
