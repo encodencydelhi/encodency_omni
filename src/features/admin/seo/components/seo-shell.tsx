@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CalendarDays, ChevronDown, Download } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../shared/integration-pending-banner";
 
 export type SeoView =
   | "overview"
@@ -51,7 +52,9 @@ export function SeoShell({
           <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-[#71809D]">
             SEO <ChevronDown className="size-2.5 -rotate-90" /> {label}
           </div>
-          <h1 className="text-[20px] font-semibold text-[#172044]">{title}</h1>
+          <h1 className="text-[20px] font-semibold text-[#172044]">
+            {title} <IntegrationPendingBadge label="Crawler Integration Pending" />
+          </h1>
           <p className="text-[10px] text-[#71809D]">{description}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -90,6 +93,11 @@ export function SeoShell({
           </Link>
         ))}
       </div>
+
+      <IntegrationPendingBanner
+        moduleName="SEO Intelligence"
+        feature="Search Console rank imports, backlink index refreshes, and the site-wide technical crawler"
+      />
 
       {children}
     </div>

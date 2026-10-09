@@ -131,6 +131,16 @@ export interface CompanyOwner {
   email: string;
   phone: string | null;
   state: OwnerState;
+  /**
+   * One-time owner invite link, returned only by the create / resend responses
+   * (never by the list). `null` in mock mode and on reads, where no invitation
+   * was issued by this session.
+   */
+  invitationUrl?: string | null;
+  /** ISO expiry of the pending invitation, when the backend reported one. */
+  invitationExpiresAt?: string | null;
+  /** False when the invitation email could not be queued — the link must be shared manually. */
+  emailQueued?: boolean;
 }
 
 /** A person's membership of one organisation. */

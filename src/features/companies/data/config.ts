@@ -421,6 +421,37 @@ export const COUNTRIES = [
   "Poland",
 ] as const;
 
+export type CountryName = (typeof COUNTRIES)[number];
+
+/** ISO 3166-1 alpha-2 for every option offered by {@link COUNTRIES}. */
+export const COUNTRY_CODES: Record<CountryName, string> = {
+  India: "IN",
+  "United States": "US",
+  "United Kingdom": "GB",
+  "United Arab Emirates": "AE",
+  Singapore: "SG",
+  Australia: "AU",
+  Canada: "CA",
+  Germany: "DE",
+  France: "FR",
+  Spain: "ES",
+  Italy: "IT",
+  Poland: "PL",
+};
+
+/**
+ * Country display name (or an already-coded value) → ISO 3166-1 alpha-2.
+ * `address.country` on PATCH /settings/organization only accepts a 2-letter code
+ * (`^[A-Z]{2}$`); sending "India" makes the whole patch fail with 400.
+ */
+export function countryToIso(country?: string | null): string | undefined {
+  if (!country) return undefined;
+  const trimmed = country.trim();
+  if (!trimmed) return undefined;
+  if (/^[A-Za-z]{2}$/.test(trimmed)) return trimmed.toUpperCase();
+  return COUNTRY_CODES[trimmed as CountryName];
+}
+
 export const TIMEZONES = [
   "Asia/Kolkata",
   "Asia/Dubai",

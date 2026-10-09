@@ -45,6 +45,31 @@ export interface UpdateOrganizationPayload {
   currency?: string | null;
 }
 
+export function isRevisionConflict(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const status = (err as any).status;
+  const reason = (err as any).reason;
+  return status === 409 || reason === "revision_conflict";
+}
+
+export function describeOrganizationError(err: unknown): string {
+  if (err && typeof err === "object") {
+    const errorObj = err as any;
+    if (errorObj.reason === "revision_conflict" || errorObj.status === 409) {
+      return "The organization profile was modified by another session. Please reload and try again.";
+    }
+    if (errorObj.fieldErrors && typeof errorObj.fieldErrors === "object") {
+      const entries = Object.entries(errorObj.fieldErrors);
+      const firstEntry = entries[0];
+      if (firstEntry) {
+        return `${firstEntry[0]}: ${firstEntry[1]}`;
+      }
+    }
+    if (errorObj.message) return errorObj.message;
+  }
+  return err instanceof Error ? err.message : "Failed to save organization settings.";
+}
+
 export const organizationApi = {
   /** GET /settings/organization — Company context, capability organization:read */
   get(companyId: string, signal?: AbortSignal): Promise<OrganizationRecord> {
@@ -67,3 +92,4 @@ export const organizationApi = {
     });
   },
 };
+

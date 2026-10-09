@@ -51,15 +51,8 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
       onChange({ logo: newUrl });
       toast.success("Organization logo updated successfully.");
     } catch (err: unknown) {
-      console.warn("Failed to upload logo to backend, falling back to local preview", err);
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          onChange({ logo: reader.result });
-          toast.success("Organization logo updated locally.");
-        }
-      };
-      reader.readAsDataURL(file);
+      console.error("Failed to upload logo to backend:", err);
+      toast.error("Logo Upload Failed", { description: describeBrandingError(err) });
     } finally {
       setIsUploadingLogo(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -71,11 +64,10 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
       setIsUploadingLogo(true);
       await brandingApi.remove("logo");
       onChange({ logo: "" });
-      toast.info("Logo removed.");
+      toast.success("Logo removed successfully.");
     } catch (err: unknown) {
-      console.warn("Failed to delete logo from backend", err);
-      onChange({ logo: "" });
-      toast.info("Logo removed locally.");
+      console.error("Failed to delete logo from backend:", err);
+      toast.error("Logo Removal Failed", { description: describeBrandingError(err) });
     } finally {
       setIsUploadingLogo(false);
     }

@@ -19,8 +19,26 @@ export function useUnreadNotifications() {
   return useQuery({
     queryKey: queryKeys.notifications.list({ unread: true }),
     queryFn: ({ signal }) =>
-      notificationService.list({ pageSize: 6, filters: { readState: "unread" } }, signal),
-    refetchInterval: 120_000,
+      notificationService.list({ pageSize: 10, filters: { readState: "unread" } }, signal),
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+  });
+}
+
+/** Feed for dropdown with tab support (unread vs all) */
+export function useRecentNotifications(filter: "unread" | "all" = "unread") {
+  return useQuery({
+    queryKey: queryKeys.notifications.list({ tab: filter }),
+    queryFn: ({ signal }) =>
+      notificationService.list(
+        {
+          pageSize: 10,
+          filters: filter === "unread" ? { readState: "unread" } : undefined,
+        },
+        signal,
+      ),
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 }
 

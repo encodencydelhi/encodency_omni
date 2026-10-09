@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { AllSettingsState, SettingsSectionId, NotificationChannel } from "./types";
 import { SettingsRepository } from "./repository";
+import { describeOrganizationError } from "../live/organization-api";
 
 const VALID_SECTIONS: SettingsSectionId[] = [
   "organization",
@@ -215,7 +216,8 @@ export function useSettings() {
       return true;
     } catch (err: any) {
       console.error("Failed to save settings:", err);
-      toast.error(err?.message || "Failed to save settings.");
+      const message = describeOrganizationError(err);
+      toast.error(message);
       return false;
     } finally {
       setIsSaving(false);
@@ -224,6 +226,7 @@ export function useSettings() {
 
   // Section-specific updaters
   const updateOrganization = (partial: Partial<AllSettingsState["organization"]>) => {
+    const updatedBrandName = partial.displayName ?? partial.name;
     setDraftState((prev) => {
       if (!prev) return null;
       return {
@@ -233,8 +236,24 @@ export function useSettings() {
           ...partial,
           address: partial.address ? { ...prev.organization.address, ...partial.address } : prev.organization.address,
         },
+        branding: {
+          ...prev.branding,
+          ...(partial.logo !== undefined ? { logo: partial.logo } : {}),
+          ...(updatedBrandName ? { brandName: updatedBrandName } : {}),
+        },
       };
     });
+
+    if (partial.logo !== undefined) {
+      setSavedState((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          organization: { ...prev.organization, logo: partial.logo! },
+          branding: { ...prev.branding, logo: partial.logo! },
+        };
+      });
+    }
   };
 
   const updateWorkspace = (partial: Partial<AllSettingsState["workspace"]>) => {
@@ -247,8 +266,29 @@ export function useSettings() {
   const updateBranding = (partial: Partial<AllSettingsState["branding"]>) => {
     setDraftState((prev) => {
       if (!prev) return null;
-      return { ...prev, branding: { ...prev.branding, ...partial } };
+      return {
+        ...prev,
+        branding: { ...prev.branding, ...partial },
+        organization: partial.logo !== undefined ? { ...prev.organization, logo: partial.logo } : prev.organization,
+      };
     });
+
+    const isLiveAssetChange =
+      partial.logo !== undefined ||
+      partial.favicon !== undefined ||
+      partial.reportLogo !== undefined ||
+      partial.emailLogo !== undefined;
+
+    if (isLiveAssetChange) {
+      setSavedState((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          branding: { ...prev.branding, ...partial },
+          organization: partial.logo !== undefined ? { ...prev.organization, logo: partial.logo } : prev.organization,
+        };
+      });
+    }
   };
 
   const updateNotificationItem = (id: string, channel: NotificationChannel, value: boolean) => {

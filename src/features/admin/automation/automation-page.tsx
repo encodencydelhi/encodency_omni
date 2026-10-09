@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useUrlState } from "./components/use-url-state";
 import { AdminPageTitle } from "../shared/admin-page-title";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../shared/integration-pending-banner";
 import { SubTabs } from "../website/components/ui/kit";
 import { Plus, ChevronDown, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -101,12 +102,13 @@ export function AutomationPage() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <AdminPageTitle
           eyebrow="Operations"
           title="Automation"
           description="Automate lead follow-up, notifications and marketing operations."
+          badge={<IntegrationPendingBadge label="Workflow Engine Integration Pending" />}
         />
         
         {/* Top Operations Controls */}
@@ -198,6 +200,11 @@ export function AutomationPage() {
           </button>
         </div>
       </div>
+
+      <IntegrationPendingBanner
+        moduleName="Automation Studio"
+        feature="visual workflow execution engine, webhook trigger dispatchers, and queue runners"
+      />
       
       <SubTabs
         ariaLabel="Automation Sections"

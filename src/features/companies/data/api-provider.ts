@@ -47,7 +47,9 @@ import type {
   UpdateCompanyInput,
 } from "./types";
 import { ensureBundle, writeBundle } from "./mock/store";
+import { PLAN_TIER, type PlanTier } from "@/types/domain/plan";
 import { organizationApi, type UpdateOrganizationPayload } from "@/features/admin/settings/live/organization-api";
+import { countryToIso } from "./config";
 import { superAdminCompaniesApi } from "../live/super-admin-companies-api";
 
 /* ------------------------------------------------------------------ */
@@ -84,6 +86,12 @@ interface SuperAdminCompanySummary {
   taxId?: string | null;
   timezone?: string | null;
   currency?: string | null;
+  /**
+   * Present only on the create and owner-invitation resend responses — the list
+   * and detail reads never carry them (see `SuperAdminCompanyCreatedResponse`).
+   */
+  invitationToken?: string;
+  invitationUrl?: string;
 }
 
 interface SuperAdminCompanyListResponse {
@@ -96,6 +104,11 @@ interface SuperAdminCompanyListResponse {
 interface SuperAdminCompanyDetailResponse extends SuperAdminCompanySummary {
   members: Array<{ membershipId: string; email: string; systemRole: string }>;
   clients: Array<{ id: string; name: string; createdAt: string }>;
+}
+
+/** POST /super-admin/companies and .../owner-invitation/resend. */
+interface SuperAdminCompanyCreateResponse extends SuperAdminCompanySummary {
+  updatedAt?: string;
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -112,11 +125,38 @@ function toAccountStatus(status: BackendCompanyStatus): CompanyAccountStatus {
   return status === "ARCHIVED" ? "archived" : "active";
 }
 
-function toOwner(ownerEmail: string | null, onboarding?: OwnerOnboarding | null): CompanyOwner {
+function toOwner(
+  ownerEmail: string | null,
+  onboarding?: OwnerOnboarding | null,
+  invitationUrl?: string | null,
+): CompanyOwner {
   const state = onboarding?.state ?? (ownerEmail ? "active" : "none");
   const effectiveEmail = onboarding?.ownerEmail || ownerEmail || "";
   const local = effectiveEmail.split("@")[0] ?? effectiveEmail;
-  return { userId: null, name: local, email: effectiveEmail, phone: null, state };
+  return {
+    userId: null,
+    name: local,
+    email: effectiveEmail,
+    phone: null,
+    state,
+    invitationUrl: invitationUrl ?? null,
+    invitationExpiresAt: onboarding?.invitationExpiresAt ?? null,
+    emailQueued: onboarding?.emailQueued,
+  };
+}
+
+/**
+ * The owner invite link. The backend builds one from `FRONTEND_URL`, which may
+ * be unset or point at the wrong origin — so a raw token without a URL is
+ * re-based onto the origin this app is actually served from, and a missing
+ * link stays `null` instead of being invented.
+ */
+function ownerInviteUrl(row: SuperAdminCompanySummary): string | null {
+  if (row.invitationUrl) return row.invitationUrl;
+  if (!row.invitationToken) return null;
+  const origin = typeof window !== "undefined" ? window.location.origin : null;
+  if (!origin) return null;
+  return `${origin}/accept-invitation?token=${encodeURIComponent(row.invitationToken)}`;
 }
 
 function toSlug(name: string): string {
@@ -125,6 +165,23 @@ function toSlug(name: string): string {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * Free-text wizard fields are trimmed and capped at the DTO's `MaxLength`.
+ * Anything longer would be rejected wholesale by `forbidNonWhitelisted`'s
+ * sibling validation, turning a filled-in form into an opaque 400.
+ * Empty input collapses to `undefined` so the key is omitted entirely.
+ */
+function clip(value: string | null | undefined, max: number): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
+}
+
+/** Display name for a plan tier, falling back to the raw key for custom plans. */
+function planLabel(tier: string): string {
+  return PLAN_TIER[tier as PlanTier]?.label ?? tier;
 }
 
 function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
@@ -186,7 +243,7 @@ function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
     },
     attention: [],
     onboarding: row.ownerOnboarding?.state === "active" || (!row.ownerOnboarding && row.ownerEmail) ? "completed" : "awaiting_owner",
-    owner: toOwner(row.ownerEmail, row.ownerOnboarding),
+    owner: toOwner(row.ownerEmail, row.ownerOnboarding, ownerInviteUrl(row)),
     internalOwners: { accountManager: null, supportOwner: null, technicalOwner: null },
   };
 }
@@ -354,17 +411,45 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       // Required: Idempotency-Key header per user intent
       const idempotencyKey = crypto.randomUUID();
 
-      // Step 1: POST /super-admin/companies with minimal core fields
-      const created = await apiClient.request<SuperAdminCompanyDetailResponse>({
+      // Step 1: POST /super-admin/companies. The DTO runs with
+      // `forbidNonWhitelisted`, so every key below must exist on
+      // CreateSuperAdminCompanyDto and nothing else may be added — a field the
+      // backend does not know turns the whole create into a 400.
+      const body = {
+        name,
+        ownerEmail,
+        ...(clip(input.legalName, 200) ? { legalName: clip(input.legalName, 200) } : {}),
+        ...(clip(input.industry, 100) ? { industry: clip(input.industry, 100) } : {}),
+        ...(clip(input.website, 2048) ? { website: clip(input.website, 2048) } : {}),
+        ...(clip(input.contactEmail, 254) ? { contactEmail: clip(input.contactEmail, 254)!.toLowerCase() } : {}),
+        ...(clip(input.contactPhone, 30) ? { contactPhone: clip(input.contactPhone, 30) } : {}),
+        ...(clip(input.country, 100) ? { country: clip(input.country, 100) } : {}),
+        ...(clip(input.owner?.name, 200) ? { ownerName: clip(input.owner?.name, 200) } : {}),
+        ...(clip(input.owner?.phone, 30) ? { ownerPhone: clip(input.owner?.phone, 30) } : {}),
+        ...(clip(input.workspace?.timezone, 64) ? { timezone: clip(input.workspace?.timezone, 64) } : {}),
+        ...(clip(input.workspace?.currency, 10) ? { currency: clip(input.workspace?.currency, 10) } : {}),
+        ...(clip(input.subscription?.planTier, 50) ? { planTier: clip(input.subscription?.planTier, 50) } : {}),
+        ...(clip(input.subscription?.billingCycle, 50) ? { billingCycle: clip(input.subscription?.billingCycle, 50) } : {}),
+        ...(clip(input.subscription?.mode, 50) ? { mode: clip(input.subscription?.mode, 50) } : {}),
+        ...(input.initialClient?.name?.trim()
+          ? {
+              initialClient: {
+                name: clip(input.initialClient.name, 200)!,
+                ...(clip(input.initialClient.websiteUrl, 2048)
+                  ? { website: clip(input.initialClient.websiteUrl, 2048) }
+                  : {}),
+              },
+            }
+          : {}),
+      };
+
+      const created = await apiClient.request<SuperAdminCompanyCreateResponse>({
         method: "POST",
         path: "/super-admin/companies",
         headers: {
           "Idempotency-Key": idempotencyKey,
         },
-        body: {
-          name,
-          ownerEmail,
-        },
+        body,
       });
 
       // Step 2 (Option B): In returned real company context, populate organization profile fields
@@ -389,7 +474,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
             ...(input.website ? { website: input.website.trim() } : {}),
             ...(input.contactPhone ? { contactPhone: input.contactPhone.trim() } : {}),
             ...(input.contactEmail ? { contactEmail: input.contactEmail.trim() } : {}),
-            ...(input.country ? { address: { country: input.country } } : {}),
+            ...(input.country ? { address: { country: countryToIso(input.country) } } : {}),
             ...(input.workspace?.timezone ? { timezone: input.workspace.timezone } : {}),
             ...(input.workspace?.currency ? { currency: input.workspace.currency } : {}),
           };
@@ -402,6 +487,14 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       }
 
       const summary = toCompanySummary(created);
+      // The backend provisions the subscription inside the create transaction but
+      // does not echo it back, so the tier the operator just chose is reported
+      // from the request instead of the "Starter" default.
+      summary.plan = {
+        tier: input.subscription.planTier,
+        name: planLabel(input.subscription.planTier),
+        billingCycle: input.subscription.billingCycle,
+      };
       try {
         const bundle = ensureBundle(summary.company.id, summary.company.name);
         writeBundle(bundle);
@@ -457,7 +550,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         return fallback.resendOwnerInvitation(id, actor);
       }
       const res = await superAdminCompaniesApi.resendOwnerInvitation(id);
-      return toCompanySummary(res as any);
+      return toCompanySummary(res);
     },
 
     async archiveCompany(id: string, input: { note: string }, actor): Promise<CompanySummary> {

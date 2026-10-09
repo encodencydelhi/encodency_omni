@@ -4,33 +4,71 @@ import { SETTINGS_MOCK_MODE, SETTINGS_STORAGE_KEY } from "./config";
 import { apiClient } from "@/lib/api/client";
 import { getStoredCompanyId, setStoredTenancy, clearStoredClientId, DEFAULT_FALLBACK_COMPANY_ID } from "@/lib/api/tenancy-storage";
 import { brandingApi } from "../live/branding-api";
-import { organizationApi } from "../live/organization-api";
+import { organizationApi, type OrganizationRecord, type UpdateOrganizationPayload, isRevisionConflict } from "../live/organization-api";
 import { teamApi } from "@/features/admin/team/live/team-api";
 import type { CurrentUserResponse } from "@/types/domain/auth";
+import { ApiError } from "@/types/api";
+
+function normalizeCountryCode(country?: string | null): string | null {
+  if (!country) return null;
+  const trimmed = country.trim();
+  if (!trimmed) return null;
+  if (/^[A-Za-z]{2}$/.test(trimmed)) return trimmed.toUpperCase();
+  const lower = trimmed.toLowerCase();
+  const map: Record<string, string> = {
+    india: "IN",
+    "united states": "US",
+    usa: "US",
+    "united kingdom": "GB",
+    uk: "GB",
+    canada: "CA",
+    australia: "AU",
+    germany: "DE",
+    france: "FR",
+    singapore: "SG",
+    uae: "AE",
+    "united arab emirates": "AE",
+  };
+  return map[lower] ?? (trimmed.length >= 2 ? trimmed.slice(0, 2).toUpperCase() : null);
+}
+
+function normalizeTimezone(timezone?: string | null): string | null {
+  if (!timezone) return null;
+  const trimmed = timezone.trim();
+  if (!trimmed) return null;
+  return trimmed.split(" ")[0] || trimmed;
+}
 
 export class SettingsRepository {
   private static isBrowser(): boolean {
     return typeof window !== "undefined";
   }
 
+  public static getStorageKey(companyId?: string): string {
+    return companyId && companyId !== DEFAULT_FALLBACK_COMPANY_ID
+      ? `${SETTINGS_STORAGE_KEY}_${companyId}`
+      : SETTINGS_STORAGE_KEY;
+  }
+
   public static async getSettings(): Promise<AllSettingsState> {
     let base: AllSettingsState = INITIAL_SETTINGS_STATE;
 
     if (this.isBrowser()) {
+      let activeCompanyId = getStoredCompanyId();
+
+      // Read initial cached state (scoped key if available, else general fallback)
       try {
-        const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+        const stored =
+          (activeCompanyId ? localStorage.getItem(this.getStorageKey(activeCompanyId)) : null) ??
+          localStorage.getItem(SETTINGS_STORAGE_KEY);
         if (stored) {
           base = JSON.parse(stored);
         }
       } catch (err) {
-        console.warn("Failed to read settings from localStorage, falling back to initial mock", err);
+        console.warn("Failed to read settings from localStorage, falling back to initial state", err);
       }
-    }
 
-    if (this.isBrowser()) {
       try {
-        let activeCompanyId = getStoredCompanyId();
-
         // 1. Fetch current authenticated user & company context from /users/me
         try {
           const user = await apiClient.request<CurrentUserResponse>({
@@ -43,13 +81,21 @@ export class SettingsRepository {
               user.memberships.find((m) => m.companyId === activeCompanyId) ?? user.memberships[0];
 
             if (activeMembership) {
-              // Switching Company invalidates the stored Client (it belongs to the
-              // previous one) — client-scoped routes would answer 403 until re-picked.
               if (activeCompanyId !== activeMembership.companyId) {
                 clearStoredClientId();
               }
               activeCompanyId = activeMembership.companyId;
               setStoredTenancy(activeCompanyId);
+
+              // Re-check company-specific cached data
+              const companyStored = localStorage.getItem(this.getStorageKey(activeCompanyId));
+              if (companyStored) {
+                try {
+                  base = JSON.parse(companyStored);
+                } catch {
+                  // ignore
+                }
+              }
 
               base.organization = {
                 ...base.organization,
@@ -72,27 +118,26 @@ export class SettingsRepository {
           console.warn("Could not fetch live /users/me for settings:", uErr);
         }
 
-        // 2. Fetch live branding from /settings/branding if we have a valid companyId
+        // 2. Fetch live branding and organization from backend if we have a valid companyId
         if (activeCompanyId && activeCompanyId !== DEFAULT_FALLBACK_COMPANY_ID) {
+          // A. Fetch live branding from /settings/branding
           try {
             const brandingRes = await brandingApi.get(activeCompanyId);
             if (brandingRes) {
               base.branding = {
                 ...base.branding,
-                logo: brandingRes.logo?.url || base.branding.logo,
-                favicon: brandingRes.favicon?.url || base.branding.favicon,
-                reportLogo: brandingRes.reportLogo?.url || base.branding.reportLogo,
-                emailLogo: brandingRes.emailLogo?.url || base.branding.emailLogo,
+                logo: brandingRes.logo?.url ?? "",
+                favicon: brandingRes.favicon?.url ?? "",
+                reportLogo: brandingRes.reportLogo?.url ?? "",
+                emailLogo: brandingRes.emailLogo?.url ?? "",
               };
-              if (brandingRes.logo?.url) {
-                base.organization.logo = brandingRes.logo.url;
-              }
+              base.organization.logo = brandingRes.logo?.url ?? "";
             }
           } catch (bErr) {
             console.warn("Could not fetch live branding for settings:", bErr);
           }
 
-          // 3. Fetch live team members to sync totalMembers count
+          // B. Fetch live team members to sync totalMembers count
           try {
             const teamMembers = await apiClient.request<any[]>({
               method: "GET",
@@ -106,7 +151,7 @@ export class SettingsRepository {
             console.warn("Could not fetch live team members for settings:", tErr);
           }
 
-          // 4. Fetch live organization record from /settings/organization
+          // C. Fetch live organization record from /settings/organization
           try {
             const orgRecord = await organizationApi.get(activeCompanyId);
             if (orgRecord) {
@@ -114,29 +159,29 @@ export class SettingsRepository {
                 ...base.organization,
                 name: orgRecord.name || base.organization.name,
                 displayName: orgRecord.displayName || base.organization.displayName,
-                legalName: orgRecord.legalName ?? base.organization.legalName,
+                legalName: orgRecord.legalName ?? "",
                 industry: orgRecord.industry ?? base.organization.industry,
-                website: orgRecord.website ?? base.organization.website,
-                contactEmail: orgRecord.contactEmail ?? base.organization.contactEmail,
-                contactPhone: orgRecord.contactPhone ?? base.organization.contactPhone,
-                description: orgRecord.description ?? (base.organization as any).description,
+                website: orgRecord.website ?? "",
+                contactEmail: orgRecord.contactEmail ?? "",
+                contactPhone: orgRecord.contactPhone ?? "",
+                description: orgRecord.description ?? "",
                 timezone: orgRecord.timezone ?? base.organization.timezone,
                 currency: orgRecord.currency ?? base.organization.currency,
-                address: orgRecord.address
-                  ? {
-                      address: orgRecord.address.street ?? base.organization.address.address,
-                      street: orgRecord.address.street ?? base.organization.address.street,
-                      city: orgRecord.address.city ?? base.organization.address.city,
-                      state: orgRecord.address.state ?? base.organization.address.state,
-                      country: orgRecord.address.country ?? base.organization.address.country,
-                      postalCode: orgRecord.address.postalCode ?? base.organization.address.postalCode,
-                    }
-                  : base.organization.address,
+                address: {
+                  address: orgRecord.address?.street ?? base.organization.address?.address ?? "",
+                  street: orgRecord.address?.street ?? base.organization.address?.street ?? "",
+                  city: orgRecord.address?.city ?? base.organization.address?.city ?? "",
+                  state: orgRecord.address?.state ?? base.organization.address?.state ?? "",
+                  country: orgRecord.address?.country === "IN" ? "India" : (orgRecord.address?.country ?? base.organization.address?.country ?? "India"),
+                  postalCode: orgRecord.address?.postalCode ?? base.organization.address?.postalCode ?? "",
+                },
                 metadata: {
                   ...base.organization.metadata,
+                  id: orgRecord.id,
                   revision: orgRecord.revision,
                 },
               };
+              base.branding.brandName = orgRecord.displayName || orgRecord.name || base.branding.brandName;
             }
           } catch (oErr) {
             console.warn("Could not fetch live organization record for settings:", oErr);
@@ -145,6 +190,8 @@ export class SettingsRepository {
 
         // Cache synced data to localStorage for instant re-renders
         try {
+          const key = this.getStorageKey(activeCompanyId);
+          localStorage.setItem(key, JSON.stringify(base));
           localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(base));
         } catch {
           // ignore
@@ -157,42 +204,113 @@ export class SettingsRepository {
     return base;
   }
 
-  public static async saveSettings(partial: Partial<AllSettingsState>, activityNote?: { action: string; section: any; setting: string }): Promise<AllSettingsState> {
+  public static async saveSettings(
+    partial: Partial<AllSettingsState>,
+    activityNote?: { action: string; section: any; setting: string }
+  ): Promise<AllSettingsState> {
     const current = await this.getSettings();
     let activeCompanyId = getStoredCompanyId();
 
-    // If organization details changed and we have a valid company, save to live backend
-    if (partial.organization && activeCompanyId && activeCompanyId !== DEFAULT_FALLBACK_COMPANY_ID) {
+    if (!activeCompanyId || activeCompanyId === DEFAULT_FALLBACK_COMPANY_ID) {
       try {
-        const expectedRevision = (current.organization.metadata as any)?.revision ?? 1;
-        const orgPatch = partial.organization;
-        const updatedOrg = await organizationApi.update(activeCompanyId, {
-          expectedRevision,
-          displayName: orgPatch.displayName || orgPatch.name,
-          legalName: orgPatch.legalName ?? null,
-          industry: orgPatch.industry ?? null,
-          website: orgPatch.website ?? null,
-          contactEmail: orgPatch.contactEmail ?? null,
-          contactPhone: orgPatch.contactPhone ?? null,
-          description: (orgPatch as any).description ?? null,
-          timezone: orgPatch.timezone ?? null,
-          currency: orgPatch.currency ?? null,
-          address: orgPatch.address
-            ? {
-                street: orgPatch.address.street ?? orgPatch.address.address ?? null,
-                city: orgPatch.address.city ?? null,
-                state: orgPatch.address.state ?? null,
-                country: orgPatch.address.country ?? null,
-                postalCode: orgPatch.address.postalCode ?? (orgPatch.address as any).zip ?? null,
-              }
-            : undefined,
+        const user = await apiClient.request<CurrentUserResponse>({
+          method: "GET",
+          path: "/users/me",
         });
+        if (user?.memberships?.[0]?.companyId) {
+          activeCompanyId = user.memberships[0].companyId;
+          setStoredTenancy(activeCompanyId);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    // Only patch the backend organization endpoint if organization section was changed or submitted
+    const shouldUpdateOrg =
+      Boolean(partial.organization) &&
+      Boolean(activeCompanyId) &&
+      activeCompanyId !== DEFAULT_FALLBACK_COMPANY_ID &&
+      (activityNote?.section === "organization" || !activityNote);
+
+    if (shouldUpdateOrg && partial.organization && activeCompanyId) {
+      const orgPatch = partial.organization;
+      const expectedRevision = (orgPatch.metadata as any)?.revision ?? (current.organization.metadata as any)?.revision ?? 1;
+
+      const addr = orgPatch.address;
+      const hasAnyAddress = addr && Boolean(addr.street || addr.address || addr.city || addr.state || addr.country || addr.postalCode);
+      const addressPayload = hasAnyAddress
+        ? {
+            street: (addr.street ?? addr.address)?.trim() || null,
+            city: addr.city?.trim() || null,
+            state: addr.state?.trim() || null,
+            country: normalizeCountryCode(addr.country),
+            postalCode: (addr.postalCode ?? (addr as any).zip)?.trim() || null,
+          }
+        : null;
+
+      const payload: UpdateOrganizationPayload = {
+        expectedRevision,
+        displayName: (orgPatch.displayName || orgPatch.name)?.trim(),
+        legalName: orgPatch.legalName ? orgPatch.legalName.trim() : null,
+        industry: orgPatch.industry ? orgPatch.industry.trim() : null,
+        website: orgPatch.website ? orgPatch.website.trim() : null,
+        contactEmail: orgPatch.contactEmail ? orgPatch.contactEmail.trim().toLowerCase() : null,
+        contactPhone: orgPatch.contactPhone ? orgPatch.contactPhone.trim() : null,
+        description: orgPatch.description ? orgPatch.description.trim() : null,
+        timezone: orgPatch.timezone ? normalizeTimezone(orgPatch.timezone) : null,
+        currency: orgPatch.currency ? orgPatch.currency.slice(0, 3).toUpperCase() : null,
+        address: addressPayload,
+      };
+
+      try {
+        let updatedOrg: OrganizationRecord | null = null;
+        try {
+          updatedOrg = await organizationApi.update(activeCompanyId, payload);
+        } catch (err: unknown) {
+          // If revision conflict (409), reload latest revision and retry once
+          if (isRevisionConflict(err)) {
+            const latest = await organizationApi.get(activeCompanyId);
+            if (latest) {
+              payload.expectedRevision = latest.revision;
+              updatedOrg = await organizationApi.update(activeCompanyId, payload);
+            } else {
+              throw err;
+            }
+          } else {
+            throw err;
+          }
+        }
 
         if (updatedOrg) {
-          if (!partial.organization.metadata) {
-            partial.organization.metadata = { ...current.organization.metadata, revision: updatedOrg.revision };
-          } else {
-            (partial.organization.metadata as any).revision = updatedOrg.revision;
+          partial.organization = {
+            ...partial.organization,
+            name: updatedOrg.name,
+            displayName: updatedOrg.displayName,
+            legalName: updatedOrg.legalName ?? "",
+            industry: updatedOrg.industry ?? partial.organization.industry,
+            website: updatedOrg.website ?? "",
+            contactEmail: updatedOrg.contactEmail ?? "",
+            contactPhone: updatedOrg.contactPhone ?? "",
+            description: updatedOrg.description ?? "",
+            timezone: updatedOrg.timezone ?? partial.organization.timezone,
+            currency: updatedOrg.currency ?? partial.organization.currency,
+            address: {
+              address: updatedOrg.address?.street ?? partial.organization.address?.address ?? "",
+              street: updatedOrg.address?.street ?? partial.organization.address?.street ?? "",
+              city: updatedOrg.address?.city ?? partial.organization.address?.city ?? "",
+              state: updatedOrg.address?.state ?? partial.organization.address?.state ?? "",
+              country: updatedOrg.address?.country === "IN" ? "India" : (updatedOrg.address?.country ?? partial.organization.address?.country ?? "India"),
+              postalCode: updatedOrg.address?.postalCode ?? partial.organization.address?.postalCode ?? "",
+            },
+            metadata: {
+              ...partial.organization.metadata,
+              revision: updatedOrg.revision,
+              id: updatedOrg.id,
+            },
+          };
+          if (partial.branding) {
+            partial.branding.brandName = updatedOrg.displayName || updatedOrg.name;
           }
         }
       } catch (orgErr) {
@@ -250,6 +368,8 @@ export class SettingsRepository {
 
     if (this.isBrowser()) {
       try {
+        const key = this.getStorageKey(activeCompanyId);
+        localStorage.setItem(key, JSON.stringify(updated));
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
       } catch (err) {
         console.error("Failed to write settings to localStorage", err);
@@ -342,6 +462,8 @@ export class SettingsRepository {
 
   public static async deleteOrganization(): Promise<void> {
     if (this.isBrowser()) {
+      const activeCompanyId = getStoredCompanyId();
+      localStorage.removeItem(this.getStorageKey(activeCompanyId));
       localStorage.removeItem(SETTINGS_STORAGE_KEY);
     }
   }

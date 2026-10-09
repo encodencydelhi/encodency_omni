@@ -43,6 +43,19 @@ function toAdminNotification(item: BackendNotificationItem): AdminNotification {
     ? "warning"
     : "info";
 
+  let href: string | null = null;
+  if (typeof item.data?.scheduledPostId === "string") {
+    href = `/admin/content?post=${encodeURIComponent(item.data.scheduledPostId)}`;
+  } else if (typeof item.data?.draftId === "string") {
+    href = `/admin/content-studio`;
+  } else if (typeof item.data?.clientId === "string") {
+    href = `/admin/clients/${encodeURIComponent(item.data.clientId)}`;
+  } else if (typeof item.data?.href === "string") {
+    href = item.data.href;
+  } else if (typeof item.data?.link === "string") {
+    href = item.data.link;
+  }
+
   return {
     id: item.id,
     title: item.title,
@@ -50,9 +63,7 @@ function toAdminNotification(item: BackendNotificationItem): AdminNotification {
     category,
     severity,
     isRead: Boolean(item.readAt),
-    href: typeof item.data?.scheduledPostId === "string"
-      ? `/admin/content?post=${encodeURIComponent(item.data.scheduledPostId)}`
-      : null,
+    href,
     source: item.companyId ?? "system",
     createdAt: item.createdAt,
   };
@@ -70,33 +81,51 @@ export const notificationService = {
       query.unreadOnly = true;
     }
 
-    const res = await apiClient.request<BackendNotificationListResponse | PaginatedResponse<AdminNotification>>({
-      method: "GET",
-      path: "/notifications",
-      query,
-      signal,
-    });
+    try {
+      const res = await apiClient.request<BackendNotificationListResponse | PaginatedResponse<AdminNotification>>({
+        method: "GET",
+        path: "/notifications",
+        query,
+        signal,
+      });
 
-    if ("items" in res && Array.isArray(res.items)) {
-      const page = res.page || 1;
-      const pageSize = res.limit || 25;
-      const total = res.total || 0;
-      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if ("items" in res && Array.isArray(res.items)) {
+        const page = res.page || 1;
+        const pageSize = res.limit || 25;
+        const total =
+          query.unreadOnly && typeof res.unreadCount === "number"
+            ? res.unreadCount
+            : res.total || 0;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
+        return {
+          data: res.items.map(toAdminNotification),
+          pagination: {
+            page,
+            pageSize,
+            total,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+          },
+        };
+      }
+
+      return res as PaginatedResponse<AdminNotification>;
+    } catch (err) {
+      console.warn("Failed to fetch notifications:", err);
       return {
-        data: res.items.map(toAdminNotification),
+        data: [],
         pagination: {
-          page,
-          pageSize,
-          total,
-          totalPages,
-          hasNextPage: page < totalPages,
-          hasPreviousPage: page > 1,
+          page: 1,
+          pageSize: params.pageSize || 25,
+          total: 0,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
         },
       };
     }
-
-    return res as PaginatedResponse<AdminNotification>;
   },
 
   async markRead(id: string): Promise<{ success: boolean }> {

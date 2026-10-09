@@ -459,6 +459,10 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
         </div>
 
         {/* Color Controls */}
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-5 text-amber-800">
+          Brand colors and footer text have no backend API yet — they are kept on this device only and
+          are not synced to your account. The logo slots above <strong>are</strong> saved to the server.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
           <div>
             <label className="block text-[11px] font-semibold text-[#334155] mb-1">

@@ -25,6 +25,7 @@ import { DonutChart } from "@/components/shared/charts/donut-chart";
 import { TrendAreaChart, ChartLegend } from "@/components/shared/charts/trend-area-chart";
 import { MonthlyBarChart } from "@/components/shared/charts/monthly-bar-chart";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "@/features/admin/shared/integration-pending-banner";
 import type { DataTableColumn } from "@/components/shared/data-table/types";
 import type { PaginationMeta, SortSpec } from "@/types/api";
 import type { DonutSegment } from "@/components/shared/charts/donut-chart";
@@ -349,11 +350,7 @@ export default function TasksPage() {
       <AdminPageTitle
         eyebrow="CRM / Tasks"
         title="Tasks"
-        badge={
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-            Preview / Mock Mode
-          </span>
-        }
+        badge={<IntegrationPendingBadge label="Live Integration Pending" />}
         description="Manage sales activities, follow-ups and team productivity."
         action={
           <div className="flex items-center gap-2">
@@ -361,6 +358,11 @@ export default function TasksPage() {
             <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="size-3.5" /> Create Task</Button>
           </div>
         }
+      />
+
+      <IntegrationPendingBanner
+        moduleName="CRM Tasks"
+        feature="task scheduling, reminders, and activity tracking"
       />
 
       <TaskMetricCards tasks={tasks} />

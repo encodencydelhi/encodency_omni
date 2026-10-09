@@ -34,6 +34,7 @@ import type { IntegrationKey, LiveStatus } from "../data/types";
 import { Chip, WButton } from "./ui/kit";
 import { NoClientSelectedState, NoWebsiteState } from "./ui/states";
 import { useWebsiteWorkspace } from "./website-workspace";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../shared/integration-pending-banner";
 
 const TABS: { label: string; href: string }[] = [
   { label: "Overview", href: "/admin/website" },
@@ -187,8 +188,9 @@ function WebsiteHeader() {
             className="-mt-1 size-14 shrink-0 object-contain"
           />
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
               <h1 className="text-[19px] font-semibold tracking-[-0.02em] text-[#0F1A38]">Website</h1>
+              <IntegrationPendingBadge label="Live Crawler Integration Pending" />
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
               {hasWebsite && websiteUrl ? (
@@ -400,7 +402,15 @@ export function WebsiteShell({ children }: { children: ReactNode }) {
       ) : !hasWebsite ? (
         <NoWebsiteState clientName={clientName} onOpenClientProfile={() => navigate("/admin/projects")} />
       ) : (
-        children
+        <>
+          <div className="mb-3 mt-1">
+            <IntegrationPendingBanner
+              moduleName="Website Intelligence"
+              feature="live multi-page crawler, Lighthouse real-time audit triggers, and GA4 telemetry collector"
+            />
+          </div>
+          {children}
+        </>
       )}
     </div>
   );

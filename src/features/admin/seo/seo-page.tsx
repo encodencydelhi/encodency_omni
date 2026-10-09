@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { AlertTriangle, CheckCircle2, FileSearch, Gauge, Play } from "lucide-react";
 import { AdminPageTitle } from "../shared/admin-page-title";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../shared/integration-pending-banner";
 import { cn } from "@/lib/utils/cn";
 import { SeoAuditView } from "./seo-audit-view";
 
@@ -22,6 +23,7 @@ export function SeoPage({ view = "overview" }: { view?: "overview" | "audit" | "
       <AdminPageTitle
         eyebrow={`SEO / ${title}`}
         title={title}
+        badge={<IntegrationPendingBadge label="Live Crawler Pending" />}
         description="Monitor and improve organic visibility for mokshasewa.org."
         action={
           <button onClick={() => { setRunning(true); setTimeout(() => setRunning(false), 1800) }} className="flex h-8 items-center gap-1.5 rounded-sm bg-[#EB0711] px-3 text-[8.5px] font-semibold text-white">
@@ -29,6 +31,10 @@ export function SeoPage({ view = "overview" }: { view?: "overview" | "audit" | "
             {running ? "Audit running..." : "Run SEO Audit"}
           </button>
         }
+      />
+      <IntegrationPendingBanner
+        moduleName="SEO Intelligence"
+        feature="live domain crawler, keyword SERP indexing, and automated Lighthouse audit engine"
       />
       {view === "overview" && <><div className="grid grid-cols-2 gap-2 lg:grid-cols-5"><Stat icon={Gauge} label="SEO Score" value="86/100" /><Stat icon={FileSearch} label="Crawled Pages" value="142" /><Stat icon={AlertTriangle} label="Critical Issues" value="5" danger /><Stat icon={AlertTriangle} label="Warnings" value="18" /><Stat icon={CheckCircle2} label="Passed Checks" value="1,248" /></div><div className="grid gap-3 lg:grid-cols-[1.2fr_.8fr]"><Panel title="SEO health trend"><div className="flex h-48 items-end gap-4 px-5 pb-4">{[68, 72, 70, 76, 79, 78, 82, 86].map((h, i) => <span key={i} className="flex-1 rounded-t bg-gradient-to-t from-[#13A070] to-[#8BD4BA]" style={{ height: `${h * 1.7}px` }} />)}</div></Panel><Panel title="Priority actions">{issues.slice(0, 4).map(issue => <Issue key={issue.title} {...issue} />)}</Panel></div></>}
       {view === "pages" && <Panel title="Crawled pages"><DataTable rows={pages.map(p => [p.url, String(p.status), p.title, String(p.issues), `${p.score}/100`])} headers={["URL", "Status", "Title", "Issues", "Score"]} /></Panel>}

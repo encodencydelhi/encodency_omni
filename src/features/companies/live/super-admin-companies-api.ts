@@ -22,6 +22,10 @@ export interface SuperAdminCompanyRecord {
   ownerEmail: string | null;
   ownerOnboarding?: OwnerOnboarding | null;
   logo: SafeAsset | null;
+  /** Create/resend only: the one-time owner invite link. Never present on list/detail reads. */
+  invitationUrl?: string;
+  /** Create/resend only: the raw token inside `invitationUrl`. */
+  invitationToken?: string;
 }
 
 export interface SuperAdminClientDirectoryItem {
@@ -57,9 +61,10 @@ export interface SuperAdminClientsDirectoryResult {
 export const superAdminCompaniesApi = {
   /**
    * POST /api/v1/super-admin/companies
-   * Platform Super Admin only.
-   * Requires Idempotency-Key header.
-   * Body must only contain { name, ownerEmail }.
+   * Platform Super Admin only. Requires the Idempotency-Key header.
+   * `name` and `ownerEmail` are required; every other key is optional and must
+   * stay inside `CreateSuperAdminCompanyDto` — the DTO rejects unknown fields.
+   * The repository builds the body (see `data/api-provider.ts`).
    */
   create(
     name: string,

@@ -19,7 +19,7 @@ import { useCompanyCapabilities } from "../data/capability-provider";
 import { relativeTime } from "../data/clock";
 import { OWNER_STATE_LABEL, companySectionHref } from "../data/config";
 import { describeError, useCompany, useCompanyMutations, useCompanySecurity } from "../data/hooks";
-import type { CompanySecurityData } from "../data/repository";
+import { companiesRepository, type CompanySecurityData } from "../data/repository";
 import type { SecurityWarning } from "../data/types";
 import { useCompanyId } from "./company-shell";
 
@@ -67,8 +67,18 @@ function SecurityBody({ companyId, data }: { companyId: string; data: CompanySec
         return;
       case "resend_invitation":
         try {
-          await mutations.resendOwnerInvitation(companyId);
-          toast.success("Owner invitation renewed (demo - no email was sent)");
+          const renewed = await mutations.resendOwnerInvitation(companyId);
+          if (companiesRepository.mode !== "api") {
+            toast.success("Owner invitation renewed (demo - no email was sent)");
+            return;
+          }
+          const inviteUrl = renewed.owner.invitationUrl;
+          if (inviteUrl) await navigator.clipboard.writeText(inviteUrl).catch(() => undefined);
+          toast.success("Owner invitation resent", {
+            description: inviteUrl
+              ? "A fresh invitation email was queued and the new link is on your clipboard."
+              : "A fresh invitation email was queued for the owner.",
+          });
         } catch (failure) {
           toast.error(describeError(failure).message);
         }

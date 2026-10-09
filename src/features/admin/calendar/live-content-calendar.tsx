@@ -644,7 +644,10 @@ function PostDetailsBody({ post, startConfirm, onClose }: { post: CalendarPost; 
   const { setClientId } = useTenancyContext();
   const [confirming, setConfirming] = useState(startConfirm);
   const reason = describeScheduleErrorCode(post.failureCode) ?? describeScheduleErrorCode(post.lastErrorCode);
-  const meta = SCHEDULED_POST_STATUS_META[post.status];
+  const meta =
+    post.status === "DRAFT"
+      ? { label: "Draft", tone: "neutral" as const, hint: "Draft content saved" }
+      : SCHEDULED_POST_STATUS_META[post.status as ScheduledPostStatus] ?? { label: post.status, tone: "neutral" as const, hint: "" };
 
   const rows: Array<[string, string]> = [
     ["Client", post.clientName ?? "—"],

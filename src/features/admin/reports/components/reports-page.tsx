@@ -32,6 +32,7 @@ import {
   Users,
 } from "lucide-react";
 import { ChannelLogo } from "../../shared/channel-logo";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../shared/integration-pending-banner";
 import { useReportsDashboard } from "../hooks/use-reports";
 import { cn } from "@/lib/utils/cn";
 import type { ReportKpi } from "@/types/domain/reports";
@@ -88,14 +89,17 @@ export function ReportsPage() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex flex-wrap items-stretch justify-between gap-2">
         <div>
           <div className="mb-1 flex items-center gap-1 text-[12px] font-semibold text-[#172044]">
             Workspace <ChevronDown className="size-3 -rotate-90" /> Reports
           </div>
-          <h1 className="text-[22px] font-semibold text-[#172044]">Reports & Analytics</h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-[22px] font-semibold text-[#172044]">Reports & Analytics</h1>
+            <IntegrationPendingBadge label="BI Engine Integration Pending" />
+          </div>
           <p className="mt-0.5 text-[12px] text-[#172044]">
             Cross-channel performance, campaigns, leads, and revenue attribution.
           </p>
@@ -117,6 +121,11 @@ export function ReportsPage() {
           </button>
         </div>
       </div>
+
+      <IntegrationPendingBanner
+        moduleName="Cross-Channel Reports & Analytics"
+        feature="live multi-platform data warehousing, automated PDF rendering engine, and scheduled dispatchers"
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 rounded-sm border border-[#DDE4ED] bg-white p-2 shadow-sm">

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPageTitle } from "../../../shared/admin-page-title";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../../shared/integration-pending-banner";
 import { SubTabs } from "../../../website/components/ui/kit";
 import { automationRepository } from "../../data/mock-provider";
 import { 
@@ -202,6 +203,7 @@ export function AutomationLogsPage() {
           eyebrow="Operations"
           title="Automation Logs & Diagnostics"
           description="Real-time execution traces, webhook payload inspection, and error diagnostics."
+          badge={<IntegrationPendingBadge label="Workflow Engine Integration Pending" />}
         />
 
         {/* Header Action Tools */}
@@ -225,7 +227,7 @@ export function AutomationLogsPage() {
               )}
               <span className={`relative inline-flex rounded-full size-2 ${isStreaming ? "bg-emerald-500" : "bg-amber-500"}`}></span>
             </span>
-            {isStreaming ? "Live Polling (5s)" : "Polling Paused"}
+            {isStreaming ? "Simulated Polling (5s)" : "Polling Paused"}
           </button>
 
           {/* Trigger Test Webhook Button */}
@@ -257,6 +259,11 @@ export function AutomationLogsPage() {
 
         </div>
       </div>
+
+      <IntegrationPendingBanner
+        moduleName="Automation Logs"
+        feature="live execution traces, webhook delivery records, and DLQ failure replay"
+      />
 
       {/* KPI Metrics Row */}
       {healthMetrics && (

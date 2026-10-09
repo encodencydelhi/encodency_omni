@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils/cn";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../shared/integration-pending-banner";
 import { usePeriod, useQueryState } from "../hooks/use-query-state";
 import { useHydrated, useNow } from "../hooks/use-now";
 import { UnsavedChangesDialog } from "../hooks/use-unsaved-changes";
@@ -195,7 +196,9 @@ function WorkspaceHeader({ tabLabel }: { tabLabel: string }) {
             <XLogo className="size-[22px]" />
           </span>
           <div className="min-w-0">
-            <h1 className="text-[20px] font-semibold leading-6 tracking-[-0.015em] text-[#0F1B3D]">X</h1>
+            <h1 className="text-[20px] font-semibold leading-6 tracking-[-0.015em] text-[#0F1B3D]">
+              X <IntegrationPendingBadge label="Live API Integration Pending" />
+            </h1>
             <p className="mt-0.5 max-w-[560px] text-[12.5px] leading-4 text-[#6B7890]">
               Manage your X profile, posts, mentions, audience and performance from one place.
             </p>
@@ -264,6 +267,12 @@ function WorkspaceHeader({ tabLabel }: { tabLabel: string }) {
           <MoreMenu tabLabel={tabLabel} />
         </div>
       </div>
+
+      <IntegrationPendingBanner
+        moduleName="X Workspace"
+        compact
+        feature="live X API reads, publishing, and engagement sync"
+      />
     </header>
   );
 }

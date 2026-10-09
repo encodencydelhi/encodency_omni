@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftIcon, ArrowRightIcon, BuildingIcon, CheckCircle2Icon, ImageUpIcon, InfoIcon, Loader2Icon, SaveIcon, Trash2Icon } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, BuildingIcon, CheckCircle2Icon, CopyIcon, ImageUpIcon, InfoIcon, Loader2Icon, SaveIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ import {
   USAGE_RESOURCE_BY_KEY,
 } from "../data/config";
 import { describeError, useCompanyMutations, useDirectory, usePlans, usePlatformUserLookup } from "../data/hooks";
+import { companiesRepository } from "../data/repository";
 import { cyclePrice } from "../data/selectors";
 import type { CompanySize, CompanySummary, CreateCompanyInput, UsageResource } from "../data/types";
 import { useUnsavedGuard } from "../hooks/use-unsaved-guard";
@@ -47,6 +48,13 @@ import { Field, Panel } from "./primitives";
 import { AccountStatusBadge, SubscriptionStatusBadge } from "./status-badges";
 
 const STEPS = ["Company", "Owner", "Subscription", "Workspace", "Review"] as const;
+
+/**
+ * Whether this form actually provisions a tenant. Resolved once from the
+ * repository seam so the copy can never claim "demo" while talking to the real
+ * backend, or promise a real invitation while running on sample data.
+ */
+const IS_LIVE = companiesRepository.mode === "api";
 
 interface WizardForm {
   name: string;
@@ -414,11 +422,17 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
           <SheetHeader className="gap-2">
             <SheetTitle className="flex items-center gap-2">
               Create company
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-                Preview / Mock Mode
-              </span>
+              {IS_LIVE ? null : (
+                <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                  Preview / Mock Mode
+                </span>
+              )}
             </SheetTitle>
-            <SheetDescription>Set up a new tenant on OmniPlatform. Company write APIs are pending backend implementation.</SheetDescription>
+            <SheetDescription>
+              {IS_LIVE
+                ? "Set up a new tenant on OmniPlatform. The owner is invited by email as soon as the company is created."
+                : "Set up a new tenant on OmniPlatform. Company write APIs are pending backend implementation."}
+            </SheetDescription>
             {!created ? <Stepper steps={[...STEPS]} current={step} className="pt-1" /> : null}
           </SheetHeader>
 
@@ -608,7 +622,9 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
                         <span>
                           <span className="font-medium text-foreground">New owner - invitation summary.</span>{" "}
                           <span className="text-muted-foreground">
-                            A pending owner account is created for {form.ownerEmail.trim()} and an invitation is recorded. In demo mode no email is delivered.
+                            {IS_LIVE
+                              ? `A pending owner account is created for ${form.ownerEmail.trim()} and an invitation email is queued when you finish.`
+                              : `A pending owner account is created for ${form.ownerEmail.trim()} and an invitation is recorded. In demo mode no email is delivered.`}
                           </span>
                         </span>
                       </div>
@@ -900,7 +916,7 @@ function ReviewStep({
       {section("Owner", 1, [
         ["Name", form.ownerName],
         ["Email", form.ownerEmail],
-        ["Type", ownerIsExisting ? "Existing platform user" : "New - invitation recorded (demo)"],
+        ["Type", ownerIsExisting ? "Existing platform user" : IS_LIVE ? "New - invitation email queued" : "New - invitation recorded (demo)"],
       ])}
       {section("Subscription", 2, [
         ["Plan", planName],
@@ -922,15 +938,42 @@ function ReviewStep({
 }
 
 function SuccessView({ summary, onCreateAnother, onClose }: { summary: CompanySummary; onCreateAnother: () => void; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const inviteUrl = IS_LIVE ? (summary.owner.invitationUrl ?? null) : null;
+  const emailFailed = IS_LIVE && summary.owner.emailQueued === false;
+
+  const copyInvite = async () => {
+    if (!inviteUrl) return;
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopied(true);
+      toast.success("Invitation link copied");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy the link", { description: "Select the link and copy it manually." });
+    }
+  };
+
   return (
     <div className="space-y-4 py-4 text-center">
       <span className="mx-auto flex size-12 items-center justify-center rounded-sm bg-success-subtle text-success">
         <CheckCircle2Icon className="size-6" aria-hidden />
       </span>
       <div className="space-y-1">
-        <h2 className="text-base font-semibold text-foreground">Company created in demo workspace</h2>
+        <h2 className="text-base font-semibold text-foreground">{IS_LIVE ? "Company created" : "Company created in demo workspace"}</h2>
         <p className="mx-auto max-w-md text-[0.8125rem] text-muted-foreground">
-          {summary.company.name} ({summary.company.displayId}) now appears in the Companies list, the KPIs and Recent Signups. No real tenant was provisioned and no email was sent.
+          {IS_LIVE ? (
+            <>
+              {summary.company.name} ({summary.company.displayId}) now appears in the Companies list.
+              {emailFailed
+                ? " The invitation email could not be queued, so the link below must be shared with the owner manually."
+                : ` An invitation email was queued for ${summary.owner.email}.`}
+            </>
+          ) : (
+            <>
+              {summary.company.name} ({summary.company.displayId}) now appears in the Companies list, the KPIs and Recent Signups. No real tenant was provisioned and no email was sent.
+            </>
+          )}
         </p>
       </div>
       <dl className="mx-auto grid max-w-md gap-1 text-left">
@@ -947,6 +990,31 @@ function SuccessView({ summary, onCreateAnother, onClose }: { summary: CompanySu
           <dd className="text-foreground">{summary.owner.name} <span className="text-muted-foreground">({summary.owner.state === "invited" ? "invitation pending" : summary.owner.state})</span></dd>
         </div>
       </dl>
+      {inviteUrl ? (
+        <div className="mx-auto max-w-md space-y-1.5 text-left">
+          <p className="text-[0.8125rem] font-medium text-foreground">Owner invitation link</p>
+          <p className="text-2xs text-muted-foreground">
+            {emailFailed
+              ? "The email could not be queued — send this link to the owner yourself."
+              : summary.owner.invitationExpiresAt
+                ? `Valid until ${new Date(summary.owner.invitationExpiresAt).toLocaleString()}. Share it if the email does not arrive.`
+                : "Valid for 48 hours. Share it if the email does not arrive."}
+          </p>
+          <div className="flex items-stretch gap-1.5">
+            <input
+              readOnly
+              value={inviteUrl}
+              aria-label="Owner invitation link"
+              onFocus={(event) => event.currentTarget.select()}
+              className="min-w-0 flex-1 rounded-sm border border-border bg-surface-sunken px-2 py-1.5 font-mono text-2xs text-foreground"
+            />
+            <Button type="button" size="sm" variant="outline" onClick={copyInvite} className="shrink-0 gap-1.5">
+              <CopyIcon className="size-3.5" aria-hidden />
+              {copied ? "Copied" : "Copy"}
+            </Button>
+          </div>
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center justify-center gap-2">
         <Button asChild>
           <Link href={ROUTES.superAdmin.company(summary.company.id)}>Open company</Link>

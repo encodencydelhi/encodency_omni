@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "../shared/integration-pending-banner";
 
 export function SeoAuditView() {
   const [activeTab, setActiveTab] = useState("Overview");
@@ -42,7 +43,10 @@ export function SeoAuditView() {
               <ChevronRight className="size-3" />
               <span className="text-[#172044]">Site Audit</span>
             </div>
-            <h1 className="text-[26px] font-semibold tracking-[-.03em] text-[#101A3D]">Site Audit</h1>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-[26px] font-semibold tracking-[-.03em] text-[#101A3D]">Site Audit</h1>
+              <IntegrationPendingBadge label="Crawler Integration Pending" />
+            </div>
             <p className="mt-1 text-[12px] text-[#687797]">Scan your website for SEO issues and get actionable recommendations to improve your search performance.</p>
           </div>
 
@@ -72,6 +76,11 @@ export function SeoAuditView() {
             </div>
           </div>
         </div>
+
+        <IntegrationPendingBanner
+          moduleName="SEO Site Audit"
+          feature="real-time headless crawler, Core Web Vitals checks, and automated issue classification"
+        />
 
         {/* Tabs */}
         <div className="flex items-center gap-6 overflow-x-auto border-b border-[#E8EDF3] [scrollbar-width:none]">

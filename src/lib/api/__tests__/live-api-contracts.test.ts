@@ -50,6 +50,9 @@ const { superAdminUsersApi } = await import(
   "@/features/users/live/super-admin-users-api"
 );
 const { SettingsRepository } = await import("@/features/admin/settings/settings-data/repository");
+const { organizationApi, describeOrganizationError, isRevisionConflict } = await import(
+  "@/features/admin/settings/live/organization-api"
+);
 const { createApiClientsProvider } = await import("@/features/clients/data/api-provider");
 
 interface Call {
@@ -1970,6 +1973,146 @@ describe("client create wizard plan slot (real billing, no client billing)", () 
     assert.equal(acme.clientsUsed, 4);
     assert.equal(acme.availableSlots, 6);
     assert.equal(acme.eligibility.ok, true);
+  });
+});
+
+describe("organizationApi (Organization Settings contracts)", () => {
+  const companyId = "c-org-123";
+
+  it("GET /settings/organization forwards x-company-id and parses profile", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        id: companyId,
+        name: "Acme Corp",
+        displayName: "Acme Corp",
+        legalName: "Acme Corporation Inc.",
+        industry: "Technology & SaaS",
+        website: "https://acme.com",
+        contactEmail: "admin@acme.com",
+        contactPhone: "+14155552671",
+        description: "Leading enterprise cloud tools",
+        address: {
+          street: "123 Market St",
+          city: "San Francisco",
+          state: "CA",
+          country: "US",
+          postalCode: "94105",
+        },
+        taxId: "TAX-12345",
+        pan: null,
+        timezone: "America/Los_Angeles",
+        currency: "USD",
+        revision: 3,
+        updatedAt: "2026-10-09T08:00:00Z",
+      },
+    });
+
+    const result = await organizationApi.get(companyId);
+    assert.equal(calls[0]!.url, "/api/v1/settings/organization");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+    assert.equal(result.id, companyId);
+    assert.equal(result.displayName, "Acme Corp");
+    assert.equal(result.legalName, "Acme Corporation Inc.");
+    assert.equal(result.revision, 3);
+    assert.equal(result.address?.city, "San Francisco");
+  });
+
+  it("PATCH /settings/organization sends x-company-id, expectedRevision, and updates profile", async () => {
+    responses.push({
+      status: 200,
+      body: {
+        id: companyId,
+        name: "Acme Global",
+        displayName: "Acme Global",
+        legalName: "Acme Corporation Inc.",
+        industry: "Technology & SaaS",
+        website: "https://acmeglobal.com",
+        contactEmail: "admin@acmeglobal.com",
+        contactPhone: "+14155552671",
+        description: "Global enterprise cloud tools",
+        address: {
+          street: "456 Mission St",
+          city: "San Francisco",
+          state: "CA",
+          country: "US",
+          postalCode: "94105",
+        },
+        taxId: "TAX-12345",
+        pan: null,
+        timezone: "America/Los_Angeles",
+        currency: "USD",
+        revision: 4,
+        updatedAt: "2026-10-09T08:30:00Z",
+      },
+    });
+
+    const payload = {
+      expectedRevision: 3,
+      displayName: "Acme Global",
+      website: "https://acmeglobal.com",
+      address: {
+        street: "456 Mission St",
+        city: "San Francisco",
+        state: "CA",
+        country: "US",
+        postalCode: "94105",
+      },
+    };
+
+    const result = await organizationApi.update(companyId, payload);
+    assert.equal(calls[0]!.url, "/api/v1/settings/organization");
+    assert.equal(calls[0]!.init.method, "PATCH");
+    assert.equal(calls[0]!.init.headers["x-company-id"], companyId);
+
+    const sentBody = JSON.parse(calls[0]!.init.body as string);
+    assert.equal(sentBody.expectedRevision, 3);
+    assert.equal(sentBody.displayName, "Acme Global");
+    assert.equal(result.revision, 4);
+    assert.equal(result.displayName, "Acme Global");
+  });
+
+  it("PATCH /settings/organization recognizes 409 revision_conflict and isRevisionConflict helper", async () => {
+    responses.push({
+      status: 409,
+      body: {
+        message: "The organization profile was changed by someone else. Reload it before saving.",
+        reason: "revision_conflict",
+        currentRevision: 4,
+      },
+    });
+
+    try {
+      await organizationApi.update(companyId, { expectedRevision: 2, displayName: "Outdated" });
+      assert.fail("should have thrown 409");
+    } catch (err: unknown) {
+      assert.ok(isRevisionConflict(err), "isRevisionConflict detects 409 conflict");
+      const message = describeOrganizationError(err);
+      assert.ok(message.includes("modified"), "friendly error message returned");
+    }
+  });
+
+  it("describeOrganizationError handles fieldErrors and fallback safely", () => {
+    const errorWithFields = {
+      status: 400,
+      fieldErrors: { contactEmail: "must be a valid email" },
+    };
+    assert.equal(describeOrganizationError(errorWithFields), "contactEmail: must be a valid email");
+
+    const plainError = new Error("Network timeout");
+    assert.equal(describeOrganizationError(plainError), "Network timeout");
+  });
+
+  it("SettingsRepository getStorageKey scopes per company", () => {
+    const keyA = SettingsRepository.getStorageKey("company-123");
+    const keyB = SettingsRepository.getStorageKey("company-456");
+    const keyDefault = SettingsRepository.getStorageKey("");
+
+    assert.ok(keyA.includes("company-123"));
+    assert.ok(keyB.includes("company-456"));
+    assert.notEqual(keyA, keyB);
+    assert.equal(keyDefault, "encodency_omni_company_settings_v1");
   });
 });
 

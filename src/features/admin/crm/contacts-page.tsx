@@ -29,6 +29,7 @@ import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ActivityTimeline } from "@/components/shared/activity-timeline";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "@/features/admin/shared/integration-pending-banner";
 import type { DataTableColumn, DataTableSelection } from "@/components/shared/data-table/types";
 import type { PaginationMeta, SortSpec } from "@/types/api";
 import { ContactMetricCards } from "./components/crm-metric-cards";
@@ -302,11 +303,7 @@ export default function ContactsPage() {
       <AdminPageTitle
         eyebrow="CRM / Contacts"
         title="Contacts"
-        badge={
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-            Preview / Mock Mode
-          </span>
-        }
+        badge={<IntegrationPendingBadge label="Live Integration Pending" />}
         description="Manage customer relationships, communication history and contact segments."
         action={
           <div className="flex items-center gap-2">
@@ -316,6 +313,11 @@ export default function ContactsPage() {
             <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="size-3.5" /> Create Contact</Button>
           </div>
         }
+      />
+
+      <IntegrationPendingBanner
+        moduleName="CRM Contacts"
+        feature="contact sync, segments, and communication history"
       />
 
       <ContactMetricCards contacts={contacts} />

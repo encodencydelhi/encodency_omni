@@ -25,6 +25,7 @@ import { ActivityTimeline } from "@/components/shared/activity-timeline";
 import { TrendAreaChart, ChartLegend } from "@/components/shared/charts/trend-area-chart";
 import { DonutChart } from "@/components/shared/charts/donut-chart";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "@/features/admin/shared/integration-pending-banner";
 import type { DataTableColumn, DataTableSelection } from "@/components/shared/data-table/types";
 import type { PaginationMeta, SortSpec } from "@/types/api";
 import type { TrendSeries } from "@/components/shared/charts/trend-area-chart";
@@ -241,17 +242,18 @@ export default function LeadsPage() {
       <AdminPageTitle
         eyebrow="CRM / Leads"
         title="Leads"
-        badge={
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-            Preview / Mock Mode
-          </span>
-        }
+        badge={<IntegrationPendingBadge label="Live Integration Pending" />}
         description="Manage, qualify, assign and convert your sales leads."
         action={<div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowImport(true)}><Upload className="size-3.5" /> Import</Button>
           <Button variant="outline" size="sm" onClick={handleExport}><Download className="size-3.5" /> Export</Button>
           <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="size-3.5" /> Create Lead</Button>
         </div>}
+      />
+
+      <IntegrationPendingBanner
+        moduleName="CRM Leads"
+        feature="lead qualification, assignments, and contact sync"
       />
 
       <LeadMetricCards leads={leads} />

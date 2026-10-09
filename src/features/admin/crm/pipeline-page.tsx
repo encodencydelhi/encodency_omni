@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { EmptyState } from "@/components/shared/empty-state";
 import { ActivityTimeline } from "@/components/shared/activity-timeline";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "@/features/admin/shared/integration-pending-banner";
 import { PipelineMetricCards } from "./components/crm-metric-cards";
 import { FunnelChart } from "./components/crm-funnel-chart";
 import { deals as initialDeals, activities, pipelines, teamMembers } from "./data/crm-data";
@@ -147,11 +148,7 @@ export default function PipelinePage() {
       <AdminPageTitle
         eyebrow="CRM / Pipeline"
         title="Sales Pipeline"
-        badge={
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-            Preview / Mock Mode
-          </span>
-        }
+        badge={<IntegrationPendingBadge label="Live Integration Pending" />}
         description="Track and manage your sales deals through every stage."
         action={
           <div className="flex items-center gap-2">
@@ -165,6 +162,11 @@ export default function PipelinePage() {
             <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="size-3.5" /> Create Deal</Button>
           </div>
         }
+      />
+
+      <IntegrationPendingBanner
+        moduleName="CRM Pipeline"
+        feature="deal movement, pipeline analytics, and stage transitions"
       />
 
       <PipelineMetricCards deals={deals.filter((d) => d.pipelineId === pipelineId)} />
