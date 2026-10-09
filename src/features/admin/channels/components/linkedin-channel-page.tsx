@@ -88,6 +88,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ChannelLogo } from "../../shared/channel-logo";
+import { IntegrationPendingBanner } from "../../shared/integration-pending-banner";
 import { ChannelHeader } from "./channel-header";
 import { cn } from "@/lib/utils/cn";
 
@@ -2915,6 +2916,16 @@ function OverviewTab({
 
       {/* 1. Namo Gange Trust Page Banner (Commented out for now) */}
       {/* <PageOverview /> */}
+
+      {/* 1b. Honest label for the preview dashboard rendered while disconnected */}
+      {!isConnected && !isLoading && (
+        <IntegrationPendingBanner
+          moduleName="LinkedIn Analytics"
+          compact
+          badgeText="Sample Data"
+          description="LinkedIn is not connected, so every metric, post, follower and demographic figure below is fixed sample data — nothing is read from LinkedIn."
+        />
+      )}
 
       {/* 2. 6 Key Metrics in a FULL ROW */}
       <KeyMetrics />

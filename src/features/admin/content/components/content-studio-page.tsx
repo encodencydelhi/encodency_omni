@@ -65,10 +65,10 @@ type PostType = "Image" | "Video" | "Reel" | "Carousel" | "Story" | "Article";
 const TABS: Array<{ id: Tab; hint: string }> = [
   { id: "Create", hint: "Compose post" },
   { id: "AI Assistant", hint: "Generate with AI" },
-  { id: "Templates", hint: "124 ready designs" },
-  { id: "Saved Drafts", hint: "8 drafts" },
-  { id: "Content Ideas", hint: "Fresh prompts" },
-  { id: "Approvals", hint: "12 pending" },
+  { id: "Templates", hint: "Sample library" },
+  { id: "Saved Drafts", hint: "From workspace" },
+  { id: "Content Ideas", hint: "Sample prompts" },
+  { id: "Approvals", hint: "From workspace" },
 ];
 
 const PLATFORMS: Platform[] = [

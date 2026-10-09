@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Sparkles, Layers, Clock } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 export interface IntegrationPendingBadgeProps {

@@ -170,7 +170,7 @@ function Integrations() {
               <ChannelLogo channel={integ} className="size-6" />
               <div>
                 <p className="text-[12px] font-bold text-[#111C3A]">{integ}</p>
-                <p className="text-[10px] text-[#078359] font-medium">Connected</p>
+                <p className="text-[10px] font-medium text-slate-500">Sample status</p>
               </div>
             </div>
             <button className="text-[10px] font-semibold text-[#2563EB] hover:underline cursor-pointer">Configure</button>

@@ -4,9 +4,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { adminOrganization, adminClients } from "@/mocks/admin/admin-dashboard.mock";
 import { clientsApi, type ClientRecord } from "@/features/admin/projects/live/clients-api";
 import { organizationApi, type OrganizationRecord } from "@/features/admin/settings/live/organization-api";
+import { brandingApi } from "@/features/admin/settings/live/branding-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { TENANCY_CHANGE_EVENT, getStoredClientId } from "@/lib/api/tenancy-storage";
 import type { AdminClientscope, Organization, Project } from "@/types/admin";
+
+export const BRANDING_CHANGE_EVENT = "omni:branding-changed";
 
 const PROJECT_COLORS = ["#D6474F", "#4F7697", "#43846B", "#8B5CF3", "#F59E0B", "#0EA5E9"];
 
@@ -24,6 +27,8 @@ function toProject(record: ClientRecord, index: number): Project {
 interface AdminContextValue {
   organization: Organization;
   Clients: Project[];
+  /** False while the bundled placeholder org/client list is still on screen. */
+  isPlaceholderData: boolean;
   selectedProjectId: AdminClientscope;
   setSelectedProjectId: (id: AdminClientscope) => void;
   isSidebarCollapsed: boolean;
@@ -48,7 +53,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     if (!isReady || !companyId) return;
     let cancelled = false;
 
-    Promise.allSettled([clientsApi.list(companyId), organizationApi.get(companyId)]).then(([clientsResult, orgResult]) => {
+    Promise.allSettled([
+      clientsApi.list(companyId),
+      organizationApi.get(companyId),
+      brandingApi.get(companyId),
+    ]).then(([clientsResult, orgResult, brandingResult]) => {
       if (cancelled) return;
 
       if (clientsResult.status === "fulfilled" && clientsResult.value.length > 0) {
@@ -67,13 +76,24 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         );
       }
 
+      const logoUrl =
+        brandingResult.status === "fulfilled" && brandingResult.value.logo?.url
+          ? brandingResult.value.logo.url
+          : null;
+
       if (orgResult.status === "fulfilled") {
         const record: OrganizationRecord = orgResult.value;
         setOrganization({
           id: record.id,
           name: record.displayName || record.name,
           timezone: record.timezone || "Asia/Kolkata",
+          logo: logoUrl,
         });
+      } else if (logoUrl) {
+        setOrganization((prev) => ({
+          ...prev,
+          logo: logoUrl,
+        }));
       }
     });
 
@@ -81,6 +101,32 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [isReady, companyId]);
+
+  // Real-time synchronization when branding/logo is uploaded or removed in Settings
+  useEffect(() => {
+    const handleBrandingChanged = (e: Event) => {
+      const custom = e as CustomEvent<{ logo?: string | null }>;
+      if (custom.detail && "logo" in custom.detail) {
+        setOrganization((prev) => ({
+          ...prev,
+          logo: custom.detail.logo || null,
+        }));
+      } else if (companyId) {
+        brandingApi
+          .get(companyId)
+          .then((res) => {
+            setOrganization((prev) => ({
+              ...prev,
+              logo: res.logo?.url || null,
+            }));
+          })
+          .catch(() => {});
+      }
+    };
+
+    window.addEventListener(BRANDING_CHANGE_EVENT, handleBrandingChanged);
+    return () => window.removeEventListener(BRANDING_CHANGE_EVENT, handleBrandingChanged);
+  }, [companyId]);
 
   // The sidebar Client switcher used to write only this local state, so every
   // channel page (WhatsApp, LinkedIn, Meta) kept asking for a Client while the
@@ -122,9 +168,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(() => ({
-    organization, Clients, selectedProjectId,
+    organization, Clients, isPlaceholderData: !hasLiveClients, selectedProjectId,
     setSelectedProjectId: selectClient, isSidebarCollapsed, toggleSidebar, isMobileNavOpen, setMobileNavOpen,
-  }), [Clients, isMobileNavOpen, isSidebarCollapsed, organization, selectedProjectId, selectClient, toggleSidebar, setMobileNavOpen]);
+  }), [Clients, hasLiveClients, isMobileNavOpen, isSidebarCollapsed, organization, selectedProjectId, selectClient, toggleSidebar, setMobileNavOpen]);
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;
 }
 

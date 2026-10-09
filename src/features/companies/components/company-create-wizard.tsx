@@ -2,7 +2,7 @@
 
 import { ArrowLeftIcon, ArrowRightIcon, BuildingIcon, CheckCircle2Icon, CopyIcon, ImageUpIcon, InfoIcon, Loader2Icon, SaveIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AlertBanner } from "@/components/shared/alert-banner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -208,6 +208,15 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
 
   const update = (patch: Partial<WizardForm>) => setForm((current) => ({ ...current, ...patch }));
 
+  // One Idempotency-Key per distinct payload: reused across retries of the same
+  // form (a network error must not create two companies), regenerated as soon as
+  // anything in the form changes (a new payload must never be answered by the
+  // replayed result of the old one).
+  const idempotencyKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    idempotencyKeyRef.current = null;
+  }, [form]);
+
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
   // The Company has no id yet, so the chosen file waits here and is uploaded
@@ -343,8 +352,11 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
     };
 
     try {
-      const summary = await mutations.createCompany(input);
+      idempotencyKeyRef.current ??= crypto.randomUUID();
+      const summary = await mutations.createCompany(input, { idempotencyKey: idempotencyKeyRef.current });
       writeDraft(null);
+      // The server has this payload replay-protected; the next create is a new intent.
+      idempotencyKeyRef.current = null;
       if (pendingLogoFile) {
         try {
           const branding = await brandingApi.uploadSuperAdminLogo(summary.company.id, pendingLogoFile);
@@ -380,6 +392,7 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
     setServerErrors({});
     setPendingLogoFile(null);
     setLogoError(null);
+    idempotencyKeyRef.current = null;
   };
 
   const input = (id: keyof WizardForm, label: string, opts: { required?: boolean; type?: string; placeholder?: string; hint?: string; maxLength?: number } = {}) => (
@@ -941,6 +954,7 @@ function SuccessView({ summary, onCreateAnother, onClose }: { summary: CompanySu
   const [copied, setCopied] = useState(false);
   const inviteUrl = IS_LIVE ? (summary.owner.invitationUrl ?? null) : null;
   const emailFailed = IS_LIVE && summary.owner.emailQueued === false;
+  const orgProfileFailed = IS_LIVE && summary.organizationProfileSaved === false;
 
   const copyInvite = async () => {
     if (!inviteUrl) return;
@@ -990,6 +1004,13 @@ function SuccessView({ summary, onCreateAnother, onClose }: { summary: CompanySu
           <dd className="text-foreground">{summary.owner.name} <span className="text-muted-foreground">({summary.owner.state === "invited" ? "invitation pending" : summary.owner.state})</span></dd>
         </div>
       </dl>
+      {orgProfileFailed && (
+        <p className="mx-auto max-w-md rounded-sm border border-warning/25 bg-warning-subtle px-3 py-2 text-left text-[0.8125rem] text-warning">
+          The company was created, but the organization profile (legal name, industry, contacts, timezone, currency) could not be saved to
+          <span className="font-mono"> /settings/organization</span>. Open <span className="font-medium">Settings → Organization</span> once and
+          save it there; nothing else about the create is affected.
+        </p>
+      )}
       {inviteUrl ? (
         <div className="mx-auto max-w-md space-y-1.5 text-left">
           <p className="text-[0.8125rem] font-medium text-foreground">Owner invitation link</p>

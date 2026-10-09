@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import IndiaMap from "./components/india-map";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
+import { IntegrationPendingBadge, IntegrationPendingBanner } from "@/features/admin/shared/integration-pending-banner";
 import { campaignsApi, type CampaignRecord } from "./live/campaigns-api";
 import { ApiError } from "@/types/api";
 import {
@@ -410,6 +411,7 @@ function TopHeader({ campaign }: { campaign?: CampaignRecord | null }) {
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-[22px] font-semibold tracking-[-0.03em] text-[#0f204b]">{title}</h1>
             <StatusPill tone="green"><span className="mr-1 h-1.5 w-1.5 rounded-sm bg-[#16b86d]" />{campaign?.status || "Active"}</StatusPill>
+            <IntegrationPendingBadge label="Partial Sample Data" />
             {campaign?.revision ? (
               <span className="rounded-sm bg-[#eef2f7] px-2 py-0.5 text-[11px] font-mono font-semibold text-[#485671]">
                 Rev {campaign.revision}
@@ -431,6 +433,13 @@ function TopHeader({ campaign }: { campaign?: CampaignRecord | null }) {
         <div className="hidden min-w-[200px] max-w-[240px] self-center lg:block">
           <img src="/campaignBanner.png" alt="Campaign Banner" className="h-[80px] w-full rounded-[8px] object-cover shadow-sm" />
         </div>
+      </div>
+
+      <div className="mt-1">
+        <IntegrationPendingBanner
+          moduleName="Campaign Detail"
+          description="Campaign identity, status and revision come from the backend. Collaborators, alerts, content schedule, audience and budget panels are sample records until those endpoints are exposed."
+        />
       </div>
     </>
   );
@@ -736,7 +745,7 @@ function RightRail({
             </div>
           </Card>
 
-          <Card title="Collaborators (6)" action={<button className="text-[11px] font-semibold text-[#1d77e7]">Manage</button>}>
+          <Card title="Collaborators (6)" action={<span className="text-[10px] font-semibold text-[#7a8497]">Sample data</span>}>
             <div className="divide-y divide-[#edf1f5]">
               {[
                 { initials: "MS", name: "Manish Sirohi", role: "Campaign Owner", access: "Owner", color: "bg-[#111827]" },
@@ -758,7 +767,7 @@ function RightRail({
             </div>
           </Card>
 
-          <Card title="Alerts & Reminders (3)" action={<button className="text-[11px] font-semibold text-[#1d77e7]">View All</button>}>
+          <Card title="Alerts & Reminders (3)" action={<span className="text-[10px] font-semibold text-[#7a8497]">Sample data</span>}>
             <div className="divide-y divide-[#edf1f5]">
               {[
                 { icon: AlertCircle, title: "Content approval pending", note: "Aarti currently reviewing", time: "4h ago", color: "text-[#ef4444]" },

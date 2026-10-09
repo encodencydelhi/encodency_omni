@@ -15,6 +15,7 @@ export interface Organization {
   id: string;
   name: string;
   timezone: string;
+  logo?: string | null;
 }
 
 export interface AdminUser {

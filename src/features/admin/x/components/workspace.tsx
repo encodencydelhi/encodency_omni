@@ -34,7 +34,7 @@ import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../shared/
 import { usePeriod, useQueryState } from "../hooks/use-query-state";
 import { useHydrated, useNow } from "../hooks/use-now";
 import { UnsavedChangesDialog } from "../hooks/use-unsaved-changes";
-import { PERIODS, xRoutes } from "../lib/constants";
+import { PERIODS, xRoutes, X_MOCK_MODE } from "../lib/constants";
 import { postSummary, relative } from "../lib/format";
 import { countMentions, failedPosts, scheduledPosts } from "../x-data/selectors";
 import { useX } from "../store/x-store";
@@ -389,7 +389,7 @@ export function SyncStatus({ compact, className }: { compact?: boolean; classNam
       </Badge>
     ) : (
       <Badge tone="green" icon={CheckCircle2}>
-        Connected
+        {X_MOCK_MODE ? "Connected (sample)" : "Connected"}
       </Badge>
     );
 
@@ -400,7 +400,7 @@ export function SyncStatus({ compact, className }: { compact?: boolean; classNam
       {pill}
       {state !== "disconnected" && (
         <span className="text-[12px] text-[#6B7890]">
-          Last sync <time dateTime={hydrated ? connection.lastSyncedAt : undefined}>{hydrated ? relative(connection.lastSyncedAt) : "…"}</time>
+          {X_MOCK_MODE ? "Sample last sync" : "Last sync"} <time dateTime={hydrated ? connection.lastSyncedAt : undefined}>{hydrated ? relative(connection.lastSyncedAt) : "…"}</time>
         </span>
       )}
       {!compact && state !== "disconnected" && (
@@ -874,13 +874,13 @@ function WorkspaceTabs({ activeLabel }: { activeLabel: string }) {
         })}
       </nav>
 
-      {/* <div className="mb-2 hidden shrink-0 items-center gap-2 xl:flex">
+      <div className="mb-2 hidden shrink-0 items-center gap-2 xl:flex">
         {X_MOCK_MODE && (
           <Badge tone="violet" icon={Sparkles} className="h-[22px]">
             Sample data
           </Badge>
         )}
-      </div> */}
+      </div>
     </div>
   );
 }

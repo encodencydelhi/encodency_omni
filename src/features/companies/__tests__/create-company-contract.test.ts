@@ -253,6 +253,61 @@ describe("POST /super-admin/companies (Create Company wizard)", () => {
     assert.equal(summary.owner.emailQueued, true);
     assert.equal(summary.company.id, createdBody.id);
     assert.deepEqual(summary.plan, { tier: "growth", name: "Growth", billingCycle: "annual" });
+    assert.equal(summary.organizationProfileSaved, true, "the profile follow-up ran and reported success");
+  });
+
+  it("reuses one Idempotency-Key across retries of the same payload", async () => {
+    queueHappyPath();
+    await companiesRepository.createCompany(input, ACTOR, { idempotencyKey: "wizard-attempt-0001" });
+    assert.equal(calls[0]!.init.headers["Idempotency-Key"], "wizard-attempt-0001");
+  });
+
+  it("generates a backend-legal Idempotency-Key when the caller supplies none", async () => {
+    queueHappyPath();
+    await companiesRepository.createCompany(input, ACTOR);
+    const key = String(calls[0]!.init.headers["Idempotency-Key"]);
+    assert.match(key, /^[A-Za-z0-9_.:-]{8,128}$/);
+
+    calls = [];
+    responses = [];
+    queueHappyPath();
+    await companiesRepository.createCompany(input, ACTOR);
+    assert.notEqual(calls[0]!.init.headers["Idempotency-Key"], key, "each new intent gets its own key");
+  });
+
+  it("treats the 403 a membership-less Super Admin gets on /settings/organization as expected, not a failure", async () => {
+    responses.push({ status: 201, body: createdBody });
+    responses.push({ status: 403, body: { message: "Forbidden", code: "FORBIDDEN" } });
+
+    const summary = await companiesRepository.createCompany(input, ACTOR);
+
+    assert.equal(calls.length, 2, "create + the read that answered 403; no write attempted");
+    assert.equal(summary.company.id, createdBody.id, "the create itself succeeded");
+    assert.equal(summary.organizationProfileSaved, undefined, "nothing to warn about — the create DTO already wrote these fields");
+  });
+
+  it("surfaces a real organisation-profile failure instead of hiding it behind a successful create", async () => {
+    const warnings: unknown[][] = [];
+    const originalWarn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      warnings.push(args);
+    };
+    try {
+      responses.push({ status: 201, body: createdBody });
+      responses.push({ status: 200, body: organisation });
+      responses.push({ status: 409, body: { message: "conflict", code: "CONFLICT", reason: "revision_conflict" } });
+
+      const summary = await companiesRepository.createCompany(input, ACTOR);
+
+      assert.equal(summary.organizationProfileSaved, false, "the operator must be told the profile write did not land");
+      assert.equal(summary.company.id, createdBody.id, "the company is still created");
+      assert.ok(
+        warnings.some((args) => JSON.stringify(args[0]).includes("organization_profile_update_failed")),
+        "a structured warning names the company and the failure",
+      );
+    } finally {
+      console.warn = originalWarn;
+    }
   });
 
   it("maps every country option to the ISO code the organization DTO accepts", async () => {

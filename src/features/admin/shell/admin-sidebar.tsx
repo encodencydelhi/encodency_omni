@@ -48,7 +48,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const activeHref = useActiveHref(pathname);
   const { open: openAssistant } = useAssistant();
-  const { isSidebarCollapsed, toggleSidebar, isMobileNavOpen, setMobileNavOpen } =
+  const { organization, isSidebarCollapsed, toggleSidebar, isMobileNavOpen, setMobileNavOpen } =
     useAdminContext();
 
   return (
@@ -81,20 +81,40 @@ export function AdminSidebar() {
             )}
           >
             {isSidebarCollapsed ? (
-              <span className="grid size-8 place-items-center rounded-sm bg-[#1E293B] text-[15px] font-semibold text-white shadow-[0_0_10px_rgba(59,130,246,0.3)]">
-                e
-              </span>
+              organization.logo ? (
+                <span className="grid size-9 place-items-center rounded-lg bg-white/5 p-1 border border-white/10 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+                  <img
+                    src={organization.logo}
+                    alt={organization.name || "Company Logo"}
+                    className="size-full object-contain"
+                  />
+                </span>
+              ) : (
+                <span className="grid size-8 place-items-center rounded-sm bg-[#1E293B] text-[15px] font-semibold text-white shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+                  {organization.name ? organization.name.charAt(0).toUpperCase() : "e"}
+                </span>
+              )
             ) : (
               <>
-                <Image
-                  src={logo}
-                  alt="Namo Gange Trust"
-                  width={140}
-                  height={56}
-                  priority
-                  sizes="160px"
-                  className="h-[60px] w-auto min-w-0 max-w-full shrink object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]"
-                />
+                <div className="flex items-center justify-center max-w-full min-w-0">
+                  {organization.logo ? (
+                    <img
+                      src={organization.logo}
+                      alt={organization.name || "Company Logo"}
+                      className="h-[52px] max-w-[150px] w-auto shrink object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]"
+                    />
+                  ) : (
+                    <Image
+                      src={logo}
+                      alt={organization.name || "Namo Gange Trust"}
+                      width={140}
+                      height={56}
+                      priority
+                      sizes="160px"
+                      className="h-[60px] w-auto min-w-0 max-w-full shrink object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]"
+                    />
+                  )}
+                </div>
                 <button
                   onClick={() => setMobileNavOpen(false)}
                   aria-label="Close navigation"

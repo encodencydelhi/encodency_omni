@@ -62,6 +62,13 @@ function SettingsBody({ data }: { data: ClientSettingsData }) {
 
   return (
     <div className="grid grid-cols-1 gap-1 lg:grid-cols-2">
+      <div className="lg:col-span-2">
+        <AlertBanner tone="info" title="Sample data">
+          Client settings are not connected to a backend yet, so the values on this page — profile,
+          workspace defaults, onboarding and lifecycle — are read from local sample records. The
+          buttons here still save real changes to the client.
+        </AlertBanner>
+      </div>
       <Panel
         title="Identity"
         action={

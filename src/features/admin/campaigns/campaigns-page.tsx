@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { ChannelLogo } from "@/features/admin/shared/channel-logo";
 import { IntegrationPendingBadge, IntegrationPendingBanner } from "@/features/admin/shared/integration-pending-banner";
-import { IntegrationPendingBadge, IntegrationPendingBanner } from "@/features/admin/shared/integration-pending-banner";
 import { campaignsApi, type CampaignRecord, isRevisionConflict } from "./live/campaigns-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";

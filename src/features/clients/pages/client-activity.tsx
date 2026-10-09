@@ -17,7 +17,7 @@ import { relativeTime } from "@/features/companies/data/clock";
 import { useDebouncedText, useUrlParams } from "@/features/companies/hooks/use-url-params";
 import { formatDateTime } from "@/lib/utils/format";
 import { ClientError, TableSkeleton } from "../components/states";
-import { ResultBadge, SeverityBadge } from "../components/status-badges";
+import { DemoTag, ResultBadge, SeverityBadge } from "../components/status-badges";
 import { useClientActivity } from "../data/hooks";
 import type { ClientActivity, ClientActivityData } from "../data/types";
 import { useClientId } from "./client-shell";
@@ -188,9 +188,12 @@ function ActivityBody({
         ) : null}
       </div>
 
-      <p className="text-2xs text-muted-foreground" aria-live="polite">
-        {filtered ? `${entries.length} of ${total} events` : `${total} ${total === 1 ? "event" : "events"}`}
-      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-2xs text-muted-foreground" aria-live="polite">
+          {filtered ? `${entries.length} of ${total} events` : `${total} ${total === 1 ? "event" : "events"}`}
+        </p>
+        <DemoTag>Sample activity log - no activity API yet</DemoTag>
+      </div>
 
       <DataTable
         columns={columns}

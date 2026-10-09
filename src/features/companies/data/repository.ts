@@ -174,7 +174,12 @@ export interface CompaniesRepository {
   getAttention(id: string): Promise<CompanyAttentionItem[]>;
 
   /* Lifecycle */
-  createCompany(input: CreateCompanyInput, actor: MutationActor): Promise<CompanySummary>;
+  /**
+   * `options.idempotencyKey` must be STABLE across retries of one logical
+   * create: a fresh key per attempt would let a timed-out-but-accepted request
+   * create a second Company on the retry. Callers own the key's lifetime.
+   */
+  createCompany(input: CreateCompanyInput, actor: MutationActor, options?: { idempotencyKey?: string }): Promise<CompanySummary>;
   updateCompany(id: string, input: UpdateCompanyInput, actor: MutationActor): Promise<CompanySummary>;
   suspendCompanies(ids: string[], input: { reason: SuspensionReason; note: string }, actor: MutationActor): Promise<BulkResult>;
   reactivateCompanies(ids: string[], input: { note: string }, actor: MutationActor): Promise<BulkResult>;

@@ -82,7 +82,7 @@ interface SuperAdminCompanySummary {
   contactEmail?: string | null;
   contactPhone?: string | null;
   description?: string | null;
-  address?: any;
+  address?: { country?: string | null; state?: string | null } | null;
   taxId?: string | null;
   timezone?: string | null;
   currency?: string | null;
@@ -185,7 +185,7 @@ function planLabel(tier: string): string {
 }
 
 function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
-  const address = (row.address as Record<string, string> | null) || {};
+  const address = row.address ?? {};
   const website = row.website ?? null;
   const domain = website ? website.replace(/^https?:\/\//i, "").split("/")[0] : null;
   return {
@@ -404,17 +404,17 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       return mapApiRow(detail);
     },
 
-    async createCompany(input: CreateCompanyInput, actor): Promise<CompanySummary> {
+    async createCompany(input: CreateCompanyInput, actor, options?): Promise<CompanySummary> {
       const name = input.name.trim();
       const ownerEmail = (input.owner?.email || "").trim().toLowerCase();
 
-      // Required: Idempotency-Key header per user intent
-      const idempotencyKey = crypto.randomUUID();
-
       // Step 1: POST /super-admin/companies. The DTO runs with
       // `forbidNonWhitelisted`, so every key below must exist on
-      // CreateSuperAdminCompanyDto and nothing else may be added — a field the
+      // `CreateSuperAdminCompanyDto` and nothing else may be added — a field the
       // backend does not know turns the whole create into a 400.
+      // The key is caller-owned so a retry of the SAME logical create replays the
+      // first response instead of creating a second Company.
+      const idempotencyKey = options?.idempotencyKey ?? crypto.randomUUID();
       const body = {
         name,
         ownerEmail,
@@ -464,6 +464,11 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         input.workspace?.currency
       );
 
+      // Step 2: write the same profile fields through the organization API, in the
+      // new company's context. The create DTO already persisted every one of them —
+      // this is a consistency pass, not the source of truth — so its failure must
+      // never make a successful create look failed.
+      let organizationProfileSaved: boolean | undefined;
       if (hasOrgFields && created.id) {
         try {
           const org = await organizationApi.get(created.id);
@@ -480,14 +485,31 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
             ...(input.workspace?.currency ? { currency: input.workspace.currency } : {}),
           };
           await organizationApi.update(created.id, updatePayload);
+          organizationProfileSaved = true;
         } catch (orgErr) {
-          // If the caller lacks company tenant membership in this session,
-          // the company creation remains successful; organization settings will be updated by the owner
-          console.warn("Option B: /settings/organization populate step skipped or deferred:", orgErr);
+          // A platform Super Admin is not a member of the company it just created,
+          // so /settings/organization answers 403 by design — the profile already
+          // lives on the Company row from the create payload. Anything else is a
+          // real failure the operator must see (create still succeeded).
+          const status = orgErr instanceof ApiError ? orgErr.status : undefined;
+          if (status === 403) {
+            organizationProfileSaved = undefined;
+          } else {
+            organizationProfileSaved = false;
+            console.warn({
+              msg: "company_create.organization_profile_update_failed",
+              companyId: created.id,
+              status,
+              error: orgErr instanceof Error ? orgErr.message : String(orgErr),
+            });
+          }
         }
       }
 
       const summary = toCompanySummary(created);
+      if (organizationProfileSaved !== undefined) {
+        summary.organizationProfileSaved = organizationProfileSaved;
+      }
       // The backend provisions the subscription inside the create transaction but
       // does not echo it back, so the tier the operator just chose is reported
       // from the request instead of the "Starter" default.
@@ -511,7 +533,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       // Decision 2: name/status are Company administration fields;
       // legalName, industry, website, contact, address, taxId, timezone, currency remain Organization Profile fields.
       const name = input.name?.trim();
-      const body: Record<string, any> = {};
+      const body: Record<string, unknown> = {};
       if (name) body.name = name;
 
       const patched = await apiClient.request<SuperAdminCompanyDetailResponse>({
