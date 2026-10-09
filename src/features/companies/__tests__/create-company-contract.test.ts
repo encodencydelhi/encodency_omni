@@ -16,6 +16,7 @@ process.env.NEXT_PUBLIC_API_BASE_URL = "/api/v1";
 process.env.NEXT_PUBLIC_MOCK_LATENCY_MS = "0";
 
 const { companiesRepository } = await import("../data/repository");
+const { COUNTRIES, COUNTRY_CODES, countryToIso } = await import("../data/config");
 const { ApiError } = await import("@/types/api");
 
 interface Call {
@@ -236,7 +237,7 @@ describe("POST /super-admin/companies (Create Company wizard)", () => {
       website: "northwind.test",
       contactEmail: "Hello@Northwind.test",
       contactPhone: "+911234567890",
-      address: { country: "India" },
+      address: { country: "IN" },
       timezone: "Asia/Kolkata",
       currency: "INR",
     });
@@ -252,6 +253,24 @@ describe("POST /super-admin/companies (Create Company wizard)", () => {
     assert.equal(summary.owner.emailQueued, true);
     assert.equal(summary.company.id, createdBody.id);
     assert.deepEqual(summary.plan, { tier: "growth", name: "Growth", billingCycle: "annual" });
+  });
+
+  it("maps every country option to the ISO code the organization DTO accepts", async () => {
+    assert.deepEqual(
+      COUNTRIES.map((name) => countryToIso(name)),
+      COUNTRIES.map((name) => COUNTRY_CODES[name]),
+    );
+    for (const name of COUNTRIES) {
+      assert.match(String(countryToIso(name)), /^[A-Z]{2}$/, `${name} must map to a 2-letter code`);
+    }
+    assert.equal(countryToIso("  India "), "IN");
+    assert.equal(countryToIso("in"), "IN");
+    assert.equal(countryToIso("Atlantis"), undefined, "an unknown name is omitted rather than sent as junk");
+    assert.equal(countryToIso(null), undefined);
+
+    queueHappyPath();
+    await companiesRepository.createCompany({ ...input, country: "Spain" }, ACTOR);
+    assert.deepEqual((bodyOf(calls[1]!) as { address?: unknown }).address, { country: "ES" });
   });
 
   it("caps over-long free-text fields instead of letting the DTO answer 400", async () => {

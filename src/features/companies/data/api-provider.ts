@@ -467,6 +467,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       if (hasOrgFields && created.id) {
         try {
           const org = await organizationApi.get(created.id);
+          const countryCode = countryToIso(input.country);
           const updatePayload: UpdateOrganizationPayload = {
             expectedRevision: org.revision,
             ...(input.legalName ? { legalName: input.legalName.trim() } : {}),
@@ -474,7 +475,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
             ...(input.website ? { website: input.website.trim() } : {}),
             ...(input.contactPhone ? { contactPhone: input.contactPhone.trim() } : {}),
             ...(input.contactEmail ? { contactEmail: input.contactEmail.trim() } : {}),
-            ...(input.country ? { address: { country: countryToIso(input.country) } } : {}),
+            ...(countryCode ? { address: { country: countryCode } } : {}),
             ...(input.workspace?.timezone ? { timezone: input.workspace.timezone } : {}),
             ...(input.workspace?.currency ? { currency: input.workspace.currency } : {}),
           };
