@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { describeScheduleError, type ScheduledPostStatus } from "@/features/admin/content/live/scheduling-api";
+import { describeScheduleError } from "@/features/admin/content/live/scheduling-api";
 import { describeScheduleErrorCode, SCHEDULED_POST_STATUS_META } from "@/features/admin/content/live/scheduling-status";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { cn } from "@/lib/utils/cn";
@@ -644,10 +644,7 @@ function PostDetailsBody({ post, startConfirm, onClose }: { post: CalendarPost; 
   const { setClientId } = useTenancyContext();
   const [confirming, setConfirming] = useState(startConfirm);
   const reason = describeScheduleErrorCode(post.failureCode) ?? describeScheduleErrorCode(post.lastErrorCode);
-  const meta =
-    post.status === "DRAFT"
-      ? { label: "Draft", tone: "neutral" as const, hint: "Draft content saved" }
-      : SCHEDULED_POST_STATUS_META[post.status as ScheduledPostStatus] ?? { label: post.status, tone: "neutral" as const, hint: "" };
+  const meta = post.status === "DRAFT" ? DRAFT_META : SCHEDULED_POST_STATUS_META[post.status];
 
   const rows: Array<[string, string]> = [
     ["Client", post.clientName ?? "—"],

@@ -24,6 +24,15 @@ export interface BackendNotificationListResponse {
   limit: number;
 }
 
+/** Support notifications open the ticket: staff-facing types on the desk, customer-facing types on the Company's Support page. */
+const DESK_SUPPORT_TYPES = new Set(["support.ticket_created", "support.customer_replied", "support.ticket_reopened", "support.ticket_assigned"]);
+
+function supportHref(item: BackendNotificationItem): string | null {
+  const number = item.data?.ticketNumber;
+  if (!item.type.startsWith("support.") || typeof number !== "number") return null;
+  return DESK_SUPPORT_TYPES.has(item.type) ? `/super-admin/support/tickets/${number}` : `/admin/support/tickets/${number}`;
+}
+
 function toAdminNotification(item: BackendNotificationItem): AdminNotification {
   const isPublishing = item.type.startsWith("publishing.");
   const isDraft = item.type.startsWith("draft.");
@@ -32,16 +41,16 @@ function toAdminNotification(item: BackendNotificationItem): AdminNotification {
   const category = isPublishing
     ? "integration"
     : isDraft
-    ? "system"
-    : isInvitation
-    ? "security"
-    : "system";
+      ? "system"
+      : isInvitation
+        ? "security"
+        : "system";
 
   const severity = item.type === "publishing.failed"
     ? "critical"
     : item.type === "publishing.outcome_unknown"
-    ? "warning"
-    : "info";
+      ? "warning"
+      : "info";
 
   let href: string | null = null;
   if (typeof item.data?.scheduledPostId === "string") {
@@ -63,7 +72,9 @@ function toAdminNotification(item: BackendNotificationItem): AdminNotification {
     category,
     severity,
     isRead: Boolean(item.readAt),
-    href,
+    href: supportHref(item) ?? (typeof item.data?.scheduledPostId === "string"
+      ? `/admin/content?post=${encodeURIComponent(item.data.scheduledPostId)}`
+      : null),
     source: item.companyId ?? "system",
     createdAt: item.createdAt,
   };
