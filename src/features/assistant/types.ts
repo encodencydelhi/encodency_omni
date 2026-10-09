@@ -19,6 +19,8 @@ export interface AssistantReply {
   actions: AssistantAction[];
   redacted: boolean;
   degraded: boolean;
+  /** Send this back with the next message so the whole chat is one conversation. */
+  conversationId: string | null;
 }
 
 /** What happened to an action card after the person used it. */

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ArrowUp, Headphones, LifeBuoy, RotateCcw, ShieldCheck, Sparkles, Ticket, X } from "lucide-react";
+import { ArrowUp, BotMessageSquare, Headphones, LifeBuoy, RotateCcw, ShieldCheck, Ticket, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { NavigateCard, TicketDraftCard, TicketListCard } from "./cards";
@@ -46,7 +46,7 @@ function Bubble({ message, chat, bootstrap, onNavigate }: { message: ChatMessage
                 key={index}
                 draft={action}
                 state={state}
-                onSent={(number) => chat.patchState(message.id, index, { ticketNumber: number })}
+                onSent={(number) => chat.ticketSent(message.id, index, number)}
                 onDismiss={() => chat.patchState(message.id, index, { dismissed: true })}
                 onNavigate={onNavigate}
               />
@@ -55,7 +55,7 @@ function Bubble({ message, chat, bootstrap, onNavigate }: { message: ChatMessage
           {message.degraded && bootstrap?.canRaiseTickets !== false && !message.actions?.length && (
             <button type="button" onClick={chat.startTicket} className="mt-2 inline-flex items-center gap-2 rounded-sm border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100">
               <Headphones className="size-3.5" />
-              Send this to the support team
+              Send This To The Support Team
             </button>
           )}
         </div>
@@ -114,7 +114,7 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
         >
           <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-red-50 text-red-600 ring-1 ring-red-100">
-              <Sparkles className="size-4.5" />
+              <BotMessageSquare className="size-4.5" />
             </span>
             <div className="min-w-0 flex-1">
               <DialogTitle className="text-[14px] font-semibold leading-tight text-slate-900">OmniPlatform Assistant</DialogTitle>
@@ -122,7 +122,7 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
                 {bootstrap?.page ? `You are on ${bootstrap.page.title}` : "Ask me how to use the platform"} · any language
               </DialogDescription>
             </div>
-            <button type="button" onClick={chat.reset} disabled={empty} aria-label="Start a new chat" title="New chat" className="grid size-8 place-items-center rounded-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40">
+            <button type="button" onClick={chat.reset} disabled={empty} aria-label="Start a new chat" title="New Chat" className="grid size-8 place-items-center rounded-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40">
               <RotateCcw className="size-4" />
             </button>
             <DialogPrimitive.Close aria-label="Close assistant" className="grid size-8 place-items-center rounded-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">
@@ -146,7 +146,7 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
                 )}
                 {!disabled && (
                   <div>
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{bootstrap?.page ? `Popular on ${bootstrap.page.title}` : "Try asking"}</p>
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{bootstrap?.page ? `Popular On ${bootstrap.page.title}` : "Try Asking"}</p>
                     <div className="flex flex-wrap gap-2">
                       {bootstrapLoading && !bootstrap && <span className="h-8 w-48 animate-pulse rounded-sm bg-slate-100" />}
                       {bootstrap?.suggestions.map((suggestion) => (
@@ -159,7 +159,7 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
                 )}
                 <p className="flex items-start gap-2 text-[11px] font-medium leading-relaxed text-slate-500">
                   <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-emerald-600" />
-                  I cannot see your clients, posts or numbers, and I never need your passwords or keys. Please do not share them.
+                  I cannot see your clients, posts or numbers, and I never need your passwords or keys. Please do not share them. Chats are saved so our support team can review them and improve the help.
                 </p>
               </div>
             )}
@@ -190,11 +190,11 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
                 className="inline-flex items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-red-300 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <LifeBuoy className="size-3.5" />
-                Talk to the support team
+                Talk To The Support Team
               </button>
               <Link href="/admin/support/tickets" onClick={onNavigate} className="inline-flex items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-red-300 hover:text-red-700">
                 <Ticket className="size-3.5" />
-                My tickets
+                My Tickets
               </Link>
             </div>
             <div className={cn("flex items-end gap-2 rounded-sm border bg-white p-1.5 transition focus-within:border-red-400 focus-within:ring-2 focus-within:ring-red-500/15", disabled ? "border-slate-200 opacity-60" : "border-slate-300")}>
@@ -219,7 +219,7 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
               </button>
             </div>
             <p className="mt-1.5 text-center text-[10px] font-medium text-slate-400">
-              AI answers can be wrong. For billing, data or account problems, send a ticket.
+              AI answers can be wrong. Chats are saved for our support team. For billing, data or account problems, send a ticket.
               {draft.length > MAX_INPUT_CHARS - 200 && <span className="ms-1 font-semibold text-amber-600">{MAX_INPUT_CHARS - draft.length} left</span>}
             </p>
           </footer>

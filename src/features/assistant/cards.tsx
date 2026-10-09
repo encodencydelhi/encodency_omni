@@ -18,7 +18,7 @@ export function NavigateCard({ action, state, onOpen }: { action: Extract<Assist
   return (
     <button type="button" onClick={onOpen} className={`${cardShell} flex w-full items-center justify-between gap-3 text-start transition hover:border-red-300 hover:bg-red-50/40`}>
       <span className="min-w-0">
-        <span className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{state?.navigated ? "Opened" : "Go to"}</span>
+        <span className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">{state?.navigated ? "Opened" : "Go To"}</span>
         <span className="block truncate text-[13px] font-semibold text-slate-900">{action.label}</span>
       </span>
       <ArrowRight className="size-4 shrink-0 text-red-600 rtl:rotate-180" />
@@ -65,7 +65,7 @@ export function TicketDraftCard({ draft, state, onSent, onDismiss, onNavigate }:
       <div className={`${cardShell} flex items-center gap-3 border-emerald-200 bg-emerald-50/60`}>
         <CheckCircle2 className="size-5 shrink-0 text-emerald-600" />
         <div className="min-w-0 flex-1 text-xs font-medium text-emerald-900">
-          <p className="font-semibold">Ticket #{state.ticketNumber} sent to support</p>
+          <p className="font-semibold">Ticket #{state.ticketNumber} Sent To Support</p>
           <p className="text-emerald-800/80">You will be notified when the team replies.</p>
         </div>
         <Link href={`/admin/support/tickets/${state.ticketNumber}`} onClick={onNavigate} className={btn}>View</Link>
@@ -97,14 +97,14 @@ export function TicketDraftCard({ draft, state, onSent, onDismiss, onNavigate }:
     <div className={cardShell}>
       <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
         <LifeBuoy className="size-3.5 text-red-600" />
-        Ticket for the support team · review, then send
+        Ticket For The Support Team · Review, Then Send
       </div>
       <label className="block text-[11px] font-semibold text-slate-600">
         Title
         <input dir="auto" value={subject} onChange={(event) => setSubject(event.target.value)} maxLength={160} className={`${field} mt-1`} />
       </label>
       <label className="mt-2 block text-[11px] font-semibold text-slate-600">
-        What happened
+        What Happened
         <textarea dir="auto" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={5000} rows={5} className={`${textarea} mt-1`} />
       </label>
       <div className="mt-2 grid grid-cols-2 gap-2">
@@ -117,7 +117,7 @@ export function TicketDraftCard({ draft, state, onSent, onDismiss, onNavigate }:
           </select>
         </label>
         <label className="block text-[11px] font-semibold text-slate-600">
-          How urgent
+          How Urgent
           <select value={priority} onChange={(event) => setPriority(event.target.value as TicketPriority)} className={`${field} mt-1`}>
             {TICKET_PRIORITIES.map((value) => (
               <option key={value} value={value}>{PRIORITY_LABEL[value]}</option>
@@ -131,7 +131,7 @@ export function TicketDraftCard({ draft, state, onSent, onDismiss, onNavigate }:
         <button type="button" className={btn} onClick={onDismiss} disabled={create.isPending}>Discard</button>
         <button type="button" className={btnPrimary} onClick={() => void send()} disabled={!valid || create.isPending}>
           {create.isPending ? <Spinner className="size-3.5" /> : <Send className="size-3.5" />}
-          Send to support
+          Send To Support
         </button>
       </div>
     </div>
