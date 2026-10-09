@@ -37,6 +37,11 @@ export function AppBreadcrumb() {
   // A dotted feature key such as seo.advanced_audit stays exactly as written.
   const toLabel = (segment: string, index = 0) => {
     const decoded = decodeURIComponent(segment);
+    // A record id (UUID) is not for people: name it after what it opens.
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decoded)) {
+      const before = nestedSegments[index - 1];
+      return before === "conversations" ? "Conversation" : before === "people" ? "Person" : "Details";
+    }
     if (inFeatureFlags && index === 0 && featureFlagPages[decoded]) return featureFlagPages[decoded];
     if (inFeatureFlags && decoded.includes(".")) return decoded;
     return decoded.replace(/^(cmp|prj|usr)_/, "").replace(/[-_]/g, " ");

@@ -14,6 +14,7 @@ import {
   ReceiptIcon,
   ScrollTextIcon,
   SettingsIcon,
+  BotMessageSquareIcon,
   UserCogIcon,
   UsersIcon,
   WebhookIcon,
@@ -187,6 +188,13 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         href: ROUTES.superAdmin.support,
         icon: HeadsetIcon,
         permission: "companies:read",
+      },
+      {
+        label: "AI Assistant",
+        href: ROUTES.superAdmin.assistant,
+        icon: BotMessageSquareIcon,
+        permission: "companies:read",
+        matchPrefixes: [ROUTES.superAdmin.assistant],
       },
       {
         label: "Notifications",

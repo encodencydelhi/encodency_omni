@@ -26,6 +26,8 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const cid = useRef<string | null>(null);
   const ref = useRef<ChatMessage[]>([]);
   const abort = useRef<AbortController | null>(null);
 
@@ -33,23 +35,29 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
   if (key !== loadedKey) {
     setLoadedKey(key);
     let restored: ChatMessage[] = [];
+    let restoredId: string | null = null;
     try {
       restored = key ? readStored(window.sessionStorage.getItem(key)) : [];
+      restoredId = key ? window.sessionStorage.getItem(`${key}:cid`) : null;
     } catch {
       restored = [];
     }
     ref.current = restored;
+    cid.current = restored.length > 0 ? restoredId : null;
     setMessages(restored);
+    setConversationId(cid.current);
   }
 
   useEffect(() => {
     if (!key) return;
     try {
       window.sessionStorage.setItem(key, JSON.stringify(trimForStorage(messages)));
+      if (conversationId) window.sessionStorage.setItem(`${key}:cid`, conversationId);
+      else window.sessionStorage.removeItem(`${key}:cid`);
     } catch {
       // Storage can be blocked; the conversation then simply lasts until the page is reloaded.
     }
-  }, [key, messages]);
+  }, [key, messages, conversationId]);
 
   useEffect(() => () => abort.current?.abort(), []);
 
@@ -63,6 +71,15 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
       commit((current) => current.map((message) => (message.id === messageId ? { ...message, state: { ...message.state, [index]: { ...message.state?.[index], ...patch } } } : message)));
     },
     [commit],
+  );
+
+  /** A ticket was sent from a card: show it, and tell the server which conversation it came from (best effort). */
+  const ticketSent = useCallback(
+    (messageId: string, index: number, ticketNumber: number) => {
+      patchState(messageId, index, { ticketNumber });
+      if (companyId && cid.current) void assistantApi.linkTicket(companyId, { conversationId: cid.current, ticketNumber }).catch(() => undefined);
+    },
+    [companyId, patchState],
   );
 
   const open = useCallback(
@@ -82,7 +99,11 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
       abort.current = controller;
       setPending(true);
       try {
-        const reply = await assistantApi.chat(companyId, { path: pathname, locale: typeof navigator !== "undefined" ? navigator.language : undefined, messages: historyForServer(ref.current) }, controller.signal);
+        const reply = await assistantApi.chat(companyId, { path: pathname, locale: typeof navigator !== "undefined" ? navigator.language : undefined, ...(cid.current ? { conversationId: cid.current } : {}), messages: historyForServer(ref.current) }, controller.signal);
+        if (reply.conversationId) {
+          cid.current = reply.conversationId;
+          setConversationId(reply.conversationId);
+        }
         const message: ChatMessage = { id: newId(), role: "assistant", content: reply.reply, createdAt: Date.now(), actions: reply.actions, degraded: reply.degraded, redacted: reply.redacted };
         commit((current) => [...current, message]);
         // Only a plain page-open the person explicitly asked for runs by itself; everything else waits for a click.
@@ -134,8 +155,10 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
     abort.current?.abort();
     abort.current = null;
     setPending(false);
+    cid.current = null;
+    setConversationId(null);
     commit(() => []);
   }, [commit]);
 
-  return { messages, pending, send, open, patchState, startTicket, reset };
+  return { messages, pending, send, open, patchState, ticketSent, startTicket, reset };
 }

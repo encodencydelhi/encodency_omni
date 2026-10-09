@@ -50,6 +50,7 @@ export const ROUTES = {
     featureFlags: "/super-admin/feature-flags",
     auditLogs: "/super-admin/audit-logs",
     support: "/super-admin/support",
+    assistant: "/super-admin/assistant",
     notifications: "/super-admin/notifications",
 
     settings: "/super-admin/settings",

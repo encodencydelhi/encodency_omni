@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ArrowUp, Headphones, LifeBuoy, RotateCcw, ShieldCheck, Sparkles, Ticket, X } from "lucide-react";
+import { ArrowUp, BotMessageSquare, Headphones, LifeBuoy, RotateCcw, ShieldCheck, Ticket, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { NavigateCard, TicketDraftCard, TicketListCard } from "./cards";
@@ -46,7 +46,7 @@ function Bubble({ message, chat, bootstrap, onNavigate }: { message: ChatMessage
                 key={index}
                 draft={action}
                 state={state}
-                onSent={(number) => chat.patchState(message.id, index, { ticketNumber: number })}
+                onSent={(number) => chat.ticketSent(message.id, index, number)}
                 onDismiss={() => chat.patchState(message.id, index, { dismissed: true })}
                 onNavigate={onNavigate}
               />
@@ -114,7 +114,7 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
         >
           <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-red-50 text-red-600 ring-1 ring-red-100">
-              <Sparkles className="size-4.5" />
+              <BotMessageSquare className="size-4.5" />
             </span>
             <div className="min-w-0 flex-1">
               <DialogTitle className="text-[14px] font-semibold leading-tight text-slate-900">OmniPlatform Assistant</DialogTitle>
@@ -159,7 +159,7 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
                 )}
                 <p className="flex items-start gap-2 text-[11px] font-medium leading-relaxed text-slate-500">
                   <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-emerald-600" />
-                  I cannot see your clients, posts or numbers, and I never need your passwords or keys. Please do not share them.
+                  I cannot see your clients, posts or numbers, and I never need your passwords or keys. Please do not share them. Chats are saved so our support team can review them and improve the help.
                 </p>
               </div>
             )}
@@ -219,7 +219,7 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
               </button>
             </div>
             <p className="mt-1.5 text-center text-[10px] font-medium text-slate-400">
-              AI answers can be wrong. For billing, data or account problems, send a ticket.
+              AI answers can be wrong. Chats are saved for our support team. For billing, data or account problems, send a ticket.
               {draft.length > MAX_INPUT_CHARS - 200 && <span className="ms-1 font-semibold text-amber-600">{MAX_INPUT_CHARS - draft.length} left</span>}
             </p>
           </footer>
