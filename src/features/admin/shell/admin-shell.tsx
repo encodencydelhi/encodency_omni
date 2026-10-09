@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { AdminRouteGuard } from "@/features/auth/components/admin-route-guard";
 import { SuspendedAccessGate } from "@/features/auth/components/suspended-access-gate";
+import { AssistantProvider } from "@/features/assistant/assistant-provider";
 import { AdminProvider, useAdminContext } from "./admin-context";
 import { AdminFooter } from "./admin-footer";
 import { AdminSidebar } from "./admin-sidebar";
@@ -60,7 +61,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <AdminRouteGuard>
       <SuspendedAccessGate>
         <AdminProvider>
-          <Shell>{children}</Shell>
+          <AssistantProvider>
+            <Shell>{children}</Shell>
+          </AssistantProvider>
         </AdminProvider>
       </SuspendedAccessGate>
     </AdminRouteGuard>
