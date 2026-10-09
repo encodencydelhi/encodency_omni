@@ -162,17 +162,20 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
           <div>
             <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Organization Name <span className="text-red-500">*</span>
+              Organization Name
             </label>
             <input
               type="text"
               value={data.name}
-              onChange={(e) => onChange({ name: e.target.value })}
-              disabled={!capabilities.canEditOrganization}
+              readOnly
+              title="Read-only: the API has no endpoint to rename a company"
               placeholder="e.g. Namo Gange Trust"
-              className="w-full h-8 px-3 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 shadow-2xs placeholder:text-[#94A3B8]"
+              className="w-full h-8 px-3 rounded-lg border border-[#CBD5E1] bg-slate-50 text-[12px] text-[#64748B] font-normal outline-none cursor-not-allowed shadow-2xs placeholder:text-[#94A3B8]"
             />
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Official registered organization title.</span>
+            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">
+              Set when the company was created — renaming is not supported by the API yet, so this field is read-only. Use Display Name below for the
+              title shown across the app.
+            </span>
           </div>
 
           <div>

@@ -1,13 +1,12 @@
-import type { AllSettingsState, DataExportRequest, SettingsActivityItem, UserPreferences } from "./types";
+import type { AllSettingsState, DataExportRequest, SettingsActivityItem, SettingsSectionId, UserPreferences } from "./types";
 import { INITIAL_SETTINGS_STATE } from "./mock-provider";
-import { SETTINGS_MOCK_MODE, SETTINGS_STORAGE_KEY } from "./config";
+import { SETTINGS_STORAGE_KEY } from "./config";
 import { apiClient } from "@/lib/api/client";
 import { getStoredCompanyId, setStoredTenancy, clearStoredClientId, DEFAULT_FALLBACK_COMPANY_ID } from "@/lib/api/tenancy-storage";
 import { brandingApi } from "../live/branding-api";
-import { organizationApi, type OrganizationRecord, type UpdateOrganizationPayload, isRevisionConflict } from "../live/organization-api";
+import { organizationApi, type OrganizationRecord, type UpdateOrganizationPayload } from "../live/organization-api";
 import { teamApi } from "@/features/admin/team/live/team-api";
 import type { CurrentUserResponse } from "@/types/domain/auth";
-import { ApiError } from "@/types/api";
 
 function normalizeCountryCode(country?: string | null): string | null {
   if (!country) return null;
@@ -139,7 +138,7 @@ export class SettingsRepository {
 
           // B. Fetch live team members to sync totalMembers count
           try {
-            const teamMembers = await apiClient.request<any[]>({
+            const teamMembers = await apiClient.request<unknown[]>({
               method: "GET",
               path: "/team/members",
               headers: { "x-company-id": activeCompanyId },
@@ -206,7 +205,7 @@ export class SettingsRepository {
 
   public static async saveSettings(
     partial: Partial<AllSettingsState>,
-    activityNote?: { action: string; section: any; setting: string }
+    activityNote?: { action: string; section: SettingsSectionId; setting: string }
   ): Promise<AllSettingsState> {
     const current = await this.getSettings();
     let activeCompanyId = getStoredCompanyId();
@@ -235,7 +234,17 @@ export class SettingsRepository {
 
     if (shouldUpdateOrg && partial.organization && activeCompanyId) {
       const orgPatch = partial.organization;
-      const expectedRevision = (orgPatch.metadata as any)?.revision ?? (current.organization.metadata as any)?.revision ?? 1;
+      // The revision this state was read at. If the state carries none (fresh
+      // session), read it now rather than guessing `1` — a guess would conflict
+      // on every save and teach callers to swallow real conflicts.
+      const revisionOf = (metadata: unknown): number | undefined => {
+        const value = (metadata ?? {}) as { revision?: unknown };
+        return typeof value.revision === "number" ? value.revision : undefined;
+      };
+      let expectedRevision: number = revisionOf(orgPatch.metadata) ?? revisionOf(current.organization.metadata) ?? 0;
+      if (!expectedRevision) {
+        expectedRevision = (await organizationApi.get(activeCompanyId)).revision;
+      }
 
       const addr = orgPatch.address;
       const hasAnyAddress = addr && Boolean(addr.street || addr.address || addr.city || addr.state || addr.country || addr.postalCode);
@@ -245,13 +254,16 @@ export class SettingsRepository {
             city: addr.city?.trim() || null,
             state: addr.state?.trim() || null,
             country: normalizeCountryCode(addr.country),
-            postalCode: (addr.postalCode ?? (addr as any).zip)?.trim() || null,
+            postalCode: (addr.postalCode ?? (addr as { zip?: string | null }).zip)?.trim() || null,
           }
         : null;
 
       const payload: UpdateOrganizationPayload = {
         expectedRevision,
-        displayName: (orgPatch.displayName || orgPatch.name)?.trim(),
+        // `name` (the Company title) has no backend write endpoint, so it is
+        // read-only in the form; only the Display Name the operator actually
+        // edited is sent — never the Company name pushed into displayName.
+        displayName: orgPatch.displayName?.trim() || undefined,
         legalName: orgPatch.legalName ? orgPatch.legalName.trim() : null,
         industry: orgPatch.industry ? orgPatch.industry.trim() : null,
         website: orgPatch.website ? orgPatch.website.trim() : null,
@@ -264,24 +276,12 @@ export class SettingsRepository {
       };
 
       try {
-        let updatedOrg: OrganizationRecord | null = null;
-        try {
-          updatedOrg = await organizationApi.update(activeCompanyId, payload);
-        } catch (err: unknown) {
-          // If revision conflict (409), reload latest revision and retry once
-          if (isRevisionConflict(err)) {
-            const latest = await organizationApi.get(activeCompanyId);
-            if (latest) {
-              payload.expectedRevision = latest.revision;
-              updatedOrg = await organizationApi.update(activeCompanyId, payload);
-            } else {
-              throw err;
-            }
-          } else {
-            throw err;
-          }
-        }
-
+        // Optimistic concurrency is the backend's contract: a 409 means another
+        // session saved between our read and this write. Retrying with the fresh
+        // revision would silently overwrite their change, so the conflict is
+        // surfaced and the operator is told to reload (backend message: "The
+        // organization profile was changed by someone else. Reload it before saving.").
+        const updatedOrg: OrganizationRecord | null = await organizationApi.update(activeCompanyId, payload);
         if (updatedOrg) {
           partial.organization = {
             ...partial.organization,
@@ -314,7 +314,10 @@ export class SettingsRepository {
           }
         }
       } catch (orgErr) {
-        console.error("Failed to save organization to backend:", orgErr);
+        // A plain message, never the Error object: handing an ApiError to the
+        // logger makes the Next dev overlay paint a full-screen error for a
+        // business conflict that the caller already reports to the operator.
+        console.warn("Organization profile save failed:", orgErr instanceof Error ? orgErr.message : String(orgErr));
         throw orgErr;
       }
     }
@@ -377,6 +380,21 @@ export class SettingsRepository {
     }
 
     return updated;
+  }
+
+  /**
+   * Reads the current organization revision so a conflicted state can be
+   * re-based after the operator has been told about the conflict — without
+   * touching any of the values they are still editing.
+   */
+  public static async refreshOrganizationRevision(): Promise<number | null> {
+    const companyId = getStoredCompanyId();
+    if (!companyId || companyId === DEFAULT_FALLBACK_COMPANY_ID) return null;
+    try {
+      return (await organizationApi.get(companyId)).revision;
+    } catch {
+      return null;
+    }
   }
 
   public static async resetPreferences(): Promise<UserPreferences> {

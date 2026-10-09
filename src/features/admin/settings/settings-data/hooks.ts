@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { AllSettingsState, SettingsSectionId, NotificationChannel } from "./types";
 import { SettingsRepository } from "./repository";
-import { describeOrganizationError } from "../live/organization-api";
+import { describeOrganizationError, isRevisionConflict } from "../live/organization-api";
 import { BRANDING_CHANGE_EVENT } from "@/features/admin/shell/admin-context";
 
 const VALID_SECTIONS: SettingsSectionId[] = [
@@ -215,9 +215,24 @@ export function useSettings() {
       setDraftState(JSON.parse(JSON.stringify(updated)));
       toast.success("Settings saved successfully.");
       return true;
-    } catch (err: any) {
-      console.error("Failed to save settings:", err);
+    } catch (err: unknown) {
       const message = describeOrganizationError(err);
+      // A plain string, never the Error object: logging an ApiError makes the
+      // Next dev overlay paint a full-screen error for a business conflict the
+      // toast below already explains to the operator.
+      console.error("Failed to save settings:", message);
+      if (isRevisionConflict(err)) {
+        // Re-base the state on the server's current revision so the operator can
+        // review their fields and save again. Nothing is retried automatically
+        // and none of their edits are touched — only the revision moves forward.
+        const revision = await SettingsRepository.refreshOrganizationRevision();
+        if (typeof revision === "number") {
+          const rebase = (prev: AllSettingsState | null) =>
+            prev ? { ...prev, organization: { ...prev.organization, metadata: { ...prev.organization.metadata, revision } } } : prev;
+          setSavedState(rebase);
+          setDraftState(rebase);
+        }
+      }
       toast.error(message);
       return false;
     } finally {
