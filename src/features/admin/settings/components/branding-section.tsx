@@ -544,7 +544,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
               value={data.footerText}
               onChange={(e) => onChange({ footerText: e.target.value })}
               disabled={!capabilities.canEditBranding}
-              placeholder="e.g. © 2026 Namo Gange Trust. All rights reserved."
+              placeholder="e.g. © 2026 Your Company. All rights reserved."
               className="w-full h-8 px-3 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 shadow-2xs placeholder:text-[#94A3B8]"
             />
           </div>
@@ -607,7 +607,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                   {data.logo ? <img src={data.logo} alt="Logo" className="size-full object-contain" /> : <Sparkles className="size-3.5 text-emerald-500" />}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[11px] font-bold truncate">{data.brandName || "Namo Gange"}</div>
+                  <div className="text-[11px] font-bold truncate">{data.brandName || "Your Brand"}</div>
                   <div className="text-[8.5px] text-slate-300 font-semibold">OmniPlatform Workspace</div>
                 </div>
               </div>
@@ -637,7 +637,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                     )}
                   </div>
                   <div>
-                    <h4 className="text-[12px] font-bold text-[#111C3A]">{data.brandName || "Namo Gange"}</h4>
+                    <h4 className="text-[12px] font-bold text-[#111C3A]">{data.brandName || "Your Brand"}</h4>
                     <p className="text-[8.5px] text-[#64748B] font-normal">Executive Performance Audit</p>
                   </div>
                 </div>
@@ -684,7 +684,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
               <div className="p-3 space-y-1.5 text-[#111C3A]">
                 <p className="text-[11px] font-bold text-[#0F172A]">Hello Team Administrator,</p>
                 <p className="text-[10px] text-[#64748B] font-normal">
-                  A scheduled campaign report for Moksha Sewa has completed with 100% deliverability rate.
+                  This is a sample of how your notification emails will look.
                 </p>
                 <button
                   type="button"
@@ -710,11 +710,11 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
             <div className="font-bold flex items-center gap-1.5">
               Custom CNAME & White-Label Domain
               <span className="text-[8.5px] font-bold bg-amber-200/80 text-amber-800 px-1 py-0.2 rounded uppercase">
-                Enterprise Add-on
+                Not Available Yet
               </span>
             </div>
             <p className="text-[9.5px] text-amber-900 mt-0.5 leading-snug font-normal">
-              Hosting OmniPlatform at a dedicated subdomain like <code className="bg-amber-100 px-1 rounded font-mono font-bold">portal.namogange.org</code> with custom SSL certificate requires an <span className="whitespace-nowrap font-bold">Enterprise Organization Tier</span> license. Contact your EnCodency account rep to activate.
+              Hosting OmniPlatform on your own domain (for example <code className="bg-amber-100 px-1 rounded font-mono font-bold">portal.yourcompany.com</code>) is not self-serve yet. Raise a ticket from Help &amp; Support to ask for it.
             </p>
           </div>
         </div>

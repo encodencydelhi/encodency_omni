@@ -8,10 +8,12 @@ import { useSettingsCapability } from "../settings-data/capability-provider";
 
 interface WorkspaceSectionProps {
   data: WorkspaceDefaults;
+  /** The Company's real Client names. */
+  clients: string[];
   onChange: (partial: Partial<WorkspaceDefaults>) => void;
 }
 
-export function WorkspaceSection({ data, onChange }: WorkspaceSectionProps) {
+export function WorkspaceSection({ data, clients, onChange }: WorkspaceSectionProps) {
   const { capabilities } = useSettingsCapability();
 
   return (
@@ -31,7 +33,7 @@ export function WorkspaceSection({ data, onChange }: WorkspaceSectionProps) {
             </div>
           </div>
           <Link
-            href="/admin/projects"
+            href="/admin/clients"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[10.5px] font-semibold text-[#2563EB] hover:underline flex items-center gap-1 shrink-0 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 shadow-2xs hover:bg-blue-100 transition-colors"
@@ -51,10 +53,12 @@ export function WorkspaceSection({ data, onChange }: WorkspaceSectionProps) {
               disabled={!capabilities.canManagePreferences}
               className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
             >
-              <option value="Moksha Sewa">Moksha Sewa (Active)</option>
-              <option value="Dental Care Clinic">Dental Care Clinic</option>
-              <option value="Ayur Luxe Wellness">Ayur Luxe Wellness</option>
-              <option value="Global Ayurveda Summit">Global Ayurveda Summit</option>
+              <option value="">{clients.length === 0 ? "No Clients Yet" : "Select A Client"}</option>
+              {clients.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
             </select>
             <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">
               Default anchor client used for aggregate reporting and dashboard metrics.
@@ -71,7 +75,11 @@ export function WorkspaceSection({ data, onChange }: WorkspaceSectionProps) {
               disabled={!capabilities.canManagePreferences}
               className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
             >
-              <option value="Moksha Sewa">Always Open Primary Client (Moksha Sewa)</option>
+              {clients.map((name) => (
+                <option key={name} value={name}>
+                  Always Open {name}
+                </option>
+              ))}
               <option value="Last Used Client">Resume Last Used Client Account</option>
               <option value="Prompt Every Time">Prompt Client Selection Modal</option>
             </select>
@@ -173,7 +181,7 @@ export function WorkspaceSection({ data, onChange }: WorkspaceSectionProps) {
             <div className="space-y-0.5 pr-4">
               <div className="text-[12px] font-bold text-[#1E293B]">Remember Filters Per Client Account</div>
               <p className="text-[10px] text-[#64748B] font-normal">
-                Persist distinct filter preferences for Moksha Sewa without overriding other client preferences.
+                Persist distinct filter preferences for each client without overriding other client preferences.
               </p>
             </div>
             <Switch

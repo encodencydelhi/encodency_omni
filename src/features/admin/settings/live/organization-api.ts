@@ -26,6 +26,8 @@ export interface OrganizationRecord {
   timezone: string | null;
   currency: string | null;
   revision: number;
+  /** When the Company was created (absent on a server that does not send it yet). */
+  createdAt?: string;
   updatedAt: string;
 }
 

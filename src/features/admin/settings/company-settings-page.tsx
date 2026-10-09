@@ -12,8 +12,9 @@ import {
   Share2,
   FolderKanban,
 } from "lucide-react";
-import { CapabilityProvider } from "./settings-data/capability-provider";
+import { CapabilityProvider, useSettingsCapability } from "./settings-data/capability-provider";
 import { useSettings } from "./settings-data/hooks";
+import { useSettingsClients } from "./settings-data/use-clients";
 import { SettingsNav } from "./components/settings-nav";
 import { UnsavedChangesBar } from "./components/unsaved-changes-bar";
 import { NavigationGuardDialog } from "./components/navigation-guard-dialog";
@@ -88,12 +89,13 @@ function CompanySettingsInner() {
     updatePreferences,
     updateDataPrivacy,
     handleResetPreferences,
-    handleRequestExport,
     handleTransferOwnership,
     handleDeactivate,
     handleDeleteOrganization,
     refetch,
   } = useSettings();
+  const { names: clientNames, current: currentClient } = useSettingsClients();
+  const { currentRole } = useSettingsCapability();
 
   if (loading) {
     return (
@@ -167,7 +169,7 @@ function CompanySettingsInner() {
           <div className="flex items-center gap-2 mt-0.5">
             <h1 className="text-[20px] font-bold tracking-tight text-[#0F172A]">Organization Settings</h1>
             <span className="text-[9.5px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-300 shadow-2xs flex items-center gap-1">
-              <span className="size-1.5 rounded-full bg-emerald-600 animate-pulse"></span> Organization Admin
+              <span className="size-1.5 rounded-full bg-emerald-600 animate-pulse"></span> {currentRole}
             </span>
           </div>
           <p className="mt-0.5 text-[11.5px] font-normal text-[#64748B] leading-relaxed">
@@ -186,12 +188,12 @@ function CompanySettingsInner() {
           <div className="flex items-center gap-1.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg px-2.5 py-1 text-[11px] shadow-2xs">
             <span className="size-2 rounded-full bg-[#10B981] animate-pulse"></span>
             <span className="text-[#64748B] font-medium text-[10.5px]">Tier:</span>
-            <span className="font-semibold text-[#0F172A] text-[10.5px]">Enterprise</span>
+            <span className="font-semibold text-[#0F172A] text-[10.5px]">{draftState.organization.metadata.currentPlan || "—"}</span>
           </div>
 
           <div className="flex items-center gap-1.5 bg-[#F8FAFD] border border-[#DDE4ED] rounded-lg px-2.5 py-1 text-[11px] shadow-2xs">
             <span className="text-[#64748B] font-medium text-[10.5px]">Client:</span>
-            <span className="font-semibold text-[#0F172A] text-[10.5px]">{draftState.workspace.primaryClient}</span>
+            <span className="font-semibold text-[#0F172A] text-[10.5px]">{currentClient?.name ?? "All Clients"}</span>
           </div>
         </div>
       </header>
@@ -223,6 +225,7 @@ function CompanySettingsInner() {
           {activeSection === "workspace" && (
             <WorkspaceSection
               data={draftState.workspace}
+              clients={clientNames}
               onChange={updateWorkspace}
             />
           )}
@@ -260,7 +263,7 @@ function CompanySettingsInner() {
             <DataPrivacySection
               data={draftState.dataPrivacy}
               onChange={updateDataPrivacy}
-              onRequestExport={handleRequestExport}
+              organizationName={draftState.organization.displayName || draftState.organization.name}
             />
           )}
 
@@ -287,10 +290,7 @@ function CompanySettingsInner() {
           )}
 
           {activeSection === "security" && (
-            <SecurityHealthPanel
-              policy={draftState.security}
-              summary={draftState.securitySummary}
-            />
+            <SecurityHealthPanel summary={draftState.securitySummary} />
           )}
 
           {activeSection === "branding" && <BrandingGuidelinesPanel />}
@@ -308,7 +308,7 @@ function CompanySettingsInner() {
 
             <div className="space-y-1">
               <Link
-                href="/admin/projects"
+                href="/admin/clients"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-between p-2 rounded-lg border border-[#DDE4ED] bg-[#F8FAFD] hover:bg-white hover:border-blue-400 hover:shadow-2xs transition-all group"

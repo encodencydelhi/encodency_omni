@@ -1,4 +1,4 @@
-import type { AllSettingsState, SettingsCapabilities } from "./types";
+import type { AllSettingsState, SecuritySummary, SettingsCapabilities } from "./types";
 
 export const INITIAL_SETTINGS_STATE: AllSettingsState = {
   organization: {
@@ -235,12 +235,13 @@ export const INITIAL_SETTINGS_STATE: AllSettingsState = {
     },
   },
   securitySummary: {
-    twoFactorAdoptionRate: 88,
-    adminsWithout2FA: 1,
-    activeSessionsCount: 14,
-    lastSecurityPolicyChange: "Yesterday at 04:15 PM",
-    lastChangedBy: "Manish Sirohi",
-    securityScore: 88,
+    available: true,
+    members: 12,
+    suspended: 0,
+    twoFactorEnabled: 11,
+    twoFactorRate: 92,
+    privilegedMembers: 3,
+    privilegedWithoutTwoFactor: 1,
   },
   preferences: {
     locale: {
@@ -425,3 +426,63 @@ export const ADMIN_LIMITED_CAPABILITIES: SettingsCapabilities = {
   canDeleteOrganization: false, // Owner only
   role: "Organization Admin",
 };
+
+/** Managers and Viewers can read the page but change nothing (the server refuses organization writes for them too). */
+export const VIEWER_CAPABILITIES: SettingsCapabilities = {
+  canViewSettings: true,
+  canEditOrganization: false,
+  canEditBranding: false,
+  canManageNotifications: false,
+  canManageSecurity: false,
+  canManagePreferences: false,
+  canManagePrivacy: false,
+  canViewAudit: false,
+  canTransferOwnership: false,
+  canDeactivateOrganization: false,
+  canDeleteOrganization: false,
+  role: "Viewer",
+};
+
+/** What the page shows when the server has not (yet) said anything: no numbers, never sample ones. */
+export const UNAVAILABLE_SECURITY_SUMMARY: SecuritySummary = {
+  available: false,
+  members: 0,
+  suspended: 0,
+  twoFactorEnabled: 0,
+  twoFactorRate: 0,
+  privilegedMembers: 0,
+  privilegedWithoutTwoFactor: 0,
+};
+
+/**
+ * The starting point for a real Company: the sample content (a made-up organization, its Clients, people, activity, exports)
+ * is removed, so a field the server has no value for is empty instead of showing somebody else's details. Device-only
+ * preferences (notification matrix, locale, table and privacy toggles) keep their harmless defaults.
+ */
+export function neutralSettingsState(): AllSettingsState {
+  const base = structuredClone(INITIAL_SETTINGS_STATE);
+  return {
+    ...base,
+    organization: {
+      name: "",
+      legalName: "",
+      displayName: "",
+      industry: "",
+      website: "",
+      contactEmail: "",
+      contactPhone: "",
+      logo: "",
+      description: "",
+      timezone: "",
+      currency: "",
+      address: { country: "", state: "", city: "", address: "", street: "", postalCode: "" },
+      metadata: { id: "", createdAt: "", owner: "", ownerEmail: "", currentPlan: "", planStatus: "", totalMembers: 0, totalClients: 0 },
+    },
+    workspace: { ...base.workspace, primaryClient: "", defaultClientAfterLogin: "Last Used Client" },
+    branding: { ...base.branding, brandName: "", footerText: "", customDomain: "" },
+    security: { ...base.security, accessPolicy: { ...base.security.accessPolicy, allowedEmailDomains: [] } },
+    securitySummary: UNAVAILABLE_SECURITY_SUMMARY,
+    dataPrivacy: { ...base.dataPrivacy, recentExports: [] },
+    activity: [],
+  };
+}

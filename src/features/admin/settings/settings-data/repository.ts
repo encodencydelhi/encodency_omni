@@ -1,11 +1,14 @@
-import type { AllSettingsState, DataExportRequest, SettingsActivityItem, UserPreferences } from "./types";
-import { INITIAL_SETTINGS_STATE } from "./mock-provider";
+import type { AllSettingsState, SettingsActivityItem, UserPreferences } from "./types";
+import { INITIAL_SETTINGS_STATE, neutralSettingsState, UNAVAILABLE_SECURITY_SUMMARY } from "./mock-provider";
 import { SETTINGS_MOCK_MODE, SETTINGS_STORAGE_KEY } from "./config";
 import { apiClient } from "@/lib/api/client";
 import { getStoredCompanyId, setStoredTenancy, clearStoredClientId, DEFAULT_FALLBACK_COMPANY_ID } from "@/lib/api/tenancy-storage";
 import { brandingApi } from "../live/branding-api";
 import { organizationApi, type OrganizationRecord, type UpdateOrganizationPayload, isRevisionConflict } from "../live/organization-api";
-import { teamApi } from "@/features/admin/team/live/team-api";
+import { teamApi, type TeamActivityRecord, type TeamMemberRecord } from "@/features/admin/team/live/team-api";
+import { clientsApi } from "@/features/admin/projects/live/clients-api";
+import type { BackendBillingSummary } from "@/features/admin/billing/billing-data/live-snapshot";
+import { timeAgo } from "@/features/support/time";
 import type { CurrentUserResponse } from "@/types/domain/auth";
 import { ApiError } from "@/types/api";
 
@@ -39,6 +42,76 @@ function normalizeTimezone(timezone?: string | null): string | null {
   return trimmed.split(" ")[0] || trimmed;
 }
 
+/** `GET /team/members/security-summary` (Owners and Admins only). */
+interface TeamSecurityResponse {
+  members: number;
+  suspended: number;
+  twoFactorEnabled: number;
+  twoFactorRate: number;
+  privilegedMembers: number;
+  privilegedWithoutTwoFactor: number;
+}
+
+const ROLE_LABEL: Record<string, string> = { OWNER: "Organization Owner", ADMIN: "Organization Admin", MANAGER: "Manager", VIEWER: "Viewer" };
+
+function formatDate(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function planStatusLabel(status: string): string {
+  const known: Record<string, string> = { ACTIVE: "Active", PAST_DUE: "Past Due", TRIALING: "Trialing", CANCELED: "Canceled", CANCELLED: "Canceled", SUSPENDED: "Suspended" };
+  return known[status] ?? (status ? status.charAt(0) + status.slice(1).toLowerCase().replace(/_/g, " ") : "");
+}
+
+/** A row of the Company's real audit feed, shaped for the settings activity list. The feed carries no before/after values or IP, so those stay empty (the UI hides them). */
+function activityItem(record: TeamActivityRecord, roleByUser: Map<string, string>): SettingsActivityItem {
+  const actor = record.actor;
+  return {
+    id: record.id,
+    user: {
+      name: actor?.name?.trim() || actor?.email || "System",
+      email: actor?.email ?? "",
+      role: (actor && roleByUser.get(actor.userId)) || "Member",
+    },
+    action: record.label,
+    section: record.module === "Organization" ? "organization" : "audit",
+    settingName: `${record.module} · ${record.resourceLabel}${record.clientName ? ` · ${record.clientName}` : ""}`,
+    previousValue: "",
+    newValue: "",
+    timestamp: timeAgo(record.at),
+    ipAddress: "",
+  };
+}
+
+/**
+ * Whatever an older version cached in this browser must never be shown as if it were this Company's data: everything that is
+ * read from the server on every load is dropped, and sample values that used to be the defaults are cleared.
+ */
+function sanitizeCached(state: AllSettingsState): AllSettingsState {
+  if (SETTINGS_MOCK_MODE) return state;
+  const sample = INITIAL_SETTINGS_STATE;
+  const sampleDomains = sample.security.accessPolicy.allowedEmailDomains.join("|");
+  return {
+    ...state,
+    activity: [],
+    securitySummary: UNAVAILABLE_SECURITY_SUMMARY,
+    dataPrivacy: { ...state.dataPrivacy, recentExports: [] },
+    branding: {
+      ...state.branding,
+      footerText: state.branding.footerText === sample.branding.footerText ? "" : state.branding.footerText,
+      customDomain: state.branding.customDomain === sample.branding.customDomain ? "" : state.branding.customDomain,
+    },
+    security: {
+      ...state.security,
+      accessPolicy: {
+        ...state.security.accessPolicy,
+        allowedEmailDomains: state.security.accessPolicy.allowedEmailDomains.join("|") === sampleDomains ? [] : state.security.accessPolicy.allowedEmailDomains,
+      },
+    },
+  };
+}
+
 export class SettingsRepository {
   private static isBrowser(): boolean {
     return typeof window !== "undefined";
@@ -51,7 +124,7 @@ export class SettingsRepository {
   }
 
   public static async getSettings(): Promise<AllSettingsState> {
-    let base: AllSettingsState = INITIAL_SETTINGS_STATE;
+    let base: AllSettingsState = SETTINGS_MOCK_MODE ? structuredClone(INITIAL_SETTINGS_STATE) : neutralSettingsState();
 
     if (this.isBrowser()) {
       let activeCompanyId = getStoredCompanyId();
@@ -62,7 +135,7 @@ export class SettingsRepository {
           (activeCompanyId ? localStorage.getItem(this.getStorageKey(activeCompanyId)) : null) ??
           localStorage.getItem(SETTINGS_STORAGE_KEY);
         if (stored) {
-          base = JSON.parse(stored);
+          base = sanitizeCached(JSON.parse(stored));
         }
       } catch (err) {
         console.warn("Failed to read settings from localStorage, falling back to initial state", err);
@@ -91,7 +164,7 @@ export class SettingsRepository {
               const companyStored = localStorage.getItem(this.getStorageKey(activeCompanyId));
               if (companyStored) {
                 try {
-                  base = JSON.parse(companyStored);
+                  base = sanitizeCached(JSON.parse(companyStored));
                 } catch {
                   // ignore
                 }
@@ -104,12 +177,6 @@ export class SettingsRepository {
                 metadata: {
                   ...base.organization.metadata,
                   id: activeMembership.companyId,
-                  owner: user.email.split("@")[0] || base.organization.metadata.owner,
-                  ownerEmail: user.email || base.organization.metadata.ownerEmail,
-                  planStatus:
-                    activeMembership.companyStatus === "ACTIVE"
-                      ? "Active"
-                      : base.organization.metadata.planStatus,
                 },
               };
             }
@@ -118,74 +185,118 @@ export class SettingsRepository {
           console.warn("Could not fetch live /users/me for settings:", uErr);
         }
 
-        // 2. Fetch live branding and organization from backend if we have a valid companyId
+        // 2. Everything below is read live from the server; nothing is filled in from sample data.
         if (activeCompanyId && activeCompanyId !== DEFAULT_FALLBACK_COMPANY_ID) {
-          // A. Fetch live branding from /settings/branding
-          try {
-            const brandingRes = await brandingApi.get(activeCompanyId);
-            if (brandingRes) {
-              base.branding = {
-                ...base.branding,
-                logo: brandingRes.logo?.url ?? "",
-                favicon: brandingRes.favicon?.url ?? "",
-                reportLogo: brandingRes.reportLogo?.url ?? "",
-                emailLogo: brandingRes.emailLogo?.url ?? "",
-              };
-              base.organization.logo = brandingRes.logo?.url ?? "";
-            }
-          } catch (bErr) {
-            console.warn("Could not fetch live branding for settings:", bErr);
+          const scope = { "x-company-id": activeCompanyId };
+          const [brandingR, teamR, orgR, billingR, clientsR, activityR, securityR] = await Promise.allSettled([
+            brandingApi.get(activeCompanyId),
+            apiClient.request<TeamMemberRecord[]>({ method: "GET", path: "/team/members", headers: scope }),
+            organizationApi.get(activeCompanyId),
+            apiClient.request<BackendBillingSummary>({ method: "GET", path: "/billing/summary", headers: scope }),
+            clientsApi.list(activeCompanyId),
+            teamApi.listActivity(activeCompanyId, { limit: 50 }),
+            apiClient.request<TeamSecurityResponse>({ method: "GET", path: "/team/members/security-summary", headers: scope }),
+          ]);
+
+          // A. Branding images (/settings/branding)
+          if (brandingR.status === "fulfilled" && brandingR.value) {
+            const branding = brandingR.value;
+            base.branding = {
+              ...base.branding,
+              logo: branding.logo?.url ?? "",
+              favicon: branding.favicon?.url ?? "",
+              reportLogo: branding.reportLogo?.url ?? "",
+              emailLogo: branding.emailLogo?.url ?? "",
+            };
+            base.organization.logo = branding.logo?.url ?? "";
+          } else if (brandingR.status === "rejected") {
+            console.warn("Could not fetch live branding for settings:", brandingR.reason);
           }
 
-          // B. Fetch live team members to sync totalMembers count
-          try {
-            const teamMembers = await apiClient.request<any[]>({
-              method: "GET",
-              path: "/team/members",
-              headers: { "x-company-id": activeCompanyId },
-            });
-            if (Array.isArray(teamMembers)) {
-              base.organization.metadata.totalMembers = teamMembers.length;
-            }
-          } catch (tErr) {
-            console.warn("Could not fetch live team members for settings:", tErr);
+          // B. Team: member count and the real Owner (not whoever happens to be signed in)
+          const members = teamR.status === "fulfilled" && Array.isArray(teamR.value) ? teamR.value : null;
+          if (members) {
+            const owner = members.find((member) => member.systemRole === "OWNER" && !member.suspendedAt) ?? members.find((member) => member.systemRole === "OWNER");
+            base.organization.metadata = {
+              ...base.organization.metadata,
+              totalMembers: members.length,
+              owner: owner ? owner.user.name?.trim() || owner.user.email : "",
+              ownerEmail: owner?.user.email ?? "",
+            };
+          } else if (teamR.status === "rejected") {
+            console.warn("Could not fetch live team members for settings:", teamR.reason);
           }
 
-          // C. Fetch live organization record from /settings/organization
-          try {
-            const orgRecord = await organizationApi.get(activeCompanyId);
-            if (orgRecord) {
-              base.organization = {
-                ...base.organization,
-                name: orgRecord.name || base.organization.name,
-                displayName: orgRecord.displayName || base.organization.displayName,
-                legalName: orgRecord.legalName ?? "",
-                industry: orgRecord.industry ?? base.organization.industry,
-                website: orgRecord.website ?? "",
-                contactEmail: orgRecord.contactEmail ?? "",
-                contactPhone: orgRecord.contactPhone ?? "",
-                description: orgRecord.description ?? "",
-                timezone: orgRecord.timezone ?? base.organization.timezone,
-                currency: orgRecord.currency ?? base.organization.currency,
-                address: {
-                  address: orgRecord.address?.street ?? base.organization.address?.address ?? "",
-                  street: orgRecord.address?.street ?? base.organization.address?.street ?? "",
-                  city: orgRecord.address?.city ?? base.organization.address?.city ?? "",
-                  state: orgRecord.address?.state ?? base.organization.address?.state ?? "",
-                  country: orgRecord.address?.country === "IN" ? "India" : (orgRecord.address?.country ?? base.organization.address?.country ?? "India"),
-                  postalCode: orgRecord.address?.postalCode ?? base.organization.address?.postalCode ?? "",
-                },
-                metadata: {
-                  ...base.organization.metadata,
-                  id: orgRecord.id,
-                  revision: orgRecord.revision,
-                },
-              };
-              base.branding.brandName = orgRecord.displayName || orgRecord.name || base.branding.brandName;
-            }
-          } catch (oErr) {
-            console.warn("Could not fetch live organization record for settings:", oErr);
+          // C. Organization profile (/settings/organization): a field the server has no value for stays empty
+          if (orgR.status === "fulfilled" && orgR.value) {
+            const orgRecord = orgR.value;
+            base.organization = {
+              ...base.organization,
+              name: orgRecord.name || base.organization.name,
+              displayName: orgRecord.displayName || base.organization.displayName,
+              legalName: orgRecord.legalName ?? "",
+              industry: orgRecord.industry ?? "",
+              website: orgRecord.website ?? "",
+              contactEmail: orgRecord.contactEmail ?? "",
+              contactPhone: orgRecord.contactPhone ?? "",
+              description: orgRecord.description ?? "",
+              timezone: orgRecord.timezone ?? "",
+              currency: orgRecord.currency ?? "",
+              address: {
+                address: orgRecord.address?.street ?? "",
+                street: orgRecord.address?.street ?? "",
+                city: orgRecord.address?.city ?? "",
+                state: orgRecord.address?.state ?? "",
+                country: orgRecord.address?.country === "IN" ? "India" : (orgRecord.address?.country ?? ""),
+                postalCode: orgRecord.address?.postalCode ?? "",
+              },
+              metadata: {
+                ...base.organization.metadata,
+                id: orgRecord.id,
+                revision: orgRecord.revision,
+                createdAt: orgRecord.createdAt ? formatDate(orgRecord.createdAt) : "",
+              },
+            };
+            base.branding.brandName = orgRecord.displayName || orgRecord.name || base.branding.brandName;
+          } else if (orgR.status === "rejected") {
+            console.warn("Could not fetch live organization record for settings:", orgR.reason);
           }
+
+          // D. The Company's real plan (a Company without a subscription has no plan; the server's stand-in is not shown as one)
+          if (billingR.status === "fulfilled" && billingR.value) {
+            const summary = billingR.value;
+            base.organization.metadata = {
+              ...base.organization.metadata,
+              currentPlan: summary.subscriptionId ? summary.plan.name : "No Active Plan",
+              planStatus: summary.subscriptionId ? planStatusLabel(summary.status) : "None",
+            };
+          }
+
+          // E. Clients: the real count, and workspace choices that point at a Client that no longer exists are cleared
+          if (clientsR.status === "fulfilled" && Array.isArray(clientsR.value)) {
+            const names = clientsR.value.map((client) => client.displayName?.trim() || client.name);
+            base.organization.metadata = { ...base.organization.metadata, totalClients: names.length };
+            const choices = new Set(["Last Used Client", "Prompt Every Time", ...names]);
+            base.workspace = {
+              ...base.workspace,
+              primaryClient: names.includes(base.workspace.primaryClient) ? base.workspace.primaryClient : "",
+              defaultClientAfterLogin: choices.has(base.workspace.defaultClientAfterLogin) ? base.workspace.defaultClientAfterLogin : "Last Used Client",
+            };
+          }
+
+          // F. Recent activity of this Company's people, from the audit log (Owners and Admins; others get none)
+          if (activityR.status === "fulfilled" && activityR.value?.items) {
+            const roleByUser = new Map((members ?? []).map((member) => [member.user.id, ROLE_LABEL[member.systemRole] ?? member.systemRole] as const));
+            base.activity = activityR.value.items.map((record) => activityItem(record, roleByUser));
+          } else {
+            base.activity = [];
+          }
+
+          // G. Real sign-in security numbers (Owners and Admins)
+          base.securitySummary =
+            securityR.status === "fulfilled" && securityR.value
+              ? { available: true, ...securityR.value }
+              : UNAVAILABLE_SECURITY_SUMMARY;
         }
 
         // Cache synced data to localStorage for instant re-renders
@@ -330,42 +441,6 @@ export class SettingsRepository {
       dataPrivacy: partial.dataPrivacy ? { ...current.dataPrivacy, ...partial.dataPrivacy } : current.dataPrivacy,
     };
 
-    // Calculate updated security summary if security settings changed
-    if (partial.security) {
-      const sec = updated.security;
-      let score = 70;
-      if (sec.authentication.require2FAForAdmins) score += 10;
-      if (sec.authentication.require2FAForAllMembers) score += 10;
-      if (sec.accessPolicy.blockPersonalEmailDomains) score += 5;
-      if (sec.accessPolicy.allowedEmailDomains.length > 0) score += 5;
-      updated.securitySummary = {
-        ...current.securitySummary,
-        securityScore: Math.min(100, score),
-        lastSecurityPolicyChange: "Just now",
-        lastChangedBy: updated.organization.metadata.owner || "Administrator",
-      };
-    }
-
-    // Append an activity record if relevant
-    if (activityNote) {
-      const newActivity: SettingsActivityItem = {
-        id: `act_${Date.now()}`,
-        user: {
-          name: updated.organization.metadata.owner || "Workspace Admin",
-          email: updated.organization.metadata.ownerEmail || "admin@workspace.com",
-          role: "Organization Admin",
-        },
-        action: activityNote.action,
-        section: activityNote.section,
-        settingName: activityNote.setting,
-        previousValue: "Previous configuration",
-        newValue: "Updated configuration",
-        timestamp: "Just now",
-        ipAddress: "Verified Session",
-      };
-      updated.activity = [newActivity, ...updated.activity.slice(0, 19)];
-    }
-
     if (this.isBrowser()) {
       try {
         const key = this.getStorageKey(activeCompanyId);
@@ -387,32 +462,6 @@ export class SettingsRepository {
       setting: "UserPreferences",
     });
     return defaults;
-  }
-
-  public static async requestExport(categories: string[]): Promise<DataExportRequest> {
-    const newExport: DataExportRequest = {
-      id: `exp_${Date.now().toString().slice(-4)}_req`,
-      requestedAt: "Just now",
-      completedAt: undefined,
-      categories,
-      status: "preparing",
-      progressPercentage: 15,
-    };
-
-    const current = await this.getSettings();
-    const updatedExports = [newExport, ...current.dataPrivacy.recentExports];
-    await this.saveSettings({
-      dataPrivacy: {
-        ...current.dataPrivacy,
-        recentExports: updatedExports,
-      },
-    }, {
-      action: "Initiated full organization archive export",
-      section: "data-privacy",
-      setting: "DataExportRequest",
-    });
-
-    return newExport;
   }
 
   public static async transferOwnership(newOwnerName: string, newOwnerEmail: string): Promise<void> {
