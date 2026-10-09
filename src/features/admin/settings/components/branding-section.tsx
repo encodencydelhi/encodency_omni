@@ -27,6 +27,7 @@ import {
   isStorageUnavailable,
   type BrandingPurpose,
 } from "../live/branding-api";
+import { BRANDING_CHANGE_EVENT } from "@/features/admin/shell/admin-context";
 import { cn } from "@/lib/utils/cn";
 
 interface BrandingSectionProps {
@@ -145,6 +146,11 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
       const updated = res[fieldKey];
       onChange({ [fieldKey]: updated?.url || "" });
       setAssetIds((prev) => ({ ...prev, [fieldKey]: updated?.id }));
+      if (purpose === "logo" && typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent(BRANDING_CHANGE_EVENT, { detail: { logo: updated?.url || null } })
+        );
+      }
       toast.success(`${PURPOSE_LABEL_MAP[purpose]} updated successfully.`);
     } catch (err: unknown) {
       if (isAssetConflict(err)) {
@@ -201,6 +207,11 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
       await brandingApi.remove(purpose);
       onChange({ [fieldKey]: "" });
       setAssetIds((prev) => ({ ...prev, [fieldKey]: undefined }));
+      if (purpose === "logo" && typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent(BRANDING_CHANGE_EVENT, { detail: { logo: null } })
+        );
+      }
       toast.success(`${PURPOSE_LABEL_MAP[purpose]} removed.`);
     } catch (err: unknown) {
       if (isStorageUnavailable(err)) {

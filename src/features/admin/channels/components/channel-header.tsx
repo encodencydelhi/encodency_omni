@@ -154,6 +154,9 @@ export function ChannelHeader({
   const [isSyncing, setIsSyncing] = useState(false);
   const config = CHANNEL_CONFIGS[channel];
   const effectivePrimaryLabel = primaryActionLabel !== undefined ? primaryActionLabel : config.primaryActionLabel;
+  // Only claim "connected/online" when the caller actually reports a healthy
+  // connection — the fallback pills used to assert API status nobody verified.
+  const isConnected = connectionStatus?.tone === "success";
 
   const handleSyncClick = () => {
     setIsSyncing(true);
@@ -192,10 +195,16 @@ export function ChannelHeader({
                   />
                 )}
               </div>
-              {/* Online indicator ping */}
+              {/* Online indicator — only green/pulsing when the connection is verified */}
               <span className="absolute -bottom-0.5 -right-0.5 flex size-3.5 items-center justify-center">
-                <span className="absolute inline-flex size-full animate-ping rounded-sm bg-[#10B981] opacity-75" />
-                <span className="relative inline-flex size-2.5 rounded-sm border-2 border-white bg-[#10B981]" />
+                {isConnected ? (
+                  <>
+                    <span className="absolute inline-flex size-full animate-ping rounded-sm bg-[#10B981] opacity-75" />
+                    <span className="relative inline-flex size-2.5 rounded-sm border-2 border-white bg-[#10B981]" />
+                  </>
+                ) : (
+                  <span className="relative inline-flex size-2.5 rounded-sm border-2 border-white bg-slate-300" />
+                )}
               </span>
             </div>
 
@@ -207,13 +216,13 @@ export function ChannelHeader({
                 </h1>
                 <span className="text-[#DDE4ED] text-[20px] leading-none font-light">|</span>
                 <span className="text-[14px] font-bold text-[#111B43]">{customAccountHandle || config.accountHandle}</span>
-                {config.statusText && config.statusText.split("•")[0] && (
+                {isConnected && config.statusText && config.statusText.split("•")[0] && (
                   <span className="inline-flex items-center gap-1.5 rounded-sm bg-[#ECFDF5] px-2.5 py-0.5 text-[11px] font-bold text-[#047857] border border-emerald-200/60">
                     <span className="size-1.5 rounded-sm bg-[#10B981]" />
                     {config.statusText.split("•")[0]}
                   </span>
                 )}
-                {config.statusText && config.statusText.split("•")[1] && (
+                {isConnected && config.statusText && config.statusText.split("•")[1] && (
                   <span className="text-[12px] text-[#64748B] font-semibold">
                     • {config.statusText.split("•")[1]?.trim()}
                   </span>
@@ -245,17 +254,11 @@ export function ChannelHeader({
                   </span>
                 );
               }
-              const statusPills: Record<ChannelType, { label: string; text: string; bg: string; border: string; dot: string }> = {
-                whatsapp: { label: "WABA Cloud API Connected", text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200/70", dot: "bg-emerald-500" },
-                meta: { label: "Meta Graph API Connected", text: "text-pink-700", bg: "bg-pink-50", border: "border-pink-200/70", dot: "bg-pink-500" },
-                linkedin: { label: "LinkedIn Company API Active", text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200/70", dot: "bg-blue-600" },
-                google: { label: "Google Business Profile Verified", text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200/70", dot: "bg-blue-500" },
-                youtube: { label: "YouTube Partner API Active", text: "text-rose-700", bg: "bg-rose-50", border: "border-rose-200/70", dot: "bg-rose-500" },
-              };
-              const pill = statusPills[channel] ?? statusPills.meta;
+              // No connection status was provided: say so instead of asserting a
+              // verified API connection that nobody checked.
               return (
-                <span className={cn("inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[11px] font-bold border", pill.bg, pill.text, pill.border)}>
-                  <span className={cn("size-2 rounded-sm animate-pulse", pill.dot)} /> {pill.label}
+                <span className="inline-flex items-center gap-1.5 rounded-sm border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-600">
+                  <span className="size-2 rounded-sm bg-slate-400" /> Connection status not synced
                 </span>
               );
             })()}

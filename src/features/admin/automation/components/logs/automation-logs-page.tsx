@@ -182,7 +182,7 @@ export function AutomationLogsPage() {
 
   const tabsConfig = [
     { value: "traces" as const, label: "Execution Traces", count: runs.length },
-    { value: "console" as const, label: "Live Console Stream", count: consoleLogs.length },
+    { value: "console" as const, label: "Console Stream (sample)", count: consoleLogs.length },
     { value: "dlq" as const, label: "Dead Letter Queue (DLQ)", count: failedRuns.length },
   ];
 
@@ -202,7 +202,7 @@ export function AutomationLogsPage() {
         <AdminPageTitle
           eyebrow="Operations"
           title="Automation Logs & Diagnostics"
-          description="Real-time execution traces, webhook payload inspection, and error diagnostics."
+          description="Simulated execution traces, webhook payload inspection, and error diagnostics."
           badge={<IntegrationPendingBadge label="Workflow Engine Integration Pending" />}
         />
 
@@ -213,7 +213,7 @@ export function AutomationLogsPage() {
           <button
             onClick={() => {
               setIsStreaming(!isStreaming);
-              toast.info(isStreaming ? "Live polling paused" : "Live polling resumed");
+              toast.info(isStreaming ? "Sample polling paused" : "Sample polling resumed");
             }}
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11.5px] font-bold shadow-2xs transition-colors ${
               isStreaming

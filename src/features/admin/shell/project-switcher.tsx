@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useAdminContext } from "./admin-context";
 
 export function Clientswitcher() {
-  const { Clients, selectedProjectId, setSelectedProjectId } = useAdminContext();
+  const { Clients, selectedProjectId, setSelectedProjectId, isPlaceholderData } = useAdminContext();
   const selected = Clients.find((project) => project.id === selectedProjectId);
   const availableClients = Clients;
   return (
@@ -31,6 +31,11 @@ export function Clientswitcher() {
               {selected?.name ?? "All Clients"}
             </span>
           </div>
+          {isPlaceholderData && (
+            <span className="shrink-0 rounded-full border border-amber-300/70 bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-300">
+              Sample
+            </span>
+          )}
           <ChevronsUpDown className="size-[14px] text-[#64748B] group-hover:text-[#94A3B8] transition-colors" />
         </button>
       </DropdownMenuTrigger>
@@ -54,6 +59,11 @@ export function Clientswitcher() {
             )}
           </DropdownMenuItem>
         ))}
+        {isPlaceholderData && (
+          <div className="border-t border-slate-100 px-2 py-1.5 text-[10px] leading-snug text-amber-700">
+            Sample workspace — live Clients are still loading from the backend.
+          </div>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

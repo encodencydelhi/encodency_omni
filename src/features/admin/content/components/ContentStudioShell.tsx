@@ -15,10 +15,10 @@ import { ApprovalsTab } from "./ApprovalsTab";
 const TABS: Array<{ id: Tab; hint: string }> = [
   { id: "Create", hint: "Compose post" },
   { id: "AI Assistant", hint: "Generate with AI" },
-  { id: "Templates", hint: "124 ready designs" },
-  { id: "Saved Drafts", hint: "8 drafts" },
-  { id: "Content Ideas", hint: "Fresh prompts" },
-  { id: "Approvals", hint: "12 pending" },
+  { id: "Templates", hint: "Sample library" },
+  { id: "Saved Drafts", hint: "From workspace" },
+  { id: "Content Ideas", hint: "Sample prompts" },
+  { id: "Approvals", hint: "From workspace" },
 ];
 
 export default function ContentStudioShell() {
@@ -73,7 +73,7 @@ export default function ContentStudioShell() {
         moduleName="Content Studio"
         compact
         badgeText="Preview Tabs"
-        description="Templates, Content Ideas and the AI Assistant are sample content — nothing is generated or stored by the server. Create, Saved Drafts and Approvals save through the backend."
+        description="Templates and Content Ideas are a fixed sample library kept in local state. Create, AI generation, Saved Drafts and Approvals run through the backend API."
       />
 
       {/* Tabs */}

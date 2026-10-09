@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AllSettingsState, SettingsSectionId, NotificationChannel } from "./types";
 import { SettingsRepository } from "./repository";
 import { describeOrganizationError } from "../live/organization-api";
+import { BRANDING_CHANGE_EVENT } from "@/features/admin/shell/admin-context";
 
 const VALID_SECTIONS: SettingsSectionId[] = [
   "organization",
@@ -253,6 +254,11 @@ export function useSettings() {
           branding: { ...prev.branding, logo: partial.logo! },
         };
       });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent(BRANDING_CHANGE_EVENT, { detail: { logo: partial.logo || null } })
+        );
+      }
     }
   };
 
@@ -288,6 +294,11 @@ export function useSettings() {
           organization: partial.logo !== undefined ? { ...prev.organization, logo: partial.logo } : prev.organization,
         };
       });
+      if (partial.logo !== undefined && typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent(BRANDING_CHANGE_EVENT, { detail: { logo: partial.logo || null } })
+        );
+      }
     }
   };
 

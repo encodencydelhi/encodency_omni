@@ -404,17 +404,17 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       return mapApiRow(detail);
     },
 
-    async createCompany(input: CreateCompanyInput, actor): Promise<CompanySummary> {
+    async createCompany(input: CreateCompanyInput, actor, options?): Promise<CompanySummary> {
       const name = input.name.trim();
       const ownerEmail = (input.owner?.email || "").trim().toLowerCase();
 
-      // Required: Idempotency-Key header per user intent
-      const idempotencyKey = crypto.randomUUID();
-
       // Step 1: POST /super-admin/companies. The DTO runs with
       // `forbidNonWhitelisted`, so every key below must exist on
-      // CreateSuperAdminCompanyDto and nothing else may be added — a field the
+      // `CreateSuperAdminCompanyDto` and nothing else may be added — a field the
       // backend does not know turns the whole create into a 400.
+      // The key is caller-owned so a retry of the SAME logical create replays the
+      // first response instead of creating a second Company.
+      const idempotencyKey = options?.idempotencyKey ?? crypto.randomUUID();
       const body = {
         name,
         ownerEmail,

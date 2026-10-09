@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { OrganizationProfile } from "../settings-data/types";
 import { useSettingsCapability } from "../settings-data/capability-provider";
 import { brandingApi, describeBrandingError } from "../live/branding-api";
+import { BRANDING_CHANGE_EVENT } from "@/features/admin/shell/admin-context";
 
 interface OrganizationSectionProps {
   data: OrganizationProfile;
@@ -49,6 +50,11 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
       const res = await brandingApi.upload("logo", file);
       const newUrl = res.logo?.url || "";
       onChange({ logo: newUrl });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent(BRANDING_CHANGE_EVENT, { detail: { logo: newUrl } })
+        );
+      }
       toast.success("Organization logo updated successfully.");
     } catch (err: unknown) {
       console.error("Failed to upload logo to backend:", err);
@@ -64,6 +70,11 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
       setIsUploadingLogo(true);
       await brandingApi.remove("logo");
       onChange({ logo: "" });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent(BRANDING_CHANGE_EVENT, { detail: { logo: null } })
+        );
+      }
       toast.success("Logo removed successfully.");
     } catch (err: unknown) {
       console.error("Failed to delete logo from backend:", err);

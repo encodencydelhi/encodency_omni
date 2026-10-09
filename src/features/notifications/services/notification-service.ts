@@ -52,17 +52,19 @@ function toAdminNotification(item: BackendNotificationItem): AdminNotification {
       ? "warning"
       : "info";
 
-  let href: string | null = null;
-  if (typeof item.data?.scheduledPostId === "string") {
-    href = `/admin/content?post=${encodeURIComponent(item.data.scheduledPostId)}`;
-  } else if (typeof item.data?.draftId === "string") {
-    href = `/admin/content-studio`;
-  } else if (typeof item.data?.clientId === "string") {
-    href = `/admin/clients/${encodeURIComponent(item.data.clientId)}`;
-  } else if (typeof item.data?.href === "string") {
-    href = item.data.href;
-  } else if (typeof item.data?.link === "string") {
-    href = item.data.link;
+  let href: string | null = supportHref(item);
+  if (!href) {
+    if (typeof item.data?.scheduledPostId === "string") {
+      href = `/admin/content?post=${encodeURIComponent(item.data.scheduledPostId)}`;
+    } else if (typeof item.data?.draftId === "string") {
+      href = `/admin/content-studio`;
+    } else if (typeof item.data?.clientId === "string") {
+      href = `/admin/clients/${encodeURIComponent(item.data.clientId)}`;
+    } else if (typeof item.data?.href === "string") {
+      href = item.data.href;
+    } else if (typeof item.data?.link === "string") {
+      href = item.data.link;
+    }
   }
 
   return {
@@ -72,9 +74,7 @@ function toAdminNotification(item: BackendNotificationItem): AdminNotification {
     category,
     severity,
     isRead: Boolean(item.readAt),
-    href: supportHref(item) ?? (typeof item.data?.scheduledPostId === "string"
-      ? `/admin/content?post=${encodeURIComponent(item.data.scheduledPostId)}`
-      : null),
+    href,
     source: item.companyId ?? "system",
     createdAt: item.createdAt,
   };
