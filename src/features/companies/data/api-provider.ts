@@ -82,7 +82,7 @@ interface SuperAdminCompanySummary {
   contactEmail?: string | null;
   contactPhone?: string | null;
   description?: string | null;
-  address?: any;
+  address?: { country?: string | null; state?: string | null } | null;
   taxId?: string | null;
   timezone?: string | null;
   currency?: string | null;
@@ -185,7 +185,7 @@ function planLabel(tier: string): string {
 }
 
 function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
-  const address = (row.address as Record<string, string> | null) || {};
+  const address = row.address ?? {};
   const website = row.website ?? null;
   const domain = website ? website.replace(/^https?:\/\//i, "").split("/")[0] : null;
   return {
@@ -533,7 +533,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       // Decision 2: name/status are Company administration fields;
       // legalName, industry, website, contact, address, taxId, timezone, currency remain Organization Profile fields.
       const name = input.name?.trim();
-      const body: Record<string, any> = {};
+      const body: Record<string, unknown> = {};
       if (name) body.name = name;
 
       const patched = await apiClient.request<SuperAdminCompanyDetailResponse>({
