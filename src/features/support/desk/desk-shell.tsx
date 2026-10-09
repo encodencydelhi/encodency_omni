@@ -62,7 +62,7 @@ export function DeskShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </div>
-        <nav className="mt-3 flex gap-1 overflow-x-auto" aria-label="Support desk sections">
+        <nav className="mt-3 flex gap-1 overflow-x-auto overflow-y-hidden" aria-label="Support desk sections">
           {tabs.map((tab) => {
             const current = tab.href === "/super-admin/support" ? pathname === tab.href : pathname.startsWith(tab.href) || (tab.href.endsWith("/inbox") && pathname.includes("/tickets/"));
             return (
@@ -70,7 +70,7 @@ export function DeskShell({ children }: { children: ReactNode }) {
                 key={tab.href}
                 href={tab.href}
                 aria-current={current ? "page" : undefined}
-                className={cn("-mb-px inline-flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-2.5 text-xs font-semibold transition", current ? "border-red-600 text-red-600" : "border-transparent text-slate-500 hover:text-slate-900")}
+                className={cn("inline-flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-2.5 text-xs font-semibold transition", current ? "border-red-600 text-red-600" : "border-transparent text-slate-500 hover:text-slate-900")}
               >
                 <tab.icon className="size-3.5" />
                 {tab.label}
