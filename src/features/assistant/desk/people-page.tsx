@@ -36,19 +36,19 @@ export function AssistantPeoplePage() {
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3">
         <SearchBox value={text} onChange={setText} placeholder="Search by name or email…" className="min-w-[260px]" />
         <Select label="Period" value={values.range} onChange={(value) => set({ range: value })} options={RANGE_TABS.map((tab) => ({ value: tab.id as DeskRange, label: tab.id === "all" ? "Ever" : tab.label }))} />
-        <Select label="Sort" value={values.sort} onChange={(value) => set({ sort: value })} options={[{ value: "recent", label: "Recently active" }, { value: "tokens", label: "Most tokens" }, { value: "chats", label: "Most chats" }]} />
+        <Select label="Sort" value={values.sort} onChange={(value) => set({ sort: value })} options={[{ value: "recent", label: "Recently Active" }, { value: "tokens", label: "Most Tokens" }, { value: "chats", label: "Most Chats" }]} />
       </div>
 
       {people.isError ? (
         <div className="p-4">
-          <Notice tone="red" title="People could not be loaded" action={<button type="button" className={btn} onClick={() => void people.refetch()}>Try again</button>}>
+          <Notice tone="red" title="People Could Not Be Loaded" action={<button type="button" className={btn} onClick={() => void people.refetch()}>Try again</button>}>
             {errorMessage(people.error)}
           </Notice>
         </div>
       ) : people.isLoading ? (
         <ListSkeleton rows={8} />
       ) : people.data && people.data.items.length === 0 ? (
-        <EmptyState icon={UsersRound} title="Nobody here yet" description={values.q ? "No one matches that name or email." : "People appear once they ask the assistant something."} />
+        <EmptyState icon={UsersRound} title="Nobody Here Yet" description={values.q ? "No one matches that name or email." : "People appear once they ask the assistant something."} />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-xs">

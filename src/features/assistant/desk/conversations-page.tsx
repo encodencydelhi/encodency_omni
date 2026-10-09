@@ -55,12 +55,12 @@ export function AssistantConversationsPage() {
             label="Company"
             value={values.company}
             onChange={(value) => set({ company: value })}
-            options={[{ value: "", label: "All companies" }, ...(filters.data?.companies ?? []).map((item) => ({ value: item.id, label: `${item.name} (${item.conversations})` })), ...(values.company && !company ? [{ value: values.company, label: "Selected company" }] : [])]}
+            options={[{ value: "", label: "All Companies" }, ...(filters.data?.companies ?? []).map((item) => ({ value: item.id, label: `${item.name} (${item.conversations})` })), ...(values.company && !company ? [{ value: values.company, label: "Selected Company" }] : [])]}
           />
-          <Select label="Asked on page" value={values.on} onChange={(value) => set({ on: value })} options={[{ value: "", label: "Any page" }, ...(filters.data?.pages ?? []).map((item) => ({ value: item.id ?? "", label: item.title }))]} />
-          <Select label="Show" value={values.flag} onChange={(value) => set({ flag: value })} options={[{ value: "", label: "All chats" }, { value: "ticket", label: "Sent a ticket" }, { value: "degraded", label: "Had a failed answer" }, { value: "redacted", label: "Secret was masked" }]} />
+          <Select label="Asked On Page" value={values.on} onChange={(value) => set({ on: value })} options={[{ value: "", label: "Any Page" }, ...(filters.data?.pages ?? []).map((item) => ({ value: item.id ?? "", label: item.title }))]} />
+          <Select label="Show" value={values.flag} onChange={(value) => set({ flag: value })} options={[{ value: "", label: "All Chats" }, { value: "ticket", label: "Sent A Ticket" }, { value: "degraded", label: "Had A Failed Answer" }, { value: "redacted", label: "Secret Was Masked" }]} />
           <Select label="Period" value={values.range} onChange={(value) => set({ range: value })} options={RANGE_TABS.map((tab) => ({ value: tab.id as DeskRange, label: tab.label }))} />
-          <Select label="Sort" value={values.sort} onChange={(value) => set({ sort: value })} options={[{ value: "recent", label: "Latest first" }, { value: "tokens", label: "Most tokens" }, { value: "messages", label: "Longest chats" }]} />
+          <Select label="Sort" value={values.sort} onChange={(value) => set({ sort: value })} options={[{ value: "recent", label: "Latest First" }, { value: "tokens", label: "Most Tokens" }, { value: "messages", label: "Longest Chats" }]} />
         </div>
 
         {values.user && (
@@ -72,7 +72,7 @@ export function AssistantConversationsPage() {
 
         {list.isError ? (
           <div className="p-4">
-            <Notice tone="red" title="Conversations could not be loaded" action={<button type="button" className={btn} onClick={() => void list.refetch()}>Try again</button>}>
+            <Notice tone="red" title="Conversations Could Not Be Loaded" action={<button type="button" className={btn} onClick={() => void list.refetch()}>Try again</button>}>
               {errorMessage(list.error)}
             </Notice>
           </div>

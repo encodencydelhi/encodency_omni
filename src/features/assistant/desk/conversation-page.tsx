@@ -82,7 +82,7 @@ export function AssistantConversationPage({ id }: { id: string }) {
         All conversations
       </Link>
 
-      {query.isLoading && <Section title="Loading conversation…" flush><ListSkeleton rows={5} /></Section>}
+      {query.isLoading && <Section title="Loading Conversation…" flush><ListSkeleton rows={5} /></Section>}
 
       {query.isError && (
         <Section title="Conversation">
@@ -129,23 +129,23 @@ export function AssistantConversationPage({ id }: { id: string }) {
                 </KeyValue>
                 <KeyValue label="Email">{data.person.email}</KeyValue>
                 <KeyValue label="Company">{data.company.name}</KeyValue>
-                <KeyValue label="Role then">{data.person.role ? (ROLE_LABEL[data.person.role] ?? data.person.role) : "—"}</KeyValue>
-                <KeyValue label="Started on">{data.firstPage.title}</KeyValue>
+                <KeyValue label="Role Then">{data.person.role ? (ROLE_LABEL[data.person.role] ?? data.person.role) : "—"}</KeyValue>
+                <KeyValue label="Started On">{data.firstPage.title}</KeyValue>
                 <KeyValue label="Started">{dateTime(data.startedAt)}</KeyValue>
-                <KeyValue label="Last message">{timeAgo(data.lastMessageAt)}</KeyValue>
+                <KeyValue label="Last Message">{timeAgo(data.lastMessageAt)}</KeyValue>
                 <KeyValue label="Lasted">
                   <span className="inline-flex items-center gap-1"><Clock className="size-3 text-slate-400" />{span(new Date(data.lastMessageAt).getTime() - new Date(data.startedAt).getTime())}</span>
                 </KeyValue>
               </Section>
 
               <Section title="Tokens">
-                <KeyValue label="Sent to the model">{full(data.promptTokens)}</KeyValue>
-                <KeyValue label="Written by the model">{full(data.completionTokens)}</KeyValue>
+                <KeyValue label="Sent To The Model">{full(data.promptTokens)}</KeyValue>
+                <KeyValue label="Written By The Model">{full(data.completionTokens)}</KeyValue>
                 <KeyValue label="Total">{full(data.tokens)}</KeyValue>
-                <KeyValue label="Per answer">{data.questions > 0 ? full(Math.round(data.tokens / data.questions)) : "—"}</KeyValue>
+                <KeyValue label="Per Answer">{data.questions > 0 ? full(Math.round(data.tokens / data.questions)) : "—"}</KeyValue>
               </Section>
 
-              <Section title="Support ticket">
+              <Section title="Support Ticket">
                 {data.ticket ? (
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-slate-900">#{data.ticket.number} {data.ticket.subject}</p>
@@ -163,7 +163,7 @@ export function AssistantConversationPage({ id }: { id: string }) {
                 )}
               </Section>
 
-              <Notice tone="blue" title="Reading this was recorded">
+              <Notice tone="blue" title="Reading This Was Recorded">
                 Opening a conversation is written to the Audit Log with your name, so people&apos;s chats are only read for a reason.
               </Notice>
             </div>

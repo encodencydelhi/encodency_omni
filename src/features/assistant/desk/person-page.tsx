@@ -63,29 +63,29 @@ export function AssistantPersonPage({ userId }: { userId: string }) {
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
             <StatTile label="Conversations" value={full(data.stats.conversations)} icon={MessagesSquare} tone="blue" />
             <StatTile label="Questions" value={full(data.stats.questions)} icon={MessageCircleQuestion} tone="violet" />
-            <StatTile label="Tokens used" value={compact(data.stats.tokens)} icon={Coins} tone="orange" sub={`↑ ${compact(data.stats.promptTokens)} · ↓ ${compact(data.stats.completionTokens)}`} />
-            <StatTile label="Avg tokens / chat" value={full(data.stats.avgTokensPerConversation)} icon={Gauge} />
-            <StatTile label="Tickets sent" value={full(data.stats.ticketsSent)} icon={Ticket} tone="green" />
-            <StatTile label="Failed answers" value={full(data.stats.failedReplies)} icon={TriangleAlert} tone={data.stats.failedReplies > 0 ? "red" : undefined} sub={data.stats.maskedMessages > 0 ? `${data.stats.maskedMessages} secret${data.stats.maskedMessages === 1 ? "" : "s"} masked` : undefined} />
+            <StatTile label="Tokens Used" value={compact(data.stats.tokens)} icon={Coins} tone="orange" sub={`↑ ${compact(data.stats.promptTokens)} · ↓ ${compact(data.stats.completionTokens)}`} />
+            <StatTile label="Avg Tokens / Chat" value={full(data.stats.avgTokensPerConversation)} icon={Gauge} />
+            <StatTile label="Tickets Sent" value={full(data.stats.ticketsSent)} icon={Ticket} tone="green" />
+            <StatTile label="Failed Answers" value={full(data.stats.failedReplies)} icon={TriangleAlert} tone={data.stats.failedReplies > 0 ? "red" : undefined} sub={data.stats.maskedMessages > 0 ? `${data.stats.maskedMessages} secret${data.stats.maskedMessages === 1 ? "" : "s"} masked` : undefined} />
           </div>
 
           <div className="grid gap-2 xl:grid-cols-3">
-            <Section title="Activity, last 30 days" description="Questions per day and tokens used." className="xl:col-span-2">
+            <Section title="Activity, Last 30 Days" description="Questions per day and tokens used." className="xl:col-span-2">
               <UsageChart data={data.series} height={170} />
             </Section>
             <div className="space-y-2">
-              <Section title="Where they ask">
+              <Section title="Where They Ask">
                 <BarList color="bg-blue-500" rows={data.pages.map((p) => ({ key: p.id ?? "other", label: p.title, value: p.questions, hint: `${compact(p.tokens)} tokens` }))} empty="No questions yet." />
               </Section>
-              <Section title="What they talk about">
+              <Section title="What They Talk About">
                 <KeywordCloud words={data.keywords} />
               </Section>
             </div>
           </div>
 
-          <Section title="Their conversations" description="Newest first. Open one to read it word for word." flush>
+          <Section title="Their Conversations" description="Newest first. Open one to read it word for word." flush>
             {data.conversations.items.length === 0 ? (
-              <EmptyState icon={MessagesSquare} title="No conversations" />
+              <EmptyState icon={MessagesSquare} title="No Conversations" />
             ) : (
               <ul className="divide-y divide-slate-100">{data.conversations.items.map((item) => <ConversationRow key={item.id} item={item} showPerson={false} />)}</ul>
             )}
@@ -93,7 +93,7 @@ export function AssistantPersonPage({ userId }: { userId: string }) {
           </Section>
 
           {data.stats.maskedMessages > 0 && (
-            <Notice tone="amber" title="This person shared sensitive details">
+            <Notice tone="amber" title="This Person Shared Sensitive Details">
               <span className="inline-flex items-center gap-1.5"><ShieldAlert className="size-3.5" />Passwords, keys or card numbers in their messages were removed before saving and before reaching the model.</span>
             </Notice>
           )}

@@ -122,7 +122,7 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
                 {bootstrap?.page ? `You are on ${bootstrap.page.title}` : "Ask me how to use the platform"} · any language
               </DialogDescription>
             </div>
-            <button type="button" onClick={chat.reset} disabled={empty} aria-label="Start a new chat" title="New chat" className="grid size-8 place-items-center rounded-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40">
+            <button type="button" onClick={chat.reset} disabled={empty} aria-label="Start a new chat" title="New Chat" className="grid size-8 place-items-center rounded-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40">
               <RotateCcw className="size-4" />
             </button>
             <DialogPrimitive.Close aria-label="Close assistant" className="grid size-8 place-items-center rounded-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">

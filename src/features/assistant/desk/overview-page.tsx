@@ -29,7 +29,7 @@ export function AssistantOverviewPage() {
       </div>
 
       {overview.isError && (
-        <Notice tone="red" title="The assistant numbers could not be loaded" action={<button type="button" className={btn} onClick={() => void overview.refetch()}>Try again</button>}>
+        <Notice tone="red" title="The Assistant Numbers Could Not Be Loaded" action={<button type="button" className={btn} onClick={() => void overview.refetch()}>Try again</button>}>
           {errorMessage(overview.error)}
         </Notice>
       )}
@@ -43,8 +43,8 @@ export function AssistantOverviewPage() {
       )}
 
       {data && data.totals.conversations === 0 && (
-        <Section title="No conversations yet" description={`Nobody has used the assistant ${RANGE_NOUN[range]}.`}>
-          <EmptyState icon={MessageCircleQuestion} title="Waiting for the first question" description="When people press Help & Support in the Admin panel and ask something, their conversations and token use appear here." />
+        <Section title="No Conversations Yet" description={`Nobody has used the assistant ${RANGE_NOUN[range]}.`}>
+          <EmptyState icon={MessageCircleQuestion} title="Waiting For The First Question" description="When people press Help & Support in the Admin panel and ask something, their conversations and token use appear here." />
         </Section>
       )}
 
@@ -52,31 +52,31 @@ export function AssistantOverviewPage() {
         <>
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
             <StatTile label="Conversations" value={full(data.totals.conversations)} icon={MessagesSquare} tone="blue" sub={<Delta value={data.change?.conversations} />} />
-            <StatTile label="Questions asked" value={full(data.totals.questions)} icon={MessageCircleQuestion} tone="violet" sub={<Delta value={data.change?.questions} />} />
+            <StatTile label="Questions Asked" value={full(data.totals.questions)} icon={MessageCircleQuestion} tone="violet" sub={<Delta value={data.change?.questions} />} />
             <StatTile label="People" value={full(data.totals.users)} icon={UsersRound} tone="green" sub={`in ${data.totals.companies} ${data.totals.companies === 1 ? "company" : "companies"}`} />
-            <StatTile label="Tokens used" value={compact(data.totals.totalTokens)} icon={Coins} tone="orange" sub={<Delta value={data.change?.tokens} />} />
-            <StatTile label="Avg tokens / answer" value={full(data.totals.avgTokensPerReply)} icon={Gauge} sub={`↑ ${compact(data.totals.promptTokens)} in · ↓ ${compact(data.totals.completionTokens)} out`} />
-            <StatTile label="Tickets sent" value={full(data.totals.ticketsFromAssistant)} icon={Ticket} tone="green" sub="raised from a conversation" href="/super-admin/assistant/conversations?flag=ticket" />
+            <StatTile label="Tokens Used" value={compact(data.totals.totalTokens)} icon={Coins} tone="orange" sub={<Delta value={data.change?.tokens} />} />
+            <StatTile label="Avg Tokens / Answer" value={full(data.totals.avgTokensPerReply)} icon={Gauge} sub={`↑ ${compact(data.totals.promptTokens)} in · ↓ ${compact(data.totals.completionTokens)} out`} />
+            <StatTile label="Tickets Sent" value={full(data.totals.ticketsFromAssistant)} icon={Ticket} tone="green" sub="raised from a conversation" href="/super-admin/assistant/conversations?flag=ticket" />
           </div>
 
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-            <StatTile label="Avg answer time" value={seconds(data.totals.avgLatencyMs)} icon={Timer} sub="model + tools" />
-            <StatTile label="Failed answers" value={`${data.totals.failureRate}%`} icon={AlertTriangle} tone={data.totals.degraded > 0 ? "red" : undefined} sub={`${data.totals.degraded} of ${data.totals.replies}`} href="/super-admin/assistant/conversations?flag=degraded" />
-            <StatTile label="Secrets masked" value={full(data.totals.redacted)} icon={ShieldAlert} tone={data.totals.redacted > 0 ? "amber" : undefined} sub="passwords, keys, cards removed" href="/super-admin/assistant/conversations?flag=redacted" />
-            <StatTile label="Questions per chat" value={data.totals.avgQuestionsPerConversation} icon={MessagesSquare} sub="longer chats can mean unsolved" />
+            <StatTile label="Avg Answer Time" value={seconds(data.totals.avgLatencyMs)} icon={Timer} sub="model + tools" />
+            <StatTile label="Failed Answers" value={`${data.totals.failureRate}%`} icon={AlertTriangle} tone={data.totals.degraded > 0 ? "red" : undefined} sub={`${data.totals.degraded} of ${data.totals.replies}`} href="/super-admin/assistant/conversations?flag=degraded" />
+            <StatTile label="Secrets Masked" value={full(data.totals.redacted)} icon={ShieldAlert} tone={data.totals.redacted > 0 ? "amber" : undefined} sub="passwords, keys, cards removed" href="/super-admin/assistant/conversations?flag=redacted" />
+            <StatTile label="Questions Per Chat" value={data.totals.avgQuestionsPerConversation} icon={MessagesSquare} sub="longer chats can mean unsolved" />
           </div>
 
           <div className="grid gap-2 xl:grid-cols-3">
-            <Section title="Usage over time" description="Questions per day and the tokens they used." className="xl:col-span-2">
+            <Section title="Usage Over Time" description="Questions per day and the tokens they used." className="xl:col-span-2">
               <UsageChart data={data.series} height={270} />
             </Section>
-            <Section title="Where people ask" description="The page they were on when they asked.">
+            <Section title="Where People Ask" description="The page they were on when they asked.">
               <BarList color="bg-blue-500" rows={data.pages.map((page) => ({ key: page.id ?? "other", label: page.title, value: page.questions, hint: `${compact(page.tokens)} tokens` }))} empty="No questions yet." />
             </Section>
           </div>
 
           <div className="grid gap-2 xl:grid-cols-3">
-            <Section title="Most asked questions" description="The same question asked again and again points to missing help." className="xl:col-span-2" flush>
+            <Section title="Most Asked Questions" description="The same question asked again and again points to missing help." className="xl:col-span-2" flush>
               <ul className="divide-y divide-slate-100">
                 {data.topQuestions.map((question) => (
                   <li key={question.text} className="flex items-start gap-3 px-4 py-2.5">
@@ -87,13 +87,13 @@ export function AssistantOverviewPage() {
                 ))}
               </ul>
             </Section>
-            <Section title="What people talk about" description="Words used most in questions.">
+            <Section title="What People Talk About" description="Words used most in questions.">
               <KeywordCloud words={data.keywords} />
             </Section>
           </div>
 
           <div className="grid gap-2 xl:grid-cols-3">
-            <Section title="What the assistant did" description="Actions it took for people.">
+            <Section title="What The Assistant Did" description="Actions it took for people.">
               <BarList color="bg-violet-500" rows={data.tools.map((tool) => ({ key: tool.name, label: toolLabel(tool.name), value: tool.count }))} empty="It only answered questions; no actions yet." />
               {data.cards.length > 0 && (
                 <p className="mt-3 border-t border-slate-100 pt-3 text-[11px] font-medium text-slate-500">
@@ -101,7 +101,7 @@ export function AssistantOverviewPage() {
                 </p>
               )}
             </Section>
-            <Section title="Model & tokens" description="Which model answered and what it used." className="xl:col-span-2" flush>
+            <Section title="Model & Tokens" description="Which model answered and what it used." className="xl:col-span-2" flush>
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50/70 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
@@ -133,7 +133,7 @@ export function AssistantOverviewPage() {
           </div>
 
           <div className="grid gap-2 xl:grid-cols-2">
-            <Section title="Busiest companies" description="By people using it, then questions." flush action={<Link href="/super-admin/assistant/conversations" className={btn}>All conversations</Link>}>
+            <Section title="Busiest Companies" description="By people using it, then questions." flush action={<Link href="/super-admin/assistant/conversations" className={btn}>All conversations</Link>}>
               <ul className="divide-y divide-slate-100">
                 {data.companies.map((company) => (
                   <li key={company.id}>
@@ -149,7 +149,7 @@ export function AssistantOverviewPage() {
                 ))}
               </ul>
             </Section>
-            <Section title="Most active people" description="Open one to read everything they asked." flush action={<Link href="/super-admin/assistant/people" className={btn}>All people</Link>}>
+            <Section title="Most Active People" description="Open one to read everything they asked." flush action={<Link href="/super-admin/assistant/people" className={btn}>All people</Link>}>
               <ul className="divide-y divide-slate-100">
                 {data.people.map((person) => (
                   <li key={person.id}>
@@ -167,7 +167,7 @@ export function AssistantOverviewPage() {
             </Section>
           </div>
 
-          <Section title="Latest conversations" description="The newest chats, word for word one click away." flush action={<Link href="/super-admin/assistant/conversations" className={btn}>See all</Link>}>
+          <Section title="Latest Conversations" description="The newest chats, word for word one click away." flush action={<Link href="/super-admin/assistant/conversations" className={btn}>See all</Link>}>
             {overview.isFetching && !data.recent.length ? <ListSkeleton rows={4} /> : <ul className="divide-y divide-slate-100">{data.recent.map((item) => <ConversationRow key={item.id} item={item} />)}</ul>}
           </Section>
         </>

@@ -124,7 +124,8 @@ export const notificationService = {
 
       return res as PaginatedResponse<AdminNotification>;
     } catch (err) {
-      console.warn("Failed to fetch notifications:", err);
+      // A request that was cancelled on purpose (page change, dev double-render) is not a failure worth logging.
+      if (!(err instanceof Error && err.name === "AbortError")) console.warn("Failed to fetch notifications:", err);
       return {
         data: [],
         pagination: {

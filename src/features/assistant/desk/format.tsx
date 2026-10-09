@@ -3,10 +3,10 @@ import { cn } from "@/lib/utils/cn";
 import type { DeskRange } from "./types";
 
 export const RANGE_TABS: Array<{ id: DeskRange; label: string }> = [
-  { id: "7d", label: "Last 7 days" },
-  { id: "30d", label: "Last 30 days" },
-  { id: "90d", label: "Last 90 days" },
-  { id: "all", label: "All time" },
+  { id: "7d", label: "Last 7 Days" },
+  { id: "30d", label: "Last 30 Days" },
+  { id: "90d", label: "Last 90 Days" },
+  { id: "all", label: "All Time" },
 ];
 
 export const RANGE_NOUN: Record<DeskRange, string> = { "7d": "in the last 7 days", "30d": "in the last 30 days", "90d": "in the last 90 days", all: "so far" };
@@ -28,11 +28,11 @@ export function seconds(ms: number): string {
 
 /** What the assistant did, in words (the model's tool names are internal). */
 export const TOOL_LABEL: Record<string, string> = {
-  navigate_to_page: "Pointed to a page",
-  draft_support_ticket: "Prepared a support ticket",
-  find_my_tickets: "Looked up tickets",
+  navigate_to_page: "Pointed To A Page",
+  draft_support_ticket: "Prepared A Support Ticket",
+  find_my_tickets: "Looked Up Tickets",
 };
-export const CARD_LABEL: Record<string, string> = { navigate: "Page button", ticket_draft: "Ticket draft", tickets: "Ticket list" };
+export const CARD_LABEL: Record<string, string> = { navigate: "Page Button", ticket_draft: "Ticket Draft", tickets: "Ticket List" };
 export const toolLabel = (name: string) => TOOL_LABEL[name] ?? name;
 export const cardLabel = (name: string) => CARD_LABEL[name.split(":")[0]!] ?? name;
 
