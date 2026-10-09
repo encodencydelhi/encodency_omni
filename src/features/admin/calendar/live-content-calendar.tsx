@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { describeScheduleError, type ScheduledPostStatus } from "@/features/admin/content/live/scheduling-api";
+import { describeScheduleError } from "@/features/admin/content/live/scheduling-api";
 import { describeScheduleErrorCode, SCHEDULED_POST_STATUS_META } from "@/features/admin/content/live/scheduling-status";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { cn } from "@/lib/utils/cn";
