@@ -1,0 +1,141 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ApiError } from "@/types/api";
+import { assistantApi } from "./api";
+import { historyForServer, MAX_INPUT_CHARS, readStored, storageKey, trimForStorage } from "./text";
+import type { ActionState, AssistantAction, ChatMessage } from "./types";
+
+const newId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `m${Date.now()}${Math.random().toString(16).slice(2)}`);
+
+interface Options {
+  userId: string | undefined;
+  companyId: string | undefined;
+  pathname: string;
+  pageTitle: string | undefined;
+  /** Opens a page for the person (also closes the assistant). */
+  go: (path: string) => void;
+}
+
+/**
+ * The conversation lives in this tab only (sessionStorage, keyed by person and Company) so it survives closing the
+ * modal and page changes, never leaks to another person on the same tab, and is not stored on the server.
+ */
+export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }: Options) {
+  const key = storageKey(userId, companyId);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const ref = useRef<ChatMessage[]>([]);
+  const abort = useRef<AbortController | null>(null);
+
+  // Switching person or Company swaps the whole conversation (done while rendering, not in an effect).
+  if (key !== loadedKey) {
+    setLoadedKey(key);
+    let restored: ChatMessage[] = [];
+    try {
+      restored = key ? readStored(window.sessionStorage.getItem(key)) : [];
+    } catch {
+      restored = [];
+    }
+    ref.current = restored;
+    setMessages(restored);
+  }
+
+  useEffect(() => {
+    if (!key) return;
+    try {
+      window.sessionStorage.setItem(key, JSON.stringify(trimForStorage(messages)));
+    } catch {
+      // Storage can be blocked; the conversation then simply lasts until the page is reloaded.
+    }
+  }, [key, messages]);
+
+  useEffect(() => () => abort.current?.abort(), []);
+
+  const commit = useCallback((update: (current: ChatMessage[]) => ChatMessage[]) => {
+    ref.current = update(ref.current);
+    setMessages(ref.current);
+  }, []);
+
+  const patchState = useCallback(
+    (messageId: string, index: number, patch: ActionState) => {
+      commit((current) => current.map((message) => (message.id === messageId ? { ...message, state: { ...message.state, [index]: { ...message.state?.[index], ...patch } } } : message)));
+    },
+    [commit],
+  );
+
+  const open = useCallback(
+    (messageId: string, index: number, path: string) => {
+      patchState(messageId, index, { navigated: true });
+      go(path);
+    },
+    [go, patchState],
+  );
+
+  const send = useCallback(
+    async (text: string) => {
+      const content = text.trim().slice(0, MAX_INPUT_CHARS);
+      if (!content || !companyId || abort.current) return;
+      commit((current) => [...current, { id: newId(), role: "user", content, createdAt: Date.now() }]);
+      const controller = new AbortController();
+      abort.current = controller;
+      setPending(true);
+      try {
+        const reply = await assistantApi.chat(companyId, { path: pathname, locale: typeof navigator !== "undefined" ? navigator.language : undefined, messages: historyForServer(ref.current) }, controller.signal);
+        const message: ChatMessage = { id: newId(), role: "assistant", content: reply.reply, createdAt: Date.now(), actions: reply.actions, degraded: reply.degraded, redacted: reply.redacted };
+        commit((current) => [...current, message]);
+        // Only a plain page-open the person explicitly asked for runs by itself; everything else waits for a click.
+        const auto = reply.actions.findIndex((action: AssistantAction) => action.type === "navigate" && action.auto);
+        const target = reply.actions[auto];
+        if (target && target.type === "navigate") open(message.id, auto, target.path);
+      } catch (error) {
+        if (controller.signal.aborted && !(error instanceof ApiError)) return;
+        const limited = ApiError.isApiError(error) && error.reason === "assistant_rate_limited";
+        commit((current) => [
+          ...current,
+          {
+            id: newId(),
+            role: "assistant",
+            content: limited && ApiError.isApiError(error) ? error.message : "I could not reach the assistant just now. Please try again, or send your question to the support team.",
+            createdAt: Date.now(),
+            notice: true,
+            degraded: !limited,
+          },
+        ]);
+      } finally {
+        // A reset (or a newer request) may already own the slot; only release what this request took.
+        if (abort.current === controller) {
+          abort.current = null;
+          setPending(false);
+        }
+      }
+    },
+    [commit, companyId, open, pathname],
+  );
+
+  /** A blank ticket the person fills in (seeded with their last message), for when they would rather talk to people. */
+  const startTicket = useCallback(() => {
+    const lastUser = [...ref.current].reverse().find((message) => message.role === "user" && !message.notice);
+    const relatedUrl = /^\/admin(\/[A-Za-z0-9._~\-/]*)?$/.test(pathname) ? pathname : undefined;
+    commit((current) => [
+      ...current,
+      {
+        id: newId(),
+        role: "assistant",
+        content: "Tell the support team what is wrong. You can edit everything below before sending.",
+        createdAt: Date.now(),
+        actions: [{ type: "ticket_draft", subject: "", description: lastUser?.content ?? "", category: "technical", priority: "normal", ...(pageTitle ? { relatedModule: pageTitle.slice(0, 60) } : {}), ...(relatedUrl ? { relatedUrl } : {}) }],
+      },
+    ]);
+  }, [commit, pageTitle, pathname]);
+
+  const reset = useCallback(() => {
+    abort.current?.abort();
+    abort.current = null;
+    setPending(false);
+    commit(() => []);
+  }, [commit]);
+
+  return { messages, pending, send, open, patchState, startTicket, reset };
+}
