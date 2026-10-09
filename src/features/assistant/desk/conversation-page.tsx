@@ -50,7 +50,7 @@ function Message({ message, person }: { message: ThreadMessage; person: string }
         )}
         {!mine && (
           <div className="mt-1.5 flex flex-wrap items-center justify-end gap-1.5 text-[11px] font-medium text-slate-500">
-            {message.degraded && <Badge tone="red">Failed answer</Badge>}
+            {message.degraded && <Badge tone="red">Failed Answer</Badge>}
             {message.tools.map((tool, index) => (
               <Badge key={`${tool}-${index}`} tone="violet">
                 <Wrench className="size-3" />
@@ -79,7 +79,7 @@ export function AssistantConversationPage({ id }: { id: string }) {
     <div className="space-y-2">
       <Link href="/super-admin/assistant/conversations" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 transition hover:text-red-700">
         <ArrowLeft className="size-3.5" />
-        All conversations
+        All Conversations
       </Link>
 
       {query.isLoading && <Section title="Loading Conversation…" flush><ListSkeleton rows={5} /></Section>}
@@ -88,9 +88,9 @@ export function AssistantConversationPage({ id }: { id: string }) {
         <Section title="Conversation">
           <EmptyState
             icon={FileSearch}
-            title={notFound ? "This conversation is gone" : "The conversation could not be loaded"}
+            title={notFound ? "This Conversation Is Gone" : "The Conversation Could Not Be Loaded"}
             description={notFound ? "It was deleted after the retention period, or the link is wrong." : errorMessage(query.error)}
-            action={<Link href="/super-admin/assistant/conversations" className={btn}>Back to the list</Link>}
+            action={<Link href="/super-admin/assistant/conversations" className={btn}>Back To The List</Link>}
           />
         </Section>
       )}
@@ -107,9 +107,9 @@ export function AssistantConversationPage({ id }: { id: string }) {
               </Link>
               <Badge tone="slate"><Building2 className="size-3" />{data.company.name}</Badge>
               {data.person.role && <Badge tone="blue">{ROLE_LABEL[data.person.role] ?? data.person.role}</Badge>}
-              <Badge tone="violet"><Coins className="size-3" />{full(data.tokens)} tokens</Badge>
-              {data.ticketNumber && <Badge tone="green"><Ticket className="size-3" />Ticket #{data.ticketNumber} sent</Badge>}
-              {data.degraded > 0 && <Badge tone="red">{data.degraded} failed</Badge>}
+              <Badge tone="violet"><Coins className="size-3" />{full(data.tokens)} Tokens</Badge>
+              {data.ticketNumber && <Badge tone="green"><Ticket className="size-3" />Ticket #{data.ticketNumber} Sent</Badge>}
+              {data.degraded > 0 && <Badge tone="red">{data.degraded} Failed</Badge>}
             </div>
           </div>
 
@@ -154,7 +154,7 @@ export function AssistantConversationPage({ id }: { id: string }) {
                       <PriorityBadge priority={data.ticket.priority as TicketPriority} />
                     </div>
                     <Link href={`/super-admin/support/tickets/${data.ticket.number}`} className={btn}>
-                      Open in Support Desk
+                      Open In Support Desk
                       <ExternalLink className="size-3.5" />
                     </Link>
                   </div>

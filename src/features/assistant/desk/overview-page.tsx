@@ -29,7 +29,7 @@ export function AssistantOverviewPage() {
       </div>
 
       {overview.isError && (
-        <Notice tone="red" title="The Assistant Numbers Could Not Be Loaded" action={<button type="button" className={btn} onClick={() => void overview.refetch()}>Try again</button>}>
+        <Notice tone="red" title="The Assistant Numbers Could Not Be Loaded" action={<button type="button" className={btn} onClick={() => void overview.refetch()}>Try Again</button>}>
           {errorMessage(overview.error)}
         </Notice>
       )}
@@ -107,8 +107,8 @@ export function AssistantOverviewPage() {
                   <tr className="border-b border-slate-200 bg-slate-50/70 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                     <th className="px-4 py-2.5">Model</th>
                     <th className="px-2 py-2.5 text-right">Answers</th>
-                    <th className="px-2 py-2.5 text-right">Tokens in</th>
-                    <th className="px-2 py-2.5 text-right">Tokens out</th>
+                    <th className="px-2 py-2.5 text-right">Tokens In</th>
+                    <th className="px-2 py-2.5 text-right">Tokens Out</th>
                     <th className="px-4 py-2.5 text-right">Total</th>
                   </tr>
                 </thead>
@@ -133,7 +133,7 @@ export function AssistantOverviewPage() {
           </div>
 
           <div className="grid gap-2 xl:grid-cols-2">
-            <Section title="Busiest Companies" description="By people using it, then questions." flush action={<Link href="/super-admin/assistant/conversations" className={btn}>All conversations</Link>}>
+            <Section title="Busiest Companies" description="By people using it, then questions." flush action={<Link href="/super-admin/assistant/conversations" className={btn}>All Conversations</Link>}>
               <ul className="divide-y divide-slate-100">
                 {data.companies.map((company) => (
                   <li key={company.id}>
@@ -149,7 +149,7 @@ export function AssistantOverviewPage() {
                 ))}
               </ul>
             </Section>
-            <Section title="Most Active People" description="Open one to read everything they asked." flush action={<Link href="/super-admin/assistant/people" className={btn}>All people</Link>}>
+            <Section title="Most Active People" description="Open one to read everything they asked." flush action={<Link href="/super-admin/assistant/people" className={btn}>All People</Link>}>
               <ul className="divide-y divide-slate-100">
                 {data.people.map((person) => (
                   <li key={person.id}>
@@ -167,7 +167,7 @@ export function AssistantOverviewPage() {
             </Section>
           </div>
 
-          <Section title="Latest Conversations" description="The newest chats, word for word one click away." flush action={<Link href="/super-admin/assistant/conversations" className={btn}>See all</Link>}>
+          <Section title="Latest Conversations" description="The newest chats, word for word one click away." flush action={<Link href="/super-admin/assistant/conversations" className={btn}>See All</Link>}>
             {overview.isFetching && !data.recent.length ? <ListSkeleton rows={4} /> : <ul className="divide-y divide-slate-100">{data.recent.map((item) => <ConversationRow key={item.id} item={item} />)}</ul>}
           </Section>
         </>

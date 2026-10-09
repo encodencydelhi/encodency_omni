@@ -41,7 +41,7 @@ export function AssistantPeoplePage() {
 
       {people.isError ? (
         <div className="p-4">
-          <Notice tone="red" title="People Could Not Be Loaded" action={<button type="button" className={btn} onClick={() => void people.refetch()}>Try again</button>}>
+          <Notice tone="red" title="People Could Not Be Loaded" action={<button type="button" className={btn} onClick={() => void people.refetch()}>Try Again</button>}>
             {errorMessage(people.error)}
           </Notice>
         </div>
@@ -55,12 +55,12 @@ export function AssistantPeoplePage() {
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/70 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-2.5">Person</th>
-                <th className="px-2 py-2.5">Company & role</th>
+                <th className="px-2 py-2.5">Company & Role</th>
                 <th className="px-2 py-2.5 text-right">Chats</th>
                 <th className="px-2 py-2.5 text-right">Questions</th>
                 <th className="px-2 py-2.5 text-right">Tokens</th>
                 <th className="px-2 py-2.5 text-right">Failed</th>
-                <th className="px-4 py-2.5 text-right">Last active</th>
+                <th className="px-4 py-2.5 text-right">Last Active</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

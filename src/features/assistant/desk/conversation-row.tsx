@@ -39,9 +39,9 @@ export function ConversationRow({ item, showPerson = true }: { item: Conversatio
               Ticket #{item.ticketNumber}
             </Badge>
           )}
-          {item.degraded > 0 && <Badge tone="red">{item.degraded} failed</Badge>}
-          {item.redacted > 0 && <Badge tone="amber">Secret masked</Badge>}
-          <Badge tone="violet">{compact(item.tokens)} tokens</Badge>
+          {item.degraded > 0 && <Badge tone="red">{item.degraded} Failed</Badge>}
+          {item.redacted > 0 && <Badge tone="amber">Secret Masked</Badge>}
+          <Badge tone="violet">{compact(item.tokens)} Tokens</Badge>
         </div>
       </Link>
     </li>

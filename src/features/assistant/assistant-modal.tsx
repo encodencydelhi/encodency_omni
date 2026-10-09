@@ -55,7 +55,7 @@ function Bubble({ message, chat, bootstrap, onNavigate }: { message: ChatMessage
           {message.degraded && bootstrap?.canRaiseTickets !== false && !message.actions?.length && (
             <button type="button" onClick={chat.startTicket} className="mt-2 inline-flex items-center gap-2 rounded-sm border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100">
               <Headphones className="size-3.5" />
-              Send this to the support team
+              Send This To The Support Team
             </button>
           )}
         </div>
@@ -146,7 +146,7 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
                 )}
                 {!disabled && (
                   <div>
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{bootstrap?.page ? `Popular on ${bootstrap.page.title}` : "Try asking"}</p>
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{bootstrap?.page ? `Popular On ${bootstrap.page.title}` : "Try Asking"}</p>
                     <div className="flex flex-wrap gap-2">
                       {bootstrapLoading && !bootstrap && <span className="h-8 w-48 animate-pulse rounded-sm bg-slate-100" />}
                       {bootstrap?.suggestions.map((suggestion) => (
@@ -190,11 +190,11 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
                 className="inline-flex items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-red-300 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <LifeBuoy className="size-3.5" />
-                Talk to the support team
+                Talk To The Support Team
               </button>
               <Link href="/admin/support/tickets" onClick={onNavigate} className="inline-flex items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-red-300 hover:text-red-700">
                 <Ticket className="size-3.5" />
-                My tickets
+                My Tickets
               </Link>
             </div>
             <div className={cn("flex items-end gap-2 rounded-sm border bg-white p-1.5 transition focus-within:border-red-400 focus-within:ring-2 focus-within:ring-red-500/15", disabled ? "border-slate-200 opacity-60" : "border-slate-300")}>

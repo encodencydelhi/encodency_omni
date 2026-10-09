@@ -26,7 +26,7 @@ export function AssistantPersonPage({ userId }: { userId: string }) {
     <div className="space-y-2">
       <Link href="/super-admin/assistant/people" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 transition hover:text-red-700">
         <ArrowLeft className="size-3.5" />
-        All people
+        All People
       </Link>
 
       {query.isLoading && <Section title="Loading…" flush><ListSkeleton rows={5} /></Section>}
@@ -34,9 +34,9 @@ export function AssistantPersonPage({ userId }: { userId: string }) {
         <Section title="Person">
           <EmptyState
             icon={FileSearch}
-            title={notFound ? "This person has not used the assistant" : "This person could not be loaded"}
+            title={notFound ? "This Person Has Not Used The Assistant" : "This Person Could Not Be Loaded"}
             description={notFound ? "There are no chats for them (or they were deleted after the retention period)." : errorMessage(query.error)}
-            action={<Link href="/super-admin/assistant/people" className={btn}>Back to people</Link>}
+            action={<Link href="/super-admin/assistant/people" className={btn}>Back To People</Link>}
           />
         </Section>
       )}
@@ -55,8 +55,8 @@ export function AssistantPersonPage({ userId }: { userId: string }) {
               </div>
             </div>
             <div className="text-right text-[11px] font-medium text-slate-500">
-              <p>First chat: <span className="font-semibold text-slate-800">{dateTime(data.stats.firstChatAt)}</span></p>
-              <p>Last active: <span className="font-semibold text-slate-800">{timeAgo(data.stats.lastActiveAt)}</span></p>
+              <p>First Chat: <span className="font-semibold text-slate-800">{dateTime(data.stats.firstChatAt)}</span></p>
+              <p>Last Active: <span className="font-semibold text-slate-800">{timeAgo(data.stats.lastActiveAt)}</span></p>
             </div>
           </div>
 

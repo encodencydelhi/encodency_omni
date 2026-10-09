@@ -44,7 +44,7 @@ export function AssistantConversationsPage() {
           dirty && (
             <button type="button" className={btn} onClick={() => { setText(""); reset(); }}>
               <X className="size-3.5" />
-              Clear filters
+              Clear Filters
             </button>
           )
         }
@@ -66,20 +66,20 @@ export function AssistantConversationsPage() {
         {values.user && (
           <div className="flex items-center justify-between gap-2 border-b border-slate-200 bg-blue-50/50 px-4 py-2 text-xs font-medium text-blue-900">
             <span>Showing the chats of one person.</span>
-            <button type="button" className="font-semibold underline" onClick={() => set({ user: "" })}>Show everyone</button>
+            <button type="button" className="font-semibold underline" onClick={() => set({ user: "" })}>Show Everyone</button>
           </div>
         )}
 
         {list.isError ? (
           <div className="p-4">
-            <Notice tone="red" title="Conversations Could Not Be Loaded" action={<button type="button" className={btn} onClick={() => void list.refetch()}>Try again</button>}>
+            <Notice tone="red" title="Conversations Could Not Be Loaded" action={<button type="button" className={btn} onClick={() => void list.refetch()}>Try Again</button>}>
               {errorMessage(list.error)}
             </Notice>
           </div>
         ) : list.isLoading ? (
           <ListSkeleton rows={8} />
         ) : list.data && list.data.items.length === 0 ? (
-          <EmptyState icon={MessagesSquare} title={dirty ? "No chats match these filters" : "No conversations yet"} description={dirty ? "Try a different word, period or company." : "Chats appear here as soon as people use Help & Support."} action={dirty ? <button type="button" className={btn} onClick={() => { setText(""); reset(); }}>Clear filters</button> : undefined} />
+          <EmptyState icon={MessagesSquare} title={dirty ? "No Chats Match These Filters" : "No Conversations Yet"} description={dirty ? "Try a different word, period or company." : "Chats appear here as soon as people use Help & Support."} action={dirty ? <button type="button" className={btn} onClick={() => { setText(""); reset(); }}>Clear Filters</button> : undefined} />
         ) : (
           <ul className="divide-y divide-slate-100">{list.data?.items.map((item) => <ConversationRow key={item.id} item={item} />)}</ul>
         )}
