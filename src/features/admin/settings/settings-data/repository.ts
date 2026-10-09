@@ -159,20 +159,24 @@ export class SettingsRepository {
                 name: orgRecord.name || base.organization.name,
                 displayName: orgRecord.displayName || base.organization.displayName,
                 legalName: orgRecord.legalName ?? "",
-                industry: orgRecord.industry ?? base.organization.industry,
+                // Mirror the record exactly when it is empty. Falling back to
+                // `base.*` here let mock/session defaults (a full mock address,
+                // industry, timezone, currency) leak into a "nothing changed"
+                // save and fabricate company data on the server.
+                industry: orgRecord.industry ?? "",
                 website: orgRecord.website ?? "",
                 contactEmail: orgRecord.contactEmail ?? "",
                 contactPhone: orgRecord.contactPhone ?? "",
                 description: orgRecord.description ?? "",
-                timezone: orgRecord.timezone ?? base.organization.timezone,
-                currency: orgRecord.currency ?? base.organization.currency,
+                timezone: orgRecord.timezone ?? "",
+                currency: orgRecord.currency ?? "",
                 address: {
-                  address: orgRecord.address?.street ?? base.organization.address?.address ?? "",
-                  street: orgRecord.address?.street ?? base.organization.address?.street ?? "",
-                  city: orgRecord.address?.city ?? base.organization.address?.city ?? "",
-                  state: orgRecord.address?.state ?? base.organization.address?.state ?? "",
-                  country: orgRecord.address?.country === "IN" ? "India" : (orgRecord.address?.country ?? base.organization.address?.country ?? "India"),
-                  postalCode: orgRecord.address?.postalCode ?? base.organization.address?.postalCode ?? "",
+                  address: orgRecord.address?.street ?? "",
+                  street: orgRecord.address?.street ?? "",
+                  city: orgRecord.address?.city ?? "",
+                  state: orgRecord.address?.state ?? "",
+                  country: orgRecord.address?.country === "IN" ? "India" : (orgRecord.address?.country ?? ""),
+                  postalCode: orgRecord.address?.postalCode ?? "",
                 },
                 metadata: {
                   ...base.organization.metadata,
@@ -247,10 +251,17 @@ export class SettingsRepository {
       }
 
       const addr = orgPatch.address;
-      const hasAnyAddress = addr && Boolean(addr.street || addr.address || addr.city || addr.state || addr.country || addr.postalCode);
+      // The Street input is bound to `address.address`; `street` only mirrors
+      // the value the page was loaded with. After the first save the two can
+      // differ, and the field the operator actually edits must win — otherwise
+      // every later edit sends the stale mirror and silently changes nothing.
+      // A cleared input stays "" here and is sent as null (clear), never as
+      // the stale mirror.
+      const streetValue = addr ? (addr.address ?? addr.street ?? "").trim() : "";
+      const hasAnyAddress = addr && Boolean(streetValue || addr.city || addr.state || addr.country || addr.postalCode);
       const addressPayload = hasAnyAddress
         ? {
-            street: (addr.street ?? addr.address)?.trim() || null,
+            street: streetValue || null,
             city: addr.city?.trim() || null,
             state: addr.state?.trim() || null,
             country: normalizeCountryCode(addr.country),

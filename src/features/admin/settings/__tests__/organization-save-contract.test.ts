@@ -180,6 +180,110 @@ describe("PATCH /settings/organization (Settings → Organization)", () => {
     assert.equal(gets()[0]!.url, "/api/v1/settings/organization");
   });
 
+  it("sends a Street-only edit (form writes address.address, API field is street)", async () => {
+    respond = (call) => (call.init.method === "PATCH" ? { status: 200, body: organisation(8) } : { status: 200, body: organisation(7) });
+
+    await SettingsRepository.saveSettings(
+      {
+        organization: {
+          ...orgState({ revision: 7 }),
+          // exactly how the Street input writes it: `address.address`, while
+          // `street` still holds the empty string the page was loaded with
+          address: { address: "42 Residency Road", street: "", city: "", state: "", country: "India", postalCode: "" },
+        },
+      } as never,
+      note,
+    );
+
+    const sent = bodyOf(patches()[0]!) as { address?: Record<string, unknown> | null };
+    assert.ok(sent.address, "a street edit alone must count as an address");
+    assert.equal(sent.address!.street, "42 Residency Road");
+    assert.equal(sent.address!.city, null);
+    assert.equal(sent.address!.country, "IN");
+  });
+
+  it("never drops an edited value from the PATCH body", async () => {
+    respond = (call) => (call.init.method === "PATCH" ? { status: 200, body: organisation(8) } : { status: 200, body: organisation(7) });
+
+    await SettingsRepository.saveSettings(
+      {
+        organization: {
+          ...orgState({ revision: 7 }),
+          legalName: "TechNova Solutions Private Limited",
+          displayName: "TechNova Labs",
+          industry: "Fintech",
+          website: "https://technova.dev",
+          contactEmail: "support@technova.dev",
+          contactPhone: "+919876543210",
+          description: "Edited by the operator",
+          // the Street input writes `address.address`; `street` stays as loaded ("")
+          address: { address: "12/4 Institutional Area", street: "", city: "Pune", state: "Maharashtra", country: "India", postalCode: "411001" },
+        },
+      } as never,
+      note,
+    );
+
+    const sent = bodyOf(patches()[0]!);
+    assert.equal(sent.legalName, "TechNova Solutions Private Limited");
+    assert.equal(sent.displayName, "TechNova Labs");
+    assert.equal(sent.industry, "Fintech");
+    assert.equal(sent.website, "https://technova.dev");
+    assert.equal(sent.contactEmail, "support@technova.dev");
+    assert.equal(sent.contactPhone, "+919876543210");
+    assert.equal(sent.description, "Edited by the operator");
+    assert.deepEqual(
+      sent.address,
+      { street: "12/4 Institutional Area", city: "Pune", state: "Maharashtra", country: "IN", postalCode: "411001" },
+      "the typed Street must land in address.street (an empty `street` must not swallow address.address)",
+    );
+  });
+
+  it("prefers the typed Street over the stale street mirror from page load", async () => {
+    respond = (call) => (call.init.method === "PATCH" ? { status: 200, body: organisation(8) } : { status: 200, body: organisation(7) });
+
+    await SettingsRepository.saveSettings(
+      {
+        organization: {
+          ...orgState({ revision: 7 }),
+          // after a reload both fields hold the server value …
+          address: { street: "12/4, Institutional Area, Lodhi Road", address: "12/4, Institutional Area, Lodhi Road", city: "New Delhi", state: "Delhi", country: "India", postalCode: "110003" },
+        },
+      } as never,
+      note,
+    );
+    // … then the operator edits only the input, so `address` differs from the
+    // untouched `street` mirror. A save in that state must send the edit.
+    await SettingsRepository.saveSettings(
+      {
+        organization: {
+          ...orgState({ revision: 8 }),
+          address: { street: "12/4, Institutional Area, Lodhi Road", address: "12/4, Institutional Area, Lodhi Road, Block C", city: "New Delhi", state: "Delhi", country: "India", postalCode: "110003" },
+        },
+      } as never,
+      note,
+    );
+
+    const sent = bodyOf(patches()[1]!) as { address?: Record<string, unknown> | null };
+    assert.equal(sent.address!.street, "12/4, Institutional Area, Lodhi Road, Block C", "the typed value must be sent, not the stale mirror");
+  });
+
+  it("sends null when the operator clears the input, not the stale street mirror", async () => {
+    respond = (call) => (call.init.method === "PATCH" ? { status: 200, body: organisation(8) } : { status: 200, body: organisation(7) });
+
+    await SettingsRepository.saveSettings(
+      {
+        organization: {
+          ...orgState({ revision: 7 }),
+          address: { street: "12/4, Institutional Area, Lodhi Road", address: "", city: "", state: "", country: "", postalCode: "" },
+        },
+      } as never,
+      note,
+    );
+
+    const sent = bodyOf(patches()[0]!) as { address?: Record<string, unknown> | null };
+    assert.equal(sent.address, null, "an emptied address block must clear the record");
+  });
+
   it("never writes the read-only Company name into displayName", async () => {
     respond = (call) => (call.init.method === "PATCH" ? { status: 200, body: organisation(8) } : { status: 200, body: organisation(7) });
 

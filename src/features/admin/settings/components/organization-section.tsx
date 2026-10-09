@@ -118,7 +118,7 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
           <div className="flex-1 min-w-0 space-y-1">
             <div className="text-[12px] font-bold text-[#1E293B]">Organization Logo</div>
             <p className="text-[10px] text-[#64748B] font-normal leading-tight">
-              Recommended format: PNG or SVG with transparent background. Square 400×400px (Max 2MB).
+              PNG, SVG, or WebP (Max 5MB). Square (1:1) displays as emblem badge with company name in the sidebar; horizontal banner (3:1 / 4:1) displays full-width.
             </p>
             <div className="flex items-center gap-2 pt-0.5">
               <input

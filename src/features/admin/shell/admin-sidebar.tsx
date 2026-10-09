@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { ChevronRight, ChevronsLeft, Headphones, X } from "lucide-react";
 import { adminNavigation } from "@/config/admin-navigation";
 import { cn } from "@/lib/utils/cn";
@@ -12,6 +12,65 @@ import { useAdminContext } from "./admin-context";
 import { ChannelLogo } from "../shared/channel-logo";
 import { Clientswitcher } from "./project-switcher";
 import logo from "@/assets/namogange.webp";
+
+function SidebarBrandLogo({
+  logoUrl,
+  name,
+}: {
+  logoUrl: string;
+  name?: string;
+}) {
+  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const img = new window.Image();
+    img.src = logoUrl;
+    img.onload = () => {
+      if (active && img.naturalHeight > 0) {
+        setAspectRatio(img.naturalWidth / img.naturalHeight);
+      }
+    };
+    return () => {
+      active = false;
+    };
+  }, [logoUrl]);
+
+  // Square or compact logo (< 1.8 ratio):
+  // Render sleek icon badge + Company Name + Workspace subtitle so it fills the sidebar width
+  if (aspectRatio !== null && aspectRatio < 1.8) {
+    return (
+      <div className="flex items-center gap-2.5 min-w-0 flex-1 px-1">
+        <div className="size-11 rounded-xl bg-white/5 border border-white/10 p-1.5 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(59,130,246,0.2)] overflow-hidden">
+          <img
+            src={logoUrl}
+            alt={name || "Company Logo"}
+            className="size-full object-contain"
+          />
+        </div>
+        <div className="min-w-0 flex-1 text-left">
+          <div className="text-[13px] font-bold text-white tracking-tight truncate leading-snug">
+            {name || "Organization"}
+          </div>
+          <div className="text-[9.5px] text-[#94A3B8] font-medium truncate uppercase tracking-wider mt-0.5">
+            Workspace
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Wide horizontal banner logo (>= 1.8 ratio or initial fallback)
+  return (
+    <div className="flex items-center justify-center max-w-full min-w-0">
+      <img
+        src={logoUrl}
+        alt={name || "Company Logo"}
+        className="h-[52px] max-w-[170px] w-auto shrink object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]"
+      />
+    </div>
+  );
+}
 
 const brandLabels = new Set([
   "Meta & Instagram",
@@ -96,12 +155,11 @@ export function AdminSidebar() {
               )
             ) : (
               <>
-                <div className="flex items-center justify-center max-w-full min-w-0">
+                <div className="flex items-center justify-center max-w-full min-w-0 flex-1">
                   {organization.logo ? (
-                    <img
-                      src={organization.logo}
-                      alt={organization.name || "Company Logo"}
-                      className="h-[52px] max-w-[150px] w-auto shrink object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]"
+                    <SidebarBrandLogo
+                      logoUrl={organization.logo}
+                      name={organization.name}
                     />
                   ) : (
                     <Image

@@ -272,7 +272,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                 <span className="text-[10px] text-[#94A3B8] font-normal">No logo uploaded</span>
               )}
             </div>
-            <p className="text-[9.5px] text-[#64748B] font-normal">PNG / JPEG / WebP • Max 5MB</p>
+            <p className="text-[9.5px] text-[#64748B] font-normal">PNG / JPEG / WebP • Max 5MB • Square (1:1) or Banner (3:1 / 4:1)</p>
             <input
               ref={logoRef}
               type="file"
