@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { DeskInboxPage } from "@/features/support/desk/inbox-page";
+import { MyTicketsPage } from "@/features/support/admin/tickets-page";
 
 export default function Page() {
   return (
     <Suspense fallback={null}>
-      <DeskInboxPage />
+      <MyTicketsPage />
     </Suspense>
   );
 }
