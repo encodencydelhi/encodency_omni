@@ -8,16 +8,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
-import {
-  LayoutDashboardIcon,
-  ReceiptIcon,
-  WalletCardsIcon,
-  RotateCcwIcon,
-  Building2Icon,
-  ScaleIcon,
-  HistoryIcon,
-  SettingsIcon,
-} from "lucide-react";
 
 export function BillingTabs() {
   const pathname = usePathname();
@@ -26,77 +16,68 @@ export function BillingTabs() {
     {
       label: "Overview",
       href: "/super-admin/billing",
-      icon: LayoutDashboardIcon,
       exact: true,
     },
     {
       label: "Invoices",
       href: "/super-admin/billing/invoices",
-      icon: ReceiptIcon,
       exact: false,
     },
     {
       label: "Payments",
       href: "/super-admin/billing/payments",
-      icon: WalletCardsIcon,
       exact: false,
     },
     {
       label: "Credits & Refunds",
       href: "/super-admin/billing/credits-refunds",
-      icon: RotateCcwIcon,
       exact: false,
     },
     {
       label: "Billing Accounts",
       href: "/super-admin/billing/accounts",
-      icon: Building2Icon,
       exact: false,
     },
     {
       label: "Reconciliation & Issues",
       href: "/super-admin/billing/reconciliation",
-      icon: ScaleIcon,
       exact: false,
     },
     {
       label: "Activity",
       href: "/super-admin/billing/activity",
-      icon: HistoryIcon,
       exact: false,
     },
     {
       label: "Settings",
       href: "/super-admin/billing/settings",
-      icon: SettingsIcon,
       exact: false,
     },
   ];
 
   return (
-    <div className="bg-transparent px-2">
-      <nav className="flex items-center gap-0 overflow-x-auto scrollbar-none" aria-label="Billing Sections">
+    <nav aria-label="Billing Sections" className="overflow-x-auto border-b border-border scrollbar-thin">
+      <ul className="flex min-w-max gap-0.5">
         {tabs.map((tab) => {
           const isActive = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
-          const Icon = tab.icon;
 
           return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={cn(
-                "group flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium transition-all whitespace-nowrap outline-none border-b-2 focus-visible:ring-2 focus-visible:ring-blue-500",
-                isActive
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-700",
-              )}
-            >
-              <Icon className={cn("size-3.5", isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600")} />
-              <span>{tab.label}</span>
-            </Link>
+            <li key={tab.href}>
+              <Link
+                href={tab.href}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "relative inline-flex items-center px-3 py-2 text-[0.8125rem] font-medium transition-colors",
+                  isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {tab.label}
+                {isActive ? <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
+              </Link>
+            </li>
           );
         })}
-      </nav>
-    </div>
+      </ul>
+    </nav>
   );
 }

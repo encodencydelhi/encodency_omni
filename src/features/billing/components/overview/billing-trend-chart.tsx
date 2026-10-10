@@ -109,7 +109,7 @@ export function BillingTrendChart({
     <div className="flex flex-col h-full bg-card rounded-sm border border-border p-3 shadow-2xs">
       <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-border/60">
         <div>
-          <h2 className="text-xs font-bold tracking-tight text-foreground uppercase">
+          <h2 className="text-xs font-medium tracking-tight text-foreground uppercase">
             Invoicing & Collections Trend
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">

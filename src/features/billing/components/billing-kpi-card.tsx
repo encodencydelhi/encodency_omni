@@ -51,7 +51,7 @@ export function BillingKpiCard({
       <div className="flex items-start justify-between gap-1.5 min-w-0">
         <div className="flex items-center gap-1.5 min-w-0" title={label}>
           {Icon && <Icon className="size-3.5 text-muted-foreground shrink-0" />}
-          <span className="text-xs font-semibold uppercase tracking-tight text-muted-foreground truncate">
+          <span className="text-xs font-medium uppercase tracking-tight text-muted-foreground truncate">
             {label}
           </span>
         </div>
@@ -71,7 +71,7 @@ export function BillingKpiCard({
       </div>
 
       <div className="mt-2 space-y-0.5 min-w-0">
-        <div className="text-lg sm:text-xl font-bold tracking-tight text-foreground truncate" title={String(value)}>
+        <div className="text-lg sm:text-xl font-medium tracking-tight text-foreground truncate" title={String(value)}>
           {value}
         </div>
         {hint && (
