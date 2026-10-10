@@ -101,14 +101,14 @@ export function InvestigationDetailPage({ id }: { id: string }) {
 
       {closed && item.closure ? <AlertBanner tone="success" title="Investigation Closed">{item.closure.reason}. {item.closure.conclusion} Closed by {item.closure.closedBy}{item.closedAt ? `, ${utcShort(item.closedAt)}` : ""}. The linked audit events were not changed.</AlertBanner> : null}
 
-      <nav aria-label="Investigation sections" className="overflow-x-auto border-b border-border scrollbar-thin">
+      <nav aria-label="Investigation sections" className="overflow-x-auto overflow-y-hidden border-b border-border scrollbar-none">
         <ul className="flex min-w-max gap-0.5">
           {TABS.map((entry) => (
             <li key={entry.key}>
               <Link href={`${auditRoutes.investigation(item.id)}${entry.key === "overview" ? "" : `?tab=${entry.key}`}`} aria-current={entry.key === tab ? "page" : undefined} className={cn("relative inline-flex items-center px-3 py-2 text-[0.8125rem] font-medium transition-colors", entry.key === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
                 {entry.label}
                 {entry.key === "events" ? <span className="ml-1.5 rounded-sm bg-muted px-1 text-2xs tabular text-muted-foreground">{item.links.length}</span> : null}
-                {entry.key === tab ? <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
+                {entry.key === tab ? <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
               </Link>
             </li>
           ))}

@@ -76,7 +76,7 @@ export function useUrlTab<T extends string>(items: ReadonlyArray<TabItem<T>>, pa
 
 export function TabBar<T extends string>({ items, value, onChange, label }: { items: ReadonlyArray<TabItem<T>>; value: T; onChange: (value: T) => void; label: string }) {
   return (
-    <div role="tablist" aria-label={label} className="flex gap-0.5 overflow-x-auto border-b border-border scrollbar-thin">
+    <div role="tablist" aria-label={label} className="flex gap-0.5 overflow-x-auto overflow-y-hidden border-b border-border scrollbar-none">
       {items.map((item) => {
         const active = item.value === value;
         return (
@@ -93,7 +93,7 @@ export function TabBar<T extends string>({ items, value, onChange, label }: { it
           >
             {item.label}
             {item.count !== undefined ? <span className="rounded-sm bg-muted px-1.5 text-2xs tabular text-muted-foreground">{item.count}</span> : null}
-            {active ? <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary" /> : null}
+            {active ? <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-primary" /> : null}
           </button>
         );
       })}

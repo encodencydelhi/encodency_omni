@@ -81,13 +81,13 @@ export function FlagDetailPage({ flagKey }: { flagKey: string }) {
       {flag.lifecycle === "archived" ? <AlertBanner tone="info" title="Archived">This flag is read-only. Its history and configuration versions are kept.</AlertBanner> : null}
       {row.state === "emergency_off" && tab !== "targeting" ? <AlertBanner tone="danger" title="Emergency Disabled" action={<Button asChild size="sm" variant="outline"><Link href={flagRoutes.flag(flag.key, environment, "targeting")}>Review</Link></Button>}>The feature is switched off in this environment. Its rollout configuration is preserved.</AlertBanner> : null}
 
-      <nav aria-label="Flag sections" className="overflow-x-auto border-b border-border scrollbar-thin">
+      <nav aria-label="Flag sections" className="overflow-x-auto overflow-y-hidden border-b border-border scrollbar-none">
         <ul className="flex min-w-max gap-0.5">
           {FLAG_TABS.map((item) => (
             <li key={item.key}>
               <Link href={flagRoutes.flag(flag.key, environment, item.key)} aria-current={item.key === tab ? "page" : undefined} className={cn("relative inline-flex items-center px-3 py-2 text-[0.8125rem] font-medium transition-colors", item.key === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
                 {item.label}
-                {item.key === tab ? <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
+                {item.key === tab ? <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
               </Link>
             </li>
           ))}

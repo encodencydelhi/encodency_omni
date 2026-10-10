@@ -16,7 +16,7 @@ export function ModuleFrame({ children }: { children: ReactNode }) {
 
   return (
     <div className="space-y-3">
-      <nav aria-label="Plans And Subscriptions" className="overflow-x-auto border-b border-border scrollbar-thin">
+      <nav aria-label="Plans And Subscriptions" className="overflow-x-auto overflow-y-hidden border-b border-border scrollbar-none">
         <ul className="flex min-w-max gap-0.5">
           {MODULE_TABS.map((tab) => {
             const active = tab.key === current;
@@ -31,7 +31,7 @@ export function ModuleFrame({ children }: { children: ReactNode }) {
                   )}
                 >
                   {tab.label}
-                  {active ? <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
+                  {active ? <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
                 </Link>
               </li>
             );

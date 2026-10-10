@@ -78,7 +78,7 @@ export function JobsQueuesOperationsCenter() {
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-100/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
+      <div className="overflow-x-auto overflow-y-hidden rounded-xl border border-slate-200 bg-slate-100/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] scrollbar-none">
         <nav aria-label="Jobs tabs" className="flex min-w-max items-center gap-1 px-2 py-1">
           {TABS.map((item) => {
             const isActive = item.id === tab;

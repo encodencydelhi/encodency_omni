@@ -99,7 +99,7 @@ function Header({ snapshot, range, setRange, customHours, setCustomHours, servic
 
 function Tabs() {
   const pathname = usePathname();
-  return <nav className="overflow-x-auto overflow-y-hidden border-b border-slate-200 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="API Monitoring sections"><ul className="flex min-w-max gap-0.5">{tabs.map(([name, href]) => { const active = href === BASE ? pathname === BASE : pathname.startsWith(href); return <li key={href}><Link href={href} className={cn("relative inline-flex px-3 py-2 text-[13px] font-medium", active ? "text-[#111C3A]" : "text-slate-500 hover:text-[#111C3A]")}>{name}{active ? <span className="absolute inset-x-2 -bottom-px h-0.5 bg-[#111C3A]" /> : null}</Link></li>; })}</ul></nav>;
+  return <nav className="overflow-x-auto overflow-y-hidden border-b border-slate-200 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="API Monitoring sections"><ul className="flex min-w-max gap-0.5">{tabs.map(([name, href]) => { const active = href === BASE ? pathname === BASE : pathname.startsWith(href); return <li key={href}><Link href={href} className={cn("relative inline-flex px-3 py-2 text-[13px] font-medium", active ? "text-[#111C3A]" : "text-slate-500 hover:text-[#111C3A]")}>{name}{active ? <span className="absolute inset-x-2 bottom-0 h-0.5 bg-[#111C3A]" /> : null}</Link></li>; })}</ul></nav>;
 }
 
 function KpiGrid({ snapshot, range, serviceId, customMinutes }: { snapshot: ApiMonitoringSnapshot; range: ApiTimeRange; serviceId: string; customMinutes?: number }) {

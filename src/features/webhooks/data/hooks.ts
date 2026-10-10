@@ -18,7 +18,12 @@ export function useWebhooksSnapshot(environment: WebhookEnvironment) {
   return useQuery({
     queryKey: WEBHOOK_QUERY_KEYS.snapshot(environment),
     queryFn: () => webhooksRepository.getSnapshot(environment),
-    staleTime: Number.POSITIVE_INFINITY,
+    // Was POSITIVE_INFINITY: the snapshot then never refetched inside a session,
+    // so tab switches, mutations by another operator and environment round-trips
+    // all kept serving the first response from cache and the network tab stayed
+    // empty. 30s keeps the shared config cheap while still converging on the
+    // backend's state.
+    staleTime: 30_000,
   });
 }
 

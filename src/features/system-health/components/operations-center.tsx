@@ -261,7 +261,7 @@ function Header({ snapshot, setEnvironment, exportJson }: { snapshot: SystemHeal
 function Tabs() {
   const pathname = usePathname();
   return (
-    <nav aria-label="System Health sections" className="overflow-x-auto border-b border-slate-200">
+    <nav aria-label="System Health sections" className="overflow-x-auto overflow-y-hidden border-b border-slate-200 scrollbar-none">
       <ul className="flex min-w-max gap-0.5">
         {TABS.map((tab) => {
           const active = tab.href === BASE ? pathname === BASE : pathname.startsWith(tab.href);
@@ -269,7 +269,7 @@ function Tabs() {
             <li key={tab.href}>
               <Link href={tab.href} aria-current={active ? "page" : undefined} className={cn("relative inline-flex items-center px-3 py-2 text-[13px] font-medium", active ? "text-[#111C3A]" : "text-slate-500 hover:text-[#111C3A]")}>
                 {tab.label}
-                {active ? <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-sm bg-[#111C3A]" /> : null}
+                {active ? <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-sm bg-[#111C3A]" /> : null}
               </Link>
             </li>
           );

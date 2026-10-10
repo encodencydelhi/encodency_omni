@@ -15,7 +15,7 @@ export function ModuleFrame({ children }: { children: ReactNode }) {
   const current = activeModuleTab(pathname);
   return (
     <div className="space-y-3">
-      <nav aria-label="Audit logs" className="overflow-x-auto border-b border-border scrollbar-thin">
+      <nav aria-label="Audit logs" className="overflow-x-auto overflow-y-hidden border-b border-border scrollbar-none">
         <ul className="flex min-w-max gap-0.5">
           {MODULE_TABS.map((tab) => {
             const active = tab.key === current;
@@ -23,7 +23,7 @@ export function ModuleFrame({ children }: { children: ReactNode }) {
               <li key={tab.key}>
                 <Link href={tab.href} aria-current={active ? "page" : undefined} className={cn("relative inline-flex items-center px-3 py-2 text-[0.8125rem] font-medium transition-colors", active ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
                   {tab.label}
-                  {active ? <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
+                  {active ? <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
                 </Link>
               </li>
             );

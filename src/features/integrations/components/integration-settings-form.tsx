@@ -399,7 +399,7 @@ export function IntegrationSettingsForm() {
 
       {/* Floating Action Bar when unsaved */}
       {isDirty && (
-        <div className="fixed bottom-4 inset-x-0 mx-auto max-w-lg z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="fixed bottom-16 inset-x-0 mx-auto max-w-lg z-[60] animate-in fade-in slide-in-from-bottom-2 duration-200">
           <div className="rounded-xl border border-slate-800 bg-slate-900 text-white p-3 shadow-xl flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="size-2 rounded-full bg-amber-400 animate-pulse" />

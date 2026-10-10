@@ -328,13 +328,13 @@ export function SubscriptionDetailPage() {
         <StatCard compact label="Pending Changes" value={detail.scheduled.length} hint="Scheduled" href={routes.subscription(row.id, "history")} />
       </StatGrid>
 
-      <nav aria-label="Subscription Sections" className="overflow-x-auto border-b border-border scrollbar-thin">
+      <nav aria-label="Subscription Sections" className="overflow-x-auto overflow-y-hidden border-b border-border scrollbar-none">
         <ul className="flex min-w-max gap-0.5">
           {SUBSCRIPTION_SECTIONS.map((item) => (
             <li key={item.key}>
               <button type="button" onClick={() => setSection(item.key)} aria-current={item.key === section ? "page" : undefined} className={cn("relative px-3 py-2 text-[0.8125rem] font-medium transition-colors", item.key === section ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
                 {item.label}
-                {item.key === section ? <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
+                {item.key === section ? <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
               </button>
             </li>
           ))}

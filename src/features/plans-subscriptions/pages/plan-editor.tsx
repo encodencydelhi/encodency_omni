@@ -139,7 +139,7 @@ function EditorBody({ summary }: { summary: PlanSummary }) {
 
       <div className="grid grid-cols-1 gap-1 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-1">
-          <nav aria-label="Editor Sections" className="flex gap-0.5 overflow-x-auto rounded-sm border border-border bg-card p-1 scrollbar-thin">
+          <nav aria-label="Editor Sections" className="flex gap-0.5 overflow-x-auto overflow-y-hidden rounded-sm border border-border bg-card p-1 scrollbar-none">
             {visibleTabs.map((item) => {
               const count = errors.filter((issue) => item.owns(issue.field)).length;
               return (

@@ -32,7 +32,7 @@ function SectionNav({ summary }: { summary: CompanySummary }) {
   };
 
   return (
-    <nav aria-label="Company sections" className="overflow-x-auto border-b border-border scrollbar-thin">
+    <nav aria-label="Company sections" className="overflow-x-auto overflow-y-hidden border-b border-border scrollbar-none">
       <ul className="flex min-w-max gap-0.5">
         {COMPANY_SECTIONS.map((section) => {
           const active = section.key === current;
@@ -51,7 +51,7 @@ function SectionNav({ summary }: { summary: CompanySummary }) {
                 {count !== undefined ? (
                   <span className="rounded-sm bg-muted px-1 text-[11px] font-medium tabular text-muted-foreground">{count}</span>
                 ) : null}
-                {active ? <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
+                {active ? <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
               </Link>
             </li>
           );

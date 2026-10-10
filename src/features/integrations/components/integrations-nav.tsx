@@ -21,7 +21,7 @@ export function IntegrationsNav() {
   return (
     <nav
       aria-label="Integrations module navigation"
-      className="border-b border-border/80 pb-0 mb-3 overflow-x-auto scrollbar-none"
+      className="border-b border-border/80 pb-0 mb-3 overflow-x-auto overflow-y-hidden scrollbar-none"
     >
       <ul className="flex items-center gap-1 min-w-max">
         {INTEGRATIONS_MODULE_NAV.map((item) => {
@@ -64,7 +64,7 @@ export function IntegrationsNav() {
                 )}
                 {isActive && (
                   <span
-                    className="absolute inset-x-0 -bottom-px h-0.5 bg-blue-600"
+                    className="absolute inset-x-0 bottom-0 h-0.5 bg-blue-600"
                     aria-hidden
                   />
                 )}

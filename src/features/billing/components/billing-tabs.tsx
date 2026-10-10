@@ -56,7 +56,7 @@ export function BillingTabs() {
   ];
 
   return (
-    <nav aria-label="Billing Sections" className="overflow-x-auto border-b border-border scrollbar-thin">
+    <nav aria-label="Billing Sections" className="overflow-x-auto overflow-y-hidden border-b border-border scrollbar-none">
       <ul className="flex min-w-max gap-0.5">
         {tabs.map((tab) => {
           const isActive = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
@@ -72,7 +72,7 @@ export function BillingTabs() {
                 )}
               >
                 {tab.label}
-                {isActive ? <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
+                {isActive ? <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-sm bg-primary" aria-hidden /> : null}
               </Link>
             </li>
           );

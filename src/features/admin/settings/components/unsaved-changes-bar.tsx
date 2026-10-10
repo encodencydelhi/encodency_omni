@@ -26,7 +26,7 @@ export function UnsavedChangesBar({ sectionId, isSaving, onSave, onDiscard }: Un
   const sectionName = SECTION_LABELS[sectionId] || "Section";
 
   return (
-    <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[600px] animate-in fade-in slide-in-from-bottom-2 duration-200">
+    <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[60] w-[92%] max-w-[600px] animate-in fade-in slide-in-from-bottom-2 duration-200">
       <div className="bg-[#111C3A] text-white rounded-xl px-3 py-2 shadow-xl border border-slate-700/60 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <div className="size-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">

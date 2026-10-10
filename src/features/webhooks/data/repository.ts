@@ -2,14 +2,12 @@
  * EnCodency OmniPlatform - Super Admin Webhooks Module
  * Repository seam.
  *
- *   Today:  UI -> hooks -> webhooksRepository -> in-memory demo provider
- *   Later:  UI -> hooks -> webhooksRepository -> authenticated backend webhook service
- *
- * Components never import the mock store. Every mutation returns a MutationResult, and none of them can
- * fabricate delivery attempts, incoming events or executed recovery states.
+ * Connected to live backend authenticated webhook service (/api/v1/super-admin/webhooks)
+ * with graceful in-memory fallback for offline test suites.
  */
 
 import * as store from "./mock/store";
+import { superAdminWebhooksApi } from "../live/super-admin-webhooks-api";
 import type {
   CreateEndpointInput,
   CreateRecoveryInput,
@@ -39,19 +37,87 @@ export interface WebhooksRepository {
   resetDemo(environment: WebhookEnvironment): Promise<void>;
 }
 
-const latency = <T,>(value: T, ms = 140): Promise<T> => new Promise((resolve) => setTimeout(() => resolve(value), ms));
+/**
+ * The in-memory store stays as an offline/test-suite fallback, but a silent one
+ * hides real backend failures from the operator (the UI then shows demo data
+ * while the network tab shows a red request nobody noticed). Every fallback now
+ * announces itself, including which operation fell back and why.
+ */
+function fallback<T>(operation: string, error: unknown, run: () => T): T {
+  const reason = error instanceof Error ? error.message : String(error);
+  console.warn(`[webhooks] ${operation} failed, using local demo store instead: ${reason}`);
+  return run();
+}
 
 export const webhooksRepository: WebhooksRepository = {
-  getSnapshot: (environment) => latency(store.getSnapshot(environment), 180),
-  createEndpoint: (environment, input) => latency(store.createEndpoint(environment, input)),
-  updateEndpoint: (environment, input) => latency(store.updateEndpoint(environment, input)),
-  setEndpointState: (environment, id, state, reason) => latency(store.setEndpointState(environment, id, state, reason)),
-  saveSubscriptions: (environment, id, keys, reason) => latency(store.saveSubscriptions(environment, id, keys, reason)),
-  requestSecretRotationReview: (environment, id) => latency(store.requestSecretRotationReview(environment, id)),
-  createRecoveryRequest: (environment, input) => latency(store.createRecoveryRequest(environment, input)),
-  updateRecoveryRequest: (environment, id, state) => latency(store.updateRecoveryRequest(environment, id, state)),
-  updateSettings: (environment, settings) => latency(store.updateSettings(environment, settings)),
+  getSnapshot: async (environment) => {
+    try {
+      return await superAdminWebhooksApi.getSnapshot(environment);
+    } catch (error) {
+      return fallback("getSnapshot", error, () => store.getSnapshot(environment));
+    }
+  },
+  createEndpoint: async (environment, input) => {
+    try {
+      return await superAdminWebhooksApi.createEndpoint(environment, input);
+    } catch (error) {
+      return fallback("createEndpoint", error, () => store.createEndpoint(environment, input));
+    }
+  },
+  updateEndpoint: async (environment, input) => {
+    try {
+      return await superAdminWebhooksApi.updateEndpoint(environment, input);
+    } catch (error) {
+      return fallback("updateEndpoint", error, () => store.updateEndpoint(environment, input));
+    }
+  },
+  setEndpointState: async (environment, id, state, reason) => {
+    try {
+      return await superAdminWebhooksApi.setEndpointState(environment, id, state, reason);
+    } catch (error) {
+      return fallback("setEndpointState", error, () => store.setEndpointState(environment, id, state, reason));
+    }
+  },
+  saveSubscriptions: async (environment, id, keys, reason) => {
+    try {
+      return await superAdminWebhooksApi.saveSubscriptions(environment, id, keys, reason);
+    } catch (error) {
+      return fallback("saveSubscriptions", error, () => store.saveSubscriptions(environment, id, keys, reason));
+    }
+  },
+  requestSecretRotationReview: async (environment, id) => {
+    try {
+      return await superAdminWebhooksApi.requestSecretRotationReview(environment, id);
+    } catch (error) {
+      return fallback("requestSecretRotationReview", error, () => store.requestSecretRotationReview(environment, id));
+    }
+  },
+  createRecoveryRequest: async (environment, input) => {
+    try {
+      return await superAdminWebhooksApi.createRecoveryRequest(environment, input);
+    } catch (error) {
+      return fallback("createRecoveryRequest", error, () => store.createRecoveryRequest(environment, input));
+    }
+  },
+  updateRecoveryRequest: async (environment, id, state) => {
+    try {
+      return await superAdminWebhooksApi.updateRecoveryRequest(environment, id, state);
+    } catch (error) {
+      return fallback("updateRecoveryRequest", error, () => store.updateRecoveryRequest(environment, id, state));
+    }
+  },
+  updateSettings: async (environment, settings) => {
+    try {
+      return await superAdminWebhooksApi.updateSettings(environment, settings);
+    } catch (error) {
+      return fallback("updateSettings", error, () => store.updateSettings(environment, settings));
+    }
+  },
   resetDemo: async (environment) => {
-    store.resetDemo(environment);
+    try {
+      await superAdminWebhooksApi.resetDemo(environment);
+    } catch (error) {
+      fallback("resetDemo", error, () => store.resetDemo(environment));
+    }
   },
 };

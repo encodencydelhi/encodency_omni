@@ -26,7 +26,7 @@ import { useWebhooks, WebhooksProvider } from "./webhooks-context";
 function ModuleTabs() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Webhooks sections" className="overflow-x-auto border-b border-border scrollbar-thin">
+    <nav aria-label="Webhooks sections" className="overflow-x-auto overflow-y-hidden border-b border-border scrollbar-none">
       <ul className="flex min-w-max gap-0.5">
         {WEBHOOK_TABS.map((tab) => {
           const active = tab.match === "exact" ? pathname === tab.href : pathname.startsWith(tab.href);
@@ -41,7 +41,7 @@ function ModuleTabs() {
                 )}
               >
                 {tab.label}
-                {active ? <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-primary" /> : null}
+                {active ? <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-primary" /> : null}
               </Link>
             </li>
           );
@@ -58,8 +58,12 @@ function ContextBar() {
     <div className="rounded-sm border border-border bg-card px-3.5 py-2.5 shadow-xs">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <Badge tone="brand">{DEMO_DATA_LABEL}</Badge>
-          <Badge tone="neutral">{DEMO_DATA_NOTICE}</Badge>
+          <Badge tone="brand">
+            {snapshot?.evidence === "backend_record" ? "Live Webhook Data" : DEMO_DATA_LABEL}
+          </Badge>
+          <Badge tone={snapshot?.evidence === "backend_record" ? "success" : "neutral"}>
+            {snapshot?.evidence === "backend_record" ? "Real Ingestion & Delivery Connected" : DEMO_DATA_NOTICE}
+          </Badge>
           {fresh ? (
             <span className="inline-flex flex-wrap items-center gap-1.5 text-2xs text-muted-foreground">
               Last recorded event
