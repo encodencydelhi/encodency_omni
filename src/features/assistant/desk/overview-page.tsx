@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, Building2, Coins, Gauge, MessagesSquare, MessageCircleQuestion, ShieldAlert, Ticket, Timer, UsersRound } from "lucide-react";
+import { AlertTriangle, Building2, Coins, Gauge, MessagesSquare, MessageCircleQuestion, ShieldAlert, Sparkles, Ticket, Timer, UsersRound, Zap } from "lucide-react";
 import { BarList } from "@/features/support/charts";
 import { errorMessage } from "@/features/support/hooks";
 import { timeAgo } from "@/features/support/time";
@@ -10,16 +10,19 @@ import { useUrlState } from "@/features/support/url-state";
 import { KeywordCloud, UsageChart } from "./charts";
 import { ConversationRow } from "./conversation-row";
 import { cardLabel, compact, Delta, full, RANGE_NOUN, RANGE_TABS, seconds, toolLabel } from "./format";
-import { useAssistantOverview } from "./hooks";
+import { useAssistantAiAnalytics, useAssistantOverview } from "./hooks";
 import type { DeskRange } from "./types";
 
 const DEFAULTS = { range: "30d" };
+const usd = (micros: number) => `$${(micros / 1_000_000).toFixed(micros > 0 && micros < 10_000 ? 4 : 2)}`;
 
 export function AssistantOverviewPage() {
   const { values, set } = useUrlState(DEFAULTS);
   const range = (RANGE_TABS.some((tab) => tab.id === values.range) ? values.range : "30d") as DeskRange;
   const overview = useAssistantOverview(range);
+  const ai = useAssistantAiAnalytics(range);
   const data = overview.data;
+  const aiData = ai.data;
 
   return (
     <div className="space-y-2">
@@ -65,6 +68,51 @@ export function AssistantOverviewPage() {
             <StatTile label="Secrets Masked" value={full(data.totals.redacted)} icon={ShieldAlert} tone={data.totals.redacted > 0 ? "amber" : undefined} sub="passwords, keys, cards removed" href="/super-admin/assistant/conversations?flag=redacted" />
             <StatTile label="Questions Per Chat" value={data.totals.avgQuestionsPerConversation} icon={MessagesSquare} sub="longer chats can mean unsolved" />
           </div>
+
+          <Section title="AI Performance" description="Provider usage, cache bypasses and estimated cost from assistant usage events." flush>
+            {!aiData ? (
+              <ListSkeleton rows={3} />
+            ) : aiData.totals.usageEvents === 0 ? (
+              <EmptyState icon={Sparkles} title="No Usage Events Yet" description="New chats, embeddings, FAQ bypasses and evaluations will appear here once recorded." />
+            ) : (
+              <div className="space-y-3 p-4">
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
+                  <StatTile label="Usage Events" value={full(aiData.totals.usageEvents)} icon={Sparkles} />
+                  <StatTile label="OpenAI Requests" value={full(aiData.totals.openAiRequests)} icon={Zap} tone="violet" />
+                  <StatTile label="FAQ Bypasses" value={full(aiData.totals.faqBypasses)} icon={MessageCircleQuestion} tone="green" />
+                  <StatTile label="Cache Hit Rate" value={`${aiData.totals.cacheHitRate}%`} icon={Gauge} />
+                  <StatTile label="Est. API Cost" value={usd(aiData.totals.estimatedCostMicros)} icon={Coins} tone="orange" sub="estimated, not provider bill" />
+                  <StatTile label="Error Rate" value={`${aiData.totals.errorRate}%`} icon={AlertTriangle} tone={aiData.totals.errorRate > 0 ? "red" : undefined} />
+                </div>
+                <div className="grid gap-2 xl:grid-cols-2">
+                  <div className="overflow-hidden rounded-sm border border-slate-200">
+                    <div className="border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900">Cost By Model</div>
+                    <div className="divide-y divide-slate-100">
+                      {aiData.byModel.length === 0 ? <p className="p-3 text-xs font-medium text-slate-500">No model usage yet.</p> : aiData.byModel.map((row) => (
+                        <div key={`${row.model}-${row.operation}`} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 py-2 text-xs">
+                          <span className="font-semibold text-slate-900">{row.model}</span>
+                          <span className="text-slate-500">{row.requests} {row.operation}</span>
+                          <span className="font-semibold tabular-nums text-slate-900">{usd(row.estimatedCostMicros)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="overflow-hidden rounded-sm border border-slate-200">
+                    <div className="border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900">Operations</div>
+                    <div className="divide-y divide-slate-100">
+                      {aiData.byFeature.length === 0 ? <p className="p-3 text-xs font-medium text-slate-500">No operations yet.</p> : aiData.byFeature.map((row) => (
+                        <div key={`${row.feature}-${row.operation}-${row.success}`} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 py-2 text-xs">
+                          <span className="font-semibold text-slate-900">{row.feature} / {row.operation}</span>
+                          <span className={row.success ? "text-emerald-700" : "text-rose-700"}>{row.success ? "success" : "failed"}</span>
+                          <span className="font-semibold tabular-nums text-slate-900">{row.requests}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Section>
 
           <div className="grid gap-2 xl:grid-cols-3">
             <Section title="Usage Over Time" description="Questions per day and the tokens they used." className="xl:col-span-2">

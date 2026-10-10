@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { BotMessageSquare, LayoutDashboard, MessagesSquare, RefreshCw, ShieldCheck, UsersRound } from "lucide-react";
+import { BookOpenCheck, BotMessageSquare, LayoutDashboard, MessagesSquare, RefreshCw, ShieldCheck, UsersRound } from "lucide-react";
 import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils/cn";
 import { btn } from "@/features/support/ui";
@@ -13,6 +13,7 @@ const TABS = [
   { label: "Overview", href: "/super-admin/assistant", icon: LayoutDashboard },
   { label: "Conversations", href: "/super-admin/assistant/conversations", icon: MessagesSquare },
   { label: "People", href: "/super-admin/assistant/people", icon: UsersRound },
+  { label: "Knowledge", href: "/super-admin/assistant/knowledge", icon: BookOpenCheck },
 ];
 
 /** Header and tabs of the Super Admin's assistant console: what people ask the in-app assistant and what it answers. */

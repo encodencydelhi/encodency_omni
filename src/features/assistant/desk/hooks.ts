@@ -11,6 +11,9 @@ type Query = Record<string, string | number | undefined>;
 export const useAssistantOverview = (range: DeskRange) =>
   useQuery({ queryKey: [ASSISTANT_DESK_KEY, "overview", range], queryFn: ({ signal }) => assistantDeskApi.overview(range, signal), placeholderData: keepPreviousData, staleTime: 20_000, refetchInterval: 60_000 });
 
+export const useAssistantAiAnalytics = (range: DeskRange) =>
+  useQuery({ queryKey: [ASSISTANT_DESK_KEY, "ai-analytics", range], queryFn: ({ signal }) => assistantDeskApi.aiAnalytics(range, signal), placeholderData: keepPreviousData, staleTime: 20_000, refetchInterval: 60_000 });
+
 export const useAssistantFilters = () => useQuery({ queryKey: [ASSISTANT_DESK_KEY, "filters"], queryFn: ({ signal }) => assistantDeskApi.filters(signal), staleTime: 60_000 });
 
 export const useAssistantConversations = (query: Query) =>

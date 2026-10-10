@@ -59,6 +59,53 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
     }
   }, [key, messages, conversationId]);
 
+  useEffect(() => {
+    if (!companyId || messages.length > 0 || conversationId || pending) return;
+    const controller = new AbortController();
+    void assistantApi
+      .conversations(companyId, controller.signal)
+      .then(async (list) => {
+        const latest = list.items[0];
+        if (!latest || controller.signal.aborted) return;
+        const detail = await assistantApi.conversation(companyId, latest.id, controller.signal);
+        if (controller.signal.aborted) return;
+        const restored: ChatMessage[] = detail.messages.map((message) => ({
+          id: message.id,
+          role: message.role === "USER" ? "user" : "assistant",
+          content: message.content,
+          createdAt: new Date(message.createdAt).getTime(),
+          degraded: message.degraded,
+          redacted: message.redacted,
+        }));
+        cid.current = detail.conversation.id;
+        ref.current = restored;
+        setConversationId(detail.conversation.id);
+        setMessages(restored);
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [companyId, conversationId, messages.length, pending]);
+
+  useEffect(() => {
+    if (!companyId || !key || !conversationId) return;
+    const controller = new AbortController();
+    void assistantApi.conversation(companyId, conversationId, controller.signal).catch(() => {
+      if (controller.signal.aborted) return;
+      cid.current = null;
+      ref.current = [];
+      setConversationId(null);
+      setMessages([]);
+      try {
+        window.sessionStorage.removeItem(key);
+        window.sessionStorage.removeItem(`${key}:cid`);
+      } catch {
+        // If storage is unavailable, clearing React state is still enough for this tab.
+      }
+    });
+    return () => controller.abort();
+  }, [companyId, conversationId, key]);
+
+
   useEffect(() => () => abort.current?.abort(), []);
 
   const commit = useCallback((update: (current: ChatMessage[]) => ChatMessage[]) => {

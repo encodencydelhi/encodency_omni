@@ -23,6 +23,17 @@ export interface AssistantReply {
   conversationId: string | null;
 }
 
+export interface AssistantConversationList {
+  items: Array<{ id: string; title: string; lastPageId: string | null; messageCount: number; totalTokens: number; lastMessageAt: string; expiresAt: string | null }>;
+  nextCursor: string | null;
+}
+
+export interface AssistantConversationDetail {
+  conversation: { id: string; title: string; lastMessageAt: string; expiresAt: string | null };
+  messages: Array<{ id: string; role: "USER" | "ASSISTANT"; content: string; actions: string[]; degraded: boolean; redacted: boolean; createdAt: string }>;
+  nextCursor: string | null;
+}
+
 /** What happened to an action card after the person used it. */
 export interface ActionState {
   /** Ticket number once "Send to support" succeeded. */
