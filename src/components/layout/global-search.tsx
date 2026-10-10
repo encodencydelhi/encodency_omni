@@ -1,6 +1,25 @@
 "use client";
 
-import { Building2Icon, SearchIcon, UserIcon, FolderIcon, ServerIcon, ReceiptIcon, HeadsetIcon } from "lucide-react";
+import {
+  ActivityIcon,
+  BellIcon,
+  BotMessageSquareIcon,
+  Building2Icon,
+  CreditCardIcon,
+  FlagIcon,
+  FolderIcon,
+  HeadsetIcon,
+  HeartPulseIcon,
+  ReceiptIcon,
+  SearchIcon,
+  ServerIcon,
+  SettingsIcon,
+  ShieldCheckIcon,
+  UserIcon,
+  UsersIcon,
+  WebhookIcon,
+  type LucideIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -9,9 +28,165 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ROUTES } from "@/config/routes";
 import { superAdminCompaniesApi } from "@/features/companies/live/super-admin-companies-api";
+import { superAdminPlansApi } from "@/features/plans-subscriptions/live/super-admin-plans-api";
+import { deskApi } from "@/features/support/api";
+import { superAdminUsersApi } from "@/features/users/live/super-admin-users-api";
 
 const MIN_QUERY_LENGTH = 1;
 const DEBOUNCE_MS = 250;
+const MAX_RESULTS_PER_GROUP = 6;
+
+type SearchResult = {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  group: string;
+  icon: LucideIcon;
+  badge?: string;
+  tone?: "brand" | "success" | "warning" | "danger" | "info" | "neutral";
+};
+
+const pageShortcuts: SearchResult[] = [
+  { id: "dashboard", title: "Dashboard", subtitle: "Super Admin Overview", href: ROUTES.superAdmin.dashboard, group: "Pages", icon: ServerIcon },
+  { id: "companies", title: "Companies", subtitle: "Company Directory", href: ROUTES.superAdmin.companies, group: "Pages", icon: Building2Icon },
+  { id: "clients", title: "Clients", subtitle: "Client Directory", href: ROUTES.superAdmin.Clients, group: "Pages", icon: FolderIcon },
+  { id: "users", title: "Users", subtitle: "User Access And Security", href: ROUTES.superAdmin.users, group: "Pages", icon: UserIcon },
+  { id: "team", title: "Internal Team", subtitle: "Staff, Roles And Assignments", href: ROUTES.superAdmin.team, group: "Pages", icon: UsersIcon },
+  { id: "plans", title: "Plans", subtitle: "Plan Catalogue And Pricing", href: ROUTES.superAdmin.plans, group: "Pages", icon: ReceiptIcon },
+  { id: "subscriptions", title: "Subscriptions", subtitle: "Company Subscriptions", href: ROUTES.superAdmin.subscriptions, group: "Pages", icon: CreditCardIcon },
+  { id: "billing", title: "Billing", subtitle: "Invoices, Payments And Accounts", href: ROUTES.superAdmin.billing, group: "Pages", icon: CreditCardIcon },
+  { id: "usage", title: "Usage", subtitle: "Limits, Metering And Overrides", href: ROUTES.superAdmin.usage, group: "Pages", icon: ActivityIcon },
+  { id: "support", title: "Support", subtitle: "Support Desk And Tickets", href: ROUTES.superAdmin.support, group: "Pages", icon: HeadsetIcon },
+  { id: "assistant", title: "AI Assistant", subtitle: "Conversations, Knowledge And Quality", href: ROUTES.superAdmin.assistant, group: "Pages", icon: BotMessageSquareIcon },
+  { id: "integrations", title: "Integrations", subtitle: "Providers, Connections And Issues", href: ROUTES.superAdmin.integrations, group: "Pages", icon: ServerIcon },
+  { id: "webhooks", title: "Webhooks", subtitle: "Incoming And Outgoing Webhooks", href: ROUTES.superAdmin.webhooks, group: "Pages", icon: WebhookIcon },
+  { id: "feature-flags", title: "Feature Flags", subtitle: "Rollouts And Company Access", href: ROUTES.superAdmin.featureFlags, group: "Pages", icon: FlagIcon },
+  { id: "audit-logs", title: "Audit Logs", subtitle: "Security And Platform Events", href: ROUTES.superAdmin.auditLogs, group: "Pages", icon: ShieldCheckIcon },
+  { id: "system-health", title: "System Health", subtitle: "Services, Incidents And Maintenance", href: ROUTES.superAdmin.systemHealth, group: "Pages", icon: HeartPulseIcon },
+  { id: "api-monitoring", title: "API Monitoring", subtitle: "Requests, Performance And Availability", href: ROUTES.superAdmin.apiMonitoring, group: "Pages", icon: ActivityIcon },
+  { id: "notifications", title: "Notifications", subtitle: "Center, Campaigns And Deliveries", href: ROUTES.superAdmin.notifications, group: "Pages", icon: BellIcon },
+  { id: "settings", title: "Settings", subtitle: "Global Platform Configuration", href: ROUTES.superAdmin.settings, group: "Pages", icon: SettingsIcon },
+  { id: "jobs", title: "Jobs", subtitle: "Background Jobs And Workers", href: ROUTES.superAdmin.jobs, group: "Pages", icon: ServerIcon },
+];
+
+const includesTerm = (value: string | null | undefined, term: string) => (value ?? "").toLowerCase().includes(term.toLowerCase());
+
+async function safe<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await promise;
+  } catch {
+    return fallback;
+  }
+}
+
+function emptyPage<T>() {
+  return { items: [] as T[], total: 0, page: 1, limit: MAX_RESULTS_PER_GROUP };
+}
+
+function Highlight({ text, term }: { text: string; term: string }) {
+  if (!term) return <>{text}</>;
+
+  const matchAt = text.toLowerCase().indexOf(term.toLowerCase());
+  if (matchAt < 0) return <>{text}</>;
+
+  const before = text.slice(0, matchAt);
+  const match = text.slice(matchAt, matchAt + term.length);
+  const after = text.slice(matchAt + term.length);
+
+  return (
+    <>
+      {before}
+      <mark className="rounded-sm bg-amber-100 px-0.5 text-amber-900">{match}</mark>
+      {after}
+    </>
+  );
+}
+
+async function searchSuperAdmin(term: string): Promise<SearchResult[]> {
+  const [companies, clients, users, tickets, plans, subscriptions] = await Promise.all([
+    safe(superAdminCompaniesApi.list({ page: 1, limit: MAX_RESULTS_PER_GROUP, search: term }), emptyPage()),
+    safe(superAdminCompaniesApi.listClients({ page: 1, limit: MAX_RESULTS_PER_GROUP, search: term }), emptyPage()),
+    safe(superAdminUsersApi.list({ page: 1, limit: MAX_RESULTS_PER_GROUP, search: term }), emptyPage()),
+    safe(deskApi.list({ page: 1, limit: MAX_RESULTS_PER_GROUP, search: term }), emptyPage()),
+    safe(superAdminPlansApi.listPlans(), []),
+    safe(superAdminPlansApi.listSubscriptions(), []),
+  ]);
+
+  const pageResults = pageShortcuts.filter((item) => includesTerm(`${item.title} ${item.subtitle}`, term)).slice(0, MAX_RESULTS_PER_GROUP);
+  const planResults = plans
+    .filter((plan) => includesTerm(plan.name, term))
+    .slice(0, MAX_RESULTS_PER_GROUP)
+    .map<SearchResult>((plan) => ({
+      id: `plan-${plan.id}`,
+      title: plan.name,
+      subtitle: `Plan - Rs ${(plan.monthlyPrice / 100).toLocaleString("en-IN")}/month`,
+      href: `${ROUTES.superAdmin.plans}/${plan.id}`,
+      group: "Plans",
+      icon: ReceiptIcon,
+      badge: plan.isActive ? "Active" : "Inactive",
+      tone: plan.isActive ? "success" : "neutral",
+    }));
+  const subscriptionResults = subscriptions
+    .filter((sub) => includesTerm(`${sub.company?.name ?? ""} ${sub.plan?.name ?? ""} ${sub.status}`, term))
+    .slice(0, MAX_RESULTS_PER_GROUP)
+    .map<SearchResult>((sub) => ({
+      id: `subscription-${sub.id}`,
+      title: sub.company?.name ?? "Subscription",
+      subtitle: `${sub.plan?.name ?? "Plan"} Subscription`,
+      href: `${ROUTES.superAdmin.subscriptions}/${sub.id}`,
+      group: "Subscriptions",
+      icon: CreditCardIcon,
+      badge: sub.status.replaceAll("_", " "),
+      tone: sub.status === "ACTIVE" ? "success" : sub.status === "PAST_DUE" ? "warning" : "neutral",
+    }));
+
+  return [
+    ...pageResults,
+    ...companies.items.map<SearchResult>((company) => ({
+      id: `company-${company.id}`,
+      title: company.name,
+      subtitle: `Company - ${company.ownerEmail ?? "No Owner Email"}`,
+      href: ROUTES.superAdmin.company(company.id),
+      group: "Companies",
+      icon: Building2Icon,
+      badge: company.status === "ACTIVE" ? "Active" : "Archived",
+      tone: company.status === "ACTIVE" ? "success" : "neutral",
+    })),
+    ...clients.items.map<SearchResult>((client) => ({
+      id: `client-${client.id}`,
+      title: client.displayName ?? client.name,
+      subtitle: `Client - ${client.companyName}`,
+      href: ROUTES.superAdmin.client(client.id),
+      group: "Clients",
+      icon: FolderIcon,
+      badge: client.industry ?? undefined,
+      tone: "info",
+    })),
+    ...users.items.map<SearchResult>((user) => ({
+      id: `user-${user.id}`,
+      title: user.name ?? user.email,
+      subtitle: `User - ${user.email}`,
+      href: ROUTES.superAdmin.user(user.id),
+      group: "Users",
+      icon: UserIcon,
+      badge: user.status === "ACTIVE" ? "Active" : "Deactivated",
+      tone: user.status === "ACTIVE" ? "success" : "neutral",
+    })),
+    ...tickets.items.map<SearchResult>((ticket) => ({
+      id: `ticket-${ticket.id}`,
+      title: `#${ticket.number} ${ticket.subject}`,
+      subtitle: `Support - ${ticket.company.name}`,
+      href: `${ROUTES.superAdmin.support}/tickets/${ticket.number}`,
+      group: "Support Tickets",
+      icon: HeadsetIcon,
+      badge: ticket.status.replaceAll("_", " "),
+      tone: ticket.priority === "urgent" ? "danger" : ticket.priority === "high" ? "warning" : "neutral",
+    })),
+    ...planResults,
+    ...subscriptionResults,
+  ];
+}
 
 export function GlobalSearch() {
   const router = useRouter();
@@ -39,14 +214,12 @@ export function GlobalSearch() {
 
   const isActive = debounced.length >= MIN_QUERY_LENGTH;
 
-  const { data, isFetching } = useQuery({
-    queryKey: ["global-search", "companies", debounced],
-    queryFn: () => superAdminCompaniesApi.list({ page: 1, limit: 6, search: debounced }),
+  const { data: results = [], isFetching } = useQuery({
+    queryKey: ["global-search", debounced],
+    queryFn: () => searchSuperAdmin(debounced),
     enabled: isActive,
     staleTime: 30_000,
   });
-
-  const results = isActive ? (data?.items ?? []) : [];
 
   const goTo = (href: string) => {
     setOpen(false);
@@ -83,7 +256,7 @@ export function GlobalSearch() {
                 if (e.key === "Enter" && debounced && results && results.length > 0) {
                   const firstResult = results[0];
                   if (firstResult) {
-                    goTo(ROUTES.superAdmin.company(firstResult.id));
+                    goTo(firstResult.href);
                   }
                 }
               }}
@@ -121,33 +294,42 @@ export function GlobalSearch() {
 
             {isActive && results.length > 0 && (
               <div className="space-y-1">
-                <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Companies</div>
-                <ul>
-                  {results.map((company) => (
-                    <li key={company.id}>
-                      <button
-                        type="button"
-                        onClick={() => goTo(ROUTES.superAdmin.company(company.id))}
-                        className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-                      >
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-white border border-slate-200 shadow-sm text-slate-600">
-                          <Building2Icon className="size-4" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[14px] font-medium text-slate-800 leading-tight">
-                            {company.name}
-                          </p>
-                          <p className="text-[12px] text-slate-500 leading-tight mt-0.5">
-                            Company
-                          </p>
-                        </div>
-                        <Badge tone={company.status === "ACTIVE" ? "success" : "neutral"} className="hidden sm:inline-flex">
-                          {company.status === "ACTIVE" ? "Active" : "Archived"}
-                        </Badge>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                {Array.from(new Set(results.map((item) => item.group))).map((group) => (
+                  <div key={group}>
+                    <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">{group}</div>
+                    <ul>
+                      {results.filter((item) => item.group === group).map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <li key={item.id}>
+                            <button
+                              type="button"
+                              onClick={() => goTo(item.href)}
+                              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
+                            >
+                              <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-white border border-slate-200 shadow-sm text-slate-600">
+                                <Icon className="size-4" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-[14px] font-medium text-slate-800 leading-tight">
+                                  <Highlight text={item.title} term={debounced} />
+                                </p>
+                                <p className="mt-0.5 truncate text-[12px] text-slate-500 leading-tight">
+                                  <Highlight text={item.subtitle} term={debounced} />
+                                </p>
+                              </div>
+                              {item.badge ? (
+                                <Badge tone={item.tone ?? "neutral"} className="hidden max-w-32 capitalize sm:inline-flex">
+                                  <span className="truncate">{item.badge.toLowerCase()}</span>
+                                </Badge>
+                              ) : null}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
               </div>
             )}
           </div>
