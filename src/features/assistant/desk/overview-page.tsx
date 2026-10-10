@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, Building2, Coins, Gauge, MessagesSquare, MessageCircleQuestion, ShieldAlert, Sparkles, Ticket, Timer, UsersRound, Zap } from "lucide-react";
+import type { ReactNode } from "react";
+import { AlertTriangle, BarChart3, Building2, Coins, Gauge, MessagesSquare, MessageCircleQuestion, PieChart, ShieldAlert, Sparkles, Ticket, Timer, UsersRound, Zap, type LucideIcon } from "lucide-react";
 import { BarList } from "@/features/support/charts";
 import { errorMessage } from "@/features/support/hooks";
 import { timeAgo } from "@/features/support/time";
 import { Avatar, btn, CountTabs, EmptyState, ListSkeleton, Notice, Section, Skeleton, StatTile } from "@/features/support/ui";
 import { useUrlState } from "@/features/support/url-state";
-import { KeywordCloud, UsageChart } from "./charts";
+import { DonutMeter, KeywordCloud, MiniBarSpark, UsageChart } from "./charts";
 import { ConversationRow } from "./conversation-row";
 import { cardLabel, compact, Delta, full, RANGE_NOUN, RANGE_TABS, seconds, toolLabel } from "./format";
 import { useAssistantAiAnalytics, useAssistantOverview } from "./hooks";
@@ -15,6 +16,30 @@ import type { DeskRange } from "./types";
 
 const DEFAULTS = { range: "30d" };
 const usd = (micros: number) => `$${(micros / 1_000_000).toFixed(micros > 0 && micros < 10_000 ? 4 : 2)}`;
+const toneClass = {
+  blue: "bg-blue-50 text-blue-700 ring-blue-100",
+  violet: "bg-violet-50 text-violet-700 ring-violet-100",
+  green: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+  orange: "bg-amber-50 text-amber-700 ring-amber-100",
+};
+
+function MetricCard({ label, value, sub, icon: Icon, tone, spark }: { label: string; value: ReactNode; sub?: ReactNode; icon: LucideIcon; tone: keyof typeof toneClass; spark: ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-sm border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <div className="flex items-start justify-between gap-2 p-3">
+        <div className="min-w-0">
+          <p className="truncate text-[11px] font-semibold text-slate-500">{label}</p>
+          <div className="mt-1 text-2xl font-semibold leading-none tracking-tight text-slate-900">{value}</div>
+          {sub && <p className="mt-1 truncate text-[11px] font-medium text-slate-500">{sub}</p>}
+        </div>
+        <span className={`flex size-7 shrink-0 items-center justify-center rounded-sm ring-1 ${toneClass[tone]}`}>
+          <Icon className="size-3.5" />
+        </span>
+      </div>
+      <div className="border-t border-slate-100 bg-slate-50/50 px-3 py-2">{spark}</div>
+    </div>
+  );
+}
 
 export function AssistantOverviewPage() {
   const { values, set } = useUrlState(DEFAULTS);
@@ -23,10 +48,12 @@ export function AssistantOverviewPage() {
   const ai = useAssistantAiAnalytics(range);
   const data = overview.data;
   const aiData = ai.data;
+  const questionSpark = data?.series.map((point) => point.questions) ?? [];
+  const tokenSpark = data?.series.map((point) => point.tokens) ?? [];
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="space-y-1">
+      <div className="flex flex-wrap items-center justify-between gap-1">
         <CountTabs<DeskRange> label="Period" value={range} onChange={(next) => set({ range: next })} tabs={RANGE_TABS} />
         {data && <span className="text-[11px] font-medium text-slate-500">Chats are kept for {data.retentionDays} days, then deleted.</span>}
       </div>
@@ -38,7 +65,7 @@ export function AssistantOverviewPage() {
       )}
 
       {overview.isLoading && !data && (
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
+        <div className="grid gap-1 sm:grid-cols-2 xl:grid-cols-6">
           {Array.from({ length: 6 }, (_, i) => (
             <Skeleton key={i} className="h-[104px]" />
           ))}
@@ -53,16 +80,16 @@ export function AssistantOverviewPage() {
 
       {data && data.totals.conversations > 0 && (
         <>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
-            <StatTile label="Conversations" value={full(data.totals.conversations)} icon={MessagesSquare} tone="blue" sub={<Delta value={data.change?.conversations} />} />
-            <StatTile label="Questions Asked" value={full(data.totals.questions)} icon={MessageCircleQuestion} tone="violet" sub={<Delta value={data.change?.questions} />} />
+          <div className="grid gap-1 sm:grid-cols-2 xl:grid-cols-6">
+            <MetricCard label="Conversations" value={full(data.totals.conversations)} icon={MessagesSquare} tone="blue" spark={<MiniBarSpark data={questionSpark} tone="blue" />} sub={<Delta value={data.change?.conversations} />} />
+            <MetricCard label="Questions Asked" value={full(data.totals.questions)} icon={MessageCircleQuestion} tone="violet" spark={<MiniBarSpark data={questionSpark} tone="violet" />} sub={<Delta value={data.change?.questions} />} />
             <StatTile label="People" value={full(data.totals.users)} icon={UsersRound} tone="green" sub={`in ${data.totals.companies} ${data.totals.companies === 1 ? "company" : "companies"}`} />
-            <StatTile label="Tokens Used" value={compact(data.totals.totalTokens)} icon={Coins} tone="orange" sub={<Delta value={data.change?.tokens} />} />
+            <MetricCard label="Tokens Used" value={compact(data.totals.totalTokens)} icon={Coins} tone="orange" spark={<MiniBarSpark data={tokenSpark} tone="orange" />} sub={<Delta value={data.change?.tokens} />} />
             <StatTile label="Avg Tokens / Answer" value={full(data.totals.avgTokensPerReply)} icon={Gauge} sub={`↑ ${compact(data.totals.promptTokens)} in · ↓ ${compact(data.totals.completionTokens)} out`} />
             <StatTile label="Tickets Sent" value={full(data.totals.ticketsFromAssistant)} icon={Ticket} tone="green" sub="raised from a conversation" href="/super-admin/assistant/conversations?flag=ticket" />
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-1 sm:grid-cols-2 xl:grid-cols-4">
             <StatTile label="Avg Answer Time" value={seconds(data.totals.avgLatencyMs)} icon={Timer} sub="model + tools" />
             <StatTile label="Failed Answers" value={`${data.totals.failureRate}%`} icon={AlertTriangle} tone={data.totals.degraded > 0 ? "red" : undefined} sub={`${data.totals.degraded} of ${data.totals.replies}`} href="/super-admin/assistant/conversations?flag=degraded" />
             <StatTile label="Secrets Masked" value={full(data.totals.redacted)} icon={ShieldAlert} tone={data.totals.redacted > 0 ? "amber" : undefined} sub="passwords, keys, cards removed" href="/super-admin/assistant/conversations?flag=redacted" />
@@ -75,8 +102,8 @@ export function AssistantOverviewPage() {
             ) : aiData.totals.usageEvents === 0 ? (
               <EmptyState icon={Sparkles} title="No Usage Events Yet" description="New chats, embeddings, FAQ bypasses and evaluations will appear here once recorded." />
             ) : (
-              <div className="space-y-3 p-4">
-                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
+              <div className="space-y-1 p-2">
+                <div className="grid gap-1 sm:grid-cols-2 xl:grid-cols-6">
                   <StatTile label="Usage Events" value={full(aiData.totals.usageEvents)} icon={Sparkles} />
                   <StatTile label="OpenAI Requests" value={full(aiData.totals.openAiRequests)} icon={Zap} tone="violet" />
                   <StatTile label="FAQ Bypasses" value={full(aiData.totals.faqBypasses)} icon={MessageCircleQuestion} tone="green" />
@@ -84,9 +111,13 @@ export function AssistantOverviewPage() {
                   <StatTile label="Est. API Cost" value={usd(aiData.totals.estimatedCostMicros)} icon={Coins} tone="orange" sub="estimated, not provider bill" />
                   <StatTile label="Error Rate" value={`${aiData.totals.errorRate}%`} icon={AlertTriangle} tone={aiData.totals.errorRate > 0 ? "red" : undefined} />
                 </div>
-                <div className="grid gap-2 xl:grid-cols-2">
+                <div className="grid gap-1 xl:grid-cols-[0.8fr_1.2fr_1fr]">
+                  <div className="flex items-center justify-around rounded-sm border border-slate-200 bg-white p-3">
+                    <DonutMeter value={aiData.totals.cacheHitRate} label="Cache" tone="green" />
+                    <DonutMeter value={aiData.totals.errorRate} label="Errors" tone={aiData.totals.errorRate > 0 ? "red" : "blue"} />
+                  </div>
                   <div className="overflow-hidden rounded-sm border border-slate-200">
-                    <div className="border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900">Cost By Model</div>
+                    <div className="flex items-center gap-2 border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900"><PieChart className="size-3.5" /> Cost By Model</div>
                     <div className="divide-y divide-slate-100">
                       {aiData.byModel.length === 0 ? <p className="p-3 text-xs font-medium text-slate-500">No model usage yet.</p> : aiData.byModel.map((row) => (
                         <div key={`${row.model}-${row.operation}`} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 py-2 text-xs">
@@ -98,7 +129,7 @@ export function AssistantOverviewPage() {
                     </div>
                   </div>
                   <div className="overflow-hidden rounded-sm border border-slate-200">
-                    <div className="border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900">Operations</div>
+                    <div className="flex items-center gap-2 border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900"><BarChart3 className="size-3.5" /> Operations</div>
                     <div className="divide-y divide-slate-100">
                       {aiData.byFeature.length === 0 ? <p className="p-3 text-xs font-medium text-slate-500">No operations yet.</p> : aiData.byFeature.map((row) => (
                         <div key={`${row.feature}-${row.operation}-${row.success}`} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 py-2 text-xs">
@@ -110,7 +141,7 @@ export function AssistantOverviewPage() {
                     </div>
                   </div>
                 </div>
-                <div className="grid gap-2 xl:grid-cols-3">
+                <div className="grid gap-1 xl:grid-cols-3">
                   <div className="overflow-hidden rounded-sm border border-slate-200">
                     <div className="border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900">Learning Health</div>
                     <div className="grid grid-cols-2 gap-2 p-3 text-xs">
@@ -161,7 +192,7 @@ export function AssistantOverviewPage() {
             )}
           </Section>
 
-          <div className="grid gap-2 xl:grid-cols-3">
+          <div className="grid gap-1 xl:grid-cols-3">
             <Section title="Usage Over Time" description="Questions per day and the tokens they used." className="xl:col-span-2">
               <UsageChart data={data.series} height={270} />
             </Section>
@@ -170,7 +201,7 @@ export function AssistantOverviewPage() {
             </Section>
           </div>
 
-          <div className="grid gap-2 xl:grid-cols-3">
+          <div className="grid gap-1 xl:grid-cols-3">
             <Section title="Most Asked Questions" description="The same question asked again and again points to missing help." className="xl:col-span-2" flush>
               <ul className="divide-y divide-slate-100">
                 {data.topQuestions.map((question) => (
@@ -187,7 +218,7 @@ export function AssistantOverviewPage() {
             </Section>
           </div>
 
-          <div className="grid gap-2 xl:grid-cols-3">
+          <div className="grid gap-1 xl:grid-cols-3">
             <Section title="What The Assistant Did" description="Actions it took for people.">
               <BarList color="bg-violet-500" rows={data.tools.map((tool) => ({ key: tool.name, label: toolLabel(tool.name), value: tool.count }))} empty="It only answered questions; no actions yet." />
               {data.cards.length > 0 && (
@@ -227,7 +258,7 @@ export function AssistantOverviewPage() {
             </Section>
           </div>
 
-          <div className="grid gap-2 xl:grid-cols-2">
+          <div className="grid gap-1 xl:grid-cols-2">
             <Section title="Busiest Companies" description="By people using it, then questions." flush action={<Link href="/super-admin/assistant/conversations" className={btn}>All Conversations</Link>}>
               <ul className="divide-y divide-slate-100">
                 {data.companies.map((company) => (

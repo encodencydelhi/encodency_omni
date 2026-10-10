@@ -93,3 +93,32 @@ export function KeywordCloud({ words }: { words: Array<{ word: string; count: nu
     </ul>
   );
 }
+
+export function MiniBarSpark({ data, tone = "blue" }: { data: number[]; tone?: "blue" | "violet" | "green" | "orange" | "red" }) {
+  const max = Math.max(1, ...data);
+  const color = { blue: "bg-blue-500", violet: "bg-violet-500", green: "bg-emerald-500", orange: "bg-amber-500", red: "bg-rose-500" }[tone];
+  return (
+    <div className="flex h-8 items-end gap-0.5" aria-hidden="true">
+      {data.slice(-18).map((value, index) => (
+        <span key={index} className={`${color} w-full min-w-1 rounded-t-[1px] opacity-80`} style={{ height: `${Math.max(12, (value / max) * 100)}%` }} />
+      ))}
+    </div>
+  );
+}
+
+export function DonutMeter({ value, label, tone = "blue" }: { value: number; label: string; tone?: "blue" | "green" | "orange" | "red" | "violet" }) {
+  const pct = Math.max(0, Math.min(100, value));
+  const stroke = { blue: "#2563eb", green: "#059669", orange: "#d97706", red: "#e11d48", violet: "#7c3aed" }[tone];
+  return (
+    <div className="relative size-20 shrink-0" role="img" aria-label={`${label} ${pct}%`}>
+      <svg viewBox="0 0 40 40" className="size-20 -rotate-90">
+        <circle cx="20" cy="20" r="15.5" fill="none" stroke="#e2e8f0" strokeWidth="5" />
+        <circle cx="20" cy="20" r="15.5" fill="none" stroke={stroke} strokeWidth="5" strokeLinecap="round" strokeDasharray={`${pct} ${100 - pct}`} pathLength={100} />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-sm font-bold tabular-nums text-slate-900">{pct}%</span>
+        <span className="text-[9px] font-semibold uppercase text-slate-400">{label}</span>
+      </div>
+    </div>
+  );
+}

@@ -24,8 +24,8 @@ export function AssistantDeskShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="-mx-4 -my-4 flex min-h-full flex-col bg-[#f8fafc] capitalize sm:-mx-5 xl:-mx-6">
-      <div className="border-b border-slate-200 bg-white px-5 pt-4 sm:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="border-b border-slate-200 bg-white px-5 pt-3 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-1">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-red-50 text-red-600 ring-1 ring-red-100">
               <BotMessageSquare className="size-5" />
@@ -46,7 +46,7 @@ export function AssistantDeskShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </div>
-        <nav className="mt-3 flex gap-1 overflow-x-auto overflow-y-hidden" aria-label="Assistant sections">
+        <nav className="mt-2 flex gap-1 overflow-x-auto overflow-y-hidden" aria-label="Assistant sections">
           {TABS.map((tab) => {
             const current = tab.href === "/super-admin/assistant" ? pathname === tab.href : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
             return (
@@ -63,7 +63,7 @@ export function AssistantDeskShell({ children }: { children: ReactNode }) {
           })}
         </nav>
       </div>
-      <div className="flex-1 px-5 py-4 sm:px-6">{children}</div>
+      <div className="flex-1 px-5 py-2 sm:px-6">{children}</div>
     </div>
   );
 }
