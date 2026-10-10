@@ -123,6 +123,25 @@ export interface AiAnalytics {
   byFeature: Array<{ feature: string; operation: string; success: boolean; requests: number; totalTokens: number; estimatedCostMicros: number }>;
   alerts: Array<{ id: string; severity: string; kind: string; title: string; detail: string | null; createdAt: string }>;
   evaluationRuns: Array<{ id: string; status: string; totalCases: number; passed: number; failed: number; createdAt: string; finishedAt: string | null }>;
+  learning: {
+    enabled: boolean;
+    jobs: Array<{ id: string; kind: string; status: string; processed: number; candidatesCreated: number; duplicatesSkipped: number; error: string | null; startedAt: string; finishedAt: string | null }>;
+    failures: number;
+    pendingApprovals: number;
+  };
+  knowledgeHealth: {
+    approvedFaqs: number;
+    faqHits: number;
+    negativeFeedback: number;
+    feedback: Array<{ rating: string; count: number }>;
+  };
+  knowledgeGaps: Array<{ question: string; frequency: number; lastAskedAt: string; priority: string; status: string }>;
+  config: {
+    vectorSearchEnabled: boolean;
+    modelRoutingEnabled: boolean;
+    streamingEnabled: boolean;
+    proactiveSupportEnabled: boolean;
+  };
 }
 
 export interface Filters {
