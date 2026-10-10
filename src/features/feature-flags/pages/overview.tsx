@@ -84,19 +84,26 @@ export function FlagsOverviewPage() {
       {query.error && !data ? (
         <FlagsError subject="Feature Flag Overview" error={query.error} onRetry={() => void query.refetch()} />
       ) : !data ? (
-        <div className="space-y-1"><StatGridSkeleton count={8} className="grid-cols-2 sm:grid-cols-4 min-[1600px]:grid-cols-8" /><PanelSkeleton rows={6} /></div>
+        <div className="space-y-1">
+          <div className="overflow-x-auto scrollbar-none pb-0.5">
+            <StatGridSkeleton count={8} className="grid-cols-8 min-w-[700px] lg:min-w-0" />
+          </div>
+          <PanelSkeleton rows={6} />
+        </div>
       ) : (
         <>
-          <StatGrid className="grid-cols-2 sm:grid-cols-4 min-[1600px]:grid-cols-8">
-            <StatCard compact label="Total Flags" value={data.kpis.total} hint="Not archived" href={flagRoutes.all(environment)} />
-            <StatCard compact label="Globally Enabled" value={data.kpis.globallyEnabled} hint="All eligible companies" href={flagRoutes.all(environment, { state: "enabled", strategy: "all" })} />
-            <StatCard compact label="Disabled" value={data.kpis.disabled} hint="Switched off" href={flagRoutes.all(environment, { state: "disabled" })} />
-            <StatCard compact label="Active Rollouts" value={data.kpis.activeRollouts} hint="Partial or internal" href={flagRoutes.rollouts(environment)} />
-            <StatCard compact label="Scheduled Changes" value={data.kpis.scheduled} hint="Planned, not applied" href={flagRoutes.changes(environment, "scheduled")} />
-            <StatCard compact label="Pending Approval" value={data.kpis.pendingApproval} hint="Demo requests" tone={data.kpis.pendingApproval > 0 ? "warning" : "neutral"} href={flagRoutes.changes(environment, "pending")} />
-            <StatCard compact label="Emergency Disabled" value={data.kpis.emergencyOff} hint="Configuration preserved" tone={data.kpis.emergencyOff > 0 ? "danger" : "neutral"} href={flagRoutes.all(environment, { quick: "emergency" })} />
-            <StatCard compact label="Cleanup Candidates" value={data.kpis.cleanup} hint="Review and retire" href={flagRoutes.all(environment, { quick: "cleanup" })} />
-          </StatGrid>
+          <div className="overflow-x-auto scrollbar-none pb-0.5">
+            <StatGrid className="grid-cols-8 min-w-[700px] lg:min-w-0">
+              <StatCard compact label="Total Flags" value={data.kpis.total} hint="Not archived" href={flagRoutes.all(environment)} />
+              <StatCard compact label="Globally Enabled" value={data.kpis.globallyEnabled} hint="All eligible companies" href={flagRoutes.all(environment, { state: "enabled", strategy: "all" })} />
+              <StatCard compact label="Disabled" value={data.kpis.disabled} hint="Switched off" href={flagRoutes.all(environment, { state: "disabled" })} />
+              <StatCard compact label="Active Rollouts" value={data.kpis.activeRollouts} hint="Partial or internal" href={flagRoutes.rollouts(environment)} />
+              <StatCard compact label="Scheduled Changes" value={data.kpis.scheduled} hint="Planned, not applied" href={flagRoutes.changes(environment, "scheduled")} />
+              <StatCard compact label="Pending Approval" value={data.kpis.pendingApproval} hint="Demo requests" tone={data.kpis.pendingApproval > 0 ? "warning" : "neutral"} href={flagRoutes.changes(environment, "pending")} />
+              <StatCard compact label="Emergency Disabled" value={data.kpis.emergencyOff} hint="Configuration preserved" tone={data.kpis.emergencyOff > 0 ? "danger" : "neutral"} href={flagRoutes.all(environment, { quick: "emergency" })} />
+              <StatCard compact label="Cleanup Candidates" value={data.kpis.cleanup} hint="Review and retire" href={flagRoutes.all(environment, { quick: "cleanup" })} />
+            </StatGrid>
+          </div>
 
           <div className="grid grid-cols-1 gap-1 xl:grid-cols-3">
             <Panel className="xl:col-span-2" title="Active Rollout Summary" description="Flags that are enabled for some companies. Effective is the evaluated count, which can differ from a percentage." flush action={<Button asChild variant="ghost" size="sm"><Link href={flagRoutes.rollouts(environment)}>View All</Link></Button>}>

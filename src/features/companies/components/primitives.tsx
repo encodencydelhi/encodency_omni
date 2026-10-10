@@ -84,8 +84,15 @@ export function StatCard({
 }) {
   const body = (
     <>
-      <div className="flex items-center justify-between gap-2">
-        <p className={cn("truncate text-[11px] font-medium uppercase text-muted-foreground", compact ? "tracking-wide" : "tracking-wider")}>{label}</p>
+      <div className="flex items-start justify-between gap-1.5">
+        <p
+          className={cn(
+            "line-clamp-2 text-[11px] font-medium uppercase leading-tight text-muted-foreground break-words",
+            compact ? "tracking-wide" : "tracking-wider",
+          )}
+        >
+          {label}
+        </p>
         {Icon && !compact ? (
           <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-sm", STAT_ICON_TONES[tone])}>
             <Icon className="size-3" aria-hidden />
@@ -97,18 +104,21 @@ export function StatCard({
     </>
   );
 
+  const cardTitle = title ?? (typeof label === "string" ? label : undefined);
+
   const shell = cn(
     "block min-w-0 rounded-sm border border-border bg-card px-3 py-2.5 shadow-xs",
+    compact && "px-2.5 py-2",
     href && "transition-colors hover:border-border-strong hover:bg-accent/40 focus-visible:outline-2 focus-visible:outline-ring/40",
     className,
   );
 
   return href ? (
-    <Link href={href} className={shell} title={title}>
+    <Link href={href} className={shell} title={cardTitle}>
       {body}
     </Link>
   ) : (
-    <div className={shell} title={title}>
+    <div className={shell} title={cardTitle}>
       {body}
     </div>
   );

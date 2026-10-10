@@ -82,17 +82,21 @@ export function AllFlagsPage() {
       />
 
       {data ? (
-        <StatGrid className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-7">
-          <StatCard compact label="Total Flags" value={data.summary.total} hint="Not archived" />
-          <StatCard compact label="Enabled" value={data.summary.enabled} hint="Switched on" href={flagRoutes.all(environment, { quick: "enabled" })} />
-          <StatCard compact label="Disabled" value={data.summary.disabled} hint="Switched off" href={flagRoutes.all(environment, { quick: "disabled" })} />
-          <StatCard compact label="Gradual Rollouts" value={data.summary.targeted} hint="Selected or percentage" href={flagRoutes.all(environment, { quick: "gradual" })} />
-          <StatCard compact label="Internal Only" value={data.summary.internal} hint="No tenant matched" href={flagRoutes.all(environment, { quick: "internal" })} />
-          <StatCard compact label="Emergency Off" value={data.summary.emergency} hint="Configuration preserved" tone={data.summary.emergency > 0 ? "danger" : "neutral"} href={flagRoutes.all(environment, { quick: "emergency" })} />
-          <StatCard compact label="Archived" value={data.summary.archived} hint="Read-only" href={flagRoutes.all(environment, { lifecycle: "archived" })} />
-        </StatGrid>
+        <div className="overflow-x-auto scrollbar-none pb-0.5">
+          <StatGrid className="grid-cols-7 min-w-[640px] xl:min-w-0">
+            <StatCard compact label="Total Flags" value={data.summary.total} hint="Not archived" />
+            <StatCard compact label="Enabled" value={data.summary.enabled} hint="Switched on" href={flagRoutes.all(environment, { quick: "enabled" })} />
+            <StatCard compact label="Disabled" value={data.summary.disabled} hint="Switched off" href={flagRoutes.all(environment, { quick: "disabled" })} />
+            <StatCard compact label="Gradual Rollouts" value={data.summary.targeted} hint="Selected or percentage" href={flagRoutes.all(environment, { quick: "gradual" })} />
+            <StatCard compact label="Internal Only" value={data.summary.internal} hint="No tenant matched" href={flagRoutes.all(environment, { quick: "internal" })} />
+            <StatCard compact label="Emergency Off" value={data.summary.emergency} hint="Configuration preserved" tone={data.summary.emergency > 0 ? "danger" : "neutral"} href={flagRoutes.all(environment, { quick: "emergency" })} />
+            <StatCard compact label="Archived" value={data.summary.archived} hint="Read-only" href={flagRoutes.all(environment, { lifecycle: "archived" })} />
+          </StatGrid>
+        </div>
       ) : query.error ? null : (
-        <StatGridSkeleton count={7} className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-7" />
+        <div className="overflow-x-auto scrollbar-none pb-0.5">
+          <StatGridSkeleton count={7} className="grid-cols-7 min-w-[640px] xl:min-w-0" />
+        </div>
       )}
 
       <div className="space-y-1.5">
