@@ -110,6 +110,53 @@ export function AssistantOverviewPage() {
                     </div>
                   </div>
                 </div>
+                <div className="grid gap-2 xl:grid-cols-3">
+                  <div className="overflow-hidden rounded-sm border border-slate-200">
+                    <div className="border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900">Learning Health</div>
+                    <div className="grid grid-cols-2 gap-2 p-3 text-xs">
+                      <span className="font-medium text-slate-500">Auto Learning</span>
+                      <span className={aiData.learning.enabled ? "text-right font-semibold text-emerald-700" : "text-right font-semibold text-slate-500"}>{aiData.learning.enabled ? "enabled" : "disabled"}</span>
+                      <span className="font-medium text-slate-500">Pending Reviews</span>
+                      <span className="text-right font-semibold text-slate-900">{full(aiData.learning.pendingApprovals)}</span>
+                      <span className="font-medium text-slate-500">Failed Jobs</span>
+                      <span className={aiData.learning.failures > 0 ? "text-right font-semibold text-rose-700" : "text-right font-semibold text-slate-900"}>{full(aiData.learning.failures)}</span>
+                    </div>
+                  </div>
+                  <div className="overflow-hidden rounded-sm border border-slate-200">
+                    <div className="border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900">FAQ Health</div>
+                    <div className="grid grid-cols-2 gap-2 p-3 text-xs">
+                      <span className="font-medium text-slate-500">Approved FAQs</span>
+                      <span className="text-right font-semibold text-slate-900">{full(aiData.knowledgeHealth.approvedFaqs)}</span>
+                      <span className="font-medium text-slate-500">FAQ Hits</span>
+                      <span className="text-right font-semibold text-slate-900">{full(aiData.knowledgeHealth.faqHits)}</span>
+                      <span className="font-medium text-slate-500">Negative Feedback</span>
+                      <span className={aiData.knowledgeHealth.negativeFeedback > 0 ? "text-right font-semibold text-amber-700" : "text-right font-semibold text-slate-900"}>{full(aiData.knowledgeHealth.negativeFeedback)}</span>
+                    </div>
+                  </div>
+                  <div className="overflow-hidden rounded-sm border border-slate-200">
+                    <div className="border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900">Feature Flags</div>
+                    <div className="grid grid-cols-2 gap-2 p-3 text-xs">
+                      <span className="font-medium text-slate-500">Semantic Search</span>
+                      <span className="text-right font-semibold text-slate-900">{aiData.config.vectorSearchEnabled ? "on" : "off"}</span>
+                      <span className="font-medium text-slate-500">Model Routing</span>
+                      <span className="text-right font-semibold text-slate-900">{aiData.config.modelRoutingEnabled ? "on" : "off"}</span>
+                      <span className="font-medium text-slate-500">Streaming</span>
+                      <span className="text-right font-semibold text-slate-900">{aiData.config.streamingEnabled ? "on" : "off"}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="overflow-hidden rounded-sm border border-slate-200">
+                  <div className="border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900">Knowledge Gaps</div>
+                  <div className="divide-y divide-slate-100">
+                    {aiData.knowledgeGaps.length === 0 ? <p className="p-3 text-xs font-medium text-slate-500">No repeated unresolved questions in this period.</p> : aiData.knowledgeGaps.map((gap) => (
+                      <div key={gap.question} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 py-2 text-xs">
+                        <span dir="auto" className="min-w-0 truncate font-semibold text-slate-900">{gap.question}</span>
+                        <span className="font-medium text-slate-500">{gap.frequency} asks</span>
+                        <span className={gap.priority === "high" ? "font-semibold text-rose-700" : gap.priority === "medium" ? "font-semibold text-amber-700" : "font-semibold text-slate-600"}>{gap.priority}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </Section>
