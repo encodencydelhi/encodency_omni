@@ -8,6 +8,7 @@
  * resolves to a provider that refuses to invent flags.
  */
 import { FLAGS_MOCK_MODE } from "./config";
+import { liveFlagsProvider } from "./live-provider";
 import { mockFlagsProvider } from "./mock-provider";
 import { unavailableFlagsProvider } from "./unavailable-provider";
 import type { ApprovalDecision } from "./selectors";
@@ -158,7 +159,7 @@ export interface VersionComparison {
 }
 
 export interface FlagsRepository {
-  readonly mode: "mock" | "unavailable";
+  readonly mode: "mock" | "unavailable" | "live";
   getOverview(environment: Environment, filter?: OverviewFilter): Promise<OverviewData>;
   listFlags(query: FlagListQuery): Promise<FlagListResult>;
   getFlag(key: string, environment: Environment): Promise<FlagDetail>;
@@ -181,4 +182,4 @@ export interface FlagsRepository {
   resetDemoData?(): Promise<void>;
 }
 
-export const flagsRepository: FlagsRepository = FLAGS_MOCK_MODE ? mockFlagsProvider : unavailableFlagsProvider;
+export const flagsRepository: FlagsRepository = FLAGS_MOCK_MODE ? mockFlagsProvider : liveFlagsProvider;

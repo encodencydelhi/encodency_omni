@@ -54,6 +54,10 @@ const { organizationApi, describeOrganizationError, isRevisionConflict } = await
   "@/features/admin/settings/live/organization-api"
 );
 const { createApiClientsProvider } = await import("@/features/clients/data/api-provider");
+const { superAdminSettingsApi } = await import("@/features/global-settings/live/super-admin-settings-api");
+const { createApiSettingsProvider } = await import("@/features/global-settings/data/api-provider");
+const { superAdminFeatureFlagsApi } = await import("@/features/feature-flags/live/super-admin-feature-flags-api");
+const { liveFlagsProvider } = await import("@/features/feature-flags/data/live-provider");
 
 interface Call {
   url: string;
@@ -2113,6 +2117,212 @@ describe("organizationApi (Organization Settings contracts)", () => {
     assert.ok(keyB.includes("company-456"));
     assert.notEqual(keyA, keyB);
     assert.equal(keyDefault, "encodency_omni_company_settings_v1");
+  });
+});
+
+describe("global settings", () => {
+  it("GET /super-admin/settings/configuration and /new-company-defaults", async () => {
+    responses.push(
+      { status: 200, body: { values: { "identity.platform_name": "OmniPlatform" } } },
+      { status: 200, body: { timezone: "Asia/Kolkata", language: "en", currency: "INR" } },
+    );
+
+    const snapshot = await superAdminSettingsApi.getConfiguration();
+    const defaults = await superAdminSettingsApi.getNewCompanyDefaults();
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/settings/configuration");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(calls[1]!.url, "/api/v1/super-admin/settings/new-company-defaults");
+    assert.equal(calls[1]!.init.method, "GET");
+    assert.equal(snapshot.values["identity.platform_name"], "OmniPlatform");
+    assert.equal(defaults.timezone, "Asia/Kolkata");
+  });
+
+  it("PUT /super-admin/settings/sections/:section sends { values, reason } and never the actor", async () => {
+    responses.push({ status: 200, body: { version: null, applied: [], pending: [] } });
+
+    const result = await createApiSettingsProvider().saveSection(
+      { section: "localization", values: { "localization.default_timezone": "Europe/Berlin" }, reason: "Align with the EU team" },
+      { id: "usr-1", name: "Platform Admin" },
+    );
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/settings/sections/localization");
+    assert.equal(calls[0]!.init.method, "PUT");
+    assert.deepEqual(body(calls[0]!), {
+      values: { "localization.default_timezone": "Europe/Berlin" },
+      reason: "Align with the EU team",
+    });
+    assert.deepEqual(result, { version: null, applied: [], pending: [] });
+  });
+
+  it("POST /super-admin/settings/review sends { section, values } without writing anything", async () => {
+    responses.push({ status: 200, body: { rows: [], requiresReason: false, hasPending: false, checks: [], warnings: [] } });
+
+    await superAdminSettingsApi.reviewChanges("security", { "security.session_idle_minutes": 30 });
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/settings/review");
+    assert.equal(calls[0]!.init.method, "POST");
+    assert.deepEqual(body(calls[0]!), {
+      section: "security",
+      values: { "security.session_idle_minutes": 30 },
+    });
+  });
+
+  it("GET /super-admin/settings/changes forwards only the set filters", async () => {
+    responses.push({ status: 200, body: { rows: [], total: 0, page: 1, pageSize: 20, actors: [] } });
+
+    await superAdminSettingsApi.listChanges({ section: "security", page: 1, actor: undefined, search: "" });
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/settings/changes?section=security&page=1");
+    assert.equal(calls[0]!.init.method, "GET");
+  });
+
+  it("GET /super-admin/settings/changes/:id and /pending read the trail", async () => {
+    responses.push({ status: 200, body: { id: "chg_1" } }, { status: 200, body: [{ id: "chg_2" }] });
+
+    const change = await superAdminSettingsApi.getChange("chg_1");
+    const pending = await superAdminSettingsApi.listPending();
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/settings/changes/chg_1");
+    assert.equal(calls[1]!.url, "/api/v1/super-admin/settings/pending");
+    assert.equal(change.id, "chg_1");
+    assert.deepEqual(pending, [{ id: "chg_2" }]);
+  });
+
+  it("POST /super-admin/settings/pending/:id/withdraw sends { reason } and not the actor", async () => {
+    responses.push({ status: 200, body: { id: "chg_9", result: "withdrawn" } });
+
+    const withdrawn = await createApiSettingsProvider().withdrawPending("chg_9", "No longer needed", { id: "usr-1", name: "Platform Admin" });
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/settings/pending/chg_9/withdraw");
+    assert.equal(calls[0]!.init.method, "POST");
+    assert.deepEqual(body(calls[0]!), { reason: "No longer needed" });
+    assert.equal(withdrawn.result, "withdrawn");
+  });
+
+  it("GET /super-admin/settings/versions and /versions/compare", async () => {
+    responses.push({ status: 200, body: [{ id: "cfg_v2" }] }, { status: 200, body: { from: { id: "cfg_v1" }, to: { id: "cfg_v2" }, rows: [] } });
+
+    const versions = await superAdminSettingsApi.listVersions();
+    const comparison = await superAdminSettingsApi.compareVersions("cfg_v1", "cfg_v2");
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/settings/versions");
+    assert.equal(calls[1]!.url, "/api/v1/super-admin/settings/versions/compare?from=cfg_v1&to=cfg_v2");
+    assert.deepEqual(versions, [{ id: "cfg_v2" }]);
+    assert.equal(comparison.from.id, "cfg_v1");
+  });
+
+  it("GET /super-admin/settings/security-review", async () => {
+    responses.push({ status: 200, body: { configured: [], incomplete: [], backendDependencies: [], pendingSensitive: [], lastUpdatedAt: null, status: "configured" } });
+
+    const review = await superAdminSettingsApi.getSecurityReview();
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/settings/security-review");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(review.status, "configured");
+  });
+
+  it("maps a 422 save failure to ApiError with fieldErrors and no fallback", async () => {
+    responses.push({
+      status: 422,
+      body: {
+        message: "Some values are not valid. Nothing was saved.",
+        fieldErrors: { "localization.default_timezone": "Unknown IANA timezone." },
+      },
+    });
+
+    await assert.rejects(
+      superAdminSettingsApi.saveSection({ section: "localization", values: { "localization.default_timezone": "Mars/Olympus" } }),
+      (error: unknown) => {
+        if (!ApiError.isApiError(error)) return false;
+        assert.equal(error.status, 422);
+        assert.equal(error.code, "VALIDATION_FAILED");
+        assert.equal(error.fieldErrors?.["localization.default_timezone"], "Unknown IANA timezone.");
+        return true;
+      },
+    );
+  });
+
+  it("resolves the api repository in api mode with no demo reset", async () => {
+    const provider = createApiSettingsProvider();
+    assert.equal(provider.mode, "api");
+    assert.equal(provider.resetDemoData, undefined);
+
+    responses.push({ status: 200, body: { values: {} } });
+    await provider.getConfiguration();
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/settings/configuration");
+  });
+});
+
+describe("Super Admin Feature Flags contract", () => {
+  beforeEach(() => {
+    calls = [];
+    responses = [];
+  });
+
+  afterEach(() => {
+    onSessionExpired(null);
+  });
+
+  it("GET /super-admin/feature-flags/overview forwards environment and category filter", async () => {
+    responses.push({ status: 200, body: { environment: "production", kpis: { total: 21 }, rollouts: [], facets: { categories: [], owners: [] } } });
+
+    const overview = await superAdminFeatureFlagsApi.getOverview("production", { category: "AI & Content" });
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/feature-flags/overview?environment=production&category=AI+%26+Content");
+    assert.equal(calls[0]!.init.method, "GET");
+    assert.equal(overview.kpis.total, 21);
+  });
+
+  it("GET /super-admin/feature-flags/flags maps query parameters", async () => {
+    responses.push({ status: 200, body: { rows: [], total: 0 } });
+
+    await superAdminFeatureFlagsApi.listFlags({ environment: "staging", search: "ai", category: "Workspace" });
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/feature-flags/flags?environment=staging&search=ai&category=Workspace");
+    assert.equal(calls[0]!.init.method, "GET");
+  });
+
+  it("POST /super-admin/feature-flags/flags/validate checks key uniqueness", async () => {
+    responses.push({ status: 200, body: [] });
+
+    const issues = await superAdminFeatureFlagsApi.validateCreate({
+      key: "new.flag",
+      name: "New Flag",
+      description: "Test",
+      category: "Workspace",
+      ownerTeam: "Core",
+      relatedModule: "Workspace",
+      reason: "Initial create",
+    });
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/feature-flags/flags/validate");
+    assert.equal(calls[0]!.init.method, "POST");
+    assert.deepEqual(issues, []);
+  });
+
+  it("POST /super-admin/feature-flags/flags/:key/propose submits rollout mutation", async () => {
+    responses.push({ status: 200, body: { applied: true, flag: { key: "content.ai_generator" } } });
+
+    const outcome = await superAdminFeatureFlagsApi.proposeChange({
+      flagKey: "content.ai_generator",
+      environment: "production",
+      proposed: { enabled: true, strategy: "percentage", percentage: 80 },
+      reason: "Scale to 80%",
+    });
+
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/feature-flags/flags/content.ai_generator/propose");
+    assert.equal(calls[0]!.init.method, "POST");
+    assert.equal(outcome.applied, true);
+  });
+
+  it("liveFlagsProvider resolves in api mode with no mock fallback", async () => {
+    assert.equal(liveFlagsProvider.mode, "live");
+    assert.equal(typeof liveFlagsProvider.resetDemoData, "function");
+
+    responses.push({ status: 200, body: { rows: [], total: 0 } });
+    await liveFlagsProvider.listFlags({ environment: "production" });
+    assert.equal(calls[0]!.url, "/api/v1/super-admin/feature-flags/flags?environment=production");
   });
 });
 

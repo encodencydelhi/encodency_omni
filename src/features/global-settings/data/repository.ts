@@ -1,15 +1,16 @@
 /**
  * The one seam between the Global Settings UI and wherever its data lives.
  *
- *   Today:  UI -> hooks -> settingsRepository -> shared mock provider
- *   Later:  UI -> hooks -> settingsRepository -> authenticated configuration service
+ *   UI -> hooks -> settingsRepository -> mock provider (demo mode)
+ *   UI -> hooks -> settingsRepository -> authenticated configuration service (api mode)
  *
  * Components never import a provider. When mock mode is off the repository
- * resolves to a provider that refuses to invent configuration.
+ * resolves to the API provider: every call reaches the backend and errors
+ * propagate as `ApiError` - nothing falls back to demo configuration.
  */
+import { createApiSettingsProvider } from "./api-provider";
 import { SETTINGS_MOCK_MODE } from "./config";
 import { mockSettingsProvider } from "./mock-provider";
-import { unavailableSettingsProvider } from "./unavailable-provider";
 import type {
   ChangeListResult,
   ChangeQuery,
@@ -28,7 +29,7 @@ import type {
 } from "./types";
 
 export interface SettingsRepository {
-  readonly mode: "mock" | "unavailable";
+  readonly mode: "mock" | "unavailable" | "api";
   getConfiguration(): Promise<ConfigurationSnapshot>;
   getNewCompanyDefaults(): Promise<NewCompanyDefaults>;
   /** The review a save would show: what changes, who is affected, what is held. Nothing is written. */
@@ -44,4 +45,4 @@ export interface SettingsRepository {
   resetDemoData?(): Promise<void>;
 }
 
-export const settingsRepository: SettingsRepository = SETTINGS_MOCK_MODE ? mockSettingsProvider : unavailableSettingsProvider;
+export const settingsRepository: SettingsRepository = SETTINGS_MOCK_MODE ? mockSettingsProvider : createApiSettingsProvider();
