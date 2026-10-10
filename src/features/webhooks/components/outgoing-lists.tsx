@@ -15,6 +15,7 @@ import { PageSection } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { DELIVERY_STATE, ENDPOINT_STATE, ENVIRONMENT_LABEL, PRIVACY_LABEL, SIGNING_STATE, WEBHOOK_ROUTES } from "../data/config";
 import type { OutgoingEndpoint } from "../data/types";
+import { useWebhooksEndpoints } from "../data/hooks";
 import { CompanyCell, EndpointCell, OpenLink, TablePanel, SectionCard } from "./cells";
 import { EndpointWizard } from "./endpoint-wizard";
 import { EnvironmentFilter, FilterControls, optionsFrom, useFilterState } from "./filters";
@@ -53,7 +54,8 @@ function OutgoingHeader({ onAdd, exportRows }: { onAdd: () => void; exportRows: 
 }
 
 export function OutgoingEndpointsPage() {
-  const { snapshot } = useWebhookData();
+  const { snapshot, environment } = useWebhookData();
+  useWebhooksEndpoints(environment);
   const router = useRouter();
   const [wizard, setWizard] = useState(false);
   const filters = useFilterState(["company", "state", "signing", "event", "result"] as const);

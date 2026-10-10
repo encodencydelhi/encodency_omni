@@ -21,9 +21,11 @@ import type { IncomingSource, OutgoingEndpoint } from "../data/types";
 import { CompanyCell, EndpointCell, OpenLink, TablePanel, SectionCard } from "./cells";
 import { CardGrid, Chip, EmptyRows, Kpi, Mono, Notice, State, Timestamp } from "./kit";
 import { useWebhookData } from "./webhooks-context";
+import { useWebhooksSettings } from "../data/hooks";
 
 export function SecurityPage() {
-  const { snapshot, window } = useWebhookData();
+  const { snapshot, window, environment } = useWebhookData();
+  useWebhooksSettings(environment);
   const router = useRouter();
   const summary = useMemo(() => securitySummary(snapshot, window), [snapshot, window]);
   const events = useMemo(() => incomingInWindow(snapshot, window), [snapshot, window]);

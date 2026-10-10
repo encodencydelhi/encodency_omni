@@ -19,6 +19,7 @@ import { DetailHeader, InfoCard } from "./detail";
 import { EnvironmentFilter, FilterControls, optionsFrom, useFilterState } from "./filters";
 import { CardGrid, Chip, EmptyRows, ExportButton, FilterBar, Kpi, Mono, NotFoundPanel, Notice, State, SubNav, Timestamp, usePaged } from "./kit";
 import { useWebhookData } from "./webhooks-context";
+import { useWebhooksSubscriptions } from "../data/hooks";
 
 function EventsNav({ view }: { view: "catalogue" | "subscriptions" }) {
   const router = useRouter();
@@ -50,7 +51,8 @@ function EventsSummary() {
 }
 
 export function EventCataloguePage() {
-  const { snapshot } = useWebhookData();
+  const { snapshot, environment } = useWebhookData();
+  useWebhooksSubscriptions(environment);
   const router = useRouter();
   const filters = useFilterState(["category", "audience", "schema", "availability", "subscribers"] as const);
 
@@ -116,7 +118,8 @@ export function EventCataloguePage() {
 }
 
 export function SubscriptionsDirectoryPage() {
-  const { snapshot } = useWebhookData();
+  const { snapshot, environment } = useWebhookData();
+  useWebhooksSubscriptions(environment);
   const router = useRouter();
   const filters = useFilterState(["company", "endpoint", "event", "status"] as const);
 

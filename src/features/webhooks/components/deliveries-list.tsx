@@ -20,6 +20,7 @@ import { DATE_FILTER_OPTIONS, EnvironmentFilter, FilterControls, optionsFrom, us
 import { CardGrid, Chip, EmptyRows, ExportButton, FilterBar, IdCell, Kpi, Mono, State, Timestamp } from "./kit";
 import { EligibilityBadge, RecoverySheet } from "./recovery-sheet";
 import { useWebhookData } from "./webhooks-context";
+import { useWebhooksDeliveries } from "../data/hooks";
 
 export function assessDelivery(snapshot: WebhooksSnapshot, delivery: Delivery): EligibilityAssessment {
   return evaluateDeliveryRecovery({
@@ -32,7 +33,8 @@ export function assessDelivery(snapshot: WebhooksSnapshot, delivery: Delivery): 
 }
 
 export function DeliveriesPage() {
-  const { snapshot, window } = useWebhookData();
+  const { snapshot, window, environment } = useWebhookData();
+  useWebhooksDeliveries(environment);
   const filters = useFilterState(["state", "endpoint", "company", "event", "status", "retry", "hours"] as const);
   const [preview, setPreview] = useState<Delivery | null>(null);
   const [recovery, setRecovery] = useState<string | null>(null);

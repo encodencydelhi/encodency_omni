@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ENVIRONMENT_LABEL, MODULE_LINKS, NOT_LIVE_NOTICE } from "../data/config";
-import { WEBHOOK_QUERY_KEYS, useWebhookMutation } from "../data/hooks";
+import { WEBHOOK_QUERY_KEYS, useWebhookMutation, useWebhooksActivity, useWebhooksSettings } from "../data/hooks";
 import { webhooksRepository } from "../data/repository";
 import type { WebhookSettings } from "../data/types";
 import { FilterControls, optionsFrom, useFilterState } from "./filters";
@@ -21,6 +21,8 @@ import { useWebhookData } from "./webhooks-context";
 
 export function ActivitySettingsPage() {
   const { snapshot, environment } = useWebhookData();
+  useWebhooksActivity(environment);
+  useWebhooksSettings(environment);
   const client = useQueryClient();
   const filters = useFilterState(["type", "endpoint"] as const);
   const [draft, setDraft] = useState<WebhookSettings>(snapshot.settings);
@@ -88,7 +90,7 @@ export function ActivitySettingsPage() {
         </SectionCard>
 
         <div className="space-y-1">
-          <SectionCard title="Demo Settings" description={`Saved in this browser session for ${ENVIRONMENT_LABEL[environment]}. Backend enforcement comes later.`}>
+          <SectionCard title="Webhook Settings" description={`Configured settings for ${ENVIRONMENT_LABEL[environment]}.`}>
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5"><Label htmlFor="set-timeout">Default timeout (ms)</Label><Input id="set-timeout" type="number" min={1000} max={30000} step={500} value={draft.defaultTimeoutMs} onChange={(e) => setDraft({ ...draft, defaultTimeoutMs: Number(e.target.value) })} /></div>
@@ -108,8 +110,13 @@ export function ActivitySettingsPage() {
               <div className="flex justify-end gap-2">
                 <Button variant="ghost" disabled={!dirty} onClick={() => setDraft(snapshot.settings)}>Reset</Button>
                 <Button disabled={!dirty || errors.length > 0 || save.isPending} onClick={async () => {
-                  try { await save.mutateAsync(draft); toast.success("Demo settings saved", { description: NOT_LIVE_NOTICE }); } catch (error) { toast.error(error instanceof Error ? error.message : "Settings could not be saved."); }
-                }}>Save Demo Settings</Button>
+                  try {
+                    await save.mutateAsync(draft);
+                    toast.success("Webhook settings saved successfully");
+                  } catch (error) {
+                    toast.error(error instanceof Error ? error.message : "Settings could not be saved.");
+                  }
+                }}>Save Settings</Button>
               </div>
             </div>
           </SectionCard>

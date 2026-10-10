@@ -14,7 +14,7 @@ import { DataTable } from "@/components/shared/data-table/data-table";
 import type { DataTableColumn } from "@/components/shared/data-table/types";
 import { Button } from "@/components/ui/button";
 import { DELIVERY_STATE, FAILURE_CLASS, MODULE_LINKS, PROCESSING_STATE, RECOVERY_KIND, RECOVERY_STATE, VERIFICATION_STATE, WEBHOOK_ROUTES } from "../data/config";
-import { useWebhookMutation } from "../data/hooks";
+import { useWebhookMutation, useWebhooksRecoveryRequests } from "../data/hooks";
 import { webhooksRepository } from "../data/repository";
 import { deliveriesInWindow, evaluateIncomingReprocess, incomingInWindow, isIncomingProcessingFailure } from "../data/selectors";
 import type { Delivery, IncomingEvent, RecoveryRequest } from "../data/types";
@@ -29,6 +29,7 @@ const SECTIONS: Section[] = ["incoming", "outgoing", "retry", "exhausted", "requ
 
 export function FailuresPage() {
   const { snapshot, window: period, environment } = useWebhookData();
+  useWebhooksRecoveryRequests(environment);
   const router = useRouter();
   const search = useSearchParams();
   const requested = search.get("section") as Section | null;

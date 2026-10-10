@@ -26,6 +26,62 @@ export const superAdminWebhooksApi = {
       signal,
     }),
 
+  getEndpoints: (environment: WebhookEnvironment = "production", signal?: AbortSignal) =>
+    apiClient.request<OutgoingEndpoint[]>({
+      method: "GET",
+      path: `${BASE}/endpoints`,
+      query: { environment },
+      signal,
+    }),
+
+  getDeliveries: (environment: WebhookEnvironment = "production", signal?: AbortSignal) =>
+    apiClient.request<any[]>({
+      method: "GET",
+      path: `${BASE}/deliveries`,
+      query: { environment },
+      signal,
+    }),
+
+  getSubscriptions: (environment: WebhookEnvironment = "production", signal?: AbortSignal) =>
+    apiClient.request<EventSubscription[]>({
+      method: "GET",
+      path: `${BASE}/subscriptions`,
+      query: { environment },
+      signal,
+    }),
+
+  getIncomingEvents: (environment: WebhookEnvironment = "production", signal?: AbortSignal) =>
+    apiClient.request<any[]>({
+      method: "GET",
+      path: `${BASE}/incoming-events`,
+      query: { environment },
+      signal,
+    }),
+
+  getRecoveryRequests: (environment: WebhookEnvironment = "production", signal?: AbortSignal) =>
+    apiClient.request<RecoveryRequest[]>({
+      method: "GET",
+      path: `${BASE}/recovery-requests`,
+      query: { environment },
+      signal,
+    }),
+
+  getActivity: (environment: WebhookEnvironment = "production", signal?: AbortSignal) =>
+    apiClient.request<WebhookActivity[]>({
+      method: "GET",
+      path: `${BASE}/activity`,
+      query: { environment },
+      signal,
+    }),
+
+  getSettings: (environment: WebhookEnvironment = "production", signal?: AbortSignal) =>
+    apiClient.request<WebhookSettings>({
+      method: "GET",
+      path: `${BASE}/settings`,
+      query: { environment },
+      signal,
+    }),
+
   createEndpoint: (environment: WebhookEnvironment, input: CreateEndpointInput) =>
     apiClient.request<MutationResult<OutgoingEndpoint>>({
       method: "POST",

@@ -21,6 +21,7 @@ import { EnvironmentFilter, FilterControls, optionsFrom, useFilterState, DATE_FI
 import { CardGrid, Chip, EmptyRows, ExportButton, FilterBar, IdCell, JobReference, Kpi, Mono, Notice, State, SubNav, Timestamp, humanize, usePaged } from "./kit";
 import { MonitoringChip } from "./overview-page";
 import { useWebhookData, useWebhooks } from "./webhooks-context";
+import { useWebhooksIncomingEvents } from "../data/hooks";
 
 function IncomingNav({ view }: { view: "sources" | "events" }) {
   const router = useRouter();
@@ -58,7 +59,8 @@ function IncomingSummary() {
 /* ------------------------------------------------------------------ */
 
 export function IncomingSourcesPage() {
-  const { snapshot, window } = useWebhookData();
+  const { snapshot, window, environment } = useWebhookData();
+  useWebhooksIncomingEvents(environment);
   const router = useRouter();
   const filters = useFilterState(["provider", "config", "method", "last"] as const);
   const stats = useMemo(() => sourceStats(snapshot, window), [snapshot, window]);
@@ -142,7 +144,8 @@ export function IncomingSourcesPage() {
 /* ------------------------------------------------------------------ */
 
 export function IncomingEventsPage() {
-  const { snapshot, window } = useWebhookData();
+  const { snapshot, window, environment } = useWebhookData();
+  useWebhooksIncomingEvents(environment);
   const filters = useFilterState(["provider", "source", "type", "verification", "processing", "company", "hours"] as const);
   const [preview, setPreview] = useState<IncomingEvent | null>(null);
 
