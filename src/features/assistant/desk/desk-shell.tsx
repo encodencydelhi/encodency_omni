@@ -23,7 +23,7 @@ export function AssistantDeskShell({ children }: { children: ReactNode }) {
   const fetching = useIsFetching({ queryKey: [ASSISTANT_DESK_KEY] }) > 0;
 
   return (
-    <div className="-mx-4 -my-4 flex min-h-full flex-col bg-[#f8fafc] capitalize sm:-mx-5 xl:-mx-6">
+    <div className="-mx-4 -my-4 flex min-h-[calc(100dvh-84px)] flex-col overflow-visible bg-[#f8fafc] capitalize sm:-mx-5 xl:-mx-6">
       <div className="border-b border-slate-200 bg-white px-5 pt-3 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-1">
           <div className="flex min-w-0 items-center gap-3">
