@@ -19,6 +19,7 @@ import {
   ServerIcon,
   SettingsIcon,
   ShieldCheckIcon,
+  StarIcon,
   UserIcon,
   WebhookIcon,
   type LucideIcon,
@@ -34,6 +35,7 @@ import { superAdminSearchApi, type SuperAdminSearchKind, type SuperAdminSearchRe
 const MIN_QUERY_LENGTH = 1;
 const DEBOUNCE_MS = 220;
 const RECENTS_KEY = "super-admin-global-search-recents";
+const PINNED_KEY = "super-admin-global-search-pinned";
 
 const iconByKind: Record<SuperAdminSearchKind, LucideIcon> = {
   page: ServerIcon,
@@ -66,6 +68,13 @@ const suggestedKinds = [
   { label: "Settings", icon: SettingsIcon },
 ];
 
+const emptySuggestions: SuperAdminSearchResult[] = [
+  { id: "empty-companies", kind: "page", group: "Suggestions", title: "Search Companies", subtitle: "Open company directory", href: "/super-admin/companies", preview: [{ label: "Open", value: "/super-admin/companies" }], score: 0 },
+  { id: "empty-users", kind: "page", group: "Suggestions", title: "Open Users", subtitle: "Review users and access", href: "/super-admin/users", preview: [{ label: "Open", value: "/super-admin/users" }], score: 0 },
+  { id: "empty-create-company", kind: "command", group: "Suggestions", title: "Create Company", subtitle: "Start company onboarding", href: "/super-admin/companies?create=1", badge: "Command", tone: "brand", preview: [{ label: "Action", value: "Create company" }], score: 0 },
+  { id: "empty-audit", kind: "page", group: "Suggestions", title: "Check Audit Logs", subtitle: "Investigate platform events", href: "/super-admin/audit-logs", preview: [{ label: "Open", value: "/super-admin/audit-logs" }], score: 0 },
+];
+
 function saveRecent(item: SuperAdminSearchResult) {
   if (typeof window === "undefined") return;
   const current = readRecents();
@@ -81,6 +90,21 @@ function readRecents(): SuperAdminSearchResult[] {
   } catch {
     return [];
   }
+}
+
+function readPinned(): SuperAdminSearchResult[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(PINNED_KEY) ?? "[]");
+    return Array.isArray(parsed) ? parsed.slice(0, 8) : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePinned(items: SuperAdminSearchResult[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(PINNED_KEY, JSON.stringify(items.slice(0, 8)));
 }
 
 function Highlight({ text, term }: { text: string; term: string }) {
@@ -102,7 +126,23 @@ function Highlight({ text, term }: { text: string; term: string }) {
   );
 }
 
-function ResultRow({ item, active, term, onSelect, onHover }: { item: SuperAdminSearchResult; active: boolean; term: string; onSelect: () => void; onHover: () => void }) {
+function ResultRow({
+  item,
+  active,
+  pinned,
+  term,
+  onSelect,
+  onHover,
+  onTogglePin,
+}: {
+  item: SuperAdminSearchResult;
+  active: boolean;
+  pinned: boolean;
+  term: string;
+  onSelect: () => void;
+  onHover: () => void;
+  onTogglePin: () => void;
+}) {
   const Icon = iconByKind[item.kind] ?? SearchIcon;
   return (
     <button
@@ -128,6 +168,18 @@ function ResultRow({ item, active, term, onSelect, onHover }: { item: SuperAdmin
           <span className="truncate">{item.badge.toLowerCase().replaceAll("_", " ")}</span>
         </Badge>
       ) : null}
+      <span
+        role="button"
+        tabIndex={-1}
+        onClick={(event) => {
+          event.stopPropagation();
+          onTogglePin();
+        }}
+        className={`hidden rounded p-1 transition-colors hover:bg-white sm:inline-flex ${pinned ? "text-amber-500" : "text-slate-300"}`}
+        title={pinned ? "Unpin" : "Pin"}
+      >
+        <StarIcon className={`size-4 ${pinned ? "fill-current" : ""}`} />
+      </span>
       <ChevronRightIcon className={`hidden size-4 text-slate-400 sm:block ${active ? "opacity-100" : "opacity-0"}`} />
     </button>
   );
@@ -142,6 +194,9 @@ export function GlobalSearch() {
   const [debounced, setDebounced] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [recents, setRecents] = useState<SuperAdminSearchResult[]>([]);
+  const [pinned, setPinned] = useState<SuperAdminSearchResult[]>([]);
+  const [previewFocused, setPreviewFocused] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(term.trim()), DEBOUNCE_MS);
@@ -162,6 +217,7 @@ export function GlobalSearch() {
   useEffect(() => {
     if (open) {
       setRecents(readRecents());
+      setPinned(readPinned());
       window.setTimeout(() => inputRef.current?.focus(), 0);
     }
   }, [open]);
@@ -175,7 +231,12 @@ export function GlobalSearch() {
     staleTime: 20_000,
   });
 
-  const results = isActive ? data?.items ?? [] : recents;
+  const results = isActive
+    ? data?.items ?? []
+    : [
+        ...pinned.map((item) => ({ ...item, group: "Pinned" })),
+        ...recents.filter((recent) => !pinned.some((item) => item.href === recent.href)).map((item) => ({ ...item, group: "Recent" })),
+      ];
   const selected = results[activeIndex] ?? results[0] ?? null;
   const grouped = useMemo(() => Array.from(new Set(results.map((item) => item.group))), [results]);
 
@@ -183,14 +244,30 @@ export function GlobalSearch() {
     setActiveIndex(0);
   }, [debounced, open]);
 
-  const goTo = (item: SuperAdminSearchResult) => {
+  useEffect(() => {
+    const active = listRef.current?.querySelector<HTMLElement>("[data-active='true']");
+    active?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, results.length]);
+
+  const goTo = (item: SuperAdminSearchResult, newTab = false) => {
     saveRecent(item);
     setRecents(readRecents());
+    void superAdminSearchApi.recordClick(debounced || term || item.title, item).catch(() => undefined);
     setOpen(false);
     setTerm("");
     setDebounced("");
     setActiveIndex(0);
+    if (newTab && typeof window !== "undefined") {
+      window.open(item.href, "_blank", "noopener,noreferrer");
+      return;
+    }
     router.push(item.href);
+  };
+
+  const togglePin = (item: SuperAdminSearchResult) => {
+    const next = pinned.some((entry) => entry.href === item.href) ? pinned.filter((entry) => entry.href !== item.href) : [item, ...pinned].slice(0, 8);
+    setPinned(next);
+    savePinned(next);
   };
 
   return (
@@ -218,6 +295,10 @@ export function GlobalSearch() {
               onChange={(e) => setTerm(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Escape") setOpen(false);
+                if (e.key === "Tab" && selected) {
+                  e.preventDefault();
+                  setPreviewFocused((value) => !value);
+                }
                 if (e.key === "ArrowDown") {
                   e.preventDefault();
                   setActiveIndex((index) => Math.min(index + 1, Math.max(results.length - 1, 0)));
@@ -228,14 +309,14 @@ export function GlobalSearch() {
                 }
                 if (e.key === "Enter" && selected) {
                   e.preventDefault();
-                  goTo(selected);
+                  goTo(selected, e.metaKey || e.ctrlKey);
                 }
               }}
             />
           </div>
 
           <div className="grid max-h-[68vh] grid-cols-1 overflow-hidden md:grid-cols-[minmax(0,1fr)_300px]">
-            <div className="overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-slate-200">
+            <div ref={listRef} className="overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-slate-200">
               {!isActive && recents.length === 0 ? (
                 <div className="px-3 py-6 text-center text-sm text-slate-500">
                   <p>Type to search across the platform.</p>
@@ -252,12 +333,6 @@ export function GlobalSearch() {
                 </div>
               ) : null}
 
-              {!isActive && recents.length > 0 ? (
-                <div className="mb-1 flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  <HistoryIcon className="size-3.5" /> Recent
-                </div>
-              ) : null}
-
               {isActive && isFetching && results.length === 0 ? (
                 <div className="space-y-2 p-2">
                   {Array.from({ length: 5 }, (_, index) => (
@@ -267,14 +342,28 @@ export function GlobalSearch() {
               ) : null}
 
               {isActive && !isFetching && results.length === 0 ? (
-                <p className="px-3 py-10 text-center text-[13px] text-slate-500">No results found for "{debounced}"</p>
+                <div className="space-y-3 px-3 py-6">
+                  <p className="text-center text-[13px] text-slate-500">No results found for "{debounced}"</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {emptySuggestions.map((item) => (
+                      <button key={item.id} type="button" onClick={() => goTo(item)} className="rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50">
+                        {item.title}
+                        <span className="mt-0.5 block text-[11px] font-normal text-slate-500">{item.subtitle}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ) : null}
 
               {results.length > 0 ? (
                 <div className="space-y-1">
                   {grouped.map((group) => (
                     <div key={group}>
-                      <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">{isActive ? group : "Recent"}</div>
+                      <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        {!isActive && group === "Pinned" ? <StarIcon className="size-3.5 text-amber-500" /> : null}
+                        {!isActive && group === "Recent" ? <HistoryIcon className="size-3.5" /> : null}
+                        {group}
+                      </div>
                       <ul>
                         {results
                           .filter((item) => item.group === group)
@@ -282,7 +371,17 @@ export function GlobalSearch() {
                             const absoluteIndex = results.findIndex((result) => result.id === item.id);
                             return (
                               <li key={item.id}>
-                                <ResultRow item={item} active={absoluteIndex === activeIndex} term={debounced} onHover={() => setActiveIndex(absoluteIndex)} onSelect={() => goTo(item)} />
+                                <div data-active={absoluteIndex === activeIndex ? "true" : "false"}>
+                                  <ResultRow
+                                    item={item}
+                                    active={absoluteIndex === activeIndex}
+                                    pinned={pinned.some((entry) => entry.href === item.href)}
+                                    term={debounced}
+                                    onHover={() => setActiveIndex(absoluteIndex)}
+                                    onSelect={() => goTo(item)}
+                                    onTogglePin={() => togglePin(item)}
+                                  />
+                                </div>
                               </li>
                             );
                           })}
@@ -293,7 +392,7 @@ export function GlobalSearch() {
               ) : null}
             </div>
 
-            <aside className="hidden border-l border-slate-100 bg-slate-50/70 p-4 md:block">
+            <aside className={`hidden border-l border-slate-100 bg-slate-50/70 p-4 md:block ${previewFocused ? "ring-2 ring-inset ring-slate-300" : ""}`}>
               {selected ? (
                 <div className="space-y-4">
                   <div>
@@ -319,7 +418,7 @@ export function GlobalSearch() {
                     ))}
                   </div>
                   <p className="rounded-md bg-white px-3 py-2 text-[11px] text-slate-500">
-                    Use arrow keys to move, Enter to open, Esc to close.
+                    Arrow keys move, Enter opens, Ctrl+Enter opens a new tab, Tab focuses preview.
                   </p>
                 </div>
               ) : (

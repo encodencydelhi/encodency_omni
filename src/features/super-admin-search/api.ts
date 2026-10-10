@@ -40,4 +40,11 @@ export const superAdminSearchApi = {
       signal,
     });
   },
+  recordClick(query: string, result: SuperAdminSearchResult, source = "global") {
+    return apiClient.request<void>({
+      method: "POST",
+      path: "/super-admin/search/click",
+      body: { query, result, source },
+    });
+  },
 };
