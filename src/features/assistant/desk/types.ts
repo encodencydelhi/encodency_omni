@@ -103,6 +103,28 @@ export interface Overview {
   recent: ConversationItem[];
 }
 
+export interface AiAnalytics {
+  range: DeskRange;
+  since: string | null;
+  totals: {
+    usageEvents: number;
+    openAiRequests: number;
+    faqBypasses: number;
+    cacheHitRate: number;
+    errorRate: number;
+    inputTokens: number;
+    outputTokens: number;
+    cachedInputTokens: number;
+    totalTokens: number;
+    estimatedCostMicros: number;
+    avgLatencyMs: number;
+  };
+  byModel: Array<{ model: string; operation: string; requests: number; inputTokens: number; outputTokens: number; totalTokens: number; estimatedCostMicros: number }>;
+  byFeature: Array<{ feature: string; operation: string; success: boolean; requests: number; totalTokens: number; estimatedCostMicros: number }>;
+  alerts: Array<{ id: string; severity: string; kind: string; title: string; detail: string | null; createdAt: string }>;
+  evaluationRuns: Array<{ id: string; status: string; totalCases: number; passed: number; failed: number; createdAt: string; finishedAt: string | null }>;
+}
+
 export interface Filters {
   companies: Array<{ id: string; name: string; conversations: number }>;
   pages: Array<PageRef & { questions: number }>;
