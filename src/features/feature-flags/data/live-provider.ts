@@ -5,6 +5,7 @@ import type {
   CreateFlagInput,
   Environment,
   FeatureFlag,
+  FlagChange,
   FlagListQuery,
   MutationActor,
   ProposeChangeInput,
@@ -92,11 +93,11 @@ export const liveFlagsProvider: FlagsRepository = {
     return superAdminFeatureFlagsApi.listChanges(query);
   },
 
-  getChange(id: string): Promise<any> {
+  getChange(id: string): Promise<FlagChange> {
     return superAdminFeatureFlagsApi.getChange(id);
   },
 
-  cancelChange(id: string, reason: string, _actor: MutationActor): Promise<any> {
+  cancelChange(id: string, reason: string, _actor: MutationActor): Promise<FlagChange> {
     return superAdminFeatureFlagsApi.cancelChange(id, reason);
   },
 

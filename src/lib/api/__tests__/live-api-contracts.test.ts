@@ -2261,7 +2261,8 @@ describe("Super Admin Feature Flags contract", () => {
   });
 
   afterEach(() => {
-    onSessionExpired(null);
+    const stop = onSessionExpired(() => undefined);
+    stop();
   });
 
   it("GET /super-admin/feature-flags/overview forwards environment and category filter", async () => {
@@ -2293,6 +2294,20 @@ describe("Super Admin Feature Flags contract", () => {
       category: "Workspace",
       ownerTeam: "Core",
       relatedModule: "Workspace",
+      documentation: "https://docs.example.com/flags/new_flag",
+      type: "release",
+      implementation: "in_development",
+      protection: "standard",
+      entitlement: null,
+      requiredCapability: null,
+      integrations: [],
+      usageResource: null,
+      prerequisites: [],
+      initial: {
+        development: { strategy: "disabled", percentage: 10, selectedCompanyIds: [], enabled: false },
+        staging: { strategy: "disabled", percentage: 10, selectedCompanyIds: [], enabled: false },
+        production: { strategy: "disabled", percentage: 10, selectedCompanyIds: [], enabled: false },
+      },
       reason: "Initial create",
     });
 

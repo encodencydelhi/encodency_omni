@@ -49,6 +49,9 @@ export class HttpTransport implements Transport {
         headers: {
           Accept: "application/json",
           "ngrok-skip-browser-warning": "true",
+          ...(typeof window === "undefined" && !["GET", "HEAD", "OPTIONS"].includes(spec.method)
+            ? { Origin: "http://localhost:3000" }
+            : {}),
           ...(spec.body && !isFormData ? { "Content-Type": "application/json" } : {}),
           ...spec.headers,
         },
