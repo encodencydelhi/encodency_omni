@@ -67,8 +67,8 @@ export function BillingHeader({
     <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between border-b border-border bg-card px-4 py-3 rounded-sm shadow-2xs">
       <div>
         <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Billing & Payments</h1>
-          <span className="rounded-sm bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200">
+          <h1 className="text-xl font-medium tracking-tight text-foreground">Billing & Payments</h1>
+          <span className="rounded-sm bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 border border-blue-200">
             Platform Treasury
           </span>
         </div>

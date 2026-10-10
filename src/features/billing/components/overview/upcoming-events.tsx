@@ -71,7 +71,7 @@ export function UpcomingEvents({ invoices, accounts }: UpcomingEventsProps) {
       <div className="flex items-center justify-between pb-2 border-b border-border/60">
         <div className="flex items-center gap-1.5">
           <CalendarIcon className="size-4 text-blue-600 shrink-0" />
-          <h2 className="text-xs font-bold tracking-tight text-foreground uppercase">
+          <h2 className="text-xs font-medium tracking-tight text-foreground uppercase">
             Upcoming Billing Events
           </h2>
         </div>
@@ -88,7 +88,7 @@ export function UpcomingEvents({ invoices, accounts }: UpcomingEventsProps) {
             <div key={evt.id} className="py-2 flex items-center justify-between gap-2 hover:bg-slate-50/60 px-1 transition-colors">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-foreground truncate">{evt.company}</span>
+                  <span className="text-xs font-medium text-foreground truncate">{evt.company}</span>
                   <span className="px-1.5 py-0.2 rounded-sm bg-slate-100 text-slate-700 border border-slate-200 text-xs">
                     {evt.type}
                   </span>
@@ -99,7 +99,7 @@ export function UpcomingEvents({ invoices, accounts }: UpcomingEventsProps) {
               </div>
 
               <div className="text-right shrink-0">
-                <div className="font-mono text-xs font-semibold text-foreground">
+                <div className="font-mono text-xs font-medium text-foreground">
                   {formatMoney(evt.amountMinor, evt.currency)}
                 </div>
                 <div className="text-xs text-muted-foreground">{evt.status}</div>

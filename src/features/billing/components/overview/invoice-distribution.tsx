@@ -44,7 +44,7 @@ export function InvoiceDistribution({ invoices, currency }: InvoiceDistributionP
         count: overdue.length,
         amountMinor: overdue.reduce((acc, i) => acc + i.outstandingBalanceMinor, 0),
         color: "bg-rose-500",
-        pill: "bg-rose-50 text-rose-700 border-rose-200 font-semibold",
+        pill: "bg-rose-50 text-rose-700 border-rose-200 font-medium",
         filter: "overdue",
       },
       {
@@ -89,7 +89,7 @@ export function InvoiceDistribution({ invoices, currency }: InvoiceDistributionP
       <div>
         <div className="flex items-center justify-between pb-2 border-b border-border/60">
           <div>
-            <h2 className="text-xs font-bold tracking-tight text-foreground uppercase">
+            <h2 className="text-xs font-medium tracking-tight text-foreground uppercase">
               Invoice Status Distribution
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">

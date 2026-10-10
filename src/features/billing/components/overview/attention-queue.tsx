@@ -134,10 +134,10 @@ export function AttentionQueue({
       <div className="flex items-center justify-between pb-2 border-b border-border/60">
         <div className="flex items-center gap-1.5">
           <AlertCircleIcon className="size-4 text-rose-600 shrink-0" />
-          <h2 className="text-xs font-bold tracking-tight text-foreground uppercase">
+          <h2 className="text-xs font-medium tracking-tight text-foreground uppercase">
             Collections Requiring Attention
           </h2>
-          <span className="px-1.5 py-0.5 rounded-sm bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold">
+          <span className="px-1.5 py-0.5 rounded-sm bg-rose-50 text-rose-700 border border-rose-200 text-xs font-medium">
             {items.length} Issues
           </span>
         </div>
@@ -162,7 +162,7 @@ export function AttentionQueue({
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-foreground truncate">
+                  <span className="text-xs font-medium text-foreground truncate">
                     {item.company}
                   </span>
                   <span className={`px-1.5 py-0.2 rounded-sm border text-xs capitalize ${severityBadge[item.severity]}`}>
@@ -173,7 +173,7 @@ export function AttentionQueue({
               </div>
 
               <div className="text-right shrink-0">
-                <div className="font-mono text-xs font-semibold text-foreground">
+                <div className="font-mono text-xs font-medium text-foreground">
                   {formatMoney(item.amountMinor, item.currency)}
                 </div>
                 <div className="text-xs text-muted-foreground">{formatDate(item.date)}</div>

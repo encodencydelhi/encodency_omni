@@ -20,7 +20,7 @@ export function RecentActivityWidget({ activities }: RecentActivityWidgetProps) 
       <div className="flex items-center justify-between pb-2 border-b border-border/60">
         <div className="flex items-center gap-1.5">
           <ActivityIcon className="size-4 text-purple-600 shrink-0" />
-          <h2 className="text-xs font-bold tracking-tight text-foreground uppercase">
+          <h2 className="text-xs font-medium tracking-tight text-foreground uppercase">
             Recent Financial Activity
           </h2>
         </div>
@@ -42,7 +42,7 @@ export function RecentActivityWidget({ activities }: RecentActivityWidgetProps) 
             <div key={act.id} className="py-2 flex items-center justify-between gap-2 hover:bg-slate-50/60 px-1 transition-colors">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-foreground truncate">{act.companyName}</span>
+                  <span className="text-xs font-medium text-foreground truncate">{act.companyName}</span>
                   <span className="font-mono text-xs text-muted-foreground">[{act.reference}]</span>
                 </div>
                 <div className="text-xs text-muted-foreground truncate mt-0.5">{act.result}</div>
