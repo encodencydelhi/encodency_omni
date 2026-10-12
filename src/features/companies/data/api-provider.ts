@@ -50,7 +50,7 @@ import type {
 import { commercialContext } from "@/features/plans-subscriptions/data/mock/plan-store";
 import { nowIso, platformNow } from "./clock";
 import { STAFF } from "./mock/dataset";
-import { countIntegrations, computePortfolio, filterSummaries, type DerivationContext } from "./selectors";
+import { countIntegrations, computePortfolio, filterSummaries, resolveStaff, computeSecurityWarnings, type DerivationContext } from "./selectors";
 import { USAGE_RESOURCE_BY_KEY } from "./config";
 import type {
   ActivityFilter,
@@ -66,6 +66,7 @@ import type {
   CompanyOwner,
   CompanySummary,
   CompanySubscription,
+  CompanySubscriptionStatus,
   CompanyUsageOverride,
   CompanyUsageRecord,
   CompanyUsageSummary,
@@ -77,7 +78,7 @@ import type {
   UpdateCompanyInput,
   UsageOverrideInput,
 } from "./types";
-import { ensureBundle, writeBundle } from "./mock/store";
+import { ensureBundle, findBundle, writeBundle } from "./mock/store";
 import { PLAN_TIER, type Plan, type PlanTier } from "@/types/domain/plan";
 import type { IntegrationProvider } from "@/types/domain/integration";
 import type { OrganisationRole, UserStatus } from "@/types/domain/user";
@@ -119,10 +120,26 @@ interface SuperAdminCompanySummary {
   contactPhone?: string | null;
   description?: string | null;
   country?: string | null;
-  address?: { country?: string | null; state?: string | null } | null;
+  address?: { country?: string | null; state?: string | null; internalTags?: string[]; internalOwners?: Record<string, string | null> } | null;
   taxId?: string | null;
   timezone?: string | null;
   currency?: string | null;
+  internalTags?: string[];
+  internalOwners?: {
+    accountManagerId: string | null;
+    supportOwnerId: string | null;
+    technicalOwnerId: string | null;
+  } | null;
+  subscription?: {
+    id: string;
+    planId: string;
+    planName: string;
+    status: string;
+    billingCycle: string;
+    currentPeriodEnd: string;
+    createdAt?: string;
+  } | null;
+  securitySettings?: unknown;
   /**
    * Present only on the create and owner-invitation resend responses — the list
    * and detail reads never carry them (see `SuperAdminCompanyCreatedResponse`).
@@ -314,11 +331,47 @@ function planLabel(tier: string): string {
   return PLAN_TIER[tier as PlanTier]?.label ?? tier;
 }
 
+let cachedLiveStaff: StaffRef[] = [];
+
 function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
-  const address = row.address ?? {};
-  const country = row.country ?? address.country ?? "";
+  const address = (row.address && typeof row.address === "object" && !Array.isArray(row.address))
+    ? (row.address as Record<string, unknown>)
+    : {};
+  const country = row.country ?? (address.country as string | undefined) ?? "";
   const website = row.website ?? null;
   const domain = website ? website.replace(/^https?:\/\//i, "").split("/")[0] : null;
+
+  const rawPlanName = row.subscription?.planName?.trim() || "";
+  const lowerPlan = rawPlanName.toLowerCase();
+  const planTier: PlanTier = lowerPlan.includes("agency")
+    ? "agency"
+    : lowerPlan.includes("growth")
+    ? "growth"
+    : lowerPlan.includes("enterprise")
+    ? "enterprise"
+    : "starter";
+  const planName = rawPlanName || (planTier.charAt(0).toUpperCase() + planTier.slice(1));
+  const billingCycle = row.subscription?.billingCycle?.toLowerCase() === "annual" ? "annual" : "monthly";
+
+  const rawTags = row.internalTags ?? (address.internalTags as string[] | undefined) ?? [];
+  const internalTags = Array.isArray(rawTags) ? rawTags : [];
+
+  const addrOwners = (address.internalOwners && typeof address.internalOwners === "object")
+    ? (address.internalOwners as Record<string, string | null>)
+    : null;
+  const internalOwners = {
+    accountManagerId: row.internalOwners?.accountManagerId ?? addrOwners?.accountManagerId ?? null,
+    supportOwnerId: row.internalOwners?.supportOwnerId ?? addrOwners?.supportOwnerId ?? null,
+    technicalOwnerId: row.internalOwners?.technicalOwnerId ?? addrOwners?.technicalOwnerId ?? null,
+  };
+
+  const pCtx = portfolioContext();
+  const resolvedOwners = {
+    accountManager: resolveStaff(pCtx, internalOwners.accountManagerId),
+    supportOwner: resolveStaff(pCtx, internalOwners.supportOwnerId),
+    technicalOwner: resolveStaff(pCtx, internalOwners.technicalOwnerId),
+  };
+
   return {
     company: {
       id: row.id,
@@ -338,22 +391,24 @@ function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
         timezone: row.timezone ?? "Asia/Kolkata",
         currency: row.currency ?? "INR",
         language: "English",
-        region: address.state ?? "",
+        region: (address.state as string | undefined) ?? "",
       },
       accountStatus: toAccountStatus(row.status),
       suspension: null,
       archivedAt: row.archivedAt,
       ownerUserId: null,
-      internalOwners: { accountManagerId: null, supportOwnerId: null, technicalOwnerId: null },
-      internalTags: [],
+      internalOwners,
+      internalTags,
       createdAt: row.createdAt,
-      // The backend reports no activity stream yet; creation time is the only
-      // truthful anchor available rather than a fabricated "last seen".
       lastActiveAt: row.createdAt,
       isDemoCreated: false,
     },
-    plan: { tier: "starter", name: "Starter", billingCycle: "monthly" },
-    subscriptionStatus: "active",
+    plan: { tier: planTier, name: planName, billingCycle },
+    subscriptionStatus: (row.subscription?.status?.toLowerCase() === "canceled"
+      ? "canceled"
+      : row.subscription?.status?.toLowerCase() === "past_due"
+      ? "past_due"
+      : "active") as CompanySubscriptionStatus,
     billingStatus: "no_payment_method",
     mrrMinor: 0,
     currency: "INR",
@@ -375,23 +430,44 @@ function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
     attention: [],
     onboarding: row.ownerOnboarding?.state === "active" || (!row.ownerOnboarding && row.ownerEmail) ? "completed" : "awaiting_owner",
     owner: toOwner(row.ownerEmail, row.ownerOnboarding, ownerInviteUrl(row)),
-    internalOwners: { accountManager: null, supportOwner: null, technicalOwner: null },
+    internalOwners: resolvedOwners,
   };
 }
 
 /** Maps a backend row and overlays the local-only bundle fields (tags, owners, size, logo). */
 function mapApiRow(row: SuperAdminCompanySummary): CompanySummary {
   const summary = toCompanySummary(row);
-  // The detail response names the OWNER membership — used by the transfer flow
-  // to mark the current owner. List rows simply keep null.
-  const ownerMembership = (row as SuperAdminCompanyDetailResponse).members?.find(
+  const detail = row as SuperAdminCompanyDetailResponse;
+  const ownerMembership = detail.members?.find(
     (member) => member.systemRole === "OWNER",
-  );
-  if (ownerMembership) summary.company.ownerUserId = ownerMembership.membershipId;
+  ) ?? detail.members?.[0];
+  if (ownerMembership) {
+    summary.company.ownerUserId = ownerMembership.membershipId;
+    summary.owner.userId = ownerMembership.membershipId;
+    if (ownerMembership.name) summary.owner.name = ownerMembership.name;
+    if (ownerMembership.email) summary.owner.email = ownerMembership.email;
+    summary.owner.state = "active";
+  }
   try {
     const bundle = ensureBundle(row.id, row.name);
-    summary.company.internalTags = bundle.company.internalTags ?? [];
-    summary.company.internalOwners = bundle.company.internalOwners ?? { accountManagerId: null, supportOwnerId: null, technicalOwnerId: null };
+    if (summary.company.internalTags.length === 0 && bundle.company?.internalTags?.length) {
+      summary.company.internalTags = bundle.company.internalTags;
+    } else {
+      bundle.company.internalTags = summary.company.internalTags;
+    }
+    if (!summary.company.internalOwners.accountManagerId && !summary.company.internalOwners.supportOwnerId && !summary.company.internalOwners.technicalOwnerId) {
+      if (bundle.company?.internalOwners) {
+        summary.company.internalOwners = bundle.company.internalOwners;
+      }
+    } else {
+      bundle.company.internalOwners = summary.company.internalOwners;
+    }
+    const pCtx = portfolioContext();
+    summary.internalOwners = {
+      accountManager: resolveStaff(pCtx, summary.company.internalOwners.accountManagerId),
+      supportOwner: resolveStaff(pCtx, summary.company.internalOwners.supportOwnerId),
+      technicalOwner: resolveStaff(pCtx, summary.company.internalOwners.technicalOwnerId),
+    };
     summary.company.profile.companySize = bundle.company.profile.companySize ?? null;
     if (summary.company.profile.country) {
       bundle.company.profile.country = summary.company.profile.country;
@@ -415,7 +491,8 @@ function mapApiRow(row: SuperAdminCompanySummary): CompanySummary {
 
 /** Derivation context for portfolio KPIs — the currency is the only plan data `computePortfolio` reads. */
 function portfolioContext(): DerivationContext {
-  return { now: platformNow(), staff: STAFF, ...commercialContext() };
+  const combinedStaff = [...cachedLiveStaff, ...STAFF.filter((s) => !cachedLiveStaff.some((c) => c.id === s.id))];
+  return { now: platformNow(), staff: combinedStaff, ...commercialContext() };
 }
 
 /* ------------------------------------------------------------------ */
@@ -793,16 +870,18 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
     async listStaff(): Promise<StaffRef[]> {
       try {
         const response = await staffApi.list({ limit: 100 });
-        return response.items
+        const list = response.items
           .filter((member: LiveStaff) => member.status === "ACTIVE")
           .map((member: LiveStaff) => ({
             id: member.id,
             name: member.name || member.email.split("@")[0] || member.email,
             email: member.email,
-            role: member.platformRole === "SUPER_ADMIN" ? "super_admin" : "support",
+            role: (member.platformRole === "SUPER_ADMIN" ? "super_admin" : "support") as StaffRef["role"],
             department: member.department ?? "",
-            status: "active",
+            status: "active" as const,
           }));
+        cachedLiveStaff = list;
+        return list;
       } catch (error) {
         if (shouldFallBack(error)) return fallback.listStaff();
         throw error;
@@ -956,6 +1035,20 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       if (input.contactEmail !== undefined) body.contactEmail = clip(input.contactEmail, 254)?.toLowerCase() ?? null;
       if (input.contactPhone !== undefined) body.contactPhone = clip(input.contactPhone, 30) ?? null;
       if (input.country !== undefined) body.country = clip(input.country, 100) ?? null;
+      if (input.internalTags !== undefined) {
+        body.internalTags = input.internalTags;
+      }
+      if (input.internalOwners !== undefined) {
+        if (input.internalOwners.accountManagerId !== undefined) {
+          body.accountManagerId = input.internalOwners.accountManagerId || null;
+        }
+        if (input.internalOwners.supportOwnerId !== undefined) {
+          body.supportOwnerId = input.internalOwners.supportOwnerId || null;
+        }
+        if (input.internalOwners.technicalOwnerId !== undefined) {
+          body.technicalOwnerId = input.internalOwners.technicalOwnerId || null;
+        }
+      }
 
       const patched = await apiClient.request<SuperAdminCompanyDetailResponse>({
         method: "PATCH",
@@ -1596,9 +1689,13 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       }
 
       try {
-        const [usersData, fallbackSecurity] = await Promise.all([
+        const [usersData, fallbackSecurity, companyDetail] = await Promise.all([
           this.getUsers(id),
           fallback.getSecurity(id),
+          apiClient.request<SuperAdminCompanyDetailResponse>({
+            method: "GET",
+            path: `/super-admin/companies/${encodeURIComponent(id)}`,
+          }).catch(() => null),
         ]);
 
         const totalUsers = usersData.users.length;
@@ -1606,15 +1703,49 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         const percent = totalUsers > 0 ? Math.round((withTwoFactor / totalUsers) * 100) : 100;
         const adminsWithout2fa = usersData.users.filter((u) => (u.role === "owner" || u.role === "admin") && !u.mfaEnabled);
 
+        const secSettings = (companyDetail?.securitySettings ?? null) as Record<string, unknown> | null;
+        const is2faRequired = Boolean(secSettings?.require2FAForAllMembers || secSettings?.require2fa);
+        const isLocked = companyDetail?.status === "ARCHIVED";
+
+        const bundle = findBundle(id);
+        const bundleEvents = bundle?.security?.events ?? [];
+        const allEvents = [...bundleEvents, ...(fallbackSecurity.security.events || [])].slice(0, 50);
+
+        const warnings = computeSecurityWarnings(
+          {
+            ...fallbackSecurity,
+            users: usersData.users,
+          } as any,
+          usersData.owner,
+        );
+
         return {
           ...fallbackSecurity,
           owner: usersData.owner,
           users: usersData.users,
+          warnings,
           adoption: {
             totalUsers,
             withTwoFactor,
             percent,
             adminsWithout2fa,
+          },
+          security: {
+            ...fallbackSecurity.security,
+            policies: {
+              ...fallbackSecurity.security.policies,
+              require2fa: is2faRequired || fallbackSecurity.security.policies.require2fa,
+            },
+            accessLock: isLocked
+              ? bundle?.security?.accessLock ?? {
+                  lockedAt: companyDetail?.createdAt || new Date().toISOString(),
+                  lockedBy: "Super Admin",
+                  reason: "Access locked by administrator",
+                }
+              : null,
+            passwordResetRequestedAt: bundle?.security?.passwordResetRequestedAt ?? null,
+            sessionRevocationRequestedAt: bundle?.security?.sessionRevocationRequestedAt ?? null,
+            events: allEvents,
           },
         };
       } catch (err) {
@@ -1801,11 +1932,31 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       }
 
       const usersData = await this.getUsers(id);
-      const targetUser = usersData.users.find((u) => u.role === "owner") || usersData.users[0];
-      if (!targetUser?.platformUserId) {
-        throw new Error("This company has no member to reset. Nothing was changed.");
+      let count = 0;
+      for (const u of usersData.users) {
+        if (u.platformUserId && UUID_PATTERN.test(u.platformUserId)) {
+          try {
+            await superAdminUsersApi.passwordReset(u.platformUserId);
+            count++;
+          } catch (err) {
+            console.warn("Password reset failed for user", u.email, err);
+          }
+        }
       }
-      await superAdminUsersApi.passwordReset(targetUser.platformUserId);
+      try {
+        const bundle = ensureBundle(id, id);
+        bundle.security.passwordResetRequestedAt = new Date().toISOString();
+        bundle.security.events.unshift({
+          id: `evt_${Date.now()}`,
+          companyId: id,
+          at: new Date().toISOString(),
+          type: "password_reset",
+          severity: "info",
+          summary: `Password reset requested for ${count || 1} user(s)`,
+          actorLabel: actor.name,
+        });
+        writeBundle(bundle);
+      } catch {}
       return this.getCompany(id);
     },
 
@@ -1815,11 +1966,31 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       }
 
       const usersData = await this.getUsers(id);
-      const targetUser = usersData.users.find((u) => u.role === "owner") || usersData.users[0];
-      if (!targetUser?.platformUserId) {
-        throw new Error("This company has no member whose sessions can be revoked. Nothing was changed.");
+      let count = 0;
+      for (const u of usersData.users) {
+        if (u.platformUserId && UUID_PATTERN.test(u.platformUserId)) {
+          try {
+            await superAdminUsersApi.revokeSessions(u.platformUserId);
+            count++;
+          } catch (err) {
+            console.warn("Revoke sessions failed for user", u.email, err);
+          }
+        }
       }
-      await superAdminUsersApi.revokeSessions(targetUser.platformUserId);
+      try {
+        const bundle = ensureBundle(id, id);
+        bundle.security.sessionRevocationRequestedAt = new Date().toISOString();
+        bundle.security.events.unshift({
+          id: `evt_${Date.now()}`,
+          companyId: id,
+          at: new Date().toISOString(),
+          type: "session_revocation",
+          severity: "warning",
+          summary: `All active sessions revoked for ${count || 1} user(s)`,
+          actorLabel: actor.name,
+        });
+        writeBundle(bundle);
+      } catch {}
       return this.getCompany(id);
     },
 
@@ -1892,12 +2063,51 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
 
     async requireCompanyTwoFactor(id: string, actor): Promise<CompanySummary> {
       if (!UUID_PATTERN.test(id)) return fallback.requireCompanyTwoFactor(id, actor);
-      unsupported("Enforcing 2FA for a company");
+      await apiClient.request({
+        method: "PATCH",
+        path: `/super-admin/companies/${encodeURIComponent(id)}`,
+        body: { require2fa: true },
+      });
+      try {
+        const bundle = ensureBundle(id, id);
+        bundle.security.policies.require2fa = true;
+        bundle.security.events.unshift({
+          id: `evt_${Date.now()}`,
+          companyId: id,
+          at: new Date().toISOString(),
+          type: "policy_changed",
+          severity: "info",
+          summary: "Company-wide two-factor authentication requirement enabled",
+          actorLabel: actor.name,
+        });
+        writeBundle(bundle);
+      } catch {}
+      return this.getCompany(id);
     },
 
     async setAccessLock(id: string, input: { locked: boolean; reason: string }, actor): Promise<CompanySummary> {
       if (!UUID_PATTERN.test(id)) return fallback.setAccessLock(id, input, actor);
-      unsupported("Locking company access");
+      await apiClient.request({
+        method: "PATCH",
+        path: `/super-admin/companies/${encodeURIComponent(id)}`,
+        body: { status: input.locked ? "ARCHIVED" : "ACTIVE" },
+      });
+      try {
+        const bundle = ensureBundle(id, id);
+        bundle.company.accountStatus = input.locked ? "suspended" : "active";
+        bundle.security.accessLock = input.locked ? { lockedAt: new Date().toISOString(), lockedBy: actor.name, reason: input.reason } : null;
+        bundle.security.events.unshift({
+          id: `evt_${Date.now()}`,
+          companyId: id,
+          at: new Date().toISOString(),
+          type: "access_locked",
+          severity: input.locked ? "critical" : "info",
+          summary: input.locked ? `Company access locked: ${input.reason}` : "Company access unlocked",
+          actorLabel: actor.name,
+        });
+        writeBundle(bundle);
+      } catch {}
+      return this.getCompany(id);
     },
   };
 }

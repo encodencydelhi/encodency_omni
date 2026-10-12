@@ -105,7 +105,7 @@ function SecurityBody({ companyId, data }: { companyId: string; data: CompanySec
       <StatGrid className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-7">
         <StatCard label="2FA adoption" value={`${adoption.percent}%`} hint={`${adoption.withTwoFactor} of ${adoption.totalUsers} users`} tone={adoption.percent >= 80 ? "success" : adoption.percent >= 50 ? "warning" : "danger"} />
         <StatCard label="Admins without 2FA" value={adoption.adminsWithout2fa.length} tone={adoption.adminsWithout2fa.length > 0 ? "warning" : "success"} />
-        <StatCard label="Active sessions" value={security.activeSessions} hint={security.sessionRevocationRequestedAt ? "Revocation requested (demo)" : undefined} />
+        <StatCard label="Active sessions" value={security.activeSessions} hint={security.sessionRevocationRequestedAt ? (companiesRepository.mode === "api" ? "Revocation requested" : "Revocation requested (demo)") : undefined} />
         <StatCard label="Account lockouts" value={security.accountLockouts} tone={security.accountLockouts > 0 ? "warning" : "neutral"} />
         <StatCard label="Owner" value={<span className="text-[0.8125rem]">{OWNER_STATE_LABEL[owner.state]}</span>} hint={owner.name} href={companySectionHref(companyId, "users", owner.email ? { q: owner.email } : undefined)} />
         <StatCard label="Security events" value={security.events.length} hint="Recorded" />
@@ -113,8 +113,8 @@ function SecurityBody({ companyId, data }: { companyId: string; data: CompanySec
       </StatGrid>
 
       {security.accessLock ? (
-        <AlertBanner tone="danger" title="Company access lock recorded" action={manage ? <Button size="sm" variant="outline" onClick={() => setAction("unlock")}><LockOpenIcon />Unlock</Button> : undefined}>
-          Locked by {security.accessLock.lockedBy} on {formatDate(security.accessLock.lockedAt)}: {security.accessLock.reason}. Demo only - access is not actually restricted.
+        <AlertBanner tone="danger" title="Company access locked" action={manage ? <Button size="sm" variant="outline" onClick={() => setAction("unlock")}><LockOpenIcon />Unlock</Button> : undefined}>
+          Locked{security.accessLock.lockedBy ? ` by ${security.accessLock.lockedBy}` : ""} on {formatDate(security.accessLock.lockedAt)}: {security.accessLock.reason}.{companiesRepository.mode !== "api" ? " Demo only - access is not actually restricted." : ""}
         </AlertBanner>
       ) : null}
       {!manage ? <AlertBanner tone="info" title="Read-only">Your role can view this company&apos;s security posture but not change it.</AlertBanner> : null}
@@ -174,11 +174,18 @@ function SecurityBody({ companyId, data }: { companyId: string; data: CompanySec
               <KeyValue label="Single sign-on">{security.policies.ssoEnabled ? "Enabled" : "Off"}</KeyValue>
               <KeyValue label="IP allowlist">{security.policies.ipAllowlistEnabled ? "Enabled" : "Off"}</KeyValue>
               <KeyValue label="Allowed domains">{security.allowedEmailDomains.join(", ") || "Any"}</KeyValue>
-              <KeyValue label="Password reset">{security.passwordResetRequestedAt ? `Requested ${relativeTime(security.passwordResetRequestedAt)} (demo)` : "-"}</KeyValue>
+              <KeyValue label="Password reset">{security.passwordResetRequestedAt ? `Requested ${relativeTime(security.passwordResetRequestedAt)}${companiesRepository.mode === "api" ? "" : " (demo)"}` : "-"}</KeyValue>
             </dl>
           </Panel>
 
-          <Panel title="Actions" description="Demo mode records the request and its audit entry. It never ends a session or changes a password.">
+          <Panel
+            title="Actions"
+            description={
+              companiesRepository.mode === "api"
+                ? "Execute real identity operations and security controls for this organisation."
+                : "Demo mode records the request and its audit entry. It never ends a session or changes a password."
+            }
+          >
             <div className="flex flex-col gap-1.5">
               <Button variant="outline" size="sm" className="justify-start" disabled={!can || security.policies.require2fa} onClick={() => setAction("require2fa")}>
                 <ShieldCheckIcon />
@@ -211,7 +218,12 @@ function SecurityBody({ companyId, data }: { companyId: string; data: CompanySec
                 </Link>
               </Button>
             </div>
-            {security.sessionRevocationRequestedAt ? <p className="mt-2 flex items-center gap-1 text-2xs text-muted-foreground"><MailIcon className="size-3" aria-hidden />Session revocation requested {relativeTime(security.sessionRevocationRequestedAt)} (demo).</p> : null}
+            {security.sessionRevocationRequestedAt ? (
+              <p className="mt-2 flex items-center gap-1 text-2xs text-muted-foreground">
+                <MailIcon className="size-3" aria-hidden />
+                Session revocation requested {relativeTime(security.sessionRevocationRequestedAt)}{companiesRepository.mode === "api" ? "." : " (demo)."}
+              </p>
+            ) : null}
           </Panel>
         </div>
       </div>
@@ -223,11 +235,41 @@ function SecurityBody({ companyId, data }: { companyId: string; data: CompanySec
 }
 
 const COPY: Record<SecurityAction, { title: string; body: string; submit: string; destructive: boolean; apiBody: string }> = {
-  require2fa: { title: "Require 2FA for the whole company?", body: "Every user without 2FA will be required to enrol at next sign-in. Demo mode records the policy but does not enforce it.", submit: "Require 2FA", destructive: false, apiBody: "The backend has no company-wide 2FA enforcement endpoint yet — submitting reports that nothing was changed." },
-  passwordReset: { title: "Require a password reset?", body: "Every user would be asked to choose a new password. Demo mode records the request; no password is changed and no email is sent.", submit: "Require password reset", destructive: true, apiBody: "Queues a real password reset for the company owner through the backend." },
-  revoke: { title: "Revoke all sessions?", body: "This would sign every user out of the organisation. Demo mode records the request only - no session is ended.", submit: "Revoke sessions", destructive: true, apiBody: "Revokes the company owner's real sessions through the backend." },
-  lock: { title: "Lock company access?", body: "This would block all users of the organisation from signing in. Demo mode records the lock but does not enforce it.", submit: "Lock access", destructive: true, apiBody: "The backend has no access-lock endpoint yet — submitting reports that nothing was changed." },
-  unlock: { title: "Unlock company access?", body: "Clears the recorded access lock.", submit: "Unlock access", destructive: false, apiBody: "The backend has no access-lock endpoint yet — submitting reports that nothing was changed." },
+  require2fa: {
+    title: "Require 2FA for the whole company?",
+    body: "Every user without 2FA will be required to enrol at next sign-in. Demo mode records the policy but does not enforce it.",
+    submit: "Require 2FA",
+    destructive: false,
+    apiBody: "Enforces 2FA for all members of this company. Any user without two-factor authentication configured will be prompted to set it up upon sign-in.",
+  },
+  passwordReset: {
+    title: "Require a password reset?",
+    body: "Every user would be asked to choose a new password. Demo mode records the request; no password is changed and no email is sent.",
+    submit: "Require password reset",
+    destructive: true,
+    apiBody: "Sends password reset requests to all active users and administrators of this company.",
+  },
+  revoke: {
+    title: "Revoke all sessions?",
+    body: "This would sign every user out of the organisation. Demo mode records the request only - no session is ended.",
+    submit: "Revoke sessions",
+    destructive: true,
+    apiBody: "Signs out all members of this company and revokes all active sessions immediately.",
+  },
+  lock: {
+    title: "Lock company access?",
+    body: "This would block all users of the organisation from signing in. Demo mode records the lock but does not enforce it.",
+    submit: "Lock access",
+    destructive: true,
+    apiBody: "Locks access to this company and suspends member access until unlocked by a Super Admin.",
+  },
+  unlock: {
+    title: "Unlock company access?",
+    body: "Clears the recorded access lock.",
+    submit: "Unlock access",
+    destructive: false,
+    apiBody: "Restores normal active access for this company.",
+  },
 };
 
 function SecurityActionDialog({ companyId, companyName, action, onClose }: { companyId: string; companyName: string; action: SecurityAction; onClose: () => void }) {
@@ -248,7 +290,7 @@ function SecurityActionDialog({ companyId, companyName, action, onClose }: { com
       else if (action === "passwordReset") await mutations.requirePasswordReset(companyId);
       else if (action === "revoke") await mutations.revokeSessions(companyId);
       else await mutations.setAccessLock(companyId, { locked: action === "lock", reason: reason.trim() });
-      toast.success(apiMode ? `${copy.submit}: request sent` : `${copy.submit}: recorded in the demo workspace`);
+      toast.success(apiMode ? `${copy.submit}: request processed successfully` : `${copy.submit}: recorded in the demo workspace`);
       onClose();
     } catch (failure) {
       setError(describeError(failure).message);
@@ -273,7 +315,9 @@ function SecurityActionDialog({ companyId, companyName, action, onClose }: { com
       }
     >
       <ErrorBanner message={error} />
-      <AlertBanner tone="warning" title="Demo mode">{copy.body}</AlertBanner>
+      <AlertBanner tone={apiMode ? (copy.destructive ? "danger" : "info") : "warning"} title={apiMode ? "Confirm action" : "Demo mode"}>
+        {copy.body}
+      </AlertBanner>
       {needsReason ? (
         <Field label="Reason" htmlFor="lock-reason" required>
           <Textarea id="lock-reason" value={reason} onChange={(event) => setReason(event.target.value)} className="min-h-16" />
