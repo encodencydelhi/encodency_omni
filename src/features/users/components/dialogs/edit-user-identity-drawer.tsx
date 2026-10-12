@@ -1,8 +1,14 @@
-import { SaveIcon, UserCogIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Loader2Icon, SaveIcon, Trash2Icon, UploadIcon, UserCogIcon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getInitials } from "@/lib/utils/format";
+import { ApiError } from "@/types/api";
+import { USER_AVATAR_LIMITS } from "@/features/auth/services/user-avatar-api";
+import { superAdminUsersApi } from "../../live/super-admin-users-api";
 import {
   Select,
   SelectContent,
@@ -45,6 +51,59 @@ export function EditUserIdentityDrawer({
   const [avatarUrl, setAvatarUrl] = useState("");
   const [theme, setTheme] = useState<"system" | "light" | "dark">("system");
   const [notifications, setNotifications] = useState(true);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!USER_AVATAR_LIMITS.mimeTypes.includes(file.type as any)) {
+      toast.error("Please choose a PNG, JPEG, or WebP image.");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > USER_AVATAR_LIMITS.maxBytes) {
+      toast.error("Image must be smaller than 2 MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      if (!USERS_MOCK_MODE) {
+        await superAdminUsersApi.uploadAvatar(user.identity.id, file);
+        toast.success("User avatar updated.");
+        await full.refetch();
+      } else {
+        const previewUrl = URL.createObjectURL(file);
+        setAvatarUrl(previewUrl);
+        toast.success("Avatar preview updated (demo mode).");
+      }
+    } catch (err) {
+      toast.error(ApiError.isApiError(err) ? err.message : "Failed to upload avatar.");
+    } finally {
+      setAvatarUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleResetAvatar = async () => {
+    if (!user) return;
+    setAvatarUrl("");
+    if (!USERS_MOCK_MODE) {
+      setAvatarUploading(true);
+      try {
+        await superAdminUsersApi.removeAvatar(user.identity.id);
+        toast.success("User avatar reset to default initials.");
+        await full.refetch();
+      } catch (err) {
+        toast.error("Failed to reset avatar.");
+      } finally {
+        setAvatarUploading(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -61,9 +120,9 @@ export function EditUserIdentityDrawer({
     return (
       name.trim() !== user.identity.name ||
       (phone.trim() || null) !== (user.identity.phone ?? null) ||
+      (avatarUrl.trim() || null) !== (user.identity.avatarUrl ?? null) ||
       (USERS_MOCK_MODE &&
-        ((avatarUrl.trim() || null) !== (user.identity.avatarUrl ?? null) ||
-          theme !== (user.identity.themePreference ?? "system") ||
+        (theme !== (user.identity.themePreference ?? "system") ||
           notifications !== (user.identity.notificationsEnabled ?? true)))
     );
   }, [user, name, phone, avatarUrl, theme, notifications]);
@@ -97,7 +156,7 @@ export function EditUserIdentityDrawer({
         userId: user.identity.id,
         name: name.trim(),
         phone: phone.trim() || null,
-        avatarUrl: USERS_MOCK_MODE ? avatarUrl.trim() || null : user.identity.avatarUrl,
+        avatarUrl: avatarUrl.trim() || null,
         themePreference: theme,
         notificationsEnabled: notifications,
       },
@@ -165,20 +224,93 @@ export function EditUserIdentityDrawer({
             />
           </div>
 
-          {USERS_MOCK_MODE && (
-          <div className="space-y-1.5">
-            <Label htmlFor="edit-avatar" className="text-xs font-semibold">
-              Avatar Image URL
+          {/* Avatar Moderation & Management */}
+          <div className="space-y-2 pt-1 border-t border-border">
+            <Label className="text-xs font-semibold block">
+              Profile Avatar
             </Label>
-            <Input
-              id="edit-avatar"
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              placeholder="https://..."
-              className="h-8.5 text-xs"
-            />
+
+            <div className="flex items-center gap-3 p-2.5 rounded-lg border border-slate-200 bg-slate-50/50">
+              <div className="relative shrink-0">
+                <Avatar className="size-11 border border-slate-200 shrink-0">
+                  {avatarUrl ? (
+                    <AvatarImage src={avatarUrl} alt={name || "User"} className="object-cover" />
+                  ) : null}
+                  <AvatarFallback className="bg-slate-200 text-slate-700 font-bold text-xs">
+                    {getInitials(name || user.identity.name)}
+                  </AvatarFallback>
+                </Avatar>
+                {avatarUploading && (
+                  <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
+                    <Loader2Icon className="size-4 text-white animate-spin" />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-slate-800 truncate">
+                  {avatarUrl ? "Custom avatar active" : "Using system initials fallback"}
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  {avatarUrl
+                    ? "Super Admins can replace or reset this user's avatar."
+                    : "No custom image uploaded by this user."}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={USER_AVATAR_LIMITS.mimeTypes.join(",")}
+                  className="hidden"
+                  onChange={handleAvatarFileChange}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={avatarUploading}
+                  className="h-7 text-xs gap-1 font-medium"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Upload a new profile picture for this user"
+                >
+                  <UploadIcon className="size-3" />
+                  {avatarUrl ? "Change" : "Upload"}
+                </Button>
+
+                {avatarUrl ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={avatarUploading}
+                    className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 gap-1 font-medium"
+                    onClick={handleResetAvatar}
+                    title="Clear / reset this user's avatar"
+                  >
+                    <Trash2Icon className="size-3" />
+                    Reset
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+
+            {USERS_MOCK_MODE && (
+              <div className="space-y-1 pt-1">
+                <Label htmlFor="edit-avatar" className="text-[11px] text-slate-500">
+                  Custom Avatar URL (Demo Mode)
+                </Label>
+                <Input
+                  id="edit-avatar"
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  placeholder="https://..."
+                  className="h-8.5 text-xs"
+                />
+              </div>
+            )}
           </div>
-          )}
 
           {USERS_MOCK_MODE && (
           <div className="pt-2 border-t border-border space-y-3">

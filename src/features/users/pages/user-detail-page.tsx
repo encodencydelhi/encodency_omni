@@ -36,6 +36,7 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -304,14 +305,19 @@ export function UserDetailPage() {
           {/* Avatar & Identity details */}
           <div className="flex items-start sm:items-center gap-4">
             <div className="relative">
-              <div className="size-16 rounded-full bg-linear-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xl font-bold tracking-wider shadow-sm ring-2 ring-white">
-                {user.identity.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .slice(0, 2)
-                  .join("")
-                  .toUpperCase()}
-              </div>
+              <Avatar className="size-16 rounded-full shadow-sm ring-2 ring-white border border-slate-200">
+                {user.identity.avatarUrl && (
+                  <AvatarImage src={user.identity.avatarUrl} alt={user.identity.name} className="object-cover" />
+                )}
+                <AvatarFallback className="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white text-xl font-bold tracking-wider">
+                  {user.identity.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
               <span
                 className={`absolute bottom-0 right-0 size-4 rounded-full border-2 border-white ${
                   user.identity.globalStatus === "active"

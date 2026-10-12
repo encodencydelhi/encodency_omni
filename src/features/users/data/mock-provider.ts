@@ -1111,6 +1111,17 @@ export const mockUsersProvider = {
     return toUserAggregate(user);
   },
 
+  async removeAvatar(userId: string): Promise<UserAggregate> {
+    await sleep(100);
+    const user = getRawUser(userId);
+    if (!user) {
+      throw new ApiError({ code: "NOT_FOUND", status: 404, message: "User not found." });
+    }
+    user.identity.avatarUrl = null;
+    setRawUser(user);
+    return toUserAggregate(user);
+  },
+
   async listSecurityUsers(query: { search?: string; companyId?: string; status?: string; twoFactor?: string } = {}): Promise<UserAggregate[]> {
     await sleep(100);
     let items = getAllRawUsers().map(toUserAggregate);

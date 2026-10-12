@@ -1320,6 +1320,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
             platformUserId: user.id,
             name: user.name || user.email.split("@")[0] || "User",
             email: user.email,
+            avatarUrl: user.avatarUrl ?? null,
             role,
             status,
             mfaEnabled: Boolean(user.mfaEnabled),
@@ -1342,6 +1343,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
                 platformUserId: m.userId ?? m.membershipId,
                 name: m.name || m.email.split("@")[0] || "Member",
                 email: m.email,
+                avatarUrl: (m as { avatarUrl?: string | null }).avatarUrl ?? null,
                 role,
                 status: m.suspendedAt ? "suspended" : "active",
                 mfaEnabled: false,
@@ -1947,7 +1949,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         const bundle = ensureBundle(id, id);
         bundle.security.passwordResetRequestedAt = new Date().toISOString();
         bundle.security.events.unshift({
-          id: `evt_${Date.now()}`,
+          id: `evt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           companyId: id,
           at: new Date().toISOString(),
           type: "password_reset",
@@ -1981,7 +1983,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         const bundle = ensureBundle(id, id);
         bundle.security.sessionRevocationRequestedAt = new Date().toISOString();
         bundle.security.events.unshift({
-          id: `evt_${Date.now()}`,
+          id: `evt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           companyId: id,
           at: new Date().toISOString(),
           type: "session_revocation",
@@ -2072,7 +2074,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         const bundle = ensureBundle(id, id);
         bundle.security.policies.require2fa = true;
         bundle.security.events.unshift({
-          id: `evt_${Date.now()}`,
+          id: `evt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           companyId: id,
           at: new Date().toISOString(),
           type: "policy_changed",
@@ -2097,7 +2099,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         bundle.company.accountStatus = input.locked ? "suspended" : "active";
         bundle.security.accessLock = input.locked ? { lockedAt: new Date().toISOString(), lockedBy: actor.name, reason: input.reason } : null;
         bundle.security.events.unshift({
-          id: `evt_${Date.now()}`,
+          id: `evt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           companyId: id,
           at: new Date().toISOString(),
           type: "access_locked",

@@ -282,6 +282,15 @@ export function useUserMutations() {
     onError: (err: unknown) => notifyMutationError("Failed to update identity profile.", err),
   });
 
+  const removeAvatar = useMutation({
+    mutationFn: (userId: string) => usersRepository.removeAvatar(userId),
+    onSuccess: (res) => {
+      invalidateAll();
+      toast.success(`Avatar removed for ${res.identity.name}.`);
+    },
+    onError: (err: unknown) => notifyMutationError("Failed to remove avatar.", err),
+  });
+
   const bulkAction = useMutation({
     mutationFn: ({
       action,
@@ -318,6 +327,7 @@ export function useUserMutations() {
     revokeAllSessions,
     unlockAccount,
     updateUserIdentity,
+    removeAvatar,
     bulkAction,
   };
 }

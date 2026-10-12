@@ -457,7 +457,15 @@ export const liveUsersProvider: UsersRepository = {
 
   async updateUserIdentity(input) {
     await superAdminUsersApi.updateProfile(input.userId, { name: input.name.trim(), phone: input.phone?.trim() ? input.phone.trim() : null });
+    if (input.avatarUrl === null) {
+      await superAdminUsersApi.removeAvatar(input.userId);
+    }
     return loadAggregate(input.userId);
+  },
+
+  async removeAvatar(userId) {
+    await superAdminUsersApi.removeAvatar(userId);
+    return loadAggregate(userId);
   },
 
   async listSecurityUsers(query) {

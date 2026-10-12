@@ -159,6 +159,7 @@ export interface CompanyUser {
   lastLoginAt: string | null;
   createdAt: string;
   invitationExpired: boolean;
+  avatarUrl?: string | null;
 }
 
 export interface CompanyClient {

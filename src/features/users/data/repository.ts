@@ -43,6 +43,7 @@ export interface UsersRepository {
   revokeAllSessions(userId: string): Promise<UserAggregate>;
   unlockAccount(userId: string): Promise<UserAggregate>;
   updateUserIdentity(input: UpdateUserIdentityInput): Promise<UserAggregate>;
+  removeAvatar(userId: string): Promise<UserAggregate>;
   listSecurityUsers(query?: { search?: string; companyId?: string; status?: string; twoFactor?: string }): Promise<UserAggregate[]>;
   listSecurityEvents(): Promise<UserSecurityEvent[]>;
   listAttentionItems(): Promise<UserAttentionItem[]>;

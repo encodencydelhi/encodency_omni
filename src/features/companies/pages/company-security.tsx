@@ -150,8 +150,8 @@ function SecurityBody({ companyId, data }: { companyId: string; data: CompanySec
                 <EmptyState icon={ShieldAlertIcon} size="sm" title="No security events" description="Sign-in and policy events for this company appear here." />
               ) : (
                 <ul className="divide-y divide-border border-t border-border">
-                  {security.events.slice(0, 10).map((event) => (
-                    <li key={event.id} className="flex items-start justify-between gap-3 px-3 py-2">
+                  {security.events.slice(0, 10).map((event, idx) => (
+                    <li key={event.id ? `${event.id}_${idx}` : `event_${idx}`} className="flex items-start justify-between gap-3 px-3 py-2">
                       <div className="min-w-0">
                         <p className="text-[0.8125rem] text-foreground">{event.summary}</p>
                         <p className="text-2xs text-muted-foreground" title={formatDateTime(event.at)}>{event.actorLabel} · {relativeTime(event.at)}</p>

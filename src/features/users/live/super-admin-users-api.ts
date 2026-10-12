@@ -157,6 +157,25 @@ export const superAdminUsersApi = {
     return apiClient.request({ method: "PUT", path: `/super-admin/users/${encodeURIComponent(userId)}`, body });
   },
 
+  /** DELETE /api/v1/super-admin/users/:userId/avatar: resets/removes inappropriate avatar for another user. */
+  async removeAvatar(userId: string): Promise<unknown> {
+    return apiClient.request({ method: "DELETE", path: `/super-admin/users/${encodeURIComponent(userId)}/avatar` });
+  },
+
+  /** PUT /api/v1/super-admin/users/:userId/avatar: uploads/replaces avatar for another user. */
+  async uploadAvatar(userId: string, file: Blob, replacesAssetId?: string): Promise<unknown> {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (replacesAssetId) {
+      formData.append("replacesAssetId", replacesAssetId);
+    }
+    return apiClient.request({
+      method: "PUT",
+      path: `/super-admin/users/${encodeURIComponent(userId)}/avatar`,
+      body: formData,
+    });
+  },
+
   sessions(userId: string): Promise<{ items: LiveUserSession[] }> {
     return apiClient.request({ method: "GET", path: `/super-admin/users/${encodeURIComponent(userId)}/sessions` });
   },

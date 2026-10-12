@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,11 +19,13 @@ import { ReplaceTotpDialog } from "@/features/auth/components/replace-totp-dialo
 import { usePlatformIdentity } from "@/features/global-settings/data/hooks";
 import { getInitials } from "@/lib/utils/format";
 import { INTERNAL_ROLE } from "@/types/domain/team";
+import { MyProfileDialog } from "./my-profile-dialog";
 
 export function UserMenu() {
   const { user, logout } = useAuth();
   const identity = usePlatformIdentity();
   const [replaceTotpOpen, setReplaceTotpOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   if (!user) return null;
 
   // Only Platform Super Admins carry a staff role; the Super Admin shell is closed to everyone else.
@@ -35,6 +37,7 @@ export function UserMenu() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-9 gap-2 px-1.5 sm:pr-2.5" aria-label="Account menu">
             <Avatar>
+              {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
               <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
             </Avatar>
             <span className="hidden min-w-0 flex-col items-start sm:flex">
@@ -48,6 +51,7 @@ export function UserMenu() {
         <DropdownMenuContent align="end" className="w-64">
           <div className="flex items-start gap-3 px-2 py-2.5">
             <Avatar className="size-9">
+              {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
               <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1 space-y-1">
@@ -58,6 +62,11 @@ export function UserMenu() {
           </div>
 
           <DropdownMenuSeparator />
+
+          <DropdownMenuItem onSelect={() => setProfileOpen(true)}>
+            <UserIcon />
+            My profile
+          </DropdownMenuItem>
 
           <DropdownMenuItem asChild>
             <Link href={ROUTES.superAdmin.team}>
@@ -92,6 +101,7 @@ export function UserMenu() {
       </DropdownMenu>
 
       <ReplaceTotpDialog open={replaceTotpOpen} onOpenChange={setReplaceTotpOpen} />
+      <MyProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
     </>
   );
 }

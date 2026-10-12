@@ -185,7 +185,7 @@ export function MembersLivePage() {
             <>
               <SheetHeader><SheetTitle>Member preview</SheetTitle></SheetHeader>
               <SheetBody>
-                <div className="flex items-center gap-3 border-b pb-4"><Avatar name={previewMember.name} large /><div><h2 className="font-semibold">{previewMember.name}</h2><p className="text-xs text-slate-500">{previewMember.email}</p><p className="text-xs text-slate-500">{[previewMember.jobTitle, previewMember.department].filter(Boolean).join(" · ") || "No title set"}</p></div></div>
+                <div className="flex items-center gap-3 border-b pb-4"><Avatar name={previewMember.name} avatarUrl={previewMember.avatarUrl} large /><div><h2 className="font-semibold">{previewMember.name}</h2><p className="text-xs text-slate-500">{previewMember.email}</p><p className="text-xs text-slate-500">{[previewMember.jobTitle, previewMember.department].filter(Boolean).join(" · ") || "No title set"}</p></div></div>
                 <Section title="Role"><Link href={`/admin/roles/${previewMember.roleId}`} className="text-sm font-medium text-primary">{previewMember.roleName}</Link></Section>
                 <Section title="Client access"><Chips all values={previewMember.clientAccess.map((c) => c.clientName)} empty={previewMember.isOrgAdmin ? "All clients (owner/admin)" : "No client access"} /></Section>
                 <Section title="Groups"><Chips all values={previewMember.groups.map((g) => g.name)} empty="No groups" /></Section>
@@ -210,7 +210,7 @@ export function MembersLivePage() {
 function Identity({ member, you }: { member: Member; you: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
-      <Avatar name={member.name} />
+      <Avatar name={member.name} avatarUrl={member.avatarUrl} />
       <div className="min-w-0">
         <p className="font-medium text-[#202124]">{member.name}{you && <span className="ml-1.5 rounded-sm bg-blue-50 px-1 py-0.5 text-[10px] font-semibold text-blue-700">You</span>}{member.status === "suspended" && <span title={member.suspensionReason ?? "Access suspended"} className="ml-1.5 rounded-sm bg-red-50 px-1 py-0.5 text-[10px] font-semibold text-red-700">Suspended</span>}</p>
         <p className="max-w-[260px] truncate text-[11px] text-[#5F6368]">{member.email}{member.jobTitle ? ` · ${member.jobTitle}` : ""}</p>
@@ -218,7 +218,18 @@ function Identity({ member, you }: { member: Member; you: boolean }) {
     </div>
   );
 }
-function Avatar({ name, large = false }: { name: string; large?: boolean }) { return <span className={`grid shrink-0 place-items-center rounded-full bg-slate-900 font-semibold text-white ${large ? "size-11 text-sm" : "size-7 text-[10px]"}`}>{name.split(" ").map((x) => x[0]).slice(0, 2).join("").toUpperCase()}</span>; }
+function Avatar({ name, avatarUrl, large = false }: { name: string; avatarUrl?: string | null; large?: boolean }) {
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        className={`shrink-0 rounded-full object-cover border border-slate-200 ${large ? "size-11" : "size-7"}`}
+      />
+    );
+  }
+  return <span className={`grid shrink-0 place-items-center rounded-full bg-slate-900 font-semibold text-white ${large ? "size-11 text-sm" : "size-7 text-[10px]"}`}>{name.split(" ").map((x) => x[0]).slice(0, 2).join("").toUpperCase()}</span>;
+}
 function Chips({ values, empty = "—", all = false }: { values: string[]; empty?: string; all?: boolean }) {
   if (!values.length) return <span className="text-[11px] text-slate-400">{empty}</span>;
   if (all) return <div className="flex flex-wrap gap-1">{values.map((v) => <span key={v} className="rounded-sm bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium">{v}</span>)}</div>;

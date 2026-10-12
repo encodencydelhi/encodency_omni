@@ -13,7 +13,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { SearchInput } from "@/components/shared/search-input";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { getInitials, formatDate } from "@/lib/utils/format";
@@ -138,6 +138,7 @@ function UsersBody({ companyId, data }: { companyId: string; data: CompanyUsersD
       cell: (user) => (
         <div className="flex min-w-0 items-center gap-2.5">
           <Avatar className="size-7 shrink-0">
+            {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
             <AvatarFallback className="text-[11px]">{getInitials(user.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
