@@ -65,6 +65,7 @@ export const ROUTES = {
     settings: "/admin/settings",
     team: "/admin/team",
     billing: "/admin/billing",
+    support: "/admin/support",
   },
 } as const;
 

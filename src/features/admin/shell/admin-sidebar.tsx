@@ -274,10 +274,10 @@ export function AdminSidebar() {
               </span>
               <span className="min-w-0 flex-1">
                 <b className="block truncate text-[12px] font-semibold leading-tight text-white">
-                  Help &amp; Support
+                  AI Assistant
                 </b>
                 <small className="block truncate text-[12px] leading-tight text-[#94A3B8] mt-0.5">
-                  Ask the assistant or contact us.
+                  Ask questions or get guidance.
                 </small>
               </span>
               <ChevronRight className="size-3.5 text-[#D946EF]/50 group-hover:text-[#D946EF] transition-colors" />
@@ -285,8 +285,8 @@ export function AdminSidebar() {
           ) : (
             <button
               type="button"
-              title="Help & Support"
-              aria-label="Help and Support"
+              title="AI Assistant"
+              aria-label="AI Assistant"
               aria-haspopup="dialog"
               onClick={() => {
                 setMobileNavOpen(false);

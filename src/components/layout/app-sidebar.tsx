@@ -61,9 +61,8 @@ export function AppSidebar() {
       <aside
         data-collapsed={isCollapsed}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex bg-[#0B1121] transition-[width,transform] duration-200 lg:translate-x-0",
-          "border-r border-[#1E293B] shadow-[1px_0_12px_rgb(0_0_0/0.5)] flex-col lg:flex",
-          !isMobileOpen && "hidden", // In app-sidebar logic, it hides unless mobile open or lg
+          "fixed inset-y-0 left-0 z-50 hidden bg-[#0B1121] transition-[width,transform] duration-200 lg:translate-x-0 lg:flex",
+          "border-r border-[#1E293B] shadow-[1px_0_12px_rgb(0_0_0/0.5)] flex-col",
           isCollapsed ? "w-[64px]" : "w-[220px]",
         )}
       >
@@ -85,9 +84,12 @@ export function AppSidebar() {
       </aside>
 
       <Sheet open={isMobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="bg-sidebar p-0" showClose={false}>
+        <SheetContent side="left" className="w-[220px] border-[#1E293B] bg-[#0B1121] p-0" showClose={false}>
           <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <SidebarBody isCollapsed={false} onNavigate={() => setMobileOpen(false)} />
+          <div className="absolute top-0 left-0 right-0 h-[200px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent pointer-events-none" />
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+            <SidebarBody isCollapsed={false} onNavigate={() => setMobileOpen(false)} />
+          </div>
         </SheetContent>
       </Sheet>
     </>

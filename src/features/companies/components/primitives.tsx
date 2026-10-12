@@ -87,7 +87,7 @@ export function StatCard({
       <div className="flex items-start justify-between gap-1.5">
         <p
           className={cn(
-            "line-clamp-2 text-[11px] font-medium uppercase leading-tight text-muted-foreground break-words",
+            "min-w-0 flex-1 line-clamp-2 text-[11px] font-medium uppercase leading-tight text-muted-foreground break-words",
             compact ? "tracking-wide" : "tracking-wider",
           )}
         >
@@ -99,12 +99,12 @@ export function StatCard({
           </span>
         ) : null}
       </div>
-      <div className="mt-1.5 min-w-0 truncate text-lg font-semibold leading-none tabular text-foreground">{value}</div>
+      <div className="mt-1.5 min-w-0 truncate text-lg font-semibold leading-none tabular-nums text-foreground">{value}</div>
       {hint ? <div className="mt-1 truncate text-2xs text-muted-foreground">{hint}</div> : null}
     </>
   );
 
-  const cardTitle = title ?? (typeof label === "string" ? label : undefined);
+  const cardTitle = title ?? label;
 
   const shell = cn(
     "block min-w-0 rounded-sm border border-border bg-card px-3 py-2.5 shadow-xs",

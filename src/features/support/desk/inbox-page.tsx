@@ -112,7 +112,7 @@ export function DeskInboxPage() {
             value={queue}
             onChange={(id) => {
               clearSelection();
-              set({ queue: id, status: "", priority: "", assignee: "" });
+              set({ queue: id, status: "", priority: "", category: "", assignee: "", companyId: "", page: "1" });
             }}
             tabs={[
               { id: "all", label: "All open", count: q?.all },
