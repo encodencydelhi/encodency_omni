@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, LogOut, Menu, Plus, Search, Settings, Upload, UserRound, X } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Plus, Search, Settings, ShieldCheck, Upload, UserRound, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { NotificationsMenu } from "@/components/layout/notifications-menu";
 import { useAdminContext } from "./admin-context";
@@ -9,6 +9,7 @@ import { useAuth } from "@/features/auth/components/auth-provider";
 import { cn } from "@/lib/utils/cn";
 import { getUserDisplay } from "@/lib/utils/user-display";
 import Image from "next/image";
+import { SecurityDialog } from "@/features/auth/components/security-dialog";
 
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -26,6 +27,7 @@ export function AdminTopbar() {
   const { fullName, firstName, email: userEmail, initials } = getUserDisplay(user);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [securityOpen, setSecurityOpen] = useState(false);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -212,6 +214,9 @@ export function AdminTopbar() {
             <DropdownMenuItem asChild className="gap-2 rounded-md cursor-pointer">
               <Link href="/admin/settings"><UserRound className="size-4" />Profile settings</Link>
             </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2 rounded-md cursor-pointer" onSelect={() => setSecurityOpen(true)}>
+              <ShieldCheck className="size-4" />Security
+            </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={(e) => {
                 e.preventDefault();
@@ -244,6 +249,7 @@ export function AdminTopbar() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      <SecurityDialog open={securityOpen} onOpenChange={setSecurityOpen} />
     </header>
   );
 }

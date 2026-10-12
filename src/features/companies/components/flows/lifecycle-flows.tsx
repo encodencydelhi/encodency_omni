@@ -208,8 +208,14 @@ export function ReactivateFlow({ targets, onClose }: { targets: CompanySummary[]
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const eligible = targets.filter((target) => target.company.accountStatus === "suspended");
-  const skipped = targets.filter((target) => target.company.accountStatus !== "suspended");
+  // The backend's real reversible state is ARCHIVED; "suspended" only exists
+  // in demo data. Both are eligible for reactivation.
+  const eligible = targets.filter(
+    (target) => target.company.accountStatus === "suspended" || target.company.accountStatus === "archived",
+  );
+  const skipped = targets.filter(
+    (target) => target.company.accountStatus !== "suspended" && target.company.accountStatus !== "archived",
+  );
   const single = eligible.length === 1 ? eligible[0] : undefined;
 
   const submit = async () => {
@@ -232,7 +238,7 @@ export function ReactivateFlow({ targets, onClose }: { targets: CompanySummary[]
       onOpenChange={(open) => !open && !pending && onClose()}
       size="lg"
       title={single ? `Reactivate ${single.company.name}?` : `Reactivate ${formatNumber(eligible.length)} companies?`}
-      description="Review why each company was suspended and what is still outstanding before restoring access."
+      description="Restore operating access for suspended or archived companies. Review what is still outstanding before reactivating."
       footer={
         <>
           <Button variant="outline" onClick={onClose} disabled={pending}>
@@ -247,7 +253,7 @@ export function ReactivateFlow({ targets, onClose }: { targets: CompanySummary[]
     >
       <ErrorBanner message={error} />
       {skipped.length > 0 ? (
-        <AlertBanner tone="info" title={`${skipped.length} selected ${skipped.length === 1 ? "company is" : "companies are"} not suspended`}>
+        <AlertBanner tone="info" title={`${skipped.length} selected ${skipped.length === 1 ? "company is" : "companies are"} not suspended or archived`}>
           {skipped.map((item) => item.company.name).join(", ")} will be left unchanged.
         </AlertBanner>
       ) : null}

@@ -24,6 +24,18 @@ const CHALLENGE_TTL_MS = 5 * 60 * 1000;
 let pendingChallenge: { userId: string; expiresAt: number } | null = null;
 let signedInUserId: string | null = null;
 let pendingReplacement: { userId: string; challengeToken: string; expiresAt: number } | null = null;
+let demoTotpEnabled = true;
+/** Stand-in store for the user's own sessions in demo mode. */
+let demoSessions: Array<{
+  id: string;
+  createdAt: string;
+  lastSeenAt: string;
+  expiresAt: string;
+  ipAddress: string | null;
+  browser: string;
+  device: string;
+  current: boolean;
+}> = [];
 
 /** Stand-in QR for demo mode — a data URL so the enroll step renders the same shape as the API. */
 const DEMO_REPLACEMENT_SECRET = "DEMOREPLACEMENTSECRET234567";
@@ -60,6 +72,29 @@ function completeSecondFactor(): { status: "authenticated"; user: { id: string; 
   pendingChallenge = null;
   if (!account || account.status === "suspended") unauthorized("This account is no longer able to sign in.");
   signedInUserId = account.id;
+  demoTotpEnabled = true;
+  demoSessions = [
+    {
+      id: "demo-session-current",
+      createdAt: new Date().toISOString(),
+      lastSeenAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      ipAddress: "127.0.0.1",
+      browser: "Chrome",
+      device: "Windows",
+      current: true,
+    },
+    {
+      id: "demo-session-phone",
+      createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+      lastSeenAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + 21 * 60 * 60 * 1000).toISOString(),
+      ipAddress: "192.168.1.14",
+      browser: "Safari",
+      device: "iPhone",
+      current: false,
+    },
+  ];
   return { status: "authenticated", user: { id: account.id, email: account.email } };
 }
 
@@ -142,7 +177,7 @@ export const authRoutes: MockRoutes = {
     return {
       id: account.id,
       email: account.email,
-      totpEnabled: true,
+      totpEnabled: demoTotpEnabled,
       platformRole: account.role === "super_admin" ? "SUPER_ADMIN" : null,
       memberships: [],
     } satisfies CurrentUserResponse;
@@ -156,7 +191,70 @@ export const authRoutes: MockRoutes = {
   "POST /auth/logout": () => {
     signedInUserId = null;
     pendingReplacement = null;
+    demoSessions = [];
     return { status: "logged_out" };
+  },
+
+  "POST /auth/logout-all": () => {
+    signedInUserId = null;
+    pendingReplacement = null;
+    demoSessions = [];
+    return { status: "logged_out_everywhere" };
+  },
+
+  "POST /auth/change-password": ({ body }) => {
+    if (!signedInUserId) unauthorized("Not authenticated");
+    const { currentPassword, newPassword } = (body ?? {}) as { currentPassword?: string; newPassword?: string };
+    if (!currentPassword || currentPassword.length < 8) unauthorized("The current password is not correct.");
+    if (!newPassword || newPassword.length < 8) {
+      throw new ApiError({ code: "BAD_REQUEST", status: 400, message: "Password must be at least 8 characters." });
+    }
+    demoSessions = demoSessions.filter((session) => session.current);
+    return { status: "password_changed", revokedSessions: demoSessions.length > 0 ? 1 : 0 };
+  },
+
+  "GET /auth/sessions": () => {
+    if (!signedInUserId) unauthorized("Not authenticated");
+    return { items: demoSessions };
+  },
+
+  "DELETE /auth/sessions/:sessionId": ({ params }) => {
+    if (!signedInUserId) unauthorized("Not authenticated");
+    const sessionId = params.sessionId ?? "";
+    const target = demoSessions.find((session) => session.id === sessionId);
+    if (!target) {
+      throw new ApiError({ code: "NOT_FOUND", status: 404, message: "That session no longer exists." });
+    }
+    if (target.current) {
+      signedInUserId = null;
+      pendingReplacement = null;
+    }
+    demoSessions = demoSessions.filter((session) => session.id !== sessionId);
+    return { status: target.current ? "logged_out" : "session_revoked", revoked: true };
+  },
+
+  "POST /auth/totp/disable": ({ body }) => {
+    if (!signedInUserId) unauthorized("Not authenticated");
+    if (!demoTotpEnabled) {
+      throw new ApiError({ code: "CONFLICT", status: 409, message: "Two-factor authentication is already off." });
+    }
+    const { code, recoveryCode } = (body ?? {}) as { code?: string; recoveryCode?: string };
+    if (code !== undefined && !/^\d{6}$/.test(code)) unauthorized("That code was not accepted.");
+    if (recoveryCode !== undefined && recoveryCode.trim().length < 8) unauthorized("That recovery code was not accepted.");
+    if (code === undefined && recoveryCode === undefined) unauthorized("That code was not accepted.");
+    demoTotpEnabled = false;
+    demoSessions = demoSessions.filter((session) => session.current);
+    return { status: "totp_disabled" };
+  },
+
+  "POST /auth/totp/recovery-codes": ({ body }) => {
+    if (!signedInUserId) unauthorized("Not authenticated");
+    if (!demoTotpEnabled) {
+      throw new ApiError({ code: "CONFLICT", status: 409, message: "Two-factor authentication is not enabled." });
+    }
+    const { code } = (body ?? {}) as { code?: string };
+    if (!/^\d{6}$/.test(code ?? "")) unauthorized("That code was not accepted.");
+    return { status: "recovery_codes_regenerated", recoveryCodes: [...DEMO_RECOVERY_CODES] };
   },
 
   "POST /auth/forgot-password": ({ body }) => {

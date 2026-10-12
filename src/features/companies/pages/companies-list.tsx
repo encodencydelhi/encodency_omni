@@ -179,7 +179,11 @@ export function CompaniesListPage() {
   })();
 
   const suspendable = selectedSummaries.filter((row) => row.company.accountStatus === "active");
-  const reactivatable = selectedSummaries.filter((row) => row.company.accountStatus === "suspended");
+  // Archived is the backend's real reversible state; "suspended" exists in demo data.
+  const reactivatable = selectedSummaries.filter(
+    (row) => row.company.accountStatus === "suspended" || row.company.accountStatus === "archived",
+  );
+  const apiMode = companiesRepository.mode === "api";
 
   return (
     <div className="space-y-3">
@@ -207,18 +211,24 @@ export function CompaniesListPage() {
                     Import Companies
                   </DropdownMenuItem>
                 ) : null}
-                <DropdownMenuItem asChild>
-                  <Link href={`${ROUTES.superAdmin.companies}?health=at_risk`}>
-                    <TriangleAlertIcon />
-                    View Companies Needing Attention
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href={`${ROUTES.superAdmin.companies}?accountStatus=suspended`}>
-                    <BanIcon />
-                    View Suspended Companies
-                  </Link>
-                </DropdownMenuItem>
+                {/* Health and suspension are not filterable on the live backend; hiding the
+                    shortcuts beats showing every row under a filter that did nothing. */}
+                {!apiMode ? (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href={`${ROUTES.superAdmin.companies}?health=at_risk`}>
+                        <TriangleAlertIcon />
+                        View Companies Needing Attention
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href={`${ROUTES.superAdmin.companies}?accountStatus=suspended`}>
+                        <BanIcon />
+                        View Suspended Companies
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                ) : null}
                 {COMPANIES_MOCK_MODE ? (
                   <>
                     <DropdownMenuSeparator />

@@ -267,6 +267,94 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     mode: "api",
     
     async listClients(query: ClientListQuery): Promise<ClientListResult> {
+      // In Super Admin cross-company view, fetch from GET /super-admin/clients
+      if (isSuperAdminRoute() || fallback === unavailableClientsProvider) {
+        try {
+          const directory = await superAdminCompaniesApi.listClients({
+            page: query.page ?? 1,
+            limit: query.pageSize ?? 25,
+            search: query.search || undefined,
+            companyId: query.company && UUID_PATTERN.test(query.company) ? query.company : undefined,
+          });
+          const liveClients = await Promise.all(
+            (directory.items ?? []).map(async (item) => {
+              try {
+                const workspace = await getSuperAdminWorkspace(item.id);
+                return workspace.summary;
+              } catch {
+                return {
+                  client: {
+                    id: item.id,
+                    companyId: item.companyId,
+                    name: item.name,
+                    websiteUrl: item.website,
+                    status: "active",
+                    connectedChannels: [],
+                    brokenChannels: [],
+                    scheduledPosts: 0,
+                    failedPosts: 0,
+                    leadsLast30Days: 0,
+                    createdAt: item.createdAt,
+                    lastActivityAt: item.updatedAt,
+                    logo: item.logo,
+                  },
+                  displayId: item.id,
+                  company: {
+                    id: item.companyId,
+                    name: item.companyName,
+                    slug: item.companyId,
+                    planTier: "starter",
+                    planName: "Starter",
+                    accountStatus: "active",
+                    subscriptionStatus: "active",
+                  },
+                  profile: {
+                    displayName: item.displayName ?? item.name,
+                    industry: item.industry ?? "Not set",
+                    description: "",
+                    contactEmail: null,
+                    contactPhone: null,
+                    logoDataUrl: item.logo?.url ?? null,
+                    logo: item.logo,
+                    timezone: item.timezone ?? "UTC",
+                    language: item.language ?? "en",
+                    reportingPeriod: "30d",
+                    createdBy: "System",
+                  },
+                  websites: [],
+                  primaryWebsite: null,
+                  workspace: "active",
+                  onboarding: { status: "completed", requiredTotal: 4, requiredDone: 4, steps: [], blockedReason: null },
+                  health: { status: "healthy", reason: "Operational", factors: [] },
+                  attention: [],
+                  lead: item.lead ? { membershipId: item.lead.membershipId, name: item.lead.name } : null,
+                  counts: { connections: 0, healthyConnections: 0, attentionConnections: 0, assigned: 0, activeMembers: 0, pendingMembers: 0, accessIssues: 0 },
+                  connectedProviders: [],
+                  operations: { scheduledPosts: 0, failedPosts: 0, processingJobs: 0, retryPending: 0, lastPublishedAt: null },
+                  lastActiveAt: item.updatedAt,
+                  pause: null,
+                  platformReviewer: null,
+                } as unknown as ClientSummary;
+              }
+            }),
+          );
+          return {
+            data: liveClients,
+            matchingIds: liveClients.map((c) => c.displayId ?? c.client.id),
+            pagination: {
+              total: directory.total,
+              page: directory.page,
+              pageSize: directory.limit,
+              totalPages: Math.max(1, Math.ceil(directory.total / (directory.limit || 25))),
+              hasNextPage: directory.page < Math.ceil(directory.total / (directory.limit || 25)),
+              hasPreviousPage: directory.page > 1,
+            },
+          };
+        } catch {
+          return fallback.listClients(query);
+        }
+      }
+
       const companyId = query.company || getCompanyIdHeader();
 
       // If a specific company is selected with a valid UUID
@@ -315,37 +403,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
         }
       }
 
-      // In Super Admin cross-company view, fetch from GET /super-admin/clients
-      try {
-        const directory = await superAdminCompaniesApi.listClients({
-          page: query.page ?? 1,
-          limit: query.pageSize ?? 25,
-          search: query.search || undefined,
-          companyId: query.company && UUID_PATTERN.test(query.company) ? query.company : undefined,
-        });
-        const liveClients = await Promise.all(
-          (directory.items ?? []).map((item) =>
-            getSuperAdminWorkspace(item.id).then((workspace) => workspace.summary),
-          ),
-        );
-        return {
-          data: liveClients,
-          matchingIds: liveClients.map((c) => c.displayId ?? c.client.id),
-          pagination: {
-            total: directory.total,
-            page: directory.page,
-            pageSize: directory.limit,
-            totalPages: Math.max(1, Math.ceil(directory.total / (directory.limit || 25))),
-            hasNextPage: directory.page < Math.ceil(directory.total / (directory.limit || 25)),
-            hasPreviousPage: directory.page > 1,
-          },
-        };
-      } catch {
-        // fallback if not super admin or offline
-      }
-
-      const fallbackResult = await fallback.listClients(query);
-      return fallbackResult;
+      return fallback.listClients(query);
     },
 
     async createClient(input: CreateClientInput, actor): Promise<ClientSummary> {
@@ -574,15 +632,39 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
 
     exportClients: fallback.exportClients,
     async getPortfolio() {
-      if (isSuperAdminRoute()) return superAdminCompaniesApi.getClientPortfolio();
+      if (isSuperAdminRoute() || fallback === unavailableClientsProvider) {
+        try {
+          return await superAdminCompaniesApi.getClientPortfolio();
+        } catch {
+          return fallback.getPortfolio();
+        }
+      }
       const companyId = getCompanyIdHeader();
-      if (companyId && UUID_PATTERN.test(companyId)) return clientsApi.getPortfolio<ClientPortfolio>(companyId);
+      if (companyId && UUID_PATTERN.test(companyId)) {
+        try {
+          return await clientsApi.getPortfolio<ClientPortfolio>(companyId);
+        } catch {
+          return fallback.getPortfolio();
+        }
+      }
       return fallback.getPortfolio();
     },
     async getFacets() {
-      if (isSuperAdminRoute()) return superAdminCompaniesApi.getClientFacets();
+      if (isSuperAdminRoute() || fallback === unavailableClientsProvider) {
+        try {
+          return await superAdminCompaniesApi.getClientFacets();
+        } catch {
+          return fallback.getFacets();
+        }
+      }
       const companyId = getCompanyIdHeader();
-      if (companyId && UUID_PATTERN.test(companyId)) return clientsApi.getFacets<ClientFacets>(companyId);
+      if (companyId && UUID_PATTERN.test(companyId)) {
+        try {
+          return await clientsApi.getFacets<ClientFacets>(companyId);
+        } catch {
+          return fallback.getFacets();
+        }
+      }
       return fallback.getFacets();
     },
 

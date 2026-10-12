@@ -634,7 +634,7 @@ function OpenStudioItem({ post }: { post: CalendarPost }) {
 function PostDetailsDialog({ detail, onClose }: { detail: { post: CalendarPost; confirmCancel: boolean } | null; onClose: () => void }) {
   return (
     <Dialog open={detail !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg">{detail && <PostDetailsBody post={detail.post} startConfirm={detail.confirmCancel} onClose={onClose} />}</DialogContent>
+      <DialogContent className="sm:max-w-lg max-h-[92dvh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">{detail && <PostDetailsBody post={detail.post} startConfirm={detail.confirmCancel} onClose={onClose} />}</DialogContent>
     </Dialog>
   );
 }
@@ -686,14 +686,14 @@ function PostDetailsBody({ post, startConfirm, onClose }: { post: CalendarPost; 
         </DialogDescription>
       </DialogHeader>
 
-      <div className="max-h-[50vh] space-y-3 overflow-y-auto text-xs">
-        <div className="whitespace-pre-wrap rounded-sm border bg-slate-50 p-3 text-[12px] text-slate-800">{post.content}</div>
+      <div className="min-h-0 space-y-3 overflow-y-auto text-xs">
+        <div className="whitespace-pre-wrap break-words rounded-sm border bg-slate-50 p-3 text-[12px] text-slate-800">{post.content}</div>
         {reason && <p className="rounded-sm border border-red-200 bg-red-50 p-2 text-[11px] font-medium text-red-700">{reason}</p>}
-        <dl className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1.5">
+        <dl className="grid grid-cols-[110px_minmax(0,1fr)] gap-x-3 gap-y-1.5">
           {rows.map(([label, value]) => (
             <div key={label} className="contents">
               <dt className="font-semibold text-slate-500">{label}</dt>
-              <dd className="text-slate-800">{value}</dd>
+              <dd className="min-w-0 break-words text-slate-800">{value}</dd>
             </div>
           ))}
         </dl>

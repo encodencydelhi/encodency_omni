@@ -22,6 +22,7 @@ import {
   SUBSCRIPTION_STATUS_META,
   USAGE_LEVEL_META,
 } from "../data/config";
+import { companiesRepository } from "../data/repository";
 import type { AttentionKind, CompanyListQuery } from "../data/types";
 export const FILTER_KEYS = [
   "plan",
@@ -79,16 +80,33 @@ interface FilterDef {
   options: FilterOption[];
 }
 
+/**
+ * Filters the live backend cannot honour (it serves search, status, plan and
+ * created only). Hidden in API mode so a control never pretends to filter.
+ */
+const API_UNSUPPORTED_FILTERS = new Set<CompanyFilterKey>([
+  "health",
+  "subscriptionStatus",
+  "billingStatus",
+  "usageLevel",
+  "lastActive",
+  "issue",
+  "tag",
+]);
+
 function useFilterDefs(extraTags: string[]): { primary: FilterDef[]; secondary: FilterDef[] } {
   return useMemo(() => {
+    const apiMode = companiesRepository.mode === "api";
+    const visible = (defs: FilterDef[]): FilterDef[] =>
+      apiMode ? defs.filter((def) => !API_UNSUPPORTED_FILTERS.has(def.key)) : defs;
     const tags = [...new Set([...INTERNAL_TAG_OPTIONS, ...extraTags])].sort();
     return {
-      primary: [
+      primary: visible([
         { key: "plan", label: "Plan", options: toStatusOptions(PLAN_TIER) },
         { key: "accountStatus", label: "Account", options: toStatusOptions(ACCOUNT_STATUS) },
         { key: "health", label: "Health", options: HEALTH_FILTER_OPTIONS },
-      ],
-      secondary: [
+      ]),
+      secondary: visible([
         { key: "subscriptionStatus", label: "Subscription", options: toStatusOptions(SUBSCRIPTION_STATUS_META) },
         { key: "billingStatus", label: "Billing", options: toStatusOptions(BILLING_STATUS_META) },
         { key: "usageLevel", label: "Usage", options: toStatusOptions(USAGE_LEVEL_META).filter((option) => option.value !== "not_metered") },
@@ -96,19 +114,25 @@ function useFilterDefs(extraTags: string[]): { primary: FilterDef[]; secondary: 
         { key: "lastActive", label: "Last active", options: LAST_ACTIVE_OPTIONS },
         { key: "issue", label: "Attention", options: ISSUE_OPTIONS },
         { key: "tag", label: "Tag", options: tags.map((tag) => ({ value: tag, label: tag })) },
-      ],
+      ]),
     };
   }, [extraTags]);
 }
 
 function SortSelect({ table, className }: { table: CompanyTableState; className?: string }) {
+  // The live list endpoint sorts by creation date and name only; the other
+  // demo sorts are hidden instead of silently doing nothing.
+  const options =
+    companiesRepository.mode === "api"
+      ? SORT_OPTIONS.filter((option) => option.field === "createdAt" || option.field === "name")
+      : SORT_OPTIONS;
   const current = table.sort ? `${table.sort.field}:${table.sort.direction}` : "createdAt:desc";
-  const known = SORT_OPTIONS.some((option) => option.value === current);
+  const known = options.some((option) => option.value === current);
   return (
     <Select
       value={known ? current : ""}
       onValueChange={(value) => {
-        const option = SORT_OPTIONS.find((item) => item.value === value);
+        const option = options.find((item) => item.value === value);
         if (option) table.setSort(option.field, option.direction);
       }}
     >
@@ -117,7 +141,7 @@ function SortSelect({ table, className }: { table: CompanyTableState; className?
         <SelectValue placeholder="Custom" />
       </SelectTrigger>
       <SelectContent>
-        {SORT_OPTIONS.map((option) => (
+        {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}
           </SelectItem>

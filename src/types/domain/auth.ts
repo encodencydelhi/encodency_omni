@@ -87,6 +87,36 @@ export interface TotpReplacementCompletedResponse {
   recoveryCodes: string[];
 }
 
+/** GET /api/v1/auth/sessions — the signed-in user's own active sessions. */
+export interface OwnSessionItem {
+  id: string;
+  createdAt: string;
+  lastSeenAt: string;
+  expiresAt: string;
+  ipAddress: string | null;
+  browser: string;
+  device: string;
+  /** True for the session making the request. */
+  current: boolean;
+}
+
+/** POST /api/v1/auth/change-password */
+export interface ChangePasswordResponse {
+  status: "password_changed";
+  revokedSessions: number;
+}
+
+/** POST /api/v1/auth/totp/disable */
+export interface DisableTotpResponse {
+  status: "totp_disabled";
+}
+
+/** POST /api/v1/auth/totp/recovery-codes — the new set is returned exactly once. */
+export interface RegenerateRecoveryCodesResponse {
+  status: "recovery_codes_regenerated";
+  recoveryCodes: string[];
+}
+
 /* ------------------------------------------------------------------ */
 /* Frontend model                                                      */
 /* ------------------------------------------------------------------ */
@@ -115,6 +145,8 @@ export interface AuthenticatedUser {
   department: string;
   lastLoginAt: string | null;
   memberships: CompanyMembershipSummary[];
+  /** Whether two-factor (TOTP) is currently enabled — drives the Security screen. */
+  totpEnabled: boolean;
 }
 
 export interface AuthSession {

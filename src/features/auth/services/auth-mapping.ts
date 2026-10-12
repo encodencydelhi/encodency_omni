@@ -39,5 +39,6 @@ export function toAuthenticatedUser(profile: CurrentUserResponse): Authenticated
     department: "",
     lastLoginAt: null,
     memberships: profile.memberships.map((membership) => ({ ...membership })),
+    totpEnabled: profile.totpEnabled,
   };
 }

@@ -139,7 +139,8 @@ export function useCompanyActions() {
       if (status === "active" && capabilities.canSuspendCompany) {
         items.push({ id: "suspend", label: "Suspend Company", icon: BanIcon, variant: "destructive", separatorBefore: true, onSelect: () => setFlow({ kind: "suspend", targets: [summary] }) });
       }
-      if (status === "suspended" && capabilities.canReactivateCompany) {
+      // Suspended (demo data) and archived (the backend's real reversible state) both reactivate.
+      if ((status === "suspended" || archived) && capabilities.canReactivateCompany) {
         items.push({ id: "reactivate", label: "Reactivate Company", icon: CircleCheckIcon, separatorBefore: true, onSelect: () => setFlow({ kind: "reactivate", targets: [summary] }) });
       }
       if (!archived && capabilities.canArchiveCompany) {
@@ -172,7 +173,7 @@ export function useCompanyActions() {
       if (status === "active" && capabilities.canSuspendCompany) {
         items.push({ id: "suspend", label: "Suspend Company", icon: BanIcon, variant: "destructive", separatorBefore: true, onSelect: () => setFlow({ kind: "suspend", targets: [summary] }) });
       }
-      if (status === "suspended" && capabilities.canReactivateCompany) {
+      if ((status === "suspended" || archived) && capabilities.canReactivateCompany) {
         items.push({ id: "reactivate", label: "Reactivate Company", icon: CircleCheckIcon, separatorBefore: true, onSelect: () => setFlow({ kind: "reactivate", targets: [summary] }) });
       }
       if (!archived && capabilities.canArchiveCompany) {

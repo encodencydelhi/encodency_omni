@@ -64,6 +64,9 @@ function toAdminNotification(item: BackendNotificationItem): AdminNotification {
       href = item.data.href;
     } else if (typeof item.data?.link === "string") {
       href = item.data.link;
+    } else if (item.companyId) {
+      // Company-scoped announcements (e.g. super-admin "send notification") open the Company detail page.
+      href = `/super-admin/companies/${encodeURIComponent(item.companyId)}`;
     }
   }
 

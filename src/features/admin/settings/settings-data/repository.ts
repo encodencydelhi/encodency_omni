@@ -1,4 +1,4 @@
-import type { AllSettingsState, SettingsActivityItem, SettingsSectionId, UserPreferences } from "./types";
+import type { AllSettingsState, SecurityPolicy, SettingsActivityItem, SettingsSectionId, UserPreferences } from "./types";
 import { INITIAL_SETTINGS_STATE, neutralSettingsState, UNAVAILABLE_SECURITY_SUMMARY } from "./mock-provider";
 import { SETTINGS_MOCK_MODE, SETTINGS_STORAGE_KEY } from "./config";
 import { apiClient } from "@/lib/api/client";
@@ -187,7 +187,7 @@ export class SettingsRepository {
         // 2. Everything below is read live from the server; nothing is filled in from sample data.
         if (activeCompanyId && activeCompanyId !== DEFAULT_FALLBACK_COMPANY_ID) {
           const scope = { "x-company-id": activeCompanyId };
-          const [brandingR, teamR, orgR, billingR, clientsR, activityR, securityR] = await Promise.allSettled([
+          const [brandingR, teamR, orgR, billingR, clientsR, activityR, securityR, securityPolicyR] = await Promise.allSettled([
             brandingApi.get(activeCompanyId),
             apiClient.request<TeamMemberRecord[]>({ method: "GET", path: "/team/members", headers: scope }),
             organizationApi.get(activeCompanyId),
@@ -195,6 +195,7 @@ export class SettingsRepository {
             clientsApi.list(activeCompanyId),
             teamApi.listActivity(activeCompanyId, { limit: 50 }),
             apiClient.request<TeamSecurityResponse>({ method: "GET", path: "/team/members/security-summary", headers: scope }),
+            apiClient.request<SecurityPolicy>({ method: "GET", path: "/settings/security", headers: scope }),
           ]);
 
           // A. Branding images (/settings/branding)
@@ -296,6 +297,24 @@ export class SettingsRepository {
             securityR.status === "fulfilled" && securityR.value
               ? { available: true, ...securityR.value }
               : UNAVAILABLE_SECURITY_SUMMARY;
+
+          // H. Company security policy (GET /settings/security). A server with
+          // no stored policy returns the service defaults; keep the neutral
+          // in-memory defaults rather than treating a 404 as an error.
+          if (securityPolicyR.status === "fulfilled" && securityPolicyR.value) {
+            base.security = {
+              ...base.security,
+              ...securityPolicyR.value,
+              accessPolicy: {
+                ...base.security.accessPolicy,
+                ...securityPolicyR.value.accessPolicy,
+                allowedEmailDomains:
+                  securityPolicyR.value.accessPolicy?.allowedEmailDomains ?? base.security.accessPolicy.allowedEmailDomains,
+              },
+            };
+          } else if (securityPolicyR.status === "rejected") {
+            console.warn("Could not fetch company security policy:", securityPolicyR.reason);
+          }
         }
 
         // Cache synced data to localStorage for instant re-renders
@@ -437,6 +456,48 @@ export class SettingsRepository {
         // business conflict that the caller already reports to the operator.
         console.warn("Organization profile save failed:", orgErr instanceof Error ? orgErr.message : String(orgErr));
         throw orgErr;
+      }
+    }
+
+    // Only patch the backend security endpoint when the security section was changed
+    const shouldUpdateSecurity =
+      Boolean(partial.security) &&
+      Boolean(activeCompanyId) &&
+      activeCompanyId !== DEFAULT_FALLBACK_COMPANY_ID &&
+      activityNote?.section === "security";
+
+    if (shouldUpdateSecurity && partial.security && activeCompanyId) {
+      const securityPatch: Partial<SecurityPolicy> = {
+        authentication: partial.security.authentication ? { ...partial.security.authentication } : undefined,
+        sessionPolicy: partial.security.sessionPolicy ? { ...partial.security.sessionPolicy } : undefined,
+        accessPolicy: partial.security.accessPolicy
+          ? { ...partial.security.accessPolicy, allowedEmailDomains: partial.security.accessPolicy.allowedEmailDomains }
+          : undefined,
+        sensitiveActionProtection: partial.security.sensitiveActionProtection ? { ...partial.security.sensitiveActionProtection } : undefined,
+      };
+
+      try {
+        const updatedPolicy = await apiClient.request<SecurityPolicy>({
+          method: "PATCH",
+          path: "/settings/security",
+          headers: { "x-company-id": activeCompanyId },
+          body: securityPatch,
+        });
+        if (updatedPolicy) {
+          partial.security = {
+            ...partial.security,
+            ...updatedPolicy,
+            accessPolicy: {
+              ...partial.security.accessPolicy,
+              ...updatedPolicy.accessPolicy,
+              allowedEmailDomains:
+                updatedPolicy.accessPolicy?.allowedEmailDomains ?? partial.security.accessPolicy.allowedEmailDomains,
+            },
+          };
+        }
+      } catch (secErr) {
+        console.warn("Company security policy save failed:", secErr instanceof Error ? secErr.message : String(secErr));
+        throw secErr;
       }
     }
 

@@ -11,11 +11,13 @@ import { cn } from "@/lib/utils/cn";
 import { getUserDisplay } from "@/lib/utils/user-display";
 import { useState } from "react";
 import { MyProfileDialog } from "./my-profile-dialog";
+import { SecurityDialog } from "@/features/auth/components/security-dialog";
 
 export function Topbar() {
   const { setMobileOpen, toggleCollapsed, isCollapsed } = useSidebar();
   const { user, logout } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [securityOpen, setSecurityOpen] = useState(false);
   const { fullName, firstName, email: userEmail, initials } = getUserDisplay(user);
 
   return (
@@ -152,7 +154,7 @@ export function Topbar() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2 rounded-md cursor-pointer" onSelect={() => setProfileOpen(true)}><UserRound className="size-4" />My Profile</DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 rounded-md cursor-pointer"><ShieldCheck className="size-4" />Security</DropdownMenuItem>
+            <DropdownMenuItem className="gap-2 rounded-md cursor-pointer" onSelect={() => setSecurityOpen(true)}><ShieldCheck className="size-4" />Security</DropdownMenuItem>
             <DropdownMenuItem className="gap-2 rounded-md cursor-pointer"><Settings className="size-4" />Preferences</DropdownMenuItem>
             <DropdownMenuItem className="gap-2 rounded-md cursor-pointer"><Sparkles className="size-4" />Workspace</DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -161,6 +163,7 @@ export function Topbar() {
         </DropdownMenu>
       </div>
       <MyProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
+      <SecurityDialog open={securityOpen} onOpenChange={setSecurityOpen} />
     </header>
   );
 }

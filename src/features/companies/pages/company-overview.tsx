@@ -80,7 +80,7 @@ function OverviewBody({ data }: { data: CompanyOverviewData }) {
               )}
             </KeyValue>
             <KeyValue label="Industry">{company.profile.industry}</KeyValue>
-            <KeyValue label="Country">{company.profile.country}</KeyValue>
+            <KeyValue label="Country">{company.profile.country || "-"}</KeyValue>
             <KeyValue label="Created">{formatDate(company.createdAt)}</KeyValue>
             <KeyValue label="Account"><AccountStatusBadge status={company.accountStatus} /></KeyValue>
             <KeyValue label="Owner">

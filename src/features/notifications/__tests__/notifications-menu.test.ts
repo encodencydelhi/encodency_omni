@@ -43,17 +43,28 @@ describe("Notifications System & Menu Contracts", () => {
             companyId: "comp-1",
             clientId: "client-1",
           },
+          {
+            id: "notif-4",
+            type: "platform.announcement",
+            title: "Scheduled maintenance",
+            message: "Billing will be unavailable for 30 minutes",
+            data: { source: "super_admin" },
+            readAt: null,
+            createdAt: "2026-10-09T07:00:00.000Z",
+            companyId: "comp-6092634f",
+            clientId: null,
+          },
         ],
-        total: 3,
-        unreadCount: 2,
+        total: 4,
+        unreadCount: 3,
         page: 1,
         limit: 10,
       } as any);
 
       // Unread only request
       const unreadRes = await notificationService.list({ pageSize: 10, filters: { readState: "unread" } });
-      assert.equal(unreadRes.data.length, 3);
-      assert.equal(unreadRes.pagination.total, 2, "Unread count mapped into pagination total when unread filter applied");
+      assert.equal(unreadRes.data.length, 4);
+      assert.equal(unreadRes.pagination.total, 3, "Unread count mapped into pagination total when unread filter applied");
 
       // Verify item 1: publishing.failed
       const item1 = unreadRes.data[0]!;
@@ -78,6 +89,14 @@ describe("Notifications System & Menu Contracts", () => {
       assert.equal(item3.category, "security");
       assert.equal(item3.isRead, true);
       assert.equal(item3.href, "/admin/clients/client-789");
+
+      // Verify item 4: platform.announcement links to the Company detail page via companyId
+      const item4 = unreadRes.data[3]!;
+      assert.equal(item4.id, "notif-4");
+      assert.equal(item4.category, "system");
+      assert.equal(item4.severity, "info");
+      assert.equal(item4.href, "/super-admin/companies/comp-6092634f");
+      assert.equal(item4.source, "comp-6092634f");
 
     } finally {
       apiClient.request = originalRequest;

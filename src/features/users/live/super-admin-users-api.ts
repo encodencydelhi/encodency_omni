@@ -185,7 +185,7 @@ export const superAdminUsersApi = {
     return apiClient.request({ method: "GET", path: "/super-admin/user-insights/security-events", query: { userId } });
   },
 
-  notify(body: { userIds: string[]; title: string; message: string }): Promise<{ delivered: number; skipped: number }> {
+  notify(body: { userIds: string[]; title: string; message: string; companyId?: string }): Promise<{ delivered: number; skipped: number }> {
     return apiClient.request({ method: "POST", path: "/super-admin/user-insights/notify", body });
   },
 

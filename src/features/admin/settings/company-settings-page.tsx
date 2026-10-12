@@ -35,11 +35,10 @@ import { DataPrivacySection } from "./components/data-privacy-section";
 import { AuditActivitySection } from "./components/audit-activity-section";
 import { DangerZoneSection } from "./components/danger-zone-section";
 
-/** Sections with no backend route (GET/PATCH /settings/organization and branding are the only live ones). */
+/** Sections with no backend route (Organization, Branding and Security save to the server). */
 const LOCAL_ONLY_SECTIONS = new Set([
   "workspace",
   "notifications",
-  "security",
   "preferences",
   "data-privacy",
   "audit",
@@ -212,7 +211,7 @@ function CompanySettingsInner() {
           {LOCAL_ONLY_SECTIONS.has(activeSection) && (
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-5 text-amber-800">
               This section has no backend API yet — changes are kept on this device only and are not
-              synced to your account. Only <strong>Organization</strong> and <strong>Branding</strong> save to the server.
+              synced to your account. Only <strong>Organization</strong>, <strong>Branding</strong> and <strong>Security</strong> save to the server.
             </p>
           )}
           {activeSection === "organization" && (

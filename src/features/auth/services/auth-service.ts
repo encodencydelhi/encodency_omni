@@ -2,13 +2,17 @@ import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/types/api";
 import type {
   AuthenticatedUser,
+  ChangePasswordResponse,
   ChallengeVerification,
   CurrentUserResponse,
+  DisableTotpResponse,
   EnrollmentResult,
   EnrollmentVerifiedResponse,
   LoginChallengeResponse,
   LoginCredentials,
   LoginResult,
+  OwnSessionItem,
+  RegenerateRecoveryCodesResponse,
   TotpReplacementAuthorization,
   TotpReplacementCompletedResponse,
   TotpReplacementPendingResponse,
@@ -139,6 +143,50 @@ export const authService = {
   /** Revokes the backend session. Callers clear local state whether or not this succeeds. */
   async logout(): Promise<void> {
     await apiClient.request({ method: "POST", path: "/auth/logout", skipSessionExpiry: true });
+  },
+
+  /** Changes the signed-in user's password. Always requires the current password; the server revokes every other session. */
+  async changePassword(input: { currentPassword: string; newPassword: string }): Promise<ChangePasswordResponse> {
+    return apiClient.request<ChangePasswordResponse>({
+      method: "POST",
+      path: "/auth/change-password",
+      body: input,
+    });
+  },
+
+  /** The signed-in user's own active sessions, most recently seen first. */
+  async listSessions(): Promise<{ items: OwnSessionItem[] }> {
+    return apiClient.request<{ items: OwnSessionItem[] }>({ method: "GET", path: "/auth/sessions" });
+  },
+
+  /** Revokes ONE of the signed-in user's own sessions. */
+  async revokeSession(sessionId: string): Promise<{ status: string; revoked: boolean }> {
+    return apiClient.request({ method: "DELETE", path: `/auth/sessions/${sessionId}` });
+  },
+
+  /** Signs out everywhere: revokes ALL sessions including the current one; the cookie is cleared server-side. */
+  async logoutAll(): Promise<void> {
+    await apiClient.request({ method: "POST", path: "/auth/logout-all" });
+  },
+
+  /** Removes MFA, authorised with the CURRENT TOTP or a recovery code. The next sign-in re-offers enrollment. */
+  async disableTotp(authorization: TotpReplacementAuthorization): Promise<DisableTotpResponse> {
+    return apiClient.request<DisableTotpResponse>({
+      method: "POST",
+      path: "/auth/totp/disable",
+      body: authorization.recoveryCode !== undefined ? { recoveryCode: authorization.recoveryCode } : { code: authorization.code },
+      skipSessionExpiry: true,
+    });
+  },
+
+  /** Rotates recovery codes. Only a CURRENT TOTP code authorises this; the new set is returned exactly once. */
+  async regenerateRecoveryCodes(code: string): Promise<RegenerateRecoveryCodesResponse> {
+    return apiClient.request<RegenerateRecoveryCodesResponse>({
+      method: "POST",
+      path: "/auth/totp/recovery-codes",
+      body: { code },
+      skipSessionExpiry: true,
+    });
   },
 
   async requestPasswordReset(email: string): Promise<void> {

@@ -222,12 +222,12 @@ function SecurityBody({ companyId, data }: { companyId: string; data: CompanySec
   );
 }
 
-const COPY: Record<SecurityAction, { title: string; body: string; submit: string; destructive: boolean }> = {
-  require2fa: { title: "Require 2FA for the whole company?", body: "Every user without 2FA will be required to enrol at next sign-in. Demo mode records the policy but does not enforce it.", submit: "Require 2FA", destructive: false },
-  passwordReset: { title: "Require a password reset?", body: "Every user would be asked to choose a new password. Demo mode records the request; no password is changed and no email is sent.", submit: "Require password reset", destructive: true },
-  revoke: { title: "Revoke all sessions?", body: "This would sign every user out of the organisation. Demo mode records the request only - no session is ended.", submit: "Revoke sessions", destructive: true },
-  lock: { title: "Lock company access?", body: "This would block all users of the organisation from signing in. Demo mode records the lock but does not enforce it.", submit: "Lock access", destructive: true },
-  unlock: { title: "Unlock company access?", body: "Clears the recorded access lock.", submit: "Unlock access", destructive: false },
+const COPY: Record<SecurityAction, { title: string; body: string; submit: string; destructive: boolean; apiBody: string }> = {
+  require2fa: { title: "Require 2FA for the whole company?", body: "Every user without 2FA will be required to enrol at next sign-in. Demo mode records the policy but does not enforce it.", submit: "Require 2FA", destructive: false, apiBody: "The backend has no company-wide 2FA enforcement endpoint yet — submitting reports that nothing was changed." },
+  passwordReset: { title: "Require a password reset?", body: "Every user would be asked to choose a new password. Demo mode records the request; no password is changed and no email is sent.", submit: "Require password reset", destructive: true, apiBody: "Queues a real password reset for the company owner through the backend." },
+  revoke: { title: "Revoke all sessions?", body: "This would sign every user out of the organisation. Demo mode records the request only - no session is ended.", submit: "Revoke sessions", destructive: true, apiBody: "Revokes the company owner's real sessions through the backend." },
+  lock: { title: "Lock company access?", body: "This would block all users of the organisation from signing in. Demo mode records the lock but does not enforce it.", submit: "Lock access", destructive: true, apiBody: "The backend has no access-lock endpoint yet — submitting reports that nothing was changed." },
+  unlock: { title: "Unlock company access?", body: "Clears the recorded access lock.", submit: "Unlock access", destructive: false, apiBody: "The backend has no access-lock endpoint yet — submitting reports that nothing was changed." },
 };
 
 function SecurityActionDialog({ companyId, companyName, action, onClose }: { companyId: string; companyName: string; action: SecurityAction; onClose: () => void }) {
@@ -235,7 +235,9 @@ function SecurityActionDialog({ companyId, companyName, action, onClose }: { com
   const [reason, setReason] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const copy = COPY[action];
+  const apiMode = companiesRepository.mode === "api";
+  const baseCopy = COPY[action];
+  const copy = apiMode ? { ...baseCopy, body: baseCopy.apiBody } : baseCopy;
   const needsReason = action === "lock";
 
   const run = async () => {
@@ -246,7 +248,7 @@ function SecurityActionDialog({ companyId, companyName, action, onClose }: { com
       else if (action === "passwordReset") await mutations.requirePasswordReset(companyId);
       else if (action === "revoke") await mutations.revokeSessions(companyId);
       else await mutations.setAccessLock(companyId, { locked: action === "lock", reason: reason.trim() });
-      toast.success(`${copy.submit}: recorded in the demo workspace`);
+      toast.success(apiMode ? `${copy.submit}: request sent` : `${copy.submit}: recorded in the demo workspace`);
       onClose();
     } catch (failure) {
       setError(describeError(failure).message);
