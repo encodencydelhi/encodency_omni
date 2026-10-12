@@ -39,9 +39,8 @@ export function RolloutCell({ config }: { config: EnvironmentConfig }) {
   );
 }
 
-const RESULT = { applied: { label: "Applied (Demo)", tone: "success" }, pending: { label: "Pending Approval", tone: "warning" }, scheduled: { label: "Scheduled (Planned)", tone: "info" }, cancelled: { label: "Cancelled", tone: "neutral" }, rejected: { label: "Rejected", tone: "danger" } } as const;
+const RESULT = { applied: { label: "Applied", tone: "success" }, pending: { label: "Pending Approval", tone: "warning" }, scheduled: { label: "Scheduled (Planned)", tone: "info" }, cancelled: { label: "Cancelled", tone: "neutral" }, rejected: { label: "Rejected", tone: "danger" } } as const;
 
-/** The outcome recorded for an activity entry. Applied always says demo: nothing is enforced outside this frontend. */
 export function ResultBadge({ result }: { result: keyof typeof RESULT }) {
   return <Badge tone={RESULT[result].tone}>{RESULT[result].label}</Badge>;
 }

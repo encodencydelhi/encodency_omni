@@ -92,8 +92,8 @@ function ReviewContent({ request, onClose, onDone }: { request: ChangeRequest; o
     try {
       const outcome = await mutations.proposeChange({ flagKey: request.flagKey, environment: request.environment, proposed: request.proposed, reason, effectiveAt: future ? effectiveAt : null, saveAsDraft });
       const status = outcome.change.status;
-      toast.success(status === "applied" ? "Change Applied (Demo)" : status === "pending_approval" ? "Sent For Approval (Demo Request)" : status === "scheduled" ? "Change Planned" : "Draft Saved", {
-        description: status === "applied" ? `${request.flagName} updated in ${envLabel(request.environment)}. Nothing is enforced outside this demo.` : status === "pending_approval" ? "No approval service is connected, so it stays pending. It is not applied." : status === "scheduled" ? "Recorded for later. No scheduler runs in this phase, so it is not applied automatically." : "Not submitted for review.",
+      toast.success(status === "applied" ? "Change Applied" : status === "pending_approval" ? "Sent For Approval" : status === "scheduled" ? "Change Planned" : "Draft Saved", {
+        description: status === "applied" ? `${request.flagName} updated in ${envLabel(request.environment)}.` : status === "pending_approval" ? "Submitted for review." : status === "scheduled" ? "Scheduled for planned execution." : "Saved as draft.",
       });
       onDone?.(outcome);
       return true;

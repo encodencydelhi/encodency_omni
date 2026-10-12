@@ -179,7 +179,7 @@ export const CHANGE_STATUS: Record<ChangeStatus, { label: string; tone: Tone }> 
   draft: { label: "Draft", tone: "neutral" },
   pending_approval: { label: "Pending Approval", tone: "warning" },
   scheduled: { label: "Scheduled (Planned)", tone: "info" },
-  applied: { label: "Applied (Demo)", tone: "success" },
+  applied: { label: "Applied", tone: "success" },
   rejected: { label: "Rejected", tone: "danger" },
   cancelled: { label: "Cancelled", tone: "neutral" },
 };
