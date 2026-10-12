@@ -3,9 +3,8 @@
 /**
  * Connect / manage / disconnect an integration.
  *
- * The OAuth handshakes do not exist yet. Rather than fake a Google consent
- * screen, this dialog is explicit: it sets the integration state for this
- * workspace so the capability-gated screens can be seen working, and says so.
+ * Stores the client-specific integration identifier. Provider authorization
+ * and reporting sync remain server-side responsibilities.
  */
 
 import { useState } from "react";
@@ -164,9 +163,9 @@ export function IntegrationDialog({
             <p className="text-[11px] text-[#6B7A94]">Last sync: {formatDateTime(integration.lastSyncAt)}</p>
           ) : null}
 
-          <p className="rounded-md bg-[#FDF3E3] px-3 py-2 text-[11px] leading-relaxed text-[#9A5B08]">
-            The OAuth handshake is not built yet. Connecting here sets the integration state for this workspace so you
-            can see exactly what it unlocks — it does not reach Google or install anything on the website.
+          <p className="rounded-md bg-[#F7F9FC] px-3 py-2 text-[11px] leading-relaxed text-[#6B7A94]">
+            Save the verified property identifier for this client. Reporting becomes available after the provider
+            connection and data sync are verified.
           </p>
         </div>
 
@@ -212,8 +211,8 @@ export function IntegrationDialog({
                       toast.success(
                         integrationKey === "omniTracking"
                           ? "Tracking marked as installed"
-                          : `${integration?.name} connected`,
-                        { description: "The screens it unlocks are now available." },
+                          : `${integration?.name} configuration saved`,
+                        { description: "Reporting appears after the provider sync is verified." },
                       );
                       onClose();
                     },
@@ -222,7 +221,7 @@ export function IntegrationDialog({
                 );
               }}
             >
-              {integrationKey === "omniTracking" ? "Mark as installed" : "Connect"}
+              {integrationKey === "omniTracking" ? "Mark as installed" : "Save configuration"}
             </WButton>
           )}
         </DialogFooter>

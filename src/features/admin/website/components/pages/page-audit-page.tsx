@@ -1,19 +1,10 @@
 "use client";
 
-/**
- * Page audit — one discovered page, examined from the outside.
- *
- * Screenshots are explicitly framed as placeholders: no worker is capturing
- * them yet, and a fake browser chrome around invented pixels would be worse
- * than an honest empty frame.
- */
-
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  Camera,
   CheckCircle2,
   ChevronRight,
   Circle,
@@ -56,7 +47,6 @@ import {
   KeyValue,
   Meter,
   ScoreDial,
-  SegmentedControl,
   SubTabs,
   WButton,
   type Column,
@@ -85,12 +75,6 @@ export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
   const issues = useWebsiteIssues(clientId);
 
   const [tab, setTab] = useUrlState<AuditTab>("tab", "overview", TABS.map((entry) => entry.value));
-  const [viewport, setViewport] = useUrlState<"desktop" | "tablet" | "mobile">("viewport", "desktop", [
-    "desktop",
-    "tablet",
-    "mobile",
-  ]);
-
   const pageIssues = useMemo(
     () => (issues.data ?? []).filter((issue) => issue.affectedPageIds.includes(pageId)),
     [issues.data, pageId],
@@ -238,55 +222,7 @@ export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
 
       {tab === "overview" ? (
         <div className="grid gap-1 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-          <Card
-            title="Visual snapshot"
-            icon={Camera}
-            subtitle={data.screenshots.note}
-            action={
-              <SegmentedControl
-                ariaLabel="Viewport"
-                size="sm"
-                value={viewport}
-                onChange={setViewport}
-                options={[
-                  { value: "desktop", label: "Desktop" },
-                  { value: "tablet", label: "Tablet" },
-                  { value: "mobile", label: "Mobile" },
-                ]}
-              />
-            }
-          >
-            <div
-              className={cn(
-                "mx-auto overflow-hidden rounded-lg border border-[#DAE1EC] bg-[#F7F9FC]",
-                viewport === "desktop" ? "aspect-[16/10] w-full" : viewport === "tablet" ? "aspect-[3/4] w-[62%]" : "aspect-[9/16] w-[38%]",
-              )}
-            >
-              <div className="flex h-full flex-col">
-                <div className="flex h-6 shrink-0 items-center gap-1 border-b border-[#E6EBF4] bg-white px-2">
-                  <span className="size-1.5 rounded-full bg-[#F1C0BE]" />
-                  <span className="size-1.5 rounded-full bg-[#F5DFB8]" />
-                  <span className="size-1.5 rounded-full bg-[#BDE8D6]" />
-                  <span className="ml-2 truncate font-mono text-[8.5px] text-[#94A3B8]">{page.url}</span>
-                </div>
-                <div className="flex flex-1 flex-col items-center justify-center gap-1.5 p-4 text-center">
-                  <Camera className="size-5 text-[#B4C0D2]" aria-hidden />
-                  <p className="text-[11px] font-semibold text-[#5B6B85]">No snapshot captured</p>
-                  <p className="max-w-[240px] text-[10.5px] leading-relaxed text-[#94A3B8]">
-                    Screenshot capture needs a rendering worker. The {viewport} frame is shown at the right aspect
-                    ratio so the layout is ready for it.
-                  </p>
-                  <WButton
-                    size="sm"
-                    icon={ExternalLink}
-                    onClick={() => window.open(page.url, "_blank", "noopener,noreferrer")}
-                  >
-                    Open live page instead
-                  </WButton>
-                </div>
-              </div>
-            </div>
-          </Card>
+          <MetadataEvidencePanel data={data} />
 
           <div className="grid gap-1">
             <Card title="Summary" icon={ScrollText}>
@@ -371,6 +307,48 @@ export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
 
 /* ------------------------------------------------------------------ */
 
+type DeepPageAudit = PageAudit & {
+  social?: { title?: string; description?: string; image?: string; type?: string; url?: string };
+  twitter?: { card?: string; title?: string; description?: string; image?: string };
+  schema?: { valid: boolean; types: string[] }[];
+  keywords?: { term: string; count: number }[];
+  inboundLinks?: { pageId: string; path: string; title: string; url: string }[];
+};
+
+function MetadataEvidencePanel({ data }: { data: PageAudit }) {
+  const deep = data as DeepPageAudit;
+  const social = deep.social ?? {};
+  const schemaTypes = (deep.schema ?? []).flatMap((item) => item.types).filter(Boolean);
+  const rows = [
+    { label: "Title tag", value: data.seoChecks.find((check) => check.id === "title")?.value, status: data.seoChecks.find((check) => check.id === "title")?.status, note: "Target 50-60 characters" },
+    { label: "Meta description", value: data.seoChecks.find((check) => check.id === "description")?.value, status: data.seoChecks.find((check) => check.id === "description")?.status, note: "Target 120-160 characters" },
+    { label: "Canonical", value: data.canonical, status: data.seoChecks.find((check) => check.id === "canonical")?.status, note: "Observed in live HTML" },
+    { label: "Robots", value: data.seoChecks.find((check) => check.id === "robots")?.value, status: data.seoChecks.find((check) => check.id === "robots")?.status, note: "Indexing directive" },
+  ];
+
+  return (
+    <Card title="SEO evidence" icon={Search} subtitle="Observed from the latest public crawl">
+      <dl className="divide-y divide-[#F2F5FA]">
+        {rows.map((row) => (
+          <KeyValue key={row.label} label={row.label}>
+            <span className="flex min-w-0 items-center justify-end gap-1.5">
+              <span className="max-w-[260px] truncate font-mono text-[10.5px] text-[#4A5A73]">{row.value ?? "Not found"}</span>
+              <Chip tone={checkTone[row.status ?? "unknown"]}>{checkLabel[row.status ?? "unknown"]}</Chip>
+            </span>
+            <span className="block text-right text-[10px] text-[#94A3B8]">{row.note}</span>
+          </KeyValue>
+        ))}
+        <KeyValue label="Open Graph">
+          <span className="max-w-[260px] truncate font-mono text-[10.5px] text-[#4A5A73]">{social.title || "Not found"}</span>
+        </KeyValue>
+        <KeyValue label="Schema types">
+          {schemaTypes.length ? <span className="text-[11px] text-[#334155]">{schemaTypes.join(", ")}</span> : <Chip tone="warn">None found</Chip>}
+        </KeyValue>
+      </dl>
+    </Card>
+  );
+}
+
 function ScoreSummary({ label, value }: { label: string; value: number | null }) {
   return (
     <div className="flex items-center gap-2.5 rounded-xl border border-[#E6EBF4] p-2.5">
@@ -448,6 +426,8 @@ function CheckListCard({
 
 function ContentTab({ data }: { data: PageAudit }) {
   const { content } = data;
+  const keywords = (data as DeepPageAudit).keywords ?? [];
+  const aiSignals = (data as PageAudit & { aiSignals?: { kind: string; evidence: string }[] }).aiSignals ?? [];
   return (
     <div className="grid gap-1 lg:grid-cols-2">
       <Card title="Content summary" icon={ScrollText}>
@@ -521,12 +501,46 @@ function ContentTab({ data }: { data: PageAudit }) {
           )}
         </Card>
       </div>
+
+      <Card title="AI-related signals" icon={ScrollText} className="lg:col-span-2">
+        {aiSignals.length === 0 ? (
+          <p className="text-[11.5px] leading-relaxed text-[#6B7A94]">
+            No public AI-related script or generator metadata was observed. This does not prove that content or images were not created with AI.
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {aiSignals.map((signal, index) => (
+              <li key={`${signal.kind}-${index}`} className="border-l-2 border-[#2563EB] pl-2.5">
+                <p className="text-[11.5px] font-semibold text-[#28354C]">{signal.kind}</p>
+                <p className="break-all font-mono text-[10.5px] text-[#6B7A94]">{signal.evidence}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-3 text-[10.5px] leading-relaxed text-[#94A3B8]">
+          Public HTML cannot reliably determine whether prose or images were AI-generated, so this panel reports observable implementation evidence only.
+        </p>
+      </Card>
+
+      <Card title="Observed keyword themes" icon={Search} className="lg:col-span-2">
+        {keywords.length === 0 ? (
+          <p className="text-[11.5px] leading-relaxed text-[#6B7A94]">No repeated keyword themes were extracted from the public HTML.</p>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {keywords.map((keyword) => <Chip key={keyword.term} tone="info">{keyword.term} · {keyword.count}</Chip>)}
+          </div>
+        )}
+        <p className="mt-3 text-[10.5px] leading-relaxed text-[#94A3B8]">
+          These are on-page term frequencies, not search-volume, ranking, or keyword-difficulty estimates.
+        </p>
+      </Card>
     </div>
   );
 }
 
 function LinksTab({ data }: { data: PageAudit }) {
   const { links } = data;
+  const inboundLinks = (data as DeepPageAudit).inboundLinks ?? [];
   const columns: Column<PageAudit["links"]["samples"][number]>[] = [
     {
       key: "href",
@@ -578,6 +592,27 @@ function LinksTab({ data }: { data: PageAudit }) {
           empty={<EmptyState title="No links found" body="This page contains no anchors." compact />}
           dense
         />
+      </Card>
+
+      <Card title={`Internal links to this page (${inboundLinks.length})`} icon={Link2} subtitle="Pages in the latest crawl that link to this URL" bodyClassName="p-0">
+        {inboundLinks.length === 0 ? (
+          <EmptyState title="No internal links found" body="This can make the page harder for visitors and crawlers to discover. Add relevant links from related pages." compact />
+        ) : (
+          <ul className="divide-y divide-[#F2F5FA]">
+            {inboundLinks.map((link) => (
+              <li key={link.pageId} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                <span className="min-w-0">
+                  <span className="block truncate text-[11.5px] font-semibold text-[#28354C]">{link.title}</span>
+                  <span className="block truncate font-mono text-[10.5px] text-[#6B7A94]">{link.path}</span>
+                </span>
+                <a href={link.url} target="_blank" rel="noreferrer noopener" className="shrink-0 text-[10.5px] font-semibold text-[#2563EB] hover:underline">Open</a>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="border-t border-[#F2F5FA] px-3.5 py-2 text-[10.5px] leading-relaxed text-[#94A3B8]">
+          External backlinks are not inferred from a public crawl. They require Search Console link data or a dedicated backlink index.
+        </p>
       </Card>
     </div>
   );

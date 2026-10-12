@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   AlertTriangle,
+  Plus,
   Archive,
   BellRing,
   ExternalLink,
@@ -19,10 +20,8 @@ import {
   Globe,
   Link2,
   Lock,
-  Plus,
   RefreshCw,
   Save,
-  ShieldCheck,
   Bug,
   Undo2,
   Unlink,
@@ -32,6 +31,7 @@ import {
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+
 import { cn } from "@/lib/utils/cn";
 import {
   useArchiveMonitoring,
@@ -41,7 +41,6 @@ import {
   useWebsiteTarget,
 } from "../../data/hooks";
 import {
-  CAPABILITY_LABELS,
   INTEGRATION_ORDER,
   integrationStatusLabel,
   integrationTone,
@@ -49,7 +48,7 @@ import {
 } from "../../data/capability-provider";
 import { formatDateTime, formatRelative } from "../../data/selectors";
 import { WEBSITE_MOCK_MODE } from "../../data/config";
-import type { WebsiteCapability, WebsiteSettings } from "../../data/types";
+import type { WebsiteSettings } from "../../data/types";
 import { WEBSITE_PERMISSIONS } from "../../data/types";
 import { Card, Chip, FilterSelect, KeyValue, SubTabs, WButton } from "../ui/kit";
 import { QueryErrorState, SkeletonBlock } from "../ui/states";
@@ -73,9 +72,6 @@ const SECTIONS: { value: Section; label: string }[] = [
   { value: "monitoring", label: "Monitoring" },
   { value: "integrations", label: "Integrations" },
   { value: "notifications", label: "Notifications" },
-  { value: "team", label: "Team access" },
-  { value: "reports", label: "Reports" },
-  { value: "danger", label: "Danger zone" },
 ];
 
 export function WebsiteSettingsPage() {
@@ -154,7 +150,7 @@ export function WebsiteSettingsPage() {
       </div>
 
       {section === "website" ? (
-        <div className="grid gap-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="max-w-3xl">
           <Card title="Website" icon={Globe} subtitle="Owned by the Client Profile — read-only here">
             <dl className="divide-y divide-[#F2F5FA]">
               <KeyValue label="Client">{clientName}</KeyValue>
@@ -169,22 +165,12 @@ export function WebsiteSettingsPage() {
                   <ExternalLink className="size-3" aria-hidden />
                 </a>
               </KeyValue>
-              <KeyValue label="Source">{target.data?.sourceLabel ?? "Client Profile"}</KeyValue>
-              <KeyValue label="Ownership">
-                <Chip tone={target.data?.verified ? "good" : "muted"}>
-                  {target.data?.verified ? "Verified" : "Not verified"}
-                </Chip>
-              </KeyValue>
               <KeyValue label="Last scanned">{formatRelative(target.data?.lastScannedAt)}</KeyValue>
-              <KeyValue label="Next scan">{formatRelative(target.data?.nextScanAt)}</KeyValue>
             </dl>
 
             <div className="mt-3 flex flex-wrap gap-1.5">
               <WButton icon={Globe} onClick={() => navigate("/admin/clients")}>
                 Open Client Profile
-              </WButton>
-              <WButton icon={ShieldCheck} onClick={() => openIntegration("ownership")}>
-                Re-verify
               </WButton>
               <WButton
                 tone="primary"
@@ -203,50 +189,6 @@ export function WebsiteSettingsPage() {
             </p>
           </Card>
 
-          <div className="grid gap-1">
-            <Card
-              title="What the URL alone lets us do"
-              icon={ShieldCheck}
-              subtitle="No CMS, server or deploy access is required for any of these"
-            >
-              <ul className="flex flex-wrap gap-1.5">
-                {(Object.keys(CAPABILITY_LABELS) as WebsiteCapability[]).map((key) => (
-                  <li key={key}>
-                    <Chip tone={capabilities.data?.capabilities[key] ? "good" : "muted"} dot>
-                      {CAPABILITY_LABELS[key]}
-                    </Chip>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-
-            <Card title="Unlock model" icon={Link2} subtitle="What each integration adds on top" bodyClassName="p-0">
-              <ul className="divide-y divide-[#F2F5FA]">
-                {UNLOCK_MODEL.map((step) => (
-                  <li key={step.key} className="px-3.5 py-2.5">
-                    <p className="text-[12px] font-semibold text-[#28354C]">{step.title}</p>
-                    <p className="text-[10.5px] text-[#94A3B8]">{step.requires}</p>
-                    <ul className="mt-1.5 flex flex-wrap gap-1">
-                      {step.unlocks.map((unlock) => (
-                        <li key={unlock}>
-                          <Chip tone="muted">{unlock}</Chip>
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-
-            {!WEBSITE_MOCK_MODE ? (
-              <Card title="Data mode" icon={AlertTriangle}>
-                <p className="text-[11.5px] leading-relaxed text-[#9A5B08]">
-                  Live data mode is on and the backing services are not connected, so screens report the missing service
-                  rather than showing sample numbers.
-                </p>
-              </Card>
-            ) : null}
-          </div>
         </div>
       ) : null}
 
@@ -322,16 +264,16 @@ export function WebsiteSettingsPage() {
       ) : null}
 
       {section === "monitoring" ? (
-        <Card title="Monitoring" icon={Wifi} subtitle="Availability checks and the thresholds that trigger an alert">
-          <div className="grid gap-4 lg:grid-cols-2">
+        <Card title="Monitoring" icon={Wifi} subtitle="Website availability only">
+          <div className="max-w-xl space-y-1">
             <div className="space-y-1">
               <ToggleRow
                 label="Monitoring enabled"
-                hint="Checks this website from three regions on the interval below."
+                hint="Records whether this website responds successfully on the interval below."
                 checked={draft.monitoring.enabled}
                 onChange={(enabled) => update({ monitoring: { ...draft.monitoring, enabled } })}
               />
-              <Field label="Check interval" hint="How often each region requests the home page.">
+              <Field label="Check interval" hint="How often we check whether the website is reachable.">
                 <FilterSelect
                   label="Check interval"
                   value={String(draft.monitoring.intervalMinutes)}
@@ -348,40 +290,40 @@ export function WebsiteSettingsPage() {
               </Field>
             </div>
 
-            <div className="space-y-1">
+            {false ? <div className="space-y-1">
               <Field label="Slow response threshold (ms)" hint="Above this, a check is recorded as degraded.">
                 <NumberInput
-                  value={draft.monitoring.responseTimeThresholdMs}
+                  value={draft!.monitoring.responseTimeThresholdMs}
                   min={200}
                   max={10000}
                   step={100}
                   onChange={(responseTimeThresholdMs) =>
-                    update({ monitoring: { ...draft.monitoring, responseTimeThresholdMs } })
+                    update({ monitoring: { ...draft!.monitoring, responseTimeThresholdMs } })
                   }
                 />
               </Field>
               <Field label="SSL expiry warning (days)" hint="How far ahead of expiry we start warning.">
                 <NumberInput
-                  value={draft.monitoring.sslExpiryWarningDays}
+                  value={draft!.monitoring.sslExpiryWarningDays}
                   min={3}
                   max={90}
                   onChange={(sslExpiryWarningDays) =>
-                    update({ monitoring: { ...draft.monitoring, sslExpiryWarningDays } })
+                    update({ monitoring: { ...draft!.monitoring, sslExpiryWarningDays } })
                   }
                 />
               </Field>
               <Field label="Uptime alert threshold (%)" hint="Alert when 30-day uptime falls below this.">
                 <NumberInput
-                  value={draft.monitoring.uptimeAlertThresholdPct}
+                  value={draft!.monitoring.uptimeAlertThresholdPct}
                   min={90}
                   max={100}
                   step={0.1}
                   onChange={(uptimeAlertThresholdPct) =>
-                    update({ monitoring: { ...draft.monitoring, uptimeAlertThresholdPct } })
+                    update({ monitoring: { ...draft!.monitoring, uptimeAlertThresholdPct } })
                   }
                 />
               </Field>
-            </div>
+            </div> : null}
           </div>
         </Card>
       ) : null}
@@ -397,7 +339,7 @@ export function WebsiteSettingsPage() {
               <Card
                 key={key}
                 title={integration.name}
-                icon={key === "omniTracking" ? Lock : Link2}
+                icon={Link2}
                 action={
                   <Chip tone={tone === "good" ? "good" : tone === "warn" ? "warn" : "muted"} dot>
                     {integrationStatusLabel(integration.status)}
@@ -423,7 +365,7 @@ export function WebsiteSettingsPage() {
                 </ul>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   <WButton tone={connected ? "secondary" : "primary"} icon={Link2} onClick={() => openIntegration(key)}>
-                    {connected ? "Manage" : key === "omniTracking" ? "Set up" : "Connect"}
+                    {connected ? "Manage" : "Connect"}
                   </WButton>
                   {connected ? (
                     <WButton tone="danger" icon={Unlink} onClick={() => openIntegration(key)}>
@@ -536,12 +478,12 @@ export function WebsiteSettingsPage() {
                               team: draft.team.map((entry) =>
                                 entry.id === member.id
                                   ? {
-                                      ...entry,
-                                      permissions:
-                                        checked === true
-                                          ? [...entry.permissions, permission]
-                                          : entry.permissions.filter((value) => value !== permission),
-                                    }
+                                    ...entry,
+                                    permissions:
+                                      checked === true
+                                        ? [...entry.permissions, permission]
+                                        : entry.permissions.filter((value) => value !== permission),
+                                  }
                                   : entry,
                               ),
                             })

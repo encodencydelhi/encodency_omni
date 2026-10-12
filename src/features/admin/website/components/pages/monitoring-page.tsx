@@ -63,11 +63,6 @@ type MonitoringTab = "overview" | "uptime" | "ssl" | "dns" | "errors" | "changes
 
 const TABS: { value: MonitoringTab; label: string }[] = [
   { value: "overview", label: "Overview" },
-  { value: "uptime", label: "Uptime" },
-  { value: "ssl", label: "SSL" },
-  { value: "dns", label: "DNS" },
-  { value: "errors", label: "Errors" },
-  { value: "changes", label: "Changes" },
 ];
 
 const INCIDENT_LABEL: Record<UptimeIncident["kind"], string> = {
@@ -200,10 +195,6 @@ function StatusBanner({ data }: { data: MonitoringData }) {
           <dd className="text-[15px] font-semibold text-[#111C3A]">{data.uptime.uptimePct90d.toFixed(2)}%</dd>
         </div>
         <div>
-          <dt className="text-[10px] font-semibold uppercase tracking-[0.04em] text-[#6B7A94]">Avg response</dt>
-          <dd className="text-[15px] font-semibold text-[#111C3A]">{formatMs(data.uptime.avgResponseMs)}</dd>
-        </div>
-        <div>
           <dt className="text-[10px] font-semibold uppercase tracking-[0.04em] text-[#6B7A94]">Last downtime</dt>
           <dd className="text-[15px] font-semibold text-[#111C3A]">{formatRelative(data.uptime.lastDowntimeAt)}</dd>
         </div>
@@ -249,6 +240,32 @@ function UptimeStrip({ data }: { data: MonitoringData }) {
 
 function OverviewTab({ data, onTab }: { data: MonitoringData; onTab: (tab: MonitoringTab) => void }) {
   const failingHeaders = data.securityHeaders.filter((header) => header.status !== "pass");
+
+  return (
+    <div className="space-y-1">
+      <StatusBanner data={data} />
+      <Card title="Availability history" icon={Activity} subtitle="Each bar records whether the website was reachable that day">
+        {data.uptime.dailyStatus.length > 0 ? <UptimeStrip data={data} /> : <EmptyState title="No history yet" body="Availability history starts after the first scheduled checks complete." compact />}
+      </Card>
+      <Card title={`Downtime incidents (${data.uptime.incidents.length})`} icon={AlertOctagon} bodyClassName="p-0">
+        {data.uptime.incidents.length === 0 ? (
+          <EmptyState title="No downtime recorded" body="We will list each outage here with its start time and duration." compact />
+        ) : (
+          <ul className="divide-y divide-[#F2F5FA]">
+            {data.uptime.incidents.slice(0, 8).map((incident) => (
+              <li key={incident.id} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                <span className="min-w-0">
+                  <span className="block text-[11.5px] font-semibold text-[#28354C]">{formatDateTime(incident.startedAt)}</span>
+                  <span className="block truncate text-[10.5px] text-[#6B7A94]">{incident.note}</span>
+                </span>
+                <Chip tone={incident.kind === "down" ? "bad" : "warn"}>{formatMinutes(incident.durationMinutes)}</Chip>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </div>
+  );
 
   return (
     <div className="space-y-1">

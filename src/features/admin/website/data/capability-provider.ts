@@ -209,8 +209,8 @@ export function evaluateFeature(
   };
 }
 
-/** The four integration slots, in the order they are shown everywhere. */
-export const INTEGRATION_ORDER: IntegrationKey[] = ["ga4", "searchConsole", "omniTracking", "ownership"];
+/** Provider connections that have a useful, supported surface in the product. */
+export const INTEGRATION_ORDER: IntegrationKey[] = ["ga4", "searchConsole"];
 
 export function integrationTone(status: IntegrationState["status"]): "good" | "warn" | "muted" {
   if (status === "connected" || status === "installed") return "good";
@@ -262,12 +262,6 @@ export const UNLOCK_MODEL: { key: string; title: string; requires: string; unloc
     title: "URL + Search Console",
     requires: "Property verified and shared with us",
     unlocks: ["Queries", "Clicks", "Impressions", "CTR", "Average position"],
-  },
-  {
-    key: "omni-tracking",
-    title: "URL + Omni Tracking",
-    requires: "Snippet added to the website",
-    unlocks: ["CTA clicks", "Form starts", "Form submits", "Scroll depth", "Custom events", "Heatmaps"],
   },
 ];
 

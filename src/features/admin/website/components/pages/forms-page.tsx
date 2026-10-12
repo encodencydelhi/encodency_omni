@@ -88,13 +88,13 @@ export function WebsiteFormsPage() {
   const forms = useWebsiteForms(clientId);
   const issues = useWebsiteIssues(clientId);
   const capabilities = useWebsiteCapabilities(clientId);
+  const behaviour = evaluateFeature(capabilities.data, "behaviour-events");
 
   const [tab, setTab] = useUrlState<FormsTab>("tab", "overview", TABS.map((entry) => entry.value));
   const [search, setSearch] = useState("");
   const [ctaKind, setCtaKind] = useState("all");
   const [openForm, setOpenForm] = useState<FormRecord | null>(null);
 
-  const behaviour = evaluateFeature(capabilities.data, "behaviour-events");
 
   const formIssues = useMemo(
     () => sortIssues((issues.data ?? []).filter((issue) => issue.status === "open" && issue.category === "forms")),
@@ -265,7 +265,7 @@ export function WebsiteFormsPage() {
                 <StatTile label="Booking links" value={data.counts.bookingLinks} icon={CalendarCheck} tone="muted" onClick={() => setTab("ctas")} />
               </div>
 
-              <div className="grid gap-1 lg:grid-cols-2">
+              <div className="max-w-3xl">
                 <Card title="Conversion readiness" icon={ShieldCheck}>
                   <ul className="space-y-2">
                     <ReadinessRow
@@ -291,7 +291,7 @@ export function WebsiteFormsPage() {
                   </ul>
                 </Card>
 
-                <Card title="Submissions & interactions" icon={MousePointerClick}>
+                {false ? <Card title="Submissions & interactions" icon={MousePointerClick}>
                   <div className="rounded-lg border border-dashed border-[#DAE1EC] bg-[#FAFBFD] p-4 text-center">
                     <p className="text-[12px] font-semibold text-[#28354C]">
                       {behaviour.available ? "Tracking installed" : "Not available from a crawl"}
@@ -307,7 +307,7 @@ export function WebsiteFormsPage() {
                       </WButton>
                     ) : null}
                   </div>
-                </Card>
+                </Card> : null}
               </div>
             </div>
           ) : null}

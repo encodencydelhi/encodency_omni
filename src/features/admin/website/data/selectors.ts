@@ -79,7 +79,10 @@ const SHORT_DATE_FMT = new Intl.DateTimeFormat("en-GB", {
 export const formatDate = (iso: string | null | undefined) => (iso ? DATE_FMT.format(new Date(iso)) : "—");
 export const formatDateTime = (iso: string | null | undefined) =>
   iso ? `${DATE_TIME_FMT.format(new Date(iso))} UTC` : "—";
-export const formatShortDate = (iso: string) => SHORT_DATE_FMT.format(new Date(iso));
+export const formatShortDate = (iso: string) => {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? "—" : SHORT_DATE_FMT.format(date);
+};
 
 export function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
