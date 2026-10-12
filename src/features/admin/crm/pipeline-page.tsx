@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Plus, MoreHorizontal, Eye, Pencil, Trash2, ArrowRightLeft, Target,
   CheckCircle2, XCircle, GripVertical, ChevronDown, Settings,
@@ -25,6 +25,7 @@ import { deals as initialDeals, activities, pipelines, teamMembers } from "./dat
 import type { Deal, DealStage } from "./types";
 import { DEAL_STAGE_REGISTRY } from "./types";
 import { formatDate } from "@/lib/utils/format";
+import { crmApi } from './data/crm-api';
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                            */
@@ -84,6 +85,7 @@ export default function PipelinePage() {
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [draggedDeal, setDraggedDeal] = useState<string | null>(null);
+  useEffect(()=>{if(process.env.NEXT_PUBLIC_DATA_SOURCE==='api')crmApi.list<Deal>('deal').then(setDeals).catch(()=>{});},[]);
 
   const pipeline = useMemo(() => pipelines.find((p) => p.id === pipelineId) ?? pipelines[0] ?? { id: "", name: "", stages: [] as DealStage[] }, [pipelineId]);
   const activeStages = useMemo(() => pipeline.stages.filter((s) => s !== "won" && s !== "lost"), [pipeline]);

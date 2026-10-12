@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/features/auth/components/auth-provider";
-import { clientsApi } from "@/features/admin/projects/live/clients-api";
+import { clientsApi } from "@/features/clients/data/clients-api";
 
 import {
   DEFAULT_FALLBACK_COMPANY_ID,

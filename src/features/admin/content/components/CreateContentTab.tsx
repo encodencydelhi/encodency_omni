@@ -28,7 +28,7 @@ import {
   ALL_PLATFORMS, PLATFORM_META, PLATFORM_CONTENT_TYPES,
   MOCK_CONNECTIONS, PLATFORM_CHAR_LIMITS, MEDIA_CAPABLE_PLATFORMS,
 } from "../config/platform-config";
-import { clientsApi } from "@/features/admin/projects/live/clients-api";
+import { clientsApi } from "@/features/clients/data/clients-api";
 import { ContentPreviewPanel } from "./ContentPreview";
 import { ContentChecklist } from "./ContentChecklist";
 import { MasterContentEditor } from "./MasterContentEditor";

@@ -1,4 +1,4 @@
-import { clientsApi } from "@/features/admin/projects/live/clients-api";
+import { clientsApi } from "@/features/clients/data/clients-api";
 import { teamApi } from "@/features/admin/team/live/team-api";
 import { apiClient } from "@/lib/api/client";
 import { companyScopeHeaders } from "@/lib/api/company-scope";

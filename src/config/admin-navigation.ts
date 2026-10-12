@@ -13,7 +13,6 @@ export const adminNavigation: AdminNavSection[] = [
   {
     label: "Clients", items: [
       { label: "Clients", href: "/admin/clients", icon: FolderKanban },
-      // { label: "Projects", href: "/admin/projects", icon: FolderKanban },
     ]
   },
   {

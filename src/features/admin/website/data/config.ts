@@ -1,5 +1,6 @@
-export const WEBSITE_MOCK_MODE: boolean =
-  process.env.NEXT_PUBLIC_WEBSITE_MOCK_MODE !== "false";
+export const WEBSITE_MOCK_MODE: boolean = process.env.NEXT_PUBLIC_WEBSITE_MOCK_MODE
+  ? process.env.NEXT_PUBLIC_WEBSITE_MOCK_MODE !== "false"
+  : process.env.NEXT_PUBLIC_DATA_SOURCE !== "api";
 
 export const WEBSITE_REFERENCE_NOW = "2026-09-17T09:24:00.000Z";
 

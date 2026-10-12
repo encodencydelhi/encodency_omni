@@ -79,7 +79,9 @@ function useFilterDefs(): { primary: FilterDef[]; secondary: FilterDef[] } {
   const facets = useClientFacets();
   return useMemo(() => {
     const companies = (facets.data?.companies ?? []).map((company) => ({ value: company.id, label: company.name }));
-    const providers = (facets.data?.providers ?? []).map((provider) => ({ value: provider, label: INTEGRATION_PROVIDER[provider].label }));
+    const providers = (facets.data?.providers ?? [])
+      .filter((provider): provider is keyof typeof INTEGRATION_PROVIDER => provider in INTEGRATION_PROVIDER)
+      .map((provider) => ({ value: provider, label: INTEGRATION_PROVIDER[provider].label }));
     return {
       primary: [
         { key: "company", label: "Parent company", options: companies },

@@ -118,7 +118,7 @@ export function ClientsPage() {
               Sort
               <ChevronDown className="size-3.5 text-muted-foreground" />
             </button>
-            <Link href="/admin/projects/new" className="flex h-8 items-center gap-1.5 rounded-sm bg-primary px-3 text-[11px] font-semibold text-primary-foreground hover:bg-primary-hover shadow-sm transition-colors">
+            <Link href="/admin/clients/new" className="flex h-8 items-center gap-1.5 rounded-sm bg-primary px-3 text-[11px] font-semibold text-primary-foreground hover:bg-primary-hover shadow-sm transition-colors">
               <Plus className="size-3.5" />
               Add Client
             </Link>
@@ -146,7 +146,7 @@ export function ClientsPage() {
                         {project.logoText}
                       </span>
                       <div className="min-w-0">
-                        <Link href={`/admin/projects/${project.id}`} className="font-semibold text-foreground hover:underline truncate block text-[12px]">
+                        <Link href={`/admin/clients/${project.id}`} className="font-semibold text-foreground hover:underline truncate block text-[12px]">
                           {project.name}
                         </Link>
                         <p className="w-[140px] truncate text-[11px] text-muted-foreground mt-0.5" title={project.description}>
@@ -210,7 +210,7 @@ export function ClientsPage() {
                   </td>
                   <td className="px-2 py-1.5">
                     <div className="flex items-center gap-1">
-                      <Link href={`/admin/projects/${project.id}`} className="rounded-full border px-2 py-1 text-[11px] font-semibold transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
+                      <Link href={`/admin/clients/${project.id}`} className="rounded-full border px-2 py-1 text-[11px] font-semibold transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">
                         Open
                       </Link>
                       <button className="grid size-6 place-items-center rounded-full border transition-colors hover:bg-accent hover:text-accent-foreground shadow-sm bg-white">

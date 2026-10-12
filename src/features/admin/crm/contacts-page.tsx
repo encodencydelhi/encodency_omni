@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Plus, Download, Upload, Merge, Grid3X3, List, Eye, Pencil, Trash2,
   MoreHorizontal, Phone, Mail, MessageSquare, Building2, Tag, Users, Calendar,
@@ -39,6 +39,7 @@ import { contacts as initialContacts, activities, contactGroups, teamMembers } f
 import { exportContactsCsv, listValues } from "./lib/csv";
 import type { Contact, ContactStatus, ContactViewMode } from "./types";
 import { formatDate } from "@/lib/utils/format";
+import { crmApi } from './data/crm-api';
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                            */
@@ -72,6 +73,7 @@ export default function ContactsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [mergePair, setMergePair] = useState<[Contact, Contact] | null>(null);
+  useEffect(()=>{if(process.env.NEXT_PUBLIC_DATA_SOURCE==='api')crmApi.list<Contact>('contact').then(setContacts).catch(()=>{});},[]);
 
   /* ---- Derived data ---- */
   const filtered = useMemo(() => {

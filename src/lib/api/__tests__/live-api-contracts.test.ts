@@ -20,7 +20,7 @@ const {
   isAssetConflict: isClientLogoAssetConflict,
   isFileTooLarge: isClientLogoFileTooLarge,
   isStorageUnavailable: isClientLogoStorageUnavailable,
-} = await import("@/features/admin/projects/live/clients-api");
+} = await import("@/features/clients/data/clients-api");
 const { teamRepository } = await import("@/features/admin/team/team-data/repository");
 const { getIntegrationsRepository } = await import("@/features/admin/integrations/integrations-data/repository");
 const { teamApi, invitationLink } = await import("@/features/admin/team/live/team-api");

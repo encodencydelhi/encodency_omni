@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { clientsApi } from "@/features/admin/projects/live/clients-api";
+import { clientsApi } from "@/features/clients/data/clients-api";
 import { CATEGORY_HINT, CATEGORY_LABEL, PRIORITY_LABEL } from "../labels";
 import { errorMessage, errorReason, useCompanyScope, useCreateTicket, useSupportSummary } from "../hooks";
 import { TICKET_CATEGORIES, TICKET_PRIORITIES, type TicketCategory, type TicketPriority } from "../types";

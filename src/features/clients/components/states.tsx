@@ -17,7 +17,9 @@ export function ClientError({ subject, error, onRetry, className }: { subject: s
 
   const title = notFound ? "Client not found" : notConnected ? "Client service not connected" : `${subject} unavailable`;
   const description = notFound
-    ? "This client does not exist, or it was removed from this demo workspace. Check the link or return to the client list."
+    ? CLIENTS_MOCK_MODE
+      ? "This client does not exist, or it was removed from this demo workspace. Check the link or return to the client list."
+      : "This client does not exist, or it is no longer available in the platform database. Check the link or return to the client list."
     : (api?.message ?? "The request did not complete. Nothing was changed.");
   const Icon = notFound ? SearchXIcon : notConnected ? PlugZapIcon : AlertTriangleIcon;
 

@@ -190,6 +190,16 @@ export function describeClientLogoError(err: unknown): string {
 }
 
 export const clientsApi = {
+  /** GET /clients/portfolio/summary - live statistics for the active Company. */
+  getPortfolio<T>(companyId: string): Promise<T> {
+    return apiClient.request<T>({ method: "GET", path: "/clients/portfolio/summary", headers: companyScopeHeaders(companyId) });
+  },
+
+  /** GET /clients/portfolio/facets - live filters for the active Company. */
+  getFacets<T>(companyId: string): Promise<T> {
+    return apiClient.request<T>({ method: "GET", path: "/clients/portfolio/facets", headers: companyScopeHeaders(companyId) });
+  },
+
   /** GET /clients — requires `clients:read` in the verified Company. */
   list(companyId: string): Promise<ClientRecord[]> {
     return apiClient.request<ClientRecord[]>({ method: "GET", path: "/clients", headers: companyScopeHeaders(companyId) });
@@ -208,6 +218,15 @@ export const clientsApi = {
     return apiClient.request<ClientRecord>({
       method: "GET",
       path: `/clients/${encodeURIComponent(clientId)}`,
+      headers: companyScopeHeaders(companyId, { "x-client-id": clientId }),
+    });
+  },
+
+  /** GET /clients/:id/workspace - live read model for all client profile tabs. */
+  getWorkspace<T>(companyId: string, clientId: string): Promise<T> {
+    return apiClient.request<T>({
+      method: "GET",
+      path: `/clients/${encodeURIComponent(clientId)}/workspace`,
       headers: companyScopeHeaders(companyId, { "x-client-id": clientId }),
     });
   },

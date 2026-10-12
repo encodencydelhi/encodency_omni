@@ -78,8 +78,8 @@ export interface ClientWebsite {
   sitemap: WebsiteFileStatus;
   robots: WebsiteFileStatus;
   redirect: string | null;
-  /** Always demo in this phase; a real crawler will set its own source. */
-  dataSource: "demo";
+  /** Whether technical website information is a live persisted scan or a local demo record. */
+  dataSource: "demo" | "live";
 }
 
 /**

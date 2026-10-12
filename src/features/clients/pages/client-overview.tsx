@@ -220,7 +220,7 @@ function WebsitePanel({ data }: { data: ClientOverviewData }) {
           <KeyValue label="Monitoring">{MONITORING_META[site.monitoring].label}</KeyValue>
           <KeyValue label="Search Console"><StatusBadge registry={ANALYTICS_LINK_META} status={search.gscState} /></KeyValue>
           <KeyValue label="Analytics (GA4)"><StatusBadge registry={ANALYTICS_LINK_META} status={search.ga4State} /></KeyValue>
-          <KeyValue label="Technical data"><DemoTag>Demo data</DemoTag></KeyValue>
+          <KeyValue label="Technical data">{site.dataSource === "live" ? "Latest persisted scan" : <DemoTag>Demo data</DemoTag>}</KeyValue>
         </dl>
       ) : (
         <p className="text-[0.8125rem] text-muted-foreground">No website is configured for this client. Some clients do not have one.</p>

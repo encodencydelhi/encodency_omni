@@ -58,8 +58,8 @@ export function AddClientPage() {
             draft={draft}
             onBack={() => goTo(step - 1)}
             onNext={() => goTo(step + 1)}
-            onDiscard={() => router.push("/admin/projects")}
-            onCreate={() => router.push("/admin/projects")}
+            onDiscard={() => router.push("/admin/clients")}
+            onCreate={() => router.push("/admin/clients")}
           />
         </Card>
 
@@ -81,7 +81,7 @@ function Header() {
   return (
     <header className="relative">
       <div className="flex items-center gap-1 text-[11px] text-[#6B7280]">
-        <Link href="/admin/projects" className="transition-colors hover:text-[#111827]">
+        <Link href="/admin/clients" className="transition-colors hover:text-[#111827]">
           Clients
         </Link>
         <ChevronRight className="size-3" />

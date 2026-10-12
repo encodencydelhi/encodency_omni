@@ -36,6 +36,7 @@ import { CrmImportDialog } from "./components/crm-import-dialog";
 import { leads as seedLeads, activities as seedActivities, teamMembers } from "./data/crm-data";
 import { exportLeadsCsv, listValues } from "./lib/csv";
 import type { Lead, LeadStage, LeadSource, CrmActivity } from "./types";
+import { crmApi } from './data/crm-api';
 
 const STAGE_OPTIONS = ["new", "contacted", "qualified", "proposal", "won", "lost"] as const;
 const SOURCE_OPTIONS = ["website", "google", "facebook", "instagram", "linkedin", "referral", "campaign", "import", "manual", "other"] as const;
@@ -73,7 +74,7 @@ export default function LeadsPage() {
   const [showImport, setShowImport] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => { const t = setTimeout(() => setIsLoading(false), 600); return () => clearTimeout(t); }, []);
+  useEffect(() => { if(process.env.NEXT_PUBLIC_DATA_SOURCE==='api'){Promise.all([crmApi.list<Lead>('lead'),crmApi.list<CrmActivity>('activity')]).then(([rows,activity])=>{setLeads(rows);setActs(activity);}).catch(()=>{}).finally(()=>setIsLoading(false));return;} const t = setTimeout(() => setIsLoading(false), 600); return () => clearTimeout(t); }, []);
 
   const addActivity = useCallback((type: CrmActivity["type"], desc: string, entityId: string, old?: string, newVal?: string) => {
     const entry: CrmActivity = { id: aid(), type, actor: "Priya Sharma", actorInitials: "PS", description: desc, oldValue: old, newValue: newVal, entityId, entityType: "lead", createdAt: new Date().toISOString() };

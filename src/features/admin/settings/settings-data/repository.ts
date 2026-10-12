@@ -6,7 +6,7 @@ import { getStoredCompanyId, setStoredTenancy, clearStoredClientId, DEFAULT_FALL
 import { brandingApi } from "../live/branding-api";
 import { organizationApi, type OrganizationRecord, type UpdateOrganizationPayload } from "../live/organization-api";
 import { teamApi, type TeamActivityRecord, type TeamMemberRecord } from "@/features/admin/team/live/team-api";
-import { clientsApi } from "@/features/admin/projects/live/clients-api";
+import { clientsApi } from "@/features/clients/data/clients-api";
 import type { BackendBillingSummary } from "@/features/admin/billing/billing-data/live-snapshot";
 import { timeAgo } from "@/features/support/time";
 import type { CurrentUserResponse } from "@/types/domain/auth";

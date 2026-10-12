@@ -14,6 +14,7 @@ import { ClientError, PanelSkeleton } from "../components/states";
 import { OnboardingBadge, WorkspaceBadge } from "../components/status-badges";
 import { useClientActions } from "../components/use-client-actions";
 import { ARCHIVE_SLOT_POLICY, ONBOARDING_STEPS, PAUSE_REASON_LABEL, REPORTING_PERIODS } from "../data/config";
+import { CLIENTS_MOCK_MODE } from "../data/config";
 import { describeError, useClientMutations, useClientSettings, useClientTeam } from "../data/hooks";
 import type { ClientSettingsData, OnboardingStepKey } from "../data/types";
 import { useClientId } from "./client-shell";
@@ -62,13 +63,13 @@ function SettingsBody({ data }: { data: ClientSettingsData }) {
 
   return (
     <div className="grid grid-cols-1 gap-1 lg:grid-cols-2">
-      <div className="lg:col-span-2">
-        <AlertBanner tone="info" title="Sample data">
-          Client settings are not connected to a backend yet, so the values on this page — profile,
-          workspace defaults, onboarding and lifecycle — are read from local sample records. The
-          buttons here still save real changes to the client.
-        </AlertBanner>
-      </div>
+      {CLIENTS_MOCK_MODE ? (
+        <div className="lg:col-span-2">
+          <AlertBanner tone="info" title="Sample data">
+            Client settings are read from local sample records in mock mode.
+          </AlertBanner>
+        </div>
+      ) : null}
       <Panel
         title="Identity"
         action={

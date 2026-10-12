@@ -130,4 +130,26 @@ export const superAdminCompaniesApi = {
       query,
     });
   },
+
+  getClient(clientId: string): Promise<SuperAdminClientDirectoryItem> {
+    return apiClient.request<SuperAdminClientDirectoryItem>({
+      method: "GET",
+      path: `/super-admin/clients/${encodeURIComponent(clientId)}`,
+    });
+  },
+
+  getClientWorkspace(clientId: string): Promise<any> {
+    return apiClient.request({
+      method: "GET",
+      path: `/super-admin/clients/${encodeURIComponent(clientId)}/workspace`,
+    });
+  },
+
+  getClientPortfolio(): Promise<any> {
+    return apiClient.request({ method: "GET", path: "/super-admin/clients/portfolio/summary" });
+  },
+
+  getClientFacets(): Promise<any> {
+    return apiClient.request({ method: "GET", path: "/super-admin/clients/portfolio/facets" });
+  },
 };

@@ -19,7 +19,7 @@ import { StepReview } from "./steps/step-8-review";
 import { cn } from "@/lib/utils/cn";
 import { campaignsApi } from "../live/campaigns-api";
 import { whatsappApi } from "@/features/admin/channels/live/whatsapp-api";
-import { clientsApi, type ClientRecord } from "@/features/admin/projects/live/clients-api";
+import { clientsApi, type ClientRecord } from "@/features/clients/data/clients-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";
 
