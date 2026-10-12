@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronDown, LogOut, Menu, Plus, Search, Settings, Upload, UserRound, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { NotificationsMenu } from "@/components/layout/notifications-menu";
+import { AdminGlobalSearch } from "./admin-search";
 import { useAdminContext } from "./admin-context";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { cn } from "@/lib/utils/cn";
@@ -123,16 +124,7 @@ export function AdminTopbar() {
             </span>
           </div>
         </div>
-        <label className="relative flex h-9 w-full max-w-[260px] items-center gap-2.5 rounded-sm bg-[#F4F4F5] px-4 transition-colors hover:bg-[#E4E4E7] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#E4E4E7] focus-within:hover:bg-white">
-          <Search className="size-4 text-[#A1A1AA]" />
-          <input
-            className="min-w-0 flex-1 bg-transparent text-[13px] text-[#27272A] outline-none placeholder:text-[#A1A1AA]"
-            placeholder="Search..."
-          />
-          <kbd className="hidden sm:flex items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[12px] font-medium text-[#A1A1AA] shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-[#E4E4E7]">
-            <span>⌘</span>K
-          </kbd>
-        </label>
+        <AdminGlobalSearch />
       </div>
 
       <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
