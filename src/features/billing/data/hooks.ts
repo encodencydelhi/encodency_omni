@@ -203,6 +203,7 @@ export function useCreditsAndRefunds() {
     requestRefund: billingStore.requestRefund.bind(billingStore),
     approveRefund: billingStore.approveRefund.bind(billingStore),
     rejectRefund: billingStore.rejectRefund.bind(billingStore),
+    markRefundProcessed: billingStore.markRefundProcessed.bind(billingStore),
   };
 }
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { clientsApi, type ClientRecord } from "@/features/admin/projects/live/clients-api";
+import { clientsApi, type ClientRecord } from "@/features/clients/data/clients-api";
 
 /**
  * Inline Client picker for channel pages that gate every request on

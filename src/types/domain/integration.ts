@@ -6,6 +6,7 @@ export const INTEGRATION_PROVIDER = {
   google_business: { label: "Google Business Profile", category: "local" },
   whatsapp: { label: "WhatsApp / AiSensy", category: "messaging" },
   youtube: { label: "YouTube", category: "video" },
+  x: { label: "X", category: "social" },
   search_console: { label: "Search Console", category: "seo" },
   website_analytics: { label: "Website Analytics", category: "analytics" },
 } as const;

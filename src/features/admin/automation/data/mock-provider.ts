@@ -771,4 +771,7 @@ class MockAutomationRepository implements AutomationRepository {
   }
 }
 
-export const automationRepository = new MockAutomationRepository();
+import { LiveAutomationRepository } from './live-provider';
+export const automationRepository: AutomationRepository = process.env.NEXT_PUBLIC_DATA_SOURCE === 'api'
+  ? new LiveAutomationRepository()
+  : new MockAutomationRepository();

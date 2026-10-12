@@ -41,6 +41,24 @@ export type LearningJob = {
   finishedAt: string | null;
 };
 
+export type EvaluationCase = {
+  id: string;
+  name: string;
+  question: string;
+  expected: string | null;
+  category: string | null;
+  enabled: boolean;
+  createdAt: string;
+};
+
+export type LearningAutomation = {
+  enabled: boolean;
+  lastRunAt: string | null;
+  nextRunAt: string | null;
+  failedJobs: number;
+  pendingCandidates: number;
+};
+
 /** Super Admin only: usage and conversations of the in-app assistant. */
 export const assistantDeskApi = {
   overview: (range: DeskRange, signal?: AbortSignal) => apiClient.request<Overview>({ method: "GET", path: `${base}/overview`, query: { range }, signal }),
@@ -52,10 +70,13 @@ export const assistantDeskApi = {
   person: (userId: string, query: Query, signal?: AbortSignal) => apiClient.request<PersonDetail>({ method: "GET", path: `${base}/people/${userId}`, query: clean(query), signal }),
   knowledgeCandidates: (signal?: AbortSignal) => apiClient.request<{ items: KnowledgeCandidate[] }>({ method: "GET", path: `${base}/knowledge/candidates`, signal }),
   knowledgeBase: (signal?: AbortSignal) => apiClient.request<{ faqs: KnowledgeFaq[]; jobs: LearningJob[] }>({ method: "GET", path: `${base}/knowledge/base`, signal }),
+  learningAutomation: (signal?: AbortSignal) => apiClient.request<LearningAutomation>({ method: "GET", path: `${base}/knowledge/automation`, signal }),
   runLearning: () => apiClient.request<LearningJob>({ method: "POST", path: `${base}/knowledge/learning-runs/resolved-tickets` }),
+  retryFailedLearning: () => apiClient.request<{ retried: number }>({ method: "POST", path: `${base}/knowledge/learning-runs/retry-failed` }),
   approveCandidate: (id: string, body: { scope: "COMPANY" | "GLOBAL"; question?: string; answer?: string; note?: string }) => apiClient.request<KnowledgeFaq>({ method: "POST", path: `${base}/knowledge/candidates/${id}/approve`, body }),
   rejectCandidate: (id: string, body: { note?: string }) => apiClient.request<{ rejected: true }>({ method: "POST", path: `${base}/knowledge/candidates/${id}/reject`, body }),
   archiveFaq: (id: string, body: { note?: string }) => apiClient.request<{ archived: true }>({ method: "POST", path: `${base}/knowledge/faqs/${id}/archive`, body }),
+  evaluationCases: (signal?: AbortSignal) => apiClient.request<{ items: EvaluationCase[] }>({ method: "GET", path: `${base}/evaluations/cases`, signal }),
   seedEvaluationDefaults: () => apiClient.request<{ items: unknown[] }>({ method: "POST", path: `${base}/evaluations/seed-defaults` }),
   runEvaluations: () => apiClient.request<{ id: string; status: string; totalCases: number; passed: number; failed: number }>({ method: "POST", path: `${base}/evaluations/run` }),
 };

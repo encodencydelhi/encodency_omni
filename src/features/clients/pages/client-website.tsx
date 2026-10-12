@@ -150,6 +150,7 @@ function WebsiteBody({ data }: { data: ClientWebsiteData }) {
   const crawlRef = useRef<HTMLDivElement>(null);
   const issuesRef = useRef<HTMLDivElement>(null);
   const primary = websites.find((site) => site.id === primaryWebsiteId) ?? null;
+  const isDemo = primary?.dataSource === "demo";
   const canEdit = capabilities.canEditClient && summary.workspace !== "archived";
   const integrationsHref = companySectionHref(summary.company.id, "integrations", { client: summary.client.name });
   const issues = primary ? technicalIssues(primary) : [];
@@ -200,8 +201,8 @@ function WebsiteBody({ data }: { data: ClientWebsiteData }) {
     <div className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
-          <DemoTag>Demo data</DemoTag>
-          <p className="text-2xs text-muted-foreground">Technical results are simulated. Nothing is crawled or synced in this build.</p>
+          {isDemo ? <DemoTag>Demo data</DemoTag> : null}
+          <p className="text-2xs text-muted-foreground">{isDemo ? "Technical results are simulated. Nothing is crawled or synced in this build." : "Technical results come from the latest persisted website scan."}</p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <Button variant="outline" size="sm" onClick={() => scrollTo(crawlRef)} disabled={!primary}>
@@ -240,7 +241,7 @@ function WebsiteBody({ data }: { data: ClientWebsiteData }) {
       {primary ? (
         <div className="grid grid-cols-1 gap-1 lg:grid-cols-2">
           <div ref={crawlRef} className="scroll-mt-28">
-            <Panel title="Crawl summary" description={`${primary.domain} · primary website`} action={<DemoTag>Demo data</DemoTag>}>
+            <Panel title="Crawl summary" description={`${primary.domain} · primary website`} action={isDemo ? <DemoTag>Demo data</DemoTag> : undefined}>
               <dl className="divide-y divide-border">
                 <KeyValue label="Last checked">{primary.lastCheckedAt ? relativeTime(primary.lastCheckedAt) : "Never"}</KeyValue>
                 <KeyValue label="Last crawl">{primary.lastCrawlAt ? relativeTime(primary.lastCrawlAt) : "Not crawled"}</KeyValue>
@@ -252,9 +253,9 @@ function WebsiteBody({ data }: { data: ClientWebsiteData }) {
             </Panel>
           </div>
           <div ref={issuesRef} className="scroll-mt-28">
-            <Panel title="Technical issues" description={issues.length === 0 ? undefined : `${issues.length} found`} action={<DemoTag>Demo data</DemoTag>}>
+            <Panel title="Technical issues" description={issues.length === 0 ? undefined : `${issues.length} found`} action={isDemo ? <DemoTag>Demo data</DemoTag> : undefined}>
               {issues.length === 0 ? (
-                <p className="text-[0.8125rem] text-muted-foreground">No technical issues in the latest demo crawl.</p>
+                <p className="text-[0.8125rem] text-muted-foreground">No technical issues in the latest {isDemo ? "demo " : ""}crawl.</p>
               ) : (
                 <ul className="space-y-1.5">
                   {issues.map((issue) => (

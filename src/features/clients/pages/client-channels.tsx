@@ -21,7 +21,7 @@ import { formatDate } from "@/lib/utils/format";
 import { INTEGRATION_PROVIDER } from "@/types/domain/integration";
 import { ClientError, StatGridSkeleton, TableSkeleton } from "../components/states";
 import { DemoTag } from "../components/status-badges";
-import { clientSectionHref } from "../data/config";
+import { CLIENTS_MOCK_MODE, clientSectionHref } from "../data/config";
 import { describeError, useClientCapabilities, useClientChannels, useClientMutations } from "../data/hooks";
 import type { ClientChannelsData, ClientSummary } from "../data/types";
 import { useClientId } from "./client-shell";
@@ -63,7 +63,7 @@ function ConnectionDrawer({ summary, connection, canAsk, onClose }: { summary: C
             <SheetBody className="space-y-3">
               <div className="flex flex-wrap items-center gap-1.5">
                 <StatusBadge registry={CONNECTION_STATE_META} status={connection.state} withDot />
-                <DemoTag>Demo data</DemoTag>
+                {CLIENTS_MOCK_MODE ? <DemoTag>Demo data</DemoTag> : null}
               </div>
 
               {connection.lastError ? (

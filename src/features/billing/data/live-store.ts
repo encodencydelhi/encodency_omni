@@ -231,6 +231,10 @@ export class LiveBillingStore {
     return this.change<Refund>("POST", `/refunds/${encodeURIComponent(refundId)}/reject`, reason ? { reason } : {});
   }
 
+  public async markRefundProcessed(refundId: string, reference: string): Promise<Refund> {
+    return this.change<Refund>("POST", `/refunds/${encodeURIComponent(refundId)}/mark-processed`, { reference });
+  }
+
   public async recordManualPayment(input: {
     companyId: string;
     billingAccountId: string;

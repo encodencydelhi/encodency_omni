@@ -39,6 +39,7 @@ const PROVIDER_ERRORS: Record<IntegrationProvider, Array<{ code: string; message
     { code: "UPLOAD_400", message: "Video processing failed during transcode" },
     { code: "QUOTA_403", message: "Daily upload quota exhausted" },
   ],
+  x: [],
   search_console: [
     { code: "SITE_403", message: "Property ownership verification lost" },
     { code: "SYNC_500", message: "Search analytics export timed out" },

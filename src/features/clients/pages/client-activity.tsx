@@ -18,6 +18,7 @@ import { useDebouncedText, useUrlParams } from "@/features/companies/hooks/use-u
 import { formatDateTime } from "@/lib/utils/format";
 import { ClientError, TableSkeleton } from "../components/states";
 import { DemoTag, ResultBadge, SeverityBadge } from "../components/status-badges";
+import { CLIENTS_MOCK_MODE } from "../data/config";
 import { useClientActivity } from "../data/hooks";
 import type { ClientActivity, ClientActivityData } from "../data/types";
 import { useClientId } from "./client-shell";
@@ -192,7 +193,7 @@ function ActivityBody({
         <p className="text-2xs text-muted-foreground" aria-live="polite">
           {filtered ? `${entries.length} of ${total} events` : `${total} ${total === 1 ? "event" : "events"}`}
         </p>
-        <DemoTag>Sample activity log - no activity API yet</DemoTag>
+        {CLIENTS_MOCK_MODE ? <DemoTag>Sample activity log</DemoTag> : null}
       </div>
 
       <DataTable

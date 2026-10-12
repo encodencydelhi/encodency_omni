@@ -676,6 +676,20 @@ class BillingStore {
     return refund;
   }
 
+  public markRefundProcessed(refundId: string, reference: string): Refund {
+    const refund = this.refunds.find((r) => r.id === refundId);
+    if (!refund) throw new Error("Refund Not Found");
+    if (refund.status !== "processing" && refund.status !== "approved") {
+      throw new Error("Only approved or processing refunds can be marked as processed.");
+    }
+    refund.status = "succeeded";
+    refund.providerRefundReference = reference;
+    refund.processedAt = new Date().toISOString();
+    this.logActivity("refund_processed", refund.companyId, refund.companyName, refund.reference, `Refund ${refund.reference} processed (${reference})`);
+    this.notify();
+    return refund;
+  }
+
   public updatePolicies(newPolicies: Partial<BillingPolicies>): void {
     this.policies = { ...this.policies, ...newPolicies };
     this.logActivity(
@@ -738,6 +752,7 @@ export type BillingStoreMutations = {
     | "requestRefund"
     | "approveRefund"
     | "rejectRefund"
+    | "markRefundProcessed"
     | "recordManualPayment"
     | "updateBillingAccount"
     | "updateReconciliationIssue"

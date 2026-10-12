@@ -8,6 +8,7 @@
 
 import { WEBSITE_MOCK_MODE } from "./config";
 import { MockWebsiteProvider, UnavailableWebsiteProvider } from "./mock-provider";
+import { LiveWebsiteProvider } from "./live-provider";
 import { findClientProfile } from "./mock-dataset";
 import type {
   IntegrationKey,
@@ -21,7 +22,7 @@ let provider: WebsiteDataProvider | null = null;
 
 function getProvider(): WebsiteDataProvider {
   if (!provider) {
-    provider = WEBSITE_MOCK_MODE ? new MockWebsiteProvider() : new UnavailableWebsiteProvider();
+    provider = WEBSITE_MOCK_MODE ? new MockWebsiteProvider() : new LiveWebsiteProvider();
   }
   return provider;
 }

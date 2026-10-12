@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { adminOrganization, adminClients } from "@/mocks/admin/admin-dashboard.mock";
-import { clientsApi, type ClientRecord } from "@/features/admin/projects/live/clients-api";
+import { clientsApi, type ClientRecord } from "@/features/clients/data/clients-api";
 import { organizationApi, type OrganizationRecord } from "@/features/admin/settings/live/organization-api";
 import { brandingApi } from "@/features/admin/settings/live/branding-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";

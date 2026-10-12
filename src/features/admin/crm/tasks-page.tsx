@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Plus, MoreHorizontal, Eye, Pencil, Trash2, CheckCircle2, Clock,
   Calendar, Phone, Mail, Users, AlertCircle, ListTodo, CalendarDays,
@@ -36,6 +36,7 @@ import { tasks as initialTasks, activities } from "./data/crm-data";
 import type { CrmTask, TaskStatus, TaskPriority, TaskType, TaskViewMode } from "./types";
 import { TASK_STATUS_REGISTRY, TASK_PRIORITY_REGISTRY } from "./types";
 import { formatDate } from "@/lib/utils/format";
+import { crmApi } from './data/crm-api';
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                            */
@@ -148,6 +149,7 @@ function computeMonthlyTasks(tasks: CrmTask[]): MonthlyPoint[] {
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<CrmTask[]>(initialTasks);
+  useEffect(()=>{if(process.env.NEXT_PUBLIC_DATA_SOURCE==='api')crmApi.list<CrmTask>('task').then(setTasks).catch(()=>{});},[]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);

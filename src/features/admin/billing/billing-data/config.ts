@@ -33,7 +33,7 @@ export const LIMIT_META: Record<
   LimitKey,
   { label: string; short: string; unit: string; perPeriod: boolean; link: { label: string; href: string } | null; format?: "storage" }
 > = {
-  clients: { label: "Clients", short: "Clients", unit: "clients", perPeriod: false, link: { label: "Manage clients", href: "/admin/projects" } },
+  clients: { label: "Clients", short: "Clients", unit: "clients", perPeriod: false, link: { label: "Manage clients", href: "/admin/clients" } },
   teamMembers: { label: "Team members", short: "Team members", unit: "seats", perPeriod: false, link: { label: "Manage team", href: "/admin/team" } },
   channels: { label: "Connected channels", short: "Channels", unit: "channels", perPeriod: false, link: { label: "Manage integrations", href: "/admin/integrations" } },
   aiCredits: { label: "AI credits", short: "AI credits", unit: "credits", perPeriod: true, link: null },

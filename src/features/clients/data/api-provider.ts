@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/types/api";
 import type { ClientsRepository, LifecycleAction } from "./repository";
-import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCompanySlot, ClientCreationCompany, EligibleMember, MutationActor, ClientTeamData, ClientAssignmentView, ClientOverviewData } from "./types";
+import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCompanySlot, ClientCreationCompany, EligibleMember, MutationActor, ClientTeamData, ClientAssignmentView, ClientOverviewData, ClientChannelsData, ClientWebsiteData, ClientActivityData, ClientActivityFilter, ClientSettingsData, ClientPortfolio, ClientFacets } from "./types";
 import type { OrganisationRole } from "@/types/domain/user";
 import type { CompanyClient } from "@/features/companies/data/types";
 import { unavailableClientsProvider } from "./unavailable-provider";
@@ -13,6 +13,28 @@ import { superAdminCompaniesApi } from "@/features/companies/live/super-admin-co
 
 function getCompanyIdHeader(): string {
   return getStoredCompanyId();
+}
+
+function isSuperAdminRoute(): boolean {
+  return typeof window !== "undefined" && window.location.pathname.startsWith("/super-admin/");
+}
+
+async function getSuperAdminWorkspace(id: string): Promise<{
+  summary: ClientSummary;
+  overview: ClientOverviewData;
+  team: ClientTeamData;
+  channels: ClientChannelsData;
+  websiteSeo: ClientWebsiteData;
+  activity: ClientActivityData;
+  settings: ClientSettingsData;
+}> {
+  return superAdminCompaniesApi.getClientWorkspace(id);
+}
+
+type ClientWorkspace = Awaited<ReturnType<typeof getSuperAdminWorkspace>>;
+
+async function getCompanyWorkspace(companyId: string, clientId: string): Promise<ClientWorkspace> {
+  return clientsApi.getWorkspace<ClientWorkspace>(companyId, clientId);
 }
 
 const LANGUAGE_NAME_TO_CODE: Record<string, string> = {
@@ -256,7 +278,11 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
             query: toListQuery(query),
             headers: { "x-company-id": companyId }
           });
-          const clients = (Array.isArray(rawClients) ? rawClients : []).map((c) => toClientSummary(c));
+          const clients = await Promise.all(
+            (Array.isArray(rawClients) ? rawClients : []).map((client) =>
+              getCompanyWorkspace(companyId, client.id).then((workspace) => workspace.summary),
+            ),
+          );
           for (const c of clients) {
             try {
               const bundle = ensureBundle(companyId, c.company.name);
@@ -297,8 +323,10 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
           search: query.search || undefined,
           companyId: query.company && UUID_PATTERN.test(query.company) ? query.company : undefined,
         });
-        const liveClients = (directory.items ?? []).map((item) =>
-          toClientSummary(item, { id: item.companyId, name: item.companyName }),
+        const liveClients = await Promise.all(
+          (directory.items ?? []).map((item) =>
+            getSuperAdminWorkspace(item.id).then((workspace) => workspace.summary),
+          ),
         );
         return {
           data: liveClients,
@@ -383,38 +411,15 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async getClient(id: string): Promise<ClientSummary> {
+      if (isSuperAdminRoute()) {
+        return (await getSuperAdminWorkspace(id)).summary;
+      }
       const companyId = getCompanyIdHeader();
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) {
         return fallback.getClient(id);
       }
 
-      try {
-        const raw = await apiClient.request<any>({
-          method: "GET",
-          path: `/clients/${id}`,
-          headers: { 
-            "x-company-id": companyId,
-            "x-client-id": id
-          }
-        });
-        const summary = toClientSummary(raw);
-        // The detail endpoint carries no member counts; fill them from the members
-        // list so the "Assigned members" strip never renders the placeholder 0.
-        try {
-          const members = await clientsApi.listMembers(companyId, id);
-          return {
-            ...summary,
-            counts: { ...summary.counts, assigned: members.length, activeMembers: members.length },
-          };
-        } catch {
-          return summary;
-        }
-      } catch (err) {
-        if (ApiError.isApiError(err) && (err.status === 400 || err.status === 404)) {
-          return fallback.getClient(id);
-        }
-        throw err;
-      }
+      return (await getCompanyWorkspace(companyId, id)).summary;
     },
 
     async listCreationCompanies(): Promise<ClientCreationCompany[]> {
@@ -568,64 +573,70 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     exportClients: fallback.exportClients,
-    getPortfolio: fallback.getPortfolio,
-    getFacets: fallback.getFacets,
-
-    /** Everything except the team panel still comes from the fallback; the assigned team and its
-     * counts are replaced with GET /clients/:id/members so the overview never shows mock rows. */
-    async getOverview(id: string): Promise<ClientOverviewData> {
-      const overview = await fallback.getOverview(id);
+    async getPortfolio() {
+      if (isSuperAdminRoute()) return superAdminCompaniesApi.getClientPortfolio();
       const companyId = getCompanyIdHeader();
-      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) return overview;
-      try {
-        const members = await clientsApi.listMembers(companyId, id);
-        return {
-          ...overview,
-          team: members.map(toAssignmentView),
-          summary: {
-            ...overview.summary,
-            counts: {
-              ...overview.summary.counts,
-              assigned: members.length,
-              activeMembers: members.length,
-            },
-          },
-        };
-      } catch (err) {
-        console.warn("Live clientsApi.listMembers failed for overview, keeping fallback team:", err);
-        return overview;
-      }
+      if (companyId && UUID_PATTERN.test(companyId)) return clientsApi.getPortfolio<ClientPortfolio>(companyId);
+      return fallback.getPortfolio();
+    },
+    async getFacets() {
+      if (isSuperAdminRoute()) return superAdminCompaniesApi.getClientFacets();
+      const companyId = getCompanyIdHeader();
+      if (companyId && UUID_PATTERN.test(companyId)) return clientsApi.getFacets<ClientFacets>(companyId);
+      return fallback.getFacets();
+    },
+
+    async getOverview(id: string): Promise<ClientOverviewData> {
+      if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).overview;
+      const companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) return fallback.getOverview(id);
+      return (await getCompanyWorkspace(companyId, id)).overview;
     },
 
     async getTeam(id: string): Promise<ClientTeamData> {
+      if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).team;
       const companyId = getCompanyIdHeader();
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) {
         return fallback.getTeam(id);
       }
-      try {
-        const [summary, rawMembers, eligible] = await Promise.all([
-          provider.getClient(id),
-          clientsApi.listMembers(companyId, id),
-          provider.listEligibleMembers(companyId, id),
-        ]);
-
-        const assignments: ClientAssignmentView[] = (rawMembers as any[]).map(toAssignmentView);
-
-        return {
-          summary,
-          assignments,
-          eligibleMembers: eligible,
-        };
-      } catch (err) {
-        console.warn("Live clientsApi.listMembers failed, falling back to mock:", err);
-        return fallback.getTeam(id);
-      }
+      return (await getCompanyWorkspace(companyId, id)).team;
     },
 
-    getChannels: fallback.getChannels,
-    getWebsiteSeo: fallback.getWebsiteSeo,
-    getActivity: fallback.getActivity,
-    getSettings: fallback.getSettings,
+    async getChannels(id: string): Promise<ClientChannelsData> {
+      if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).channels;
+      const companyId = getCompanyIdHeader();
+      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) return (await getCompanyWorkspace(companyId, id)).channels;
+      return fallback.getChannels(id);
+    },
+    async getWebsiteSeo(id: string): Promise<ClientWebsiteData> {
+      if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).websiteSeo;
+      const companyId = getCompanyIdHeader();
+      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) return (await getCompanyWorkspace(companyId, id)).websiteSeo;
+      return fallback.getWebsiteSeo(id);
+    },
+    async getActivity(id: string, filter: ClientActivityFilter): Promise<ClientActivityData> {
+      const companyId = getCompanyIdHeader();
+      if (!isSuperAdminRoute() && (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id))) return fallback.getActivity(id, filter);
+      const data = isSuperAdminRoute() ? (await getSuperAdminWorkspace(id)).activity : (await getCompanyWorkspace(companyId!, id)).activity;
+      const entries = data.entries.filter((entry) => {
+        const term = filter.search?.trim().toLowerCase();
+        if (filter.actor && entry.actor.name !== filter.actor) return false;
+        if (filter.module && entry.module !== filter.module) return false;
+        if (filter.event && entry.action !== filter.event) return false;
+        if (filter.severity && entry.severity !== filter.severity) return false;
+        if (filter.result && entry.result !== filter.result) return false;
+        if (filter.from && entry.at < filter.from) return false;
+        if (filter.to && entry.at >= `${filter.to}T23:59:59.999Z`) return false;
+        return !term || [entry.summary, entry.action, entry.actor.name, entry.entity.label].some((value) => value.toLowerCase().includes(term));
+      });
+      return { ...data, entries };
+    },
+    async getSettings(id: string): Promise<ClientSettingsData> {
+      if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).settings;
+      const companyId = getCompanyIdHeader();
+      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) return (await getCompanyWorkspace(companyId, id)).settings;
+      return fallback.getSettings(id);
+    },
 
     async updateClient(id: string, input: UpdateClientInput, actor): Promise<ClientSummary> {
       const companyId = getCompanyIdHeader();

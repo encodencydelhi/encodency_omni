@@ -291,7 +291,7 @@ function WebsiteHeader() {
               <DropdownMenuItem onSelect={() => navigate("/admin/website/settings")} className="text-[12px]">
                 <Settings2 className="size-3.5" /> Website settings
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => navigate("/admin/projects")} className="text-[12px]">
+              <DropdownMenuItem onSelect={() => navigate("/admin/clients")} className="text-[12px]">
                 <UserRound className="size-3.5" /> Open client profile
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -400,7 +400,7 @@ export function WebsiteShell({ children }: { children: ReactNode }) {
       {!hasClient ? (
         <NoClientSelectedState />
       ) : !hasWebsite ? (
-        <NoWebsiteState clientName={clientName} onOpenClientProfile={() => navigate("/admin/projects")} />
+        <NoWebsiteState clientName={clientName} onOpenClientProfile={() => navigate("/admin/clients")} />
       ) : (
         <>
           <div className="mb-3 mt-1">

@@ -180,7 +180,7 @@ export function WebsiteSettingsPage() {
             </dl>
 
             <div className="mt-3 flex flex-wrap gap-1.5">
-              <WButton icon={Globe} onClick={() => navigate("/admin/projects")}>
+              <WButton icon={Globe} onClick={() => navigate("/admin/clients")}>
                 Open Client Profile
               </WButton>
               <WButton icon={ShieldCheck} onClick={() => openIntegration("ownership")}>
@@ -677,7 +677,7 @@ export function WebsiteSettingsPage() {
               The website URL cannot be removed from here. It lives on the Client Profile, and removing it there is what
               switches this module off for the client.
             </p>
-            <WButton className="mt-3" icon={Globe} onClick={() => navigate("/admin/projects")}>
+            <WButton className="mt-3" icon={Globe} onClick={() => navigate("/admin/clients")}>
               Open Client Profile
             </WButton>
           </Card>
