@@ -796,6 +796,14 @@ function SchemaTab({ report }: { report: NonNullable<ReturnType<typeof useWebsit
 }
 
 function SearchConsoleTab({ data }: { data: NonNullable<NonNullable<ReturnType<typeof useWebsiteSeo>["data"]>["searchConsole"]> }) {
+  const runtime = data as typeof data & { topQueries?: SearchQueryRow[]; topPages?: typeof data.pages };
+  const totals = data.totals ?? { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+  const deltas = data.deltas ?? { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+  const trend = data.trend ?? [];
+  const queries = data.queries ?? runtime.topQueries ?? [];
+  const devices = data.devices ?? [];
+  const countries = data.countries ?? [];
+  const ctrPercent = totals.ctr > 0 && totals.ctr <= 1 ? totals.ctr * 100 : totals.ctr;
   const queryColumns: Column<SearchQueryRow>[] = [
     {
       key: "query",
@@ -825,13 +833,13 @@ function SearchConsoleTab({ data }: { data: NonNullable<NonNullable<ReturnType<t
   return (
     <div className="space-y-1">
       <div className="grid grid-cols-2 gap-1 lg:grid-cols-4">
-        <StatTile label="Clicks" value={formatNumber(data.totals.clicks)} delta={data.deltas.clicks} tone="info" sub="Last 28 days" />
-        <StatTile label="Impressions" value={formatCompact(data.totals.impressions)} delta={data.deltas.impressions} tone="violet" sub="Last 28 days" />
-        <StatTile label="CTR" value={`${data.totals.ctr.toFixed(2)}%`} delta={data.deltas.ctr} deltaSuffix="pp" tone="good" sub="Clicks ÷ impressions" />
+        <StatTile label="Clicks" value={formatNumber(totals.clicks)} delta={deltas.clicks} tone="info" sub="Last 28 days" />
+        <StatTile label="Impressions" value={formatCompact(totals.impressions)} delta={deltas.impressions} tone="violet" sub="Last 28 days" />
+        <StatTile label="CTR" value={`${ctrPercent.toFixed(2)}%`} delta={deltas.ctr} deltaSuffix="pp" tone="good" sub="Clicks / impressions" />
         <StatTile
           label="Average position"
-          value={data.totals.position.toFixed(1)}
-          delta={data.deltas.position}
+          value={totals.position.toFixed(1)}
+          delta={deltas.position}
           inverseDelta
           deltaSuffix=""
           tone="warn"
@@ -849,7 +857,7 @@ function SearchConsoleTab({ data }: { data: NonNullable<NonNullable<ReturnType<t
         />
         <div className="h-[220px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data.trend} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}>
+            <LineChart data={trend} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}>
               <CartesianGrid {...GRID_PROPS} />
               <XAxis dataKey="date" {...AXIS_PROPS} tickFormatter={formatShortDate} minTickGap={28} />
               <YAxis {...AXIS_PROPS} width={46} tickFormatter={(value: number) => formatCompact(value)} />
@@ -873,14 +881,14 @@ function SearchConsoleTab({ data }: { data: NonNullable<NonNullable<ReturnType<t
 
       <div className="grid gap-1 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <Card title="Top queries" icon={Search} bodyClassName="p-0">
-          <DataTable columns={queryColumns} rows={data.queries} getRowId={(row) => row.query} empty={<EmptyState title="No queries" body="No search data in this period." />} dense />
+          <DataTable columns={queryColumns} rows={queries} getRowId={(row) => row.query} empty={<EmptyState title="No queries" body="No search data in this period." />} dense />
         </Card>
 
         <div className="grid gap-1">
           <Card title="Devices" icon={ListTree} bodyClassName="p-3.5 pt-2">
             <div className="h-[132px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.devices} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                <BarChart data={devices} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                   <CartesianGrid {...GRID_PROPS} />
                   <XAxis dataKey="device" {...AXIS_PROPS} />
                   <YAxis {...AXIS_PROPS} width={42} tickFormatter={(value: number) => formatCompact(value)} />
@@ -893,7 +901,7 @@ function SearchConsoleTab({ data }: { data: NonNullable<NonNullable<ReturnType<t
 
           <Card title="Top countries" icon={ListTree} bodyClassName="p-0">
             <ul className="divide-y divide-[#F2F5FA]">
-              {data.countries.map((country) => (
+              {countries.map((country) => (
                 <li key={country.country} className="flex items-center justify-between gap-2 px-3.5 py-2">
                   <span className="text-[11.5px] text-[#334155]">{country.country}</span>
                   <span className="text-[11.5px] font-semibold text-[#28354C]">{formatNumber(country.clicks)}</span>

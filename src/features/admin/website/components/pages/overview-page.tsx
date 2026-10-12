@@ -123,6 +123,8 @@ export function WebsiteOverviewPage() {
   );
   const bySeverity = useMemo(() => countBySeverity(openIssues), [openIssues]);
   const problemPages = useMemo(() => topProblemPages(pages.data ?? [], 6), [pages.data]);
+  const aiAudit = (summary.data as (typeof summary.data & { aiAudit?: { executiveSummary?: string; priorities?: { title?: string; explanation?: string }[] }; aiAuditMeta?: { openai?: boolean; gemini?: boolean } }) | undefined)?.aiAudit;
+  const aiAuditMeta = (summary.data as (typeof summary.data & { aiAuditMeta?: { openai?: boolean; gemini?: boolean } }) | undefined)?.aiAuditMeta;
 
   return (
     <div className="space-y-1">
@@ -312,6 +314,26 @@ export function WebsiteOverviewPage() {
       </div>
 
       {/* D + C — trend and needs attention */}
+      {aiAudit ? (
+        <Card title="AI audit summary" icon={FileSearch} subtitle="Measured crawl data, independent model reviews, then a final merged assessment">
+          <p className="text-[12px] leading-relaxed text-[#4A5A73]">{aiAudit.executiveSummary}</p>
+          {aiAudit.priorities?.length ? (
+            <ul className="mt-3 grid gap-2 md:grid-cols-2">
+              {aiAudit.priorities.slice(0, 4).map((priority, index) => (
+                <li key={`${priority.title}-${index}`} className="border-l-2 border-[#2563EB] pl-2.5">
+                  <p className="text-[11.5px] font-semibold text-[#28354C]">{priority.title}</p>
+                  <p className="mt-0.5 text-[10.5px] leading-relaxed text-[#6B7A94]">{priority.explanation}</p>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <Chip tone={aiAuditMeta?.openai ? "good" : "muted"}>{aiAuditMeta?.openai ? "OpenAI reviewed" : "OpenAI unavailable"}</Chip>
+            <Chip tone={aiAuditMeta?.gemini ? "good" : "muted"}>{aiAuditMeta?.gemini ? "Gemini reviewed" : "Gemini unavailable"}</Chip>
+          </div>
+        </Card>
+      ) : null}
+
       <div className="grid gap-1 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <Card
           title="Website health trend"
