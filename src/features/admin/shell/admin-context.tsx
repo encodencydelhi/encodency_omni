@@ -43,7 +43,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const { companyId, isReady, setClientId } = useTenancyContext();
   const [organization, setOrganization] = useState<Organization>(adminOrganization);
   const [Clients, setClients] = useState<Project[]>(adminClients);
-  const [selectedProjectId, setSelectedProjectId] = useState<AdminClientscope>("moksha-sewa");
+  // Start without a bundled placeholder selection. Live client data resolves
+  // the active UUID before client-scoped requests are allowed to run.
+  const [selectedProjectId, setSelectedProjectId] = useState<AdminClientscope>("all");
   const [hasLiveClients, setHasLiveClients] = useState(false);
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobileNavOpen, setMobileNavOpen] = useState(false);

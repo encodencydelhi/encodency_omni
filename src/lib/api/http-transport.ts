@@ -90,7 +90,9 @@ export class HttpTransport implements Transport {
 
     if (response.status === 204) return undefined as TResult;
 
-    const payload = (await response.json()) as { data?: TResult } | TResult;
+    const raw = await response.text();
+    if (!raw.trim()) return null as TResult;
+    const payload = JSON.parse(raw) as { data?: TResult } | TResult;
     return payload && typeof payload === "object" && "data" in payload && !("pagination" in payload)
       ? ((payload as { data: TResult }).data)
       : (payload as TResult);

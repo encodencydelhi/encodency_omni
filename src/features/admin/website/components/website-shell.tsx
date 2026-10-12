@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils/cn";
 import { useWebsiteCapabilities, useWebsiteSummary, useWebsiteTarget } from "../data/hooks";
+import { WEBSITE_MOCK_MODE } from "../data/config";
 import { formatRelative } from "../data/selectors";
 import { integrationStatusLabel, integrationTone } from "../data/capability-provider";
 import type { IntegrationKey, LiveStatus } from "../data/types";
@@ -190,7 +191,7 @@ function WebsiteHeader() {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
               <h1 className="text-[19px] font-semibold tracking-[-0.02em] text-[#0F1A38]">Website</h1>
-              <IntegrationPendingBadge label="Live Crawler Integration Pending" />
+              {WEBSITE_MOCK_MODE ? <IntegrationPendingBadge label="Live Crawler Integration Pending" /> : null}
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
               {hasWebsite && websiteUrl ? (
@@ -214,16 +215,9 @@ function WebsiteHeader() {
                   <Chip tone={target.https ? "good" : "bad"} icon={target.https ? Lock : ShieldAlert}>
                     {target.https ? "HTTPS" : "No HTTPS"}
                   </Chip>
-                  <Chip tone={target.verified ? "good" : "muted"} icon={target.verified ? ShieldCheck : ShieldAlert}>
-                    {target.verified ? "Ownership verified" : "Not verified"}
-                  </Chip>
                   <span className="inline-flex items-center gap-1 text-[11px] text-[#6B7A94]">
                     <Timer className="size-3" aria-hidden />
                     Last scan {formatRelative(target.lastScannedAt)}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-[#6B7A94]">
-                    <RefreshCw className="size-3" aria-hidden />
-                    Next scan {formatRelative(target.nextScanAt)}
                   </span>
                 </>
               ) : null}
@@ -281,13 +275,6 @@ function WebsiteHeader() {
                 <Wifi className="size-3.5" /> Uptime check
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                disabled={!hasWebsite}
-                onSelect={() => openIntegration("ownership")}
-                className="text-[12px]"
-              >
-                <ShieldCheck className="size-3.5" /> Re-verify ownership
-              </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => navigate("/admin/website/settings")} className="text-[12px]">
                 <Settings2 className="size-3.5" /> Website settings
               </DropdownMenuItem>
@@ -305,7 +292,7 @@ function WebsiteHeader() {
           <span className="text-[10.5px] font-semibold uppercase tracking-[0.05em] text-[#94A3B8]">
             Integrations
           </span>
-          {(["ga4", "searchConsole", "omniTracking"] as IntegrationKey[]).map((key) => {
+          {(["ga4", "searchConsole"] as IntegrationKey[]).map((key) => {
             const integration = capabilities?.integrations[key];
             const tone = integration ? integrationTone(integration.status) : "muted";
             return (
@@ -403,12 +390,14 @@ export function WebsiteShell({ children }: { children: ReactNode }) {
         <NoWebsiteState clientName={clientName} onOpenClientProfile={() => navigate("/admin/clients")} />
       ) : (
         <>
-          <div className="mb-3 mt-1">
-            <IntegrationPendingBanner
-              moduleName="Website Intelligence"
-              feature="live multi-page crawler, Lighthouse real-time audit triggers, and GA4 telemetry collector"
-            />
-          </div>
+          {WEBSITE_MOCK_MODE ? (
+            <div className="mb-3 mt-1">
+              <IntegrationPendingBanner
+                moduleName="Website Intelligence"
+                feature="live multi-page crawler, Lighthouse real-time audit triggers, and GA4 telemetry collector"
+              />
+            </div>
+          ) : null}
           {children}
         </>
       )}

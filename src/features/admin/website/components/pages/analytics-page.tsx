@@ -22,7 +22,6 @@ import {
 import {
   Activity,
   BarChart3,
-  Flame,
   Globe2,
   Layers,
   MonitorSmartphone,
@@ -54,8 +53,6 @@ export function WebsiteAnalyticsPage() {
   const capabilities = useWebsiteCapabilities(clientId);
 
   const ga4 = evaluateFeature(capabilities.data, "audience-analytics");
-  const behaviour = evaluateFeature(capabilities.data, "behaviour-events");
-  const heatmaps = evaluateFeature(capabilities.data, "heatmaps");
 
   if (analytics.isLoading || capabilities.isLoading) {
     return (
@@ -75,7 +72,7 @@ export function WebsiteAnalyticsPage() {
   }
 
   if (!ga4.available || !analytics.data) {
-    return <AnalyticsLocked onConnect={() => openIntegration("ga4")} />;
+    return <AnalyticsLocked integration={capabilities.data?.integrations.ga4} onConnect={() => openIntegration("ga4")} />;
   }
 
   const data = analytics.data;
@@ -177,16 +174,10 @@ export function WebsiteAnalyticsPage() {
                 stage={stage}
                 first={index === 0}
                 maxValue={data.funnel[0]?.value ?? 1}
-                onUnlock={() => openIntegration("omniTracking")}
+                onUnlock={() => undefined}
               />
             ))}
           </ol>
-          {!behaviour.available ? (
-            <p className="mt-2 rounded-md bg-[#FDF3E3] px-2.5 py-2 text-[10.5px] leading-relaxed text-[#9A5B08]">
-              CTA clicks and form starts need Omni Tracking on the website. Form submits below come from a GA4 event
-              the site already sends.
-            </p>
-          ) : null}
         </Card>
       </div>
 
@@ -315,26 +306,6 @@ export function WebsiteAnalyticsPage() {
             </ul>
           </Card>
 
-          <Card title="Heatmaps" icon={Flame}>
-            {heatmaps.available ? (
-              <EmptyState
-                title="Heatmap rendering is not built yet"
-                body="Omni Tracking is installed and collecting interaction events. The heatmap renderer ships with the tracking backend."
-                icon={Flame}
-                compact
-                className="!py-4"
-              />
-            ) : (
-              <LockedState
-                title={heatmaps.lockedTitle}
-                body={heatmaps.lockedBody}
-                ctaLabel={heatmaps.ctaLabel}
-                onCta={() => openIntegration("omniTracking")}
-                compact
-                className="!py-4"
-              />
-            )}
-          </Card>
         </div>
       </div>
     </div>
@@ -343,7 +314,13 @@ export function WebsiteAnalyticsPage() {
 
 /* ------------------------------------------------------------------ */
 
-function AnalyticsLocked({ onConnect }: { onConnect: () => void }) {
+function AnalyticsLocked({
+  integration,
+  onConnect,
+}: {
+  integration?: { property: string | null; status: string; detail: string };
+  onConnect: () => void;
+}) {
   const unlocks = [
     { icon: Users, label: "Users & sessions", detail: "How many people visit, and how often they come back." },
     { icon: Layers, label: "Traffic sources", detail: "Which channels bring them — search, social, direct, paid." },
@@ -357,9 +334,13 @@ function AnalyticsLocked({ onConnect }: { onConnect: () => void }) {
     <div className="space-y-1">
       <Card title="Google Analytics" icon={Activity}>
         <LockedState
-          title="Google Analytics not connected"
-          body="This website has no GA4 property linked, so there is no visitor data to show. We will not estimate traffic — connect the property the client already owns and the numbers below become real."
-          ctaLabel="Connect Google Analytics"
+          title={integration?.property ? "Google Analytics sync pending" : "Google Analytics not configured"}
+          body={
+            integration?.property
+              ? `${integration.detail || "The GA4 property is saved."} Visitor metrics will appear after the server-side sync completes; traffic is never estimated.`
+              : "Save the GA4 property for this client to begin verified server-side reporting. Traffic is never estimated."
+          }
+          ctaLabel={integration?.property ? "View GA4 configuration" : "Configure Google Analytics"}
           onCta={onConnect}
         />
       </Card>

@@ -22,7 +22,6 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAdminContext } from "@/features/admin/shell/admin-context";
-import { websiteRepository } from "../data/repository";
 import { useScanRunner, type ScanRunner } from "../data/hooks";
 import { scanTypeLabel } from "../data/selectors";
 import type { IntegrationKey, ScanType } from "../data/types";
@@ -42,6 +41,7 @@ export interface ClientWebsiteOption {
   id: string;
   name: string;
   domain: string | null;
+  websiteUrl: string | null;
 }
 
 interface WebsiteWorkspaceValue {
@@ -66,6 +66,18 @@ interface WebsiteWorkspaceValue {
 
 const WebsiteWorkspaceContext = createContext<WebsiteWorkspaceValue | null>(null);
 
+function websiteDetails(website: string | null | undefined): Pick<ClientWebsiteOption, "domain" | "websiteUrl"> {
+  const value = website?.trim();
+  if (!value) return { domain: null, websiteUrl: null };
+
+  try {
+    const url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+    return { domain: url.hostname, websiteUrl: url.href };
+  } catch {
+    return { domain: null, websiteUrl: null };
+  }
+}
+
 export function useWebsiteWorkspace(): WebsiteWorkspaceValue {
   const context = useContext(WebsiteWorkspaceContext);
   if (!context) throw new Error("useWebsiteWorkspace must be used inside WebsiteWorkspaceProvider");
@@ -81,16 +93,18 @@ export function WebsiteWorkspaceProvider({ children }: { children: ReactNode }) 
       Clients.map((client) => ({
         id: client.id,
         name: client.name,
-        domain: websiteRepository.resolveClientWebsite(client.id)?.domain ?? null,
+        ...websiteDetails(client.website),
       })),
     [Clients],
   );
 
-  const hasClient = selectedProjectId !== "all" && selectedProjectId.length > 0;
   const active = clients.find((client) => client.id === selectedProjectId);
-  const clientId = hasClient ? selectedProjectId : "";
+  // Never pass a bundled slug or a stale browser value to a tenant-scoped API.
+  const hasClient = Boolean(active);
+  const clientId = active?.id ?? "";
   const clientName = active?.name ?? "";
   const domain = active?.domain ?? null;
+  const websiteUrl = active?.websiteUrl ?? null;
 
   /* Overlays ------------------------------------------------------- */
   const [issueId, setIssueId] = useState<string | null>(null);
@@ -184,8 +198,8 @@ export function WebsiteWorkspaceProvider({ children }: { children: ReactNode }) 
       clientId,
       clientName,
       domain,
-      websiteUrl: domain ? `https://${domain}` : null,
-      hasWebsite: Boolean(domain),
+      websiteUrl,
+      hasWebsite: Boolean(websiteUrl),
       hasClient,
       clients,
       selectClient,
@@ -198,7 +212,7 @@ export function WebsiteWorkspaceProvider({ children }: { children: ReactNode }) 
       navigate,
       registerUnsavedGuard,
     }),
-    [clientId, clientName, domain, hasClient, clients, selectClient, scan, runScan, navigate, registerUnsavedGuard],
+    [clientId, clientName, domain, websiteUrl, hasClient, clients, selectClient, scan, runScan, navigate, registerUnsavedGuard],
   );
 
   return (

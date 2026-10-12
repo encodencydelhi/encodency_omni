@@ -189,13 +189,7 @@ export function WebsiteOverviewPage() {
                     {summary.data.target.https ? "Valid certificate" : "Not secure"}
                   </Chip>
                 </KeyValue>
-                <KeyValue label="Ownership" className="py-1">
-                  <Chip tone={summary.data.target.verified ? "good" : "muted"}>
-                    {summary.data.target.verified ? "Verified" : "Not verified"}
-                  </Chip>
-                </KeyValue>
                 <KeyValue label="Last scanned" className="py-1">{formatRelative(summary.data.target.lastScannedAt)}</KeyValue>
-                <KeyValue label="Next scan" className="py-1">{formatRelative(summary.data.target.nextScanAt)}</KeyValue>
               </dl>
 
               <div className="mt-2 flex flex-wrap gap-1.5">
