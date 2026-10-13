@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { RotateCcw, X, Loader2, Check } from "lucide-react";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 interface ResetPreferencesModalProps {
   open: boolean;
@@ -12,6 +13,7 @@ interface ResetPreferencesModalProps {
 export function ResetPreferencesModal({ open, onClose, onConfirm }: ResetPreferencesModalProps) {
   const [loading, setLoading] = useState(false);
 
+  useScrollLock(open);
   if (!open) return null;
 
   const handleReset = async () => {

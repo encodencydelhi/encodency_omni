@@ -1,9 +1,11 @@
 "use client";
 
-import { Users, UserPlus, TrendingUp, Clock, Phone, Mail, Building2, Target, CheckCircle2, AlertCircle, ListTodo, CalendarClock } from "lucide-react";
+import { useState } from "react";
+import { Users, UserPlus, TrendingUp, Clock, Building2, Target, CheckCircle2, AlertCircle, ListTodo, CalendarClock } from "lucide-react";
 import { MetricCard } from "@/components/shared/metric-card";
 import type { MetricDelta } from "@/types/common";
 import type { Lead, Contact, Deal, CrmTask } from "../types";
+import { formatInr } from "../lib/crm-records";
 
 /* ------------------------------------------------------------------ */
 /* Leads KPIs                                                           */
@@ -11,27 +13,103 @@ import type { Lead, Contact, Deal, CrmTask } from "../types";
 
 export function LeadMetricCards({ leads }: { leads: Lead[] }) {
   const total = leads.length;
-  const thisWeek = leads.filter((l) => {
-    const d = new Date(l.createdAt);
-    const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    return d >= weekAgo;
+  const [now] = useState(() => Date.now());
+  const ONE_DAY = 24 * 60 * 60 * 1000;
+  const SEVEN_DAYS = 7 * ONE_DAY;
+  const THIRTY_DAYS = 30 * ONE_DAY;
+
+  // 1. Total Leads & 30-day trend
+  const thisMonthLeads = leads.filter((l) => now - new Date(l.createdAt).getTime() <= THIRTY_DAYS).length;
+  const prevMonthLeads = leads.filter((l) => {
+    const age = now - new Date(l.createdAt).getTime();
+    return age > THIRTY_DAYS && age <= 2 * THIRTY_DAYS;
   }).length;
+
+  const totalDelta: MetricDelta | null = prevMonthLeads > 0 ? {
+    changePercent: Math.round(((thisMonthLeads - prevMonthLeads) / prevMonthLeads) * 100),
+    direction: "up-is-good",
+  } : null;
+
+  // 2. New This Week
+  const thisWeekLeads = leads.filter((l) => now - new Date(l.createdAt).getTime() <= SEVEN_DAYS).length;
+  const prevWeekLeads = leads.filter((l) => {
+    const age = now - new Date(l.createdAt).getTime();
+    return age > SEVEN_DAYS && age <= 2 * SEVEN_DAYS;
+  }).length;
+
+  const weekDelta: MetricDelta | null = prevWeekLeads > 0 ? {
+    changePercent: Math.round(((thisWeekLeads - prevWeekLeads) / prevWeekLeads) * 100),
+    direction: "up-is-good",
+  } : null;
+
+  // 3. Conversion Rate
   const converted = leads.filter((l) => l.stage === "won").length;
   const rate = total > 0 ? ((converted / total) * 100).toFixed(1) : "0";
 
-  const deltas: MetricDelta[] = [
-    { changePercent: 12.4, direction: "up-is-good" },
-    { changePercent: 8.2, direction: "up-is-good" },
-    { changePercent: 1.2, direction: "up-is-good" },
-    { changePercent: 18, direction: "up-is-good" },
-  ];
+  // 4. Avg Response Time (calculated from actual createdAt to lastContacted)
+  const contactedLeads = leads.filter((l) => {
+    if (!l.lastContacted || !l.createdAt) return false;
+    const diff = new Date(l.lastContacted).getTime() - new Date(l.createdAt).getTime();
+    return diff > 0 && diff < 90 * ONE_DAY;
+  });
+
+  let avgResponseValue = "—";
+  let avgResponseHint = "No response logs yet";
+
+  if (contactedLeads.length > 0) {
+    const totalMs = contactedLeads.reduce((acc, l) => {
+      return acc + (new Date(l.lastContacted).getTime() - new Date(l.createdAt).getTime());
+    }, 0);
+    const avgMinutes = Math.round(totalMs / (contactedLeads.length * 60 * 1000));
+    const hours = Math.floor(avgMinutes / 60);
+    const mins = avgMinutes % 60;
+
+    avgResponseValue = hours >= 24
+      ? `${(hours / 24).toFixed(1)}d`
+      : hours > 0
+        ? `${hours}h ${mins}m`
+        : `${mins}m`;
+
+    avgResponseHint = `across ${contactedLeads.length} contacted lead${contactedLeads.length === 1 ? "" : "s"}`;
+  }
 
   const metrics = [
-    { label: "Total Leads", value: String(total), icon: Users, iconColor: "#2563EB", iconBg: "#DBEAFE", delta: deltas[0], hint: "+42 new this month" },
-    { label: "New This Week", value: String(thisWeek), icon: UserPlus, iconColor: "#059669", iconBg: "#D1FAE5", delta: deltas[1], hint: "vs last week" },
-    { label: "Conversion Rate", value: `${rate}%`, icon: TrendingUp, iconColor: "#7C3AED", iconBg: "#EDE9FE", delta: deltas[2], hint: "won / total" },
-    { label: "Avg Response", value: "2h 34m", icon: Clock, iconColor: "#D97706", iconBg: "#FEF3C7", delta: deltas[3], hint: "18% faster" },
+    {
+      label: "Total Leads",
+      value: String(total),
+      icon: Users,
+      iconColor: "#2563EB",
+      iconBg: "#DBEAFE",
+      delta: totalDelta,
+      hint: thisMonthLeads > 0 ? `+${thisMonthLeads} in last 30 days` : "total active leads",
+    },
+    {
+      label: "New This Week",
+      value: String(thisWeekLeads),
+      icon: UserPlus,
+      iconColor: "#059669",
+      iconBg: "#D1FAE5",
+      delta: weekDelta,
+      hint: prevWeekLeads > 0 ? `vs. ${prevWeekLeads} previous week` : "past 7 days",
+    },
+    {
+      label: "Conversion Rate",
+      value: `${rate}%`,
+      icon: TrendingUp,
+      iconColor: "#7C3AED",
+      iconBg: "#EDE9FE",
+      delta: null,
+      hint: `${converted} won out of ${total} leads`,
+    },
+    {
+      label: "Avg Response",
+      value: avgResponseValue,
+      icon: Clock,
+      iconColor: "#D97706",
+      iconBg: "#FEF3C7",
+      delta: null,
+      hint: avgResponseHint,
+    },
   ];
 
   return (
@@ -49,15 +127,24 @@ export function LeadMetricCards({ leads }: { leads: Lead[] }) {
 
 export function ContactMetricCards({ contacts }: { contacts: Contact[] }) {
   const total = contacts.length;
+  const [now] = useState(() => Date.now());
+  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
   const active = contacts.filter((c) => c.status === "active" || c.status === "customer").length;
   const notContacted = contacts.filter((c) => !c.lastContacted).length;
-  const companies = new Set(contacts.map((c) => c.companyId)).size;
+  const companies = new Set(contacts.map((c) => c.company.trim().toLowerCase()).filter(Boolean)).size;
+
+  const age = (c: Contact) => now - new Date(c.createdAt).getTime();
+  const recent = contacts.filter((c) => age(c) <= THIRTY_DAYS).length;
+  const previous = contacts.filter((c) => age(c) > THIRTY_DAYS && age(c) <= 2 * THIRTY_DAYS).length;
+  const totalDelta: MetricDelta | null = previous > 0
+    ? { changePercent: Math.round(((recent - previous) / previous) * 100), direction: "up-is-good" }
+    : null;
 
   const metrics = [
-    { label: "Total Contacts", value: String(total), icon: Users, iconColor: "#2563EB", iconBg: "#DBEAFE", delta: { changePercent: 8.5, direction: "up-is-good" as const }, hint: "across all companies" },
-    { label: "Active Contacts", value: String(active), icon: CheckCircle2, iconColor: "#059669", iconBg: "#D1FAE5", delta: { changePercent: 5.2, direction: "up-is-good" as const }, hint: "engaged recently" },
-    { label: "Not Contacted", value: String(notContacted), icon: AlertCircle, iconColor: "#DC2626", iconBg: "#FEE2E2", delta: { changePercent: 3.1, direction: "down-is-good" as const }, hint: "need attention" },
-    { label: "Total Companies", value: String(companies), icon: Building2, iconColor: "#7C3AED", iconBg: "#EDE9FE", delta: { changePercent: 12, direction: "up-is-good" as const }, hint: "unique organizations" },
+    { label: "Total Contacts", value: String(total), icon: Users, iconColor: "#2563EB", iconBg: "#DBEAFE", delta: totalDelta, hint: recent > 0 ? `+${recent} in last 30 days` : "across all companies" },
+    { label: "Active Contacts", value: String(active), icon: CheckCircle2, iconColor: "#059669", iconBg: "#D1FAE5", delta: null, hint: "active or customer" },
+    { label: "Not Contacted", value: String(notContacted), icon: AlertCircle, iconColor: "#DC2626", iconBg: "#FEE2E2", delta: null, hint: "need attention" },
+    { label: "Total Companies", value: String(companies), icon: Building2, iconColor: "#7C3AED", iconBg: "#EDE9FE", delta: null, hint: "unique organizations" },
   ];
 
   return (
@@ -77,27 +164,26 @@ export function PipelineMetricCards({ deals }: { deals: Deal[] }) {
   const openDeals = deals.filter((d) => d.stage !== "won" && d.stage !== "lost");
   const wonDeals = deals.filter((d) => d.stage === "won");
   const lostDeals = deals.filter((d) => d.stage === "lost");
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+  const wonThisMonth = wonDeals.filter((d) => new Date(d.updatedAt).getTime() >= monthStart.getTime());
   const totalValue = openDeals.reduce((sum, d) => sum + d.value, 0);
   const weightedValue = openDeals.reduce((sum, d) => sum + (d.value * d.probability) / 100, 0);
-  const wonValue = wonDeals.reduce((sum, d) => sum + d.value, 0);
-  const lostValue = lostDeals.reduce((sum, d) => sum + d.value, 0);
+  const wonValue = wonThisMonth.reduce((sum, d) => sum + d.value, 0);
   const closedDeals = wonDeals.length + lostDeals.length;
   const winRate = closedDeals > 0 ? ((wonDeals.length / closedDeals) * 100).toFixed(1) : "0";
   const avgDeal = openDeals.length > 0 ? Math.round(totalValue / openDeals.length) : 0;
 
-  const format = (n: number) => n >= 100000 ? `${(n / 100000).toFixed(1)}L` : `${(n / 1000).toFixed(0)}K`;
-
   const metrics = [
-    { label: "Pipeline Value", value: `₹${format(totalValue)}`, icon: Target, iconColor: "#2563EB", iconBg: "#DBEAFE", delta: { changePercent: 15, direction: "up-is-good" as const }, hint: `${openDeals.length} open deals` },
-    { label: "Weighted Pipeline", value: `₹${format(weightedValue)}`, icon: TrendingUp, iconColor: "#7C3AED", iconBg: "#EDE9FE", delta: { changePercent: 10, direction: "up-is-good" as const }, hint: "probability adjusted" },
-    { label: "Won This Month", value: `₹${format(wonValue)}`, icon: CheckCircle2, iconColor: "#059669", iconBg: "#D1FAE5", delta: { changePercent: 22, direction: "up-is-good" as const }, hint: `${wonDeals.length} deals closed` },
-    { label: "Win Rate", value: `${winRate}%`, icon: Target, iconColor: "#D97706", iconBg: "#FEF3C7", delta: { changePercent: 3.5, direction: "up-is-good" as const }, hint: `avg deal ₹${format(avgDeal)}` },
+    { label: "Pipeline Value", value: formatInr(totalValue), icon: Target, iconColor: "#2563EB", iconBg: "#DBEAFE", hint: `${openDeals.length} open deal${openDeals.length === 1 ? "" : "s"}` },
+    { label: "Weighted Pipeline", value: formatInr(weightedValue), icon: TrendingUp, iconColor: "#7C3AED", iconBg: "#EDE9FE", hint: "probability adjusted" },
+    { label: "Won This Month", value: formatInr(wonValue), icon: CheckCircle2, iconColor: "#059669", iconBg: "#D1FAE5", hint: `${wonThisMonth.length} deal${wonThisMonth.length === 1 ? "" : "s"} closed` },
+    { label: "Win Rate", value: `${winRate}%`, icon: Target, iconColor: "#D97706", iconBg: "#FEF3C7", hint: `avg open deal ${formatInr(avgDeal)}` },
   ];
 
   return (
     <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
       {metrics.map((m) => (
-        <MetricCard key={m.label} label={m.label} value={m.value} icon={m.icon} iconColor={m.iconColor} iconBg={m.iconBg} delta={m.delta} hint={m.hint} />
+        <MetricCard key={m.label} label={m.label} value={m.value} icon={m.icon} iconColor={m.iconColor} iconBg={m.iconBg} delta={null} hint={m.hint} />
       ))}
     </div>
   );

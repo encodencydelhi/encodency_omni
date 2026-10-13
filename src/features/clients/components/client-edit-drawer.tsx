@@ -25,6 +25,7 @@ import {
   isAssetConflict,
   type SafeAsset,
 } from "@/features/admin/projects/live/clients-api";
+import { PHONE_ERROR, sanitizePhone } from "@/lib/utils/phone";
 
 const NONE = "__none__";
 
@@ -51,7 +52,7 @@ function toForm(summary: ClientSummary): EditForm {
     industry: profile.industry,
     description: profile.description,
     contactEmail: profile.contactEmail ?? "",
-    contactPhone: profile.contactPhone ?? "",
+    contactPhone: sanitizePhone(profile.contactPhone),
     logoDataUrl: profile.logoDataUrl,
     timezone: profile.timezone,
     language: profile.language,
@@ -135,7 +136,7 @@ export function ClientEditDrawer({ summary, onClose }: { summary: ClientSummary;
   if (!form.name.trim()) errors.name = "Client name is required.";
   if (form.primaryWebsite.trim() && !isValidWebsite(form.primaryWebsite)) errors.primaryWebsite = "Enter a valid website, e.g. example.com.";
   if (form.contactEmail.trim() && !isValidEmail(form.contactEmail)) errors.contactEmail = "Enter a valid email address.";
-  if (form.contactPhone.trim() && !isValidPhone(form.contactPhone)) errors.contactPhone = "Enter a valid phone number.";
+  if (form.contactPhone.trim() && !isValidPhone(form.contactPhone)) errors.contactPhone = PHONE_ERROR;
   const shown = { ...(attempted ? errors : {}), ...serverErrors };
   const valid = Object.keys(errors).length === 0;
 
@@ -186,9 +187,12 @@ export function ClientEditDrawer({ summary, onClose }: { summary: ClientSummary;
     <Field label={label} htmlFor={`client-edit-${id}`} required={opts.required} error={shown[id]} hint={opts.hint}>
       <Input
         id={`client-edit-${id}`}
-        type={opts.type ?? "text"}
+        type={id === "contactPhone" ? "tel" : (opts.type ?? "text")}
+        inputMode={id === "contactPhone" ? "numeric" : undefined}
+        maxLength={id === "contactPhone" ? 20 : undefined}
+        placeholder={id === "contactPhone" ? "10-digit mobile number" : undefined}
         value={String(form[id] ?? "")}
-        onChange={(event) => update({ [id]: event.target.value } as Partial<EditForm>)}
+        onChange={(event) => update({ [id]: id === "contactPhone" ? sanitizePhone(event.target.value) : event.target.value } as Partial<EditForm>)}
         aria-invalid={Boolean(shown[id])}
       />
     </Field>

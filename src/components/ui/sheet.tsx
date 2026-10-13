@@ -2,8 +2,9 @@
 
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
-import type * as React from "react";
+import * as React from "react";
 import { cn } from "@/lib/utils/cn";
+import { ScrollLock } from "@/lib/utils/scroll-lock";
 
 export const Sheet = SheetPrimitive.Root;
 export const SheetTrigger = SheetPrimitive.Trigger;
@@ -25,18 +26,28 @@ export function SheetContent({
   side?: keyof typeof SIDE_STYLES;
   showClose?: boolean;
 }) {
+
   return (
     <SheetPrimitive.Portal>
-      <SheetPrimitive.Overlay className="fixed inset-0 z-50 bg-foreground/25 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
+      <SheetPrimitive.Overlay
+        className="fixed inset-0 z-50 bg-foreground/25 backdrop-blur-[2px] overscroll-contain data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
+        onWheel={(e) => {
+          if (e.target === e.currentTarget) e.preventDefault();
+        }}
+        onTouchMove={(e) => {
+          if (e.target === e.currentTarget) e.preventDefault();
+        }}
+      />
       <SheetPrimitive.Content
         className={cn(
-          "fixed z-50 flex flex-col border-border bg-card shadow-lg transition ease-in-out",
+          "fixed z-50 flex flex-col border-border bg-card shadow-lg transition ease-in-out overscroll-contain",
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-200 data-[state=open]:duration-300",
           SIDE_STYLES[side],
           className,
         )}
         {...props}
       >
+        <ScrollLock />
         {children}
         {showClose ? (
           <SheetPrimitive.Close className="absolute top-4 right-4 rounded-sm p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">

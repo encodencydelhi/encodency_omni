@@ -21,6 +21,7 @@ import { composeScheduledFor } from "../live/schedule-datetime";
 import { SCHEDULED_POST_STATUS_META, describeScheduleErrorCode } from "../live/scheduling-status";
 import { PLATFORM_META } from "../config/platform-config";
 import type { Platform, PlatformSchedule } from "../types/content.types";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 const PLATFORM_TO_CHANNEL: Partial<Record<Platform, PublishChannel>> = {
   facebook: "FACEBOOK_PAGE",
@@ -53,6 +54,7 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ScheduledPost | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<{ platform: Platform; scheduledFor: string } | null>(null);
+  useScrollLock(pendingConfirm !== null);
   const [scheduling, setScheduling] = useState(false);
   const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
   const [conflictNotice, setConflictNotice] = useState<string | null>(null);

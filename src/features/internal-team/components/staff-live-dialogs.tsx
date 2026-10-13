@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ASSIGNMENT_RESPONSIBILITIES, DEPARTMENTS } from "../data/config";
 import { useStaffList } from "../data/hooks";
 import type { AssignmentResponsibility, StaffAssignment, StaffMember } from "../data/types";
+import { PHONE_ERROR, isValidOptionalPhone, sanitizePhone } from "@/lib/utils/phone";
 
 /** Active staff other than `exceptId`, for "who takes over" pickers. */
 export function useColleagues(exceptId?: string): StaffMember[] {
@@ -39,7 +40,7 @@ export function EditStaffProfileDialog({ member, open, onOpenChange, onConfirm, 
 
 function EditProfileBody({ member, onClose, onConfirm, isPending }: { member: StaffMember; onClose: () => void; onConfirm: EditProfileProps["onConfirm"]; isPending?: boolean }) {
   const [name, setName] = useState(member.name === member.email ? "" : member.name);
-  const [phone, setPhone] = useState(member.phone ?? "");
+  const [phone, setPhone] = useState(sanitizePhone(member.phone));
   const [jobTitle, setJobTitle] = useState(member.jobTitle);
   const [department, setDepartment] = useState(member.department);
   return (
@@ -50,7 +51,7 @@ function EditProfileBody({ member, onClose, onConfirm, isPending }: { member: St
       </DialogHeader>
       <div className="space-y-3 text-xs">
         <div className="grid gap-1.5"><Label htmlFor="staff-name">Full name</Label><Input id="staff-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} className="h-8 text-xs" /></div>
-        <div className="grid gap-1.5"><Label htmlFor="staff-phone">Phone</Label><Input id="staff-phone" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={30} className="h-8 text-xs" /></div>
+        <div className="grid gap-1.5"><Label htmlFor="staff-phone">Phone</Label><Input id="staff-phone" type="tel" inputMode="numeric" placeholder="10-digit mobile number" value={phone} onChange={(e) => setPhone(sanitizePhone(e.target.value))} maxLength={20} aria-invalid={!isValidOptionalPhone(phone)} className="h-8 text-xs" /></div>
         <div className="grid grid-cols-2 gap-2">
           <div className="grid gap-1.5"><Label htmlFor="staff-title">Job title</Label><Input id="staff-title" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} maxLength={100} className="h-8 text-xs" /></div>
           <div className="grid gap-1.5">
@@ -67,7 +68,7 @@ function EditProfileBody({ member, onClose, onConfirm, isPending }: { member: St
       </div>
       <DialogFooter>
         <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onClose}>Cancel</Button>
-        <Button size="sm" className="h-8 text-xs" disabled={isPending} onClick={() => { onConfirm({ name, phone, jobTitle, department }); onClose(); }}>{isPending ? "Saving..." : "Save"}</Button>
+        <Button size="sm" className="h-8 text-xs" disabled={isPending || !isValidOptionalPhone(phone)} title={isValidOptionalPhone(phone) ? undefined : PHONE_ERROR} onClick={() => { onConfirm({ name, phone, jobTitle, department }); onClose(); }}>{isPending ? "Saving..." : "Save"}</Button>
       </DialogFooter>
     </>
   );

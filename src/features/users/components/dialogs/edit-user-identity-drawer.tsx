@@ -29,6 +29,7 @@ import { useUnsavedGuard } from "../../hooks/use-unsaved-guard";
 import { USERS_MOCK_MODE } from "../../data/config";
 import { useUser, useUserMutations } from "../../data/hooks";
 import type { UserAggregate } from "../../data/types";
+import { PHONE_ERROR, isValidOptionalPhone, sanitizePhone } from "@/lib/utils/phone";
 
 interface EditUserIdentityDrawerProps {
   user: UserAggregate | null;
@@ -108,7 +109,7 @@ export function EditUserIdentityDrawer({
   useEffect(() => {
     if (user) {
       setName(user.identity.name);
-      setPhone(user.identity.phone ?? "");
+      setPhone(sanitizePhone(user.identity.phone));
       setAvatarUrl(user.identity.avatarUrl ?? "");
       setTheme(user.identity.themePreference ?? "system");
       setNotifications(user.identity.notificationsEnabled ?? true);
@@ -119,7 +120,7 @@ export function EditUserIdentityDrawer({
     if (!user) return false;
     return (
       name.trim() !== user.identity.name ||
-      (phone.trim() || null) !== (user.identity.phone ?? null) ||
+      (phone.trim() || null) !== (sanitizePhone(user.identity.phone) || null) ||
       (avatarUrl.trim() || null) !== (user.identity.avatarUrl ?? null) ||
       (USERS_MOCK_MODE &&
         (theme !== (user.identity.themePreference ?? "system") ||
@@ -150,7 +151,10 @@ export function EditUserIdentityDrawer({
     );
   }
 
+  const phoneInvalid = !isValidOptionalPhone(phone);
+
   const handleSave = () => {
+    if (phoneInvalid) return;
     mutations.updateUserIdentity.mutate(
       {
         userId: user.identity.id,
@@ -217,9 +221,13 @@ export function EditUserIdentityDrawer({
             </Label>
             <Input
               id="edit-phone"
+              type="tel"
+              inputMode="numeric"
+              maxLength={20}
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="e.g. +91 98765 43210"
+              onChange={(e) => setPhone(sanitizePhone(e.target.value))}
+              aria-invalid={phoneInvalid}
+              placeholder="10-digit mobile number"
               className="h-8.5 text-xs"
             />
           </div>

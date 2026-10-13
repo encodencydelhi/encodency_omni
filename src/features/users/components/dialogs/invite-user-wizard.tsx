@@ -37,6 +37,7 @@ import { ALLOWED_COMPANY_ROLES, USERS_MOCK_MODE } from "../../data/config";
 import { useUserMutations } from "../../data/hooks";
 import { getAllInvitations, getAllRawUsers } from "../../data/mock/store";
 import { InviteUserLive } from "./invite-user-live";
+import { isValidOptionalPhone, sanitizePhone } from "@/lib/utils/phone";
 
 interface InviteUserWizardProps {
   open: boolean;
@@ -113,7 +114,7 @@ function InviteUserWizardDemo({
     { id: `prj_${companyId}_2`, name: `${selectedCompanyName} Secondary` },
   ];
 
-  const canProceedStep1 = email.trim().length > 3 && email.includes("@") && name.trim().length > 1 && !existingUser;
+  const canProceedStep1 = email.trim().length > 3 && email.includes("@") && name.trim().length > 1 && !existingUser && isValidOptionalPhone(phone);
   const canProceedStep2 = Boolean(companyId) && Boolean(role);
 
   const handleSubmit = () => {
@@ -293,9 +294,13 @@ function InviteUserWizardDemo({
                 </Label>
                 <Input
                   id="inv-phone"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={20}
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="e.g. +91 98765 43210"
+                  onChange={(e) => setPhone(sanitizePhone(e.target.value))}
+                  aria-invalid={!isValidOptionalPhone(phone)}
+                  placeholder="10-digit mobile number"
                   className="h-8.5 text-xs"
                 />
               </div>

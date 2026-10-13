@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ShieldAlert, ShieldCheck, Zap, AlertTriangle, PauseCircle, Trash2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { SafetySettings } from "../../data/settings-types";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 interface SafetyControlsSectionProps {
   settings: SafetySettings;
@@ -13,6 +14,7 @@ interface SafetyControlsSectionProps {
 
 export function SafetyControlsSection({ settings, onChange, onResetAllToDefaults }: SafetyControlsSectionProps) {
   const [showDangerModal, setShowDangerModal] = useState<"pause_all" | "purge_logs" | "reset_all" | null>(null);
+  useScrollLock(showDangerModal !== null);
 
   const handleConfirmAction = () => {
     if (showDangerModal === "pause_all") {

@@ -13,6 +13,7 @@ import { userProfileApi } from "@/features/auth/services/user-profile-api";
 import { userAvatarApi, USER_AVATAR_LIMITS } from "@/features/auth/services/user-avatar-api";
 import { ApiError } from "@/types/api";
 import { getInitials } from "@/lib/utils/format";
+import { PHONE_ERROR, isValidOptionalPhone, sanitizePhone } from "@/lib/utils/phone";
 
 /** Lets any signed-in person set their name, phone, and profile avatar across the platform. */
 export function MyProfileDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -26,7 +27,7 @@ export function MyProfileDialog({ open, onOpenChange }: { open: boolean; onOpenC
 function Body({ onClose }: { onClose: () => void }) {
   const { user, refreshUser } = useAuth();
   const [name, setName] = useState(user && user.name !== user.email ? user.name : "");
-  const [phone, setPhone] = useState((user as { phone?: string | null } | null)?.phone ?? "");
+  const [phone, setPhone] = useState(sanitizePhone((user as { phone?: string | null } | null)?.phone));
   const [saving, setSaving] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -73,6 +74,7 @@ function Body({ onClose }: { onClose: () => void }) {
   };
 
   const save = async () => {
+    if (!isValidOptionalPhone(phone)) { toast.error(PHONE_ERROR); return; }
     setSaving(true);
     try {
       await userProfileApi.updateMe({ name: name.trim(), phone: phone.trim() || null });
@@ -163,7 +165,7 @@ function Body({ onClose }: { onClose: () => void }) {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="profile-phone">Phone (optional)</Label>
-          <Input id="profile-phone" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={40} />
+          <Input id="profile-phone" type="tel" inputMode="numeric" placeholder="10-digit mobile number" value={phone} onChange={(e) => setPhone(sanitizePhone(e.target.value))} maxLength={20} />
         </div>
       </div>
 

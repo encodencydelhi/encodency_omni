@@ -10,6 +10,7 @@ import { clientsApi } from "@/features/clients/data/clients-api";
 import type { BackendBillingSummary } from "@/features/admin/billing/billing-data/live-snapshot";
 import { timeAgo } from "@/features/support/time";
 import type { CurrentUserResponse } from "@/types/domain/auth";
+import { PHONE_ERROR, isValidPhoneNumber, parsePhone } from "@/lib/utils/phone";
 
 function normalizeCountryCode(country?: string | null): string | null {
   if (!country) return null;
@@ -395,6 +396,10 @@ export class SettingsRepository {
           }
         : null;
 
+      if (orgPatch.contactPhone && !isValidPhoneNumber(orgPatch.contactPhone)) {
+        throw new Error(PHONE_ERROR);
+      }
+
       const payload: UpdateOrganizationPayload = {
         expectedRevision,
         // `name` (the Company title) has no backend write endpoint, so it is
@@ -405,7 +410,7 @@ export class SettingsRepository {
         industry: orgPatch.industry ? orgPatch.industry.trim() : null,
         website: orgPatch.website ? orgPatch.website.trim() : null,
         contactEmail: orgPatch.contactEmail ? orgPatch.contactEmail.trim().toLowerCase() : null,
-        contactPhone: orgPatch.contactPhone ? orgPatch.contactPhone.trim() : null,
+        contactPhone: orgPatch.contactPhone ? (parsePhone(orgPatch.contactPhone) ?? orgPatch.contactPhone.trim()) : null,
         description: orgPatch.description ? orgPatch.description.trim() : null,
         timezone: orgPatch.timezone ? normalizeTimezone(orgPatch.timezone) : null,
         currency: orgPatch.currency ? orgPatch.currency.slice(0, 3).toUpperCase() : null,

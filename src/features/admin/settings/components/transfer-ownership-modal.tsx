@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { UserCheck, AlertTriangle, X, Loader2 } from "lucide-react";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { teamApi } from "@/features/admin/team/live/team-api";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 interface TransferOwnershipModalProps {
   open: boolean;
@@ -80,6 +81,7 @@ export function TransferOwnershipModal({
     };
   }, [currentOwner, open]);
 
+  useScrollLock(open);
   if (!open) return null;
 
   const targetAdmin = eligibleAdmins.find((a) => a.email === selectedAdmin) || eligibleAdmins[0];

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Trash2, AlertTriangle, X, Loader2 } from "lucide-react";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 interface DeleteOrgModalProps {
   open: boolean;
@@ -14,6 +15,7 @@ export function DeleteOrgModal({ open, orgName, onClose, onConfirm }: DeleteOrgM
   const [typedConfirm, setTypedConfirm] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useScrollLock(open);
   if (!open) return null;
 
   const isMatched = typedConfirm.trim() === orgName;

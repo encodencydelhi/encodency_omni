@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils/cn";
 import { notificationsRepository } from "../data/repository";
 import { campaignIntentCount, deliveryByChannel, kpis, scopedIntents } from "../data/selectors";
 import type { Campaign, NotificationDelivery, NotificationEnvironment, NotificationIntent, NotificationRange, NotificationSnapshot, Preference, RecoveryRequest, Template } from "../data/types";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 const BASE = ROUTES.superAdmin.notifications;
 const tabs = [
@@ -77,6 +78,7 @@ function download(name: string, content: string) {
 }
 
 function Drawer({ title, open, onClose, children }: { title: string; open: boolean; onClose: () => void; children: React.ReactNode }) {
+  useScrollLock(open);
   const ref = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!open) return undefined;

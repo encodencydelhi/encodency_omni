@@ -36,6 +36,8 @@ import { tasks as initialTasks } from "./data/crm-data";
 import type { CrmTask, TaskStatus, TaskPriority, TaskType, TaskViewMode } from "./types";
 import { formatDate } from "@/lib/utils/format";
 import { crmApi, type CrmScope } from "./data/crm-api";
+import { crmLink, useOpenParam } from "./lib/use-open-param";
+import type { Contact, Deal, Lead } from "./types";
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                            */
@@ -85,6 +87,9 @@ interface TaskDraft {
   dueDate: string;
   dueTime: string;
   assigneeId: string;
+  /** Which kind of CRM record the task is linked to, and its id. */
+  relatedKind: "none" | "lead" | "contact" | "deal";
+  relatedId: string;
 }
 
 function emptyTaskDraft(): TaskDraft {
@@ -98,6 +103,8 @@ function emptyTaskDraft(): TaskDraft {
     dueDate: tomorrow.toISOString().slice(0, 10),
     dueTime: "09:00",
     assigneeId: "",
+    relatedKind: "none",
+    relatedId: "",
   };
 }
 
@@ -223,6 +230,9 @@ export default function TasksPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingTask, setEditingTask] = useState<CrmTask | null>(null);
   const [draft, setDraft] = useState<TaskDraft>(emptyTaskDraft);
+  const [leadOptions, setLeadOptions] = useState<Lead[]>([]);
+  const [contactOptions, setContactOptions] = useState<Contact[]>([]);
+  const [dealOptions, setDealOptions] = useState<Deal[]>([]);
 
   const loadTasks = useCallback(async () => {
     if (isMockMode) return;
@@ -241,6 +251,13 @@ export default function TasksPage() {
         teamApi.listMembers(scope.companyId).catch(() => []),
       ]);
       setTasks(taskRows.map(normalizeTask));
+      void Promise.allSettled([
+        crmApi.list<Lead>("lead", scope), crmApi.list<Contact>("contact", scope), crmApi.list<Deal>("deal", scope),
+      ]).then(([leadRows, contactRows, dealRows]) => {
+        if (leadRows.status === "fulfilled") setLeadOptions(leadRows.value);
+        if (contactRows.status === "fulfilled") setContactOptions(contactRows.value);
+        if (dealRows.status === "fulfilled") setDealOptions(dealRows.value);
+      });
       if (memberRows.length) {
         setAssignees(memberRows.filter((member) => !member.suspendedAt).map((member) => ({ id: member.user.id, name: member.user.name?.trim() || member.user.email })));
       }
@@ -255,6 +272,11 @@ export default function TasksPage() {
     const timer = window.setTimeout(() => void loadTasks(), 0);
     return () => window.clearTimeout(timer);
   }, [loadTasks]);
+
+  useOpenParam(!isLoading && isReady, useCallback((id: string) => {
+    const task = tasks.find((t) => t.id === id);
+    if (task) setDetailTask(task);
+  }, [tasks]));
 
   /* ---- Derived data ---- */
   const filtered = useMemo(() => {
@@ -360,7 +382,9 @@ export default function TasksPage() {
 
   const openEdit = (task: CrmTask) => {
     setEditingTask(task);
-    setDraft({ title: task.title, description: task.description, type: task.type, priority: task.priority, dueDate: task.dueDate, dueTime: task.dueTime, assigneeId: task.assigneeId });
+    const relatedKind = task.relatedDealId ? "deal" : task.relatedContactId ? "contact" : task.relatedLeadId ? "lead" : "none";
+    const relatedId = task.relatedDealId ?? task.relatedContactId ?? task.relatedLeadId ?? "";
+    setDraft({ title: task.title, description: task.description, type: task.type, priority: task.priority, dueDate: task.dueDate, dueTime: task.dueTime, assigneeId: task.assigneeId, relatedKind, relatedId });
     setDetailTask(null);
     setShowCreate(true);
   };
@@ -374,12 +398,26 @@ export default function TasksPage() {
       toast.error("Due date is required.");
       return;
     }
+    if (draft.relatedKind !== "none" && !draft.relatedId) {
+      toast.error(`Choose the ${draft.relatedKind} this task belongs to, or set “Linked to” to None.`);
+      return;
+    }
     const assignee = assignees.find((item) => item.id === draft.assigneeId);
     const now = new Date().toISOString();
+    const { relatedKind, relatedId, ...taskFields } = draft;
+    const lead = relatedKind === "lead" ? leadOptions.find((l) => l.id === relatedId) : undefined;
+    const contact = relatedKind === "contact" ? contactOptions.find((c) => c.id === relatedId) : undefined;
+    const deal = relatedKind === "deal" ? dealOptions.find((d) => d.id === relatedId) : undefined;
     const task = normalizeTask({
       ...(editingTask ?? {}),
       id: editingTask?.id ?? (isMockMode ? crypto.randomUUID() : ""),
-      ...draft,
+      ...taskFields,
+      relatedLeadId: relatedKind === "lead" ? relatedId : undefined,
+      relatedLeadName: lead ? `${lead.firstName} ${lead.lastName}`.trim() : relatedKind === "lead" ? editingTask?.relatedLeadName : undefined,
+      relatedContactId: relatedKind === "contact" ? relatedId : undefined,
+      relatedContactName: contact ? `${contact.firstName} ${contact.lastName}`.trim() : relatedKind === "contact" ? editingTask?.relatedContactName : undefined,
+      relatedDealId: relatedKind === "deal" ? relatedId : undefined,
+      relatedDealName: deal ? deal.name : relatedKind === "deal" ? editingTask?.relatedDealName : undefined,
       assigneeName: assignee?.name ?? "Unassigned",
       status: editingTask?.status ?? "pending",
       reminder: editingTask?.reminder ?? "none",
@@ -732,9 +770,9 @@ export default function TasksPage() {
                 {(detailTask.relatedLeadName || detailTask.relatedContactName || detailTask.relatedDealName) && (
                   <div className="rounded-sm border border-[#DDE4ED] p-3 space-y-1">
                     <h3 className="text-[12px] font-semibold text-[#27375D]">Related Records</h3>
-                    {detailTask.relatedLeadName && <p className="text-[12px] text-[#354568]">Lead: {detailTask.relatedLeadName}</p>}
-                    {detailTask.relatedContactName && <p className="text-[12px] text-[#354568]">Contact: {detailTask.relatedContactName}</p>}
-                    {detailTask.relatedDealName && <p className="text-[12px] text-[#354568]">Deal: {detailTask.relatedDealName}</p>}
+                    {detailTask.relatedLeadName && <p className="text-[12px] text-[#354568]">Lead: {detailTask.relatedLeadId ? <Link className="font-medium text-indigo-700 hover:underline" href={crmLink("leads", detailTask.relatedLeadId)}>{detailTask.relatedLeadName}</Link> : detailTask.relatedLeadName}</p>}
+                    {detailTask.relatedContactName && <p className="text-[12px] text-[#354568]">Contact: {detailTask.relatedContactId ? <Link className="font-medium text-indigo-700 hover:underline" href={crmLink("contacts", detailTask.relatedContactId)}>{detailTask.relatedContactName}</Link> : detailTask.relatedContactName}</p>}
+                    {detailTask.relatedDealName && <p className="text-[12px] text-[#354568]">Deal: {detailTask.relatedDealId ? <Link className="font-medium text-indigo-700 hover:underline" href={crmLink("pipeline", detailTask.relatedDealId)}>{detailTask.relatedDealName}</Link> : detailTask.relatedDealName}</p>}
                   </div>
                 )}
                 <div className="flex gap-2">
@@ -774,6 +812,35 @@ export default function TasksPage() {
             <div className="grid grid-cols-2 gap-2">
               <Input type="date" placeholder="Due Date" value={draft.dueDate} onChange={(event) => setDraft((current) => ({ ...current, dueDate: event.target.value }))} />
               <Input type="time" placeholder="Due Time" value={draft.dueTime} onChange={(event) => setDraft((current) => ({ ...current, dueTime: event.target.value }))} />
+            </div>
+            <div className="grid grid-cols-[8.5rem_1fr] gap-2">
+              <Select value={draft.relatedKind} onValueChange={(value) => setDraft((current) => ({ ...current, relatedKind: value as TaskDraft["relatedKind"], relatedId: "" }))}>
+                <SelectTrigger aria-label="Linked to"><SelectValue placeholder="Linked to" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Linked to: None</SelectItem>
+                  <SelectItem value="lead">Lead</SelectItem>
+                  <SelectItem value="contact">Contact</SelectItem>
+                  <SelectItem value="deal">Deal</SelectItem>
+                </SelectContent>
+              </Select>
+              {draft.relatedKind === "none" ? (
+                <div className="flex items-center rounded-md border border-dashed border-slate-200 px-3 text-[12px] text-slate-400">Not linked to a record</div>
+              ) : (
+                <Select value={draft.relatedId || "__pick__"} onValueChange={(value) => setDraft((current) => ({ ...current, relatedId: value === "__pick__" ? "" : value }))}>
+                  <SelectTrigger aria-label="Linked record"><SelectValue placeholder={`Select a ${draft.relatedKind}`} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__pick__" disabled>Select a {draft.relatedKind}</SelectItem>
+                    {draft.relatedKind === "lead" && leadOptions.map((l) => <SelectItem key={l.id} value={l.id}>{`${l.firstName} ${l.lastName}`.trim() || l.email}{l.company ? ` · ${l.company}` : ""}</SelectItem>)}
+                    {draft.relatedKind === "contact" && contactOptions.map((c) => <SelectItem key={c.id} value={c.id}>{`${c.firstName} ${c.lastName}`.trim() || c.email}{c.company ? ` · ${c.company}` : ""}</SelectItem>)}
+                    {draft.relatedKind === "deal" && dealOptions.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                    {draft.relatedId && !(
+                      (draft.relatedKind === "lead" && leadOptions.some((l) => l.id === draft.relatedId)) ||
+                      (draft.relatedKind === "contact" && contactOptions.some((c) => c.id === draft.relatedId)) ||
+                      (draft.relatedKind === "deal" && dealOptions.some((d) => d.id === draft.relatedId))
+                    ) ? <SelectItem value={draft.relatedId}>Current link</SelectItem> : null}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             <Select value={draft.assigneeId || "__unassigned__"} onValueChange={(value) => setDraft((current) => ({ ...current, assigneeId: value === "__unassigned__" ? "" : value }))}>
               <SelectTrigger><SelectValue placeholder="Assignee" /></SelectTrigger>
