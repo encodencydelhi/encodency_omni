@@ -2,23 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Target, Users, Globe, Clock, Download, Shield, CheckCircle, X } from "lucide-react";
+import { Target, Users, Globe, Download, Shield } from "lucide-react";
 import { Card, WButton } from "../ui/kit";
 import { LockedState } from "../ui/states";
-import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
 import { useCompetitorAnalysis } from "../../data/hooks";
-import { CompetitorData } from "../../data/types";
-import { scoreBand, downloadFile, toCsv } from "../../data/selectors";
+import { downloadFile, toCsv } from "../../data/selectors";
 import { WEBSITE_MOCK_MODE } from "../../data/config";
-
-const INTENT_OPTIONS = [
-  { value: "all", label: "All intents" },
-  { value: "informational", label: "Informational" },
-  { value: "transactional", label: "Transactional" },
-  { value: "navigational", label: "Navigational" },
-  { value: "commercial", label: "Commercial" },
-];
 
 export function WebsiteCompetitorAnalysisPage() {
   const { clientId, navigate } = useWebsiteWorkspace();

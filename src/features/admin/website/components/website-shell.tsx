@@ -13,7 +13,6 @@ import {
   RefreshCw,
   Search,
   Settings2,
-  ShieldCheck,
   ShieldAlert,
   Timer,
   UserRound,

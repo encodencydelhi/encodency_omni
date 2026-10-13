@@ -2,13 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Link, Globe, Shield, Activity, Download, CheckCircle } from "lucide-react";
-import { Card, WButton } from "../ui/kit";
+import { Link, Globe, Shield, Activity, Download } from "lucide-react";
+import { Card, Chip, WButton } from "../ui/kit";
 import { LockedState } from "../ui/states";
-import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
 import { useBacklinkAnalysis } from "../../data/hooks";
-import { BacklinkData } from "../../data/types";
 import { downloadFile, toCsv } from "../../data/selectors";
 import { WEBSITE_MOCK_MODE } from "../../data/config";
 
@@ -27,7 +25,7 @@ export function WebsiteBacklinkAnalysisPage() {
   const filtered = useMemo(() => {
     let result = backlinkData;
     if (searchDomain) {
-      result = result.filter((b) => b.referringDomain.toLowerCase().includes(searchDomain.toLowerCase()));
+      result = result.filter((b) => b.referringDomain.toLowerCase().includes(searchDomain.toLowerCase()) || b.anchorText.toLowerCase().includes(searchDomain.toLowerCase()));
     }
     if (filterType !== "all") {
       result = result.filter((b) => b.linkType === filterType);
@@ -58,24 +56,28 @@ export function WebsiteBacklinkAnalysisPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-base font-bold text-[#28354C]">Backlink Analysis</h1>
-          <p className="text-[#6B7A94]">Monitor link profile health and authority signals</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-base font-bold text-[#28354C]">Backlink Analysis</h1>
+            {backlinkData.length > 0 && (
+              <Chip tone="good" dot>
+                Live via Google Search Console
+              </Chip>
+            )}
+          </div>
+          <p className="text-[#6B7A94]">Monitor inbound search referrals, verified landing pages, and authority signals</p>
         </div>
-        {!WEBSITE_MOCK_MODE ? null : (
-          <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
-            Export
-          </WButton>
-        )}
+        <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
+          Export
+        </WButton>
       </div>
 
-      {!WEBSITE_MOCK_MODE ? (
+      {!isLoading && backlinkData.length === 0 ? (
         <LockedState
-          title="Backlink data is not connected"
+          title="Connect Google Search Console to view live inbound links"
           body={
             <>
-              No backlink index (Ahrefs, Majestic or similar) is connected to this workspace yet. Rather
-              than show sample referring domains and authority scores as if they were real, this panel stays
-              empty.
+              Google Search Console provides verified inbound search traffic, referring queries, and top performing
+              landing pages. Connect your Search Console property in Integrations to view real referring pages.
             </>
           }
           ctaLabel="Open integrations"
@@ -154,7 +156,7 @@ export function WebsiteBacklinkAnalysisPage() {
           </div>
 
           <div className="mt-3 space-y-1">
-            {filtered.map((b, idx) => (
+            {filtered.map((b) => (
               <button
                 key={b.url}
                 className={`w-full rounded-lg border p-2 text-left transition-colors ${selectedLink === b.url ? "border-[#4F46E5] bg-[#EEF2FF]" : "border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
@@ -243,6 +245,32 @@ export function WebsiteBacklinkAnalysisPage() {
                     {selected.domainAuthority !== null ? selected.domainAuthority : "Not available"}
                   </div>
                 </div>
+                {selected.clicks !== undefined && (
+                  <div>
+                    <div className="text-sm text-[#6B7A94]">Inbound search clicks</div>
+                    <div className="text-base font-bold text-[#166534]">{selected.clicks}</div>
+                  </div>
+                )}
+                {selected.impressions !== undefined && (
+                  <div>
+                    <div className="text-sm text-[#6B7A94]">Search impressions</div>
+                    <div className="text-base font-bold text-[#28354C]">{selected.impressions}</div>
+                  </div>
+                )}
+                {selected.position !== undefined && (
+                  <div>
+                    <div className="text-sm text-[#6B7A94]">Avg search position</div>
+                    <div className="text-base font-bold text-[#28354C]">{selected.position.toFixed(1)}</div>
+                  </div>
+                )}
+                {selected.status && (
+                  <div>
+                    <div className="text-sm text-[#6B7A94]">Verification status</div>
+                    <div className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-[#DCFCE7] px-2 py-0.5 text-xs font-medium text-[#166534]">
+                      {selected.status}
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
           ) : (

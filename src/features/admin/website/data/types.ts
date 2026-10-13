@@ -458,6 +458,12 @@ export interface BacklinkData {
   url: string;
   firstSeen: IsoDate;
   lastSeen: IsoDate | null;
+  sourceUrl?: string;
+  targetPage?: string;
+  clicks?: number;
+  impressions?: number;
+  position?: number;
+  status?: string;
 }
 
 export interface RankTrackingData {
