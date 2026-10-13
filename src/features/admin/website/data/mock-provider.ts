@@ -21,12 +21,16 @@ import {
   NoWebsiteConfiguredError,
   ServiceUnavailableError,
   type AnalyticsData,
+  type BacklinkData,
+  type CompetitorData,
   type FixGuide,
   type IntegrationKey,
   type IssueRecord,
   type IssueStatus,
+  type KeywordResearchData,
   type PageAudit,
   type PageRecord,
+  type RankTrackingData,
   type ScanProgress,
   type ScanRecord,
   type ScanType,
@@ -193,6 +197,26 @@ export class MockWebsiteProvider implements WebsiteDataProvider {
   async getSettings(clientId: string): Promise<WebsiteSettings> {
     await delay(180);
     return this.dataset(clientId).settings;
+  }
+
+  async getKeywordResearch(clientId: string): Promise<KeywordResearchData[]> {
+    await delay(120);
+    return this.dataset(clientId).keywordResearch;
+  }
+
+  async getCompetitorAnalysis(clientId: string): Promise<CompetitorData[]> {
+    await delay(120);
+    return this.dataset(clientId).competitorAnalysis;
+  }
+
+  async getBacklinkAnalysis(clientId: string): Promise<BacklinkData[]> {
+    await delay(120);
+    return this.dataset(clientId).backlinkAnalysis;
+  }
+
+  async getRankTracking(clientId: string): Promise<RankTrackingData[]> {
+    await delay(120);
+    return this.dataset(clientId).rankTracking;
   }
 
   /* Commands ------------------------------------------------------- */
@@ -491,6 +515,18 @@ export class UnavailableWebsiteProvider implements WebsiteDataProvider {
   }
   async getSettings(): Promise<WebsiteSettings> {
     return this.fail("Website settings service");
+  }
+  async getKeywordResearch(): Promise<KeywordResearchData[]> {
+    return this.fail("Keyword research service");
+  }
+  async getCompetitorAnalysis(): Promise<CompetitorData[]> {
+    return this.fail("Competitor analysis service");
+  }
+  async getBacklinkAnalysis(): Promise<BacklinkData[]> {
+    return this.fail("Backlink analysis service");
+  }
+  async getRankTracking(): Promise<RankTrackingData[]> {
+    return this.fail("Rank tracking service");
   }
   async startScan(): Promise<ScanProgress> {
     return this.fail("Scan service");

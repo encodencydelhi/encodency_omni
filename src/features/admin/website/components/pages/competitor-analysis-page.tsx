@@ -4,10 +4,11 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Target, Users, Globe, Clock, Download, Shield, CheckCircle, X } from "lucide-react";
 import { Card, WButton } from "../ui/kit";
-import { useUrlState } from "../../use-url-state";
+import { useUrlState } from "../use-url-state";
+import { useWebsiteWorkspace } from "../website-workspace";
 import { useCompetitorAnalysis } from "../../data/hooks";
 import { CompetitorData } from "../../data/types";
-import { scoreBand, downloadFile } from "../../data/selectors";
+import { scoreBand, downloadFile, toCsv } from "../../data/selectors";
 
 const INTENT_OPTIONS = [
   { value: "all", label: "All intents" },
@@ -18,7 +19,8 @@ const INTENT_OPTIONS = [
 ];
 
 export function WebsiteCompetitorAnalysisPage() {
-  const { data: competitorData = [], isLoading, error } = useCompetitorAnalysis();
+  const { clientId } = useWebsiteWorkspace();
+  const { data: competitorData = [], isLoading, error } = useCompetitorAnalysis(clientId);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [searchDomain, setSearchDomain] = useState("");
   const [focusArea, setFocusArea] = useState<string | null>("traffic");
@@ -37,27 +39,21 @@ export function WebsiteCompetitorAnalysisPage() {
   }, [competitorData, searchDomain]);
 
   const handleExport = () => {
-    const csv = [
-      ["Domain", "Traffic Share", "Keyword Overlap", "Content Gap", "Referring Domains", "Total Backlinks", "Backlink Growth"],
-      ...filtered.map((c) => [
-        c.domain,
-        `${c.trafficShare}%`,
-        `${c.keywordOverlap}%`,
-        `${c.contentGap}%`,
-        c.backlinkProfile.referringDomains,
-        c.backlinkProfile.totalBacklinks,
-        `${c.backlinkProfile.growthRate}%`,
-      ])
-        .map((row) => row.map((cell) => String(cell)).join(","))
-        .join("\n"),
-    ];
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `competitor-analysis-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(
+      "competitor-analysis.csv",
+      toCsv(
+        ["Domain", "Traffic Share", "Keyword Overlap", "Content Gap", "Referring Domains", "Total Backlinks", "Backlink Growth"],
+        filtered.map((c) => [
+          c.domain,
+          `${c.trafficShare}%`,
+          `${c.keywordOverlap}%`,
+          `${c.contentGap}%`,
+          c.backlinkProfile.referringDomains,
+          c.backlinkProfile.totalBacklinks,
+          `${c.backlinkProfile.growthRate}%`,
+        ]),
+      ),
+    );
     toast.success("Competitor analysis exported");
   };
 

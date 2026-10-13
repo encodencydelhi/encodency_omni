@@ -128,7 +128,7 @@ export interface WebsiteTarget {
 }
 
 export interface ScoreSet {
-  /** OmniPlatform Website Health — our composite, never a Google score. */
+  /** EnCodency Website Health — our composite, never a Google score. */
   health: number;
   seo: number;
   performance: number;

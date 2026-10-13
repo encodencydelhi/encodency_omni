@@ -4,10 +4,11 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Search, TrendingUp, Target, Clock, Globe, FileText, Download } from "lucide-react";
 import { Card, WButton } from "../ui/kit";
-import { useUrlState } from "../../use-url-state";
+import { useUrlState } from "../use-url-state";
+import { useWebsiteWorkspace } from "../website-workspace";
 import { useKeywordResearch } from "../../data/hooks";
 import { KeywordResearchData } from "../../data/types";
-import { scoreBand, downloadFile } from "../../data/selectors";
+import { scoreBand, downloadFile, toCsv } from "../../data/selectors";
 
 const INTENT_OPTIONS = [
   { value: "all", label: "All intents" },
@@ -18,7 +19,8 @@ const INTENT_OPTIONS = [
 ];
 
 export function WebsiteKeywordResearchPage() {
-  const { data: keywordData = [], isLoading, error } = useKeywordResearch();
+  const { clientId } = useWebsiteWorkspace();
+  const { data: keywordData = [], isLoading, error } = useKeywordResearch(clientId);
   const [selectedQuery, setSelectedQuery] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 

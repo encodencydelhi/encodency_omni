@@ -40,8 +40,8 @@ const FIELD_LABEL: Record<IntegrationKey, string> = {
 };
 
 function trackingSnippet(siteKey: string, domain: string) {
-  return `<!-- OmniPlatform tracking — place before </head> on ${domain} -->
-<script async src="https://cdn.omniplatform.app/t.js" data-site="${siteKey}"></script>`;
+  return `<!-- EnCodency tracking — place before </head> on ${domain} -->
+<script async src="https://cdn.encodency.app/t.js" data-site="${siteKey}"></script>`;
 }
 
 export function IntegrationDialog({

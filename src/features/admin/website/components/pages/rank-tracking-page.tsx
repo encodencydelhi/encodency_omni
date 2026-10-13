@@ -5,9 +5,10 @@ import { toast } from "sonner";
 import { TrendingUp, Target, Clock, Globe, Download, Activity, CheckCircle } from "lucide-react";
 import { Card, WButton } from "../ui/kit";
 import { useUrlState } from "../use-url-state";
+import { useWebsiteWorkspace } from "../website-workspace";
 import { useRankTracking } from "../../data/hooks";
 import { RankTrackingData } from "../../data/types";
-import { scoreBand } from "../../data/selectors";
+import { scoreBand, downloadFile, toCsv } from "../../data/selectors";
 
 const INTENT_OPTIONS = [
   { value: "all", label: "All intents" },
@@ -18,7 +19,8 @@ const INTENT_OPTIONS = [
 ];
 
 export function WebsiteRankTrackingPage() {
-  const { data: rankData = [], isLoading, error } = useRankTracking();
+  const { clientId } = useWebsiteWorkspace();
+  const { data: rankData = [], isLoading, error } = useRankTracking(clientId);
   const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [positionFilter, setPositionFilter] = useState<string>("all");
@@ -43,37 +45,31 @@ export function WebsiteRankTrackingPage() {
   }, [rankData, searchKeyword, positionFilter]);
 
   const handleExport = () => {
-    const csv = [
-      [
-        "Keyword",
-        "Current Position",
-        "Previous Position",
-        "Change",
-        "Search Volume",
-        "Difficulty",
-        "Intent",
-        "URL",
-      ],
-      ...filtered.map((r) => [
-        r.keyword,
-        r.currentPosition,
-        r.previousPosition,
-        r.positionChange > 0 ? `+${r.positionChange}` : r.positionChange,
-        r.searchVolume,
-        r.difficulty,
-        r.intent,
-        r.url ?? "—",
-      ])
-        .map((row) => row.map((cell) => String(cell)).join(","))
-        .join("\n"),
-    ];
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `rank-tracking-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(
+      `rank-tracking-${new Date().toISOString().split("T")[0]}.csv`,
+      toCsv(
+        [
+          "Keyword",
+          "Current Position",
+          "Previous Position",
+          "Change",
+          "Search Volume",
+          "Difficulty",
+          "Intent",
+          "URL",
+        ],
+        filtered.map((r) => [
+          r.keyword,
+          r.currentPosition,
+          r.previousPosition,
+          r.positionChange > 0 ? `+${r.positionChange}` : r.positionChange,
+          r.searchVolume,
+          r.difficulty,
+          r.intent,
+          r.url ?? "—",
+        ]),
+      ),
+    );
     toast.success("Rankings exported");
   };
 

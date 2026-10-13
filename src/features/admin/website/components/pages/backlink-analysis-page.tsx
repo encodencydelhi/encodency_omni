@@ -5,11 +5,14 @@ import { toast } from "sonner";
 import { Link, Globe, Shield, Activity, Download, CheckCircle } from "lucide-react";
 import { Card, WButton } from "../ui/kit";
 import { useUrlState } from "../use-url-state";
+import { useWebsiteWorkspace } from "../website-workspace";
 import { useBacklinkAnalysis } from "../../data/hooks";
 import { BacklinkData } from "../../data/types";
+import { downloadFile, toCsv } from "../../data/selectors";
 
 export function WebsiteBacklinkAnalysisPage() {
-  const { data: backlinkData = [], isLoading, error } = useBacklinkAnalysis();
+  const { clientId } = useWebsiteWorkspace();
+  const { data: backlinkData = [], isLoading, error } = useBacklinkAnalysis(clientId);
   const [selectedLink, setSelectedLink] = useState<string | null>(null);
   const [searchDomain, setSearchDomain] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
@@ -31,27 +34,21 @@ export function WebsiteBacklinkAnalysisPage() {
   }, [backlinkData, searchDomain, filterType]);
 
   const handleExport = () => {
-    const csv = [
-      ["Referring Domain", "Anchor Text", "Link Type", "URL", "First Seen", "Last Seen", "Domain Authority"],
-      ...filtered.map((b) => [
-        b.referringDomain,
-        b.anchorText,
-        b.linkType,
-        b.url,
-        b.firstSeen.split("T")[0],
-        b.lastSeen?.split("T")[0] ?? "—",
-        b.domainAuthority !== null ? b.domainAuthority : "—",
-      ])
-        .map((row) => row.map((cell) => String(cell)).join(","))
-        .join("\n"),
-    ];
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `backlink-analysis-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(
+      `backlink-analysis-${new Date().toISOString().split("T")[0]}.csv`,
+      toCsv(
+        ["Referring Domain", "Anchor Text", "Link Type", "URL", "First Seen", "Last Seen", "Domain Authority"],
+        filtered.map((b) => [
+          b.referringDomain,
+          b.anchorText,
+          b.linkType,
+          b.url,
+          b.firstSeen.split("T")[0] ?? "",
+          b.lastSeen?.split("T")[0] ?? "—",
+          b.domainAuthority !== null ? b.domainAuthority : "—",
+        ]),
+      ),
+    );
     toast.success("Backlinks exported");
   };
 
@@ -87,8 +84,8 @@ export function WebsiteBacklinkAnalysisPage() {
                 ? (
                     filtered
                       .filter((b) => b.domainAuthority !== null)
-                      .reduce((sum, b) => sum + b.domainAuthority, 0) /
-                    filtered.filter((b) => b.domainAuthority !== null).length
+                      .reduce((sum, b) => sum + (b.domainAuthority ?? 0), 0) /
+                    Math.max(filtered.filter((b) => b.domainAuthority !== null).length, 1)
                   ).toFixed(1)
                 : "—"
             }

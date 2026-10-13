@@ -1823,7 +1823,7 @@ function buildMonitoring(profile: ClientWebsiteProfile, domain: string, pages: P
         { type: "MX", name: "@", value: "10 mx.zoho.in", status: "pass" },
         { type: "TXT", name: "@", value: "v=spf1 include:zoho.in ~all", status: "pass" },
         { type: "TXT", name: "_dmarc", value: "v=DMARC1; p=none", status: "warning" },
-        { type: "TXT", name: "@", value: `omniplatform-verification=${seedFrom(domain) % 99999}`, status: profile.verified ? "pass" : "warning" },
+        { type: "TXT", name: "@", value: `encodency-verification=${seedFrom(domain) % 99999}`, status: profile.verified ? "pass" : "warning" },
       ],
       registrarDataAvailable: false,
       registrarNote:
@@ -2129,13 +2129,14 @@ function buildBacklinkAnalysis(profile: ClientWebsiteProfile, domain: string): B
 
   const backlinks: BacklinkData[] = [];
   for (let i = 0; i < 50; i++) {
-    const refDomain = referringDomainsArr[Math.floor(rng() * referringDomainsArr.length)];
-    const linkType = linkTypesArr[Math.floor(rng() * linkTypesArr.length)];
+    const refDomain = referringDomainsArr[Math.floor(rng() * referringDomainsArr.length)] ?? "example.com";
+    const linkType = (linkTypesArr[Math.floor(rng() * linkTypesArr.length)] ?? "external") as BacklinkData["linkType"];
+    const anchorText = anchorTextsArr[Math.floor(rng() * anchorTextsArr.length)] ?? "read more";
     const hasDA = rng() > 0.2;
 
     backlinks.push({
       referringDomain: refDomain,
-      anchorText: anchorTextsArr[Math.floor(rng() * anchorTextsArr.length)],
+      anchorText,
       linkType,
       domainAuthority: hasDA ? 10 + Math.floor(rng() * 90) : null,
       url: `https://${refDomain}/article-${Math.floor(rng() * 10000)}`,
