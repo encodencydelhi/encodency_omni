@@ -2,22 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { TrendingUp, Target, Clock, Globe, Download, Activity, CheckCircle } from "lucide-react";
+import { TrendingUp, Target, Globe, Download, Activity } from "lucide-react";
 import { Card, WButton } from "../ui/kit";
-import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
 import { useRankTracking } from "../../data/hooks";
-import { RankTrackingData } from "../../data/types";
 import { scoreBand, downloadFile, toCsv } from "../../data/selectors";
 import { WEBSITE_MOCK_MODE } from "../../data/config";
-
-const INTENT_OPTIONS = [
-  { value: "all", label: "All intents" },
-  { value: "informational", label: "Informational" },
-  { value: "transactional", label: "Transactional" },
-  { value: "navigational", label: "Navigational" },
-  { value: "commercial", label: "Commercial" },
-];
 
 export function WebsiteRankTrackingPage() {
   const { clientId } = useWebsiteWorkspace();
@@ -150,7 +140,7 @@ export function WebsiteRankTrackingPage() {
           </div>
 
           <div className="mt-3 space-y-1">
-            {filtered.map((r, idx) => (
+            {filtered.map((r) => (
               <button
                 key={r.keyword}
                 className={`w-full rounded-lg border p-2 text-left transition-colors ${selectedKeyword === r.keyword ? "border-[#4F46E5] bg-[#EEF2FF]" : "border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}

@@ -2,22 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Search, TrendingUp, Target, Clock, Globe, FileText, Download } from "lucide-react";
+import { Search, TrendingUp, Target, Globe, FileText, Download } from "lucide-react";
 import { Card, WButton } from "../ui/kit";
-import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
 import { useKeywordResearch } from "../../data/hooks";
-import { KeywordResearchData } from "../../data/types";
 import { scoreBand, downloadFile, toCsv } from "../../data/selectors";
 import { WEBSITE_MOCK_MODE } from "../../data/config";
-
-const INTENT_OPTIONS = [
-  { value: "all", label: "All intents" },
-  { value: "informational", label: "Informational" },
-  { value: "transactional", label: "Transactional" },
-  { value: "navigational", label: "Navigational" },
-  { value: "commercial", label: "Commercial" },
-];
 
 export function WebsiteKeywordResearchPage() {
   const { clientId } = useWebsiteWorkspace();
@@ -34,8 +24,6 @@ export function WebsiteKeywordResearchPage() {
     }
     return result;
   }, [keywordData, searchQuery]);
-
-  const selectedRank = useMemo(() => filtered.findIndex((k) => k.query === selectedQuery), [filtered, selectedQuery]);
 
   const hasRank = (intent: string) => filtered.some((k) => k.intent === intent && k.position > 0);
 
