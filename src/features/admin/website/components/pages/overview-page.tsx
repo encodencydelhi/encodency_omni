@@ -938,6 +938,7 @@ function MiniStat({
       </div>
       <div className="mt-1 flex items-baseline justify-between gap-1 flex-wrap">
         <p className={cn("text-[18px] font-bold tracking-[-0.02em] leading-none", toneText[tone])}>{formatNumber(value)}</p>
+        {best !== undefined ? <span className="mx-1 text-[#15803D] font-bold text-[9.5px]">/</span> : null}
         {best !== undefined ? (
           <span className="inline-flex items-center rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
             {best}

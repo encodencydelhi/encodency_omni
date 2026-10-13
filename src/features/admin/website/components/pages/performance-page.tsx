@@ -213,7 +213,7 @@ function OverviewTab({
     <div className="space-y-1">
       <div className="grid gap-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)]">
         <Card
-          title="OmniPlatform Performance score"
+          title="Performance score"
           icon={Gauge}
           subtitle="Composite of lab measurements"
           bodyClassName="p-2.5"
@@ -272,7 +272,7 @@ function OverviewTab({
       <Card
         title="Performance trend"
         icon={Zap}
-        subtitle="OmniPlatform performance score after each scan"
+        subtitle="performance score after each scan"
         action={
           <div className="flex items-center gap-1">
             {(["7d", "30d"] as const).map((value) => (

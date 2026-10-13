@@ -254,29 +254,6 @@ export function WebsiteAnalyticsPage() {
             empty={<EmptyState title="No landing page data" body="GA4 returned no landing pages for this period." compact />}
           />
         </Card>
-
-        <Card title="Conversions" icon={Target} bodyClassName="p-0">
-          <ul className="divide-y divide-[#F2F5FA]">
-            {data.conversions.map((conversion) => (
-              <li key={conversion.name} className="flex items-center justify-between gap-2 px-3.5 py-2.5">
-                <div className="min-w-0">
-                  <p className="truncate text-[11.5px] font-semibold text-[#28354C]">{conversion.name}</p>
-                  {conversion.value !== null ? (
-                    <p className="text-[10.5px] text-[#6B7A94]">₹{formatNumber(conversion.value)} value</p>
-                  ) : null}
-                </div>
-                <div className="flex items-center gap-2">
-                  <b className="text-[13px] font-semibold text-[#111C3A]">{formatNumber(conversion.count)}</b>
-                  <Chip tone={conversion.delta >= 0 ? "good" : "bad"}>
-                    {conversion.delta >= 0 ? "+" : ""}
-                    {conversion.delta.toFixed(1)}%
-                  </Chip>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
-
       </div>
     </div>
   );

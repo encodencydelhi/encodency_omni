@@ -1275,6 +1275,22 @@ function buildSeo(profile: ClientWebsiteProfile, domain: string, pages: PageReco
         { device: "Desktop", clicks: 3128, impressions: 58240 },
         { device: "Tablet", clicks: 712, impressions: 14254 },
       ],
+      indexCoverage: {
+        submitted: 486,
+        indexed: 452,
+        indexedNotSubmitted: 12,
+        removed: 10,
+        error: 4,
+        warning: 10,
+        excluded: 6,
+      },
+      sitemaps: {
+        submitted: 5,
+        indexed: 4,
+        pending: 0,
+        error: 0,
+        warning: 1,
+      },
     }
     : null;
 

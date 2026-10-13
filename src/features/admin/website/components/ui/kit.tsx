@@ -370,28 +370,30 @@ export function StatTile({
         ) : null}
       </span>
 
-      <span className="relative z-10 flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-0.5">
+<span className="relative z-10 flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-0.5">
         <b className={cn("text-[24px] font-bold leading-none tracking-[-0.03em]", toneText[tone])}>{value}</b>
+        {best !== undefined ? <span className="mx-1 text-[#15803D] font-bold text-[10px]">/</span> : null}
         {best !== undefined ? (
-          <span className="inline-flex items-center gap-1 rounded-md bg-[#F0FDF4] px-1.5 py-0.5 text-[10px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
+          <span className="inline-flex items-center rounded-md bg-[#F0FDF4] px-1.5 py-0.5 text-[10px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
             {best}
           </span>
         ) : null}
-        {delta !== undefined ? (
-          <span
-            className={cn(
-              "rounded-md px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset",
-              delta === 0
-                ? toneChip.muted
-                : (inverseDelta ? delta < 0 : delta > 0)
-                  ? toneChip.good
-                  : toneChip.bad,
-            )}
-          >
-            <Delta value={delta} suffix={deltaSuffix} inverse={inverseDelta} />
-          </span>
-        ) : null}
       </span>
+
+      {delta !== undefined ? (
+        <span
+          className={cn(
+            "rounded-md px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset",
+            delta === 0
+              ? toneChip.muted
+              : (inverseDelta ? delta < 0 : delta > 0)
+                ? toneChip.good
+                : toneChip.bad,
+          )}
+        >
+          <Delta value={delta} suffix={deltaSuffix} inverse={inverseDelta} />
+        </span>
+      ) : null}
 
       {sub ? <span className="relative z-10 truncate text-[11px] font-medium leading-snug text-[#64748B]">{sub}</span> : null}
       {footer && <div className="relative z-10 mt-2">{footer}</div>}

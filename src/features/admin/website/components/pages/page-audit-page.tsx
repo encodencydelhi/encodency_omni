@@ -39,7 +39,7 @@ import {
   slugForFile,
   toCsv,
 } from "../../data/selectors";
-import type { AuditCheck, PageAudit } from "../../data/types";
+import type { AuditCheck, CheckStatus, PageAudit } from "../../data/types";
 import {
   Card,
   Chip,
@@ -336,7 +336,7 @@ function MetadataEvidencePanel({ data }: { data: PageAudit }) {
           <KeyValue key={row.label} label={row.label}>
             <span className="flex min-w-0 items-center justify-end gap-1.5">
               <span className="max-w-[260px] truncate font-mono text-[10.5px] text-[#4A5A73]">{row.value ?? "Not found"}</span>
-              <Chip tone={checkTone[row.status ?? "unknown"]}>{checkLabel[row.status ?? "unknown"]}</Chip>
+              <Chip tone={checkTone[(row.status ?? "unknown") as CheckStatus]}>{checkLabel[(row.status ?? "unknown") as CheckStatus]}</Chip>
             </span>
             <span className="block text-right text-[10px] text-[#94A3B8]">{row.note}</span>
           </KeyValue>
@@ -428,9 +428,10 @@ function CheckListCard({
 }
 
 function ContentTab({ data }: { data: PageAudit }) {
-  const { content } = data;
-  const keywords = (data as DeepPageAudit).keywords ?? [];
-  const aiSignals = (data as PageAudit & { aiSignals?: { kind: string; evidence: string }[] }).aiSignals ?? [];
+   const { content } = data;
+   const deep = data as DeepPageAudit;
+   const keywords = (data as DeepPageAudit).keywords ?? [];
+   const aiSignals = (data as PageAudit & { aiSignals?: { kind: string; evidence: string }[] }).aiSignals ?? [];
   return (
     <div className="grid gap-1 lg:grid-cols-2">
       <Card title="Content summary" icon={ScrollText}>
