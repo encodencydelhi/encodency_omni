@@ -56,6 +56,7 @@ import {
 } from "../ui/kit";
 import { AXIS_PROPS, ChartLegend, GRID_PROPS, makeTooltip, SERIES_COLORS } from "../ui/charts";
 import { EmptyState, QueryErrorState, SkeletonBlock, SkeletonStats } from "../ui/states";
+import { WEBSITE_MOCK_MODE } from "../../data/config";
 import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
 
@@ -121,6 +122,17 @@ export function WebsiteMonitoringPage() {
           <WButton size="sm" onClick={() => navigate("/admin/website/settings?section=monitoring")}>
             Open monitoring settings
           </WButton>
+        </div>
+      ) : null}
+
+      {!WEBSITE_MOCK_MODE ? (
+        <div className="flex items-start gap-2 rounded-lg border border-[#F5DFB8] bg-[#FDF3E3] px-3 py-2">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-[#9A5B08]" aria-hidden />
+          <p className="text-[11.5px] leading-relaxed text-[#9A5B08]">
+            Simulated monitoring — uptime percentages, incidents, response times, SSL certificate details and
+            DNS records on this page are estimates. No live uptime prober, TLS handshake or DNS lookup is
+            connected yet.
+          </p>
         </div>
       ) : null}
 
@@ -209,20 +221,18 @@ function StatusBanner({ data }: { data: MonitoringData }) {
 }
 
 function UptimeStrip({ data }: { data: MonitoringData }) {
-  const fallbackDays = useMemo(
-    () =>
-      Array.from({ length: 60 }, (_, i) => ({
-        date: new Date(Date.now() - (59 - i) * 86400000).toISOString().slice(0, 10),
-        uptimePct: 100,
-        incidents: 0,
-      })),
-    [],
-  );
-  const rawDays = data.uptime.dailyStatus.length > 0 ? data.uptime.dailyStatus : fallbackDays;
-  const days = rawDays.slice(-60);
+  const days = data.uptime.dailyStatus.slice(-60);
+  if (days.length === 0) {
+    return (
+      <div className="py-4 text-center">
+        <p className="text-xs font-semibold text-[#28354C]">Availability history</p>
+        <p className="mt-1 text-[11px] text-[#6B7A94]">Availability history starts after scheduled checks complete.</p>
+      </div>
+    );
+  }
   return (
     <div>
-      <div className="flex items-end gap-[2px]" role="img" aria-label="Daily uptime for the last 60 days">
+      <div className="flex items-end gap-[2px]" role="img" aria-label="Daily uptime for recorded checks">
         {days.map((day) => {
           const tone = day.uptimePct >= 99.9 ? "bg-[#12A06D]" : day.uptimePct >= 99 ? "bg-[#E29208]" : "bg-[#DC3A32]";
           return (
@@ -521,6 +531,11 @@ function SslTab({ data }: { data: MonitoringData }) {
           <KeyValue label="Valid to">{formatDate(ssl.validTo)}</KeyValue>
           <KeyValue label="Protocol">{ssl.protocol}</KeyValue>
         </dl>
+        {!WEBSITE_MOCK_MODE ? (
+          <p className="mt-3 rounded-md bg-[#F7F9FC] px-2.5 py-2 text-[11px] leading-relaxed text-[#6B7A94]">
+            Certificate details are illustrative — no real TLS handshake is performed against this domain yet.
+          </p>
+        ) : null}
       </Card>
 
       <div className="grid gap-1">
@@ -573,6 +588,11 @@ function DnsTab({ data }: { data: MonitoringData }) {
               <span className="font-mono text-[11px]">{dns.nameservers.join(", ")}</span>
             </KeyValue>
           </dl>
+          {!WEBSITE_MOCK_MODE ? (
+            <p className="mt-3 rounded-md bg-[#F7F9FC] px-2.5 py-2 text-[11px] leading-relaxed text-[#6B7A94]">
+              DNS records are not looked up for this domain yet — values shown are placeholders.
+            </p>
+          ) : null}
         </Card>
 
         <Card title="Registrar & domain expiry" icon={CalendarClock}>

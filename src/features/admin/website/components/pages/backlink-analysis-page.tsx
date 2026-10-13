@@ -4,14 +4,16 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Link, Globe, Shield, Activity, Download, CheckCircle } from "lucide-react";
 import { Card, WButton } from "../ui/kit";
+import { LockedState } from "../ui/states";
 import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
 import { useBacklinkAnalysis } from "../../data/hooks";
 import { BacklinkData } from "../../data/types";
 import { downloadFile, toCsv } from "../../data/selectors";
+import { WEBSITE_MOCK_MODE } from "../../data/config";
 
 export function WebsiteBacklinkAnalysisPage() {
-  const { clientId } = useWebsiteWorkspace();
+  const { clientId, navigate } = useWebsiteWorkspace();
   const { data: backlinkData = [], isLoading, error } = useBacklinkAnalysis(clientId);
   const [selectedLink, setSelectedLink] = useState<string | null>(null);
   const [searchDomain, setSearchDomain] = useState("");
@@ -59,11 +61,28 @@ export function WebsiteBacklinkAnalysisPage() {
           <h1 className="text-base font-bold text-[#28354C]">Backlink Analysis</h1>
           <p className="text-[#6B7A94]">Monitor link profile health and authority signals</p>
         </div>
-        <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
-          Export
-        </WButton>
+        {!WEBSITE_MOCK_MODE ? null : (
+          <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
+            Export
+          </WButton>
+        )}
       </div>
 
+      {!WEBSITE_MOCK_MODE ? (
+        <LockedState
+          title="Backlink data is not connected"
+          body={
+            <>
+              No backlink index (Ahrefs, Majestic or similar) is connected to this workspace yet. Rather
+              than show sample referring domains and authority scores as if they were real, this panel stays
+              empty.
+            </>
+          }
+          ctaLabel="Open integrations"
+          onCta={() => navigate("/admin/website/settings?section=integrations")}
+        />
+      ) : (
+        <>
       <div className="grid gap-4 md:grid-cols-4">
         <Card title="Total backlinks" icon={Link} className="md:col-span-1">
           <div className="text-lg font-bold text-[#28354C]">{filtered.length}</div>
@@ -249,6 +268,8 @@ export function WebsiteBacklinkAnalysisPage() {
         <div className="rounded-lg border border-[#FEE2E2] bg-[#FEF2F2] p-4 text-[#B91C1C]">
           Failed to load backlink data.
         </div>
+      )}
+        </>
       )}
     </div>
   );

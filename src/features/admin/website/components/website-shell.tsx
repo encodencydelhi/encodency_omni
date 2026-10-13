@@ -38,20 +38,20 @@ import { NoClientSelectedState, NoWebsiteState } from "./ui/states";
 import { useWebsiteWorkspace } from "./website-workspace";
 import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../shared/integration-pending-banner";
 
-const TABS: { label: string; href: string }[] = [
+const TABS: { label: string; href: string; simulated?: boolean }[] = [
   { label: "Overview", href: "/admin/website" },
   { label: "Pages", href: "/admin/website/pages" },
   { label: "SEO", href: "/admin/website/seo" },
   { label: "Performance", href: "/admin/website/performance" },
   { label: "Analytics", href: "/admin/website/analytics" },
   { label: "Forms & CTAs", href: "/admin/website/forms" },
-  { label: "Monitoring", href: "/admin/website/monitoring" },
+  { label: "Monitoring", href: "/admin/website/monitoring", simulated: true },
   { label: "Issues", href: "/admin/website/issues" },
-  { label: "Settings", href: "/admin/website/settings" },
   { label: "Keyword Research", href: "/admin/website/keyword-research" },
-  { label: "Competitor Analysis", href: "/admin/website/competitor-analysis" },
-  { label: "Backlink Analysis", href: "/admin/website/backlink-analysis" },
+  { label: "Competitor Analysis", href: "/admin/website/competitor-analysis", simulated: true },
+  { label: "Backlink Analysis", href: "/admin/website/backlink-analysis", simulated: true },
   { label: "Rank Tracking", href: "/admin/website/rank-tracking" },
+  { label: "Settings", href: "/admin/website/settings" },
 ];
 
 const STATUS_META: Record<LiveStatus, { label: string; tone: "good" | "warn" | "bad" | "muted" }> = {
@@ -382,6 +382,12 @@ function TabBar() {
             )}
           >
             {tab.label}
+            {tab.simulated && !WEBSITE_MOCK_MODE ? (
+              <span
+                title="Contains simulated data — no live source is connected yet"
+                className="ml-1.5 inline-block size-1.5 rounded-full bg-[#E29208] align-middle"
+              />
+            ) : null}
             {count !== undefined && count > 0 ? (
               <span
                 className={cn(

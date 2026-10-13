@@ -9,6 +9,7 @@ import { useWebsiteWorkspace } from "../website-workspace";
 import { useRankTracking } from "../../data/hooks";
 import { RankTrackingData } from "../../data/types";
 import { scoreBand, downloadFile, toCsv } from "../../data/selectors";
+import { WEBSITE_MOCK_MODE } from "../../data/config";
 
 const INTENT_OPTIONS = [
   { value: "all", label: "All intents" },
@@ -85,6 +86,14 @@ export function WebsiteRankTrackingPage() {
         </WButton>
       </div>
 
+      {!WEBSITE_MOCK_MODE ? (
+        <p className="rounded-lg border border-[#E6EBF4] bg-[#FAFBFD] px-3 py-2 text-[11px] leading-relaxed text-[#6B7A94]">
+          Current positions come from Google Search Console. Previous position, position change, difficulty
+          and search volume are not tracked per keyword yet — they are estimates, and the ranking history
+          chart reflects site-wide performance, not this keyword alone.
+        </p>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-4">
         <Card title="Keywords tracked" icon={Target} className="md:col-span-1">
           <div className="text-lg font-bold text-[#28354C]">{filtered.length}</div>
@@ -105,11 +114,11 @@ export function WebsiteRankTrackingPage() {
           <div className="mt-1 text-sm text-[#6B7A94]">Moving up</div>
         </Card>
 
-        <Card title="Search volume" icon={Globe} className="md:col-span-1">
+        <Card title="Est. search volume" icon={Globe} className="md:col-span-1">
           <div className="text-lg font-bold text-[#28354C]">
             {filtered.length > 0 ? (filtered.reduce((sum, r) => sum + r.searchVolume, 0)).toLocaleString() : "—"}
           </div>
-          <div className="mt-1 text-sm text-[#6B7A94]">Monthly searches</div>
+          <div className="mt-1 text-sm text-[#6B7A94]">Est. monthly searches</div>
         </Card>
       </div>
 
@@ -171,8 +180,11 @@ export function WebsiteRankTrackingPage() {
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-sm">
                   <span className="text-[#6B7A94]">Vol {r.searchVolume.toLocaleString()}</span>
-                  <span className={`px-1.5 py-0.5 rounded text-xs ${scoreBand(r.difficulty) === "good" ? "bg-[#DCFCE7] text-[#166534]" : scoreBand(r.difficulty) === "warn" ? "bg-[#FEF3C7] text-[#9A5B08]" : "bg-[#FEE2E2] text-[#B91C1C]"}`}>
-                    D{r.difficulty}
+                  <span
+                    title="Estimated difficulty — no keyword-difficulty API is connected"
+                    className={`px-1.5 py-0.5 rounded text-xs ${scoreBand(r.difficulty) === "good" ? "bg-[#DCFCE7] text-[#166534]" : scoreBand(r.difficulty) === "warn" ? "bg-[#FEF3C7] text-[#9A5B08]" : "bg-[#FEE2E2] text-[#B91C1C]"}`}
+                  >
+                    Est. D{r.difficulty}
                   </span>
                 </div>
               </button>
@@ -191,22 +203,37 @@ export function WebsiteRankTrackingPage() {
                   <div className="text-sm text-[#6B7A94]">Current position</div>
                   <div className="text-2xl font-bold text-[#28354C]">{selected.currentPosition}</div>
                 </div>
+                {!WEBSITE_MOCK_MODE ? (
+                  <>
+                    <div>
+                      <div className="text-sm text-[#6B7A94]">Previous position</div>
+                      <div className="text-2xl font-bold text-[#28354C]">—</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-[#6B7A94]">Position change</div>
+                      <div className="text-2xl font-bold text-[#28354C]">—</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <div className="text-sm text-[#6B7A94]">Previous position</div>
+                      <div className="text-2xl font-bold text-[#28354C]">{selected.previousPosition}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-[#6B7A94]">Position change</div>
+                      <div className="text-2xl font-bold text-[#28354C]">
+                        {selected.positionChange > 0 ? `+${selected.positionChange}` : selected.positionChange}
+                      </div>
+                    </div>
+                  </>
+                )}
                 <div>
-                  <div className="text-sm text-[#6B7A94]">Previous position</div>
-                  <div className="text-2xl font-bold text-[#28354C]">{selected.previousPosition}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-[#6B7A94]">Position change</div>
-                  <div className="text-2xl font-bold text-[#28354C]">
-                    {selected.positionChange > 0 ? `+${selected.positionChange}` : selected.positionChange}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm text-[#6B7A94]">Search volume</div>
+                  <div className="text-sm text-[#6B7A94]">Est. search volume</div>
                   <div className="text-2xl font-bold text-[#28354C]">{selected.searchVolume.toLocaleString()}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-[#6B7A94]">Difficulty</div>
+                  <div className="text-sm text-[#6B7A94]">Est. difficulty</div>
                   <div className="text-2xl font-bold text-[#28354C]">{selected.difficulty}</div>
                 </div>
                 <div>

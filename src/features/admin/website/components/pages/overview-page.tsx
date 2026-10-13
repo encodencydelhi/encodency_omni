@@ -70,6 +70,7 @@ import {
   vitalTone,
 } from "../../data/selectors";
 import { INTEGRATION_ORDER, integrationStatusLabel, integrationTone } from "../../data/capability-provider";
+import { WEBSITE_MOCK_MODE } from "../../data/config";
 import type { IssueRecord, PageRecord, Severity } from "../../data/types";
 import {
   Card,
@@ -332,7 +333,7 @@ export function WebsiteOverviewPage() {
                 label="Uptime · 30 days"
                 value={`${summary.data.uptimePct.toFixed(2)}%`}
                 best="100%"
-                sub="3 regions · View uptime details →"
+                sub={WEBSITE_MOCK_MODE ? "3 regions · View uptime details →" : "estimated · no live prober · View details →"}
                 icon={Wifi}
                 tone={summary.data.uptimePct >= 99.9 ? "good" : "warn"}
                 onClick={() => navigate("/admin/website/monitoring?tab=uptime")}

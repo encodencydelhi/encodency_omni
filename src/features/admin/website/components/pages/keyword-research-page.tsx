@@ -9,6 +9,7 @@ import { useWebsiteWorkspace } from "../website-workspace";
 import { useKeywordResearch } from "../../data/hooks";
 import { KeywordResearchData } from "../../data/types";
 import { scoreBand, downloadFile, toCsv } from "../../data/selectors";
+import { WEBSITE_MOCK_MODE } from "../../data/config";
 
 const INTENT_OPTIONS = [
   { value: "all", label: "All intents" },
@@ -61,6 +62,13 @@ export function WebsiteKeywordResearchPage() {
         </WButton>
       </div>
 
+      {!WEBSITE_MOCK_MODE ? (
+        <p className="rounded-lg border border-[#E6EBF4] bg-[#FAFBFD] px-3 py-2 text-[11px] leading-relaxed text-[#6B7A94]">
+          Positions, impressions, clicks and CTR come from Google Search Console. Difficulty and search
+          volume are rough estimates derived from that data — not from a keyword research API.
+        </p>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-4">
         <Card title="Total keywords" icon={Search} className="md:col-span-1">
           <div className="text-lg font-bold text-[#28354C]">{filtered.length}</div>
@@ -74,11 +82,11 @@ export function WebsiteKeywordResearchPage() {
           <div className="mt-1 text-sm text-[#6B7A94]">Current rankings</div>
         </Card>
 
-        <Card title="Search volume" icon={Globe} className="md:col-span-1">
+        <Card title="Est. search volume" icon={Globe} className="md:col-span-1">
           <div className="text-lg font-bold text-[#28354C]">
             {filtered.length > 0 ? (filtered.reduce((sum, k) => sum + (k.searchVolume || 0), 0)).toLocaleString() : "—"}
           </div>
-          <div className="mt-1 text-sm text-[#6B7A94]">Monthly searches</div>
+          <div className="mt-1 text-sm text-[#6B7A94]">Est. monthly searches</div>
         </Card>
 
         <Card title="Intent distribution" icon={Target} className="md:col-span-1">
@@ -120,8 +128,11 @@ export function WebsiteKeywordResearchPage() {
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-sm">
                   <span className="text-[#6B7A94]">Pos {k.position}</span>
-                  <span className={`px-1.5 py-0.5 rounded text-xs ${scoreBand(k.difficulty) === "good" ? "bg-[#DCFCE7] text-[#166534]" : scoreBand(k.difficulty) === "warn" ? "bg-[#FEF3C7] text-[#9A5B08]" : "bg-[#FEE2E2] text-[#B91C1C]"}`}>
-                    D{k.difficulty}
+                  <span
+                    title="Estimated difficulty — no keyword-difficulty API is connected"
+                    className={`px-1.5 py-0.5 rounded text-xs ${scoreBand(k.difficulty) === "good" ? "bg-[#DCFCE7] text-[#166534]" : scoreBand(k.difficulty) === "warn" ? "bg-[#FEF3C7] text-[#9A5B08]" : "bg-[#FEE2E2] text-[#B91C1C]"}`}
+                  >
+                    Est. D{k.difficulty}
                   </span>
                 </div>
               </button>
@@ -153,7 +164,7 @@ export function WebsiteKeywordResearchPage() {
                   <div className="text-base font-bold text-[#28354C]">{selected.ctr}%</div>
                 </div>
                 <div>
-                  <div className="text-sm text-[#6B7A94]">Volume</div>
+                  <div className="text-sm text-[#6B7A94]">Est. volume</div>
                   <div className="text-base font-bold text-[#28354C]">
                     {(selected.searchVolume || 0).toLocaleString()}
                   </div>

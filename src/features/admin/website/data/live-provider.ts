@@ -12,7 +12,15 @@ function getStoredClientIdSafe(): string {
 
 function headers(clientId: string) {
   const targetId = clientId && UUID_PATTERN.test(clientId) ? clientId : getStoredClientIdSafe();
-  return companyScopeHeaders(getStoredCompanyId(), targetId ? { 'x-client-id': targetId } : {});
+  const companyId = getStoredCompanyId();
+  const h: Record<string, string> = {};
+  if (companyId && UUID_PATTERN.test(companyId)) {
+    h['x-company-id'] = companyId;
+  }
+  if (targetId && UUID_PATTERN.test(targetId)) {
+    h['x-client-id'] = targetId;
+  }
+  return h;
 }
 
 function get<T>(clientId: string, section: string, query?: Record<string, string>) {
