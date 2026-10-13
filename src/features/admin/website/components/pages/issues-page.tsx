@@ -51,7 +51,6 @@ import {
 } from "../ui/kit";
 import { EmptyState, QueryErrorState, SkeletonBlock, SkeletonStats } from "../ui/states";
 import { useUrlParams, useUrlState } from "../use-url-state";
-import { useWebsiteWorkspace } from "../website-workspace";
 
 type IssueTab = "all" | Severity | "resolved";
 

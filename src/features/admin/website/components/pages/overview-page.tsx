@@ -142,7 +142,7 @@ export function WebsiteOverviewPage() {
             <Card title="Website" icon={ShieldCheck}>
               <SkeletonBlock lines={6} />
             </Card>
-            <Card title="OmniPlatform website scores" icon={Gauge}>
+            <Card title="website scores" icon={Gauge}>
               <SkeletonStats count={4} />
             </Card>
             <SkeletonStats count={4} />
@@ -253,7 +253,7 @@ export function WebsiteOverviewPage() {
             </Card>
 
             <Card
-              title="OmniPlatform website scores"
+              title="website scores"
               subtitle="Our own composite measures — click any score for full details"
               icon={Gauge}
               bodyClassName="p-4 flex flex-col justify-center"
@@ -929,7 +929,7 @@ function MiniStat({
       className={cn(
         "rounded-xl border border-[#E6EBF4] p-2.5 text-left transition-all",
         onClick &&
-          "cursor-pointer hover:-translate-y-0.5 hover:border-[#C9D6EA] hover:shadow-md hover:bg-[#FAFCFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35",
+        "cursor-pointer hover:-translate-y-0.5 hover:border-[#C9D6EA] hover:shadow-md hover:bg-[#FAFCFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35",
       )}
     >
       <div className="flex items-center justify-between">

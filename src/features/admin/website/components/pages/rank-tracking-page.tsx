@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { TrendingUp, Target, Globe, Download, Activity } from "lucide-react";
 import { Card, WButton } from "../ui/kit";
@@ -15,6 +15,26 @@ export function WebsiteRankTrackingPage() {
   const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [positionFilter, setPositionFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const previousSearchKeyword = useRef<string>(searchKeyword);
+  const previousPositionFilter = useRef<string>(positionFilter);
+
+  // Reset page when search query changes
+  useEffect(() => {
+    if (previousSearchKeyword.current !== searchKeyword) {
+      setCurrentPage(1);
+    }
+    previousSearchKeyword.current = searchKeyword;
+  }, [searchKeyword]);
+
+  // Reset page when position filter changes
+  useEffect(() => {
+    if (previousPositionFilter.current !== positionFilter) {
+      setCurrentPage(1);
+    }
+    previousPositionFilter.current = positionFilter;
+  }, [positionFilter]);
 
   const selected = useMemo(() => rankData.find((r) => r.keyword === selectedKeyword) ?? null, [
     rankData,
@@ -34,6 +54,17 @@ export function WebsiteRankTrackingPage() {
     }
     return result;
   }, [rankData, searchKeyword, positionFilter]);
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(startIndex, startIndex + itemsPerPage);
+  }, [filtered, currentPage, itemsPerPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(totalPages, page)));
+  };
 
   const handleExport = () => {
     downloadFile(
@@ -140,7 +171,7 @@ export function WebsiteRankTrackingPage() {
           </div>
 
           <div className="mt-3 space-y-1">
-            {filtered.map((r) => (
+            {paginatedItems.map((r) => (
               <button
                 key={r.keyword}
                 className={`w-full rounded-lg border p-2 text-left transition-colors ${selectedKeyword === r.keyword ? "border-[#4F46E5] bg-[#EEF2FF]" : "border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
@@ -181,6 +212,54 @@ export function WebsiteRankTrackingPage() {
             ))}
             {filtered.length === 0 && (
               <div className="py-8 text-center text-[#6B7A94]">No rankings found</div>
+            )}
+
+            {/* Pagination Controls */}
+            {filtered.length > 0 && (
+              <div className="flex items-center justify-between px-2 py-3 border-t border-[#DAE1EC] bg-[#FAFBFD] rounded-b-lg">
+                <div className="text-sm text-[#6B7A94]">
+                  Showing {paginatedItems.length} of {filtered.length} keywords
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => 
+                      page === 1 || 
+                      page === totalPages || 
+                      Math.abs(page - currentPage) <= 1
+                    )
+                    .map((page, idx, filteredPages) => {
+                      const showEllipsisBefore = idx > 0 && filteredPages[idx - 1] !== page - 1;
+                      const showEllipsisAfter = idx < filteredPages.length - 1 && filteredPages[idx + 1] !== page + 1;
+                      
+                      return (
+                        <div key={page} className="flex items-center">
+                          {showEllipsisBefore && <span className="px-2 text-[#6B7A94]">...</span>}
+                          <button
+                            onClick={() => handlePageChange(page)}
+                            className={`px-3 py-1 text-sm border rounded ${currentPage === page ? "bg-[#4F46E5] text-white border-[#4F46E5]" : "bg-white text-[#28354C] border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
+                          >
+                            {page}
+                          </button>
+                          {showEllipsisAfter && <span className="px-2 text-[#6B7A94]">...</span>}
+                        </div>
+                      );
+                    })}
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

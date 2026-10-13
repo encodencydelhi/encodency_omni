@@ -15,7 +15,7 @@ export function WebsiteKeywordResearchPage() {
   const [selectedQuery, setSelectedQuery] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const itemsPerPage = 10;
   const previousSearchQuery = useRef<string>(searchQuery);
 
   // Reset page when search query changes
@@ -36,12 +36,16 @@ export function WebsiteKeywordResearchPage() {
     return result;
   }, [keywordData, searchQuery]);
 
-  // Pagination calculations
+// Pagination calculations
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
   const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filtered.slice(startIndex, startIndex + itemsPerPage);
   }, [filtered, currentPage, itemsPerPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(totalPages, page)));
+  };
 
   const hasRank = (intent: string) => filtered.some((k) => k.intent === intent && k.position > 0);
 
@@ -148,68 +152,53 @@ export function WebsiteKeywordResearchPage() {
              )}
            </div>
 
-           {/* Pagination Controls */}
-           {filtered.length > 0 && (
-             <div className="flex items-center justify-between px-2 py-3 border-t border-[#DAE1EC] bg-[#FAFBFD] rounded-b-lg">
-               <div className="text-sm text-[#6B7A94]">
-                 Showing {paginatedItems.length} of {filtered.length} keywords
-               </div>
-               <div className="flex items-center gap-2">
-                 <select
-                   value={itemsPerPage}
-                   onChange={(e) => {
-                     setItemsPerPage(Number(e.target.value));
-                     setCurrentPage(1);
-                   }}
-                   className="text-sm border border-[#DAE1EC] rounded px-2 py-1 bg-white"
-                 >
-                   <option value={5}>5 per page</option>
-                   <option value={10}>10 per page</option>
-                   <option value={20}>20 per page</option>
-                   <option value={50}>50 per page</option>
-                 </select>
-                 <div className="flex gap-1">
-                   <button
-                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                     disabled={currentPage === 1}
-                     className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
-                   >
-                     Previous
-                   </button>
-                   {Array.from({ length: totalPages }, (_, i) => i + 1)
-                     .filter(page => 
-                       page === 1 || 
-                       page === totalPages || 
-                       Math.abs(page - currentPage) <= 1
-                     )
-                     .map((page, idx, filteredPages) => {
-                       const showEllipsisBefore = idx > 0 && filteredPages[idx - 1] !== page - 1;
-                       const showEllipsisAfter = idx < filteredPages.length - 1 && filteredPages[idx + 1] !== page + 1;
-                       
-                       return (
-                         <div key={page} className="flex items-center">
-                           {showEllipsisBefore && <span className="px-2 text-[#6B7A94]">...</span>}
-                           <button
-                             onClick={() => setCurrentPage(page)}
-                             className={`px-3 py-1 text-sm border rounded ${currentPage === page ? "bg-[#4F46E5] text-white border-[#4F46E5]" : "bg-white text-[#28354C] border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
-                           >
-                             {page}
-                           </button>
-                           {showEllipsisAfter && <span className="px-2 text-[#6B7A94]">...</span>}
-                         </div>
-                       );
-                     })}
-                   <button
-                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                     disabled={currentPage === totalPages}
-                     className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
-                   >
-                     Next
-                   </button>
-                 </div>
-               </div>
-             </div>
-           )}
+{/* Pagination Controls */}
+            {filtered.length > 0 && (
+              <div className="flex items-center justify-between px-2 py-3 border-t border-[#DAE1EC] bg-[#FAFBFD] rounded-b-lg">
+                <div className="text-sm text-[#6B7A94]">
+                  Showing {paginatedItems.length} of {filtered.length} keywords
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => 
+                      page === 1 || 
+                      page === totalPages || 
+                      Math.abs(page - currentPage) <= 1
+                    )
+                    .map((page, idx, filteredPages) => {
+                      const showEllipsisBefore = idx > 0 && filteredPages[idx - 1] !== page - 1;
+                      const showEllipsisAfter = idx < filteredPages.length - 1 && filteredPages[idx + 1] !== page + 1;
+                      
+                      return (
+                        <div key={page} className="flex items-center">
+                          {showEllipsisBefore && <span className="px-2 text-[#6B7A94]">...</span>}
+                          <button
+                            onClick={() => handlePageChange(page)}
+                            className={`px-3 py-1 text-sm border rounded ${currentPage === page ? "bg-[#4F46E5] text-white border-[#4F46E5]" : "bg-white text-[#28354C] border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
+                          >
+                            {page}
+                          </button>
+                          {showEllipsisAfter && <span className="px-2 text-[#6B7A94]">...</span>}
+                        </div>
+                      );
+                    })}
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
         </div>
 
         <div className="md:col-span-2">

@@ -62,8 +62,7 @@ import type { IssueCategory, Severity } from "../../data/types";
 
 type ReportTab = "overview" | "affected-pages" | "similar-issues" | "history" | "fix-guide";
 
-export default function IssueDetailPage({ params }: { params: { issueId: string } }) {
-  const { issueId } = params;
+export default function IssueDetailPage({ issueId }: { issueId: string }) {
   const router = useRouter();
   const { clientId, runScan, scan, openFixGuide, navigate } = useWebsiteWorkspace();
   const { data: issues, isLoading: issuesLoading, error: issuesError, refetch: refetchIssues } = useWebsiteIssues(clientId, Boolean(issueId));

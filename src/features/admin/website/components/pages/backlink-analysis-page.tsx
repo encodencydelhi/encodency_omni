@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Link, Download } from "lucide-react";
 import { Card, Chip, WButton } from "../ui/kit";
@@ -14,6 +14,17 @@ export function WebsiteBacklinkAnalysisPage() {
   const { data: gscPages = [], queries, trend, totals, isLoading, error } = useSearchConsole(clientId);
   const [selectedPage, setSelectedPage] = useState<null | { page: string; position?: number; clicks?: number; impressions?: number; ctr?: number }>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const previousSearchQuery = useRef<string>(searchQuery);
+
+  // Reset page when search query changes
+  useEffect(() => {
+    if (previousSearchQuery.current !== searchQuery) {
+      setCurrentPage(1);
+    }
+    previousSearchQuery.current = searchQuery;
+  }, [searchQuery]);
 
   const filtered = useMemo(() => {
     let result = gscPages;
@@ -26,6 +37,17 @@ export function WebsiteBacklinkAnalysisPage() {
     }
     return result;
   }, [gscPages, searchQuery]);
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(startIndex, startIndex + itemsPerPage);
+  }, [filtered, currentPage, itemsPerPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(totalPages, page)));
+  };
 
   const handleExport = () => {
     downloadFile(
@@ -122,8 +144,8 @@ export function WebsiteBacklinkAnalysisPage() {
                 />
               </div>
 
-              <div className="mt-3 space-y-1">
-                {filtered.map((g) => {
+<div className="mt-3 space-y-1">
+                {paginatedItems.map((g) => {
                   const isSelected = selectedPage?.page === g.page;
                   return (
                     <button
@@ -147,7 +169,7 @@ export function WebsiteBacklinkAnalysisPage() {
                                   : g.position && g.position <= 20
                                     ? "bg-[#F97316]"
                                     : "bg-[#EF4444]"
-                          }`}
+                            }`}
                           />
                           <span className="text-[10px]">{g.position?.toFixed(1) ?? "—"}</span>
                         </div>
@@ -164,6 +186,54 @@ export function WebsiteBacklinkAnalysisPage() {
                   <div className="py-8 text-center text-[#6B7A94]">No organic landing pages found</div>
                 )}
               </div>
+
+              {/* Pagination Controls */}
+              {filtered.length > 0 && (
+                <div className="flex items-center justify-between px-2 py-3 border-t border-[#DAE1EC] bg-[#FAFBFD] rounded-b-lg">
+                  <div className="text-sm text-[#6B7A94]">
+                    Showing {paginatedItems.length} of {filtered.length} landing pages
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => 
+                        page === 1 || 
+                        page === totalPages || 
+                        Math.abs(page - currentPage) <= 1
+                      )
+                      .map((page, idx, filteredPages) => {
+                        const showEllipsisBefore = idx > 0 && filteredPages[idx - 1] !== page - 1;
+                        const showEllipsisAfter = idx < filteredPages.length - 1 && filteredPages[idx + 1] !== page + 1;
+                        
+                        return (
+                          <div key={page} className="flex items-center">
+                            {showEllipsisBefore && <span className="px-2 text-[#6B7A94]">...</span>}
+                            <button
+                              onClick={() => handlePageChange(page)}
+                              className={`px-3 py-1 text-sm border rounded ${currentPage === page ? "bg-[#4F46E5] text-white border-[#4F46E5]" : "bg-white text-[#28354C] border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
+                            >
+                              {page}
+                            </button>
+                            {showEllipsisAfter && <span className="px-2 text-[#6B7A94]">...</span>}
+                          </div>
+                        );
+                      })}
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="md:col-span-1">
