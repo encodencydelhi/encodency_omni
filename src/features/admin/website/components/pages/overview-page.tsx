@@ -82,6 +82,7 @@ import {
   SegmentedControl,
   StatTile,
   WButton,
+  toneText,
   type Column,
 } from "../ui/kit";
 import { AXIS_PROPS, ChartLegend, GRID_PROPS, makeTooltip, SERIES_COLORS } from "../ui/charts";
@@ -278,11 +279,11 @@ export function WebsiteOverviewPage() {
                       {scoreLabel(summary.data.scores.health)} →
                     </p>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="inline-flex items-center rounded-md bg-[#EFF6FF] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1D4ED8] ring-1 ring-inset ring-[#BFDBFE]">
-                        Current: {summary.data.scores.health}
+                      <span className={cn("inline-flex items-center rounded-md bg-[#F8FAFC] px-1.5 py-0.5 text-[9.5px] font-bold ring-1 ring-inset ring-[#E2E8F0]", toneText[scoreBand(summary.data.scores.health)])}>
+                        {summary.data.scores.health}
                       </span>
                       <span className="inline-flex items-center rounded-md bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
-                        Best: 100
+                        100
                       </span>
                     </div>
                     <span className="inline-flex items-center justify-center rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-[#475569] shadow-sm ring-1 ring-inset ring-[#E2E8F0]">
@@ -315,9 +316,9 @@ export function WebsiteOverviewPage() {
                         {score.label} →
                       </span>
                       <div className="flex items-center justify-center gap-1 text-[9px] font-bold">
-                        <span className="text-[#334155]">Cur: {score.value}</span>
+                        <span className={toneText[scoreBand(score.value)]}>{score.value}</span>
                         <span className="text-[#94A3B8]">·</span>
-                        <span className="text-[#15803D]">Best: 100</span>
+                        <span className="text-[#15803D]">100</span>
                       </div>
                     </button>
                   ))}
@@ -653,11 +654,11 @@ export function WebsiteOverviewPage() {
                     <dt className="text-[12px] font-medium text-[#4A5A73]">{vital.label}</dt>
                     <dd className="inline-flex items-center gap-2">
                       <div className="flex items-center gap-1.5 text-[11px]">
-                        <span className="font-bold text-[#0F172A] bg-[#F1F5F9] px-1.5 py-0.5 rounded">
-                          Cur: {vital.display}
+                        <span className={cn("font-bold bg-[#F1F5F9] px-1.5 py-0.5 rounded", toneText[vitalTone[vital.band]])}>
+                          {vital.display}
                         </span>
                         <span className="font-bold text-[#15803D] bg-[#F0FDF4] px-1.5 py-0.5 rounded border border-[#DCFCE7]">
-                          Best: ≤ {vital.thresholds.good}{vital.key === "cls" ? "" : vital.key === "inp" ? "ms" : "s"}
+                          ≤ {vital.thresholds.good}{vital.key === "cls" ? "" : vital.key === "inp" ? "ms" : "s"}
                         </span>
                       </div>
                       <Chip tone={vitalTone[vital.band]}>{vital.band === "good" ? "Good" : vital.band === "poor" ? "Poor" : "Needs work"}</Chip>
@@ -672,11 +673,11 @@ export function WebsiteOverviewPage() {
                 >
                   <dt className="text-[12px] font-medium text-[#4A5A73]">Average page weight</dt>
                   <dd className="inline-flex items-center gap-2 text-[11px]">
-                    <span className="font-bold text-[#0F172A] bg-[#F1F5F9] px-1.5 py-0.5 rounded">
-                      Cur: {formatWeight(performance.data.avgPageWeightKb)}
+                    <span className={cn("font-bold bg-[#F1F5F9] px-1.5 py-0.5 rounded", performance.data.avgPageWeightKb <= 1536 ? "text-[#15803D]" : "text-[#B45309]")}>
+                      {formatWeight(performance.data.avgPageWeightKb)}
                     </span>
                     <span className="font-bold text-[#15803D] bg-[#F0FDF4] px-1.5 py-0.5 rounded border border-[#DCFCE7]">
-                      Best: &lt; 1.5 MB
+                      &lt; 1.5 MB
                     </span>
                     <ArrowRight className="size-3 text-[#94A3B8]" />
                   </dd>
@@ -688,11 +689,11 @@ export function WebsiteOverviewPage() {
                 >
                   <dt className="text-[12px] font-medium text-[#4A5A73]">Average requests</dt>
                   <dd className="inline-flex items-center gap-2 text-[11px]">
-                    <span className="font-bold text-[#0F172A] bg-[#F1F5F9] px-1.5 py-0.5 rounded">
-                      Cur: {performance.data.avgRequests}
+                    <span className={cn("font-bold bg-[#F1F5F9] px-1.5 py-0.5 rounded", performance.data.avgRequests < 50 ? "text-[#15803D]" : "text-[#B45309]")}>
+                      {performance.data.avgRequests}
                     </span>
                     <span className="font-bold text-[#15803D] bg-[#F0FDF4] px-1.5 py-0.5 rounded border border-[#DCFCE7]">
-                      Best: &lt; 50
+                      &lt; 50
                     </span>
                     <ArrowRight className="size-3 text-[#94A3B8]" />
                   </dd>
@@ -928,13 +929,10 @@ function MiniStat({
         {onClick ? <ArrowRight className="size-3 text-[#94A3B8]" /> : null}
       </div>
       <div className="mt-1 flex items-baseline justify-between gap-1 flex-wrap">
-        <div className="flex items-baseline gap-1">
-          <span className="text-[10px] font-bold text-[#64748B]">Current:</span>
-          <p className="text-[18px] font-bold tracking-[-0.02em] text-[#111C3A] leading-none">{formatNumber(value)}</p>
-        </div>
+        <p className={cn("text-[18px] font-bold tracking-[-0.02em] leading-none", toneText[tone])}>{formatNumber(value)}</p>
         {best !== undefined ? (
           <span className="inline-flex items-center rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
-            Best: {best}
+            {best}
           </span>
         ) : null}
       </div>

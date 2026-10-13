@@ -61,7 +61,7 @@ export function WebsiteCompetitorAnalysisPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#28354C]">Competitor Analysis</h1>
+          <h1 className="text-base font-bold text-[#28354C]">Competitor Analysis</h1>
           <p className="text-[#6B7A94]">Benchmark against key competitors in your market</p>
         </div>
         <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
@@ -71,26 +71,26 @@ export function WebsiteCompetitorAnalysisPage() {
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card title="Competitors tracked" icon={Users} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">{filtered.length}</div>
+          <div className="text-lg font-bold text-[#28354C]">{filtered.length}</div>
           <div className="mt-1 text-sm text-[#6B7A94]">Competitors in monitoring</div>
         </Card>
 
         <Card title="Avg traffic share" icon={Globe} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">
+          <div className="text-lg font-bold text-[#28354C]">
             {filtered.length > 0 ? (filtered.reduce((sum, c) => sum + c.trafficShare, 0) / filtered.length).toFixed(1) : "—"}
           </div>
           <div className="mt-1 text-sm text-[#6B7A94]">Of target market</div>
         </Card>
 
         <Card title="Avg keyword overlap" icon={Target} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">
+          <div className="text-lg font-bold text-[#28354C]">
             {filtered.length > 0 ? (filtered.reduce((sum, c) => sum + c.keywordOverlap, 0) / filtered.length).toFixed(1) : "—"}
           </div>
           <div className="mt-1 text-sm text-[#6B7A94]">Shared keywords</div>
         </Card>
 
         <Card title="Content gap %" icon={Shield} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">
+          <div className="text-lg font-bold text-[#28354C]">
             {filtered.length > 0 ? (filtered.reduce((sum, c) => sum + c.contentGap, 0) / filtered.length).toFixed(1) : "—"}
           </div>
           <div className="mt-1 text-sm text-[#6B7A94]">Unique opportunities</div>
@@ -136,27 +136,27 @@ export function WebsiteCompetitorAnalysisPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <div className="text-sm text-[#6B7A94]">Traffic share</div>
-                  <div className="text-2xl font-bold text-[#28354C]">{selected.trafficShare}%</div>
+                  <div className="text-base font-bold text-[#28354C]">{selected.trafficShare}%</div>
                 </div>
                 <div>
                   <div className="text-sm text-[#6B7A94]">Keyword overlap</div>
-                  <div className="text-2xl font-bold text-[#28354C]">{selected.keywordOverlap}%</div>
+                  <div className="text-base font-bold text-[#28354C]">{selected.keywordOverlap}%</div>
                 </div>
                 <div>
                   <div className="text-sm text-[#6B7A94]">Content gap</div>
-                  <div className="text-2xl font-bold text-[#28354C]">{selected.contentGap}%</div>
+                  <div className="text-base font-bold text-[#28354C]">{selected.contentGap}%</div>
                 </div>
                 <div>
                   <div className="text-sm text-[#6B7A94]">Referring domains</div>
-                  <div className="text-2xl font-bold text-[#28354C]">{selected.backlinkProfile.referringDomains}</div>
+                  <div className="text-base font-bold text-[#28354C]">{selected.backlinkProfile.referringDomains}</div>
                 </div>
                 <div>
                   <div className="text-sm text-[#6B7A94]">Total backlinks</div>
-                  <div className="text-2xl font-bold text-[#28354C]">{selected.backlinkProfile.totalBacklinks}</div>
+                  <div className="text-base font-bold text-[#28354C]">{selected.backlinkProfile.totalBacklinks}</div>
                 </div>
                 <div>
                   <div className="text-sm text-[#6B7A94]">Backlink growth</div>
-                  <div className="text-2xl font-bold text-[#28354C]">{selected.backlinkProfile.growthRate}%</div>
+                  <div className="text-base font-bold text-[#28354C]">{selected.backlinkProfile.growthRate}%</div>
                 </div>
               </div>
 

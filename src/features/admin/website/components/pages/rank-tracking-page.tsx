@@ -77,7 +77,7 @@ export function WebsiteRankTrackingPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#28354C]">Rank Tracking</h1>
+          <h1 className="text-base font-bold text-[#28354C]">Rank Tracking</h1>
           <p className="text-[#6B7A94]">Monitor keyword positions and SERP visibility</p>
         </div>
         <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
@@ -87,26 +87,26 @@ export function WebsiteRankTrackingPage() {
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card title="Keywords tracked" icon={Target} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">{filtered.length}</div>
+          <div className="text-lg font-bold text-[#28354C]">{filtered.length}</div>
           <div className="mt-1 text-sm text-[#6B7A94]">In campaign</div>
         </Card>
 
         <Card title="Avg position" icon={TrendingUp} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">
+          <div className="text-lg font-bold text-[#28354C]">
             {filtered.length > 0 ? (filtered.reduce((sum, r) => sum + r.currentPosition, 0) / filtered.length).toFixed(1) : "—"}
           </div>
           <div className="mt-1 text-sm text-[#6B7A94]">Current rankings</div>
         </Card>
 
         <Card title="Improving" icon={Activity} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">
+          <div className="text-lg font-bold text-[#28354C]">
             {filtered.filter((r) => r.positionChange > 0).length}
           </div>
           <div className="mt-1 text-sm text-[#6B7A94]">Moving up</div>
         </Card>
 
         <Card title="Search volume" icon={Globe} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">
+          <div className="text-lg font-bold text-[#28354C]">
             {filtered.length > 0 ? (filtered.reduce((sum, r) => sum + r.searchVolume, 0)).toLocaleString() : "—"}
           </div>
           <div className="mt-1 text-sm text-[#6B7A94]">Monthly searches</div>

@@ -371,15 +371,10 @@ export function StatTile({
       </span>
 
       <span className="relative z-10 flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-0.5">
-        <span className="flex items-baseline gap-1.5">
-          {best !== undefined ? (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">Current:</span>
-          ) : null}
-          <b className="text-[24px] font-bold leading-none tracking-[-0.03em] text-[#0F172A]">{value}</b>
-        </span>
+        <b className={cn("text-[24px] font-bold leading-none tracking-[-0.03em]", toneText[tone])}>{value}</b>
         {best !== undefined ? (
           <span className="inline-flex items-center gap-1 rounded-md bg-[#F0FDF4] px-1.5 py-0.5 text-[10px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
-            Best: {best}
+            {best}
           </span>
         ) : null}
         {delta !== undefined ? (

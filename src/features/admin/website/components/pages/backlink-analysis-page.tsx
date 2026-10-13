@@ -56,7 +56,7 @@ export function WebsiteBacklinkAnalysisPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#28354C]">Backlink Analysis</h1>
+          <h1 className="text-base font-bold text-[#28354C]">Backlink Analysis</h1>
           <p className="text-[#6B7A94]">Monitor link profile health and authority signals</p>
         </div>
         <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
@@ -66,19 +66,19 @@ export function WebsiteBacklinkAnalysisPage() {
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card title="Total backlinks" icon={Link} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">{filtered.length}</div>
+          <div className="text-lg font-bold text-[#28354C]">{filtered.length}</div>
           <div className="mt-1 text-sm text-[#6B7A94]">Active links</div>
         </Card>
 
         <Card title="Unique domains" icon={Globe} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">
+          <div className="text-lg font-bold text-[#28354C]">
             {filtered.length > 0 ? new Set(filtered.map((b) => b.referringDomain)).size : "—"}
           </div>
           <div className="mt-1 text-sm text-[#6B7A94]">Referrers</div>
         </Card>
 
         <Card title="Avg authority" icon={Shield} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">
+          <div className="text-lg font-bold text-[#28354C]">
             {
               filtered.length > 0
                 ? (
@@ -94,7 +94,7 @@ export function WebsiteBacklinkAnalysisPage() {
         </Card>
 
         <Card title="DoFollow ratio" icon={Activity} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">
+          <div className="text-lg font-bold text-[#28354C]">
             {
               filtered.length > 0
                 ? (

@@ -53,7 +53,7 @@ export function WebsiteKeywordResearchPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#28354C]">Keyword Research</h1>
+          <h1 className="text-base font-bold text-[#28354C]">Keyword Research</h1>
           <p className="text-[#6B7A94]">Track search performance, volume, and competitive gaps</p>
         </div>
         <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
@@ -63,26 +63,26 @@ export function WebsiteKeywordResearchPage() {
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card title="Total keywords" icon={Search} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">{filtered.length}</div>
+          <div className="text-lg font-bold text-[#28354C]">{filtered.length}</div>
           <div className="mt-1 text-sm text-[#6B7A94]">Tracked queries</div>
         </Card>
 
         <Card title="Avg position" icon={TrendingUp} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">
+          <div className="text-lg font-bold text-[#28354C]">
             {filtered.length > 0 ? (filtered.reduce((sum, k) => sum + k.position, 0) / filtered.length).toFixed(1) : "—"}
           </div>
           <div className="mt-1 text-sm text-[#6B7A94]">Current rankings</div>
         </Card>
 
         <Card title="Search volume" icon={Globe} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">
+          <div className="text-lg font-bold text-[#28354C]">
             {filtered.length > 0 ? (filtered.reduce((sum, k) => sum + (k.searchVolume || 0), 0)).toLocaleString() : "—"}
           </div>
           <div className="mt-1 text-sm text-[#6B7A94]">Monthly searches</div>
         </Card>
 
         <Card title="Intent distribution" icon={Target} className="md:col-span-1">
-          <div className="text-3xl font-bold text-[#28354C]">
+          <div className="text-lg font-bold text-[#28354C]">
             {
               Object.entries(
                 filtered.reduce<Record<string, number>>(
@@ -138,29 +138,29 @@ export function WebsiteKeywordResearchPage() {
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
                   <div className="text-sm text-[#6B7A94]">Position</div>
-                  <div className="text-xl font-bold text-[#28354C]">{selected.position}</div>
+                  <div className="text-base font-bold text-[#28354C]">{selected.position}</div>
                 </div>
                 <div>
                   <div className="text-sm text-[#6B7A94]">Impressions</div>
-                  <div className="text-xl font-bold text-[#28354C]">{selected.impressions.toLocaleString()}</div>
+                  <div className="text-base font-bold text-[#28354C]">{selected.impressions.toLocaleString()}</div>
                 </div>
                 <div>
                   <div className="text-sm text-[#6B7A94]">Clicks</div>
-                  <div className="text-xl font-bold text-[#28354C]">{selected.clicks.toLocaleString()}</div>
+                  <div className="text-base font-bold text-[#28354C]">{selected.clicks.toLocaleString()}</div>
                 </div>
                 <div>
                   <div className="text-sm text-[#6B7A94]">CTR</div>
-                  <div className="text-xl font-bold text-[#28354C]">{selected.ctr}%</div>
+                  <div className="text-base font-bold text-[#28354C]">{selected.ctr}%</div>
                 </div>
                 <div>
                   <div className="text-sm text-[#6B7A94]">Volume</div>
-                  <div className="text-xl font-bold text-[#28354C]">
+                  <div className="text-base font-bold text-[#28354C]">
                     {(selected.searchVolume || 0).toLocaleString()}
                   </div>
                 </div>
                 <div>
                   <div className="text-sm text-[#6B7A94]">Intent</div>
-                  <div className="text-xl font-bold text-[#28354C]">{selected.intent}</div>
+                  <div className="text-base font-bold text-[#28354C]">{selected.intent}</div>
                 </div>
               </div>
 

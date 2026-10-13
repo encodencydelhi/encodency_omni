@@ -277,10 +277,13 @@ export function WebsitePagesListPage() {
         cell: (page) => <span className="text-[11px] text-[#6B7A94]">{formatRelative(page.lastScannedAt)}</span>,
       },
     ],
-    [], // TODO: Fix dependency array
+    [],
   );
 
-  const sort: SortState = { key: sortKey, direction: sortDir };
+  const sort = useMemo<SortState>(
+    () => ({ key: sortKey, direction: sortDir }),
+    [sortKey, sortDir],
+  );
   const sorted = useSortedRows(filtered, columns, sort);
   const pagination = usePagination(sorted.length, 25);
   const visible = pagination.slice(sorted);

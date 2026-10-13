@@ -63,6 +63,7 @@ import {
   ScoreDial,
   StatTile,
   SubTabs,
+  toneText,
   usePagination,
   WButton,
   type Column,
@@ -225,8 +226,8 @@ export function WebsiteSeoPage() {
                           Overall Score
                         </p>
                         <div className="flex items-center gap-1 text-[9.5px] font-bold mt-0.5">
-                          <span className="rounded bg-[#EFF6FF] px-1.5 py-0.5 text-[#1D4ED8] ring-1 ring-inset ring-[#BFDBFE]">Current: {seo.data.overview.score}</span>
-                          <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">Best: 100</span>
+                          <span className={cn("rounded bg-[#F8FAFC] px-1.5 py-0.5 ring-1 ring-inset ring-[#E2E8F0]", toneText[scoreBand(seo.data.overview.score)])}>{seo.data.overview.score}</span>
+                          <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">100</span>
                         </div>
                       </div>
                     </div>
@@ -242,22 +243,22 @@ export function WebsiteSeoPage() {
                       <div className="flex items-center justify-between rounded-lg bg-[#FEF2F2] py-1 px-2.5 border border-[#FEE2E2]">
                         <span className="text-[11px] font-semibold text-[#B91C1C]">Errors</span>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[11.5px] font-bold text-[#991B1B]">Current: {formatNumber(seo.data.overview.errors)}</span>
-                          <span className="rounded bg-white px-1 py-0.5 text-[9px] font-bold text-[#15803D]">Best: 0</span>
+                          <span className={cn("text-[11.5px] font-bold", seo.data.overview.errors > 0 ? "text-[#991B1B]" : "text-[#166534]")}>{formatNumber(seo.data.overview.errors)}</span>
+                          <span className="rounded bg-white px-1 py-0.5 text-[9px] font-bold text-[#15803D]">0</span>
                         </div>
                       </div>
                       <div className="flex items-center justify-between rounded-lg bg-[#FFFBEB] py-1 px-2.5 border border-[#FEF3C7]">
                         <span className="text-[11px] font-semibold text-[#B45309]">Warnings</span>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[11.5px] font-bold text-[#92400E]">Current: {formatNumber(seo.data.overview.warnings)}</span>
-                          <span className="rounded bg-white px-1 py-0.5 text-[9px] font-bold text-[#15803D]">Best: 0</span>
+                          <span className={cn("text-[11.5px] font-bold", seo.data.overview.warnings > 0 ? "text-[#92400E]" : "text-[#166534]")}>{formatNumber(seo.data.overview.warnings)}</span>
+                          <span className="rounded bg-white px-1 py-0.5 text-[9px] font-bold text-[#15803D]">0</span>
                         </div>
                       </div>
                       <div className="flex items-center justify-between rounded-lg bg-[#F0FDF4] py-1 px-2.5 border border-[#DCFCE7]">
                         <span className="text-[11px] font-semibold text-[#15803D]">Passed checks</span>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[11.5px] font-bold text-[#166534]">Current: {formatNumber(seo.data.overview.passedChecks)}</span>
-                          <span className="rounded bg-white px-1 py-0.5 text-[9px] font-bold text-[#15803D]">Best: {seo.data.overview.passedChecks + seo.data.overview.errors + seo.data.overview.warnings}</span>
+                          <span className="text-[11.5px] font-bold text-[#166534]">{formatNumber(seo.data.overview.passedChecks)}</span>
+                          <span className="rounded bg-white px-1 py-0.5 text-[9px] font-bold text-[#15803D]">{seo.data.overview.passedChecks + seo.data.overview.errors + seo.data.overview.warnings}</span>
                         </div>
                       </div>
                     </div>
@@ -287,7 +288,6 @@ export function WebsiteSeoPage() {
                         <div className="flex items-center justify-between gap-1">
                           <span className="text-[11.5px] font-bold text-[#0F172A]">{category.label}</span>
                           <div className="flex items-baseline gap-1">
-                            <span className="text-[10px] font-semibold text-[#64748B]">Cur:</span>
                             <b
                               className={cn(
                                 "text-[12.5px] font-extrabold",
@@ -301,7 +301,7 @@ export function WebsiteSeoPage() {
                               {category.score}
                             </b>
                             <span className="text-[9px] font-bold text-[#15803D] bg-[#F0FDF4] px-1 py-0.5 rounded border border-[#DCFCE7]">
-                              Best: 100
+                              100
                             </span>
                           </div>
                         </div>

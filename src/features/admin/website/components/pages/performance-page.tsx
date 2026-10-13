@@ -50,6 +50,7 @@ import {
   Pagination,
   ScoreDial,
   SubTabs,
+  toneText,
   usePagination,
   useSortedRows,
   WButton,
@@ -152,7 +153,7 @@ function VitalTile({ vital }: { vital: CoreWebVital }) {
             {vitalLabel[vital.band]}
           </Chip>
           <span className="inline-flex items-center rounded-md bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
-            Best: {bestThreshold}
+            {bestThreshold}
           </span>
         </div>
         <div className="min-w-0">
@@ -160,8 +161,7 @@ function VitalTile({ vital }: { vital: CoreWebVital }) {
             {vital.label}
           </p>
           <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">Current:</span>
-            <p className="text-[26px] font-extrabold tracking-tight text-[#0F172A] leading-none">{vital.display.replace(/ (s|ms)$/, '')}</p>
+            <p className={cn("text-[26px] font-extrabold tracking-tight leading-none", isGood ? "text-[#10B981]" : isWarn ? "text-[#F59E0B]" : "text-[#EF4444]")}>{vital.display.replace(/ (s|ms)$/, '')}</p>
             <span className="text-[12px] font-bold text-[#64748B]">{vital.key === "cls" ? "" : vital.key === "inp" ? "ms" : "s"}</span>
           </div>
         </div>
@@ -224,8 +224,8 @@ function OverviewTab({
               <div className="flex flex-col items-center text-center mt-1">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] mb-0.5">Overall Score</p>
                 <div className="flex items-center gap-1 text-[9.5px] font-bold mt-0.5">
-                  <span className="rounded bg-[#EFF6FF] px-1.5 py-0.5 text-[#1D4ED8] ring-1 ring-inset ring-[#BFDBFE]">Current: {data.score}</span>
-                  <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">Best: 100</span>
+                  <span className={cn("rounded bg-[#F8FAFC] px-1.5 py-0.5 ring-1 ring-inset ring-[#E2E8F0]", toneText[scoreBand(data.score)])}>{data.score}</span>
+                  <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">100</span>
                 </div>
               </div>
             </div>
@@ -240,15 +240,15 @@ function OverviewTab({
               <div className="flex items-center justify-between rounded-lg bg-white py-1 px-2.5 border border-[#F1F5F9] shadow-sm">
                 <span className="text-[11px] font-semibold text-[#475569]">Avg page weight</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11.5px] font-bold text-[#0F172A]">Current: {formatWeight(data.avgPageWeightKb)}</span>
-                  <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">Best: &lt; 1.5 MB</span>
+                  <span className={cn("text-[11.5px] font-bold", data.avgPageWeightKb <= 1536 ? "text-[#166534]" : "text-[#92400E]")}>{formatWeight(data.avgPageWeightKb)}</span>
+                  <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">&lt; 1.5 MB</span>
                 </div>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-white py-1 px-2.5 border border-[#F1F5F9] shadow-sm">
                 <span className="text-[11px] font-semibold text-[#475569]">Avg requests</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11.5px] font-bold text-[#0F172A]">Current: {data.avgRequests}</span>
-                  <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">Best: &lt; 50</span>
+                  <span className={cn("text-[11.5px] font-bold", data.avgRequests < 50 ? "text-[#166534]" : "text-[#92400E]")}>{data.avgRequests}</span>
+                  <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">&lt; 50</span>
                 </div>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-[#F0FDF4] py-1 px-2.5 border border-[#DCFCE7]">
