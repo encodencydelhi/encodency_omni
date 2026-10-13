@@ -78,9 +78,9 @@ export function WebsiteRankTrackingPage() {
 
       {!WEBSITE_MOCK_MODE ? (
         <p className="rounded-lg border border-[#E6EBF4] bg-[#FAFBFD] px-3 py-2 text-[11px] leading-relaxed text-[#6B7A94]">
-          Current positions come from Google Search Console. Previous position, position change, difficulty
-          and search volume are not tracked per keyword yet — they are estimates, and the ranking history
-          chart reflects site-wide performance, not this keyword alone.
+          Current positions come from Google Search Console. Previous position is computed from the prior 28-day
+          window in GSC. Position change, difficulty and search volume are not tracked per keyword yet — they are
+          estimates, and the ranking history chart reflects site-wide performance, not this keyword alone.
         </p>
       ) : null}
 

@@ -47,7 +47,6 @@ const TABS: { label: string; href: string; simulated?: boolean; description?: st
   { label: "Monitoring", href: "/admin/website/monitoring", simulated: true },
   { label: "Issues", href: "/admin/website/issues" },
   { label: "Keyword Research", href: "/admin/website/keyword-research" },
-  { label: "Competitor Analysis", href: "/admin/website/competitor-analysis", simulated: true },
   { label: "Organic Landing Pages", href: "/admin/website/backlink-analysis", simulated: true, description: "Shows Google Search Console organic landing pages - backlink data not yet available" },
   { label: "Rank Tracking", href: "/admin/website/rank-tracking" },
   { label: "Settings", href: "/admin/website/settings" },
@@ -381,7 +380,7 @@ function TabBar() {
             )}
           >
             {tab.label}
-            {tab.simulated && !WEBSITE_MOCK_MODE ? (
+            {tab.simulated && WEBSITE_MOCK_MODE ? (
               <span
                 title="Contains simulated data — no live source is connected yet"
                 className="ml-1.5 inline-block size-1.5 rounded-full bg-[#E29208] align-middle"

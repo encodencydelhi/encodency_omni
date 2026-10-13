@@ -63,7 +63,7 @@ export function WebsiteCompetitorAnalysisPage() {
         )}
       </div>
 
-      {!WEBSITE_MOCK_MODE ? (
+      {!WEBSITE_MOCK_MODE && competitorData.length === 0 ? (
         <LockedState
           title="Competitor data is not connected"
           body={
