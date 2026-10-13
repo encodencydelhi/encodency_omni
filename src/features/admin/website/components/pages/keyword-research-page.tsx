@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Search, TrendingUp, Target, Globe, FileText, Download } from "lucide-react";
 import { Card, WButton } from "../ui/kit";
@@ -14,6 +14,17 @@ export function WebsiteKeywordResearchPage() {
   const { data: keywordData = [], isLoading, error } = useKeywordResearch(clientId);
   const [selectedQuery, setSelectedQuery] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const previousSearchQuery = useRef<string>(searchQuery);
+
+  // Reset page when search query changes
+  useEffect(() => {
+    if (previousSearchQuery.current !== searchQuery) {
+      setCurrentPage(1);
+    }
+    previousSearchQuery.current = searchQuery;
+  }, [searchQuery]);
 
   const selected = useMemo(() => keywordData.find((k) => k.query === selectedQuery) ?? null, [keywordData, selectedQuery]);
 
@@ -24,6 +35,13 @@ export function WebsiteKeywordResearchPage() {
     }
     return result;
   }, [keywordData, searchQuery]);
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(startIndex, startIndex + itemsPerPage);
+  }, [filtered, currentPage, itemsPerPage]);
 
   const hasRank = (intent: string) => filtered.some((k) => k.intent === intent && k.position > 0);
 
@@ -104,31 +122,94 @@ export function WebsiteKeywordResearchPage() {
           />
 
           <div className="mt-3 space-y-1">
-            {filtered.map((k, idx) => (
-              <button
-                key={k.query}
-                className={`w-full rounded-lg border p-2 text-left transition-colors ${selectedQuery === k.query ? "border-[#4F46E5] bg-[#EEF2FF]" : "border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
-                onClick={() => setSelectedQuery(k.query)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="truncate font-medium text-[#28354C]">{k.query}</div>
-                  <div className="text-sm text-[#6B7A94]">#{idx + 1}</div>
-                </div>
-                <div className="mt-1 flex items-center gap-2 text-sm">
-                  <span className="text-[#6B7A94]">Pos {k.position}</span>
-                  <span
-                    title="Estimated difficulty — no keyword-difficulty API is connected"
-                    className={`px-1.5 py-0.5 rounded text-xs ${scoreBand(k.difficulty) === "good" ? "bg-[#DCFCE7] text-[#166534]" : scoreBand(k.difficulty) === "warn" ? "bg-[#FEF3C7] text-[#9A5B08]" : "bg-[#FEE2E2] text-[#B91C1C]"}`}
-                  >
-                    Est. D{k.difficulty}
-                  </span>
-                </div>
-              </button>
-            ))}
-            {filtered.length === 0 && (
-              <div className="py-8 text-center text-[#6B7A94]">No keywords found</div>
-            )}
-          </div>
+            {paginatedItems.map((k, idx) => (
+               <button
+                 key={k.query}
+                 className={`w-full rounded-lg border p-2 text-left transition-colors ${selectedQuery === k.query ? "border-[#4F46E5] bg-[#EEF2FF]" : "border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
+                 onClick={() => setSelectedQuery(k.query)}
+               >
+                 <div className="flex items-center justify-between">
+                   <div className="truncate font-medium text-[#28354C]">{k.query}</div>
+                   <div className="text-sm text-[#6B7A94]">#{((currentPage - 1) * itemsPerPage) + idx + 1}</div>
+                 </div>
+                 <div className="mt-1 flex items-center gap-2 text-sm">
+                   <span className="text-[#6B7A94]">Pos {k.position}</span>
+                   <span
+                     title="Estimated difficulty — no keyword-difficulty API is connected"
+                     className={`px-1.5 py-0.5 rounded text-xs ${scoreBand(k.difficulty) === "good" ? "bg-[#DCFCE7] text-[#166534]" : scoreBand(k.difficulty) === "warn" ? "bg-[#FEF3C7] text-[#9A5B08]" : "bg-[#FEE2E2] text-[#B91C1C]"}`}
+                   >
+                     Est. D{k.difficulty}
+                   </span>
+                 </div>
+               </button>
+             ))}
+             {filtered.length === 0 && (
+               <div className="py-8 text-center text-[#6B7A94]">No keywords found</div>
+             )}
+           </div>
+
+           {/* Pagination Controls */}
+           {filtered.length > 0 && (
+             <div className="flex items-center justify-between px-2 py-3 border-t border-[#DAE1EC] bg-[#FAFBFD] rounded-b-lg">
+               <div className="text-sm text-[#6B7A94]">
+                 Showing {paginatedItems.length} of {filtered.length} keywords
+               </div>
+               <div className="flex items-center gap-2">
+                 <select
+                   value={itemsPerPage}
+                   onChange={(e) => {
+                     setItemsPerPage(Number(e.target.value));
+                     setCurrentPage(1);
+                   }}
+                   className="text-sm border border-[#DAE1EC] rounded px-2 py-1 bg-white"
+                 >
+                   <option value={5}>5 per page</option>
+                   <option value={10}>10 per page</option>
+                   <option value={20}>20 per page</option>
+                   <option value={50}>50 per page</option>
+                 </select>
+                 <div className="flex gap-1">
+                   <button
+                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                     disabled={currentPage === 1}
+                     className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
+                   >
+                     Previous
+                   </button>
+                   {Array.from({ length: totalPages }, (_, i) => i + 1)
+                     .filter(page => 
+                       page === 1 || 
+                       page === totalPages || 
+                       Math.abs(page - currentPage) <= 1
+                     )
+                     .map((page, idx, filteredPages) => {
+                       const showEllipsisBefore = idx > 0 && filteredPages[idx - 1] !== page - 1;
+                       const showEllipsisAfter = idx < filteredPages.length - 1 && filteredPages[idx + 1] !== page + 1;
+                       
+                       return (
+                         <div key={page} className="flex items-center">
+                           {showEllipsisBefore && <span className="px-2 text-[#6B7A94]">...</span>}
+                           <button
+                             onClick={() => setCurrentPage(page)}
+                             className={`px-3 py-1 text-sm border rounded ${currentPage === page ? "bg-[#4F46E5] text-white border-[#4F46E5]" : "bg-white text-[#28354C] border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
+                           >
+                             {page}
+                           </button>
+                           {showEllipsisAfter && <span className="px-2 text-[#6B7A94]">...</span>}
+                         </div>
+                       );
+                     })}
+                   <button
+                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                     disabled={currentPage === totalPages}
+                     className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
+                   >
+                     Next
+                   </button>
+                 </div>
+               </div>
+             </div>
+           )}
         </div>
 
         <div className="md:col-span-2">

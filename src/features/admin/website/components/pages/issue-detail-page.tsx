@@ -58,6 +58,7 @@ import {
 import { EmptyState, QueryErrorState, SkeletonBlock, SkeletonStats } from "../ui/states";
 import { useUrlParams, useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
+import type { IssueCategory, Severity } from "../../data/types";
 
 type ReportTab = "overview" | "affected-pages" | "similar-issues" | "history" | "fix-guide";
 
@@ -105,15 +106,17 @@ export default function IssueDetailPage({ params }: { params: { issueId: string 
 
   const categoryStats = useMemo(() => {
     if (!issues) return {};
-    const totalByCategory: Record<IssueCategory, number> = {};
-    const severityByCategory: Record<IssueCategory, Record<Severity, number>> = {};
+    const totalByCategory = {} as Record<IssueCategory, number>;
+    const severityByCategory = {} as Record<IssueCategory, Record<Severity, number>>;
     (issues ?? []).forEach((i) => {
       if (i.status !== "open") return;
       const cat = i.category;
       const sev = i.severity;
       totalByCategory[cat] = (totalByCategory[cat] ?? 0) + 1;
-      if (!severityByCategory[cat]) severityByCategory[cat] = {};
-      severityByCategory[cat][sev] = (severityByCategory[cat][sev] ?? 0) + 1;
+      if (!severityByCategory[cat]) {
+        severityByCategory[cat] = { critical: 0, high: 0, medium: 0, low: 0 };
+      }
+      severityByCategory[cat][sev] = severityByCategory[cat][sev] + 1;
     });
     return { totalByCategory, severityByCategory };
   }, [issues]);

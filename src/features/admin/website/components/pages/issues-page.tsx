@@ -10,6 +10,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   ArrowRight,
@@ -35,6 +36,7 @@ import {
   toCsv,
 } from "../../data/selectors";
 import type { IssueCategory, IssueRecord, Severity } from "../../data/types";
+import { useWebsiteWorkspace } from "../website-workspace";
 import {
   Card,
   Chip,
@@ -392,6 +394,61 @@ export function WebsiteIssuesPage() {
 
 /* ------------------------------------------------------------------ */
 
+function AIHelpModal({
+  issue,
+  open,
+  onClose,
+  aiEnabled,
+}: {
+  issue: IssueRecord;
+  open: boolean;
+  onClose: () => void;
+  aiEnabled: boolean;
+}) {
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A]/60 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl rounded-xl border border-[#E6EBF4] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-[#EEF2F8] p-4">
+          <div>
+            <h3 className="text-[12.5px] font-semibold text-[#28354C]">AI Help — {issue.title}</h3>
+            <p className="mt-0.5 text-[10.5px] text-[#6B7A94]">{issue.description}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded p-1 text-[#8494AC] transition-colors hover:bg-[#F4F7FB] hover:text-[#28354C]"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+        <div className="p-4">
+          {aiEnabled ? (
+            <div className="space-y-2">
+              <p className="text-[11.5px] leading-relaxed text-[#28354C]">
+                To enable AI recommendations, connect an AI provider in the platform settings. When enabled, each issue will show
+                an AI-generated fix summary, including the root cause, affected pages, and step-by-step fix instructions tailored to your setup.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-md border border-[#FDE3D4] bg-[#FFF3EE] p-3.5">
+              <p className="text-[11.5px] leading-relaxed text-[#B45309]">
+                AI recommendations are disabled. Enable an AI provider in platform settings to get smart fix guidance for this issue.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function IssueRow({
   issue,
   isSaving,
@@ -409,6 +466,7 @@ function IssueRow({
   onRescan: () => void;
   onToggleResolved: () => void;
 }) {
+  const [showAiHelp, setShowAiHelp] = useState(false);
   const resolved = issue.status === "resolved";
   return (
     <li className={cn("px-3.5 py-3", resolved && "bg-[#FCFDFE]")}>
@@ -469,9 +527,18 @@ function IssueRow({
             >
               {resolved ? "Reopen" : "Mark resolved"}
             </WButton>
+            <WButton size="sm" onClick={() => setShowAiHelp(true)}>
+              AI Help
+            </WButton>
           </div>
         </div>
       </div>
+      <AIHelpModal
+        issue={issue}
+        open={showAiHelp}
+        onClose={() => setShowAiHelp(false)}
+        aiEnabled={false}
+      />
     </li>
   );
 }

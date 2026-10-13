@@ -308,6 +308,8 @@ export interface IssueRecord {
   status: IssueStatus;
   detectedAt: IsoDate;
   resolvedAt: IsoDate | null;
+  resolvedBy: string | null;
+  resolutionNotes: string | null;
   /** Page ids this issue was found on. Empty for site-wide issues. */
   affectedPageIds: string[];
   /** Site-wide issues still need a count, e.g. "robots.txt" affects the site. */
@@ -430,6 +432,24 @@ export interface SearchConsoleData {
   pages: SearchPageRow[];
   countries: { country: string; clicks: number; impressions: number }[];
   devices: { device: string; clicks: number; impressions: number }[];
+  /** Index coverage report from Google Search Console */
+  indexCoverage: {
+    submitted: number;
+    indexed: number;
+    indexedNotSubmitted: number;
+    removed: number;
+    error: number;
+    warning: number;
+    excluded: number;
+  };
+  /** Sitemaps submitted and their status */
+  sitemaps: {
+    submitted: number;
+    indexed: number;
+    pending: number;
+    error: number;
+    warning: number;
+  };
 }
 
 export interface KeywordResearchData {

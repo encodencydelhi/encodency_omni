@@ -210,6 +210,8 @@ interface IssueSeed {
   fixGuideId: string;
   evidence: string | null;
   resolvedDaysAgo?: number;
+  resolvedBy?: string;
+  resolutionNotes?: string;
 }
 
 const ISSUE_SEEDS: IssueSeed[] = [
@@ -504,6 +506,8 @@ const ISSUE_SEEDS: IssueSeed[] = [
     paths: ["/donate", "/volunteer"],
     detectedDaysAgo: 21,
     resolvedDaysAgo: 12,
+    resolvedBy: "admin@encodency.com",
+    resolutionNotes: "Updated canonical tags to point to production domain after deploy verification.",
     recommendation: "Keep canonicals absolute and environment-aware so a staging build cannot leak them.",
     fixGuideId: "fg-canonical",
     evidence: "2 pages",
@@ -518,6 +522,8 @@ const ISSUE_SEEDS: IssueSeed[] = [
     paths: "site",
     detectedDaysAgo: 34,
     resolvedDaysAgo: 34,
+    resolvedBy: "devops@encodency.com",
+    resolutionNotes: "Reverted robots.txt to allow all paths; added CI check to prevent future regressions.",
     recommendation: "Add a deploy check that fails the build when robots.txt disallows the root path.",
     fixGuideId: "fg-robots",
     evidence: "Disallow: /",
@@ -532,6 +538,8 @@ const ISSUE_SEEDS: IssueSeed[] = [
     paths: ["/", "/contact"],
     detectedDaysAgo: 26,
     resolvedDaysAgo: 19,
+    resolvedBy: "webmaster@mokshasewa.org",
+    resolutionNotes: "Updated WhatsApp link to full international format: wa.me/919811012345.",
     recommendation: "Use the full international format in wa.me links, e.g. wa.me/919811012345.",
     fixGuideId: "fg-cta-link",
     evidence: "2 pages",
@@ -1104,6 +1112,8 @@ function buildIssues(profile: ClientWebsiteProfile, pages: PageRecord[]): IssueR
         status: resolved ? "resolved" : "open",
         detectedAt: daysAgo(seed.detectedDaysAgo),
         resolvedAt: resolved ? daysAgo(seed.resolvedDaysAgo ?? 0) : null,
+        resolvedBy: resolved ? (seed.resolvedBy ?? null) : null,
+        resolutionNotes: resolved ? (seed.resolutionNotes ?? null) : null,
         affectedPageIds,
         affectedCount: seed.paths === "site" ? pages.length : affectedPageIds.length,
         recommendation: seed.recommendation,
