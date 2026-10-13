@@ -1,11 +1,18 @@
 import { apiClient } from '@/lib/api/client';
 import { companyScopeHeaders } from '@/lib/api/company-scope';
-import { getStoredCompanyId } from '@/lib/api/tenancy-storage';
+import { getStoredClientId, getStoredCompanyId } from '@/lib/api/tenancy-storage';
 import type { IntegrationKey, IssueStatus, ScanType, WebsiteDataProvider, WebsiteSettings } from './types';
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function getStoredClientIdSafe(): string {
+  if (typeof localStorage === 'undefined') return getStoredClientId() ?? '';
+  return localStorage.getItem('omni_active_client_id') ?? getStoredClientId() ?? '';
+}
+
 function headers(clientId: string) {
-  const companyId = getStoredCompanyId();
-  return companyScopeHeaders(companyId, clientId ? { 'x-client-id': clientId } : {});
+  const targetId = clientId && UUID_PATTERN.test(clientId) ? clientId : getStoredClientIdSafe();
+  return companyScopeHeaders(getStoredCompanyId(), targetId ? { 'x-client-id': targetId } : {});
 }
 
 function get<T>(clientId: string, section: string, query?: Record<string, string>) {
@@ -15,11 +22,6 @@ function get<T>(clientId: string, section: string, query?: Record<string, string
     headers: headers(clientId),
     query,
   });
-}
-
-function getStoredClientIdSafe(): string {
-  if (typeof localStorage === 'undefined') return '';
-  return localStorage.getItem('omni_active_client_id') ?? '';
 }
 
 export class LiveWebsiteProvider implements WebsiteDataProvider {

@@ -11,6 +11,8 @@ import {
   AlertCircle, Activity, TrendingUp, TrendingDown, Bot
 } from "lucide-react";
 import { ChannelLogo } from "@/features/admin/shared/channel-logo";
+import { useAdminContext } from "@/features/admin/shell/admin-context";
+import { getStoredClientId } from "@/lib/api/tenancy-storage";
 
 // Helper components
 const StatusChip = ({ status }: { status: string }) => {
@@ -28,23 +30,31 @@ const StatusChip = ({ status }: { status: string }) => {
 };
 
 export function WorkflowsPage() {
+  const { selectedProjectId } = useAdminContext();
   const [workflows, setWorkflows] = useState<AutomationWorkflow[]>([]);
   const [search, setSearch] = useState("");
   const [editingWorkflow, setEditingWorkflow] = useState<AutomationWorkflow | null>(null);
 
   useEffect(() => {
-    automationRepository.getWorkflows("client_1").then((wfs) => {
-      // Mock extra workflows to match screenshot layout
-      const extras: AutomationWorkflow[] = [
-        { id: "wf_m1", clientId: "c1", name: "SEO Critical Issue", status: "Paused", version: 1, trigger: { type: "seo", label: "SEO Issue" }, channels: ["google", "slack"], runs: 84, successRate: 96.2, failures: 3, lastRunAt: new Date(Date.now() - 5*60*60*1000).toISOString(), createdAt: "", updatedAt: new Date(Date.now() - 5*60*60*1000).toISOString(), nodes: [], edges: [] },
-        { id: "wf_m2", clientId: "c1", name: "WhatsApp Re-engagement", status: "Active", version: 1, trigger: { type: "time", label: "No reply 24h" }, channels: ["whatsapp"], runs: 316, successRate: 91.8, failures: 12, lastRunAt: new Date(Date.now() - 24*60*60*1000).toISOString(), createdAt: "", updatedAt: new Date(Date.now() - 24*60*60*1000).toISOString(), nodes: [], edges: [] },
-        { id: "wf_m3", clientId: "c1", name: "Website Down Alert", status: "Active", version: 1, trigger: { type: "system", label: "Website Down" }, channels: ["email", "slack"], runs: 52, successRate: 100, failures: 0, lastRunAt: new Date(Date.now() - 24*60*60*1000).toISOString(), createdAt: "", updatedAt: new Date(Date.now() - 24*60*60*1000).toISOString(), nodes: [], edges: [] },
-        { id: "wf_m4", clientId: "c1", name: "Form Submission Routing", status: "Draft", version: 1, trigger: { type: "form", label: "Form Submit" }, channels: ["web", "email"], runs: 210, successRate: 92.4, failures: 8, lastRunAt: new Date(Date.now() - 2*24*60*60*1000).toISOString(), createdAt: "", updatedAt: new Date(Date.now() - 2*24*60*60*1000).toISOString(), nodes: [], edges: [] },
-        { id: "wf_m5", clientId: "c1", name: "Missed Call Callback", status: "Paused", version: 1, trigger: { type: "call", label: "Missed Call" }, channels: ["phone", "whatsapp"], runs: 175, successRate: 89.1, failures: 15, lastRunAt: new Date(Date.now() - 3*24*60*60*1000).toISOString(), createdAt: "", updatedAt: new Date(Date.now() - 3*24*60*60*1000).toISOString(), nodes: [], edges: [] },
-      ];
-      setWorkflows([...wfs, ...extras]);
-    });
-  }, []);
+    const activeClient = selectedProjectId !== "all" ? selectedProjectId : getStoredClientId();
+    const effectiveClientId = activeClient || undefined;
+    automationRepository.getWorkflows(effectiveClientId)
+      .then((wfs) => {
+        const list = Array.isArray(wfs) ? wfs : [];
+        // Mock extra workflows to match screenshot layout
+        const extras: AutomationWorkflow[] = [
+          { id: "wf_m1", clientId: "c1", name: "SEO Critical Issue", status: "Paused", version: 1, trigger: { type: "seo", label: "SEO Issue" }, channels: ["google", "slack"], runs: 84, successRate: 96.2, failures: 3, lastRunAt: new Date(Date.now() - 5*60*60*1000).toISOString(), createdAt: "", updatedAt: new Date(Date.now() - 5*60*60*1000).toISOString(), nodes: [], edges: [] },
+          { id: "wf_m2", clientId: "c1", name: "WhatsApp Re-engagement", status: "Active", version: 1, trigger: { type: "time", label: "No reply 24h" }, channels: ["whatsapp"], runs: 316, successRate: 91.8, failures: 12, lastRunAt: new Date(Date.now() - 24*60*60*1000).toISOString(), createdAt: "", updatedAt: new Date(Date.now() - 24*60*60*1000).toISOString(), nodes: [], edges: [] },
+          { id: "wf_m3", clientId: "c1", name: "Website Down Alert", status: "Active", version: 1, trigger: { type: "system", label: "Website Down" }, channels: ["email", "slack"], runs: 52, successRate: 100, failures: 0, lastRunAt: new Date(Date.now() - 24*60*60*1000).toISOString(), createdAt: "", updatedAt: new Date(Date.now() - 24*60*60*1000).toISOString(), nodes: [], edges: [] },
+          { id: "wf_m4", clientId: "c1", name: "Form Submission Routing", status: "Draft", version: 1, trigger: { type: "form", label: "Form Submit" }, channels: ["web", "email"], runs: 210, successRate: 92.4, failures: 8, lastRunAt: new Date(Date.now() - 2*24*60*60*1000).toISOString(), createdAt: "", updatedAt: new Date(Date.now() - 2*24*60*60*1000).toISOString(), nodes: [], edges: [] },
+          { id: "wf_m5", clientId: "c1", name: "Missed Call Callback", status: "Paused", version: 1, trigger: { type: "call", label: "Missed Call" }, channels: ["phone", "whatsapp"], runs: 175, successRate: 89.1, failures: 15, lastRunAt: new Date(Date.now() - 3*24*60*60*1000).toISOString(), createdAt: "", updatedAt: new Date(Date.now() - 3*24*60*60*1000).toISOString(), nodes: [], edges: [] },
+        ];
+        setWorkflows([...list, ...extras]);
+      })
+      .catch((err) => {
+        console.error("Failed to load workflows:", err);
+      });
+  }, [selectedProjectId]);
 
   const filteredWorkflows = useMemo(() => {
     if (!search) return workflows;

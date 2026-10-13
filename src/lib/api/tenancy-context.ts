@@ -139,7 +139,11 @@ export function useTenancyContext(): TenancyContextState {
 
   const setClientId = useCallback((id: string) => {
     setClientState(id);
-    setStoredTenancy(getStoredCompanyId(), id);
+    if (id) {
+      setStoredTenancy(getStoredCompanyId(), id);
+    } else {
+      clearStoredClientId();
+    }
   }, []);
 
   return {

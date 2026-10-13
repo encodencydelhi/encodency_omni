@@ -1,6 +1,9 @@
+import { isMockMode } from "@/config/env";
+
 const STORAGE_KEY_COMPANY = "omni_active_company_id";
 const STORAGE_KEY_CLIENT = "omni_active_client_id";
 const MEMORY_STORAGE = new Map<string, string>();
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function createFallbackStorage(): Storage {
   return {
@@ -43,26 +46,27 @@ function getStorage(): Storage | null {
 export const DEFAULT_FALLBACK_COMPANY_ID = "";
 export const DEFAULT_FALLBACK_CLIENT_ID = "";
 
+function readStoredTenantId(storage: Storage, key: string, legacyPlaceholder: string): string {
+  const stored = storage.getItem(key)?.trim() ?? "";
+  if (!stored || stored === legacyPlaceholder) return "";
+  if (isMockMode || UUID_PATTERN.test(stored)) return stored;
+
+  // Live APIs require UUID tenant headers. Drop stale mock/legacy selections
+  // before they can make every scoped request fail validation.
+  storage.removeItem(key);
+  return "";
+}
+
 export function getStoredCompanyId(): string {
   const storage = getStorage();
   if (!storage) return "";
-
-  const stored = storage.getItem(STORAGE_KEY_COMPANY);
-  if (stored && stored.trim() && stored.trim() !== "development-company-id") {
-    return stored.trim();
-  }
-  return "";
+  return readStoredTenantId(storage, STORAGE_KEY_COMPANY, "development-company-id");
 }
 
 export function getStoredClientId(): string {
   const storage = getStorage();
   if (!storage) return "";
-
-  const stored = storage.getItem(STORAGE_KEY_CLIENT);
-  if (stored && stored.trim() && stored.trim() !== "development-client-id") {
-    return stored.trim();
-  }
-  return "";
+  return readStoredTenantId(storage, STORAGE_KEY_CLIENT, "development-client-id");
 }
 
 /**
@@ -85,6 +89,8 @@ export function setStoredTenancy(companyId: string, clientId?: string): void {
   }
   if (clientId) {
     storage.setItem(STORAGE_KEY_CLIENT, clientId);
+  } else if (clientId !== undefined) {
+    storage.removeItem(STORAGE_KEY_CLIENT);
   }
   emitTenancyChange();
 }
