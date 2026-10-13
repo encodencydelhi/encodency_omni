@@ -37,6 +37,7 @@ import {
 } from "../../data/selectors";
 import type { IssueCategory, IssueRecord, Severity } from "../../data/types";
 import { useWebsiteWorkspace } from "../website-workspace";
+import { useConfiguration } from "@/features/global-settings/data/hooks";
 import {
   Card,
   Chip,
@@ -90,6 +91,8 @@ export function WebsiteIssuesPage() {
   const pages = useWebsitePages(clientId);
   const setStatus = useSetIssueStatus(clientId);
   const { get, setMany } = useUrlParams();
+  const config = useConfiguration();
+  const aiEnabled = (config.data?.values["ai.provider"] as string | undefined) !== "none" && !!config.data?.values["ai.provider"];
 
   const [tab, setTab] = useUrlState<IssueTab>("severity", "all", TABS.map((entry) => entry.value));
   const search = get("q") ?? "";
