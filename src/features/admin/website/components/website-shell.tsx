@@ -37,7 +37,7 @@ import { NoClientSelectedState, NoWebsiteState } from "./ui/states";
 import { useWebsiteWorkspace } from "./website-workspace";
 import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../shared/integration-pending-banner";
 
-const TABS: { label: string; href: string; simulated?: boolean }[] = [
+const TABS: { label: string; href: string; simulated?: boolean; description?: string }[] = [
   { label: "Overview", href: "/admin/website" },
   { label: "Pages", href: "/admin/website/pages" },
   { label: "SEO", href: "/admin/website/seo" },
@@ -48,7 +48,7 @@ const TABS: { label: string; href: string; simulated?: boolean }[] = [
   { label: "Issues", href: "/admin/website/issues" },
   { label: "Keyword Research", href: "/admin/website/keyword-research" },
   { label: "Competitor Analysis", href: "/admin/website/competitor-analysis", simulated: true },
-  { label: "Backlink Analysis", href: "/admin/website/backlink-analysis", simulated: true },
+  { label: "Organic Landing Pages", href: "/admin/website/backlink-analysis", simulated: true, description: "Shows Google Search Console organic landing pages - backlink data not yet available" },
   { label: "Rank Tracking", href: "/admin/website/rank-tracking" },
   { label: "Settings", href: "/admin/website/settings" },
 ];

@@ -141,7 +141,7 @@ export interface WebsiteSummary {
   scores: ScoreSet;
   /** Change vs. the previous scan, same order of keys as `scores`. */
   scoreDeltas: ScoreSet;
-  uptimePct: number;
+  uptimePct: number | null;
   pagesDiscovered: number;
   criticalIssues: number;
   openIssues: number;
@@ -362,7 +362,8 @@ export interface SitemapEntry {
   loc: string;
   lastModified: IsoDate | null;
   status: number | null;
-  valid: boolean;
+  /** Null when the entry is listed but not individually fetched yet. */
+  valid: boolean | null;
   note: string | null;
 }
 
@@ -370,10 +371,12 @@ export interface SitemapReport {
   detected: boolean;
   url: string | null;
   fetchedAt: IsoDate | null;
-  childSitemaps: { url: string; urlCount: number }[];
+  childSitemaps: { url: string; urlCount: number | null }[];
   urlsDiscovered: number;
   invalidUrls: number;
   entries: SitemapEntry[];
+  /** Why nothing is shown, e.g. "sitemap.xml returned HTTP 404." */
+  note?: string | null;
 }
 
 export interface RobotsReport {
@@ -385,6 +388,8 @@ export interface RobotsReport {
   blockedPaths: string[];
   sitemapReferences: string[];
   warnings: string[];
+  /** Why nothing is shown, e.g. "robots.txt could not be fetched." */
+  note?: string | null;
 }
 
 export interface SchemaTypeReport {
@@ -622,8 +627,9 @@ export interface FormRecord {
   action: string;
   actionSecure: boolean;
   requiredFields: number;
-  consentDetected: boolean;
-  captchaDetected: boolean;
+  /** Null when the snapshot predates markup extraction and no scan has run since. */
+  consentDetected: boolean | null;
+  captchaDetected: boolean | null;
   httpsPage: boolean;
   accessibilityFindings: string[];
   issueIds: string[];
@@ -653,6 +659,8 @@ export interface ContactLinkRecord {
 }
 
 export interface FormsData {
+  /** "crawl" = read from markup during the last scan; "legacy" = older snapshot. */
+  source?: "crawl" | "legacy";
   counts: {
     forms: number;
     ctas: number;
@@ -666,6 +674,8 @@ export interface FormsData {
   ctas: CtaRecord[];
   contactLinks: ContactLinkRecord[];
   issueIds: string[];
+  /** Explains a partial result, e.g. "Run a scan to fill this in." */
+  note?: string | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -684,33 +694,38 @@ export interface UptimeIncident {
 
 export interface UptimeData {
   status: LiveStatus;
-  uptimePct30d: number;
-  uptimePct90d: number;
-  avgResponseMs: number;
-  lastCheckedAt: IsoDate;
+  /** Null until a background prober has actually observed that window. */
+  uptimePct30d: number | null;
+  uptimePct90d: number | null;
+  avgResponseMs: number | null;
+  lastCheckedAt: IsoDate | null;
   lastDowntimeAt: IsoDate | null;
-  checkIntervalMinutes: number;
-  responseTrend: { date: IsoDate; responseMs: number; uptimePct: number }[];
+  /** Null when no scheduled monitoring is running. */
+  checkIntervalMinutes: number | null;
+  responseTrend: { date: IsoDate; responseMs: number | null; uptimePct: number | null }[];
   /** One entry per day, newest last — drives the uptime bar strip. */
   dailyStatus: { date: IsoDate; uptimePct: number; incidents: number }[];
   incidents: UptimeIncident[];
+  /** Why the long-window numbers are missing, shown next to the stats. */
+  note?: string | null;
 }
 
 export interface SslData {
-  httpsEnabled: boolean;
-  certificateValid: boolean;
-  issuer: string;
+  httpsEnabled: boolean | null;
+  certificateValid: boolean | null;
+  issuer: string | null;
   subject: string;
-  validFrom: IsoDate;
-  validTo: IsoDate;
-  daysRemaining: number;
-  protocol: string;
-  hstsEnabled: boolean;
-  mixedContentPages: number;
+  validFrom: IsoDate | null;
+  validTo: IsoDate | null;
+  daysRemaining: number | null;
+  protocol: string | null;
+  hstsEnabled: boolean | null;
+  /** Null when mixed content is not measured by the probe. */
+  mixedContentPages: number | null;
 }
 
 export interface DnsData {
-  resolves: boolean;
+  resolves: boolean | null;
   resolvedIps: string[];
   nameservers: string[];
   records: { type: string; name: string; value: string; status: CheckStatus }[];

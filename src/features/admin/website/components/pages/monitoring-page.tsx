@@ -126,12 +126,12 @@ export function WebsiteMonitoringPage() {
       ) : null}
 
       {!WEBSITE_MOCK_MODE ? (
-        <div className="flex items-start gap-2 rounded-lg border border-[#F5DFB8] bg-[#FDF3E3] px-3 py-2">
-          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-[#9A5B08]" aria-hidden />
-          <p className="text-[11.5px] leading-relaxed text-[#9A5B08]">
-            Simulated monitoring — uptime percentages, incidents, response times, SSL certificate details and
-            DNS records on this page are estimates. No live uptime prober, TLS handshake or DNS lookup is
-            connected yet.
+        <div className="flex items-start gap-2 rounded-lg border border-[#E6EBF4] bg-[#F7F9FC] px-3 py-2">
+          <Info className="mt-0.5 size-4 shrink-0 text-[#4A5A73]" aria-hidden />
+          <p className="text-[11.5px] leading-relaxed text-[#4A5A73]">
+            These numbers come from a real check run when you open this page: an HTTP request, a TLS handshake and
+            DNS lookups against the site. Historical uptime percentages, downtimes and scheduled checks need a
+            background prober, which is not enabled — so long-window uptime shows as “Not available”.
           </p>
         </div>
       ) : null}
@@ -197,23 +197,35 @@ function StatusBanner({ data }: { data: MonitoringData }) {
             {status === "live" ? "UP" : status === "degraded" ? "DEGRADED" : status === "down" ? "DOWN" : "UNKNOWN"}
           </p>
           <p className="text-[11.5px] text-[#4A5A73]">
-            Checked {formatRelative(data.uptime.lastCheckedAt)} · every{" "}
-            {formatMinutes(data.uptime.checkIntervalMinutes)} from 3 regions
+            {data.uptime.lastCheckedAt ? `Checked ${formatRelative(data.uptime.lastCheckedAt)}` : "Not checked yet"}
+            {data.uptime.checkIntervalMinutes
+              ? ` · every ${formatMinutes(data.uptime.checkIntervalMinutes)}`
+              : " · no scheduled checks — one-off live check"}
           </p>
         </div>
       </div>
       <dl className="flex flex-wrap gap-x-6 gap-y-1">
         <div>
           <dt className="text-[10px] font-semibold uppercase tracking-[0.04em] text-[#6B7A94]">Uptime 30d</dt>
-          <dd className="text-[15px] font-semibold text-[#111C3A]">{data.uptime.uptimePct30d.toFixed(2)}%</dd>
+          <dd className="text-[15px] font-semibold text-[#111C3A]">
+            {data.uptime.uptimePct30d === null ? "Not available" : `${data.uptime.uptimePct30d.toFixed(2)}%`}
+          </dd>
         </div>
         <div>
           <dt className="text-[10px] font-semibold uppercase tracking-[0.04em] text-[#6B7A94]">Uptime 90d</dt>
-          <dd className="text-[15px] font-semibold text-[#111C3A]">{data.uptime.uptimePct90d.toFixed(2)}%</dd>
+          <dd className="text-[15px] font-semibold text-[#111C3A]">
+            {data.uptime.uptimePct90d === null ? "Not available" : `${data.uptime.uptimePct90d.toFixed(2)}%`}
+          </dd>
         </div>
         <div>
           <dt className="text-[10px] font-semibold uppercase tracking-[0.04em] text-[#6B7A94]">Last downtime</dt>
-          <dd className="text-[15px] font-semibold text-[#111C3A]">{formatRelative(data.uptime.lastDowntimeAt)}</dd>
+          <dd className="text-[15px] font-semibold text-[#111C3A]">
+            {data.uptime.lastDowntimeAt
+              ? formatRelative(data.uptime.lastDowntimeAt)
+              : data.uptime.uptimePct30d === null
+                ? "No history"
+                : "Never"}
+          </dd>
         </div>
       </dl>
     </div>
@@ -273,11 +285,11 @@ function OverviewTab({ data, onTab }: { data: MonitoringData; onTab: (tab: Monit
       <div className="grid grid-cols-2 gap-1 lg:grid-cols-4">
         <StatTile
           label="Certificate expires"
-          value={`${data.ssl.daysRemaining} days`}
+          value={data.ssl.daysRemaining === null ? "Not checked" : `${data.ssl.daysRemaining} days`}
           best="> 90 days"
           sub={formatDate(data.ssl.validTo)}
           icon={Lock}
-          tone={data.ssl.daysRemaining < 30 ? "warn" : "good"}
+          tone={data.ssl.daysRemaining === null ? "muted" : data.ssl.daysRemaining < 30 ? "warn" : "good"}
           onClick={() => onTab("ssl")}
         />
         <StatTile
@@ -376,7 +388,7 @@ function OverviewTab({ data, onTab }: { data: MonitoringData; onTab: (tab: Monit
 
       <Card title={`Downtime incidents (${data.uptime.incidents.length})`} icon={AlertOctagon} bodyClassName="p-0">
         {data.uptime.incidents.length === 0 ? (
-          <EmptyState title="No downtime recorded" body="All availability checks passed with 100% reachability. We will list any future outages here." compact />
+          <EmptyState title="No downtime recorded" body="No outages have been observed. Only checks that actually ran against this site are listed — background monitoring is not enabled yet." compact />
         ) : (
           <ul className="divide-y divide-[#F2F5FA]">
             {data.uptime.incidents.slice(0, 8).map((incident) => (
@@ -481,7 +493,7 @@ function UptimeTab({ data }: { data: MonitoringData }) {
           empty={
             <EmptyState
               title="No incidents recorded"
-              body="This website has responded to every check in the monitored window."
+              body="No outages have been observed for this website. Incidents appear here once scheduled checks are running."
               icon={ShieldCheck}
             />
           }
@@ -494,7 +506,9 @@ function UptimeTab({ data }: { data: MonitoringData }) {
 function SslTab({ data }: { data: MonitoringData }) {
   const ssl = data.ssl;
   const total = 90;
-  const remaining = Math.max(0, Math.min(total, ssl.daysRemaining));
+  const days = ssl.daysRemaining;
+  const remaining = days === null ? 0 : Math.max(0, Math.min(total, days));
+  const daysTone = days === null ? "muted" : days < 14 ? "bad" : days < 30 ? "warn" : "good";
 
   return (
     <div className="grid gap-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -504,15 +518,23 @@ function SslTab({ data }: { data: MonitoringData }) {
             <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#6B7A94]">
               Days remaining
             </span>
-            <Chip tone={ssl.daysRemaining < 14 ? "bad" : ssl.daysRemaining < 30 ? "warn" : "good"} dot>
-              {ssl.daysRemaining < 14 ? "Renew now" : ssl.daysRemaining < 30 ? "Renew soon" : "Healthy"}
+            <Chip tone={daysTone} dot>
+              {days === null
+                ? "Not checked"
+                : days < 14
+                  ? "Renew now"
+                  : days < 30
+                    ? "Renew soon"
+                    : "Healthy"}
             </Chip>
           </div>
-          <p className="mt-1 text-[24px] font-semibold tracking-[-0.025em] text-[#111C3A]">{ssl.daysRemaining}</p>
+          <p className="mt-1 text-[24px] font-semibold tracking-[-0.025em] text-[#111C3A]">
+            {days === null ? "—" : days}
+          </p>
           <Meter
             value={remaining}
             max={total}
-            tone={ssl.daysRemaining < 14 ? "bad" : ssl.daysRemaining < 30 ? "warn" : "good"}
+            tone={daysTone}
             className="mt-2"
             label="Days remaining on certificate"
           />
@@ -520,20 +542,29 @@ function SslTab({ data }: { data: MonitoringData }) {
 
         <dl className="divide-y divide-[#F2F5FA]">
           <KeyValue label="HTTPS">
-            <Chip tone={ssl.httpsEnabled ? "good" : "bad"}>{ssl.httpsEnabled ? "Enabled" : "Not enabled"}</Chip>
+            {ssl.httpsEnabled === null ? (
+              <Chip tone="muted">Unknown</Chip>
+            ) : (
+              <Chip tone={ssl.httpsEnabled ? "good" : "bad"}>{ssl.httpsEnabled ? "Enabled" : "Not enabled"}</Chip>
+            )}
           </KeyValue>
           <KeyValue label="Certificate status">
-            <Chip tone={ssl.certificateValid ? "good" : "bad"}>{ssl.certificateValid ? "Valid" : "Invalid"}</Chip>
+            {ssl.certificateValid === null ? (
+              <Chip tone="muted">Not checked</Chip>
+            ) : (
+              <Chip tone={ssl.certificateValid ? "good" : "bad"}>{ssl.certificateValid ? "Valid" : "Invalid"}</Chip>
+            )}
           </KeyValue>
-          <KeyValue label="Issuer">{ssl.issuer}</KeyValue>
+          <KeyValue label="Issuer">{ssl.issuer ?? "—"}</KeyValue>
           <KeyValue label="Subject">{ssl.subject}</KeyValue>
           <KeyValue label="Valid from">{formatDate(ssl.validFrom)}</KeyValue>
           <KeyValue label="Valid to">{formatDate(ssl.validTo)}</KeyValue>
-          <KeyValue label="Protocol">{ssl.protocol}</KeyValue>
+          <KeyValue label="Protocol">{ssl.protocol ?? "—"}</KeyValue>
         </dl>
         {!WEBSITE_MOCK_MODE ? (
           <p className="mt-3 rounded-md bg-[#F7F9FC] px-2.5 py-2 text-[11px] leading-relaxed text-[#6B7A94]">
-            Certificate details are illustrative — no real TLS handshake is performed against this domain yet.
+            Certificate details are read from a real TLS handshake against this domain during the check. A field shows
+            “Not checked” when the handshake could not be completed.
           </p>
         ) : null}
       </Card>
@@ -542,15 +573,23 @@ function SslTab({ data }: { data: MonitoringData }) {
         <Card title="HTTPS hygiene" icon={ShieldCheck}>
           <dl className="divide-y divide-[#F2F5FA]">
             <KeyValue label="HSTS">
-              <Chip tone={ssl.hstsEnabled ? "good" : "warn"}>{ssl.hstsEnabled ? "Enabled" : "Not set"}</Chip>
+              {ssl.hstsEnabled === null ? (
+                <Chip tone="muted">Unknown</Chip>
+              ) : (
+                <Chip tone={ssl.hstsEnabled ? "good" : "warn"}>{ssl.hstsEnabled ? "Enabled" : "Not set"}</Chip>
+              )}
             </KeyValue>
             <KeyValue label="Pages with mixed content">
-              <Chip tone={ssl.mixedContentPages > 0 ? "bad" : "good"}>{ssl.mixedContentPages}</Chip>
+              {ssl.mixedContentPages === null ? (
+                <Chip tone="muted">Not checked</Chip>
+              ) : (
+                <Chip tone={ssl.mixedContentPages > 0 ? "bad" : "good"}>{ssl.mixedContentPages}</Chip>
+              )}
             </KeyValue>
           </dl>
           <p className="mt-2 rounded-md bg-[#F7F9FC] px-2.5 py-2 text-[11px] leading-relaxed text-[#6B7A94]">
             Mixed content means an HTTPS page loading an http:// resource. Browsers block or downgrade these, and the
-            padlock disappears for visitors.
+            padlock disappears for visitors. This probe does not render subresources, so the count shows “Not checked”.
           </p>
         </Card>
 
@@ -577,20 +616,26 @@ function DnsTab({ data }: { data: MonitoringData }) {
         <Card title="Resolution" icon={Network}>
           <dl className="divide-y divide-[#F2F5FA]">
             <KeyValue label="Resolves">
-              <Chip tone={dns.resolves ? "good" : "bad"} dot>
-                {dns.resolves ? "Yes" : "No"}
-              </Chip>
+              {dns.resolves === null ? (
+                <Chip tone="muted" dot>
+                  Not checked
+                </Chip>
+              ) : (
+                <Chip tone={dns.resolves ? "good" : "bad"} dot>
+                  {dns.resolves ? "Yes" : "No"}
+                </Chip>
+              )}
             </KeyValue>
             <KeyValue label="Resolved IPs">
-              <span className="font-mono text-[11px]">{dns.resolvedIps.join(", ")}</span>
+              <span className="font-mono text-[11px]">{dns.resolvedIps.join(", ") || "—"}</span>
             </KeyValue>
             <KeyValue label="Nameservers">
-              <span className="font-mono text-[11px]">{dns.nameservers.join(", ")}</span>
+              <span className="font-mono text-[11px]">{dns.nameservers.join(", ") || "—"}</span>
             </KeyValue>
           </dl>
           {!WEBSITE_MOCK_MODE ? (
             <p className="mt-3 rounded-md bg-[#F7F9FC] px-2.5 py-2 text-[11px] leading-relaxed text-[#6B7A94]">
-              DNS records are not looked up for this domain yet — values shown are placeholders.
+              Resolved live against public DNS servers (8.8.8.8, 1.1.1.1) when this page was loaded.
             </p>
           ) : null}
         </Card>

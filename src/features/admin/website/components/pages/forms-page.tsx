@@ -151,13 +151,13 @@ export function WebsiteFormsPage() {
       key: "consent",
       header: "Consent",
       align: "center",
-      cell: (form) => <BoolChip value={form.consentDetected} yes="Detected" no="Missing" invertTone />,
+      cell: (form) => <BoolChip value={form.consentDetected ?? false} yes="Detected" no="Missing" invertTone />,
     },
     {
       key: "captcha",
       header: "Captcha",
       align: "center",
-      cell: (form) => <BoolChip value={form.captchaDetected} yes="Detected" no="None" />,
+      cell: (form) => <BoolChip value={form.captchaDetected ?? false} yes="Detected" no="None" />,
     },
     {
       key: "issues",

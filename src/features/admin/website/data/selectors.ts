@@ -118,7 +118,8 @@ export function formatWeight(kilobytes: number): string {
   return `${Math.round(kilobytes)} KB`;
 }
 
-export function formatMs(ms: number): string {
+export function formatMs(ms: number | null | undefined): string {
+  if (typeof ms !== "number" || Number.isNaN(ms)) return "Not available";
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)} s`;
   return `${Math.round(ms)} ms`;
 }

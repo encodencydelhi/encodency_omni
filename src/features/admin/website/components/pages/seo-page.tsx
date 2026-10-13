@@ -656,7 +656,10 @@ function SitemapTab({ report }: { report: NonNullable<ReturnType<typeof useWebsi
       <Card title="Sitemap" icon={FileCode2}>
         <EmptyState
           title="No sitemap found"
-          body="We could not find sitemap.xml at the usual locations or in robots.txt. A sitemap helps search engines find every page."
+          body={
+            report.note ??
+            "We could not find sitemap.xml at the usual locations or in robots.txt. A sitemap helps search engines find every page."
+          }
         />
       </Card>
     );
@@ -684,9 +687,12 @@ function SitemapTab({ report }: { report: NonNullable<ReturnType<typeof useWebsi
       key: "valid",
       header: "Valid",
       align: "center",
-      cell: (entry) => (
-        <Chip tone={entry.valid ? "good" : "bad"}>{entry.valid ? "Valid" : (entry.note ?? "Invalid")}</Chip>
-      ),
+      cell: (entry) =>
+        entry.valid === null ? (
+          <Chip tone="muted">Not checked</Chip>
+        ) : (
+          <Chip tone={entry.valid ? "good" : "bad"}>{entry.valid ? "Valid" : (entry.note ?? "Invalid")}</Chip>
+        ),
     },
   ];
 
@@ -745,7 +751,13 @@ function SitemapTab({ report }: { report: NonNullable<ReturnType<typeof useWebsi
                 "sitemap-urls.csv",
                 toCsv(
                   ["URL", "Status", "Last modified", "Valid", "Note"],
-                  report.entries.map((entry) => [entry.loc, entry.status, entry.lastModified, entry.valid ? "Yes" : "No", entry.note]),
+                  report.entries.map((entry) => [
+                    entry.loc,
+                    entry.status,
+                    entry.lastModified,
+                    entry.valid === null ? "Not checked" : entry.valid ? "Yes" : "No",
+                    entry.note,
+                  ]),
                 ),
               );
               toast.success("Sitemap URLs exported");
@@ -781,7 +793,10 @@ function RobotsTab({ report }: { report: NonNullable<ReturnType<typeof useWebsit
       <Card title="robots.txt" icon={Bot}>
         <EmptyState
           title="No robots.txt found"
-          body="Without robots.txt, crawlers assume everything is allowed. That is usually fine, but a file lets you exclude search and admin paths."
+          body={
+            report.note ??
+            "Without robots.txt, crawlers assume everything is allowed. That is usually fine, but a file lets you exclude search and admin paths."
+          }
         />
       </Card>
     );
