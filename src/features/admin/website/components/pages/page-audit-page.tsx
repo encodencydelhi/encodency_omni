@@ -56,7 +56,7 @@ import { EmptyState, QueryErrorState, SkeletonBlock, SkeletonStats } from "../ui
 import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
 
-type AuditTab = "overview" | "seo" | "content" | "links" | "performance" | "accessibility" | "technical";
+type AuditTab = "overview" | "seo" | "content" | "links" | "performance" | "accessibility" | "technical" | "images";
 
 const TABS: { value: AuditTab; label: string }[] = [
   { value: "overview", label: "Overview" },
@@ -66,6 +66,7 @@ const TABS: { value: AuditTab; label: string }[] = [
   { value: "performance", label: "Performance" },
   { value: "accessibility", label: "Accessibility" },
   { value: "technical", label: "Technical" },
+  { value: "images", label: "Images" },
 ];
 
 export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
@@ -301,6 +302,7 @@ export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
       {tab === "content" ? <ContentTab data={data} /> : null}
       {tab === "links" ? <LinksTab data={data} /> : null}
       {tab === "performance" ? <PerformanceTab data={data} /> : null}
+      {tab === "images" ? <ImagesTab data={data} /> : null}
     </div>
   );
 }
@@ -324,6 +326,7 @@ function MetadataEvidencePanel({ data }: { data: PageAudit }) {
     { label: "Meta description", value: data.seoChecks.find((check) => check.id === "description")?.value, status: data.seoChecks.find((check) => check.id === "description")?.status, note: "Target 120-160 characters" },
     { label: "Canonical", value: data.canonical, status: data.seoChecks.find((check) => check.id === "canonical")?.status, note: "Observed in live HTML" },
     { label: "Robots", value: data.seoChecks.find((check) => check.id === "robots")?.value, status: data.seoChecks.find((check) => check.id === "robots")?.status, note: "Indexing directive" },
+    { label: "Screenshots", value: data.screenshots.available ? "Available" : "Not available", status: data.screenshots.available ? "pass" : "warning", note: data.screenshots.note ?? "Screenshot worker is not enabled." },
   ];
 
   return (
@@ -467,19 +470,21 @@ function ContentTab({ data }: { data: PageAudit }) {
           {content.headings.length === 0 ? (
             <EmptyState title="No headings found" body="This page has no heading elements to analyse." compact />
           ) : (
-            <ul className="divide-y divide-[#F2F5FA]">
-              {content.headings.map((heading, index) => (
-                <li key={`${heading.level}-${index}`} className="flex items-center gap-2 px-3.5 py-2">
-                  <Chip tone={heading.level === 1 ? "info" : "muted"}>H{heading.level}</Chip>
-                  <span
-                    className="truncate text-[11.5px] text-[#334155]"
-                    style={{ paddingLeft: (heading.level - 1) * 10 }}
-                  >
-                    {heading.text}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div className="max-h-[300px] overflow-y-auto">
+              <ul className="divide-y divide-[#F2F5FA]">
+                {content.headings.map((heading, index) => (
+                  <li key={`${heading.level}-${index}`} className="flex items-center gap-2 px-3.5 py-2">
+                    <Chip tone={heading.level === 1 ? "info" : "muted"}>H{heading.level}</Chip>
+                    <span
+                      className="truncate text-[11.5px] text-[#334155]"
+                      style={{ paddingLeft: (heading.level - 1) * 10 }}
+                    >
+                      {heading.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </Card>
 
@@ -533,6 +538,40 @@ function ContentTab({ data }: { data: PageAudit }) {
         <p className="mt-3 text-[10.5px] leading-relaxed text-[#94A3B8]">
           These are on-page term frequencies, not search-volume, ranking, or keyword-difficulty estimates.
         </p>
+      </Card>
+
+      <Card title="Twitter card" icon={ImageIcon} className="lg:col-span-2">
+        {deep.twitter ? (
+          <div className="space-y-3">
+            {deep.twitter.title && (
+              <div>
+                <p className="text-[11.5px] font-semibold text-[#28354C]">Title</p>
+                <p className="truncate font-mono text-[10px] text-[#6B7A94]">{deep.twitter.title}</p>
+              </div>
+            )}
+            {deep.twitter.description && (
+              <div>
+                <p className="text-[11.5px] font-semibold text-[#28354C]">Description</p>
+                <p className="truncate font-mono text-[10px] text-[#6B7A94]">{deep.twitter.description}</p>
+              </div>
+            )}
+            {deep.twitter.image && (
+              <img
+                src={deep.twitter.image}
+                alt={deep.twitter.title || "Twitter card image"}
+                className="h-32 w-auto max-w-full rounded-lg border border-[#E6EBF4] object-contain"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+            )}
+            {deep.twitter.card && (
+              <p className="text-[10.5px] text-[#6B7A94]">Card type: {deep.twitter.card}</p>
+            )}
+          </div>
+        ) : (
+          <p className="text-[11.5px] leading-relaxed text-[#6B7A94]">No Twitter card metadata found in the page HTML.</p>
+        )}
       </Card>
     </div>
   );
@@ -666,6 +705,96 @@ function PerformanceTab({ data }: { data: PageAudit }) {
           )}
         </Card>
       </div>
+    </div>
+  );
+}
+
+function ImagesTab({ data }: { data: PageAudit }) {
+  const { content } = data;
+  const totalImages = content.images.total;
+  const missingAlt = content.images.missingAlt;
+  const oversized = content.images.oversized;
+  
+  // Extract OG image from SEO checks
+  const ogImage = data.seoChecks.find((check) => check.id === "og-image")?.value as string | null;
+  const ogImageAlt = data.seoChecks.find((check) => check.id === "og-image")?.detail;
+  
+  return (
+    <div className="grid gap-1">
+      <Card title="Image summary" icon={ImageIcon}>
+        <dl className="divide-y divide-[#F2F5FA]">
+          <KeyValue label="Total images">{totalImages}</KeyValue>
+          <KeyValue label="Missing alt text">{missingAlt}</KeyValue>
+          <KeyValue label="Oversized images">{oversized} images</KeyValue>
+        </dl>
+      </Card>
+
+      {ogImage && (
+        <Card title="Open Graph image preview" icon={ImageIcon}>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <img
+                src={ogImage}
+                alt={ogImageAlt ?? "Open Graph image"}
+                className="h-32 w-auto max-w-full rounded-lg border border-[#E6EBF4] object-contain"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold text-[#28354C]">og:image</p>
+                <p className="truncate font-mono text-[10px] text-[#6B7A94]">{ogImage}</p>
+              </div>
+            </div>
+            <p className="text-[10.5px] text-[#94A3B8]">
+              This is the image used when the page is shared on social platforms (Facebook, LinkedIn, X, etc.).
+              {ogImageAlt && <span className="ml-1">Alt: {ogImageAlt}</span>}
+            </p>
+          </div>
+        </Card>
+      )}
+
+      <Card title="Images without alt text" icon={ImageIcon}>
+        {missingAlt === 0 ? (
+          <p className="text-[11.5px] leading-relaxed text-[#0B7A55]">All images have alt text — great for accessibility!</p>
+        ) : (
+          <ul className="divide-y divide-[#F2F5FA]">
+            {content.headings?.length ? (
+              content.headings.map((heading, index) => (
+                <li key={`${heading.level}-${index}`} className="flex items-center gap-2 px-3.5 py-2">
+                  <Chip tone="warn">Missing alt</Chip>
+                  <span className="truncate text-[11.5px] text-[#334155]">{heading.text}</span>
+                </li>
+              ))
+            ) : (
+              <EmptyState title="No headings found" body="Cannot determine which images lack alt text without heading context." compact />
+            )}
+          </ul>
+        )}
+      </Card>
+
+      <Card title="Image optimization" icon={ImageIcon}>
+        {oversized > 0 ? (
+          <ul className="divide-y divide-[#F2F5FA]">
+            <li className="flex items-center gap-2 px-3.5 py-2.5">
+              <Chip tone="warn">Oversized images detected</Chip>
+              <span className="text-[11.5px] text-[#334155]">{oversized} image{oversized === 1 ? "" : "s"} exceed recommended size</span>
+            </li>
+            <li className="mt-1 text-[10.5px] text-[#6B7A94]">
+              Consider compressing or serving these images in modern formats (WebP/AVIF).
+            </li>
+          </ul>
+        ) : (
+          <p className="text-[11.5px] leading-relaxed text-[#0B7A55]">No oversized images detected — good optimization!</p>
+        )}
+      </Card>
+
+      <Card title="Note" icon={ImageIcon} className="border-[#E29208]">
+        <p className="text-[11px] leading-relaxed text-[#6B7A94]">
+          Individual image previews (with URLs, dimensions, alt text per image) require enhanced crawl data. 
+          The current public crawl captures only aggregate counts and the Open Graph image above.
+        </p>
+      </Card>
     </div>
   );
 }

@@ -234,7 +234,7 @@ export function WebsiteAnalyticsPage() {
         </Card>
       </div>
 
-      <div className="grid gap-1 xl:grid-cols-2">
+      <div className="grid gap-1 xl:grid-cols-3">
         <Card title="Top pages" icon={BarChart3} bodyClassName="p-0">
           <DataTable
             dense
@@ -254,59 +254,29 @@ export function WebsiteAnalyticsPage() {
             empty={<EmptyState title="No landing page data" body="GA4 returned no landing pages for this period." compact />}
           />
         </Card>
-      </div>
 
-      <div className="grid gap-1 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] xl:items-start">
-        <Card title="Events" icon={MousePointerClick} subtitle="Source is shown per event" bodyClassName="p-3.5 pt-2">
-          <div className="h-[212px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.events} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                <CartesianGrid {...GRID_PROPS} />
-                <XAxis dataKey="name" {...AXIS_PROPS} interval={0} angle={-18} textAnchor="end" height={48} />
-                <YAxis {...AXIS_PROPS} width={48} tickFormatter={(value: number) => formatCompact(value)} />
-                <Tooltip
-                  cursor={{ fill: "#F4F7FB" }}
-                  content={makeTooltip((entry) => formatNumber(entry.value), (label) => label)}
-                />
-                <Bar dataKey="count" name="Event count" fill={SERIES_COLORS[0]} radius={[4, 4, 0, 0]} maxBarSize={42} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <ul className="mt-2 flex flex-wrap gap-1.5">
-            {data.events.map((event) => (
-              <li key={event.name}>
-                <Chip tone={event.source === "ga4" ? "info" : "violet"}>
-                  {event.name} · {event.source === "ga4" ? "GA4" : "Omni Tracking"}
-                </Chip>
+        <Card title="Conversions" icon={Target} bodyClassName="p-0">
+          <ul className="divide-y divide-[#F2F5FA]">
+            {data.conversions.map((conversion) => (
+              <li key={conversion.name} className="flex items-center justify-between gap-2 px-3.5 py-2.5">
+                <div className="min-w-0">
+                  <p className="truncate text-[11.5px] font-semibold text-[#28354C]">{conversion.name}</p>
+                  {conversion.value !== null ? (
+                    <p className="text-[10.5px] text-[#6B7A94]">₹{formatNumber(conversion.value)} value</p>
+                  ) : null}
+                </div>
+                <div className="flex items-center gap-2">
+                  <b className="text-[13px] font-semibold text-[#111C3A]">{formatNumber(conversion.count)}</b>
+                  <Chip tone={conversion.delta >= 0 ? "good" : "bad"}>
+                    {conversion.delta >= 0 ? "+" : ""}
+                    {conversion.delta.toFixed(1)}%
+                  </Chip>
+                </div>
               </li>
             ))}
           </ul>
         </Card>
 
-        <div className="grid gap-1">
-          <Card title="Conversions" icon={Target} bodyClassName="p-0">
-            <ul className="divide-y divide-[#F2F5FA]">
-              {data.conversions.map((conversion) => (
-                <li key={conversion.name} className="flex items-center justify-between gap-2 px-3.5 py-2.5">
-                  <div className="min-w-0">
-                    <p className="truncate text-[11.5px] font-semibold text-[#28354C]">{conversion.name}</p>
-                    {conversion.value !== null ? (
-                      <p className="text-[10.5px] text-[#6B7A94]">₹{formatNumber(conversion.value)} value</p>
-                    ) : null}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <b className="text-[13px] font-semibold text-[#111C3A]">{formatNumber(conversion.count)}</b>
-                    <Chip tone={conversion.delta >= 0 ? "good" : "bad"}>
-                      {conversion.delta >= 0 ? "+" : ""}
-                      {conversion.delta.toFixed(1)}%
-                    </Chip>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </Card>
-
-        </div>
       </div>
     </div>
   );

@@ -1,58 +1,69 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Link, Globe, Shield, Activity, Download } from "lucide-react";
+import { Link, Download } from "lucide-react";
 import { Card, Chip, WButton } from "../ui/kit";
 import { LockedState } from "../ui/states";
 import { useWebsiteWorkspace } from "../website-workspace";
-import { useBacklinkAnalysis } from "../../data/hooks";
+import { useSearchConsole } from "../../data/hooks";
 import { downloadFile, toCsv } from "../../data/selectors";
-import { WEBSITE_MOCK_MODE } from "../../data/config";
 
 export function WebsiteBacklinkAnalysisPage() {
   const { clientId, navigate } = useWebsiteWorkspace();
-  const { data: backlinkData = [], isLoading, error } = useBacklinkAnalysis(clientId);
-  const [selectedLink, setSelectedLink] = useState<string | null>(null);
-  const [searchDomain, setSearchDomain] = useState("");
-  const [filterType, setFilterType] = useState<string>("all");
+  const { data: gscPages = [], queries, trend, totals, isLoading, error } = useSearchConsole(clientId);
+  const [selectedPage, setSelectedPage] = useState<null | { page: string; position?: number; clicks?: number; impressions?: number; ctr?: number }>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const previousSearchQuery = useRef<string>(searchQuery);
 
-  const rowIds = useMemo(() => new Map(backlinkData.map((b, index) => [b, `${index}:${b.referringDomain}|${b.url}`])), [backlinkData]);
-
-  const selected = useMemo(() => backlinkData.find((b) => rowIds.get(b) === selectedLink) ?? null, [
-    backlinkData,
-    rowIds,
-    selectedLink,
-  ]);
+  // Reset page when search query changes
+  useEffect(() => {
+    if (previousSearchQuery.current !== searchQuery) {
+      setCurrentPage(1);
+    }
+    previousSearchQuery.current = searchQuery;
+  }, [searchQuery]);
 
   const filtered = useMemo(() => {
-    let result = backlinkData;
-    if (searchDomain) {
-      result = result.filter((b) => b.referringDomain.toLowerCase().includes(searchDomain.toLowerCase()) || b.anchorText.toLowerCase().includes(searchDomain.toLowerCase()));
-    }
-    if (filterType !== "all") {
-      result = result.filter((b) => b.linkType === filterType);
+    let result = gscPages;
+    if (searchQuery) {
+      result = result.filter(
+        (g) =>
+          g.page.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (g.page || '').toLowerCase().includes(searchQuery.toLowerCase()),
+      );
     }
     return result;
-  }, [backlinkData, searchDomain, filterType]);
+  }, [gscPages, searchQuery]);
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(startIndex, startIndex + itemsPerPage);
+  }, [filtered, currentPage, itemsPerPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(totalPages, page)));
+  };
 
   const handleExport = () => {
     downloadFile(
-      `backlink-analysis-${new Date().toISOString().split("T")[0]}.csv`,
+      `organic-landing-pages-${new Date().toISOString().split("T")[0]}.csv`,
       toCsv(
-        ["Referring Domain", "Anchor Text", "Link Type", "URL", "First Seen", "Last Seen", "Domain Authority"],
-        filtered.map((b) => [
-          b.referringDomain,
-          b.anchorText,
-          b.linkType,
-          b.url,
-          b.firstSeen.split("T")[0] ?? "",
-          b.lastSeen?.split("T")[0] ?? "—",
-          b.domainAuthority !== null ? b.domainAuthority : "—",
+        ["Landing Page", "Clicks", "Impressions", "CTR %", "Avg Position"],
+        filtered.map((g) => [
+          g.page,
+          g.clicks,
+          g.impressions,
+          g.ctr?.toFixed(2) ?? "—",
+          g.position?.toFixed(1) ?? "—",
         ]),
       ),
     );
-    toast.success("Backlinks exported");
+    toast.success("Organic landing pages exported");
   };
 
   return (
@@ -60,27 +71,31 @@ export function WebsiteBacklinkAnalysisPage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-base font-bold text-[#28354C]">Backlink Analysis</h1>
-            {backlinkData.length > 0 && (
+            <h1 className="text-base font-bold text-[#28354C]">Organic Landing Pages</h1>
+            {gscPages.length > 0 && (
               <Chip tone="good" dot>
                 Live via Google Search Console
               </Chip>
             )}
           </div>
-          <p className="text-[#6B7A94]">Monitor inbound search referrals, verified landing pages, and authority signals</p>
+          <p className="text-[#6B7A94]">
+            Monitor top-performing landing pages from Google Search - actual search
+            traffic data, not estimated backlinks
+          </p>
         </div>
         <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
           Export
         </WButton>
       </div>
 
-      {!isLoading && backlinkData.length === 0 ? (
+      {!isLoading && gscPages.length === 0 ? (
         <LockedState
-          title="Connect Google Search Console to view live inbound links"
+          title="Connect Google Search Console to view organic landing page data"
           body={
             <>
-              Google Search Console provides verified inbound search traffic, referring queries, and top performing
-              landing pages. Connect your Search Console property in Integrations to view real referring pages.
+              Google Search Console provides verified search traffic data including landing
+              pages, clicks, impressions, and average positions. Connect your Search Console
+              property in Integrations to view real organic search performance.
             </>
           }
           ctaLabel="Open integrations"
@@ -88,198 +103,185 @@ export function WebsiteBacklinkAnalysisPage() {
         />
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-4">
-            <Card title="Total backlinks" icon={Link} className="md:col-span-1">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card title="Total landing pages" icon={Link} className="md:col-span-1">
               <div className="text-lg font-bold text-[#28354C]">{filtered.length}</div>
-              <div className="mt-1 text-sm text-[#6B7A94]">Active links</div>
+              <div className="mt-1 text-sm text-[#6B7A94]">Unique URLs</div>
             </Card>
 
-            <Card title="Unique domains" icon={Globe} className="md:col-span-1">
+            <Card title="Total clicks" icon={Link} className="md:col-span-1">
               <div className="text-lg font-bold text-[#28354C]">
-                {filtered.length > 0 ? new Set(filtered.map((b) => b.referringDomain)).size : "—"}
+                {filtered.reduce((sum, g) => sum + (g.clicks ?? 0), 0).toLocaleString()}
               </div>
-              <div className="mt-1 text-sm text-[#6B7A94]">Referrers</div>
+              <div className="mt-1 text-sm text-[#6B7A94]">Search clicks</div>
             </Card>
 
-            <Card title="Avg authority" icon={Shield} className="md:col-span-1">
+            <Card title="Avg position" icon={Link} className="md:col-span-1">
               <div className="text-lg font-bold text-[#28354C]">
-                {
-                  filtered.length > 0
-                    ? (
-                      filtered
-                        .filter((b) => b.domainAuthority !== null)
-                        .reduce((sum, b) => sum + (b.domainAuthority ?? 0), 0) /
-                      Math.max(filtered.filter((b) => b.domainAuthority !== null).length, 1)
-                    ).toFixed(1)
-                    : "—"
+                {filtered.length > 0
+                  ? (
+                    filtered
+                      .filter((g) => g.position !== null)
+                      .reduce((sum, g) => sum + (g.position ?? 0), 0) /
+                    Math.max(filtered.filter((g) => g.position !== null).length, 1)
+                  ).toFixed(1)
+                  : "—"
                 }
               </div>
-              <div className="mt-1 text-sm text-[#6B7A94]">Domain score</div>
-            </Card>
-
-            <Card title="DoFollow ratio" icon={Activity} className="md:col-span-1">
-              <div className="text-lg font-bold text-[#28354C]">
-                {
-                  filtered.length > 0
-                    ? (
-                      ((filtered.filter((b) => b.linkType === "external").length / filtered.length) * 100)
-                    ).toFixed(1)
-                    : "—"
-                }
-              </div>
-              <div className="mt-1 text-sm text-[#6B7A94]">Followed links</div>
+              <div className="mt-1 text-sm text-[#6B7A94]">Avg search position</div>
             </Card>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="md:col-span-1">
               <div className="space-y-2">
                 <input
                   type="text"
-                  placeholder="Search referring domain..."
+                  placeholder="Search landing page or query..."
                   className="w-full rounded-lg border border-[#DAE1EC] px-3 py-2 text-sm"
-                  value={searchDomain}
-                  onChange={(e) => setSearchDomain(e.target.value)}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
-
-                <div className="flex space-x-2">
-                  <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="rounded-lg border border-[#DAE1EC] px-3 py-2 text-sm"
-                  >
-                    <option value="all">All link types</option>
-                    <option value="internal">Internal</option>
-                    <option value="external">External</option>
-                    <option value="no-follow">No-follow</option>
-                    <option value="sponsored">Sponsored</option>
-                    <option value="ugc">UGC</option>
-                  </select>
-                </div>
               </div>
 
-              <div className="mt-3 space-y-1">
-                {filtered.map((b) => (
-                  <button
-                    key={rowIds.get(b)}
-                    className={`w-full rounded-lg border p-2 text-left transition-colors ${selectedLink === rowIds.get(b) ? "border-[#4F46E5] bg-[#EEF2FF]" : "border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
-                    onClick={() => setSelectedLink(rowIds.get(b) ?? null)}
-                  >
-                    <div className="flex items-center justify-between space-x-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate font-medium text-[#28354C]">{b.referringDomain}</div>
-                        <div className="mt-0.5 text-xs text-[#6B7A94]">{b.anchorText}</div>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs">
-                        <div
-                          className={`size-2 rounded-full ${b.linkType === "internal"
-                              ? "bg-[#12A06D]"
-                              : b.linkType === "external"
-                                ? "bg-[#4F46E5]"
-                                : b.linkType === "no-follow"
-                                  ? "bg-[#DC3A32]"
-                                  : b.linkType === "sponsored"
-                                    ? "bg-[#E29208]"
-                                    : "bg-[#9A5B08]"
+<div className="mt-3 space-y-1">
+                {paginatedItems.map((g) => {
+                  const isSelected = selectedPage?.page === g.page;
+                  return (
+                    <button
+                      key={g.page}
+                      className={`w-full rounded-lg border p-2 text-left transition-colors ${
+                        isSelected ? "border-[#4F46E5] bg-[#EEF2FF]" : "border-[#DAE1EC] hover:bg-[#F9FAFB]"
+                      }`}
+                      onClick={() => setSelectedPage(g)}
+                    >
+                      <div className="flex items-center justify-between space-x-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate font-medium text-[#28354C]">{g.page}</div>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <div
+                            className={`size-2 rounded-full ${
+                              g.position && g.position <= 3
+                                ? "bg-[#10B981]"
+                                : g.position && g.position <= 10
+                                  ? "bg-[#FBBF24]"
+                                  : g.position && g.position <= 20
+                                    ? "bg-[#F97316]"
+                                    : "bg-[#EF4444]"
                             }`}
-                        />
-                        <span>{b.linkType}</span>
-                      </div>
-                    </div>
-                    <div className="mt-1 flex items-center gap-2 text-sm">
-                      <span className="text-[#6B7A94]">DA {b.domainAuthority ?? "—"}</span>
-                      <span className="text-[#6B7A94]">{new Date(b.firstSeen).toLocaleDateString()}</span>
-                    </div>
-                  </button>
-                ))}
-                {filtered.length === 0 && (
-                  <div className="py-8 text-center text-[#6B7A94]">No backlinks found</div>
-                )}
-              </div>
-            </div>
-
-            <div className="md:col-span-2">
-              {selected ? (
-                <Card title={selected.referringDomain} icon={Link} subtitle="Backlink details">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <div className="text-sm text-[#6B7A94]">Anchor text</div>
-                      <div className="text-base font-medium text-[#28354C]">{selected.anchorText}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-[#6B7A94]">Link type</div>
-                      <div className="flex items-center gap-1">
-                        <div
-                          className={`size-2 rounded-full ${selected.linkType === "internal"
-                              ? "bg-[#12A06D]"
-                              : selected.linkType === "external"
-                                ? "bg-[#4F46E5]"
-                                : selected.linkType === "no-follow"
-                                  ? "bg-[#DC3A32]"
-                                  : selected.linkType === "sponsored"
-                                    ? "bg-[#E29208]"
-                                    : selected.linkType === "ugc"
-                                      ? "bg-[#9A5B08]"
-                                      : "bg-[#6B7A94]"
-                            }`}
-                        />
-                        <span className="text-[12px]">{selected.linkType}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-[#6B7A94]">URL</div>
-                      <div className="text-xs break-all text-[#6B7A94]">{selected.url}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-[#6B7A94]">First seen</div>
-                      <div className="text-base font-medium text-[#28354C]">{selected.firstSeen.split("T")[0]}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-[#6B7A94]">Last seen</div>
-                      <div className="text-base font-medium text-[#28354C]">
-                        {selected.lastSeen ? selected.lastSeen.split("T")[0] : "—"}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-[#6B7A94]">Domain authority</div>
-                      <div className="text-base font-medium text-[#28354C]">
-                        {selected.domainAuthority !== null ? selected.domainAuthority : "Not available"}
-                      </div>
-                    </div>
-                    {selected.clicks != null && (
-                      <div>
-                        <div className="text-sm text-[#6B7A94]">Inbound search clicks</div>
-                        <div className="text-base font-bold text-[#166534]">{selected.clicks}</div>
-                      </div>
-                    )}
-                    {selected.impressions != null && (
-                      <div>
-                        <div className="text-sm text-[#6B7A94]">Search impressions</div>
-                        <div className="text-base font-bold text-[#28354C]">{selected.impressions}</div>
-                      </div>
-                    )}
-                    {selected.position != null && (
-                      <div>
-                        <div className="text-sm text-[#6B7A94]">Avg search position</div>
-                        <div className="text-base font-bold text-[#28354C]">{selected.position.toFixed(1)}</div>
-                      </div>
-                    )}
-                    {selected.status && (
-                      <div>
-                        <div className="text-sm text-[#6B7A94]">Verification status</div>
-                        <div className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-[#DCFCE7] px-2 py-0.5 text-xs font-medium text-[#166534]">
-                          {selected.status}
+                          />
+                          <span className="text-[10px]">{g.position?.toFixed(1) ?? "—"}</span>
                         </div>
                       </div>
-                    )}
+                      <div className="mt-1 flex items-center gap-2 text-sm">
+                        <span className="text-[#6B7A94]">Clicks: {g.clicks?.toLocaleString() ?? "0"}</span>
+                        <span className="text-[#6B7A94]">Impr: {g.impressions?.toLocaleString() ?? "0"}</span>
+                        <span className="text-[#6B7A94]">Pos: {g.position?.toFixed(1) ?? "—"}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+                {filtered.length === 0 && (
+                  <div className="py-8 text-center text-[#6B7A94]">No organic landing pages found</div>
+                )}
+              </div>
+
+              {/* Pagination Controls */}
+              {filtered.length > 0 && (
+                <div className="flex items-center justify-between px-2 py-3 border-t border-[#DAE1EC] bg-[#FAFBFD] rounded-b-lg">
+                  <div className="text-sm text-[#6B7A94]">
+                    Showing {paginatedItems.length} of {filtered.length} landing pages
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => 
+                        page === 1 || 
+                        page === totalPages || 
+                        Math.abs(page - currentPage) <= 1
+                      )
+                      .map((page, idx, filteredPages) => {
+                        const showEllipsisBefore = idx > 0 && filteredPages[idx - 1] !== page - 1;
+                        const showEllipsisAfter = idx < filteredPages.length - 1 && filteredPages[idx + 1] !== page + 1;
+                        
+                        return (
+                          <div key={page} className="flex items-center">
+                            {showEllipsisBefore && <span className="px-2 text-[#6B7A94]">...</span>}
+                            <button
+                              onClick={() => handlePageChange(page)}
+                              className={`px-3 py-1 text-sm border rounded ${currentPage === page ? "bg-[#4F46E5] text-white border-[#4F46E5]" : "bg-white text-[#28354C] border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
+                            >
+                              {page}
+                            </button>
+                            {showEllipsisAfter && <span className="px-2 text-[#6B7A94]">...</span>}
+                          </div>
+                        );
+                      })}
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="md:col-span-1">
+              {selectedPage ? (
+                <Card title={selectedPage.page} icon={Link} subtitle="Landing page details">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <div className="text-sm text-[#6B7A94]">Landing page</div>
+                      <div className="text-base font-medium text-[#28354C]">{selectedPage.page}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-[#6B7A94]">Search query</div>
+                      <div className="text-base font-medium text-[#28354C]">
+                        {"—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-[#6B7A94]">Clicks</div>
+                      <div className="text-base font-bold text-[#28354C]">
+                        {selectedPage.clicks?.toLocaleString() ?? "0"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-[#6B7A94]">Impressions</div>
+                      <div className="text-base font-bold text-[#28354C]">
+                        {selectedPage.impressions?.toLocaleString() ?? "0"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-[#6B7A94]">CTR</div>
+                      <div className="text-base font-medium text-[#28354C]">
+                        {(selectedPage.ctr ?? 0).toFixed(2)}%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-[#6B7A94]">Avg position</div>
+                      <div className="text-base font-bold text-[#28354C]">
+                        {selectedPage.position?.toFixed(1) ?? "—"}
+                      </div>
+                    </div>
                   </div>
                 </Card>
               ) : (
                 <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-[#DAE1EC] bg-[#FAFBFD] p-12">
                   <div className="text-center">
                     <Link className="mx-auto mb-3 size-12 text-[#94A3B8]" />
-                    <p className="text-[#28354C]">Analyze link details</p>
-                    <p className="mt-1 text-sm text-[#6B7A94]">Select a backlink to view its properties</p>
+                    <p className="text-[#28354C]">Analyze landing page details</p>
+                    <p className="mt-1 text-sm text-[#6B7A94]">Select a landing page to view its properties</p>
                   </div>
                 </div>
               )}
@@ -289,13 +291,13 @@ export function WebsiteBacklinkAnalysisPage() {
           {isLoading && (
             <div className="rounded-lg border border-[#DAE1EC] bg-[#FAFBFD] p-8 text-center">
               <div className="inline-block size-8 animate-spin rounded-full border-4 border-solid border-[#4F46E5] border-t-transparent" />
-              <p className="mt-3 text-[#6B7A94]">Loading backlink data...</p>
+              <p className="mt-3 text-[#6B7A94]">Loading organic landing page data...</p>
             </div>
           )}
 
           {error && (
             <div className="rounded-lg border border-[#FEE2E2] bg-[#FEF2F2] p-4 text-[#B91C1C]">
-              Failed to load backlink data.
+              Failed to load organic landing page data.
             </div>
           )}
         </>

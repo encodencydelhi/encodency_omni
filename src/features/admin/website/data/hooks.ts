@@ -350,3 +350,19 @@ export function useRankTracking(clientId: string, enabled = true) {
     ...SHARED,
   });
 }
+
+export function useSearchConsole(clientId: string, enabled = true) {
+  const seoResult = useWebsiteSeo(clientId, enabled);
+  return useMemo(() => {
+    const pages = seoResult.data?.searchConsole?.pages ?? [];
+    const queries = seoResult.data?.searchConsole?.queries ?? [];
+    return {
+      data: pages,
+      queries,
+      trend: seoResult.data?.searchConsole?.trend ?? [],
+      totals: seoResult.data?.searchConsole?.totals ?? null,
+      isLoading: seoResult.isLoading,
+      error: seoResult.error,
+    };
+  }, [seoResult.data, seoResult.isLoading, seoResult.error]);
+}
