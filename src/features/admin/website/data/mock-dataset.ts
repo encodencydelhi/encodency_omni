@@ -2060,7 +2060,7 @@ function buildKeywordResearch(profile: ClientWebsiteProfile, domain: string): Ke
   ];
 
   return keywords.map((query, index) => {
-    const intent = intentsArr[index % intentsArr.length];
+    const intent = intentsArr[index % intentsArr.length] as KeywordResearchData["intent"];
     const position = 1 + Math.floor(rng() * 50);
     const impressions = Math.round(100 + rng() * 10000);
     const clicks = Math.round(impressions * (0.5 + rng() * 8) / 100);
@@ -2112,27 +2112,30 @@ function buildCompetitorAnalysis(profile: ClientWebsiteProfile, domain: string):
 
 function buildBacklinkAnalysis(profile: ClientWebsiteProfile, domain: string): BacklinkData[] {
   const rng = makeRng(`${profile.clientId}:backlinks`);
-  const linkTypes: BacklinkData["linkType"][] = ["internal", "external", "no-follow", "sponsored", "ugc"];
+  const linkTypes = ["internal", "external", "no-follow", "sponsored", "ugc"] as const;
+  const linkTypesArr = linkTypes;
   const anchorTexts = [
     "click here", "read more", "learn more", "donate now", "support us",
     "water quality", "water testing", "clean water", "charity", "nonprofit",
     "get involved", "our work", "programs", "impact", "stories",
   ];
+  const anchorTextsArr = anchorTexts;
   const referringDomains = [
     "timesofindia.indiatimes.com", "thehindu.com", "ndtv.com", "indiatoday.in",
     "scroll.in", "thewire.in", "livemint.com", "economictimes.indiatimes.com",
     "business-standard.com", "financialexpress.com",
   ];
+  const referringDomainsArr = referringDomains;
 
   const backlinks: BacklinkData[] = [];
   for (let i = 0; i < 50; i++) {
-    const refDomain = referringDomains[Math.floor(rng() * referringDomains.length)];
-    const linkType = linkTypes[Math.floor(rng() * linkTypes.length)];
+    const refDomain = referringDomainsArr[Math.floor(rng() * referringDomainsArr.length)];
+    const linkType = linkTypesArr[Math.floor(rng() * linkTypesArr.length)];
     const hasDA = rng() > 0.2;
 
     backlinks.push({
       referringDomain: refDomain,
-      anchorText: anchorTexts[Math.floor(rng() * anchorTexts.length)],
+      anchorText: anchorTextsArr[Math.floor(rng() * anchorTextsArr.length)],
       linkType,
       domainAuthority: hasDA ? 10 + Math.floor(rng() * 90) : null,
       url: `https://${refDomain}/article-${Math.floor(rng() * 10000)}`,
@@ -2146,8 +2149,10 @@ function buildBacklinkAnalysis(profile: ClientWebsiteProfile, domain: string): B
 
 function buildRankTracking(profile: ClientWebsiteProfile, domain: string): RankTrackingData[] {
   const rng = makeRng(`${profile.clientId}:ranks`);
-  const intents: RankTrackingData["intent"][] = ["informational", "transactional", "navigational", "commercial"];
+  const intents = ["informational", "transactional", "navigational", "commercial"] as const;
+  const intentsArr = intents;
   const serpFeatures = ["Featured Snippet", "People Also Ask", "Local Pack", "Knowledge Panel", "Image Pack", "Video Carousel", "Site Links"];
+  const serpFeaturesArr = serpFeatures;
 
   const keywords = [
     "donate water charity", "clean water nonprofit", "water testing near me", "ngo donations",
@@ -2165,7 +2170,7 @@ function buildRankTracking(profile: ClientWebsiteProfile, domain: string): RankT
     const positionChange = previousPosition - currentPosition;
     const searchVolume = Math.round(100 + rng() * 50000);
     const difficulty = 10 + Math.floor(rng() * 80);
-    const intent = intents[index % intents.length];
+    const intent = intentsArr[index % intentsArr.length] as RankTrackingData["intent"];
     const historyLength = 30;
     const history = Array.from({ length: historyLength }, (_, i) => {
       const dayPosition = Math.max(1, currentPosition + Math.floor((rng() - 0.5) * 10));
@@ -2174,7 +2179,7 @@ function buildRankTracking(profile: ClientWebsiteProfile, domain: string): RankT
         position: dayPosition,
       };
     });
-    const features = serpFeatures.filter(() => rng() > 0.7).slice(0, 3);
+    const features = serpFeaturesArr.filter(() => rng() > 0.7).slice(0, 3);
 
     return {
       keyword,

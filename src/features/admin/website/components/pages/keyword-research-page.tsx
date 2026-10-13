@@ -3,12 +3,11 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Search, TrendingUp, Target, Clock, Globe, FileText, Download } from "lucide-react";
-import { Card } from "../ui/kit";
-import { WButton } from "../ui/wbutton";
-import { useUrlState } from "../use-url-state";
-import { useKeywordResearch } from "../data/hooks";
-import { KeywordResearchData } from "../data/types";
-import { scoreBand } from "../data/selectors";
+import { Card, WButton } from "../ui/kit";
+import { useUrlState } from "../../use-url-state";
+import { useKeywordResearch } from "../../data/hooks";
+import { KeywordResearchData } from "../../data/types";
+import { scoreBand, downloadFile } from "../../data/selectors";
 
 const INTENT_OPTIONS = [
   { value: "all", label: "All intents" },
@@ -38,19 +37,13 @@ export function WebsiteKeywordResearchPage() {
   const hasRank = (intent: string) => filtered.some((k) => k.intent === intent && k.position > 0);
 
   const handleExport = () => {
-    const csv = [
-      ["Query", "Position", "Impressions", "Clicks", "CTR", "Difficulty", "Intent"],
-      ...filtered.map((k) => [k.query, k.position, k.impressions, k.clicks, `${k.ctr}%`, k.difficulty, k.intent]),
-    ]
-      .map((row) => row.map((cell) => String(cell)).join(","))
-      .join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `keyword-research-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(
+      "keyword-research.csv",
+      toCsv(
+        ["Query", "Position", "Impressions", "Clicks", "CTR", "Difficulty", "Intent"],
+        filtered.map((k) => [k.query, k.position, k.impressions, k.clicks, `${k.ctr}%`, k.difficulty, k.intent]),
+      ),
+    );
     toast.success("Keywords exported");
   };
 

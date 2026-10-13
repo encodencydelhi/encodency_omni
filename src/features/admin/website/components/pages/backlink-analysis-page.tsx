@@ -3,11 +3,10 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Link, Globe, Shield, Activity, Download, CheckCircle } from "lucide-react";
-import { Card } from "@/features/admin/website/components/ui/kit";
-import { WButton } from "@/features/admin/website/components/ui/wbutton";
+import { Card, WButton } from "../ui/kit";
 import { useUrlState } from "../use-url-state";
-import { useBacklinkAnalysis } from "../data/hooks";
-import { BacklinkData } from "../data/types";
+import { useBacklinkAnalysis } from "../../data/hooks";
+import { BacklinkData } from "../../data/types";
 
 export function WebsiteBacklinkAnalysisPage() {
   const { data: backlinkData = [], isLoading, error } = useBacklinkAnalysis();

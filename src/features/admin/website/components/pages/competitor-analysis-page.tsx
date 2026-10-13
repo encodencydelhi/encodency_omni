@@ -3,12 +3,11 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Target, Users, Globe, Clock, Download, Shield, CheckCircle, X } from "lucide-react";
-import { Card } from "@/features/admin/website/components/ui/kit";
-import { WButton } from "@/features/admin/website/components/ui/wbutton";
-import { useUrlState } from "../use-url-state";
-import { useCompetitorAnalysis } from "../data/hooks";
-import { CompetitorData } from "../data/types";
-import { scoreBand } from "../data/selectors";
+import { Card, WButton } from "../ui/kit";
+import { useUrlState } from "../../use-url-state";
+import { useCompetitorAnalysis } from "../../data/hooks";
+import { CompetitorData } from "../../data/types";
+import { scoreBand, downloadFile } from "../../data/selectors";
 
 const INTENT_OPTIONS = [
   { value: "all", label: "All intents" },

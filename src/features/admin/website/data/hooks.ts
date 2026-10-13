@@ -311,6 +311,7 @@ return useMemo(
       start,
       dismiss,
     }),
+    [progress, error, start, dismiss],
   );
 }
 
