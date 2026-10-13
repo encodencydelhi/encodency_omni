@@ -13,13 +13,17 @@ import { WEBSITE_MOCK_MODE } from "../../data/config";
 export function WebsiteBacklinkAnalysisPage() {
   const { clientId, navigate } = useWebsiteWorkspace();
   const { data: backlinkData = [], isLoading, error } = useBacklinkAnalysis(clientId);
-  const [selectedLink, setSelectedLink] = useState<string | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [searchDomain, setSearchDomain] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
 
-  const selected = useMemo(() => backlinkData.find((b) => b.url === selectedLink) ?? null, [
+  const getItemKey = (b: { url: string; anchorText: string }) => `${b.url}::${b.anchorText}`;
+
+  const activeSelectedKey = selectedKey ?? (backlinkData.length > 0 ? getItemKey(backlinkData[0]!) : null);
+
+  const selected = useMemo(() => backlinkData.find((b) => getItemKey(b) === activeSelectedKey) ?? backlinkData[0] ?? null, [
     backlinkData,
-    selectedLink,
+    activeSelectedKey,
   ]);
 
   const filtered = useMemo(() => {
@@ -133,7 +137,7 @@ export function WebsiteBacklinkAnalysisPage() {
           <div className="space-y-2">
             <input
               type="text"
-              placeholder="Search referring domain..."
+              placeholder="Search domain, query or landing page..."
               className="w-full rounded-lg border border-[#DAE1EC] px-3 py-2 text-sm"
               value={searchDomain}
               onChange={(e) => setSearchDomain(e.target.value)}
@@ -156,12 +160,15 @@ export function WebsiteBacklinkAnalysisPage() {
           </div>
 
           <div className="mt-3 space-y-1">
-            {filtered.map((b) => (
-              <button
-                key={b.url}
-                className={`w-full rounded-lg border p-2 text-left transition-colors ${selectedLink === b.url ? "border-[#4F46E5] bg-[#EEF2FF]" : "border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
-                onClick={() => setSelectedLink(b.url)}
-              >
+            {filtered.map((b) => {
+              const itemKey = getItemKey(b);
+              const isSelected = activeSelectedKey === itemKey;
+              return (
+                <button
+                  key={itemKey}
+                  className={`w-full rounded-lg border p-2 text-left transition-colors ${isSelected ? "border-[#4F46E5] bg-[#EEF2FF]" : "border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
+                  onClick={() => setSelectedKey(itemKey)}
+                >
                 <div className="flex items-center justify-between space-x-2">
                   <div className="flex-1 min-w-0">
                     <div className="truncate font-medium text-[#28354C]">{b.referringDomain}</div>
@@ -189,8 +196,9 @@ export function WebsiteBacklinkAnalysisPage() {
                   <span className="text-[#6B7A94]">{new Date(b.firstSeen).toLocaleDateString()}</span>
                 </div>
               </button>
-            ))}
-            {filtered.length === 0 && (
+            );
+          })}
+          {filtered.length === 0 && (
               <div className="py-8 text-center text-[#6B7A94]">No backlinks found</div>
             )}
           </div>
