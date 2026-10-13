@@ -43,6 +43,7 @@ import { ATTRIBUTE_GROUPS, ATTRIBUTE_GROUP_LABEL, DAY_LABELS, LIMITS, gbRoutes }
 import { date as fmtDate, timeLabel } from "../lib/format";
 import { useGbp } from "../store/gbp-store";
 import type { AttributeDefinition, AttributeValue, Location, LocationProfile, SpecialHour, TimePeriod } from "../types";
+import { sanitizePhone } from "@/lib/utils/phone";
 
 const SECTIONS: { id: string; label: string; icon: ComponentType<{ className?: string }> }[] = [
   { id: "basic", label: "Basic information", icon: Store },
@@ -253,7 +254,7 @@ export function ProfileEditor({ location }: { location: Location }) {
           <Section id="contact" title="Contact" icon={Phone} description="How customers reach this location.">
             <fieldset disabled={!editable} className="grid gap-1 sm:grid-cols-2">
               <FormField label="Primary phone" htmlFor="profile-phone" error={errors.phone}>
-                <input id="profile-phone" className={gb.input} value={draft.phone} onChange={(event) => set("phone", event.target.value)} placeholder="+91 11 4567 8900" />
+                <input id="profile-phone" className={gb.input} type="tel" inputMode="numeric" maxLength={20} value={sanitizePhone(draft.phone)} onChange={(event) => set("phone", sanitizePhone(event.target.value))} placeholder="10-digit phone number" />
               </FormField>
               <FormField label="Website" htmlFor="profile-website" error={errors.website}>
                 <input id="profile-website" className={gb.input} value={draft.website} onChange={(event) => set("website", event.target.value)} placeholder="https://" />

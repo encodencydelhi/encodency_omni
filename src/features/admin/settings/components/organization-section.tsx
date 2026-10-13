@@ -18,6 +18,7 @@ import { OrganizationProfile } from "../settings-data/types";
 import { useSettingsCapability } from "../settings-data/capability-provider";
 import { brandingApi, describeBrandingError } from "../live/branding-api";
 import { BRANDING_CHANGE_EVENT } from "@/features/admin/shell/admin-context";
+import { PHONE_ERROR, isValidPhoneNumber, sanitizePhone } from "@/lib/utils/phone";
 
 interface OrganizationSectionProps {
   data: OrganizationProfile;
@@ -268,13 +269,19 @@ export function OrganizationSection({ data, onChange }: OrganizationSectionProps
             </label>
             <input
               type="tel"
-              value={data.contactPhone}
-              onChange={(e) => onChange({ contactPhone: e.target.value })}
+              inputMode="numeric"
+              maxLength={20}
+              value={sanitizePhone(data.contactPhone)}
+              onChange={(e) => onChange({ contactPhone: sanitizePhone(e.target.value) })}
               disabled={!capabilities.canEditOrganization}
-              placeholder="+91 98765 43210"
+              placeholder="10-digit mobile number"
               className="w-full h-8 px-3 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 shadow-2xs placeholder:text-[#94A3B8]"
             />
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Official organizational telephone / mobile number.</span>
+            {data.contactPhone && !isValidPhoneNumber(data.contactPhone) ? (
+              <span className="text-[10px] text-red-600 font-medium mt-0.5 block">{PHONE_ERROR}</span>
+            ) : (
+              <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Official organizational telephone / mobile number (10 digits).</span>
+            )}
           </div>
 
           <div className="md:col-span-2">

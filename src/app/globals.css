@@ -216,6 +216,12 @@
     overflow-x: hidden;
   }
 
+  /* Set by useScrollLock while a modal, drawer or sheet is open. */
+  html.scroll-locked,
+  html.scroll-locked body {
+    overflow: hidden;
+  }
+
   body {
     max-width: 100%;
     overflow-x: hidden;

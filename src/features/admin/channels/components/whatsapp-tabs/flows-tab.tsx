@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 const initialFlows = [
   { id: 1, name: "Volunteer Registration", type: "Form", status: "Published", submissions: 1247, completionRate: "82%", screens: 4, lastModified: "Apr 10, 2025", category: "Lead Generation" },
@@ -65,6 +66,7 @@ const flowScreens = [
 export function FlowsTab() {
   const [flowList, setFlowList] = useState(initialFlows);
   const [previewFlow, setPreviewFlow] = useState<typeof initialFlows[0] | null>(null);
+  useScrollLock(previewFlow !== null);
 
   const handleDuplicate = (id: number) => {
     const item = flowList.find((f) => f.id === id);

@@ -46,6 +46,7 @@ import { hostnameOf, isValidEmail, isValidPhone, isValidWebsite } from "../lib/v
 import { ErrorBanner, Stepper } from "./flows/flow-kit";
 import { Field, Panel } from "./primitives";
 import { AccountStatusBadge, SubscriptionStatusBadge } from "./status-badges";
+import { PHONE_ERROR, sanitizePhone } from "@/lib/utils/phone";
 
 const STEPS = ["Company", "Owner", "Subscription", "Workspace", "Review"] as const;
 
@@ -139,13 +140,13 @@ export function validateStep(step: number, form: WizardForm): Errors {
     if (form.website.trim() && !isValidWebsite(form.website)) errors.website = "Enter a valid website, e.g. example.com.";
     if (!form.country) errors.country = "Select a country.";
     if (form.contactEmail.trim() && !isValidEmail(form.contactEmail)) errors.contactEmail = "Enter a valid email address.";
-    if (form.contactPhone.trim() && !isValidPhone(form.contactPhone)) errors.contactPhone = "Enter a valid phone number.";
+    if (form.contactPhone.trim() && !isValidPhone(form.contactPhone)) errors.contactPhone = PHONE_ERROR;
   }
   if (step === 1) {
     if (!form.ownerName.trim()) errors.ownerName = "Owner name is required.";
     if (!form.ownerEmail.trim()) errors.ownerEmail = "Owner email is required.";
     else if (!isValidEmail(form.ownerEmail)) errors.ownerEmail = "Enter a valid email address.";
-    if (form.ownerPhone.trim() && !isValidPhone(form.ownerPhone)) errors.ownerPhone = "Enter a valid phone number.";
+    if (form.ownerPhone.trim() && !isValidPhone(form.ownerPhone)) errors.ownerPhone = PHONE_ERROR;
   }
   if (step === 2) {
     if (!form.startDate) errors.startDate = "Choose a start date.";
@@ -395,15 +396,16 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
     idempotencyKeyRef.current = null;
   };
 
-  const input = (id: keyof WizardForm, label: string, opts: { required?: boolean; type?: string; placeholder?: string; hint?: string; maxLength?: number } = {}) => (
+  const input = (id: keyof WizardForm, label: string, opts: { required?: boolean; type?: string; placeholder?: string; hint?: string; maxLength?: number; phone?: boolean } = {}) => (
     <Field label={label} htmlFor={`wiz-${id}`} required={opts.required} hint={opts.hint} error={visibleErrors[id]}>
       <Input
         id={`wiz-${id}`}
-        type={opts.type ?? "text"}
+        type={opts.phone ? "tel" : (opts.type ?? "text")}
+        inputMode={opts.phone ? "numeric" : undefined}
         value={String(form[id] ?? "")}
-        onChange={(event) => update({ [id]: event.target.value } as Partial<WizardForm>)}
+        onChange={(event) => update({ [id]: opts.phone ? sanitizePhone(event.target.value) : event.target.value } as Partial<WizardForm>)}
         placeholder={opts.placeholder}
-        maxLength={opts.maxLength}
+        maxLength={opts.phone ? 20 : opts.maxLength}
         aria-invalid={Boolean(visibleErrors[id])}
         aria-describedby={visibleErrors[id] ? `wiz-${id}-error` : undefined}
       />
@@ -566,7 +568,7 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
                       {select("country", "Country", COUNTRIES, { required: true })}
                       {select("companySize", "Company size", COMPANY_SIZES, { allowEmpty: true })}
                       {input("contactEmail", "Contact email", { type: "email", placeholder: "hello@acme.com" })}
-                      {input("contactPhone", "Contact phone", { placeholder: "+91 98765 43210" })}
+                      {input("contactPhone", "Contact phone", { placeholder: "10-digit mobile number", phone: true })}
                     </div>
                     {duplicateName ? (
                       <AlertBanner tone="warning" title="A company with this name already exists" className="mt-3">
@@ -590,7 +592,7 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
                     <div className="grid gap-3 sm:grid-cols-2">
                       {input("ownerName", "Owner full name", { required: true })}
                       {input("ownerEmail", "Owner email", { required: true, type: "email", placeholder: "owner@acme.com" })}
-                      {input("ownerPhone", "Phone (optional)")}
+                      {input("ownerPhone", "Phone (optional)", { placeholder: "10-digit mobile number", phone: true })}
                     </div>
 
                     {emailReady && lookup.isPending ? <p className="mt-3 text-2xs text-muted-foreground">Checking whether this email already belongs to a platform user...</p> : null}

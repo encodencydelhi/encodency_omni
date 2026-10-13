@@ -64,7 +64,7 @@ export function WebsiteRankTrackingPage() {
           r.currentPosition,
           r.previousPosition,
           r.positionChange > 0 ? `+${r.positionChange}` : r.positionChange,
-          r.searchVolume,
+          r.searchVolume ?? "",
           r.difficulty,
           r.intent,
           r.url ?? "—",
@@ -116,7 +116,7 @@ export function WebsiteRankTrackingPage() {
 
         <Card title="Est. search volume" icon={Globe} className="md:col-span-1">
           <div className="text-lg font-bold text-[#28354C]">
-            {filtered.length > 0 ? (filtered.reduce((sum, r) => sum + r.searchVolume, 0)).toLocaleString() : "—"}
+            {filtered.length > 0 ? (filtered.reduce((sum, r) => sum + (r.searchVolume ?? 0), 0)).toLocaleString() : "—"}
           </div>
           <div className="mt-1 text-sm text-[#6B7A94]">Est. monthly searches</div>
         </Card>
@@ -179,7 +179,7 @@ export function WebsiteRankTrackingPage() {
                   </div>
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-sm">
-                  <span className="text-[#6B7A94]">Vol {r.searchVolume.toLocaleString()}</span>
+                  <span className="text-[#6B7A94]">Vol {r.searchVolume == null ? "—" : r.searchVolume.toLocaleString()}</span>
                   <span
                     title="Estimated difficulty — no keyword-difficulty API is connected"
                     className={`px-1.5 py-0.5 rounded text-xs ${scoreBand(r.difficulty) === "good" ? "bg-[#DCFCE7] text-[#166534]" : scoreBand(r.difficulty) === "warn" ? "bg-[#FEF3C7] text-[#9A5B08]" : "bg-[#FEE2E2] text-[#B91C1C]"}`}
@@ -230,7 +230,7 @@ export function WebsiteRankTrackingPage() {
                 )}
                 <div>
                   <div className="text-sm text-[#6B7A94]">Est. search volume</div>
-                  <div className="text-2xl font-bold text-[#28354C]">{selected.searchVolume.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-[#28354C]">{selected.searchVolume == null ? "—" : selected.searchVolume.toLocaleString()}</div>
                 </div>
                 <div>
                   <div className="text-sm text-[#6B7A94]">Est. difficulty</div>

@@ -2,6 +2,7 @@
 
 import { AlertCircle, Check, Loader2, Undo2, X } from "lucide-react";
 import { SettingsSectionId } from "../settings-data/types";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 interface NavigationGuardDialogProps {
   open: boolean;
@@ -20,6 +21,7 @@ export function NavigationGuardDialog({
   onDiscard,
   onSaveAndLeave,
 }: NavigationGuardDialogProps) {
+  useScrollLock(open);
   if (!open) return null;
 
   return (

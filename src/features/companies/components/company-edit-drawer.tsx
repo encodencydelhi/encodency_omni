@@ -19,6 +19,7 @@ import { isValidEmail, isValidPhone, isValidWebsite } from "../lib/validation";
 import { ErrorBanner } from "./flows/flow-kit";
 import { Field, Panel } from "./primitives";
 import { brandingApi, BRANDING_UPLOAD_LIMITS, describeBrandingError } from "@/features/admin/settings/live/branding-api";
+import { PHONE_ERROR, sanitizePhone } from "@/lib/utils/phone";
 
 const NONE = "__none__";
 
@@ -47,7 +48,7 @@ function toForm(summary: CompanySummary): EditForm {
     country: company.profile.country,
     companySize: company.profile.companySize ?? NONE,
     contactEmail: company.profile.contactEmail ?? "",
-    contactPhone: company.profile.contactPhone ?? "",
+    contactPhone: sanitizePhone(company.profile.contactPhone),
     tags: company.internalTags,
     accountManagerId: company.internalOwners.accountManagerId ?? NONE,
     supportOwnerId: company.internalOwners.supportOwnerId ?? NONE,
@@ -155,7 +156,7 @@ export function CompanyEditDrawer({ summary, onClose }: { summary: CompanySummar
   if (!form.name.trim()) errors.name = "Company name is required.";
   if (form.website.trim() && !isValidWebsite(form.website)) errors.website = "Enter a valid website.";
   if (form.contactEmail.trim() && !isValidEmail(form.contactEmail)) errors.contactEmail = "Enter a valid email address.";
-  if (form.contactPhone.trim() && !isValidPhone(form.contactPhone)) errors.contactPhone = "Enter a valid phone number.";
+  if (form.contactPhone.trim() && !isValidPhone(form.contactPhone)) errors.contactPhone = PHONE_ERROR;
   const shown = { ...(attempted ? errors : {}), ...serverErrors };
   const valid = Object.keys(errors).length === 0;
 
@@ -216,9 +217,12 @@ export function CompanyEditDrawer({ summary, onClose }: { summary: CompanySummar
     <Field label={label} htmlFor={`edit-${id}`} required={opts.required} error={shown[id]}>
       <Input
         id={`edit-${id}`}
-        type={opts.type ?? "text"}
+        type={id === "contactPhone" ? "tel" : (opts.type ?? "text")}
+        inputMode={id === "contactPhone" ? "numeric" : undefined}
+        maxLength={id === "contactPhone" ? 20 : undefined}
+        placeholder={id === "contactPhone" ? "10-digit mobile number" : undefined}
         value={String(form[id])}
-        onChange={(event) => update({ [id]: event.target.value } as Partial<EditForm>)}
+        onChange={(event) => update({ [id]: id === "contactPhone" ? sanitizePhone(event.target.value) : event.target.value } as Partial<EditForm>)}
         aria-invalid={Boolean(shown[id])}
       />
     </Field>

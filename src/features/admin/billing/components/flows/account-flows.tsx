@@ -10,6 +10,7 @@ import type { BillingContact, BillingProfile, ContactKind } from "../../billing-
 import { useBilling } from "../../store/billing-store";
 import { FlowError, FlowShell } from "../flow-shell";
 import { Button, FormField, SelectMenu, Segmented, x } from "../ui";
+import { PHONE_ERROR, isValidPhoneNumber, sanitizePhone } from "@/lib/utils/phone";
 
 const INDIAN_STATES = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
@@ -31,7 +32,7 @@ function validateProfile(profile: BillingProfile): ProfileErrors {
   const india = profile.country === "India";
   if (profile.legalName.trim().length < 2) errors.legalName = "Enter the registered business name.";
   if (!EMAIL_RE.test(profile.billingEmail.trim())) errors.billingEmail = "Enter a valid email address.";
-  if (profile.billingPhone && !PHONE_RE.test(profile.billingPhone.trim())) errors.billingPhone = "Enter a valid phone number.";
+  if (profile.billingPhone && !isValidPhoneNumber(profile.billingPhone)) errors.billingPhone = PHONE_ERROR;
   if (!profile.addressLine1.trim()) errors.addressLine1 = "Enter the street address.";
   if (!profile.city.trim()) errors.city = "Enter the city.";
   if (!profile.state.trim()) errors.state = india ? "Choose the state." : "Enter the state or region.";
@@ -80,7 +81,8 @@ export function DetailsSheet() {
       autoComplete={props.autoComplete}
       inputMode={props.inputMode}
       aria-invalid={Boolean(show(key))}
-      onChange={(event) => set(key, props.upper ? event.target.value.toUpperCase() : event.target.value)}
+      maxLength={key === "billingPhone" ? 20 : undefined}
+      onChange={(event) => set(key, props.upper ? event.target.value.toUpperCase() : key === "billingPhone" ? sanitizePhone(event.target.value) : event.target.value)}
       onBlur={blur(key)}
     />
   );
@@ -136,7 +138,7 @@ export function DetailsSheet() {
               {input("billingEmail", { autoComplete: "email", inputMode: "email" })}
             </FormField>
             <FormField label="Billing phone" htmlFor="bd-billingPhone" error={show("billingPhone")}>
-              {input("billingPhone", { autoComplete: "tel", inputMode: "tel" })}
+              {input("billingPhone", { autoComplete: "tel", inputMode: "numeric", placeholder: "10-digit mobile number" })}
             </FormField>
           </div>
         </Group>

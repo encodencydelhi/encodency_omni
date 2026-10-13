@@ -149,10 +149,15 @@ export function DataTable<TRow>({
                 Columns
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Visible columns</DropdownMenuLabel>
               {columns
-                .filter((column) => column.hideable !== false)
+                .filter(
+                  (column) =>
+                    column.hideable !== false &&
+                    // Unlabelled columns (row actions) can't be named in this list.
+                    !(typeof column.header === "string" && column.header.trim() === ""),
+                )
                 .map((column) => (
                   <DropdownMenuCheckboxItem
                     key={column.id}

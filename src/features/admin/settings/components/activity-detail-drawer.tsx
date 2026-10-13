@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { SettingsActivityItem } from "../settings-data/types";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 interface ActivityDetailDrawerProps {
   activity: SettingsActivityItem | null;
@@ -9,6 +10,7 @@ interface ActivityDetailDrawerProps {
 }
 
 export function ActivityDetailDrawer({ activity, onClose }: ActivityDetailDrawerProps) {
+  useScrollLock(Boolean(activity));
   if (!activity) return null;
 
   return (

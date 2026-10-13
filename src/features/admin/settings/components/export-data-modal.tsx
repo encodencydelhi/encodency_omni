@@ -5,6 +5,7 @@ import { Download, Loader2, Check, X, FileArchive, AlertCircle } from "lucide-re
 import { toast } from "sonner";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { buildOrganizationExport, downloadJson, EXPORT_CATEGORIES, type ExportCategoryId, type OrganizationExport } from "../settings-data/export";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 interface ExportDataModalProps {
   open: boolean;
@@ -25,6 +26,7 @@ export function ExportDataModal({ open, onClose, organizationName }: ExportDataM
   const [status, setStatus] = useState<"idle" | "preparing" | "done">("idle");
   const [result, setResult] = useState<OrganizationExport | null>(null);
 
+  useScrollLock(open);
   if (!open) return null;
 
   const close = () => {

@@ -3,6 +3,7 @@
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import type * as React from "react";
 import { cn } from "@/lib/utils/cn";
+import { ScrollLock } from "@/lib/utils/scroll-lock";
 import { buttonVariants } from "./button";
 
 export const AlertDialog = AlertDialogPrimitive.Root;
@@ -22,7 +23,10 @@ export function AlertDialogContent({
           className,
         )}
         {...props}
-      />
+      >
+        <ScrollLock />
+        {props.children}
+      </AlertDialogPrimitive.Content>
     </AlertDialogPrimitive.Portal>
   );
 }

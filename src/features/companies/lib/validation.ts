@@ -1,3 +1,5 @@
+import { isValidPhoneNumber } from "@/lib/utils/phone";
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function isValidEmail(value: string): boolean {
@@ -26,6 +28,7 @@ export function hostnameOf(value: string | null | undefined): string | null {
   }
 }
 
+/** Exactly 10 digits (an optional +91 / 0 prefix is tolerated). Callers skip blank optional fields. */
 export function isValidPhone(value: string): boolean {
-  return /^[+()\d\s-]{7,20}$/.test(value.trim());
+  return isValidPhoneNumber(value);
 }

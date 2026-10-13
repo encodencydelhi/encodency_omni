@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { integrationsApi, type LinkedInDashboardResponse, type LinkedInDataset } from "../../integrations/live/integrations-api";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 type LinkedInTab = "Overview" | "Posts" | "Analytics" | "Audience" | "Campaigns" | "Leads" | "Inbox" | "Settings";
 type Metric = { key: string; label: string; value: number };
@@ -190,6 +191,7 @@ function audienceMetrics(data: Record<string, unknown>[]) {
 function Audience({ dataset, networkSize }: { dataset: LinkedInDashboardResponse["followers"]; networkSize: LinkedInDashboardResponse["networkSize"] }) {
   const [activeCategory, setActiveCategory] = useState("All");
   const [showDetails, setShowDetails] = useState(false);
+  useScrollLock(showDetails);
   if (dataset.state !== "live") return <div className="p-5"><DatasetNotice dataset={dataset} /></div>;
   const metrics = audienceMetrics(dataset.data);
   const categories = [...new Set(metrics.map((metric) => metric.category))];

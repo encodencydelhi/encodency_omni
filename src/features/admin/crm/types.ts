@@ -123,6 +123,9 @@ export interface Lead {
   notes: string;
   nextFollowUp: string;
   lastContacted: string;
+  /** Set when the lead has been converted: the contact / deal created from it. */
+  convertedContactId?: string;
+  convertedDealId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -155,6 +158,9 @@ export interface Contact {
   tags: string[];
   groups: string[];
   status: ContactStatus;
+  notes?: string;
+  /** Lead this contact was converted from, if any. */
+  sourceLeadId?: string;
   lastContacted: string;
   nextFollowUp: string;
   createdAt: string;
@@ -186,6 +192,7 @@ export interface Deal {
   tags: string[];
   notes: string;
   priority: DealPriority;
+  lostReason?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -243,6 +250,8 @@ export interface Pipeline {
   id: string;
   name: string;
   stages: DealStage[];
+  /** Stored record that renames / re-stages the built-in default pipeline (deals keep pipelineId "pipeline_1"). */
+  isDefault?: boolean;
 }
 
 export const DEFAULT_PIPELINE: Pipeline = {

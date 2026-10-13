@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils/cn";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 interface TemplatesTabProps {
   onOpenModal: (modal: string) => void;
@@ -61,6 +62,7 @@ export function TemplatesTab({ onOpenModal }: TemplatesTabProps) {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [previewTemplate, setPreviewTemplate] = useState<typeof initialTemplates[0] | null>(null);
+  useScrollLock(previewTemplate !== null);
 
   const filtered = templateList.filter((t) => {
     if (search && !t.name.toLowerCase().includes(search.toLowerCase())) return false;

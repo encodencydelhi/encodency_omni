@@ -51,6 +51,7 @@ import type {
   ServiceRecord,
   SystemHealthSnapshotV2,
 } from "../data/types";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 const BASE = ROUTES.superAdmin.systemHealth;
 const TABS = [
@@ -148,6 +149,7 @@ function useLatest<T>(value: T) {
 }
 
 function Drawer({ title, open, onClose, children }: { title: string; open: boolean; onClose: () => void; children: React.ReactNode }) {
+  useScrollLock(open);
   const closeRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useLatest(onClose);
   useEffect(() => {
@@ -174,6 +176,7 @@ function Drawer({ title, open, onClose, children }: { title: string; open: boole
 }
 
 function Modal({ title, open, onClose, children }: { title: string; open: boolean; onClose: () => void; children: React.ReactNode }) {
+  useScrollLock(open);
   const closeRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useLatest(onClose);
   useEffect(() => {

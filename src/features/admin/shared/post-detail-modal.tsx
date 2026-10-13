@@ -30,6 +30,7 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import RichTextEditor from "@/components/layout/rich-text-editor";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 type EventType = "fb" | "ig" | "li" | "yt" | "wa" | "gmb" | "link";
 
@@ -366,6 +367,7 @@ export function PostDetailModal({
   onClose: () => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
+  useScrollLock();
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [rescheduleSuccess, setRescheduleSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState({

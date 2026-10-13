@@ -10,6 +10,7 @@ import { buildApiMonitoringSnapshot } from "../data/observability-provider";
 import { fetchLiveApiRequestById, fetchLiveApiRequests, useLiveApiMonitoringSnapshot, updateLiveMonitoringConfig, useLiveApiRequests } from "../data/live-provider";
 import { endpointLabel, endpointStats, errorGroupMembers, kpis, requestsInRange, serviceStats, statusClass } from "../data/observability-selectors";
 import type { ApiEnvironment, ApiMonitoringConfig, ApiMonitoringSnapshot, ApiRateLimit, ApiRequest, ApiService, ApiTimeRange } from "../data/observability-types";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 const BASE = ROUTES.superAdmin.apiMonitoring;
 const tabs = [
@@ -76,6 +77,7 @@ function download(name: string, content: string, type = "text/csv") {
 }
 
 function Drawer({ title, open, onClose, children }: { title: string; open: boolean; onClose: () => void; children: React.ReactNode }) {
+  useScrollLock(open);
   const ref = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!open) return undefined;

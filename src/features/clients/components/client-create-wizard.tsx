@@ -27,6 +27,7 @@ import { LogoPicker } from "./logo-picker";
 import { clientsApi, describeClientLogoError } from "@/features/admin/projects/live/clients-api";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
+import { PHONE_ERROR, sanitizePhone } from "@/lib/utils/phone";
 
 const SUPER_ADMIN_STEPS = ["Parent company", "Client identity", "Defaults & team", "Review"];
 const ADMIN_STEPS = ["Client identity", "Defaults & team", "Review"];
@@ -233,7 +234,7 @@ function IdentityStep({
           <Input id="create-email" type="email" value={draft.contactEmail} onChange={(event) => update({ contactEmail: event.target.value })} placeholder="contact@example.com" aria-invalid={Boolean(errors.contactEmail)} />
         </Field>
         <Field label="Contact phone" htmlFor="create-phone" error={errors.contactPhone}>
-          <Input id="create-phone" value={draft.contactPhone} onChange={(event) => update({ contactPhone: event.target.value })} placeholder="+91 9876543210" aria-invalid={Boolean(errors.contactPhone)} />
+          <Input id="create-phone" type="tel" inputMode="numeric" maxLength={20} value={draft.contactPhone} onChange={(event) => update({ contactPhone: sanitizePhone(event.target.value) })} placeholder="10-digit mobile number" aria-invalid={Boolean(errors.contactPhone)} />
         </Field>
         <Field label="Target audience" htmlFor="create-target-audience" className="sm:col-span-2" hint="Key audience demographic, market segment or customer profile">
           <Input id="create-target-audience" value={draft.targetAudience} onChange={(event) => update({ targetAudience: event.target.value })} placeholder="e.g. B2B Enterprise, Tech Startups, Retail Consumers" />
@@ -534,7 +535,7 @@ function WizardBody({ initialCompanyId, onClose }: { initialCompanyId?: string; 
     }
     if (draft.website.trim() && !isValidWebsite(draft.website)) errors.website = "Enter a valid website, e.g. example.com.";
     if (draft.contactEmail.trim() && !isValidEmail(draft.contactEmail)) errors.contactEmail = "Enter a valid email address.";
-    if (draft.contactPhone.trim() && !isValidPhone(draft.contactPhone)) errors.contactPhone = "Enter a valid phone number.";
+    if (draft.contactPhone.trim() && !isValidPhone(draft.contactPhone)) errors.contactPhone = PHONE_ERROR;
   }
   const shown = { ...(attempted ? errors : {}), ...serverErrors };
 

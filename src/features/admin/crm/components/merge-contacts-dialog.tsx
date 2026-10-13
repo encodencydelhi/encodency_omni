@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,15 +45,14 @@ interface MergeContactsDialogProps {
 }
 
 export function MergeContactsDialog({ open, onClose, pair, onMerge }: MergeContactsDialogProps) {
-  const [primaryId, setPrimaryId] = useState("");
-
-  useEffect(() => {
-    if (open && pair) setPrimaryId(pair[0].id);
-  }, [open, pair]);
+  const [chosenId, setChosenId] = useState("");
 
   if (!open || !pair) return null;
 
-  const primary = pair.find((c) => c.id === primaryId) ?? pair[0];
+  // Falls back to the first contact until the user picks one (or the pair changes).
+  const primary = pair.find((c) => c.id === chosenId) ?? pair[0];
+  const primaryId = primary.id;
+  const setPrimaryId = setChosenId;
   const secondary = pair.find((c) => c.id !== primary.id)!;
 
   return (

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PowerOff, AlertTriangle, X, Loader2 } from "lucide-react";
+import { useScrollLock } from "@/lib/utils/scroll-lock";
 
 interface DeactivateModalProps {
   open: boolean;
@@ -13,6 +14,7 @@ export function DeactivateModal({ open, onClose, onConfirm }: DeactivateModalPro
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  useScrollLock(open);
   if (!open) return null;
 
   const handleDeactivate = async () => {
