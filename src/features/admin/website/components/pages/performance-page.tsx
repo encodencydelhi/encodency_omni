@@ -140,21 +140,27 @@ function VitalTile({ vital }: { vital: CoreWebVital }) {
       vital.key === "cls" ? LayoutTemplate :
         vital.key === "ttfb" ? Clock : Gauge;
 
+  const bestThreshold = `≤ ${vital.thresholds.good}${vital.key === "cls" ? "" : vital.key === "inp" ? "ms" : "s"}`;
+
   return (
     <div className="relative overflow-hidden rounded-xl border border-[#E6EBF4] bg-white p-3.5 shadow-sm transition-all hover:border-[#C9D6EA] hover:shadow-md flex flex-col h-full">
       <div className={cn("absolute inset-x-0 top-0 h-1 z-10", isGood ? "bg-[#10B981]" : isWarn ? "bg-[#F59E0B]" : "bg-[#EF4444]")} />
 
       <div className="flex flex-col gap-1.5 mt-0.5 relative z-10">
-        <div className="flex justify-start">
+        <div className="flex items-center justify-between">
           <Chip tone={vitalTone[vital.band]} dot className="shrink-0">
             {vitalLabel[vital.band]}
           </Chip>
+          <span className="inline-flex items-center rounded-md bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
+            Best: {bestThreshold}
+          </span>
         </div>
         <div className="min-w-0">
           <p className="text-[10px] leading-[1.3] font-bold uppercase tracking-wider text-[#64748B]">
             {vital.label}
           </p>
           <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">Current:</span>
             <p className="text-[26px] font-extrabold tracking-tight text-[#0F172A] leading-none">{vital.display.replace(/ (s|ms)$/, '')}</p>
             <span className="text-[12px] font-bold text-[#64748B]">{vital.key === "cls" ? "" : vital.key === "inp" ? "ms" : "s"}</span>
           </div>
@@ -217,6 +223,10 @@ function OverviewTab({
               <ScoreDial value={data.score} tone={scoreBand(data.score)} size={68} label={`Performance ${data.score}`} />
               <div className="flex flex-col items-center text-center mt-1">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] mb-0.5">Overall Score</p>
+                <div className="flex items-center gap-1 text-[9.5px] font-bold mt-0.5">
+                  <span className="rounded bg-[#EFF6FF] px-1.5 py-0.5 text-[#1D4ED8] ring-1 ring-inset ring-[#BFDBFE]">Current: {data.score}</span>
+                  <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">Best: 100</span>
+                </div>
               </div>
             </div>
             <div className="flex flex-col justify-center gap-1">
@@ -229,11 +239,17 @@ function OverviewTab({
               </div>
               <div className="flex items-center justify-between rounded-lg bg-white py-1 px-2.5 border border-[#F1F5F9] shadow-sm">
                 <span className="text-[11px] font-semibold text-[#475569]">Avg page weight</span>
-                <span className="text-[11.5px] font-bold text-[#0F172A]">{formatWeight(data.avgPageWeightKb)}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11.5px] font-bold text-[#0F172A]">Current: {formatWeight(data.avgPageWeightKb)}</span>
+                  <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">Best: &lt; 1.5 MB</span>
+                </div>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-white py-1 px-2.5 border border-[#F1F5F9] shadow-sm">
                 <span className="text-[11px] font-semibold text-[#475569]">Avg requests</span>
-                <span className="text-[11.5px] font-bold text-[#0F172A]">{data.avgRequests}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11.5px] font-bold text-[#0F172A]">Current: {data.avgRequests}</span>
+                  <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">Best: &lt; 50</span>
+                </div>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-[#F0FDF4] py-1 px-2.5 border border-[#DCFCE7]">
                 <span className="text-[11px] font-semibold text-[#15803D]">Pages measured</span>

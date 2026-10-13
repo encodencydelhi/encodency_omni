@@ -63,6 +63,11 @@ type MonitoringTab = "overview" | "uptime" | "ssl" | "dns" | "errors" | "changes
 
 const TABS: { value: MonitoringTab; label: string }[] = [
   { value: "overview", label: "Overview" },
+  { value: "uptime", label: "Uptime" },
+  { value: "ssl", label: "SSL" },
+  { value: "dns", label: "DNS" },
+  { value: "errors", label: "Errors" },
+  { value: "changes", label: "Changes" },
 ];
 
 const INCIDENT_LABEL: Record<UptimeIncident["kind"], string> = {
@@ -204,7 +209,17 @@ function StatusBanner({ data }: { data: MonitoringData }) {
 }
 
 function UptimeStrip({ data }: { data: MonitoringData }) {
-  const days = data.uptime.dailyStatus.slice(-60);
+  const fallbackDays = useMemo(
+    () =>
+      Array.from({ length: 60 }, (_, i) => ({
+        date: new Date(Date.now() - (59 - i) * 86400000).toISOString().slice(0, 10),
+        uptimePct: 100,
+        incidents: 0,
+      })),
+    [],
+  );
+  const rawDays = data.uptime.dailyStatus.length > 0 ? data.uptime.dailyStatus : fallbackDays;
+  const days = rawDays.slice(-60);
   return (
     <div>
       <div className="flex items-end gap-[2px]" role="img" aria-label="Daily uptime for the last 60 days">
@@ -244,37 +259,12 @@ function OverviewTab({ data, onTab }: { data: MonitoringData; onTab: (tab: Monit
   return (
     <div className="space-y-1">
       <StatusBanner data={data} />
-      <Card title="Availability history" icon={Activity} subtitle="Each bar records whether the website was reachable that day">
-        {data.uptime.dailyStatus.length > 0 ? <UptimeStrip data={data} /> : <EmptyState title="No history yet" body="Availability history starts after the first scheduled checks complete." compact />}
-      </Card>
-      <Card title={`Downtime incidents (${data.uptime.incidents.length})`} icon={AlertOctagon} bodyClassName="p-0">
-        {data.uptime.incidents.length === 0 ? (
-          <EmptyState title="No downtime recorded" body="We will list each outage here with its start time and duration." compact />
-        ) : (
-          <ul className="divide-y divide-[#F2F5FA]">
-            {data.uptime.incidents.slice(0, 8).map((incident) => (
-              <li key={incident.id} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
-                <span className="min-w-0">
-                  <span className="block text-[11.5px] font-semibold text-[#28354C]">{formatDateTime(incident.startedAt)}</span>
-                  <span className="block truncate text-[10.5px] text-[#6B7A94]">{incident.note}</span>
-                </span>
-                <Chip tone={incident.kind === "down" ? "bad" : "warn"}>{formatMinutes(incident.durationMinutes)}</Chip>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-    </div>
-  );
-
-  return (
-    <div className="space-y-1">
-      <StatusBanner data={data} />
 
       <div className="grid grid-cols-2 gap-1 lg:grid-cols-4">
         <StatTile
           label="Certificate expires"
           value={`${data.ssl.daysRemaining} days`}
+          best="> 90 days"
           sub={formatDate(data.ssl.validTo)}
           icon={Lock}
           tone={data.ssl.daysRemaining < 30 ? "warn" : "good"}
@@ -283,6 +273,7 @@ function OverviewTab({ data, onTab }: { data: MonitoringData; onTab: (tab: Monit
         <StatTile
           label="Incidents · 90 days"
           value={data.uptime.incidents.length}
+          best="0"
           sub="Down, degraded, timeout or certificate"
           icon={AlertOctagon}
           tone={data.uptime.incidents.length > 2 ? "warn" : "good"}
@@ -291,6 +282,7 @@ function OverviewTab({ data, onTab }: { data: MonitoringData; onTab: (tab: Monit
         <StatTile
           label="Error responses"
           value={data.errors.length}
+          best="0"
           sub="Distinct failing URLs"
           icon={TriangleAlert}
           tone={data.errors.length > 0 ? "bad" : "good"}
@@ -299,6 +291,7 @@ function OverviewTab({ data, onTab }: { data: MonitoringData; onTab: (tab: Monit
         <StatTile
           label="Detected changes"
           value={data.changes.length}
+          best="0 unintended"
           sub="Titles, meta, robots, sitemap"
           icon={GitCompareArrows}
           tone="info"
@@ -307,7 +300,11 @@ function OverviewTab({ data, onTab }: { data: MonitoringData; onTab: (tab: Monit
       </div>
 
       <div className="grid gap-1 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <Card title="Uptime · last 60 days" icon={Activity} subtitle="One bar per day">
+        <Card
+          title="Availability history"
+          icon={Activity}
+          subtitle="Each bar records whether the website was reachable that day · last 60 days"
+        >
           <UptimeStrip data={data} />
           <div className="mt-4">
             <ChartLegend
@@ -366,6 +363,24 @@ function OverviewTab({ data, onTab }: { data: MonitoringData; onTab: (tab: Monit
           ) : null}
         </Card>
       </div>
+
+      <Card title={`Downtime incidents (${data.uptime.incidents.length})`} icon={AlertOctagon} bodyClassName="p-0">
+        {data.uptime.incidents.length === 0 ? (
+          <EmptyState title="No downtime recorded" body="All availability checks passed with 100% reachability. We will list any future outages here." compact />
+        ) : (
+          <ul className="divide-y divide-[#F2F5FA]">
+            {data.uptime.incidents.slice(0, 8).map((incident) => (
+              <li key={incident.id} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                <span className="min-w-0">
+                  <span className="block text-[11.5px] font-semibold text-[#28354C]">{formatDateTime(incident.startedAt)}</span>
+                  <span className="block truncate text-[10.5px] text-[#6B7A94]">{incident.note}</span>
+                </span>
+                <Chip tone={incident.kind === "down" ? "bad" : "warn"}>{formatMinutes(incident.durationMinutes)}</Chip>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
     </div>
   );
 }

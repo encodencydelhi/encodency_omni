@@ -156,6 +156,7 @@ export function WebsiteIssuesPage() {
         <StatTile
           label="Open issues"
           value={counts.all}
+          best="0"
           sub="Across every category"
           icon={TriangleAlert}
           tone={counts.all > 0 ? "warn" : "good"}
@@ -164,6 +165,7 @@ export function WebsiteIssuesPage() {
         <StatTile
           label="Critical"
           value={counts.critical}
+          best="0"
           sub="Fix these first"
           icon={TriangleAlert}
           tone={counts.critical > 0 ? "bad" : "good"}
@@ -172,6 +174,7 @@ export function WebsiteIssuesPage() {
         <StatTile
           label="Resolved"
           value={counts.resolved}
+          best={`${counts.resolved + counts.all} (100%)`}
           sub="Confirmed by a later scan or marked by the team"
           icon={CheckCheck}
           tone="good"
@@ -188,6 +191,7 @@ export function WebsiteIssuesPage() {
                   )[0]?.detectedAt ?? null,
                 )
           }
+          best="< 24h"
           sub="Age of the longest-standing finding"
           icon={RefreshCw}
           tone="info"

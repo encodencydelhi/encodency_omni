@@ -94,7 +94,7 @@ export type { ClientOnboardingConfig };
 
 const defaultClientsRepository: ClientsRepository = CLIENTS_MOCK_MODE
   ? mockClientsProvider
-  : createApiClientsProvider(mockClientsProvider);
+  : createApiClientsProvider(unavailableClientsProvider);
 
 // Super Admin is a platform-wide, real-data surface. Keep this route on the
 // API provider even if an old development bundle was started with mock mode;
@@ -103,7 +103,7 @@ const defaultClientsRepository: ClientsRepository = CLIENTS_MOCK_MODE
 const superAdminClientsRepository = createApiClientsProvider(unavailableClientsProvider);
 
 function isSuperAdminClientRoute(): boolean {
-  return typeof window !== "undefined" && window.location.pathname.startsWith("/super-admin/clients");
+  return typeof window !== "undefined" && (window.location.pathname.startsWith("/super-admin/clients") || window.location.pathname.startsWith("/super-admin/projects"));
 }
 
 export const clientsRepository: ClientsRepository = new Proxy(defaultClientsRepository, {

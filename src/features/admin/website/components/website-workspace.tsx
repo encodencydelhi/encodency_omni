@@ -98,7 +98,10 @@ export function WebsiteWorkspaceProvider({ children }: { children: ReactNode }) 
     [Clients],
   );
 
-  const active = clients.find((client) => client.id === selectedProjectId);
+  const active =
+    clients.find((client) => client.id === selectedProjectId) ??
+    clients.find((client) => Boolean(client.domain)) ??
+    (clients.length > 0 ? clients[0] : undefined);
   // Never pass a bundled slug or a stale browser value to a tenant-scoped API.
   const hasClient = Boolean(active);
   const clientId = active?.id ?? "";

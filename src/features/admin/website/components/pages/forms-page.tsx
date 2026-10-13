@@ -291,23 +291,7 @@ export function WebsiteFormsPage() {
                   </ul>
                 </Card>
 
-                {false ? <Card title="Submissions & interactions" icon={MousePointerClick}>
-                  <div className="rounded-lg border border-dashed border-[#DAE1EC] bg-[#FAFBFD] p-4 text-center">
-                    <p className="text-[12px] font-semibold text-[#28354C]">
-                      {behaviour.available ? "Tracking installed" : "Not available from a crawl"}
-                    </p>
-                    <p className="mx-auto mt-1 max-w-sm text-[11px] leading-relaxed text-[#6B7A94]">
-                      {behaviour.available
-                        ? "Omni Tracking is installed. Form starts, submits and CTA clicks appear in Analytics; per-form breakdowns ship with the tracking backend."
-                        : "Reading a form's HTML tells us it exists, not who filled it in. Submission counts need Omni Tracking on the website or a form-backend integration — we will not invent them."}
-                    </p>
-                    {!behaviour.available ? (
-                      <WButton className="mt-2.5" tone="primary" onClick={() => openIntegration("omniTracking")}>
-                        Set up Omni Tracking
-                      </WButton>
-                    ) : null}
-                  </div>
-                </Card> : null}
+                
               </div>
             </div>
           ) : null}

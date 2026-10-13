@@ -334,4 +334,16 @@ export const clientsApi = {
       body: { leadMembershipId },
     });
   },
+
+  /**
+   * DELETE /clients/:id — remove a Client and associated access rules.
+   * Company context. Capability: clients:write.
+   */
+  delete(companyId: string, clientId: string): Promise<{ deleted: boolean }> {
+    return apiClient.request<{ deleted: boolean }>({
+      method: "DELETE",
+      path: `/clients/${encodeURIComponent(clientId)}`,
+      headers: companyScopeHeaders(companyId),
+    });
+  },
 };

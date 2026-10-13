@@ -1,7 +1,9 @@
 import { WEBSITE_REFERENCE_NOW } from "./config";
 import type {
   AnalyticsData,
+  BacklinkData,
   ChangeRecord,
+  CompetitorData,
   ContactLinkRecord,
   CtaRecord,
   ErrorSample,
@@ -12,11 +14,13 @@ import type {
   IntegrationState,
   IssueCategory,
   IssueRecord,
+  KeywordResearchData,
   MonitoringData,
   PageAudit,
   PageRecord,
   PageType,
   PerformanceData,
+  RankTrackingData,
   ScanRecord,
   ScoreSet,
   SeoData,
@@ -1034,6 +1038,10 @@ export interface WebsiteDataset {
   forms: FormsData;
   monitoring: MonitoringData;
   settings: WebsiteSettings;
+  keywordResearch: KeywordResearchData[];
+  competitorAnalysis: CompetitorData[];
+  backlinkAnalysis: BacklinkData[];
+  rankTracking: RankTrackingData[];
 }
 
 function pageIdFor(clientId: string, path: string): string {
@@ -2037,6 +2045,153 @@ function buildAudit(page: PageRecord, domain: string, issues: IssueRecord[], per
 }
 
 /* ------------------------------------------------------------------ */
+/* SEMrush/Ahrefs-style mock data builders                             */
+/* ------------------------------------------------------------------ */
+
+function buildKeywordResearch(profile: ClientWebsiteProfile, domain: string): KeywordResearchData[] {
+  const rng = makeRng(`${profile.clientId}:keywords`);
+  const intents = ["informational", "transactional", "navigational", "commercial"] as const;
+  const intentsArr = intents;
+  const keywords = [
+    "donate", "charity", "nonprofit", "fundraising", "water testing", "water quality",
+    "ngo", "volunteer", "social impact", "community", "sustainability", "environment",
+    "education", "healthcare", "poverty", "disaster relief", "child sponsorship",
+    "clean water", "sanitation", "hygiene", "well drilling", "water filtration",
+  ];
+
+  return keywords.map((query, index) => {
+    const intent = intentsArr[index % intentsArr.length];
+    const position = 1 + Math.floor(rng() * 50);
+    const impressions = Math.round(100 + rng() * 10000);
+    const clicks = Math.round(impressions * (0.5 + rng() * 8) / 100);
+    const ctr = Math.round((clicks / impressions) * 1000) / 10;
+    const difficulty = 10 + Math.floor(rng() * 80);
+    const searchVolume = Math.round(100 + rng() * 50000);
+
+    return {
+      query,
+      impressions,
+      clicks,
+      ctr,
+      position,
+      difficulty,
+      intent,
+      searchVolume,
+    };
+  });
+}
+
+function buildCompetitorAnalysis(profile: ClientWebsiteProfile, domain: string): CompetitorData[] {
+  const rng = makeRng(`${profile.clientId}:competitors`);
+  const competitors = [
+    "charitywater.org", "water.org", "unicef.org", "worldvision.org", "oxfam.org",
+    "savechildren.org", "care.org", "mercycorps.org", "irc.org", "directrelief.org",
+  ];
+
+  return competitors.map((compDomain) => {
+    const trafficShare = 0.5 + rng() * 15;
+    const keywordOverlap = 5 + rng() * 45;
+    const contentGap = 10 + rng() * 60;
+    const referringDomains = Math.round(100 + rng() * 10000);
+    const totalBacklinks = Math.round(referringDomains * (2 + rng() * 10));
+    const growthRate = -5 + rng() * 20;
+
+    return {
+      domain: compDomain,
+      trafficShare: Math.round(trafficShare * 10) / 10,
+      keywordOverlap: Math.round(keywordOverlap * 10) / 10,
+      contentGap: Math.round(contentGap * 10) / 10,
+      backlinkProfile: {
+        referringDomains,
+        totalBacklinks,
+        growthRate: Math.round(growthRate * 10) / 10,
+      },
+    };
+  });
+}
+
+function buildBacklinkAnalysis(profile: ClientWebsiteProfile, domain: string): BacklinkData[] {
+  const rng = makeRng(`${profile.clientId}:backlinks`);
+  const linkTypes: BacklinkData["linkType"][] = ["internal", "external", "no-follow", "sponsored", "ugc"];
+  const anchorTexts = [
+    "click here", "read more", "learn more", "donate now", "support us",
+    "water quality", "water testing", "clean water", "charity", "nonprofit",
+    "get involved", "our work", "programs", "impact", "stories",
+  ];
+  const referringDomains = [
+    "timesofindia.indiatimes.com", "thehindu.com", "ndtv.com", "indiatoday.in",
+    "scroll.in", "thewire.in", "livemint.com", "economictimes.indiatimes.com",
+    "business-standard.com", "financialexpress.com",
+  ];
+
+  const backlinks: BacklinkData[] = [];
+  for (let i = 0; i < 50; i++) {
+    const refDomain = referringDomains[Math.floor(rng() * referringDomains.length)];
+    const linkType = linkTypes[Math.floor(rng() * linkTypes.length)];
+    const hasDA = rng() > 0.2;
+
+    backlinks.push({
+      referringDomain: refDomain,
+      anchorText: anchorTexts[Math.floor(rng() * anchorTexts.length)],
+      linkType,
+      domainAuthority: hasDA ? 10 + Math.floor(rng() * 90) : null,
+      url: `https://${refDomain}/article-${Math.floor(rng() * 10000)}`,
+      firstSeen: daysAgo(Math.floor(rng() * 365)),
+      lastSeen: rng() > 0.3 ? daysAgo(Math.floor(rng() * 30)) : null,
+    });
+  }
+
+  return backlinks;
+}
+
+function buildRankTracking(profile: ClientWebsiteProfile, domain: string): RankTrackingData[] {
+  const rng = makeRng(`${profile.clientId}:ranks`);
+  const intents: RankTrackingData["intent"][] = ["informational", "transactional", "navigational", "commercial"];
+  const serpFeatures = ["Featured Snippet", "People Also Ask", "Local Pack", "Knowledge Panel", "Image Pack", "Video Carousel", "Site Links"];
+
+  const keywords = [
+    "donate water charity", "clean water nonprofit", "water testing near me", "ngo donations",
+    "water quality testing", "well drilling charity", "water filtration systems",
+    "volunteer water projects", "community water supply", "disaster relief water",
+    "child sponsorship water", "sustainable water solutions", "rainwater harvesting",
+    "water sanitation hygiene", "water crisis solutions", "groundwater recharge",
+    "water conservation ngo", "safe drinking water", "water purification methods",
+    "rural water supply",
+  ];
+
+  return keywords.map((keyword, index) => {
+    const currentPosition = 1 + Math.floor(rng() * 100);
+    const previousPosition = Math.max(1, currentPosition + Math.floor((rng() - 0.5) * 20));
+    const positionChange = previousPosition - currentPosition;
+    const searchVolume = Math.round(100 + rng() * 50000);
+    const difficulty = 10 + Math.floor(rng() * 80);
+    const intent = intents[index % intents.length];
+    const historyLength = 30;
+    const history = Array.from({ length: historyLength }, (_, i) => {
+      const dayPosition = Math.max(1, currentPosition + Math.floor((rng() - 0.5) * 10));
+      return {
+        date: daysAgo(historyLength - i),
+        position: dayPosition,
+      };
+    });
+    const features = serpFeatures.filter(() => rng() > 0.7).slice(0, 3);
+
+    return {
+      keyword,
+      currentPosition,
+      previousPosition,
+      positionChange,
+      searchVolume,
+      difficulty,
+      intent,
+      history,
+      serpFeatures: features,
+      url: rng() > 0.2 ? `https://${domain}/programs/${keyword.replace(/\s+/g, "-").toLowerCase()}` : null,
+    };
+  });
+}
+
+/* ------------------------------------------------------------------ */
 /* Public builder                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -2112,6 +2267,10 @@ export function buildDataset(profile: ClientWebsiteProfile): WebsiteDataset | nu
     forms: buildForms(profile, pages, issues),
     monitoring: buildMonitoring(profile, domain, pages),
     settings: buildSettings(profile, domain),
+    keywordResearch: buildKeywordResearch(profile, domain),
+    competitorAnalysis: buildCompetitorAnalysis(profile, domain),
+    backlinkAnalysis: buildBacklinkAnalysis(profile, domain),
+    rankTracking: buildRankTracking(profile, domain),
   };
 }
 

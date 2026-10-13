@@ -4,6 +4,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import {
+  ChevronDown,
   Download,
   ExternalLink,
   Gauge,
@@ -47,6 +48,10 @@ const TABS: { label: string; href: string }[] = [
   { label: "Monitoring", href: "/admin/website/monitoring" },
   { label: "Issues", href: "/admin/website/issues" },
   { label: "Settings", href: "/admin/website/settings" },
+  { label: "Keyword Research", href: "/admin/website/keyword-research" },
+  { label: "Competitor Analysis", href: "/admin/website/competitor-analysis" },
+  { label: "Backlink Analysis", href: "/admin/website/backlink-analysis" },
+  { label: "Rank Tracking", href: "/admin/website/rank-tracking" },
 ];
 
 const STATUS_META: Record<LiveStatus, { label: string; tone: "good" | "warn" | "bad" | "muted" }> = {
@@ -127,44 +132,45 @@ function ScanBanner() {
   );
 }
 
-// function ClientSwitcher() {
-//   const { clients, clientId, clientName, selectClient } = useWebsiteWorkspace();
-//   return (
-//     <DropdownMenu>
-//       <DropdownMenuTrigger asChild>
-//         <button
-//           type="button"
-//           className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md border border-[#DAE1EC] bg-white px-2 text-[11.5px] font-semibold text-[#28354C] hover:bg-[#F7F9FC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35"
-//         >
-//           <UserRound className="size-3.5 text-[#6B7A94]" aria-hidden />
-//           <span className="text-[#6B7A94]">Client:</span>
-//           {clientName || "Select"}
-//           <ChevronDown className="size-3 text-[#94A3B8]" aria-hidden />
-//         </button>
-//       </DropdownMenuTrigger>
-//       <DropdownMenuContent align="start" className="w-60">
-//         <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-[#94A3B8]">
-//           Client website
-//         </DropdownMenuLabel>
-//         {clients.map((client) => (
-//           <DropdownMenuItem
-//             key={client.id}
-//             onSelect={() => selectClient(client.id)}
-//             className="flex cursor-pointer items-center justify-between gap-2 text-[12px]"
-//           >
-//             <span className="min-w-0">
-//               <span className="block truncate font-medium">{client.name}</span>
-//               <span className="block truncate text-[10.5px] text-[#94A3B8]">
-//                 {client.domain ?? "No website URL"}
-//               </span>
-//             </span>
-//             {client.id === clientId ? <Chip tone="info">Active</Chip> : null}
-//           </DropdownMenuItem>
-//         ))}
-//       </DropdownMenuContent>
-//     </DropdownMenu>
-//   );
-// }
+function ClientSwitcher() {
+  const { clients, clientId, clientName, selectClient } = useWebsiteWorkspace();
+  if (!clients || clients.length <= 1) return null;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex h-6.5 cursor-pointer items-center gap-1.5 rounded-md border border-[#DAE1EC] bg-white px-2 text-[11px] font-medium text-[#28354C] hover:bg-[#F7F9FC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35"
+        >
+          <UserRound className="size-3 text-[#6B7A94]" aria-hidden />
+          <span className="text-[#6B7A94]">Client:</span>
+          <span className="font-semibold">{clientName || "Select"}</span>
+          <ChevronDown className="size-3 text-[#94A3B8]" aria-hidden />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-60">
+        <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-[#94A3B8]">
+          Client website
+        </DropdownMenuLabel>
+        {clients.map((client) => (
+          <DropdownMenuItem
+            key={client.id}
+            onSelect={() => selectClient(client.id)}
+            className="flex cursor-pointer items-center justify-between gap-2 text-[12px]"
+          >
+            <span className="min-w-0">
+              <span className="block truncate font-medium">{client.name}</span>
+              <span className="block truncate text-[10.5px] text-[#94A3B8]">
+                {client.domain ?? "No website URL"}
+              </span>
+            </span>
+            {client.id === clientId ? <Chip tone="info">Active</Chip> : null}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 function WebsiteHeader() {
   const { clientId, domain, websiteUrl, hasWebsite, runScan, openExport, openIntegration, navigate, scan } =
@@ -191,6 +197,7 @@ function WebsiteHeader() {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
               <h1 className="text-[19px] font-semibold tracking-[-0.02em] text-[#0F1A38]">Website</h1>
+              <ClientSwitcher />
               {WEBSITE_MOCK_MODE ? <IntegrationPendingBadge label="Live Crawler Integration Pending" /> : null}
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
@@ -265,20 +272,44 @@ function WebsiteHeader() {
               <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-[#94A3B8]">
                 Run a scan
               </DropdownMenuLabel>
-              <DropdownMenuItem disabled={!hasWebsite} onSelect={() => runScan("seo-audit")} className="text-[12px]">
+              <DropdownMenuItem
+                disabled={!hasWebsite}
+                onSelect={() => {
+                  runScan("seo-audit");
+                  navigate("/admin/website/seo");
+                }}
+                className="text-[12px]"
+              >
                 <Search className="size-3.5" /> SEO audit
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={!hasWebsite} onSelect={() => runScan("performance")} className="text-[12px]">
+              <DropdownMenuItem
+                disabled={!hasWebsite}
+                onSelect={() => {
+                  runScan("performance");
+                  navigate("/admin/website/performance");
+                }}
+                className="text-[12px]"
+              >
                 <Gauge className="size-3.5" /> Performance audit
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={!hasWebsite} onSelect={() => runScan("uptime")} className="text-[12px]">
+              <DropdownMenuItem
+                disabled={!hasWebsite}
+                onSelect={() => {
+                  runScan("uptime");
+                  navigate("/admin/website/monitoring");
+                }}
+                className="text-[12px]"
+              >
                 <Wifi className="size-3.5" /> Uptime check
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => navigate("/admin/website/settings")} className="text-[12px]">
                 <Settings2 className="size-3.5" /> Website settings
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => navigate("/admin/clients")} className="text-[12px]">
+              <DropdownMenuItem
+                onSelect={() => navigate(clientId ? `/admin/clients/${encodeURIComponent(clientId)}` : "/admin/clients")}
+                className="text-[12px]"
+              >
                 <UserRound className="size-3.5" /> Open client profile
               </DropdownMenuItem>
             </DropdownMenuContent>

@@ -36,7 +36,7 @@ function CompanyChip({ summary }: { summary: CompanySummary }) {
 
 function reportBulk(verb: string, result: { updated: string[]; skipped: Array<{ name: string; reason: string }> }) {
   if (result.updated.length > 0) {
-    toast.success(`${verb} ${formatNumber(result.updated.length)} ${result.updated.length === 1 ? "company" : "companies"} in the demo workspace`);
+    toast.success(`${verb} ${formatNumber(result.updated.length)} ${result.updated.length === 1 ? "company" : "companies"}`);
   }
   if (result.skipped.length > 0) {
     toast.warning(`${formatNumber(result.skipped.length)} skipped`, {
@@ -549,9 +549,9 @@ export function AssignOwnersDialog({ targets, onClose }: { targets: CompanySumma
   const single = targets.length === 1 ? targets[0] : undefined;
 
   const initial = (current: string | null | undefined) => (single ? (current ?? NONE) : KEEP);
-  const [accountManager, setAccountManager] = useState(initial(single?.company.internalOwners.accountManagerId));
-  const [supportOwner, setSupportOwner] = useState(initial(single?.company.internalOwners.supportOwnerId));
-  const [technicalOwner, setTechnicalOwner] = useState(initial(single?.company.internalOwners.technicalOwnerId));
+  const [accountManager, setAccountManager] = useState(initial(single?.company?.internalOwners?.accountManagerId));
+  const [supportOwner, setSupportOwner] = useState(initial(single?.company?.internalOwners?.supportOwnerId));
+  const [technicalOwner, setTechnicalOwner] = useState(initial(single?.company?.internalOwners?.technicalOwnerId));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -569,9 +569,9 @@ export function AssignOwnersDialog({ targets, onClose }: { targets: CompanySumma
   }, [accountManager, supportOwner, technicalOwner]);
 
   const changed = single
-    ? (patch.accountManagerId ?? null) !== single.company.internalOwners.accountManagerId ||
-      (patch.supportOwnerId ?? null) !== single.company.internalOwners.supportOwnerId ||
-      (patch.technicalOwnerId ?? null) !== single.company.internalOwners.technicalOwnerId
+    ? (patch.accountManagerId ?? null) !== (single.company?.internalOwners?.accountManagerId ?? null) ||
+      (patch.supportOwnerId ?? null) !== (single.company?.internalOwners?.supportOwnerId ?? null) ||
+      (patch.technicalOwnerId ?? null) !== (single.company?.internalOwners?.technicalOwnerId ?? null)
     : Object.keys(patch).length > 0;
 
   const submit = async (): Promise<boolean> => {
@@ -580,6 +580,10 @@ export function AssignOwnersDialog({ targets, onClose }: { targets: CompanySumma
     try {
       const result = await mutations.assignInternalOwners(targets.map((item) => item.company.id), patch);
       reportBulk("Updated internal owners for", result);
+      if (result.skipped.length > 0 && result.updated.length === 0) {
+        setError(result.skipped.map((item) => `${item.name}: ${item.reason}`).join(", "));
+        return false;
+      }
       return true;
     } catch (failure) {
       setError(describeError(failure).message);
@@ -591,24 +595,32 @@ export function AssignOwnersDialog({ targets, onClose }: { targets: CompanySumma
 
   const guard = useUnsavedGuard({ dirty: changed, onDiscard: onClose, onSave: submit, label: "internal ownership" });
 
-  const renderSelect = (id: string, label: string, value: string, onChange: (value: string) => void) => (
-    <Field label={label} htmlFor={id}>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger id={id}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {!single ? <SelectItem value={KEEP}>Keep current</SelectItem> : null}
-          <SelectItem value={NONE}>Unassigned</SelectItem>
-          {active.map((member) => (
-            <SelectItem key={member.id} value={member.id}>
-              {member.name} - {member.department}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </Field>
-  );
+  const renderSelect = (id: string, label: string, value: string, onChange: (value: string) => void) => {
+    const extraMember = value !== NONE && value !== KEEP ? staff.data?.find((m) => m.id === value && !active.some((a) => a.id === m.id)) : undefined;
+    return (
+      <Field label={label} htmlFor={id}>
+        <Select value={value} onValueChange={onChange}>
+          <SelectTrigger id={id}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {!single ? <SelectItem value={KEEP}>Keep current</SelectItem> : null}
+            <SelectItem value={NONE}>Unassigned</SelectItem>
+            {extraMember ? (
+              <SelectItem key={extraMember.id} value={extraMember.id}>
+                {extraMember.name}{extraMember.department ? ` - ${extraMember.department}` : ""} ({extraMember.status})
+              </SelectItem>
+            ) : null}
+            {active.map((member) => (
+              <SelectItem key={member.id} value={member.id}>
+                {member.name}{member.department ? ` - ${member.department}` : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+    );
+  };
 
   return (
     <>

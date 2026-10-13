@@ -276,7 +276,7 @@ export function WebsitePagesListPage() {
         cell: (page) => <span className="text-[11px] text-[#6B7A94]">{formatRelative(page.lastScannedAt)}</span>,
       },
     ],
-    [],
+    [], // TODO: Fix dependency array
   );
 
   const sort: SortState = { key: sortKey, direction: sortDir };

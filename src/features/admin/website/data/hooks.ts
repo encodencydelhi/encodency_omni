@@ -269,6 +269,11 @@ export function useScanRunner(clientId: string, onComplete?: (progress: ScanProg
       try {
         const started = await websiteRepository.startScan(clientId, type, pageId);
         setProgress(started);
+        if (started.status === "completed" || started.status === "failed") {
+          void queryClient.invalidateQueries({ queryKey: websiteKeys.client(clientId) });
+          completeRef.current?.(started);
+          return;
+        }
         timerRef.current = setInterval(() => {
           void websiteRepository
             .getScanProgress(clientId, started.scanId)
@@ -298,7 +303,7 @@ export function useScanRunner(clientId: string, onComplete?: (progress: ScanProg
     setError(null);
   }, [stopPolling]);
 
-  return useMemo(
+return useMemo(
     () => ({
       progress,
       isRunning: progress?.status === "running" || progress?.status === "queued",
@@ -306,6 +311,41 @@ export function useScanRunner(clientId: string, onComplete?: (progress: ScanProg
       start,
       dismiss,
     }),
-    [progress, error, start, dismiss],
   );
+}
+
+export function useKeywordResearch(clientId: string, enabled = true) {
+  return useQuery({
+    queryKey: websiteKeys.keywordResearch(clientId),
+    queryFn: () => websiteRepository.getKeywordResearch(clientId),
+    enabled: enabled && Boolean(clientId),
+    ...SHARED,
+  });
+}
+
+export function useCompetitorAnalysis(clientId: string, enabled = true) {
+  return useQuery({
+    queryKey: websiteKeys.competitorAnalysis(clientId),
+    queryFn: () => websiteRepository.getCompetitorAnalysis(clientId),
+    enabled: enabled && Boolean(clientId),
+    ...SHARED,
+  });
+}
+
+export function useBacklinkAnalysis(clientId: string, enabled = true) {
+  return useQuery({
+    queryKey: websiteKeys.backlinkAnalysis(clientId),
+    queryFn: () => websiteRepository.getBacklinkAnalysis(clientId),
+    enabled: enabled && Boolean(clientId),
+    ...SHARED,
+  });
+}
+
+export function useRankTracking(clientId: string, enabled = true) {
+  return useQuery({
+    queryKey: websiteKeys.rankTracking(clientId),
+    queryFn: () => websiteRepository.getRankTracking(clientId),
+    enabled: enabled && Boolean(clientId),
+    ...SHARED,
+  });
 }

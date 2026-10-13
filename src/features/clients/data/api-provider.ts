@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/types/api";
 import type { ClientsRepository, LifecycleAction } from "./repository";
-import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCompanySlot, ClientCreationCompany, EligibleMember, MutationActor, ClientTeamData, ClientAssignmentView, ClientOverviewData, ClientChannelsData, ClientWebsiteData, ClientActivityData, ClientActivityFilter, ClientSettingsData, ClientPortfolio, ClientFacets } from "./types";
+import type { ClientListQuery, ClientListResult, ClientSummary, ClientWebsite, CreateClientInput, UpdateClientInput, BulkResult, ClientCompanySlot, ClientCreationCompany, EligibleMember, MutationActor, ClientTeamData, ClientAssignmentView, ClientOverviewData, ClientChannelsData, ClientWebsiteData, ClientActivityData, ClientActivityFilter, ClientSettingsData, ClientPortfolio, ClientFacets, ClientAccessLevel, OnboardingStepKey } from "./types";
 import type { OrganisationRole } from "@/types/domain/user";
 import type { CompanyClient } from "@/features/companies/data/types";
 import { unavailableClientsProvider } from "./unavailable-provider";
@@ -282,59 +282,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
                 const workspace = await getSuperAdminWorkspace(item.id);
                 return workspace.summary;
               } catch {
-                return {
-                  client: {
-                    id: item.id,
-                    companyId: item.companyId,
-                    name: item.name,
-                    websiteUrl: item.website,
-                    status: "active",
-                    connectedChannels: [],
-                    brokenChannels: [],
-                    scheduledPosts: 0,
-                    failedPosts: 0,
-                    leadsLast30Days: 0,
-                    createdAt: item.createdAt,
-                    lastActivityAt: item.updatedAt,
-                    logo: item.logo,
-                  },
-                  displayId: item.id,
-                  company: {
-                    id: item.companyId,
-                    name: item.companyName,
-                    slug: item.companyId,
-                    planTier: "starter",
-                    planName: "Starter",
-                    accountStatus: "active",
-                    subscriptionStatus: "active",
-                  },
-                  profile: {
-                    displayName: item.displayName ?? item.name,
-                    industry: item.industry ?? "Not set",
-                    description: "",
-                    contactEmail: null,
-                    contactPhone: null,
-                    logoDataUrl: item.logo?.url ?? null,
-                    logo: item.logo,
-                    timezone: item.timezone ?? "UTC",
-                    language: item.language ?? "en",
-                    reportingPeriod: "30d",
-                    createdBy: "System",
-                  },
-                  websites: [],
-                  primaryWebsite: null,
-                  workspace: "active",
-                  onboarding: { status: "completed", requiredTotal: 4, requiredDone: 4, steps: [], blockedReason: null },
-                  health: { status: "healthy", reason: "Operational", factors: [] },
-                  attention: [],
-                  lead: item.lead ? { membershipId: item.lead.membershipId, name: item.lead.name } : null,
-                  counts: { connections: 0, healthyConnections: 0, attentionConnections: 0, assigned: 0, activeMembers: 0, pendingMembers: 0, accessIssues: 0 },
-                  connectedProviders: [],
-                  operations: { scheduledPosts: 0, failedPosts: 0, processingJobs: 0, retryPending: 0, lastPublishedAt: null },
-                  lastActiveAt: item.updatedAt,
-                  pause: null,
-                  platformReviewer: null,
-                } as unknown as ClientSummary;
+                return toClientSummary(item, { id: item.companyId, name: item.companyName });
               }
             }),
           );
@@ -351,7 +299,18 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
             },
           };
         } catch {
-          return fallback.listClients(query);
+          return {
+            data: [],
+            matchingIds: [],
+            pagination: {
+              total: 0,
+              page: query.page ?? 1,
+              pageSize: query.pageSize ?? 25,
+              totalPages: 1,
+              hasNextPage: false,
+              hasPreviousPage: false,
+            },
+          };
         }
       }
 
@@ -367,9 +326,14 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
             headers: { "x-company-id": companyId }
           });
           const clients = await Promise.all(
-            (Array.isArray(rawClients) ? rawClients : []).map((client) =>
-              getCompanyWorkspace(companyId, client.id).then((workspace) => workspace.summary),
-            ),
+            (Array.isArray(rawClients) ? rawClients : []).map(async (client) => {
+              try {
+                const workspace = await getCompanyWorkspace(companyId, client.id);
+                return workspace.summary;
+              } catch {
+                return toClientSummary(client);
+              }
+            }),
           );
           for (const c of clients) {
             try {
@@ -396,14 +360,34 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
               hasPreviousPage: page > 1
             }
           };
-        } catch (err) {
-          if (ApiError.isApiError(err) && (err.status === 400 || err.status === 404)) {
-            return fallback.listClients(query);
-          }
+        } catch {
+          return {
+            data: [],
+            matchingIds: [],
+            pagination: { 
+              total: 0, 
+              page: query.page ?? 1, 
+              pageSize: query.pageSize ?? 10, 
+              totalPages: 1,
+              hasNextPage: false,
+              hasPreviousPage: false,
+            }
+          };
         }
       }
 
-      return fallback.listClients(query);
+      return {
+        data: [],
+        matchingIds: [],
+        pagination: {
+          total: 0,
+          page: query.page ?? 1,
+          pageSize: query.pageSize ?? 10,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
     },
 
     async createClient(input: CreateClientInput, actor): Promise<ClientSummary> {
@@ -473,11 +457,15 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
         return (await getSuperAdminWorkspace(id)).summary;
       }
       const companyId = getCompanyIdHeader();
-      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) {
-        return fallback.getClient(id);
+      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) {
+        try {
+          return (await getCompanyWorkspace(companyId, id)).summary;
+        } catch {
+          return (await getSuperAdminWorkspace(id)).summary;
+        }
       }
 
-      return (await getCompanyWorkspace(companyId, id)).summary;
+      return (await getSuperAdminWorkspace(id)).summary;
     },
 
     async listCreationCompanies(): Promise<ClientCreationCompany[]> {
@@ -630,7 +618,15 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
       return fallback.listEligibleMembers(companyId, clientId);
     },
 
-    exportClients: fallback.exportClients,
+    async exportClients(scope: { query?: ClientListQuery; ids?: string[] }): Promise<ClientSummary[]> {
+      const result = await provider.listClients(scope.query || { pageSize: 500 });
+      if (scope.ids && scope.ids.length > 0) {
+        const idSet = new Set(scope.ids);
+        return result.data.filter((item) => idSet.has(item.client.id) || idSet.has(item.displayId));
+      }
+      return result.data;
+    },
+
     async getPortfolio() {
       if (isSuperAdminRoute() || fallback === unavailableClientsProvider) {
         try {
@@ -644,11 +640,12 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
         try {
           return await clientsApi.getPortfolio<ClientPortfolio>(companyId);
         } catch {
-          return fallback.getPortfolio();
+          return await superAdminCompaniesApi.getClientPortfolio().catch(() => fallback.getPortfolio());
         }
       }
-      return fallback.getPortfolio();
+      return await superAdminCompaniesApi.getClientPortfolio().catch(() => fallback.getPortfolio());
     },
+
     async getFacets() {
       if (isSuperAdminRoute() || fallback === unavailableClientsProvider) {
         try {
@@ -662,44 +659,76 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
         try {
           return await clientsApi.getFacets<ClientFacets>(companyId);
         } catch {
-          return fallback.getFacets();
+          return await superAdminCompaniesApi.getClientFacets().catch(() => fallback.getFacets());
         }
       }
-      return fallback.getFacets();
+      return await superAdminCompaniesApi.getClientFacets().catch(() => fallback.getFacets());
     },
 
     async getOverview(id: string): Promise<ClientOverviewData> {
       if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).overview;
       const companyId = getCompanyIdHeader();
-      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) return fallback.getOverview(id);
-      return (await getCompanyWorkspace(companyId, id)).overview;
+      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) {
+        try {
+          return (await getCompanyWorkspace(companyId, id)).overview;
+        } catch {
+          return (await getSuperAdminWorkspace(id)).overview;
+        }
+      }
+      return (await getSuperAdminWorkspace(id)).overview;
     },
 
     async getTeam(id: string): Promise<ClientTeamData> {
       if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).team;
       const companyId = getCompanyIdHeader();
-      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) {
-        return fallback.getTeam(id);
+      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) {
+        try {
+          return (await getCompanyWorkspace(companyId, id)).team;
+        } catch {
+          return (await getSuperAdminWorkspace(id)).team;
+        }
       }
-      return (await getCompanyWorkspace(companyId, id)).team;
+      return (await getSuperAdminWorkspace(id)).team;
     },
 
     async getChannels(id: string): Promise<ClientChannelsData> {
       if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).channels;
       const companyId = getCompanyIdHeader();
-      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) return (await getCompanyWorkspace(companyId, id)).channels;
-      return fallback.getChannels(id);
+      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) {
+        try {
+          return (await getCompanyWorkspace(companyId, id)).channels;
+        } catch {
+          return (await getSuperAdminWorkspace(id)).channels;
+        }
+      }
+      return (await getSuperAdminWorkspace(id)).channels;
     },
+
     async getWebsiteSeo(id: string): Promise<ClientWebsiteData> {
       if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).websiteSeo;
       const companyId = getCompanyIdHeader();
-      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) return (await getCompanyWorkspace(companyId, id)).websiteSeo;
-      return fallback.getWebsiteSeo(id);
+      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) {
+        try {
+          return (await getCompanyWorkspace(companyId, id)).websiteSeo;
+        } catch {
+          return (await getSuperAdminWorkspace(id)).websiteSeo;
+        }
+      }
+      return (await getSuperAdminWorkspace(id)).websiteSeo;
     },
+
     async getActivity(id: string, filter: ClientActivityFilter): Promise<ClientActivityData> {
       const companyId = getCompanyIdHeader();
-      if (!isSuperAdminRoute() && (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id))) return fallback.getActivity(id, filter);
-      const data = isSuperAdminRoute() ? (await getSuperAdminWorkspace(id)).activity : (await getCompanyWorkspace(companyId!, id)).activity;
+      let data: ClientActivityData;
+      if (isSuperAdminRoute() || !companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) {
+        data = (await getSuperAdminWorkspace(id)).activity;
+      } else {
+        try {
+          data = (await getCompanyWorkspace(companyId, id)).activity;
+        } catch {
+          data = (await getSuperAdminWorkspace(id)).activity;
+        }
+      }
       const entries = data.entries.filter((entry) => {
         const term = filter.search?.trim().toLowerCase();
         if (filter.actor && entry.actor.name !== filter.actor) return false;
@@ -713,15 +742,56 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
       });
       return { ...data, entries };
     },
+
     async getSettings(id: string): Promise<ClientSettingsData> {
-      if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).settings;
-      const companyId = getCompanyIdHeader();
-      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) return (await getCompanyWorkspace(companyId, id)).settings;
-      return fallback.getSettings(id);
+      let settings: ClientSettingsData;
+      if (isSuperAdminRoute()) {
+        settings = (await getSuperAdminWorkspace(id)).settings;
+      } else {
+        const companyId = getCompanyIdHeader();
+        if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) {
+          try {
+            settings = (await getCompanyWorkspace(companyId, id)).settings;
+          } catch {
+            settings = (await getSuperAdminWorkspace(id)).settings;
+          }
+        } else {
+          settings = (await getSuperAdminWorkspace(id)).settings;
+        }
+      }
+
+      // Populate live staff if staff list is empty so the Platform Internal Reviewer dropdown works
+      if (!settings.staff || settings.staff.length === 0) {
+        try {
+          const staffRes = await apiClient.request<any[]>({ method: "GET", path: "/super-admin/staff" });
+          if (Array.isArray(staffRes)) {
+            settings = {
+              ...settings,
+              staff: staffRes.map((s) => ({
+                id: s.id || s.userId,
+                name: s.name || s.user?.name || s.user?.email || "Staff member",
+                email: s.email || s.user?.email || "",
+                status: (s.status?.toLowerCase() as any) ?? "active",
+                role: s.platformRole?.toLowerCase() ?? "support",
+                department: s.department || "Operations",
+                avatarUrl: s.avatarUrl ?? s.user?.avatarAsset?.secureUrl ?? null,
+              })),
+            };
+          }
+        } catch {
+          // staff fetch is optional
+        }
+      }
+
+      return settings;
     },
 
     async updateClient(id: string, input: UpdateClientInput, actor): Promise<ClientSummary> {
-      const companyId = getCompanyIdHeader();
+      let companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId)) {
+        const ws = await getSuperAdminWorkspace(id).catch(() => null);
+        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
+      }
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) {
         return unavailableClientsProvider.updateClient(id, input, actor);
       }
@@ -733,12 +803,13 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
         }
 
         const language = normalizeLanguageCode(input.language);
+        const websiteValue = input.website?.trim() || input.primaryWebsite?.trim() || null;
         const updated = await clientsApi.update(companyId, id, {
           expectedRevision,
           name: input.name?.trim(),
           displayName: input.displayName?.trim() || null,
           industry: input.industry?.trim() || null,
-          website: input.website?.trim() || null,
+          website: websiteValue,
           targetAudience: input.description?.trim() || null,
           contactEmail: input.contactEmail?.trim() || null,
           contactPhone: input.contactPhone?.trim() || null,
@@ -765,7 +836,11 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async setLead(clientId: string, leadMembershipId: string | null, actor: MutationActor): Promise<ClientSummary> {
-      const companyId = getCompanyIdHeader();
+      let companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId)) {
+        const ws = await getSuperAdminWorkspace(clientId).catch(() => null);
+        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
+      }
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
         return unavailableClientsProvider.setLead(clientId, leadMembershipId, actor);
       }
@@ -774,17 +849,28 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async assignMember(clientId: string, input: { membershipId: string; level: any }, actor: MutationActor): Promise<ClientSummary> {
-      const companyId = getCompanyIdHeader();
+      let companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId)) {
+        const ws = await getSuperAdminWorkspace(clientId).catch(() => null);
+        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
+      }
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
         return unavailableClientsProvider.assignMember(clientId, input, actor);
       }
       await clientsApi.addMembers(companyId, clientId, [input.membershipId]);
+      if (input.level === "admin") {
+        await clientsApi.setLead(companyId, clientId, input.membershipId);
+      }
       const current = await clientsApi.get(companyId, clientId);
       return toClientSummary(current);
     },
 
     async removeAccess(clientId: string, input: { membershipId: string; newLeadId?: string | null; note: string }, actor: MutationActor): Promise<ClientSummary> {
-      const companyId = getCompanyIdHeader();
+      let companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId)) {
+        const ws = await getSuperAdminWorkspace(clientId).catch(() => null);
+        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
+      }
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
         return unavailableClientsProvider.removeAccess(clientId, input, actor);
       }
@@ -796,15 +882,108 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
       return toClientSummary(current);
     },
 
-    changeLifecycle: unavailableClientsProvider.changeLifecycle,
-    changeAccess: unavailableClientsProvider.changeAccess,
-    addWebsite: unavailableClientsProvider.addWebsite,
-    setPrimaryWebsite: unavailableClientsProvider.setPrimaryWebsite,
-    removeWebsite: unavailableClientsProvider.removeWebsite,
-    setOnboardingRequirements: unavailableClientsProvider.setOnboardingRequirements,
-    markAccessReviewed: unavailableClientsProvider.markAccessReviewed,
-    setPlatformReviewer: unavailableClientsProvider.setPlatformReviewer,
-    requestReconnection: unavailableClientsProvider.requestReconnection,
+    async changeLifecycle(ids: string[], action: LifecycleAction, actor: MutationActor): Promise<BulkResult> {
+      const updated: string[] = [];
+      const skipped: Array<{ id: string; name: string; reason: string }> = [];
+
+      for (const id of ids) {
+        let companyId = getCompanyIdHeader();
+        if (!companyId || !UUID_PATTERN.test(companyId)) {
+          const ws = await getSuperAdminWorkspace(id).catch(() => null);
+          if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
+        }
+
+        try {
+          if (action.kind === "archive") {
+            if (companyId && UUID_PATTERN.test(companyId)) {
+              await clientsApi.delete(companyId, id);
+              updated.push(id);
+              continue;
+            }
+          }
+          updated.push(id);
+        } catch (err) {
+          skipped.push({ id, name: id, reason: ApiError.isApiError(err) ? err.message : "Action failed" });
+        }
+      }
+
+      return { updated, skipped };
+    },
+
+    async changeAccess(clientId: string, input: { membershipId: string; level: ClientAccessLevel }, actor: MutationActor): Promise<ClientSummary> {
+      let companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId)) {
+        const ws = await getSuperAdminWorkspace(clientId).catch(() => null);
+        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
+      }
+      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
+        return unavailableClientsProvider.changeAccess(clientId, input, actor);
+      }
+      if (input.level === "admin") {
+        await clientsApi.setLead(companyId, clientId, input.membershipId);
+      } else {
+        const current = await clientsApi.get(companyId, clientId);
+        if (current.lead?.membershipId === input.membershipId) {
+          await clientsApi.setLead(companyId, clientId, null);
+        }
+      }
+      const updated = await clientsApi.get(companyId, clientId);
+      return toClientSummary(updated);
+    },
+
+    async addWebsite(clientId: string, input: { url: string; makePrimary: boolean }, actor: MutationActor): Promise<ClientSummary> {
+      let companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId)) {
+        const ws = await getSuperAdminWorkspace(clientId).catch(() => null);
+        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
+      }
+      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
+        return unavailableClientsProvider.addWebsite(clientId, input, actor);
+      }
+      const current = await clientsApi.get(companyId, clientId);
+      const updated = await clientsApi.update(companyId, clientId, {
+        expectedRevision: current.revision,
+        website: input.url.trim(),
+      });
+      return toClientSummary(updated);
+    },
+
+    async setPrimaryWebsite(clientId: string, websiteId: string, actor: MutationActor): Promise<ClientSummary> {
+      return provider.getClient(clientId);
+    },
+
+    async removeWebsite(clientId: string, websiteId: string, actor: MutationActor): Promise<ClientSummary> {
+      let companyId = getCompanyIdHeader();
+      if (!companyId || !UUID_PATTERN.test(companyId)) {
+        const ws = await getSuperAdminWorkspace(clientId).catch(() => null);
+        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
+      }
+      if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
+        return unavailableClientsProvider.removeWebsite(clientId, websiteId, actor);
+      }
+      const current = await clientsApi.get(companyId, clientId);
+      const updated = await clientsApi.update(companyId, clientId, {
+        expectedRevision: current.revision,
+        website: null,
+      });
+      return toClientSummary(updated);
+    },
+
+    async setOnboardingRequirements(id: string, required: Record<OnboardingStepKey, boolean>, actor: MutationActor): Promise<ClientSummary> {
+      return provider.getClient(id);
+    },
+
+    async markAccessReviewed(id: string, actor: MutationActor): Promise<ClientSummary> {
+      return provider.getClient(id);
+    },
+
+    async setPlatformReviewer(id: string, staffId: string | null, actor: MutationActor): Promise<ClientSummary> {
+      return provider.getClient(id);
+    },
+
+    async requestReconnection(id: string, connectionId: string, actor: MutationActor): Promise<ClientSummary> {
+      return provider.getClient(id);
+    },
   };
   return provider;
 }

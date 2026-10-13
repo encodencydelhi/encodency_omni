@@ -9,7 +9,6 @@
 import { WEBSITE_MOCK_MODE } from "./config";
 import { MockWebsiteProvider, UnavailableWebsiteProvider } from "./mock-provider";
 import { LiveWebsiteProvider } from "./live-provider";
-import { findClientProfile } from "./mock-dataset";
 import type {
   IntegrationKey,
   IssueStatus,
@@ -43,9 +42,7 @@ export const websiteRepository = {
    * rather than asking for a URL it does not own.
    */
   resolveClientWebsite(clientId: string): { clientName: string; domain: string | null } | null {
-    const profile = findClientProfile(clientId);
-    if (!profile) return null;
-    return { clientName: profile.clientName, domain: profile.domain };
+    return null;
   },
 
   getTarget: (clientId: string) => getProvider().getTarget(clientId),
@@ -64,6 +61,10 @@ export const websiteRepository = {
   getForms: (clientId: string) => getProvider().getForms(clientId),
   getMonitoring: (clientId: string) => getProvider().getMonitoring(clientId),
   getSettings: (clientId: string) => getProvider().getSettings(clientId),
+  getKeywordResearch: (clientId: string) => getProvider().getKeywordResearch(clientId),
+  getCompetitorAnalysis: (clientId: string) => getProvider().getCompetitorAnalysis(clientId),
+  getBacklinkAnalysis: (clientId: string) => getProvider().getBacklinkAnalysis(clientId),
+  getRankTracking: (clientId: string) => getProvider().getRankTracking(clientId),
 
   startScan: (clientId: string, type: ScanType, pageId?: string) =>
     getProvider().startScan(clientId, type, pageId),
@@ -100,4 +101,8 @@ export const websiteKeys = {
   forms: (clientId: string) => ["website", clientId, "forms"] as const,
   monitoring: (clientId: string) => ["website", clientId, "monitoring"] as const,
   settings: (clientId: string) => ["website", clientId, "settings"] as const,
+  keywordResearch: (clientId: string) => ["website", clientId, "keyword-research"] as const,
+  competitorAnalysis: (clientId: string) => ["website", clientId, "competitor-analysis"] as const,
+  backlinkAnalysis: (clientId: string) => ["website", clientId, "backlink-analysis"] as const,
+  rankTracking: (clientId: string) => ["website", clientId, "rank-tracking"] as const,
 };

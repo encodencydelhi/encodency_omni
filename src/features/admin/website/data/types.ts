@@ -347,6 +347,8 @@ export interface SeoOverview {
   score: number;
   pagesCrawled: number;
   indexablePages: number;
+  totalPages?: number;
+  totalChecks?: number;
   errors: number;
   warnings: number;
   passedChecks: number;
@@ -423,6 +425,52 @@ export interface SearchConsoleData {
   pages: SearchPageRow[];
   countries: { country: string; clicks: number; impressions: number }[];
   devices: { device: string; clicks: number; impressions: number }[];
+}
+
+export interface KeywordResearchData {
+  query: string;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  position: number;
+  difficulty: number;
+  intent: "informational" | "transactional" | "navigational" | "commercial";
+  searchVolume?: number;
+}
+
+export interface CompetitorData {
+  domain: string;
+  trafficShare: number;
+  keywordOverlap: number;
+  contentGap: number;
+  backlinkProfile: {
+    referringDomains: number;
+    totalBacklinks: number;
+    growthRate: number;
+  };
+}
+
+export interface BacklinkData {
+  referringDomain: string;
+  anchorText: string;
+  linkType: "internal" | "external" | "no-follow" | "sponsored" | "ugc";
+  domainAuthority: number | null;
+  url: string;
+  firstSeen: IsoDate;
+  lastSeen: IsoDate | null;
+}
+
+export interface RankTrackingData {
+  keyword: string;
+  currentPosition: number;
+  previousPosition: number;
+  positionChange: number;
+  searchVolume: number;
+  difficulty: number;
+  intent: "informational" | "transactional" | "navigational" | "commercial";
+  history: { date: IsoDate; position: number }[];
+  serpFeatures: string[];
+  url: string | null;
 }
 
 export interface SeoData {
@@ -835,6 +883,10 @@ export interface WebsiteDataProvider {
   getForms(clientId: string): Promise<FormsData>;
   getMonitoring(clientId: string): Promise<MonitoringData>;
   getSettings(clientId: string): Promise<WebsiteSettings>;
+  getKeywordResearch(clientId: string): Promise<KeywordResearchData[]>;
+  getCompetitorAnalysis(clientId: string): Promise<CompetitorData[]>;
+  getBacklinkAnalysis(clientId: string): Promise<BacklinkData[]>;
+  getRankTracking(clientId: string): Promise<RankTrackingData[]>;
 
   /* Commands ------------------------------------------------------- */
   startScan(clientId: string, type: ScanType, pageId?: string): Promise<ScanProgress>;

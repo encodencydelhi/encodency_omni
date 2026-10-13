@@ -98,6 +98,15 @@ const TREND_SERIES = [
 
 const SEVERITY_ORDER: Severity[] = ["critical", "high", "medium", "low"];
 
+/** Audit priorities are coloured by their impact so severity reads at a glance. */
+const PRIORITY_TONE: Record<string, { card: string; rail: string }> = {
+  high: { card: "bg-[#FEF2F2] border-[#FCA5A5]", rail: "border-l-[#DC2626]" },
+  medium: { card: "bg-[#FFFBEB] border-[#FCD34D]", rail: "border-l-[#F59E0B]" },
+  low: { card: "bg-[#ECFDF5] border-[#A7F3D0]", rail: "border-l-[#10B981]" },
+};
+const PRIORITY_TONE_FALLBACK = { card: "bg-[#F8FAFC] border-[#E2E8F0]", rail: "border-l-[#2563EB]" };
+const priorityTone = (impact?: string) => PRIORITY_TONE[String(impact ?? "").toLowerCase()] ?? PRIORITY_TONE_FALLBACK;
+
 export function WebsiteOverviewPage() {
   const router = useRouter();
   const { clientId, domain, websiteUrl, runScan, openExport, openIssue, openFixGuide, openIntegration, navigate, scan } =
@@ -123,8 +132,7 @@ export function WebsiteOverviewPage() {
   );
   const bySeverity = useMemo(() => countBySeverity(openIssues), [openIssues]);
   const problemPages = useMemo(() => topProblemPages(pages.data ?? [], 6), [pages.data]);
-  const aiAudit = (summary.data as (typeof summary.data & { aiAudit?: { executiveSummary?: string; priorities?: { title?: string; explanation?: string }[] }; aiAuditMeta?: { openai?: boolean; gemini?: boolean } }) | undefined)?.aiAudit;
-  const aiAuditMeta = (summary.data as (typeof summary.data & { aiAuditMeta?: { openai?: boolean; gemini?: boolean } }) | undefined)?.aiAuditMeta;
+  const aiAudit = (summary.data as (typeof summary.data & { aiAudit?: { executiveSummary?: string; priorities?: { title?: string; explanation?: string; impact?: string }[] } }) | undefined)?.aiAudit;
 
   return (
     <div className="space-y-1">
@@ -175,23 +183,49 @@ export function WebsiteOverviewPage() {
               </div>
 
               <dl className="mt-2 divide-y divide-[#F2F5FA] border-t border-[#F1F4F9] pt-1">
-                <KeyValue label="Live status" className="py-1">
-                  <Chip tone={summary.data.target.status === "live" ? "good" : summary.data.target.status === "degraded" ? "warn" : "bad"} dot>
-                    {summary.data.target.status === "live"
-                      ? "Live"
-                      : summary.data.target.status === "degraded"
-                        ? "Degraded"
-                        : summary.data.target.status === "down"
-                          ? "Down"
-                          : "Unknown"}
-                  </Chip>
-                </KeyValue>
-                <KeyValue label="HTTPS" className="py-1">
-                  <Chip tone={summary.data.target.https ? "good" : "bad"} icon={Lock}>
-                    {summary.data.target.https ? "Valid certificate" : "Not secure"}
-                  </Chip>
-                </KeyValue>
-                <KeyValue label="Last scanned" className="py-1">{formatRelative(summary.data.target.lastScannedAt)}</KeyValue>
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/website/monitoring?tab=uptime")}
+                  className="w-full flex items-center justify-between py-1.5 px-1 rounded transition-colors hover:bg-[#F8FAFC] cursor-pointer text-left"
+                >
+                  <dt className="text-[12px] font-medium text-[#4A5A73]">Live status</dt>
+                  <dd className="flex items-center gap-1.5">
+                    <Chip tone={summary.data.target.status === "live" ? "good" : summary.data.target.status === "degraded" ? "warn" : "bad"} dot>
+                      {summary.data.target.status === "live"
+                        ? "Live"
+                        : summary.data.target.status === "degraded"
+                          ? "Degraded"
+                          : summary.data.target.status === "down"
+                            ? "Down"
+                            : "Unknown"}
+                    </Chip>
+                    <ArrowRight className="size-3 text-[#94A3B8]" />
+                  </dd>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/website/monitoring?tab=ssl")}
+                  className="w-full flex items-center justify-between py-1.5 px-1 rounded transition-colors hover:bg-[#F8FAFC] cursor-pointer text-left"
+                >
+                  <dt className="text-[12px] font-medium text-[#4A5A73]">HTTPS</dt>
+                  <dd className="flex items-center gap-1.5">
+                    <Chip tone={summary.data.target.https ? "good" : "bad"} icon={Lock}>
+                      {summary.data.target.https ? "Valid certificate" : "Not secure"}
+                    </Chip>
+                    <ArrowRight className="size-3 text-[#94A3B8]" />
+                  </dd>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/website/pages")}
+                  className="w-full flex items-center justify-between py-1.5 px-1 rounded transition-colors hover:bg-[#F8FAFC] cursor-pointer text-left"
+                >
+                  <dt className="text-[12px] font-medium text-[#4A5A73]">Last scanned</dt>
+                  <dd className="flex items-center gap-1 text-[12px] font-medium text-[#111C3A]">
+                    {formatRelative(summary.data.target.lastScannedAt)}
+                    <ArrowRight className="size-3 text-[#94A3B8]" />
+                  </dd>
+                </button>
               </dl>
 
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -220,12 +254,16 @@ export function WebsiteOverviewPage() {
 
             <Card
               title="OmniPlatform website scores"
-              subtitle="Our own composite measures — not Google Lighthouse or PageSpeed scores"
+              subtitle="Our own composite measures — click any score for full details"
               icon={Gauge}
               bodyClassName="p-4 flex flex-col justify-center"
             >
               <div className="grid grid-cols-[1.1fr_1fr] items-stretch gap-3 h-full">
-                <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-[#E6EBF4] bg-gradient-to-br from-[#FAFCFF] to-[#F1F5F9] p-4 shadow-sm h-full">
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/website/issues")}
+                  className="group flex flex-col items-center justify-center gap-3 rounded-xl border border-[#E6EBF4] bg-gradient-to-br from-[#FAFCFF] to-[#F1F5F9] p-4 shadow-sm h-full cursor-pointer transition-all hover:-translate-y-0.5 hover:border-[#C9D6EA] hover:shadow-md hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35 text-center"
+                >
                   <ScoreDial
                     value={summary.data.scores.health}
                     tone={scoreBand(summary.data.scores.health)}
@@ -236,15 +274,23 @@ export function WebsiteOverviewPage() {
                     <p className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] mb-0.5">
                       Overall Health
                     </p>
-                    <p className="text-[14px] font-bold text-[#0F172A] leading-none mb-1.5">
-                      {scoreLabel(summary.data.scores.health)}
+                    <p className="text-[14px] font-bold text-[#0F172A] leading-none mb-1 group-hover:text-[#2563EB] transition-colors">
+                      {scoreLabel(summary.data.scores.health)} →
                     </p>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="inline-flex items-center rounded-md bg-[#EFF6FF] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1D4ED8] ring-1 ring-inset ring-[#BFDBFE]">
+                        Current: {summary.data.scores.health}
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
+                        Best: 100
+                      </span>
+                    </div>
                     <span className="inline-flex items-center justify-center rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-[#475569] shadow-sm ring-1 ring-inset ring-[#E2E8F0]">
                       {summary.data.scoreDeltas.health >= 0 ? "+" : ""}
                       {summary.data.scoreDeltas.health} vs previous
                     </span>
                   </div>
-                </div>
+                </button>
 
                 <div className="grid grid-cols-2 gap-2">
                   {[
@@ -257,17 +303,22 @@ export function WebsiteOverviewPage() {
                       key={score.key}
                       type="button"
                       onClick={() => navigate(score.href)}
-                      className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-[#E6EBF4] bg-white p-2 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#C9D6EA] hover:shadow-md hover:bg-[#FAFCFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35 h-full"
+                      className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-[#E6EBF4] bg-white p-2 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#C9D6EA] hover:shadow-md hover:bg-[#FAFCFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35 h-full"
                     >
                       <ScoreDial
                         value={score.value}
                         tone={scoreBand(score.value)}
-                        size={54}
+                        size={52}
                         label={`OmniPlatform ${score.label} score ${score.value}`}
                       />
                       <span className="w-full text-center text-[10.5px] font-bold tracking-tight text-[#475569] truncate">
-                        {score.label}
+                        {score.label} →
                       </span>
+                      <div className="flex items-center justify-center gap-1 text-[9px] font-bold">
+                        <span className="text-[#334155]">Cur: {score.value}</span>
+                        <span className="text-[#94A3B8]">·</span>
+                        <span className="text-[#15803D]">Best: 100</span>
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -279,15 +330,17 @@ export function WebsiteOverviewPage() {
               <StatTile
                 label="Uptime · 30 days"
                 value={`${summary.data.uptimePct.toFixed(2)}%`}
-                sub="3 regions"
+                best="100%"
+                sub="3 regions · View uptime details →"
                 icon={Wifi}
                 tone={summary.data.uptimePct >= 99.9 ? "good" : "warn"}
-                onClick={() => navigate("/admin/website/monitoring")}
+                onClick={() => navigate("/admin/website/monitoring?tab=uptime")}
               />
               <StatTile
                 label="Pages"
                 value={formatNumber(summary.data.pagesDiscovered)}
-                sub={`${(pages.data ?? []).filter((page) => page.indexable).length} indexable`}
+                best={`${summary.data.pagesDiscovered} indexed`}
+                sub={`${(pages.data ?? []).filter((page) => page.indexable).length} indexable · View all pages →`}
                 icon={FileStack}
                 tone="info"
                 onClick={() => navigate("/admin/website/pages")}
@@ -295,7 +348,8 @@ export function WebsiteOverviewPage() {
               <StatTile
                 label="Critical"
                 value={formatNumber(summary.data.criticalIssues)}
-                sub="Fix first"
+                best="0"
+                sub="Fix first · View critical issues →"
                 icon={AlertOctagon}
                 tone={summary.data.criticalIssues > 0 ? "bad" : "good"}
                 onClick={() => navigate("/admin/website/issues?severity=critical")}
@@ -303,7 +357,8 @@ export function WebsiteOverviewPage() {
               <StatTile
                 label="Open issues"
                 value={formatNumber(summary.data.openIssues)}
-                sub={`${bySeverity.high} high · ${bySeverity.medium} med`}
+                best="0"
+                sub={`${bySeverity.high} high · ${bySeverity.medium} med · View all →`}
                 icon={TriangleAlert}
                 tone={summary.data.openIssues > 12 ? "warn" : "info"}
                 onClick={() => navigate("/admin/website/issues")}
@@ -315,22 +370,32 @@ export function WebsiteOverviewPage() {
 
       {/* D + C — trend and needs attention */}
       {aiAudit ? (
-        <Card title="AI audit summary" icon={FileSearch} subtitle="Measured crawl data, independent model reviews, then a final merged assessment">
+        <Card
+          title="AI audit summary"
+          icon={FileSearch}
+          subtitle="Measured crawl data, independent model reviews, then a final merged assessment"
+          action={<LinkAction onClick={() => navigate("/admin/website/issues")}>View audit issues →</LinkAction>}
+        >
           <p className="text-[12px] leading-relaxed text-[#4A5A73]">{aiAudit.executiveSummary}</p>
           {aiAudit.priorities?.length ? (
             <ul className="mt-3 grid gap-2 md:grid-cols-2">
-              {aiAudit.priorities.slice(0, 4).map((priority, index) => (
-                <li key={`${priority.title}-${index}`} className="border-l-2 border-[#2563EB] pl-2.5">
-                  <p className="text-[11.5px] font-semibold text-[#28354C]">{priority.title}</p>
-                  <p className="mt-0.5 text-[10.5px] leading-relaxed text-[#6B7A94]">{priority.explanation}</p>
-                </li>
-              ))}
+              {aiAudit.priorities.slice(0, 4).map((priority, index) => {
+                const tone = priorityTone(priority.impact);
+                return (
+                  <li
+                    key={`${priority.title}-${index}`}
+                    onClick={() => navigate("/admin/website/issues")}
+                    className={cn("rounded-r border border-l-2 py-1 pl-2.5 cursor-pointer transition-colors", tone.card, tone.rail)}
+                  >
+                    <p className="text-[11.5px] font-semibold text-[#28354C] hover:text-[#2563EB] transition-colors">
+                      {priority.title} →
+                    </p>
+                    <p className="mt-0.5 text-[10.5px] leading-relaxed text-[#6B7A94]">{priority.explanation}</p>
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            <Chip tone={aiAuditMeta?.openai ? "good" : "muted"}>{aiAuditMeta?.openai ? "OpenAI reviewed" : "OpenAI unavailable"}</Chip>
-            <Chip tone={aiAuditMeta?.gemini ? "good" : "muted"}>{aiAuditMeta?.gemini ? "Gemini reviewed" : "Gemini unavailable"}</Chip>
-          </div>
         </Card>
       ) : null}
 
@@ -340,17 +405,20 @@ export function WebsiteOverviewPage() {
           subtitle="OmniPlatform composite scores over time"
           icon={History}
           action={
-            <SegmentedControl
-              ariaLabel="Trend period"
-              size="sm"
-              value={period}
-              onChange={setPeriod}
-              options={[
-                { value: "7d", label: "7d" },
-                { value: "30d", label: "30d" },
-                { value: "90d", label: "90d" },
-              ]}
-            />
+            <div className="flex items-center gap-2.5">
+              <LinkAction onClick={() => navigate("/admin/website/monitoring")}>Detailed monitoring →</LinkAction>
+              <SegmentedControl
+                ariaLabel="Trend period"
+                size="sm"
+                value={period}
+                onChange={setPeriod}
+                options={[
+                  { value: "7d", label: "7d" },
+                  { value: "30d", label: "30d" },
+                  { value: "90d", label: "90d" },
+                ]}
+              />
+            </div>
           }
           bodyClassName="p-3.5 pt-2"
         >
@@ -532,10 +600,34 @@ export function WebsiteOverviewPage() {
               <QueryErrorState error={seo.error} onRetry={() => void seo.refetch()} compact />
             ) : seo.data ? (
               <div className="grid grid-cols-2 gap-2">
-                <MiniStat label="Healthy pages" value={seo.data.overview.healthyPages} tone="good" />
-                <MiniStat label="Warnings" value={seo.data.overview.warningPages} tone="warn" />
-                <MiniStat label="Critical" value={seo.data.overview.criticalPages} tone="bad" />
-                <MiniStat label="Passed checks" value={seo.data.overview.passedChecks} tone="info" />
+                <MiniStat
+                  label="Healthy pages"
+                  value={seo.data.overview.healthyPages}
+                  best={seo.data.overview.pagesCrawled}
+                  tone="good"
+                  onClick={() => navigate("/admin/website/seo?tab=pages")}
+                />
+                <MiniStat
+                  label="Warnings"
+                  value={seo.data.overview.warningPages}
+                  best="0"
+                  tone="warn"
+                  onClick={() => navigate("/admin/website/issues?category=seo&severity=medium")}
+                />
+                <MiniStat
+                  label="Critical"
+                  value={seo.data.overview.criticalPages}
+                  best="0"
+                  tone="bad"
+                  onClick={() => navigate("/admin/website/issues?category=seo&severity=critical")}
+                />
+                <MiniStat
+                  label="Passed checks"
+                  value={seo.data.overview.passedChecks}
+                  best={seo.data.overview.passedChecks + seo.data.overview.errors + seo.data.overview.warnings}
+                  tone="info"
+                  onClick={() => navigate("/admin/website/seo?tab=overview")}
+                />
               </div>
             ) : null}
           </Card>
@@ -552,15 +644,59 @@ export function WebsiteOverviewPage() {
             ) : performance.data ? (
               <dl className="divide-y divide-[#F2F5FA]">
                 {performance.data.vitals.map((vital) => (
-                  <KeyValue key={vital.key} label={vital.label}>
-                    <span className="inline-flex items-center gap-1.5">
-                      {vital.display}
+                  <button
+                    key={vital.key}
+                    type="button"
+                    onClick={() => navigate("/admin/website/performance?tab=vitals")}
+                    className="w-full flex items-center justify-between py-2 text-left hover:bg-[#F8FAFC] px-1 rounded transition-colors cursor-pointer"
+                  >
+                    <dt className="text-[12px] font-medium text-[#4A5A73]">{vital.label}</dt>
+                    <dd className="inline-flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 text-[11px]">
+                        <span className="font-bold text-[#0F172A] bg-[#F1F5F9] px-1.5 py-0.5 rounded">
+                          Cur: {vital.display}
+                        </span>
+                        <span className="font-bold text-[#15803D] bg-[#F0FDF4] px-1.5 py-0.5 rounded border border-[#DCFCE7]">
+                          Best: ≤ {vital.thresholds.good}{vital.key === "cls" ? "" : vital.key === "inp" ? "ms" : "s"}
+                        </span>
+                      </div>
                       <Chip tone={vitalTone[vital.band]}>{vital.band === "good" ? "Good" : vital.band === "poor" ? "Poor" : "Needs work"}</Chip>
-                    </span>
-                  </KeyValue>
+                      <ArrowRight className="size-3 text-[#94A3B8]" />
+                    </dd>
+                  </button>
                 ))}
-                <KeyValue label="Average page weight">{formatWeight(performance.data.avgPageWeightKb)}</KeyValue>
-                <KeyValue label="Average requests">{performance.data.avgRequests}</KeyValue>
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/website/performance?tab=resources")}
+                  className="w-full flex items-center justify-between py-2 text-left hover:bg-[#F8FAFC] px-1 rounded transition-colors cursor-pointer"
+                >
+                  <dt className="text-[12px] font-medium text-[#4A5A73]">Average page weight</dt>
+                  <dd className="inline-flex items-center gap-2 text-[11px]">
+                    <span className="font-bold text-[#0F172A] bg-[#F1F5F9] px-1.5 py-0.5 rounded">
+                      Cur: {formatWeight(performance.data.avgPageWeightKb)}
+                    </span>
+                    <span className="font-bold text-[#15803D] bg-[#F0FDF4] px-1.5 py-0.5 rounded border border-[#DCFCE7]">
+                      Best: &lt; 1.5 MB
+                    </span>
+                    <ArrowRight className="size-3 text-[#94A3B8]" />
+                  </dd>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/website/performance?tab=resources")}
+                  className="w-full flex items-center justify-between py-2 text-left hover:bg-[#F8FAFC] px-1 rounded transition-colors cursor-pointer"
+                >
+                  <dt className="text-[12px] font-medium text-[#4A5A73]">Average requests</dt>
+                  <dd className="inline-flex items-center gap-2 text-[11px]">
+                    <span className="font-bold text-[#0F172A] bg-[#F1F5F9] px-1.5 py-0.5 rounded">
+                      Cur: {performance.data.avgRequests}
+                    </span>
+                    <span className="font-bold text-[#15803D] bg-[#F0FDF4] px-1.5 py-0.5 rounded border border-[#DCFCE7]">
+                      Best: &lt; 50
+                    </span>
+                    <ArrowRight className="size-3 text-[#94A3B8]" />
+                  </dd>
+                </button>
               </dl>
             ) : null}
           </Card>
@@ -569,7 +705,12 @@ export function WebsiteOverviewPage() {
 
       {/* H + I + J */}
       <div className="grid gap-1 lg:grid-cols-3">
-        <Card title="Integration status" icon={Link2} bodyClassName="p-0">
+        <Card
+          title="Integration status"
+          icon={Link2}
+          action={<LinkAction onClick={() => navigate("/admin/website/settings?section=integrations")}>Manage all →</LinkAction>}
+          bodyClassName="p-0"
+        >
           {capabilities.isLoading ? (
             <SkeletonBlock lines={4} />
           ) : capabilities.error ? (
@@ -580,8 +721,24 @@ export function WebsiteOverviewPage() {
                 const integration = capabilities.data.integrations[key];
                 const tone = integrationTone(integration.status);
                 const connected = tone === "good";
+                const targetHref =
+                  key === "ga4" && connected
+                    ? "/admin/website/analytics"
+                    : key === "searchConsole" && connected
+                      ? "/admin/website/seo?tab=search"
+                      : null;
                 return (
-                  <li key={key} className="flex items-center justify-between gap-2 rounded-xl border border-[#E6EBF4] bg-white px-2.5 py-1.5 shadow-sm transition-all hover:border-[#C9D6EA] hover:shadow-md">
+                  <li
+                    key={key}
+                    onClick={() => {
+                      if (targetHref) {
+                        navigate(targetHref);
+                      } else {
+                        openIntegration(key);
+                      }
+                    }}
+                    className="flex items-center justify-between gap-2 rounded-xl border border-[#E6EBF4] bg-white px-2.5 py-1.5 shadow-sm transition-all hover:border-[#C9D6EA] hover:shadow-md cursor-pointer"
+                  >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <p className="truncate text-[11.5px] font-bold text-[#0F172A]">{integration.name}</p>
@@ -591,9 +748,16 @@ export function WebsiteOverviewPage() {
                       </div>
                       <p className="mt-0.5 truncate text-[10.5px] leading-tight text-[#64748B]">{integration.detail}</p>
                     </div>
-                    <WButton size="sm" tone={connected ? undefined : "primary"} onClick={() => openIntegration(key)} className="shrink-0">
-                      {connected ? "Manage" : "Connect"}
-                    </WButton>
+                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      {targetHref ? (
+                        <WButton size="sm" onClick={() => navigate(targetHref)}>
+                          View data
+                        </WButton>
+                      ) : null}
+                      <WButton size="sm" tone={connected ? undefined : "primary"} onClick={() => openIntegration(key)}>
+                        {connected ? "Manage" : "Connect"}
+                      </WButton>
+                    </div>
                   </li>
                 );
               })}
@@ -605,6 +769,7 @@ export function WebsiteOverviewPage() {
           title="Detected technologies"
           subtitle="Inferred from public responses — treated as likely, not certain"
           icon={Boxes}
+          action={<LinkAction onClick={() => navigate("/admin/website/pages")}>View in pages →</LinkAction>}
         >
           {technologies.isLoading ? (
             <SkeletonBlock lines={4} />
@@ -616,9 +781,11 @@ export function WebsiteOverviewPage() {
             <ul className="flex flex-wrap gap-1.5 p-2">
               {(technologies.data ?? []).map((tech) => (
                 <li key={tech.name}>
-                  <span
-                    title={`${tech.category} · ${tech.confidence} confidence · ${tech.evidence}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1 text-[10.5px] font-bold text-[#334155] shadow-sm transition-all hover:bg-white hover:shadow-md"
+                  <button
+                    type="button"
+                    onClick={() => navigate("/admin/website/pages")}
+                    title={`${tech.category} · ${tech.confidence} confidence · Click to view pages`}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1 text-[10.5px] font-bold text-[#334155] shadow-sm transition-all hover:bg-white hover:border-[#C9D6EA] hover:shadow-md cursor-pointer"
                   >
                     {tech.name}
                     <span className="ml-1 flex items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#64748B] ring-1 ring-inset ring-[#E2E8F0]">
@@ -635,14 +802,19 @@ export function WebsiteOverviewPage() {
                       />
                       {tech.confidence}
                     </span>
-                  </span>
+                  </button>
                 </li>
               ))}
             </ul>
           )}
         </Card>
 
-        <Card title="Recent scans" icon={Timer} bodyClassName="p-0">
+        <Card
+          title="Recent scans"
+          icon={Timer}
+          action={<LinkAction onClick={() => navigate("/admin/website/settings?section=crawling")}>Crawl settings →</LinkAction>}
+          bodyClassName="p-0"
+        >
           {scans.isLoading ? (
             <SkeletonTable rows={4} />
           ) : scans.error ? (
@@ -661,7 +833,11 @@ export function WebsiteOverviewPage() {
           ) : (
             <ul className="flex flex-col gap-1.5 p-2 scrollbar-thin max-h-[240px] overflow-y-auto">
               {(scans.data ?? []).slice(0, 4).map((record) => (
-                <li key={record.id} className="flex flex-col gap-1 rounded-xl border border-[#E6EBF4] bg-white px-2.5 py-1.5 shadow-sm transition-all hover:border-[#C9D6EA] hover:shadow-md">
+                <li
+                  key={record.id}
+                  onClick={() => navigate("/admin/website/pages")}
+                  className="flex flex-col gap-1 rounded-xl border border-[#E6EBF4] bg-white px-2.5 py-1.5 shadow-sm transition-all hover:border-[#C9D6EA] hover:shadow-md cursor-pointer"
+                >
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-[11.5px] font-bold text-[#0F172A]">
                       {scanTypeLabel[record.type]}
@@ -688,12 +864,26 @@ export function WebsiteOverviewPage() {
                     <span className="inline-flex items-center rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-medium text-[#475569]">
                       {formatDuration(record.durationSeconds)}
                     </span>
-                    <span className="inline-flex items-center rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-medium text-[#475569]">
-                      {record.pagesScanned} pages
-                    </span>
-                    <span className="inline-flex items-center rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-medium text-[#475569]">
-                      {record.issuesFound} issues
-                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate("/admin/website/pages");
+                      }}
+                      className="inline-flex items-center rounded bg-[#EFF6FF] text-[#1D4ED8] hover:bg-[#DBEAFE] px-1.5 py-0.5 text-[10px] font-semibold transition-colors cursor-pointer"
+                    >
+                      {record.pagesScanned} pages →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate("/admin/website/issues");
+                      }}
+                      className="inline-flex items-center rounded bg-[#FEF2F2] text-[#B91C1C] hover:bg-[#FEE2E2] px-1.5 py-0.5 text-[10px] font-semibold transition-colors cursor-pointer"
+                    >
+                      {record.issuesFound} issues →
+                    </button>
                   </div>
                   {record.note ? <p className="mt-0.5 text-[10.5px] font-medium text-[#B45309] bg-[#FEF3C7] px-2 py-1 rounded-md">{record.note}</p> : null}
                 </li>
@@ -710,13 +900,46 @@ export function WebsiteOverviewPage() {
 /* Pieces                                                              */
 /* ------------------------------------------------------------------ */
 
-function MiniStat({ label, value, tone }: { label: string; value: number; tone: "good" | "warn" | "bad" | "info" }) {
+function MiniStat({
+  label,
+  value,
+  best,
+  tone,
+  onClick,
+}: {
+  label: string;
+  value: number;
+  best?: React.ReactNode;
+  tone: "good" | "warn" | "bad" | "info";
+  onClick?: () => void;
+}) {
+  const Wrapper = onClick ? "button" : "div";
   return (
-    <div className="rounded-xl border border-[#E6EBF4] p-2.5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.04em] text-[#6B7A94]">{label}</p>
-      <p className="mt-0.5 text-[18px] font-semibold tracking-[-0.02em] text-[#111C3A]">{formatNumber(value)}</p>
+    <Wrapper
+      {...(onClick ? { type: "button" as const, onClick } : {})}
+      className={cn(
+        "rounded-xl border border-[#E6EBF4] p-2.5 text-left transition-all",
+        onClick &&
+          "cursor-pointer hover:-translate-y-0.5 hover:border-[#C9D6EA] hover:shadow-md hover:bg-[#FAFCFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35",
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-[0.04em] text-[#6B7A94]">{label}</p>
+        {onClick ? <ArrowRight className="size-3 text-[#94A3B8]" /> : null}
+      </div>
+      <div className="mt-1 flex items-baseline justify-between gap-1 flex-wrap">
+        <div className="flex items-baseline gap-1">
+          <span className="text-[10px] font-bold text-[#64748B]">Current:</span>
+          <p className="text-[18px] font-bold tracking-[-0.02em] text-[#111C3A] leading-none">{formatNumber(value)}</p>
+        </div>
+        {best !== undefined ? (
+          <span className="inline-flex items-center rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
+            Best: {best}
+          </span>
+        ) : null}
+      </div>
       <Meter value={Math.min(100, value)} tone={tone} className="mt-1.5" label={label} />
-    </div>
+    </Wrapper>
   );
 }
 

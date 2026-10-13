@@ -290,40 +290,7 @@ export function WebsiteSettingsPage() {
               </Field>
             </div>
 
-            {false ? <div className="space-y-1">
-              <Field label="Slow response threshold (ms)" hint="Above this, a check is recorded as degraded.">
-                <NumberInput
-                  value={draft!.monitoring.responseTimeThresholdMs}
-                  min={200}
-                  max={10000}
-                  step={100}
-                  onChange={(responseTimeThresholdMs) =>
-                    update({ monitoring: { ...draft!.monitoring, responseTimeThresholdMs } })
-                  }
-                />
-              </Field>
-              <Field label="SSL expiry warning (days)" hint="How far ahead of expiry we start warning.">
-                <NumberInput
-                  value={draft!.monitoring.sslExpiryWarningDays}
-                  min={3}
-                  max={90}
-                  onChange={(sslExpiryWarningDays) =>
-                    update({ monitoring: { ...draft!.monitoring, sslExpiryWarningDays } })
-                  }
-                />
-              </Field>
-              <Field label="Uptime alert threshold (%)" hint="Alert when 30-day uptime falls below this.">
-                <NumberInput
-                  value={draft!.monitoring.uptimeAlertThresholdPct}
-                  min={90}
-                  max={100}
-                  step={0.1}
-                  onChange={(uptimeAlertThresholdPct) =>
-                    update({ monitoring: { ...draft!.monitoring, uptimeAlertThresholdPct } })
-                  }
-                />
-              </Field>
-            </div> : null}
+
           </div>
         </Card>
       ) : null}

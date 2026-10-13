@@ -37,12 +37,18 @@ interface AdminContextValue {
   setMobileNavOpen: (open: boolean) => void;
 }
 
+const isMockMode = process.env.NEXT_PUBLIC_DATA_SOURCE === "mock";
+
 const AdminContext = createContext<AdminContextValue | null>(null);
 
 export function AdminProvider({ children }: { children: ReactNode }) {
   const { companyId, isReady, setClientId } = useTenancyContext();
-  const [organization, setOrganization] = useState<Organization>(adminOrganization);
-  const [Clients, setClients] = useState<Project[]>(adminClients);
+  const [organization, setOrganization] = useState<Organization>(() =>
+    isMockMode ? adminOrganization : { id: "", name: "", timezone: "Asia/Kolkata", logo: null }
+  );
+  const [Clients, setClients] = useState<Project[]>(() =>
+    isMockMode ? adminClients : []
+  );
   // Start without a bundled placeholder selection. Live client data resolves
   // the active UUID before client-scoped requests are allowed to run.
   const [selectedProjectId, setSelectedProjectId] = useState<AdminClientscope>("all");
@@ -62,20 +68,24 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     ]).then(([clientsResult, orgResult, brandingResult]) => {
       if (cancelled) return;
 
-      if (clientsResult.status === "fulfilled" && clientsResult.value.length > 0) {
+      if (clientsResult.status === "fulfilled") {
         const liveClients = clientsResult.value.map(toProject);
         const storedClientId = getStoredClientId();
         setClients(liveClients);
         setHasLiveClients(true);
         // Keep the switcher on the Client the shared scope already resolved to,
         // falling back to the first live Client — never to the bundled placeholder.
-        setSelectedProjectId((current) =>
-          liveClients.some((client) => client.id === current)
-            ? current
-            : storedClientId && liveClients.some((client) => client.id === storedClientId)
-              ? storedClientId
-              : liveClients[0]!.id,
-        );
+        if (liveClients.length > 0) {
+          setSelectedProjectId((current) =>
+            liveClients.some((client) => client.id === current)
+              ? current
+              : storedClientId && liveClients.some((client) => client.id === storedClientId)
+                ? storedClientId
+                : liveClients[0]!.id,
+          );
+        } else {
+          setSelectedProjectId("all");
+        }
       }
 
       const logoUrl =

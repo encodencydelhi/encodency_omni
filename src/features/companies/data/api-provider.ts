@@ -59,6 +59,7 @@ import type {
   CompanyActivity,
   CompanyClient,
   CompanyIntegration,
+  CompanyInternalOwner,
   CompanyInvoice,
   CompanyListQuery,
   CompanyListResult,
@@ -72,6 +73,7 @@ import type {
   CompanyUsageSummary,
   CompanyUser,
   CreateCompanyInput,
+  MutationActor,
   PortfolioSummary,
   StaffRef,
   SuspensionReason,
@@ -332,6 +334,29 @@ function planLabel(tier: string): string {
 }
 
 let cachedLiveStaff: StaffRef[] = [];
+let staffLoadPromise: Promise<void> | null = null;
+
+async function loadLiveStaffIfNeeded(): Promise<void> {
+  if (cachedLiveStaff.length > 0) return;
+  if (!staffLoadPromise) {
+    staffLoadPromise = (async () => {
+      try {
+        const response = await staffApi.list({ limit: 100 });
+        cachedLiveStaff = response.items.map((member: LiveStaff) => ({
+          id: member.id,
+          name: member.name || member.email.split("@")[0] || member.email,
+          email: member.email,
+          role: (member.platformRole === "SUPER_ADMIN" ? "super_admin" : "support") as StaffRef["role"],
+          department: member.department ?? "",
+          status: (member.status === "ACTIVE" ? "active" : "suspended") as StaffRef["status"],
+        }));
+      } catch {}
+    })().finally(() => {
+      staffLoadPromise = null;
+    });
+  }
+  await staffLoadPromise;
+}
 
 function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
   const address = (row.address && typeof row.address === "object" && !Array.isArray(row.address))
@@ -455,7 +480,9 @@ function mapApiRow(row: SuperAdminCompanySummary): CompanySummary {
     } else {
       bundle.company.internalTags = summary.company.internalTags;
     }
-    if (!summary.company.internalOwners.accountManagerId && !summary.company.internalOwners.supportOwnerId && !summary.company.internalOwners.technicalOwnerId) {
+    if (row.internalOwners !== undefined && row.internalOwners !== null) {
+      bundle.company.internalOwners = summary.company.internalOwners;
+    } else if (!summary.company.internalOwners.accountManagerId && !summary.company.internalOwners.supportOwnerId && !summary.company.internalOwners.technicalOwnerId) {
       if (bundle.company?.internalOwners) {
         summary.company.internalOwners = bundle.company.internalOwners;
       }
@@ -684,6 +711,7 @@ function toBackendStatus(accountStatus: string | undefined): BackendCompanyStatu
 
 /** Every row the backend serves, paged at the API's maximum page size. Empty on a fallback-worthy error. */
 async function fetchAllSummaries(): Promise<CompanySummary[]> {
+  await loadLiveStaffIfNeeded();
   const summaries: CompanySummary[] = [];
   let page = 1;
   let totalPages = 1;
@@ -716,6 +744,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
     mode: "api",
 
     async listCompanies(query: CompanyListQuery): Promise<CompanyListResult> {
+      await loadLiveStaffIfNeeded();
       const page = query.page ?? 1;
       const limit = Math.min(Math.max(query.pageSize ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
       const status = toBackendStatus(query.accountStatus);
@@ -870,18 +899,16 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
     async listStaff(): Promise<StaffRef[]> {
       try {
         const response = await staffApi.list({ limit: 100 });
-        const list = response.items
-          .filter((member: LiveStaff) => member.status === "ACTIVE")
-          .map((member: LiveStaff) => ({
-            id: member.id,
-            name: member.name || member.email.split("@")[0] || member.email,
-            email: member.email,
-            role: (member.platformRole === "SUPER_ADMIN" ? "super_admin" : "support") as StaffRef["role"],
-            department: member.department ?? "",
-            status: "active" as const,
-          }));
+        const list = response.items.map((member: LiveStaff) => ({
+          id: member.id,
+          name: member.name || member.email.split("@")[0] || member.email,
+          email: member.email,
+          role: (member.platformRole === "SUPER_ADMIN" ? "super_admin" : "support") as StaffRef["role"],
+          department: member.department ?? "",
+          status: (member.status === "ACTIVE" ? "active" : "suspended") as StaffRef["status"],
+        }));
         cachedLiveStaff = list;
-        return list;
+        return list.filter((member) => member.status === "active");
       } catch (error) {
         if (shouldFallBack(error)) return fallback.listStaff();
         throw error;
@@ -894,6 +921,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         return fallback.getCompany(id);
       }
 
+      await loadLiveStaffIfNeeded();
       const detail = await apiClient.request<SuperAdminCompanyDetailResponse>({
         method: "GET",
         path: `/super-admin/companies/${encodeURIComponent(id)}`,
@@ -1181,6 +1209,65 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
           });
         }
       }
+      return { updated, skipped };
+    },
+
+    async assignInternalOwners(
+      ids: string[],
+      patch: Partial<CompanyInternalOwner>,
+      actor: MutationActor,
+    ): Promise<BulkResult> {
+      await loadLiveStaffIfNeeded();
+      const updated: string[] = [];
+      const skipped: Array<{ id: string; name: string; reason: string }> = [];
+
+      for (const id of ids) {
+        if (!UUID_PATTERN.test(id)) {
+          const res = await fallback.assignInternalOwners([id], patch, actor);
+          updated.push(...res.updated);
+          skipped.push(...res.skipped);
+          continue;
+        }
+
+        try {
+          const body: Record<string, unknown> = {};
+          if ("accountManagerId" in patch) {
+            body.accountManagerId = patch.accountManagerId ?? null;
+          }
+          if ("supportOwnerId" in patch) {
+            body.supportOwnerId = patch.supportOwnerId ?? null;
+          }
+          if ("technicalOwnerId" in patch) {
+            body.technicalOwnerId = patch.technicalOwnerId ?? null;
+          }
+
+          const patched = await apiClient.request<SuperAdminCompanyDetailResponse>({
+            method: "PATCH",
+            path: `/super-admin/companies/${encodeURIComponent(id)}`,
+            body,
+          });
+
+          try {
+            const bundle = ensureBundle(id, patched.name || id);
+            bundle.company.internalOwners = {
+              ...bundle.company.internalOwners,
+              ...(patch.accountManagerId !== undefined ? { accountManagerId: patch.accountManagerId } : {}),
+              ...(patch.supportOwnerId !== undefined ? { supportOwnerId: patch.supportOwnerId } : {}),
+              ...(patch.technicalOwnerId !== undefined ? { technicalOwnerId: patch.technicalOwnerId } : {}),
+            };
+            writeBundle(bundle);
+          } catch {}
+
+          updated.push(id);
+        } catch (e) {
+          skipped.push({
+            id,
+            name: id,
+            reason: e instanceof Error ? e.message : "Failed to assign internal owner",
+          });
+        }
+      }
+
       return { updated, skipped };
     },
 
