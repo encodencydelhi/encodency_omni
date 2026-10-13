@@ -32,6 +32,7 @@ import { useCalendar, useCancelScheduledPost } from "./live/use-calendar";
 
 type View = "Month" | "Week" | "List";
 type CalendarTask = CrmTask & { clientId: string; clientName: string };
+type CalendarStatusFilter = CalendarStatusGroup | `task:${TaskStatus}`;
 
 const DAY = 86_400_000;
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -55,12 +56,16 @@ function PostLogo({ post, className }: { post: Pick<CalendarPost, "channel">; cl
   return <ChannelLogo channel={CHANNEL_NAME[post.channel] ?? post.channel} className={className} />;
 }
 
-const STATUS_FILTERS: Array<{ value: CalendarStatusGroup; label: string }> = [
+const STATUS_FILTERS: Array<{ value: CalendarStatusFilter; label: string }> = [
   { value: "scheduled", label: "Scheduled" },
   { value: "published", label: "Published" },
   { value: "failed", label: "Failed" },
   { value: "cancelled", label: "Cancelled" },
   { value: "draft", label: "Drafts" },
+  { value: "task:pending", label: "Tasks: Pending" },
+  { value: "task:in_progress", label: "Tasks: In progress" },
+  { value: "task:completed", label: "Tasks: Completed" },
+  { value: "task:cancelled", label: "Tasks: Cancelled" },
 ];
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -107,6 +112,37 @@ function taskDate(task: CrmTask): Date {
   return new Date(`${task.dueDate}T${task.dueTime || "00:00"}:00`);
 }
 
+function normalizeCalendarTask(task: Partial<CrmTask>, clientId: string, clientName: string): CalendarTask | null {
+  const dueDate = String(task.dueDate ?? "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) return null;
+  const status = task.status && task.status in TASK_STATUS ? task.status : "pending";
+  return {
+    id: String(task.id ?? ""),
+    title: String(task.title ?? "Untitled task"),
+    description: String(task.description ?? ""),
+    type: task.type ?? "other",
+    priority: task.priority ?? "medium",
+    status,
+    assigneeId: String(task.assigneeId ?? ""),
+    assigneeName: String(task.assigneeName ?? "Unassigned"),
+    dueDate,
+    dueTime: /^\d{2}:\d{2}$/.test(String(task.dueTime ?? "")) ? String(task.dueTime) : "",
+    reminder: String(task.reminder ?? "none"),
+    relatedLeadId: task.relatedLeadId,
+    relatedLeadName: task.relatedLeadName,
+    relatedContactId: task.relatedContactId,
+    relatedContactName: task.relatedContactName,
+    relatedDealId: task.relatedDealId,
+    relatedDealName: task.relatedDealName,
+    tags: Array.isArray(task.tags) ? task.tags : [],
+    createdAt: String(task.createdAt ?? ""),
+    updatedAt: String(task.updatedAt ?? ""),
+    completedAt: task.completedAt,
+    clientId,
+    clientName,
+  };
+}
+
 function TaskChip({ task, onSelect }: { task: CalendarTask; onSelect?: () => void }) {
   return (
     <Link
@@ -133,7 +169,7 @@ export function LiveContentCalendar() {
   const [selected, setSelected] = useState<Date>(today);
   const [clientId, setClientId] = useState("");
   const [channel, setChannel] = useState<"" | CalendarChannel>("");
-  const [statusGroup, setStatusGroup] = useState<"" | CalendarStatusGroup>("");
+  const [statusFilter, setStatusFilter] = useState<"" | CalendarStatusFilter>("");
   const [campaignId, setCampaignId] = useState("");
   const [personId, setPersonId] = useState("");
   const [showFilters, setShowFilters] = useState(true);
@@ -141,6 +177,9 @@ export function LiveContentCalendar() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [detail, setDetail] = useState<{ post: CalendarPost; confirmCancel: boolean } | null>(null);
   const [calendarTasks, setCalendarTasks] = useState<CalendarTask[]>([]);
+  const [taskLoadError, setTaskLoadError] = useState<string | null>(null);
+  const [loadedTaskScopeKey, setLoadedTaskScopeKey] = useState("");
+  const [taskReloadKey, setTaskReloadKey] = useState(0);
 
   const first = startOfMonth(cursor);
   const daysInMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
@@ -149,37 +188,49 @@ export function LiveContentCalendar() {
   const gridEnd = addDays(gridStart, weeks * 7);
   const cells = Array.from({ length: weeks * 7 }, (_, i) => addDays(gridStart, i));
 
+  const contentStatusGroup = statusFilter && !statusFilter.startsWith("task:") ? statusFilter as CalendarStatusGroup : undefined;
+  const taskStatus = statusFilter.startsWith("task:") ? statusFilter.slice(5) as TaskStatus : undefined;
+  const showContentItems = !taskStatus;
   const filters = { clientId: clientId || undefined, channel: channel || undefined, campaignId: campaignId || undefined, personId: personId || undefined };
-  const { data, isLoading, isFetching, error, refetch } = useCalendar({ from: gridStart.toISOString(), to: gridEnd.toISOString(), statusGroup: statusGroup || undefined, ...filters, limit: 500 });
+  const { data, isLoading, isFetching, error, refetch } = useCalendar({ from: gridStart.toISOString(), to: gridEnd.toISOString(), statusGroup: contentStatusGroup, ...filters, limit: 500 });
 
-  const taskClientKey = useMemo(() => {
-    if (clientId) return clientId;
-    return (data?.clients ?? []).map((client) => client.id).sort().join(",");
+  const taskClientsKey = useMemo(() => {
+    const clients = clientId ? (data?.clients ?? []).filter((client) => client.id === clientId) : (data?.clients ?? []);
+    return JSON.stringify(clients.map((client) => ({ id: client.id, name: client.name })).sort((left, right) => left.id.localeCompare(right.id)));
   }, [clientId, data?.clients]);
+  const taskScopeKey = `${companyId}:${taskClientsKey}`;
 
   useEffect(() => {
     let cancelled = false;
-    const clientIds = taskClientKey.split(",").filter(Boolean);
-    if (!companyId || clientIds.length === 0) {
-      void Promise.resolve().then(() => { if (!cancelled) setCalendarTasks([]); });
+    const taskClients = JSON.parse(taskClientsKey) as Array<{ id: string; name: string }>;
+    if (!companyId || taskClients.length === 0) {
+      void Promise.resolve().then(() => {
+        if (!cancelled) {
+          setCalendarTasks([]);
+          setTaskLoadError(null);
+          setLoadedTaskScopeKey(taskScopeKey);
+        }
+      });
       return () => { cancelled = true; };
     }
 
-    const names = new Map((data?.clients ?? []).map((client) => [client.id, client.name]));
     void Promise.allSettled(
-      clientIds.map(async (taskClientId) => {
-        const rows = await crmApi.list<CrmTask>("task", { companyId, clientId: taskClientId });
+      taskClients.map(async (taskClient) => {
+        const rows = await crmApi.list<CrmTask>("task", { companyId, clientId: taskClient.id });
         return rows
-          .filter((task) => Boolean(task.dueDate))
-          .map((task) => ({ ...task, clientId: taskClientId, clientName: names.get(taskClientId) ?? "Client" }));
+          .map((task) => normalizeCalendarTask(task, taskClient.id, taskClient.name))
+          .filter((task): task is CalendarTask => task !== null);
       }),
     ).then((results) => {
       if (cancelled) return;
       setCalendarTasks(results.flatMap((result) => result.status === "fulfilled" ? result.value : []));
+      const failed = results.filter((result) => result.status === "rejected").length;
+      setTaskLoadError(failed > 0 ? `CRM tasks could not be loaded for ${failed} client${failed === 1 ? "" : "s"}.` : null);
+      setLoadedTaskScopeKey(taskScopeKey);
     });
 
     return () => { cancelled = true; };
-  }, [companyId, data?.clients, taskClientKey]);
+  }, [companyId, taskClientsKey, taskReloadKey, taskScopeKey]);
 
   const upcomingWindow = useMemo(() => {
     const from = new Date();
@@ -190,18 +241,28 @@ export function LiveContentCalendar() {
 
   const byDay = useMemo(() => {
     const map = new Map<string, CalendarPost[]>();
-    for (const post of data?.items ?? []) {
+    for (const post of showContentItems ? (data?.items ?? []) : []) {
       const key = dayKey(new Date(post.scheduledFor));
       const list = map.get(key) ?? [];
       list.push(post);
       map.set(key, list);
     }
     return map;
-  }, [data]);
+  }, [data, showContentItems]);
 
+  const scopedPersonId = personId || (!data?.scope.seesEveryone ? data?.scope.viewingPersonId ?? "" : "");
+  const showTasksForContentFilters = !channel && !campaignId && !contentStatusGroup;
+  const scopedCalendarTasks = useMemo(
+    () => loadedTaskScopeKey === taskScopeKey ? calendarTasks : [],
+    [calendarTasks, loadedTaskScopeKey, taskScopeKey],
+  );
+  const personScopedTasks = useMemo(
+    () => scopedCalendarTasks.filter((task) => !scopedPersonId || task.assigneeId === scopedPersonId),
+    [scopedCalendarTasks, scopedPersonId],
+  );
   const visibleCalendarTasks = useMemo(
-    () => calendarTasks.filter((task) => !personId || task.assigneeId === personId),
-    [calendarTasks, personId],
+    () => personScopedTasks.filter((task) => showTasksForContentFilters && (!taskStatus || task.status === taskStatus)),
+    [personScopedTasks, showTasksForContentFilters, taskStatus],
   );
 
   const tasksByDay = useMemo(() => {
@@ -219,7 +280,7 @@ export function LiveContentCalendar() {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const selectedPosts = byDay.get(dayKey(selected)) ?? [];
   const selectedTasks = tasksByDay.get(dayKey(selected)) ?? [];
-  const monthPosts = (data?.items ?? []).filter((p) => sameMonth(new Date(p.scheduledFor), cursor));
+  const monthPosts = (showContentItems ? (data?.items ?? []) : []).filter((p) => sameMonth(new Date(p.scheduledFor), cursor));
   const monthTasks = visibleCalendarTasks.filter((task) => sameMonth(taskDate(task), cursor));
   const monthItems = [
     ...monthPosts.map((post) => ({ kind: "post" as const, at: new Date(post.scheduledFor), post })),
@@ -230,12 +291,42 @@ export function LiveContentCalendar() {
       const due = taskDate(task).getTime();
       const from = new Date(upcomingWindow.from).getTime();
       const to = new Date(upcomingWindow.to).getTime();
-      return due >= from && due < to && task.status !== "completed" && task.status !== "cancelled";
+      return due >= from && due < to;
     })
     .sort((left, right) => taskDate(left).getTime() - taskDate(right).getTime())
     .slice(0, 6);
+  const taskStatusCounts = useMemo(() => ({
+    pending: personScopedTasks.filter((task) => task.status === "pending").length,
+    in_progress: personScopedTasks.filter((task) => task.status === "in_progress").length,
+    completed: personScopedTasks.filter((task) => task.status === "completed").length,
+    cancelled: personScopedTasks.filter((task) => task.status === "cancelled").length,
+  }), [personScopedTasks]);
+  const taskActivity = visibleCalendarTasks
+    .map((task) => ({
+      id: `task:${task.id}`,
+      at: task.completedAt || task.updatedAt || task.createdAt,
+      label: `CRM task: ${task.title}`,
+      actor: task.assigneeName && task.assigneeName !== "Unassigned" ? `Assigned to ${task.assigneeName}` : "Unassigned",
+      clientName: task.clientName,
+      outcome: "SUCCESS" as const,
+    }))
+    .filter((entry) => {
+      const at = new Date(entry.at).getTime();
+      return Number.isFinite(at) && at >= gridStart.getTime() && at < gridEnd.getTime();
+    });
+  const calendarActivity = [
+    ...(data?.activity ?? []),
+    ...taskActivity,
+  ].sort((left, right) => right.at.localeCompare(left.at));
   const campaigns = (data?.campaigns ?? []).filter((c) => !clientId || c.clientId === clientId);
-  const activeFilters = [clientId, channel, statusGroup, campaignId, personId].filter(Boolean).length;
+  const peopleOptions = useMemo(() => {
+    const people = new Map((data?.people ?? []).map((person) => [person.id, person.name]));
+    for (const task of scopedCalendarTasks) {
+      if (task.assigneeId) people.set(task.assigneeId, task.assigneeName || "Unnamed member");
+    }
+    return [...people].map(([id, name]) => ({ value: id, label: name })).sort((left, right) => left.label.localeCompare(right.label));
+  }, [data?.people, scopedCalendarTasks]);
+  const activeFilters = [clientId, channel, statusFilter, campaignId, personId].filter(Boolean).length;
 
   const goTo = (date: Date) => {
     setSelected(date);
@@ -252,9 +343,24 @@ export function LiveContentCalendar() {
   const resetFilters = () => {
     setClientId("");
     setChannel("");
-    setStatusGroup("");
+    setStatusFilter("");
     setCampaignId("");
     setPersonId("");
+  };
+  const changeStatusFilter = (value: "" | CalendarStatusFilter) => {
+    if (value.startsWith("task:")) {
+      setChannel("");
+      setCampaignId("");
+    }
+    setStatusFilter(value);
+  };
+  const changeChannel = (value: "" | CalendarChannel) => {
+    if (value && statusFilter.startsWith("task:")) setStatusFilter("");
+    setChannel(value);
+  };
+  const changeCampaign = (value: string) => {
+    if (value && statusFilter.startsWith("task:")) setStatusFilter("");
+    setCampaignId(value);
   };
 
   const title =
@@ -267,7 +373,7 @@ export function LiveContentCalendar() {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
-    <div className="space-y-3 max-w-[1500px] mx-auto pb-6">
+    <div className="space-y-1 max-w-[1500px] mx-auto pb-6">
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-3">
         <div>
           <div className="text-[11px] text-muted-foreground flex items-center mb-1">
@@ -297,8 +403,8 @@ export function LiveContentCalendar() {
         </div>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-[1fr_280px] xl:grid-cols-[1fr_300px] items-start">
-        <div className="space-y-3">
+      <div className="grid gap-1 lg:grid-cols-[1fr_280px] xl:grid-cols-[1fr_300px] items-start">
+        <div className="space-y-1">
           <section className="rounded-sm border bg-white shadow-sm overflow-hidden">
             <div className="flex flex-wrap items-center justify-between border-b p-3 bg-white gap-2">
               <div className="flex items-center gap-2">
@@ -378,6 +484,12 @@ export function LiveContentCalendar() {
                 {data?.truncated && (
                   <p className="border-b bg-amber-50 px-3 py-1.5 text-[11px] font-medium text-amber-800">
                     Showing the first {data.items.length} of {data.total} posts. Use the filters to narrow it down.
+                  </p>
+                )}
+                {taskLoadError && loadedTaskScopeKey === taskScopeKey && (
+                  <p className="flex items-center justify-between gap-3 border-b bg-amber-50 px-3 py-1.5 text-[11px] font-medium text-amber-800">
+                    <span>{taskLoadError} Content calendar data is still available.</span>
+                    <button className="shrink-0 font-semibold underline" onClick={() => setTaskReloadKey((key) => key + 1)}>Retry tasks</button>
                   </p>
                 )}
 
@@ -507,9 +619,9 @@ export function LiveContentCalendar() {
             )}
           </section>
 
-          <div className="grid lg:grid-cols-[1.5fr_1fr] gap-3 items-start">
-            <div className="bg-white rounded-sm border shadow-sm p-3">
-              <div className="flex items-center justify-between mb-4">
+          <div className="grid gap-1 lg:grid-cols-[1.5fr_1fr] lg:items-stretch">
+            <div className="flex min-h-0 flex-col overflow-hidden rounded-sm border bg-white p-3 shadow-sm lg:h-[260px]">
+              <div className="mb-3 flex shrink-0 items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h2 className="text-[14px] font-semibold text-foreground">
                     {isToday(selected) ? "Today's Schedule" : selected.toLocaleDateString([], { weekday: "long", day: "numeric", month: "short" })}
@@ -520,32 +632,42 @@ export function LiveContentCalendar() {
               </div>
 
               {selectedPosts.length === 0 && selectedTasks.length === 0 ? (
-                <p className="py-8 text-center text-[12px] text-gray-500">Nothing is scheduled for this day.</p>
+                <div className="grid min-h-0 flex-1 place-items-center overflow-y-auto">
+                  <p className="py-8 text-center text-[12px] text-gray-500">Nothing is scheduled for this day.</p>
+                </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="border-b text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
-                        <th className="pb-2 font-medium">Time</th>
-                        <th className="pb-2 font-medium">Content</th>
-                        <th className="pb-2 font-medium">Channel</th>
-                        <th className="pb-2 font-medium">Client</th>
-                        <th className="pb-2 font-medium">Status</th>
-                        <th className="pb-2 font-medium text-right">Actions</th>
+                <div className="min-h-0 flex-1 overflow-auto rounded-sm border border-gray-200">
+                  <table className="w-full min-w-[680px] table-fixed text-left">
+                    <colgroup>
+                      <col className="w-[72px]" />
+                      <col />
+                      <col className="w-[72px]" />
+                      <col className="w-[132px]" />
+                      <col className="w-[92px]" />
+                      <col className="w-[76px]" />
+                    </colgroup>
+                    <thead className="sticky top-0 z-10 bg-gray-50">
+                      <tr className="border-b text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                        <th className="px-2.5 py-2 font-medium">Time</th>
+                        <th className="px-2.5 py-2 font-medium">Content</th>
+                        <th className="px-2.5 py-2 text-center font-medium">Type</th>
+                        <th className="px-2.5 py-2 font-medium">Client</th>
+                        <th className="px-2.5 py-2 font-medium">Status</th>
+                        <th className="px-2.5 py-2 text-right font-medium">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y text-[12px]">
                       {selectedPosts.map((post) => (
-                        <tr key={post.id}>
-                          <td className="py-2.5 text-gray-600 whitespace-nowrap">{timeOf(post.scheduledFor)}</td>
-                          <td className="py-2.5 max-w-[220px]">
-                            <p className="truncate font-semibold text-gray-900 text-[11px]">{post.title}</p>
-                            {post.campaignName && <p className="truncate text-[10px] text-gray-500">{post.campaignName}</p>}
+                        <tr key={post.id} className="transition-colors hover:bg-gray-50/80">
+                          <td className="whitespace-nowrap px-2.5 py-3 text-[11px] font-medium tabular-nums text-gray-600">{timeOf(post.scheduledFor)}</td>
+                          <td className="min-w-0 px-2.5 py-3">
+                            <p className="truncate text-[11px] font-semibold text-gray-900" title={post.title}>{post.title}</p>
+                            {post.campaignName && <p className="mt-0.5 truncate text-[10px] text-gray-500" title={post.campaignName}>{post.campaignName}</p>}
                           </td>
-                          <td className="py-2.5"><PostLogo post={post} className="size-4" /></td>
-                          <td className="py-2.5 text-gray-600 text-[11px]">{post.clientName ?? "—"}</td>
-                          <td className="py-2.5"><StatusPill status={post.status} /></td>
-                          <td className="py-2.5 text-right">
+                          <td className="px-2.5 py-3"><span className="flex justify-center"><PostLogo post={post} className="size-4" /></span></td>
+                          <td className="truncate px-2.5 py-3 text-[11px] text-gray-600" title={post.clientName ?? undefined}>{post.clientName ?? "—"}</td>
+                          <td className="px-2.5 py-3"><StatusPill status={post.status} /></td>
+                          <td className="px-2.5 py-3 text-right">
                             <div className="flex items-center justify-end gap-1">
                               <button onClick={() => setDetail({ post, confirmCancel: false })} className="text-[10px] font-semibold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">View</button>
                               <DropdownMenu>
@@ -563,17 +685,17 @@ export function LiveContentCalendar() {
                         </tr>
                       ))}
                       {selectedTasks.map((task) => (
-                        <tr key={`task:${task.id}`}>
-                          <td className="py-2.5 text-gray-600 whitespace-nowrap">{task.dueTime || "All day"}</td>
-                          <td className="py-2.5 max-w-[220px]">
-                            <p className="truncate font-semibold text-gray-900 text-[11px]">{task.title}</p>
-                            {task.description && <p className="truncate text-[10px] text-gray-500">{task.description}</p>}
+                        <tr key={`task:${task.id}`} className="transition-colors hover:bg-gray-50/80">
+                          <td className="whitespace-nowrap px-2.5 py-3 text-[11px] font-medium tabular-nums text-gray-600">{task.dueTime || "All day"}</td>
+                          <td className="min-w-0 px-2.5 py-3">
+                            <p className="truncate text-[11px] font-semibold text-gray-900" title={task.title}>{task.title}</p>
+                            {task.description && <p className="mt-0.5 truncate text-[10px] text-gray-500" title={task.description}>{task.description}</p>}
                           </td>
-                          <td className="py-2.5"><CalendarDaysIcon className="size-4 text-red-600" /></td>
-                          <td className="py-2.5 text-gray-600 text-[11px]">{task.clientName}</td>
-                          <td className="py-2.5"><TaskStatusPill status={task.status} /></td>
-                          <td className="py-2.5 text-right">
-                            <Link href="/admin/crm/tasks" className="text-[10px] font-semibold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">View</Link>
+                          <td className="px-2.5 py-3"><span className="flex justify-center"><CalendarDaysIcon className="size-4 text-red-600" /></span></td>
+                          <td className="truncate px-2.5 py-3 text-[11px] text-gray-600" title={task.clientName}>{task.clientName}</td>
+                          <td className="px-2.5 py-3"><TaskStatusPill status={task.status} /></td>
+                          <td className="px-2.5 py-3 text-right">
+                            <Link href="/admin/crm/tasks" className="inline-flex h-7 items-center rounded-sm border px-2.5 text-[10px] font-semibold text-gray-700 transition-colors hover:bg-gray-50">View</Link>
                           </td>
                         </tr>
                       ))}
@@ -583,9 +705,9 @@ export function LiveContentCalendar() {
               )}
             </div>
 
-            <div>
-              <h2 className="text-[14px] font-semibold text-foreground mb-3">Quick Actions</h2>
-              <div className="grid grid-cols-2 gap-3">
+            <div className="flex min-h-0 flex-col lg:h-[260px]">
+              <h2 className="mb-3 shrink-0 text-[14px] font-semibold text-foreground">Quick Actions</h2>
+              <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-1">
                 <Link href="/admin/content" className="text-left p-3.5 rounded-sm bg-[#FFF1F2] hover:bg-red-100/80 transition-colors border border-red-100">
                   <Edit2 className="size-4 text-red-600 mb-2.5" />
                   <p className="text-[12px] font-semibold text-red-900">Create Post</p>
@@ -609,16 +731,18 @@ export function LiveContentCalendar() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-sm border shadow-sm p-3">
-            <div className="mb-3 flex items-center justify-between">
+          <div className="flex h-[410px] min-h-0 flex-col overflow-hidden rounded-sm border bg-white p-3 shadow-sm">
+            <div className="mb-3 flex shrink-0 items-center justify-between">
               <h2 className="text-[14px] font-semibold text-foreground">Activity Log</h2>
               <span className="text-[10px] text-gray-500">Who did what, and when, in the visible calendar.</span>
             </div>
-            {(data?.activity ?? []).length === 0 ? (
-              <p className="py-6 text-center text-[12px] text-gray-500">No drafts, schedules or publishes were recorded in this period.</p>
+            {calendarActivity.length === 0 ? (
+              <div className="grid min-h-0 flex-1 place-items-center">
+                <p className="text-center text-[12px] text-gray-500">No content or CRM task activity was recorded in this period.</p>
+              </div>
             ) : (
-              <div className="max-h-[320px] divide-y overflow-y-auto">
-                {(data?.activity ?? []).map((a) => (
+              <div className="min-h-0 flex-1 divide-y overflow-y-auto pr-1">
+                {calendarActivity.map((a) => (
                   <div key={a.id} className="flex items-center justify-between gap-3 py-2 text-[12px]">
                     <div className="min-w-0">
                       <p className="truncate font-semibold text-gray-900">{a.label}{a.outcome === "FAILURE" ? " (failed)" : ""}</p>
@@ -632,7 +756,7 @@ export function LiveContentCalendar() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-1">
           <div className="bg-white rounded-sm border shadow-sm p-3">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-[13px] font-semibold text-gray-900">{MONTHS[cursor.getMonth()]} {cursor.getFullYear()}</h3>
@@ -672,14 +796,14 @@ export function LiveContentCalendar() {
               </div>
               <div className="space-y-3">
                 <FilterSelect label="Client" value={clientId} onChange={(v) => { setClientId(v); setCampaignId(""); }} options={(data?.clients ?? []).map((c) => ({ value: c.id, label: c.name }))} all="All Clients" />
-                <FilterSelect label="Channel" value={channel} onChange={(v) => setChannel(v as "" | CalendarChannel)} options={CHANNELS} all="All Channels" />
-                <FilterSelect label="Status" value={statusGroup} onChange={(v) => setStatusGroup(v as "" | CalendarStatusGroup)} options={STATUS_FILTERS} all="All Status" />
+                <FilterSelect label="Channel" value={channel} onChange={(v) => changeChannel(v as "" | CalendarChannel)} options={CHANNELS} all="All Channels" />
+                <FilterSelect label="Status" value={statusFilter} onChange={(v) => changeStatusFilter(v as "" | CalendarStatusFilter)} options={STATUS_FILTERS} all="All Status" />
                 {data?.scope.seesEveryone ? (
-                  <FilterSelect label="Person" value={personId} onChange={setPersonId} options={(data.people ?? []).map((p) => ({ value: p.id, label: p.name }))} all="Everyone" />
+                  <FilterSelect label="Person" value={personId} onChange={setPersonId} options={peopleOptions} all="Everyone" />
                 ) : (
                   <p className="text-[11px] text-gray-500">Showing only your own work.</p>
                 )}
-                <FilterSelect label="Campaign" value={campaignId} onChange={setCampaignId} options={campaigns.map((c) => ({ value: c.id, label: c.name }))} all="All Campaigns" />
+                <FilterSelect label="Campaign" value={campaignId} onChange={changeCampaign} options={campaigns.map((c) => ({ value: c.id, label: c.name }))} all="All Campaigns" />
               </div>
             </div>
           )}
@@ -699,25 +823,48 @@ export function LiveContentCalendar() {
               ).map(([value, label, dot, n]) => (
                 <button
                   key={value}
-                  onClick={() => setStatusGroup((current) => (current === value ? "" : value))}
-                  className={cn("flex w-full items-center justify-between rounded px-1 py-0.5 text-[12px] hover:bg-gray-50", statusGroup === value && "bg-gray-100")}
+                  onClick={() => setStatusFilter((current) => (current === value ? "" : value))}
+                  className={cn("flex w-full items-center justify-between rounded px-1 py-0.5 text-[12px] hover:bg-gray-50", statusFilter === value && "bg-gray-100")}
                 >
                   <span className="flex items-center gap-2 text-gray-700 font-medium"><span className={cn("size-2 rounded-sm", dot)} /> {label}</span>
                   <span className="font-semibold">{n ?? 0}</span>
                 </button>
               ))}
               <p className="px-1 pt-1 text-[10px] text-gray-500">{counts?.drafts ?? 0} drafts in total, {counts?.draftsPendingReview ?? 0} waiting for review.</p>
+              <div className="border-t pt-2">
+                <p className="mb-1 text-[10px] font-semibold text-gray-600">CRM Tasks</p>
+                {(
+                  [
+                    ["pending", "Pending", "bg-slate-400", taskStatusCounts.pending],
+                    ["in_progress", "In progress", "bg-blue-500", taskStatusCounts.in_progress],
+                    ["completed", "Completed", "bg-emerald-500", taskStatusCounts.completed],
+                    ["cancelled", "Cancelled", "bg-gray-300", taskStatusCounts.cancelled],
+                  ] as const
+                ).map(([value, label, dot, n]) => {
+                  const filterValue = `task:${value}` as CalendarStatusFilter;
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => changeStatusFilter(statusFilter === filterValue ? "" : filterValue)}
+                      className={cn("flex w-full items-center justify-between rounded px-1 py-0.5 text-[12px] hover:bg-gray-50", statusFilter === filterValue && "bg-gray-100")}
+                    >
+                      <span className="flex items-center gap-2 font-medium text-gray-700"><span className={cn("size-2 rounded-sm", dot)} /> {label}</span>
+                      <span className="font-semibold">{n}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-sm border shadow-sm p-3">
-            <div className="flex items-center justify-between mb-3">
+          <div className="flex h-[248px] min-h-0 flex-col overflow-hidden rounded-sm border bg-white p-3 shadow-sm">
+            <div className="mb-3 flex shrink-0 items-center justify-between">
               <h3 className="text-[13px] font-semibold text-gray-900">Upcoming (Next 7 Days)</h3>
-              <button onClick={() => { goTo(today); setStatusGroup("scheduled"); setView("List"); }} className="text-[11px] font-semibold text-[#EB0711] hover:underline flex items-center gap-0.5">View all &rarr;</button>
+              <button onClick={() => { goTo(today); setStatusFilter(""); setView("List"); }} className="text-[11px] font-semibold text-[#EB0711] hover:underline flex items-center gap-0.5">View all &rarr;</button>
             </div>
-            <div className="space-y-4">
-              {(upcoming.data?.items ?? []).length === 0 && upcomingTasks.length === 0 && <p className="text-[12px] text-gray-500">{upcoming.isLoading ? "Loading..." : "Nothing is scheduled in the next 7 days."}</p>}
-              {(upcoming.data?.items ?? []).map((post) => (
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+              {(showContentItems ? (upcoming.data?.items ?? []).length : 0) === 0 && upcomingTasks.length === 0 && <p className="grid h-full place-items-center text-center text-[12px] text-gray-500">{upcoming.isLoading ? "Loading..." : "Nothing is scheduled in the next 7 days."}</p>}
+              {(showContentItems ? (upcoming.data?.items ?? []) : []).map((post) => (
                 <button key={post.id} onClick={() => setDetail({ post, confirmCancel: false })} className="flex w-full items-start gap-3 text-left">
                   <PostLogo post={post} className="size-5 shrink-0 mt-0.5" />
                   <div className="min-w-0">

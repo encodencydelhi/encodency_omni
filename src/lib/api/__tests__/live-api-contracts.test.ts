@@ -321,15 +321,16 @@ describe("Team & Invitations API", () => {
   });
 
   it("transferOwnership promotes the new owner and demotes the current owner through membership role routes", async () => {
-    globalThis.localStorage.setItem("omni_active_company_id", "c-1");
+    const activeCompanyId = "11111111-1111-4111-8111-111111111111";
+    globalThis.localStorage.setItem("omni_active_company_id", activeCompanyId);
     responses.push({
       status: 200,
       body: {
         id: "u-1",
         email: "sompal7678@example.com",
         memberships: [
-          { membershipId: "m-10", companyId: "c-1", companyName: "Acme", companyStatus: "ACTIVE", systemRole: "OWNER" },
-          { membershipId: "m-11", companyId: "c-2", companyName: "Other", companyStatus: "ACTIVE", systemRole: "ADMIN" },
+          { membershipId: "m-10", companyId: activeCompanyId, companyName: "Acme", companyStatus: "ACTIVE", systemRole: "OWNER" },
+          { membershipId: "m-11", companyId: "22222222-2222-4222-8222-222222222222", companyName: "Other", companyStatus: "ACTIVE", systemRole: "ADMIN" },
         ],
       },
     });
