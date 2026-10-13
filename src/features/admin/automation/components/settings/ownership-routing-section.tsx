@@ -1,6 +1,9 @@
 "use client";
 
-import { Users, Shuffle, Scale, Wifi, Compass, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Users, Shuffle, Scale, Wifi, Clock, Plus, Trash2 } from "lucide-react";
+import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
+import { teamApi } from "@/features/admin/team/live/team-api";
 import { OwnershipRoutingSettings, RoutingAgent } from "../../data/settings-types";
 
 interface OwnershipRoutingSectionProps {
@@ -8,234 +11,142 @@ interface OwnershipRoutingSectionProps {
   onChange: (updates: Partial<OwnershipRoutingSettings>) => void;
 }
 
+interface Member { id: string; name: string; email: string; role: string }
+
+const MODES = [
+  { id: "round_robin", icon: <Shuffle className="size-4 text-blue-600" />, title: "Round robin", desc: "Gives the next record to the online agent with the fewest assignments today." },
+  { id: "weighted", icon: <Scale className="size-4 text-indigo-600" />, title: "Weighted", desc: "Agents with a higher weight receive proportionally more records." },
+  { id: "availability", icon: <Wifi className="size-4 text-emerald-600" />, title: "Availability", desc: "Only agents marked Online receive records (least loaded first)." },
+] as const;
+
 export function OwnershipRoutingSection({ settings, onChange }: OwnershipRoutingSectionProps) {
-  const handleUpdateAgent = (index: number, updates: Partial<RoutingAgent>) => {
-    const updated = [...settings.agents];
-    const current = updated[index];
-    if (current) {
-      updated[index] = { ...current, ...updates };
-      onChange({ agents: updated });
-    }
+  const [members, setMembers] = useState<Member[]>([]);
+  const [membersError, setMembersError] = useState<string | null>(null);
+  const [pick, setPick] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    teamApi.listMembers(getStoredCompanyId())
+      .then((rows) => {
+        if (cancelled) return;
+        setMembers(rows.filter((m) => !m.suspendedAt).map((m) => ({ id: m.user.id, name: m.user.name?.trim() || m.user.email, email: m.user.email, role: String(m.systemRole ?? "").toLowerCase() })));
+      })
+      .catch(() => { if (!cancelled) setMembersError("Team members could not be loaded."); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const updateAgent = (id: string, updates: Partial<RoutingAgent>) => onChange({ agents: settings.agents.map((a) => (a.id === id ? { ...a, ...updates } : a)) });
+  const removeAgent = (id: string) => onChange({ agents: settings.agents.filter((a) => a.id !== id) });
+  const addAgent = () => {
+    const member = members.find((m) => m.id === pick);
+    if (!member || settings.agents.some((a) => a.id === member.id)) return;
+    onChange({ agents: [...settings.agents, { id: member.id, name: member.name, email: member.email, role: member.role, online: true, capacityLimitPerDay: 25, weightPercentage: 50, assignedChannels: [] }] });
+    setPick("");
   };
+  const available = members.filter((m) => !settings.agents.some((a) => a.id === m.id));
+  // Roster entries saved before the roster was tied to real team members can't be routed to.
+  const unknown = settings.agents.filter((a) => members.length > 0 && !members.some((m) => m.id === a.id));
 
   return (
     <div className="space-y-4">
-      {/* Header Banner */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-4 flex items-start gap-3">
-        <div className="size-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
-          <Users className="size-4" />
-        </div>
+      <div className="flex items-start gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600"><Users className="size-4" /></div>
         <div>
-          <h3 className="text-[14px] font-bold text-[#111C3A]">Lead Ownership & Inbound Routing Rules</h3>
-          <p className="text-[11px] text-[#64748B] mt-0.5">
-            Automate distribution of incoming Meta Ads and WhatsApp leads among sales reps using Round Robin, weights, or live availability.
-          </p>
+          <h3 className="text-[14px] font-bold text-[#111C3A]">Ownership &amp; routing</h3>
+          <p className="mt-0.5 text-[11px] text-[#64748B]">Used by the <strong>Assign User → “Use routing rules”</strong> step and, when General → Default ownership is Round robin, for leads created from website forms.</p>
         </div>
       </div>
 
-      {/* Distribution Mode Cards */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-5 space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-[#F1F5F9]">
-          <Shuffle className="size-4 text-[#334155]" />
-          <h4 className="text-[12.5px] font-bold text-[#111C3A]">Lead Distribution Algorithm</h4>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-          {[
-            {
-              id: "round_robin",
-              icon: <Shuffle className="size-4 text-blue-600" />,
-              title: "Round Robin",
-              desc: "Rotates leads evenly one-by-one across all active roster agents.",
-            },
-            {
-              id: "weighted",
-              icon: <Scale className="size-4 text-indigo-600" />,
-              title: "Weighted Ratio",
-              desc: "Assigns higher lead volumes to senior reps based on assigned weight %.",
-            },
-            {
-              id: "availability",
-              icon: <Wifi className="size-4 text-emerald-600" />,
-              title: "Availability Only",
-              desc: "Directs leads strictly to agents currently logged in and marked 'Online'.",
-            },
-            {
-              id: "channel_specific",
-              icon: <Compass className="size-4 text-purple-600" />,
-              title: "Channel Specialist",
-              desc: "Matches WhatsApp leads to chat reps and Meta Ads forms to sales execs.",
-            },
-          ].map((mode) => {
-            const isSelected = settings.distributionMode === mode.id;
+      <div className="space-y-4 rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-xs">
+        <h4 className="border-b border-[#F1F5F9] pb-2 text-[12.5px] font-bold text-[#111C3A]">Distribution mode</h4>
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+          {MODES.map((mode) => {
+            const selected = settings.distributionMode === mode.id;
             return (
-              <div
-                key={mode.id}
-                onClick={() => onChange({ distributionMode: mode.id as any })}
-                className={`p-3.5 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
-                  isSelected
-                    ? "bg-blue-50/50 border-blue-500 shadow-2xs"
-                    : "bg-[#FAFBFD] border-[#E2E8F0] hover:bg-white hover:border-[#CBD5E1]"
-                }`}
-              >
-                <div>
-                  <div className="size-7 rounded-lg bg-white border border-[#E2E8F0] flex items-center justify-center mb-2 shadow-2xs">
-                    {mode.icon}
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-[12px] font-bold ${isSelected ? "text-blue-600" : "text-[#111C3A]"}`}>
-                      {mode.title}
-                    </span>
-                    <div className={`size-3.5 rounded-full border flex items-center justify-center ${isSelected ? "border-blue-600" : "border-[#CBD5E1]"}`}>
-                      {isSelected && <div className="size-1.5 rounded-full bg-blue-600" />}
-                    </div>
-                  </div>
-                  <p className="text-[10px] text-[#64748B] leading-relaxed mt-1">{mode.desc}</p>
-                </div>
-              </div>
+              <button key={mode.id} type="button" onClick={() => onChange({ distributionMode: mode.id })} className={`rounded-xl border p-3.5 text-left transition-all ${selected ? "border-blue-500 bg-blue-50/50 shadow-2xs" : "border-[#E2E8F0] bg-[#FAFBFD] hover:border-[#CBD5E1] hover:bg-white"}`}>
+                <div className="mb-2 flex size-7 items-center justify-center rounded-lg border border-[#E2E8F0] bg-white shadow-2xs">{mode.icon}</div>
+                <span className={`text-[12px] font-bold ${selected ? "text-blue-600" : "text-[#111C3A]"}`}>{mode.title}</span>
+                <p className="mt-1 text-[10px] leading-relaxed text-[#64748B]">{mode.desc}</p>
+              </button>
             );
           })}
         </div>
+        {settings.distributionMode === "channel_specific" ? <p className="text-[11px] text-[#B45309]">“Channel specialist” is not supported; records are routed like Availability.</p> : null}
       </div>
 
-      {/* Team Agent Roster Table */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-5 space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-[#F1F5F9]">
+      <div className="space-y-4 rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#F1F5F9] pb-2">
+          <h4 className="text-[12.5px] font-bold text-[#111C3A]">Agent roster ({settings.agents.filter((a) => a.online).length} of {settings.agents.length} online)</h4>
           <div className="flex items-center gap-2">
-            <Users className="size-4 text-[#334155]" />
-            <h4 className="text-[12.5px] font-bold text-[#111C3A]">Assigned Sales & Support Agent Roster</h4>
+            <select aria-label="Team member to add" value={pick} onChange={(e) => setPick(e.target.value)} className="h-8 rounded-md border border-[#E2E8F0] bg-white px-2 text-[11.5px]">
+              <option value="">{members.length ? "Add a team member…" : membersError ?? "Loading team…"}</option>
+              {available.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+            <button type="button" disabled={!pick} onClick={addAgent} className="flex h-8 items-center gap-1 rounded-md bg-[#2563EB] px-3 text-[11.5px] font-semibold text-white hover:bg-[#1D4ED8] disabled:opacity-50"><Plus className="size-3.5" /> Add</button>
           </div>
-          <span className="text-[11px] font-mono text-[#64748B]">
-            {settings.agents.filter(a => a.online).length} of {settings.agents.length} Agents Online
-          </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-[11px] font-medium border-collapse">
-            <thead>
-              <tr className="border-b border-[#E2E8F0] text-[#64748B] text-[10px] uppercase tracking-wider bg-[#F8FAFC]">
-                <th className="py-2.5 px-3">Agent</th>
-                <th className="py-2.5 px-3">Status</th>
-                <th className="py-2.5 px-3">Daily Capacity Limit</th>
-                {settings.distributionMode === "weighted" && (
-                  <th className="py-2.5 px-3">Weight %</th>
-                )}
-                <th className="py-2.5 px-3">Assigned Channels</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E2E8F0]">
-              {settings.agents.map((agent, i) => (
-                <tr key={agent.id} className="hover:bg-[#FAFBFD] transition-colors">
-                  <td className="py-2.5 px-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="size-7 rounded-full bg-slate-100 text-[#111C3A] font-bold text-[11px] flex items-center justify-center border border-[#E2E8F0]">
-                        {agent.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-bold text-[#111C3A]">{agent.name}</div>
-                        <div className="text-[9.5px] text-[#64748B]">{agent.role}</div>
-                      </div>
-                    </div>
-                  </td>
+        {unknown.length ? <p className="rounded-md bg-amber-50 px-3 py-2 text-[11px] text-amber-800">{unknown.map((a) => a.name).join(", ")} {unknown.length === 1 ? "is" : "are"} not a member of this company, so records can’t be routed to them. Remove and add real team members.</p> : null}
 
-                  <td className="py-2.5 px-3">
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateAgent(i, { online: !agent.online })}
-                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold transition-colors cursor-pointer ${
-                        agent.online ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-slate-100 text-slate-500 border border-slate-200"
-                      }`}
-                    >
-                      <span className={`size-1.5 rounded-full ${agent.online ? "bg-emerald-500" : "bg-slate-400"}`} />
-                      {agent.online ? "Online" : "Offline"}
-                    </button>
-                  </td>
-
-                  <td className="py-2.5 px-3">
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        min="5"
-                        max="100"
-                        value={agent.capacityLimitPerDay}
-                        onChange={(e) => handleUpdateAgent(i, { capacityLimitPerDay: parseInt(e.target.value) || 10 })}
-                        className="w-16 bg-[#FAFBFD] border border-[#E2E8F0] rounded px-2 py-1 text-[11px] font-mono font-bold text-[#111C3A] focus:outline-none focus:border-blue-500"
-                      />
-                      <span className="text-[10px] text-[#94A3B8]">leads / day</span>
-                    </div>
-                  </td>
-
-                  {settings.distributionMode === "weighted" && (
-                    <td className="py-2.5 px-3">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="range"
-                          min="5"
-                          max="100"
-                          step="5"
-                          value={agent.weightPercentage}
-                          onChange={(e) => handleUpdateAgent(i, { weightPercentage: parseInt(e.target.value) || 10 })}
-                          className="w-24 accent-indigo-600 cursor-pointer"
-                        />
-                        <span className="font-mono font-bold text-[11px] text-[#111C3A]">{agent.weightPercentage}%</span>
-                      </div>
-                    </td>
-                  )}
-
-                  <td className="py-2.5 px-3">
-                    <div className="flex flex-wrap gap-1">
-                      {agent.assignedChannels.map((c) => (
-                        <span key={c} className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[9.5px] font-bold">
-                          {c}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
+        {settings.agents.length === 0 ? (
+          <p className="py-6 text-center text-[11.5px] text-[#64748B]">No agents yet. Add the team members who should receive routed leads.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-[11px] font-medium">
+              <thead>
+                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[10px] uppercase tracking-wider text-[#64748B]">
+                  <th className="px-3 py-2.5">Agent</th><th className="px-3 py-2.5">Status</th><th className="px-3 py-2.5">Daily cap</th>
+                  {settings.distributionMode === "weighted" ? <th className="px-3 py-2.5">Weight</th> : null}
+                  <th className="px-3 py-2.5 text-right">Remove</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-[#E2E8F0]">
+                {settings.agents.map((agent) => (
+                  <tr key={agent.id} className="hover:bg-[#FAFBFD]">
+                    <td className="px-3 py-2.5">
+                      <div className="font-bold text-[#111C3A]">{agent.name}</div>
+                      <div className="text-[9.5px] text-[#64748B]">{agent.email}</div>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <button type="button" onClick={() => updateAgent(agent.id, { online: !agent.online })} className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold ${agent.online ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-slate-200 bg-slate-100 text-slate-500"}`}>
+                        <span className={`size-1.5 rounded-full ${agent.online ? "bg-emerald-500" : "bg-slate-400"}`} />{agent.online ? "Online" : "Offline"}
+                      </button>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <input type="number" min={0} max={1000} value={agent.capacityLimitPerDay} onChange={(e) => updateAgent(agent.id, { capacityLimitPerDay: Math.max(0, parseInt(e.target.value) || 0) })} className="w-16 rounded border border-[#E2E8F0] bg-[#FAFBFD] px-2 py-1 font-mono text-[11px] font-bold" />
+                      <span className="ml-1 text-[10px] text-[#94A3B8]">/ day (0 = no cap)</span>
+                    </td>
+                    {settings.distributionMode === "weighted" ? (
+                      <td className="px-3 py-2.5">
+                        <input type="range" min={5} max={100} step={5} value={agent.weightPercentage} onChange={(e) => updateAgent(agent.id, { weightPercentage: parseInt(e.target.value) || 10 })} className="w-24 accent-indigo-600" />
+                        <span className="ml-2 font-mono text-[11px] font-bold">{agent.weightPercentage}</span>
+                      </td>
+                    ) : null}
+                    <td className="px-3 py-2.5 text-right"><button type="button" aria-label={`Remove ${agent.name}`} onClick={() => removeAgent(agent.id)} className="rounded p-1 text-[#94A3B8] hover:bg-red-50 hover:text-red-600"><Trash2 className="size-3.5" /></button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* SLA & Inactivity Escalation */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-5 space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-[#F1F5F9]">
-          <Clock className="size-4 text-[#334155]" />
-          <h4 className="text-[12.5px] font-bold text-[#111C3A]">SLA & Auto-Reassignment Escalation</h4>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+      <div className="space-y-4 rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-xs">
+        <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2"><Clock className="size-4 text-[#334155]" /><h4 className="text-[12.5px] font-bold text-[#111C3A]">Fallback &amp; SLA</h4></div>
+        <div className="grid grid-cols-1 gap-4 text-[11px] md:grid-cols-2">
           <div>
-            <label className="block font-bold text-[#334155] mb-1">
-              Auto-Reassign Unresponsive Leads After
-            </label>
-            <select
-              value={settings.slaInactivityMinutes}
-              onChange={(e) => onChange({ slaInactivityMinutes: parseInt(e.target.value) || 15 })}
-              className="w-full bg-[#FAFBFD] border border-[#E2E8F0] rounded-lg px-3 py-2 text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-blue-500 focus:bg-white"
-            >
-              <option value={5}>5 minutes (Fast response / High-intent)</option>
-              <option value={15}>15 minutes (Standard SLA)</option>
-              <option value={30}>30 minutes</option>
-              <option value={60}>1 hour</option>
+            <label className="mb-1 block font-bold text-[#334155]">Fallback assignee (when no agent is available)</label>
+            <select value={settings.fallbackAssignee} onChange={(e) => onChange({ fallbackAssignee: e.target.value })} className="w-full rounded-lg border border-[#E2E8F0] bg-[#FAFBFD] px-3 py-2 text-[12px] font-medium text-[#111C3A] focus:border-blue-500 focus:outline-none">
+              <option value="">Leave unassigned (the step fails)</option>
+              {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
-            <p className="text-[10px] text-[#94A3B8] mt-1">
-              If the assigned agent has not sent a manual message within this timeframe, the lead rotates to the next rep.
-            </p>
           </div>
-
-          <div>
-            <label className="block font-bold text-[#334155] mb-1">Fallback Assignee (When all reps offline)</label>
-            <input
-              type="text"
-              value={settings.fallbackAssignee}
-              onChange={(e) => onChange({ fallbackAssignee: e.target.value })}
-              className="w-full bg-[#FAFBFD] border border-[#E2E8F0] rounded-lg px-3 py-2 text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-blue-500 focus:bg-white"
-            />
-            <p className="text-[10px] text-[#94A3B8] mt-1">
-              Default administrator or unassigned queue bucket to receive overflow leads.
-            </p>
+          <div className="opacity-60">
+            <label className="mb-1 block font-bold text-[#334155]">Auto-reassign unresponsive leads</label>
+            <select disabled value={settings.slaInactivityMinutes} className="w-full cursor-not-allowed rounded-lg border border-[#E2E8F0] bg-[#FAFBFD] px-3 py-2 text-[12px]">
+              <option value={settings.slaInactivityMinutes}>{settings.slaInactivityMinutes} minutes</option>
+            </select>
+            <p className="mt-1 text-[10px] text-[#94A3B8]">Not available yet: agent replies are not tracked, so leads are never re-routed automatically.</p>
           </div>
         </div>
       </div>

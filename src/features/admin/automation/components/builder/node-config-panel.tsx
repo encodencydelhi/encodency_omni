@@ -1,340 +1,317 @@
 "use client";
 
 import { useState } from "react";
-import { AutomationNode } from "../../data/types";
-import { Settings, Database, Sliders, Copy, ChevronDown, ChevronRight, Webhook, FileText, Users, Filter, GitBranch, Mail, CheckSquare, UserPlus, Clock3, Zap, Flag, Bot } from "lucide-react";
-import { FaFacebookF, FaWhatsapp } from "react-icons/fa";
+import { Bot, Check, Copy, Settings, Braces } from "lucide-react";
+import { toast } from "sonner";
+import type { AutomationNode } from "../../data/types";
+import { webhookUrl } from "../../data/automation-api";
+import { libraryItem } from "./node-library";
 
-function getNodeIcon(label: string, type: string) {
-  const map: Record<string, any> = {
-    "Inbound Webhook": Webhook,
-    "New Meta Lead": FaFacebookF,
-    "Website Down": Zap,
-    "Form Submission": FileText,
-    "New Customer": Users,
-    "Send WhatsApp": FaWhatsapp,
-    "WhatsApp Reply": FaWhatsapp,
-    "Send Email": Mail,
-    "Assign User": UserPlus,
-    "Update Record": Database,
-    "Create Task": CheckSquare,
-    "Filter Condition": Filter,
-    "If / Else": GitBranch,
-    "Wait / Delay": Clock3,
-    "End Workflow": Flag,
-    "Parse Data": () => <span className="text-[11px] font-bold font-mono">{"{ }"}</span>,
-  };
-  return map[label] || (type === "trigger" ? Zap : type === "delay" ? Clock3 : type === "condition" ? Filter : Bot);
+export interface BuilderResources {
+  templates: Array<{ id: string; name: string; language: string; variables: string[]; status: string; providerStatus: string | null }>;
+  templatesError: string | null;
+  members: Array<{ id: string; name: string }>;
 }
 
-function getNodeBadge(label: string, type: string) {
-  if (type === "trigger") return { bg: "bg-[#DBEAFE]", text: "text-[#2563EB]", label: "TRIGGER" };
-  if (type === "delay") return { bg: "bg-[#FEF3C7]", text: "text-[#D97706]", label: "DELAY" };
-  if (type === "condition") return { bg: "bg-[#FEE2E2]", text: "text-[#EF4444]", label: "CONDITION" };
-  if (label === "End Workflow") return { bg: "bg-[#FEE2E2]", text: "text-[#EF4444]", label: "END" };
-  return { bg: "bg-[#DBEAFE]", text: "text-[#2563EB]", label: "ACTION" };
+const VARIABLES = [
+  { token: "{{lead.firstName}}", label: "Lead / contact first name" },
+  { token: "{{lead.lastName}}", label: "Last name" },
+  { token: "{{lead.email}}", label: "Email" },
+  { token: "{{lead.phone}}", label: "Phone (10 digits)" },
+  { token: "{{lead.company}}", label: "Company" },
+  { token: "{{lead.source}}", label: "Lead source" },
+  { token: "{{lead.stage}}", label: "Lead stage" },
+  { token: "{{lead.ownerName}}", label: "Owner name" },
+  { token: "{{trigger.message}}", label: "Any field from the trigger payload, e.g. message" },
+];
+
+const CONDITION_FIELDS = [
+  { value: "lead.source", label: "Lead source" },
+  { value: "lead.stage", label: "Lead stage" },
+  { value: "lead.leadScore", label: "Lead score" },
+  { value: "lead.priority", label: "Lead priority" },
+  { value: "lead.phone", label: "Phone" },
+  { value: "lead.email", label: "Email" },
+  { value: "contact.status", label: "Contact status" },
+  { value: "lead.tags", label: "Tags" },
+];
+
+const OPERATORS = [
+  { value: "equals", label: "equals" },
+  { value: "not_equals", label: "does not equal" },
+  { value: "contains", label: "contains" },
+  { value: "not_contains", label: "does not contain" },
+  { value: "greater_than", label: "is greater than" },
+  { value: "less_than", label: "is less than" },
+  { value: "is_not_empty", label: "is not empty" },
+  { value: "is_empty", label: "is empty" },
+];
+
+const LEAD_STAGES = ["new", "contacted", "qualified", "proposal", "won", "lost"];
+const CONTACT_STATUSES = ["active", "inactive", "lead", "customer", "prospect"];
+
+/** Returns why a step can't run as configured, or null when it is ready. */
+export function nodeProblem(node: AutomationNode): string | null {
+  const c = node.config ?? {};
+  switch (node.actionId) {
+    case "send_whatsapp": return c.templateId ? null : "Choose a WhatsApp template";
+    case "send_email": return c.subject ? null : "Add a subject";
+    case "assign_user": return c.userId ? null : "Choose a team member";
+    case "update_record": return c.field ? (c.value ? null : "Set the new value") : "Choose a field to update";
+    case "create_task": return c.title ? null : "Add a task title";
+    case "filter_condition":
+    case "if_else": return c.field ? (c.operator ? null : "Choose an operator") : "Choose a field to check";
+    case "delay": return Number(c.duration) > 0 ? null : "Set how long to wait";
+    default:
+      if (node.type === "trigger") return node.actionId ? null : "Pick a trigger type";
+      return node.actionId ? null : "Pick an action type for this step";
+  }
 }
 
-function CollapsibleSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
-  const [open, setOpen] = useState(defaultOpen);
+const input = "h-9 w-full rounded-lg border border-[#E2E8F0] px-3 text-[11.5px] focus:border-[#2563EB] focus:outline-none focus:ring-1 focus:ring-[#2563EB]/20";
+const label = "text-[11.5px] font-semibold text-[#111C3A]";
+
+function Field({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="border border-[#E2E8F0] rounded-lg overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-3 py-2.5 text-[11.5px] font-semibold text-[#111C3A] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
-      >
-        <span>{title}</span>
-        {open ? <ChevronDown className="size-3.5 text-[#94A3B8]" /> : <ChevronRight className="size-3.5 text-[#94A3B8]" />}
-      </button>
-      {open && <div className="px-3 pb-3 space-y-3 border-t border-[#E2E8F0]">{children}</div>}
+    <div className="space-y-1.5">
+      <label className={label}>{title}</label>
+      {children}
+      {hint ? <p className="text-[10px] text-[#6B7A94]">{hint}</p> : null}
     </div>
   );
 }
 
-export function NodeConfigPanel({
-  node,
-  onChange,
-}: {
+export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
   node: AutomationNode;
+  /** Saved workflow id; undefined while the workflow has never been saved. */
+  workflowId?: string;
+  resources: BuilderResources;
   onChange: (updates: Partial<AutomationNode>) => void;
 }) {
-  const [activeTab, setActiveTab] = useState<"configure" | "data" | "settings">("configure");
-  const Icon = getNodeIcon(node.label, node.type);
-  const badge = getNodeBadge(node.label, node.type);
+  const [tab, setTab] = useState<"configure" | "variables">("configure");
+  const [copied, setCopied] = useState(false);
+  const item = libraryItem(node.actionId, node.label);
+  const Icon = item?.icon ?? Bot;
+  const config = node.config ?? {};
+  const setConfig = (patch: Record<string, unknown>) => onChange({ config: { ...config, ...patch } });
+  const problem = nodeProblem(node);
 
-  const tabs = [
-    { id: "configure" as const, label: "Configure", icon: Settings },
-    { id: "data" as const, label: "Data", icon: Database },
-    { id: "settings" as const, label: "Settings", icon: Sliders },
-  ];
+  const copy = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success("Copied");
+    window.setTimeout(() => setCopied(false), 1500);
+  };
+
+  const selectedTemplate = resources.templates.find((t) => t.id === config.templateId);
+  const url = workflowId && config.webhookToken ? webhookUrl(workflowId, String(config.webhookToken)) : null;
 
   return (
     <div className="flex h-full flex-col">
-      {/* Tabs */}
       <div className="flex border-b border-[#E2E8F0]">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold transition-colors cursor-pointer ${
-              activeTab === tab.id
-                ? "text-[#2563EB] border-b-2 border-[#2563EB]"
-                : "text-[#6B7A94] hover:text-[#111C3A] hover:bg-[#F8FAFC]"
-            }`}
-          >
-            <tab.icon className="size-3.5" />
-            {tab.label}
+        {([["configure", "Configure", Settings], ["variables", "Variables", Braces]] as const).map(([key, text, TabIcon]) => (
+          <button key={key} type="button" onClick={() => setTab(key)} className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold transition-colors ${tab === key ? "border-b-2 border-[#2563EB] text-[#2563EB]" : "text-[#6B7A94] hover:bg-[#F8FAFC] hover:text-[#111C3A]"}`}>
+            <TabIcon className="size-3.5" /> {text}
           </button>
         ))}
       </div>
 
-      {activeTab === "configure" && (
+      {tab === "variables" ? (
+        <div className="flex-1 space-y-2 overflow-y-auto p-4">
+          <p className="text-[11px] text-[#6B7A94]">Use these in any text field. They are filled in from the lead/contact (or the trigger payload) when the run executes. <code>contact.*</code> works the same as <code>lead.*</code>.</p>
+          {VARIABLES.map((v) => (
+            <button key={v.token} type="button" onClick={() => void copy(v.token)} className="flex w-full items-center justify-between rounded-lg border border-[#E2E8F0] px-3 py-2 text-left hover:bg-[#F8FAFC]">
+              <span><code className="text-[11px] font-semibold text-[#1D4ED8]">{v.token}</code><span className="block text-[10px] text-[#6B7A94]">{v.label}</span></span>
+              <Copy className="size-3.5 text-[#94A3B8]" />
+            </button>
+          ))}
+        </div>
+      ) : (
         <div className="flex-1 overflow-y-auto">
-          {/* Node Header */}
-          <div className="p-4 border-b border-[#E2E8F0]">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#F1F5F9] text-[#64748B]">
-                <Icon className="size-5" />
-              </div>
+          <div className="border-b border-[#E2E8F0] p-4">
+            <div className="mb-2 flex items-center gap-3">
+              <div className={`grid size-10 shrink-0 place-items-center rounded-xl ${item?.iconBg ?? "bg-[#64748B]"} text-white`}><Icon className="size-5" /></div>
               <div>
-                <h3 className="text-[13px] font-bold text-[#111C3A]">{node.label}</h3>
-                <span className={`inline-block mt-0.5 text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded ${badge.bg} ${badge.text}`}>
-                  {badge.label}
-                </span>
+                <h3 className="text-[13px] font-bold text-[#111C3A]">{item?.label ?? node.label}</h3>
+                <p className="text-[10.5px] text-[#6B7A94]">{item?.description ?? node.description}</p>
               </div>
             </div>
-            {node.description && (
-              <p className="text-[10.5px] text-[#6B7A94] leading-relaxed">{node.description}</p>
-            )}
+            {problem ? <p className="rounded-md bg-[#FFFBEB] px-2.5 py-1.5 text-[10.5px] font-medium text-[#B45309]">{problem}</p> : <p className="flex items-center gap-1 text-[10.5px] font-medium text-[#047857]"><Check className="size-3" /> Ready to run</p>}
           </div>
 
-          {/* Form Fields */}
-          <div className="p-4 space-y-4">
-            {node.type === "trigger" && node.label === "Inbound Webhook" && (
+          <div className="space-y-4 p-4">
+            <Field title="Step name">
+              <input className={input} value={node.label} maxLength={80} onChange={(e) => onChange({ label: e.target.value })} />
+            </Field>
+
+            {node.type === "trigger" && (node.actionId === "inbound_webhook" || node.actionId === "form_submission") ? (
               <>
-                <div className="space-y-1.5">
-                  <label className="text-[11.5px] font-semibold text-[#111C3A]">
-                    Webhook Name <span className="text-[#EF4444]">*</span>
+                <Field title="Webhook URL" hint="POST JSON to this URL. The token in it is secret — share it only with the system that sends data.">
+                  {url ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-9 min-w-0 flex-1 items-center truncate rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 font-mono text-[10.5px] text-[#475569]">{url}</div>
+                      <button type="button" aria-label="Copy webhook URL" onClick={() => void copy(url)} className="grid size-9 place-items-center rounded-lg border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]">{copied ? <Check className="size-3.5 text-[#10B981]" /> : <Copy className="size-3.5" />}</button>
+                    </div>
+                  ) : (
+                    <p className="rounded-lg border border-dashed border-[#CBD5E1] px-3 py-2 text-[11px] text-[#64748B]">Save the workflow once to generate its URL.</p>
+                  )}
+                </Field>
+                {url ? (
+                  <Field title="Example request">
+                    <pre className="overflow-x-auto rounded-lg bg-[#0F172A] p-2.5 font-mono text-[10px] text-slate-200">{`curl -X POST "${url}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"name":"Rahul Mehta","email":"rahul@example.com","phone":"9876543210","message":"Hi"}'`}</pre>
+                  </Field>
+                ) : null}
+                {node.actionId === "form_submission" ? (
+                  <label className="flex items-center gap-2 text-[11.5px] text-[#334155]">
+                    <input type="checkbox" checked={config.createLead !== false} onChange={(e) => setConfig({ createLead: e.target.checked })} />
+                    Create a CRM lead from the form fields (name, email, phone, message)
                   </label>
-                  <input
-                    type="text"
-                    value={node.label}
-                    onChange={e => onChange({ label: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/20"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11.5px] font-semibold text-[#111C3A]">Webhook URL</label>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-9 px-3 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] text-[11px] text-[#6B7A94] flex items-center truncate font-mono">
-                      https://api.omniplatform.com/webhooks/abc123
-                    </div>
-                    <button type="button" className="size-9 grid place-items-center rounded-lg border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#64748B] transition-colors cursor-pointer">
-                      <Copy className="size-3.5" />
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-[#6B7A94]">Use this URL in your external system to send data.</p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11.5px] font-semibold text-[#111C3A]">HTTP Method</label>
-                  <select className="w-full h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] focus:outline-none focus:border-[#2563EB] bg-white cursor-pointer">
-                    <option>POST</option>
-                    <option>GET</option>
-                    <option>PUT</option>
-                  </select>
-                </div>
-
-                <CollapsibleSection title="Headers (Optional)">
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold text-[#111C3A]">Header Key</label>
-                    <input
-                      type="text"
-                      placeholder="Authorization"
-                      className="w-full h-8 px-2.5 rounded-md border border-[#E2E8F0] text-[11px] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB]"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold text-[#111C3A]">Header Value</label>
-                    <input
-                      type="text"
-                      placeholder="Bearer token..."
-                      className="w-full h-8 px-2.5 rounded-md border border-[#E2E8F0] text-[11px] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB]"
-                    />
-                  </div>
-                </CollapsibleSection>
-
-                <CollapsibleSection title="Response Settings">
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold text-[#111C3A]">Response Code</label>
-                    <select className="w-full h-8 px-2.5 rounded-md border border-[#E2E8F0] text-[11px] focus:outline-none focus:border-[#2563EB] bg-white cursor-pointer">
-                      <option>200 OK</option>
-                      <option>201 Created</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold text-[#111C3A]">Response Body</label>
-                    <textarea
-                      rows={3}
-                      placeholder='{"status": "received"}'
-                      className="w-full px-2.5 py-2 rounded-md border border-[#E2E8F0] text-[11px] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB] resize-none font-mono"
-                    />
-                  </div>
-                </CollapsibleSection>
+                ) : null}
+                <p className="text-[10.5px] text-[#6B7A94]">The workflow must be <strong>Active</strong> to accept webhook calls.</p>
               </>
-            )}
+            ) : null}
 
-            {node.type === "trigger" && node.label !== "Inbound Webhook" && (
-              <div className="space-y-1.5">
-                <label className="text-[11.5px] font-semibold text-[#111C3A]">Trigger Name</label>
-                <input
-                  type="text"
-                  value={node.label}
-                  onChange={e => onChange({ label: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/20"
-                />
-              </div>
-            )}
+            {node.type === "trigger" && !["inbound_webhook", "form_submission"].includes(node.actionId ?? "") ? (
+              <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[11px] text-[#475569]">{item?.description ?? "Choose a trigger from the left panel."} No extra settings are needed.</p>
+            ) : null}
 
-            {node.type === "action" && (
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11.5px] font-semibold text-[#111C3A]">Action Name</label>
-                  <input
-                    type="text"
-                    value={node.label}
-                    onChange={e => onChange({ label: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]/20"
-                  />
-                </div>
+            {node.actionId === "send_whatsapp" ? (
+              <>
+                <Field title="WhatsApp template" hint={resources.templatesError ?? (resources.templates.length ? "Only enabled templates from WhatsApp → Templates are listed." : "No enabled templates. Sync them in WhatsApp → Templates first.")}>
+                  <select className={`${input} bg-white`} value={config.templateId ?? ""} onChange={(e) => {
+                    const tpl = resources.templates.find((t) => t.id === e.target.value);
+                    const vars = Object.fromEntries((tpl?.variables ?? []).map((v) => [v, (config.variables ?? {})[v] ?? ""]));
+                    setConfig({ templateId: e.target.value, templateName: tpl?.name ?? "", variables: vars });
+                  }}>
+                    <option value="">Select a template…</option>
+                    {resources.templates.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.language}){t.providerStatus ? ` · ${t.providerStatus}` : ""}</option>)}
+                  </select>
+                </Field>
+                <Field title="Recipient phone" hint="Leave as {{lead.phone}} to message the lead/contact. 10-digit numbers get +91 added.">
+                  <input className={input} value={config.phone ?? "{{lead.phone}}"} onChange={(e) => setConfig({ phone: e.target.value })} />
+                </Field>
+                {selectedTemplate?.variables.length ? (
+                  <div className="space-y-2 rounded-lg border border-[#E2E8F0] p-3">
+                    <p className="text-[11px] font-semibold text-[#111C3A]">Template variables</p>
+                    {selectedTemplate.variables.map((v) => (
+                      <div key={v} className="space-y-1">
+                        <span className="text-[10.5px] font-medium text-[#475569]">{v}</span>
+                        <input className={input} placeholder="e.g. {{lead.firstName}}" value={(config.variables ?? {})[v] ?? ""} onChange={(e) => setConfig({ variables: { ...(config.variables ?? {}), [v]: e.target.value } })} />
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </>
+            ) : null}
 
-                {(node.label.includes("WhatsApp") || node.actionId === "send_whatsapp") && (
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[11.5px] font-semibold text-[#111C3A]">Template Message</label>
-                      <select className="w-full h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] focus:outline-none focus:border-[#2563EB] bg-white cursor-pointer">
-                        <option>welcome_lead_01</option>
-                        <option>followup_no_reply</option>
+            {node.actionId === "send_email" ? (
+              <>
+                <Field title="To" hint="An email address or {{lead.email}}. Left empty, the record’s own email is used.">
+                  <input className={input} placeholder="{{lead.email}} or team@company.com" value={config.to ?? ""} onChange={(e) => setConfig({ to: e.target.value })} />
+                </Field>
+                <Field title="Subject">
+                  <input className={input} maxLength={200} value={config.subject ?? ""} onChange={(e) => setConfig({ subject: e.target.value })} />
+                </Field>
+                <Field title="Message">
+                  <textarea rows={6} className="w-full resize-none rounded-lg border border-[#E2E8F0] px-3 py-2 text-[11.5px] focus:border-[#2563EB] focus:outline-none" value={config.body ?? ""} onChange={(e) => setConfig({ body: e.target.value })} />
+                </Field>
+              </>
+            ) : null}
+
+            {node.actionId === "assign_user" ? (
+              <Field title="Assign to" hint="Becomes the owner of the lead/contact that started the run.">
+                <select className={`${input} bg-white`} value={config.userId ?? ""} onChange={(e) => setConfig({ userId: e.target.value, userName: e.target.value === "__routing__" ? "Routing rules" : resources.members.find((m) => m.id === e.target.value)?.name ?? "" })}>
+                  <option value="">Select a team member…</option>
+                  <option value="__routing__">Use routing rules (Settings → Ownership &amp; Routing)</option>
+                  {resources.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+              </Field>
+            ) : null}
+
+            {node.actionId === "update_record" ? (
+              <>
+                <Field title="Field">
+                  <select className={`${input} bg-white`} value={config.field ?? ""} onChange={(e) => setConfig({ field: e.target.value, value: "" })}>
+                    <option value="">Select…</option>
+                    <option value="stage">Lead stage</option>
+                    <option value="status">Contact status</option>
+                    <option value="priority">Priority</option>
+                    <option value="tags_add">Add tags</option>
+                    <option value="notes_append">Append to notes</option>
+                  </select>
+                </Field>
+                {config.field ? (
+                  <Field title="New value" hint={config.field === "tags_add" ? "Separate tags with commas." : undefined}>
+                    {config.field === "stage" || config.field === "status" || config.field === "priority" ? (
+                      <select className={`${input} bg-white`} value={config.value ?? ""} onChange={(e) => setConfig({ value: e.target.value })}>
+                        <option value="">Select…</option>
+                        {(config.field === "stage" ? LEAD_STAGES : config.field === "status" ? CONTACT_STATUSES : ["low", "medium", "high"]).map((v) => <option key={v} value={v}>{v}</option>)}
                       </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[11.5px] font-semibold text-[#111C3A]">Recipient Number Variable</label>
-                      <input
-                        type="text"
-                        value="{{lead.phone}}"
-                        readOnly
-                        className="w-full h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] bg-[#F8FAFC] text-[#6B7A94]"
-                      />
-                      <p className="text-[10px] text-[#6B7A94]">This field will be mapped automatically.</p>
-                    </div>
-                  </div>
-                )}
+                    ) : (
+                      <input className={input} value={config.value ?? ""} onChange={(e) => setConfig({ value: e.target.value })} />
+                    )}
+                  </Field>
+                ) : null}
+              </>
+            ) : null}
 
-                {node.label.includes("Email") && (
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[11.5px] font-semibold text-[#111C3A]">Recipient</label>
-                      <input
-                        type="text"
-                        placeholder="{{lead.email}}"
-                        className="w-full h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB]"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[11.5px] font-semibold text-[#111C3A]">Subject</label>
-                      <input
-                        type="text"
-                        placeholder="Welcome to our platform"
-                        className="w-full h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB]"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+            {node.actionId === "create_task" ? (
+              <>
+                <Field title="Task title"><input className={input} maxLength={200} value={config.title ?? ""} onChange={(e) => setConfig({ title: e.target.value })} /></Field>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field title="Due in (days)"><input type="number" min={0} max={365} className={input} value={config.dueInDays ?? 1} onChange={(e) => setConfig({ dueInDays: Math.max(0, Number(e.target.value) || 0) })} /></Field>
+                  <Field title="Priority">
+                    <select className={`${input} bg-white`} value={config.priority ?? "medium"} onChange={(e) => setConfig({ priority: e.target.value })}>
+                      <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+                    </select>
+                  </Field>
+                </div>
+                <Field title="Assignee" hint="Defaults to the owner of the lead/contact.">
+                  <select className={`${input} bg-white`} value={config.assigneeId ?? ""} onChange={(e) => setConfig({ assigneeId: e.target.value, assigneeName: resources.members.find((m) => m.id === e.target.value)?.name ?? "" })}>
+                    <option value="">Record owner</option>
+                    {resources.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  </select>
+                </Field>
+              </>
+            ) : null}
 
-            {node.type === "delay" && (
-              <div className="space-y-1.5">
-                <label className="text-[11.5px] font-semibold text-[#111C3A]">Delay Duration</label>
+            {node.actionId === "filter_condition" || node.actionId === "if_else" ? (
+              <>
+                <Field title="Field to check">
+                  <select className={`${input} bg-white`} value={CONDITION_FIELDS.some((f) => f.value === config.field) || !config.field ? config.field ?? "" : "__custom"} onChange={(e) => setConfig({ field: e.target.value === "__custom" ? "trigger." : e.target.value })}>
+                    <option value="">Select…</option>
+                    {CONDITION_FIELDS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+                    <option value="__custom">Custom field…</option>
+                  </select>
+                  {config.field && !CONDITION_FIELDS.some((f) => f.value === config.field) ? (
+                    <input className={`${input} mt-1.5`} placeholder="e.g. trigger.city" value={config.field} onChange={(e) => setConfig({ field: e.target.value })} />
+                  ) : null}
+                </Field>
+                <Field title="Operator">
+                  <select className={`${input} bg-white`} value={config.operator ?? ""} onChange={(e) => setConfig({ operator: e.target.value })}>
+                    <option value="">Select…</option>
+                    {OPERATORS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </Field>
+                {config.operator && !["is_empty", "is_not_empty"].includes(config.operator) ? (
+                  <Field title="Value"><input className={input} value={config.value ?? ""} onChange={(e) => setConfig({ value: e.target.value })} /></Field>
+                ) : null}
+                <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[10.5px] text-[#475569]">
+                  {node.actionId === "filter_condition" ? "If the condition is false the run stops here (it is still recorded as successful)." : "If the condition is false the next step is skipped and the run continues after it."}
+                </p>
+              </>
+            ) : null}
+
+            {node.actionId === "delay" ? (
+              <Field title="Wait for" hint="The run pauses and resumes automatically (checked every 30 seconds).">
                 <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={node.config.duration || 2}
-                    onChange={e => onChange({ config: { ...node.config, duration: e.target.value } })}
-                    className="w-20 h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] focus:outline-none focus:border-[#2563EB]"
-                  />
-                  <select
-                    value={node.config.unit || "hours"}
-                    onChange={e => onChange({ config: { ...node.config, unit: e.target.value } })}
-                    className="flex-1 h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] focus:outline-none focus:border-[#2563EB] bg-white cursor-pointer"
-                  >
-                    <option value="minutes">Minutes</option>
-                    <option value="hours">Hours</option>
-                    <option value="days">Days</option>
+                  <input type="number" min={1} max={90} className="h-9 w-20 rounded-lg border border-[#E2E8F0] px-3 text-[11.5px]" value={config.duration ?? 1} onChange={(e) => setConfig({ duration: Math.max(1, Number(e.target.value) || 1) })} />
+                  <select className={`${input} flex-1 bg-white`} value={config.unit ?? "hours"} onChange={(e) => setConfig({ unit: e.target.value })}>
+                    <option value="minutes">Minutes</option><option value="hours">Hours</option><option value="days">Days</option>
                   </select>
                 </div>
-              </div>
-            )}
-
-            {node.type === "condition" && (
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11.5px] font-semibold text-[#111C3A]">Condition Field</label>
-                  <select className="w-full h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] focus:outline-none focus:border-[#2563EB] bg-white cursor-pointer">
-                    <option>lead.source</option>
-                    <option>lead.status</option>
-                    <option>lead.score</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11.5px] font-semibold text-[#111C3A]">Operator</label>
-                  <select className="w-full h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] focus:outline-none focus:border-[#2563EB] bg-white cursor-pointer">
-                    <option>equals</option>
-                    <option>contains</option>
-                    <option>greater than</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11.5px] font-semibold text-[#111C3A]">Value</label>
-                  <input
-                    type="text"
-                    placeholder="Enter value..."
-                    className="w-full h-9 px-3 rounded-lg border border-[#E2E8F0] text-[11.5px] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#2563EB]"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Save Button */}
-          <div className="p-4 border-t border-[#E2E8F0]">
-            <button
-              type="button"
-              className="w-full h-9 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[11.5px] font-semibold transition-colors cursor-pointer shadow-sm"
-            >
-              Save Changes
-            </button>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "data" && (
-        <div className="flex-1 flex items-center justify-center p-6 text-center">
-          <div>
-            <Database className="size-8 text-[#CBD5E1] mx-auto mb-2" />
-            <p className="text-[11.5px] text-[#6B7A94]">Data mappings will appear here once the workflow is configured.</p>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "settings" && (
-        <div className="flex-1 flex items-center justify-center p-6 text-center">
-          <div>
-            <Sliders className="size-8 text-[#CBD5E1] mx-auto mb-2" />
-            <p className="text-[11.5px] text-[#6B7A94]">Advanced settings for this node.</p>
+              </Field>
+            ) : null}
           </div>
         </div>
       )}

@@ -1,23 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { useUrlState } from "./components/use-url-state";
-import { AdminPageTitle } from "../shared/admin-page-title";
-import { IntegrationPendingBadge, IntegrationPendingBanner } from "../shared/integration-pending-banner";
-import { SubTabs } from "../website/components/ui/kit";
-import { Plus, ChevronDown, Check } from "lucide-react";
+import { Calendar, Check, ChevronDown, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { AutomationWorkflow } from "./data/types";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AdminPageTitle } from "../shared/admin-page-title";
+import { SubTabs } from "../website/components/ui/kit";
+import { useAdminContext } from "../shell/admin-context";
+import { useUrlState } from "./components/use-url-state";
+import type { AutomationRun, AutomationWorkflow } from "./data/types";
+import { automationApi } from "./data/automation-api";
+import { errorMessage, useAutomationScope, useInvalidateAutomation } from "./data/hooks";
 import { WorkflowBuilder } from "./components/builder/workflow-builder";
-
+import { TestRunDialog } from "./components/builder/test-run-dialog";
+import { RunDetailsSheet } from "./components/logs/run-details-sheet";
+import { PERIOD_OPTIONS, periodRangeLabel } from "./components/shared";
 import { AutomationOverview } from "./components/pages/automation-overview";
 import { WorkflowsPage } from "./components/pages/workflows-page";
 import { TemplatesPage } from "./components/pages/templates-page";
 import { RunsPage } from "./components/pages/runs-page";
 import { SettingsPage } from "./components/pages/settings-page";
-
-import { useAdminContext } from "../shell/admin-context";
-import { getStoredClientId } from "@/lib/api/tenancy-storage";
 
 type AutomationTab = "overview" | "workflows" | "templates" | "runs" | "settings";
 const TABS = [
@@ -25,217 +27,163 @@ const TABS = [
   { value: "workflows", label: "Workflows" },
   { value: "templates", label: "Templates" },
   { value: "runs", label: "Run History" },
-  { value: "settings", label: "Settings" }
+  { value: "settings", label: "Settings" },
 ];
 
-const DATE_RANGE_OPTIONS = [
-  { label: "Last 7 days", dates: "Apr 07, 2025 - Apr 14, 2025" },
-  { label: "Last 30 days", dates: "Mar 15, 2025 - Apr 14, 2025" },
-  { label: "Last 90 days", dates: "Jan 14, 2025 - Apr 14, 2025" },
-  { label: "Year to date", dates: "Jan 01, 2025 - Apr 14, 2025" },
-] as const;
+export interface AutomationPageActions {
+  days: number;
+  onEdit: (workflow: AutomationWorkflow) => void;
+  onCreate: () => void;
+  onTest: (workflow: AutomationWorkflow) => void;
+  onUseTemplate: (templateId: string) => Promise<void>;
+  onOpenRun: (run: AutomationRun) => void;
+  onNavigate: (tab: AutomationTab) => void;
+}
 
-type DateRangeOption = (typeof DATE_RANGE_OPTIONS)[number];
+function blankWorkflow(clientId: string): AutomationWorkflow {
+  const now = new Date().toISOString();
+  return { id: `draft_${Date.now()}`, clientId, name: "", status: "Draft", version: 0, trigger: { type: "noop", label: "" }, channels: [], runs: 0, successRate: null, failures: 0, createdAt: now, updatedAt: now, nodes: [], edges: [] };
+}
 
 export function AutomationPage() {
   const { Clients, selectedProjectId, setSelectedProjectId } = useAdminContext();
+  const { clientId, clientName } = useAutomationScope();
+  const invalidate = useInvalidateAutomation();
   const [activeTab, setActiveTab] = useUrlState<AutomationTab>("tab", "overview", ["overview", "workflows", "templates", "runs", "settings"]);
-  const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
+  const [days, setDays] = useState(30);
+  const [editing, setEditing] = useState<{ workflow: AutomationWorkflow; clientId: string } | null>(null);
+  const [testTarget, setTestTarget] = useState<AutomationWorkflow | null>(null);
+  const [testKey, setTestKey] = useState(0);
+  const [openRun, setOpenRun] = useState<AutomationRun | null>(null);
 
-  const [selectedPeriod, setSelectedPeriod] = useState<DateRangeOption>(DATE_RANGE_OPTIONS[1]);
-  const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
-
-  const [editingWorkflow, setEditingWorkflow] = useState<AutomationWorkflow | null>(null);
-
-  const selectedClientObj = Clients.find((c) => c.id === selectedProjectId);
-  const currentClientLabel = selectedProjectId === "all" ? "All Clients" : (selectedClientObj?.name ?? "All Clients");
-
-  const handleCreateNewWorkflow = () => {
-    const activeClientId = selectedProjectId !== "all" ? selectedProjectId : (Clients[0]?.id ?? getStoredClientId() ?? "");
-    const blankWorkflow: AutomationWorkflow = {
-      id: `wf_${Date.now()}`,
-      clientId: activeClientId,
-      name: "Untitled Automation Workflow",
-      status: "Draft",
-      version: 1,
-      trigger: { type: "webhook", label: "Select Inbound Trigger" },
-      channels: ["whatsapp"],
-      runs: 0,
-      successRate: 100,
-      failures: 0,
-      lastRunAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      nodes: [
-        { id: "node_1", type: "trigger", label: "Inbound Webhook", description: "Triggers when data is received via a webhook URL.", status: "idle", config: {} },
-        { id: "node_2", type: "action", label: "Parse Data", description: "Extract and map the incoming data fields.", status: "idle", config: {} },
-        { id: "node_3", type: "condition", label: "Filter Condition", description: "Check if the data meets the required criteria.", status: "idle", config: {} },
-        { id: "node_4", type: "action", actionId: "send_whatsapp", label: "WhatsApp Reply", description: "Send a template message to the user via WhatsApp.", status: "idle", config: {} },
-        { id: "node_5", type: "delay", label: "Wait / Delay", description: "Wait for a specific time before next step.", status: "idle", config: {} },
-        { id: "node_6", type: "action", label: "Assign User", description: "Assign the lead to a team member.", status: "idle", config: {} },
-        { id: "node_7", type: "action", label: "Update Record", description: "Update lead information in the database.", status: "idle", config: {} },
-        { id: "node_8", type: "action", label: "Send Email", description: "Send a confirmation email to the user.", status: "idle", config: {} },
-        { id: "node_9", type: "action", label: "Create Task", description: "Create a follow-up task for the assigned user.", status: "idle", config: {} },
-      ],
-      edges: [
-        { id: "e1", source: "node_1", target: "node_2" },
-        { id: "e2", source: "node_2", target: "node_3" },
-        { id: "e3", source: "node_3", target: "node_4" },
-        { id: "e4", source: "node_4", target: "node_5" },
-        { id: "e5", source: "node_5", target: "node_6" },
-        { id: "e6", source: "node_6", target: "node_7" },
-        { id: "e7", source: "node_7", target: "node_8" },
-        { id: "e8", source: "node_8", target: "node_9" },
-      ]
-    };
-    setEditingWorkflow(blankWorkflow);
-    toast.success("Created new blank workflow. Welcome to Workflow Builder!");
+  const requireClient = (): string | null => {
+    if (clientId) return clientId;
+    toast.error("Select a client first", { description: "Workflows belong to one client. Pick it from the Client menu above." });
+    return null;
   };
 
-  if (editingWorkflow) {
-    return (
-      <WorkflowBuilder
-        workflow={editingWorkflow}
-        onBack={() => setEditingWorkflow(null)}
-      />
-    );
+  const actions: AutomationPageActions = {
+    days,
+    onEdit: (workflow) => setEditing({ workflow, clientId: workflow.clientId }),
+    onCreate: () => {
+      const id = requireClient();
+      if (id) setEditing({ workflow: blankWorkflow(id), clientId: id });
+    },
+    onTest: (workflow) => { setTestKey((k) => k + 1); setTestTarget(workflow); },
+    onUseTemplate: async (templateId) => {
+      const id = requireClient();
+      if (!id) return;
+      try {
+        const workflow = await automationApi.useTemplate(id, templateId);
+        invalidate();
+        toast.success(`Created “${workflow.name}” as a draft — finish setting it up, then publish`);
+        setEditing({ workflow, clientId: id });
+      } catch (error) {
+        toast.error(errorMessage(error));
+      }
+    },
+    onOpenRun: (run) => setOpenRun(run),
+    onNavigate: (tab) => setActiveTab(tab),
+  };
+
+  if (editing) {
+    return <WorkflowBuilder key={editing.workflow.id} workflow={editing.workflow} clientId={editing.clientId} onBack={() => { setEditing(null); invalidate(); }} />;
   }
+
+  const periodLabel = PERIOD_OPTIONS.find((p) => p.days === days)?.label ?? `Last ${days} days`;
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <AdminPageTitle
-          eyebrow="Operations"
-          title="Automation"
-          description="Automate lead follow-up, notifications and marketing operations."
-          badge={<IntegrationPendingBadge label="Workflow Engine Integration Pending" />}
-        />
-        
-        {/* Top Operations Controls */}
+        <AdminPageTitle eyebrow="Operations" title="Automation" description="Automate lead follow-up, notifications and CRM work with real, logged workflow runs." />
         <div className="flex flex-wrap items-center gap-2.5">
-          
-          {/* Client Filter Dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setClientDropdownOpen(!clientDropdownOpen)}
-              className="h-10 flex items-center gap-2 border border-[#CBD5E1] bg-white rounded-lg px-3.5 shadow-2xs text-[12px] font-normal text-[#0F172A] cursor-pointer hover:bg-slate-50 transition-colors"
-            >
-              <span className="text-[11px] text-[#64748B] font-medium">Client:</span>
-              <span className="font-semibold text-[#0F172A]">{currentClientLabel}</span>
-              <ChevronDown className="size-3.5 text-[#94A3B8]" />
-            </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className="flex h-10 items-center gap-2 rounded-lg border border-[#CBD5E1] bg-white px-3.5 text-[12px] shadow-2xs hover:bg-slate-50">
+                <span className="text-[11px] font-medium text-[#64748B]">Client:</span>
+                <span className="font-semibold text-[#0F172A]">{clientName}</span>
+                <ChevronDown className="size-3.5 text-[#94A3B8]" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => setSelectedProjectId("all")}>
+                <span className="flex-1">All Clients <span className="text-[10px] text-[#94A3B8]">(view only)</span></span>
+                {selectedProjectId === "all" ? <Check className="size-3.5 text-[#2563EB]" /> : null}
+              </DropdownMenuItem>
+              {Clients.length ? <DropdownMenuSeparator /> : null}
+              {Clients.map((client) => (
+                <DropdownMenuItem key={client.id} onClick={() => setSelectedProjectId(client.id)}>
+                  <span className="flex-1 truncate">{client.name}</span>
+                  {selectedProjectId === client.id ? <Check className="size-3.5 text-[#2563EB]" /> : null}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-            {clientDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-52 bg-white border border-[#CBD5E1] rounded-xl shadow-xl z-30 py-1 text-[11.5px] animate-in fade-in zoom-in-95">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedProjectId("all");
-                    setClientDropdownOpen(false);
-                    toast.info("Filtered view for All Clients");
-                  }}
-                  className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-50 cursor-pointer"
-                >
-                  <span className={selectedProjectId === "all" ? "font-bold text-[#2563EB]" : "text-[#334155]"}>
-                    All Clients
-                  </span>
-                  {selectedProjectId === "all" && <Check className="size-3.5 text-[#2563EB]" />}
-                </button>
-                {Clients.map((client) => (
-                  <button
-                    key={client.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedProjectId(client.id);
-                      setClientDropdownOpen(false);
-                      toast.info(`Filtered view for ${client.name}`);
-                    }}
-                    className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-50 cursor-pointer"
-                  >
-                    <span className={selectedProjectId === client.id ? "font-bold text-[#2563EB]" : "text-[#334155]"}>
-                      {client.name}
-                    </span>
-                    {selectedProjectId === client.id && <Check className="size-3.5 text-[#2563EB]" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className="flex h-10 items-center gap-2.5 rounded-lg border border-[#CBD5E1] bg-white px-3.5 text-[12px] shadow-2xs hover:bg-slate-50">
+                <Calendar className="size-3.5 text-[#64748B]" />
+                <span className="flex flex-col text-left leading-tight">
+                  <span className="text-[10px] font-medium text-[#64748B]">{periodLabel}</span>
+                  <span className="text-[11px] font-semibold text-[#0F172A]">{periodRangeLabel(days)}</span>
+                </span>
+                <ChevronDown className="size-3.5 text-[#94A3B8]" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-60">
+              <DropdownMenuLabel>Period</DropdownMenuLabel>
+              {PERIOD_OPTIONS.map((p) => (
+                <DropdownMenuItem key={p.days} onClick={() => setDays(p.days)}>
+                  <span className="flex-1"><span className="block font-medium">{p.label}</span><span className="text-[10px] text-[#94A3B8]">{periodRangeLabel(p.days)}</span></span>
+                  {days === p.days ? <Check className="size-3.5 text-[#2563EB]" /> : null}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          {/* Date Range Dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setPeriodDropdownOpen(!periodDropdownOpen)}
-              className="h-10 flex items-center gap-2.5 border border-[#CBD5E1] bg-white rounded-lg px-3.5 shadow-2xs text-[12px] text-[#0F172A] cursor-pointer hover:bg-slate-50 transition-colors"
-            >
-              <div className="flex flex-col text-left justify-center">
-                <span className="text-[10px] text-[#64748B] font-medium leading-tight">{selectedPeriod.label}</span>
-                <span className="font-semibold leading-tight text-[11px] text-[#0F172A]">{selectedPeriod.dates}</span>
-              </div>
-              <ChevronDown className="size-3.5 text-[#94A3B8]" />
-            </button>
-
-            {periodDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-56 bg-white border border-[#CBD5E1] rounded-xl shadow-xl z-30 py-1 text-[11.5px] animate-in fade-in zoom-in-95">
-                {DATE_RANGE_OPTIONS.map((p) => (
-                  <button
-                    key={p.label}
-                    type="button"
-                    onClick={() => {
-                      setSelectedPeriod(p);
-                      setPeriodDropdownOpen(false);
-                      toast.info(`Period updated to: ${p.label}`);
-                    }}
-                    className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-50 cursor-pointer"
-                  >
-                    <div>
-                      <div className={selectedPeriod.label === p.label ? "font-bold text-[#2563EB]" : "font-medium text-[#111C3A]"}>
-                        {p.label}
-                      </div>
-                      <div className="text-[10px] text-[#94A3B8]">{p.dates}</div>
-                    </div>
-                    {selectedPeriod.label === p.label && <Check className="size-3.5 text-[#2563EB]" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Create Workflow Button */}
-          <button
-            type="button"
-            onClick={handleCreateNewWorkflow}
-            className="h-10 inline-flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-sm shadow-blue-500/20 rounded-lg px-4 text-[12.5px] font-semibold cursor-pointer transition-colors"
-          >
-            <Plus className="size-4" />
-            <span>Create Workflow</span>
+          <button type="button" onClick={actions.onCreate} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#2563EB] px-4 text-[12.5px] font-semibold text-white shadow-sm shadow-blue-500/20 hover:bg-[#1D4ED8]">
+            <Plus className="size-4" /> Create Workflow
           </button>
         </div>
       </div>
 
-      <IntegrationPendingBanner
-        moduleName="Automation Studio"
-        feature="visual workflow execution engine, webhook trigger dispatchers, and queue runners"
-      />
-      
-      <SubTabs
-        ariaLabel="Automation Sections"
-        options={TABS}
-        value={activeTab}
-        onChange={(val) => setActiveTab(val as AutomationTab)}
-      />
+      <SubTabs ariaLabel="Automation sections" options={TABS} value={activeTab} onChange={(val) => setActiveTab(val as AutomationTab)} />
 
       <div className="mt-4">
-        {activeTab === "overview" && <AutomationOverview onNavigateTab={(val) => setActiveTab(val)} />}
-        {activeTab === "workflows" && <WorkflowsPage />}
-        {activeTab === "templates" && (
-          <TemplatesPage onUseTemplate={(wf) => setEditingWorkflow(wf)} />
-        )}
-        {activeTab === "runs" && <RunsPage />}
+        {activeTab === "overview" && <AutomationOverview {...actions} />}
+        {activeTab === "workflows" && <WorkflowsPage {...actions} />}
+        {activeTab === "templates" && <TemplatesPage {...actions} />}
+        {activeTab === "runs" && <RunsPage {...actions} />}
         {activeTab === "settings" && <SettingsPage />}
       </div>
+
+      {testTarget ? (
+        <TestRunDialog key={testKey} open={Boolean(testTarget)} onClose={() => setTestTarget(null)} workflow={testTarget} clientId={testTarget.clientId} onRan={(run) => { invalidate(); setOpenRun(run); }} />
+      ) : null}
+      <RunDetailsSheet
+        run={openRun}
+        open={Boolean(openRun)}
+        onOpenChange={(open) => { if (!open) setOpenRun(null); }}
+        onRetry={async (id) => {
+          if (!openRun) return;
+          try {
+            const run = await automationApi.retryRun(openRun.clientId, id);
+            setOpenRun(run);
+            invalidate();
+            toast.success(`Retry ${run.status.toLowerCase()}`);
+          } catch (error) { toast.error(errorMessage(error)); }
+        }}
+        onCancel={async (id) => {
+          try {
+            if (!openRun) return;
+            const run = await automationApi.cancelRun(openRun.clientId, id);
+            setOpenRun(run);
+            invalidate();
+            toast.success("Run cancelled");
+          } catch (error) { toast.error(errorMessage(error)); }
+        }}
+      />
     </div>
   );
 }

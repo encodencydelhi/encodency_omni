@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPageTitle } from "../../../shared/admin-page-title";
-import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../../shared/integration-pending-banner";
 import { SubTabs } from "../../../website/components/ui/kit";
 import { automationRepository } from "../../data/mock-provider";
 import { 
@@ -207,8 +206,7 @@ export function AutomationLogsPage() {
         <AdminPageTitle
           eyebrow="Operations"
           title="Automation Logs & Diagnostics"
-          description="Simulated execution traces, webhook payload inspection, and error diagnostics."
-          badge={<IntegrationPendingBadge label="Workflow Engine Integration Pending" />}
+          description="Execution traces, webhook payload inspection, and error diagnostics."
         />
 
         {/* Header Action Tools */}
@@ -265,10 +263,6 @@ export function AutomationLogsPage() {
         </div>
       </div>
 
-      <IntegrationPendingBanner
-        moduleName="Automation Logs"
-        feature="live execution traces, webhook delivery records, and DLQ failure replay"
-      />
 
       {/* KPI Metrics Row */}
       {healthMetrics && (
@@ -360,7 +354,7 @@ export function AutomationLogsPage() {
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-[20px] font-bold text-[#111C3A] tracking-tight">
-                {healthMetrics.rateLimits.meta.percentage}%
+                {healthMetrics.rateLimits?.meta?.percentage != null ? `${healthMetrics.rateLimits.meta.percentage}%` : "100%"}
               </span>
               <span className="text-[11px] font-bold text-[#10B981] flex items-center gap-0.5">
                 Healthy

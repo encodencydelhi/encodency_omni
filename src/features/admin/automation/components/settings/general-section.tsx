@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Settings, Plus, X, Globe, User, MessageSquare, Tag, Terminal } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Globe, MessageSquare, Settings, Terminal, User } from "lucide-react";
+import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
+import { teamApi } from "@/features/admin/team/live/team-api";
 import { GeneralSettings } from "../../data/settings-types";
 
 interface GeneralSectionProps {
@@ -9,264 +11,124 @@ interface GeneralSectionProps {
   onChange: (updates: Partial<GeneralSettings>) => void;
 }
 
+const TIMEZONES = [
+  "Asia/Kolkata (GMT+5:30)",
+  "Asia/Dubai (GMT+4:00)",
+  "Asia/Singapore (GMT+8:00)",
+  "Europe/London (GMT+0:00)",
+  "America/New_York (GMT-5:00)",
+  "America/Los_Angeles (GMT-8:00)",
+];
+
+const CHANNELS = [
+  { id: "WhatsApp", desc: "Send WhatsApp steps" },
+  { id: "Email", desc: "Send Email steps" },
+];
+
+const field = "w-full rounded-lg border border-[#E2E8F0] bg-[#FAFBFD] px-3 py-2 text-[12px] font-medium text-[#111C3A] focus:border-blue-500 focus:bg-white focus:outline-none";
+
 export function GeneralSection({ settings, onChange }: GeneralSectionProps) {
-  const [newChannelInput, setNewChannelInput] = useState("");
-  const [showAddChannel, setShowAddChannel] = useState(false);
+  const [members, setMembers] = useState<Array<{ id: string; name: string }>>([]);
 
-  const handleToggleChannel = (ch: string) => {
-    if (settings.allowedChannels.includes(ch)) {
-      if (settings.allowedChannels.length <= 1) return; // Keep at least one
-      onChange({ allowedChannels: settings.allowedChannels.filter(c => c !== ch) });
-    } else {
-      onChange({ allowedChannels: [...settings.allowedChannels, ch] });
-    }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    teamApi.listMembers(getStoredCompanyId())
+      .then((rows) => { if (!cancelled) setMembers(rows.filter((m) => !m.suspendedAt).map((m) => ({ id: m.user.id, name: m.user.name?.trim() || m.user.email }))); })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, []);
 
-  const handleAddCustomChannel = () => {
-    const trimmed = newChannelInput.trim();
-    if (trimmed && !settings.allowedChannels.includes(trimmed)) {
-      onChange({ allowedChannels: [...settings.allowedChannels, trimmed] });
-      setNewChannelInput("");
-      setShowAddChannel(false);
-    }
+  const toggleChannel = (id: string) => {
+    const has = settings.allowedChannels.some((c) => c.toLowerCase() === id.toLowerCase());
+    onChange({ allowedChannels: has ? settings.allowedChannels.filter((c) => c.toLowerCase() !== id.toLowerCase()) : [...settings.allowedChannels, id] });
   };
 
   return (
     <div className="space-y-4">
-      {/* Header Banner */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-4 flex items-start gap-3">
-        <div className="size-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
-          <Settings className="size-4" />
-        </div>
+      <div className="flex items-start gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600"><Settings className="size-4" /></div>
         <div>
-          <h3 className="text-[14px] font-bold text-[#111C3A]">General Automation Settings</h3>
-          <p className="text-[11px] text-[#64748B] mt-0.5">
-            Configure global workspace defaults, primary communication channels, log retention levels, and lead tagging behavior.
-          </p>
+          <h3 className="text-[14px] font-bold text-[#111C3A]">General</h3>
+          <p className="mt-0.5 text-[11px] text-[#64748B]">Company-wide defaults used by every client&apos;s workflows.</p>
         </div>
       </div>
 
-      {/* Grid: Workspace Identity & Timezone */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-5 space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-[#F1F5F9]">
-          <User className="size-4 text-[#334155]" />
-          <h4 className="text-[12.5px] font-bold text-[#111C3A]">Workspace & Ownership</h4>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+      <div className="space-y-4 rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-xs">
+        <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2"><User className="size-4 text-[#334155]" /><h4 className="text-[12.5px] font-bold text-[#111C3A]">Ownership &amp; timezone</h4></div>
+        <div className="grid grid-cols-1 gap-4 text-[11px] md:grid-cols-2">
           <div>
-            <label className="block font-bold text-[#334155] mb-1">Default Workflow Ownership</label>
-            <select
-              value={settings.defaultOwnership}
-              onChange={(e) => onChange({ defaultOwnership: e.target.value as any })}
-              className="w-full bg-[#FAFBFD] border border-[#E2E8F0] rounded-lg px-3 py-2 text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
-            >
-              <option value="account_owner">Assign to Client Account Owner</option>
-              <option value="round_robin">Round Robin across Operations Admins</option>
-              <option value="specific_user">Specific Administrator: Manish Sirohi</option>
+            <label className="mb-1 block font-bold text-[#334155]">Owner of leads created by form webhooks</label>
+            <select value={settings.defaultOwnership} onChange={(e) => onChange({ defaultOwnership: e.target.value as GeneralSettings["defaultOwnership"] })} className={field}>
+              <option value="account_owner">The workflow&apos;s owner</option>
+              <option value="round_robin">Routing rules (Ownership &amp; Routing)</option>
+              <option value="specific_user">A specific team member</option>
             </select>
-            <p className="text-[10px] text-[#94A3B8] mt-1">
-              Determines who receives ownership notifications and escalations for new workflows.
-            </p>
+            {settings.defaultOwnership === "specific_user" ? (
+              <select aria-label="Team member" value={settings.specificOwnerId ?? ""} onChange={(e) => onChange({ specificOwnerId: e.target.value, specificOwnerName: members.find((m) => m.id === e.target.value)?.name ?? "" })} className={`${field} mt-2`}>
+                <option value="">Select a team member…</option>
+                {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            ) : null}
+            <p className="mt-1 text-[10px] text-[#94A3B8]">Applies to leads a Form Submission trigger creates. Other triggers keep the record&apos;s existing owner.</p>
           </div>
-
           <div>
-            <label className="block font-bold text-[#334155] mb-1 flex items-center gap-1.5">
-              <Globe className="size-3 text-[#64748B]" /> System Automation Timezone
-            </label>
-            <select
-              value={settings.timezone}
-              onChange={(e) => onChange({ timezone: e.target.value })}
-              className="w-full bg-[#FAFBFD] border border-[#E2E8F0] rounded-lg px-3 py-2 text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
-            >
-              <option value="Asia/Kolkata (GMT+5:30)">Asia/Kolkata (GMT+5:30) - India Standard Time</option>
-              <option value="Asia/Dubai (GMT+4:00)">Asia/Dubai (GMT+4:00) - Gulf Standard Time</option>
-              <option value="Europe/London (GMT+0:00)">Europe/London (GMT+0:00) - Greenwich Mean Time</option>
-              <option value="America/New_York (GMT-5:00)">America/New_York (GMT-5:00) - Eastern Time</option>
-              <option value="America/Los_Angeles (GMT-8:00)">America/Los_Angeles (GMT-8:00) - Pacific Time</option>
+            <label className="mb-1 flex items-center gap-1.5 font-bold text-[#334155]"><Globe className="size-3 text-[#64748B]" /> Automation timezone</label>
+            <select value={settings.timezone} onChange={(e) => onChange({ timezone: e.target.value })} className={field}>
+              {(TIMEZONES.includes(settings.timezone) ? TIMEZONES : [settings.timezone, ...TIMEZONES]).map((tz) => <option key={tz} value={tz}>{tz}</option>)}
             </select>
-            <p className="text-[10px] text-[#94A3B8] mt-1">
-              Controls scheduling, delay nodes, and quiet hour boundaries across all triggers.
-            </p>
+            <p className="mt-1 text-[10px] text-[#94A3B8]">Used for the daily digest time. Business hours have their own timezone.</p>
           </div>
         </div>
       </div>
 
-      {/* Omnichannel Communication Defaults */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-5 space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-[#F1F5F9]">
-          <MessageSquare className="size-4 text-[#334155]" />
-          <h4 className="text-[12.5px] font-bold text-[#111C3A]">Omnichannel Reply & Channel Enablement</h4>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+      <div className="space-y-4 rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-xs">
+        <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2"><MessageSquare className="size-4 text-[#334155]" /><h4 className="text-[12.5px] font-bold text-[#111C3A]">Channels &amp; new leads</h4></div>
+        <div className="grid grid-cols-1 gap-4 text-[11px] md:grid-cols-2">
           <div>
-            <label className="block font-bold text-[#334155] mb-1">Default Fallback Reply Channel</label>
-            <select
-              value={settings.defaultReplyChannel}
-              onChange={(e) => onChange({ defaultReplyChannel: e.target.value as any })}
-              className="w-full bg-[#FAFBFD] border border-[#E2E8F0] rounded-lg px-3 py-2 text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
-            >
-              <option value="whatsapp">WhatsApp Cloud API (Highest open rate)</option>
-              <option value="instagram">Instagram Direct Message</option>
-              <option value="email">Email SMTP / Resend</option>
-              <option value="sms">SMS Gateway (DLT Certified)</option>
-            </select>
-            <p className="text-[10px] text-[#94A3B8] mt-1">
-              Selected when automated replies do not specify a channel explicitly.
-            </p>
-          </div>
-
-          <div>
-            <label className="block font-bold text-[#334155] mb-1">Active Communication Channels</label>
-            <div className="border border-[#E2E8F0] rounded-lg p-2 bg-[#FAFBFD] flex flex-wrap gap-1.5 min-h-[38px] items-center">
-              {settings.allowedChannels.map((ch) => (
-                <span
-                  key={ch}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10.5px] font-bold bg-blue-50 text-[#2563EB] border border-blue-200 shadow-2xs"
-                >
-                  {ch}
-                  <button
-                    type="button"
-                    onClick={() => handleToggleChannel(ch)}
-                    className="hover:text-blue-900 transition-colors cursor-pointer"
-                    title="Remove channel"
-                  >
-                    <X className="size-3" />
-                  </button>
-                </span>
-              ))}
-
-              {showAddChannel ? (
-                <div className="flex items-center gap-1">
-                  <input
-                    type="text"
-                    placeholder="Channel name..."
-                    value={newChannelInput}
-                    onChange={(e) => setNewChannelInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleAddCustomChannel()}
-                    className="bg-white border border-[#CBD5E1] rounded px-2 py-0.5 text-[11px] w-24 focus:outline-none focus:border-blue-500"
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddCustomChannel}
-                    className="px-2 py-0.5 bg-blue-600 text-white rounded text-[10px] font-bold"
-                  >
-                    Add
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddChannel(false)}
-                    className="text-[#64748B] hover:text-[#0F172A]"
-                  >
-                    <X className="size-3" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowAddChannel(true)}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10.5px] font-medium text-[#64748B] border border-dashed border-[#CBD5E1] hover:bg-white hover:text-[#111C3A] transition-colors"
-                >
-                  <Plus className="size-3" /> Add Channel
-                </button>
-              )}
+            <label className="mb-1 block font-bold text-[#334155]">Allowed channels</label>
+            <div className="space-y-1.5">
+              {CHANNELS.map((ch) => {
+                const on = settings.allowedChannels.some((c) => c.toLowerCase() === ch.id.toLowerCase());
+                return (
+                  <label key={ch.id} className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#E2E8F0] bg-[#FAFBFD] px-3 py-2">
+                    <input type="checkbox" checked={on} onChange={() => toggleChannel(ch.id)} />
+                    <span className="font-semibold text-[#111C3A]">{ch.id}</span>
+                    <span className="text-[10px] text-[#64748B]">{ch.desc}</span>
+                  </label>
+                );
+              })}
             </div>
-            <p className="text-[10px] text-[#94A3B8] mt-1">
-              Available channels across all client automation builders.
-            </p>
+            <p className="mt-1 text-[10px] text-[#94A3B8]">A step on a disallowed channel is skipped (shown in the run).</p>
           </div>
-        </div>
-      </div>
-
-      {/* Tagging & Ingestion Defaults */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-5 space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-[#F1F5F9]">
-          <Tag className="size-4 text-[#334155]" />
-          <h4 className="text-[12.5px] font-bold text-[#111C3A]">Tagging & Inbound Lead Defaults</h4>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
-          {/* Toggle Auto Prefix */}
-          <div className="flex items-start justify-between p-3 rounded-lg border border-[#E2E8F0] bg-[#FAFBFD]">
+          <div className="space-y-3">
             <div>
-              <span className="font-bold text-[#111C3A] block">Auto-Prefix Automation Tags</span>
-              <span className="text-[10px] text-[#64748B] block mt-0.5">
-                Appends <code className="bg-white px-1 py-0.5 rounded border border-[#E2E8F0] font-mono text-[9.5px] text-blue-600">[Auto]</code> prefix to all tags created by workflow nodes.
-              </span>
+              <label className="mb-1 block font-bold text-[#334155]">Stage for leads created by form webhooks</label>
+              <select value={settings.defaultLeadStage} onChange={(e) => onChange({ defaultLeadStage: e.target.value as GeneralSettings["defaultLeadStage"] })} className={field}>
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="qualified">Qualified</option>
+              </select>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
-              <input
-                type="checkbox"
-                checked={settings.autoPrefixTags}
-                onChange={(e) => onChange({ autoPrefixTags: e.target.checked })}
-                className="sr-only peer"
-              />
-              <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+            <label className="flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-[#E2E8F0] bg-[#FAFBFD] p-3">
+              <span>
+                <span className="block text-[11.5px] font-bold text-[#111C3A]">Tag automation-created leads</span>
+                <span className="mt-0.5 block text-[10px] text-[#64748B]">Adds the tag <code>automation</code> so they are easy to filter in CRM.</span>
+              </span>
+              <input type="checkbox" className="mt-0.5" checked={settings.autoPrefixTags} onChange={(e) => onChange({ autoPrefixTags: e.target.checked })} />
             </label>
-          </div>
-
-          {/* Default Lead Stage */}
-          <div>
-            <label className="block font-bold text-[#334155] mb-1">Default Stage for Ingested Leads</label>
-            <select
-              value={settings.defaultLeadStage}
-              onChange={(e) => onChange({ defaultLeadStage: e.target.value as any })}
-              className="w-full bg-[#FAFBFD] border border-[#E2E8F0] rounded-lg px-3 py-2 text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
-            >
-              <option value="new">New Lead (Awaiting Contact)</option>
-              <option value="qualified">Pre-Qualified (Webhook Verified)</option>
-              <option value="prospect">Active Marketing Prospect</option>
-            </select>
-            <p className="text-[10px] text-[#94A3B8] mt-1">
-              Initial CRM pipeline status applied when Meta Leadgen or WhatsApp inbound creates a lead.
-            </p>
           </div>
         </div>
       </div>
 
-      {/* System Diagnostic Logging Level */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-5 space-y-3">
-        <div className="flex items-center gap-2 pb-2 border-b border-[#F1F5F9]">
-          <Terminal className="size-4 text-[#334155]" />
-          <h4 className="text-[12.5px] font-bold text-[#111C3A]">Automation Diagnostic Logging Level</h4>
-        </div>
-
-        <p className="text-[11px] text-[#64748B]">
-          Select the granularity of runtime console logs streamed to the Live Console Stream viewer.
-        </p>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-          {[
-            { level: "debug", label: "DEBUG", desc: "Detailed step dumps, payloads, latency pings" },
-            { level: "info", label: "INFO", desc: "Normal executions, triggers, inbound webhooks" },
-            { level: "warn", label: "WARN", desc: "Transient delays, rate limits, retried steps" },
-            { level: "error", label: "ERROR", desc: "Only fatal errors and unhandled exceptions" },
-          ].map((item) => {
-            const isSelected = settings.logLevel === item.level;
-            return (
-              <div
-                key={item.level}
-                onClick={() => onChange({ logLevel: item.level as any })}
-                className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                  isSelected
-                    ? "bg-blue-50/50 border-blue-500 shadow-2xs"
-                    : "bg-[#FAFBFD] border-[#E2E8F0] hover:bg-white hover:border-[#CBD5E1]"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className={`text-[11px] font-mono font-bold ${isSelected ? "text-blue-600" : "text-[#1E293B]"}`}>
-                    {item.label}
-                  </span>
-                  <div className={`size-3 rounded-full border flex items-center justify-center ${isSelected ? "border-blue-600" : "border-[#CBD5E1]"}`}>
-                    {isSelected && <div className="size-1.5 rounded-full bg-blue-600" />}
-                  </div>
-                </div>
-                <p className="text-[9.5px] text-[#64748B] leading-tight">{item.desc}</p>
-              </div>
-            );
-          })}
+      <div className="space-y-3 rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-xs">
+        <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2"><Terminal className="size-4 text-[#334155]" /><h4 className="text-[12.5px] font-bold text-[#111C3A]">Default log level</h4></div>
+        <p className="text-[11px] text-[#64748B]">The level the Logs page filters to when it opens. Every step is always recorded.</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {(["debug", "info", "warn", "error"] as const).map((level) => (
+            <button key={level} type="button" onClick={() => onChange({ logLevel: level })} className={`rounded-lg border px-3 py-2 text-left text-[11px] font-bold uppercase ${settings.logLevel === level ? "border-blue-500 bg-blue-50 text-blue-700" : "border-[#E2E8F0] bg-[#FAFBFD] text-[#475569] hover:bg-white"}`}>
+              {level}
+            </button>
+          ))}
         </div>
       </div>
     </div>

@@ -204,7 +204,7 @@ export function BusinessHoursSection({ settings, onChange }: BusinessHoursSectio
               />
             </div>
             <p className="text-[10px] text-[#94A3B8] mt-1">
-              Standard compliance window: 10:00 PM to 08:00 AM (prevents user annoyance and unsubscribe spikes).
+              During quiet hours customer messages are held even if business hours are off.
             </p>
           </div>
 
@@ -215,23 +215,20 @@ export function BusinessHoursSection({ settings, onChange }: BusinessHoursSectio
               onChange={(e) => onChange({ offHoursPolicy: e.target.value as any })}
               className="w-full bg-[#FAFBFD] border border-[#E2E8F0] rounded-lg px-3 py-2 text-[12px] text-[#111C3A] font-medium focus:outline-none focus:border-blue-500 focus:bg-white"
             >
-              <option value="buffer_queue">Buffer & Hold in Queue (Release at 09:00 AM)</option>
-              <option value="send_closed_message">Send Automated 'We are closed' Reply</option>
-              <option value="bypass_critical">Bypass DND for High-Priority Alerts Only</option>
+              <option value="buffer_queue">Hold customer messages until the next open time</option>
+              <option value="bypass_critical">Ignore business hours (send immediately)</option>
+              {settings.offHoursPolicy === "send_closed_message" ? <option value="send_closed_message">Send a closed reply (not supported, holds messages)</option> : null}
             </select>
+            <p className="text-[10px] text-[#94A3B8] mt-1">
+              Applies to WhatsApp steps and emails sent to the record. Emails to a fixed team address are never held.
+            </p>
           </div>
         </div>
 
         {settings.offHoursPolicy === "send_closed_message" && (
-          <div className="pt-2">
-            <label className="block text-[11px] font-bold text-[#334155] mb-1">Automated After-Hours Message</label>
-            <textarea
-              rows={2}
-              value={settings.autoReplyMessage}
-              onChange={(e) => onChange({ autoReplyMessage: e.target.value })}
-              className="w-full bg-[#FAFBFD] border border-[#E2E8F0] rounded-lg p-3 text-[11px] text-[#111C3A] focus:outline-none focus:border-blue-500"
-            />
-          </div>
+          <p className="pt-2 text-[11px] text-[#B45309]">
+            Automatic closed replies are not supported (WhatsApp only allows approved templates). Messages are held until opening time instead. Pick another policy to clear this note.
+          </p>
         )}
       </div>
 

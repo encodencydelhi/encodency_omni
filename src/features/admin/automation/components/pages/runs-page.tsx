@@ -1,771 +1,186 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { 
-  Play, CheckCircle2, XCircle, Clock, ChevronDown, Download, Search, 
-  MoreHorizontal, Activity, Calendar, MessageSquare, Globe, User, 
-  RotateCcw, RefreshCcw, ShieldAlert, Check
-} from "lucide-react";
+import { Activity, Ban, CheckCircle2, ChevronLeft, ChevronRight, Download, Hourglass, RotateCcw, Search, XCircle } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import type { AutomationPageActions } from "../../automation-page";
+import { automationApi } from "../../data/automation-api";
+import { errorMessage, useAutomationScope, useInvalidateAutomation, useRuns, useWorkflows } from "../../data/hooks";
+import type { AutomationRunStatus } from "../../data/types";
+import { EmptyPanel, KpiTile, RunStatusChip, downloadCsv, formatDateTime, formatDuration } from "../shared";
 
-const DATE_RANGE_OPTIONS = [
-  { label: "Last 7 days", dates: "Apr 07, 2025 - Apr 14, 2025", days: 7 },
-  { label: "Last 30 days", dates: "Mar 15, 2025 - Apr 14, 2025", days: 30 },
-  { label: "Last 90 days", dates: "Jan 14, 2025 - Apr 14, 2025", days: 90 },
-  { label: "Year to date", dates: "Jan 01, 2025 - Apr 14, 2025", days: 365 },
-] as const;
+const STATUSES: AutomationRunStatus[] = ["Successful", "Failed", "Waiting", "Running", "Cancelled"];
 
-type DateRangeOption = (typeof DATE_RANGE_OPTIONS)[number];
+export function RunsPage({ days, onOpenRun }: AutomationPageActions) {
+  const { clientId } = useAutomationScope();
+  const invalidate = useInvalidateAutomation();
+  const [status, setStatus] = useState<AutomationRunStatus | "all">("all");
+  const [workflowId, setWorkflowId] = useState("all");
+  const [search, setSearch] = useState("");
+  const [onlyTests, setOnlyTests] = useState<"all" | "live" | "test">("all");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
+  const [busy, setBusy] = useState(false);
+  const pageSize = 20;
 
-const ALL_RUNS = [
-  { id: "run_8f3a2c1e", wf: "New Meta Lead Follow-up", trigLbl: "Meta Ads", trigType: "activity" as const, date: "Apr 14, 2025, 10:24 AM", dur: "2m 14s", steps: "4/4", res: "Success", own: "Manish S." },
-  { id: "run_7c9d4b2a", wf: "WhatsApp Re-engagement", trigLbl: "Manual", trigType: "message" as const, date: "Apr 14, 2025, 09:18 AM", dur: "1m 32s", steps: "3/4", res: "Failed", own: "Neha V." },
-  { id: "run_5e2f8a9d", wf: "Google Review Alert", trigLbl: "Website", trigType: "google" as const, date: "Apr 14, 2025, 08:44 AM", dur: "45s", steps: "3/3", res: "Success", own: "Rohit K." },
-  { id: "run_1d7c9e5b", wf: "SEO Critical Issue", trigLbl: "System", trigType: "google" as const, date: "Apr 14, 2025, 07:12 AM", dur: "3m 21s", steps: "4/4", res: "Retried", own: "Manish S." },
-  { id: "run_4b8e2d1f", wf: "Website Down Alert", trigLbl: "Website", trigType: "globe" as const, date: "Apr 13, 2025, 11:03 PM", dur: "38s", steps: "2/2", res: "Success", own: "Priya M." },
-  { id: "run_9a3f6c7e", wf: "New Meta Lead Follow-up", trigLbl: "Meta Ads", trigType: "activity" as const, date: "Apr 13, 2025, 08:21 PM", dur: "-", steps: "0/4", res: "Queued", own: "Unassigned" },
-  { id: "run_6d2b4e8f", wf: "WhatsApp Re-engagement", trigLbl: "Scheduled", trigType: "clock" as const, date: "Apr 13, 2025, 05:44 PM", dur: "2m 08s", steps: "4/4", res: "Success", own: "Neha V." },
-  { id: "run_3e9c1a7d", wf: "Negative Review Alert", trigLbl: "Google Business", trigType: "google" as const, date: "Apr 13, 2025, 03:12 PM", dur: "1m 14s", steps: "3/3", res: "Cancelled", own: "Rohit K." },
-];
+  const { data: runs = [], isLoading, error, refetch, isFetching } = useRuns(clientId, { days, limit: 1000 }, { refetchInterval: 30_000 });
+  const { data: workflows = [] } = useWorkflows(clientId, days);
 
-function parseRunDate(dateStr: string): Date {
-  return new Date(dateStr.replace(",", ""));
-}
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return runs.filter((r) =>
+      (status === "all" || r.status === status) &&
+      (workflowId === "all" || r.workflowId === workflowId) &&
+      (onlyTests === "all" || (onlyTests === "test" ? r.test : !r.test)) &&
+      (!q || r.id.toLowerCase().includes(q) || (r.workflowName ?? "").toLowerCase().includes(q) || r.triggerEntity.label.toLowerCase().includes(q) || (r.triggerSource ?? "").toLowerCase().includes(q) || (r.errorSummary?.message ?? "").toLowerCase().includes(q)));
+  }, [runs, status, workflowId, onlyTests, search]);
 
-function TrigIcon({ type }: { type: string }) {
-  switch (type) {
-    case "activity": return <Activity className="size-3.5 text-blue-500" />;
-    case "message": return <MessageSquare className="size-3.5 text-emerald-500" fill="currentColor" />;
-    case "google": return <span className="text-orange-500 font-bold text-[11px]">G</span>;
-    case "globe": return <Globe className="size-3.5 text-blue-500" />;
-    case "clock": return <Clock className="size-3.5 text-emerald-500" />;
-    default: return <Activity className="size-3.5 text-blue-500" />;
-  }
-}
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const rows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-function getStatusFilterValue(label: string): string {
-  switch (label) {
-    case "Successful": return "Success";
-    case "Failed": return "Failed";
-    case "Retried": return "Retried";
-    case "Queued": return "Queued";
-    case "Cancelled": return "Cancelled";
-    default: return "All Statuses";
-  }
-}
+  const count = (s: AutomationRunStatus) => runs.filter((r) => r.status === s).length;
+  const finished = count("Successful") + count("Failed");
+  const durations = runs.filter((r) => r.status === "Successful" && r.durationMs).map((r) => r.durationMs);
+  const avgDuration = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
+  const retryable = filtered.filter((r) => selected.includes(r.id) && (r.status === "Failed" || r.status === "Cancelled"));
 
-export function RunsPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("All Statuses");
-  const [selectedPeriod, setSelectedPeriod] = useState<DateRangeOption>(DATE_RANGE_OPTIONS[1]);
-  const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const exportCsv = () => {
+    if (!filtered.length) { toast.error("No runs to export"); return; }
+    downloadCsv(`automation-runs-${new Date().toISOString().slice(0, 10)}.csv`, ["Run ID", "Workflow", "Status", "Trigger", "Record", "Started", "Duration (ms)", "Steps succeeded", "Steps total", "Error"],
+      filtered.map((r) => [r.id, r.workflowName, r.status, r.triggerSource, r.triggerEntity.label, r.startedAt, r.durationMs, r.stepsSucceeded ?? 0, r.stepsTotal ?? r.steps.length, r.errorSummary?.message ?? ""]));
+    toast.success(`Exported ${filtered.length} run${filtered.length === 1 ? "" : "s"}`);
+  };
 
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setPeriodDropdownOpen(false);
-      }
+  const retrySelected = async () => {
+    const groups = new Map<string, string[]>();
+    for (const run of retryable) groups.set(run.clientId, [...(groups.get(run.clientId) ?? []), run.id]);
+    setBusy(true);
+    try {
+      const results = (await Promise.all([...groups.entries()].map(([cid, ids]) => automationApi.bulkRetry(cid, ids)))).flat();
+      const ok = results.filter((r) => r.ok).length;
+      if (ok) toast.success(`Retried ${ok} run${ok === 1 ? "" : "s"}`);
+      if (ok < results.length) toast.error(`${results.length - ok} could not be retried: ${results.find((r) => !r.ok)?.error ?? ""}`);
+      setSelected([]);
+      invalidate();
+    } catch (e) {
+      toast.error(errorMessage(e));
+    } finally {
+      setBusy(false);
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  };
 
-  const filteredRuns = useMemo(() => {
-    const now = new Date("2025-04-14T23:59:59");
-    const cutoff = new Date(now);
-    cutoff.setDate(cutoff.getDate() - selectedPeriod.days);
-    const filterVal = getStatusFilterValue(selectedStatus);
-
-    return ALL_RUNS.filter((run) => {
-      const runDate = parseRunDate(run.date);
-      if (runDate < cutoff) return false;
-      if (filterVal !== "All Statuses" && run.res !== filterVal) return false;
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        return (
-          run.id.toLowerCase().includes(q) ||
-          run.wf.toLowerCase().includes(q) ||
-          run.trigLbl.toLowerCase().includes(q) ||
-          run.own.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [selectedPeriod, selectedStatus, searchQuery]);
-
-  const handleExportLogs = () => {
-    const csvContent = "data:text/csv;charset=utf-8," + 
-      "Run ID,Workflow Name,Status,Trigger Source,Duration,Executed At\n" +
-      filteredRuns.map(r => `${r.id},${r.wf},${r.res},${r.trigLbl},${r.dur},${r.date}`).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `automation_runs_export_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success("Automation execution logs exported to CSV.");
+  const rowAction = async (label: string, fn: () => Promise<unknown>) => {
+    try { await fn(); invalidate(); toast.success(label); } catch (e) { toast.error(errorMessage(e)); }
   };
 
   return (
     <div className="space-y-2 pb-12">
-      
-      {/* Top Filter Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className="relative" ref={dropdownRef}>
-            <button
-              type="button"
-              onClick={() => setPeriodDropdownOpen(!periodDropdownOpen)}
-              className="flex items-center gap-1.5 border border-[#E2E8F0] bg-white rounded-md px-3 py-1.5 text-[12px] font-medium text-[#111C3A] cursor-pointer hover:bg-slate-50"
-            >
-              <Calendar className="size-3.5 text-[#64748B]" />
-              <div className="flex flex-col text-left leading-none">
-                <span className="font-bold text-[#111C3A]">{selectedPeriod.label}</span>
-                <span className="text-[9px] text-[#94A3B8]">{selectedPeriod.dates}</span>
-              </div>
-              <ChevronDown className="size-3.5 text-[#94A3B8] ml-1" />
-            </button>
-
-            {periodDropdownOpen && (
-              <div className="absolute left-0 mt-1 w-56 bg-white border border-[#E2E8F0] rounded-xl shadow-xl z-30 py-1 text-[11.5px] animate-in fade-in zoom-in-95">
-                {DATE_RANGE_OPTIONS.map((p) => (
-                  <button
-                    key={p.label}
-                    type="button"
-                    onClick={() => {
-                      setSelectedPeriod(p);
-                      setPeriodDropdownOpen(false);
-                    }}
-                    className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-50 cursor-pointer"
-                  >
-                    <div>
-                      <div className={selectedPeriod.label === p.label ? "font-bold text-[#2563EB]" : "font-medium text-[#111C3A]"}>
-                        {p.label}
-                      </div>
-                      <div className="text-[10px] text-[#94A3B8]">{p.dates}</div>
-                    </div>
-                    {selectedPeriod.label === p.label && <Check className="size-3.5 text-[#2563EB]" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="border border-[#E2E8F0] bg-white rounded-md px-3 py-2 text-[12px] font-medium text-[#334155] cursor-pointer hover:bg-slate-50 focus:outline-none"
-          >
-            <option value="All Statuses">All Statuses</option>
-            <option value="Successful">Successful</option>
-            <option value="Failed">Failed</option>
-            <option value="Retried">Retried</option>
-            <option value="Queued">Queued</option>
-            <option value="Cancelled">Cancelled</option>
+      <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center">
+        <div className="flex flex-wrap items-center gap-2">
+          <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value as typeof status); setPage(1); }} className="h-9 rounded-md border border-[#E2E8F0] bg-white px-3 text-[12px] font-medium text-[#334155]">
+            <option value="all">All statuses</option>
+            {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-
-          <Link
-            href="/admin/automation/logs"
-            className="flex items-center gap-1.5 border border-[#BFDBFE] bg-blue-50/50 rounded-md px-3 py-2 text-[12px] font-bold text-[#2563EB] hover:bg-blue-50 transition-colors"
-          >
-            <Activity className="size-3.5" /> Live Diagnostic Logs & DLQ →
-          </Link>
+          <select aria-label="Workflow" value={workflowId} onChange={(e) => { setWorkflowId(e.target.value); setPage(1); }} className="h-9 max-w-[220px] rounded-md border border-[#E2E8F0] bg-white px-3 text-[12px] font-medium text-[#334155]">
+            <option value="all">All workflows</option>
+            {workflows.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
+          </select>
+          <select aria-label="Run type" value={onlyTests} onChange={(e) => { setOnlyTests(e.target.value as typeof onlyTests); setPage(1); }} className="h-9 rounded-md border border-[#E2E8F0] bg-white px-3 text-[12px] font-medium text-[#334155]">
+            <option value="all">Live + test runs</option>
+            <option value="live">Live runs only</option>
+            <option value="test">Test runs only</option>
+          </select>
+          <Link href="/admin/automation/logs" className="flex h-9 items-center gap-1.5 rounded-md border border-[#BFDBFE] bg-blue-50/50 px-3 text-[12px] font-bold text-[#2563EB] hover:bg-blue-50"><Activity className="size-3.5" /> Logs & DLQ →</Link>
         </div>
-
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#94A3B8]" />
-            <input 
-              type="text" 
-              placeholder="Search runs, contacts, or messages..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-white border border-[#E2E8F0] rounded-md text-[12px] w-[260px] focus:outline-none focus:border-[#3B82F6]"
-            />
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#94A3B8]" />
+            <input type="search" placeholder="Search run ID, workflow, record, error..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="h-9 w-[260px] rounded-md border border-[#E2E8F0] bg-white pl-9 pr-3 text-[12px] focus:border-[#3B82F6] focus:outline-none" />
           </div>
-          <button 
-            type="button"
-            onClick={handleExportLogs}
-            className="flex items-center gap-1.5 border border-[#E2E8F0] bg-white rounded-md px-3 py-2 text-[12px] font-bold text-[#2563EB] hover:bg-slate-50 transition-colors cursor-pointer"
-          >
-            <Download className="size-3.5" /> Export Logs
-          </button>
+          <button type="button" disabled={!retryable.length || busy} onClick={() => void retrySelected()} className="flex h-9 items-center gap-1.5 rounded-md border border-[#E2E8F0] bg-white px-3 text-[12px] font-bold text-[#334155] hover:bg-slate-50 disabled:opacity-50"><RotateCcw className="size-3.5" /> Retry selected ({retryable.length})</button>
+          <button type="button" onClick={exportCsv} className="flex h-9 items-center gap-1.5 rounded-md border border-[#E2E8F0] bg-white px-3 text-[12px] font-bold text-[#2563EB] hover:bg-slate-50"><Download className="size-3.5" /> Export CSV</button>
         </div>
       </div>
 
-      {/* KPI Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
-        <div className="bg-white rounded-xl border border-[#E2E8F0] px-3 py-2 shadow-sm flex items-center gap-3">
-          <div className="bg-[#EFF6FF] text-[#3B82F6] p-2 rounded-full"><Play className="size-5" fill="currentColor" /></div>
-          <div>
-            <h4 className="text-[10px] font-medium text-[#64748B] mb-0.5">Total Runs</h4>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-bold text-[#111C3A]">2,076</span>
-              <span className="text-[10px] font-bold text-[#10B981] flex items-center">↑ 18%</span>
-            </div>
-            <p className="text-[9px] text-[#94A3B8]">vs last 30 days</p>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-xl border border-[#E2E8F0] px-3 py-2 shadow-sm flex items-center gap-3">
-          <div className="bg-[#ECFDF5] text-[#10B981] p-2 rounded-full"><CheckCircle2 className="size-5" /></div>
-          <div>
-            <h4 className="text-[10px] font-medium text-[#64748B] mb-0.5">Successful</h4>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-bold text-[#111C3A]">1,742</span>
-              <span className="text-[10px] font-bold text-[#10B981] flex items-center">↑ 22%</span>
-            </div>
-            <p className="text-[9px] text-[#64748B]">84.0% success rate</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-[#E2E8F0] px-3 py-2 shadow-sm flex items-center gap-3">
-          <div className="bg-[#FEF2F2] text-[#EF4444] p-2 rounded-full"><XCircle className="size-5" fill="currentColor" /></div>
-          <div>
-            <h4 className="text-[10px] font-medium text-[#64748B] mb-0.5">Failed</h4>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-bold text-[#111C3A]">186</span>
-              <span className="text-[10px] font-bold text-[#EF4444] flex items-center">↓ 28%</span>
-            </div>
-            <p className="text-[9px] text-[#64748B]">9.0% failure rate</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-[#E2E8F0] px-3 py-2 shadow-sm flex items-center gap-3">
-          <div className="bg-[#FEF9C3] text-[#EAB308] p-2 rounded-full"><Clock className="size-5" fill="currentColor" /></div>
-          <div>
-            <h4 className="text-[10px] font-medium text-[#64748B] mb-0.5">Pending</h4>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-bold text-[#111C3A]">64</span>
-              <span className="text-[10px] font-bold text-[#10B981] flex items-center">↑ 12%</span>
-            </div>
-            <p className="text-[9px] text-[#64748B]">3.1% in queue</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-[#E2E8F0] px-3 py-2 shadow-sm flex items-center gap-3">
-          <div className="bg-[#F3E8FF] text-[#A855F7] p-2 rounded-full"><RotateCcw className="size-5" /></div>
-          <div>
-            <h4 className="text-[10px] font-medium text-[#64748B] mb-0.5">Retries</h4>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-bold text-[#111C3A]">124</span>
-              <span className="text-[10px] font-bold text-[#10B981] flex items-center">↑ 40%</span>
-            </div>
-            <p className="text-[9px] text-[#64748B]">6.0% retried runs</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-[#E2E8F0] px-3 py-2 shadow-sm flex items-center gap-3">
-          <div className="bg-[#EBF5FF] text-[#3B82F6] p-2 rounded-full"><Clock className="size-5" /></div>
-          <div>
-            <h4 className="text-[10px] font-medium text-[#64748B] mb-0.5">Avg. Duration</h4>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-bold text-[#111C3A]">2m 14s</span>
-              <span className="text-[10px] font-bold text-[#EF4444] flex items-center">↓ 18%</span>
-            </div>
-            <p className="text-[9px] text-[#94A3B8]">vs last 30 days</p>
-          </div>
-        </div>
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-6">
+        <KpiTile icon={<div className="rounded-lg bg-[#EBF5FF] p-1.5 text-[#3B82F6]"><Activity className="size-4" /></div>} title="Runs" value={runs.length.toLocaleString()} hint={`last ${days} days`} />
+        <KpiTile icon={<div className="rounded-lg bg-[#ECFDF5] p-1.5 text-[#10B981]"><CheckCircle2 className="size-4" /></div>} title="Successful" value={String(count("Successful"))} hint={finished ? `${Math.round((count("Successful") / finished) * 100)}% of finished` : "no finished runs"} />
+        <KpiTile icon={<div className="rounded-lg bg-[#FEF2F2] p-1.5 text-[#EF4444]"><XCircle className="size-4" /></div>} title="Failed" value={String(count("Failed"))} hint="can be retried" />
+        <KpiTile icon={<div className="rounded-lg bg-[#F5F3FF] p-1.5 text-[#7C3AED]"><Hourglass className="size-4" /></div>} title="Waiting" value={String(count("Waiting"))} hint="paused on a delay" />
+        <KpiTile icon={<div className="rounded-lg bg-[#F1F5F9] p-1.5 text-[#64748B]"><Ban className="size-4" /></div>} title="Cancelled" value={String(count("Cancelled"))} hint="stopped manually" />
+        <KpiTile icon={<div className="rounded-lg bg-[#FFFBEB] p-1.5 text-[#F59E0B]"><Activity className="size-4" /></div>} title="Avg. Duration" value={formatDuration(avgDuration)} hint="successful runs" />
       </div>
 
-      {/* Main 2-Column Layout */}
-      <div className="flex flex-col lg:flex-row gap-2 items-start pt-2">
-        
-        {/* LEFT COLUMN (Main Content) */}
-        <div className="flex-1 space-y-2 min-w-0">
-          
-          {/* Workflow Runs Table */}
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-3 border-b border-[#E2E8F0]">
-              <h3 className="text-[13px] font-bold text-[#111C3A]">Workflow Runs</h3>
-              <div className="flex items-center gap-2 text-[11px] text-[#64748B]">
-                <span>{filteredRuns.length} of {ALL_RUNS.length} runs</span>
-                <div className="flex items-center gap-1">
-                  <button className="size-6 flex items-center justify-center rounded border border-[#E2E8F0] hover:bg-slate-50">&lt;</button>
-                  <button className="size-6 flex items-center justify-center rounded border border-[#E2E8F0] hover:bg-slate-50">&gt;</button>
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-[11px] whitespace-nowrap">
-                <thead className="bg-white text-[#64748B] border-b border-[#E2E8F0]">
-                  <tr>
-                    <th className="pl-3 pr-2 py-2 w-[24px]"><input type="checkbox" className="rounded border-gray-300" /></th>
-                    <th className="px-2 py-2 font-medium">Run ID</th>
-                    <th className="px-2 py-2 font-medium">Workflow</th>
-                    <th className="px-2 py-2 font-medium">Triggered By</th>
-                    <th className="px-2 py-2 font-medium text-[#2563EB]">Started At ↓</th>
-                    <th className="px-2 py-2 font-medium">Duration</th>
-                    <th className="px-2 py-2 font-medium">Steps</th>
-                    <th className="px-2 py-2 font-medium">Result</th>
-                    <th className="px-2 py-2 font-medium">Owner</th>
-                    <th className="px-3 py-2 font-medium text-right">Actions</th>
+      <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-[14px] font-bold text-[#111C3A]">Run history ({filtered.length})</h3>
+          <span className="text-[10.5px] text-[#94A3B8]">{isFetching ? "Refreshing…" : "Auto-refreshes every 30s"}</span>
+        </div>
+        {error ? (
+          <EmptyPanel title="Runs could not be loaded" body={errorMessage(error)} action={<button type="button" onClick={() => void refetch()} className="text-[12px] font-semibold text-[#2563EB] hover:underline">Retry</button>} />
+        ) : isLoading ? (
+          <div className="space-y-2">{Array.from({ length: 5 }, (_, i) => <div key={i} className="h-10 animate-pulse rounded-md bg-slate-100" />)}</div>
+        ) : filtered.length === 0 ? (
+          <EmptyPanel title={runs.length ? "No runs match" : "No runs yet"} body={runs.length ? "Try different filters." : "Runs appear when an active workflow is triggered or you test one."} />
+        ) : (
+          <>
+            <div className="-mx-4 overflow-x-auto">
+              <table className="w-full text-left text-[12px]">
+                <thead>
+                  <tr className="whitespace-nowrap border-b border-[#E2E8F0] text-[#64748B]">
+                    <th className="w-[30px] py-2 pl-4 pr-2"><input type="checkbox" aria-label="Select all on page" checked={rows.length > 0 && rows.every((r) => selected.includes(r.id))} onChange={(e) => setSelected((prev) => (e.target.checked ? Array.from(new Set([...prev, ...rows.map((r) => r.id)])) : prev.filter((id) => !rows.some((r) => r.id === id))))} /></th>
+                    <th className="px-3 py-2 font-medium">Run</th>
+                    <th className="px-3 py-2 font-medium">Workflow</th>
+                    <th className="px-3 py-2 font-medium">Trigger</th>
+                    <th className="px-3 py-2 font-medium">Record</th>
+                    <th className="px-3 py-2 font-medium">Started</th>
+                    <th className="px-3 py-2 font-medium">Duration</th>
+                    <th className="px-3 py-2 font-medium">Steps</th>
+                    <th className="px-3 py-2 font-medium">Status</th>
+                    <th className="px-4 py-2 text-right font-medium">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {filteredRuns.map((r) => {
-                    const resCol = r.res === "Success" ? "bg-[#ECFDF5] text-[#10B981]"
-                      : r.res === "Failed" || r.res === "Cancelled" ? "bg-[#FEF2F2] text-[#EF4444]"
-                      : r.res === "Retried" ? "bg-[#FEF9C3] text-[#D97706]"
-                      : "bg-[#F1F5F9] text-[#64748B]";
-                    const dotCol = r.res === "Success" ? "bg-[#10B981]"
-                      : r.res === "Failed" || r.res === "Cancelled" ? "bg-[#EF4444]"
-                      : r.res === "Retried" ? "bg-[#D97706]"
-                      : "bg-[#94A3B8]";
-                    return (
-                      <tr key={r.id} className="border-b border-[#F1F5F9] hover:bg-[#F8FAFC] transition-colors cursor-pointer border-l-2 border-l-transparent">
-                        <td className="pl-3 pr-2 py-2.5"><input type="checkbox" className="rounded border-gray-300" /></td>
-                        <td className="px-2 py-2.5 font-mono text-[#64748B]">{r.id}</td>
-                        <td className="px-2 py-2.5 font-semibold text-[#111C3A]">{r.wf}</td>
-                        <td className="px-2 py-2.5">
-                          <div className="flex items-center gap-1.5 text-[#334155]">
-                            <div className="w-4 flex justify-center"><TrigIcon type={r.trigType} /></div>
-                            {r.trigLbl}
-                          </div>
-                        </td>
-                        <td className="px-2 py-2.5 text-[#334155]">{r.date}</td>
-                        <td className="px-2 py-2.5 text-[#334155]">{r.dur}</td>
-                        <td className="px-2 py-2.5 text-[#64748B]">{r.steps}</td>
-                        <td className="px-2 py-2.5">
-                          <span className={`w-[76px] inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${resCol}`}>
-                             <div className={`size-1.5 rounded-full ${dotCol}`}></div>
-                             {r.res}
-                          </span>
-                        </td>
-                        <td className="px-2 py-2.5 text-[#64748B]">{r.own}</td>
-                        <td className="px-3 py-2.5 text-right">
-                          <button className="text-[#94A3B8] hover:text-[#111C3A]"><MoreHorizontal className="size-4" /></button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {filteredRuns.length === 0 && (
-                    <tr>
-                      <td colSpan={10} className="px-4 py-8 text-center text-[12px] text-[#94A3B8]">
-                        No runs match the current filters.
+                <tbody className="divide-y divide-[#F1F5F9]">
+                  {rows.map((r) => (
+                    <tr key={r.id} className="cursor-pointer whitespace-nowrap hover:bg-[#F8FAFC]" onClick={() => onOpenRun(r)}>
+                      <td className="py-2.5 pl-4 pr-2" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select run ${r.id}`} checked={selected.includes(r.id)} onChange={(e) => setSelected((prev) => (e.target.checked ? [...prev, r.id] : prev.filter((id) => id !== r.id)))} /></td>
+                      <td className="px-3 py-2.5 font-mono text-[11px] text-[#475569]">{r.id.slice(0, 8)}{r.test ? <span className="ml-1.5 rounded bg-[#FEF3C7] px-1 font-sans text-[9px] font-bold text-[#92400E]">TEST</span> : null}</td>
+                      <td className="max-w-[200px] truncate px-3 py-2.5 font-medium text-[#111C3A]">{r.workflowName}</td>
+                      <td className="px-3 py-2.5 text-[#64748B]">{(r.triggerSource ?? "").replace(/ \(test\)$/, "")}</td>
+                      <td className="max-w-[160px] truncate px-3 py-2.5 text-[#64748B]">{r.triggerEntity.label}</td>
+                      <td className="px-3 py-2.5 text-[#64748B]">{formatDateTime(r.startedAt)}</td>
+                      <td className="px-3 py-2.5 text-[#64748B]">{formatDuration(r.durationMs)}</td>
+                      <td className="px-3 py-2.5 text-[#64748B]">{r.stepsSucceeded ?? 0}/{r.stepsTotal ?? r.steps.length}</td>
+                      <td className="px-3 py-2.5"><RunStatusChip status={r.status} /></td>
+                      <td className="px-4 py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild><button type="button" className="rounded-md border border-[#E2E8F0] px-2 py-1 text-[11px] font-semibold text-[#334155] hover:bg-slate-50">Actions</button></DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onOpenRun(r)}>View details</DropdownMenuItem>
+                            {r.status === "Failed" || r.status === "Cancelled" ? <DropdownMenuItem onClick={() => void rowAction("Run retried", () => automationApi.retryRun(r.clientId, r.id))}>Retry</DropdownMenuItem> : null}
+                            {r.status === "Waiting" || r.status === "Running" ? <DropdownMenuItem variant="destructive" onClick={() => void rowAction("Run cancelled", () => automationApi.cancelRun(r.clientId, r.id))}>Cancel</DropdownMenuItem> : null}
+                            <DropdownMenuItem onClick={() => { void navigator.clipboard.writeText(r.id); toast.success("Run ID copied"); }}>Copy run ID</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                     </tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            
-            {/* Failure Reasons */}
-            <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[13px] font-bold text-[#111C3A]">Failure Reasons</h3>
-                <a href="#" className="text-[10px] font-medium text-[#2563EB] hover:underline">View all →</a>
-              </div>
-              <div className="space-y-2.5">
-                {[
-                  { lbl: "Invalid workflow configuration", pct: 32, col: "bg-red-500" },
-                  { lbl: "API rate limit exceeded (429)", pct: 24, col: "bg-orange-500" },
-                  { lbl: "Contact phone / email invalid", pct: 18, col: "bg-amber-500" },
-                  { lbl: "WhatsApp auth token expired", pct: 14, col: "bg-purple-500" },
-                  { lbl: "Inbound webhook timeout", pct: 12, col: "bg-blue-500" },
-                  { lbl: "Database constraint failure", pct: 9, col: "bg-indigo-500" },
-                  { lbl: "Condition rule not satisfied", pct: 8, col: "bg-cyan-500" },
-                  { lbl: "Payload schema mismatch", pct: 6, col: "bg-teal-500" },
-                  { lbl: "DLQ max retries reached", pct: 4, col: "bg-emerald-500" },
-                  { lbl: "Uncaught system exception", pct: 2, col: "bg-slate-400" },
-                ].map(r => (
-                  <div key={r.lbl} className="flex items-center gap-2 text-[10.5px]">
-                    <ShieldAlert className="size-3.5 shrink-0 text-slate-400" />
-                    <span className="text-[#334155] font-medium flex-1 truncate">{r.lbl}</span>
-                    <span className="text-[#64748B] font-bold text-[10px] w-7 text-right shrink-0">{r.pct}%</span>
-                    <div className="w-24 sm:w-28 h-1.5 bg-[#F1F5F9] rounded-full overflow-hidden shrink-0">
-                      <div className={`h-full ${r.col} rounded-full`} style={{ width: `${r.pct}%` }} />
-                    </div>
-                  </div>
-                ))}
+            <div className="mt-4 flex items-center justify-between text-[11px] text-[#64748B]">
+              <span>Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} of {filtered.length}</span>
+              <div className="flex items-center gap-1">
+                <button type="button" aria-label="Previous page" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)} className="grid size-7 place-items-center rounded border border-[#E2E8F0] disabled:opacity-40"><ChevronLeft className="size-3.5" /></button>
+                <span className="px-2">Page {currentPage} of {totalPages}</span>
+                <button type="button" aria-label="Next page" disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)} className="grid size-7 place-items-center rounded border border-[#E2E8F0] disabled:opacity-40"><ChevronRight className="size-3.5" /></button>
               </div>
             </div>
-
-            {/* Recent Incidents */}
-            <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[13px] font-bold text-[#111C3A]">Recent Incidents</h3>
-                <Link href="/admin/automation/logs" className="text-[10px] font-medium text-[#2563EB] hover:underline">View all in DLQ →</Link>
-              </div>
-              <div className="flex-1 overflow-x-auto">
-                <table className="w-full text-left text-[10px] whitespace-nowrap">
-                  <thead className="text-[#94A3B8] border-b border-[#F1F5F9]">
-                    <tr>
-                      <th className="font-medium pb-2 pr-2">Time</th>
-                      <th className="font-medium pb-2 px-2">Run ID</th>
-                      <th className="font-medium pb-2 px-2">Workflow</th>
-                      <th className="font-medium pb-2 px-2">Error</th>
-                      <th className="font-medium pb-2 pl-2 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-[#334155]">
-                    {[
-                      { time: "Apr 14, 09:19 AM", id: "run_7c9d...", wf: "WhatsApp Re-eng...", err: "Invalid wait duration format" },
-                      { time: "Apr 14, 07:33 AM", id: "run_2e8f...", wf: "New Meta Lead F...", err: "WhatsApp API rate limit exceeded" },
-                      { time: "Apr 13, 11:42 PM", id: "run_4b8e...", wf: "Google Review...", err: "OAuth token expired (401)" },
-                      { time: "Apr 13, 05:15 PM", id: "run_9a3f...", wf: "Abandoned Cart...", err: "Invalid phone E.164 syntax" },
-                      { time: "Apr 13, 02:20 PM", id: "run_6d2b...", wf: "Website Down...", err: "TCP connection timeout (504)" },
-                      { time: "Apr 12, 10:05 AM", id: "run_3e9c...", wf: "Form Routing...", err: "Sales agent capacity saturated" },
-                    ].map(inc => (
-                      <tr key={inc.id} className="border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC]">
-                        <td className="py-2 pr-2">{inc.time}</td>
-                        <td className="py-2 px-2 font-mono text-[#64748B]">{inc.id}</td>
-                        <td className="py-2 px-2">{inc.wf}</td>
-                        <td className="py-2 px-2 text-[#EF4444]">{inc.err}</td>
-                        <td className="py-2 pl-2 text-right">
-                          <Link href="/admin/automation/logs" className="text-[#2563EB] font-bold hover:underline">
-                            View Logs
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Bottom Grid: Runs Over Time & Success vs Failure */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            
-            {/* Runs Over Time (Line + Bar mock) */}
-            <div className="md:col-span-2 bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col justify-between h-[215px]">
-              <div className="flex items-center justify-between mb-1.5">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-[13px] font-bold text-[#111C3A]">Runs Over Time</h3>
-                    <div className="hidden sm:flex items-center gap-2.5 text-[10px] text-[#64748B] ml-2">
-                      <span className="flex items-center gap-1"><span className="size-2 rounded-[2px] bg-[#10B981]"></span>Runs</span>
-                      <span className="flex items-center gap-1"><span className="size-2 rounded-[2px] bg-[#EF4444]"></span>Failed</span>
-                      <span className="flex items-center gap-1"><span className="w-2.5 h-0.5 rounded-full bg-[#3B82F6]"></span>Success Rate</span>
-                    </div>
-                  </div>
-                  <p className="text-[10px] text-[#64748B]">Total workflow runs and success rate over time.</p>
-                </div>
-                <div className="flex items-center gap-1.5 border border-[#E2E8F0] rounded-md px-2 py-1 text-[11px] font-medium text-[#334155] bg-white hover:bg-slate-50 cursor-pointer">
-                  {selectedPeriod.label} <ChevronDown className="size-3" />
-                </div>
-              </div>
-
-              {/* Chart Graphics Container */}
-              <div className="flex-1 flex flex-col justify-end relative h-[135px] w-full pt-1 pb-5 overflow-hidden">
-                 {/* Horizontal Grid lines */}
-                 <div className="absolute inset-0 flex flex-col justify-between pt-1 pb-5 pointer-events-none">
-                   <div className="border-t border-[#F1F5F9] w-full border-dashed" />
-                   <div className="border-t border-[#F1F5F9] w-full border-dashed" />
-                   <div className="border-t border-[#F1F5F9] w-full border-dashed" />
-                   <div className="border-t border-[#E2E8F0] w-full" />
-                 </div>
-                 
-                 {/* Bars (sitting strictly on the baseline) */}
-                 <div className="relative z-10 w-full h-[100px] flex items-end justify-between gap-1 px-3">
-                   {[35, 42, 65, 78, 25, 45, 55, 68, 30, 50, 60, 72, 40, 58, 68, 80, 32, 48, 62, 75, 28, 52, 66, 78, 38].map((h, i) => (
-                     <div key={i} className="w-full bg-[#10B981] rounded-t-sm hover:brightness-105 transition-all" style={{ height: `${h * 0.72}%` }}>
-                       {i % 4 === 0 && <div className="w-full bg-[#EF4444] rounded-t-sm" style={{ height: `${Math.max(4, h * 0.2)}%` }} />}
-                     </div>
-                   ))}
-                 </div>
-                 
-                 {/* Smooth Line SVG strictly bounded within safe coordinates */}
-                 <svg className="absolute inset-x-0 top-0 h-[calc(100%-20px)] w-full pointer-events-none z-20" viewBox="0 0 500 100" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="runsTrendGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.16" />
-                        <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.0" />
-                      </linearGradient>
-                    </defs>
-                    
-                    {/* Area fill under curve */}
-                    <path 
-                      d="M 12,62 C 45,58 70,44 95,42 C 125,40 150,50 175,52 C 205,54 225,32 250,28 C 280,24 305,42 330,44 C 360,46 385,25 410,22 C 440,19 465,18 488,18 L 488,100 L 12,100 Z" 
-                      fill="url(#runsTrendGradient)" 
-                    />
-                    
-                    {/* Main Trend Line */}
-                    <path 
-                      d="M 12,62 C 45,58 70,44 95,42 C 125,40 150,50 175,52 C 205,54 225,32 250,28 C 280,24 305,42 330,44 C 360,46 385,25 410,22 C 440,19 465,18 488,18" 
-                      fill="none" 
-                      stroke="#3B82F6" 
-                      strokeWidth="2.5" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                    />
-
-                    {/* Milestone Dots */}
-                    <circle cx="175" cy="52" r="3.5" fill="#FFFFFF" stroke="#3B82F6" strokeWidth="2" />
-                    <circle cx="250" cy="28" r="3.5" fill="#FFFFFF" stroke="#3B82F6" strokeWidth="2" />
-                    <circle cx="410" cy="22" r="3.5" fill="#FFFFFF" stroke="#3B82F6" strokeWidth="2" />
-                 </svg>
-
-                 {/* Date Labels */}
-                 <div className="absolute bottom-0 left-0 right-0 flex justify-between text-[9px] text-[#94A3B8] px-3 font-medium">
-                   <span>Mar 15</span>
-                   <span>Mar 20</span>
-                   <span>Mar 25</span>
-                   <span>Mar 30</span>
-                   <span>Apr 4</span>
-                   <span>Apr 9</span>
-                   <span>Apr 14</span>
-                 </div>
-              </div>
-            </div>
-
-            {/* Success vs Failure */}
-            <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4 flex flex-col justify-between h-[215px]">
-              <h3 className="text-[13px] font-bold text-[#111C3A] mb-1">Success vs Failure</h3>
-              <div className="flex-1 flex items-center justify-between gap-3 px-1">
-                 {/* Donut Chart Mock on Left */}
-                 <div className="size-20 rounded-full border-[10px] border-[#10B981] border-r-[#EF4444] border-b-[#EAB308] border-l-[#8B5CF6] flex items-center justify-center transform rotate-45 shrink-0">
-                    <div className="transform -rotate-45 text-center">
-                      <div className="text-[13px] font-bold text-[#111C3A] leading-tight">2,076</div>
-                      <div className="text-[8px] text-[#64748B]">Total Runs</div>
-                    </div>
-                 </div>
-                 
-                 {/* Stats text on Right */}
-                 <div className="flex flex-col gap-1.5 min-w-0">
-                    <div className="flex items-center gap-2">
-                       <div className="size-2 rounded-full bg-[#10B981] shrink-0" />
-                       <div className="min-w-0">
-                         <div className="text-[11px] font-bold text-[#111C3A] leading-none mb-0.5">1,742</div>
-                         <div className="text-[9px] text-[#64748B] leading-none whitespace-nowrap">Successful (84.0%)</div>
-                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       <div className="size-2 rounded-full bg-[#EF4444] shrink-0" />
-                       <div className="min-w-0">
-                         <div className="text-[11px] font-bold text-[#111C3A] leading-none mb-0.5">186</div>
-                         <div className="text-[9px] text-[#64748B] leading-none whitespace-nowrap">Failed (9.0%)</div>
-                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       <div className="size-2 rounded-full bg-[#EAB308] shrink-0" />
-                       <div className="min-w-0">
-                         <div className="text-[11px] font-bold text-[#111C3A] leading-none mb-0.5">64</div>
-                         <div className="text-[9px] text-[#64748B] leading-none whitespace-nowrap">Pending (3.1%)</div>
-                       </div>
-                    </div>
-                 </div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* RIGHT COLUMN (Sidebar Details) */}
-        <div className="w-full lg:w-[320px] shrink-0 space-y-2">
-          
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-[#E2E8F0]">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[13px] font-bold text-[#111C3A]">Selected Run Details</h3>
-                <button className="text-[#94A3B8] hover:text-[#111C3A]"><XCircle className="size-4" /></button>
-              </div>
-
-              <div className="flex gap-3">
-                <div className="size-10 rounded-lg bg-[#ECFDF5] border border-[#A7F3D0] flex items-center justify-center shrink-0">
-                  <MessageSquare className="size-5 text-[#10B981]" fill="currentColor" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="text-[13px] font-bold text-[#111C3A]">WhatsApp Re-engagement</h4>
-                    <span className="text-[9px] font-bold bg-[#FEF2F2] text-[#EF4444] px-1.5 py-0.5 rounded text-red-600">Failed</span>
-                  </div>
-                  <div className="text-[10px] text-[#64748B] mb-2 flex flex-col gap-0.5">
-                    <span className="font-mono">Run ID: run_7c9d4b2a</span>
-                    <span>Apr 14, 2025, 09:18 AM &nbsp;•&nbsp; 1m 32s &nbsp;•&nbsp; 3/4 steps</span>
-                  </div>
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button className="px-2 py-1 border border-[#E2E8F0] rounded text-[10px] font-bold text-[#64748B] hover:bg-slate-50"><MoreHorizontal className="size-3" /></button>
-                    <button className="px-2 py-1 border border-[#BFDBFE] rounded text-[10px] font-bold text-[#2563EB] bg-blue-50 hover:bg-blue-100 transition-colors">Retry Run</button>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-[#E2E8F0] text-[10px]">
-                <div>
-                  <div className="text-[#94A3B8] mb-1">Triggered By</div>
-                  <div className="flex items-center gap-1 text-[#111C3A] font-medium"><Activity className="size-3 text-[#64748B]" /> Manual (User)</div>
-                </div>
-                <div>
-                  <div className="text-[#94A3B8] mb-1">Contact</div>
-                  <div className="flex flex-col">
-                     <span className="flex items-center gap-1 text-[#111C3A] font-medium"><User className="size-3 text-[#64748B]" /> Ramesh Patel</span>
-                     <span className="text-[#64748B] text-[9px] ml-4">ramesh.patel@gmail.com</span>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[#94A3B8] mb-1">Owner</div>
-                  <div className="flex items-center gap-1 text-[#111C3A] font-medium"><User className="size-3 text-[#64748B]" /> Neha Verma</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 bg-[#F8FAFC]">
-              <h3 className="text-[11px] font-bold text-[#111C3A] mb-4">Execution Log</h3>
-              
-              <div className="space-y-0 relative before:absolute before:top-2 before:bottom-2 before:left-[11px] before:w-0.5 before:bg-slate-200">
-                
-                {/* Step 1 */}
-                <div className="relative flex items-center group is-active pb-4">
-                  <div className="flex items-start w-full">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-[#10B981] text-white shrink-0 z-10 mr-3 shadow-2xs">
-                       <Check className="size-3" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-[11.5px] font-bold text-[#111C3A]">Trigger Received</h4>
-                        <span className="text-[9.5px] text-[#94A3B8]">09:18:12 AM</span>
-                      </div>
-                      <p className="text-[10px] text-[#64748B] mt-0.5">Manual trigger by Neha Verma</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step 2 */}
-                <div className="relative flex items-center group is-active pb-4">
-                  <div className="flex items-start w-full">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-[#10B981] text-white shrink-0 z-10 mr-3 shadow-2xs">
-                       <Check className="size-3" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-[11.5px] font-bold text-[#111C3A]">Condition Check</h4>
-                        <span className="text-[9.5px] text-[#94A3B8]">09:18:14 AM</span>
-                      </div>
-                      <p className="text-[10px] text-[#64748B] mt-0.5">Contact matches re-engagement criteria</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step 3 */}
-                <div className="relative flex items-center group is-active pb-4">
-                  <div className="flex items-start w-full">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-[#10B981] text-white shrink-0 z-10 mr-3 shadow-2xs">
-                       <Check className="size-3" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-[11.5px] font-bold text-[#111C3A]">WhatsApp Message Sent</h4>
-                        <span className="text-[9.5px] text-[#94A3B8]">09:18:17 AM</span>
-                      </div>
-                      <p className="text-[10px] text-[#64748B] mt-0.5">Message sent successfully via WhatsApp</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step 4 (Failed) */}
-                <div className="relative flex items-center group is-active pb-4">
-                  <div className="flex items-start w-full">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-[#EF4444] text-white shrink-0 z-10 mr-3 shadow-2xs">
-                       <XCircle className="size-3.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-[11.5px] font-bold text-[#EF4444]">Wait 2 Hours</h4>
-                        <span className="text-[9.5px] text-[#94A3B8]">09:19:42 AM</span>
-                      </div>
-                      <p className="text-[10px] text-[#64748B] mt-0.5">Step failed due to invalid delay configuration</p>
-                      <div className="mt-2.5 bg-[#FEF2F2] border border-[#FECACA] rounded-lg p-2.5 flex items-center justify-between w-full shadow-2xs">
-                         <div className="flex items-center gap-1.5 text-[10px] text-[#B91C1C] font-semibold">
-                           <ShieldAlert className="size-3.5 shrink-0 text-red-500" />
-                           <span>Error: Invalid wait duration format</span>
-                         </div>
-                         <button 
-                           type="button"
-                           onClick={() => toast.success("Step retry scheduled for execution!")}
-                           className="text-[10px] font-bold text-[#2563EB] bg-white px-3 py-1 rounded-md border border-[#BFDBFE] hover:bg-blue-50 transition-colors cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
-                         >
-                           Retry Step
-                         </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step 5 (Not executed) */}
-                <div className="relative flex items-center group is-active">
-                  <div className="flex items-start w-full">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-[#E2E8F0] text-[#94A3B8] shrink-0 z-10 mr-3 shadow-2xs">
-                       <span className="text-[10px] font-bold">5</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between opacity-50">
-                        <h4 className="text-[11.5px] font-bold text-[#111C3A]">Assign User</h4>
-                      </div>
-                      <p className="text-[10px] text-[#94A3B8] mt-0.5">Not executed</p>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-
-          {/* Queue Health with Uniform Equal-Width Card Items */}
-          <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm p-4">
-            <div className="flex items-center justify-between mb-3">
-               <h3 className="text-[11px] font-bold text-[#111C3A]">Queue Health</h3>
-               <a href="#" className="text-[10px] font-medium text-[#2563EB] hover:underline">View all →</a>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-               <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-2.5 flex items-center justify-between min-w-0 w-full">
-                 <div className="flex items-center gap-2 min-w-0">
-                   <div className="size-6 bg-[#FEF9C3] text-[#EAB308] rounded flex items-center justify-center shrink-0"><Clock className="size-3" /></div>
-                   <div className="min-w-0">
-                     <div className="text-[12px] font-bold text-[#111C3A] leading-tight">64</div>
-                     <div className="text-[9px] text-[#64748B] truncate">Runs in Queue</div>
-                   </div>
-                 </div>
-                 <div className="text-[9px] font-bold text-[#10B981] shrink-0">↓ 12%</div>
-               </div>
-
-               <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-2.5 flex items-center justify-between min-w-0 w-full">
-                 <div className="flex items-center gap-2 min-w-0">
-                   <div className="size-6 bg-[#F3E8FF] text-[#A855F7] rounded flex items-center justify-center shrink-0"><RefreshCcw className="size-3" /></div>
-                   <div className="min-w-0">
-                     <div className="text-[12px] font-bold text-[#111C3A] leading-tight">124</div>
-                     <div className="text-[9px] text-[#64748B] truncate">Runs Retried</div>
-                   </div>
-                 </div>
-                 <div className="text-[9px] font-bold text-[#10B981] shrink-0">↑ 40%</div>
-               </div>
-
-               <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-2.5 flex items-center justify-between min-w-0 w-full">
-                 <div className="flex items-center gap-2 min-w-0">
-                   <div className="size-6 bg-[#ECFDF5] text-[#10B981] rounded flex items-center justify-center shrink-0"><Clock className="size-3" /></div>
-                   <div className="min-w-0">
-                     <div className="text-[12px] font-bold text-[#111C3A] leading-tight">~5 min</div>
-                     <div className="text-[9px] text-[#64748B] truncate">Average Wait Time</div>
-                   </div>
-                 </div>
-                 <div className="text-[9px] font-bold text-[#10B981] shrink-0">↓ 18%</div>
-               </div>
-
-               <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-2.5 flex items-center justify-between min-w-0 w-full">
-                 <div className="flex items-center gap-2 min-w-0">
-                   <div className="size-6 bg-[#EBF5FF] text-[#3B82F6] rounded flex items-center justify-center shrink-0"><Activity className="size-3" /></div>
-                   <div className="min-w-0">
-                     <div className="text-[12px] font-bold text-[#111C3A] leading-tight">98.2%</div>
-                     <div className="text-[9px] text-[#64748B] truncate">Queue Processing Rate</div>
-                   </div>
-                 </div>
-                 <div className="text-[9px] font-bold text-[#10B981] shrink-0">↑ 2%</div>
-               </div>
-            </div>
-          </div>
-
-        </div>
-
+          </>
+        )}
       </div>
     </div>
   );

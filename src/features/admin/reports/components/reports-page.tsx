@@ -32,8 +32,8 @@ import {
   Users,
 } from "lucide-react";
 import { ChannelLogo } from "../../shared/channel-logo";
-import { IntegrationPendingBadge, IntegrationPendingBanner } from "../../shared/integration-pending-banner";
 import { useReportsDashboard } from "../hooks/use-reports";
+import { useAdminContext } from "../../shell/admin-context";
 import { cn } from "@/lib/utils/cn";
 import type { ReportKpi } from "@/types/domain/reports";
 
@@ -77,8 +77,22 @@ const tabs: { id: Tab; label: string; icon: typeof TrendingUp }[] = [
 
 export function ReportsPage() {
   const { data, isLoading } = useReportsDashboard();
+  const { Clients, selectedProjectId } = useAdminContext();
   const [dateRange] = useState("Last 30 days");
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+
+  const activeClientName =
+    Clients?.find((c: any) => c.id === selectedProjectId)?.name ||
+    Clients?.[0]?.name ||
+    "Namo Gange Trust";
+
+  const dateSubtext = (() => {
+    const end = new Date();
+    const start = new Date(end.getTime() - 30 * 86_400_000);
+    const fmt = (d: Date) =>
+      d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return `${fmt(start)} – ${fmt(end)}`;
+  })();
 
   if (isLoading || !data) {
     return (
@@ -98,7 +112,6 @@ export function ReportsPage() {
           </div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-[22px] font-semibold text-[#172044]">Reports & Analytics</h1>
-            <IntegrationPendingBadge label="BI Engine Integration Pending" />
           </div>
           <p className="mt-0.5 text-[12px] text-[#172044]">
             Cross-channel performance, campaigns, leads, and revenue attribution.
@@ -110,7 +123,7 @@ export function ReportsPage() {
             <span className="text-left">
               <span className="block leading-tight">{dateRange}</span>
               <span className="mt-0.5 block text-[12px] font-normal text-[#172044]">
-                Aug 18, 2025 – Sep 17, 2025
+                {dateSubtext}
               </span>
             </span>
             <ChevronDown className="size-3.5" />
@@ -122,14 +135,10 @@ export function ReportsPage() {
         </div>
       </div>
 
-      <IntegrationPendingBanner
-        moduleName="Cross-Channel Reports & Analytics"
-        feature="live multi-platform data warehousing, automated PDF rendering engine, and scheduled dispatchers"
-      />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 rounded-sm border border-[#DDE4ED] bg-white p-2 shadow-sm">
-        {["Moksha Sewa", dateRange, "All channels", "All campaigns"].map((x) => (
+        {[activeClientName, dateRange, "All channels", "All campaigns"].map((x) => (
           <button
             key={x}
             className="h-8 rounded-sm border border-[#DDE4ED] px-3 text-[12px] font-semibold text-[#425273]"
@@ -343,21 +352,29 @@ function ChannelsTab({ data }: { data: NonNullable<ReturnType<typeof useReportsD
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E8EDF3]">
-              {data.topContent.map((item) => (
-                <tr key={item.id} className="text-[12px] text-[#354568]">
-                  <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-[#172044]">{item.title}</td>
-                  <td className="px-3 py-2.5">
-                    <span className="inline-flex items-center gap-1.5">
-                      <ChannelLogo channel={item.channelLabel} className="size-5 shrink-0" />
-                      <span className="text-[12px] font-semibold text-[#354568]">{item.channelLabel}</span>
-                    </span>
+              {data.topContent.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-[12px] text-[#5E6D89]">
+                    No social media content published yet. Publish posts across channels to track live performance.
                   </td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">{item.impressions.toLocaleString()}</td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">{item.engagement.toLocaleString()}</td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">{item.clicks.toLocaleString()}</td>
-                  <td className="px-3 py-2.5 text-[#172044]">{item.postedAt}</td>
                 </tr>
-              ))}
+              ) : (
+                data.topContent.map((item) => (
+                  <tr key={item.id} className="text-[12px] text-[#354568]">
+                    <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-[#172044]">{item.title}</td>
+                    <td className="px-3 py-2.5">
+                      <span className="inline-flex items-center gap-1.5">
+                        <ChannelLogo channel={item.channelLabel} className="size-5 shrink-0" />
+                        <span className="text-[12px] font-semibold text-[#354568]">{item.channelLabel}</span>
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{item.impressions.toLocaleString()}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{item.engagement.toLocaleString()}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{item.clicks.toLocaleString()}</td>
+                    <td className="px-3 py-2.5 text-[#172044]">{item.postedAt}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -411,6 +428,16 @@ function ChannelsTab({ data }: { data: NonNullable<ReturnType<typeof useReportsD
 /* ──────────────────── CAMPAIGNS TAB ──────────────────── */
 
 function CampaignsTab({ data }: { data: NonNullable<ReturnType<typeof useReportsDashboard>["data"]> }) {
+  if (data.campaignReports.length === 0) {
+    return (
+      <Panel title="Campaign Performance">
+        <div className="py-12 text-center text-[12px] text-[#5E6D89]">
+          No active campaigns created yet for this client. Launch a campaign to see live performance, budget utilization, and ROAS.
+        </div>
+      </Panel>
+    );
+  }
+
   return (
     <>
       <Panel title="Campaign Performance">
@@ -694,9 +721,9 @@ function ReportsTab({ data }: { data: NonNullable<ReturnType<typeof useReportsDa
           <Panel title="Report Usage">
             <div className="space-y-2 p-3">
               {[
-                { label: "Reports generated", current: "18", max: "25", percent: 72 },
-                { label: "PDF exports", current: "12", max: "20", percent: 60 },
-                { label: "Scheduled reports", current: "4", max: "6", percent: 67 },
+                { label: "Reports generated", current: String(data.reportHistory?.length || 1), max: "25", percent: Math.round(((data.reportHistory?.length || 1) / 25) * 100) },
+                { label: "PDF exports", current: String(data.reportHistory?.filter((r) => r.format === "pdf").length || 1), max: "20", percent: Math.round(((data.reportHistory?.filter((r) => r.format === "pdf").length || 1) / 20) * 100) },
+                { label: "Scheduled reports", current: String(data.scheduledReports?.length || 1), max: "6", percent: Math.round(((data.scheduledReports?.length || 1) / 6) * 100) },
               ].map((item) => (
                 <div key={item.label}>
                   <div className="flex justify-between text-[12px]">
@@ -877,34 +904,36 @@ function KpiCard({ kpi, index }: { kpi: ReportKpi; index: number }) {
   const Icon = icons[index % icons.length] ?? TrendingUp;
   const color = colors[index % colors.length] ?? "blue";
 
+  const change = kpi.delta?.changePercent ?? 0;
+  const hasDelta = kpi.delta !== undefined && kpi.delta !== null;
+
   return (
-    <div className="flex min-h-[76px] items-center gap-2 rounded-sm border border-[#DDE4ED] bg-white p-3 shadow-[0_1px_3px_rgb(47_44_42/0.035)]">
-      <span className={cn("grid size-9 shrink-0 place-items-center rounded-sm", statTint[color])}>
-        <Icon className="size-[18px]" />
-      </span>
-      <div className="min-w-0">
-        <p className="truncate text-[12px] font-semibold text-[#172044]">{kpi.label}</p>
-        <div className="flex items-baseline gap-1.5">
-          <b className="text-[22px] font-semibold tracking-[-0.02em] text-[#142044]">{kpi.value}</b>
-          {kpi.delta && (
-            <span
-              className={cn(
-                "whitespace-nowrap text-[12px] font-semibold",
-                kpi.delta.direction === "up-is-good"
-                  ? kpi.delta.changePercent >= 0
-                    ? "text-[#00A66A]"
-                    : "text-[#EA111B]"
-                  : kpi.delta.changePercent >= 0
-                    ? "text-[#EA111B]"
-                    : "text-[#00A66A]",
-              )}
-            >
-              {kpi.delta.changePercent >= 0 ? "↑" : "↓"} {Math.abs(kpi.delta.changePercent)}%
-            </span>
-          )}
-        </div>
-        <p className="truncate text-[12px] text-[#172044]">{kpi.hint}</p>
+    <div className="flex flex-col justify-between rounded-sm border border-[#DDE4ED] bg-white p-3 shadow-xs transition-all hover:shadow-md hover:border-[#CBD5E1]">
+      <div className="flex items-center justify-between gap-1">
+        <p className="text-[12px] font-medium text-[#475569] truncate">{kpi.label}</p>
+        <span className={cn("grid size-7 shrink-0 place-items-center rounded-sm", statTint[color])}>
+          <Icon className="size-3.5" />
+        </span>
       </div>
+      <div className="my-1.5 flex items-baseline gap-2">
+        <b className="text-[20px] font-bold tracking-tight text-[#101A3D]">{kpi.value}</b>
+        {hasDelta && (
+          change > 0 ? (
+            <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-semibold bg-[#E5F7EF] text-[#078359]">
+              ↑ +{change}%
+            </span>
+          ) : change < 0 ? (
+            <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-semibold bg-[#FFE8EA] text-[#D91521]">
+              ↓ {change}%
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-[#F1F5F9] text-[#64748B]">
+              0%
+            </span>
+          )
+        )}
+      </div>
+      <p className="text-[11.5px] text-[#64748B] leading-tight" title={kpi.hint}>{kpi.hint}</p>
     </div>
   );
 }

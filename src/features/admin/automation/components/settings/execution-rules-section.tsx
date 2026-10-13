@@ -50,7 +50,7 @@ export function ExecutionRulesSection({ settings, onChange }: ExecutionRulesSect
               </span>
             </div>
             <p className="text-[10px] text-[#94A3B8] mt-1">
-              Limits concurrent background worker threads to avoid overwhelming client servers (Range: 1 - 50).
+              Runs actively executing at once for one client. Extra runs are queued and start automatically when a slot frees up.
             </p>
           </div>
 
@@ -58,19 +58,18 @@ export function ExecutionRulesSection({ settings, onChange }: ExecutionRulesSect
             <label className="block font-bold text-[#334155] mb-1">
               Global Third-Party API Rate Limiter
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 opacity-60">
               <input
                 type="number"
-                min="5"
-                max="200"
+                disabled
                 value={settings.globalRateLimiterRps}
-                onChange={(e) => onChange({ globalRateLimiterRps: parseInt(e.target.value) || 10 })}
-                className="w-24 bg-[#FAFBFD] border border-[#E2E8F0] rounded-lg px-3 py-1.5 text-[12px] font-mono font-bold text-[#111C3A] focus:outline-none focus:border-blue-500 focus:bg-white"
+                readOnly
+                className="w-24 cursor-not-allowed bg-[#FAFBFD] border border-[#E2E8F0] rounded-lg px-3 py-1.5 text-[12px] font-mono font-bold text-[#111C3A]"
               />
               <span className="text-[11px] font-semibold text-[#64748B]">requests / second (RPS)</span>
             </div>
             <p className="text-[10px] text-[#94A3B8] mt-1">
-              Guards against Meta Graph API and WhatsApp Cloud API 429 throttling limits.
+              Not enforced yet. Provider rate limits (HTTP 429) are handled by the retry policy instead.
             </p>
           </div>
         </div>
@@ -112,7 +111,7 @@ export function ExecutionRulesSection({ settings, onChange }: ExecutionRulesSect
               {
                 id: "queue",
                 title: "Queue Sequentially",
-                desc: "Hold the new event in the buffer and execute when the active run finishes.",
+                desc: "The new run waits (checked every minute) until the earlier run for the same record finishes.",
               },
               {
                 id: "cancel_older",
