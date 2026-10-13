@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { RotateCcw, AlertTriangle, Sparkles, ShieldAlert } from "lucide-react";
-import { toast } from "sonner";
 import { RetrySettings } from "../../data/settings-types";
 
 interface RetryLogicSectionProps {
@@ -11,18 +10,16 @@ interface RetryLogicSectionProps {
 }
 
 export function RetryLogicSection({ settings, onChange }: RetryLogicSectionProps) {
-  const [isSimulating, setIsSimulating] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
 
-  const handleSimulateRetry = () => {
-    setIsSimulating(true);
-    toast.info("Simulating transient API failure retry curve...", {
-      description: `Attempt 1: +${settings.initialDelaySeconds}s delay → Attempt 2: +${settings.initialDelaySeconds * 2}s (jitter applied) → Attempt 3: Final fallback to ${settings.escalationAction.toUpperCase()}`,
-    });
-    setTimeout(() => {
-      setIsSimulating(false);
-      toast.success("Retry simulation passed: Circuit held without fatal degradation!");
-    }, 1800);
-  };
+  /** The same delay formula the engine uses (see AutomationEngine.retryDelayMs). */
+  const schedule = Array.from({ length: Math.max(0, settings.maxRetryAttempts) }, (_, i) => {
+    const attempt = i + 1;
+    const initial = Math.max(1, settings.initialDelaySeconds || 30);
+    const raw = settings.retryAlgorithm === "fixed" ? initial : settings.retryAlgorithm === "linear" ? initial * attempt : initial * 2 ** (attempt - 1);
+    return Math.min(raw, Math.max(1, settings.maxBackoffDelayMinutes || 10) * 60);
+  });
+  const fmt = (sec: number) => (sec < 60 ? `${sec}s` : sec % 60 ? `${Math.floor(sec / 60)}m ${sec % 60}s` : `${sec / 60}m`);
 
   return (
     <div className="space-y-4">
@@ -42,14 +39,28 @@ export function RetryLogicSection({ settings, onChange }: RetryLogicSectionProps
 
         <button
           type="button"
-          onClick={handleSimulateRetry}
-          disabled={isSimulating}
+          onClick={() => setShowSchedule((v) => !v)}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FAFBFD] hover:bg-white text-[#2563EB] border border-[#BFDBFE] rounded-lg text-[11px] font-bold shadow-2xs transition-colors shrink-0 cursor-pointer disabled:opacity-50"
         >
-          <Sparkles className={`size-3.5 ${isSimulating ? "animate-spin" : ""}`} />
-          {isSimulating ? "Simulating..." : "Test Retry Curve"}
+          <Sparkles className="size-3.5" />
+          {showSchedule ? "Hide schedule" : "Preview retry schedule"}
         </button>
       </div>
+
+      {showSchedule ? (
+        <div className="rounded-xl border border-[#BFDBFE] bg-blue-50/40 p-4 text-[11.5px] text-[#334155]">
+          {schedule.length === 0 ? (
+            <p>No retries: a failing step fails the run straight away.</p>
+          ) : (
+            <p>
+              A failing step is retried {schedule.length} time{schedule.length === 1 ? "" : "s"}:{" "}
+              {schedule.map((sec, i) => `retry ${i + 1} after ${fmt(sec)}`).join(" → ")}, then the run is marked Failed
+              {settings.escalationAction === "pause_workflow" ? " and the workflow is paused" : settings.escalationAction === "trigger_webhook" ? " and your escalation webhook is called" : " and listed in the Dead Letter Queue"}.
+              Retries are scheduled (the run waits), checked every 30 seconds.
+            </p>
+          )}
+        </div>
+      ) : null}
 
       {/* Retry Strategy Parameters */}
       <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-5 space-y-4">

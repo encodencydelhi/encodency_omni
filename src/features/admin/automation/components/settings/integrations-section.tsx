@@ -1,195 +1,116 @@
 "use client";
 
-import { useState } from "react";
-import { Link2, Copy, Check, Eye, EyeOff, RefreshCw, Activity, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, Copy, Link2, Mail, ShieldCheck, Webhook } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { toast } from "sonner";
+import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
+import { whatsappApi, type WhatsAppConfigState } from "@/features/admin/channels/live/whatsapp-api";
 import { IntegrationsSettings } from "../../data/settings-types";
+import { webhookUrl } from "../../data/automation-api";
+import { useAutomationScope, useWorkflows } from "../../data/hooks";
 
 interface IntegrationsSectionProps {
   settings: IntegrationsSettings;
   onChange: (updates: Partial<IntegrationsSettings>) => void;
 }
 
+const IP_RULE = /^(\d{1,3}\.){3}\d{1,3}(\/(3[0-2]|[12]?\d))?$|^[0-9a-f:]+$/i;
+
 export function IntegrationsSection({ settings, onChange }: IntegrationsSectionProps) {
-  const [copiedKey, setCopiedKey] = useState(false);
-  const [copiedUrl, setCopiedUrl] = useState(false);
-  const [showSecret, setShowSecret] = useState(false);
-  const [pingingId, setPingingId] = useState<string | null>(null);
+  const { clientId } = useAutomationScope();
+  const { data: workflows = [] } = useWorkflows(clientId, 30);
+  const [whatsapp, setWhatsapp] = useState<WhatsAppConfigState | null | "error">(null);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [ipInput, setIpInput] = useState(settings.ipWhitelist.join(", "));
 
-  const handleCopy = (text: string, type: "url" | "key") => {
-    navigator.clipboard.writeText(text);
-    if (type === "url") {
-      setCopiedUrl(true);
-      setTimeout(() => setCopiedUrl(false), 2000);
-      toast.success("Webhook URL copied to clipboard!");
-    } else {
-      setCopiedKey(true);
-      setTimeout(() => setCopiedKey(false), 2000);
-      toast.success("HMAC Secret Key copied!");
-    }
+  useEffect(() => {
+    let cancelled = false;
+    whatsappApi.getConfig(getStoredCompanyId()).then((c) => { if (!cancelled) setWhatsapp(c); }).catch(() => { if (!cancelled) setWhatsapp("error"); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const hooks = workflows.flatMap((wf) => {
+    const trigger = wf.nodes.find((n) => n.type === "trigger");
+    if (!trigger || !["inbound_webhook", "form_submission"].includes(trigger.actionId ?? "") || !trigger.config?.webhookToken) return [];
+    return [{ wf, kind: trigger.actionId === "form_submission" ? "Form submission" : "Inbound webhook", url: webhookUrl(wf.id, String(trigger.config.webhookToken)) }];
+  });
+
+  const copy = async (key: string, text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(key);
+    toast.success("URL copied");
+    window.setTimeout(() => setCopied(null), 1500);
   };
 
-  const handleRegenerateSecret = () => {
-    const newSecret = "whsec_" + Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-    onChange({ hmacSecretKey: newSecret });
-    toast.success("Regenerated new HMAC Webhook Secret Key!");
-  };
-
-  const handlePingProvider = (id: string, name: string) => {
-    setPingingId(id);
-    setTimeout(() => {
-      setPingingId(null);
-      const simulatedLatency = Math.floor(Math.random() * 80) + 60;
-      toast.success(`${name} connection verified!`, {
-        description: `Gateway responded with HTTP 200 OK (${simulatedLatency}ms latency).`,
-      });
-    }, 1000);
-  };
+  const ips = ipInput.split(",").map((s) => s.trim()).filter(Boolean);
+  const badIps = ips.filter((ip) => !IP_RULE.test(ip));
 
   return (
     <div className="space-y-4">
-      {/* Header Banner */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-4 flex items-start gap-3">
-        <div className="size-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
-          <Link2 className="size-4" />
-        </div>
+      <div className="flex items-start gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600"><Link2 className="size-4" /></div>
         <div>
-          <h3 className="text-[14px] font-bold text-[#111C3A]">Connected Integrations & Inbound Webhooks</h3>
-          <p className="text-[11px] text-[#64748B] mt-0.5">
-            Manage live authentication tokens, webhook verification listeners, latency pings, and HMAC signature keys.
-          </p>
+          <h3 className="text-[14px] font-bold text-[#111C3A]">Integrations &amp; webhooks</h3>
+          <p className="mt-0.5 text-[11px] text-[#64748B]">Channels the engine sends through, and the secret URLs external systems post to.</p>
         </div>
       </div>
 
-      {/* Universal Webhook Endpoint */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-5 space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-[#F1F5F9]">
-          <ShieldCheck className="size-4 text-[#10B981]" />
-          <h4 className="text-[12.5px] font-bold text-[#111C3A]">Universal Inbound Webhook Listener</h4>
-        </div>
-
-        <p className="text-[11px] text-[#64748B]">
-          Point your external triggers, CRM webhooks, and third-party forms to this authenticated endpoint.
-        </p>
-
-        <div className="space-y-3 text-[11px]">
-          {/* Webhook URL with Copy */}
-          <div>
-            <label className="block font-bold text-[#334155] mb-1">Global Inbound Webhook Endpoint</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                readOnly
-                value={settings.universalWebhookUrl}
-                className="flex-1 bg-[#FAFBFD] border border-[#E2E8F0] rounded-lg px-3 py-2 text-[11.5px] font-mono text-[#111C3A] select-all cursor-text focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => handleCopy(settings.universalWebhookUrl, "url")}
-                className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 border border-[#E2E8F0] rounded-lg text-[11px] font-bold text-[#2563EB] shadow-2xs transition-colors shrink-0 cursor-pointer"
-              >
-                {copiedUrl ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
-                {copiedUrl ? "Copied" : "Copy URL"}
-              </button>
+      <div className="space-y-3 rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-xs">
+        <h4 className="border-b border-[#F1F5F9] pb-2 text-[12.5px] font-bold text-[#111C3A]">Sending channels</h4>
+        <div className="flex items-start justify-between rounded-lg border border-[#E2E8F0] bg-[#FAFBFD] p-3.5 text-[11px]">
+          <div className="flex items-start gap-2.5">
+            <FaWhatsapp className="mt-0.5 size-4 text-[#16A34A]" />
+            <div>
+              <span className="block text-[11.5px] font-bold text-[#111C3A]">WhatsApp (AiSensy)</span>
+              <span className="mt-0.5 block text-[10px] text-[#64748B]">
+                {whatsapp === null ? "Checking…" : whatsapp === "error" ? "Could not read the WhatsApp configuration." : whatsapp.configured ? `${whatsapp.displayName ?? "Connected account"} · status ${whatsapp.status ?? "unknown"}` : "Not configured. Set it up under Channels → WhatsApp → Settings."}
+              </span>
             </div>
           </div>
-
-          {/* HMAC Secret Key */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="font-bold text-[#334155]">HMAC-SHA256 Webhook Signature Secret</label>
-              <button
-                type="button"
-                onClick={handleRegenerateSecret}
-                className="text-[10px] font-bold text-[#2563EB] hover:text-[#1D4ED8] flex items-center gap-1 cursor-pointer"
-              >
-                <RefreshCw className="size-3" /> Regenerate Secret
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <input
-                  type={showSecret ? "text" : "password"}
-                  readOnly
-                  value={settings.hmacSecretKey}
-                  className="w-full bg-[#FAFBFD] border border-[#E2E8F0] rounded-lg px-3 py-2 pr-9 text-[11.5px] font-mono text-[#111C3A] select-all focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowSecret(!showSecret)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#111C3A] cursor-pointer"
-                >
-                  {showSecret ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleCopy(settings.hmacSecretKey, "key")}
-                className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 border border-[#E2E8F0] rounded-lg text-[11px] font-bold text-[#334155] shadow-2xs transition-colors shrink-0 cursor-pointer"
-              >
-                {copiedKey ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
-                {copiedKey ? "Copied" : "Copy Key"}
-              </button>
-            </div>
-            <p className="text-[10px] text-[#94A3B8] mt-1">
-              Verify incoming webhook authenticity using the <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#334155]">X-Encodency-Signature</code> header.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Provider Status Cards */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-5 space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-[#F1F5F9]">
-          <div className="flex items-center gap-2">
-            <Activity className="size-4 text-[#334155]" />
-            <h4 className="text-[12.5px] font-bold text-[#111C3A]">Active Connected Gateways</h4>
-          </div>
-          <span className="text-[10.5px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-            All 4 Providers Operational
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${whatsapp && whatsapp !== "error" && whatsapp.configured && whatsapp.status === "ACTIVE" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+            {whatsapp && whatsapp !== "error" && whatsapp.configured ? (whatsapp.status === "ACTIVE" ? "Connected" : whatsapp.status ?? "Configured") : "Not connected"}
           </span>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
-          {settings.providers.map((p) => (
-            <div key={p.id} className="p-4 rounded-xl border border-[#E2E8F0] bg-[#FAFBFD] hover:bg-white hover:shadow-xs transition-all space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="font-bold text-[#111C3A] text-[12.5px] block">{p.name}</span>
-                  <span className="text-[10px] text-[#64748B] block mt-0.5">{p.accountLabel}</span>
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-[#ECFDF5] text-[#10B981] border border-emerald-200 flex items-center gap-1">
-                  <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Connected
-                </span>
-              </div>
-
-              {/* Provider details */}
-              <div className="bg-white rounded-lg p-2.5 border border-[#E2E8F0] space-y-1 text-[10px] font-mono text-[#334155]">
-                {Object.entries(p.details).map(([k, v]) => (
-                  <div key={k} className="flex items-center justify-between">
-                    <span className="text-[#64748B]">{k}:</span>
-                    <span className="font-bold text-[#111C3A] truncate max-w-[200px]">{v}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between pt-1 border-t border-[#F1F5F9] text-[10.5px]">
-                <span className="text-[#94A3B8]">
-                  Ping: <strong className="text-[#111C3A] font-mono">{p.latencyMs}ms</strong> • {p.lastSyncAt}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handlePingProvider(p.id, p.name)}
-                  disabled={pingingId === p.id}
-                  className="px-2.5 py-1 rounded bg-white hover:bg-slate-50 text-blue-600 border border-[#E2E8F0] font-bold shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  {pingingId === p.id ? "Pinging..." : "Test Latency"}
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="flex items-start gap-2.5 rounded-lg border border-[#E2E8F0] bg-[#FAFBFD] p-3.5 text-[11px]">
+          <Mail className="mt-0.5 size-4 text-blue-600" />
+          <div>
+            <span className="block text-[11.5px] font-bold text-[#111C3A]">Email</span>
+            <span className="mt-0.5 block text-[10px] text-[#64748B]">Sent through the platform mail server (the same one used for invitations). If it is not configured, email steps fail with a clear error in the run.</span>
+          </div>
         </div>
+      </div>
+
+      <div className="space-y-3 rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-xs">
+        <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2"><Webhook className="size-4 text-[#7C3AED]" /><h4 className="text-[12.5px] font-bold text-[#111C3A]">Workflow webhook URLs</h4></div>
+        <p className="text-[11px] text-[#64748B]">Every workflow with an Inbound Webhook or Form Submission trigger gets its own secret URL. It only accepts events while the workflow is Active.</p>
+        {!clientId ? (
+          <p className="text-[11px] text-[#64748B]">Select a client to see its webhook URLs.</p>
+        ) : hooks.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-[#CBD5E1] px-3 py-3 text-[11px] text-[#64748B]">No webhook workflows yet. Create a workflow with an Inbound Webhook or Form Submission trigger and save it.</p>
+        ) : (
+          <ul className="space-y-2">
+            {hooks.map((h) => (
+              <li key={h.wf.id} className="rounded-lg border border-[#E2E8F0] p-3">
+                <div className="mb-1.5 flex items-center justify-between text-[11.5px]">
+                  <span className="font-bold text-[#111C3A]">{h.wf.name} <span className="font-normal text-[#64748B]">· {h.kind}</span></span>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${h.wf.status === "Active" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{h.wf.status}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <code className="min-w-0 flex-1 truncate rounded bg-[#F8FAFC] px-2 py-1.5 text-[10.5px] text-[#475569]">{h.url}</code>
+                  <button type="button" aria-label={`Copy URL for ${h.wf.name}`} onClick={() => void copy(h.wf.id, h.url)} className="grid size-8 place-items-center rounded-md border border-[#E2E8F0] text-[#64748B] hover:bg-slate-50">{copied === h.wf.id ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="space-y-3 rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-xs">
+        <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2"><ShieldCheck className="size-4 text-[#10B981]" /><h4 className="text-[12.5px] font-bold text-[#111C3A]">Webhook IP allow-list</h4></div>
+        <p className="text-[11px] text-[#64748B]">Optional. When set, webhook calls from any other IP are rejected (403). Comma-separated IPs or IPv4 ranges such as <code>157.240.0.0/16</code>. Leave empty to accept any IP that has the secret URL.</p>
+        <input type="text" value={ipInput} onChange={(e) => setIpInput(e.target.value)} onBlur={() => onChange({ ipWhitelist: ips.filter((ip) => IP_RULE.test(ip)) })} placeholder="e.g. 203.0.113.10, 157.240.0.0/16" className="w-full rounded-lg border border-[#E2E8F0] bg-[#FAFBFD] px-3 py-2 font-mono text-[11.5px] focus:border-blue-500 focus:outline-none" />
+        {badIps.length ? <p className="text-[10.5px] text-red-600">Not valid (ignored): {badIps.join(", ")}</p> : null}
       </div>
     </div>
   );

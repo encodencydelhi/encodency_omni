@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { toast } from "sonner";
-import { automationRepository } from "../../data/mock-provider";
+import { automationApi } from "../../data/automation-api";
 import { AutomationSettingsState, DEFAULT_AUTOMATION_SETTINGS } from "../../data/settings-types";
 
 export function useAutomationSettings() {
@@ -10,20 +10,30 @@ export function useAutomationSettings() {
   const [savedSettings, setSavedSettings] = useState<AutomationSettingsState>(DEFAULT_AUTOMATION_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let mounted = true;
-    automationRepository.getSettings().then((data) => {
-      if (mounted) {
+    automationApi.getSettings()
+      .then((data) => {
+        if (!mounted) return;
         setSettings(data);
         setSavedSettings(data);
-        setIsLoading(false);
-      }
-    });
+        setLoadError(null);
+      })
+      .catch((err: unknown) => {
+        if (mounted) setLoadError(err instanceof Error ? err.message : "Automation settings could not be loaded.");
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false);
+      });
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [reloadKey]);
+
+  const reload = useCallback(() => { setIsLoading(true); setReloadKey((k) => k + 1); }, []);
 
   const isDirty = useMemo(() => {
     return JSON.stringify(settings) !== JSON.stringify(savedSettings);
@@ -45,7 +55,7 @@ export function useAutomationSettings() {
   const saveSettings = useCallback(async () => {
     setIsSaving(true);
     try {
-      const updated = await automationRepository.updateSettings(settings);
+      const updated = await automationApi.updateSettings(settings);
       setSettings(updated);
       setSavedSettings(updated);
       toast.success("Automation settings saved successfully!", {
@@ -53,12 +63,26 @@ export function useAutomationSettings() {
       });
       return true;
     } catch (err) {
-      toast.error("Failed to save settings. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Failed to save settings. Please try again.");
       return false;
     } finally {
       setIsSaving(false);
     }
   }, [settings]);
+
+  /** Saves one section's fields immediately, keeping any other unsaved edits on screen. */
+  const applyNow = useCallback(async <K extends keyof AutomationSettingsState>(section: K, updates: Partial<AutomationSettingsState[K]>) => {
+    try {
+      const nextSection = { ...(savedSettings[section] as object), ...(updates as object) };
+      const updated = await automationApi.updateSettings({ [section]: nextSection } as Partial<AutomationSettingsState>);
+      setSavedSettings(updated);
+      setSettings((prev) => ({ ...prev, meta: updated.meta, [section]: { ...(prev[section] as object), ...(updates as object) } }));
+      return true;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save the change.");
+      return false;
+    }
+  }, [savedSettings]);
 
   const discardChanges = useCallback(() => {
     setSettings(JSON.parse(JSON.stringify(savedSettings)));
@@ -68,7 +92,7 @@ export function useAutomationSettings() {
   const resetToDefaults = useCallback(async () => {
     setIsSaving(true);
     try {
-      const res = await automationRepository.resetSettings();
+      const res = await automationApi.resetSettings();
       setSettings(res);
       setSavedSettings(res);
       toast.success("Settings reset to defaults successfully.");
@@ -126,9 +150,12 @@ export function useAutomationSettings() {
     settings,
     savedSettings,
     isLoading,
+    loadError,
+    reload,
     isSaving,
     isDirty,
     updateSection,
+    applyNow,
     saveSettings,
     discardChanges,
     resetToDefaults,

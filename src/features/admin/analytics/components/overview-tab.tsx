@@ -36,27 +36,38 @@ const ICON_COLORS = [
 function KpiCard({ kpi, index }: { kpi: AnalyticsDashboardData["overview"]["kpis"][number]; index: number }) {
   const Icon = ICONS[kpi.label];
   const colorClass = ICON_COLORS[index % ICON_COLORS.length];
-  const isUp = (kpi.delta?.changePercent ?? 0) >= 0;
+  const change = kpi.delta?.changePercent ?? 0;
+  const hasDelta = kpi.delta !== undefined && kpi.delta !== null;
 
   return (
-    <div className="flex flex-col gap-1 rounded-sm border border-[#DDE4ED] bg-white p-2 shadow-xs transition-all hover:shadow-md hover:border-[#CBD5E1]">
+    <div className="flex flex-col justify-between gap-1 rounded-sm border border-[#DDE4ED] bg-white p-2.5 shadow-xs transition-all hover:shadow-md hover:border-[#CBD5E1]">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] font-medium uppercase tracking-wider text-[#354568] truncate">{kpi.label}</p>
-        <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-sm bg-gradient-to-br", colorClass)}>
-          {Icon && <Icon className="size-2.5 text-white" />}
+        <p className="text-[12px] font-medium text-[#475569] truncate">{kpi.label}</p>
+        <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-sm bg-gradient-to-br", colorClass)}>
+          {Icon && <Icon className="size-3 text-white" />}
         </span>
       </div>
-      <p className="text-[16px] font-bold leading-none tracking-tight tabular text-[#101A3D]">{kpi.value}</p>
-      <div className="flex items-center gap-1">
-        <span className={cn(
-          "inline-flex items-center gap-0.5 rounded-sm px-1 py-0.5 text-[12px] font-semibold",
-          isUp ? "bg-[#E5F7EF] text-[#078359]" : "bg-[#FFE8EA] text-[#D91521]"
-        )}>
-          <TrendingUp className={cn("size-2.5", !isUp && "rotate-180")} />
-          {kpi.delta ? `${kpi.delta.changePercent > 0 ? "+" : ""}${kpi.delta.changePercent}%` : "—"}
-        </span>
+      <div className="my-1 flex items-baseline gap-1.5">
+        <p className="text-[18px] font-bold leading-none tracking-tight tabular text-[#101A3D]">{kpi.value}</p>
+        {hasDelta && (
+          change > 0 ? (
+            <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-semibold bg-[#E5F7EF] text-[#078359]">
+              <TrendingUp className="size-2.5" />
+              +{change}%
+            </span>
+          ) : change < 0 ? (
+            <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-semibold bg-[#FFE8EA] text-[#D91521]">
+              <TrendingUp className="size-2.5 rotate-180" />
+              {change}%
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-[#F1F5F9] text-[#64748B]">
+              0%
+            </span>
+          )
+        )}
       </div>
-      {kpi.hint && <p className="text-[12px] text-[#354568] truncate">{kpi.hint}</p>}
+      {kpi.hint && <p className="text-[11.5px] text-[#64748B] truncate" title={kpi.hint}>{kpi.hint}</p>}
     </div>
   );
 }
@@ -90,8 +101,8 @@ export function OverviewTab({ data }: { data: AnalyticsDashboardData["overview"]
           <div className="flex items-center gap-3 p-3 flex-1">
             <DonutChart
               segments={data.channels}
-              centerValue="86.5K"
-              centerLabel="Total Reach"
+              centerValue={data.channels?.length ? "100%" : "0%"}
+              centerLabel="Leads"
               size={120}
             />
             <ul className="flex-1 space-y-1">
@@ -123,22 +134,30 @@ export function OverviewTab({ data }: { data: AnalyticsDashboardData["overview"]
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E8EDF3]">
-                {data.topCampaigns.map((c) => (
-                  <tr key={c.name}>
-                    <td className="px-3 py-2 text-[12px] font-medium text-[#354568]">{c.name}</td>
-                    <td className="px-3 py-2 text-right text-[12px]">{c.leads}</td>
-                    <td className="px-3 py-2 text-right text-[12px]">{c.conversions}</td>
-                    <td className="px-3 py-2 text-right">
-                      <span className={`inline-block rounded-sm px-1.5 py-0.5 text-[12px] font-semibold ${
-                        c.score >= 80 ? "bg-[#E5F7EF] text-[#078359]"
-                          : c.score >= 60 ? "bg-[#FEF3CD] text-[#92700C]"
-                          : "bg-[#FFE8EA] text-[#D91521]"
-                      }`}>
-                        {c.score}
-                      </span>
+                {data.topCampaigns.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-3 py-6 text-center text-[12px] text-[#5E6D89]">
+                      No active campaigns found
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  data.topCampaigns.map((c) => (
+                    <tr key={c.name}>
+                      <td className="px-3 py-2 text-[12px] font-medium text-[#354568]">{c.name}</td>
+                      <td className="px-3 py-2 text-right text-[12px]">{c.leads}</td>
+                      <td className="px-3 py-2 text-right text-[12px]">{c.conversions}</td>
+                      <td className="px-3 py-2 text-right">
+                        <span className={`inline-block rounded-sm px-1.5 py-0.5 text-[12px] font-semibold ${
+                          c.score >= 80 ? "bg-[#E5F7EF] text-[#078359]"
+                            : c.score >= 60 ? "bg-[#FEF3CD] text-[#92700C]"
+                            : "bg-[#FFE8EA] text-[#D91521]"
+                        }`}>
+                          {c.score}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

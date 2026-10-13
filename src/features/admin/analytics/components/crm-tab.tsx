@@ -5,7 +5,8 @@ import { DonutChart } from "@/components/shared/charts/donut-chart";
 import type { AnalyticsDashboardData } from "../data/analytics-data";
 
 export function CrmTab({ data }: { data: AnalyticsDashboardData["crm"] }) {
-  const pipelineMax = Math.max(...data.pipeline.map((s) => s.count));
+  const pipelineMax = Math.max(...data.pipeline.map((s) => s.count), 1);
+  const totalLeadsCount = data.recentLeads?.length ?? 0;
 
   return (
     <div className="space-y-2">
@@ -41,7 +42,7 @@ export function CrmTab({ data }: { data: AnalyticsDashboardData["crm"] }) {
           <div className="flex items-center gap-3 p-4">
             <DonutChart
               segments={data.sources}
-              centerValue="248"
+              centerValue={String(totalLeadsCount)}
               centerLabel="Total Leads"
               size={140}
             />
@@ -117,25 +118,33 @@ export function CrmTab({ data }: { data: AnalyticsDashboardData["crm"] }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E8EDF3]">
-              {data.recentLeads.map((lead) => (
-                <tr key={lead.name}>
-                  <td className="px-3 py-2 text-[12px] font-medium text-[#354568]">{lead.name}</td>
-                  <td className="px-3 py-2 text-[12px] text-[#354568]">{lead.source}</td>
-                  <td className="px-3 py-2 text-[12px] text-[#354568]">{lead.project}</td>
-                  <td className="px-3 py-2 w-[120px]">
-                    <span className={`inline-block w-[90px] text-center rounded-sm px-1.5 py-0.5 text-[12px] font-semibold ${
-                      lead.stage === "New" ? "bg-[#E8F0FE] text-[#2563EB]"
-                        : lead.stage === "Contacted" ? "bg-[#FEF3CD] text-[#92700C]"
-                        : lead.stage === "Qualified" ? "bg-[#E5F7EF] text-[#078359]"
-                        : "bg-[#F3E8FF] text-[#8B5CF6]"
-                    }`}>
-                      {lead.stage}
-                    </span>
+              {data.recentLeads?.length ? (
+                data.recentLeads.map((lead) => (
+                  <tr key={lead.name}>
+                    <td className="px-3 py-2 text-[12px] font-medium text-[#354568]">{lead.name}</td>
+                    <td className="px-3 py-2 text-[12px] text-[#354568]">{lead.source}</td>
+                    <td className="px-3 py-2 text-[12px] text-[#354568]">{lead.project}</td>
+                    <td className="px-3 py-2 w-[120px]">
+                      <span className={`inline-block w-[90px] text-center rounded-sm px-1.5 py-0.5 text-[12px] font-semibold ${
+                        lead.stage === "New" ? "bg-[#E8F0FE] text-[#2563EB]"
+                          : lead.stage === "Contacted" ? "bg-[#FEF3CD] text-[#92700C]"
+                          : lead.stage === "Qualified" ? "bg-[#E5F7EF] text-[#078359]"
+                          : "bg-[#F3E8FF] text-[#8B5CF6]"
+                      }`}>
+                        {lead.stage}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-[12px] text-[#354568]">{lead.assignedTo}</td>
+                    <td className="px-3 py-2 text-[12px] text-[#354568]">{lead.date}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-3 py-10 text-center text-[12px] text-[#5E6D89]">
+                    No CRM leads recorded yet.
                   </td>
-                  <td className="px-3 py-2 text-[12px] text-[#354568]">{lead.assignedTo}</td>
-                  <td className="px-3 py-2 text-[12px] text-[#354568]">{lead.date}</td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

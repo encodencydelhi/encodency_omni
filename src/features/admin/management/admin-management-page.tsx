@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Download, FileText, Plus, Settings, ShieldCheck, Sparkles, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPageTitle } from "../shared/admin-page-title";
-import { IntegrationPendingBadge, IntegrationPendingBanner } from "../shared/integration-pending-banner";
 import { ChannelLogo } from "../shared/channel-logo";
 import { cn } from "@/lib/utils/cn";
 import { AnalyticsPage } from "../analytics/components/analytics-page";
@@ -43,7 +42,6 @@ export function AdminManagementPage({ view }: { view: View }) {
         eyebrow={`Management / ${title}`}
         title={title}
         description={`${title} for Namo Gange Trust and Moksha Sewa.`}
-        badge={<IntegrationPendingBadge />}
         action={
           view === "team" || view === "roles" ? (
             <button className="flex h-8 items-center gap-1 rounded-sm bg-[#EB0711] px-3 text-[8.5px] font-semibold text-white cursor-pointer">
@@ -52,10 +50,6 @@ export function AdminManagementPage({ view }: { view: View }) {
             </button>
           ) : undefined
         }
-      />
-      <IntegrationPendingBanner
-        moduleName="Management & Analytics"
-        feature="live analytics queries, the real member directory, and role template CRUD"
       />
       {view === "analytics" && <AnalyticsPage />}
       {view === "reports" && <Reports />}

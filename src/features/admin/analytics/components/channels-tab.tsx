@@ -42,34 +42,45 @@ const ICON_COLORS: Record<string, string> = {
 function KpiCard({ kpi, channelKey }: { kpi: AnalyticsDashboardData["channels"][keyof AnalyticsDashboardData["channels"]]["kpis"][number]; channelKey: string }) {
   const Icon = CHANNEL_ICONS[channelKey] ?? Share2;
   const colorClass = ICON_COLORS[channelKey] ?? ICON_COLORS.meta;
-  const isUp = (kpi.delta?.changePercent ?? 0) >= 0;
+  const change = kpi.delta?.changePercent ?? 0;
+  const hasDelta = kpi.delta !== undefined && kpi.delta !== null;
 
   return (
-    <div className="flex flex-col gap-1 rounded-sm border border-[#DDE4ED] bg-white p-2 shadow-xs transition-all hover:shadow-md hover:border-[#CBD5E1]">
+    <div className="flex flex-col justify-between gap-1 rounded-sm border border-[#DDE4ED] bg-white p-2.5 shadow-xs transition-all hover:shadow-md hover:border-[#CBD5E1]">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] font-medium uppercase tracking-wider text-[#354568] truncate">{kpi.label}</p>
+        <p className="text-[12px] font-medium text-[#475569] truncate">{kpi.label}</p>
         <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-sm bg-gradient-to-br", colorClass)}>
           <Icon className="size-2.5 text-white" />
         </span>
       </div>
-      <p className="text-[16px] font-bold leading-none tracking-tight tabular text-[#101A3D]">{kpi.value}</p>
-      <div className="flex items-center gap-1">
-        <span className={cn(
-          "inline-flex items-center gap-0.5 rounded-sm px-1 py-0.5 text-[12px] font-semibold",
-          isUp ? "bg-[#E5F7EF] text-[#078359]" : "bg-[#FFE8EA] text-[#D91521]"
-        )}>
-          <TrendingUp className={cn("size-2.5", !isUp && "rotate-180")} />
-          {kpi.delta ? `${kpi.delta.changePercent > 0 ? "+" : ""}${kpi.delta.changePercent}%` : "—"}
-        </span>
+      <div className="my-1 flex items-baseline gap-1.5">
+        <p className="text-[16px] font-bold leading-none tracking-tight tabular text-[#101A3D]">{kpi.value}</p>
+        {hasDelta && (
+          change > 0 ? (
+            <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-semibold bg-[#E5F7EF] text-[#078359]">
+              <TrendingUp className="size-2.5" />
+              +{change}%
+            </span>
+          ) : change < 0 ? (
+            <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-semibold bg-[#FFE8EA] text-[#D91521]">
+              <TrendingUp className="size-2.5 rotate-180" />
+              {change}%
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-[#F1F5F9] text-[#64748B]">
+              0%
+            </span>
+          )
+        )}
       </div>
-      {kpi.hint && <p className="text-[12px] text-[#354568] truncate">{kpi.hint}</p>}
+      {kpi.hint && <p className="text-[11.5px] text-[#64748B] truncate" title={kpi.hint}>{kpi.hint}</p>}
     </div>
   );
 }
 
 export function ChannelsTab({ data }: { data: AnalyticsDashboardData["channels"] }) {
   const [active, setActive] = useState<string>("meta");
-  const channel = data[active as keyof typeof data];
+  const channel = data?.[active as keyof typeof data] || { kpis: [], trend: [], topContent: [] };
 
   return (
     <div className="space-y-2">
@@ -92,7 +103,7 @@ export function ChannelsTab({ data }: { data: AnalyticsDashboardData["channels"]
       </div>
 
       <div className="grid grid-cols-3 gap-2 lg:grid-cols-6">
-        {channel.kpis.map((kpi) => (
+        {channel.kpis?.map((kpi) => (
           <KpiCard key={kpi.label} kpi={kpi} channelKey={active} />
         ))}
       </div>
@@ -103,10 +114,18 @@ export function ChannelsTab({ data }: { data: AnalyticsDashboardData["channels"]
             Performance Trend
           </h2>
           <div className="p-3">
-            <TrendAreaChart series={channel.trend} height={220} />
-            <div className="mt-2">
-              <ChartLegend series={channel.trend} />
-            </div>
+            {channel.trend?.length ? (
+              <>
+                <TrendAreaChart series={channel.trend} height={220} />
+                <div className="mt-2">
+                  <ChartLegend series={channel.trend} />
+                </div>
+              </>
+            ) : (
+              <div className="flex h-[220px] items-center justify-center text-[12px] text-[#5E6D89]">
+                No performance trend data recorded yet
+              </div>
+            )}
           </div>
         </section>
 
@@ -115,16 +134,22 @@ export function ChannelsTab({ data }: { data: AnalyticsDashboardData["channels"]
             Top Content
           </h2>
           <div className="divide-y divide-[#E8EDF3]">
-            {channel.topContent.map((item, i) => (
-              <div key={i} className="flex items-center gap-2 px-3 py-2.5">
-                <ChannelLogo channel={channelLabels[active]} className="size-5" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[12px] font-medium text-[#354568] truncate">{item.title}</p>
-                  <p className="text-[12px] text-[#354568]">{item.metric}</p>
+            {channel.topContent?.length ? (
+              channel.topContent.map((item, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-2.5">
+                  <ChannelLogo channel={channelLabels[active]} className="size-5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-medium text-[#354568] truncate">{item.title}</p>
+                    <p className="text-[12px] text-[#354568]">{item.metric}</p>
+                  </div>
+                  <span className="shrink-0 text-[12px] font-semibold">{item.value}</span>
                 </div>
-                <span className="shrink-0 text-[12px] font-semibold">{item.value}</span>
+              ))
+            ) : (
+              <div className="py-12 px-4 text-center text-[12px] text-[#5E6D89]">
+                No published content or activity tracked for {channelLabels[active]}
               </div>
-            ))}
+            )}
           </div>
         </section>
       </div>

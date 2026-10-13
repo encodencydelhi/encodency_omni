@@ -1,5 +1,6 @@
 export type AutomationWorkflowStatus = "Active" | "Draft" | "Paused" | "Error" | "Archived";
-export type AutomationRunStatus = "Running" | "Successful" | "Failed" | "Partial Failure" | "Cancelled";
+export type AutomationRunStatus = "Running" | "Waiting" | "Successful" | "Failed" | "Cancelled" | "Partial Failure";
+export type AutomationStepStatus = "Successful" | "Failed" | "Skipped" | "Waiting" | "Running" | "Cancelled" | "Partial Failure";
 export type IntegrationCapability = "meta" | "aisensy" | "google-business" | "ga4" | "search-console" | "omni-tracking";
 
 export interface AutomationWorkflow {
@@ -14,10 +15,15 @@ export interface AutomationWorkflow {
   };
   channels: string[];
   ownerId?: string;
+  ownerName?: string;
+  /** Runs in the selected period. */
   runs: number;
-  successRate: number;
+  totalRuns?: number;
+  /** Null when the workflow has no finished runs in the period. */
+  successRate: number | null;
   failures: number;
   lastRunAt?: string;
+  templateId?: string;
   createdAt: string;
   updatedAt: string;
   nodes: AutomationNode[];
@@ -40,18 +46,38 @@ export interface AutomationEdge {
   id: string;
   source: string;
   target: string;
-  label?: string; // e.g. "Yes", "No"
+  label?: string;
+}
+
+export interface AutomationRunStep {
+  id: string;
+  nodeId: string;
+  label?: string;
+  actionId?: string;
+  status: AutomationStepStatus;
+  startedAt: string;
+  durationMs: number;
+  input: Record<string, any>;
+  output?: Record<string, any>;
+  error?: string;
+  retryCount: number;
 }
 
 export interface AutomationRun {
   id: string;
+  clientId: string;
   workflowId: string;
   workflowName?: string;
-  channel?: IntegrationCapability | "whatsapp" | "email" | "system";
+  channel?: string;
   triggerSource?: string;
+  test?: boolean;
   status: AutomationRunStatus;
   startedAt: string;
+  completedAt?: string | null;
+  resumeAt?: string | null;
   durationMs: number;
+  owner?: string;
+  httpDumps?: any[];
   triggerEntity: {
     type: string;
     id: string;
@@ -59,25 +85,16 @@ export interface AutomationRun {
     subLabel?: string;
   };
   steps: AutomationRunStep[];
+  stepsTotal?: number;
+  stepsSucceeded?: number;
   rawWebhookPayload?: Record<string, any>;
-  httpDumps?: Array<{
-    id: string;
-    service: string;
-    method: "GET" | "POST" | "PUT" | "DELETE";
-    endpoint: string;
-    statusCode: number;
-    durationMs: number;
-    requestHeaders?: Record<string, string>;
-    requestBody?: Record<string, any>;
-    responseBody?: Record<string, any>;
-  }>;
+  retryOfId?: string | null;
   errorSummary?: {
     code: string;
     message: string;
     stack?: string;
     recommendation: string;
   };
-  owner?: string;
 }
 
 export type AutomationLogLevel = "info" | "warn" | "error" | "debug";
@@ -95,39 +112,30 @@ export interface AutomationConsoleLog {
 
 export interface AutomationHealthMetrics {
   totalExecutions: { value: number; trend: number };
-  successRate: { value: number; trend: number };
+  successRate: { value: number | null; trend: number };
   failedRuns: { value: number; trend: number };
-  activeQueue: { count: number; avgWaitTime: string; processingRate: number };
-  rateLimits: {
-    meta: { remaining: number; total: number; percentage: number; status: "Healthy" | "Warning" | "Critical" };
-    whatsapp: { remaining: number; total: number; percentage: number; status: "Healthy" | "Warning" | "Critical" };
-    google: { remaining: number; total: number; percentage: number; status: "Healthy" | "Warning" | "Critical" };
+  activeQueue: { count: number; waiting?: number; running?: number; avgWaitTime: string; processingRate: number };
+  /** Provider rate limits are not reported by the integrations yet, or provided by mock/provider metrics. */
+  rateLimits: null | {
+    meta?: { remaining?: number; total?: number; percentage: number; status?: string };
+    whatsapp?: { remaining?: number; total?: number; percentage: number; status?: string };
+    google?: { remaining?: number; total?: number; percentage: number; status?: string };
+    [key: string]: any;
   };
-  webhookIngestion: { eventsPerMin: number; uptime: number };
-}
-
-export interface AutomationRunStep {
-  id: string;
-  nodeId: string;
-  status: AutomationRunStatus;
-  startedAt: string;
-  durationMs: number;
-  input: Record<string, any>;
-  output?: Record<string, any>;
-  error?: string;
-  retryCount: number;
+  webhookIngestion: { eventsPerMin: number; eventsLastHour?: number; uptime: number | null };
 }
 
 export interface AutomationAnalytics {
+  periodDays?: number;
   activeWorkflows: { value: number; trend: number };
   totalRuns: { value: number; trend: number };
-  successRate: { value: number; trend: number };
+  successRate: { value: number | null; trend: number };
   failedRuns: { value: number; trend: number };
-  timeSavedHours: { value: number; trend: number };
+  timeSavedHours: { value: number; trend: number; estimate?: string };
   actionsExecuted: { value: number; trend: number };
-  activity: { date: string; successfulRuns: number; failedRuns: number; successRate: number }[];
-  health: { status: "Healthy" | "Needs Attention" | "Paused" | "Error"; count: number; color: string }[];
-  triggerSources: { source: string; percentage: number; color: string }[];
+  activity: { date: string; successfulRuns: number; failedRuns: number; successRate: number | null }[];
+  health: { status: string; count: number; color: string }[];
+  triggerSources: { source: string; count?: number; percentage: number; color: string }[];
   alerts: AutomationAlert[];
 }
 
@@ -135,20 +143,24 @@ export interface AutomationAlert {
   id: string;
   title: string;
   description: string;
-  timeAgo: string;
+  at?: string;
+  timeAgo?: string;
   type: "error" | "warning";
   actionLabel: string;
+  workflowId?: string;
 }
 
 export interface AutomationTemplate {
   id: string;
   name: string;
   description: string;
-  category: "Lead Management" | "Google Business" | "Website" | "SEO" | "WhatsApp" | "Tasks" | "Notifications";
+  category: "Lead Management" | "Website" | "WhatsApp" | "Tasks" | "Notifications" | "Google Business" | string;
   trigger: string;
   stepCount: number;
-  requiredIntegrations: IntegrationCapability[];
+  requiredIntegrations: string[];
+  channels?: string[];
   useCount: number;
   complexity: "Basic" | "Intermediate" | "Advanced";
   features?: string[];
+  nodes?: Array<Pick<AutomationNode, "id" | "type" | "actionId" | "label" | "description" | "config">>;
 }

@@ -110,6 +110,7 @@ const MOCK_WORKFLOWS: AutomationWorkflow[] = [
 const MOCK_RUNS: AutomationRun[] = [
   {
     id: "run_8f3a2c1e",
+    clientId: "cli_alpha",
     workflowId: "wf_1",
     workflowName: "New Meta Lead Follow-up",
     channel: "meta",
@@ -183,6 +184,7 @@ const MOCK_RUNS: AutomationRun[] = [
   },
   {
     id: "run_7c9d4b2a",
+    clientId: "cli_alpha",
     workflowId: "wf_1",
     workflowName: "New Meta Lead Follow-up",
     channel: "whatsapp",
@@ -239,6 +241,7 @@ const MOCK_RUNS: AutomationRun[] = [
   },
   {
     id: "run_5e2f8a9d",
+    clientId: "cli_alpha",
     workflowId: "wf_2",
     workflowName: "Google Review Alert",
     channel: "google-business",
@@ -287,6 +290,7 @@ const MOCK_RUNS: AutomationRun[] = [
   },
   {
     id: "run_4b8e2d1f",
+    clientId: "cli_alpha",
     workflowId: "wf_4",
     workflowName: "Website Down Alert",
     channel: "omni-tracking",
@@ -336,6 +340,7 @@ const MOCK_RUNS: AutomationRun[] = [
   },
   {
     id: "run_1d7c9e5b",
+    clientId: "cli_alpha",
     workflowId: "wf_3",
     workflowName: "WhatsApp Re-engagement",
     channel: "whatsapp",
@@ -363,6 +368,7 @@ const MOCK_RUNS: AutomationRun[] = [
   },
   {
     id: "run_9a3f6c7e",
+    clientId: "cli_alpha",
     workflowId: "wf_1",
     workflowName: "New Meta Lead Follow-up",
     channel: "meta",
@@ -383,6 +389,7 @@ const MOCK_RUNS: AutomationRun[] = [
   },
   {
     id: "run_6d2b4e8f",
+    clientId: "cli_alpha",
     workflowId: "wf_2",
     workflowName: "Google Review Alert",
     channel: "google-business",
@@ -403,6 +410,7 @@ const MOCK_RUNS: AutomationRun[] = [
   },
   {
     id: "run_3e9c1a7d",
+    clientId: "cli_alpha",
     workflowId: "wf_3",
     workflowName: "WhatsApp Re-engagement",
     channel: "whatsapp",
@@ -621,6 +629,7 @@ class MockAutomationRepository implements AutomationRepository {
     const newRunId = `run_test_${Date.now().toString(36)}`;
     const newRun: AutomationRun = {
       id: newRunId,
+      clientId: wf.clientId || "cli_alpha",
       workflowId: wf.id,
       workflowName: wf.name,
       channel: (wf.channels[0] as any) || "meta",

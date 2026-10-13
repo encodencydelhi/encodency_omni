@@ -5,33 +5,43 @@ import { ShieldAlert, ShieldCheck, Zap, AlertTriangle, PauseCircle, Trash2, Rota
 import { toast } from "sonner";
 import { SafetySettings } from "../../data/settings-types";
 import { useScrollLock } from "@/lib/utils/scroll-lock";
+import { automationApi } from "../../data/automation-api";
 
 interface SafetyControlsSectionProps {
   settings: SafetySettings;
   onChange: (updates: Partial<SafetySettings>) => void;
+  /** Saves these fields immediately (used for switches that must take effect at once). */
+  onApplyNow: (updates: Partial<SafetySettings>) => Promise<boolean>;
   onResetAllToDefaults: () => void;
 }
 
-export function SafetyControlsSection({ settings, onChange, onResetAllToDefaults }: SafetyControlsSectionProps) {
+export function SafetyControlsSection({ settings, onChange, onApplyNow, onResetAllToDefaults }: SafetyControlsSectionProps) {
   const [showDangerModal, setShowDangerModal] = useState<"pause_all" | "purge_logs" | "reset_all" | null>(null);
+  const [purgeDays, setPurgeDays] = useState(30);
+  const [busy, setBusy] = useState(false);
   useScrollLock(showDangerModal !== null);
 
-  const handleConfirmAction = () => {
-    if (showDangerModal === "pause_all") {
-      onChange({ emergencyKillSwitchActive: !settings.emergencyKillSwitchActive });
-      if (!settings.emergencyKillSwitchActive) {
-        toast.warning("EMERGENCY KILL SWITCH ACTIVATED: All active workflows halted!", {
-          description: "No webhooks or scheduled triggers will execute until deactivated.",
-        });
-      } else {
-        toast.success("Kill switch deactivated. Normal automation resumed.");
+  const handleConfirmAction = async () => {
+    setBusy(true);
+    try {
+      if (showDangerModal === "pause_all") {
+        const next = !settings.emergencyKillSwitchActive;
+        if (await onApplyNow({ emergencyKillSwitchActive: next })) {
+          if (next) toast.warning("Emergency kill switch is ON", { description: "No workflow will start until you turn it off. Waiting runs stay paused." });
+          else toast.success("Kill switch turned off. Workflows run normally again.");
+        }
+      } else if (showDangerModal === "purge_logs") {
+        const { deleted } = await automationApi.purgeRuns(purgeDays);
+        toast.success(`Deleted ${deleted} finished run${deleted === 1 ? "" : "s"} older than ${purgeDays} days.`);
+      } else if (showDangerModal === "reset_all") {
+        onResetAllToDefaults();
       }
-    } else if (showDangerModal === "purge_logs") {
-      toast.success("Purged all historic completed logs older than 7 days.");
-    } else if (showDangerModal === "reset_all") {
-      onResetAllToDefaults();
+      setShowDangerModal(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The action failed.");
+    } finally {
+      setBusy(false);
     }
-    setShowDangerModal(null);
   };
 
   return (
@@ -72,7 +82,7 @@ export function SafetyControlsSection({ settings, onChange, onResetAllToDefaults
                 )}
               </div>
               <p className="text-[11px] text-[#64748B] mt-1 leading-relaxed">
-                When enabled, workflows evaluate real triggers, filters, and conditional branches, but <strong>mock all external API side-effects</strong> (no actual WhatsApp or SMS sent, no Meta budgets changed).
+                When enabled, workflows still run their triggers, conditions and delays, but <strong>every action is skipped</strong>: no WhatsApp or email is sent and no CRM record is assigned, updated or created. Saved immediately.
               </p>
             </div>
           </div>
@@ -82,12 +92,12 @@ export function SafetyControlsSection({ settings, onChange, onResetAllToDefaults
               type="checkbox"
               checked={settings.sandboxDryRunMode}
               onChange={(e) => {
-                onChange({ sandboxDryRunMode: e.target.checked });
-                if (e.target.checked) {
-                  toast.warning("Sandbox Mode ENABLED: External dispatch is paused.");
-                } else {
-                  toast.info("Sandbox Mode DISABLED: Live dispatch active.");
-                }
+                const enabled = e.target.checked;
+                void onApplyNow({ sandboxDryRunMode: enabled }).then((ok) => {
+                  if (!ok) return;
+                  if (enabled) toast.warning("Sandbox dry-run is ON: messages are not sent and records are not changed.");
+                  else toast.success("Sandbox dry-run is OFF: workflows act for real again.");
+                });
               }}
               className="sr-only peer"
             />
@@ -110,7 +120,7 @@ export function SafetyControlsSection({ settings, onChange, onResetAllToDefaults
               <div>
                 <span className="font-bold text-[#111C3A] text-[11.5px] block">Emergency Circuit Breaker</span>
                 <span className="text-[10px] text-[#64748B] block mt-0.5">
-                  Auto-pauses workflow worker if error rate spikes abruptly.
+                  Sets a workflow to Error (stopped) when too many of its runs fail in a short window.
                 </span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer shrink-0">
@@ -134,7 +144,16 @@ export function SafetyControlsSection({ settings, onChange, onResetAllToDefaults
                   onChange={(e) => onChange({ circuitBreakerThresholdFailures: parseInt(e.target.value) || 25 })}
                   className="w-16 bg-white border border-[#E2E8F0] rounded px-2 py-1 text-[11px] font-mono font-bold text-[#111C3A]"
                 />
-                <span className="text-[10px] text-[#64748B]">failures in 60 seconds</span>
+                <span className="text-[10px] text-[#64748B]">failures in</span>
+                <input
+                  type="number"
+                  min="10"
+                  max="3600"
+                  value={settings.circuitBreakerWindowSeconds}
+                  onChange={(e) => onChange({ circuitBreakerWindowSeconds: parseInt(e.target.value) || 60 })}
+                  className="w-16 bg-white border border-[#E2E8F0] rounded px-2 py-1 text-[11px] font-mono font-bold text-[#111C3A]"
+                />
+                <span className="text-[10px] text-[#64748B]">seconds</span>
               </div>
             )}
           </div>
@@ -145,7 +164,7 @@ export function SafetyControlsSection({ settings, onChange, onResetAllToDefaults
               <div>
                 <span className="font-bold text-[#111C3A] text-[11.5px] block">Mask Customer PII in Console Logs</span>
                 <span className="text-[10px] text-[#64748B] block mt-0.5">
-                  Anonymizes phone numbers (<code className="font-mono text-[9px]">+91 98*** **344</code>) and email addresses in debug traces.
+                  Masks phone numbers and email addresses in the step inputs/outputs stored with each run.
                 </span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer shrink-0">
@@ -176,7 +195,7 @@ export function SafetyControlsSection({ settings, onChange, onResetAllToDefaults
               <option value={365}>365 days (Enterprise Compliance)</option>
             </select>
             <p className="text-[10px] text-[#94A3B8] mt-1">
-              Payload blobs and HTTP headers older than this window are automatically purged.
+              Finished runs older than this are deleted automatically (checked every 15 minutes).
             </p>
           </div>
 
@@ -184,14 +203,15 @@ export function SafetyControlsSection({ settings, onChange, onResetAllToDefaults
             <div>
               <span className="font-bold text-[#111C3A] block text-[11.5px]">Require 2-Person Approval for Risky Actions</span>
               <span className="text-[10px] text-[#64748B] block mt-0.5">
-                Bulk contact deletions or broad broadcast blasts require second admin sign-off.
+                Not available yet: approvals are not part of the workflow engine. Use Draft and Test before publishing.
               </span>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
+            <label className="relative inline-flex items-center cursor-not-allowed shrink-0 ml-3 opacity-50">
               <input
                 type="checkbox"
-                checked={settings.requireApprovalForRiskyActions}
-                onChange={(e) => onChange({ requireApprovalForRiskyActions: e.target.checked })}
+                disabled
+                checked={false}
+                readOnly
                 className="sr-only peer"
               />
               <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
@@ -254,10 +274,19 @@ export function SafetyControlsSection({ settings, onChange, onResetAllToDefaults
             </div>
 
             <p className="text-[12px] text-[#64748B] leading-relaxed">
-              {showDangerModal === "pause_all" && "Are you sure you want to toggle the global emergency kill switch? All running and scheduled executions will immediately halt."}
-              {showDangerModal === "purge_logs" && "Are you sure you want to purge all completed logs? This action cannot be reversed and logs will be permanently deleted."}
+              {showDangerModal === "pause_all" && (settings.emergencyKillSwitchActive ? "Turn the kill switch off? Active workflows start reacting to new events again." : "Turn the kill switch on? No workflow will start: new events are ignored and test runs are blocked until you turn it off. This is saved immediately.")}
+              {showDangerModal === "purge_logs" && "Finished runs (successful, failed, cancelled) older than the chosen age are deleted permanently with their step logs. Waiting runs are kept."}
               {showDangerModal === "reset_all" && "This will overwrite all 8 automation settings sections back to their factory default values. Any custom retry or routing settings will be lost."}
             </p>
+
+            {showDangerModal === "purge_logs" ? (
+              <label className="flex items-center gap-2 text-[12px] text-[#334155]">
+                Delete runs older than
+                <select value={purgeDays} onChange={(e) => setPurgeDays(Number(e.target.value))} className="rounded-md border border-[#E2E8F0] px-2 py-1 text-[12px]">
+                  {[7, 30, 60, 90, 180].map((d) => <option key={d} value={d}>{d} days</option>)}
+                </select>
+              </label>
+            ) : null}
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F1F5F9]">
               <button
@@ -269,10 +298,11 @@ export function SafetyControlsSection({ settings, onChange, onResetAllToDefaults
               </button>
               <button
                 type="button"
-                onClick={handleConfirmAction}
-                className="px-4 py-2 rounded-lg bg-[#DC2626] hover:bg-[#B91C1C] text-white text-[11.5px] font-bold shadow-sm shadow-red-500/20 transition-colors"
+                onClick={() => void handleConfirmAction()}
+                disabled={busy}
+                className="px-4 py-2 rounded-lg bg-[#DC2626] hover:bg-[#B91C1C] text-white text-[11.5px] font-bold shadow-sm shadow-red-500/20 transition-colors disabled:opacity-50"
               >
-                Yes, Proceed
+                {busy ? "Working..." : "Yes, Proceed"}
               </button>
             </div>
           </div>

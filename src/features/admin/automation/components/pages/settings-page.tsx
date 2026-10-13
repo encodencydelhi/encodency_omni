@@ -44,9 +44,12 @@ export function SettingsPage() {
   const {
     settings,
     isLoading,
+    loadError,
+    reload,
     isSaving,
     isDirty,
     updateSection,
+    applyNow,
     saveSettings,
     discardChanges,
     resetToDefaults,
@@ -57,6 +60,16 @@ export function SettingsPage() {
     return (
       <div className="flex h-64 items-center justify-center text-[13px] text-[#64748B] animate-pulse">
         Loading automation settings...
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-xl border border-[#E2E8F0] bg-white text-center">
+        <p className="text-[13px] font-semibold text-[#111C3A]">Automation settings could not be loaded</p>
+        <p className="text-[11.5px] text-[#64748B]">{loadError}</p>
+        <button type="button" onClick={reload} className="text-[12px] font-semibold text-[#2563EB] hover:underline">Retry</button>
       </div>
     );
   }
@@ -132,6 +145,7 @@ export function SettingsPage() {
             <NotificationsSection
               settings={settings.notifications}
               onChange={(u) => updateSection("notifications", u)}
+              isDirty={isDirty}
             />
           )}
 
@@ -160,6 +174,7 @@ export function SettingsPage() {
             <SafetyControlsSection
               settings={settings.safety}
               onChange={(u) => updateSection("safety", u)}
+              onApplyNow={(u) => applyNow("safety", u)}
               onResetAllToDefaults={resetToDefaults}
             />
           )}
@@ -208,58 +223,27 @@ export function SettingsPage() {
             </div>
           </div>
 
-          {/* Connected Integrations Quick View */}
+          {/* What is live right now */}
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[13px] font-bold text-[#111C3A]">Connected Gateways</h3>
-              <button
-                type="button"
-                onClick={() => setActiveSection("integrations")}
-                className="text-[10.5px] font-bold text-[#2563EB] hover:underline cursor-pointer"
-              >
-                Configure →
-              </button>
+            <h3 className="text-[13px] font-bold text-[#111C3A] mb-2.5">Live status</h3>
+            <div className="space-y-1.5 text-[11px]">
+              <div className="flex items-center justify-between"><span className="text-[#64748B]">Kill switch</span><span className={settings.safety.emergencyKillSwitchActive ? "font-bold text-red-600" : "font-semibold text-emerald-600"}>{settings.safety.emergencyKillSwitchActive ? "ON - nothing runs" : "Off"}</span></div>
+              <div className="flex items-center justify-between"><span className="text-[#64748B]">Sandbox dry-run</span><span className={settings.safety.sandboxDryRunMode ? "font-bold text-amber-600" : "font-semibold text-emerald-600"}>{settings.safety.sandboxDryRunMode ? "ON - actions skipped" : "Off"}</span></div>
+              <div className="flex items-center justify-between"><span className="text-[#64748B]">Business hours</span><span className="font-semibold text-[#334155]">{settings.businessHours.enabled ? "Enforced" : "Off"}{settings.businessHours.enableQuietHours ? ` · quiet ${settings.businessHours.quietHoursStart}-${settings.businessHours.quietHoursEnd}` : ""}</span></div>
+              <div className="flex items-center justify-between"><span className="text-[#64748B]">Retries</span><span className="font-semibold text-[#334155]">{settings.retry.maxRetryAttempts} x {settings.retry.retryAlgorithm}</span></div>
+              <div className="flex items-center justify-between"><span className="text-[#64748B]">Routing agents</span><span className="font-semibold text-[#334155]">{settings.routing.agents.filter((a) => a.online).length} online / {settings.routing.agents.length}</span></div>
             </div>
-
-            <div className="space-y-1.5 text-[10.5px]">
-              {settings.integrations.providers.map((int) => (
-                <div
-                  key={int.id}
-                  onClick={() => setActiveSection("integrations")}
-                  className="flex items-center justify-between p-2 hover:bg-[#FAFBFD] rounded-lg border border-transparent hover:border-[#E2E8F0] cursor-pointer transition-colors"
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="font-bold text-[#111C3A] truncate">{int.name}</span>
-                  </div>
-                  <span className="w-[52px] text-center font-mono text-[9.5px] font-bold text-emerald-600 bg-emerald-50 py-0.5 rounded border border-emerald-200 shrink-0">
-                    {int.latencyMs}ms
-                  </span>
-                </div>
-              ))}
-            </div>
+            <button type="button" onClick={() => setActiveSection("safety")} className="mt-3 text-[10.5px] font-bold text-[#2563EB] hover:underline">Safety controls</button>
           </div>
 
-          {/* Audit Log Card */}
+          {/* Last change */}
           <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-xs p-4">
-            <h3 className="text-[13px] font-bold text-[#111C3A] mb-2.5">Audit Log</h3>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="size-6 rounded-full bg-[#1E293B] text-white flex items-center justify-center font-bold text-[10px]">
-                M
-              </div>
-              <div>
-                <span className="text-[11px] font-bold text-[#111C3A] block leading-none">Manish Sirohi</span>
-                <span className="text-[9.5px] text-[#94A3B8]">Last modified: Today, 10:24 AM</span>
-              </div>
-            </div>
-
-            <div className="p-2 rounded-lg bg-[#FAFBFD] border border-[#E2E8F0] text-[9.5px] text-[#64748B] space-y-1">
-              <div>• Ownership: {settings.general.defaultOwnership.replace("_", " ")}</div>
-              <div>• Timezone: {settings.general.timezone.split(" ")[0]}</div>
-              <div>• Retry limit: {settings.retry.maxRetryAttempts} attempts</div>
-              <div>• Quiet hours: {settings.businessHours.enableQuietHours ? "Active (10 PM - 8 AM)" : "Disabled"}</div>
-            </div>
+            <h3 className="text-[13px] font-bold text-[#111C3A] mb-1.5">Last saved</h3>
+            <p className="text-[11px] text-[#64748B]">
+              {settings.meta?.updatedAt ? `${new Date(settings.meta.updatedAt).toLocaleString("en-IN")} · version ${settings.meta.version}` : "Not saved yet - these are the defaults."}
+            </p>
+            <p className="mt-1 text-[10px] text-[#94A3B8]">Settings apply to every client of this company.</p>
           </div>
-
         </div>
 
       </div>
