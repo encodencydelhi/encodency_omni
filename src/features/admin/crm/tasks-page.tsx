@@ -1,42 +1,41 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
+import Link from "next/link";
 import {
   Plus, MoreHorizontal, Eye, Pencil, Trash2, CheckCircle2, Clock,
-  Calendar, Phone, Mail, Users, AlertCircle, ListTodo, CalendarDays,
+  Calendar, Phone, Mail, Users, ListTodo, CalendarDays,
   Columns3, GripVertical, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import { SearchInput } from "@/components/shared/search-input";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
-import { ActivityTimeline } from "@/components/shared/activity-timeline";
 import { DonutChart } from "@/components/shared/charts/donut-chart";
 import { TrendAreaChart, ChartLegend } from "@/components/shared/charts/trend-area-chart";
 import { MonthlyBarChart } from "@/components/shared/charts/monthly-bar-chart";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
-import { IntegrationPendingBadge, IntegrationPendingBanner } from "@/features/admin/shared/integration-pending-banner";
+import { teamApi } from "@/features/admin/team/live/team-api";
+import { isMockMode } from "@/config/env";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
 import type { DataTableColumn } from "@/components/shared/data-table/types";
 import type { PaginationMeta, SortSpec } from "@/types/api";
 import type { DonutSegment } from "@/components/shared/charts/donut-chart";
 import type { TrendSeries } from "@/components/shared/charts/trend-area-chart";
 import type { MonthlyPoint } from "@/types/domain/dashboard";
 import { TaskMetricCards } from "./components/crm-metric-cards";
-import { tasks as initialTasks, activities } from "./data/crm-data";
+import { tasks as initialTasks } from "./data/crm-data";
 import type { CrmTask, TaskStatus, TaskPriority, TaskType, TaskViewMode } from "./types";
-import { TASK_STATUS_REGISTRY, TASK_PRIORITY_REGISTRY } from "./types";
 import { formatDate } from "@/lib/utils/format";
-import { crmApi } from './data/crm-api';
+import { crmApi, type CrmScope } from "./data/crm-api";
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                            */
@@ -77,6 +76,61 @@ const BOARD_COLUMNS: { status: TaskStatus; label: string }[] = [
   { status: "in_progress", label: "In-progress" },
   { status: "completed", label: "Completed" },
 ];
+
+interface TaskDraft {
+  title: string;
+  description: string;
+  type: TaskType;
+  priority: TaskPriority;
+  dueDate: string;
+  dueTime: string;
+  assigneeId: string;
+}
+
+function emptyTaskDraft(): TaskDraft {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return {
+    title: "",
+    description: "",
+    type: "follow_up",
+    priority: "medium",
+    dueDate: tomorrow.toISOString().slice(0, 10),
+    dueTime: "09:00",
+    assigneeId: "",
+  };
+}
+
+function normalizeTask(task: Partial<CrmTask>): CrmTask {
+  const now = new Date().toISOString();
+  return {
+    id: String(task.id ?? ""),
+    title: String(task.title ?? "Untitled task"),
+    description: String(task.description ?? ""),
+    type: TYPE_OPTIONS.includes(task.type as TaskType) ? task.type as TaskType : "other",
+    priority: PRIORITY_OPTIONS.includes(task.priority as TaskPriority) ? task.priority as TaskPriority : "medium",
+    status: STATUS_OPTIONS.includes(task.status as TaskStatus) ? task.status as TaskStatus : "pending",
+    assigneeId: String(task.assigneeId ?? ""),
+    assigneeName: String(task.assigneeName ?? "Unassigned"),
+    dueDate: String(task.dueDate ?? ""),
+    dueTime: String(task.dueTime ?? ""),
+    reminder: String(task.reminder ?? "none"),
+    relatedLeadId: task.relatedLeadId,
+    relatedLeadName: task.relatedLeadName,
+    relatedContactId: task.relatedContactId,
+    relatedContactName: task.relatedContactName,
+    relatedDealId: task.relatedDealId,
+    relatedDealName: task.relatedDealName,
+    tags: Array.isArray(task.tags) ? task.tags : [],
+    createdAt: String(task.createdAt ?? now),
+    updatedAt: String(task.updatedAt ?? now),
+    completedAt: task.completedAt,
+  };
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "The request could not be completed.";
+}
 
 /* ------------------------------------------------------------------ */
 /* Task type donut                                                      */
@@ -148,8 +202,16 @@ function computeMonthlyTasks(tasks: CrmTask[]): MonthlyPoint[] {
 /* ------------------------------------------------------------------ */
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState<CrmTask[]>(initialTasks);
-  useEffect(()=>{if(process.env.NEXT_PUBLIC_DATA_SOURCE==='api')crmApi.list<CrmTask>('task').then(setTasks).catch(()=>{});},[]);
+  const { companyId, clientId, isReady } = useTenancyContext();
+  const scope = useMemo<CrmScope | null>(() => companyId && clientId ? { companyId, clientId } : null, [companyId, clientId]);
+  const [tasks, setTasks] = useState<CrmTask[]>(isMockMode ? initialTasks : []);
+  const [assignees, setAssignees] = useState<Array<{ id: string; name: string }>>(() => {
+    const unique = new Map(initialTasks.map((task) => [task.assigneeId, { id: task.assigneeId, name: task.assigneeName }]));
+    return [...unique.values()];
+  });
+  const [isLoading, setIsLoading] = useState(!isMockMode);
+  const [loadError, setLoadError] = useState<unknown>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
@@ -159,6 +221,40 @@ export default function TasksPage() {
   const [viewMode, setViewMode] = useState<TaskViewMode>("list");
   const [detailTask, setDetailTask] = useState<CrmTask | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [editingTask, setEditingTask] = useState<CrmTask | null>(null);
+  const [draft, setDraft] = useState<TaskDraft>(emptyTaskDraft);
+
+  const loadTasks = useCallback(async () => {
+    if (isMockMode) return;
+    if (!isReady || !scope) {
+      if (isReady) {
+        setLoadError(new Error("Select a Client to view CRM tasks."));
+        setIsLoading(false);
+      }
+      return;
+    }
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const [taskRows, memberRows] = await Promise.all([
+        crmApi.list<CrmTask>("task", scope),
+        teamApi.listMembers(scope.companyId).catch(() => []),
+      ]);
+      setTasks(taskRows.map(normalizeTask));
+      if (memberRows.length) {
+        setAssignees(memberRows.filter((member) => !member.suspendedAt).map((member) => ({ id: member.user.id, name: member.user.name?.trim() || member.user.email })));
+      }
+    } catch (error) {
+      setLoadError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isReady, scope]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadTasks(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadTasks]);
 
   /* ---- Derived data ---- */
   const filtered = useMemo(() => {
@@ -206,34 +302,109 @@ export default function TasksPage() {
     );
   }, []);
 
-  const handleToggleComplete = (taskId: string) => {
-    setTasks((prev) => prev.map((t) =>
-      t.id === taskId
-        ? { ...t, status: t.status === "completed" ? "pending" : "completed", completedAt: t.status === "completed" ? undefined : new Date().toISOString() }
-        : t
-    ));
-    const task = tasks.find((t) => t.id === taskId);
-    if (task) {
-      toast.success(task.status === "completed" ? "Task reopened" : "Task completed!");
+  const replaceTask = (task: CrmTask) => {
+    setTasks((current) => current.map((item) => item.id === task.id ? task : item));
+    setDetailTask((current) => current?.id === task.id ? task : current);
+  };
+
+  const updateTask = async (task: CrmTask, successMessage: string) => {
+    const previous = tasks.find((item) => item.id === task.id);
+    if (!previous) return;
+    const optimistic = normalizeTask({ ...task, updatedAt: new Date().toISOString() });
+    replaceTask(optimistic);
+    try {
+      const saved = isMockMode ? optimistic : normalizeTask(await crmApi.update("task", task.id, optimistic, scope ?? undefined));
+      replaceTask(saved);
+      toast.success(successMessage);
+    } catch (error) {
+      replaceTask(previous);
+      toast.error(getErrorMessage(error));
     }
   };
 
+  const handleToggleComplete = (taskId: string) => {
+    const task = tasks.find((item) => item.id === taskId);
+    if (!task) return;
+    const completed = task.status !== "completed";
+    void updateTask(
+      { ...task, status: completed ? "completed" : "pending", completedAt: completed ? new Date().toISOString() : undefined },
+      completed ? "Task completed!" : "Task reopened",
+    );
+  };
+
   const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
-    setTasks((prev) => prev.map((t) =>
-      t.id === taskId ? { ...t, status: newStatus, completedAt: newStatus === "completed" ? new Date().toISOString() : undefined } : t
-    ));
-    toast.success(`Task moved to ${STATUS_LABELS[newStatus]}`);
+    const task = tasks.find((item) => item.id === taskId);
+    if (!task) return;
+    void updateTask(
+      { ...task, status: newStatus, completedAt: newStatus === "completed" ? task.completedAt ?? new Date().toISOString() : undefined },
+      `Task moved to ${STATUS_LABELS[newStatus]}`,
+    );
   };
 
-  const handlePriorityChange = (taskId: string, newPriority: TaskPriority) => {
-    setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, priority: newPriority } : t));
-    toast.success(`Priority changed to ${PRIORITY_LABELS[newPriority]}`);
+  const handleDelete = async (taskId: string) => {
+    try {
+      if (!isMockMode) await crmApi.remove("task", taskId, scope ?? undefined);
+      setTasks((prev) => prev.filter((task) => task.id !== taskId));
+      toast.success("Task deleted");
+      setDetailTask(null);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
   };
 
-  const handleDelete = (taskId: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== taskId));
-    toast.success("Task deleted");
+  const openCreate = () => {
+    setEditingTask(null);
+    setDraft(emptyTaskDraft());
+    setShowCreate(true);
+  };
+
+  const openEdit = (task: CrmTask) => {
+    setEditingTask(task);
+    setDraft({ title: task.title, description: task.description, type: task.type, priority: task.priority, dueDate: task.dueDate, dueTime: task.dueTime, assigneeId: task.assigneeId });
     setDetailTask(null);
+    setShowCreate(true);
+  };
+
+  const handleSave = async () => {
+    if (!draft.title.trim()) {
+      toast.error("Task title is required.");
+      return;
+    }
+    if (!draft.dueDate) {
+      toast.error("Due date is required.");
+      return;
+    }
+    const assignee = assignees.find((item) => item.id === draft.assigneeId);
+    const now = new Date().toISOString();
+    const task = normalizeTask({
+      ...(editingTask ?? {}),
+      id: editingTask?.id ?? (isMockMode ? crypto.randomUUID() : ""),
+      ...draft,
+      assigneeName: assignee?.name ?? "Unassigned",
+      status: editingTask?.status ?? "pending",
+      reminder: editingTask?.reminder ?? "none",
+      tags: editingTask?.tags ?? [],
+      createdAt: editingTask?.createdAt ?? now,
+      updatedAt: now,
+    });
+    setIsSaving(true);
+    try {
+      if (editingTask) {
+        const saved = isMockMode ? task : normalizeTask(await crmApi.update("task", editingTask.id, task, scope ?? undefined));
+        replaceTask(saved);
+        toast.success("Task updated");
+      } else {
+        const saved = isMockMode ? task : normalizeTask(await crmApi.create("task", task, scope ?? undefined));
+        setTasks((current) => [saved, ...current]);
+        toast.success("Task created");
+      }
+      setShowCreate(false);
+      setEditingTask(null);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleBoardDrop = (taskId: string, targetStatus: TaskStatus) => {
@@ -241,7 +412,7 @@ export default function TasksPage() {
   };
 
   /* ---- Table columns ---- */
-  const columns: DataTableColumn<CrmTask>[] = useMemo(() => [
+  const columns: DataTableColumn<CrmTask>[] = [
     {
       id: "task",
       header: "Task",
@@ -322,19 +493,19 @@ export default function TasksPage() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
             <DropdownMenuItem onClick={() => setDetailTask(row)}><Eye /> View</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setDetailTask(row)}><Pencil /> Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openEdit(row)}><Pencil /> Edit</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => handleToggleComplete(row.id)}>
               <CheckCircle2 /> {row.status === "completed" ? "Reopen" : "Complete"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={() => handleDelete(row.id)}><Trash2 /> Delete</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onClick={() => void handleDelete(row.id)}><Trash2 /> Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ),
       width: "w-10",
     },
-  ], [tasks]);
+  ];
 
   /* ---- Board View ---- */
   const tasksByStatus = useMemo(() => {
@@ -352,35 +523,29 @@ export default function TasksPage() {
       <AdminPageTitle
         eyebrow="CRM / Tasks"
         title="Tasks"
-        badge={<IntegrationPendingBadge label="Live Integration Pending" />}
         description="Manage sales activities, follow-ups and team productivity."
         action={
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm"><CalendarDays className="size-3.5" /> Calendar</Button>
-            <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="size-3.5" /> Create Task</Button>
+            <Button asChild variant="outline" size="sm"><Link href="/admin/calendar"><CalendarDays className="size-3.5" /> Calendar</Link></Button>
+            <Button size="sm" onClick={openCreate}><Plus className="size-3.5" /> Create Task</Button>
           </div>
         }
-      />
-
-      <IntegrationPendingBanner
-        moduleName="CRM Tasks"
-        feature="task scheduling, reminders, and activity tracking"
       />
 
       <TaskMetricCards tasks={tasks} />
 
       <FilterBar
-        search={<SearchInput value={search} onChange={setSearch} placeholder="Search tasks..." />}
+        search={<SearchInput value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Search tasks..." />}
         filters={
           <div className="flex items-center gap-2">
-            <Select value={statusFilter ?? "__all__"} onValueChange={(v) => setStatusFilter(v === "__all__" ? null : v)}>
+            <Select value={statusFilter ?? "__all__"} onValueChange={(v) => { setStatusFilter(v === "__all__" ? null : v); setPage(1); }}>
               <SelectTrigger size="sm" className="w-auto min-w-[8rem]"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">All Status</SelectItem>
                 {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={priorityFilter ?? "__all__"} onValueChange={(v) => setPriorityFilter(v === "__all__" ? null : v)}>
+            <Select value={priorityFilter ?? "__all__"} onValueChange={(v) => { setPriorityFilter(v === "__all__" ? null : v); setPage(1); }}>
               <SelectTrigger size="sm" className="w-auto min-w-[8rem]"><SelectValue placeholder="Priority" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">All Priority</SelectItem>
@@ -396,7 +561,7 @@ export default function TasksPage() {
           </div>
         }
         activeFilterCount={(statusFilter ? 1 : 0) + (priorityFilter ? 1 : 0)}
-        onClearFilters={() => { setStatusFilter(null); setPriorityFilter(null); setSearch(""); }}
+        onClearFilters={() => { setStatusFilter(null); setPriorityFilter(null); setSearch(""); setPage(1); }}
       />
 
       {viewMode === "list" ? (
@@ -404,7 +569,9 @@ export default function TasksPage() {
           columns={columns}
           rows={paginated}
           getRowId={(r) => r.id}
-          isLoading={false}
+          isLoading={isLoading}
+          error={loadError}
+          onRetry={() => void loadTasks()}
           sort={sort}
           onToggleSort={handleSort}
           pagination={pagination}
@@ -414,7 +581,7 @@ export default function TasksPage() {
           enableColumnVisibility
           emptyState={
             <EmptyState icon={ListTodo} title="No tasks found" description="Create your first task or adjust filters."
-              action={<Button size="sm" onClick={() => setShowCreate(true)}><Plus className="size-3.5" /> Create Task</Button>}
+              action={<Button size="sm" onClick={openCreate}><Plus className="size-3.5" /> Create Task</Button>}
             />
           }
         />
@@ -574,7 +741,7 @@ export default function TasksPage() {
                   <Button size="sm" variant="outline" onClick={() => handleToggleComplete(detailTask.id)}>
                     <CheckCircle2 className="size-3.5" /> {detailTask.status === "completed" ? "Reopen" : "Complete"}
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => { toast.info("Edit coming soon"); }}>Edit</Button>
+                  <Button size="sm" variant="outline" onClick={() => openEdit(detailTask)}>Edit</Button>
                 </div>
               </div>
             )}
@@ -583,41 +750,42 @@ export default function TasksPage() {
       </Sheet>
 
       {/* ---- Create Task Modal ---- */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+      <Dialog open={showCreate} onOpenChange={(open) => { if (!isSaving) { setShowCreate(open); if (!open) setEditingTask(null); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Create Task</DialogTitle>
-            <DialogDescription>Add a new task to your list.</DialogDescription>
+            <DialogTitle>{editingTask ? "Edit Task" : "Create Task"}</DialogTitle>
+            <DialogDescription>{editingTask ? "Update the selected task." : "Add a new task to your list."}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <Input placeholder="Task Title" />
-            <Textarea placeholder="Description" rows={2} />
-            <Select>
+            <Input placeholder="Task Title" value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} />
+            <Textarea placeholder="Description" rows={2} value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} />
+            <Select value={draft.type} onValueChange={(value) => setDraft((current) => ({ ...current, type: value as TaskType }))}>
               <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
               <SelectContent>
                 {TYPE_OPTIONS.map((t) => <SelectItem key={t} value={t}>{TYPE_LABELS[t as TaskType]}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select>
+            <Select value={draft.priority} onValueChange={(value) => setDraft((current) => ({ ...current, priority: value as TaskPriority }))}>
               <SelectTrigger><SelectValue placeholder="Priority" /></SelectTrigger>
               <SelectContent>
                 {PRIORITY_OPTIONS.map((p) => <SelectItem key={p} value={p}>{PRIORITY_LABELS[p as TaskPriority]}</SelectItem>)}
               </SelectContent>
             </Select>
             <div className="grid grid-cols-2 gap-2">
-              <Input type="date" placeholder="Due Date" />
-              <Input type="time" placeholder="Due Time" />
+              <Input type="date" placeholder="Due Date" value={draft.dueDate} onChange={(event) => setDraft((current) => ({ ...current, dueDate: event.target.value }))} />
+              <Input type="time" placeholder="Due Time" value={draft.dueTime} onChange={(event) => setDraft((current) => ({ ...current, dueTime: event.target.value }))} />
             </div>
-            <Select>
+            <Select value={draft.assigneeId || "__unassigned__"} onValueChange={(value) => setDraft((current) => ({ ...current, assigneeId: value === "__unassigned__" ? "" : value }))}>
               <SelectTrigger><SelectValue placeholder="Assignee" /></SelectTrigger>
               <SelectContent>
-                {["Priya Sharma", "Amit Singh", "Neha Verma", "Rohit Kumar"].map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                <SelectItem value="__unassigned__">Unassigned</SelectItem>
+                {assignees.map((assignee) => <SelectItem key={assignee.id} value={assignee.id}>{assignee.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-            <Button onClick={() => { toast.success("Task created"); setShowCreate(false); }}>Save Task</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)} disabled={isSaving}>Cancel</Button>
+            <Button onClick={() => void handleSave()} disabled={isSaving}>{isSaving ? "Saving..." : editingTask ? "Save Changes" : "Save Task"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

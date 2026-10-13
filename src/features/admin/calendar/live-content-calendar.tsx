@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   BarChart2,
@@ -14,6 +14,7 @@ import {
   Image as ImageIcon,
   Megaphone,
   MoreVertical,
+  CalendarDays as CalendarDaysIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -23,11 +24,14 @@ import { describeScheduleError } from "@/features/admin/content/live/scheduling-
 import { describeScheduleErrorCode, SCHEDULED_POST_STATUS_META } from "@/features/admin/content/live/scheduling-status";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { cn } from "@/lib/utils/cn";
+import { crmApi } from "@/features/admin/crm/data/crm-api";
+import type { CrmTask, TaskStatus } from "@/features/admin/crm/types";
 import { ChannelLogo } from "../shared/channel-logo";
 import { type CalendarChannel, type CalendarPost, type CalendarStatus, type CalendarStatusGroup } from "./live/calendar-api";
 import { useCalendar, useCancelScheduledPost } from "./live/use-calendar";
 
 type View = "Month" | "Week" | "List";
+type CalendarTask = CrmTask & { clientId: string; clientName: string };
 
 const DAY = 86_400_000;
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -82,13 +86,47 @@ const CHIP: Record<CalendarStatus, string> = {
   CANCELLED: "bg-gray-300",
 };
 
+const TASK_STATUS: Record<TaskStatus, { label: string; bar: string; pill: string }> = {
+  pending: { label: "Pending", bar: "bg-slate-400", pill: "bg-slate-100 text-slate-700 ring-slate-200" },
+  in_progress: { label: "In progress", bar: "bg-blue-500", pill: "bg-blue-50 text-blue-700 ring-blue-200" },
+  completed: { label: "Completed", bar: "bg-emerald-500", pill: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
+  cancelled: { label: "Cancelled", bar: "bg-gray-300", pill: "bg-gray-100 text-gray-500 ring-gray-200" },
+};
+
 function StatusPill({ status }: { status: CalendarStatus }) {
   const meta = status === "DRAFT" ? DRAFT_META : SCHEDULED_POST_STATUS_META[status];
   return <span className={cn("text-[9px] font-semibold px-2 py-1 rounded ring-1 whitespace-nowrap", meta.className)}>{meta.label}</span>;
 }
 
+function TaskStatusPill({ status }: { status: TaskStatus }) {
+  const meta = TASK_STATUS[status];
+  return <span className={cn("whitespace-nowrap rounded px-2 py-1 text-[9px] font-semibold ring-1", meta.pill)}>{meta.label}</span>;
+}
+
+function taskDate(task: CrmTask): Date {
+  return new Date(`${task.dueDate}T${task.dueTime || "00:00"}:00`);
+}
+
+function TaskChip({ task, onSelect }: { task: CalendarTask; onSelect?: () => void }) {
+  return (
+    <Link
+      href="/admin/crm/tasks"
+      onClick={(event) => { event.stopPropagation(); onSelect?.(); }}
+      className="relative flex w-full items-start gap-1.5 overflow-hidden rounded border bg-white px-1.5 py-1 text-left shadow-sm transition-colors hover:border-red-300"
+    >
+      <span className={cn("absolute inset-y-0 left-0 w-0.5", TASK_STATUS[task.status].bar)} />
+      <CalendarDaysIcon className="ml-0.5 mt-0.5 size-3 shrink-0 text-red-600" />
+      <span className="min-w-0 flex-1">
+        <span className={cn("block truncate text-[10px] font-semibold leading-tight text-gray-900", task.status === "cancelled" && "text-gray-500 line-through")}>{task.title}</span>
+        <span className="block text-[9px] text-gray-500">{task.dueTime || "All day"} · {TASK_STATUS[task.status].label}</span>
+      </span>
+    </Link>
+  );
+}
+
 /** The content calendar on the real backend: every post scheduled for the Clients you can open. */
 export function LiveContentCalendar() {
+  const { companyId } = useTenancyContext();
   const today = useMemo(() => startOfDay(new Date()), []);
   const [view, setView] = useState<View>("Month");
   const [cursor, setCursor] = useState<Date>(() => startOfMonth(new Date()));
@@ -102,6 +140,7 @@ export function LiveContentCalendar() {
   const [pickerYear, setPickerYear] = useState(cursor.getFullYear());
   const [pickerOpen, setPickerOpen] = useState(false);
   const [detail, setDetail] = useState<{ post: CalendarPost; confirmCancel: boolean } | null>(null);
+  const [calendarTasks, setCalendarTasks] = useState<CalendarTask[]>([]);
 
   const first = startOfMonth(cursor);
   const daysInMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
@@ -112,6 +151,35 @@ export function LiveContentCalendar() {
 
   const filters = { clientId: clientId || undefined, channel: channel || undefined, campaignId: campaignId || undefined, personId: personId || undefined };
   const { data, isLoading, isFetching, error, refetch } = useCalendar({ from: gridStart.toISOString(), to: gridEnd.toISOString(), statusGroup: statusGroup || undefined, ...filters, limit: 500 });
+
+  const taskClientKey = useMemo(() => {
+    if (clientId) return clientId;
+    return (data?.clients ?? []).map((client) => client.id).sort().join(",");
+  }, [clientId, data?.clients]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const clientIds = taskClientKey.split(",").filter(Boolean);
+    if (!companyId || clientIds.length === 0) {
+      void Promise.resolve().then(() => { if (!cancelled) setCalendarTasks([]); });
+      return () => { cancelled = true; };
+    }
+
+    const names = new Map((data?.clients ?? []).map((client) => [client.id, client.name]));
+    void Promise.allSettled(
+      clientIds.map(async (taskClientId) => {
+        const rows = await crmApi.list<CrmTask>("task", { companyId, clientId: taskClientId });
+        return rows
+          .filter((task) => Boolean(task.dueDate))
+          .map((task) => ({ ...task, clientId: taskClientId, clientName: names.get(taskClientId) ?? "Client" }));
+      }),
+    ).then((results) => {
+      if (cancelled) return;
+      setCalendarTasks(results.flatMap((result) => result.status === "fulfilled" ? result.value : []));
+    });
+
+    return () => { cancelled = true; };
+  }, [companyId, data?.clients, taskClientKey]);
 
   const upcomingWindow = useMemo(() => {
     const from = new Date();
@@ -131,10 +199,41 @@ export function LiveContentCalendar() {
     return map;
   }, [data]);
 
+  const visibleCalendarTasks = useMemo(
+    () => calendarTasks.filter((task) => !personId || task.assigneeId === personId),
+    [calendarTasks, personId],
+  );
+
+  const tasksByDay = useMemo(() => {
+    const map = new Map<string, CalendarTask[]>();
+    for (const task of visibleCalendarTasks) {
+      const list = map.get(task.dueDate) ?? [];
+      list.push(task);
+      list.sort((left, right) => (left.dueTime || "00:00").localeCompare(right.dueTime || "00:00"));
+      map.set(task.dueDate, list);
+    }
+    return map;
+  }, [visibleCalendarTasks]);
+
   const weekStart = addDays(startOfDay(selected), -selected.getDay());
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const selectedPosts = byDay.get(dayKey(selected)) ?? [];
+  const selectedTasks = tasksByDay.get(dayKey(selected)) ?? [];
   const monthPosts = (data?.items ?? []).filter((p) => sameMonth(new Date(p.scheduledFor), cursor));
+  const monthTasks = visibleCalendarTasks.filter((task) => sameMonth(taskDate(task), cursor));
+  const monthItems = [
+    ...monthPosts.map((post) => ({ kind: "post" as const, at: new Date(post.scheduledFor), post })),
+    ...monthTasks.map((task) => ({ kind: "task" as const, at: taskDate(task), task })),
+  ].sort((left, right) => left.at.getTime() - right.at.getTime());
+  const upcomingTasks = visibleCalendarTasks
+    .filter((task) => {
+      const due = taskDate(task).getTime();
+      const from = new Date(upcomingWindow.from).getTime();
+      const to = new Date(upcomingWindow.to).getTime();
+      return due >= from && due < to && task.status !== "completed" && task.status !== "cancelled";
+    })
+    .sort((left, right) => taskDate(left).getTime() - taskDate(right).getTime())
+    .slice(0, 6);
   const campaigns = (data?.campaigns ?? []).filter((c) => !clientId || c.clientId === clientId);
   const activeFilters = [clientId, channel, statusGroup, campaignId, personId].filter(Boolean).length;
 
@@ -292,6 +391,10 @@ export function LiveContentCalendar() {
                     <div className={cn("grid grid-cols-7", isFetching && "opacity-70")}>
                       {cells.map((day) => {
                         const posts = byDay.get(dayKey(day)) ?? [];
+                        const tasks = tasksByDay.get(dayKey(day)) ?? [];
+                        const visiblePosts = posts.slice(0, tasks.length > 0 ? 2 : 3);
+                        const visibleTasks = tasks.slice(0, 3 - visiblePosts.length);
+                        const hiddenCount = posts.length + tasks.length - visiblePosts.length - visibleTasks.length;
                         const inMonth = sameMonth(day, cursor);
                         const isSelected = dayKey(day) === dayKey(selected);
                         return (
@@ -303,7 +406,7 @@ export function LiveContentCalendar() {
                             <div className={cn("text-[11px] font-semibold mb-1 ml-1", inMonth ? "text-gray-700" : "text-gray-400", isToday(day) && "text-[#EB0711]")}>{day.getDate()}</div>
                             {isToday(day) && <div className="absolute inset-0 border-[1.5px] border-[#EB0711] pointer-events-none" />}
                             <div className="space-y-1">
-                              {posts.slice(0, 3).map((post) => (
+                              {visiblePosts.map((post) => (
                                 <button
                                   key={post.id}
                                   onClick={(e) => { e.stopPropagation(); setSelected(day); setDetail({ post, confirmCancel: false }); }}
@@ -317,9 +420,10 @@ export function LiveContentCalendar() {
                                   </div>
                                 </button>
                               ))}
-                              {posts.length > 3 && (
+                              {visibleTasks.map((task) => <TaskChip key={task.id} task={task} onSelect={() => setSelected(day)} />)}
+                              {hiddenCount > 0 && (
                                 <button onClick={(e) => { e.stopPropagation(); setSelected(day); }} className="text-[10px] font-semibold text-[#EB0711] hover:underline ml-1">
-                                  +{posts.length - 3} more
+                                  +{hiddenCount} more
                                 </button>
                               )}
                             </div>
@@ -334,13 +438,14 @@ export function LiveContentCalendar() {
                   <div className={cn("grid grid-cols-7", isFetching && "opacity-70")}>
                     {weekDays.map((day) => {
                       const posts = byDay.get(dayKey(day)) ?? [];
+                      const tasks = tasksByDay.get(dayKey(day)) ?? [];
                       return (
                         <div key={dayKey(day)} onClick={() => setSelected(day)} className={cn("min-h-[300px] border-r p-1.5 cursor-pointer", dayKey(day) === dayKey(selected) && "bg-red-50/30")}>
                           <div className={cn("mb-2 text-center text-[11px] font-semibold", isToday(day) ? "text-[#EB0711]" : "text-gray-600")}>
                             {WEEKDAYS[day.getDay()]} {day.getDate()}
                           </div>
                           <div className="space-y-1">
-                            {posts.length === 0 && <p className="pt-6 text-center text-[10px] text-gray-400">Nothing scheduled</p>}
+                            {posts.length === 0 && tasks.length === 0 && <p className="pt-6 text-center text-[10px] text-gray-400">Nothing scheduled</p>}
                             {posts.map((post) => (
                               <button
                                 key={post.id}
@@ -355,6 +460,7 @@ export function LiveContentCalendar() {
                                 </div>
                               </button>
                             ))}
+                            {tasks.map((task) => <TaskChip key={task.id} task={task} onSelect={() => setSelected(day)} />)}
                           </div>
                         </div>
                       );
@@ -364,22 +470,35 @@ export function LiveContentCalendar() {
 
                 {view === "List" && (
                   <div className={cn("divide-y", isFetching && "opacity-70")}>
-                    {monthPosts.length === 0 ? (
-                      <p className="px-3 py-12 text-center text-[12px] text-gray-500">No posts in {MONTHS[cursor.getMonth()]} {cursor.getFullYear()} match these filters.</p>
+                    {monthItems.length === 0 ? (
+                      <p className="px-3 py-12 text-center text-[12px] text-gray-500">No posts or tasks in {MONTHS[cursor.getMonth()]} {cursor.getFullYear()} match these filters.</p>
                     ) : (
-                      monthPosts.map((post) => (
-                        <button key={post.id} onClick={() => setDetail({ post, confirmCancel: false })} className="grid w-full grid-cols-[120px_1fr_90px] sm:grid-cols-[130px_1fr_130px_90px] items-center gap-3 px-3 py-2.5 text-left hover:bg-gray-50">
-                          <span className="text-[11px] font-medium text-gray-600 tabular-nums">{shortDateTime(post.scheduledFor)}</span>
+                      monthItems.map((item) => item.kind === "post" ? (
+                        <button key={`post:${item.post.id}`} onClick={() => setDetail({ post: item.post, confirmCancel: false })} className="grid w-full grid-cols-[120px_1fr_90px] sm:grid-cols-[130px_1fr_130px_90px] items-center gap-3 px-3 py-2.5 text-left hover:bg-gray-50">
+                          <span className="text-[11px] font-medium text-gray-600 tabular-nums">{shortDateTime(item.post.scheduledFor)}</span>
                           <span className="flex min-w-0 items-center gap-2">
-                            <PostLogo post={post} className="size-4 shrink-0" />
+                            <PostLogo post={item.post} className="size-4 shrink-0" />
                             <span className="min-w-0">
-                              <b className="block truncate text-[12px] font-semibold text-gray-900">{post.title}</b>
-                              <small className="block truncate text-[10px] text-gray-500">{post.clientName ?? ""}{post.campaignName ? ` · ${post.campaignName}` : ""}</small>
+                              <b className="block truncate text-[12px] font-semibold text-gray-900">{item.post.title}</b>
+                              <small className="block truncate text-[10px] text-gray-500">{item.post.clientName ?? ""}{item.post.campaignName ? ` · ${item.post.campaignName}` : ""}</small>
                             </span>
                           </span>
-                          <span className="hidden truncate text-[11px] text-gray-600 sm:block">{CHANNEL_NAME[post.channel] ?? post.channel}</span>
-                          <StatusPill status={post.status} />
+                          <span className="hidden truncate text-[11px] text-gray-600 sm:block">{CHANNEL_NAME[item.post.channel] ?? item.post.channel}</span>
+                          <StatusPill status={item.post.status} />
                         </button>
+                      ) : (
+                        <Link key={`task:${item.task.id}`} href="/admin/crm/tasks" className="grid w-full grid-cols-[120px_1fr_90px] sm:grid-cols-[130px_1fr_130px_90px] items-center gap-3 px-3 py-2.5 text-left hover:bg-gray-50">
+                          <span className="text-[11px] font-medium text-gray-600 tabular-nums">{item.at.toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                          <span className="flex min-w-0 items-center gap-2">
+                            <CalendarDaysIcon className="size-4 shrink-0 text-red-600" />
+                            <span className="min-w-0">
+                              <b className="block truncate text-[12px] font-semibold text-gray-900">{item.task.title}</b>
+                              <small className="block truncate text-[10px] text-gray-500">{item.task.clientName}</small>
+                            </span>
+                          </span>
+                          <span className="hidden truncate text-[11px] text-gray-600 sm:block">CRM Task</span>
+                          <TaskStatusPill status={item.task.status} />
+                        </Link>
                       ))
                     )}
                   </div>
@@ -395,12 +514,12 @@ export function LiveContentCalendar() {
                   <h2 className="text-[14px] font-semibold text-foreground">
                     {isToday(selected) ? "Today's Schedule" : selected.toLocaleDateString([], { weekday: "long", day: "numeric", month: "short" })}
                   </h2>
-                  <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-sm bg-gray-100 text-[10px] font-semibold text-gray-700">{selectedPosts.length}</span>
+                  <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-sm bg-gray-100 text-[10px] font-semibold text-gray-700">{selectedPosts.length + selectedTasks.length}</span>
                 </div>
                 <button onClick={() => setView("List")} className="text-[11px] font-semibold text-[#EB0711] hover:underline flex items-center gap-1">View all &rarr;</button>
               </div>
 
-              {selectedPosts.length === 0 ? (
+              {selectedPosts.length === 0 && selectedTasks.length === 0 ? (
                 <p className="py-8 text-center text-[12px] text-gray-500">Nothing is scheduled for this day.</p>
               ) : (
                 <div className="overflow-x-auto">
@@ -440,6 +559,21 @@ export function LiveContentCalendar() {
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {selectedTasks.map((task) => (
+                        <tr key={`task:${task.id}`}>
+                          <td className="py-2.5 text-gray-600 whitespace-nowrap">{task.dueTime || "All day"}</td>
+                          <td className="py-2.5 max-w-[220px]">
+                            <p className="truncate font-semibold text-gray-900 text-[11px]">{task.title}</p>
+                            {task.description && <p className="truncate text-[10px] text-gray-500">{task.description}</p>}
+                          </td>
+                          <td className="py-2.5"><CalendarDaysIcon className="size-4 text-red-600" /></td>
+                          <td className="py-2.5 text-gray-600 text-[11px]">{task.clientName}</td>
+                          <td className="py-2.5"><TaskStatusPill status={task.status} /></td>
+                          <td className="py-2.5 text-right">
+                            <Link href="/admin/crm/tasks" className="text-[10px] font-semibold text-gray-600 border rounded px-2 py-1 hover:bg-gray-50">View</Link>
                           </td>
                         </tr>
                       ))}
@@ -514,7 +648,7 @@ export function LiveContentCalendar() {
               {cells.map((day) => {
                 const inMonth = sameMonth(day, cursor);
                 const isSelected = dayKey(day) === dayKey(selected);
-                const has = (byDay.get(dayKey(day))?.length ?? 0) > 0;
+                const has = (byDay.get(dayKey(day))?.length ?? 0) > 0 || (tasksByDay.get(dayKey(day))?.length ?? 0) > 0;
                 return (
                   <div key={dayKey(day)} className="flex justify-center py-0.5">
                     <button
@@ -582,7 +716,7 @@ export function LiveContentCalendar() {
               <button onClick={() => { goTo(today); setStatusGroup("scheduled"); setView("List"); }} className="text-[11px] font-semibold text-[#EB0711] hover:underline flex items-center gap-0.5">View all &rarr;</button>
             </div>
             <div className="space-y-4">
-              {(upcoming.data?.items ?? []).length === 0 && <p className="text-[12px] text-gray-500">{upcoming.isLoading ? "Loading..." : "Nothing is scheduled in the next 7 days."}</p>}
+              {(upcoming.data?.items ?? []).length === 0 && upcomingTasks.length === 0 && <p className="text-[12px] text-gray-500">{upcoming.isLoading ? "Loading..." : "Nothing is scheduled in the next 7 days."}</p>}
               {(upcoming.data?.items ?? []).map((post) => (
                 <button key={post.id} onClick={() => setDetail({ post, confirmCancel: false })} className="flex w-full items-start gap-3 text-left">
                   <PostLogo post={post} className="size-5 shrink-0 mt-0.5" />
@@ -591,6 +725,18 @@ export function LiveContentCalendar() {
                     <p className="text-[10px] text-gray-500 mt-0.5">{CHANNEL_NAME[post.channel] ?? post.channel} • {shortDateTime(post.scheduledFor)}</p>
                   </div>
                 </button>
+              ))}
+              {upcomingTasks.map((task) => (
+                <Link key={task.id} href="/admin/crm/tasks" className="flex w-full items-start gap-3 text-left">
+                  <CalendarDaysIcon className="size-5 shrink-0 mt-0.5 text-red-600" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12px] font-semibold text-gray-900 leading-tight">{task.title}</p>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <p className="truncate text-[10px] text-gray-500">CRM Task · {taskDate(task).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                      <TaskStatusPill status={task.status} />
+                    </div>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>

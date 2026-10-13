@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { ChannelLogo } from "@/features/admin/shared/channel-logo";
+import { useAdminContext } from "@/features/admin/shell/admin-context";
+import { getStoredClientId } from "@/lib/api/tenancy-storage";
 
 
 const DEFAULT_ANALYTICS: AutomationAnalytics = {
@@ -53,24 +55,37 @@ interface AutomationOverviewProps {
 }
 
 export function AutomationOverview({ onNavigateTab }: AutomationOverviewProps) {
+  const { selectedProjectId } = useAdminContext();
   const [analytics, setAnalytics] = useState<AutomationAnalytics>(DEFAULT_ANALYTICS);
   const [workflows, setWorkflows] = useState<AutomationWorkflow[]>([]);
 
   useEffect(() => {
-    const clientId = "client_1";
-    automationRepository.getAnalytics(clientId).then((res) => {
-      if (res) setAnalytics(res);
-    });
-    automationRepository.getWorkflows(clientId).then((wfs) => {
-      const extraWorkflows: AutomationWorkflow[] = [
-        { id: "wf_ex_1", clientId: "c1", name: "SEO Critical Issue Alert", status: "Active", version: 1, trigger: { type: "seo", label: "SEO Audit Warning" }, channels: ["google", "slack"], runs: 84, successRate: 96.2, failures: 3, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
-        { id: "wf_ex_2", clientId: "c1", name: "Form Submission Lead Routing", status: "Active", version: 1, trigger: { type: "form", label: "Website Form Submit" }, channels: ["web", "email"], runs: 210, successRate: 92.4, failures: 8, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
-        { id: "wf_ex_3", clientId: "c1", name: "Missed Call Instant Callback", status: "Paused", version: 1, trigger: { type: "call", label: "Missed Phone Call" }, channels: ["phone", "whatsapp"], runs: 175, successRate: 89.1, failures: 15, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
-        { id: "wf_ex_4", clientId: "c1", name: "Abandoned Cart Recovery", status: "Active", version: 1, trigger: { type: "webhook", label: "Cart Drop Trigger" }, channels: ["whatsapp", "email"], runs: 532, successRate: 97.8, failures: 6, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
-      ];
-      setWorkflows([...wfs, ...extraWorkflows]);
-    });
-  }, []);
+    const activeClient = selectedProjectId !== "all" ? selectedProjectId : getStoredClientId();
+    const effectiveClientId = activeClient || undefined;
+
+    automationRepository.getAnalytics(effectiveClientId)
+      .then((res) => {
+        if (res) setAnalytics(res);
+      })
+      .catch((err) => {
+        console.error("Failed to load automation analytics:", err);
+      });
+
+    automationRepository.getWorkflows(effectiveClientId)
+      .then((wfs) => {
+        const list = Array.isArray(wfs) ? wfs : [];
+        const extraWorkflows: AutomationWorkflow[] = [
+          { id: "wf_ex_1", clientId: "c1", name: "SEO Critical Issue Alert", status: "Active", version: 1, trigger: { type: "seo", label: "SEO Audit Warning" }, channels: ["google", "slack"], runs: 84, successRate: 96.2, failures: 3, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
+          { id: "wf_ex_2", clientId: "c1", name: "Form Submission Lead Routing", status: "Active", version: 1, trigger: { type: "form", label: "Website Form Submit" }, channels: ["web", "email"], runs: 210, successRate: 92.4, failures: 8, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
+          { id: "wf_ex_3", clientId: "c1", name: "Missed Call Instant Callback", status: "Paused", version: 1, trigger: { type: "call", label: "Missed Phone Call" }, channels: ["phone", "whatsapp"], runs: 175, successRate: 89.1, failures: 15, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
+          { id: "wf_ex_4", clientId: "c1", name: "Abandoned Cart Recovery", status: "Active", version: 1, trigger: { type: "webhook", label: "Cart Drop Trigger" }, channels: ["whatsapp", "email"], runs: 532, successRate: 97.8, failures: 6, lastRunAt: new Date().toISOString(), createdAt: "", updatedAt: "", nodes: [], edges: [] },
+        ];
+        setWorkflows([...list, ...extraWorkflows]);
+      })
+      .catch((err) => {
+        console.error("Failed to load automation workflows:", err);
+      });
+  }, [selectedProjectId]);
 
   return (
     <div className="space-y-2 pb-12 text-[#111C3A]">

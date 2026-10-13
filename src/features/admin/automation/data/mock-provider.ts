@@ -489,8 +489,8 @@ class MockAutomationRepository implements AutomationRepository {
   private workflows = [...MOCK_WORKFLOWS];
   private runs = [...MOCK_RUNS];
 
-  async getWorkflows(clientId: string): Promise<AutomationWorkflow[]> {
-    return this.workflows.filter(wf => wf.clientId === clientId);
+  async getWorkflows(clientId?: string): Promise<AutomationWorkflow[]> {
+    return clientId ? this.workflows.filter(wf => wf.clientId === clientId) : this.workflows;
   }
 
   async getWorkflow(workflowId: string): Promise<AutomationWorkflow | null> {
@@ -534,11 +534,11 @@ class MockAutomationRepository implements AutomationRepository {
     this.workflows = this.workflows.filter(wf => wf.id !== workflowId);
   }
 
-  async getRuns(clientId: string, workflowId?: string): Promise<AutomationRun[]> {
+  async getRuns(clientId?: string, workflowId?: string): Promise<AutomationRun[]> {
     let results = this.runs;
     if (workflowId) {
       results = results.filter(r => r.workflowId === workflowId);
-    } else {
+    } else if (clientId) {
       // In a real app we would join runs with workflows to filter by clientId
       const clientWfIds = this.workflows.filter(wf => wf.clientId === clientId).map(wf => wf.id);
       results = results.filter(r => clientWfIds.includes(r.workflowId));
@@ -682,7 +682,7 @@ class MockAutomationRepository implements AutomationRepository {
     return MOCK_TEMPLATES;
   }
 
-  async getAnalytics(_clientId: string): Promise<AutomationAnalytics> {
+  async getAnalytics(_clientId?: string): Promise<AutomationAnalytics> {
     await delay(0);
     return {
       activeWorkflows: { value: 12, trend: 33 },

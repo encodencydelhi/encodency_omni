@@ -19,6 +19,8 @@ import { LiveConsoleStream } from "./live-console-stream";
 import { DlqFailuresView } from "./dlq-failures-view";
 import { RunDetailsSheet } from "./run-details-sheet";
 import { TestWebhookModal } from "./test-webhook-modal";
+import { useAdminContext } from "@/features/admin/shell/admin-context";
+import { getStoredClientId } from "@/lib/api/tenancy-storage";
 
 type LogsTab = "traces" | "console" | "dlq";
 
@@ -38,26 +40,29 @@ export function AutomationLogsPage() {
   // Live streaming simulation state
   const [isStreaming, setIsStreaming] = useState(true);
 
+  const { selectedProjectId } = useAdminContext();
+
   const loadData = useCallback(async () => {
     try {
-      const clientId = "client_1";
+      const activeClient = selectedProjectId !== "all" ? selectedProjectId : getStoredClientId();
+      const effectiveClientId = activeClient || undefined;
       const [fetchedWorkflows, fetchedRuns, fetchedLogs, fetchedHealth] = await Promise.all([
-        automationRepository.getWorkflows(clientId),
-        automationRepository.getRuns(clientId),
+        automationRepository.getWorkflows(effectiveClientId),
+        automationRepository.getRuns(effectiveClientId),
         automationRepository.getConsoleLogs(),
         automationRepository.getHealthMetrics(),
       ]);
 
-      setWorkflows(fetchedWorkflows);
-      setRuns(fetchedRuns);
-      setConsoleLogs(fetchedLogs);
-      setHealthMetrics(fetchedHealth);
+      if (Array.isArray(fetchedWorkflows)) setWorkflows(fetchedWorkflows);
+      if (Array.isArray(fetchedRuns)) setRuns(fetchedRuns);
+      if (Array.isArray(fetchedLogs)) setConsoleLogs(fetchedLogs);
+      if (fetchedHealth) setHealthMetrics(fetchedHealth);
     } catch (error) {
       toast.error("Failed to load automation logs data.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedProjectId]);
 
   useEffect(() => {
     loadData();

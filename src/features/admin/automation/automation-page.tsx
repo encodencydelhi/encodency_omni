@@ -16,6 +16,9 @@ import { TemplatesPage } from "./components/pages/templates-page";
 import { RunsPage } from "./components/pages/runs-page";
 import { SettingsPage } from "./components/pages/settings-page";
 
+import { useAdminContext } from "../shell/admin-context";
+import { getStoredClientId } from "@/lib/api/tenancy-storage";
+
 type AutomationTab = "overview" | "workflows" | "templates" | "runs" | "settings";
 const TABS = [
   { value: "overview", label: "Overview" },
@@ -23,13 +26,6 @@ const TABS = [
   { value: "templates", label: "Templates" },
   { value: "runs", label: "Run History" },
   { value: "settings", label: "Settings" }
-];
-
-const CLIENT_OPTIONS = [
-  "All Clients",
-  "Moksha Sewa (Active)",
-  "Dental Care Clinic",
-  "Ayur Luxe Wellness",
 ];
 
 const DATE_RANGE_OPTIONS = [
@@ -42,8 +38,8 @@ const DATE_RANGE_OPTIONS = [
 type DateRangeOption = (typeof DATE_RANGE_OPTIONS)[number];
 
 export function AutomationPage() {
+  const { Clients, selectedProjectId, setSelectedProjectId } = useAdminContext();
   const [activeTab, setActiveTab] = useUrlState<AutomationTab>("tab", "overview", ["overview", "workflows", "templates", "runs", "settings"]);
-  const [selectedClient, setSelectedClient] = useState("All Clients");
   const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
 
   const [selectedPeriod, setSelectedPeriod] = useState<DateRangeOption>(DATE_RANGE_OPTIONS[1]);
@@ -51,10 +47,14 @@ export function AutomationPage() {
 
   const [editingWorkflow, setEditingWorkflow] = useState<AutomationWorkflow | null>(null);
 
+  const selectedClientObj = Clients.find((c) => c.id === selectedProjectId);
+  const currentClientLabel = selectedProjectId === "all" ? "All Clients" : (selectedClientObj?.name ?? "All Clients");
+
   const handleCreateNewWorkflow = () => {
+    const activeClientId = selectedProjectId !== "all" ? selectedProjectId : (Clients[0]?.id ?? getStoredClientId() ?? "");
     const blankWorkflow: AutomationWorkflow = {
       id: `wf_${Date.now()}`,
-      clientId: "client_1",
+      clientId: activeClientId,
       name: "Untitled Automation Workflow",
       status: "Draft",
       version: 1,
@@ -122,27 +122,41 @@ export function AutomationPage() {
               className="h-10 flex items-center gap-2 border border-[#CBD5E1] bg-white rounded-lg px-3.5 shadow-2xs text-[12px] font-normal text-[#0F172A] cursor-pointer hover:bg-slate-50 transition-colors"
             >
               <span className="text-[11px] text-[#64748B] font-medium">Client:</span>
-              <span className="font-semibold text-[#0F172A]">{selectedClient}</span>
+              <span className="font-semibold text-[#0F172A]">{currentClientLabel}</span>
               <ChevronDown className="size-3.5 text-[#94A3B8]" />
             </button>
 
             {clientDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-48 bg-white border border-[#CBD5E1] rounded-xl shadow-xl z-30 py-1 text-[11.5px] animate-in fade-in zoom-in-95">
-                {CLIENT_OPTIONS.map((client) => (
+              <div className="absolute right-0 mt-1 w-52 bg-white border border-[#CBD5E1] rounded-xl shadow-xl z-30 py-1 text-[11.5px] animate-in fade-in zoom-in-95">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedProjectId("all");
+                    setClientDropdownOpen(false);
+                    toast.info("Filtered view for All Clients");
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-50 cursor-pointer"
+                >
+                  <span className={selectedProjectId === "all" ? "font-bold text-[#2563EB]" : "text-[#334155]"}>
+                    All Clients
+                  </span>
+                  {selectedProjectId === "all" && <Check className="size-3.5 text-[#2563EB]" />}
+                </button>
+                {Clients.map((client) => (
                   <button
-                    key={client}
+                    key={client.id}
                     type="button"
                     onClick={() => {
-                      setSelectedClient(client);
+                      setSelectedProjectId(client.id);
                       setClientDropdownOpen(false);
-                      toast.info(`Filtered view for ${client}`);
+                      toast.info(`Filtered view for ${client.name}`);
                     }}
                     className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-50 cursor-pointer"
                   >
-                    <span className={selectedClient === client ? "font-bold text-[#2563EB]" : "text-[#334155]"}>
-                      {client}
+                    <span className={selectedProjectId === client.id ? "font-bold text-[#2563EB]" : "text-[#334155]"}>
+                      {client.name}
                     </span>
-                    {selectedClient === client && <Check className="size-3.5 text-[#2563EB]" />}
+                    {selectedProjectId === client.id && <Check className="size-3.5 text-[#2563EB]" />}
                   </button>
                 ))}
               </div>

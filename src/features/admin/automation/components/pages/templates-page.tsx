@@ -8,6 +8,7 @@ import {
 import { toast } from "sonner";
 import { AutomationWorkflow } from "../../data/types";
 import { WorkflowBuilder } from "../builder/workflow-builder";
+import { getStoredClientId } from "@/lib/api/tenancy-storage";
 
 interface TemplatesPageProps {
   onUseTemplate?: (workflow: AutomationWorkflow) => void;
@@ -212,7 +213,7 @@ export function TemplatesPage({ onUseTemplate }: TemplatesPageProps) {
   const handleUseTemplate = (tpl: TemplateItem) => {
     const workflow: AutomationWorkflow = {
       id: `wf_${Date.now()}`,
-      clientId: "client_1",
+      clientId: getStoredClientId() || "",
       name: tpl.title,
       status: "Active",
       version: 1,
