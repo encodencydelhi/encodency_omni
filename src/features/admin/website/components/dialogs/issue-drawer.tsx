@@ -45,7 +45,7 @@ export function IssueDrawer({
 
   return (
     <Sheet open={Boolean(issueId)} onOpenChange={(open) => (open ? undefined : onClose())}>
-      <SheetContent className="w-full max-w-lg border-[#E6EBF4] bg-white p-0 sm:max-w-lg">
+      <SheetContent className="capitalize [&_.font-mono]:normal-case w-full max-w-lg border-[#E6EBF4] bg-white p-0 sm:max-w-lg">
         <SheetHeader className="border-[#EEF2F8] px-5 py-4 pr-12">
           <span className="flex flex-wrap items-center gap-1.5">
             {issue ? (

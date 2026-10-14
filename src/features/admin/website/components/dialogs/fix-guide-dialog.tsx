@@ -34,7 +34,7 @@ export function FixGuideDialog({
 
   return (
     <Dialog open={Boolean(guideId)} onOpenChange={(open) => (open ? undefined : onClose())}>
-      <DialogContent className="max-w-xl rounded-lg border-[#E6EBF4] bg-white p-0">
+      <DialogContent className="capitalize [&_.font-mono]:normal-case max-w-xl rounded-lg border-[#E6EBF4] bg-white p-0">
         <DialogHeader className="border-b border-[#EEF2F8] p-5 pr-12">
           <span className="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-[#6B7A94]">
             <Wrench className="size-3.5" aria-hidden /> Fix guide

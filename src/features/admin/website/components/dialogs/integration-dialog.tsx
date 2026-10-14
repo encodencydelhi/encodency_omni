@@ -81,7 +81,7 @@ export function IntegrationDialog({
 
   return (
     <Dialog open={Boolean(integrationKey)} onOpenChange={(open) => (open ? undefined : onClose())}>
-      <DialogContent className="max-w-lg rounded-lg border-[#E6EBF4] bg-white p-0">
+      <DialogContent className="capitalize [&_.font-mono]:normal-case max-w-lg rounded-lg border-[#E6EBF4] bg-white p-0">
         <DialogHeader className="border-b border-[#EEF2F8] p-5 pr-12">
           <span className="flex items-center gap-2">
             <DialogTitle className="text-[15px] font-semibold text-[#111C3A]">

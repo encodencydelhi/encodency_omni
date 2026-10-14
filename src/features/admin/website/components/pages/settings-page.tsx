@@ -481,7 +481,7 @@ export function WebsiteSettingsPage() {
                     <td className="px-3 py-2.5">
                       <p className="text-[11.5px] font-semibold text-[#28354C]">{member.name}</p>
                       <p className="text-[10.5px] text-[#6B7A94]">
-                        {member.role} · {member.email}
+                        {member.role} · <span className="normal-case">{member.email}</span>
                       </p>
                     </td>
                     {WEBSITE_PERMISSIONS.map((permission) => (

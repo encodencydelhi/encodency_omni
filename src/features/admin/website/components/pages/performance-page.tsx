@@ -220,7 +220,7 @@ function PagesTab({ data, device }: { data: PerformanceData; device: DeviceKey }
       cell: (r) => (
         <div className="min-w-0">
           <p className="truncate font-mono text-[11.5px] text-[#28354C]">{r.path}</p>
-          <p className="truncate text-[10px] text-[#94A3B8]">{r.url}</p>
+          <p className="truncate text-[10px] normal-case text-[#94A3B8]">{r.url}</p>
         </div>
       ),
     },

@@ -262,7 +262,7 @@ export function ExportDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? undefined : onClose())}>
-      <DialogContent className="max-w-2xl rounded-lg border-[#E6EBF4] bg-white p-0">
+      <DialogContent className="capitalize [&_.font-mono]:normal-case max-w-2xl rounded-lg border-[#E6EBF4] bg-white p-0">
         <DialogHeader className="border-b border-[#EEF2F8] p-5 pr-12">
           <DialogTitle className="text-[15px] font-semibold text-[#111C3A]">Reports &amp; export</DialogTitle>
           <DialogDescription className="text-[12px] text-[#6B7A94]">

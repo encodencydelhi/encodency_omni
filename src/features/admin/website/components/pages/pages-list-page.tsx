@@ -483,7 +483,7 @@ export function WebsitePagesListPage() {
                         <MoreHorizontal className="size-3.5" aria-hidden />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuContent align="end" className="capitalize w-48">
                       <DropdownMenuItem
                         className="text-[12px]"
                         onSelect={() => router.push(`/admin/website/pages/${encodeURIComponent(page.id)}`)}

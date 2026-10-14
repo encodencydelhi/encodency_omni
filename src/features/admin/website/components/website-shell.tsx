@@ -153,7 +153,7 @@ function ClientSwitcher() {
           <ChevronDown className="size-3 text-[#94A3B8]" aria-hidden />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-60">
+      <DropdownMenuContent align="start" className="capitalize w-60">
         <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-[#94A3B8]">
           Client website
         </DropdownMenuLabel>
@@ -211,7 +211,7 @@ function WebsiteHeader() {
                   href={websiteUrl}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="inline-flex items-center gap-1 rounded text-[12.5px] font-semibold text-[#2563EB] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35"
+                  className="inline-flex items-center gap-1 rounded text-[12.5px] font-semibold normal-case text-[#2563EB] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35"
                 >
                   {domain}
                   <ExternalLink className="size-3" aria-hidden />
@@ -273,7 +273,7 @@ function WebsiteHeader() {
                 <MoreHorizontal className="size-4" aria-hidden />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="capitalize w-56">
               <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-[#94A3B8]">
                 Run a scan
               </DropdownMenuLabel>
@@ -418,7 +418,7 @@ export function WebsiteShell({ children }: { children: ReactNode }) {
   const { hasClient, hasWebsite, clientName, navigate } = useWebsiteWorkspace();
 
   return (
-    <div className="pb-6">
+    <div className="pb-6 capitalize [&_.font-mono]:normal-case">
       <div className="-mx-4 -mt-5 mb-1 border-b border-[#E3E9F2] bg-gradient-to-b from-[#FCFDFF] via-white to-[#FAFCFF] px-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
         <WebsiteHeader />
         <div className="mt-2.5 border-t border-[#EEF2F8] pt-2.5">

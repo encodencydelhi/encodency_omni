@@ -27,7 +27,7 @@ export function UnsavedChangesDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? undefined : onStay())}>
-      <DialogContent className="max-w-md rounded-lg border-[#E6EBF4] bg-white p-5">
+      <DialogContent className="capitalize [&_.font-mono]:normal-case max-w-md rounded-lg border-[#E6EBF4] bg-white p-5">
         <DialogHeader>
           <span className="mb-1 grid size-9 place-items-center rounded-full bg-[#FDF3E3] text-[#9A5B08]">
             <AlertTriangle className="size-4.5" aria-hidden />

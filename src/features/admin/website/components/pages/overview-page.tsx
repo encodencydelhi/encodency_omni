@@ -172,12 +172,12 @@ export function WebsiteOverviewPage() {
                   {domain?.slice(0, 2) ?? "—"}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[14px] font-semibold text-[#111C3A]">{domain}</p>
+                  <p className="truncate text-[14px] font-semibold normal-case text-[#111C3A]">{domain}</p>
                   <a
                     href={websiteUrl ?? "#"}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="inline-flex items-center gap-1 truncate rounded text-[11px] text-[#2563EB] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35"
+                    className="inline-flex items-center gap-1 truncate rounded text-[11px] normal-case text-[#2563EB] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35"
                   >
                     {websiteUrl}
                     <ExternalLink className="size-3" aria-hidden />
