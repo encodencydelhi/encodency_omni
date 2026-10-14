@@ -8,12 +8,16 @@
  * screen is worse than no date at all.
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Activity,
   AlertOctagon,
   CalendarClock,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Copy,
   Download,
   GitCompareArrows,
   Globe2,
@@ -21,6 +25,8 @@ import {
   Lock,
   Network,
   RefreshCw,
+  Search,
+  Server,
   ShieldCheck,
   TriangleAlert,
   Wifi,
@@ -616,84 +622,423 @@ function SslTab({ data }: { data: MonitoringData }) {
   );
 }
 
+function DnsCopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      title={copied ? "Copied to clipboard" : `${label}: ${text}`}
+      className="inline-flex size-5 shrink-0 items-center justify-center rounded text-[#94A3B8] transition-colors hover:bg-[#EEF2F8] hover:text-[#28354C] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#2563EB]"
+      aria-label={copied ? "Copied" : label}
+    >
+      {copied ? <Check className="size-3 text-[#12A06D]" /> : <Copy className="size-3" />}
+    </button>
+  );
+}
+
 function DnsTab({ data }: { data: MonitoringData }) {
   const dns = data.dns;
-  return (
-    <div className="grid gap-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-      <div className="grid gap-1">
-        <Card title="Resolution" icon={Network}>
-          <dl className="divide-y divide-[#F2F5FA]">
-            <KeyValue label="Resolves">
-              {dns.resolves === null ? (
-                <Chip tone="muted" dot>
-                  Not checked
-                </Chip>
-              ) : (
-                <Chip tone={dns.resolves ? "good" : "bad"} dot>
-                  {dns.resolves ? "Yes" : "No"}
-                </Chip>
-              )}
-            </KeyValue>
-            <KeyValue label="Resolved IPs">
-              <span className="font-mono text-[11px]">{dns.resolvedIps.join(", ") || "—"}</span>
-            </KeyValue>
-            <KeyValue label="Nameservers">
-              <span className="font-mono text-[11px]">{dns.nameservers.join(", ") || "—"}</span>
-            </KeyValue>
-          </dl>
-          {!WEBSITE_MOCK_MODE ? (
-            <p className="mt-3 rounded-md bg-[#F7F9FC] px-2.5 py-2 text-[11px] leading-relaxed text-[#6B7A94]">
-              Resolved live against public DNS servers (8.8.8.8, 1.1.1.1) when this page was loaded.
-            </p>
-          ) : null}
-        </Card>
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [expandedKeys, setExpandedKeys] = useState<Record<string, boolean>>({});
 
-        <Card title="Registrar & domain expiry" icon={CalendarClock}>
-          <div className="flex items-start gap-2.5 rounded-lg border border-dashed border-[#DAE1EC] bg-[#FAFBFD] p-3">
-            <Info className="mt-0.5 size-4 shrink-0 text-[#6B7A94]" aria-hidden />
-            <p className="text-[11px] leading-relaxed text-[#6B7A94]">{dns.registrarNote}</p>
-          </div>
-        </Card>
+  // Unique record types present in data
+  const recordTypes = useMemo(() => {
+    const types = Array.from(new Set(dns.records.map((r) => r.type)));
+    return types.sort();
+  }, [dns.records]);
+
+  // Counts by type
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: dns.records.length };
+    dns.records.forEach((r) => {
+      counts[r.type] = (counts[r.type] || 0) + 1;
+    });
+    return counts;
+  }, [dns.records]);
+
+  // Filtered records
+  const filteredRecords = useMemo(() => {
+    return dns.records.filter((rec) => {
+      const matchesType =
+        selectedType === "all" || rec.type.toLowerCase() === selectedType.toLowerCase();
+      const matchesQuery =
+        !searchQuery.trim() ||
+        rec.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        rec.value.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        rec.type.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesType && matchesQuery;
+    });
+  }, [dns.records, selectedType, searchQuery]);
+
+  // DNS-related changes from history
+  const dnsChanges = useMemo(() => {
+    return (data.changes || []).filter(
+      (c) =>
+        c.field.toLowerCase().includes("dns") ||
+        c.field.toLowerCase().includes("nameserver") ||
+        c.field.toLowerCase().includes("record"),
+    );
+  }, [data.changes]);
+
+  const toggleExpand = (key: string) => {
+    setExpandedKeys((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // Badge tone for DNS record types
+  const getRecordTone = (type: string): "info" | "warn" | "good" | "violet" | "muted" => {
+    switch (type.toUpperCase()) {
+      case "A":
+      case "AAAA":
+        return "info";
+      case "MX":
+        return "violet";
+      case "TXT":
+        return "warn";
+      case "CNAME":
+        return "info";
+      case "NS":
+        return "good";
+      default:
+        return "muted";
+    }
+  };
+
+  const extractPriority = (type: string, value: string): string => {
+    if (type.toUpperCase() === "MX") {
+      const match = value.match(/^(\d+)\s+/);
+      if (match) return match[1] ?? "—";
+    }
+    return "—";
+  };
+
+  return (
+    <div className="space-y-2">
+      {/* A. Compact DNS Summary KPIs */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        <StatTile
+          label="Resolution Status"
+          value={dns.resolves === null ? "Not checked" : dns.resolves ? "Resolving" : "Failing"}
+          tone={dns.resolves === null ? "muted" : dns.resolves ? "good" : "bad"}
+          icon={Network}
+          sub={dns.resolves ? "Public DNS verified" : "Resolution failed"}
+        />
+        <StatTile
+          label="DNS Records"
+          value={dns.records.length}
+          tone="info"
+          icon={Globe2}
+          sub="Resolved active records"
+        />
+        <StatTile
+          label="Resolved IPs"
+          value={dns.resolvedIps.length}
+          tone="good"
+          icon={Server}
+          sub="Edge IP addresses"
+        />
+        <StatTile
+          label="Nameservers"
+          value={dns.nameservers.length}
+          tone="violet"
+          icon={ShieldCheck}
+          sub="Authoritative servers"
+        />
+        <StatTile
+          label="Last Checked"
+          value={data.uptime.lastCheckedAt ? formatRelative(data.uptime.lastCheckedAt) : "Live on load"}
+          tone="muted"
+          icon={CalendarClock}
+          sub={data.uptime.lastCheckedAt ? formatDate(data.uptime.lastCheckedAt) : "Real-time probe"}
+        />
       </div>
 
-      <Card title="Record health" icon={Globe2} subtitle="Public DNS records we can resolve" bodyClassName="p-0">
-        <DataTable
-          dense
-          columns={[
-            {
-              key: "type",
-              header: "Type",
-              cell: (row: MonitoringData["dns"]["records"][number]) => <Chip tone="muted">{row.type}</Chip>,
-            },
-            {
-              key: "name",
-              header: "Name",
-              primary: true,
-              cell: (row: MonitoringData["dns"]["records"][number]) => (
-                <span className="font-mono text-[11px] font-semibold text-[#28354C]">{row.name}</span>
-              ),
-            },
-            {
-              key: "value",
-              header: "Value",
-              cell: (row: MonitoringData["dns"]["records"][number]) => (
-                <span className="break-all font-mono text-[10.5px] text-[#6B7A94]">{row.value}</span>
-              ),
-            },
-            {
-              key: "status",
-              header: "Status",
-              align: "center",
-              cell: (row: MonitoringData["dns"]["records"][number]) => (
-                <Chip tone={checkTone[row.status]}>{row.status === "pass" ? "OK" : "Review"}</Chip>
-              ),
-            },
-          ]}
-          rows={dns.records}
-          getRowId={(row) => `${row.type}-${row.name}-${row.value}`}
-          empty={<EmptyState title="No records resolved" body="DNS lookups returned nothing for this domain." />}
-        />
+      {/* B. DNS Resolution Section */}
+      <Card
+        title="DNS Resolution Infrastructure"
+        icon={Network}
+        subtitle="Live query responses against public resolvers (8.8.8.8, 1.1.1.1)"
+        bodyClassName="p-3.5 space-y-3"
+      >
+        <div className="grid gap-3 md:grid-cols-2">
+          {/* Resolved IPs */}
+          <div className="rounded-xl border border-[#E6EBF4] bg-[#F8FAFC] p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-[0.05em] text-[#6B7A94]">
+                Resolved IP Addresses
+              </span>
+              <Chip tone={dns.resolvedIps.length > 0 ? "good" : "warn"} dot>
+                {dns.resolvedIps.length} {dns.resolvedIps.length === 1 ? "IP" : "IPs"}
+              </Chip>
+            </div>
+            {dns.resolvedIps.length > 0 ? (
+              <ul className="mt-2.5 space-y-1.5">
+                {dns.resolvedIps.map((ip) => (
+                  <li
+                    key={ip}
+                    className="flex items-center justify-between rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[11px]"
+                  >
+                    <span className="font-mono font-semibold text-[#111C3A]">{ip}</span>
+                    <DnsCopyButton text={ip} label="Copy IP" />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-[11px] text-[#94A3B8]">No resolved IP addresses reported.</p>
+            )}
+          </div>
+
+          {/* Nameservers */}
+          <div className="rounded-xl border border-[#E6EBF4] bg-[#F8FAFC] p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-[0.05em] text-[#6B7A94]">
+                Authoritative Nameservers
+              </span>
+              <Chip tone={dns.nameservers.length > 0 ? "violet" : "warn"} dot>
+                {dns.nameservers.length} NS
+              </Chip>
+            </div>
+            {dns.nameservers.length > 0 ? (
+              <ul className="mt-2.5 space-y-1.5">
+                {dns.nameservers.map((ns) => (
+                  <li
+                    key={ns}
+                    className="flex items-center justify-between rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[11px]"
+                  >
+                    <span className="truncate font-mono font-semibold text-[#111C3A]">{ns}</span>
+                    <DnsCopyButton text={ns} label="Copy Nameserver" />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-[11px] text-[#94A3B8]">No nameservers found.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#F1F5F9] pt-2 text-[11px] text-[#6B7A94]">
+          <span className="flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full bg-[#12A06D]" aria-hidden />
+            Public resolution active via Google DNS (8.8.8.8) and Cloudflare DNS (1.1.1.1).
+          </span>
+          {data.uptime.lastCheckedAt ? (
+            <span className="text-[#94A3B8]">Verified {formatDateTime(data.uptime.lastCheckedAt)}</span>
+          ) : null}
+        </div>
       </Card>
+
+      {/* C. DNS Records Table with Filters, Priority, TTL, and Truncation */}
+      <Card
+        title="DNS Records"
+        icon={Globe2}
+        subtitle={`${filteredRecords.length} records resolved`}
+        bodyClassName="p-0"
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search */}
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#94A3B8]" />
+              <input
+                type="text"
+                placeholder="Search records..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-7 w-36 rounded-md border border-[#DEE5EF] bg-white pl-8 pr-2.5 text-[11px] text-[#111C3A] placeholder-[#94A3B8] transition-all focus:w-48 focus:border-[#2563EB] focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+              />
+            </div>
+
+            {/* Type Filters */}
+            <div className="flex flex-wrap items-center gap-1" role="toolbar" aria-label="Filter by type">
+              <button
+                type="button"
+                onClick={() => setSelectedType("all")}
+                className={cn(
+                  "rounded-md px-2 py-0.5 text-[10.5px] font-semibold transition-colors",
+                  selectedType === "all"
+                    ? "bg-[#2563EB] text-white"
+                    : "bg-[#F1F4F9] text-[#4A5A73] hover:bg-[#E2E8F0]",
+                )}
+              >
+                All ({typeCounts.all})
+              </button>
+              {recordTypes.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setSelectedType(t)}
+                  className={cn(
+                    "rounded-md px-2 py-0.5 text-[10.5px] font-semibold transition-colors",
+                    selectedType.toUpperCase() === t.toUpperCase()
+                      ? "bg-[#2563EB] text-white"
+                      : "bg-[#F1F4F9] text-[#4A5A73] hover:bg-[#E2E8F0]",
+                  )}
+                >
+                  {t} ({typeCounts[t] ?? 0})
+                </button>
+              ))}
+            </div>
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-[#EEF2F8] bg-[#FAFBFD] text-[10.5px] font-bold uppercase tracking-[0.05em] text-[#6B7A94]">
+                <th className="px-3.5 py-2.5 w-20">Type</th>
+                <th className="px-3.5 py-2.5 w-32">Name</th>
+                <th className="px-3.5 py-2.5 w-20 text-center">Priority</th>
+                <th className="px-3.5 py-2.5 min-w-[280px]">Value</th>
+                <th className="px-3.5 py-2.5 w-20 text-center">TTL</th>
+                <th className="px-3.5 py-2.5 w-24 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F1F5F9] text-[11px]">
+              {filteredRecords.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-3.5 py-8 text-center text-[#6B7A94]">
+                    No DNS records match the selected filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredRecords.map((row) => {
+                  const rowKey = `${row.type}-${row.name}-${row.value}`;
+                  const isExpanded = Boolean(expandedKeys[rowKey]);
+                  const isLong = row.value.length > 40;
+                  const priority = extractPriority(row.type, row.value);
+                  const ttl = (row as { ttl?: number | string }).ttl ?? "Auto";
+
+                  return (
+                    <tr key={rowKey} className="transition-colors hover:bg-[#F8FAFC]">
+                      {/* Type */}
+                      <td className="px-3.5 py-2.5 align-top">
+                        <Chip tone={getRecordTone(row.type)} className="font-mono font-bold">
+                          {row.type}
+                        </Chip>
+                      </td>
+
+                      {/* Name */}
+                      <td className="px-3.5 py-2.5 align-top font-mono font-semibold text-[#111C3A]">
+                        {row.name}
+                      </td>
+
+                      {/* Priority */}
+                      <td className="px-3.5 py-2.5 align-top text-center font-mono text-[#6B7A94]">
+                        {priority}
+                      </td>
+
+                      {/* Value with Expand and Copy */}
+                      <td className="px-3.5 py-2.5 align-top">
+                        <div className="flex items-start gap-1.5">
+                          <div className="min-w-0 flex-1">
+                            <span
+                              className={cn(
+                                "font-mono text-[10.5px] text-[#28354C]",
+                                isExpanded ? "break-all" : "block truncate",
+                              )}
+                              title={row.value}
+                            >
+                              {row.value}
+                            </span>
+                            {isLong ? (
+                              <button
+                                type="button"
+                                onClick={() => toggleExpand(rowKey)}
+                                className="mt-1 inline-flex items-center gap-0.5 text-[10px] font-semibold text-[#2563EB] hover:underline"
+                              >
+                                {isExpanded ? (
+                                  <>
+                                    <ChevronUp className="size-3" /> Show less
+                                  </>
+                                ) : (
+                                  <>
+                                    <ChevronDown className="size-3" /> Show full record
+                                  </>
+                                )}
+                              </button>
+                            ) : null}
+                          </div>
+                          <DnsCopyButton text={row.value} label="Copy value" />
+                        </div>
+                      </td>
+
+                      {/* TTL */}
+                      <td className="px-3.5 py-2.5 align-top text-center font-mono text-[10.5px] text-[#6B7A94]">
+                        {ttl}
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-3.5 py-2.5 align-top text-center">
+                        <Chip tone={checkTone[row.status]}>
+                          {row.status === "pass" ? "OK" : "Review"}
+                        </Chip>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* D. Registrar and Expiry Section & E. DNS Change History */}
+      <div className="grid gap-2 lg:grid-cols-2">
+        {/* D. Registrar & Domain Expiry */}
+        <Card title="Registrar & Domain Expiry" icon={CalendarClock} bodyClassName="p-3.5">
+          <div className="flex items-start gap-2.5 rounded-lg border border-dashed border-[#DAE1EC] bg-[#FAFBFD] p-3">
+            <Info className="mt-0.5 size-4 shrink-0 text-[#6B7A94]" aria-hidden />
+            <div>
+              <p className="text-[12px] font-medium text-[#28354C]">
+                Registrar and domain expiry information is not configured.
+              </p>
+              <p className="mt-1 text-[11px] leading-relaxed text-[#6B7A94]">
+                {dns.registrarNote ||
+                  "WHOIS/RDAP provider is not connected. Encodency reports verified DNS data only and will not show a guessed expiry date."}
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* E. DNS Change History */}
+        <Card title="DNS Change History" icon={GitCompareArrows} bodyClassName="p-3.5">
+          {dnsChanges.length > 0 ? (
+            <ul className="divide-y divide-[#F1F5F9]">
+              {dnsChanges.map((chg) => (
+                <li key={chg.id} className="py-2 text-[11px]">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-[#111C3A]">{chg.field}</span>
+                    <span className="text-[10px] text-[#94A3B8]">{formatRelative(chg.detectedAt)}</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 text-[10.5px]">
+                    <span className="line-through text-[#DC3A32]">{chg.previous}</span>
+                    <span>→</span>
+                    <span className="font-medium text-[#12A06D]">{chg.current}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex items-start gap-2.5 rounded-lg border border-[#E6EBF4] bg-[#F8FAFC] p-3 text-[11px] text-[#6B7A94]">
+              <Info className="mt-0.5 size-4 shrink-0 text-[#6B7A94]" aria-hidden />
+              <div>
+                <p className="font-medium text-[#28354C]">No DNS changes recorded</p>
+                <p className="mt-0.5 text-[10.5px] leading-relaxed text-[#6B7A94]">
+                  DNS change history is actively monitored across automated scan runs. Any addition, modification, or removal of DNS records will appear here.
+                </p>
+              </div>
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }

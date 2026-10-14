@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { env } from "@/config/env";
 import { cn } from "@/lib/utils/cn";
 import { useIntegrationMutations, useWebsiteCapabilities } from "../../data/hooks";
 import { integrationStatusLabel, integrationTone } from "../../data/capability-provider";
@@ -41,7 +42,7 @@ const FIELD_LABEL: Record<IntegrationKey, string> = {
 
 function trackingSnippet(siteKey: string, domain: string) {
   return `<!-- EnCodency tracking — place before </head> on ${domain} -->
-<script async src="https://cdn.encodency.app/t.js" data-site="${siteKey}"></script>`;
+<script async src="${env.apiBaseUrl}/website/tracking/snippet.js?site=${siteKey}" data-site="${siteKey}"></script>`;
 }
 
 export function IntegrationDialog({
