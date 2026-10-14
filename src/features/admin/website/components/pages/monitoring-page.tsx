@@ -1,13 +1,4 @@
 "use client";
-
-/**
- * Monitoring — uptime, certificate, DNS, error responses and change detection.
- *
- * Registrar and domain-expiry data is deliberately absent: that needs a WHOIS or
- * RDAP provider we have not connected, and a guessed expiry date on a monitoring
- * screen is worse than no date at all.
- */
-
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
