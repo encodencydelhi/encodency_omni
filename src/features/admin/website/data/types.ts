@@ -554,15 +554,43 @@ export interface KeywordResearchData {
 }
 
 export interface CompetitorData {
+  id?: string;
   domain: string;
-  trafficShare: number;
-  keywordOverlap: number;
-  contentGap: number;
+  url?: string;
+  status?: string;
+  analyzedAt?: IsoDate | null;
+  trafficShare: number | null;
+  keywordOverlap: number | null;
+  contentGap: number | null;
   backlinkProfile: {
-    referringDomains: number;
-    totalBacklinks: number;
-    growthRate: number;
+    referringDomains: number | null;
+    totalBacklinks: number | null;
+    growthRate: number | null;
   };
+  technical?: Record<string, unknown> | null;
+  suggestions?: { title: string; evidence: string }[];
+  evidence?: Record<string, unknown> | null;
+  note?: string;
+  error?: string | null;
+}
+
+export interface TrackingSettings {
+  trackingEnabled: boolean;
+  consentRequired: boolean;
+  anonymousMode: boolean;
+  respectDnt: boolean;
+  respectGpc: boolean;
+  retentionDays: number;
+}
+
+export interface TrackingSnippetView {
+  siteKey: string;
+  domain: string;
+  status: string;
+  lastEventAt: IsoDate | null;
+  settings: TrackingSettings;
+  disclosure: string;
+  snippet: string;
 }
 
 export interface BacklinkData {
@@ -1220,6 +1248,13 @@ export interface WebsiteDataProvider {
   getSettings(clientId: string): Promise<WebsiteSettings>;
   getKeywordResearch(clientId: string): Promise<KeywordResearchData[]>;
   getCompetitorAnalysis(clientId: string): Promise<CompetitorData[]>;
+  addCompetitor(clientId: string, url: string): Promise<CompetitorData>;
+  analyzeCompetitor(clientId: string, id: string): Promise<CompetitorData>;
+  deleteCompetitor(clientId: string, id: string): Promise<{ deleted: boolean }>;
+  getTracking(clientId: string, period: string): Promise<AnalyticsData & { settings?: TrackingSettings; quotas?: Record<string, unknown>; disclosure?: string }>;
+  getTrackingSnippet(clientId: string): Promise<TrackingSnippetView>;
+  verifyTracking(clientId: string): Promise<{ siteKey: string; status: string; found: boolean; note: string; checkedAt: IsoDate | null }>;
+  updateTrackingSettings(clientId: string, settings: Partial<TrackingSettings>): Promise<{ siteKey: string; settings: TrackingSettings; disclosure: string }>;
   getBacklinkAnalysis(clientId: string): Promise<BacklinkData[]>;
   getRankTracking(clientId: string): Promise<RankTrackingData[]>;
   getCrawlLimits(clientId: string): Promise<CrawlLimits>;

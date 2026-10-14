@@ -2,7 +2,7 @@ import { apiClient } from '@/lib/api/client';
 import { companyScopeHeaders } from '@/lib/api/company-scope';
 import { getStoredClientId, getStoredCompanyId } from '@/lib/api/tenancy-storage';
 import { env } from '@/config/env';
-import type { GenerateReportInput, IntegrationKey, IssueStatus, ReportScheduleInput, ScanStartOptions, ScanType, WebsiteDataProvider, WebsiteSettings } from './types';
+import type { GenerateReportInput, IntegrationKey, IssueStatus, ReportScheduleInput, ScanStartOptions, ScanType, TrackingSettings, WebsiteDataProvider, WebsiteSettings } from './types';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -67,6 +67,14 @@ export class LiveWebsiteProvider implements WebsiteDataProvider {
   getSettings = (id: string) => get<any>(id, 'settings');
   getKeywordResearch = (id: string) => get<any>(id, 'keyword-research');
   getCompetitorAnalysis = (id: string) => get<any>(id, 'competitor-analysis');
+  addCompetitor = (id: string, url: string) => apiClient.request<any>({ method: 'POST', path: '/website/competitors', headers: headers(id), body: { url } });
+  analyzeCompetitor = (id: string, competitorId: string) => apiClient.request<any>({ method: 'POST', path: `/website/competitors/${encodeURIComponent(competitorId)}/analyze`, headers: headers(id), body: {} });
+  deleteCompetitor = (id: string, competitorId: string) => apiClient.request<any>({ method: 'DELETE', path: `/website/competitors/${encodeURIComponent(competitorId)}`, headers: headers(id) });
+  getTracking = (id: string, period: string) => get<any>(id, 'tracking', { period });
+  getTrackingSnippet = (id: string) => get<any>(id, 'tracking/snippet');
+  verifyTracking = (id: string) => apiClient.request<any>({ method: 'POST', path: '/website/tracking/verify', headers: headers(id), body: {} });
+  updateTrackingSettings = (id: string, settings: Partial<TrackingSettings>) =>
+    apiClient.request<any>({ method: 'PATCH', path: '/website/tracking/settings', headers: headers(id), body: settings });
   getBacklinkAnalysis = (id: string) => get<any>(id, 'backlink-analysis');
   getRankTracking = (id: string) => get<any>(id, 'rank-tracking');
   getCrawlLimits = (id: string) => get<any>(id, 'crawl-limits');

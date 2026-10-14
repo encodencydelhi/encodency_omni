@@ -808,18 +808,20 @@ export function DataTable<T>({
         {rows.map((row) => (
           <li key={getRowId(row)} className="px-3 py-3">
             <div className="flex items-start justify-between gap-2">
-              <button
-                type="button"
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-                disabled={!onRowClick}
-                className={cn(
-                  "min-w-0 flex-1 text-left",
-                  onRowClick ? "cursor-pointer" : "cursor-default",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35",
-                )}
-              >
-                {primaryColumn ? primaryColumn.cell(row) : null}
-              </button>
+              {onRowClick ? (
+                <button
+                  type="button"
+                  onClick={() => onRowClick(row)}
+                  className={cn(
+                    "min-w-0 flex-1 cursor-pointer text-left",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35",
+                  )}
+                >
+                  {primaryColumn ? primaryColumn.cell(row) : null}
+                </button>
+              ) : (
+                <div className="min-w-0 flex-1 text-left">{primaryColumn ? primaryColumn.cell(row) : null}</div>
+              )}
               {rowActions ? <div className="shrink-0">{rowActions(row)}</div> : null}
             </div>
             <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5">

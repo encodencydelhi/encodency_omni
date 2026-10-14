@@ -31,6 +31,7 @@ import {
   type UrlInspectionView,
   type FixGuide,
   type IntegrationKey,
+  type IsoDate,
   type IssueRecord,
   type IssueStatus,
   type KeywordResearchData,
@@ -51,6 +52,8 @@ import {
   type SeoData,
   type TechnologyDetection,
   type TrendPoint,
+  type TrackingSettings,
+  type TrackingSnippetView,
   type WebsiteCapabilityState,
   type WebsiteDataProvider,
   type WebsiteSettings,
@@ -223,6 +226,13 @@ export class MockWebsiteProvider implements WebsiteDataProvider {
     await delay(120);
     return this.dataset(clientId).competitorAnalysis;
   }
+  async addCompetitor(): Promise<CompetitorData> { throw new ServiceUnavailableError("Competitors", "Use live API mode to manage competitors."); }
+  async analyzeCompetitor(): Promise<CompetitorData> { throw new ServiceUnavailableError("Competitors", "Use live API mode to analyze competitors."); }
+  async deleteCompetitor(): Promise<{ deleted: boolean }> { throw new ServiceUnavailableError("Competitors", "Use live API mode to archive competitors."); }
+  async getTracking(): Promise<AnalyticsData & any> { throw new ServiceUnavailableError("Tracking", "Use live API mode to read persisted tracking events."); }
+  async getTrackingSnippet(): Promise<any> { throw new ServiceUnavailableError("Tracking", "Use live API mode to manage tracking."); }
+  async verifyTracking(): Promise<any> { throw new ServiceUnavailableError("Tracking", "Use live API mode to verify tracking."); }
+  async updateTrackingSettings(): Promise<any> { throw new ServiceUnavailableError("Tracking", "Use live API mode to update tracking settings."); }
 
   async getBacklinkAnalysis(clientId: string): Promise<BacklinkData[]> {
     await delay(120);
@@ -616,6 +626,27 @@ export class UnavailableWebsiteProvider implements WebsiteDataProvider {
   }
   async getCompetitorAnalysis(): Promise<CompetitorData[]> {
     return this.fail("Competitor analysis service");
+  }
+  async addCompetitor(): Promise<CompetitorData> {
+    return this.fail("Competitor analysis service");
+  }
+  async analyzeCompetitor(): Promise<CompetitorData> {
+    return this.fail("Competitor analysis service");
+  }
+  async deleteCompetitor(): Promise<{ deleted: boolean }> {
+    return this.fail("Competitor analysis service");
+  }
+  async getTracking(): Promise<AnalyticsData & { settings?: TrackingSettings; quotas?: Record<string, unknown>; disclosure?: string }> {
+    return this.fail("Omni Tracking");
+  }
+  async getTrackingSnippet(): Promise<TrackingSnippetView> {
+    return this.fail("Omni Tracking");
+  }
+  async verifyTracking(): Promise<{ siteKey: string; status: string; found: boolean; note: string; checkedAt: IsoDate | null }> {
+    return this.fail("Omni Tracking");
+  }
+  async updateTrackingSettings(): Promise<{ siteKey: string; settings: TrackingSettings; disclosure: string }> {
+    return this.fail("Omni Tracking");
   }
   async getBacklinkAnalysis(): Promise<BacklinkData[]> {
     return this.fail("Backlink analysis service");

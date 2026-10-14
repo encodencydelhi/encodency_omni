@@ -1,7 +1,7 @@
 import {
   BarChart3, Blocks, Bot, BriefcaseBusiness, CalendarDays, ContactRound, FileChartColumn,
   FolderKanban, Gauge, Globe2, Hash, Image, Landmark, ListChecks, Network,
-  Megaphone, MessageCircle, PanelsTopLeft, SearchCheck, Settings, ShieldCheck, Tags, Target,
+  Megaphone, MessageCircle, PanelsTopLeft, Settings, ShieldCheck, Target,
   Share2, UsersRound, Video, WalletCards, type LucideIcon,
 } from "lucide-react";
 
@@ -34,15 +34,16 @@ export const adminNavigation: AdminNavSection[] = [
       { label: "Website", href: "/admin/website", icon: Globe2 },
     ]
   },
-  {
-    label: "SEO", items: [
-      { label: "SEO Overview", href: "/admin/seo", icon: SearchCheck },
-      { label: "Site Audit", href: "/admin/seo/audit", icon: ListChecks },
-      { label: "Pages", href: "/admin/seo/pages", icon: PanelsTopLeft },
-      { label: "Issues", href: "/admin/seo/issues", icon: ShieldCheck },
-      { label: "Keywords", href: "/admin/seo/keywords", icon: Tags },
-    ]
-  },
+  // Temporarily hidden from the sidebar. Routes remain available directly.
+  // {
+  //   label: "SEO", items: [
+  //     { label: "SEO Overview", href: "/admin/seo", icon: SearchCheck },
+  //     { label: "Site Audit", href: "/admin/seo/audit", icon: ListChecks },
+  //     { label: "Pages", href: "/admin/seo/pages", icon: PanelsTopLeft },
+  //     { label: "Issues", href: "/admin/seo/issues", icon: ShieldCheck },
+  //     { label: "Keywords", href: "/admin/seo/keywords", icon: Tags },
+  //   ]
+  // },
   {
     label: "CRM", items: [
       { label: "Leads", href: "/admin/crm/leads", icon: Target },

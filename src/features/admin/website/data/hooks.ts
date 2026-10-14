@@ -437,6 +437,47 @@ export function useCompetitorAnalysis(clientId: string, enabled = true) {
   });
 }
 
+export function useCompetitorMutations(clientId: string) {
+  const qc = useQueryClient();
+  const invalidate = () => qc.invalidateQueries({ queryKey: websiteKeys.competitorAnalysis(clientId) });
+  return {
+    add: useMutation({ mutationFn: (url: string) => websiteRepository.addCompetitor(clientId, url), onSuccess: invalidate }),
+    analyze: useMutation({ mutationFn: (id: string) => websiteRepository.analyzeCompetitor(clientId, id), onSuccess: invalidate }),
+    archive: useMutation({ mutationFn: (id: string) => websiteRepository.deleteCompetitor(clientId, id), onSuccess: invalidate }),
+  };
+}
+
+export function useOmniTracking(clientId: string, period = "28d", enabled = true) {
+  return useQuery({
+    queryKey: websiteKeys.tracking(clientId, period),
+    queryFn: () => websiteRepository.getTracking(clientId, period),
+    enabled: enabled && Boolean(clientId),
+    ...SHARED,
+  });
+}
+
+export function useTrackingSnippet(clientId: string, enabled = true) {
+  return useQuery({
+    queryKey: websiteKeys.trackingSnippet(clientId),
+    queryFn: () => websiteRepository.getTrackingSnippet(clientId),
+    enabled: enabled && Boolean(clientId),
+    ...SHARED,
+  });
+}
+
+export function useTrackingMutations(clientId: string, period = "28d") {
+  const qc = useQueryClient();
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: websiteKeys.tracking(clientId, period) });
+    void qc.invalidateQueries({ queryKey: websiteKeys.trackingSnippet(clientId) });
+    void qc.invalidateQueries({ queryKey: websiteKeys.capabilities(clientId) });
+  };
+  return {
+    verify: useMutation({ mutationFn: () => websiteRepository.verifyTracking(clientId), onSuccess: invalidate }),
+    updateSettings: useMutation({ mutationFn: (settings: Parameters<typeof websiteRepository.updateTrackingSettings>[1]) => websiteRepository.updateTrackingSettings(clientId, settings), onSuccess: invalidate }),
+  };
+}
+
 export function useBacklinkAnalysis(clientId: string, enabled = true) {
   return useQuery({
     queryKey: websiteKeys.backlinkAnalysis(clientId),
