@@ -23,6 +23,8 @@ import type {
   ScanProgress,
   ScanType,
   ScanStartOptions,
+  GenerateReportInput,
+  ReportScheduleInput,
   AiRecommendationStatus,
   WebsiteSettings,
 } from "./types";
@@ -511,8 +513,9 @@ export function useSearchConsole(clientId: string, enabled = true) {
       totals: seoResult.data?.searchConsole?.totals ?? null,
       isLoading: seoResult.isLoading,
       error: seoResult.error,
+      refetch: seoResult.refetch,
     };
-  }, [seoResult.data, seoResult.isLoading, seoResult.error]);
+  }, [seoResult.data, seoResult.isLoading, seoResult.error, seoResult.refetch]);
 }
 
 
@@ -553,5 +556,102 @@ export function useSetAiRecommendationStatus(clientId: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: [...websiteKeys.client(clientId), "ai"] });
     },
+  });
+}
+
+
+/* ---- Milestone 6: monitoring incidents and alerts ----------------------------------------------------- */
+
+export function useMonitoringOverview(clientId: string, enabled = true) {
+  return useQuery({
+    queryKey: [...websiteKeys.client(clientId), "monitoring-overview"] as const,
+    queryFn: () => websiteRepository.getMonitoringOverview(clientId),
+    enabled: enabled && Boolean(clientId),
+    refetchInterval: 30_000,
+    ...SHARED,
+  });
+}
+
+export function useSendTestAlert(clientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => websiteRepository.sendTestAlert(clientId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [...websiteKeys.client(clientId), "monitoring-overview"] });
+    },
+  });
+}
+
+
+/* ---- Milestone 7: reports --------------------------------------------------------------------------------- */
+
+const reportKey = (clientId: string) => [...websiteKeys.client(clientId), "reports"] as const;
+
+export function useReportMeta(clientId: string, enabled = true) {
+  return useQuery({
+    queryKey: [...reportKey(clientId), "meta"] as const,
+    queryFn: () => websiteRepository.getReportMeta(clientId),
+    enabled: enabled && Boolean(clientId),
+    ...SHARED,
+  });
+}
+
+export function useReports(clientId: string, enabled = true) {
+  return useQuery({
+    queryKey: [...reportKey(clientId), "list"] as const,
+    queryFn: () => websiteRepository.listReports(clientId),
+    enabled: enabled && Boolean(clientId),
+    // Poll while something is queued or running so progress stays live without a manual refresh.
+    refetchInterval: (query) => ((query.state.data as { status: string }[] | undefined)?.some((r) => r.status === "queued" || r.status === "running") ? 1500 : false),
+    ...SHARED,
+  });
+}
+
+export function useGenerateReport(clientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: GenerateReportInput) => websiteRepository.generateReport(clientId, input),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: reportKey(clientId) }),
+  });
+}
+
+export function useCancelReport(clientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => websiteRepository.cancelReport(clientId, id),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: reportKey(clientId) }),
+  });
+}
+
+export function useDeleteReport(clientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => websiteRepository.deleteReport(clientId, id),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: reportKey(clientId) }),
+  });
+}
+
+export function useReportSchedules(clientId: string, enabled = true) {
+  return useQuery({
+    queryKey: [...reportKey(clientId), "schedules"] as const,
+    queryFn: () => websiteRepository.listReportSchedules(clientId),
+    enabled: enabled && Boolean(clientId),
+    ...SHARED,
+  });
+}
+
+export function useSaveReportSchedule(clientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { schedule: ReportScheduleInput; id?: string }) => websiteRepository.saveReportSchedule(clientId, input.schedule, input.id),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: [...reportKey(clientId), "schedules"] }),
+  });
+}
+
+export function useDeleteReportSchedule(clientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => websiteRepository.deleteReportSchedule(clientId, id),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: [...reportKey(clientId), "schedules"] }),
   });
 }

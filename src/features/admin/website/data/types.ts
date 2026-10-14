@@ -1105,6 +1105,8 @@ export interface MonitoringSettings {
   responseTimeThresholdMs: number;
   sslExpiryWarningDays: number;
   uptimeAlertThresholdPct: number;
+  /** Alert rules, channels, recipients, quiet hours (M6). Absent on websites saved before M6. */
+  alerts?: AlertSettings;
 }
 
 export interface NotificationSetting {
@@ -1226,6 +1228,18 @@ export interface WebsiteDataProvider {
   getPageInspection(clientId: string, pageId: string): Promise<PageInspectionState>;
   inspectPage(clientId: string, pageId: string): Promise<UrlInspectionView>;
   getPageHistory(clientId: string, pageId: string): Promise<PageHistoryEntry[]>;
+  getReportMeta(clientId: string): Promise<ReportMeta>;
+  listReports(clientId: string): Promise<ReportView[]>;
+  getReport(clientId: string, id: string): Promise<ReportView>;
+  generateReport(clientId: string, input: GenerateReportInput): Promise<ReportView>;
+  cancelReport(clientId: string, id: string): Promise<ReportView>;
+  deleteReport(clientId: string, id: string): Promise<{ deleted: boolean }>;
+  downloadReport(clientId: string, id: string): Promise<{ blob: Blob; fileName: string }>;
+  listReportSchedules(clientId: string): Promise<ReportScheduleView[]>;
+  saveReportSchedule(clientId: string, input: ReportScheduleInput, id?: string): Promise<ReportScheduleView>;
+  deleteReportSchedule(clientId: string, id: string): Promise<{ deleted: boolean }>;
+  getMonitoringOverview(clientId: string): Promise<MonitoringOverview>;
+  sendTestAlert(clientId: string): Promise<{ alertId: string; deliveries: number } | null>;
   getAiStatus(clientId: string): Promise<AiStatus>;
   getAiSummary(clientId: string): Promise<AiSiteSummary>;
   getPageAi(clientId: string, pageId: string): Promise<AiPageInsights>;
@@ -1392,4 +1406,197 @@ export interface AiSiteSummary {
     | null;
   pagesAnalysed: number;
   proposedRecommendations: number;
+}
+
+
+/* ---- Milestone 6: incidents, alerts and channels --------------------------------------------------- */
+
+export type AlertRuleKey =
+  | "siteDown" | "siteRecovered" | "ssl" | "dns" | "seoCritical" | "perfRegression" | "crawlFailure" | "monitoringFailure" | "integrationDisconnected";
+
+export interface AlertSettings {
+  channels: { inApp: boolean; email: boolean; whatsapp: boolean };
+  recipients: { emails: string[]; phones: string[] };
+  whatsappTemplateId: string | null;
+  quietHours: { enabled: boolean; start: string; end: string; timezone: string; allowCritical: boolean };
+  cooldownMinutes: number;
+  confirmationChecks: number;
+  rules: Record<AlertRuleKey, boolean>;
+  escalation: { enabled: boolean; afterMinutes: number; emails: string[] };
+  perfRegressionPoints: number;
+}
+
+export interface UptimeWindowStat {
+  checks: number;
+  uptimePct: number | null;
+  avgResponseMs: number | null;
+  /** Share of the window that recorded history actually spans. */
+  coveragePct: number;
+  insufficient: boolean;
+}
+
+export type IncidentLifecycle = "SUSPECTED" | "CONFIRMED" | "ONGOING" | "RECOVERED" | "RESOLVED";
+
+export interface MonitoringIncident {
+  id: string;
+  status: IncidentLifecycle;
+  kind: string;
+  url: string;
+  reason: string | null;
+  httpStatus: number | null;
+  failedChecks: number;
+  startedAt: IsoDate;
+  confirmedAt: IsoDate | null;
+  recoveredAt: IsoDate | null;
+  resolvedAt: IsoDate | null;
+  durationMs: number | null;
+  falsePositive: boolean;
+  escalated: boolean;
+  location: string;
+}
+
+export interface AlertDeliveryView {
+  id: string;
+  channel: "in_app" | "email" | "whatsapp";
+  status: "queued" | "sent" | "handed_off" | "failed" | "skipped";
+  reason: string | null;
+  recipient: string | null;
+  attempts: number;
+  error: string | null;
+  completedAt: IsoDate | null;
+  /** WhatsApp only: the provider's own status for the message, when known. */
+  providerStatus: string | null;
+}
+
+export interface AlertEventView {
+  id: string;
+  type: string;
+  severity: "critical" | "high" | "medium" | "info";
+  title: string;
+  message: string;
+  createdAt: IsoDate;
+  incidentId: string | null;
+  deliveries: AlertDeliveryView[];
+}
+
+export interface MonitoringOverview {
+  generatedAt: IsoDate;
+  coverage: {
+    locations: { name: string; note: string }[];
+    intervalMinutes: number;
+    enabled: boolean;
+    scheduled: boolean;
+    reason: string | null;
+    firstCheckAt: IsoDate | null;
+    totalChecks: number;
+  };
+  status: { state: "up" | "down" | "degraded" | "paused" | "unknown"; lastCheckAt: IsoDate | null; lastSuccessAt: IsoDate | null; lastHttpStatus: number | null; lastResponseMs: number | null };
+  uptime: { h24: UptimeWindowStat; d7: UptimeWindowStat; d30: UptimeWindowStat; d90: UptimeWindowStat };
+  responseSeries: { at: IsoDate; avgMs: number | null; maxMs: number | null; checks: number; failed: number }[];
+  ssl: { status: string; validTo: IsoDate | null; issuer: string | null; daysLeft: number | null; warningDays: number; checkedAt: IsoDate | null; error: string | null };
+  dns: { checkedAt: IsoDate | null; changedAt: IsoDate | null; records: { a?: string[]; aaaa?: string[]; cname?: string[]; ns?: string[]; mx?: string[] } | null };
+  activeIncident: MonitoringIncident | null;
+  incidents: MonitoringIncident[];
+  rules: Record<AlertRuleKey, boolean>;
+  alertSettings: AlertSettings;
+  channels: {
+    inApp: { enabled: boolean; available: boolean };
+    email: { enabled: boolean; smtpConfigured: boolean; recipients: number; usesOwners: boolean; active: boolean };
+    whatsapp: {
+      enabled: boolean;
+      template: { id: string; name: string; approved: boolean; connected: boolean } | null;
+      recipients: number;
+      active: boolean;
+      availableTemplates: { id: string; name: string; approved: boolean; variables: string[] }[];
+    };
+  };
+  alerts: AlertEventView[];
+}
+
+
+/* ---- Milestone 7: reports ---------------------------------------------------------------------------- */
+
+export type ReportTypeKey =
+  | "complete" | "technical_seo" | "page" | "performance" | "search_console" | "ga4" | "monitoring" | "ai_actions" | "comparison";
+export type ReportFormatKey = "pdf" | "csv";
+export type ReportStatusKey = "queued" | "running" | "completed" | "partial" | "failed" | "cancelled";
+
+export interface ReportView {
+  id: string;
+  type: ReportTypeKey;
+  typeLabel: string;
+  format: ReportFormatKey;
+  status: ReportStatusKey;
+  progress: number;
+  stage: string | null;
+  title: string;
+  pageId: string | null;
+  params: { rangeDays?: number; from?: string; to?: string; table?: string; pageId?: string };
+  version: number;
+  sizeBytes: number | null;
+  fileName: string | null;
+  /** Data that was unavailable when the report was built (it is stated inside the report as well). */
+  notes: string[];
+  error: { code: string | null; message: string | null } | null;
+  scheduled: boolean;
+  scheduleId: string | null;
+  downloadable: boolean;
+  createdAt: IsoDate;
+  startedAt: IsoDate | null;
+  completedAt: IsoDate | null;
+  expiresAt: IsoDate | null;
+  deduplicated?: boolean;
+  deliveries?: { id: string; channel: string; status: string; reason: string | null; recipient: string | null; attempts: number; error: string | null; completedAt: IsoDate | null }[];
+}
+
+export interface ReportMeta {
+  types: { type: ReportTypeKey; label: string; needsPage: boolean; csv: boolean; schedulable: boolean }[];
+  formats: ReportFormatKey[];
+  rangeOptions: number[];
+  scheduler: { running: boolean; emailConfigured: boolean; reason: string | null; emailReason: string | null };
+  limits: { dailyPerCompany: number; maxBytes: number; retentionDays: number };
+}
+
+export interface GenerateReportInput {
+  type: ReportTypeKey;
+  format: ReportFormatKey;
+  rangeDays?: number;
+  pageId?: string;
+  table?: string;
+}
+
+export interface ReportScheduleView {
+  id: string;
+  name: string;
+  type: ReportTypeKey;
+  typeLabel: string;
+  format: ReportFormatKey;
+  frequency: "daily" | "weekly" | "monthly";
+  dayOfWeek: number | null;
+  dayOfMonth: number | null;
+  timeOfDay: string;
+  timezone: string;
+  rangeDays: number;
+  recipients: string[];
+  deliverInApp: boolean;
+  enabled: boolean;
+  lastRunAt: IsoDate | null;
+  lastStatus: string | null;
+  lastReportId: string | null;
+  nextRunAt: IsoDate | null;
+}
+
+export interface ReportScheduleInput {
+  name?: string;
+  type: ReportTypeKey;
+  format?: ReportFormatKey;
+  frequency: "daily" | "weekly" | "monthly";
+  dayOfWeek?: number;
+  dayOfMonth?: number;
+  timeOfDay?: string;
+  timezone?: string;
+  rangeDays?: number;
+  recipients?: string[];
+  deliverInApp?: boolean;
+  enabled?: boolean;
 }

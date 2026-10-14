@@ -57,12 +57,16 @@ import {
 import { AXIS_PROPS, ChartLegend, GRID_PROPS, makeTooltip, SERIES_COLORS } from "../ui/charts";
 import { EmptyState, QueryErrorState, SkeletonBlock, SkeletonStats } from "../ui/states";
 import { WEBSITE_MOCK_MODE } from "../../data/config";
+import { MonitoringAlertsTab, MonitoringIncidentsTab, MonitoringLiveTab } from "../ui/monitoring-alerts";
 import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
 
-type MonitoringTab = "overview" | "uptime" | "ssl" | "dns" | "errors" | "changes";
+type MonitoringTab = "live" | "incidents" | "alerts" | "overview" | "uptime" | "ssl" | "dns" | "errors" | "changes";
 
 const TABS: { value: MonitoringTab; label: string }[] = [
+  { value: "live", label: "Live status" },
+  { value: "incidents", label: "Incidents" },
+  { value: "alerts", label: "Alerts" },
   { value: "overview", label: "Overview" },
   { value: "uptime", label: "Uptime" },
   { value: "ssl", label: "SSL" },
@@ -82,7 +86,7 @@ export function WebsiteMonitoringPage() {
   const { clientId, runScan, scan, navigate } = useWebsiteWorkspace();
   const monitoring = useWebsiteMonitoring(clientId);
   const settings = useWebsiteSettings(clientId);
-  const [tab, setTab] = useUrlState<MonitoringTab>("tab", "overview", TABS.map((entry) => entry.value));
+  const [tab, setTab] = useUrlState<MonitoringTab>("tab", "live", TABS.map((entry) => entry.value));
 
   const archived = settings.data?.monitoringArchived === true;
   const disabled = settings.data ? !settings.data.monitoring.enabled : false;
@@ -136,7 +140,11 @@ export function WebsiteMonitoringPage() {
         </div>
       ) : null}
 
-      {monitoring.isLoading ? (
+      {tab === "live" ? <MonitoringLiveTab /> : null}
+      {tab === "incidents" ? <MonitoringIncidentsTab /> : null}
+      {tab === "alerts" ? <MonitoringAlertsTab /> : null}
+
+      {tab === "live" || tab === "incidents" || tab === "alerts" ? null : monitoring.isLoading ? (
         <>
           <SkeletonStats count={4} />
           <SkeletonBlock lines={6} />

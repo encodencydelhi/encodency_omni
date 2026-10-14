@@ -1,288 +1,338 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Search, TrendingUp, Target, Globe, FileText, Download } from "lucide-react";
-import { Card, WButton } from "../ui/kit";
+import { Download, FileSearch, RefreshCw, Search, Target, TrendingUp } from "lucide-react";
+import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Card,
+  Chip,
+  DataTable,
+  FilterSelect,
+  KeyValue,
+  Pagination,
+  SearchInput,
+  WButton,
+  type Column,
+  type SortState,
+  usePagination,
+  useSortedRows,
+} from "../ui/kit";
+import { EmptyState, QueryErrorState, SkeletonStats, SkeletonTable } from "../ui/states";
 import { useWebsiteWorkspace } from "../website-workspace";
-import { useKeywordResearch } from "../../data/hooks";
-import { scoreBand, downloadFile, toCsv } from "../../data/selectors";
-import { WEBSITE_MOCK_MODE } from "../../data/config";
+import { useKeywordResearch, useWebsiteSeo } from "../../data/hooks";
+import { downloadFile, toCsv } from "../../data/selectors";
+import type { KeywordResearchData, SearchPageRow } from "../../data/types";
+import {
+  DetailMetric,
+  MetricGrid,
+  MovementChip,
+  PageHeader,
+  PathLabel,
+  UnavailableText,
+  average,
+  formatNumber,
+  formatPct,
+  formatPosition,
+} from "./search-performance-ui";
+
+type IntentFilter = "all" | KeywordResearchData["intent"];
+type PositionFilter = "all" | "top3" | "top10" | "top20" | "beyond20";
+type SortKey = "position" | "clicks" | "impressions" | "ctr";
+
+function positionMatches(position: number, filter: PositionFilter) {
+  if (filter === "top3") return position <= 3;
+  if (filter === "top10") return position <= 10;
+  if (filter === "top20") return position <= 20;
+  if (filter === "beyond20") return position > 20;
+  return true;
+}
+
+function intentTone(intent: KeywordResearchData["intent"]) {
+  return intent === "transactional" ? "warn" : intent === "commercial" ? "info" : intent === "navigational" ? "violet" : "good";
+}
+
+function associatedPages(query: string, pages: SearchPageRow[]) {
+  const terms = query.toLowerCase().split(/\s+/).filter((part) => part.length > 2);
+  return pages
+    .filter((page) => terms.some((term) => page.page.toLowerCase().includes(term)))
+    .sort((a, b) => b.clicks - a.clicks)
+    .slice(0, 5);
+}
 
 export function WebsiteKeywordResearchPage() {
   const { clientId } = useWebsiteWorkspace();
-  const { data: keywordData = [], isLoading, error } = useKeywordResearch(clientId);
-  const [selectedQuery, setSelectedQuery] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const previousSearchQuery = useRef<string>(searchQuery);
+  const keywords = useKeywordResearch(clientId);
+  const seo = useWebsiteSeo(clientId);
+  const keywordData = keywords.data ?? [];
+  const searchPages = seo.data?.searchConsole?.pages ?? [];
 
-  // Reset page when search query changes
-  useEffect(() => {
-    if (previousSearchQuery.current !== searchQuery) {
-      setCurrentPage(1);
-    }
-    previousSearchQuery.current = searchQuery;
-  }, [searchQuery]);
+  const [query, setQuery] = useState("");
+  const [intent, setIntent] = useState<IntentFilter>("all");
+  const [position, setPosition] = useState<PositionFilter>("all");
+  const [volume, setVolume] = useState("all");
+  const [sortKey, setSortKey] = useState<SortKey>("impressions");
+  const [sort, setSort] = useState<SortState>({ key: "impressions", direction: "desc" });
+  const [selected, setSelected] = useState<KeywordResearchData | null>(null);
 
-  const selected = useMemo(() => keywordData.find((k) => k.query === selectedQuery) ?? null, [keywordData, selectedQuery]);
+  const intentOptions = useMemo(() => {
+    const counts = keywordData.reduce<Record<string, number>>((acc, item) => {
+      acc[item.intent] = (acc[item.intent] ?? 0) + 1;
+      return acc;
+    }, {});
+    return [
+      { value: "all", label: "All intents", count: keywordData.length },
+      ...Object.entries(counts).map(([value, count]) => ({ value, label: value, count })),
+    ];
+  }, [keywordData]);
 
   const filtered = useMemo(() => {
-    let result = keywordData;
-    if (searchQuery) {
-      result = result.filter((k) => k.query.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-    return result;
-  }, [keywordData, searchQuery]);
+    return keywordData.filter((item) => {
+      if (query && !item.query.toLowerCase().includes(query.toLowerCase())) return false;
+      if (intent !== "all" && item.intent !== intent) return false;
+      if (!positionMatches(item.position, position)) return false;
+      if (volume === "clicks" && item.clicks <= 0) return false;
+      if (volume === "impressions" && item.impressions <= 0) return false;
+      return true;
+    });
+  }, [keywordData, query, intent, position, volume]);
 
-// Pagination calculations
-  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-  const paginatedItems = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filtered.slice(startIndex, startIndex + itemsPerPage);
-  }, [filtered, currentPage, itemsPerPage]);
+  const columns = useMemo<Column<KeywordResearchData>[]>(
+    () => [
+      {
+        key: "keyword",
+        header: "Keyword",
+        primary: true,
+        sortValue: (row) => row.query,
+        cell: (row) => <span className="font-semibold text-[#1F2A44]">{row.query}</span>,
+      },
+      { key: "intent", header: "Intent", cell: (row) => <Chip tone={intentTone(row.intent)}>{row.intent}</Chip> },
+      { key: "clicks", header: "Clicks", align: "right", sortValue: (row) => row.clicks, cell: (row) => formatNumber(row.clicks) },
+      { key: "impressions", header: "Impressions", align: "right", sortValue: (row) => row.impressions, cell: (row) => formatNumber(row.impressions) },
+      { key: "ctr", header: "CTR", align: "right", sortValue: (row) => row.ctr, cell: (row) => formatPct(row.ctr) },
+      { key: "position", header: "Avg position", align: "right", sortValue: (row) => row.position, cell: (row) => formatPosition(row.position) },
+      { key: "previous", header: "Previous", align: "right", cell: () => <UnavailableText>No previous-period data</UnavailableText> },
+      { key: "change", header: "Change", cell: () => <UnavailableText>Not available</UnavailableText> },
+      {
+        key: "pages",
+        header: "Associated pages",
+        hideOnMobile: true,
+        cell: (row) => {
+          const pages = associatedPages(row.query, searchPages);
+          return pages.length ? <PathLabel url={pages[0]!.page} /> : <UnavailableText>Not measured</UnavailableText>;
+        },
+      },
+    ],
+    [searchPages],
+  );
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(Math.max(1, Math.min(totalPages, page)));
-  };
+  const sorted = useSortedRows(filtered, columns, sort);
+  const pagination = usePagination(sorted.length, 25);
+  useEffect(() => pagination.reset(), [query, intent, position, volume, sortKey]);
 
-  const hasRank = (intent: string) => filtered.some((k) => k.intent === intent && k.position > 0);
+  const rows = pagination.slice(sorted);
+  const avgCtr = average(filtered.map((item) => item.ctr));
+  const hasSearchVolume = filtered.some((item) => item.searchVolume != null && item.searchVolume > 0);
 
   const handleExport = () => {
     downloadFile(
       "keyword-research.csv",
       toCsv(
-        ["Query", "Position", "Impressions", "Clicks", "CTR", "Difficulty", "Intent"],
-        filtered.map((k) => [k.query, k.position, k.impressions, k.clicks, `${k.ctr}%`, k.difficulty, k.intent]),
+        ["Keyword", "Intent", "Clicks", "Impressions", "CTR", "Average position", "Search volume"],
+        filtered.map((item) => [
+          item.query,
+          item.intent,
+          item.clicks,
+          item.impressions,
+          item.ctr,
+          item.position,
+          hasSearchVolume ? item.searchVolume ?? "" : "Not available",
+        ]),
       ),
     );
     toast.success("Keywords exported");
   };
 
+  if (keywords.isLoading) {
+    return (
+      <div className="space-y-3">
+        <SkeletonStats count={5} />
+        <Card title="Keyword research">
+          <SkeletonTable />
+        </Card>
+      </div>
+    );
+  }
+
+  if (keywords.error) {
+    return (
+      <Card title="Keyword Research">
+        <QueryErrorState error={keywords.error} onRetry={() => void keywords.refetch()} />
+      </Card>
+    );
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-base font-bold text-[#28354C]">Keyword Research</h1>
-          <p className="text-[#6B7A94]">Track search performance, volume, and competitive gaps</p>
-        </div>
-        <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
-          Export
-        </WButton>
-      </div>
+    <div className="space-y-3">
+      <PageHeader
+        title="Keyword Research"
+        subtitle="Discover search queries, analyze visibility and identify optimization opportunities."
+        actions={
+          <>
+            <WButton size="sm" icon={RefreshCw} onClick={() => void keywords.refetch()}>
+              Refresh
+            </WButton>
+            <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
+              Export
+            </WButton>
+          </>
+        }
+        note="Clicks, impressions, CTR and average position come from Google Search Console. Search Console does not provide monthly keyword search volume, so volume is shown only when a genuine provider supplies it."
+      />
 
-      {!WEBSITE_MOCK_MODE ? (
-        <p className="rounded-lg border border-[#E6EBF4] bg-[#FAFBFD] px-3 py-2 text-[11px] leading-relaxed text-[#6B7A94]">
-          Positions, impressions, clicks and CTR come from Google Search Console. Difficulty and search
-          volume are rough estimates derived from that data — not from a keyword research API.
-        </p>
-      ) : null}
+      <MetricGrid
+        metrics={[
+          { label: "Total queries", value: formatNumber(filtered.length), sub: "Visible in current result set", icon: Search },
+          { label: "Avg position", value: formatPosition(average(filtered.map((item) => item.position))), sub: "Lower is better", icon: TrendingUp },
+          { label: "Total impressions", value: formatNumber(filtered.reduce((sum, item) => sum + item.impressions, 0)), icon: Target },
+          { label: "Total clicks", value: formatNumber(filtered.reduce((sum, item) => sum + item.clicks, 0)), tone: "good", icon: Target },
+          {
+            label: "Average CTR",
+            value: avgCtr == null ? "Not available" : formatPct(avgCtr),
+            sub: hasSearchVolume ? `Volume ${formatNumber(filtered.reduce((sum, item) => sum + (item.searchVolume ?? 0), 0))}` : "Search volume not available",
+            icon: TrendingUp,
+          },
+        ]}
+      />
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card title="Total keywords" icon={Search} className="md:col-span-1">
-          <div className="text-lg font-bold text-[#28354C]">{filtered.length}</div>
-          <div className="mt-1 text-sm text-[#6B7A94]">Tracked queries</div>
-        </Card>
-
-        <Card title="Avg position" icon={TrendingUp} className="md:col-span-1">
-          <div className="text-lg font-bold text-[#28354C]">
-            {filtered.length > 0 ? (filtered.reduce((sum, k) => sum + k.position, 0) / filtered.length).toFixed(1) : "—"}
-          </div>
-          <div className="mt-1 text-sm text-[#6B7A94]">Current rankings</div>
-        </Card>
-
-        <Card title="Est. search volume" icon={Globe} className="md:col-span-1">
-          <div className="text-lg font-bold text-[#28354C]">
-            {filtered.length > 0 ? (filtered.reduce((sum, k) => sum + (k.searchVolume || 0), 0)).toLocaleString() : "—"}
-          </div>
-          <div className="mt-1 text-sm text-[#6B7A94]">Est. monthly searches</div>
-        </Card>
-
-        <Card title="Intent distribution" icon={Target} className="md:col-span-1">
-          <div className="text-lg font-bold text-[#28354C]">
-            {
-              Object.entries(
-                filtered.reduce<Record<string, number>>(
-                  (acc, k) => ({ ...acc, [k.intent]: (acc[k.intent] || 0) + 1 }),
-                  {},
-                ),
-              )
-                .sort((a, b) => b[1] - a[1])[0]?.[1] ?? 0
-            }
-          </div>
-          <div className="mt-1 text-sm text-[#6B7A94]">Top intent</div>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="md:col-span-1">
-          <input
-            type="text"
-            placeholder="Search keywords..."
-            className="w-full rounded-lg border border-[#DAE1EC] px-3 py-2 text-sm"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+      <Card title="Keyword table" subtitle="Click a row to inspect available query data." bodyClassName="p-0">
+        <div className="flex flex-wrap items-center gap-2 border-b border-[#EEF2F8] p-3">
+          <SearchInput value={query} onChange={setQuery} placeholder="Search keyword" className="min-w-[220px] flex-1" />
+          <FilterSelect label="Intent" value={intent} onChange={(value) => setIntent(value as IntentFilter)} options={intentOptions} />
+          <FilterSelect
+            label="Position"
+            value={position}
+            onChange={(value) => setPosition(value as PositionFilter)}
+            options={[
+              { value: "all", label: "All positions" },
+              { value: "top3", label: "Top 3" },
+              { value: "top10", label: "Top 10" },
+              { value: "top20", label: "Top 20" },
+              { value: "beyond20", label: "Beyond 20" },
+            ]}
           />
-
-          <div className="mt-3 space-y-1">
-            {paginatedItems.map((k, idx) => (
-               <button
-                 key={k.query}
-                 className={`w-full rounded-lg border p-2 text-left transition-colors ${selectedQuery === k.query ? "border-[#4F46E5] bg-[#EEF2FF]" : "border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
-                 onClick={() => setSelectedQuery(k.query)}
-               >
-                 <div className="flex items-center justify-between">
-                   <div className="truncate font-medium text-[#28354C]">{k.query}</div>
-                   <div className="text-sm text-[#6B7A94]">#{((currentPage - 1) * itemsPerPage) + idx + 1}</div>
-                 </div>
-                 <div className="mt-1 flex items-center gap-2 text-sm">
-                   <span className="text-[#6B7A94]">Pos {k.position}</span>
-                   <span
-                     title="Estimated difficulty — no keyword-difficulty API is connected"
-                     className={`px-1.5 py-0.5 rounded text-xs ${scoreBand(k.difficulty) === "good" ? "bg-[#DCFCE7] text-[#166534]" : scoreBand(k.difficulty) === "warn" ? "bg-[#FEF3C7] text-[#9A5B08]" : "bg-[#FEE2E2] text-[#B91C1C]"}`}
-                   >
-                     Est. D{k.difficulty}
-                   </span>
-                 </div>
-               </button>
-             ))}
-             {filtered.length === 0 && (
-               <div className="py-8 text-center text-[#6B7A94]">No keywords found</div>
-             )}
-           </div>
-
-{/* Pagination Controls */}
-            {filtered.length > 0 && (
-              <div className="flex items-center justify-between px-2 py-3 border-t border-[#DAE1EC] bg-[#FAFBFD] rounded-b-lg">
-                <div className="text-sm text-[#6B7A94]">
-                  Showing {paginatedItems.length} of {filtered.length} keywords
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
-                  >
-                    Previous
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(page => 
-                      page === 1 || 
-                      page === totalPages || 
-                      Math.abs(page - currentPage) <= 1
-                    )
-                    .map((page, idx, filteredPages) => {
-                      const showEllipsisBefore = idx > 0 && filteredPages[idx - 1] !== page - 1;
-                      const showEllipsisAfter = idx < filteredPages.length - 1 && filteredPages[idx + 1] !== page + 1;
-                      
-                      return (
-                        <div key={page} className="flex items-center">
-                          {showEllipsisBefore && <span className="px-2 text-[#6B7A94]">...</span>}
-                          <button
-                            onClick={() => handlePageChange(page)}
-                            className={`px-3 py-1 text-sm border rounded ${currentPage === page ? "bg-[#4F46E5] text-white border-[#4F46E5]" : "bg-white text-[#28354C] border-[#DAE1EC] hover:bg-[#F9FAFB]"}`}
-                          >
-                            {page}
-                          </button>
-                          {showEllipsisAfter && <span className="px-2 text-[#6B7A94]">...</span>}
-                        </div>
-                      );
-                    })}
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 text-sm border border-[#DAE1EC] rounded bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F9FAFB]"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
+          <FilterSelect
+            label="Volume"
+            value={volume}
+            onChange={setVolume}
+            options={[
+              { value: "all", label: "All traffic" },
+              { value: "clicks", label: "Has clicks" },
+              { value: "impressions", label: "Has impressions" },
+            ]}
+          />
+          <FilterSelect
+            label="Sort"
+            value={sortKey}
+            onChange={(value) => {
+              const key = value as SortKey;
+              setSortKey(key);
+              setSort({ key, direction: key === "position" ? "asc" : "desc" });
+            }}
+            options={[
+              { value: "impressions", label: "Sort by impressions" },
+              { value: "clicks", label: "Sort by clicks" },
+              { value: "position", label: "Sort by position" },
+              { value: "ctr", label: "Sort by CTR" },
+            ]}
+          />
         </div>
+        <DataTable
+          columns={columns}
+          rows={rows}
+          getRowId={(row) => row.query}
+          onRowClick={setSelected}
+          sort={sort}
+          onSortChange={setSort}
+          caption="Keyword research table"
+          empty={<EmptyState title="No keywords found" body="Adjust the search or filters to find matching Google Search Console queries." compact />}
+          rowActions={(row) => (
+            <WButton size="sm" icon={FileSearch} onClick={() => setSelected(row)}>
+              Details
+            </WButton>
+          )}
+        />
+        <Pagination page={pagination.page} pageSize={pagination.pageSize} total={sorted.length} onPageChange={pagination.setPage} onPageSizeChange={pagination.setPageSize} />
+      </Card>
 
-        <div className="md:col-span-2">
-          {selected ? (
-            <Card title={selected.query} icon={FileText} subtitle="Keyword details and performance">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div>
-                  <div className="text-sm text-[#6B7A94]">Position</div>
-                  <div className="text-base font-bold text-[#28354C]">{selected.position}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-[#6B7A94]">Impressions</div>
-                  <div className="text-base font-bold text-[#28354C]">{selected.impressions.toLocaleString()}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-[#6B7A94]">Clicks</div>
-                  <div className="text-base font-bold text-[#28354C]">{selected.clicks.toLocaleString()}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-[#6B7A94]">CTR</div>
-                  <div className="text-base font-bold text-[#28354C]">{selected.ctr}%</div>
-                </div>
-                <div>
-                  <div className="text-sm text-[#6B7A94]">Est. volume</div>
-                  <div className="text-base font-bold text-[#28354C]">
-                    {(selected.searchVolume || 0).toLocaleString()}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm text-[#6B7A94]">Intent</div>
-                  <div className="text-base font-bold text-[#28354C]">{selected.intent}</div>
-                </div>
-              </div>
+      <KeywordDrawer keyword={selected} pages={searchPages} onClose={() => setSelected(null)} />
+    </div>
+  );
+}
 
-              <div className="mt-6">
-                <div className="mb-2 text-sm font-medium text-[#28354C]">Intent breakdown</div>
-                <div className="flex items-center gap-4">
-                  {hasRank("informational") && (
-                    <div className="flex items-center gap-1">
-                      <div className="size-2 rounded-full bg-[#12A06D]" /> Informational
-                    </div>
-                  )}
-                  {hasRank("transactional") && (
-                    <div className="flex items-center gap-1">
-                      <div className="size-2 rounded-full bg-[#E29208]" /> Transactional
-                    </div>
-                  )}
-                  {hasRank("commercial") && (
-                    <div className="flex items-center gap-1">
-                      <div className="size-2 rounded-full bg-[#4F46E5]" /> Commercial
-                    </div>
-                  )}
-                  {hasRank("navigational") && (
-                    <div className="flex items-center gap-1">
-                      <div className="size-2 rounded-full bg-[#DC3A32]" /> Navigational
-                    </div>
-                  )}
-                </div>
+function KeywordDrawer({
+  keyword,
+  pages,
+  onClose,
+}: {
+  keyword: KeywordResearchData | null;
+  pages: SearchPageRow[];
+  onClose: () => void;
+}) {
+  const pageMatches = keyword ? associatedPages(keyword.query, pages) : [];
+  return (
+    <Sheet open={Boolean(keyword)} onOpenChange={(open) => (open ? undefined : onClose())}>
+      <SheetContent className="w-full max-w-xl border-[#E6EBF4] bg-white p-0 sm:max-w-xl">
+        <SheetHeader className="border-[#EEF2F8] px-5 py-4 pr-12">
+          <Chip tone={keyword ? intentTone(keyword.intent) : "muted"}>{keyword?.intent ?? "Intent"}</Chip>
+          <SheetTitle className="text-[15px] font-semibold text-[#111C3A]">{keyword?.query ?? "Keyword"}</SheetTitle>
+        </SheetHeader>
+        <SheetBody className="px-5 py-4">
+          {keyword ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-2">
+                <DetailMetric label="Current position" value={formatPosition(keyword.position)} />
+                <DetailMetric label="Previous position" value="No previous-period data" tone="muted" />
+                <DetailMetric label="Clicks" value={formatNumber(keyword.clicks)} tone="good" />
+                <DetailMetric label="Impressions" value={formatNumber(keyword.impressions)} />
+                <DetailMetric label="CTR" value={formatPct(keyword.ctr)} />
+                <DetailMetric label="Search volume" value="Not available" tone="muted" />
               </div>
-            </Card>
-          ) : (
-            <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-[#DAE1EC] bg-[#FAFBFD] p-12">
-              <div className="text-center">
-                <Search className="mx-auto mb-3 size-12 text-[#94A3B8]" />
-                <p className="text-[#28354C]">Select a keyword to view details</p>
-                <p className="mt-1 text-sm text-[#6B7A94]">Choose from the list to analyze performance</p>
+              <div className="rounded-lg border border-[#E6EBF4] p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">Historical trend</p>
+                <p className="mt-1 text-[12px] leading-relaxed text-[#4A5A73]">
+                  Per-keyword historical snapshots are not available in the current API response. The table uses the current Search Console period only.
+                </p>
+              </div>
+              <div>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">Associated landing pages</p>
+                {pageMatches.length ? (
+                  <dl className="divide-y divide-[#F2F5FA] rounded-lg border border-[#E6EBF4] px-3">
+                    {pageMatches.map((page) => (
+                      <KeyValue key={page.page} label={`${formatNumber(page.clicks)} clicks`}>
+                        <PathLabel url={page.page} />
+                      </KeyValue>
+                    ))}
+                  </dl>
+                ) : (
+                  <p className="rounded-lg border border-dashed border-[#DAE1EC] p-3 text-[12px] text-[#6B7A94]">
+                    No associated page is independently measured for this query in the current response.
+                  </p>
+                )}
+              </div>
+              <div className="rounded-lg bg-[#F7F9FC] p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">SEO opportunities</p>
+                <p className="mt-1 text-[12px] text-[#4A5A73]">
+                  Improve pages where this query has high impressions and low CTR, or where average position is outside the top 10. AI recommendations appear here once integrated.
+                </p>
               </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {isLoading && (
-        <div className="rounded-lg border border-[#DAE1EC] bg-[#FAFBFD] p-8 text-center">
-          <div className="inline-block size-8 animate-spin rounded-full border-4 border-solid border-[#4F46E5] border-t-transparent" />
-          <p className="mt-3 text-[#6B7A94]">Loading keyword data...</p>
-        </div>
-      )}
-
-      {error && (
-        <div className="rounded-lg border border-[#FEE2E2] bg-[#FEF2F2] p-4 text-[#B91C1C]">
-          Failed to load keyword data.
-        </div>
-      )}
-    </div>
+          ) : null}
+        </SheetBody>
+        <SheetFooter className="border-t border-[#EEF2F8] px-5 py-3">
+          <WButton onClick={onClose}>Close</WButton>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

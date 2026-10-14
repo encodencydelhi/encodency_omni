@@ -41,6 +41,7 @@ import {
   toCsv,
 } from "../../data/selectors";
 import { SegmentedControl, WButton } from "../ui/kit";
+import { ReportsPanel } from "./reports-panel";
 
 type SectionKey = "summary" | "pages" | "issues" | "seo" | "performance" | "forms" | "monitoring";
 
@@ -75,6 +76,7 @@ export function ExportDialog({
   const forms = useWebsiteForms(clientId, open);
   const monitoring = useWebsiteMonitoring(clientId, open);
 
+  const [mode, setMode] = useState<"quick" | "reports">("reports");
   const [format, setFormat] = useState<"csv" | "json">("csv");
   const [selected, setSelected] = useState<SectionKey[]>(["summary", "pages", "issues"]);
 
@@ -260,15 +262,30 @@ export function ExportDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? undefined : onClose())}>
-      <DialogContent className="max-w-lg rounded-lg border-[#E6EBF4] bg-white p-0">
+      <DialogContent className="max-w-2xl rounded-lg border-[#E6EBF4] bg-white p-0">
         <DialogHeader className="border-b border-[#EEF2F8] p-5 pr-12">
-          <DialogTitle className="text-[15px] font-semibold text-[#111C3A]">Export website report</DialogTitle>
+          <DialogTitle className="text-[15px] font-semibold text-[#111C3A]">Reports &amp; export</DialogTitle>
           <DialogDescription className="text-[12px] text-[#6B7A94]">
-            {clientName} · {domain} — built in your browser from the data on screen.
+            {clientName} · {domain} — reports are generated on the server; quick export is built in your browser.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="scrollbar-thin max-h-[52vh] space-y-3 overflow-y-auto px-5 py-4">
+        <div className="border-b border-[#EEF2F8] px-5 py-3">
+          <SegmentedControl<"quick" | "reports">
+            ariaLabel="Export mode"
+            value={mode}
+            onChange={setMode}
+            options={[{ value: "reports", label: "Reports (PDF / CSV)" }, { value: "quick", label: "Quick export" }]}
+          />
+        </div>
+
+        {mode === "reports" ? (
+          <div className="scrollbar-thin max-h-[60vh] overflow-y-auto px-5 py-4">
+            <ReportsPanel clientId={clientId} />
+          </div>
+        ) : null}
+
+        <div className={cn("scrollbar-thin max-h-[52vh] space-y-3 overflow-y-auto px-5 py-4", mode === "reports" && "hidden")}>
           <div className="flex items-center justify-between gap-3">
             <span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">Format</span>
             <SegmentedControl
@@ -322,7 +339,7 @@ export function ExportDialog({
           </ul>
         </div>
 
-        <DialogFooter className="border-t border-[#EEF2F8] p-4">
+        <DialogFooter className={cn("border-t border-[#EEF2F8] p-4", mode === "reports" && "hidden")}>
           <WButton onClick={onClose}>Cancel</WButton>
           <WButton
             tone="primary"

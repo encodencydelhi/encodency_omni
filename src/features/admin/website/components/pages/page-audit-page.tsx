@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Circle,
   Download,
+  FileText,
   ExternalLink,
   Gauge,
   Image as ImageIcon,
@@ -55,6 +56,7 @@ import {
 import { ShareBar, SERIES_COLORS } from "../ui/charts";
 import { EmptyState, QueryErrorState, SkeletonBlock, SkeletonStats } from "../ui/states";
 import { PageAiPanel } from "../ui/ai-insights";
+import { PageReportDialog } from "../dialogs/page-report-dialog";
 import { PageLighthouseAccessibility, PagePerformanceTab, PageSearchAndIndexing } from "./page-measurements";
 import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
@@ -81,6 +83,7 @@ export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
   const audit = useWebsitePageAudit(clientId, pageId);
   const issues = useWebsiteIssues(clientId);
   const measured = usePagePerformance(clientId, pageId);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const [tab, setTab] = useUrlState<AuditTab>("tab", "overview", TABS.map((entry) => entry.value));
   const pageIssues = useMemo(
@@ -200,6 +203,9 @@ export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
             </WButton>
             <WButton icon={Download} onClick={exportAudit}>
               Export
+            </WButton>
+            <WButton icon={FileText} onClick={() => setReportOpen(true)}>
+              PDF report
             </WButton>
           </div>
         </div>
@@ -341,6 +347,7 @@ export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
         </div>
       ) : null}
       {tab === "images" ? <ImagesTab data={data} /> : null}
+      <PageReportDialog clientId={clientId} pageId={pageId} pagePath={page.path} open={reportOpen} onClose={() => setReportOpen(false)} />
     </div>
   );
 }

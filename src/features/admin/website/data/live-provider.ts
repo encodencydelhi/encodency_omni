@@ -1,7 +1,8 @@
 import { apiClient } from '@/lib/api/client';
 import { companyScopeHeaders } from '@/lib/api/company-scope';
 import { getStoredClientId, getStoredCompanyId } from '@/lib/api/tenancy-storage';
-import type { IntegrationKey, IssueStatus, ScanStartOptions, ScanType, WebsiteDataProvider, WebsiteSettings } from './types';
+import { env } from '@/config/env';
+import type { GenerateReportInput, IntegrationKey, IssueStatus, ReportScheduleInput, ScanStartOptions, ScanType, WebsiteDataProvider, WebsiteSettings } from './types';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -85,6 +86,41 @@ export class LiveWebsiteProvider implements WebsiteDataProvider {
       body: { type, pageId, ...(options ?? {}) },
     });
 
+  getReportMeta = (id: string) => get<any>(id, 'reports/meta');
+  listReports = (id: string) => get<any>(id, 'reports');
+  getReport = (id: string, reportId: string) => get<any>(id, `reports/${encodeURIComponent(reportId)}`);
+  generateReport = (id: string, input: GenerateReportInput) =>
+    apiClient.request<any>({ method: 'POST', path: '/website/reports', headers: headers(id), body: input });
+  cancelReport = (id: string, reportId: string) =>
+    apiClient.request<any>({ method: 'POST', path: `/website/reports/${encodeURIComponent(reportId)}/cancel`, headers: headers(id), body: {} });
+  deleteReport = (id: string, reportId: string) =>
+    apiClient.request<any>({ method: 'DELETE', path: `/website/reports/${encodeURIComponent(reportId)}`, headers: headers(id) });
+  listReportSchedules = (id: string) => get<any>(id, 'reports/schedules');
+  saveReportSchedule = (id: string, input: ReportScheduleInput, scheduleId?: string) =>
+    apiClient.request<any>({
+      method: scheduleId ? 'PUT' : 'POST',
+      path: scheduleId ? `/website/reports/schedules/${encodeURIComponent(scheduleId)}` : '/website/reports/schedules',
+      headers: headers(id),
+      body: input,
+    });
+  deleteReportSchedule = (id: string, scheduleId: string) =>
+    apiClient.request<any>({ method: 'DELETE', path: `/website/reports/schedules/${encodeURIComponent(scheduleId)}`, headers: headers(id) });
+  /** The file is private: it is fetched with the session cookie and handed to the browser as a blob, never as a public URL. */
+  downloadReport = async (id: string, reportId: string) => {
+    const response = await fetch(`${env.apiBaseUrl}/website/reports/${encodeURIComponent(reportId)}/download`, {
+      credentials: 'include',
+      headers: { 'ngrok-skip-browser-warning': 'true', ...headers(id) },
+    });
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { message?: string | string[] };
+      throw new Error(Array.isArray(body.message) ? body.message.join(' ') : body.message ?? 'The report could not be downloaded.');
+    }
+    const disposition = response.headers.get('content-disposition') ?? '';
+    const fileName = /filename="([^"]+)"/.exec(disposition)?.[1] ?? `report-${reportId}`;
+    return { blob: await response.blob(), fileName };
+  };
+  getMonitoringOverview = (id: string) => get<any>(id, 'monitoring/overview');
+  sendTestAlert = (id: string) => apiClient.request<any>({ method: 'POST', path: '/website/monitoring/test-alert', headers: headers(id), body: {} });
   getAiStatus = (id: string) => get<any>(id, 'ai/status');
   getAiSummary = (id: string) => get<any>(id, 'ai/summary');
   getPageAi = (id: string, pageId: string) => get<any>(id, `pages/${encodeURIComponent(pageId)}/ai`);

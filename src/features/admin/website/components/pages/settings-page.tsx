@@ -54,6 +54,7 @@ import { WEBSITE_PERMISSIONS } from "../../data/types";
 import { Card, Chip, FilterSelect, KeyValue, SubTabs, WButton } from "../ui/kit";
 import { QueryErrorState, SkeletonBlock } from "../ui/states";
 import { useUrlState } from "../use-url-state";
+import { ReportSchedulesPanel } from "../dialogs/reports-panel";
 import { useWebsiteWorkspace } from "../website-workspace";
 import { useAdminContext } from "@/features/admin/shell/admin-context";
 
@@ -515,62 +516,8 @@ export function WebsiteSettingsPage() {
       ) : null}
 
       {section === "reports" ? (
-        <Card title="Reports" icon={FileBarChart} subtitle="Scheduled summaries for the client and the team">
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-1">
-              <ToggleRow
-                label="Send scheduled reports"
-                hint="A summary of health, SEO, performance, issues and uptime."
-                checked={draft.reports.scheduleEnabled}
-                onChange={(scheduleEnabled) => update({ reports: { ...draft.reports, scheduleEnabled } })}
-              />
-              <Field label="Frequency" hint="Monthly is usually enough unless the site changes constantly.">
-                <FilterSelect
-                  label="Report frequency"
-                  value={draft.reports.frequency}
-                  onChange={(value) =>
-                    update({ reports: { ...draft.reports, frequency: value as WebsiteSettings["reports"]["frequency"] } })
-                  }
-                  options={[
-                    { value: "weekly", label: "Weekly" },
-                    { value: "monthly", label: "Monthly" },
-                  ]}
-                />
-              </Field>
-              <Field label="Format" hint="CSV is easier to work with; PDF is easier to forward.">
-                <FilterSelect
-                  label="Report format"
-                  value={draft.reports.format}
-                  onChange={(value) =>
-                    update({ reports: { ...draft.reports, format: value as WebsiteSettings["reports"]["format"] } })
-                  }
-                  options={[
-                    { value: "pdf", label: "PDF" },
-                    { value: "csv", label: "CSV" },
-                  ]}
-                />
-              </Field>
-            </div>
-
-            <div className="space-y-1">
-              <PathList
-                label="Recipients"
-                hint="Email addresses that receive the scheduled report."
-                paths={draft.reports.recipients}
-                placeholder="name@example.com"
-                onChange={(recipients) => update({ reports: { ...draft.reports, recipients } })}
-              />
-              <Field label="Sections included" hint="Every section the report will contain.">
-                <ul className="flex flex-wrap gap-1.5">
-                  {draft.reports.sections.map((sectionName) => (
-                    <li key={sectionName}>
-                      <Chip tone="info">{sectionName}</Chip>
-                    </li>
-                  ))}
-                </ul>
-              </Field>
-            </div>
-          </div>
+        <Card title="Scheduled reports" icon={FileBarChart} subtitle="Reports generated and delivered automatically by the background scheduler">
+          <ReportSchedulesPanel clientId={clientId} />
         </Card>
       ) : null}
 

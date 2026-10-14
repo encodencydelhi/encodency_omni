@@ -41,6 +41,10 @@ import {
   type ScanRecord,
   type ScanType,
   type AiStatus,
+  type MonitoringOverview,
+  type ReportMeta,
+  type ReportView,
+  type ReportScheduleView,
   type AiSiteSummary,
   type AiPageInsights,
   type AiRecommendation,
@@ -230,6 +234,42 @@ export class MockWebsiteProvider implements WebsiteDataProvider {
   }
   async getPageSearch(): Promise<PageSearchData> {
     throw new ServiceUnavailableError("Page search data", "Demo data does not include Search Console page data.");
+  }
+  async getReportMeta(): Promise<ReportMeta> {
+    throw new ServiceUnavailableError("Reports", "Demo data cannot generate reports.");
+  }
+  async listReports(): Promise<ReportView[]> {
+    throw new ServiceUnavailableError("Reports", "Demo data cannot generate reports.");
+  }
+  async getReport(): Promise<ReportView> {
+    throw new ServiceUnavailableError("Reports", "Demo data cannot generate reports.");
+  }
+  async generateReport(): Promise<ReportView> {
+    throw new ServiceUnavailableError("Reports", "Demo data cannot generate reports.");
+  }
+  async cancelReport(): Promise<ReportView> {
+    throw new ServiceUnavailableError("Reports", "Demo data cannot generate reports.");
+  }
+  async deleteReport(): Promise<{ deleted: boolean }> {
+    throw new ServiceUnavailableError("Reports", "Demo data cannot generate reports.");
+  }
+  async downloadReport(): Promise<{ blob: Blob; fileName: string }> {
+    throw new ServiceUnavailableError("Reports", "Demo data cannot generate reports.");
+  }
+  async listReportSchedules(): Promise<ReportScheduleView[]> {
+    throw new ServiceUnavailableError("Reports", "Demo data cannot generate reports.");
+  }
+  async saveReportSchedule(): Promise<ReportScheduleView> {
+    throw new ServiceUnavailableError("Reports", "Demo data cannot generate reports.");
+  }
+  async deleteReportSchedule(): Promise<{ deleted: boolean }> {
+    throw new ServiceUnavailableError("Reports", "Demo data cannot generate reports.");
+  }
+  async getMonitoringOverview(): Promise<MonitoringOverview> {
+    throw new ServiceUnavailableError("Monitoring incidents and alerts", "Demo data does not include incident or alert history.");
+  }
+  async sendTestAlert(): Promise<{ alertId: string; deliveries: number } | null> {
+    throw new ServiceUnavailableError("Test alerts", "Demo data cannot send alerts.");
   }
   async getAiStatus(): Promise<AiStatus> {
     throw new ServiceUnavailableError("AI analysis", "Demo data does not include AI analysis.");
@@ -588,6 +628,42 @@ export class UnavailableWebsiteProvider implements WebsiteDataProvider {
   }
   async getPageSearch(): Promise<PageSearchData> {
     return this.fail("Page search service");
+  }
+  async getReportMeta(): Promise<ReportMeta> {
+    return this.fail("Reports");
+  }
+  async listReports(): Promise<ReportView[]> {
+    return this.fail("Reports");
+  }
+  async getReport(): Promise<ReportView> {
+    return this.fail("Reports");
+  }
+  async generateReport(): Promise<ReportView> {
+    return this.fail("Reports");
+  }
+  async cancelReport(): Promise<ReportView> {
+    return this.fail("Reports");
+  }
+  async deleteReport(): Promise<{ deleted: boolean }> {
+    return this.fail("Reports");
+  }
+  async downloadReport(): Promise<{ blob: Blob; fileName: string }> {
+    return this.fail("Reports");
+  }
+  async listReportSchedules(): Promise<ReportScheduleView[]> {
+    return this.fail("Reports");
+  }
+  async saveReportSchedule(): Promise<ReportScheduleView> {
+    return this.fail("Reports");
+  }
+  async deleteReportSchedule(): Promise<{ deleted: boolean }> {
+    return this.fail("Reports");
+  }
+  async getMonitoringOverview(): Promise<MonitoringOverview> {
+    return this.fail("Monitoring");
+  }
+  async sendTestAlert(): Promise<{ alertId: string; deliveries: number } | null> {
+    return this.fail("Monitoring");
   }
   async getAiStatus(): Promise<AiStatus> {
     return this.fail("AI analysis");
