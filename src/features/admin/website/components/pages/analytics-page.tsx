@@ -100,7 +100,7 @@ export function WebsiteAnalyticsPage() {
             key={kpi.key}
             label={kpi.label}
             value={kpi.value}
-            delta={kpi.delta}
+            delta={kpi.delta ?? undefined}
             tone={index % 2 === 0 ? "info" : "violet"}
             sub={`vs previous ${period}`}
           />

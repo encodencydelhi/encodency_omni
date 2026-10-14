@@ -129,9 +129,9 @@ export function WebsiteMonitoringPage() {
         <div className="flex items-start gap-2 rounded-lg border border-[#E6EBF4] bg-[#F7F9FC] px-3 py-2">
           <Info className="mt-0.5 size-4 shrink-0 text-[#4A5A73]" aria-hidden />
           <p className="text-[11.5px] leading-relaxed text-[#4A5A73]">
-            These numbers come from a real check run when you open this page: an HTTP request, a TLS handshake and
-            DNS lookups against the site. Historical uptime percentages, downtimes and scheduled checks need a
-            background prober, which is not enabled — so long-window uptime shows as “Not available”.
+            Status, certificate and DNS come from a real check run when you open this page. Uptime percentages and
+            incidents are computed only from availability checks that were actually recorded (scheduled checks, plus
+            the checks made when this page is opened) — see the note under the figures for how many checks they rest on.
           </p>
         </div>
       ) : null}

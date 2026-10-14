@@ -10,11 +10,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { websiteKeys, websiteRepository } from "./repository";
+import {
+  isActiveScan,
+  isTerminalScan,
+  MAX_CONSECUTIVE_POLL_FAILURES,
+  nextPollDelayMs,
+  scanProducedResults,
+} from "./scan-state";
 import type {
   IntegrationKey,
   IssueStatus,
   ScanProgress,
   ScanType,
+  ScanStartOptions,
+  AiRecommendationStatus,
   WebsiteSettings,
 } from "./types";
 
@@ -147,11 +156,12 @@ export function useWebsiteForms(clientId: string, enabled = true) {
   });
 }
 
-export function useWebsiteMonitoring(clientId: string, enabled = true) {
+export function useWebsiteMonitoring(clientId: string, enabled = true, refetchInterval?: number) {
   return useQuery({
     queryKey: websiteKeys.monitoring(clientId),
     queryFn: () => websiteRepository.getMonitoring(clientId),
     enabled: enabled && Boolean(clientId),
+    refetchInterval,
     ...SHARED,
   });
 }
@@ -231,8 +241,11 @@ export function useArchiveMonitoring(clientId: string) {
 export interface ScanRunner {
   progress: ScanProgress | null;
   isRunning: boolean;
+  isCancelling: boolean;
   error: Error | null;
-  start: (type: ScanType, pageId?: string) => Promise<void>;
+  start: (type: ScanType, pageId?: string, options?: ScanStartOptions) => Promise<void>;
+  /** Asks the backend to stop the scan. Polling continues until it reports a terminal state. */
+  cancel: () => Promise<void>;
   dismiss: () => void;
 }
 
@@ -245,7 +258,9 @@ export function useScanRunner(clientId: string, onComplete?: (progress: ScanProg
   const queryClient = useQueryClient();
   const [progress, setProgress] = useState<ScanProgress | null>(null);
   const [error, setError] = useState<Error | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trackedRef = useRef<string | null>(null);
   const completeRef = useRef(onComplete);
 
   // Keep the latest callback without making `start` depend on its identity.
@@ -255,63 +270,150 @@ export function useScanRunner(clientId: string, onComplete?: (progress: ScanProg
 
   const stopPolling = useCallback(() => {
     if (timerRef.current) {
-      clearInterval(timerRef.current);
+      clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+    trackedRef.current = null;
   }, []);
 
   useEffect(() => stopPolling, [stopPolling]);
 
+  const finish = useCallback(
+    (done: ScanProgress) => {
+      stopPolling();
+      setIsCancelling(false);
+      if (scanProducedResults(done.status)) {
+        void queryClient.invalidateQueries({ queryKey: websiteKeys.client(clientId) });
+      } else {
+        // Scan list and summary still change (a failed scan is recorded), the data sections do not.
+        void queryClient.invalidateQueries({ queryKey: websiteKeys.scans(clientId) });
+      }
+      completeRef.current?.(done);
+    },
+    [clientId, queryClient, stopPolling],
+  );
+
+  /** Polls one scan id until it reaches a terminal state. */
+  const track = useCallback(
+    (scanId: string) => {
+      stopPolling();
+      trackedRef.current = scanId;
+      let attempt = 0;
+      let failures = 0;
+      const tick = () => {
+        timerRef.current = setTimeout(async () => {
+          if (trackedRef.current !== scanId) return;
+          try {
+            const next = await websiteRepository.getScanProgress(clientId, scanId);
+            if (trackedRef.current !== scanId) return;
+            failures = 0;
+            setProgress(next);
+            if (isTerminalScan(next.status)) {
+              finish(next);
+              return;
+            }
+          } catch (pollError: unknown) {
+            failures += 1;
+            if (failures >= MAX_CONSECUTIVE_POLL_FAILURES) {
+              // The scan may still be running; say tracking was lost, not that it failed.
+              stopPolling();
+              setError(
+                new Error(
+                  pollError instanceof Error
+                    ? `Lost contact with the scan: ${pollError.message}`
+                    : "Lost contact with the scan. Reload to check its status.",
+                ),
+              );
+              return;
+            }
+          }
+          attempt += 1;
+          tick();
+        }, nextPollDelayMs(attempt));
+      };
+      tick();
+    },
+    [clientId, finish, stopPolling],
+  );
+
+  // After a reload the scan keeps running on the server: pick it back up.
+  useEffect(() => {
+    if (!clientId) return;
+    let cancelled = false;
+    void websiteRepository
+      .getScans(clientId)
+      .then((records) => {
+        if (cancelled || trackedRef.current) return;
+        const active = records.find((record) => isActiveScan(record.status));
+        if (!active) return;
+        void websiteRepository
+          .getScanProgress(clientId, active.id)
+          .then((current) => {
+            if (cancelled || trackedRef.current || !isActiveScan(current.status)) return;
+            setProgress(current);
+            track(current.scanId);
+          })
+          .catch(() => undefined);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [clientId, track]);
+
   const start = useCallback(
-    async (type: ScanType, pageId?: string) => {
+    async (type: ScanType, pageId?: string, options?: ScanStartOptions) => {
       stopPolling();
       setError(null);
+      setIsCancelling(false);
       try {
-        const started = await websiteRepository.startScan(clientId, type, pageId);
+        const started = await websiteRepository.startScan(clientId, type, pageId, options);
         setProgress(started);
-        if (started.status === "completed" || started.status === "failed") {
-          void queryClient.invalidateQueries({ queryKey: websiteKeys.client(clientId) });
-          completeRef.current?.(started);
+        if (isTerminalScan(started.status)) {
+          finish(started);
           return;
         }
-        timerRef.current = setInterval(() => {
-          void websiteRepository
-            .getScanProgress(clientId, started.scanId)
-            .then((next) => {
-              setProgress(next);
-              if (next.status === "completed" || next.status === "failed") {
-                stopPolling();
-                void queryClient.invalidateQueries({ queryKey: websiteKeys.client(clientId) });
-                completeRef.current?.(next);
-              }
-            })
-            .catch((pollError: unknown) => {
-              stopPolling();
-              setError(pollError instanceof Error ? pollError : new Error("Scan failed."));
-            });
-        }, 400);
+        track(started.scanId);
       } catch (startError: unknown) {
         setError(startError instanceof Error ? startError : new Error("Scan could not be started."));
       }
     },
-    [clientId, queryClient, stopPolling],
+    [clientId, finish, stopPolling, track],
   );
+
+  const cancel = useCallback(async () => {
+    const current = progress;
+    if (!current || !isActiveScan(current.status)) return;
+    setIsCancelling(true);
+    try {
+      const next = await websiteRepository.cancelScan(clientId, current.scanId);
+      setProgress(next);
+      if (isTerminalScan(next.status)) finish(next);
+      else if (trackedRef.current !== next.scanId) track(next.scanId);
+    } catch (cancelError: unknown) {
+      setIsCancelling(false);
+      setError(cancelError instanceof Error ? cancelError : new Error("The scan could not be cancelled."));
+    }
+  }, [clientId, finish, progress, track]);
 
   const dismiss = useCallback(() => {
     stopPolling();
     setProgress(null);
     setError(null);
+    setIsCancelling(false);
   }, [stopPolling]);
 
-return useMemo(
+  return useMemo(
     () => ({
       progress,
-      isRunning: progress?.status === "running" || progress?.status === "queued",
+      isRunning: progress ? isActiveScan(progress.status) : false,
+      isCancelling,
       error,
       start,
+      cancel,
       dismiss,
     }),
-    [progress, error, start, dismiss],
+    [progress, isCancelling, error, start, cancel, dismiss],
   );
 }
 
@@ -351,6 +453,52 @@ export function useRankTracking(clientId: string, enabled = true) {
   });
 }
 
+export function usePagePerformance(clientId: string, pageId: string, enabled = true) {
+  return useQuery({
+    queryKey: websiteKeys.pagePerformance(clientId, pageId),
+    queryFn: () => websiteRepository.getPagePerformance(clientId, pageId),
+    enabled: enabled && Boolean(clientId) && Boolean(pageId),
+    ...SHARED,
+  });
+}
+
+export function usePageSearch(clientId: string, pageId: string, enabled = true) {
+  return useQuery({
+    queryKey: websiteKeys.pageSearch(clientId, pageId),
+    queryFn: () => websiteRepository.getPageSearch(clientId, pageId),
+    enabled: enabled && Boolean(clientId) && Boolean(pageId),
+    ...SHARED,
+  });
+}
+
+export function usePageInspection(clientId: string, pageId: string, enabled = true) {
+  return useQuery({
+    queryKey: websiteKeys.pageInspection(clientId, pageId),
+    queryFn: () => websiteRepository.getPageInspection(clientId, pageId),
+    enabled: enabled && Boolean(clientId) && Boolean(pageId),
+    ...SHARED,
+  });
+}
+
+export function useInspectPage(clientId: string, pageId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => websiteRepository.inspectPage(clientId, pageId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: websiteKeys.pageInspection(clientId, pageId) });
+    },
+  });
+}
+
+export function useCrawlLimits(clientId: string, enabled = true) {
+  return useQuery({
+    queryKey: websiteKeys.crawlLimits(clientId),
+    queryFn: () => websiteRepository.getCrawlLimits(clientId),
+    enabled: enabled && Boolean(clientId),
+    ...SHARED,
+  });
+}
+
 export function useSearchConsole(clientId: string, enabled = true) {
   const seoResult = useWebsiteSeo(clientId, enabled);
   return useMemo(() => {
@@ -365,4 +513,45 @@ export function useSearchConsole(clientId: string, enabled = true) {
       error: seoResult.error,
     };
   }, [seoResult.data, seoResult.isLoading, seoResult.error]);
+}
+
+
+/* ---- Milestone 5: AI intelligence ----------------------------------------------------------------- */
+
+export function useAiStatus(clientId: string, enabled = true) {
+  return useQuery({
+    queryKey: [...websiteKeys.client(clientId), "ai", "status"] as const,
+    queryFn: () => websiteRepository.getAiStatus(clientId),
+    enabled: enabled && Boolean(clientId),
+    ...SHARED,
+  });
+}
+
+export function useAiSummary(clientId: string, enabled = true) {
+  return useQuery({
+    queryKey: [...websiteKeys.client(clientId), "ai", "summary"] as const,
+    queryFn: () => websiteRepository.getAiSummary(clientId),
+    enabled: enabled && Boolean(clientId),
+    ...SHARED,
+  });
+}
+
+export function usePageAi(clientId: string, pageId: string, enabled = true) {
+  return useQuery({
+    queryKey: [...websiteKeys.client(clientId), "ai", "page", pageId] as const,
+    queryFn: () => websiteRepository.getPageAi(clientId, pageId),
+    enabled: enabled && Boolean(clientId) && Boolean(pageId),
+    ...SHARED,
+  });
+}
+
+export function useSetAiRecommendationStatus(clientId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { id: string; status: AiRecommendationStatus }) =>
+      websiteRepository.setAiRecommendationStatus(clientId, input.id, input.status),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [...websiteKeys.client(clientId), "ai"] });
+    },
+  });
 }

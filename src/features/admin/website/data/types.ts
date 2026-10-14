@@ -128,19 +128,30 @@ export interface WebsiteTarget {
 }
 
 export interface ScoreSet {
-  /** EnCodency Website Health — our composite, never a Google score. */
-  health: number;
-  seo: number;
-  performance: number;
-  accessibility: number;
-  bestPractices: number;
+  /**
+   * EnCodency Website Health — the mean of the executed technical, on-page and content domain
+   * scores. Never a Google score. Null means nothing was measured, not zero.
+   */
+  health: number | null;
+  /** Mean of technical and on-page check pass-rates (severity weighted). */
+  seo: number | null;
+  /** PageSpeed Insights performance score, only when a real run measured it. */
+  performance: number | null;
+  /** Not verified by the crawl (needs an automated accessibility audit). */
+  accessibility: number | null;
+  /** Not measured. */
+  bestPractices: number | null;
+  technical?: number | null;
+  onPage?: number | null;
+  content?: number | null;
 }
 
 export interface WebsiteSummary {
   target: WebsiteTarget;
   scores: ScoreSet;
   /** Change vs. the previous scan, same order of keys as `scores`. */
-  scoreDeltas: ScoreSet;
+  /** Change versus the previous scan; null on the first scan (baseline). */
+  scoreDeltas: { [K in keyof ScoreSet]: number | null };
   uptimePct: number | null;
   pagesDiscovered: number;
   criticalIssues: number;
@@ -149,10 +160,10 @@ export interface WebsiteSummary {
 
 export interface TrendPoint {
   date: IsoDate;
-  health: number;
-  seo: number;
-  performance: number;
-  uptime: number;
+  health: number | null;
+  seo: number | null;
+  performance: number | null;
+  uptime: number | null;
 }
 
 export interface TechnologyDetection {
@@ -163,9 +174,16 @@ export interface TechnologyDetection {
   evidence: string;
 }
 
-export type ScanType = "full-crawl" | "seo-audit" | "performance" | "uptime" | "page";
+export type ScanType = "full-crawl" | "seo-audit" | "performance" | "uptime" | "page" | "ai";
 
-export type ScanStatus = "completed" | "running" | "failed" | "partial";
+/** Optional per-run settings for AI analysis scans. */
+export interface ScanStartOptions {
+  aiMode?: AiMode;
+  force?: boolean;
+  topN?: number;
+}
+
+export type ScanStatus = "queued" | "running" | "completed" | "partially_completed" | "failed" | "cancelled" | "partial";
 
 export interface ScanRecord {
   id: string;
@@ -183,12 +201,22 @@ export interface ScanRecord {
 export interface ScanProgress {
   scanId: string;
   type: ScanType;
-  status: "queued" | "running" | "completed" | "failed";
-  /** 0–100. */
+  status: "queued" | "running" | "completed" | "partially_completed" | "failed" | "cancelled";
+  /** 0–100, derived from completed work units. */
   progress: number;
   stage: string;
   pagesScanned: number;
   startedAt: IsoDate;
+  /** Present on live scans: real work-unit counts and failure detail. */
+  phase?: string | null;
+  totalUnits?: number;
+  completedUnits?: number;
+  failedUnits?: number;
+  completedAt?: IsoDate | null;
+  cancelRequested?: boolean;
+  /** True when the request was answered with the scan already running for this website. */
+  deduplicated?: boolean;
+  error?: { code: string; message: string; retryable: boolean } | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -245,14 +273,15 @@ export interface PageResourceBreakdown {
 
 export interface PagePerformanceDetail {
   score: number | null;
-  lcpMs: number;
-  inpMs: number;
-  cls: number;
-  ttfbMs: number;
-  pageWeightKb: number;
-  requests: number;
+  lcpMs: number | null;
+  inpMs: number | null;
+  cls: number | null;
+  ttfbMs: number | null;
+  pageWeightKb: number | null;
+  requests: number | null;
   breakdown: PageResourceBreakdown[];
   thirdParty: { name: string; weightKb: number; blocking: boolean }[];
+  note?: string;
 }
 
 export interface PageContentDetail {
@@ -261,10 +290,11 @@ export interface PageContentDetail {
   duplicateSimilarityPct: number;
   duplicateOf: string | null;
   headings: { level: number; text: string }[];
-  images: { total: number; missingAlt: number; oversized: number };
-  videos: number;
+  images: { total: number; missingAlt: number; oversized: number | null };
+  videos: number | null;
   ctas: { text: string; kind: CtaKind; destination: string }[];
-  readability: { label: string; score: number; note: string };
+  readability: { label: string; score: number | null; note: string };
+  mainContentBasis?: string;
 }
 
 export interface PageScreenshots {
@@ -293,6 +323,50 @@ export interface PageAudit {
   };
   performance: PagePerformanceDetail;
   issueIds: string[];
+  /** False for pages scanned before per-page evidence was collected. */
+  evidenceAvailable?: boolean;
+  legacyNote?: string;
+  accessibilityNote?: string;
+  scoreBasis?: string;
+  scores?: { technical: number | null; onPage: number | null; content: number | null; seo: number | null } | null;
+  checksRun?: string[];
+  issues?: IssueRecord[];
+  structuredData?: { index: number; valid: boolean; types: string[]; error: string | null; missingFields: string[] }[];
+  images?: { src: string | null; alt: string | null; hasAltAttribute: boolean }[];
+  evidence?: {
+    requestedUrl: string; finalUrl: string; redirectChain: { url: string; status: number }[]; contentType: string | null;
+    responseTimeMs: number; pageWeightKb: number; lang: string | null; metaRobots: string; xRobotsTag: string | null;
+    hreflang: { lang: string; href: string }[]; mixedContent: string[]; inSitemap: boolean; discoveredVia: string; depth: number;
+    contentHash: string | null; crawledAt: IsoDate | null; truncated: boolean;
+  };
+  history?: PageHistoryEntry[];
+}
+
+export interface PageHistoryEntry {
+  scanId: string;
+  at: IsoDate;
+  httpStatus: number | null;
+  title: string | null;
+  wordCount: number;
+  issueCount: number;
+  scores: { technical: number | null; onPage: number | null; content: number | null };
+  responseTimeMs: number;
+  /** Null for the first recorded scan: a baseline, nothing to compare with. */
+  changes: {
+    statusChanged: { from: number | null; to: number | null } | null;
+    titleChanged: { from: string | null; to: string | null } | null;
+    descriptionChanged: boolean;
+    contentChanged: boolean;
+    wordCountDelta: number;
+    newIssues: string[];
+    resolvedIssues: string[];
+  } | null;
+}
+
+export interface CrawlLimits {
+  limits: { maxPages: number; maxDepth: number; maxConcurrency: number; timeoutMs: { min: number; max: number }; externalLinkChecks: number };
+  javascriptRendering: { available: boolean; reason: string };
+  planEntitlements: { integrated: boolean; note: string };
 }
 
 /* ------------------------------------------------------------------ */
@@ -318,6 +392,17 @@ export interface IssueRecord {
   fixGuideId: string;
   /** e.g. `LCP 4.8s` — the measurement that triggered the issue. */
   evidence: string | null;
+  /** Evidence-engine fields (absent on issues from before the audit engine). */
+  checkId?: string;
+  affectedUrls?: string[];
+  evidenceDetail?: { label: string; value: string }[];
+  verification?: string[];
+  firstDetectedAt?: IsoDate;
+  lastSeenAt?: IsoDate;
+  reopenedAt?: IsoDate;
+  /** Set when a scan could not re-check this issue, so it was left as it was. */
+  notRecheckedAt?: IsoDate;
+  history?: { at: IsoDate; event: string; scanId?: string; note?: string }[];
 }
 
 export interface FixGuide {
@@ -339,14 +424,19 @@ export interface FixGuide {
 export interface SeoCategoryScore {
   key: string;
   label: string;
-  score: number;
+  /** Null when none of this category's checks ran. */
+  score: number | null;
   passed: number;
   warnings: number;
   errors: number;
+  executed?: boolean;
 }
 
 export interface SeoOverview {
-  score: number;
+  score: number | null;
+  scoreBasis?: string;
+  checksExecuted?: string[];
+  checksSkipped?: { checkId: string; reason: string }[];
   pagesCrawled: number;
   indexablePages: number;
   totalPages?: number;
@@ -433,7 +523,7 @@ export interface SearchConsoleData {
   countries: { country: string; clicks: number; impressions: number }[];
   devices: { device: string; clicks: number; impressions: number }[];
   /** Index coverage report from Google Search Console */
-  indexCoverage: {
+  indexCoverage: null | {
     submitted: number;
     indexed: number;
     indexedNotSubmitted: number;
@@ -494,10 +584,12 @@ export interface BacklinkData {
 export interface RankTrackingData {
   keyword: string;
   currentPosition: number;
-  previousPosition: number;
-  positionChange: number;
-  searchVolume: number;
-  difficulty: number;
+  /** Same query, previous 28 days. Null when the query had no impressions then. */
+  previousPosition: number | null;
+  positionChange: number | null;
+  /** No keyword-volume provider is connected. */
+  searchVolume: number | null;
+  difficulty: number | null;
   intent: "informational" | "transactional" | "navigational" | "commercial";
   history: { date: IsoDate; position: number }[];
   serpFeatures: string[];
@@ -517,9 +609,23 @@ export interface SeoData {
     redirectChains: number;
     nofollowLinks: number;
     orphanPages: number;
-    broken: { from: string; to: string; status: number; text: string }[];
+    broken: { from: string; to: string; status: number; text: string; kind?: "internal" | "external"; error?: string | null }[];
     redirects: { from: string; to: string; hops: number }[];
+    weakAnchors?: { source: string; target: string | null; anchor: string; reason: string }[];
+    orphanCandidates?: string[];
+    unchecked?: { internal: number; external: number };
+    externalChecked?: number | null;
+    orphanConclusionSound?: boolean;
   };
+  duplicates?: { kind: "title" | "description" | "h1" | "exact-content" | "near-content"; value: string; pageIds: string[]; urls: string[]; similarityPct: number | null }[];
+  crawl?: {
+    complete: boolean; limitReached: boolean; depthLimited: number; discovered: number; attempted: number;
+    skippedCounts: Record<string, number>;
+    robots: { fetched: boolean; status: number | null; note: string | null; crawlDelaySeconds: number | null; groups: number };
+    sitemap: { documents: { url: string; status: number | null; urlCount: number; isIndex: boolean; error: string | null }[]; urls: number; truncated: boolean } | null;
+    javascriptRendering: "not_requested" | "requested_but_unavailable";
+  } | null;
+  engine?: "m2" | "legacy";
   /** Null until Search Console is connected. */
   searchConsole: SearchConsoleData | null;
 }
@@ -536,8 +642,12 @@ export interface CoreWebVital {
   display: string;
   band: VitalBand;
   thresholds: { good: number; poor: number };
-  /** Share of audited pages in each band. */
-  distribution: { good: number; needsImprovement: number; poor: number };
+  /** Where the value was measured: real-user field data (CrUX) or a Lighthouse lab run. */
+  source?: "field" | "lab";
+  /** For field data: the URL itself, or the whole origin (never present it as one page). */
+  scope?: "url" | "origin" | "lab";
+  /** Share of real users in each band. Null when no field distribution exists. */
+  distribution: { good: number; needsImprovement: number; poor: number } | null;
 }
 
 export interface PerformanceRecommendation {
@@ -546,27 +656,202 @@ export interface PerformanceRecommendation {
   description: string;
   impact: "high" | "medium" | "low";
   effort: "low" | "medium" | "high";
-  estimatedSavingMs: number;
-  affectedPages: number;
+  /** Lighthouse-reported saving. Null for AI suggestions, which carry no measured saving. */
+  estimatedSavingMs: number | null;
+  affectedPages: number | null;
   fixGuideId: string;
+  source?: "lighthouse" | "ai";
+}
+
+export type MeasurementStatus =
+  | "measured"
+  | "not_configured"
+  | "not_authorized"
+  | "no_data"
+  | "pending"
+  | "stale"
+  | "rate_limited"
+  | "failed";
+
+/* ---- Milestone 3: measurement kinds are separate types on purpose ---------------- */
+
+export type FieldMetricKey = "lcpMs" | "inpMs" | "cls" | "fcpMs" | "ttfbMs";
+
+export interface FieldMetricValue {
+  p75: number;
+  category: VitalBand | null;
+  distribution: { good: number; needsImprovement: number; poor: number } | null;
+}
+
+/** Real-user (Chrome UX Report) data. `scope` says whether it describes this URL or the whole origin. */
+export interface FieldBlock {
+  scope: "url" | "origin";
+  source: "psi-loadingExperience" | "crux-api";
+  formFactor: string | null;
+  overallCategory: VitalBand | null;
+  collectionPeriod: { start: string; end: string } | null;
+  metrics: Partial<Record<FieldMetricKey, FieldMetricValue>>;
+}
+
+export interface LabMetrics {
+  fcpMs: number | null;
+  lcpMs: number | null;
+  speedIndexMs: number | null;
+  /** Lab proxy for responsiveness. NOT field INP. */
+  tbtMs: number | null;
+  cls: number | null;
+  ttfbMs: number | null;
+}
+
+export interface LighthouseScores {
+  performance: number | null;
+  accessibility: number | null;
+  seo: number | null;
+  bestPractices: number | null;
+}
+
+export interface DeviceMeasurement {
+  pageId: string;
+  path: string | null;
+  url: string;
+  device: "mobile" | "desktop";
+  measuredAt: IsoDate;
+  lighthouseVersion: string | null;
+  scores: LighthouseScores;
+  lab: LabMetrics | null;
+  field: FieldBlock | null;
+  originField: FieldBlock | null;
+  resources: { requests: number | null; totalKb: number | null; byType: { type: string; label: string; requests: number; kb: number }[] } | null;
+  thirdParty: { name: string; kb: number; blockingMs: number; mainThreadMs: number }[];
+  opportunities: { id: string; title: string; savingsMs: number | null; savingsKb: number | null; displayValue: string | null }[];
+  diagnostics: { id: string; title: string; displayValue: string | null; score: number | null }[];
+  accessibilityFailures: { id: string; title: string; description: string; count: number }[];
+}
+
+export interface CruxSnapshotView {
+  status: "measured" | "no_data" | "blocked" | "failed" | "rate_limited" | string;
+  fetchedAt: IsoDate;
+  target: string;
+  metrics: FieldBlock | null;
+  history: { periodEnd: string; lcpMs: number | null; inpMs: number | null; cls: number | null }[] | null;
+  collectionPeriod: { start: string; end: string } | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+}
+
+export interface CruxOverview {
+  configured: boolean;
+  origin?: string | null;
+  urlLevel: { mobile: CruxSnapshotView | null; desktop: CruxSnapshotView | null };
+  originLevel: { all: CruxSnapshotView | null; mobile: CruxSnapshotView | null; desktop: CruxSnapshotView | null };
+}
+
+export interface PagePerformanceData {
+  pageId: string;
+  url: string;
+  path: string;
+  audited: boolean;
+  psiConfigured: boolean;
+  mobile: PerformanceDeviceBlock;
+  desktop: PerformanceDeviceBlock;
+  crux: CruxOverview;
+  notice: string | null;
+}
+
+export interface PerformanceDeviceBlock {
+  measured: DeviceMeasurement | null;
+  /** A newer attempt that failed; the last good measurement is still in `measured`. */
+  lastAttempt: { status: string; at: IsoDate; errorCode: string | null; errorMessage: string | null } | null;
+  history: { at: IsoDate; performance: number | null; accessibility: number | null; seo: number | null; bestPractices: number | null; lcpMs: number | null; cls: number | null; tbtMs: number | null }[];
+}
+
+export interface PageSearchPerformance {
+  property: string;
+  pageUrl: string;
+  matchedUrl: string | null;
+  period: { start: string; end: string };
+  previousPeriod: { start: string; end: string };
+  totals: { clicks: number; impressions: number; ctr: number; position: number } | null;
+  previous: { clicks: number; impressions: number; ctr: number; position: number } | null;
+  deltas: { clicks: number | null; impressions: number | null; ctr: number | null; position: number | null } | null;
+  queries: { query: string; clicks: number; impressions: number; ctr: number; position: number }[];
+  daily: { date: string; clicks: number; impressions: number; ctr: number; position: number }[];
+  devices: { device: string; clicks: number; impressions: number; ctr: number; position: number }[];
+  countries: { country: string; clicks: number; impressions: number; ctr: number; position: number }[];
+  queriesTruncated: boolean;
+  note: string | null;
+}
+
+export interface PageSearchData {
+  status: "available" | "not_configured" | "not_authorized" | "rate_limited" | "failed";
+  reason: string | null;
+  pageUrl: string;
+  search: PageSearchPerformance | null;
+  fetchedAt: IsoDate | null;
+  cached?: boolean;
+  source: string;
+}
+
+export interface UrlInspectionView {
+  status: "inspected" | "failed" | "not_authorized" | "quota_exceeded" | "not_configured";
+  url: string;
+  property: string;
+  inspectedAt: IsoDate;
+  verdict: string | null;
+  coverageState: string | null;
+  indexingState: string | null;
+  robotsTxtState: string | null;
+  pageFetchState: string | null;
+  lastCrawlTime: IsoDate | null;
+  googleCanonical: string | null;
+  userCanonical: string | null;
+  details: { crawledAs?: string | null; canonicalMismatch?: boolean | null; sitemaps?: string[]; referringUrls?: string[]; mobileUsability?: { verdict: string | null; issues: string[] } | null; richResults?: { verdict: string | null; detected: string[] } | null } | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+  scopeNote: string;
+  source: string;
+}
+
+export interface PageInspectionState {
+  inspection: UrlInspectionView | null;
+  connected: boolean;
+  property: string | null;
+  url: string;
 }
 
 export interface PerformanceData {
-  score: number;
-  scoreDelta: number;
+  /** Present from the M3 backend: the three measurement kinds, kept apart. */
+  devices?: { mobile: DeviceMeasurement | null; desktop: DeviceMeasurement | null };
+  headlinePage?: { pageId: string; path: string | null; url: string } | null;
+  crux?: CruxOverview;
+  audits?: { pagesAudited: number; measured: number; lastAttemptFailed: number };
+  labels?: { kind: string; label: string; note: string }[];
+  /** `measured` only when a real PageSpeed run produced these numbers. */
+  status?: MeasurementStatus;
+  /** Why the data is unavailable, when it is. */
+  reason?: string | null;
+  /** Human-readable measurement source, e.g. "Google PageSpeed Insights (Lighthouse mobile)". */
+  source?: string | null;
+  measuredAt?: IsoDate | null;
+  strategy?: string | null;
+  score: number | null;
+  scoreDelta: number | null;
   vitals: CoreWebVital[];
-  avgPageWeightKb: number;
-  avgRequests: number;
-  trend: { date: IsoDate; score: number; lcp: number; inp: number; cls: number }[];
+  avgPageWeightKb: number | null;
+  avgRequests: number | null;
+  trend: { date: IsoDate; score: number; lcp: number | null; inp: number | null; cls: number | null }[];
   pages: {
     pageId: string;
     path: string;
     score: number;
-    lcpMs: number;
-    inpMs: number;
-    cls: number;
-    ttfbMs: number;
-    pageWeightKb: number;
+    lcpMs: number | null;
+    inpMs: number | null;
+    cls: number | null;
+    ttfbMs: number | null;
+    pageWeightKb: number | null;
+    url?: string;
+    mobile?: DeviceMeasurement | null;
+    desktop?: DeviceMeasurement | null;
   }[];
   resources: { label: string; weightKb: number; requests: number; share: number }[];
   thirdParty: { name: string; weightKb: number; blockingMs: number; pages: number }[];
@@ -582,7 +867,8 @@ export interface AnalyticsKpi {
   label: string;
   value: string;
   raw: number;
-  delta: number;
+  /** Percent change vs the previous equal period; null when unavailable. */
+  delta: number | null;
   /** Lower is better for e.g. bounce rate. */
   inverse?: boolean;
 }
@@ -805,6 +1091,12 @@ export interface CrawlSettings {
   excludePaths: string[];
   respectRobots: boolean;
   crawlJs: boolean;
+  concurrency?: number;
+  requestTimeoutMs?: number;
+  /** Empty means the default crawler user agent. */
+  userAgent?: string;
+  discoverSitemap?: boolean;
+  checkExternalLinks?: boolean;
 }
 
 export interface MonitoringSettings {
@@ -928,9 +1220,20 @@ export interface WebsiteDataProvider {
   getCompetitorAnalysis(clientId: string): Promise<CompetitorData[]>;
   getBacklinkAnalysis(clientId: string): Promise<BacklinkData[]>;
   getRankTracking(clientId: string): Promise<RankTrackingData[]>;
+  getCrawlLimits(clientId: string): Promise<CrawlLimits>;
+  getPagePerformance(clientId: string, pageId: string): Promise<PagePerformanceData>;
+  getPageSearch(clientId: string, pageId: string, refresh?: boolean): Promise<PageSearchData>;
+  getPageInspection(clientId: string, pageId: string): Promise<PageInspectionState>;
+  inspectPage(clientId: string, pageId: string): Promise<UrlInspectionView>;
+  getPageHistory(clientId: string, pageId: string): Promise<PageHistoryEntry[]>;
+  getAiStatus(clientId: string): Promise<AiStatus>;
+  getAiSummary(clientId: string): Promise<AiSiteSummary>;
+  getPageAi(clientId: string, pageId: string): Promise<AiPageInsights>;
+  setAiRecommendationStatus(clientId: string, id: string, status: AiRecommendationStatus): Promise<AiRecommendation>;
 
   /* Commands ------------------------------------------------------- */
-  startScan(clientId: string, type: ScanType, pageId?: string): Promise<ScanProgress>;
+  startScan(clientId: string, type: ScanType, pageId?: string, options?: ScanStartOptions): Promise<ScanProgress>;
+  cancelScan(clientId: string, scanId: string): Promise<ScanProgress>;
   getScanProgress(clientId: string, scanId: string): Promise<ScanProgress>;
   saveSettings(clientId: string, settings: WebsiteSettings): Promise<WebsiteSettings>;
   setIssueStatus(clientId: string, issueId: string, status: IssueStatus): Promise<IssueRecord>;
@@ -941,4 +1244,152 @@ export interface WebsiteDataProvider {
   ): Promise<WebsiteCapabilityState>;
   disconnectIntegration(clientId: string, key: IntegrationKey): Promise<WebsiteCapabilityState>;
   archiveMonitoring(clientId: string, archived: boolean): Promise<WebsiteSettings>;
+}
+
+
+/* ---- Milestone 5: AI intelligence ------------------------------------------------------------------ */
+
+export type AiMode = "auto" | "openai" | "gemini" | "dual_review" | "disabled";
+export type AiRecommendationStatus = "proposed" | "approved" | "dismissed";
+export type AiAnalysisStatus =
+  | "completed"
+  | "rejected"
+  | "failed"
+  | "provider_unavailable"
+  | "budget_exhausted"
+  | "token_limit"
+  | "disabled";
+
+export interface AiProviderState {
+  provider: "openai" | "gemini";
+  configured: boolean;
+  model: string;
+  state: "ready" | "degraded" | "unavailable" | "not_configured";
+  lastOkAt: IsoDate | null;
+  lastError: { code: string; at: IsoDate } | null;
+  circuitOpenUntil: IsoDate | null;
+}
+
+export interface AiUsage {
+  windowHours: number;
+  calls: number;
+  callLimit: number;
+  tokens: number;
+  estimatedCostMicros: number;
+  budgetMicros: number;
+  remainingMicros: number;
+  budgetExhausted: boolean;
+  currency: string;
+  pricingVersion: string;
+}
+
+export interface AiStatus {
+  mode: AiMode;
+  available: boolean;
+  usage: { windowHours: number; budgetExhausted: boolean };
+}
+
+export interface AiAnalysisView {
+  id: string;
+  task: "technical_seo" | "content_quality" | "executive_summary";
+  status: AiAnalysisStatus;
+  mode: AiMode;
+  generatedAt: IsoDate;
+  evidenceHash: string;
+  /** The page's evidence changed after this analysis was produced. */
+  stale: boolean;
+  summary: string | null;
+  limitations: string[];
+  evidenceMissing: string[];
+  /** Number of high-impact findings that were independently re-checked (dual review). */
+  reviewed: number;
+  rejectedCount: number;
+  errorCode: string | null;
+  /** Customer-safe wording. Never contains vendor names, HTTP details or raw provider text. */
+  errorMessage: string | null;
+  /** Platform-staff diagnostics only; absent for customers. */
+  provider?: string;
+  model?: string;
+  fallbackFrom?: string | null;
+  usage?: { inputTokens: number | null; outputTokens: number | null; estimatedCostMicros: number; currency: string | null; estimated: boolean; latencyMs: number } | null;
+}
+
+export interface AiRecommendation {
+  id: string;
+  pageId: string;
+  analysisId: string;
+  scanId: string | null;
+  category: string;
+  severity: "critical" | "high" | "medium" | "low" | "info";
+  priority: number;
+  finding: string;
+  explanation: string;
+  suggestedFix: string;
+  verification: string;
+  evidenceIds: string[];
+  confidence: number;
+  /** Platform-staff diagnostics only; absent for customers. */
+  provider?: string;
+  model?: string;
+  status: AiRecommendationStatus;
+  generatedAt: IsoDate;
+  statusChangedAt: IsoDate | null;
+  requiresHumanApproval: boolean;
+  /** A validated metadata rewrite the model proposed (title or description). Never applied automatically. */
+  proposal?: { field: "title" | "description"; text: string } | null;
+}
+
+export interface AiEvidenceRef {
+  id: string;
+  label: string;
+  value: unknown;
+  source: string;
+  kind: string;
+  untrusted: boolean;
+}
+
+export interface AiPageInsights {
+  pageId: string;
+  evidenceHash: string | null;
+  evidence: AiEvidenceRef[];
+  evidenceMissing: string[];
+  analyses: { task: "technical_seo" | "content_quality"; latestAttempt: AiAnalysisView | null; current: AiAnalysisView | null }[];
+  recommendations: AiRecommendation[];
+  mode: AiMode;
+  available: boolean;
+  budgetExhausted: boolean;
+}
+
+export interface AiSiteListItem {
+  title?: string;
+  explanation?: string;
+  action?: string;
+  reason?: string;
+  pageId?: string;
+  evidenceIds: string[];
+}
+
+export interface AiSiteSummary {
+  available: boolean;
+  budgetExhausted: boolean;
+  latestAttempt: AiAnalysisView | null;
+  current:
+    | (AiAnalysisView & {
+        result: {
+          summary: string;
+          urgentIssues: AiSiteListItem[];
+          highImpactPages: AiSiteListItem[];
+          technicalPriorities: AiSiteListItem[];
+          contentOpportunities: AiSiteListItem[];
+          searchStrategy: AiSiteListItem[];
+          plan7Days: AiSiteListItem[];
+          plan30Days: AiSiteListItem[];
+          limitations: string[];
+          basedOnFindings?: number;
+          generatedAt?: IsoDate;
+        };
+      })
+    | null;
+  pagesAnalysed: number;
+  proposedRecommendations: number;
 }

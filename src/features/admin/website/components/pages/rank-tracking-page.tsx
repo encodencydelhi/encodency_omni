@@ -83,10 +83,10 @@ export function WebsiteRankTrackingPage() {
         filtered.map((r) => [
           r.keyword,
           r.currentPosition,
-          r.previousPosition,
-          r.positionChange > 0 ? `+${r.positionChange}` : r.positionChange,
+          r.previousPosition ?? "",
+          r.positionChange == null ? "" : r.positionChange > 0 ? `+${r.positionChange}` : r.positionChange,
           r.searchVolume ?? "",
-          r.difficulty,
+          r.difficulty ?? "",
           r.intent,
           r.url ?? "—",
         ]),
@@ -130,7 +130,7 @@ export function WebsiteRankTrackingPage() {
 
         <Card title="Improving" icon={Activity} className="md:col-span-1">
           <div className="text-lg font-bold text-[#28354C]">
-            {filtered.filter((r) => r.positionChange > 0).length}
+            {filtered.filter((r) => (r.positionChange ?? 0) > 0).length}
           </div>
           <div className="mt-1 text-sm text-[#6B7A94]">Moving up</div>
         </Card>
@@ -181,7 +181,7 @@ export function WebsiteRankTrackingPage() {
                   <div className="flex-1 min-w-0">
                     <div className="truncate font-medium text-[#28354C]">{r.keyword}</div>
                     <div className="mt-0.5 text-xs text-[#6B7A94]">
-                      {r.positionChange > 0 ? `+${r.positionChange}` : r.positionChange}
+                      {r.positionChange == null ? "No previous data" : r.positionChange > 0 ? `+${r.positionChange}` : r.positionChange}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 text-xs">
@@ -287,12 +287,12 @@ export function WebsiteRankTrackingPage() {
                   <>
                     <div>
                       <div className="text-sm text-[#6B7A94]">Previous position</div>
-                      <div className="text-2xl font-bold text-[#28354C]">{selected.previousPosition}</div>
+                      <div className="text-2xl font-bold text-[#28354C]">{selected.previousPosition ?? "—"}</div>
                     </div>
                     <div>
                       <div className="text-sm text-[#6B7A94]">Position change</div>
                       <div className="text-2xl font-bold text-[#28354C]">
-                        {selected.positionChange > 0 ? `+${selected.positionChange}` : selected.positionChange}
+                        {selected.positionChange == null ? "—" : selected.positionChange > 0 ? `+${selected.positionChange}` : selected.positionChange}
                       </div>
                     </div>
                   </>

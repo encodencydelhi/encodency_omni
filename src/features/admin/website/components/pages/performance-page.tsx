@@ -1,129 +1,111 @@
 "use client";
 
 /**
- * Performance — measured by loading pages ourselves, on a simulated connection.
+ * Performance — real PageSpeed Insights (Lighthouse) runs per URL and device,
+ * plus Chrome UX Report field data with an explicit scope.
  *
- * Every recommendation is advice for whoever maintains the website. There is no
- * "fix automatically" anywhere on this screen, because we cannot deploy to a
- * site we do not control.
+ * Three measurement kinds are shown separately and labelled, and are never
+ * merged into one score: Lighthouse lab, URL-level field data, origin-level
+ * field data. A value that was not measured is shown as "Not measured".
+ * Recommendations are Lighthouse's own estimated savings — advice for whoever
+ * maintains the website; nothing here changes the site.
  */
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  Boxes,
-  Download,
-  FileStack,
-  Gauge,
-  Lightbulb,
-  RefreshCw,
-  TriangleAlert,
-  Wrench,
-  Zap,
-  Image as ImageIcon,
-  MousePointerClick,
-  LayoutTemplate,
-  Clock,
-} from "lucide-react";
+import { Boxes, Download, FileStack, Gauge, Lightbulb, RefreshCw, Zap } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { cn } from "@/lib/utils/cn";
 import { useWebsitePerformance } from "../../data/hooks";
-import {
-  downloadFile,
-  formatDate,
-  formatMs,
-  formatNumber,
-  formatShortDate,
-  formatWeight,
-  scoreBand,
-  toCsv,
-  vitalLabel,
-  vitalTone,
-} from "../../data/selectors";
-import type { CoreWebVital, PerformanceData, PerformanceRecommendation } from "../../data/types";
-import {
-  Card,
-  Chip,
-  DataTable,
-  Meter,
-  Pagination,
-  ScoreDial,
-  SubTabs,
-  toneText,
-  usePagination,
-  useSortedRows,
-  WButton,
-  type Column,
-  type SortState,
-} from "../ui/kit";
-import { AXIS_PROPS, ChartLegend, GRID_PROPS, makeTooltip, SERIES_COLORS, ShareBar } from "../ui/charts";
+import { downloadFile, formatMs, formatShortDate, formatWeight, scoreBand, toCsv } from "../../data/selectors";
+import type { DeviceMeasurement, PerformanceData } from "../../data/types";
+import { Card, Chip, DataTable, Pagination, SegmentedControl, SubTabs, usePagination, useSortedRows, WButton, type Column, type SortState } from "../ui/kit";
+import { AXIS_PROPS, GRID_PROPS, makeTooltip, ShareBar } from "../ui/charts";
 import { EmptyState, QueryErrorState, SkeletonBlock, SkeletonStats } from "../ui/states";
-import { useUrlParams, useUrlState } from "../use-url-state";
+import { CruxHistoryChart, CruxStatus, FieldBlockView, LabMetricsGrid, LighthouseScoreRow, SourceBadge, Stamp, UnavailableNotice } from "../ui/measurements";
+import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
 
 type PerfTab = "overview" | "vitals" | "pages" | "resources" | "recommendations";
+type DeviceKey = "mobile" | "desktop";
 
 const TABS: { value: PerfTab; label: string }[] = [
   { value: "overview", label: "Overview" },
   { value: "vitals", label: "Core Web Vitals" },
   { value: "pages", label: "Pages" },
   { value: "resources", label: "Resources" },
-  { value: "recommendations", label: "Recommendations" },
+  { value: "recommendations", label: "Opportunities" },
 ];
+
+const STATUS_COPY: Record<string, { title: string; fallback: string; tone: "muted" | "warn" }> = {
+  not_configured: { title: "Performance measurement is not configured", fallback: "PageSpeed Insights is not configured on the server.", tone: "warn" },
+  rate_limited: { title: "PageSpeed Insights quota reached", fallback: "The PageSpeed Insights quota was reached. Try again later.", tone: "warn" },
+  failed: { title: "The last performance measurement failed", fallback: "The measurement did not complete.", tone: "warn" },
+  pending: { title: "No performance measurement yet", fallback: "Run a performance audit to measure this website.", tone: "muted" },
+};
 
 export function WebsitePerformancePage() {
   const { clientId, runScan, scan, openFixGuide } = useWebsiteWorkspace();
   const performance = useWebsitePerformance(clientId);
   const [tab, setTab] = useUrlState<PerfTab>("tab", "overview", TABS.map((entry) => entry.value));
-  const [period, setPeriod] = useUrlState<"7d" | "30d">("period", "30d", ["7d", "30d"]);
+  const [device, setDevice] = useUrlState<DeviceKey>("device", "mobile", ["mobile", "desktop"]);
 
-  const trend = useMemo(() => {
-    const rows = performance.data?.trend ?? [];
-    return period === "7d" ? rows.slice(-7) : rows;
-  }, [performance.data?.trend, period]);
+  const data = performance.data;
+  const measured = data && data.status === "measured" ? data : null;
+  const copy = STATUS_COPY[data?.status ?? "pending"] ?? STATUS_COPY.pending!;
 
   return (
     <div className="space-y-1">
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E6EBF4] bg-white p-2 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-        <SubTabs ariaLabel="Performance sections" value={tab} onChange={setTab} options={TABS} />
-        <WButton
-          size="sm"
-          icon={RefreshCw}
-          disabled={scan.isRunning}
-          disabledReason="A scan is already running"
-          onClick={() => runScan("performance")}
-        >
+        <div className="flex flex-wrap items-center gap-2">
+          <SubTabs ariaLabel="Performance sections" value={tab} onChange={setTab} options={TABS} />
+          <SegmentedControl<DeviceKey>
+            ariaLabel="Device"
+            size="sm"
+            value={device}
+            onChange={setDevice}
+            options={[
+              { value: "mobile", label: "Mobile" },
+              { value: "desktop", label: "Desktop" },
+            ]}
+          />
+        </div>
+        <WButton size="sm" icon={RefreshCw} disabled={scan.isRunning} disabledReason="A scan is already running" onClick={() => runScan("performance")}>
           Run performance audit
         </WButton>
       </div>
 
       {performance.isLoading ? (
         <>
-          <SkeletonStats count={6} />
+          <SkeletonStats count={4} />
           <SkeletonBlock lines={6} />
         </>
       ) : performance.error ? (
         <Card title="Performance">
           <QueryErrorState error={performance.error} onRetry={() => void performance.refetch()} />
         </Card>
-      ) : performance.data ? (
+      ) : data && !measured ? (
+        <Card title="Performance">
+          <UnavailableNotice
+            title={copy.title}
+            body={`${data.reason ?? copy.fallback} We do not show estimated Core Web Vitals, resource weights or savings.`}
+            tone={copy.tone}
+          />
+        </Card>
+      ) : measured ? (
         <>
-          {tab === "overview" ? (
-            <OverviewTab
-              data={performance.data}
-              trend={trend}
-              period={period}
-              onPeriodChange={setPeriod}
-              onSeeRecommendations={() => setTab("recommendations")}
-            />
-          ) : null}
-          {tab === "vitals" ? <VitalsTab data={performance.data} trend={trend} /> : null}
-          {tab === "pages" ? <PagesTab data={performance.data} /> : null}
-          {tab === "resources" ? <ResourcesTab data={performance.data} /> : null}
-          {tab === "recommendations" ? (
-            <RecommendationsTab data={performance.data} onFixGuide={openFixGuide} />
-          ) : null}
+          <div className="flex flex-wrap items-center gap-2 px-1 text-[11px] text-[#6B7A94]">
+            <SourceBadge kind="lab" />
+            <span>{measured.source}</span>
+            <Stamp at={measured.measuredAt} />
+            {measured.audits ? <span>· {measured.audits.pagesAudited} page{measured.audits.pagesAudited === 1 ? "" : "s"} audited</span> : null}
+            {measured.headlinePage ? <span>· headline page: <span className="font-mono">{measured.headlinePage.path ?? measured.headlinePage.url}</span></span> : null}
+          </div>
+          {tab === "overview" ? <OverviewTab data={measured} device={device} /> : null}
+          {tab === "vitals" ? <VitalsTab data={measured} device={device} /> : null}
+          {tab === "pages" ? <PagesTab data={measured} device={device} /> : null}
+          {tab === "resources" ? <ResourcesTab data={measured} device={device} /> : null}
+          {tab === "recommendations" ? <OpportunitiesTab data={measured} device={device} onFixGuide={openFixGuide} /> : null}
         </>
       ) : null}
     </div>
@@ -132,343 +114,156 @@ export function WebsitePerformancePage() {
 
 /* ------------------------------------------------------------------ */
 
-function VitalTile({ vital }: { vital: CoreWebVital }) {
-  const isGood = vital.band === "good";
-  const isWarn = vital.band === "needs-improvement";
+function deviceData(data: PerformanceData, device: DeviceKey): DeviceMeasurement | null {
+  return data.devices?.[device] ?? null;
+}
 
-  const Icon = vital.key === "lcp" ? ImageIcon :
-    vital.key === "inp" ? MousePointerClick :
-      vital.key === "cls" ? LayoutTemplate :
-        vital.key === "ttfb" ? Clock : Gauge;
-
-  const bestThreshold = `≤ ${vital.thresholds.good}${vital.key === "cls" ? "" : vital.key === "inp" ? "ms" : "s"}`;
-
+function MissingDevice({ device }: { device: DeviceKey }) {
   return (
-    <div className="relative overflow-hidden rounded-xl border border-[#E6EBF4] bg-white p-3.5 shadow-sm transition-all hover:border-[#C9D6EA] hover:shadow-md flex flex-col h-full">
-      <div className={cn("absolute inset-x-0 top-0 h-1 z-10", isGood ? "bg-[#10B981]" : isWarn ? "bg-[#F59E0B]" : "bg-[#EF4444]")} />
-
-      <div className="flex flex-col gap-1.5 mt-0.5 relative z-10">
-        <div className="flex items-center justify-between">
-          <Chip tone={vitalTone[vital.band]} dot className="shrink-0">
-            {vitalLabel[vital.band]}
-          </Chip>
-          <span className="inline-flex items-center rounded-md bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
-            {bestThreshold}
-          </span>
-        </div>
-        <div className="min-w-0">
-          <p className="text-[10px] leading-[1.3] font-bold uppercase tracking-wider text-[#64748B]">
-            {vital.label}
-          </p>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <p className={cn("text-[26px] font-extrabold tracking-tight leading-none", isGood ? "text-[#10B981]" : isWarn ? "text-[#F59E0B]" : "text-[#EF4444]")}>{vital.display.replace(/ (s|ms)$/, '')}</p>
-            <span className="text-[12px] font-bold text-[#64748B]">{vital.key === "cls" ? "" : vital.key === "inp" ? "ms" : "s"}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 flex items-center justify-end pr-3 py-2 pointer-events-none">
-        <Icon className={cn(
-          "w-14 h-14 rotate-[-8deg] opacity-20",
-          isGood ? "text-[#10B981]" : isWarn ? "text-[#F59E0B]" : "text-[#EF4444]"
-        )} />
-      </div>
-
-      <div className="mt-auto space-y-2.5 relative z-10">
-        <div className="flex h-2 w-full gap-[2px] overflow-hidden rounded-full bg-[#F1F5F9]" role="img" aria-label={`${vital.label} distribution`}>
-          <span className="h-full rounded-l-full bg-[#10B981]" style={{ width: `${vital.distribution.good}%` }} />
-          <span className="h-full bg-[#F59E0B]" style={{ width: `${vital.distribution.needsImprovement}%` }} />
-          <span className="h-full rounded-r-full bg-[#EF4444]" style={{ width: `${vital.distribution.poor}%` }} />
-        </div>
-
-        <div className="flex items-center justify-between text-[10px] font-medium">
-          <div className="flex gap-2">
-            <span className="text-[#10B981] font-bold">{vital.distribution.good}%</span>
-            <span className="text-[#F59E0B] font-bold">{vital.distribution.needsImprovement}%</span>
-            <span className="text-[#EF4444] font-bold">{vital.distribution.poor}%</span>
-          </div>
-          <span className="text-[#94A3B8] font-semibold tracking-wide">
-            ≤ {vital.thresholds.good}{vital.key === "cls" ? "" : vital.key === "inp" ? "ms" : "s"}
-          </span>
-        </div>
-      </div>
-    </div>
+    <Card title={`${device === "mobile" ? "Mobile" : "Desktop"} not measured`}>
+      <UnavailableNotice title={`No ${device} measurement for the headline page`} body={`Run a performance audit with ${device} enabled to measure it. Nothing is estimated from the other device.`} />
+    </Card>
   );
 }
 
-function OverviewTab({
-  data,
-  trend,
-  period,
-  onPeriodChange,
-  onSeeRecommendations,
-}: {
-  data: PerformanceData;
-  trend: PerformanceData["trend"];
-  period: "7d" | "30d";
-  onPeriodChange: (value: "7d" | "30d") => void;
-  onSeeRecommendations: () => void;
-}) {
+function OverviewTab({ data, device }: { data: PerformanceData; device: DeviceKey }) {
+  const d = deviceData(data, device);
+  if (!d) return <MissingDevice device={device} />;
+  const trend = (data.trend ?? []).filter((t) => t.score !== null);
   return (
     <div className="space-y-1">
-      <div className="grid gap-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)]">
-        <Card
-          title="Performance score"
-          icon={Gauge}
-          subtitle="Composite of lab measurements"
-          bodyClassName="p-2.5"
-        >
-          <div className="grid grid-cols-[1fr_1fr] items-stretch gap-2.5">
-            <div className="flex flex-col items-center justify-center gap-1 rounded-xl border border-[#E6EBF4] bg-gradient-to-br from-[#FAFCFF] to-[#F1F5F9] p-2.5 shadow-sm">
-              <ScoreDial value={data.score} tone={scoreBand(data.score)} size={68} label={`Performance ${data.score}`} />
-              <div className="flex flex-col items-center text-center mt-1">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] mb-0.5">Overall Score</p>
-                <div className="flex items-center gap-1 text-[9.5px] font-bold mt-0.5">
-                  <span className={cn("rounded bg-[#F8FAFC] px-1.5 py-0.5 ring-1 ring-inset ring-[#E2E8F0]", toneText[scoreBand(data.score)])}>{data.score}</span>
-                  <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">100</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col justify-center gap-1">
-              <div className="flex items-center justify-between rounded-lg bg-white py-1 px-2.5 border border-[#F1F5F9] shadow-sm">
-                <span className="text-[11px] font-semibold text-[#475569]">Change vs previous</span>
-                <span className="text-[11.5px] font-bold text-[#0F172A]">
-                  {data.scoreDelta >= 0 ? "+" : ""}
-                  {data.scoreDelta}
-                </span>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-white py-1 px-2.5 border border-[#F1F5F9] shadow-sm">
-                <span className="text-[11px] font-semibold text-[#475569]">Avg page weight</span>
-                <div className="flex items-center gap-1.5">
-                  <span className={cn("text-[11.5px] font-bold", data.avgPageWeightKb <= 1536 ? "text-[#166534]" : "text-[#92400E]")}>{formatWeight(data.avgPageWeightKb)}</span>
-                  <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">&lt; 1.5 MB</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-white py-1 px-2.5 border border-[#F1F5F9] shadow-sm">
-                <span className="text-[11px] font-semibold text-[#475569]">Avg requests</span>
-                <div className="flex items-center gap-1.5">
-                  <span className={cn("text-[11.5px] font-bold", data.avgRequests < 50 ? "text-[#166534]" : "text-[#92400E]")}>{data.avgRequests}</span>
-                  <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">&lt; 50</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-[#F0FDF4] py-1 px-2.5 border border-[#DCFCE7]">
-                <span className="text-[11px] font-semibold text-[#15803D]">Pages measured</span>
-                <span className="text-[11.5px] font-bold text-[#166534]">{data.pages.length}</span>
-              </div>
-            </div>
-          </div>
-          <WButton className="mt-2.5 w-full" tone="primary" icon={Lightbulb} onClick={onSeeRecommendations}>
-            See {data.recommendations.length} recommendations
-          </WButton>
-        </Card>
+      <Card title={`Lighthouse scores · ${device}`} icon={Gauge} subtitle={`${d.path ?? d.url} · Lighthouse ${d.lighthouseVersion ?? "version unknown"}`} action={<Stamp at={d.measuredAt} />}>
+        <LighthouseScoreRow scores={d.scores} />
+        <p className="mt-2 text-[10.5px] text-[#94A3B8]">
+          Accessibility is Lighthouse&apos;s automated checks only — it is not a statement of WCAG compliance. Scores are for this URL on this device and are not averaged with other pages or devices.
+          {data.scoreDelta !== null && data.scoreDelta !== undefined
+            ? ` Performance changed ${data.scoreDelta >= 0 ? "+" : ""}${data.scoreDelta} since the previous run of this page.`
+            : " This is the first recorded run for this page and device, so there is no change to compare."}
+        </p>
+      </Card>
 
-        <div className="grid grid-cols-2 gap-1 lg:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
-          {data.vitals.map((vital) => (
-            <VitalTile key={vital.key} vital={vital} />
-          ))}
-        </div>
-      </div>
+      <Card title="Lab metrics" icon={Zap} subtitle="Simulated load — not real-user data" action={<SourceBadge kind="lab" />}>
+        <LabMetricsGrid lab={d.lab} />
+      </Card>
 
-      <Card
-        title="Performance trend"
-        icon={Zap}
-        subtitle="performance score after each scan"
-        action={
-          <div className="flex items-center gap-1">
-            {(["7d", "30d"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => onPeriodChange(value)}
-                aria-pressed={period === value}
-                className={cn(
-                  "cursor-pointer rounded-md px-2 py-0.5 text-[10.5px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35",
-                  period === value ? "bg-[#EAF2FE] text-[#1D4ED8]" : "text-[#64748B] hover:bg-[#F1F4F9]",
-                )}
-              >
-                {value}
-              </button>
-            ))}
+      <Card title="Performance score history" icon={Gauge} subtitle={`${d.path ?? d.url} · real measurements only`}>
+        {trend.length < 2 ? (
+          <EmptyState compact title="A trend needs two measurements" body="The first run is the baseline. Run another audit later to start a real history." />
+        ) : (
+          <div className="h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trend.map((t) => ({ date: t.date, Score: t.score }))} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+                <CartesianGrid {...GRID_PROPS} />
+                <XAxis dataKey="date" tickFormatter={(v: string) => formatShortDate(v)} {...AXIS_PROPS} />
+                <YAxis domain={[0, 100]} {...AXIS_PROPS} />
+                <Tooltip content={makeTooltip((e) => `${e.value}`, (label) => formatShortDate(label))} />
+                <Line type="monotone" dataKey="Score" stroke="#2563EB" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
-        }
-        bodyClassName="p-3.5 pt-2"
-      >
-        <ChartLegend className="mb-1" items={[{ key: "score", label: "Performance score", color: SERIES_COLORS[0] }]} />
-        <div className="h-[200px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={trend} margin={{ top: 6, right: 8, left: -22, bottom: 0 }}>
-              <CartesianGrid {...GRID_PROPS} />
-              <XAxis dataKey="date" {...AXIS_PROPS} tickFormatter={formatShortDate} minTickGap={26} />
-              <YAxis {...AXIS_PROPS} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} width={44} />
-              <Tooltip content={makeTooltip((entry) => entry.value, (label) => formatDate(label))} />
-              <Line
-                type="monotone"
-                dataKey="score"
-                name="Performance score"
-                stroke={SERIES_COLORS[0]}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 2, stroke: "#fff" }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        )}
       </Card>
     </div>
   );
 }
 
-function VitalsTab({ data, trend }: { data: PerformanceData; trend: PerformanceData["trend"] }) {
+function VitalsTab({ data, device }: { data: PerformanceData; device: DeviceKey }) {
+  const d = deviceData(data, device);
+  const crux = data.crux;
+  const urlCrux = crux?.urlLevel[device] ?? null;
+  const originCrux = crux?.originLevel[device] ?? crux?.originLevel.all ?? null;
   return (
     <div className="space-y-1">
-      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 xl:grid-cols-4">
-        {data.vitals.map((vital) => (
-          <VitalTile key={vital.key} vital={vital} />
-        ))}
-      </div>
-
-      <div className="grid gap-1 lg:grid-cols-2">
-        <Card title="LCP over time" icon={Zap} subtitle="Seconds — lower is better" bodyClassName="p-3.5 pt-2">
-          <div className="h-[190px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trend} margin={{ top: 6, right: 8, left: -24, bottom: 0 }}>
-                <CartesianGrid {...GRID_PROPS} />
-                <XAxis dataKey="date" {...AXIS_PROPS} tickFormatter={formatShortDate} minTickGap={26} />
-                <YAxis {...AXIS_PROPS} width={40} />
-                <Tooltip content={makeTooltip((entry) => `${entry.value.toFixed(2)} s`, (label) => formatDate(label))} />
-                <Line type="monotone" dataKey="lcp" name="LCP" stroke={SERIES_COLORS[2]} strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card title="INP over time" icon={Zap} subtitle="Milliseconds — lower is better" bodyClassName="p-3.5 pt-2">
-          <div className="h-[190px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trend} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}>
-                <CartesianGrid {...GRID_PROPS} />
-                <XAxis dataKey="date" {...AXIS_PROPS} tickFormatter={formatShortDate} minTickGap={26} />
-                <YAxis {...AXIS_PROPS} width={46} />
-                <Tooltip content={makeTooltip((entry) => `${Math.round(entry.value)} ms`, (label) => formatDate(label))} />
-                <Line type="monotone" dataKey="inp" name="INP" stroke={SERIES_COLORS[1]} strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
-
-      <Card title="What these mean" icon={Gauge}>
-        <ul className="grid gap-1 sm:grid-cols-2">
-          {data.vitals.map((vital) => (
-            <li key={vital.key} className="rounded-xl border border-[#E6EBF4] p-2.5">
-              <p className="text-[12px] font-semibold text-[#28354C]">{vital.label}</p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-[#6B7A94]">
-                {vital.key === "lcp"
-                  ? "How long until the largest thing on screen has rendered. Usually the hero image or headline."
-                  : vital.key === "inp"
-                    ? "How long the page takes to respond visibly after a tap or click."
-                    : vital.key === "cls"
-                      ? "How much the layout jumps while loading. Usually images or ads without reserved space."
-                      : "How long the server takes to send the first byte — before the browser can do anything."}
-              </p>
-            </li>
-          ))}
-        </ul>
+      <Card title="Real-user data for this URL" icon={Gauge} subtitle={`${d?.path ?? d?.url ?? "headline page"} · ${device}`} action={<SourceBadge kind="field-url" />}>
+        <div className="space-y-3">
+          <FieldBlockView
+            field={urlCrux?.metrics ?? d?.field ?? null}
+            scopeLabel="Chrome users of this exact URL"
+            empty="No field data available for this URL. Chrome has not collected enough real-user visits to report it — this is not a failing score."
+          />
+          <CruxStatus snapshot={urlCrux} label="Chrome UX Report (URL)" />
+        </div>
       </Card>
+
+      <Card title="Real-user data for the whole origin" icon={Boxes} subtitle="Every page on the site together — not a measurement of one page" action={<SourceBadge kind="field-origin" />}>
+        <div className="space-y-3">
+          <FieldBlockView
+            field={originCrux?.metrics ?? d?.originField ?? null}
+            scopeLabel={`Chrome users across ${crux?.origin ?? "the origin"}`}
+            empty="No origin-level field data available."
+          />
+          <CruxStatus snapshot={originCrux} label="Chrome UX Report (origin)" />
+          <CruxHistoryChart points={originCrux?.history ?? null} title="Origin history (LCP / INP p75)" />
+        </div>
+      </Card>
+
+      <Card title="Lab metrics" icon={Zap} subtitle="Lighthouse — a simulated load for this URL" action={<SourceBadge kind="lab" />}>
+        <LabMetricsGrid lab={d?.lab ?? null} />
+        <p className="mt-2 text-[10.5px] text-[#94A3B8]">Interaction to Next Paint (INP) exists only as field data. Lab Total Blocking Time is a different metric and is never shown in its place.</p>
+      </Card>
+
+      {crux && !crux.configured ? (
+        <UnavailableNotice title="Chrome UX Report API key is not configured" body="Field data above comes from PageSpeed Insights only. Configure CRUX_API_KEY (or allow the Chrome UX Report API on the PageSpeed key) for explicit URL/origin queries and history." />
+      ) : null}
     </div>
   );
 }
 
-function PagesTab({ data }: { data: PerformanceData }) {
+type PageRow = PerformanceData["pages"][number];
+
+function PagesTab({ data, device }: { data: PerformanceData; device: DeviceKey }) {
   const router = useRouter();
-  // Written in one update so the key does not get dropped by the direction.
-  const { get, setMany } = useUrlParams();
-  const sortKey = get("psort") ?? "score";
-  const sortDir = get("pdir") === "desc" ? "desc" : "asc";
-
-  const columns: Column<PerformanceData["pages"][number]>[] = [
+  const rows = data.pages;
+  const columns: Column<PageRow>[] = [
     {
-      key: "path",
-      header: "Page",
-      primary: true,
-      sortValue: (row) => row.path,
-      cell: (row) => <span className="truncate font-mono text-[11px] font-medium text-[#28354C]">{row.path}</span>,
-    },
-    {
-      key: "score",
-      header: "Score",
-      align: "center",
-      sortValue: (row) => row.score,
-      cell: (row) => (
-        <span className="inline-flex flex-col items-center gap-1">
-          <b
-            className={cn(
-              "text-[12px] font-semibold",
-              scoreBand(row.score) === "good"
-                ? "text-[#0B7A55]"
-                : scoreBand(row.score) === "warn"
-                  ? "text-[#9A5B08]"
-                  : "text-[#C0261F]",
-            )}
-          >
-            {row.score}
-          </b>
-          <Meter value={row.score} tone={scoreBand(row.score)} className="w-10" label={`Score ${row.score}`} />
-        </span>
+      key: "path", header: "Page", primary: true, sortValue: (r) => r.path,
+      cell: (r) => (
+        <div className="min-w-0">
+          <p className="truncate font-mono text-[11.5px] text-[#28354C]">{r.path}</p>
+          <p className="truncate text-[10px] text-[#94A3B8]">{r.url}</p>
+        </div>
       ),
     },
-    {
-      key: "lcp",
-      header: "LCP",
-      align: "right",
-      sortValue: (row) => row.lcpMs,
-      cell: (row) => (
-        <span className={row.lcpMs > 2500 ? "font-semibold text-[#C0261F]" : ""}>{formatMs(row.lcpMs)}</span>
-      ),
-    },
-    { key: "inp", header: "INP", align: "right", sortValue: (row) => row.inpMs, cell: (row) => formatMs(row.inpMs) },
-    {
-      key: "cls",
-      header: "CLS",
-      align: "right",
-      sortValue: (row) => row.cls,
-      cell: (row) => <span className={row.cls > 0.1 ? "font-semibold text-[#9A5B08]" : ""}>{row.cls.toFixed(3)}</span>,
-    },
-    { key: "ttfb", header: "TTFB", align: "right", sortValue: (row) => row.ttfbMs, cell: (row) => formatMs(row.ttfbMs) },
-    {
-      key: "weight",
-      header: "Page weight",
-      align: "right",
-      sortValue: (row) => row.pageWeightKb,
-      cell: (row) => formatWeight(row.pageWeightKb),
-    },
+    ...(["mobile", "desktop"] as const).map((dev) => ({
+      key: dev, header: dev === "mobile" ? "Mobile" : "Desktop", align: "center" as const, sortValue: (r: PageRow) => r[dev]?.scores.performance ?? -1,
+      cell: (r: PageRow) => {
+        const v = r[dev]?.scores.performance ?? null;
+        return v === null ? <span className="text-[10.5px] text-[#94A3B8]">Not measured</span> : <Chip tone={scoreBand(v)}>{v}</Chip>;
+      },
+    })),
+    { key: "lcp", header: `LCP (lab, ${device})`, align: "right", sortValue: (r) => r[device]?.lab?.lcpMs ?? -1, cell: (r) => (r[device]?.lab?.lcpMs != null ? formatMs(r[device]!.lab!.lcpMs!) : "—") },
+    { key: "tbt", header: `TBT (lab, ${device})`, align: "right", sortValue: (r) => r[device]?.lab?.tbtMs ?? -1, cell: (r) => (r[device]?.lab?.tbtMs != null ? formatMs(r[device]!.lab!.tbtMs!) : "—") },
+    { key: "field", header: "Field data", align: "center", cell: (r) => (r[device]?.field ? <Chip tone="good">URL</Chip> : r[device]?.originField ? <Chip tone="warn">Origin only</Chip> : <span className="text-[10.5px] text-[#94A3B8]">None</span>) },
+    { key: "weight", header: "Transfer", align: "right", sortValue: (r) => r.pageWeightKb ?? -1, cell: (r) => (r.pageWeightKb != null ? formatWeight(r.pageWeightKb) : "—") },
   ];
-
-  const sort: SortState = { key: sortKey, direction: sortDir };
-  const sorted = useSortedRows(data.pages, columns, sort);
+  const sort: SortState = { key: "path", direction: "asc" };
+  const sorted = useSortedRows(rows, columns, sort);
   const pagination = usePagination(sorted.length, 10);
 
   return (
     <Card
-      title="Page performance"
+      title={`Audited pages (${rows.length})`}
       icon={FileStack}
-      subtitle="Measured on a simulated 4G connection"
+      subtitle="Only pages actually sent to PageSpeed Insights appear here; every score is that URL's own"
       action={
         <WButton
           size="sm"
           icon={Download}
+          disabled={rows.length === 0}
+          disabledReason="Nothing to export"
           onClick={() => {
             downloadFile(
-              "page-performance.csv",
+              "performance-pages.csv",
               toCsv(
-                ["Path", "Score", "LCP (ms)", "INP (ms)", "CLS", "TTFB (ms)", "Weight (KB)"],
-                sorted.map((row) => [row.path, row.score, row.lcpMs, row.inpMs, row.cls, row.ttfbMs, row.pageWeightKb]),
+                ["Page", "URL", "Mobile performance", "Desktop performance", "Mobile LCP ms", "Mobile TBT ms", "Mobile accessibility", "Desktop accessibility"],
+                rows.map((r) => [r.path, r.url ?? "", r.mobile?.scores.performance ?? "", r.desktop?.scores.performance ?? "", r.mobile?.lab?.lcpMs ?? "", r.mobile?.lab?.tbtMs ?? "", r.mobile?.scores.accessibility ?? "", r.desktop?.scores.accessibility ?? ""]),
               ),
+              "text/csv;charset=utf-8",
             );
-            toast.success("Page performance exported");
+            toast.success("Performance pages exported");
           }}
         >
-          Export
+          Export CSV
         </WButton>
       }
       bodyClassName="p-0"
@@ -476,168 +271,83 @@ function PagesTab({ data }: { data: PerformanceData }) {
       <DataTable
         columns={columns}
         rows={pagination.slice(sorted)}
-        getRowId={(row) => row.pageId}
-        sort={sort}
-        onSortChange={(next) =>
-          setMany({
-            psort: next.key === "score" ? null : next.key,
-            pdir: next.direction === "asc" ? null : next.direction,
-          })
-        }
-        onRowClick={(row) => router.push(`/admin/website/pages/${encodeURIComponent(row.pageId)}?tab=performance`)}
-        empty={<EmptyState title="No pages measured" body="Run a performance audit to measure these pages." />}
+        getRowId={(r) => r.pageId}
+        onRowClick={(r) => router.push(`/admin/website/pages/${encodeURIComponent(r.pageId)}?tab=performance`)}
+        empty={<EmptyState title="No pages audited" body="Run a performance audit to measure pages." />}
       />
-      {sorted.length > 0 ? (
-        <Pagination
-          page={pagination.page}
-          pageSize={pagination.pageSize}
-          total={sorted.length}
-          onPageChange={pagination.setPage}
-          onPageSizeChange={pagination.setPageSize}
-        />
-      ) : null}
+      {sorted.length > 0 ? <Pagination page={pagination.page} pageSize={pagination.pageSize} total={sorted.length} onPageChange={pagination.setPage} onPageSizeChange={pagination.setPageSize} /> : null}
     </Card>
   );
 }
 
-function ResourcesTab({ data }: { data: PerformanceData }) {
-  const total = data.resources.reduce((sum, row) => sum + row.weightKb, 0) || 1;
-
+function ResourcesTab({ data, device }: { data: PerformanceData; device: DeviceKey }) {
+  const d = deviceData(data, device);
+  if (!d) return <MissingDevice device={device} />;
+  const resources = d.resources;
+  const total = resources?.totalKb ?? null;
   return (
     <div className="grid gap-1 lg:grid-cols-2">
-      <Card title="Weight by resource type" icon={Boxes} subtitle={`Average page total: ${formatWeight(total)}`}>
-        <ShareBar
-          ariaLabel="Average page weight by resource type"
-          rows={data.resources.map((row, index) => ({
-            label: `${row.label} · ${row.requests} requests`,
-            value: formatWeight(row.weightKb),
-            share: row.share,
-            color: SERIES_COLORS[index % SERIES_COLORS.length] ?? "#2563EB",
-          }))}
-        />
+      <Card title="Resource weight" icon={Boxes} subtitle={`${d.path ?? d.url} · ${device} · ${resources?.requests ?? "?"} requests`} action={<SourceBadge kind="lab" />}>
+        {!resources || resources.byType.length === 0 ? (
+          <EmptyState compact title="No resource breakdown returned" body="Lighthouse did not return a resource summary for this run." />
+        ) : (
+          <ShareBar
+            ariaLabel="Transfer size by resource type"
+            rows={resources.byType.map((r, i) => ({
+              label: `${r.label} · ${r.requests} requests`,
+              value: formatWeight(r.kb),
+              share: total ? Math.round((r.kb / total) * 100) : 0,
+              color: ["#2563EB", "#12A06D", "#E29208", "#7C3AED", "#DC3A32"][i % 5] ?? "#2563EB",
+            }))}
+          />
+        )}
       </Card>
-
-      <Card
-        title="Third-party scripts"
-        icon={Boxes}
-        subtitle="Loaded from other domains — the slowest thing we cannot cache"
-        bodyClassName="p-0"
-      >
-        <DataTable
-          dense
-          columns={[
-            {
-              key: "name",
-              header: "Script",
-              primary: true,
-              cell: (row: PerformanceData["thirdParty"][number]) => (
-                <span className="truncate text-[11.5px] font-medium text-[#28354C]">{row.name}</span>
-              ),
-            },
-            {
-              key: "weight",
-              header: "Weight",
-              align: "right",
-              cell: (row: PerformanceData["thirdParty"][number]) => formatWeight(row.weightKb),
-            },
-            {
-              key: "blocking",
-              header: "Blocking",
-              align: "right",
-              cell: (row: PerformanceData["thirdParty"][number]) => (
-                <Chip tone={row.blockingMs > 200 ? "warn" : "muted"}>{formatMs(row.blockingMs)}</Chip>
-              ),
-            },
-            {
-              key: "pages",
-              header: "Pages",
-              align: "right",
-              cell: (row: PerformanceData["thirdParty"][number]) => formatNumber(row.pages),
-            },
-          ]}
-          rows={data.thirdParty}
-          getRowId={(row) => row.name}
-          empty={<EmptyState title="No third-party scripts" body="Everything is served from the site's own domain." compact />}
-        />
+      <Card title="Third-party code detected" icon={Zap} subtitle="Only vendors Lighthouse actually observed" bodyClassName="p-0">
+        {d.thirdParty.length === 0 ? (
+          <EmptyState compact title="No third-party resources reported" body="Lighthouse did not report any third-party transfer for this URL." />
+        ) : (
+          <ul className="divide-y divide-[#F2F5FA]">
+            {d.thirdParty.map((t) => (
+              <li key={t.name} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+                <span className="min-w-0">
+                  <span className="block truncate text-[11.5px] font-semibold text-[#28354C]">{t.name}</span>
+                  <span className="block text-[10.5px] text-[#6B7A94]">{formatWeight(t.kb)} · main thread {formatMs(t.mainThreadMs)}</span>
+                </span>
+                <Chip tone={t.blockingMs > 250 ? "warn" : "muted"}>{t.blockingMs > 0 ? `Blocks ${formatMs(t.blockingMs)}` : "No blocking"}</Chip>
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
     </div>
   );
 }
 
-function RecommendationsTab({
-  data,
-  onFixGuide,
-}: {
-  data: PerformanceData;
-  onFixGuide: (guideId: string) => void;
-}) {
-  const ranked = useMemo(
-    () =>
-      [...data.recommendations].sort((a, b) => {
-        const rank = { high: 0, medium: 1, low: 2 } as const;
-        if (rank[a.impact] !== rank[b.impact]) return rank[a.impact] - rank[b.impact];
-        return b.estimatedSavingMs - a.estimatedSavingMs;
-      }),
-    [data.recommendations],
-  );
-
+function OpportunitiesTab({ data, device, onFixGuide }: { data: PerformanceData; device: DeviceKey; onFixGuide: (id: string) => void }) {
+  const d = deviceData(data, device);
+  const items = useMemo(() => [...(d?.opportunities ?? [])].sort((a, b) => (b.savingsMs ?? 0) - (a.savingsMs ?? 0)), [d]);
+  if (!d) return <MissingDevice device={device} />;
   return (
-    <Card
-      title={`Recommendations (${ranked.length})`}
-      icon={Lightbulb}
-      subtitle="Ordered by impact. These are instructions for whoever maintains the website — we cannot apply them."
-      bodyClassName="p-0"
-    >
-      {ranked.length === 0 ? (
-        <EmptyState title="No recommendations" body="Nothing obvious left to improve in the last audit." />
+    <Card title={`Lighthouse opportunities (${items.length})`} icon={Lightbulb} subtitle={`${d.path ?? d.url} · ${device} · savings are Lighthouse's own estimates`} action={<SourceBadge kind="lab" />} bodyClassName="p-0">
+      {items.length === 0 ? (
+        <EmptyState compact title="No opportunities reported" body="Lighthouse did not report any audit with an estimated time saving for this URL." />
       ) : (
         <ul className="divide-y divide-[#F2F5FA]">
-          {ranked.map((recommendation) => (
-            <RecommendationRow key={recommendation.id} recommendation={recommendation} onFixGuide={onFixGuide} />
+          {items.map((o) => (
+            <li key={o.id} className="flex items-start justify-between gap-3 px-3.5 py-3">
+              <div className="min-w-0">
+                <p className="text-[12px] font-semibold text-[#28354C]">{o.title}</p>
+                <p className="mt-0.5 text-[10.5px] text-[#6B7A94]">
+                  {o.savingsMs !== null ? `Estimated saving ${formatMs(o.savingsMs)}` : "No time estimate"}
+                  {o.savingsKb !== null ? ` · ${formatWeight(o.savingsKb)}` : ""}
+                  {o.displayValue ? ` · ${o.displayValue}` : ""}
+                </p>
+              </div>
+              <WButton size="sm" onClick={() => onFixGuide(o.id)}>Guide</WButton>
+            </li>
           ))}
         </ul>
       )}
     </Card>
-  );
-}
-
-function RecommendationRow({
-  recommendation,
-  onFixGuide,
-}: {
-  recommendation: PerformanceRecommendation;
-  onFixGuide: (guideId: string) => void;
-}) {
-  return (
-    <li className="flex flex-wrap items-start gap-3 px-3.5 py-3">
-      <span
-        className={cn(
-          "grid size-8 shrink-0 place-items-center rounded-lg",
-          recommendation.impact === "high"
-            ? "bg-[#FDECEB] text-[#C0261F]"
-            : recommendation.impact === "medium"
-              ? "bg-[#FDF3E3] text-[#9A5B08]"
-              : "bg-[#F1F4F9] text-[#64748B]",
-        )}
-      >
-        <TriangleAlert className="size-4" aria-hidden />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-[12.5px] font-semibold text-[#28354C]">{recommendation.title}</p>
-          <Chip tone={recommendation.impact === "high" ? "bad" : recommendation.impact === "medium" ? "warn" : "muted"}>
-            {recommendation.impact} impact
-          </Chip>
-          <Chip tone="muted">{recommendation.effort} effort</Chip>
-        </div>
-        <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#6B7A94]">{recommendation.description}</p>
-        <p className="mt-1 text-[10.5px] text-[#94A3B8]">
-          Estimated saving ≈ {formatMs(recommendation.estimatedSavingMs)} · affects {recommendation.affectedPages} pages
-        </p>
-      </div>
-      <WButton size="sm" icon={Wrench} onClick={() => onFixGuide(recommendation.fixGuideId)}>
-        View fix guide
-      </WButton>
-    </li>
   );
 }

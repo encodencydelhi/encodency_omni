@@ -279,9 +279,43 @@ export default function IssueDetailPage({ issueId }: { issueId: string }) {
                   <span className="font-medium text-[#111C3A]">{severityImpact} higher severity {issue.severity} issues</span>
                   <span className="ml-2 text-[11px] text-[#6B7A94]">in the portfolio</span>
                 </KeyValue>
-                {issue.evidence ? (
+                {issue.evidenceDetail && issue.evidenceDetail.length > 0 ? (
+                  <KeyValue label="Evidence">
+                    <ul className="space-y-0.5">
+                      {issue.evidenceDetail.map((item, index) => (
+                        <li key={`${item.label}-${index}`} className="text-[11px] text-[#28354C]">
+                          <span className="text-[#6B7A94]">{item.label}: </span>
+                          <span className="break-all font-mono">{item.value}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </KeyValue>
+                ) : issue.evidence ? (
                   <KeyValue label="Evidence">
                     <span className="font-mono text-[11px] text-[#28354C]">{issue.evidence}</span>
+                  </KeyValue>
+                ) : null}
+                {issue.affectedUrls && issue.affectedUrls.length > 0 ? (
+                  <KeyValue label="Affected URLs">
+                    <ul className="space-y-0.5">
+                      {issue.affectedUrls.slice(0, 8).map((url) => (
+                        <li key={url} className="break-all font-mono text-[11px] text-[#28354C]">{url}</li>
+                      ))}
+                      {issue.affectedUrls.length > 8 ? <li className="text-[10.5px] text-[#94A3B8]">+{issue.affectedUrls.length - 8} more</li> : null}
+                    </ul>
+                  </KeyValue>
+                ) : null}
+                {issue.verification && issue.verification.length > 0 ? (
+                  <KeyValue label="How to verify">
+                    <ul className="list-disc space-y-0.5 pl-4 text-[11px] text-[#28354C]">
+                      {issue.verification.map((step) => <li key={step}>{step}</li>)}
+                    </ul>
+                  </KeyValue>
+                ) : null}
+                {issue.lastSeenAt ? (
+                  <KeyValue label="Last seen">
+                    <span className="text-[11px] text-[#28354C]">{formatRelative(issue.lastSeenAt)}</span>
+                    {issue.notRecheckedAt ? <span className="ml-2 text-[10.5px] text-[#9A5B08]">not re-verified in the latest scan</span> : null}
                   </KeyValue>
                 ) : null}
                 {issue.resolvedAt ? (
@@ -433,7 +467,21 @@ export default function IssueDetailPage({ issueId }: { issueId: string }) {
 
       {tab === "history" && (
         <div className="space-y-1">
-          {issueHistory.length === 0 ? (
+          {issue && issue.history && issue.history.length > 0 ? (
+            <Card title="Lifecycle" icon={RefreshCw} subtitle="Recorded by each scan and by people who changed its status" bodyClassName="p-0">
+              <ul className="divide-y divide-[#F2F5FA]">
+                {[...issue.history].reverse().map((entry, index) => (
+                  <li key={`${entry.at}-${index}`} className="flex items-start justify-between gap-3 px-3.5 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-semibold capitalize text-[#28354C]">{entry.event.replace(/_/g, " ")}</p>
+                      {entry.note ? <p className="mt-0.5 text-[11px] text-[#6B7A94]">{entry.note}</p> : null}
+                    </div>
+                    <span className="shrink-0 text-[10.5px] text-[#94A3B8]">{formatDateTime(entry.at)}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          ) : issueHistory.length === 0 ? (
             <EmptyState
               title="No resolution history"
               body="This issue has not been resolved yet."

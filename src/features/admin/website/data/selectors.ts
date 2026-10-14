@@ -224,6 +224,7 @@ export const scanTypeLabel: Record<ScanType, string> = {
   performance: "Performance",
   uptime: "Uptime check",
   page: "Single page",
+  ai: "AI analysis",
 };
 
 export const categoryLabel: Record<IssueRecord["category"], string> = {

@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
+  FileCode2,
   ArrowLeft,
   CheckCircle2,
   ChevronRight,
@@ -22,7 +23,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { useWebsiteIssues, useWebsitePageAudit } from "../../data/hooks";
+import { usePagePerformance, useWebsiteIssues, useWebsitePageAudit } from "../../data/hooks";
 import {
   checkLabel,
   checkTone,
@@ -39,7 +40,7 @@ import {
   slugForFile,
   toCsv,
 } from "../../data/selectors";
-import type { AuditCheck, CheckStatus, PageAudit } from "../../data/types";
+import type { AuditCheck, CheckStatus, IssueRecord, PageAudit } from "../../data/types";
 import {
   Card,
   Chip,
@@ -53,20 +54,25 @@ import {
 } from "../ui/kit";
 import { ShareBar, SERIES_COLORS } from "../ui/charts";
 import { EmptyState, QueryErrorState, SkeletonBlock, SkeletonStats } from "../ui/states";
+import { PageAiPanel } from "../ui/ai-insights";
+import { PageLighthouseAccessibility, PagePerformanceTab, PageSearchAndIndexing } from "./page-measurements";
 import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
 
-type AuditTab = "overview" | "seo" | "content" | "links" | "performance" | "accessibility" | "technical" | "images";
+type AuditTab = "overview" | "ai" | "seo" | "content" | "links" | "performance" | "accessibility" | "technical" | "images" | "structured" | "history";
 
 const TABS: { value: AuditTab; label: string }[] = [
   { value: "overview", label: "Overview" },
-  { value: "seo", label: "SEO" },
+  { value: "ai", label: "AI insights" },
+  { value: "seo", label: "On-page SEO" },
+  { value: "technical", label: "Technical SEO" },
   { value: "content", label: "Content" },
   { value: "links", label: "Links" },
+  { value: "images", label: "Images" },
+  { value: "structured", label: "Structured data" },
   { value: "performance", label: "Performance" },
   { value: "accessibility", label: "Accessibility" },
-  { value: "technical", label: "Technical" },
-  { value: "images", label: "Images" },
+  { value: "history", label: "Issues & history" },
 ];
 
 export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
@@ -74,6 +80,7 @@ export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
   const { clientId, runScan, scan, openIssue, openFixGuide } = useWebsiteWorkspace();
   const audit = useWebsitePageAudit(clientId, pageId);
   const issues = useWebsiteIssues(clientId);
+  const measured = usePagePerformance(clientId, pageId);
 
   const [tab, setTab] = useUrlState<AuditTab>("tab", "overview", TABS.map((entry) => entry.value));
   const pageIssues = useMemo(
@@ -121,6 +128,7 @@ export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
 
   const data = audit.data;
   const page = data.page;
+  const perfDevice = measured.data?.mobile.measured ?? measured.data?.desktop.measured ?? null;
 
   const exportAudit = () => {
     const rows = [
@@ -197,9 +205,15 @@ export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <ScoreSummary label="OmniPlatform SEO" value={page.seoScore} />
-          <ScoreSummary label="OmniPlatform Performance" value={page.performanceScore} />
-          <ScoreSummary label="OmniPlatform Accessibility" value={page.accessibilityScore} />
+          <ScoreSummary label="SEO (executed checks)" value={page.seoScore} />
+          <ScoreSummary
+            label={perfDevice ? `Performance (Lighthouse ${perfDevice.device})` : "Performance (not measured)"}
+            value={perfDevice?.scores.performance ?? null}
+          />
+          <ScoreSummary
+            label={perfDevice?.scores.accessibility != null ? "Accessibility (automated checks)" : "Accessibility (not verified)"}
+            value={perfDevice?.scores.accessibility ?? null}
+          />
           <div className="flex items-center gap-2.5 rounded-xl border border-[#E6EBF4] p-2.5">
             <span
               className={cn(
@@ -291,17 +305,41 @@ export function WebsitePageAuditPage({ pageId }: { pageId: string }) {
         </div>
       ) : null}
 
-      {tab === "seo" ? <CheckListCard title="SEO checks" icon={Search} checks={data.seoChecks} /> : null}
-      {tab === "accessibility" ? (
-        <CheckListCard title="Accessibility checks" icon={ShieldCheck} checks={data.accessibilityChecks} />
+      {data.evidenceAvailable === false ? (
+        <div className="rounded-xl border border-[#F5DDA8] bg-[#FEF6E3] px-3 py-2 text-[11.5px] text-[#9A5B08]">
+          {data.legacyNote ?? "This page was scanned before evidence-based audits. Run a new scan for verified results."}
+        </div>
       ) : null}
+      {tab === "ai" ? <PageAiPanel pageId={pageId} /> : null}
+      {tab === "seo" ? <CheckListCard title="On-page SEO checks" icon={Search} checks={data.seoChecks} /> : null}
+      {tab === "seo" ? <PageSearchAndIndexing pageId={pageId} /> : null}
+      {tab === "accessibility" ? <PageLighthouseAccessibility pageId={pageId} /> : null}
+      {tab === "accessibility" ? (
+        data.accessibilityChecks.length > 0 ? (
+          <CheckListCard title="Accessibility checks" icon={ShieldCheck} checks={data.accessibilityChecks} />
+        ) : (
+          <Card title="Accessibility" icon={ShieldCheck}>
+            <EmptyState
+              title="Accessibility is not verified"
+              body={data.accessibilityNote ?? "Accessibility needs an automated audit (axe or Lighthouse), which has not run for this page. No score is shown rather than an estimated one."}
+            />
+          </Card>
+        )
+      ) : null}
+      {tab === "structured" ? <StructuredDataTab data={data} /> : null}
+      {tab === "history" ? <HistoryTab data={data} pageIssues={pageIssues} openIssue={openIssue} /> : null}
       {tab === "technical" ? (
-        <CheckListCard title="Technical checks" icon={Wrench} checks={data.technicalChecks} />
+        <CheckListCard title="Technical SEO checks" icon={Wrench} checks={data.technicalChecks} />
       ) : null}
 
       {tab === "content" ? <ContentTab data={data} /> : null}
       {tab === "links" ? <LinksTab data={data} /> : null}
-      {tab === "performance" ? <PerformanceTab data={data} /> : null}
+      {tab === "performance" ? (
+        <div className="space-y-1">
+          <PagePerformanceTab pageId={pageId} />
+          <PerformanceTab data={data} />
+        </div>
+      ) : null}
       {tab === "images" ? <ImagesTab data={data} /> : null}
     </div>
   );
@@ -459,7 +497,7 @@ function ContentTab({ data }: { data: PageAudit }) {
           <KeyValue label="Readability">
             <span className="inline-flex items-center gap-1.5">
               {content.readability.label}
-              <Chip tone="muted">{content.readability.score}</Chip>
+              {content.readability.score !== null ? <Chip tone="muted">{content.readability.score}</Chip> : null}
             </span>
           </KeyValue>
         </dl>
@@ -628,7 +666,7 @@ function LinksTab({ data }: { data: PageAudit }) {
         <DataTable
           columns={columns}
           rows={links.samples}
-          getRowId={(link) => `${link.href}-${link.text}`}
+          getRowId={(link) => `${link.href}-${link.text}-${links.samples.indexOf(link)}`}
           empty={<EmptyState title="No links found" body="This page contains no anchors." compact />}
           dense
         />
@@ -658,53 +696,120 @@ function LinksTab({ data }: { data: PageAudit }) {
   );
 }
 
+/** Crawl-time observations only. Lighthouse and field metrics live in PagePerformanceTab. */
 function PerformanceTab({ data }: { data: PageAudit }) {
   const perf = data.performance;
-  const totalWeight = perf.breakdown.reduce((sum, row) => sum + row.weightKb, 0) || 1;
-
   return (
-    <div className="space-y-1">
-      <div className="grid grid-cols-2 gap-1 lg:grid-cols-6">
-        <SmallStat label="LCP" value={formatMs(perf.lcpMs)} tone={perf.lcpMs <= 2500 ? "good" : perf.lcpMs <= 4000 ? "warn" : "bad"} />
-        <SmallStat label="INP" value={formatMs(perf.inpMs)} tone={perf.inpMs <= 200 ? "good" : perf.inpMs <= 500 ? "warn" : "bad"} />
-        <SmallStat label="CLS" value={perf.cls.toFixed(3)} tone={perf.cls <= 0.1 ? "good" : perf.cls <= 0.25 ? "warn" : "bad"} />
-        <SmallStat label="TTFB" value={formatMs(perf.ttfbMs)} tone={perf.ttfbMs <= 800 ? "good" : perf.ttfbMs <= 1800 ? "warn" : "bad"} />
-        <SmallStat label="Page weight" value={formatWeight(perf.pageWeightKb)} tone={perf.pageWeightKb < 2000 ? "good" : "warn"} />
-        <SmallStat label="Requests" value={perf.requests} tone={perf.requests < 60 ? "good" : "warn"} />
+    <Card title="Observed during the crawl" subtitle="Single observations from the last crawl — not Core Web Vitals" bodyClassName="p-3">
+      <div className="grid grid-cols-2 gap-1 lg:grid-cols-3">
+        <SmallStat label="Response time (crawl)" value={perf.ttfbMs === null ? "—" : formatMs(perf.ttfbMs)} tone="muted" />
+        <SmallStat label="HTML size" value={perf.pageWeightKb === null ? "—" : formatWeight(perf.pageWeightKb)} tone="muted" />
+        <SmallStat label="Requests (Lighthouse)" value={perf.requests === null ? "See Lighthouse above" : perf.requests} tone="muted" />
       </div>
+    </Card>
+  );
+}
 
-      <div className="grid gap-1 lg:grid-cols-2">
-        <Card title="Resource weight" icon={Gauge}>
-          <ShareBar
-            ariaLabel="Page weight by resource type"
-            rows={perf.breakdown.map((row, index) => ({
-              label: `${row.label} · ${row.requests} requests`,
-              value: formatWeight(row.weightKb),
-              share: Math.round((row.weightKb / totalWeight) * 100),
-              color: SERIES_COLORS[index % SERIES_COLORS.length] ?? "#2563EB",
-            }))}
-          />
-        </Card>
+function StructuredDataTab({ data }: { data: PageAudit }) {
+  const blocks = data.structuredData ?? [];
+  return (
+    <Card title="Structured data (JSON-LD)" icon={FileCode2} subtitle="Syntax and common-field checks. Not a rich-result eligibility verdict." bodyClassName="p-0">
+      {blocks.length === 0 ? (
+        <EmptyState title="No JSON-LD found" body="This page has no application/ld+json blocks." compact />
+      ) : (
+        <ul className="divide-y divide-[#F2F5FA]">
+          {blocks.map((block) => (
+            <li key={block.index} className="flex items-start justify-between gap-3 px-3.5 py-2.5">
+              <div className="min-w-0">
+                <p className="text-[11.5px] font-semibold text-[#28354C]">Block {block.index + 1}{block.types.length ? ` · ${block.types.join(", ")}` : ""}</p>
+                {block.error ? <p className="mt-0.5 text-[10.5px] text-[#B91C1C]">Invalid JSON: {block.error}</p> : null}
+                {block.missingFields.length ? <p className="mt-0.5 text-[10.5px] text-[#9A5B08]">Missing: {block.missingFields.join(", ")}</p> : null}
+              </div>
+              <Chip tone={!block.valid ? "bad" : block.missingFields.length ? "warn" : "good"}>{!block.valid ? "Invalid" : block.missingFields.length ? "Incomplete" : "Valid"}</Chip>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
 
-        <Card title="Third-party scripts" icon={Link2} bodyClassName="p-0">
-          {perf.thirdParty.length === 0 ? (
-            <EmptyState title="No third-party scripts" body="This page loads only first-party resources." compact />
+function HistoryTab({ data, pageIssues, openIssue }: { data: PageAudit; pageIssues: IssueRecord[]; openIssue: (id: string) => void }) {
+  const history = data.history ?? [];
+  const evidence = data.evidence;
+  return (
+    <div className="grid gap-1 xl:grid-cols-2">
+      <Card title={`Issues (${pageIssues.length})`} icon={TriangleAlert} bodyClassName="p-0">
+        {pageIssues.length === 0 ? (
+          <EmptyState title="No issues recorded" body="No issue is open or resolved for this page." icon={ShieldCheck} compact />
+        ) : (
+          <ul className="divide-y divide-[#F2F5FA]">
+            {pageIssues.map((issue) => (
+              <li key={issue.id} className="px-3.5 py-2.5">
+                <button type="button" className="w-full cursor-pointer text-left" onClick={() => openIssue(issue.id)}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate text-[11.5px] font-semibold text-[#28354C]">{issue.title}</span>
+                    <Chip tone={issue.status === "open" ? "warn" : issue.status === "resolved" ? "good" : "muted"}>{issue.status}</Chip>
+                  </div>
+                  {issue.evidence ? <p className="mt-0.5 truncate text-[10.5px] text-[#6B7A94]">{issue.evidence}</p> : null}
+                  <p className="mt-0.5 text-[10px] text-[#94A3B8]">
+                    First seen {formatRelative(issue.firstDetectedAt ?? issue.detectedAt)}
+                    {issue.reopenedAt ? ` · reopened ${formatRelative(issue.reopenedAt)}` : ""}
+                    {issue.notRecheckedAt ? " · not re-verified in the last scan" : ""}
+                  </p>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
+      <div className="grid gap-1">
+        <Card title="Scan history" icon={RefreshCw} subtitle="Same page, one row per scan" bodyClassName="p-0">
+          {history.length === 0 ? (
+            <EmptyState title="No history yet" body="History is recorded from the first scan made with the evidence-based audit." compact />
           ) : (
             <ul className="divide-y divide-[#F2F5FA]">
-              {perf.thirdParty.map((script) => (
-                <li key={script.name} className="flex items-center justify-between gap-2 px-3.5 py-2.5">
-                  <span className="min-w-0">
-                    <span className="block truncate text-[11.5px] font-semibold text-[#28354C]">{script.name}</span>
-                    <span className="block text-[10.5px] text-[#6B7A94]">{formatWeight(script.weightKb)}</span>
-                  </span>
-                  <Chip tone={script.blocking ? "warn" : "muted"}>
-                    {script.blocking ? "Blocks main thread" : "Async"}
-                  </Chip>
+              {history.map((entry, index) => (
+                <li key={entry.scanId} className="px-3.5 py-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11.5px] font-semibold text-[#28354C]">{formatRelative(entry.at)}</span>
+                    <span className="text-[10.5px] text-[#6B7A94]">HTTP {entry.httpStatus ?? "—"} · {entry.issueCount} issue{entry.issueCount === 1 ? "" : "s"} · {entry.wordCount} words</span>
+                  </div>
+                  {entry.changes === null ? (
+                    <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">{index === history.length - 1 ? "Baseline: first recorded scan" : "No earlier scan to compare"}</p>
+                  ) : (
+                    <p className="mt-0.5 text-[10.5px] text-[#5B6B85]">
+                      {[
+                        entry.changes.statusChanged ? `status ${entry.changes.statusChanged.from} → ${entry.changes.statusChanged.to}` : null,
+                        entry.changes.titleChanged ? "title changed" : null,
+                        entry.changes.descriptionChanged ? "description changed" : null,
+                        entry.changes.contentChanged ? `content changed (${entry.changes.wordCountDelta >= 0 ? "+" : ""}${entry.changes.wordCountDelta} words)` : null,
+                        entry.changes.newIssues.length ? `${entry.changes.newIssues.length} new issue(s)` : null,
+                        entry.changes.resolvedIssues.length ? `${entry.changes.resolvedIssues.length} resolved` : null,
+                      ].filter(Boolean).join(" · ") || "No changes since the previous scan"}
+                    </p>
+                  )}
                 </li>
               ))}
             </ul>
           )}
         </Card>
+
+        {evidence ? (
+          <Card title="Crawl evidence" icon={ScrollText}>
+            <dl className="divide-y divide-[#F2F5FA]">
+              <KeyValue label="Requested URL"><span className="break-all font-mono text-[10.5px]">{evidence.requestedUrl}</span></KeyValue>
+              <KeyValue label="Final URL"><span className="break-all font-mono text-[10.5px]">{evidence.finalUrl}</span></KeyValue>
+              <KeyValue label="Redirects">{evidence.redirectChain.length ? evidence.redirectChain.map((h) => `${h.status} ${h.url}`).join(" → ") : "None"}</KeyValue>
+              <KeyValue label="Found via">{evidence.discoveredVia} · depth {evidence.depth}</KeyValue>
+              <KeyValue label="In sitemap">{evidence.inSitemap ? "Yes" : "No"}</KeyValue>
+              <KeyValue label="Language">{evidence.lang ?? "Not declared"}</KeyValue>
+              <KeyValue label="Content type">{evidence.contentType ?? "Unknown"}</KeyValue>
+              <KeyValue label="Crawled">{evidence.crawledAt ? formatRelative(evidence.crawledAt) : "—"}</KeyValue>
+            </dl>
+          </Card>
+        ) : null}
       </div>
     </div>
   );
@@ -775,7 +880,9 @@ function ImagesTab({ data }: { data: PageAudit }) {
       </Card>
 
       <Card title="Image optimization" icon={ImageIcon}>
-        {oversized > 0 ? (
+        {oversized === null ? (
+          <EmptyState title="Image size not measured" body="Oversized-image detection needs per-image byte sizes, which this crawl does not collect." compact />
+        ) : oversized > 0 ? (
           <ul className="divide-y divide-[#F2F5FA]">
             <li className="flex items-center gap-2 px-3.5 py-2.5">
               <Chip tone="warn">Oversized images detected</Chip>

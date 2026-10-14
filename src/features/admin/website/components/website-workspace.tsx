@@ -24,7 +24,8 @@ import { toast } from "sonner";
 import { useAdminContext } from "@/features/admin/shell/admin-context";
 import { useScanRunner, type ScanRunner } from "../data/hooks";
 import { scanTypeLabel } from "../data/selectors";
-import type { IntegrationKey, ScanType } from "../data/types";
+import { describeScanOutcome } from "../data/scan-state";
+import type { IntegrationKey, ScanStartOptions, ScanType } from "../data/types";
 import { ExportDialog } from "./dialogs/export-dialog";
 import { FixGuideDialog } from "./dialogs/fix-guide-dialog";
 import { IntegrationDialog } from "./dialogs/integration-dialog";
@@ -54,7 +55,7 @@ interface WebsiteWorkspaceValue {
   clients: ClientWebsiteOption[];
   selectClient: (clientId: string) => void;
   scan: ScanRunner;
-  runScan: (type: ScanType, pageId?: string) => void;
+  runScan: (type: ScanType, pageId?: string, options?: ScanStartOptions) => void;
   openIssue: (issueId: string) => void;
   openFixGuide: (guideId: string) => void;
   openIntegration: (key: IntegrationKey) => void;
@@ -117,16 +118,14 @@ export function WebsiteWorkspaceProvider({ children }: { children: ReactNode }) 
 
   /* Scans ---------------------------------------------------------- */
   const scan = useScanRunner(clientId, (progress) => {
-    toast.success(`${scanTypeLabel[progress.type]} complete`, {
-      description:
-        progress.type === "page"
-          ? "This page's audit has been refreshed."
-          : `${progress.pagesScanned} page${progress.pagesScanned === 1 ? "" : "s"} scanned. Results updated.`,
-    });
+    const outcome = describeScanOutcome(progress, scanTypeLabel[progress.type]);
+    const show =
+      outcome.kind === "success" ? toast.success : outcome.kind === "warning" ? toast.warning : outcome.kind === "error" ? toast.error : toast.info;
+    show(outcome.title, { description: outcome.description });
   });
 
   const runScan = useCallback(
-    (type: ScanType, pageId?: string) => {
+    (type: ScanType, pageId?: string, options?: ScanStartOptions) => {
       if (!clientId || !domain) {
         toast.error("No website configured for this client.");
         return;
@@ -136,7 +135,7 @@ export function WebsiteWorkspaceProvider({ children }: { children: ReactNode }) 
         return;
       }
       toast.info(`${scanTypeLabel[type]} started`, { description: `Scanning ${domain}…` });
-      void scan.start(type, pageId);
+      void scan.start(type, pageId, options);
     },
     [clientId, domain, scan],
   );

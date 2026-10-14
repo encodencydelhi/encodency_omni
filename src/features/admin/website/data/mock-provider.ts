@@ -23,6 +23,12 @@ import {
   type AnalyticsData,
   type BacklinkData,
   type CompetitorData,
+  type CrawlLimits,
+  type PageHistoryEntry,
+  type PageInspectionState,
+  type PagePerformanceData,
+  type PageSearchData,
+  type UrlInspectionView,
   type FixGuide,
   type IntegrationKey,
   type IssueRecord,
@@ -34,6 +40,10 @@ import {
   type ScanProgress,
   type ScanRecord,
   type ScanType,
+  type AiStatus,
+  type AiSiteSummary,
+  type AiPageInsights,
+  type AiRecommendation,
   type SeoData,
   type TechnologyDetection,
   type TrendPoint,
@@ -47,6 +57,7 @@ import {
 const delay = (ms = MOCK_LATENCY_MS) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const SCAN_STAGES: Record<ScanType, string[]> = {
+  ai: ["Preparing evidence", "Analysing with AI", "Validating findings"],
   "full-crawl": [
     "Resolving DNS and TLS handshake",
     "Fetching robots.txt and sitemap.xml",
@@ -214,6 +225,43 @@ export class MockWebsiteProvider implements WebsiteDataProvider {
     return this.dataset(clientId).backlinkAnalysis;
   }
 
+  async getPagePerformance(): Promise<PagePerformanceData> {
+    throw new ServiceUnavailableError("Per-page performance", "Demo data does not include per-page measurements.");
+  }
+  async getPageSearch(): Promise<PageSearchData> {
+    throw new ServiceUnavailableError("Page search data", "Demo data does not include Search Console page data.");
+  }
+  async getAiStatus(): Promise<AiStatus> {
+    throw new ServiceUnavailableError("AI analysis", "Demo data does not include AI analysis.");
+  }
+  async getAiSummary(): Promise<AiSiteSummary> {
+    throw new ServiceUnavailableError("AI analysis", "Demo data does not include AI analysis.");
+  }
+  async getPageAi(): Promise<AiPageInsights> {
+    throw new ServiceUnavailableError("AI analysis", "Demo data does not include AI analysis.");
+  }
+  async setAiRecommendationStatus(): Promise<AiRecommendation> {
+    throw new ServiceUnavailableError("AI analysis", "Demo data does not include AI analysis.");
+  }
+  async getPageInspection(): Promise<PageInspectionState> {
+    throw new ServiceUnavailableError("URL Inspection", "Demo data does not include URL Inspection.");
+  }
+  async inspectPage(): Promise<UrlInspectionView> {
+    throw new ServiceUnavailableError("URL Inspection", "Demo data does not include URL Inspection.");
+  }
+
+  async getCrawlLimits(): Promise<CrawlLimits> {
+    return {
+      limits: { maxPages: 200, maxDepth: 8, maxConcurrency: 4, timeoutMs: { min: 2000, max: 30000 }, externalLinkChecks: 40 },
+      javascriptRendering: { available: false, reason: "Demo data: no rendering worker." },
+      planEntitlements: { integrated: false, note: "Demo data." },
+    };
+  }
+
+  async getPageHistory(): Promise<PageHistoryEntry[]> {
+    return [];
+  }
+
   async getRankTracking(clientId: string): Promise<RankTrackingData[]> {
     await delay(120);
     return this.dataset(clientId).rankTracking;
@@ -242,6 +290,13 @@ export class MockWebsiteProvider implements WebsiteDataProvider {
     };
     this.scans.set(`${clientId}:${scanId}`, session);
     return this.toProgress(session);
+  }
+
+  async cancelScan(clientId: string, scanId: string): Promise<ScanProgress> {
+    const session = this.scans.get(`${clientId}:${scanId}`);
+    if (!session) throw new Error("That scan is no longer being tracked.");
+    this.scans.delete(`${clientId}:${scanId}`);
+    return { ...this.toProgress(session), status: "cancelled", stage: "Cancelled" };
   }
 
   async getScanProgress(clientId: string, scanId: string): Promise<ScanProgress> {
@@ -525,6 +580,36 @@ export class UnavailableWebsiteProvider implements WebsiteDataProvider {
   async getBacklinkAnalysis(): Promise<BacklinkData[]> {
     return this.fail("Backlink analysis service");
   }
+  async getCrawlLimits(): Promise<CrawlLimits> {
+    return this.fail("Crawl limits service");
+  }
+  async getPagePerformance(): Promise<PagePerformanceData> {
+    return this.fail("Page performance service");
+  }
+  async getPageSearch(): Promise<PageSearchData> {
+    return this.fail("Page search service");
+  }
+  async getAiStatus(): Promise<AiStatus> {
+    return this.fail("AI analysis");
+  }
+  async getAiSummary(): Promise<AiSiteSummary> {
+    return this.fail("AI analysis");
+  }
+  async getPageAi(): Promise<AiPageInsights> {
+    return this.fail("AI analysis");
+  }
+  async setAiRecommendationStatus(): Promise<AiRecommendation> {
+    return this.fail("AI analysis");
+  }
+  async getPageInspection(): Promise<PageInspectionState> {
+    return this.fail("URL Inspection service");
+  }
+  async inspectPage(): Promise<UrlInspectionView> {
+    return this.fail("URL Inspection service");
+  }
+  async getPageHistory(): Promise<PageHistoryEntry[]> {
+    return this.fail("Page history service");
+  }
   async getRankTracking(): Promise<RankTrackingData[]> {
     return this.fail("Rank tracking service");
   }
@@ -532,6 +617,9 @@ export class UnavailableWebsiteProvider implements WebsiteDataProvider {
     return this.fail("Scan service");
   }
   async getScanProgress(): Promise<ScanProgress> {
+    return this.fail("Scan service");
+  }
+  async cancelScan(): Promise<ScanProgress> {
     return this.fail("Scan service");
   }
   async saveSettings(): Promise<WebsiteSettings> {

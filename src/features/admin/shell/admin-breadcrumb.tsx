@@ -6,6 +6,7 @@ import { ChevronRight, LayoutGrid } from "lucide-react";
 import Link from "next/link";
 import { useAdminContext } from "./admin-context";
 import { cn } from "@/lib/utils/cn";
+import { WebsiteLiveStatus } from "./website-live-status";
 
 export function AdminBreadcrumb() {
   const pathname = usePathname();
@@ -83,6 +84,7 @@ export function AdminBreadcrumb() {
             </li>
           )}
         </ol>
+        <WebsiteLiveStatus />
       </nav>
     </div>
   );

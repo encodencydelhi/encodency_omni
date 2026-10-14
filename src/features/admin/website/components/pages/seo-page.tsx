@@ -74,13 +74,14 @@ import { ScoreCell } from "./overview-page";
 import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
 
-type SeoTab = "overview" | "issues" | "pages" | "links" | "sitemap" | "robots" | "schema" | "search";
+type SeoTab = "overview" | "issues" | "pages" | "links" | "duplicates" | "sitemap" | "robots" | "schema" | "search";
 
 const TABS: { value: SeoTab; label: string }[] = [
   { value: "overview", label: "Overview" },
   { value: "issues", label: "Issues" },
   { value: "pages", label: "Pages" },
   { value: "links", label: "Links" },
+  { value: "duplicates", label: "Duplicates" },
   { value: "sitemap", label: "Sitemap" },
   { value: "robots", label: "Robots" },
   { value: "schema", label: "Schema" },
@@ -121,66 +122,9 @@ export function WebsiteSeoPage() {
     if (seo.data?.overview?.categories && seo.data.overview.categories.length > 0) {
       return seo.data.overview.categories;
     }
-    const allPages = pages.data ?? [];
-    const allIssues = issues.data ?? [];
-    const pageCount = Math.max(allPages.length, 1);
-    const h1Issues = allIssues.filter((i) => i.id.includes("-h1") || i.title.toLowerCase().includes("h1"));
-    const altIssues = allIssues.filter((i) => i.id.includes("-alt") || i.title.toLowerCase().includes("alt"));
-    const metaIssues = allIssues.filter((i) => i.id.includes("-desc") || i.title.toLowerCase().includes("meta"));
-    const canonIssues = allIssues.filter((i) => i.id.includes("-canon") || i.title.toLowerCase().includes("canonical"));
-    const linkIssues = allIssues.filter((i) => i.category === "technical" && i.title.toLowerCase().includes("crawl"));
-
-    return [
-      {
-        key: "title-description" as const,
-        label: "Metadata & Titles",
-        score: metaIssues.length === 0 ? 98 : Math.max(30, 100 - metaIssues.length * 12),
-        passed: Math.max(pageCount * 2 - metaIssues.length, 1),
-        warnings: metaIssues.filter((i) => i.severity !== "critical").length,
-        errors: metaIssues.filter((i) => i.severity === "critical").length,
-      },
-      {
-        key: "headings" as const,
-        label: "Heading Structure",
-        score: h1Issues.length === 0 ? 100 : Math.max(35, 100 - h1Issues.length * 4),
-        passed: Math.max(pageCount - h1Issues.length, 1),
-        warnings: h1Issues.length,
-        errors: 0,
-      },
-      {
-        key: "images" as const,
-        label: "Image Optimization",
-        score: altIssues.length === 0 ? 95 : Math.max(30, 100 - altIssues.length * 3),
-        passed: Math.max(pageCount * 3 - altIssues.length, 1),
-        warnings: altIssues.length,
-        errors: 0,
-      },
-      {
-        key: "canonical" as const,
-        label: "Canonical & Indexing",
-        score: canonIssues.length === 0 ? 100 : Math.max(40, 100 - canonIssues.length * 15),
-        passed: Math.max(pageCount - canonIssues.length, 1),
-        warnings: canonIssues.length,
-        errors: 0,
-      },
-      {
-        key: "links" as const,
-        label: "Internal Links",
-        score: 94,
-        passed: Math.max(pageCount * 4, 1),
-        warnings: linkIssues.length,
-        errors: 0,
-      },
-      {
-        key: "structured-data" as const,
-        label: "Schema & Social",
-        score: 88,
-        passed: Math.max(pageCount, 1),
-        warnings: 1,
-        errors: 0,
-      },
-    ];
-  }, [seo.data?.overview, pages.data, issues.data]);
+    // No category data means no check has run: show nothing rather than invented categories.
+    return [] as NonNullable<typeof seo.data>["overview"]["categories"];
+  }, [seo.data?.overview]);
 
   return (
     <div className="space-y-1">
@@ -215,19 +159,31 @@ export function WebsiteSeoPage() {
                 <Card title="OmniPlatform SEO score" icon={Search} subtitle="Composite of every on-page check we run" bodyClassName="p-2.5">
                   <div className="grid grid-cols-[1fr_1fr] items-stretch gap-2.5 h-full">
                     <div className="flex flex-col items-center justify-center gap-1 rounded-xl border border-[#E6EBF4] bg-gradient-to-br from-[#FAFCFF] to-[#F1F5F9] p-2.5 shadow-sm h-full">
-                      <ScoreDial
-                        value={seo.data.overview.score}
-                        tone={scoreBand(seo.data.overview.score)}
-                        size={68}
-                        label={`SEO score ${seo.data.overview.score}`}
-                      />
+                      {seo.data.overview.score === null ? (
+                        <div className="flex size-[68px] items-center justify-center rounded-full border border-dashed border-[#CBD5E1] text-center text-[10px] font-semibold text-[#64748B]">
+                          Not scored
+                        </div>
+                      ) : (
+                        <ScoreDial
+                          value={seo.data.overview.score}
+                          tone={scoreBand(seo.data.overview.score)}
+                          size={68}
+                          label={`SEO score ${seo.data.overview.score}`}
+                        />
+                      )}
                       <div className="flex flex-col items-center text-center mt-1">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] mb-0.5">
                           Overall Score
                         </p>
                         <div className="flex items-center gap-1 text-[9.5px] font-bold mt-0.5">
-                          <span className={cn("rounded bg-[#F8FAFC] px-1.5 py-0.5 ring-1 ring-inset ring-[#E2E8F0]", toneText[scoreBand(seo.data.overview.score)])}>{seo.data.overview.score}</span>
-                          <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">100</span>
+                          {seo.data.overview.score === null ? (
+                            <span className="rounded bg-[#F8FAFC] px-1.5 py-0.5 text-[#64748B] ring-1 ring-inset ring-[#E2E8F0]">No checks run yet</span>
+                          ) : (
+                            <>
+                              <span className={cn("rounded bg-[#F8FAFC] px-1.5 py-0.5 ring-1 ring-inset ring-[#E2E8F0]", toneText[scoreBand(seo.data.overview.score)])}>{seo.data.overview.score}</span>
+                              <span className="rounded bg-[#F0FDF4] px-1.5 py-0.5 text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">100</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -291,14 +247,16 @@ export function WebsiteSeoPage() {
                             <b
                               className={cn(
                                 "text-[12.5px] font-extrabold",
-                                scoreBand(category.score) === "good"
-                                  ? "text-[#10B981]"
-                                  : scoreBand(category.score) === "warn"
-                                    ? "text-[#F59E0B]"
-                                    : "text-[#EF4444]",
+                                category.score === null
+                                  ? "text-[#94A3B8]"
+                                  : scoreBand(category.score) === "good"
+                                    ? "text-[#10B981]"
+                                    : scoreBand(category.score) === "warn"
+                                      ? "text-[#F59E0B]"
+                                      : "text-[#EF4444]",
                               )}
                             >
-                              {category.score}
+                              {category.score === null ? "Not run" : category.score}
                             </b>
                             <span className="text-[9px] font-bold text-[#15803D] bg-[#F0FDF4] px-1 py-0.5 rounded border border-[#DCFCE7]">
                               100
@@ -317,7 +275,7 @@ export function WebsiteSeoPage() {
                           </span>
                         </div>
                         <div className="mt-0.5">
-                          <Meter value={category.score} tone={scoreBand(category.score)} label={category.label} />
+                          {category.score === null ? null : <Meter value={category.score} tone={scoreBand(category.score)} label={category.label} />}
                         </div>
                       </li>
                     ))}
@@ -390,7 +348,8 @@ export function WebsiteSeoPage() {
             />
           ) : null}
 
-          {tab === "links" ? <SeoLinksTab data={seo.data.links} /> : null}
+          {tab === "links" ? <SeoLinksTab data={seo.data.links} /> : null}          {tab === "duplicates" ? <SeoDuplicatesTab groups={seo.data.duplicates ?? []} engine={seo.data.engine} /> : null}
+
 
           {tab === "sitemap" ? <SitemapTab report={seo.data.sitemap} /> : null}
 
@@ -565,6 +524,12 @@ function SeoPagesTab({
 function SeoLinksTab({ data }: { data: NonNullable<ReturnType<typeof useWebsiteSeo>["data"]>["links"] }) {
   return (
     <div className="space-y-1">
+      {data.unchecked && (data.unchecked.internal > 0 || data.unchecked.external > 0) ? (
+        <p className="rounded-lg border border-[#E6EBF4] bg-white px-3 py-2 text-[11px] text-[#5B6B85]">
+          Coverage: {formatNumber(data.unchecked.internal)} internal and {formatNumber(data.unchecked.external)} external link target(s) were not checked
+          (outside the crawl limits or the external-check budget). They are not counted as working or broken.
+        </p>
+      ) : null}
       <div className="grid grid-cols-2 gap-1 lg:grid-cols-6">
         <StatTile label="Internal links" value={formatNumber(data.internalLinks)} tone="info" icon={Link2} />
         <StatTile label="External links" value={formatNumber(data.externalLinks)} tone="muted" icon={ExternalLink} />
@@ -605,8 +570,32 @@ function SeoLinksTab({ data }: { data: NonNullable<ReturnType<typeof useWebsiteS
               },
             ]}
             rows={data.broken}
-            getRowId={(row) => `${row.from}-${row.to}`}
+            getRowId={(row) => `${row.from}-${row.to}-${data.broken.indexOf(row)}`}
             empty={<EmptyState title="No broken links" body="Every link resolved on the last crawl." icon={ShieldCheck} compact />}
+          />
+        </Card>
+
+        <Card title="Orphan page candidates" icon={ListTree} subtitle={data.orphanConclusionSound === false ? "Crawl did not cover every discovered URL — no conclusion drawn" : "Listed in the sitemap, linked from no crawled page"} bodyClassName="p-0">
+          <DataTable
+            dense
+            columns={[{ key: "url", header: "URL", primary: true, cell: (row: { url: string }) => <span className="truncate font-mono text-[11px] text-[#28354C]">{row.url}</span> }]}
+            rows={(data.orphanCandidates ?? []).map((url) => ({ url }))}
+            getRowId={(row) => row.url}
+            empty={<EmptyState title={data.orphanConclusionSound === false ? "Not assessed" : "No orphan candidates"} body={data.orphanConclusionSound === false ? "Raise the page limit or depth so the crawl covers every discovered URL." : "Every sitemap page is linked from a crawled page."} icon={ShieldCheck} compact />}
+          />
+        </Card>
+
+        <Card title="Weak anchor text" icon={Link2} bodyClassName="p-0">
+          <DataTable
+            dense
+            columns={[
+              { key: "anchor", header: "Anchor", primary: true, cell: (row: NonNullable<typeof data.weakAnchors>[number]) => <span className="text-[11px] text-[#28354C]">“{row.anchor}”</span> },
+              { key: "source", header: "On page", cell: (row: NonNullable<typeof data.weakAnchors>[number]) => <span className="truncate font-mono text-[10.5px] text-[#6B7A94]">{row.source}</span> },
+              { key: "reason", header: "Why", cell: (row: NonNullable<typeof data.weakAnchors>[number]) => <span className="text-[10.5px] text-[#6B7A94]">{row.reason}</span> },
+            ]}
+            rows={data.weakAnchors ?? []}
+            getRowId={(row) => `${row.source}-${row.target}-${row.anchor}-${(data.weakAnchors ?? []).indexOf(row)}`}
+            empty={<EmptyState title="No weak anchor text" body="Every checked link describes its destination." icon={ShieldCheck} compact />}
           />
         </Card>
 
@@ -1029,5 +1018,26 @@ function SearchConsoleTab({ data }: { data: NonNullable<NonNullable<ReturnType<t
         </div>
       </div>
     </div>
+  );
+}
+
+
+function SeoDuplicatesTab({ groups, engine }: { groups: NonNullable<NonNullable<ReturnType<typeof useWebsiteSeo>["data"]>["duplicates"]>; engine?: string }) {
+  const kindLabel: Record<string, string> = { title: "Title", description: "Meta description", h1: "H1", "exact-content": "Identical content", "near-content": "Near-identical content" };
+  return (
+    <Card title="Duplicate content" icon={ListTree} subtitle="Main content only — navigation, header and footer are excluded" bodyClassName="p-0">
+      <DataTable
+        dense
+        columns={[
+          { key: "kind", header: "Type", primary: true, cell: (g: (typeof groups)[number]) => <Chip tone={g.kind.includes("content") ? "bad" : "warn"}>{kindLabel[g.kind] ?? g.kind}</Chip> },
+          { key: "value", header: "Shared value", cell: (g: (typeof groups)[number]) => <span className="line-clamp-2 text-[11px] text-[#28354C]">{g.kind === "exact-content" || g.kind === "near-content" ? `${g.urls.length} pages` : g.value}</span> },
+          { key: "sim", header: "Similarity", align: "center", cell: (g: (typeof groups)[number]) => (g.similarityPct === null ? "—" : `${g.similarityPct}%`) },
+          { key: "urls", header: "Affected URLs", cell: (g: (typeof groups)[number]) => <ul className="space-y-0.5">{g.urls.slice(0, 5).map((u) => <li key={u} className="truncate font-mono text-[10.5px] text-[#6B7A94]">{u}</li>)}{g.urls.length > 5 ? <li className="text-[10px] text-[#94A3B8]">+{g.urls.length - 5} more</li> : null}</ul> },
+        ]}
+        rows={groups}
+        getRowId={(g) => `${g.kind}-${g.value}`}
+        empty={<EmptyState title={engine === "m2" ? "No duplicates found" : "Run a new scan"} body={engine === "m2" ? "No two crawled pages share a title, description, H1 or main content." : "Duplicate detection needs a scan made with the current audit engine."} icon={ShieldCheck} compact />}
+      />
+    </Card>
   );
 }

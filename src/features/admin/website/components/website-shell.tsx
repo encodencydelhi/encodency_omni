@@ -29,6 +29,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { useWebsiteCapabilities, useWebsiteSummary, useWebsiteTarget } from "../data/hooks";
 import { WEBSITE_MOCK_MODE } from "../data/config";
+import { isTerminalScan, scanProgressPercent, scanStatusLabel, scanStatusTone } from "../data/scan-state";
 import { formatRelative } from "../data/selectors";
 import { integrationStatusLabel, integrationTone } from "../data/capability-provider";
 import type { IntegrationKey, LiveStatus } from "../data/types";
@@ -80,7 +81,7 @@ function ScanBanner() {
   if (scan.error) {
     return (
       <div className="flex items-center justify-between gap-3 rounded-lg border border-[#F7CFCC] bg-[#FDECEB] px-3 py-2">
-        <p className="text-[11.5px] font-medium text-[#C0261F]">Scan failed — {scan.error.message}</p>
+        <p className="text-[11.5px] font-medium text-[#C0261F]">Scan problem — {scan.error.message}</p>
         <WButton size="sm" onClick={scan.dismiss}>
           Dismiss
         </WButton>
@@ -90,42 +91,48 @@ function ScanBanner() {
 
   const progress = scan.progress;
   if (!progress) return null;
-  const done = progress.status === "completed";
+  const finished = isTerminalScan(progress.status);
+  const tone = scanStatusTone(progress.status);
+  const percent = scanProgressPercent(progress);
+  const palette =
+    tone === "good"
+      ? { box: "border-[#BDE8D6] bg-[#E6F6EF]", text: "text-[#0B7A55]", bar: "bg-[#12A06D]" }
+      : tone === "warn"
+        ? { box: "border-[#F5DDA8] bg-[#FEF6E3]", text: "text-[#9A5B08]", bar: "bg-[#D97706]" }
+        : tone === "bad"
+          ? { box: "border-[#F7CFCC] bg-[#FDECEB]", text: "text-[#C0261F]", bar: "bg-[#DC2626]" }
+          : tone === "muted"
+            ? { box: "border-[#E2E8F0] bg-[#F8FAFC]", text: "text-[#475569]", bar: "bg-[#94A3B8]" }
+            : { box: "border-[#C9DDFA] bg-[#EFF5FE]", text: "text-[#1D4ED8]", bar: "bg-[#2563EB]" };
+  const failedUnits = progress.failedUnits ?? 0;
 
   return (
-    <div
-      className={cn(
-        "rounded-lg border px-3 py-2",
-        done ? "border-[#BDE8D6] bg-[#E6F6EF]" : "border-[#C9DDFA] bg-[#EFF5FE]",
-      )}
-      role="status"
-      aria-live="polite"
-    >
+    <div className={cn("rounded-lg border px-3 py-2", palette.box)} role="status" aria-live="polite">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className={cn("text-[11.5px] font-semibold", done ? "text-[#0B7A55]" : "text-[#1D4ED8]")}>
-          {done ? "Scan complete" : progress.stage}
+        <p className={cn("text-[11.5px] font-semibold", palette.text)}>
+          {finished ? scanStatusLabel(progress.status) : progress.status === "queued" ? "Queued — waiting for a worker" : progress.stage}
           <span className="ml-2 font-normal text-[#5B6B85]">
-            {progress.pagesScanned} page{progress.pagesScanned === 1 ? "" : "s"} · {progress.progress}%
+            {progress.pagesScanned} page{progress.pagesScanned === 1 ? "" : "s"}
+            {failedUnits ? ` · ${failedUnits} failed` : ""}
+            {finished ? "" : ` · ${percent}%`}
+            {progress.error ? ` · ${progress.error.message}` : ""}
           </span>
         </p>
-        <WButton
-          size="sm"
-          onClick={() => {
-            // Stopping the banner mid-run stops the scan; saying "hide" would
-            // imply it carries on in the background, which it does not.
-            if (!done) toast.info("Scan cancelled", { description: "No results were recorded." });
-            scan.dismiss();
-          }}
-        >
-          {done ? "Dismiss" : "Cancel scan"}
-        </WButton>
+        {finished ? (
+          <WButton size="sm" onClick={scan.dismiss}>
+            Dismiss
+          </WButton>
+        ) : (
+          <WButton size="sm" onClick={() => void scan.cancel()} disabled={scan.isCancelling || progress.cancelRequested}>
+            {scan.isCancelling || progress.cancelRequested ? "Cancelling…" : "Cancel scan"}
+          </WButton>
+        )}
       </div>
-      <span className="mt-1.5 block h-1 w-full overflow-hidden rounded-full bg-white/70">
-        <span
-          className={cn("block h-full rounded-full transition-[width] duration-300", done ? "bg-[#12A06D]" : "bg-[#2563EB]")}
-          style={{ width: `${progress.progress}%` }}
-        />
-      </span>
+      {finished ? null : (
+        <span className="mt-1.5 block h-1 w-full overflow-hidden rounded-full bg-white/70">
+          <span className={cn("block h-full rounded-full transition-[width] duration-300", palette.bar)} style={{ width: `${percent}%` }} />
+        </span>
+      )}
     </div>
   );
 }

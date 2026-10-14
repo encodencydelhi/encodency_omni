@@ -13,6 +13,8 @@ import type {
   IntegrationKey,
   IssueStatus,
   ScanType,
+  ScanStartOptions,
+  AiRecommendationStatus,
   WebsiteDataProvider,
   WebsiteSettings,
 } from "./types";
@@ -65,10 +67,22 @@ export const websiteRepository = {
   getCompetitorAnalysis: (clientId: string) => getProvider().getCompetitorAnalysis(clientId),
   getBacklinkAnalysis: (clientId: string) => getProvider().getBacklinkAnalysis(clientId),
   getRankTracking: (clientId: string) => getProvider().getRankTracking(clientId),
+  getCrawlLimits: (clientId: string) => getProvider().getCrawlLimits(clientId),
+  getPagePerformance: (clientId: string, pageId: string) => getProvider().getPagePerformance(clientId, pageId),
+  getPageSearch: (clientId: string, pageId: string, refresh?: boolean) => getProvider().getPageSearch(clientId, pageId, refresh),
+  getPageInspection: (clientId: string, pageId: string) => getProvider().getPageInspection(clientId, pageId),
+  inspectPage: (clientId: string, pageId: string) => getProvider().inspectPage(clientId, pageId),
+  getPageHistory: (clientId: string, pageId: string) => getProvider().getPageHistory(clientId, pageId),
 
-  startScan: (clientId: string, type: ScanType, pageId?: string) =>
-    getProvider().startScan(clientId, type, pageId),
+  startScan: (clientId: string, type: ScanType, pageId?: string, options?: ScanStartOptions) =>
+    getProvider().startScan(clientId, type, pageId, options),
+  getAiStatus: (clientId: string) => getProvider().getAiStatus(clientId),
+  getAiSummary: (clientId: string) => getProvider().getAiSummary(clientId),
+  getPageAi: (clientId: string, pageId: string) => getProvider().getPageAi(clientId, pageId),
+  setAiRecommendationStatus: (clientId: string, id: string, status: AiRecommendationStatus) =>
+    getProvider().setAiRecommendationStatus(clientId, id, status),
   getScanProgress: (clientId: string, scanId: string) => getProvider().getScanProgress(clientId, scanId),
+  cancelScan: (clientId: string, scanId: string) => getProvider().cancelScan(clientId, scanId),
   saveSettings: (clientId: string, settings: WebsiteSettings) =>
     getProvider().saveSettings(clientId, settings),
   setIssueStatus: (clientId: string, issueId: string, status: IssueStatus) =>
@@ -105,4 +119,9 @@ export const websiteKeys = {
   competitorAnalysis: (clientId: string) => ["website", clientId, "competitor-analysis"] as const,
   backlinkAnalysis: (clientId: string) => ["website", clientId, "backlink-analysis"] as const,
   rankTracking: (clientId: string) => ["website", clientId, "rank-tracking"] as const,
+  crawlLimits: (clientId: string) => ["website", clientId, "crawl-limits"] as const,
+  pagePerformance: (clientId: string, pageId: string) => ["website", clientId, "page-performance", pageId] as const,
+  pageSearch: (clientId: string, pageId: string) => ["website", clientId, "page-search", pageId] as const,
+  pageInspection: (clientId: string, pageId: string) => ["website", clientId, "page-inspection", pageId] as const,
+  pageHistory: (clientId: string, pageId: string) => ["website", clientId, "page-history", pageId] as const,
 };

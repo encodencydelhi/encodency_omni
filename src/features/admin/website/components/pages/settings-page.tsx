@@ -35,6 +35,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils/cn";
 import {
   useArchiveMonitoring,
+  useCrawlLimits,
   useSaveSettings,
   useWebsiteCapabilities,
   useWebsiteSettings,
@@ -83,6 +84,7 @@ export function WebsiteSettingsPage() {
   const target = useWebsiteTarget(clientId);
   const save = useSaveSettings(clientId);
   const archive = useArchiveMonitoring(clientId);
+  const crawlLimits = useCrawlLimits(clientId);
 
   const [section, setSection] = useUrlState<Section>("section", "website", SECTIONS.map((entry) => entry.value));
 
@@ -100,7 +102,9 @@ export function WebsiteSettingsPage() {
 
   const handleSave = useCallback(async () => {
     if (!edits) return;
-    await save.mutateAsync(edits);
+    const saved = (await save.mutateAsync(edits)) as WebsiteSettings & { crawlWarnings?: string[] };
+    // Anything the server had to adjust to fit its limits is shown, never applied silently.
+    if (saved?.crawlWarnings?.length) toast.warning("Some crawl settings were adjusted", { description: saved.crawlWarnings.join(" ") });
     setEdits(null);
   }, [edits, save]);
 
@@ -196,7 +200,7 @@ export function WebsiteSettingsPage() {
         <Card title="Crawling" icon={Bug} subtitle="How deep and how often we walk the site">
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="space-y-1">
-              <Field label="Crawl frequency" hint="Weekly suits most sites. Daily is for sites that change constantly.">
+              <Field label="Crawl frequency" hint="Not active yet: scans run only when you start them. Scheduled crawls arrive with the background scheduler.">
                 <FilterSelect
                   label="Crawl frequency"
                   value={draft.crawl.frequency}
@@ -211,20 +215,20 @@ export function WebsiteSettingsPage() {
                 />
               </Field>
 
-              <Field label="Crawl depth" hint="How many links away from the home page we follow.">
+              <Field label="Crawl depth" hint={`How many links away from the home page we follow. Server limit: ${crawlLimits.data?.limits.maxDepth ?? "…"}.`}>
                 <NumberInput
                   value={draft.crawl.depth}
-                  min={1}
-                  max={10}
+                  min={0}
+                  max={crawlLimits.data?.limits.maxDepth ?? 8}
                   onChange={(depth) => update({ crawl: { ...draft.crawl, depth } })}
                 />
               </Field>
 
-              <Field label="Maximum pages" hint="A hard stop, so an unexpected URL explosion cannot run away.">
+              <Field label="Maximum pages" hint={`A hard stop, so an unexpected URL explosion cannot run away. Server limit: ${crawlLimits.data?.limits.maxPages ?? "…"} pages per scan.`}>
                 <NumberInput
                   value={draft.crawl.maxPages}
-                  min={10}
-                  max={5000}
+                  min={1}
+                  max={crawlLimits.data?.limits.maxPages ?? 200}
                   step={10}
                   onChange={(maxPages) => update({ crawl: { ...draft.crawl, maxPages } })}
                 />
@@ -237,12 +241,56 @@ export function WebsiteSettingsPage() {
                 onChange={(respectRobots) => update({ crawl: { ...draft.crawl, respectRobots } })}
               />
 
+              <Field label="Parallel requests" hint={`Pages fetched at once. Higher is faster but heavier on the site. Server limit: ${crawlLimits.data?.limits.maxConcurrency ?? "…"}.`}>
+                <NumberInput
+                  value={draft.crawl.concurrency ?? 2}
+                  min={1}
+                  max={crawlLimits.data?.limits.maxConcurrency ?? 4}
+                  onChange={(concurrency) => update({ crawl: { ...draft.crawl, concurrency } })}
+                />
+              </Field>
+
+              <Field label="Request timeout (ms)" hint="How long to wait for one page before recording it as failed.">
+                <NumberInput
+                  value={draft.crawl.requestTimeoutMs ?? 12000}
+                  min={crawlLimits.data?.limits.timeoutMs.min ?? 2000}
+                  max={crawlLimits.data?.limits.timeoutMs.max ?? 30000}
+                  step={1000}
+                  onChange={(requestTimeoutMs) => update({ crawl: { ...draft.crawl, requestTimeoutMs } })}
+                />
+              </Field>
+
+              <ToggleRow
+                label="Discover pages from the sitemap"
+                hint="Reads sitemap.xml (and sitemap indexes) so pages nothing links to are found and checked."
+                checked={draft.crawl.discoverSitemap !== false}
+                onChange={(discoverSitemap) => update({ crawl: { ...draft.crawl, discoverSitemap } })}
+              />
+
+              <ToggleRow
+                label="Check external links"
+                hint={`Sends a light HEAD request to a bounded sample (up to ${crawlLimits.data?.limits.externalLinkChecks ?? 40}) of outbound links, rate limited per host.`}
+                checked={draft.crawl.checkExternalLinks !== false}
+                onChange={(checkExternalLinks) => update({ crawl: { ...draft.crawl, checkExternalLinks } })}
+              />
+
               <ToggleRow
                 label="Render JavaScript"
-                hint="Needed for sites that build their content client-side. Slower and heavier."
+                hint={
+                  crawlLimits.data?.javascriptRendering.available
+                    ? "Needed for sites that build their content client-side. Slower and heavier."
+                    : `Unavailable on this server: scans read the HTML the server returns. ${crawlLimits.data?.javascriptRendering.reason ?? ""}`
+                }
                 checked={draft.crawl.crawlJs}
+                disabled={!crawlLimits.data?.javascriptRendering.available}
                 onChange={(crawlJs) => update({ crawl: { ...draft.crawl, crawlJs } })}
               />
+
+              {crawlLimits.data && !crawlLimits.data.planEntitlements.integrated ? (
+                <p className="rounded-lg border border-[#E6EBF4] bg-[#F8FAFC] px-2.5 py-2 text-[10.5px] text-[#64748B]">
+                  {crawlLimits.data.planEntitlements.note}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-1">
@@ -597,7 +645,8 @@ export function WebsiteSettingsPage() {
       {isDirty ? (
         <div
           className={cn(
-            "fixed inset-x-0 bottom-0 z-30 border-t border-[#E6EBF4] bg-white/95 px-4 py-2.5 shadow-[0_-2px_8px_rgba(16,24,40,0.06)] backdrop-blur transition-[left] sm:px-6",
+            // Sits above the fixed admin footer (z-50, ~42px tall); at z-30/bottom-0 the footer covered the Save button.
+            "fixed inset-x-0 bottom-[42px] z-[60] border-t border-[#E6EBF4] bg-white/95 px-4 py-2.5 shadow-[0_-2px_8px_rgba(16,24,40,0.06)] backdrop-blur transition-[left] sm:px-6",
             isSidebarCollapsed ? "lg:left-[64px]" : "lg:left-[220px]",
           )}
         >
@@ -648,19 +697,21 @@ function ToggleRow({
   hint,
   checked,
   onChange,
+  disabled = false,
 }: {
   label: string;
   hint?: string;
   checked: boolean;
   onChange: (value: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 rounded-xl border border-[#E6EBF4] p-2.5">
+    <div className={cn("flex items-start justify-between gap-3 rounded-xl border border-[#E6EBF4] p-2.5", disabled && "opacity-60")}>
       <div className="min-w-0">
         <p className="text-[11.5px] font-semibold text-[#28354C]">{label}</p>
         {hint ? <p className="mt-0.5 text-[10.5px] leading-relaxed text-[#94A3B8]">{hint}</p> : null}
       </div>
-      <Switch aria-label={label} checked={checked} onCheckedChange={(value) => onChange(value === true)} />
+      <Switch aria-label={label} checked={checked && !disabled} disabled={disabled} onCheckedChange={(value) => onChange(value === true)} />
     </div>
   );
 }

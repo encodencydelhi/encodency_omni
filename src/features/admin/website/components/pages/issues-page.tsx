@@ -37,7 +37,6 @@ import {
 } from "../../data/selectors";
 import type { IssueCategory, IssueRecord, Severity } from "../../data/types";
 import { useWebsiteWorkspace } from "../website-workspace";
-import { useConfiguration } from "@/features/global-settings/data/hooks";
 import {
   Card,
   Chip,
@@ -91,8 +90,6 @@ export function WebsiteIssuesPage() {
   const pages = useWebsitePages(clientId);
   const setStatus = useSetIssueStatus(clientId);
   const { get, setMany } = useUrlParams();
-  const config = useConfiguration();
-  const aiEnabled = (config.data?.values["ai.provider"] as string | undefined) !== "none" && !!config.data?.values["ai.provider"];
 
   const [tab, setTab] = useUrlState<IssueTab>("severity", "all", TABS.map((entry) => entry.value));
   const search = get("q") ?? "";
@@ -441,7 +438,7 @@ function AIHelpModal({
           ) : (
             <div className="rounded-md border border-[#FDE3D4] bg-[#FFF3EE] p-3.5">
               <p className="text-[11.5px] leading-relaxed text-[#B45309]">
-                AI recommendations are disabled. Enable an AI provider in platform settings to get smart fix guidance for this issue.
+                Per-issue AI recommendations are not available yet. Every issue has a deterministic fix guide with steps and a way to verify the fix.
               </p>
             </div>
           )}

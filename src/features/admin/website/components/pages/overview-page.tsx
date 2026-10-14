@@ -46,6 +46,7 @@ import {
   useWebsitePerformance,
   useWebsiteScans,
   useWebsiteSeo,
+  useWebsiteMonitoring,
   useWebsiteSummary,
   useWebsiteTechnologies,
   useWebsiteTrend,
@@ -69,6 +70,7 @@ import {
   topProblemPages,
   vitalTone,
 } from "../../data/selectors";
+import { scanStatusLabel, scanStatusTone } from "../../data/scan-state";
 import { INTEGRATION_ORDER, integrationStatusLabel, integrationTone } from "../../data/capability-provider";
 import type { IssueRecord, PageRecord, Severity } from "../../data/types";
 import {
@@ -86,6 +88,7 @@ import {
 } from "../ui/kit";
 import { AXIS_PROPS, ChartLegend, GRID_PROPS, makeTooltip, SERIES_COLORS } from "../ui/charts";
 import { EmptyState, QueryErrorState, SkeletonBlock, SkeletonChart, SkeletonStats, SkeletonTable } from "../ui/states";
+import { AiExecutiveSummaryCard } from "../ui/ai-insights";
 import { useWebsiteWorkspace } from "../website-workspace";
 import { useUrlState } from "../use-url-state";
 
@@ -113,6 +116,7 @@ export function WebsiteOverviewPage() {
     useWebsiteWorkspace();
 
   const summary = useWebsiteSummary(clientId);
+  const monitoring = useWebsiteMonitoring(clientId);
   const issues = useWebsiteIssues(clientId);
   const pages = useWebsitePages(clientId);
   const seo = useWebsiteSeo(clientId);
@@ -132,7 +136,6 @@ export function WebsiteOverviewPage() {
   );
   const bySeverity = useMemo(() => countBySeverity(openIssues), [openIssues]);
   const problemPages = useMemo(() => topProblemPages(pages.data ?? [], 6), [pages.data]);
-  const aiAudit = (summary.data as (typeof summary.data & { aiAudit?: { executiveSummary?: string; priorities?: { title?: string; explanation?: string; impact?: string }[] } }) | undefined)?.aiAudit;
 
   return (
     <div className="space-y-1">
@@ -209,9 +212,16 @@ export function WebsiteOverviewPage() {
                 >
                   <dt className="text-[12px] font-medium text-[#4A5A73]">HTTPS</dt>
                   <dd className="flex items-center gap-1.5">
-                    <Chip tone={summary.data.target.https ? "good" : "bad"} icon={Lock}>
-                      {summary.data.target.https ? "Valid certificate" : "Not secure"}
-                    </Chip>
+                    {/* The URL scheme is not a certificate check: only a real TLS handshake can say "valid". */}
+                    {monitoring.data?.ssl?.certificateValid === true ? (
+                      <Chip tone="good" icon={Lock}>Valid certificate</Chip>
+                    ) : monitoring.data?.ssl?.certificateValid === false ? (
+                      <Chip tone="bad" icon={Lock}>Certificate invalid</Chip>
+                    ) : (
+                      <Chip tone={summary.data.target.https ? "muted" : "bad"} icon={Lock}>
+                        {summary.data.target.https ? "HTTPS URL · certificate not checked" : "Not secure"}
+                      </Chip>
+                    )}
                     <ArrowRight className="size-3 text-[#94A3B8]" />
                   </dd>
                 </button>
@@ -264,21 +274,27 @@ export function WebsiteOverviewPage() {
                   onClick={() => navigate("/admin/website/issues")}
                   className="group flex flex-col items-center justify-center gap-3 rounded-xl border border-[#E6EBF4] bg-gradient-to-br from-[#FAFCFF] to-[#F1F5F9] p-4 shadow-sm h-full cursor-pointer transition-all hover:-translate-y-0.5 hover:border-[#C9D6EA] hover:shadow-md hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35 text-center"
                 >
-                  <ScoreDial
-                    value={summary.data.scores.health}
-                    tone={scoreBand(summary.data.scores.health)}
-                    size={76}
-                    label={`OmniPlatform Website Health ${summary.data.scores.health}`}
-                  />
+                  {summary.data.scores.health === null ? (
+                    <div className="flex size-[76px] items-center justify-center rounded-full border border-dashed border-[#CBD5E1] text-center text-[10px] font-semibold leading-tight text-[#64748B]">
+                      Not scored
+                    </div>
+                  ) : (
+                    <ScoreDial
+                      value={summary.data.scores.health}
+                      tone={scoreBand(summary.data.scores.health)}
+                      size={76}
+                      label={`OmniPlatform Website Health ${summary.data.scores.health}`}
+                    />
+                  )}
                   <div className="flex flex-col items-center text-center">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] mb-0.5">
                       Overall Health
                     </p>
                     <p className="text-[14px] font-bold text-[#0F172A] leading-none mb-1 group-hover:text-[#2563EB] transition-colors">
-                      {scoreLabel(summary.data.scores.health)} →
+                      {summary.data.scores.health === null ? "No checks run yet" : `${scoreLabel(summary.data.scores.health)} →`}
                     </p>
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className={cn("inline-flex items-center rounded-md bg-[#F8FAFC] px-1.5 py-0.5 text-[9.5px] font-bold ring-1 ring-inset ring-[#E2E8F0]", toneText[scoreBand(summary.data.scores.health)])}>
+                    <div className={cn("items-center gap-1.5 mb-1.5", summary.data.scores.health === null ? "hidden" : "flex")}>
+                      <span className={cn("inline-flex items-center rounded-md bg-[#F8FAFC] px-1.5 py-0.5 text-[9.5px] font-bold ring-1 ring-inset ring-[#E2E8F0]", toneText[scoreBand(summary.data.scores.health ?? 0)])}>
                         {summary.data.scores.health}
                       </span>
                       <span className="mx-1 text-[#94A3B8]">/</span>
@@ -287,8 +303,9 @@ export function WebsiteOverviewPage() {
                       </span>
                     </div>
                     <span className="inline-flex items-center justify-center rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-[#475569] shadow-sm ring-1 ring-inset ring-[#E2E8F0]">
-                      {summary.data.scoreDeltas.health >= 0 ? "+" : ""}
-                      {summary.data.scoreDeltas.health} vs previous
+                      {summary.data.scoreDeltas.health == null
+                        ? "Baseline scan"
+                        : `${summary.data.scoreDeltas.health >= 0 ? "+" : ""}${summary.data.scoreDeltas.health} vs previous`}
                     </span>
                   </div>
                 </button>
@@ -306,20 +323,28 @@ export function WebsiteOverviewPage() {
                       onClick={() => navigate(score.href)}
                       className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-[#E6EBF4] bg-white p-2 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#C9D6EA] hover:shadow-md hover:bg-[#FAFCFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35 h-full"
                     >
-                      <ScoreDial
-                        value={score.value}
-                        tone={scoreBand(score.value)}
-                        size={52}
-                        label={`OmniPlatform ${score.label} score ${score.value}`}
-                      />
+                      {score.value === null ? (
+                        <div className="flex size-[52px] items-center justify-center rounded-full border border-dashed border-[#CBD5E1] text-center text-[8.5px] font-semibold leading-tight text-[#64748B]">
+                          Not measured
+                        </div>
+                      ) : (
+                        <ScoreDial
+                          value={score.value}
+                          tone={scoreBand(score.value)}
+                          size={52}
+                          label={`OmniPlatform ${score.label} score ${score.value}`}
+                        />
+                      )}
                       <span className="w-full text-center text-[10.5px] font-bold tracking-tight text-[#475569] truncate">
                         {score.label} →
                       </span>
-                      <div className="flex items-center justify-center gap-1 text-[9px] font-bold">
-                        <span className={toneText[scoreBand(score.value)]}>{score.value}</span>
-                        <span className="mx-1 text-[#94A3B8]">/</span>
-                        <span className="text-[#15803D]">100</span>
-                      </div>
+                      {score.value === null ? null : (
+                        <div className="flex items-center justify-center gap-1 text-[9px] font-bold">
+                          <span className={toneText[scoreBand(score.value)]}>{score.value}</span>
+                          <span className="mx-1 text-[#94A3B8]">/</span>
+                          <span className="text-[#15803D]">100</span>
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -374,35 +399,7 @@ export function WebsiteOverviewPage() {
       </div>
 
       {/* D + C — trend and needs attention */}
-      {aiAudit ? (
-        <Card
-          title="AI audit summary"
-          icon={FileSearch}
-          subtitle="Measured crawl data, independent model reviews, then a final merged assessment"
-          action={<LinkAction onClick={() => navigate("/admin/website/issues")}>View audit issues →</LinkAction>}
-        >
-          <p className="text-[12px] leading-relaxed text-[#4A5A73]">{aiAudit.executiveSummary}</p>
-          {aiAudit.priorities?.length ? (
-            <ul className="mt-3 grid gap-2 md:grid-cols-2">
-              {aiAudit.priorities.slice(0, 4).map((priority, index) => {
-                const tone = priorityTone(priority.impact);
-                return (
-                  <li
-                    key={`${priority.title}-${index}`}
-                    onClick={() => navigate("/admin/website/issues")}
-                    className={cn("rounded-r border border-l-2 py-1 pl-2.5 cursor-pointer transition-colors", tone.card, tone.rail)}
-                  >
-                    <p className="text-[11.5px] font-semibold text-[#28354C] hover:text-[#2563EB] transition-colors">
-                      {priority.title} →
-                    </p>
-                    <p className="mt-0.5 text-[10.5px] leading-relaxed text-[#6B7A94]">{priority.explanation}</p>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
-        </Card>
-      ) : null}
+      <AiExecutiveSummaryCard />
 
       <div className="grid gap-1 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <Card
@@ -682,8 +679,8 @@ export function WebsiteOverviewPage() {
                 >
                   <dt className="text-[12px] font-medium text-[#4A5A73]">Average page weight</dt>
                   <dd className="inline-flex items-center gap-2 text-[11px]">
-                    <span className={cn("font-bold bg-[#F1F5F9] px-1.5 py-0.5 rounded", performance.data.avgPageWeightKb <= 1536 ? "text-[#15803D]" : "text-[#B45309]")}>
-                      {formatWeight(performance.data.avgPageWeightKb)}
+                    <span className={cn("font-bold bg-[#F1F5F9] px-1.5 py-0.5 rounded", performance.data.avgPageWeightKb != null && performance.data.avgPageWeightKb <= 1536 ? "text-[#15803D]" : "text-[#B45309]")}>
+                      {performance.data.avgPageWeightKb == null ? "—" : formatWeight(performance.data.avgPageWeightKb)}
                     </span>
                     <span className="font-bold text-[#15803D] bg-[#F0FDF4] px-1.5 py-0.5 rounded border border-[#DCFCE7]">
                       &lt; 1.5 MB
@@ -698,8 +695,8 @@ export function WebsiteOverviewPage() {
                 >
                   <dt className="text-[12px] font-medium text-[#4A5A73]">Average requests</dt>
                   <dd className="inline-flex items-center gap-2 text-[11px]">
-                    <span className={cn("font-bold bg-[#F1F5F9] px-1.5 py-0.5 rounded", performance.data.avgRequests < 50 ? "text-[#15803D]" : "text-[#B45309]")}>
-                      {performance.data.avgRequests}
+                    <span className={cn("font-bold bg-[#F1F5F9] px-1.5 py-0.5 rounded", performance.data.avgRequests != null && performance.data.avgRequests < 50 ? "text-[#15803D]" : "text-[#B45309]")}>
+                      {performance.data.avgRequests ?? "—"}
                     </span>
                     <span className="font-bold text-[#15803D] bg-[#F0FDF4] px-1.5 py-0.5 rounded border border-[#DCFCE7]">
                       &lt; 50
@@ -853,18 +850,10 @@ export function WebsiteOverviewPage() {
                       {scanTypeLabel[record.type]}
                     </p>
                     <Chip
-                      tone={
-                        record.status === "completed"
-                          ? "good"
-                          : record.status === "partial"
-                            ? "warn"
-                            : record.status === "failed"
-                              ? "bad"
-                              : "info"
-                      }
+                      tone={scanStatusTone(record.status) === "muted" ? "info" : scanStatusTone(record.status)}
                       dot
                     >
-                      {record.status}
+                      {scanStatusLabel(record.status)}
                     </Chip>
                   </div>
                   <div className="flex flex-wrap gap-1.5">

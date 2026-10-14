@@ -22,7 +22,6 @@ import type {
   PerformanceData,
   RankTrackingData,
   ScanRecord,
-  ScoreSet,
   SeoData,
   Severity,
   TechnologyDetection,
@@ -1147,7 +1146,10 @@ function averageScore(pages: PageRecord[], key: "seoScore" | "performanceScore" 
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
 }
 
-function buildTrend(profile: ClientWebsiteProfile, scores: ScoreSet): TrendPoint[] {
+/** Demo-only: the mock dataset always has every score. The live API can return null for unmeasured ones. */
+type MockScores = { health: number; seo: number; performance: number; accessibility: number; bestPractices: number };
+
+function buildTrend(profile: ClientWebsiteProfile, scores: MockScores): TrendPoint[] {
   const rng = makeRng(`${profile.clientId}:trend`);
   const points: TrendPoint[] = [];
   for (let i = 89; i >= 0; i -= 1) {
@@ -2235,7 +2237,7 @@ export function buildDataset(profile: ClientWebsiteProfile): WebsiteDataset | nu
   const issues = buildIssues(profile, basePages);
   const pages = applyIssueCounts(basePages, issues);
 
-  const scores: ScoreSet = {
+  const scores: MockScores = {
     seo: averageScore(pages, "seoScore"),
     performance: averageScore(pages, "performanceScore"),
     accessibility: averageScore(pages, "accessibilityScore"),
