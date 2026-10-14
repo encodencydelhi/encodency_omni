@@ -277,15 +277,15 @@ export function WebsiteOverviewPage() {
                     <p className="text-[14px] font-bold text-[#0F172A] leading-none mb-1 group-hover:text-[#2563EB] transition-colors">
                       {scoreLabel(summary.data.scores.health)} →
                     </p>
-                     <div className="flex items-center gap-1.5 mb-1.5">
-                       <span className={cn("inline-flex items-center rounded-md bg-[#F8FAFC] px-1.5 py-0.5 text-[9.5px] font-bold ring-1 ring-inset ring-[#E2E8F0]", toneText[scoreBand(summary.data.scores.health)])}>
-                         {summary.data.scores.health}
-                       </span>
-                       <span className="mx-1 text-[#94A3B8]">/</span>
-                       <span className="inline-flex items-center rounded-md bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
-                         100
-                       </span>
-                     </div>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className={cn("inline-flex items-center rounded-md bg-[#F8FAFC] px-1.5 py-0.5 text-[9.5px] font-bold ring-1 ring-inset ring-[#E2E8F0]", toneText[scoreBand(summary.data.scores.health)])}>
+                        {summary.data.scores.health}
+                      </span>
+                      <span className="mx-1 text-[#94A3B8]">/</span>
+                      <span className="inline-flex items-center rounded-md bg-[#F0FDF4] px-1.5 py-0.5 text-[9.5px] font-bold text-[#15803D] ring-1 ring-inset ring-[#BBF7D0]">
+                        100
+                      </span>
+                    </div>
                     <span className="inline-flex items-center justify-center rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-[#475569] shadow-sm ring-1 ring-inset ring-[#E2E8F0]">
                       {summary.data.scoreDeltas.health >= 0 ? "+" : ""}
                       {summary.data.scoreDeltas.health} vs previous
@@ -312,14 +312,14 @@ export function WebsiteOverviewPage() {
                         size={52}
                         label={`OmniPlatform ${score.label} score ${score.value}`}
                       />
-<span className="w-full text-center text-[10.5px] font-bold tracking-tight text-[#475569] truncate">
-  {score.label} →
-</span>
-<div className="flex items-center justify-center gap-1 text-[9px] font-bold">
-  <span className={toneText[scoreBand(score.value)]}>{score.value}</span>
-  <span className="mx-1 text-[#94A3B8]">/</span>
-  <span className="text-[#15803D]">100</span>
-</div>
+                      <span className="w-full text-center text-[10.5px] font-bold tracking-tight text-[#475569] truncate">
+                        {score.label} →
+                      </span>
+                      <div className="flex items-center justify-center gap-1 text-[9px] font-bold">
+                        <span className={toneText[scoreBand(score.value)]}>{score.value}</span>
+                        <span className="mx-1 text-[#94A3B8]">/</span>
+                        <span className="text-[#15803D]">100</span>
+                      </div>
                     </button>
                   ))}
                 </div>
