@@ -119,7 +119,7 @@ export function WebsiteBacklinkAnalysisPage() {
     return (
       <div className="space-y-3">
         <SkeletonStats count={5} />
-        <Card title="Organic landing pages">
+        <Card title="Organic Landing Pages">
           <SkeletonTable />
         </Card>
       </div>
@@ -173,7 +173,7 @@ export function WebsiteBacklinkAnalysisPage() {
         ]}
       />
 
-      <Card title="Landing pages" subtitle="Click a row to inspect available Search Console details." bodyClassName="p-0">
+      <Card title="Landing Pages" subtitle="Click a row to inspect available Search Console details." bodyClassName="p-0">
         <div className="flex flex-wrap items-center gap-2 border-b border-[#EEF2F8] p-3">
           <SearchInput value={search} onChange={setSearch} placeholder="Search page URL" className="min-w-[240px] flex-1" />
           <FilterSelect
@@ -205,6 +205,7 @@ export function WebsiteBacklinkAnalysisPage() {
           />
         </div>
         <DataTable
+          desktopClassName="[&_th]:whitespace-nowrap [&_th]:!capitalize [&_th]:tracking-normal [&_td]:whitespace-nowrap"
           columns={columns}
           rows={rows}
           getRowId={(row) => row.page}
@@ -251,7 +252,7 @@ function LandingPageDrawer({
     <Sheet open={Boolean(page)} onOpenChange={(open) => (open ? undefined : onClose())}>
       <SheetContent className="w-full max-w-xl border-[#E6EBF4] bg-white p-0 sm:max-w-xl">
         <SheetHeader className="border-[#EEF2F8] px-5 py-4 pr-12">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">Organic landing page</span>
+          <span className="text-[11px] font-semibold capitalize text-[#6B7A94]">Organic landing page</span>
           <SheetTitle className="truncate text-[15px] font-semibold text-[#111C3A]">{page?.page ?? "Page"}</SheetTitle>
         </SheetHeader>
         <SheetBody className="px-5 py-4">
@@ -269,7 +270,7 @@ function LandingPageDrawer({
                 <KeyValue label="Search visibility">{page.position <= 10 ? "Top 10" : page.position <= 20 ? "Top 20" : "Beyond 20"}</KeyValue>
               </dl>
               <div>
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">Contributing queries</p>
+                <p className="mb-2 text-[11px] font-semibold capitalize text-[#6B7A94]">Contributing queries</p>
                 {related.length ? (
                   <dl className="divide-y divide-[#F2F5FA] rounded-lg border border-[#E6EBF4] px-3">
                     {related.map((query) => (
@@ -285,7 +286,7 @@ function LandingPageDrawer({
                 )}
               </div>
               <div className="rounded-lg border border-[#E6EBF4] p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">Historical charts</p>
+                <p className="text-[11px] font-semibold capitalize text-[#6B7A94]">Historical charts</p>
                 <p className="mt-1 text-[12px] text-[#4A5A73]">The current API response does not include per-page historical snapshots.</p>
               </div>
             </div>

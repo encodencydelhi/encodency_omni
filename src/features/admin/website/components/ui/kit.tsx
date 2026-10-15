@@ -684,6 +684,7 @@ export function DataTable<T>({
   rowActions,
   caption,
   dense = false,
+  desktopClassName,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -695,6 +696,7 @@ export function DataTable<T>({
   rowActions?: (row: T) => ReactNode;
   caption?: string;
   dense?: boolean;
+  desktopClassName?: string;
 }) {
   if (rows.length === 0) return <>{empty}</>;
 
@@ -712,7 +714,7 @@ export function DataTable<T>({
   return (
     <>
       {/* Desktop / tablet: real table */}
-      <div className="scrollbar-thin hidden overflow-x-auto md:block">
+      <div className={cn("scrollbar-thin hidden overflow-x-auto md:block", desktopClassName)}>
         <table className="w-full min-w-full border-collapse">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <thead>

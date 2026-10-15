@@ -6,6 +6,7 @@ import { ChevronRight, LayoutGrid } from "lucide-react";
 import Link from "next/link";
 import { useAdminContext } from "./admin-context";
 import { cn } from "@/lib/utils/cn";
+import { InfrastructureLiveStatus } from "./infrastructure-live-status";
 import { WebsiteLiveStatus } from "./website-live-status";
 
 export function AdminBreadcrumb() {
@@ -84,7 +85,10 @@ export function AdminBreadcrumb() {
             </li>
           )}
         </ol>
-        <WebsiteLiveStatus />
+        <div className="ml-auto flex items-center gap-1.5">
+          <WebsiteLiveStatus />
+          <InfrastructureLiveStatus />
+        </div>
       </nav>
     </div>
   );

@@ -82,7 +82,7 @@ export function WebsiteKeywordResearchPage() {
     }, {});
     return [
       { value: "all", label: "All intents", count: keywordData.length },
-      ...Object.entries(counts).map(([value, count]) => ({ value, label: value, count })),
+      ...Object.entries(counts).map(([value, count]) => ({ value, label: value.charAt(0).toUpperCase() + value.slice(1), count })),
     ];
   }, [keywordData]);
 
@@ -104,9 +104,9 @@ export function WebsiteKeywordResearchPage() {
         header: "Keyword",
         primary: true,
         sortValue: (row) => row.query,
-        cell: (row) => <span className="font-semibold text-[#1F2A44]">{row.query}</span>,
+        cell: (row) => <span className="font-semibold capitalize text-[#1F2A44]">{row.query}</span>,
       },
-      { key: "intent", header: "Intent", cell: (row) => <Chip tone={intentTone(row.intent)}>{row.intent}</Chip> },
+      { key: "intent", header: "Intent", cell: (row) => <Chip tone={intentTone(row.intent)}><span className="capitalize">{row.intent}</span></Chip> },
       { key: "clicks", header: "Clicks", align: "right", sortValue: (row) => row.clicks, cell: (row) => formatNumber(row.clicks) },
       { key: "impressions", header: "Impressions", align: "right", sortValue: (row) => row.impressions, cell: (row) => formatNumber(row.impressions) },
       { key: "ctr", header: "CTR", align: "right", sortValue: (row) => row.ctr, cell: (row) => formatPct(row.ctr) },
@@ -157,7 +157,7 @@ export function WebsiteKeywordResearchPage() {
     return (
       <div className="space-y-3">
         <SkeletonStats count={5} />
-        <Card title="Keyword research">
+        <Card title="Keyword Research">
           <SkeletonTable />
         </Card>
       </div>
@@ -248,6 +248,7 @@ export function WebsiteKeywordResearchPage() {
           />
         </div>
         <DataTable
+          desktopClassName="[&_th]:whitespace-nowrap [&_th]:!capitalize [&_th]:tracking-normal [&_td]:whitespace-nowrap"
           columns={columns}
           rows={rows}
           getRowId={(row) => row.query}
@@ -284,8 +285,8 @@ function KeywordDrawer({
     <Sheet open={Boolean(keyword)} onOpenChange={(open) => (open ? undefined : onClose())}>
       <SheetContent className="w-full max-w-xl border-[#E6EBF4] bg-white p-0 sm:max-w-xl">
         <SheetHeader className="border-[#EEF2F8] px-5 py-4 pr-12">
-          <Chip tone={keyword ? intentTone(keyword.intent) : "muted"}>{keyword?.intent ?? "Intent"}</Chip>
-          <SheetTitle className="text-[15px] font-semibold text-[#111C3A]">{keyword?.query ?? "Keyword"}</SheetTitle>
+          <Chip tone={keyword ? intentTone(keyword.intent) : "muted"}><span className="capitalize">{keyword?.intent ?? "Intent"}</span></Chip>
+          <SheetTitle className="text-[15px] font-semibold capitalize text-[#111C3A]">{keyword?.query ?? "Keyword"}</SheetTitle>
         </SheetHeader>
         <SheetBody className="px-5 py-4">
           {keyword ? (
@@ -299,13 +300,13 @@ function KeywordDrawer({
                 <DetailMetric label="Search volume" value="Not available" tone="muted" />
               </div>
               <div className="rounded-lg border border-[#E6EBF4] p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">Historical trend</p>
+                <p className="text-[11px] font-semibold capitalize text-[#6B7A94]">Historical trend</p>
                 <p className="mt-1 text-[12px] leading-relaxed text-[#4A5A73]">
                   Per-keyword historical snapshots are not available in the current API response. The table uses the current Search Console period only.
                 </p>
               </div>
               <div>
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">Associated landing pages</p>
+                <p className="mb-2 text-[11px] font-semibold capitalize text-[#6B7A94]">Associated landing pages</p>
                 {pageMatches.length ? (
                   <dl className="divide-y divide-[#F2F5FA] rounded-lg border border-[#E6EBF4] px-3">
                     {pageMatches.map((page) => (
@@ -321,7 +322,7 @@ function KeywordDrawer({
                 )}
               </div>
               <div className="rounded-lg bg-[#F7F9FC] p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">SEO opportunities</p>
+                <p className="text-[11px] font-semibold text-[#6B7A94]">SEO Opportunities</p>
                 <p className="mt-1 text-[12px] text-[#4A5A73]">
                   Improve pages where this query has high impressions and low CTR, or where average position is outside the top 10. AI recommendations appear here once integrated.
                 </p>

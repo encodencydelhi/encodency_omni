@@ -2,7 +2,7 @@ import {
   BarChart3, Blocks, Bot, BriefcaseBusiness, CalendarDays, ContactRound, FileChartColumn,
   FolderKanban, Gauge, Globe2, Hash, Image, Landmark, ListChecks, Network,
   Megaphone, MessageCircle, PanelsTopLeft, Settings, ShieldCheck, Target,
-  Share2, UsersRound, Video, WalletCards, type LucideIcon,
+  Server, Share2, UsersRound, Video, WalletCards, type LucideIcon,
 } from "lucide-react";
 
 export interface AdminNavItem { label: string; href: string; icon: LucideIcon; }
@@ -32,6 +32,7 @@ export const adminNavigation: AdminNavSection[] = [
       { label: "YouTube", href: "/admin/youtube", icon: Video },
       { label: "X (Twitter)", href: "/admin/x", icon: Hash },
       { label: "Website", href: "/admin/website", icon: Globe2 },
+      { label: "Servers & Domains", href: "/admin/infrastructure", icon: Server },
     ]
   },
   // Temporarily hidden from the sidebar. Routes remain available directly.

@@ -102,7 +102,7 @@ export function WebsiteRankTrackingPage() {
 
   const columns = useMemo<Column<RankRow>[]>(
     () => [
-      { key: "keyword", header: "Keyword", primary: true, sortValue: (row) => row.keyword, cell: (row) => <span className="font-semibold text-[#1F2A44]">{row.keyword}</span> },
+      { key: "keyword", header: "Keyword", primary: true, sortValue: (row) => row.keyword, cell: (row) => <span className="font-semibold capitalize text-[#1F2A44]">{row.keyword}</span> },
       { key: "current", header: "Current avg position", align: "right", sortValue: (row) => row.currentPosition, cell: (row) => formatPosition(row.currentPosition) },
       { key: "previous", header: "Previous avg position", align: "right", sortValue: (row) => row.previousPosition ?? 999, cell: (row) => formatPosition(row.previousPosition) },
       {
@@ -155,7 +155,7 @@ export function WebsiteRankTrackingPage() {
     return (
       <div className="space-y-3">
         <SkeletonStats count={5} />
-        <Card title="Rank tracking">
+        <Card title="Rank Tracking">
           <SkeletonTable />
         </Card>
       </div>
@@ -198,7 +198,7 @@ export function WebsiteRankTrackingPage() {
         ]}
       />
 
-      <Card title="Ranking performance" subtitle="Full-width query position table with period-over-period movement." bodyClassName="p-0">
+      <Card title="Ranking Performance" subtitle="Full-width query position table with period-over-period movement." bodyClassName="p-0">
         <div className="flex flex-wrap items-center gap-2 border-b border-[#EEF2F8] p-3">
           <SearchInput value={search} onChange={setSearch} placeholder="Search keyword" className="min-w-[220px] flex-1" />
           <FilterSelect
@@ -244,6 +244,7 @@ export function WebsiteRankTrackingPage() {
           />
         </div>
         <DataTable
+          desktopClassName="[&_th]:whitespace-nowrap [&_th]:!capitalize [&_th]:tracking-normal [&_td]:whitespace-nowrap"
           columns={columns}
           rows={rows}
           getRowId={(row) => row.keyword}
@@ -272,8 +273,8 @@ function RankDrawer({ row, onClose }: { row: RankRow | null; onClose: () => void
     <Sheet open={Boolean(row)} onOpenChange={(open) => (open ? undefined : onClose())}>
       <SheetContent className="w-full max-w-xl border-[#E6EBF4] bg-white p-0 sm:max-w-xl">
         <SheetHeader className="border-[#EEF2F8] px-5 py-4 pr-12">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">Ranking detail</span>
-          <SheetTitle className="text-[15px] font-semibold text-[#111C3A]">{row?.keyword ?? "Keyword"}</SheetTitle>
+          <span className="text-[11px] font-semibold capitalize text-[#6B7A94]">Ranking detail</span>
+          <SheetTitle className="text-[15px] font-semibold capitalize text-[#111C3A]">{row?.keyword ?? "Keyword"}</SheetTitle>
         </SheetHeader>
         <SheetBody className="px-5 py-4">
           {row ? (
@@ -292,7 +293,7 @@ function RankDrawer({ row, onClose }: { row: RankRow | null; onClose: () => void
                 <KeyValue label="Click/impression change">Not available in current response</KeyValue>
               </dl>
               <div className="rounded-lg border border-[#E6EBF4] p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">Historical data</p>
+                <p className="text-[11px] font-semibold capitalize text-[#6B7A94]">Historical data</p>
                 {row.history.length ? (
                   <p className="mt-1 text-[12px] text-[#4A5A73]">
                     {row.history.length} historical position snapshot{row.history.length === 1 ? "" : "s"} are available for this keyword.
@@ -302,7 +303,7 @@ function RankDrawer({ row, onClose }: { row: RankRow | null; onClose: () => void
                 )}
               </div>
               <div className="rounded-lg bg-[#F7F9FC] p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#6B7A94]">Optimization opportunities</p>
+                <p className="text-[11px] font-semibold capitalize text-[#6B7A94]">Optimization opportunities</p>
                 <p className="mt-1 text-[12px] text-[#4A5A73]">
                   Prioritize queries with high impressions, weak CTR, or positions outside the top 10. AI insights appear here once integrated.
                 </p>
