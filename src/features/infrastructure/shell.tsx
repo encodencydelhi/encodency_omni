@@ -18,6 +18,7 @@ const TABS = [
   { href: "/admin/infrastructure/billing", label: "Billing & Renewals" },
   { href: "/admin/infrastructure/providers", label: "Providers & Integrations" },
   { href: "/admin/infrastructure/alerts", label: "Alerts & History" },
+  { href: "/admin/infrastructure/reports", label: "Reports" },
 ];
 
 function activeHref(pathname: string): string {
