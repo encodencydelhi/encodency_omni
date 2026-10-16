@@ -168,10 +168,10 @@ export function ExecutionTracesTable({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-1">
       
       {/* Top Filter Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 bg-white p-3 rounded-xl border border-[#E2E8F0] shadow-2xs">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 bg-white px-3 py-2 rounded-lg border border-[#E2E8F0] shadow-sm">
         
         {/* Dropdown Filters Group */}
         <div className="flex flex-wrap items-center gap-2">
@@ -297,7 +297,7 @@ export function ExecutionTracesTable({
           <table className="w-full text-left text-[11.5px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] text-[#64748B] border-b border-[#E2E8F0] font-semibold text-[10.5px]">
               <tr>
-                <th className="pl-3.5 pr-2 py-2.5 w-[24px]">
+                <th className="pl-3 pr-1 py-2 w-[24px]">
                   <input
                     type="checkbox"
                     checked={selectedRunIds.length === filteredRuns.length && filteredRuns.length > 0}
@@ -305,15 +305,15 @@ export function ExecutionTracesTable({
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                 </th>
-                <th className="px-2 py-2.5 font-bold">Run ID</th>
-                <th className="px-2 py-2.5 font-bold">Workflow</th>
-                <th className="px-2 py-2.5 font-bold">Trigger / Source</th>
-                <th className="px-2 py-2.5 font-bold">Target Entity</th>
-                <th className="px-2 py-2.5 font-bold">Started At</th>
-                <th className="px-2 py-2.5 font-bold">Duration</th>
-                <th className="px-2 py-2.5 font-bold">Steps</th>
-                <th className="px-2 py-2.5 font-bold">Status</th>
-                <th className="px-3.5 py-2.5 text-right font-bold">Actions</th>
+                <th className="px-2 py-2 font-semibold">Run ID</th>
+                <th className="px-2 py-2 font-semibold">Workflow</th>
+                <th className="hidden px-2 py-2 font-semibold xl:table-cell">Trigger / Source</th>
+                <th className="hidden px-2 py-2 font-semibold xl:table-cell">Target Entity</th>
+                <th className="px-2 py-2 font-semibold">Started At</th>
+                <th className="px-2 py-2 font-semibold">Duration</th>
+                <th className="px-2 py-2 font-semibold">Steps</th>
+                <th className="px-2 py-2 font-semibold">Status</th>
+                <th className="px-3 py-2 text-right font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F1F5F9]">
@@ -346,7 +346,7 @@ export function ExecutionTracesTable({
                         isSelected ? "bg-blue-50/40" : ""
                       }`}
                     >
-                      <td className="pl-3.5 pr-2 py-3" onClick={(e) => e.stopPropagation()}>
+                      <td className="pl-3 pr-1 py-2" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={isSelected}
@@ -355,14 +355,14 @@ export function ExecutionTracesTable({
                         />
                       </td>
 
-                      <td className="px-2 py-3">
+                      <td className="px-2 py-2">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-[#111C3A] font-bold group-hover:text-[#2563EB]">
-                            {run.id}
+                          <span className="font-mono text-[#111C3A] font-bold group-hover:text-[#2563EB]" title={run.id}>
+                            {run.id.slice(0, 8)}
                           </span>
                           <button
                             onClick={(e) => handleCopyId(e, run.id)}
-                            className="p-1 text-[#94A3B8] hover:text-[#111C3A] rounded transition-colors"
+                            className="hidden p-1 text-[#94A3B8] hover:text-[#111C3A] rounded transition-colors xl:inline-flex"
                             title="Copy Run ID"
                           >
                             {copiedId === run.id ? <Check className="size-3 text-[#10B981]" /> : <Copy className="size-3" />}
@@ -370,7 +370,7 @@ export function ExecutionTracesTable({
                         </div>
                       </td>
 
-                      <td className="px-2 py-3">
+                      <td className="px-2 py-2">
                         <div className="flex items-center gap-2">
                           <div className="p-1 rounded-md bg-slate-100 text-slate-700">
                             {getChannelIcon(run.channel)}
@@ -386,13 +386,13 @@ export function ExecutionTracesTable({
                         </div>
                       </td>
 
-                      <td className="px-2 py-3">
+                      <td className="hidden px-2 py-2 xl:table-cell">
                         <span className="text-[#334155] font-medium">
                           {run.triggerSource || "Webhook"}
                         </span>
                       </td>
 
-                      <td className="px-2 py-3">
+                      <td className="hidden px-2 py-2 xl:table-cell">
                         <div className="max-w-[170px] truncate">
                           <div className="font-bold text-[#111C3A] truncate">{run.triggerEntity.label}</div>
                           {run.triggerEntity.subLabel && (
@@ -401,7 +401,7 @@ export function ExecutionTracesTable({
                         </div>
                       </td>
 
-                      <td className="px-2 py-3 text-[#64748B]">
+                      <td className="px-2 py-2 text-[#64748B]">
                         {new Date(run.startedAt).toLocaleString("en-US", { 
                           month: "short", 
                           day: "numeric", 
@@ -410,24 +410,24 @@ export function ExecutionTracesTable({
                         })}
                       </td>
 
-                      <td className="px-2 py-3 font-medium text-[#334155]">
+                      <td className="px-2 py-2 font-medium text-[#334155]">
                         {run.durationMs < 1000 ? `${run.durationMs}ms` : `${(run.durationMs / 1000).toFixed(1)}s`}
                       </td>
 
-                      <td className="px-2 py-3">
+                      <td className="px-2 py-2">
                         <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-[#334155]">
                           {successSteps}/{run.steps.length}
                           {run.status === "Failed" && (
-                            <span className="text-[9.5px] text-[#EF4444] font-semibold">(failed)</span>
+                            <span className="hidden text-[9.5px] text-[#EF4444] font-semibold xl:inline">(failed)</span>
                           )}
                         </span>
                       </td>
 
-                      <td className="px-2 py-3">
+                      <td className="px-2 py-2">
                         {getStatusBadge(run.status)}
                       </td>
 
-                      <td className="px-3.5 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-3 py-2 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => onSelectRun(run)}

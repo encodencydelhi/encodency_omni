@@ -227,7 +227,7 @@ export function AutomationLogsPage() {
 
   const tabsConfig = [
     { value: "traces" as const, label: "Execution Traces", count: visibleRuns.length },
-    { value: "console" as const, label: "Console Stream (sample)", count: consoleLogs.length },
+    { value: "console" as const, label: demoMode ? "Console Stream (Sample)" : "Console Stream", count: consoleLogs.length },
     { value: "dlq" as const, label: "Dead Letter Queue (DLQ)", count: failedRuns.length },
   ];
 
@@ -250,7 +250,7 @@ export function AutomationLogsPage() {
   }
 
   return (
-    <div className="space-y-4 pb-12">
+    <div className="space-y-1 pb-8">
       
       {/* Top Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -317,127 +317,127 @@ export function AutomationLogsPage() {
 
       {/* KPI Metrics Row */}
       {healthMetrics && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-1">
           
           {/* 1. Total Executions */}
-          <div className="bg-white rounded-xl border border-[#E2E8F0] p-3 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="bg-white rounded-lg border border-[#E2E8F0] px-3 py-2 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center gap-2 mb-1">
               <div className="size-7 rounded-lg bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0">
                 <Play className="size-3.5" fill="currentColor" />
               </div>
               <h4 className="text-[12px] font-medium text-[#64748B] truncate">Total Runs</h4>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[20px] font-bold text-[#111C3A] tracking-tight">
+              <span className="text-[18px] font-bold leading-tight text-[#111C3A] tracking-tight">
                 {healthMetrics.totalExecutions.value.toLocaleString()}
               </span>
               <span className="text-[11px] font-bold text-[#10B981] flex items-center gap-0.5">
                 <TrendingUp className="size-3" /> {healthMetrics.totalExecutions.trend}%
               </span>
             </div>
-            <p className="text-[10px] text-[#94A3B8] mt-0.5">vs last 30 days</p>
+            <p className="text-[10px] leading-tight text-[#94A3B8] mt-0.5 truncate">vs last 30 days</p>
           </div>
 
           {/* 2. Success Rate */}
-          <div className="bg-white rounded-xl border border-[#E2E8F0] p-3 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="bg-white rounded-lg border border-[#E2E8F0] px-3 py-2 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center gap-2 mb-1">
               <div className="size-7 rounded-lg bg-[#ECFDF5] text-[#10B981] flex items-center justify-center shrink-0">
                 <CheckCircle2 className="size-3.5" />
               </div>
               <h4 className="text-[12px] font-medium text-[#64748B] truncate">Success Rate</h4>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[20px] font-bold text-[#111C3A] tracking-tight">
-                {healthMetrics.successRate.value}%
+              <span className="text-[18px] font-bold leading-tight text-[#111C3A] tracking-tight">
+                {healthMetrics.successRate.value === null ? "—" : `${Number(healthMetrics.successRate.value).toFixed(1).replace(/\.0$/, "")}%`}
               </span>
               <span className="text-[11px] font-bold text-[#10B981] flex items-center gap-0.5">
                 <TrendingUp className="size-3" /> {healthMetrics.successRate.trend}%
               </span>
             </div>
-            <p className="text-[10px] text-[#94A3B8] mt-0.5">Reliable</p>
+            <p className="text-[10px] leading-tight text-[#94A3B8] mt-0.5 truncate">Reliable</p>
           </div>
 
           {/* 3. Failed & DLQ */}
-          <div className="bg-white rounded-xl border border-[#E2E8F0] p-3 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="bg-white rounded-lg border border-[#E2E8F0] px-3 py-2 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center gap-2 mb-1">
               <div className="size-7 rounded-lg bg-[#FEF2F2] text-[#EF4444] flex items-center justify-center shrink-0">
                 <XCircle className="size-3.5" />
               </div>
               <h4 className="text-[12px] font-medium text-[#64748B] truncate">Failed Runs</h4>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[20px] font-bold text-[#111C3A] tracking-tight">
+              <span className="text-[18px] font-bold leading-tight text-[#111C3A] tracking-tight">
                 {failedRuns.length}
               </span>
               <span className="text-[11px] font-bold text-[#EF4444] flex items-center gap-0.5">
                 <TrendingDown className="size-3" /> {Math.abs(healthMetrics.failedRuns.trend)}%
               </span>
             </div>
-            <p className="text-[10px] text-[#94A3B8] mt-0.5">requires review</p>
+            <p className="text-[10px] leading-tight text-[#94A3B8] mt-0.5 truncate">requires review</p>
           </div>
 
           {/* 4. Active Queue */}
-          <div className="bg-white rounded-xl border border-[#E2E8F0] p-3 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="bg-white rounded-lg border border-[#E2E8F0] px-3 py-2 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center gap-2 mb-1">
               <div className="size-7 rounded-lg bg-[#F5F3FF] text-[#8B5CF6] flex items-center justify-center shrink-0">
                 <Clock className="size-3.5" />
               </div>
               <h4 className="text-[12px] font-medium text-[#64748B] truncate">Queue In-Flight</h4>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[20px] font-bold text-[#111C3A] tracking-tight">
+              <span className="text-[18px] font-bold leading-tight text-[#111C3A] tracking-tight">
                 {healthMetrics.activeQueue.count}
               </span>
               <span className="text-[11px] font-bold text-[#10B981] flex items-center gap-0.5">
                 ~{healthMetrics.activeQueue.avgWaitTime}
               </span>
             </div>
-            <p className="text-[10px] text-[#94A3B8] mt-0.5">avg processing wait</p>
+            <p className="text-[10px] leading-tight text-[#94A3B8] mt-0.5 truncate">avg processing wait</p>
           </div>
 
           {/* 5. API Rate Limits */}
-          <div className="bg-white rounded-xl border border-[#E2E8F0] p-3 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="bg-white rounded-lg border border-[#E2E8F0] px-3 py-2 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center gap-2 mb-1">
               <div className="size-7 rounded-lg bg-[#FFFBEB] text-[#F59E0B] flex items-center justify-center shrink-0">
                 <Zap className="size-3.5" />
               </div>
               <h4 className="text-[12px] font-medium text-[#64748B] truncate">API Quota</h4>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[20px] font-bold text-[#111C3A] tracking-tight">
+              <span className="text-[18px] font-bold leading-tight text-[#111C3A] tracking-tight">
                 {healthMetrics.rateLimits?.meta?.percentage != null ? `${healthMetrics.rateLimits.meta.percentage}%` : "100%"}
               </span>
               <span className="text-[11px] font-bold text-[#10B981] flex items-center gap-0.5">
                 Healthy
               </span>
             </div>
-            <p className="text-[10px] text-[#94A3B8] mt-0.5">remaining quota</p>
+            <p className="text-[10px] leading-tight text-[#94A3B8] mt-0.5 truncate">remaining quota</p>
           </div>
 
           {/* 6. Webhook Ingestion */}
-          <div className="bg-white rounded-xl border border-[#E2E8F0] p-3 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="bg-white rounded-lg border border-[#E2E8F0] px-3 py-2 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center gap-2 mb-1">
               <div className="size-7 rounded-lg bg-[#EBF5FF] text-[#2563EB] flex items-center justify-center shrink-0">
                 <Radio className="size-3.5" />
               </div>
               <h4 className="text-[12px] font-medium text-[#64748B] truncate">Ingestion Stream</h4>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[20px] font-bold text-[#111C3A] tracking-tight">
+              <span className="text-[18px] font-bold leading-tight text-[#111C3A] tracking-tight">
                 {healthMetrics.webhookIngestion.eventsPerMin}
               </span>
               <span className="text-[11px] font-bold text-[#10B981] flex items-center gap-0.5">
                 ev/m
               </span>
             </div>
-            <p className="text-[10px] text-[#94A3B8] mt-0.5">{healthMetrics.webhookIngestion.uptime}% uptime</p>
+            <p className="text-[10px] leading-tight text-[#94A3B8] mt-0.5 truncate">{healthMetrics.webhookIngestion.uptime === null ? "Uptime unavailable" : `${Number(healthMetrics.webhookIngestion.uptime).toFixed(1)}% uptime`}</p>
           </div>
 
         </div>
       )}
 
       {correlationFilter ? (
-        <div className="mb-2 flex items-center justify-between rounded border border-blue-200 bg-blue-50 px-3 py-1.5 text-[11.5px] text-blue-900" role="status">
+        <div className="mb-1 flex items-center justify-between rounded border border-blue-200 bg-blue-50 px-3 py-1.5 text-[11.5px] text-blue-900" role="status">
           <span>Showing runs with correlation ID <code className="font-mono">{correlationFilter}</code> ({visibleRuns.length} found)</span>
           <button type="button" onClick={() => setCorrelationFilter("")} className="font-semibold underline">Clear Filter</button>
         </div>
@@ -452,7 +452,7 @@ export function AutomationLogsPage() {
       />
 
       {/* Active Tab View */}
-      <div className="mt-3">
+      <div className="mt-1">
         {activeTab === "traces" && (
           <ExecutionTracesTable
             runs={visibleRuns}
