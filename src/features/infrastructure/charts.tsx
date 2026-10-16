@@ -7,6 +7,11 @@ import { cn } from "@/lib/utils/cn";
 /** Series palette: distinct hues that stay legible on light and dark surfaces. Colour is never the only cue (legend + tooltip text). */
 export const SERIES = { cpu: "#dc2626", mem: "#2563eb", disk: "#d97706", rx: "#059669", tx: "#7c3aed", load: "#0891b2", swap: "#db2777", muted: "#94a3b8" } as const;
 
+const TOOLTIP_STYLE = { fontSize: 11, borderRadius: 8, border: "1px solid #dbe4f3", boxShadow: "0 10px 24px -12px rgba(30,58,138,0.35)", padding: "6px 10px", background: "rgba(255,255,255,0.97)" };
+const GRID = "#e6ecf5";
+/** Soft tinted panel behind every chart so plots stand out from the white card. */
+const PLOT = "rounded-md bg-gradient-to-b from-indigo-50/50 via-slate-50/40 to-white p-2 ring-1 ring-inset ring-indigo-100/60";
+
 export type Unit = "pct" | "bytes" | "bytesPerSec" | "number" | "load";
 
 const UNITS = ["B", "KB", "MB", "GB", "TB"];
@@ -54,7 +59,7 @@ export function MonitoringChart({ data, series, unit, height = 180, yMax, kind =
   const span = data.length > 1 ? (data[data.length - 1]!.t as number) - (data[0]!.t as number) : 0;
   const hasAny = data.some((d) => series.some((s) => d[s.key] !== null && d[s.key] !== undefined));
   if (!hasAny) {
-    return <div className="flex items-center justify-center rounded-sm border border-dashed border-slate-200 text-[11px] font-medium text-slate-500" style={{ height }}>No data in this range</div>;
+    return <div className="flex items-center justify-center rounded-md border border-dashed border-indigo-200 bg-indigo-50/30 text-[11px] font-medium text-slate-500" style={{ height }}>No data in this range</div>;
   }
   const common = {
     data,
@@ -62,12 +67,12 @@ export function MonitoringChart({ data, series, unit, height = 180, yMax, kind =
   };
   const axes = (
     <>
-      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+      <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
       <XAxis dataKey="t" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={(t: number) => timeTick(t, span)} tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} minTickGap={36} />
       <YAxis width={unit === "pct" ? 38 : 54} tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatUnit(v, unit)} domain={[0, yMax ?? "auto"]} />
       <Tooltip
         isAnimationActive={false}
-        contentStyle={{ fontSize: 11, borderRadius: 4, border: "1px solid #e2e8f0", boxShadow: "none", padding: "6px 8px" }}
+        contentStyle={TOOLTIP_STYLE}
         labelFormatter={(t) => new Date(Number(t)).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
         formatter={(value, name) => [formatUnit(value as number | null, unit), name]}
       />
@@ -75,25 +80,25 @@ export function MonitoringChart({ data, series, unit, height = 180, yMax, kind =
     </>
   );
   return (
-    <div role="img" aria-label={ariaLabel} style={{ height }}>
+    <div role="img" aria-label={ariaLabel} className={PLOT} style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         {kind === "area" ? (
           <AreaChart {...common}>
             <defs>
               {series.map((s) => (
                 <linearGradient key={s.key} id={`${id}-${s.key}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={s.color} stopOpacity={0.22} />
+                  <stop offset="0%" stopColor={s.color} stopOpacity={0.32} />
                   <stop offset="100%" stopColor={s.color} stopOpacity={0.02} />
                 </linearGradient>
               ))}
             </defs>
             {axes}
-            {series.map((s) => <Area key={s.key} type="monotone" dataKey={s.key} name={s.label} stroke={s.color} strokeWidth={1.6} fill={`url(#${id}-${s.key})`} connectNulls={false} dot={false} isAnimationActive={false} />)}
+            {series.map((s) => <Area key={s.key} type="monotone" dataKey={s.key} name={s.label} stroke={s.color} strokeWidth={2} fill={`url(#${id}-${s.key})`} connectNulls={false} dot={false} isAnimationActive={false} />)}
           </AreaChart>
         ) : (
           <LineChart {...common}>
             {axes}
-            {series.map((s) => <Line key={s.key} type="monotone" dataKey={s.key} name={s.label} stroke={s.color} strokeWidth={1.6} connectNulls={false} dot={false} isAnimationActive={false} />)}
+            {series.map((s) => <Line key={s.key} type="monotone" dataKey={s.key} name={s.label} stroke={s.color} strokeWidth={2} connectNulls={false} dot={false} isAnimationActive={false} />)}
           </LineChart>
         )}
       </ResponsiveContainer>
@@ -102,19 +107,26 @@ export function MonitoringChart({ data, series, unit, height = 180, yMax, kind =
 }
 
 /** Vertical bars for categorical or time-bucket counts (expiry windows, spend per month, ...). */
-export function CountBars({ rows, color = SERIES.cpu, height = 170, unit = "number", ariaLabel, formatLabel }: { rows: Array<{ label: string; value: number }>; color?: string; height?: number; unit?: Unit; ariaLabel: string; formatLabel?: (v: string) => string }) {
+export function CountBars({ rows, color = "#4f46e5", height = 170, unit = "number", ariaLabel, formatLabel }: { rows: Array<{ label: string; value: number }>; color?: string; height?: number; unit?: Unit; ariaLabel: string; formatLabel?: (v: string) => string }) {
+  const gid = `bars-${useId().replace(/:/g, "")}`;
   if (!rows.some((r) => r.value > 0)) {
-    return <div className="flex items-center justify-center rounded-sm border border-dashed border-slate-200 text-[11px] font-medium text-slate-500" style={{ height }}>Nothing to chart yet</div>;
+    return <div className="flex items-center justify-center rounded-md border border-dashed border-indigo-200 bg-indigo-50/30 text-[11px] font-medium text-slate-500" style={{ height }}>Nothing to chart yet</div>;
   }
   return (
-    <div role="img" aria-label={ariaLabel} style={{ height }}>
+    <div role="img" aria-label={ariaLabel} className={PLOT} style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={rows} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+          <defs>
+            <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={1} />
+              <stop offset="100%" stopColor={color} stopOpacity={0.55} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
           <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} interval={0} tickFormatter={formatLabel} />
           <YAxis width={34} allowDecimals={false} tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} />
-          <Tooltip isAnimationActive={false} cursor={{ fill: "#f1f5f9" }} contentStyle={{ fontSize: 11, borderRadius: 4, border: "1px solid #e2e8f0", boxShadow: "none", padding: "6px 8px" }} formatter={(v) => [formatUnit(v as number, unit), "Count"]} />
-          <Bar dataKey="value" fill={color} radius={[2, 2, 0, 0]} isAnimationActive={false} maxBarSize={36} />
+          <Tooltip isAnimationActive={false} cursor={{ fill: "rgba(99,102,241,0.08)" }} contentStyle={TOOLTIP_STYLE} formatter={(v) => [formatUnit(v as number, unit), "Count"]} />
+          <Bar dataKey="value" fill={`url(#${gid})`} radius={[4, 4, 0, 0]} isAnimationActive={false} maxBarSize={36} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -136,7 +148,7 @@ export function Donut({ rows, height = 150, ariaLabel }: { rows: Array<{ label: 
       </p>
     );
   }
-  if (!total) return <div className="flex items-center justify-center rounded-sm border border-dashed border-slate-200 text-[11px] font-medium text-slate-500" style={{ height }}>Nothing to chart yet</div>;
+  if (!total) return <div className="flex items-center justify-center rounded-md border border-dashed border-indigo-200 bg-indigo-50/30 text-[11px] font-medium text-slate-500" style={{ height }}>Nothing to chart yet</div>;
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div role="img" aria-label={ariaLabel} style={{ width: height, height }}>
@@ -145,7 +157,7 @@ export function Donut({ rows, height = 150, ariaLabel }: { rows: Array<{ label: 
             <Pie data={data} dataKey="value" nameKey="label" innerRadius="58%" outerRadius="92%" paddingAngle={1} isAnimationActive={false} stroke="none">
               {data.map((_, i) => <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />)}
             </Pie>
-            <Tooltip isAnimationActive={false} contentStyle={{ fontSize: 11, borderRadius: 4, border: "1px solid #e2e8f0", boxShadow: "none", padding: "6px 8px" }} />
+            <Tooltip isAnimationActive={false} contentStyle={TOOLTIP_STYLE} />
           </PieChart>
         </ResponsiveContainer>
       </div>

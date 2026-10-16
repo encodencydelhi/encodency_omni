@@ -44,7 +44,7 @@ export function InfrastructureOverviewPage() {
   }
   if (q.isLoading || !d) {
     return (
-      <div className="space-y-1">
+      <div className="space-y-3">
         <Skeleton className="h-[72px]" />
         <Skeleton className="h-[72px]" />
         <Skeleton className="h-56" />
@@ -84,7 +84,7 @@ export function InfrastructureOverviewPage() {
   const clientRows = d.byClient.filter((c) => c.servers + c.domains > 0);
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-3">
       <StatStrip
         title="Infrastructure"
         items={[
@@ -105,7 +105,7 @@ export function InfrastructureOverviewPage() {
       />
 
       {unmonitored > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-1 border border-amber-200 bg-amber-50/60 px-4 py-2.5 text-xs font-medium capitalize text-slate-700">
+        <div className="flex flex-wrap items-center justify-between gap-1 border border-amber-200 border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-white px-4 shadow-sm py-2.5 text-xs font-medium capitalize text-slate-700">
           <span className="flex items-center gap-1"><Activity className="size-3.5 shrink-0 text-amber-600" />{unmonitored} server{unmonitored === 1 ? " is" : "s are"} not sending guest metrics yet. Provider data is shown, but CPU, memory and disk need the optional collector.</span>
           <Link href="/admin/infrastructure/servers" className={btn}><Terminal className="size-3.5" />Open servers</Link>
         </div>
@@ -113,7 +113,7 @@ export function InfrastructureOverviewPage() {
 
       {monitored > 0 && (
         <Section title="Server resources" description={`Average across ${trend.data?.serversReporting ?? monitored} monitored server${(trend.data?.serversReporting ?? monitored) === 1 ? "" : "s"} · measured by their collectors`} action={<RangeSelect value={range} onChange={setRange} />}>
-          <div className="grid gap-1 lg:grid-cols-3">
+          <div className="grid gap-3 lg:grid-cols-3">
             <MonitoringChart ariaLabel="Average CPU usage" data={trend.data?.points ?? []} unit="pct" yMax={100} height={170} series={[{ key: "cpuAvg", label: "CPU", color: SERIES.cpu }]} />
             <MonitoringChart ariaLabel="Average memory and disk usage" data={trend.data?.points ?? []} unit="pct" yMax={100} kind="line" height={170} series={[{ key: "memAvg", label: "Memory", color: SERIES.mem }, { key: "diskMax", label: "Disk (peak)", color: SERIES.disk }]} />
             <MonitoringChart ariaLabel="Network traffic" data={trend.data?.points ?? []} unit="bytesPerSec" height={170} series={[{ key: "netRx", label: "In", color: SERIES.rx }, { key: "netTx", label: "Out", color: SERIES.tx }]} />
@@ -121,7 +121,7 @@ export function InfrastructureOverviewPage() {
         </Section>
       )}
 
-      <div className="grid gap-1 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <Section title="Upcoming renewals" description="Confirmed and registry-reported dates, soonest first" flush action={<Link href="/admin/infrastructure/billing" className={btn}>All renewals<ArrowRight className="size-3.5" /></Link>}>
           {d.upcoming.length === 0 ? (
             <Quiet>No dates to show yet. They appear when a registry reports them or you enter them on a subscription.</Quiet>
@@ -129,7 +129,7 @@ export function InfrastructureOverviewPage() {
             <ul className="divide-y divide-slate-100">
               {d.upcoming.map((i) => (
                 <li key={i.key} className="flex flex-wrap items-center gap-1 border-l-2 border-transparent px-4 py-2 transition hover:border-blue-400 hover:bg-blue-50/40">
-                  <span className="flex size-8 shrink-0 items-center justify-center bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+                  <span className="flex size-8 shrink-0 items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-sm">
                     {i.kind === "domain_expiry" ? <Globe className="size-4" /> : <CalendarClock className="size-4" />}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -148,7 +148,7 @@ export function InfrastructureOverviewPage() {
 
         <Section title="Needs attention" flush action={<Link href="/admin/infrastructure/alerts" className={btn}>Alerts<ArrowRight className="size-3.5" /></Link>}>
           {d.alerts.length === 0 && d.failedChecks.length === 0 ? (
-            <p className="flex items-center gap-1 px-4 py-3 text-xs font-normal text-slate-600"><span className="flex size-7 items-center justify-center bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100"><ShieldCheck className="size-3.5" /></span>No open alerts and no failed checks. All clear.</p>
+            <p className="flex items-center gap-1 px-4 py-3 text-xs font-normal text-slate-600"><span className="flex size-7 items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm"><ShieldCheck className="size-3.5" /></span>No open alerts and no failed checks. All clear.</p>
           ) : (
             <ul className="divide-y divide-slate-100">
               {d.alerts.map((a) => (
@@ -169,7 +169,7 @@ export function InfrastructureOverviewPage() {
       </div>
 
       {(hasExpiry || providerRows.length > 1 || hasProjection || clientRows.length > 1) && (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-1">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3">
           {hasExpiry && (
             <Section title="Domain expiry" description="Domains expiring per month, next 12 months">
               <CountBars ariaLabel="Domains expiring per month" rows={expiryRows} formatLabel={(m) => m.slice(5)} height={170} />
@@ -197,8 +197,8 @@ export function InfrastructureOverviewPage() {
         <Section title="Recent checks" description="Latest automated lookups and provider syncs" flush>
           <ul className="divide-y divide-slate-100">
             {d.recentSync.slice(0, 5).map((r) => (
-              <li key={r.id} className="flex flex-wrap items-center justify-between gap-1 px-4 py-2 text-xs capitalize">
-                <span className="flex items-center gap-1 font-semibold text-slate-800"><MonitorUp className="size-3.5 shrink-0 text-slate-400" />{r.kind.replace(/_/g, " ").toLowerCase()} <span className="font-medium capitalize text-slate-500">· {r.trigger}</span></span>
+              <li key={r.id} className="flex flex-wrap items-center justify-between gap-1 border-l-2 border-transparent px-4 py-2 text-xs capitalize transition hover:border-indigo-400 hover:bg-indigo-50/40">
+                <span className="flex items-center gap-1 font-semibold text-slate-800"><span className={r.status === "SUCCEEDED" ? "flex size-6 shrink-0 items-center justify-center bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100" : r.status === "FAILED" ? "flex size-6 shrink-0 items-center justify-center bg-rose-50 text-rose-600 ring-1 ring-rose-100" : "flex size-6 shrink-0 items-center justify-center bg-amber-50 text-amber-600 ring-1 ring-amber-100"}><MonitorUp className="size-3.5" /></span>{r.kind.replace(/_/g, " ").toLowerCase()} <span className="font-medium capitalize text-slate-500">· {r.trigger}</span></span>
                 <span className="flex items-center gap-1">
                   {r.error && <span className="max-w-xs truncate text-[11px] font-medium capitalize text-slate-500" title={r.error}>{r.error}</span>}
                   <Chip tone={r.status === "SUCCEEDED" ? "green" : r.status === "PARTIAL" ? "amber" : r.status === "FAILED" ? "red" : "slate"}>{r.status.toLowerCase()}</Chip>

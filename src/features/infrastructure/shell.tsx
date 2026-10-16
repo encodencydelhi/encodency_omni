@@ -35,8 +35,8 @@ export function InfrastructureShell({ children }: { children: ReactNode }) {
   const active = activeHref(pathname);
 
   return (
-    <div className="pb-8">
-      <div className="-mx-4 -mt-5 mb-3 border-b border-[#E3E9F2] bg-gradient-to-b from-[#FCFDFF] via-white to-[#F7FAFF] px-4 shadow-[0_1px_2px_rgba(16,24,40,0.05)] sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
+    <div className="-mx-4 -mt-5 min-h-[calc(100vh-4rem)] bg-gradient-to-br from-[#EEF3FC] via-[#F5F7FC] to-[#F2EFFC] px-4 pb-8 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
+      <div className="-mx-4 mb-4 border-b border-[#E3E9F2] bg-gradient-to-b from-[#FCFDFF] via-white to-[#F7FAFF] px-4 shadow-[0_1px_2px_rgba(16,24,40,0.05)] sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
         <header className="pt-5">
           <div className="flex min-w-0 items-start gap-4">
             <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-b from-[#3B82F6] to-[#2563EB] text-white shadow-[0_4px_12px_-4px_rgba(37,99,235,0.5)] ring-1 ring-inset ring-white/20" aria-hidden>
@@ -69,7 +69,7 @@ export function InfrastructureShell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <div className="mt-4 border-t border-[#EEF2F8]">
-          <nav aria-label="Servers and domains sections" className="scrollbar-thin -mb-px flex gap-6 overflow-x-auto">
+          <nav aria-label="Servers and domains sections" className="scrollbar-thin -mb-px flex gap-1 overflow-x-auto">
             {TABS.map((tab) => {
               const isActive = tab.href === active;
               const count = tab.href.endsWith("/alerts") ? t?.openAlerts : undefined;
@@ -79,9 +79,9 @@ export function InfrastructureShell({ children }: { children: ReactNode }) {
                   href={tab.href}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "shrink-0 cursor-pointer whitespace-nowrap border-b-2 py-3 text-[13px] font-semibold transition-colors",
+                    "shrink-0 cursor-pointer whitespace-nowrap border-b-2 px-3 py-3 text-[13px] font-semibold transition-colors",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35",
-                    isActive ? "border-[#2563EB] text-[#1D4ED8]" : "border-transparent text-[#64748B] hover:border-[#CBD5E1] hover:text-[#28354C]",
+                    isActive ? "border-[#2563EB] bg-gradient-to-t from-[#E6EEFE] to-transparent text-[#1D4ED8]" : "border-transparent text-[#64748B] hover:border-[#CBD5E1] hover:bg-[#F4F7FC] hover:text-[#28354C]",
                   )}
                 >
                   {tab.label}
