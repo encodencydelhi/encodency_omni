@@ -123,13 +123,12 @@ export function KpiTile({ icon, title, value, trend, hint, invertTrend = false }
   const showTrend = typeof trend === "number" && trend !== 0;
   const good = showTrend && (invertTrend ? trend! < 0 : trend! > 0);
   return (
-    <div className="flex flex-col gap-1 rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 shadow-sm">
-      <div className="flex items-center gap-2.5">
-        {icon}
-        <h4 className="text-[11.5px] font-medium text-[#64748B]">{title}</h4>
-      </div>
+    <div className="flex items-center gap-2.5 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 shadow-sm">
+      <div className="shrink-0">{icon}</div>
+      <div className="min-w-0 flex-1">
+      <h4 className="truncate text-[11px] font-medium text-[#64748B]">{title}</h4>
       <div className="flex items-baseline gap-1.5">
-        <span className="text-[22px] font-bold text-[#111C3A]">{value}</span>
+        <span className="text-[19px] font-bold leading-tight text-[#111C3A]">{value}</span>
         {showTrend ? (
           <span className={`flex items-center text-[10.5px] font-bold ${good ? "text-[#10B981]" : "text-[#EF4444]"}`}>
             {trend! > 0 ? <TrendingUp className="mr-0.5 size-3" /> : <TrendingDown className="mr-0.5 size-3" />}
@@ -137,7 +136,8 @@ export function KpiTile({ icon, title, value, trend, hint, invertTrend = false }
           </span>
         ) : null}
       </div>
-      <p className="text-[10px] text-[#94A3B8]">{hint ?? (showTrend ? "vs previous period" : " ")}</p>
+      <p className="truncate text-[10px] leading-tight text-[#94A3B8]">{hint ?? (showTrend ? "vs previous period" : " ")}</p>
+      </div>
     </div>
   );
 }

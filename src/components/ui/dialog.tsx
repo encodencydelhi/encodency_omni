@@ -37,12 +37,13 @@ export function DialogContent({
   className,
   children,
   showClose = true,
+  overlayClassName,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & { showClose?: boolean }) {
+}: React.ComponentProps<typeof DialogPrimitive.Content> & { showClose?: boolean; overlayClassName?: string }) {
 
   return (
     <DialogPrimitive.Portal>
-      <Overlay />
+      <Overlay className={overlayClassName} />
       <DialogPrimitive.Content
         className={cn(
           "fixed top-1/2 left-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-sm border border-border bg-card p-6 shadow-lg overscroll-contain",

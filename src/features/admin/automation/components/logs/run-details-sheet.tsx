@@ -3,12 +3,13 @@
 import { useState } from "react";
 import {
   CheckCircle2, XCircle, Copy, Check, Download, RotateCcw, ShieldAlert, Lightbulb, Activity,
-  ChevronDown, ChevronRight, Code2, Hourglass, MinusCircle, Ban,
+  ChevronDown, ChevronRight, Code2, Hourglass, MinusCircle, Ban, Workflow,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetBody, SheetTitle } from "@/components/ui/sheet";
 import type { AutomationRun, AutomationRunStep } from "../../data/types";
 import { RunStatusChip, formatDuration } from "../shared";
+import { ExecutionDebugger } from "../debugger/execution-debugger";
 
 interface RunDetailsSheetProps {
   run: AutomationRun | null;
@@ -30,6 +31,7 @@ export function RunDetailsSheet({ run, open, onOpenChange, onRetry, onCancel }: 
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState<"retry" | "cancel" | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [debuggerOpen, setDebuggerOpen] = useState(false);
 
   if (!run) return null;
 
@@ -63,6 +65,7 @@ export function RunDetailsSheet({ run, open, onOpenChange, onRetry, onCancel }: 
   };
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex w-full flex-col border-l border-[#E2E8F0] bg-white p-0 shadow-2xl sm:max-w-3xl">
         <SheetHeader className="border-b border-[#E2E8F0] bg-[#F8FAFC] p-4">
@@ -77,6 +80,11 @@ export function RunDetailsSheet({ run, open, onOpenChange, onRetry, onCancel }: 
                 {run.test ? <span className="rounded bg-[#FEF3C7] px-1.5 py-0.5 text-[10px] font-bold text-[#92400E]">TEST</span> : null}
               </div>
               <div className="flex items-center gap-2">
+                {run.clientId ? (
+                  <button type="button" onClick={() => { setDebuggerOpen(true); onOpenChange(false); }} className="inline-flex items-center gap-1.5 rounded-md border border-[#E2E8F0] bg-white px-3 py-1.5 text-[11.5px] font-bold text-[#334155] hover:bg-slate-50">
+                    <Workflow className="size-3.5" /> Open Visual Debugger
+                  </button>
+                ) : null}
                 {onCancel && (run.status === "Waiting" || run.status === "Running") ? (
                   <button type="button" onClick={() => void act("cancel")} disabled={busy !== null} className="inline-flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-[11.5px] font-bold text-[#334155] hover:bg-slate-50 disabled:opacity-50">
                     <Ban className="size-3.5" /> {busy === "cancel" ? "Cancelling..." : "Cancel Run"}
@@ -223,5 +231,7 @@ export function RunDetailsSheet({ run, open, onOpenChange, onRetry, onCancel }: 
         </SheetBody>
       </SheetContent>
     </Sheet>
+    {debuggerOpen && run.clientId ? <ExecutionDebugger clientId={run.clientId} runId={run.id} onClose={() => { setDebuggerOpen(false); onOpenChange(true); }} /> : null}
+    </>
   );
 }

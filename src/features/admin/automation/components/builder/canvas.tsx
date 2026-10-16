@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dagre from "@dagrejs/dagre";
 import {
   Background, BackgroundVariant, Controls, Handle, MarkerType, MiniMap, Position, ReactFlow, ReactFlowProvider,
-  addEdge, applyEdgeChanges, applyNodeChanges, useReactFlow, type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type NodeProps,
+  addEdge, applyEdgeChanges, useReactFlow, type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { AlertCircle, Bot, LayoutDashboard, LockKeyhole, Redo2, Trash2, Undo2 } from "lucide-react";
@@ -55,12 +55,15 @@ function CanvasInner({ nodes, edges, selectedNodeId, readOnly, canUndo, canRedo,
   onDropNode: (item: LibraryItem, position: { x: number; y: number }) => void; onUndo: () => void; onRedo: () => void;
 }) {
   const reactFlow = useReactFlow();
+  // React Flow keeps a controlled node hidden until its measured size is stored in the node it is given. The builder's nodes are plain
+  // AutomationNodes, so measured sizes live here; without this every node stays `visibility: hidden` and the canvas looks empty.
+  const [measured, setMeasured] = useState<Record<string, { width: number; height: number }>>({});
   const problems = useMemo(() => graphProblems(nodes, edges), [nodes, edges]);
   const removeNode = useCallback((id: string) => onGraphChange(nodes.filter((node) => node.id !== id), edges.filter((edge) => edge.source !== id && edge.target !== id)), [edges, nodes, onGraphChange]);
   const flowNodes = useMemo<Node<FlowData>[]>(() => nodes.map((node, index) => ({
-    id: node.id, type: "workflow", position: node.position ?? { x: 120, y: index * 150 + 40 }, selected: node.id === selectedNodeId,
+    id: node.id, type: "workflow", position: node.position ?? { x: 120, y: index * 150 + 40 }, selected: node.id === selectedNodeId, measured: measured[node.id],
     data: { automation: node, problem: problems.get(node.id), selected: node.id === selectedNodeId, readOnly: Boolean(readOnly), onDelete: removeNode },
-  })), [nodes, problems, readOnly, removeNode, selectedNodeId]);
+  })), [measured, nodes, problems, readOnly, removeNode, selectedNodeId]);
   const flowEdges = useMemo<Edge[]>(() => edges.map((edge) => ({ ...edge, type: "smoothstep", animated: false, markerEnd: { type: MarkerType.ArrowClosed }, style: problems.has(edge.id) ? { stroke: "#d97706", strokeWidth: 2 } : { stroke: "#94a3b8", strokeWidth: 2 }, label: problems.get(edge.id) ?? edge.label })), [edges, problems]);
 
   useEffect(() => {
@@ -74,10 +77,22 @@ function CanvasInner({ nodes, edges, selectedNodeId, readOnly, canUndo, canRedo,
   }, [onRedo, onUndo]);
 
   const changeNodes = (changes: NodeChange<Node<FlowData>>[]) => {
+    // Size measurements are display state only: store them locally (also in read-only mode) and never treat them as an edit.
+    const sizes = changes.flatMap((change) => (change.type === "dimensions" && change.dimensions ? [{ id: change.id, ...change.dimensions }] : []));
+    if (sizes.length) setMeasured((previous) => {
+      let next = previous;
+      for (const size of sizes) {
+        const current = next[size.id];
+        if (!current || current.width !== size.width || current.height !== size.height) { if (next === previous) next = { ...previous }; next[size.id] = { width: size.width, height: size.height }; }
+      }
+      return next;
+    });
     if (readOnly) return;
-    const changed = applyNodeChanges(changes, flowNodes);
-    const byId = new Map(changed.map((node) => [node.id, node.position]));
-    onGraphChange(nodes.filter((node) => changed.some((candidate) => candidate.id === node.id)).map((node) => ({ ...node, position: byId.get(node.id) ?? node.position })), edges);
+    // Only real edits (dragging, removal) change the workflow; measuring or selecting must not mark it as having unsaved changes.
+    const moved = new Map(changes.flatMap((change) => (change.type === "position" && change.position ? [[change.id, change.position] as const] : [])));
+    const removed = new Set(changes.flatMap((change) => (change.type === "remove" ? [change.id] : [])));
+    if (!moved.size && !removed.size) return;
+    onGraphChange(nodes.filter((node) => !removed.has(node.id)).map((node) => (moved.has(node.id) ? { ...node, position: moved.get(node.id) } : node)), edges);
   };
   const changeEdges = (changes: EdgeChange<Edge>[]) => {
     if (readOnly) return;

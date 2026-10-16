@@ -100,6 +100,8 @@ export interface AutomationRun {
   parentRunId?: string | null;
   parentNodeId?: string | null;
   nestingDepth?: number;
+  /** Ties a run to the event / request that started it; used to find related runs. */
+  correlationId?: string | null;
   rawWebhookPayload?: Record<string, any>;
   retryOfId?: string | null;
   dlqStatus?: "OPEN" | "REPLAYED" | "DISMISSED" | null;

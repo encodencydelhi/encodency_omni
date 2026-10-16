@@ -95,7 +95,7 @@ export function AutomationPage() {
   const periodLabel = PERIOD_OPTIONS.find((p) => p.days === days)?.label ?? `Last ${days} days`;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <AdminPageTitle eyebrow="Operations" title="Automation" description="Automate lead follow-up, notifications and CRM work with real, logged workflow runs." />
         <div className="flex flex-wrap items-center gap-2.5">
@@ -152,7 +152,7 @@ export function AutomationPage() {
 
       <SubTabs ariaLabel="Automation sections" options={TABS} value={activeTab} onChange={(val) => setActiveTab(val as AutomationTab)} />
 
-      <div className="mt-4">
+      <div className="mt-1">
         {activeTab === "overview" && <AutomationOverview {...actions} />}
         {activeTab === "workflows" && <WorkflowsPage {...actions} />}
         {activeTab === "templates" && <TemplatesPage {...actions} />}

@@ -24,13 +24,21 @@ import { getStoredClientId } from "@/lib/api/tenancy-storage";
 
 type LogsTab = "traces" | "console" | "dlq";
 
+/** Deep links from the visual debugger: /admin/automation/logs?tab=dlq&correlationId=... Read once, on the client only. */
+function urlParam(name: string): string | null {
+  return typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get(name);
+}
+
 export function AutomationLogsPage() {
-  const [activeTab, setActiveTab] = useState<LogsTab>("traces");
+  const [activeTab, setActiveTab] = useState<LogsTab>(() => { const tab = urlParam("tab"); return tab === "console" || tab === "dlq" ? tab : "traces"; });
+  const [correlationFilter, setCorrelationFilter] = useState(() => (urlParam("correlationId") ?? "").slice(0, 64));
   const [runs, setRuns] = useState<AutomationRun[]>([]);
   const [workflows, setWorkflows] = useState<AutomationWorkflow[]>([]);
   const [consoleLogs, setConsoleLogs] = useState<AutomationConsoleLog[]>([]);
   const [healthMetrics, setHealthMetrics] = useState<AutomationHealthMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  // A failed request is shown as an error with a retry, never as an empty (apparently successful) list.
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Inspection Drawer & Test Modal State
   const [selectedRun, setSelectedRun] = useState<AutomationRun | null>(null);
@@ -45,6 +53,7 @@ export function AutomationLogsPage() {
   const { selectedProjectId } = useAdminContext();
 
   const loadData = useCallback(async () => {
+    setLoadError(null);
     try {
       const activeClient = selectedProjectId !== "all" ? selectedProjectId : getStoredClientId();
       const effectiveClientId = activeClient || undefined;
@@ -60,6 +69,7 @@ export function AutomationLogsPage() {
       if (Array.isArray(fetchedLogs)) setConsoleLogs(fetchedLogs);
       if (fetchedHealth) setHealthMetrics(fetchedHealth);
     } catch (error) {
+      setLoadError(error instanceof Error && error.message ? error.message : "The request could not be completed.");
       toast.error("Failed to load automation logs data.");
     } finally {
       setLoading(false);
@@ -209,12 +219,14 @@ export function AutomationLogsPage() {
     }
   };
 
+  const visibleRuns = useMemo(() => (correlationFilter ? runs.filter((run) => run.correlationId === correlationFilter) : runs), [runs, correlationFilter]);
+
   const failedRuns = useMemo(() => {
-    return runs.filter(r => r.status === "Failed" || r.status === "Partial Failure");
-  }, [runs]);
+    return visibleRuns.filter(r => r.status === "Failed" || r.status === "Partial Failure");
+  }, [visibleRuns]);
 
   const tabsConfig = [
-    { value: "traces" as const, label: "Execution Traces", count: runs.length },
+    { value: "traces" as const, label: "Execution Traces", count: visibleRuns.length },
     { value: "console" as const, label: "Console Stream (sample)", count: consoleLogs.length },
     { value: "dlq" as const, label: "Dead Letter Queue (DLQ)", count: failedRuns.length },
   ];
@@ -223,6 +235,16 @@ export function AutomationLogsPage() {
     return (
       <div className="flex h-72 items-center justify-center text-[13px] text-[#64748B] animate-pulse">
         Loading Automation Logs & Diagnostics...
+      </div>
+    );
+  }
+
+  if (loadError && runs.length === 0 && !healthMetrics) {
+    return (
+      <div className="flex h-72 flex-col items-center justify-center gap-1.5 text-center" role="alert">
+        <p className="text-[13px] font-semibold text-[#111C3A]">Automation Logs Could Not Be Loaded</p>
+        <p className="max-w-md text-[12px] text-[#64748B]">{loadError}</p>
+        <button type="button" onClick={() => { setLoading(true); void loadData(); }} className="mt-1 h-8 rounded border border-[#E2E8F0] bg-white px-3 text-[12px] font-semibold text-[#334155] hover:bg-slate-50">Try Again</button>
       </div>
     );
   }
@@ -414,6 +436,13 @@ export function AutomationLogsPage() {
         </div>
       )}
 
+      {correlationFilter ? (
+        <div className="mb-2 flex items-center justify-between rounded border border-blue-200 bg-blue-50 px-3 py-1.5 text-[11.5px] text-blue-900" role="status">
+          <span>Showing runs with correlation ID <code className="font-mono">{correlationFilter}</code> ({visibleRuns.length} found)</span>
+          <button type="button" onClick={() => setCorrelationFilter("")} className="font-semibold underline">Clear Filter</button>
+        </div>
+      ) : null}
+
       {/* SubTabs Navigation */}
       <SubTabs<LogsTab>
         ariaLabel="Automation Logs Sections"
@@ -426,7 +455,7 @@ export function AutomationLogsPage() {
       <div className="mt-3">
         {activeTab === "traces" && (
           <ExecutionTracesTable
-            runs={runs}
+            runs={visibleRuns}
             workflows={workflows}
             onSelectRun={handleSelectRun}
             onRetryRun={handleRetryRun}

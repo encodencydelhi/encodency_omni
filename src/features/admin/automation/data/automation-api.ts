@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/api/client";
 import { companyScopeHeaders } from "@/lib/api/company-scope";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import type { AutomationSettingsState } from "./settings-types";
+import type { NodeTestResult, RunTrace, SimulationResult, WorkflowInsights } from "./trace-types";
 import type {
   AutomationAnalytics,
   AutomationApproval,
@@ -54,11 +55,33 @@ export interface WorkflowVersion {
   sourceVersion?: number | null;
 }
 
+export interface DefinitionSelector {
+  /** Unsaved editor state. It is evaluated in memory only and never stored. */
+  definition?: { executionMode?: string; nodes: unknown[]; edges: unknown[] };
+  version?: number;
+  versionTag?: "draft" | "published";
+}
+export interface SimulateInput extends DefinitionSelector {
+  payload?: Record<string, unknown>;
+  record?: Record<string, unknown>;
+  approvalOutcomes?: Record<string, "approved" | "rejected" | "expired">;
+  childOutcomes?: Record<string, "success" | "failure">;
+  mockResponses?: Record<string, { success: boolean; errorCode?: string }>;
+}
+export interface TestNodeInput extends DefinitionSelector {
+  nodeId?: string;
+  node?: Record<string, unknown>;
+  sample?: Record<string, unknown>;
+  record?: Record<string, unknown>;
+  inputSchema?: Record<string, unknown>;
+}
+
 export interface RunFilters {
   workflowId?: string;
   days?: number;
   status?: AutomationRunStatus;
   limit?: number;
+  correlationId?: string;
 }
 
 export interface RunNowInput {
@@ -99,6 +122,12 @@ export const automationApi = {
   testWebhook: (clientId: string, input: { workflowId: string; eventType: string; payload: Record<string, unknown> }) => req<AutomationRun>("POST", "/automation/test-webhook", clientId, input),
   approvals: (clientId: string) => req<AutomationApproval[]>("GET", "/automation/approvals", clientId),
   decideApproval: (clientId: string, id: string, decision: "APPROVED" | "REJECTED", note?: string) => req<{ id: string; runId: string; status: string }>("POST", `/automation/approvals/${encodeURIComponent(id)}/decision`, clientId, { decision, note }),
+
+  /* Diagnostics (Milestone 3F) — read-only; simulation and node tests never execute anything */
+  runTrace: (clientId: string, id: string) => req<RunTrace>("GET", `/automation/runs/${encodeURIComponent(id)}/trace`, clientId),
+  simulate: (clientId: string, workflowId: string, input: SimulateInput) => req<SimulationResult>("POST", `/automation/workflows/${encodeURIComponent(workflowId)}/simulate`, clientId, input),
+  testNode: (clientId: string, workflowId: string, input: TestNodeInput) => req<NodeTestResult>("POST", `/automation/workflows/${encodeURIComponent(workflowId)}/node-test`, clientId, input),
+  workflowInsights: (clientId: string, workflowId: string, days = 30) => req<WorkflowInsights>("GET", `/automation/workflows/${encodeURIComponent(workflowId)}/insights`, clientId, undefined, query({ days })),
 
   /* Insights */
   analytics: (clientId: ClientScope, days = 30) => req<AutomationAnalytics>("GET", "/automation/analytics", clientId, undefined, query({ days })),
