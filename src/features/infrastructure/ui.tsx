@@ -9,8 +9,26 @@ import { Badge, field } from "@/features/support/ui";
 import { sourceLabel, formatDate } from "./format";
 import { useScope } from "./hooks";
 
-export { Badge, Card, ConfirmButton, EmptyState, ListSkeleton, Notice, PageHeader, Pager, SearchBox, Section, Select, Skeleton, Spinner, StatTile, btn, btnDanger, btnPrimary, field, textarea } from "@/features/support/ui";
+export { Badge, Card, ConfirmButton, EmptyState, ListSkeleton, Notice, PageHeader, Pager, SearchBox, Select, Skeleton, Spinner, StatTile, btn, btnDanger, btnPrimary, field, textarea } from "@/features/support/ui";
 export type { Tone } from "@/features/support/labels";
+
+/* Local premium overrides — infrastructure only, no global changes. Sharp corners everywhere. */
+const CARD = "rounded-none border border-slate-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]";
+
+export function Section({ title, description, action, children, className, flush }: { title: ReactNode; description?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
+  return (
+    <section className={cn(CARD, "overflow-hidden", className)}>
+      <div className="flex flex-wrap items-center justify-between gap-1 border-b border-slate-200 bg-slate-50/60 px-4 py-2.5">
+        <div className="min-w-0">
+          <h2 className="truncate text-[13px] font-semibold capitalize text-slate-900">{title}</h2>
+          {description && <p className="mt-0.5 text-[11px] font-medium capitalize text-slate-500">{description}</p>}
+        </div>
+        {action && <div className="flex shrink-0 flex-wrap items-center gap-1">{action}</div>}
+      </div>
+      <div className={flush ? undefined : "p-4"}>{children}</div>
+    </section>
+  );
+}
 
 export function useRoleFlags() {
   const { user } = useAuth();
@@ -64,13 +82,13 @@ export function Chip({ children, tone = "slate" }: { children: ReactNode; tone?:
   return <Badge tone={tone}>{children}</Badge>;
 }
 
-export function DateValue({ date, source, verified, unknownText = "Not available" }: { date: string | null; source?: string; verified?: boolean; unknownText?: string }) {
+export function DateValue({ date, source, verified, unknownText = "Not available", hideSource }: { date: string | null; source?: string; verified?: boolean; unknownText?: string; hideSource?: boolean }) {
   if (!date) return <span className="text-slate-400">{unknownText}</span>;
   const src = sourceLabel(source, Boolean(verified));
   return (
-    <span className="inline-flex flex-wrap items-center gap-1.5">
-      <span className="font-semibold text-slate-900">{formatDate(date)}</span>
-      {source && <Badge tone={src.tone}>{src.label}</Badge>}
+    <span className="inline-flex flex-wrap items-center gap-1.5" title={src.label}>
+      <span className="font-medium text-slate-700">{formatDate(date)}</span>
+      {!hideSource && source && <Badge tone={src.tone}>{src.label}</Badge>}
     </span>
   );
 }
@@ -112,7 +130,7 @@ export function BarList({ rows, empty = "Nothing to show yet." }: { rows: Array<
 }
 
 export function IconBox({ icon: Icon }: { icon: ComponentType<{ className?: string }> }) {
-  return <span className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-slate-100 text-slate-600"><Icon className="size-4" /></span>;
+  return <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600"><Icon className="size-4" /></span>;
 }
 
 export interface StripItem {
@@ -122,28 +140,80 @@ export interface StripItem {
   tone?: "red" | "amber" | "green" | "orange";
   href?: string;
   tip?: string;
+  icon?: ComponentType<{ className?: string }>;
 }
 
 const STRIP_TONE = { red: "text-rose-700", amber: "text-amber-700", orange: "text-orange-700", green: "text-emerald-700" } as const;
 
+type CardPalette = { tile: string; iconBox: string; bar: string };
+
+const PALETTE: CardPalette[] = [
+  { tile: "border-blue-200/70 bg-gradient-to-br from-blue-50/90 via-white to-white", iconBox: "bg-blue-600 text-white", bar: "from-blue-500 to-sky-400" },
+  { tile: "border-emerald-200/70 bg-gradient-to-br from-emerald-50/90 via-white to-white", iconBox: "bg-emerald-600 text-white", bar: "from-emerald-500 to-teal-400" },
+  { tile: "border-rose-200/70 bg-gradient-to-br from-rose-50/90 via-white to-white", iconBox: "bg-rose-600 text-white", bar: "from-rose-500 to-orange-400" },
+  { tile: "border-violet-200/70 bg-gradient-to-br from-violet-50/90 via-white to-white", iconBox: "bg-violet-600 text-white", bar: "from-violet-500 to-purple-400" },
+  { tile: "border-amber-200/70 bg-gradient-to-br from-amber-50/90 via-white to-white", iconBox: "bg-amber-500 text-white", bar: "from-amber-500 to-yellow-400" },
+  { tile: "border-cyan-200/70 bg-gradient-to-br from-cyan-50/90 via-white to-white", iconBox: "bg-cyan-600 text-white", bar: "from-cyan-500 to-sky-400" },
+  { tile: "border-orange-200/70 bg-gradient-to-br from-orange-50/90 via-white to-white", iconBox: "bg-orange-600 text-white", bar: "from-orange-500 to-amber-400" },
+  { tile: "border-indigo-200/70 bg-gradient-to-br from-indigo-50/90 via-white to-white", iconBox: "bg-indigo-600 text-white", bar: "from-indigo-500 to-blue-400" },
+  { tile: "border-teal-200/70 bg-gradient-to-br from-teal-50/90 via-white to-white", iconBox: "bg-teal-600 text-white", bar: "from-teal-500 to-emerald-400" },
+];
+
+const TONE_PALETTE: Record<string, CardPalette> = {
+  red: { tile: "border-rose-200/70 bg-gradient-to-br from-rose-50/90 via-white to-white", iconBox: "bg-rose-600 text-white", bar: "from-rose-500 to-orange-400" },
+  amber: { tile: "border-amber-200/70 bg-gradient-to-br from-amber-50/90 via-white to-white", iconBox: "bg-amber-500 text-white", bar: "from-amber-500 to-yellow-400" },
+  orange: { tile: "border-orange-200/70 bg-gradient-to-br from-orange-50/90 via-white to-white", iconBox: "bg-orange-600 text-white", bar: "from-orange-500 to-amber-400" },
+  green: { tile: "border-emerald-200/70 bg-gradient-to-br from-emerald-50/90 via-white to-white", iconBox: "bg-emerald-600 text-white", bar: "from-emerald-500 to-teal-400" },
+};
+
 /**
- * One compact bar of key figures instead of a wall of cards: hairline dividers, small labels, tight padding.
- * Cells wrap on narrow screens without losing their borders.
+ * Colourful single-line stat cards: horizontal flex row with scroll, never wraps.
+ * Sharp corners, capitalized labels, tight gap-1 — overview-wide rule.
  */
 export function StatStrip({ items, title }: { items: StripItem[]; title?: string }) {
   return (
-    <section aria-label={title} className="overflow-hidden rounded-sm border border-slate-200 bg-white">
-      {/* auto-fit wraps into a tidy grid at any width; each cell draws its own right/bottom hairline so a short last row has no grey holes */}
-      <div className="-mb-px -mr-px grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
-        {items.map((i) => {
+    <section aria-label={title}>
+      <div className="flex gap-1">
+        {items.map((i, idx) => {
+          const palette = (i.tone && TONE_PALETTE[i.tone]) || PALETTE[idx % PALETTE.length]!;
+          const Icon = i.icon;
+          const tip = i.tip ?? (typeof i.sub === "string" ? i.sub : undefined);
           const body = (
-            <div className="h-full border-b border-r border-slate-200 bg-white px-3 py-2.5 transition hover:bg-slate-50" title={i.tip ?? (typeof i.sub === "string" ? i.sub : undefined)}>
-              <p className="text-[10.5px] font-semibold uppercase leading-tight tracking-wide text-slate-500">{i.label}</p>
-              <p className={cn("mt-1 text-[19px] font-semibold leading-tight tracking-tight tabular-nums", i.tone ? STRIP_TONE[i.tone] : "text-slate-900")}>{i.value}</p>
-              {i.sub && <p className="mt-0.5 text-[10.5px] font-medium leading-snug text-slate-500">{i.sub}</p>}
+            <div
+              className={cn(
+                "group relative min-w-0 overflow-visible rounded-none border px-2.5 pb-2.5 pt-2 shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_18px_-10px_rgba(16,24,40,0.35)]",
+                palette.tile,
+              )}
+            >
+              <span className={cn("absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r", palette.bar)} aria-hidden="true" />
+              <span className="flex items-center gap-1">
+                <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-none shadow-sm", palette.iconBox)} aria-hidden="true">
+                  {Icon ? <Icon className="size-3.5" /> : <span className="text-xs font-bold leading-none">{String(i.label).charAt(0)}</span>}
+                </span>
+                <p className="truncate text-[10.5px] font-medium capitalize leading-tight text-slate-500">{i.label}</p>
+              </span>
+              <p className={cn("mt-1 truncate text-right text-xl font-semibold leading-none tracking-tight tabular-nums", i.tone ? STRIP_TONE[i.tone] : "text-slate-900")}>{i.value}</p>
+              {i.sub && <p className="mt-1 truncate text-[11px] font-medium capitalize leading-snug text-slate-500">{i.sub}</p>}
+              {tip && (
+                <span
+                  role="tooltip"
+                  className="pointer-events-none absolute left-1/2 top-full z-30 mt-1 hidden w-max max-w-[220px] -translate-x-1/2 whitespace-normal rounded-none border border-slate-700 bg-slate-900 px-2.5 py-2 text-left text-[11px] font-medium capitalize leading-snug text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:block group-hover:opacity-100"
+                >
+                  <span className="block font-bold">{i.label}</span>
+                  <span className="mt-0.5 block text-slate-200">{tip}</span>
+                </span>
+              )}
             </div>
           );
-          return i.href ? <Link key={i.label} href={i.href} className="block">{body}</Link> : <div key={i.label}>{body}</div>;
+          return i.href ? (
+            <Link key={i.label} href={i.href} className="block min-w-0 flex-1 rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/50">
+              {body}
+            </Link>
+          ) : (
+            <div key={i.label} className="min-w-0 flex-1">
+              {body}
+            </div>
+          );
         })}
       </div>
     </section>

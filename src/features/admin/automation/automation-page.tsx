@@ -20,13 +20,15 @@ import { WorkflowsPage } from "./components/pages/workflows-page";
 import { TemplatesPage } from "./components/pages/templates-page";
 import { RunsPage } from "./components/pages/runs-page";
 import { SettingsPage } from "./components/pages/settings-page";
+import { ApprovalsPage } from "./components/pages/approvals-page";
 
-type AutomationTab = "overview" | "workflows" | "templates" | "runs" | "settings";
+type AutomationTab = "overview" | "workflows" | "templates" | "runs" | "approvals" | "settings";
 const TABS = [
   { value: "overview", label: "Overview" },
   { value: "workflows", label: "Workflows" },
   { value: "templates", label: "Templates" },
   { value: "runs", label: "Run History" },
+  { value: "approvals", label: "Approvals" },
   { value: "settings", label: "Settings" },
 ];
 
@@ -49,7 +51,7 @@ export function AutomationPage() {
   const { Clients, selectedProjectId, setSelectedProjectId } = useAdminContext();
   const { clientId, clientName } = useAutomationScope();
   const invalidate = useInvalidateAutomation();
-  const [activeTab, setActiveTab] = useUrlState<AutomationTab>("tab", "overview", ["overview", "workflows", "templates", "runs", "settings"]);
+  const [activeTab, setActiveTab] = useUrlState<AutomationTab>("tab", "overview", ["overview", "workflows", "templates", "runs", "approvals", "settings"]);
   const [days, setDays] = useState(30);
   const [editing, setEditing] = useState<{ workflow: AutomationWorkflow; clientId: string } | null>(null);
   const [testTarget, setTestTarget] = useState<AutomationWorkflow | null>(null);
@@ -155,6 +157,7 @@ export function AutomationPage() {
         {activeTab === "workflows" && <WorkflowsPage {...actions} />}
         {activeTab === "templates" && <TemplatesPage {...actions} />}
         {activeTab === "runs" && <RunsPage {...actions} />}
+        {activeTab === "approvals" && <ApprovalsPage />}
         {activeTab === "settings" && <SettingsPage />}
       </div>
 

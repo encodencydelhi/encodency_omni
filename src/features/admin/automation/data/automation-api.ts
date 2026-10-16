@@ -4,6 +4,7 @@ import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import type { AutomationSettingsState } from "./settings-types";
 import type {
   AutomationAnalytics,
+  AutomationApproval,
   AutomationConsoleLog,
   AutomationHealthMetrics,
   AutomationRun,
@@ -38,6 +39,19 @@ export interface WorkflowInput {
   channels: string[];
   ownerId?: string;
   templateId?: string;
+  expectedVersion?: number;
+  executionMode?: "legacy" | "graph-v1";
+}
+
+export interface WorkflowVersion {
+  id: string;
+  version: number;
+  state: "DRAFT" | "PUBLISHED" | string;
+  name: string;
+  definition: { trigger?: AutomationWorkflow["trigger"]; nodes?: AutomationWorkflow["nodes"]; edges?: AutomationWorkflow["edges"]; channels?: string[] };
+  createdAt: string;
+  publishedAt?: string | null;
+  sourceVersion?: number | null;
 }
 
 export interface RunFilters {
@@ -65,6 +79,9 @@ export const automationApi = {
   getWorkflow: (clientId: string, id: string) => req<AutomationWorkflow>("GET", `/automation/workflows/${encodeURIComponent(id)}`, clientId),
   createWorkflow: (clientId: string, input: WorkflowInput) => req<AutomationWorkflow>("POST", "/automation/workflows", clientId, input),
   updateWorkflow: (clientId: string, id: string, input: WorkflowInput) => req<AutomationWorkflow>("PATCH", `/automation/workflows/${encodeURIComponent(id)}`, clientId, input),
+  publishWorkflow: (clientId: string, id: string, expectedVersion: number) => req<AutomationWorkflow>("POST", `/automation/workflows/${encodeURIComponent(id)}/publish`, clientId, { expectedVersion }),
+  workflowVersions: (clientId: string, id: string) => req<WorkflowVersion[]>("GET", `/automation/workflows/${encodeURIComponent(id)}/versions`, clientId),
+  rollbackWorkflow: (clientId: string, id: string, version: number, expectedVersion: number, publish = true) => req<AutomationWorkflow>("POST", `/automation/workflows/${encodeURIComponent(id)}/rollback`, clientId, { version, expectedVersion, publish }),
   setWorkflowStatus: (clientId: string, id: string, status: AutomationWorkflowStatus) => req<AutomationWorkflow>("PATCH", `/automation/workflows/${encodeURIComponent(id)}/status`, clientId, { status }),
   duplicateWorkflow: (clientId: string, id: string) => req<AutomationWorkflow>("POST", `/automation/workflows/${encodeURIComponent(id)}/duplicate`, clientId),
   deleteWorkflow: (clientId: string, id: string) => req<void>("DELETE", `/automation/workflows/${encodeURIComponent(id)}`, clientId),
@@ -73,10 +90,15 @@ export const automationApi = {
   /* Runs */
   listRuns: (clientId: ClientScope, filters: RunFilters = {}) => req<AutomationRun[]>("GET", "/automation/runs", clientId, undefined, query({ ...filters })),
   getRun: (clientId: string, id: string) => req<AutomationRun>("GET", `/automation/runs/${encodeURIComponent(id)}`, clientId),
-  retryRun: (clientId: string, id: string) => req<AutomationRun>("POST", `/automation/runs/${encodeURIComponent(id)}/retry`, clientId),
-  bulkRetry: (clientId: string, runIds: string[]) => req<Array<{ runId: string; ok: boolean; error?: string }>>("POST", "/automation/runs/retry", clientId, { runIds }),
+  /** `acknowledgeDuplicateRisk` is required to retry a run whose outcome was unknown (it may already have been delivered). */
+  retryRun: (clientId: string, id: string, options: { acknowledgeDuplicateRisk?: boolean } = {}) => req<AutomationRun>("POST", `/automation/runs/${encodeURIComponent(id)}/retry`, clientId, options),
+  /** Issues a new webhook token. The plaintext is returned only here; read endpoints never include it. */
+  rotateWebhook: (clientId: string, id: string) => req<{ token: string; workflowId: string }>("POST", `/automation/workflows/${encodeURIComponent(id)}/webhook/rotate`, clientId),
+  bulkRetry: (clientId: string, runIds: string[], options: { acknowledgeDuplicateRisk?: boolean } = {}) => req<Array<{ runId: string; ok: boolean; error?: string }>>("POST", "/automation/runs/retry", clientId, { runIds, ...options }),
   cancelRun: (clientId: string, id: string) => req<AutomationRun>("POST", `/automation/runs/${encodeURIComponent(id)}/cancel`, clientId),
   testWebhook: (clientId: string, input: { workflowId: string; eventType: string; payload: Record<string, unknown> }) => req<AutomationRun>("POST", "/automation/test-webhook", clientId, input),
+  approvals: (clientId: string) => req<AutomationApproval[]>("GET", "/automation/approvals", clientId),
+  decideApproval: (clientId: string, id: string, decision: "APPROVED" | "REJECTED", note?: string) => req<{ id: string; runId: string; status: string }>("POST", `/automation/approvals/${encodeURIComponent(id)}/decision`, clientId, { decision, note }),
 
   /* Insights */
   analytics: (clientId: ClientScope, days = 30) => req<AutomationAnalytics>("GET", "/automation/analytics", clientId, undefined, query({ days })),
@@ -95,7 +117,15 @@ export const automationApi = {
   purgeRuns: (olderThanDays: number) => req<{ deleted: number }>("POST", "/automation/runs/purge", null, { olderThanDays }),
 };
 
-/** Public URL an external system posts to for a webhook-triggered workflow. */
+/** Endpoint without the secret token (the token goes in the `x-automation-token` header). */
+export function webhookEndpoint(workflowId: string): string {
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "/api/v1").replace(/\/$/, "");
+  const prefix = /^https?:/i.test(base) ? base : `${origin}${base}`;
+  return `${prefix}/automation/hooks/${encodeURIComponent(workflowId)}`;
+}
+
+/** Public URL an external system posts to for a webhook-triggered workflow (token in the query string). */
 export function webhookUrl(workflowId: string, token: string): string {
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const base = (process.env.NEXT_PUBLIC_API_BASE_URL || "/api/v1").replace(/\/$/, "");

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Bot, Check, Copy, Settings, Braces } from "lucide-react";
 import { toast } from "sonner";
 import type { AutomationNode } from "../../data/types";
-import { webhookUrl } from "../../data/automation-api";
+import { automationApi, webhookEndpoint, webhookUrl } from "../../data/automation-api";
+import { getStoredClientId } from "@/lib/api/tenancy-storage";
 import { libraryItem } from "./node-library";
 
 export interface BuilderResources {
@@ -61,7 +62,15 @@ export function nodeProblem(node: AutomationNode): string | null {
     case "create_task": return c.title ? null : "Add a task title";
     case "filter_condition":
     case "if_else": return c.field ? (c.operator ? null : "Choose an operator") : "Choose a field to check";
+    case "switch": return c.field ? (Array.isArray(c.cases) && c.cases.length ? null : "Add at least one switch case") : "Choose a field to switch on";
     case "delay": return Number(c.duration) > 0 ? null : "Set how long to wait";
+    case "wait_until": return c.mode === "absolute" ? (c.until ? null : "Choose a future date and time") : Number(c.duration) > 0 ? null : "Set how long to wait";
+    case "approval": return Array.isArray(c.approverUserIds) && c.approverUserIds.length ? (Number(c.expiryMinutes) >= 1 && Number(c.expiryMinutes) <= 43200 ? null : "Expiry must be 1 to 43,200 minutes") : "Select at least one approver";
+    case "sub_workflow": return c.workflowId ? (Number(c.timeoutSeconds) >= 1 && Number(c.timeoutSeconds) <= 86400 ? null : "Timeout must be 1 to 86,400 seconds") : "Enter a published workflow ID";
+    case "parallel": return Array.isArray(c.branches) && c.branches.length >= 2 && c.branches.length <= 10 ? (c.joinNodeId ? null : "Add a Merge node after this split") : "Add 2 to 10 unique branches";
+    case "merge": return ["all", "any"].includes(c.mode) ? null : "Choose a join mode";
+    case "for_each": return c.arraySource ? (Number(c.concurrency) >= 1 && Number(c.concurrency) <= 10 ? (Number(c.maxItems) >= 1 && Number(c.maxItems) <= 100 ? null : "Maximum items must be 1 to 100") : "Concurrency must be 1 to 10") : "Add an array source";
+    case "loop": return Number(c.maxIterations) >= 1 && Number(c.maxIterations) <= 100 ? (c.stopCondition?.field && c.stopCondition?.operator ? null : "Add a stop condition") : "Maximum iterations must be 1 to 100";
     default:
       if (node.type === "trigger") return node.actionId ? null : "Pick a trigger type";
       return node.actionId ? null : "Pick an action type for this step";
@@ -104,7 +113,25 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
   };
 
   const selectedTemplate = resources.templates.find((t) => t.id === config.templateId);
-  const url = workflowId && config.webhookToken ? webhookUrl(workflowId, String(config.webhookToken)) : null;
+  // Tokens are never returned by read APIs: the plaintext is shown once, right after it is issued here.
+  const [issuedToken, setIssuedToken] = useState<string | null>(null);
+  const [issuing, setIssuing] = useState(false);
+  const endpoint = workflowId ? webhookEndpoint(workflowId) : null;
+  const url = workflowId && issuedToken ? webhookUrl(workflowId, issuedToken) : null;
+  const issueToken = async () => {
+    const clientId = getStoredClientId();
+    if (!workflowId || !clientId) return;
+    setIssuing(true);
+    try {
+      const res = await automationApi.rotateWebhook(clientId, workflowId);
+      setIssuedToken(res.token);
+      toast.success("New webhook token issued. Copy it now; it will not be shown again.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not issue a webhook token.");
+    } finally {
+      setIssuing(false);
+    }
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -146,19 +173,30 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
 
             {node.type === "trigger" && (node.actionId === "inbound_webhook" || node.actionId === "form_submission") ? (
               <>
-                <Field title="Webhook URL" hint="POST JSON to this URL. The token in it is secret — share it only with the system that sends data.">
-                  {url ? (
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-9 min-w-0 flex-1 items-center truncate rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 font-mono text-[10.5px] text-[#475569]">{url}</div>
-                      <button type="button" aria-label="Copy webhook URL" onClick={() => void copy(url)} className="grid size-9 place-items-center rounded-lg border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]">{copied ? <Check className="size-3.5 text-[#10B981]" /> : <Copy className="size-3.5" />}</button>
+                <Field title="Webhook URL" hint="POST JSON to this URL with the secret token in the x-automation-token header. Tokens are shown only once, when issued.">
+                  {endpoint ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-9 min-w-0 flex-1 items-center truncate rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 font-mono text-[10.5px] text-[#475569]">{endpoint}</div>
+                        <button type="button" aria-label="Copy webhook endpoint" onClick={() => void copy(endpoint)} className="grid size-9 place-items-center rounded-lg border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]">{copied ? <Check className="size-3.5 text-[#10B981]" /> : <Copy className="size-3.5" />}</button>
+                      </div>
+                      {issuedToken ? (
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-9 min-w-0 flex-1 items-center truncate rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-3 font-mono text-[10.5px] text-[#92400E]">{issuedToken}</div>
+                          <button type="button" aria-label="Copy webhook token" onClick={() => void copy(issuedToken)} className="grid size-9 place-items-center rounded-lg border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]"><Copy className="size-3.5" /></button>
+                        </div>
+                      ) : null}
+                      <button type="button" disabled={issuing} onClick={() => void issueToken()} className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-50">
+                        {issuing ? "Issuing…" : "Issue new token (replaces the current one)"}
+                      </button>
                     </div>
                   ) : (
                     <p className="rounded-lg border border-dashed border-[#CBD5E1] px-3 py-2 text-[11px] text-[#64748B]">Save the workflow once to generate its URL.</p>
                   )}
                 </Field>
-                {url ? (
+                {endpoint ? (
                   <Field title="Example request">
-                    <pre className="overflow-x-auto rounded-lg bg-[#0F172A] p-2.5 font-mono text-[10px] text-slate-200">{`curl -X POST "${url}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"name":"Rahul Mehta","email":"rahul@example.com","phone":"9876543210","message":"Hi"}'`}</pre>
+                    <pre className="overflow-x-auto rounded-lg bg-[#0F172A] p-2.5 font-mono text-[10px] text-slate-200">{`curl -X POST "${url ?? endpoint}" \\\n  -H "Content-Type: application/json" \\\n  -H "x-automation-token: <your token>" \\\n  -H "Idempotency-Key: <unique id per event>" \\\n  -d '{"name":"Rahul Mehta","email":"rahul@example.com","phone":"9876543210","message":"Hi"}'`}</pre>
                   </Field>
                 ) : null}
                 {node.actionId === "form_submission" ? (
@@ -302,6 +340,13 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
               </>
             ) : null}
 
+            {node.actionId === "switch" ? (
+              <>
+                <Field title="Field to switch on"><input className={input} placeholder="e.g. lead.status" value={config.field ?? ""} onChange={(e) => setConfig({ field: e.target.value })} /></Field>
+                <Field title="Named cases" hint="Comma-separated values. Connect each matching handle; the final handle is Default."><input className={input} placeholder="new, qualified, won" value={Array.isArray(config.cases) ? config.cases.map((item: { value?: string }) => item.value).join(", ") : ""} onChange={(e) => setConfig({ cases: e.target.value.split(",").map((value) => value.trim()).filter(Boolean).map((value) => ({ value })) })} /></Field>
+              </>
+            ) : null}
+
             {node.actionId === "delay" ? (
               <Field title="Wait for" hint="The run pauses and resumes automatically (checked every 30 seconds).">
                 <div className="flex gap-2">
@@ -312,6 +357,46 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
                 </div>
               </Field>
             ) : null}
+
+            {node.actionId === "wait_until" ? <>
+              <Field title="Wait mode"><select className={`${input} bg-white`} value={config.mode ?? "relative"} onChange={(e) => setConfig({ mode: e.target.value })}><option value="relative">Relative duration</option><option value="absolute">Absolute date and time</option></select></Field>
+              {config.mode === "absolute" ? <Field title="Resume at" hint="Stored as an ISO timestamp with timezone."><input type="datetime-local" className={input} value={config.until && Number.isFinite(Date.parse(String(config.until))) ? new Date(Date.parse(String(config.until)) - new Date(String(config.until)).getTimezoneOffset() * 60_000).toISOString().slice(0, 16) : ""} onChange={(e) => setConfig({ until: e.target.value ? new Date(e.target.value).toISOString() : "" })} /></Field> : <Field title="Wait for"><div className="flex gap-2"><input type="number" min={1} className="h-9 w-20 rounded-lg border border-[#E2E8F0] px-3 text-[11.5px]" value={config.duration ?? 1} onChange={(e) => setConfig({ duration: Math.max(1, Number(e.target.value) || 1) })} /><select className={`${input} flex-1 bg-white`} value={config.unit ?? "hours"} onChange={(e) => setConfig({ unit: e.target.value })}><option value="minutes">Minutes</option><option value="hours">Hours</option><option value="days">Days</option></select></div></Field>}
+            </> : null}
+
+            {node.actionId === "approval" ? <>
+              <Field title="Authorized approvers" hint="Only active members with this client can decide."><div className="space-y-2 rounded-lg border border-slate-200 p-2">{resources.members.map((member) => <label key={member.id} className="flex items-center gap-2 text-[11px] text-slate-700"><input type="checkbox" checked={Array.isArray(config.approverUserIds) && config.approverUserIds.includes(member.id)} onChange={(e) => setConfig({ approverUserIds: e.target.checked ? [...(Array.isArray(config.approverUserIds) ? config.approverUserIds : []), member.id] : (Array.isArray(config.approverUserIds) ? config.approverUserIds : []).filter((id: string) => id !== member.id) })} />{member.name}</label>)}</div></Field>
+              <div className="grid grid-cols-2 gap-2"><Field title="Expiry minutes"><input type="number" min={1} max={43200} className={input} value={config.expiryMinutes ?? 1440} onChange={(e) => setConfig({ expiryMinutes: Math.max(1, Math.min(43200, Number(e.target.value) || 1)) })} /></Field><Field title="Remind before"><input type="number" min={0} max={43200} className={input} value={config.reminderMinutes ?? 60} onChange={(e) => setConfig({ reminderMinutes: Math.max(0, Math.min(43200, Number(e.target.value) || 0)) })} /></Field></div>
+            </> : null}
+
+            {node.actionId === "sub_workflow" ? <>
+              <Field title="Published workflow ID" hint="The selected published version is pinned when the child starts."><input className={input} value={config.workflowId ?? ""} onChange={(e) => setConfig({ workflowId: e.target.value.trim() })} /></Field>
+              <Field title="Version (optional)"><input type="number" min={1} className={input} value={config.version ?? ""} onChange={(e) => setConfig({ version: e.target.value ? Number(e.target.value) : undefined })} /></Field>
+              <Field title="Timeout seconds"><input type="number" min={1} max={86400} className={input} value={config.timeoutSeconds ?? 3600} onChange={(e) => setConfig({ timeoutSeconds: Math.max(1, Math.min(86400, Number(e.target.value) || 1)) })} /></Field>
+              <label className="flex items-center gap-2 text-[11px] text-slate-600"><input type="checkbox" checked={config.waitForCompletion !== false} onChange={(e) => setConfig({ waitForCompletion: e.target.checked })} />Wait for child completion</label>
+            </> : null}
+
+            {node.actionId === "parallel" ? <>
+              <Field title="Branch identifiers" hint="Comma-separated unique handles used by outgoing connections."><input className={input} value={Array.isArray(config.branches) ? config.branches.join(", ") : ""} onChange={(e) => setConfig({ branches: e.target.value.split(",").map((value) => value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-")).filter(Boolean).slice(0, 10) })} /></Field>
+              <Field title="Failure policy"><select className={`${input} bg-white`} value={config.failurePolicy ?? "fail"} onChange={(e) => setConfig({ failurePolicy: e.target.value })}><option value="fail">Fail the run</option><option value="continue">Continue with partial results</option></select></Field>
+              <Field title="Timeout (seconds)"><input type="number" min={0} max={86400} className={input} value={config.timeoutSeconds ?? 300} onChange={(e) => setConfig({ timeoutSeconds: Math.max(0, Math.min(86400, Number(e.target.value) || 0)) })} /></Field>
+              <label className="flex items-center gap-2 text-[11px] text-slate-600"><input type="checkbox" checked={config.cancelRemaining !== false} onChange={(e) => setConfig({ cancelRemaining: e.target.checked })} />Cancel remaining work after Wait-Any succeeds</label>
+            </> : null}
+
+            {node.actionId === "merge" ? <Field title="Join behavior"><select className={`${input} bg-white`} value={config.mode ?? "all"} onChange={(e) => setConfig({ mode: e.target.value })}><option value="all">Wait for all</option><option value="any">Wait for first success</option></select></Field> : null}
+
+            {node.actionId === "for_each" ? <>
+              <Field title="Array source" hint="Dot path resolving to an array, for example trigger.items."><input className={input} value={config.arraySource ?? ""} onChange={(e) => setConfig({ arraySource: e.target.value })} /></Field>
+              <Field title="Item variable"><input className={input} value={config.itemVariable ?? "item"} onChange={(e) => setConfig({ itemVariable: e.target.value.replace(/[^A-Za-z0-9_]/g, "") })} /></Field>
+              <div className="grid grid-cols-2 gap-2"><Field title="Concurrency"><input type="number" min={1} max={10} className={input} value={config.concurrency ?? 2} onChange={(e) => setConfig({ concurrency: Math.max(1, Math.min(10, Number(e.target.value) || 1)) })} /></Field><Field title="Maximum items"><input type="number" min={1} max={100} className={input} value={config.maxItems ?? 100} onChange={(e) => setConfig({ maxItems: Math.max(1, Math.min(100, Number(e.target.value) || 1)) })} /></Field></div>
+              <Field title="Item failure policy"><select className={`${input} bg-white`} value={config.failurePolicy ?? "fail"} onChange={(e) => setConfig({ failurePolicy: e.target.value })}><option value="fail">Fail the run</option><option value="continue">Continue with partial results</option></select></Field>
+            </> : null}
+
+            {node.actionId === "loop" ? <>
+              <div className="grid grid-cols-2 gap-2"><Field title="Maximum iterations"><input type="number" min={1} max={100} className={input} value={config.maxIterations ?? 10} onChange={(e) => setConfig({ maxIterations: Math.max(1, Math.min(100, Number(e.target.value) || 1)) })} /></Field><Field title="Maximum seconds"><input type="number" min={1} max={86400} className={input} value={config.maxDurationSeconds ?? 3600} onChange={(e) => setConfig({ maxDurationSeconds: Math.max(1, Math.min(86400, Number(e.target.value) || 1)) })} /></Field></div>
+              <Field title="Stop condition field"><input className={input} placeholder="variables.done" value={config.stopCondition?.field ?? ""} onChange={(e) => setConfig({ stopCondition: { ...(config.stopCondition ?? {}), field: e.target.value } })} /></Field>
+              <Field title="Stop operator"><select className={`${input} bg-white`} value={config.stopCondition?.operator ?? "equals"} onChange={(e) => setConfig({ stopCondition: { ...(config.stopCondition ?? {}), operator: e.target.value } })}>{OPERATORS.map((operator) => <option key={operator.value} value={operator.value}>{operator.label}</option>)}</select></Field>
+              <Field title="Stop value"><input className={input} value={config.stopCondition?.value ?? ""} onChange={(e) => setConfig({ stopCondition: { ...(config.stopCondition ?? {}), value: e.target.value } })} /></Field>
+            </> : null}
           </div>
         </div>
       )}

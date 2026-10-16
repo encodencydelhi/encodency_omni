@@ -19,8 +19,8 @@ export interface AutomationRepository {
   // Runs
   getRuns(clientId?: string, workflowId?: string): Promise<AutomationRun[]>;
   getRun(runId: string): Promise<AutomationRun | null>;
-  retryRun(runId: string): Promise<AutomationRun>;
-  bulkRetryRuns(runIds: string[]): Promise<AutomationRun[]>;
+  retryRun(runId: string, options?: { acknowledgeDuplicateRisk?: boolean }): Promise<AutomationRun>;
+  bulkRetryRuns(runIds: string[], options?: { acknowledgeDuplicateRisk?: boolean }): Promise<AutomationRun[]>;
   createTestWebhookRun(payload: { workflowId: string; eventType: string; payload: Record<string, any> }): Promise<AutomationRun>;
 
   // Console Logs

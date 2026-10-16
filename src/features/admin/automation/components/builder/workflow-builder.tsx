@@ -1,16 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Check, Pencil, Play, Send, Save, PauseCircle } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Check, History, PauseCircle, Pencil, Play, RefreshCw, Save, Send, X } from "lucide-react";
 import { toast } from "sonner";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { whatsappApi } from "@/features/admin/channels/live/whatsapp-api";
 import { teamApi } from "@/features/admin/team/live/team-api";
-import type { AutomationNode, AutomationRun, AutomationWorkflow, AutomationWorkflowStatus } from "../../data/types";
-import { automationApi, type WorkflowInput } from "../../data/automation-api";
+import type { AutomationEdge, AutomationNode, AutomationRun, AutomationWorkflow, AutomationWorkflowStatus } from "../../data/types";
+import { automationApi, type WorkflowInput, type WorkflowVersion } from "../../data/automation-api";
 import { errorMessage, useInvalidateAutomation } from "../../data/hooks";
 import { RunDetailsSheet } from "../logs/run-details-sheet";
 import { WorkflowStatusChip } from "../shared";
@@ -18,205 +16,113 @@ import { NodeLibrary, type LibraryItem } from "./node-library";
 import { WorkflowCanvas } from "./canvas";
 import { NodeConfigPanel, nodeProblem, type BuilderResources } from "./node-config-panel";
 import { TestRunDialog } from "./test-run-dialog";
+import { graphProblems, linearEdges } from "./graph-utils";
+import { VersionHistoryDialog } from "./version-history-dialog";
 
-/** A workflow that has never been saved has an id starting with "draft_". */
-export function isUnsaved(workflow: AutomationWorkflow) {
-  return workflow.id.startsWith("draft_");
-}
+type GraphSnapshot = { nodes: AutomationNode[]; edges: AutomationEdge[] };
 
-function toInput(name: string, status: AutomationWorkflowStatus, nodes: AutomationNode[], base: AutomationWorkflow): WorkflowInput {
-  const trigger = nodes.find((n) => n.type === "trigger");
-  const channels = Array.from(new Set(nodes.flatMap((n) => (n.actionId === "send_whatsapp" ? ["whatsapp"] : n.actionId === "send_email" ? ["email"] : n.actionId === "meta_lead" ? ["meta"] : []))));
-  return {
-    name: name.trim() || "Untitled workflow",
-    status,
-    trigger: { type: trigger?.actionId, label: trigger?.label },
-    nodes: nodes.map((n) => ({ ...n, status: nodeProblem(n) ? "idle" : "configured" })),
-    edges: nodes.slice(1).map((n, i) => ({ id: `e${i + 1}`, source: nodes[i]!.id, target: n.id })),
-    channels,
-    ownerId: base.ownerId,
-    templateId: base.templateId,
-  };
+export function isUnsaved(workflow: AutomationWorkflow) { return workflow.id.startsWith("draft_"); }
+
+function normalizedEdges(workflow: Pick<AutomationWorkflow, "nodes" | "edges">) { return workflow.edges?.length ? workflow.edges : linearEdges(workflow.nodes ?? []); }
+
+function toInput(name: string, status: AutomationWorkflowStatus, nodes: AutomationNode[], edges: AutomationEdge[], base: AutomationWorkflow): WorkflowInput {
+  const trigger = nodes.find((node) => node.type === "trigger");
+  const channels = Array.from(new Set(nodes.flatMap((node) => node.actionId === "send_whatsapp" ? ["whatsapp"] : node.actionId === "send_email" ? ["email"] : node.actionId === "meta_lead" ? ["meta"] : [])));
+  return { name: name.trim() || "Untitled workflow", status, trigger: { type: trigger?.actionId, label: trigger?.label }, nodes: nodes.map((node) => ({ ...node, status: nodeProblem(node) ? "idle" : "configured" })), edges, channels, executionMode: "graph-v1", ownerId: base.ownerId, templateId: base.templateId };
 }
 
 export function WorkflowBuilder({ workflow: initial, clientId, onBack }: { workflow: AutomationWorkflow; clientId: string; onBack: () => void }) {
   const invalidate = useInvalidateAutomation();
+  const initialEdges = normalizedEdges(initial);
   const [workflow, setWorkflow] = useState(initial);
   const [nodes, setNodes] = useState<AutomationNode[]>(initial.nodes ?? []);
+  const [edges, setEdges] = useState<AutomationEdge[]>(initialEdges);
   const [name, setName] = useState(initial.name);
   const [editingName, setEditingName] = useState(isUnsaved(initial));
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initial.nodes?.[0]?.id ?? null);
-  const [saving, setSaving] = useState<null | "draft" | "publish" | "pause">(null);
-  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify({ name: initial.name, nodes: initial.nodes ?? [] }));
+  const [saving, setSaving] = useState<null | "draft" | "publish" | "pause" | "rollback">(null);
+  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify({ name: initial.name, nodes: initial.nodes ?? [], edges: initialEdges }));
+  const [past, setPast] = useState<GraphSnapshot[]>([]);
+  const [future, setFuture] = useState<GraphSnapshot[]>([]);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
   const [testKey, setTestKey] = useState(0);
   const [lastRun, setLastRun] = useState<AutomationRun | null>(null);
   const [runSheetOpen, setRunSheetOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [inspecting, setInspecting] = useState<WorkflowVersion | null>(null);
+  const [conflict, setConflict] = useState(false);
   const [resources, setResources] = useState<BuilderResources>({ templates: [], templatesError: null, members: [] });
 
-  const dirty = JSON.stringify({ name, nodes }) !== savedSnapshot;
-  const selectedNode = nodes.find((n) => n.id === selectedNodeId) ?? null;
-  const problems = useMemo(() => nodes.map((n) => ({ node: n, problem: nodeProblem(n) })).filter((p) => p.problem), [nodes]);
-  const hasTrigger = nodes.some((n) => n.type === "trigger");
+  const dirty = JSON.stringify({ name, nodes, edges }) !== savedSnapshot;
+  const visibleNodes = inspecting?.definition.nodes ?? nodes;
+  const visibleEdges = inspecting ? (inspecting.definition.edges?.length ? inspecting.definition.edges : linearEdges(visibleNodes)) : edges;
+  const selectedNode = visibleNodes.find((node) => node.id === selectedNodeId) ?? null;
+  const problems = useMemo(() => nodes.map((node) => ({ node, problem: nodeProblem(node) })).filter((entry) => entry.problem), [nodes]);
+  const hasTrigger = nodes.some((node) => node.type === "trigger");
   const saved = !isUnsaved(workflow);
 
+  const commitGraph = useCallback((nextNodes: AutomationNode[], nextEdges: AutomationEdge[]) => { setPast((items) => [...items.slice(-49), { nodes, edges }]); setFuture([]); setNodes(nextNodes); setEdges(nextEdges); }, [edges, nodes]);
+  const undo = useCallback(() => { const previous = past.at(-1); if (!previous) return; setFuture((items) => [{ nodes, edges }, ...items]); setPast((items) => items.slice(0, -1)); setNodes(previous.nodes); setEdges(previous.edges); }, [edges, nodes, past]);
+  const redo = useCallback(() => { const next = future[0]; if (!next) return; setPast((items) => [...items, { nodes, edges }]); setFuture((items) => items.slice(1)); setNodes(next.nodes); setEdges(next.edges); }, [edges, future, nodes]);
+
   useEffect(() => {
-    const companyId = getStoredCompanyId();
-    let cancelled = false;
-    void Promise.allSettled([whatsappApi.listTemplates(companyId, clientId), teamApi.listMembers(companyId)]).then(([tpl, team]) => {
-      if (cancelled) return;
-      setResources({
-        templates: tpl.status === "fulfilled" ? tpl.value.items.filter((t) => t.status === "ENABLED").map((t) => ({ id: t.id, name: t.name, language: t.language, variables: t.variables ?? [], status: t.status, providerStatus: t.providerStatus })) : [],
-        templatesError: tpl.status === "rejected" ? "WhatsApp is not connected for this client (Channels → WhatsApp)." : null,
-        members: team.status === "fulfilled" ? team.value.filter((m) => !m.suspendedAt).map((m) => ({ id: m.user.id, name: m.user.name?.trim() || m.user.email })) : [],
-      });
-    });
+    const companyId = getStoredCompanyId(); let cancelled = false;
+    void Promise.allSettled([whatsappApi.listTemplates(companyId, clientId), teamApi.listMembers(companyId)]).then(([templates, team]) => { if (cancelled) return; setResources({ templates: templates.status === "fulfilled" ? templates.value.items.filter((item) => item.status === "ENABLED").map((item) => ({ id: item.id, name: item.name, language: item.language, variables: item.variables ?? [], status: item.status, providerStatus: item.providerStatus })) : [], templatesError: templates.status === "rejected" ? "WhatsApp is not connected for this client (Channels → WhatsApp)." : null, members: team.status === "fulfilled" ? team.value.filter((member) => !member.suspendedAt).map((member) => ({ id: member.user.id, name: member.user.name?.trim() || member.user.email })) : [] }); });
     return () => { cancelled = true; };
   }, [clientId]);
 
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); };
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty]);
+  useEffect(() => { if (!dirty) return; const warn = (event: BeforeUnloadEvent) => event.preventDefault(); window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn); }, [dirty]);
 
-  const addNode = (item: LibraryItem) => {
-    const node: AutomationNode = { id: `node_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, type: item.type, actionId: item.id, label: item.label, description: item.description, status: "idle", config: item.id === "delay" ? { duration: 1, unit: "hours" } : item.id === "send_whatsapp" ? { phone: "{{lead.phone}}", variables: {} } : item.id === "create_task" ? { dueInDays: 1, priority: "medium" } : {} };
+  const addNode = (item: LibraryItem, position?: { x: number; y: number }) => {
+    if (item.supported === false || inspecting) return;
+    const node: AutomationNode = { id: `node_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, type: item.type, actionId: item.id, label: item.label, description: item.description, status: "idle", position, config: item.id === "delay" ? { duration: 1, unit: "hours" } : item.id === "wait_until" ? { mode: "relative", duration: 1, unit: "hours" } : item.id === "approval" ? { approverUserIds: [], expiryMinutes: 1440, reminderMinutes: 60 } : item.id === "sub_workflow" ? { workflowId: "", waitForCompletion: true, timeoutSeconds: 3600, input: {} } : item.id === "send_whatsapp" ? { phone: "{{lead.phone}}", variables: {} } : item.id === "create_task" ? { dueInDays: 1, priority: "medium" } : item.id === "parallel" ? { branches: ["branch-a", "branch-b"], failurePolicy: "fail", timeoutSeconds: 300, cancelRemaining: true } : item.id === "merge" ? { mode: "all" } : item.id === "for_each" ? { arraySource: "trigger.items", itemVariable: "item", concurrency: 2, maxItems: 100, failurePolicy: "fail" } : item.id === "loop" ? { maxIterations: 10, maxDurationSeconds: 3600, stopCondition: { field: "variables.done", operator: "equals", value: "true", valueType: "boolean" } } : {} };
     if (item.type === "trigger") {
-      const existing = nodes.find((n) => n.type === "trigger");
-      // Replacing a trigger keeps a webhook token only if the new trigger is a webhook type too.
-      const keep = existing && ["inbound_webhook", "form_submission"].includes(item.id) ? { webhookToken: existing.config?.webhookToken } : {};
-      setNodes((prev) => [{ ...node, config: { ...node.config, ...(keep.webhookToken ? keep : {}) } }, ...prev.filter((n) => n.type !== "trigger")]);
-      if (existing) toast.info(`Trigger replaced with “${item.label}”`);
+      const existing = nodes.find((candidate) => candidate.type === "trigger"); const keep = existing && ["inbound_webhook", "form_submission"].includes(item.id) ? { webhookToken: existing.config?.webhookToken } : {};
+      const nextNodes = [{ ...node, config: { ...node.config, ...(keep.webhookToken ? keep : {}) } }, ...nodes.filter((candidate) => candidate.type !== "trigger")];
+      const nextEdges = existing ? edges.map((edge) => ({ ...edge, source: edge.source === existing.id ? node.id : edge.source, target: edge.target === existing.id ? node.id : edge.target })) : edges;
+      commitGraph(nextNodes, nextEdges); if (existing) toast.info(`Trigger replaced with “${item.label}”`);
     } else {
-      setNodes((prev) => [...prev, node]);
+      const previous = nodes.at(-1);
+      const paired = item.id === "merge" ? nodes.map((candidate) => candidate.actionId === "parallel" && !candidate.config?.joinNodeId ? { ...candidate, config: { ...candidate.config, joinNodeId: node.id } } : candidate) : nodes;
+      commitGraph([...paired, node], previous ? [...edges, { id: `e_${previous.id}_${node.id}`, source: previous.id, target: node.id }] : edges);
     }
     setSelectedNodeId(node.id);
   };
 
-  const updateNode = (id: string, updates: Partial<AutomationNode>) => setNodes((prev) => prev.map((n) => (n.id === id ? { ...n, ...updates } : n)));
+  const applyResult = (result: AutomationWorkflow) => { const resultEdges = normalizedEdges(result); setWorkflow(result); setNodes(result.nodes); setEdges(resultEdges); setName(result.name); setSavedSnapshot(JSON.stringify({ name: result.name, nodes: result.nodes, edges: resultEdges })); setPast([]); setFuture([]); setConflict(false); setInspecting(null); invalidate(); };
 
-  const moveNode = (id: string, dir: -1 | 1) => setNodes((prev) => {
-    const i = prev.findIndex((n) => n.id === id);
-    const j = i + dir;
-    if (i < 0 || j < 0 || j >= prev.length || prev[j]!.type === "trigger" || prev[i]!.type === "trigger") return prev;
-    const next = [...prev];
-    [next[i], next[j]] = [next[j]!, next[i]!];
-    return next;
-  });
-
-  const deleteNode = (id: string) => {
-    setNodes((prev) => prev.filter((n) => n.id !== id));
-    if (selectedNodeId === id) setSelectedNodeId(null);
-  };
-
-  const save = async (mode: "draft" | "publish" | "pause") => {
+  const save = async (mode: "draft" | "publish") => {
     if (!name.trim()) { toast.error("Give the workflow a name"); setEditingName(true); return; }
     if (mode === "publish") {
-      if (!hasTrigger) { toast.error("Add a trigger before publishing"); return; }
-      if (nodes.length < 2) { toast.error("Add at least one step after the trigger"); return; }
-      if (problems.length) { toast.error(`Finish configuring: ${problems[0]!.node.label} — ${problems[0]!.problem}`); setSelectedNodeId(problems[0]!.node.id); return; }
+      if (!hasTrigger || nodes.length < 2) { toast.error("Add a trigger and at least one action before publishing"); return; }
+      if (problems.length) { toast.error(`Finish configuring ${problems[0]!.node.label}: ${problems[0]!.problem}`); setSelectedNodeId(problems[0]!.node.id); return; }
+      const graphErrors = graphProblems(nodes, edges); if (graphErrors.size) { const first = graphErrors.values().next().value; toast.error(first ?? "Fix graph validation errors before publishing."); return; }
     }
-    const status: AutomationWorkflowStatus = mode === "publish" ? "Active" : mode === "pause" ? "Paused" : saved ? workflow.status : "Draft";
     setSaving(mode);
     try {
-      const input = toInput(name, status, nodes, workflow);
-      const result = saved ? await automationApi.updateWorkflow(clientId, workflow.id, input) : await automationApi.createWorkflow(clientId, input);
-      setWorkflow(result);
-      setNodes(result.nodes);
-      setName(result.name);
-      setSavedSnapshot(JSON.stringify({ name: result.name, nodes: result.nodes }));
-      invalidate();
-      toast.success(mode === "publish" ? "Workflow published — it is now live" : mode === "pause" ? "Workflow paused" : "Draft saved");
-    } catch (error) {
-      toast.error(errorMessage(error));
-    } finally {
-      setSaving(null);
-    }
+      const input = { ...toInput(name, "Draft", nodes, edges, workflow), ...(saved ? { expectedVersion: workflow.version } : {}) };
+      let result = saved && dirty ? await automationApi.updateWorkflow(clientId, workflow.id, input) : saved ? workflow : await automationApi.createWorkflow(clientId, input);
+      if (mode === "publish") result = await automationApi.publishWorkflow(clientId, result.id, result.version);
+      applyResult(result); toast.success(mode === "publish" ? "Workflow published — it is now live" : "Draft saved");
+    } catch (error) { const message = errorMessage(error); if (/edited by someone else|reload/i.test(message)) setConflict(true); toast.error(message); } finally { setSaving(null); }
   };
 
-  const openTest = () => {
-    if (!saved) { toast.error("Save the workflow before testing it"); return; }
-    if (dirty) { toast.error("Save your changes first — tests run the saved version"); return; }
-    setTestKey((k) => k + 1);
-    setTestOpen(true);
-  };
+  const pause = async () => { setSaving("pause"); try { const result = await automationApi.setWorkflowStatus(clientId, workflow.id, "Paused"); applyResult(result); toast.success("Workflow paused"); } catch (error) { toast.error(errorMessage(error)); } finally { setSaving(null); } };
+  const reloadLatest = async () => { try { applyResult(await automationApi.getWorkflow(clientId, workflow.id)); toast.success("Latest revision loaded"); } catch (error) { toast.error(errorMessage(error)); } };
+  const rollback = async (version: WorkflowVersion) => { setSaving("rollback"); try { const result = await automationApi.rollbackWorkflow(clientId, workflow.id, version.version, workflow.version, true); applyResult(result); setHistoryOpen(false); toast.success(`Version ${version.version} restored as version ${result.version}`); } catch (error) { const message = errorMessage(error); if (/edited by someone else|reload/i.test(message)) setConflict(true); toast.error(message); } finally { setSaving(null); } };
+  const openTest = () => { if (!saved) return toast.error("Save the workflow before testing it"); if (dirty) return toast.error("Save your changes first — tests run the saved draft version"); setTestKey((key) => key + 1); setTestOpen(true); };
 
-  const back = () => (dirty ? setConfirmLeave(true) : onBack());
-
-  return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-[#F8FAFC]">
-      <header className="z-20 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-[#E2E8F0] bg-white px-5">
-        <div className="flex min-w-0 items-center gap-4">
-          <button type="button" onClick={back} aria-label="Back to workflows" className="rounded-lg p-1.5 text-[#64748B] hover:bg-[#F1F5F9]"><ArrowLeft className="size-4" /></button>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              {editingName ? (
-                <input autoFocus value={name} maxLength={200} onChange={(e) => setName(e.target.value)} onBlur={() => setEditingName(false)} onKeyDown={(e) => { if (e.key === "Enter") setEditingName(false); }} className="h-7 w-[280px] rounded-md border border-[#2563EB] px-2 text-[13px] font-bold text-[#111C3A] focus:outline-none" placeholder="Workflow name" />
-              ) : (
-                <>
-                  <h1 className="truncate text-[14px] font-bold text-[#111C3A]">{name || "Untitled workflow"}</h1>
-                  <button type="button" aria-label="Rename workflow" onClick={() => setEditingName(true)} className="rounded p-1 text-[#94A3B8] hover:bg-[#F1F5F9] hover:text-[#64748B]"><Pencil className="size-3.5" /></button>
-                </>
-              )}
-            </div>
-            <div className="flex items-center gap-2 text-[10.5px] text-[#6B7A94]">
-              {saved ? <WorkflowStatusChip status={workflow.status} /> : <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-bold text-[#475569]">NEW</span>}
-              {saved ? <span>v{workflow.version}</span> : null}
-              <span>•</span>
-              <span className={dirty ? "font-semibold text-[#B45309]" : ""}>{dirty ? "Unsaved changes" : saved ? "All changes saved" : "Not saved yet"}</span>
-              {problems.length ? <><span>•</span><span className="text-[#B45309]">{problems.length} step{problems.length === 1 ? "" : "s"} need setup</span></> : null}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
-          <button type="button" onClick={openTest} className="flex h-8 items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-white px-3 text-[11.5px] font-semibold text-[#334155] hover:bg-slate-50"><Play className="size-3.5" /> Test</button>
-          {saved && workflow.status === "Active" ? (
-            <button type="button" disabled={saving !== null} onClick={() => void save("pause")} className="flex h-8 items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-white px-3 text-[11.5px] font-semibold text-[#B45309] hover:bg-amber-50 disabled:opacity-50"><PauseCircle className="size-3.5" /> {saving === "pause" ? "Pausing..." : "Pause"}</button>
-          ) : null}
-          <button type="button" disabled={saving !== null || (!dirty && saved)} onClick={() => void save("draft")} className="flex h-8 items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-white px-3 text-[11.5px] font-semibold text-[#111C3A] hover:bg-slate-50 disabled:opacity-50"><Save className="size-3.5" /> {saving === "draft" ? "Saving..." : saved && workflow.status === "Active" ? "Save" : "Save Draft"}</button>
-          <button type="button" disabled={saving !== null || (saved && workflow.status === "Active" && !dirty)} onClick={() => void save("publish")} className="flex h-8 items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#2563EB] to-[#4F46E5] px-4 text-[11.5px] font-semibold text-white shadow-sm hover:from-[#1D4ED8] hover:to-[#4338CA] disabled:opacity-50">
-            {saved && workflow.status === "Active" && !dirty ? <Check className="size-3.5" /> : <Send className="size-3.5" />}
-            {saving === "publish" ? "Publishing..." : saved && workflow.status === "Active" ? (dirty ? "Publish Changes" : "Live") : "Publish"}
-          </button>
-        </div>
-      </header>
-
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="flex w-64 shrink-0 flex-col overflow-hidden border-r border-[#E2E8F0] bg-white"><NodeLibrary hasTrigger={hasTrigger} onAddNode={addNode} /></aside>
-        <main className="relative flex-1 overflow-hidden bg-[#F8FAFC]">
-          <WorkflowCanvas nodes={nodes} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId} onMoveNode={moveNode} onDeleteNode={deleteNode} />
-        </main>
-        <aside className="custom-scrollbar w-80 shrink-0 overflow-y-auto border-l border-[#E2E8F0] bg-white">
-          {selectedNode ? (
-            <NodeConfigPanel key={selectedNode.id} node={selectedNode} workflowId={saved ? workflow.id : undefined} resources={resources} onChange={(u) => updateNode(selectedNode.id, u)} />
-          ) : (
-            <div className="flex h-full items-center justify-center p-6 text-center"><p className="text-[11.5px] text-[#6B7A94]">Select a step on the canvas to configure it.</p></div>
-          )}
-        </aside>
-      </div>
-
-      {saved ? <TestRunDialog key={testKey} open={testOpen} onClose={() => setTestOpen(false)} workflow={workflow} clientId={clientId} onRan={(run) => { setLastRun(run); invalidate(); }} /> : null}
-      {lastRun && !testOpen ? (
-        <button type="button" onClick={() => setRunSheetOpen(true)} className="fixed bottom-5 right-[22rem] z-20 rounded-full bg-[#111C3A] px-4 py-2 text-[11.5px] font-semibold text-white shadow-lg hover:bg-[#1E293B]">View last test run</button>
-      ) : null}
-      <RunDetailsSheet run={lastRun} open={runSheetOpen} onOpenChange={setRunSheetOpen} />
-
-      <AlertDialog open={confirmLeave} onOpenChange={setConfirmLeave}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Leave without saving?</AlertDialogTitle>
-            <AlertDialogDescription>Your changes to this workflow will be lost.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep editing</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={onBack}>Discard changes</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
+  return <div className="fixed inset-0 z-[100] flex flex-col bg-slate-50">
+    <header className="z-20 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-5">
+      <div className="flex min-w-0 items-center gap-4"><button type="button" onClick={() => dirty ? setConfirmLeave(true) : onBack()} aria-label="Back to workflows" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"><ArrowLeft className="size-4" /></button><div className="min-w-0">{editingName ? <input autoFocus value={name} maxLength={200} onChange={(event) => setName(event.target.value)} onBlur={() => setEditingName(false)} onKeyDown={(event) => { if (event.key === "Enter") setEditingName(false); }} className="h-7 w-[280px] rounded-md border border-blue-600 px-2 text-[13px] font-bold" /> : <div className="flex items-center gap-2"><h1 className="truncate text-sm font-bold text-slate-900">{name || "Untitled workflow"}</h1>{!inspecting ? <button type="button" onClick={() => setEditingName(true)}><Pencil className="size-3.5 text-slate-400" /></button> : null}</div>}<div className="flex items-center gap-2 text-[10.5px] text-slate-500">{saved ? <WorkflowStatusChip status={workflow.status} /> : <span className="font-bold">NEW</span>}<span>v{inspecting?.version ?? workflow.version}</span><span>•</span><span className={dirty ? "font-semibold text-amber-700" : ""}>{inspecting ? "Historical revision" : dirty ? "Unsaved changes" : "All changes saved"}</span></div></div></div>
+      <div className="flex shrink-0 items-center gap-2">{saved ? <button type="button" onClick={() => setHistoryOpen(true)} className="flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold"><History className="size-3.5" />Versions</button> : null}<button type="button" disabled={Boolean(inspecting)} onClick={openTest} className="flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold disabled:opacity-40"><Play className="size-3.5" />Test Run</button>{saved && workflow.status === "Active" ? <button type="button" disabled={saving !== null || Boolean(inspecting)} onClick={() => void pause()} className="flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold text-amber-700"><PauseCircle className="size-3.5" />Pause</button> : null}<button type="button" disabled={saving !== null || (!dirty && saved) || Boolean(inspecting)} onClick={() => void save("draft")} className="flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold disabled:opacity-40"><Save className="size-3.5" />{saving === "draft" ? "Saving…" : "Save Draft"}</button><button type="button" disabled={saving !== null || Boolean(inspecting)} onClick={() => void save("publish")} className="flex h-8 items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 text-xs font-semibold text-white disabled:opacity-40">{workflow.status === "Active" && !dirty ? <Check className="size-3.5" /> : <Send className="size-3.5" />}{saving === "publish" ? "Publishing…" : "Publish"}</button></div>
+    </header>
+    {conflict ? <div className="flex items-center justify-between border-b border-amber-200 bg-amber-50 px-5 py-2 text-xs text-amber-900"><span>This workflow changed in another editor. Your local changes were not overwritten.</span><button type="button" onClick={() => void reloadLatest()} className="flex items-center gap-1 font-bold"><RefreshCw className="size-3.5" />Discard local changes and reload</button></div> : null}
+    {inspecting ? <div className="flex items-center justify-between border-b border-blue-200 bg-blue-50 px-5 py-2 text-xs text-blue-900"><span>Inspecting immutable version {inspecting.version}. Editing and execution controls are disabled.</span><button type="button" onClick={() => { setInspecting(null); setSelectedNodeId(nodes[0]?.id ?? null); }} className="flex items-center gap-1 font-bold"><X className="size-3.5" />Return to draft</button></div> : null}
+    <div className="flex flex-1 overflow-hidden"><aside className="flex w-64 shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white"><NodeLibrary hasTrigger={hasTrigger} readOnly={Boolean(inspecting)} onAddNode={addNode} /></aside><main className="relative flex-1 overflow-hidden"><WorkflowCanvas nodes={visibleNodes} edges={visibleEdges} selectedNodeId={selectedNodeId} readOnly={Boolean(inspecting)} canUndo={past.length > 0} canRedo={future.length > 0} onSelectNode={setSelectedNodeId} onGraphChange={commitGraph} onDropNode={addNode} onUndo={undo} onRedo={redo} /></main><aside className="custom-scrollbar w-80 shrink-0 overflow-y-auto border-l border-slate-200 bg-white">{selectedNode ? <div className={inspecting ? "pointer-events-none opacity-75" : ""}><NodeConfigPanel key={`${inspecting?.version ?? "draft"}-${selectedNode.id}`} node={selectedNode} workflowId={saved ? workflow.id : undefined} resources={resources} onChange={(updates) => { if (!inspecting) commitGraph(nodes.map((node) => node.id === selectedNode.id ? { ...node, ...updates } : node), edges); }} /></div> : <div className="flex h-full items-center justify-center p-6 text-center text-xs text-slate-500">Select a node to configure it.</div>}</aside></div>
+    {saved ? <><TestRunDialog key={testKey} open={testOpen} onClose={() => setTestOpen(false)} workflow={workflow} clientId={clientId} onRan={(run) => { setLastRun(run); invalidate(); }} /><VersionHistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} clientId={clientId} workflowId={workflow.id} currentVersion={workflow.version} onInspect={(version) => { setInspecting(version); setSelectedNodeId(version.definition.nodes?.[0]?.id ?? null); }} onRollback={rollback} /></> : null}
+    {lastRun && !testOpen ? <button type="button" onClick={() => setRunSheetOpen(true)} className="fixed bottom-5 right-[22rem] z-20 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-lg">View last test run</button> : null}<RunDetailsSheet run={lastRun} open={runSheetOpen} onOpenChange={setRunSheetOpen} />
+    <AlertDialog open={confirmLeave} onOpenChange={setConfirmLeave}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Leave without saving?</AlertDialogTitle><AlertDialogDescription>Your changes to this workflow will be lost.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Keep editing</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={onBack}>Discard changes</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+  </div>;
 }

@@ -1,34 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { AlertCircle, Loader2, Wifi } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
+import { Activity, AlertCircle, CheckCircle2, Loader2, Wifi } from "lucide-react";
 import { useWebsiteMonitoring } from "@/features/admin/website/data/hooks";
 import type { LiveStatus } from "@/features/admin/website/data/types";
 import { useAdminContext } from "./admin-context";
-
-const STATUS_META: Record<LiveStatus, { label: string; className: string; dot: string }> = {
-  live: {
-    label: "Website live",
-    className: "border-[#BDE8D6] bg-[#E6F6EF] text-[#0B7A55] hover:bg-[#D9F0E7]",
-    dot: "bg-[#12A06D]",
-  },
-  degraded: {
-    label: "Website degraded",
-    className: "border-[#F5DFB8] bg-[#FDF3E3] text-[#9A5B08] hover:bg-[#FBE9C7]",
-    dot: "bg-[#E29208]",
-  },
-  down: {
-    label: "Website down",
-    className: "border-[#F7CFCC] bg-[#FDECEB] text-[#C0261F] hover:bg-[#FBDDDC]",
-    dot: "bg-[#DC3A32]",
-  },
-  unknown: {
-    label: "Website unknown",
-    className: "border-[#DAE1EC] bg-white text-[#64748B] hover:bg-[#F7F9FC]",
-    dot: "bg-[#94A3B8]",
-  },
-};
+import { StatusPill, type StatusTone, type StatusHighlightData } from "./status-pill";
 
 function websiteDetails(website: string | null | undefined) {
   const value = website?.trim();
@@ -54,28 +30,73 @@ export function WebsiteLiveStatus() {
     return null;
   }
 
-  const status = monitoring.data?.uptime.status ?? "unknown";
-  const meta = STATUS_META[status];
-  const title = domain ? `${domain}: ${meta.label}` : meta.label;
+  const rawStatus: LiveStatus = monitoring.data?.uptime.status ?? "unknown";
+
+  let tone: StatusTone = "healthy";
+  let label = "Website Live";
+
+  if (monitoring.isLoading) {
+    tone = "neutral";
+    label = "Checking Website";
+  } else if (monitoring.error) {
+    tone = "critical";
+    label = "Check Failed";
+  } else if (rawStatus === "live") {
+    tone = "healthy";
+    label = "Website Live";
+  } else if (rawStatus === "degraded") {
+    tone = "warning";
+    label = "Website Degraded";
+  } else if (rawStatus === "down") {
+    tone = "critical";
+    label = "Website Down";
+  } else {
+    tone = "neutral";
+    label = "Website Unknown";
+  }
+
+  const uptimePct = monitoring.data?.uptime.uptimePct30d;
+
+  let highlightData: StatusHighlightData | null = null;
+  if (monitoring.isLoading) {
+    highlightData = { text: "Checking", icon: Loader2, tone: "neutral" };
+  } else if (monitoring.error) {
+    highlightData = { text: "Error", icon: AlertCircle, tone: "critical" };
+  } else if (uptimePct != null) {
+    highlightData = {
+      text: `${uptimePct.toFixed(1)}% Uptime`,
+      icon: Activity,
+      tone: rawStatus === "down" ? "critical" : rawStatus === "degraded" ? "warning" : "healthy",
+    };
+  } else if (rawStatus === "live") {
+    highlightData = { text: "200 OK", icon: CheckCircle2, tone: "healthy" };
+  }
+
+  const tooltipLines: string[] = [
+    domain ? `Monitored host: ${domain}` : "",
+    rawStatus === "live"
+      ? "Status: Live & operational (HTTP 200 OK)"
+      : rawStatus === "degraded"
+        ? "Status: Performance degraded"
+        : rawStatus === "down"
+          ? "Status: Down or unreachable"
+          : "Status: Awaiting next scheduled check",
+    uptimePct != null ? `30-Day availability: ${uptimePct.toFixed(2)}%` : "",
+  ].filter(Boolean);
+
+  const icon = monitoring.isLoading ? Loader2 : monitoring.error ? AlertCircle : Wifi;
 
   return (
-    <Link
+    <StatusPill
       href="/admin/website/monitoring"
-      title={title}
-      className={cn(
-        "ml-auto hidden h-6 shrink-0 items-center gap-1.5 rounded-md border px-2 text-[11px] font-semibold transition-colors md:inline-flex",
-        monitoring.error ? STATUS_META.unknown.className : meta.className,
-      )}
-    >
-      {monitoring.isLoading ? (
-        <Loader2 className="size-3 animate-spin" aria-hidden />
-      ) : monitoring.error ? (
-        <AlertCircle className="size-3" aria-hidden />
-      ) : (
-        <Wifi className="size-3" aria-hidden />
-      )}
-      <span className={cn("size-1.5 rounded-full", monitoring.error ? STATUS_META.unknown.dot : meta.dot)} />
-      <span>{monitoring.isLoading ? "Checking website" : monitoring.error ? "Website check failed" : meta.label}</span>
-    </Link>
+      tone={tone}
+      icon={icon}
+      label={label}
+      highlightData={highlightData}
+      tooltipTitle="Website Monitoring"
+      tooltipLines={tooltipLines}
+      tooltipAction="Open website monitoring →"
+      loading={monitoring.isLoading}
+    />
   );
 }

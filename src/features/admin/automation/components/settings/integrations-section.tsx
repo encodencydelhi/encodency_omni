@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { whatsappApi, type WhatsAppConfigState } from "@/features/admin/channels/live/whatsapp-api";
 import { IntegrationsSettings } from "../../data/settings-types";
-import { webhookUrl } from "../../data/automation-api";
+import { webhookEndpoint } from "../../data/automation-api";
 import { useAutomationScope, useWorkflows } from "../../data/hooks";
 
 interface IntegrationsSectionProps {
@@ -32,8 +32,9 @@ export function IntegrationsSection({ settings, onChange }: IntegrationsSectionP
 
   const hooks = workflows.flatMap((wf) => {
     const trigger = wf.nodes.find((n) => n.type === "trigger");
-    if (!trigger || !["inbound_webhook", "form_submission"].includes(trigger.actionId ?? "") || !trigger.config?.webhookToken) return [];
-    return [{ wf, kind: trigger.actionId === "form_submission" ? "Form submission" : "Inbound webhook", url: webhookUrl(wf.id, String(trigger.config.webhookToken)) }];
+    if (!trigger || !["inbound_webhook", "form_submission"].includes(trigger.actionId ?? "")) return [];
+    // Tokens are hidden by the API; the endpoint is listed and the token is issued from the workflow builder.
+    return [{ wf, kind: trigger.actionId === "form_submission" ? "Form submission" : "Inbound webhook", url: webhookEndpoint(wf.id) }];
   });
 
   const copy = async (key: string, text: string) => {

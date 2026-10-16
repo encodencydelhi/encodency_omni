@@ -558,7 +558,7 @@ class MockAutomationRepository implements AutomationRepository {
     return this.runs.find(r => r.id === runId) || null;
   }
 
-  async retryRun(runId: string): Promise<AutomationRun> {
+  async retryRun(runId: string, _options: { acknowledgeDuplicateRisk?: boolean } = {}): Promise<AutomationRun> {
     await delay(300);
     const idx = this.runs.findIndex(r => r.id === runId);
     if (idx === -1) throw new Error("Run not found");
@@ -595,7 +595,7 @@ class MockAutomationRepository implements AutomationRepository {
     return updated;
   }
 
-  async bulkRetryRuns(runIds: string[]): Promise<AutomationRun[]> {
+  async bulkRetryRuns(runIds: string[], _options: { acknowledgeDuplicateRisk?: boolean } = {}): Promise<AutomationRun[]> {
     await delay(400);
     const updatedRuns: AutomationRun[] = [];
     for (const id of runIds) {

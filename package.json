@@ -13,6 +13,7 @@
     "test": "node --import ./scripts/ts-test-hooks.mjs --test \"src/**/*.test.ts\""
   },
   "dependencies": {
+    "@dagrejs/dagre": "^3.1.1",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.16",
     "@radix-ui/react-avatar": "^1.1.11",
@@ -32,6 +33,7 @@
     "@radix-ui/react-tabs": "^1.1.14",
     "@radix-ui/react-tooltip": "^1.2.9",
     "@tanstack/react-query": "^5.102.8",
+    "@xyflow/react": "^12.12.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",

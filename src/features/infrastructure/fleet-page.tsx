@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Download, Plus, RefreshCw, Server } from "lucide-react";
+import { Activity, AlertTriangle, Bell, CalendarClock, Download, Globe, MonitorUp, Plus, RefreshCw, Server } from "lucide-react";
 import { toast } from "sonner";
 import { infraApi } from "./api";
 import { Donut, MonitoringChart, SERIES, UsageBar } from "./charts";
@@ -57,38 +57,18 @@ export function FleetPage() {
         <StatStrip
           title="Fleet summary"
           items={[
-            { label: "Servers", value: s.total, sub: `${s.running} running · ${s.stopped} stopped${s.otherStatus ? ` · ${s.otherStatus} other` : ""}` },
-            { label: "Monitored", value: `${s.monitored}/${s.total}`, tone: s.total > 0 && s.monitored === 0 ? "amber" : undefined, sub: s.collectorOffline ? `${s.collectorOffline} collector offline` : s.pendingSetup ? `${s.pendingSetup} waiting for first data` : `${s.unmonitored} not monitored` },
-            { label: "Need attention", value: s.needingAttention, tone: s.needingAttention ? "red" : undefined, sub: "Alerts, offline or pressure" },
-            { label: "CPU · RAM · disk pressure", value: `${s.cpuPressure} · ${s.memoryPressure} · ${s.diskPressure}`, tone: s.cpuPressure + s.memoryPressure + s.diskPressure ? "orange" : undefined, sub: "≥ 85% · 90% · 85% now" },
-            { label: "Renewals ≤ 30 d", value: s.renewalsWithin30Days, tone: s.renewalsWithin30Days ? "amber" : undefined, sub: "Confirmed dates only" },
+            { label: "Servers", value: s.total, icon: Server, tip: `${s.running} running · ${s.stopped} stopped${s.otherStatus ? ` · ${s.otherStatus} other` : ""}` },
+            { label: "Monitored", value: `${s.monitored}/${s.total}`, tone: s.total > 0 && s.monitored === 0 ? "amber" : undefined, icon: MonitorUp, tip: s.collectorOffline ? `${s.collectorOffline} collector offline` : s.pendingSetup ? `${s.pendingSetup} waiting for first data` : `${s.unmonitored} not monitored` },
+            { label: "Need attention", value: s.needingAttention, tone: s.needingAttention ? "red" : undefined, icon: AlertTriangle, tip: "Alerts, offline or pressure" },
+            { label: "Load", value: `${s.cpuPressure} · ${s.memoryPressure} · ${s.diskPressure}`, tone: s.cpuPressure + s.memoryPressure + s.diskPressure ? "orange" : undefined, icon: Activity, tip: "CPU, memory, disk pressure ≥ 85% · 90% · 85% now" },
+            { label: "Renewals", value: s.renewalsWithin30Days, tone: s.renewalsWithin30Days ? "amber" : undefined, icon: CalendarClock, tip: "Confirmed dates, due within 30 days" },
           ]}
         />
       ) : (
         <Skeleton className="h-[72px]" />
       )}
 
-      {s && s.total > 0 && (
-        <Section title="Distribution">
-          <div className="grid gap-1 lg:grid-cols-3">
-            <div><p className="mb-1 text-[11px] font-semibold text-slate-500">Provider</p><Donut ariaLabel="Servers by provider" height={96} rows={s.byProvider.map((p) => ({ label: providerName(p.label), value: p.value }))} /></div>
-            <div><p className="mb-1 text-[11px] font-semibold text-slate-500">Region</p><Donut ariaLabel="Servers by region" height={96} rows={s.byRegion} /></div>
-            <div><p className="mb-1 text-[11px] font-semibold text-slate-500">Provider status</p><Donut ariaLabel="Servers by provider status" height={96} rows={s.byStatus} /></div>
-          </div>
-        </Section>
-      )}
-
-      {s && s.monitored > 0 && (
-        <Section title="Fleet resource trend" description={`Average across ${trend.data?.serversReporting ?? s.monitored} monitored server${(trend.data?.serversReporting ?? s.monitored) === 1 ? "" : "s"}. Unmonitored servers are not included.`} action={<RangeSelect value={range} onChange={setRange} />}>
-          {trend.isLoading ? <Skeleton className="h-44" /> : (
-            <div className="grid gap-1 lg:grid-cols-2">
-              <MonitoringChart ariaLabel="Fleet CPU and memory" data={points} unit="pct" yMax={100} kind="line" series={[{ key: "cpuAvg", label: "CPU", color: SERIES.cpu }, { key: "memAvg", label: "Memory", color: SERIES.mem }, { key: "diskMax", label: "Disk (peak)", color: SERIES.disk }]} />
-              <MonitoringChart ariaLabel="Fleet network traffic" data={points} unit="bytesPerSec" series={[{ key: "netRx", label: "Inbound", color: SERIES.rx }, { key: "netTx", label: "Outbound", color: SERIES.tx }]} />
-            </div>
-          )}
-        </Section>
-      )}
-
+      {/* Servers table — stat cards ke turant neeche */}
       <Section
         title="Servers"
         description="Provider status comes from the provider API; CPU, memory and disk appear only for servers with an advanced-monitoring collector."
@@ -151,6 +131,28 @@ export function FleetPage() {
         )}
         <Pager page={fleet.data?.page ?? page} limit={20} total={fleet.data?.total ?? 0} onPage={setPage} noun="servers" />
       </Section>
+
+      {/* Charts — table ke neeche */}
+      {s && s.total > 0 && (
+        <Section title="Distribution">
+          <div className="grid gap-1 lg:grid-cols-3">
+            <div><p className="mb-1 text-[11px] font-medium capitalize text-slate-500">Provider</p><Donut ariaLabel="Servers by provider" height={96} rows={s.byProvider.map((p) => ({ label: providerName(p.label), value: p.value }))} /></div>
+            <div><p className="mb-1 text-[11px] font-medium capitalize text-slate-500">Region</p><Donut ariaLabel="Servers by region" height={96} rows={s.byRegion} /></div>
+            <div><p className="mb-1 text-[11px] font-medium capitalize text-slate-500">Provider status</p><Donut ariaLabel="Servers by provider status" height={96} rows={s.byStatus} /></div>
+          </div>
+        </Section>
+      )}
+
+      {s && s.monitored > 0 && (
+        <Section title="Fleet resource trend" description={`Average across ${trend.data?.serversReporting ?? s.monitored} monitored server${(trend.data?.serversReporting ?? s.monitored) === 1 ? "" : "s"}. Unmonitored servers are not included.`} action={<RangeSelect value={range} onChange={setRange} />}>
+          {trend.isLoading ? <Skeleton className="h-44" /> : (
+            <div className="grid gap-1 lg:grid-cols-2">
+              <MonitoringChart ariaLabel="Fleet CPU and memory" data={points} unit="pct" yMax={100} kind="line" series={[{ key: "cpuAvg", label: "CPU", color: SERIES.cpu }, { key: "memAvg", label: "Memory", color: SERIES.mem }, { key: "diskMax", label: "Disk (peak)", color: SERIES.disk }]} />
+              <MonitoringChart ariaLabel="Fleet network traffic" data={points} unit="bytesPerSec" series={[{ key: "netRx", label: "Inbound", color: SERIES.rx }, { key: "netTx", label: "Outbound", color: SERIES.tx }]} />
+            </div>
+          )}
+        </Section>
+      )}
       {adding && <ServerDialog open onOpenChange={setAdding} />}
     </div>
   );

@@ -1,124 +1,110 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowDown, ArrowUp, Bot, Flag, Maximize2, Minus, MoreVertical, Plus, Trash2, AlertCircle } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { AutomationNode } from "../../data/types";
-import { libraryItem } from "./node-library";
-import { nodeProblem } from "./node-config-panel";
+import { useCallback, useEffect, useMemo } from "react";
+import dagre from "@dagrejs/dagre";
+import {
+  Background, BackgroundVariant, Controls, Handle, MarkerType, MiniMap, Position, ReactFlow, ReactFlowProvider,
+  addEdge, applyEdgeChanges, applyNodeChanges, useReactFlow, type Connection, type Edge, type EdgeChange, type Node, type NodeChange, type NodeProps,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { AlertCircle, Bot, LayoutDashboard, LockKeyhole, Redo2, Trash2, Undo2 } from "lucide-react";
+import type { AutomationEdge, AutomationNode } from "../../data/types";
+import { graphProblems } from "./graph-utils";
+import { LIBRARY, NODE_DRAG_TYPE, libraryItem, type LibraryItem } from "./node-library";
 
-const BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  trigger: { bg: "bg-[#DBEAFE]", text: "text-[#2563EB]", label: "TRIGGER" },
-  action: { bg: "bg-[#E0F2FE]", text: "text-[#0369A1]", label: "ACTION" },
-  condition: { bg: "bg-[#FEE2E2]", text: "text-[#DC2626]", label: "CONDITION" },
-  delay: { bg: "bg-[#FEF3C7]", text: "text-[#B45309]", label: "DELAY" },
-};
+type FlowData = { automation: AutomationNode; problem?: string; selected: boolean; readOnly: boolean; onDelete: (id: string) => void };
 
-function NodeCard({ node, step, total, selected, onSelect, onMove, onDelete }: {
-  node: AutomationNode; step: number; total: number; selected: boolean;
-  onSelect: () => void; onMove: (dir: -1 | 1) => void; onDelete: () => void;
-}) {
-  const item = libraryItem(node.actionId, node.label);
+function WorkflowNode({ id, data }: NodeProps<Node<FlowData>>) {
+  const item = libraryItem(data.automation.actionId, data.automation.label);
   const Icon = item?.icon ?? Bot;
-  const badge = BADGE[node.type] ?? BADGE.action!;
-  const problem = nodeProblem(node);
-  const isTrigger = node.type === "trigger";
-
+  const isTrigger = data.automation.type === "trigger";
+  const action = data.automation.actionId;
+  const switchCases = action === "switch" && Array.isArray(data.automation.config?.cases) ? data.automation.config.cases as Array<{ value?: string }> : [];
+  const parallelBranches = action === "parallel" && Array.isArray(data.automation.config?.branches) ? data.automation.config.branches.map(String) : [];
   return (
-    <div className="relative">
-      <div className="absolute -left-3 -top-3 z-20 grid size-7 place-items-center rounded-full border-2 border-white text-[11px] font-bold text-white shadow-sm" style={{ backgroundColor: item?.hexColor ?? "#3B82F6" }}>{step}</div>
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={onSelect}
-        onKeyDown={(e) => { if (e.key === "Enter") onSelect(); }}
-        className={`relative flex w-[320px] cursor-pointer items-start gap-3 rounded-2xl bg-white p-4 text-left transition-all ${selected ? "scale-[1.01] shadow-lg ring-2 ring-[#2563EB]" : "shadow-sm ring-1 ring-[#E2E8F0] hover:-translate-y-0.5 hover:shadow-md"}`}
-      >
-        <div className={`grid size-11 shrink-0 place-items-center rounded-xl ${item?.iconBg ?? "bg-[#3B82F6]"} text-white shadow-sm`}><Icon className="size-5" /></div>
+    <div className={`relative w-64 rounded-xl border bg-white shadow-sm transition ${data.selected ? "border-blue-500 ring-2 ring-blue-200" : data.problem ? "border-amber-400" : "border-slate-200"}`}>
+      {!isTrigger ? <Handle type="target" position={Position.Top} className="!size-3 !border-2 !border-white !bg-slate-400" /> : null}
+      <div className="flex items-start gap-3 p-3.5">
+        <div className={`grid size-10 shrink-0 place-items-center rounded-lg ${item?.iconBg ?? "bg-blue-500"} text-white`}><Icon className="size-4" /></div>
         <div className="min-w-0 flex-1">
-          <p className={`truncate text-[13px] font-bold ${selected ? "text-[#1E40AF]" : "text-[#111C3A]"}`}>{node.label}</p>
-          <span className={`mt-1 inline-block rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${badge.bg} ${badge.text}`}>{badge.label}</span>
-          {problem ? (
-            <p className="mt-1.5 flex items-center gap-1 text-[10.5px] font-medium text-[#B45309]"><AlertCircle className="size-3" /> {problem}</p>
-          ) : node.description ? (
-            <p className="mt-1.5 line-clamp-2 text-[10.5px] leading-snug text-[#6B7A94]">{node.description}</p>
-          ) : null}
+          <div className="flex items-center gap-2"><p className="truncate text-xs font-bold text-slate-900">{data.automation.label}</p>{item?.supported === false ? <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[8px] font-bold uppercase text-slate-500">Coming Soon</span> : null}</div>
+          <p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">{data.automation.type.replace("_", " ")}</p>
+          {data.problem ? <p className="mt-2 flex items-center gap-1 text-[10px] font-medium text-amber-700"><AlertCircle className="size-3" />{data.problem}</p> : <p className="mt-1.5 line-clamp-2 text-[10px] text-slate-500">{data.automation.description}</p>}
         </div>
-        <div onClick={(e) => e.stopPropagation()}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button type="button" aria-label={`Options for ${node.label}`} className="grid size-6 place-items-center rounded-md text-[#94A3B8] hover:bg-slate-100 hover:text-[#64748B]"><MoreVertical className="size-4" /></button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem disabled={isTrigger || step <= 2} onClick={() => onMove(-1)}><ArrowUp /> Move up</DropdownMenuItem>
-              <DropdownMenuItem disabled={isTrigger || step >= total} onClick={() => onMove(1)}><ArrowDown /> Move down</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onClick={onDelete}><Trash2 /> Delete step</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        {!problem && !isTrigger ? <span className="absolute -right-1 -top-1 size-3 rounded-full bg-emerald-500 ring-2 ring-white" title="Configured" /> : null}
-        {problem ? <span className="absolute -right-1 -top-1 size-3 rounded-full bg-amber-500 ring-2 ring-white" title="Needs configuration" /> : null}
+        {!data.readOnly ? <button type="button" aria-label={`Delete ${data.automation.label}`} onClick={(event) => { event.stopPropagation(); data.onDelete(id); }} className="rounded p-1 text-slate-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="size-3.5" /></button> : null}
       </div>
+      {action === "approval" ? <><Handle id="approved" type="source" position={Position.Bottom} style={{ left: "22%" }} className="!size-3 !border-2 !border-white !bg-emerald-500" /><Handle id="rejected" type="source" position={Position.Bottom} style={{ left: "50%" }} className="!size-3 !border-2 !border-white !bg-red-500" /><Handle id="expired" type="source" position={Position.Bottom} style={{ left: "78%" }} className="!size-3 !border-2 !border-white !bg-amber-500" /></> : action === "sub_workflow" ? <><Handle id="success" type="source" position={Position.Bottom} style={{ left: "32%" }} className="!size-3 !border-2 !border-white !bg-emerald-500" /><Handle id="failure" type="source" position={Position.Bottom} style={{ left: "68%" }} className="!size-3 !border-2 !border-white !bg-red-500" /></> : action === "if_else" ? <><Handle id="true" type="source" position={Position.Bottom} style={{ left: "32%" }} className="!size-3 !border-2 !border-white !bg-emerald-500" /><span className="absolute -bottom-5 left-[22%] text-[9px] font-bold text-emerald-700">TRUE</span><Handle id="false" type="source" position={Position.Bottom} style={{ left: "68%" }} className="!size-3 !border-2 !border-white !bg-red-500" /><span className="absolute -bottom-5 right-[18%] text-[9px] font-bold text-red-700">FALSE</span></> : action === "filter_condition" ? <><Handle id="pass" type="source" position={Position.Bottom} style={{ left: "32%" }} className="!size-3 !border-2 !border-white !bg-emerald-500" /><span className="absolute -bottom-5 left-[22%] text-[9px] font-bold text-emerald-700">PASS</span><Handle id="reject" type="source" position={Position.Bottom} style={{ left: "68%" }} className="!size-3 !border-2 !border-white !bg-slate-400" /><span className="absolute -bottom-5 right-[15%] text-[9px] font-bold text-slate-500">REJECT</span></> : action === "switch" ? <>{switchCases.map((item, index) => <Handle key={item.value ?? index} id={String(item.value ?? index).toLowerCase()} type="source" position={Position.Bottom} style={{ left: `${((index + 1) / (switchCases.length + 2)) * 100}%` }} className="!size-3 !border-2 !border-white !bg-rose-500" />)}<Handle id="default" type="source" position={Position.Bottom} style={{ left: `${((switchCases.length + 1) / (switchCases.length + 2)) * 100}%` }} className="!size-3 !border-2 !border-white !bg-slate-400" /></> : action === "parallel" ? <>{parallelBranches.map((branch, index) => <Handle key={branch} id={branch} type="source" position={Position.Bottom} style={{ left: `${((index + 1) / (parallelBranches.length + 1)) * 100}%` }} className="!size-3 !border-2 !border-white !bg-indigo-500" />)}</> : action === "for_each" ? <><Handle id="item" type="source" position={Position.Bottom} style={{ left: "32%" }} className="!size-3 !border-2 !border-white !bg-violet-600" /><span className="absolute -bottom-5 left-[22%] text-[9px] font-bold text-violet-700">ITEM</span><Handle id="done" type="source" position={Position.Bottom} style={{ left: "68%" }} className="!size-3 !border-2 !border-white !bg-emerald-500" /><span className="absolute -bottom-5 right-[18%] text-[9px] font-bold text-emerald-700">DONE</span></> : action === "loop" ? <><Handle id="continue" type="source" position={Position.Bottom} style={{ left: "32%" }} className="!size-3 !border-2 !border-white !bg-violet-600" /><span className="absolute -bottom-5 left-[14%] text-[9px] font-bold text-violet-700">CONTINUE</span><Handle id="exit" type="source" position={Position.Bottom} style={{ left: "68%" }} className="!size-3 !border-2 !border-white !bg-emerald-500" /><span className="absolute -bottom-5 right-[20%] text-[9px] font-bold text-emerald-700">EXIT</span></> : <Handle type="source" position={Position.Bottom} className="!size-3 !border-2 !border-white !bg-blue-500" />}
     </div>
   );
 }
 
-function Connector() {
-  return <div className="flex h-10 flex-col items-center"><div className="w-0.5 flex-1 bg-[#CBD5E1]" /><ArrowDown className="-mt-1 size-3.5 text-[#94A3B8]" /></div>;
+const nodeTypes = { workflow: WorkflowNode };
+
+function layout(nodes: AutomationNode[], edges: AutomationEdge[]): AutomationNode[] {
+  const graph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+  graph.setGraph({ rankdir: "TB", ranksep: 75, nodesep: 45, marginx: 30, marginy: 30 });
+  nodes.forEach((node) => graph.setNode(node.id, { width: 256, height: 100 }));
+  edges.forEach((edge) => graph.setEdge(edge.source, edge.target));
+  dagre.layout(graph);
+  return nodes.map((node) => { const point = graph.node(node.id); return { ...node, position: { x: point.x - 128, y: point.y - 50 } }; });
 }
 
-export function WorkflowCanvas({ nodes, selectedNodeId, onSelectNode, onMoveNode, onDeleteNode }: {
-  nodes: AutomationNode[];
-  selectedNodeId: string | null;
-  onSelectNode: (id: string) => void;
-  onMoveNode: (id: string, dir: -1 | 1) => void;
-  onDeleteNode: (id: string) => void;
+function CanvasInner({ nodes, edges, selectedNodeId, readOnly, canUndo, canRedo, onSelectNode, onGraphChange, onDropNode, onUndo, onRedo }: {
+  nodes: AutomationNode[]; edges: AutomationEdge[]; selectedNodeId: string | null; readOnly?: boolean; canUndo: boolean; canRedo: boolean;
+  onSelectNode: (id: string | null) => void; onGraphChange: (nodes: AutomationNode[], edges: AutomationEdge[]) => void;
+  onDropNode: (item: LibraryItem, position: { x: number; y: number }) => void; onUndo: () => void; onRedo: () => void;
 }) {
-  const [zoom, setZoom] = useState(100);
+  const reactFlow = useReactFlow();
+  const problems = useMemo(() => graphProblems(nodes, edges), [nodes, edges]);
+  const removeNode = useCallback((id: string) => onGraphChange(nodes.filter((node) => node.id !== id), edges.filter((edge) => edge.source !== id && edge.target !== id)), [edges, nodes, onGraphChange]);
+  const flowNodes = useMemo<Node<FlowData>[]>(() => nodes.map((node, index) => ({
+    id: node.id, type: "workflow", position: node.position ?? { x: 120, y: index * 150 + 40 }, selected: node.id === selectedNodeId,
+    data: { automation: node, problem: problems.get(node.id), selected: node.id === selectedNodeId, readOnly: Boolean(readOnly), onDelete: removeNode },
+  })), [nodes, problems, readOnly, removeNode, selectedNodeId]);
+  const flowEdges = useMemo<Edge[]>(() => edges.map((edge) => ({ ...edge, type: "smoothstep", animated: false, markerEnd: { type: MarkerType.ArrowClosed }, style: problems.has(edge.id) ? { stroke: "#d97706", strokeWidth: 2 } : { stroke: "#94a3b8", strokeWidth: 2 }, label: problems.get(edge.id) ?? edge.label })), [edges, problems]);
 
-  return (
-    <div className="relative flex h-full flex-col">
-      <div className="custom-scrollbar relative flex-1 overflow-auto">
-        <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: "radial-gradient(circle, #CBD5E1 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-        <div className="relative z-10 flex min-h-full justify-center px-8 py-10">
-          {nodes.length === 0 ? (
-            <div className="mt-20 flex flex-col items-center text-center">
-              <div className="mb-5 grid size-16 place-items-center rounded-2xl bg-white shadow-lg ring-1 ring-black/5"><Plus className="size-7 text-[#3B82F6]" /></div>
-              <h2 className="text-[15px] font-bold text-[#111C3A]">Build your automation</h2>
-              <p className="mt-1.5 max-w-[260px] text-[12px] leading-relaxed text-[#6B7A94]">Pick a trigger from the left panel, then add the steps that should run.</p>
-            </div>
-          ) : (
-            <div className="flex origin-top flex-col items-center" style={{ transform: `scale(${zoom / 100})` }}>
-              {nodes.map((node, i) => (
-                <div key={node.id} className="flex flex-col items-center">
-                  <NodeCard
-                    node={node}
-                    step={i + 1}
-                    total={nodes.length}
-                    selected={node.id === selectedNodeId}
-                    onSelect={() => onSelectNode(node.id)}
-                    onMove={(dir) => onMoveNode(node.id, dir)}
-                    onDelete={() => onDeleteNode(node.id)}
-                  />
-                  <Connector />
-                </div>
-              ))}
-              <div className="flex items-center gap-2 rounded-full border border-dashed border-[#CBD5E1] bg-white px-4 py-2 text-[11px] font-semibold text-[#64748B] shadow-2xs">
-                <Flag className="size-3.5 text-[#EF4444]" /> End of workflow — add steps from the left panel
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+  useEffect(() => {
+    const keydown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      if (event.key.toLowerCase() === "z") { event.preventDefault(); if (event.shiftKey) onRedo(); else onUndo(); }
+      if (event.key.toLowerCase() === "y") { event.preventDefault(); onRedo(); }
+    };
+    window.addEventListener("keydown", keydown);
+    return () => window.removeEventListener("keydown", keydown);
+  }, [onRedo, onUndo]);
 
-      <div className="absolute bottom-4 left-6 z-20 flex items-center gap-1 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1 shadow-lg">
-        <button type="button" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(50, z - 10))} className="grid size-7 place-items-center rounded-lg text-[#64748B] hover:bg-slate-100"><Minus className="size-3.5" /></button>
-        <span className="w-10 text-center text-[11px] font-semibold text-[#111C3A]">{zoom}%</span>
-        <button type="button" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(150, z + 10))} className="grid size-7 place-items-center rounded-lg text-[#64748B] hover:bg-slate-100"><Plus className="size-3.5" /></button>
-        <div className="mx-0.5 h-4 w-px bg-[#E2E8F0]" />
-        <button type="button" aria-label="Reset zoom" onClick={() => setZoom(100)} className="grid size-7 place-items-center rounded-lg text-[#64748B] hover:bg-slate-100"><Maximize2 className="size-3.5" /></button>
-      </div>
+  const changeNodes = (changes: NodeChange<Node<FlowData>>[]) => {
+    if (readOnly) return;
+    const changed = applyNodeChanges(changes, flowNodes);
+    const byId = new Map(changed.map((node) => [node.id, node.position]));
+    onGraphChange(nodes.filter((node) => changed.some((candidate) => candidate.id === node.id)).map((node) => ({ ...node, position: byId.get(node.id) ?? node.position })), edges);
+  };
+  const changeEdges = (changes: EdgeChange<Edge>[]) => {
+    if (readOnly) return;
+    const changed = applyEdgeChanges(changes, flowEdges);
+    onGraphChange(nodes, changed.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target, label: typeof edge.label === "string" ? edge.label : undefined, sourceHandle: edge.sourceHandle, targetHandle: edge.targetHandle })));
+  };
+  const connect = (connection: Connection) => {
+    if (readOnly || !connection.source || !connection.target || connection.source === connection.target) return;
+    const changed = addEdge({ ...connection, label: connection.sourceHandle ?? undefined, id: `e_${connection.source}_${connection.sourceHandle ?? "next"}_${connection.target}_${Date.now()}` }, flowEdges);
+    onGraphChange(nodes, changed.map((edge) => ({ id: edge.id, source: edge.source, target: edge.target, sourceHandle: edge.sourceHandle, targetHandle: edge.targetHandle })));
+  };
+
+  return <div className="relative h-full" onDragOver={(event) => { if (!readOnly) { event.preventDefault(); event.dataTransfer.dropEffect = "move"; } }} onDrop={(event) => {
+    if (readOnly) return; event.preventDefault(); const id = event.dataTransfer.getData(NODE_DRAG_TYPE); const item = LIBRARY.find((candidate) => candidate.id === id); if (item && item.supported !== false) onDropNode(item, reactFlow.screenToFlowPosition({ x: event.clientX, y: event.clientY }));
+  }}>
+    <ReactFlow nodes={flowNodes} edges={flowEdges} nodeTypes={nodeTypes} onNodesChange={changeNodes} onEdgesChange={changeEdges} onConnect={connect} onNodeClick={(_, node) => onSelectNode(node.id)} onPaneClick={() => onSelectNode(null)} nodesDraggable={!readOnly} nodesConnectable={!readOnly} elementsSelectable fitView minZoom={0.25} maxZoom={1.8} deleteKeyCode={readOnly ? null : ["Backspace", "Delete"]} onNodesDelete={(deleted) => deleted.forEach((node) => removeNode(node.id))}>
+      <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="#cbd5e1" /><MiniMap pannable zoomable nodeColor={(node) => libraryItem((node.data as FlowData).automation.actionId)?.hexColor ?? "#3b82f6"} maskColor="rgba(248,250,252,.75)" /><Controls showInteractive={false} />
+    </ReactFlow>
+    <div className="absolute left-4 top-4 z-10 flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+      <button type="button" disabled={readOnly || !canUndo} onClick={onUndo} title="Undo (Ctrl+Z)" className="rounded p-2 text-slate-600 hover:bg-slate-100 disabled:opacity-30"><Undo2 className="size-4" /></button>
+      <button type="button" disabled={readOnly || !canRedo} onClick={onRedo} title="Redo (Ctrl+Y)" className="rounded p-2 text-slate-600 hover:bg-slate-100 disabled:opacity-30"><Redo2 className="size-4" /></button>
+      <button type="button" disabled={readOnly || nodes.length === 0} onClick={() => onGraphChange(layout(nodes, edges), edges)} title="Auto-layout" className="rounded p-2 text-slate-600 hover:bg-slate-100 disabled:opacity-30"><LayoutDashboard className="size-4" /></button>
+      {readOnly ? <span className="flex items-center gap-1 px-2 text-[10px] font-bold uppercase text-slate-500"><LockKeyhole className="size-3" />Read only</span> : null}
     </div>
-  );
+  </div>;
+}
+
+export function WorkflowCanvas(props: Parameters<typeof CanvasInner>[0]) {
+  return <ReactFlowProvider><CanvasInner {...props} /></ReactFlowProvider>;
 }

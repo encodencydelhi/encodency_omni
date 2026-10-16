@@ -14,7 +14,7 @@ interface RunDetailsSheetProps {
   run: AutomationRun | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRetry?: (runId: string) => Promise<void>;
+  onRetry?: (runId: string) => Promise<boolean | void>;
   onCancel?: (runId: string) => Promise<void>;
 }
 
@@ -136,6 +136,18 @@ export function RunDetailsSheet({ run, open, onOpenChange, onRetry, onCancel }: 
                   ) : null}
                 </div>
               ) : null}
+
+              {run.branches?.length ? <div className="space-y-2">
+                <div className="flex items-center justify-between"><h3 className="text-[13px] font-bold text-[#111C3A]">Parallel Branches</h3><span className="text-[11px] text-slate-500">{run.joins?.[0]?.mode === "any" ? "Wait for any" : "Wait for all"}</span></div>
+                <div className="grid gap-2 md:grid-cols-2">{run.branches.map((branch) => <div key={branch.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3"><div className="flex items-center justify-between"><span className="font-mono text-[11px] font-bold text-slate-700">{branch.branchKey}</span><span className="rounded bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600">{branch.status}</span></div><div className="mt-1 text-[10px] text-slate-500">{branch.durationMs == null ? branch.currentNodeId ? `At ${branch.currentNodeId}` : "Waiting" : formatDuration(branch.durationMs)}</div>{branch.error ? <p className="mt-2 text-[10px] text-red-600">{String(branch.error.message ?? branch.error.code ?? "Branch failed")}</p> : null}</div>)}</div>
+                {run.joins?.map((join) => <div key={`${join.splitNodeId}-${join.joinNodeId}`} className="rounded-lg border border-indigo-100 bg-indigo-50 p-2.5 text-[10.5px] text-indigo-800">Join {join.status}: {join.completedCount}/{join.expectedCount} complete, {join.failedCount} failed.</div>)}
+              </div> : null}
+              {run.iterations?.length ? <div className="space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">For Each Items</p>
+                <div className="grid gap-2 md:grid-cols-2">{run.iterations.map((iteration) => <div key={iteration.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3"><div className="flex items-center justify-between"><span className="font-mono text-[11px] font-bold text-slate-700">Item {iteration.iterationIndex + 1}</span><span className="rounded bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600">{iteration.status}</span></div><div className="mt-1 text-[10px] text-slate-500">{iteration.durationMs == null ? iteration.currentNodeId ? `At ${iteration.currentNodeId}` : "Waiting" : formatDuration(iteration.durationMs)}</div>{iteration.error ? <p className="mt-2 text-[10px] text-red-600">{String(iteration.error.message ?? iteration.error.code ?? "Item failed")}</p> : null}</div>)}</div>
+              </div> : null}
+              {run.approvals?.length ? <div className="space-y-2"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Human approvals</p>{run.approvals.map((approval) => <div key={approval.id} className="flex items-center justify-between rounded-lg border border-teal-100 bg-teal-50 p-3"><div><p className="text-[11px] font-bold text-teal-900">{approval.status}</p><p className="text-[10px] text-teal-700">Node {approval.nodeId} · expires {new Date(approval.expiresAt).toLocaleString()}</p></div>{approval.decidedAt ? <span className="text-[10px] text-teal-700">Decided {new Date(approval.decidedAt).toLocaleString()}</span> : null}</div>)}</div> : null}
+              {run.childRuns?.length ? <div className="space-y-2"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Sub-workflow runs</p>{run.childRuns.map((child) => <div key={child.id} className="flex items-center justify-between rounded-lg border border-sky-100 bg-sky-50 p-3"><div><p className="text-[11px] font-bold text-sky-900">{child.workflowName ?? child.workflowId}</p><p className="text-[10px] text-sky-700">Version {child.workflowVersion} · {child.status}</p></div><span className="font-mono text-[9px] text-sky-700">{child.id.slice(0, 8)}</span></div>)}</div> : null}
 
               <div className="flex items-center justify-between">
                 <h3 className="text-[13px] font-bold text-[#111C3A]">Steps</h3>

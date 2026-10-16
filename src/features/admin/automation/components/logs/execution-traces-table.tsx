@@ -12,8 +12,8 @@ interface ExecutionTracesTableProps {
   runs: AutomationRun[];
   workflows: AutomationWorkflow[];
   onSelectRun: (run: AutomationRun) => void;
-  onRetryRun: (runId: string) => Promise<void>;
-  onBulkRetry: (runIds: string[]) => Promise<void>;
+  onRetryRun: (runId: string) => Promise<boolean | void>;
+  onBulkRetry: (runIds: string[]) => Promise<boolean | void>;
 }
 
 export function ExecutionTracesTable({

@@ -35,17 +35,17 @@ export function InfrastructureShell({ children }: { children: ReactNode }) {
   const active = activeHref(pathname);
 
   return (
-    <div className="pb-6">
-      <div className="-mx-4 -mt-5 mb-1.5 border-b border-[#E3E9F2] bg-gradient-to-b from-[#FCFDFF] via-white to-[#FAFCFF] px-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
-        <header className="space-y-2.5 pt-3.5">
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-[#EFF5FE] text-[#2563EB] ring-1 ring-[#DCE8FB]" aria-hidden>
-              <Server className="size-7" />
+    <div className="pb-8">
+      <div className="-mx-4 -mt-5 mb-3 border-b border-[#E3E9F2] bg-gradient-to-b from-[#FCFDFF] via-white to-[#F7FAFF] px-4 shadow-[0_1px_2px_rgba(16,24,40,0.05)] sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
+        <header className="pt-5">
+          <div className="flex min-w-0 items-start gap-4">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-b from-[#3B82F6] to-[#2563EB] text-white shadow-[0_4px_12px_-4px_rgba(37,99,235,0.5)] ring-1 ring-inset ring-white/20" aria-hidden>
+              <Server className="size-6" />
             </span>
-            <div className="min-w-0">
-              <h1 className="text-[19px] font-semibold capitalize tracking-[-0.02em] text-[#0F1A38]">Servers &amp; Domains</h1>
-              <p className="mt-0.5 text-[12px] font-medium capitalize text-[#64748B]">Servers, domains, DNS, certificates and renewals. A date is shown only when a source confirms it.</p>
-              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 capitalize">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl font-bold capitalize tracking-tight text-[#0F1A38]">Infrastructure</h1>
+              <p className="mt-1 max-w-2xl text-[13px] font-normal capitalize leading-relaxed text-[#64748B]">Servers, domains, DNS, certificates and renewals. A date is shown only when a source confirms it.</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 {t && d ? (
                   <>
                     <Badge tone={t.servers === 0 ? "slate" : t.runningServers === t.servers ? "green" : t.runningServers > 0 ? "amber" : "red"} dot>{t.servers === 0 ? "No Servers" : t.runningServers === t.servers ? (t.servers === 1 ? "Server Live" : `${t.servers} Servers Live`) : `${t.runningServers}/${t.servers} Servers Live`}</Badge>
@@ -68,8 +68,8 @@ export function InfrastructureShell({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        <div className="mt-2.5 border-t border-[#EEF2F8] pt-2.5">
-          <nav aria-label="Servers and domains sections" className="scrollbar-thin -mb-px flex gap-5 overflow-x-auto">
+        <div className="mt-4 border-t border-[#EEF2F8]">
+          <nav aria-label="Servers and domains sections" className="scrollbar-thin -mb-px flex gap-6 overflow-x-auto">
             {TABS.map((tab) => {
               const isActive = tab.href === active;
               const count = tab.href.endsWith("/alerts") ? t?.openAlerts : undefined;
@@ -79,14 +79,14 @@ export function InfrastructureShell({ children }: { children: ReactNode }) {
                   href={tab.href}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "shrink-0 cursor-pointer whitespace-nowrap border-b-2 pb-2 text-[12px] font-semibold capitalize transition-colors",
+                    "shrink-0 cursor-pointer whitespace-nowrap border-b-2 py-3 text-[13px] font-semibold transition-colors",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/35",
-                    isActive ? "border-[#2563EB] text-[#1D4ED8]" : "border-transparent text-[#64748B] hover:text-[#28354C]",
+                    isActive ? "border-[#2563EB] text-[#1D4ED8]" : "border-transparent text-[#64748B] hover:border-[#CBD5E1] hover:text-[#28354C]",
                   )}
                 >
                   {tab.label}
                   {count !== undefined && count > 0 ? (
-                    <span className={cn("ml-1.5 rounded px-1 py-px text-[9.5px]", isActive ? "bg-[#EAF2FE] text-[#1D4ED8]" : "bg-[#F1F4F9] text-[#64748B]")}>{count}</span>
+                    <span className={cn("ml-1.5 rounded-full px-1.5 py-px text-[10px] font-bold", isActive ? "bg-[#EAF2FE] text-[#1D4ED8]" : "bg-[#F1F4F9] text-[#64748B]")}>{count}</span>
                   ) : null}
                 </Link>
               );
@@ -94,7 +94,7 @@ export function InfrastructureShell({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </div>
-      <div className="space-y-1 capitalize [&_.font-mono]:normal-case">{children}</div>
+      <div className="space-y-4 [&_.font-mono]:normal-case">{children}</div>
     </div>
   );
 }

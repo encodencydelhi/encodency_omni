@@ -18,6 +18,7 @@ import { LiveConsoleStream } from "./live-console-stream";
 import { DlqFailuresView } from "./dlq-failures-view";
 import { RunDetailsSheet } from "./run-details-sheet";
 import { TestWebhookModal } from "./test-webhook-modal";
+import { DuplicateRiskDialog } from "./duplicate-risk-dialog";
 import { useAdminContext } from "@/features/admin/shell/admin-context";
 import { getStoredClientId } from "@/lib/api/tenancy-storage";
 
@@ -35,6 +36,8 @@ export function AutomationLogsPage() {
   const [selectedRun, setSelectedRun] = useState<AutomationRun | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+  const [pendingReplay, setPendingReplay] = useState<{ runIds: string[]; bulk: boolean } | null>(null);
+  const [confirmingReplay, setConfirmingReplay] = useState(false);
 
   // Live streaming simulation state
   const [isStreaming, setIsStreaming] = useState(true);
@@ -67,34 +70,30 @@ export function AutomationLogsPage() {
     loadData();
   }, [loadData]);
 
-  // Periodic live streaming simulation
+  // Live mode: refresh the real, run-derived console from the API. No lines are ever invented client-side.
+  // Demo mode (NEXT_PUBLIC_DATA_SOURCE != "api"): the sample heartbeat below is explicitly labelled as simulated.
+  const demoMode = process.env.NEXT_PUBLIC_DATA_SOURCE !== "api";
   useEffect(() => {
     if (!isStreaming) return;
+    if (!demoMode) {
+      const refresh = setInterval(() => { void loadData(); }, 15000);
+      return () => clearInterval(refresh);
+    }
     const interval = setInterval(() => {
-      // Simulate real-time console heartbeat or trace update
       const sampleMessages = [
-        { level: "info" as const, source: "meta-webhook", msg: "Inbound webhook heartbeat: active connection OK." },
-        { level: "debug" as const, source: "queue-worker", msg: "Worker thread pool: 8 active jobs, memory consumption nominal." },
-        { level: "info" as const, source: "aisensy-api", msg: "Pinged WhatsApp Cloud gateway: latency 112ms." },
-        { level: "debug" as const, source: "google-business", msg: "Token validation check passed for account loc_8819284." },
+        { level: "info" as const, source: "demo", msg: "[demo data] Simulated inbound webhook heartbeat." },
+        { level: "debug" as const, source: "demo", msg: "[demo data] Simulated worker pool status." },
       ];
       const randomSample = sampleMessages[Math.floor(Math.random() * sampleMessages.length)];
       if (randomSample) {
         setConsoleLogs(prev => [
-          {
-            id: `log_live_${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            level: randomSample.level,
-            source: randomSample.source,
-            message: randomSample.msg
-          },
-          ...prev.slice(0, 100) // cap buffer
+          { id: `log_demo_${Date.now()}`, timestamp: new Date().toISOString(), level: randomSample.level, source: randomSample.source, message: randomSample.msg },
+          ...prev.slice(0, 100)
         ]);
       }
     }, 6000);
-
     return () => clearInterval(interval);
-  }, [isStreaming]);
+  }, [isStreaming, demoMode, loadData]);
 
   // Open Drawer handler
   const handleSelectRun = (run: AutomationRun) => {
@@ -114,8 +113,17 @@ export function AutomationLogsPage() {
   };
 
   // Single Retry
-  const handleRetryRun = async (runId: string) => {
-    const updated = await automationRepository.retryRun(runId);
+  const hasDuplicateRisk = (runId: string) => {
+    const run = runs.find((item) => item.id === runId);
+    return run?.failureClass === "unknown_outcome" || run?.errorSummary?.code === "OUTCOME_UNKNOWN";
+  };
+
+  const handleRetryRun = async (runId: string, acknowledgeDuplicateRisk = false): Promise<boolean> => {
+    if (!acknowledgeDuplicateRisk && hasDuplicateRisk(runId)) {
+      setPendingReplay({ runIds: [runId], bulk: false });
+      return false;
+    }
+    const updated = await automationRepository.retryRun(runId, { acknowledgeDuplicateRisk });
     setRuns(prev => prev.map(r => r.id === runId ? updated : r));
     if (selectedRun?.id === runId) {
       setSelectedRun(updated);
@@ -123,17 +131,38 @@ export function AutomationLogsPage() {
     // reload logs
     const newLogs = await automationRepository.getConsoleLogs();
     setConsoleLogs(newLogs);
+    return true;
   };
 
   // Bulk Retry
-  const handleBulkRetry = async (runIds: string[]) => {
-    const updated = await automationRepository.bulkRetryRuns(runIds);
+  const handleBulkRetry = async (runIds: string[], acknowledgeDuplicateRisk = false): Promise<boolean> => {
+    if (!acknowledgeDuplicateRisk && runIds.some(hasDuplicateRisk)) {
+      setPendingReplay({ runIds, bulk: true });
+      return false;
+    }
+    const updated = await automationRepository.bulkRetryRuns(runIds, { acknowledgeDuplicateRisk });
     setRuns(prev => prev.map(r => {
       const match = updated.find(u => u.id === r.id);
       return match || r;
     }));
     const newLogs = await automationRepository.getConsoleLogs();
     setConsoleLogs(newLogs);
+    return true;
+  };
+
+  const confirmDuplicateRisk = async () => {
+    if (!pendingReplay) return;
+    setConfirmingReplay(true);
+    try {
+      if (pendingReplay.bulk) await handleBulkRetry(pendingReplay.runIds, true);
+      else await handleRetryRun(pendingReplay.runIds[0]!, true);
+      toast.success(pendingReplay.bulk ? `Replay started for ${pendingReplay.runIds.length} runs.` : "Replay started.");
+      setPendingReplay(null);
+    } catch {
+      toast.error("Replay failed.");
+    } finally {
+      setConfirmingReplay(false);
+    }
   };
 
   // Send Test Webhook
@@ -216,7 +245,7 @@ export function AutomationLogsPage() {
           <button
             onClick={() => {
               setIsStreaming(!isStreaming);
-              toast.info(isStreaming ? "Sample polling paused" : "Sample polling resumed");
+              toast.info(isStreaming ? "Auto-refresh paused" : "Auto-refresh resumed");
             }}
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11.5px] font-bold shadow-2xs transition-colors ${
               isStreaming
@@ -230,7 +259,7 @@ export function AutomationLogsPage() {
               )}
               <span className={`relative inline-flex rounded-full size-2 ${isStreaming ? "bg-emerald-500" : "bg-amber-500"}`}></span>
             </span>
-            {isStreaming ? "Simulated Polling (5s)" : "Polling Paused"}
+            {isStreaming ? (demoMode ? "Demo data (simulated)" : "Auto-refresh (15s)") : "Refresh paused"}
           </button>
 
           {/* Trigger Test Webhook Button */}
@@ -442,6 +471,14 @@ export function AutomationLogsPage() {
         onOpenChange={setIsTestModalOpen}
         workflows={workflows}
         onTrigger={handleTriggerTestWebhook}
+      />
+
+      <DuplicateRiskDialog
+        open={pendingReplay !== null}
+        runCount={pendingReplay?.runIds.length ?? 0}
+        busy={confirmingReplay}
+        onOpenChange={(open) => { if (!open && !confirmingReplay) setPendingReplay(null); }}
+        onConfirm={() => { void confirmDuplicateRisk(); }}
       />
 
     </div>

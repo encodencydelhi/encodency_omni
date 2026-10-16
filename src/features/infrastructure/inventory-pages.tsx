@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Download, Globe2, Plus, RefreshCw, Server, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { BulkDomainsDialog, DomainDialog, ServerDialog } from "./dialogs";
-import { DomainAnalyticsSection } from "./domain-analytics";
+import { DomainAnalyticsCharts, DomainSummaryCards } from "./domain-analytics";
 import { ENV_LABEL, rdapInfo, daysLabel, daysTone, formatRam, formatRelative, formatStorage, providerName } from "./format";
 import { downloadExport, errorMessage, useDomains, useInfraMutation, useScope, useServers } from "./hooks";
 import { infraApi } from "./api";
@@ -122,7 +122,8 @@ export function DomainsPage() {
 
   return (
     <div className="space-y-1">
-      <DomainAnalyticsSection />
+      {/* Order: stat cards → domains table → charts */}
+      <DomainSummaryCards />
       <Section
         title="Domains & DNS"
         description="Registration data comes from public registry (RDAP) lookups. Dates are never inferred."
@@ -177,6 +178,7 @@ export function DomainsPage() {
         )}
         <Pager page={list.data?.page ?? page} limit={20} total={list.data?.total ?? 0} onPage={setPage} noun="domains" />
       </Section>
+      <DomainAnalyticsCharts />
       {adding && <DomainDialog open onOpenChange={setAdding} />}
       {bulk && <BulkDomainsDialog open onOpenChange={setBulk} />}
     </div>

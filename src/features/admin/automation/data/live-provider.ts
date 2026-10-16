@@ -36,20 +36,20 @@ async function req<T>(
 }
 
 export class LiveAutomationRepository implements AutomationRepository {
-  getWorkflows = (c?: string) => req<any[]>('GET', '/automation/workflows', c).catch(() => []);
+  getWorkflows = (c?: string) => req<any[]>('GET', '/automation/workflows', c);
   getWorkflow = (id: string) => req<any>('GET', `/automation/workflows/${id}`);
   createWorkflow = (c: string, w: Partial<AutomationWorkflow>) => req<any>('POST', '/automation/workflows', c, w);
   updateWorkflow = (id: string, u: Partial<AutomationWorkflow>) => req<any>('PATCH', `/automation/workflows/${id}`, undefined, u);
   deleteWorkflow = (id: string) => req<void>('DELETE', `/automation/workflows/${id}`);
-  getRuns = (c?: string, w?: string) => req<any[]>('GET', '/automation/runs', c, undefined, w ? { workflowId: w } : undefined).catch(() => []);
+  getRuns = (c?: string, w?: string) => req<any[]>('GET', '/automation/runs', c, undefined, w ? { workflowId: w } : undefined);
   getRun = (id: string) => req<any>('GET', `/automation/runs/${id}`);
-  retryRun = (id: string) => req<any>('POST', `/automation/runs/${id}/retry`);
-  bulkRetryRuns = (runIds: string[]) => req<any[]>('POST', '/automation/runs/retry', undefined, { runIds });
+  retryRun = (id: string, options: { acknowledgeDuplicateRisk?: boolean } = {}) => req<any>('POST', `/automation/runs/${id}/retry`, undefined, options);
+  bulkRetryRuns = (runIds: string[], options: { acknowledgeDuplicateRisk?: boolean } = {}) => req<any[]>('POST', '/automation/runs/retry', undefined, { runIds, ...options });
   createTestWebhookRun = (p: any) => req<any>('POST', '/automation/test-webhook', undefined, p);
-  getConsoleLogs = () => req<any[]>('GET', '/automation/logs').catch(() => []);
-  getTemplates = () => req<any[]>('GET', '/automation/templates').catch(() => []);
-  getAnalytics = (c?: string) => req<any>('GET', '/automation/analytics', c).catch(() => null);
-  getHealthMetrics = () => req<any>('GET', '/automation/health').catch(() => null);
+  getConsoleLogs = () => req<any[]>('GET', '/automation/logs');
+  getTemplates = () => req<any[]>('GET', '/automation/templates');
+  getAnalytics = (c?: string) => req<any>('GET', '/automation/analytics', c);
+  getHealthMetrics = () => req<any>('GET', '/automation/health');
   getSettings = () => req<any>('GET', '/automation/settings');
   updateSettings = (settings: Partial<AutomationSettingsState>) => req<any>('PUT', '/automation/settings', undefined, { settings });
   resetSettings = () => req<any>('POST', '/automation/settings/reset');

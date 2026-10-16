@@ -11,7 +11,6 @@ export type SettingsSectionKey =
 export interface GeneralSettings {
   defaultOwnership: "account_owner" | "round_robin" | "specific_user";
   specificOwnerName: string;
-  /** User id for "specific_user" ownership. */
   specificOwnerId?: string;
   timezone: string;
   defaultReplyChannel: "whatsapp" | "instagram" | "email" | "sms";
@@ -23,6 +22,7 @@ export interface GeneralSettings {
 
 export interface ExecutionRulesSettings {
   maxConcurrentRunsPerClient: number;
+  maxConcurrentRunsPerTenant?: number;
   globalRateLimiterRps: number;
   allowParallelWorkflowsSameContact: boolean;
   collisionPolicy: "queue" | "cancel_older" | "skip";
@@ -145,7 +145,7 @@ export interface AutomationSettingsState {
 const WEEKDAY: DaySchedule = { enabled: true, startTime: "09:00", endTime: "18:00" };
 export const DEFAULT_AUTOMATION_SETTINGS: AutomationSettingsState = {
   general: { defaultOwnership: "account_owner", specificOwnerName: "", specificOwnerId: "", timezone: "Asia/Kolkata (GMT+5:30)", defaultReplyChannel: "whatsapp", allowedChannels: ["WhatsApp", "Email"], autoPrefixTags: true, defaultLeadStage: "new", logLevel: "info" },
-  execution: { maxConcurrentRunsPerClient: 10, globalRateLimiterRps: 45, allowParallelWorkflowsSameContact: false, collisionPolicy: "queue", deduplicationWindowMinutes: 15, stepTimeoutSeconds: 60, workflowMaxRuntimeMinutes: 30 },
+  execution: { maxConcurrentRunsPerClient: 10, maxConcurrentRunsPerTenant: 25, globalRateLimiterRps: 45, allowParallelWorkflowsSameContact: false, collisionPolicy: "queue", deduplicationWindowMinutes: 15, stepTimeoutSeconds: 60, workflowMaxRuntimeMinutes: 30 },
   retry: { maxRetryAttempts: 3, retryAlgorithm: "exponential", initialDelaySeconds: 30, maxBackoffDelayMinutes: 10, retryOnRateLimit429: true, retryOnServerError5xx: true, failImmediatelyOnAuthOrBadPayload: true, escalationAction: "dlq", escalationWebhookUrl: "" },
   notifications: { enableInAppAlerts: true, enableEmailAlerts: false, alertEmails: [], enableWhatsAppAlerts: false, alertPhoneNumbers: [], enableWebhookAlerts: false, alertWebhookUrl: "", events: { criticalFailuresAndDlq: true, quotaThresholdWarning: false, dailyHealthDigest: false, highIngestionSpikes: false } },
   businessHours: {

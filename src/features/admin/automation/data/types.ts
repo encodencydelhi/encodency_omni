@@ -9,6 +9,8 @@ export interface AutomationWorkflow {
   name: string;
   status: AutomationWorkflowStatus;
   version: number;
+  draftVersion?: number;
+  publishedVersion?: number | null;
   trigger: {
     type: string;
     label: string;
@@ -30,7 +32,7 @@ export interface AutomationWorkflow {
   edges: AutomationEdge[];
 }
 
-export type AutomationNodeType = "trigger" | "action" | "condition" | "delay" | "branch";
+export type AutomationNodeType = "trigger" | "action" | "condition" | "delay" | "branch" | "parallel" | "merge" | "loop" | "approval" | "sub_workflow";
 
 export interface AutomationNode {
   id: string;
@@ -40,6 +42,7 @@ export interface AutomationNode {
   description?: string;
   status: "idle" | "error" | "configured" | "missing-dependency";
   config: Record<string, any>;
+  position?: { x: number; y: number };
 }
 
 export interface AutomationEdge {
@@ -47,6 +50,8 @@ export interface AutomationEdge {
   source: string;
   target: string;
   label?: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
 }
 
 export interface AutomationRunStep {
@@ -87,14 +92,38 @@ export interface AutomationRun {
   steps: AutomationRunStep[];
   stepsTotal?: number;
   stepsSucceeded?: number;
+  branches?: Array<{ id: string; branchKey: string; splitNodeId: string; joinNodeId?: string | null; currentNodeId?: string | null; status: string; startedAt?: string | null; completedAt?: string | null; durationMs?: number | null; output?: Record<string, any>; error?: Record<string, any> }>;
+  iterations?: Array<{ id: string; nodeId: string; iterationIndex: number; itemKey: string; currentNodeId?: string | null; status: string; startedAt?: string | null; completedAt?: string | null; durationMs?: number | null; item?: unknown; output?: Record<string, any>; error?: Record<string, any> }>;
+  joins?: Array<{ splitNodeId: string; joinNodeId: string; mode: "all" | "any"; failurePolicy: string; status: string; expectedCount: number; completedCount: number; succeededCount: number; failedCount: number; timeoutAt?: string | null }>;
+  approvals?: Array<{ id: string; nodeId: string; status: string; expiresAt: string; reminderAt?: string | null; remindedAt?: string | null; decidedAt?: string | null; decidedById?: string | null; decisionNote?: string | null }>;
+  childRuns?: Array<{ id: string; workflowId: string; workflowName?: string; parentNodeId?: string | null; workflowVersion: number; status: string; startedAt: string; completedAt?: string | null; error?: Record<string, any> }>;
+  parentRunId?: string | null;
+  parentNodeId?: string | null;
+  nestingDepth?: number;
   rawWebhookPayload?: Record<string, any>;
   retryOfId?: string | null;
+  dlqStatus?: "OPEN" | "REPLAYED" | "DISMISSED" | null;
+  failureClass?: "retries_exhausted" | "permanent" | "unknown_outcome" | "quota" | "runtime" | "stalled" | null;
   errorSummary?: {
     code: string;
     message: string;
     stack?: string;
     recommendation: string;
   };
+}
+
+export interface AutomationApproval {
+  id: string;
+  runId: string;
+  workflowId: string;
+  workflowName: string;
+  nodeId: string;
+  status: string;
+  expiresAt: string;
+  reminderAt?: string | null;
+  decidedAt?: string | null;
+  decidedById?: string | null;
+  decisionNote?: string | null;
 }
 
 export type AutomationLogLevel = "info" | "warn" | "error" | "debug";

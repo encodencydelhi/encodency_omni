@@ -8,8 +8,8 @@ import { AutomationRun } from "../../data/types";
 interface DlqFailuresViewProps {
   failedRuns: AutomationRun[];
   onSelectRun: (run: AutomationRun) => void;
-  onRetryRun: (runId: string) => Promise<void>;
-  onBulkRetry: (runIds: string[]) => Promise<void>;
+  onRetryRun: (runId: string) => Promise<boolean>;
+  onBulkRetry: (runIds: string[]) => Promise<boolean>;
 }
 
 export function DlqFailuresView({
@@ -21,6 +21,12 @@ export function DlqFailuresView({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isRetryingAll, setIsRetryingAll] = useState(false);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [failureFilter, setFailureFilter] = useState<"all" | "retryable" | "unknown">("all");
+  const visibleRuns = failedRuns.filter((run) => {
+    if (failureFilter === "unknown") return run.failureClass === "unknown_outcome" || run.errorSummary?.code === "OUTCOME_UNKNOWN";
+    if (failureFilter === "retryable") return run.failureClass === "retries_exhausted" || run.failureClass === "stalled";
+    return true;
+  });
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => 
@@ -29,19 +35,21 @@ export function DlqFailuresView({
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === failedRuns.length) {
+    if (selectedIds.length === visibleRuns.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(failedRuns.map(r => r.id));
+      setSelectedIds(visibleRuns.map(r => r.id));
     }
   };
 
   const handleRetrySingle = async (runId: string) => {
     setRetryingId(runId);
     try {
-      await onRetryRun(runId);
-      toast.success(`Run ${runId} successfully re-queued and executed!`);
-      setSelectedIds(prev => prev.filter(id => id !== runId));
+      const started = await onRetryRun(runId);
+      if (started) {
+        toast.success(`Run ${runId} was re-queued.`);
+        setSelectedIds(prev => prev.filter(id => id !== runId));
+      }
     } catch {
       toast.error("Retry failed.");
     } finally {
@@ -53,9 +61,11 @@ export function DlqFailuresView({
     if (selectedIds.length === 0) return;
     setIsRetryingAll(true);
     try {
-      await onBulkRetry(selectedIds);
-      toast.success(`Successfully retried ${selectedIds.length} failed runs!`);
-      setSelectedIds([]);
+      const started = await onBulkRetry(selectedIds);
+      if (started) {
+        toast.success(`Re-queued ${selectedIds.length} failed runs.`);
+        setSelectedIds([]);
+      }
     } catch {
       toast.error("Bulk retry failed.");
     } finally {
@@ -114,7 +124,7 @@ export function DlqFailuresView({
           )}
 
           <button
-            onClick={() => onBulkRetry(failedRuns.map(r => r.id))}
+            onClick={() => void onBulkRetry(visibleRuns.map(r => r.id))}
             disabled={isRetryingAll}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-[#FECACA] hover:bg-red-50/60 text-[#B91C1C] text-[12px] font-bold rounded-lg shadow-2xs transition-colors disabled:opacity-50"
           >
@@ -122,6 +132,14 @@ export function DlqFailuresView({
             Retry All Failures
           </button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2" aria-label="Failure filters">
+        {([["all", "All failed"], ["retryable", "Retryable"], ["unknown", "Unknown outcome"]] as const).map(([value, label]) => (
+          <button key={value} type="button" onClick={() => { setFailureFilter(value); setSelectedIds([]); }} className={`rounded-full border px-3 py-1 text-[11px] font-bold ${failureFilter === value ? "border-blue-600 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Table of Failed Runs */}
@@ -133,7 +151,7 @@ export function DlqFailuresView({
                 <th className="pl-3.5 pr-2 py-2.5 w-[24px]">
                   <input
                     type="checkbox"
-                    checked={selectedIds.length === failedRuns.length && failedRuns.length > 0}
+                    checked={selectedIds.length === visibleRuns.length && visibleRuns.length > 0}
                     onChange={toggleSelectAll}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
@@ -147,7 +165,7 @@ export function DlqFailuresView({
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F1F5F9]">
-              {failedRuns.map((run) => {
+              {visibleRuns.map((run) => {
                 const isSelected = selectedIds.includes(run.id);
                 const failedStep = run.steps.find(s => s.status === "Failed" || s.status === "Partial Failure");
                 const stepIndex = run.steps.findIndex(s => s.status === "Failed" || s.status === "Partial Failure");
