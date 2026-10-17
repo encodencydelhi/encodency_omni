@@ -15,7 +15,10 @@ export function ApprovalsPage() {
     if (!clientId) { setRows([]); return; }
     try { setRows(await automationApi.approvals(clientId)); } catch (error) { toast.error(errorMessage(error)); }
   }, [clientId]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [load]);
   const decide = async (row: AutomationApproval, decision: "APPROVED" | "REJECTED") => {
     if (!clientId) return;
     setBusy(row.id);

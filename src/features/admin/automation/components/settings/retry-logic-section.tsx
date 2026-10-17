@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- settings form paths are validated before persistence */
 "use client";
 
 import { useState } from "react";

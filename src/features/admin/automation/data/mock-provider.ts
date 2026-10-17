@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- mock graph payloads mirror arbitrary workflow JSON */
 import { AutomationRepository } from "./repository";
 import { 
   AutomationRun, 
@@ -621,6 +622,28 @@ class MockAutomationRepository implements AutomationRepository {
       }
     }
     return updatedRuns;
+  }
+
+  async reconcileRun(runId: string, resolution: "DELIVERED" | "NOT_DELIVERED", _note: string): Promise<AutomationRun> {
+    await delay(200);
+    const idx = this.runs.findIndex(r => r.id === runId);
+    const existing = this.runs[idx];
+    if (idx === -1 || !existing) throw new Error("Run not found");
+    const updated: AutomationRun = {
+      ...existing,
+      failureClass: "reconciled",
+      errorSummary: { code: "OUTCOME_RECONCILED", message: resolution === "DELIVERED" ? "An administrator confirmed the send was delivered." : "An administrator confirmed the send was not delivered.", recommendation: "Retry the run when ready." },
+    };
+    this.runs[idx] = updated;
+    return updated;
+  }
+
+  async cancelRun(runId: string): Promise<AutomationRun> {
+    const run = MOCK_RUNS.find((item) => item.id === runId);
+    if (!run) throw new Error("Run not found");
+    run.status = "Cancelled";
+    run.completedAt = new Date().toISOString();
+    return { ...run };
   }
 
   async createTestWebhookRun(payload: { workflowId: string; eventType: string; payload: Record<string, any> }): Promise<AutomationRun> {

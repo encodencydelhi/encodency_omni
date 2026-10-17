@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- repository preserves versioned workflow JSON compatibility */
 import { 
   AutomationWorkflow, 
   AutomationRun, 
@@ -21,6 +22,9 @@ export interface AutomationRepository {
   getRun(runId: string): Promise<AutomationRun | null>;
   retryRun(runId: string, options?: { acknowledgeDuplicateRisk?: boolean }): Promise<AutomationRun>;
   bulkRetryRuns(runIds: string[], options?: { acknowledgeDuplicateRisk?: boolean }): Promise<AutomationRun[]>;
+  /** Administrator attestation for a send whose outcome was unknown. Sends nothing; a later retry no longer needs the duplicate-risk prompt. */
+  reconcileRun(runId: string, resolution: "DELIVERED" | "NOT_DELIVERED", note: string): Promise<AutomationRun>;
+  cancelRun(runId: string): Promise<AutomationRun>;
   createTestWebhookRun(payload: { workflowId: string; eventType: string; payload: Record<string, any> }): Promise<AutomationRun>;
 
   // Console Logs

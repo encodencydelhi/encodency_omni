@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- backend automation JSON is normalized at this boundary */
 import { apiClient } from '@/lib/api/client';
 import { companyScopeHeaders } from '@/lib/api/company-scope';
 import { getStoredClientId, getStoredCompanyId } from '@/lib/api/tenancy-storage';
@@ -44,7 +45,12 @@ export class LiveAutomationRepository implements AutomationRepository {
   getRuns = (c?: string, w?: string) => req<any[]>('GET', '/automation/runs', c, undefined, w ? { workflowId: w } : undefined);
   getRun = (id: string) => req<any>('GET', `/automation/runs/${id}`);
   retryRun = (id: string, options: { acknowledgeDuplicateRisk?: boolean } = {}) => req<any>('POST', `/automation/runs/${id}/retry`, undefined, options);
-  bulkRetryRuns = (runIds: string[], options: { acknowledgeDuplicateRisk?: boolean } = {}) => req<any[]>('POST', '/automation/runs/retry', undefined, { runIds, ...options });
+  bulkRetryRuns = async (runIds: string[], options: { acknowledgeDuplicateRisk?: boolean } = {}) => {
+    const results = await req<Array<{ runId: string; ok: boolean; run?: any }>>('POST', '/automation/runs/retry', undefined, { runIds, ...options });
+    return results.filter((item) => item.ok && item.run).map((item) => item.run);
+  };
+  reconcileRun = (id: string, resolution: 'DELIVERED' | 'NOT_DELIVERED', note: string) => req<any>('POST', `/automation/dlq/${id}/reconcile`, undefined, { resolution, note });
+  cancelRun = (id: string) => req<any>('POST', `/automation/runs/${id}/cancel`);
   createTestWebhookRun = (p: any) => req<any>('POST', '/automation/test-webhook', undefined, p);
   getConsoleLogs = () => req<any[]>('GET', '/automation/logs');
   getTemplates = () => req<any[]>('GET', '/automation/templates');

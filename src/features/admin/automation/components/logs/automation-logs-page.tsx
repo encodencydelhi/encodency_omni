@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- provider event payloads are runtime-validated at this API boundary */
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
@@ -77,7 +78,8 @@ export function AutomationLogsPage() {
   }, [selectedProjectId]);
 
   useEffect(() => {
-    loadData();
+    const timeout = window.setTimeout(() => { void loadData(); }, 0);
+    return () => window.clearTimeout(timeout);
   }, [loadData]);
 
   // Live mode: refresh the real, run-derived console from the API. No lines are ever invented client-side.
@@ -158,6 +160,31 @@ export function AutomationLogsPage() {
     const newLogs = await automationRepository.getConsoleLogs();
     setConsoleLogs(newLogs);
     return true;
+  };
+
+  const handleCancelRun = async (runId: string) => {
+    const updated = await automationRepository.cancelRun(runId);
+    setRuns((previous) => previous.map((run) => run.id === runId ? updated : run));
+    if (selectedRun?.id === runId) setSelectedRun(updated);
+    setConsoleLogs(await automationRepository.getConsoleLogs());
+    toast.success("Run cancelled");
+  };
+
+  const reconcilePending = async (resolution: "DELIVERED" | "NOT_DELIVERED", note: string) => {
+    const runId = pendingReplay?.runIds[0];
+    if (!runId || pendingReplay?.bulk) return;
+    setConfirmingReplay(true);
+    try {
+      const updated = await automationRepository.reconcileRun(runId, resolution, note);
+      setRuns((previous) => previous.map((run) => run.id === runId ? updated : run));
+      if (selectedRun?.id === runId) setSelectedRun(updated);
+      toast.success(resolution === "DELIVERED" ? "Recorded as delivered. It will not be sent again." : "Recorded as not delivered. You can now retry.");
+      setPendingReplay(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not record the outcome.");
+    } finally {
+      setConfirmingReplay(false);
+    }
   };
 
   const confirmDuplicateRisk = async () => {
@@ -492,6 +519,7 @@ export function AutomationLogsPage() {
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
         onRetry={handleRetryRun}
+        onCancel={handleCancelRun}
       />
 
       {/* Test Webhook Modal */}
@@ -508,6 +536,7 @@ export function AutomationLogsPage() {
         busy={confirmingReplay}
         onOpenChange={(open) => { if (!open && !confirmingReplay) setPendingReplay(null); }}
         onConfirm={() => { void confirmDuplicateRisk(); }}
+        onReconcile={(resolution, note) => { void reconcilePending(resolution, note); }}
       />
 
     </div>

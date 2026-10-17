@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- workflow definitions and provider payloads are open JSON contracts */
 export type AutomationWorkflowStatus = "Active" | "Draft" | "Paused" | "Error" | "Archived";
 export type AutomationRunStatus = "Running" | "Waiting" | "Successful" | "Failed" | "Cancelled" | "Partial Failure";
 export type AutomationStepStatus = "Successful" | "Failed" | "Skipped" | "Waiting" | "Running" | "Cancelled" | "Partial Failure";
@@ -105,7 +106,7 @@ export interface AutomationRun {
   rawWebhookPayload?: Record<string, any>;
   retryOfId?: string | null;
   dlqStatus?: "OPEN" | "REPLAYED" | "DISMISSED" | null;
-  failureClass?: "retries_exhausted" | "permanent" | "unknown_outcome" | "quota" | "runtime" | "stalled" | null;
+  failureClass?: "retries_exhausted" | "permanent" | "unknown_outcome" | "reconciled" | "quota" | "runtime" | "stalled" | null;
   errorSummary?: {
     code: string;
     message: string;

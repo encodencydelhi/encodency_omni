@@ -18,7 +18,7 @@ function samplePayload(trigger: string): string {
   if (trigger === "form_submission" || trigger === "inbound_webhook") {
     return JSON.stringify({ name: "Test Visitor", email: "test.visitor@example.com", phone: "9876543210", message: "This is a test submission" }, null, 2);
   }
-  if (trigger === "website_down") return JSON.stringify({ domain: "example.com", url: "https://example.com", status: 503, checkedAt: new Date().toISOString() }, null, 2);
+  if (trigger === "website_down") return JSON.stringify({ website: { id: "sample-website-id", url: "https://example.com", name: "Example Site", httpStatus: 503, errorMessage: "Service unavailable", detectedAt: new Date().toISOString(), region: "Primary", incidentId: "sample-incident" }, company: { id: "sample-company-id", name: "Example Company" }, recipient: { email: null } }, null, 2);
   return JSON.stringify({ note: "Manual test run" }, null, 2);
 }
 

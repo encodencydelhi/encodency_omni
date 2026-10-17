@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { whatsappApi, type WhatsAppConfigState } from "@/features/admin/channels/live/whatsapp-api";
 import { IntegrationsSettings } from "../../data/settings-types";
-import { webhookEndpoint } from "../../data/automation-api";
+import { automationApi, type CompanySmtpSettings, webhookEndpoint } from "../../data/automation-api";
 import { useAutomationScope, useWorkflows } from "../../data/hooks";
 
 interface IntegrationsSectionProps {
@@ -23,10 +23,15 @@ export function IntegrationsSection({ settings, onChange }: IntegrationsSectionP
   const [whatsapp, setWhatsapp] = useState<WhatsAppConfigState | null | "error">(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [ipInput, setIpInput] = useState(settings.ipWhitelist.join(", "));
+  const [smtp, setSmtp] = useState<CompanySmtpSettings | null>(null);
+  const [smtpUsername, setSmtpUsername] = useState("");
+  const [smtpPassword, setSmtpPassword] = useState("");
+  const [smtpBusy, setSmtpBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     whatsappApi.getConfig(getStoredCompanyId()).then((c) => { if (!cancelled) setWhatsapp(c); }).catch(() => { if (!cancelled) setWhatsapp("error"); });
+    automationApi.smtpSettings().then((value) => { if (!cancelled) setSmtp(value); }).catch(() => { if (!cancelled) setSmtp(null); });
     return () => { cancelled = true; };
   }, []);
 
@@ -46,6 +51,20 @@ export function IntegrationsSection({ settings, onChange }: IntegrationsSectionP
 
   const ips = ipInput.split(",").map((s) => s.trim()).filter(Boolean);
   const badIps = ips.filter((ip) => !IP_RULE.test(ip));
+  const updateSmtp = (updates: Partial<CompanySmtpSettings>) => setSmtp((current) => current ? { ...current, ...updates } : current);
+  const saveSmtp = async () => {
+    if (!smtp) return;
+    setSmtpBusy(true);
+    try {
+      const next = await automationApi.saveSmtpSettings({ enabled: smtp.enabled, host: smtp.host, port: smtp.port, secure: smtp.secure, fromEmail: smtp.fromEmail, fromName: smtp.fromName, fallbackPolicy: smtp.fallbackPolicy, expectedRevision: smtp.revision, ...(smtpUsername ? { username: smtpUsername } : {}), ...(smtpPassword ? { password: smtpPassword } : {}) });
+      setSmtp(next); setSmtpUsername(""); setSmtpPassword(""); toast.success("Company SMTP settings saved");
+    } catch (error) { toast.error(error instanceof Error ? error.message : "SMTP settings could not be saved."); } finally { setSmtpBusy(false); }
+  };
+  const verifySmtp = async () => {
+    setSmtpBusy(true);
+    try { setSmtp(await automationApi.verifySmtpSettings()); toast.success("SMTP connection verified and test email sent"); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "SMTP verification failed."); } finally { setSmtpBusy(false); }
+  };
 
   return (
     <div className="space-y-4">
@@ -73,12 +92,26 @@ export function IntegrationsSection({ settings, onChange }: IntegrationsSectionP
             {whatsapp && whatsapp !== "error" && whatsapp.configured ? (whatsapp.status === "ACTIVE" ? "Connected" : whatsapp.status ?? "Configured") : "Not connected"}
           </span>
         </div>
-        <div className="flex items-start gap-2.5 rounded-lg border border-[#E2E8F0] bg-[#FAFBFD] p-3.5 text-[11px]">
+        <div className="space-y-3 rounded-lg border border-[#E2E8F0] bg-[#FAFBFD] p-3.5 text-[11px]">
+          <div className="flex items-start gap-2.5">
           <Mail className="mt-0.5 size-4 text-blue-600" />
           <div>
-            <span className="block text-[11.5px] font-bold text-[#111C3A]">Email</span>
-            <span className="mt-0.5 block text-[10px] text-[#64748B]">Sent through the platform mail server (the same one used for invitations). If it is not configured, email steps fail with a clear error in the run.</span>
+            <span className="block text-[11.5px] font-bold text-[#111C3A]">Company SMTP</span>
+            <span className="mt-0.5 block text-[10px] text-[#64748B]">Credentials are encrypted and never returned. Platform SMTP is used only when explicitly allowed.</span>
           </div>
+          </div>
+          {smtp ? <div className="grid gap-2 sm:grid-cols-2">
+            <label className="text-[10.5px] font-semibold">SMTP Host<input value={smtp.host} onChange={(e) => updateSmtp({ host: e.target.value })} className="mt-1 h-8 w-full rounded-md border border-slate-200 px-2" /></label>
+            <label className="text-[10.5px] font-semibold">Port<input type="number" min={1} max={65535} value={smtp.port} onChange={(e) => updateSmtp({ port: Number(e.target.value) })} className="mt-1 h-8 w-full rounded-md border border-slate-200 px-2" /></label>
+            <label className="text-[10.5px] font-semibold">From Email<input type="email" value={smtp.fromEmail} onChange={(e) => updateSmtp({ fromEmail: e.target.value })} className="mt-1 h-8 w-full rounded-md border border-slate-200 px-2" /></label>
+            <label className="text-[10.5px] font-semibold">From Name<input value={smtp.fromName} onChange={(e) => updateSmtp({ fromName: e.target.value })} className="mt-1 h-8 w-full rounded-md border border-slate-200 px-2" /></label>
+            <label className="text-[10.5px] font-semibold">SMTP Username<input autoComplete="off" value={smtpUsername} onChange={(e) => setSmtpUsername(e.target.value)} placeholder={smtp.credentialHint ?? "SMTP username"} className="mt-1 h-8 w-full rounded-md border border-slate-200 px-2" /></label>
+            <label className="text-[10.5px] font-semibold">New Password<input type="password" autoComplete="new-password" value={smtpPassword} onChange={(e) => setSmtpPassword(e.target.value)} placeholder={smtp.usernameConfigured ? "Leave blank to keep existing" : "SMTP password"} className="mt-1 h-8 w-full rounded-md border border-slate-200 px-2" /></label>
+            <label className="text-[10.5px] font-semibold">Fallback Policy<select value={smtp.fallbackPolicy} onChange={(e) => updateSmtp({ fallbackPolicy: e.target.value as CompanySmtpSettings["fallbackPolicy"] })} className="mt-1 h-8 w-full rounded-md border border-slate-200 bg-white px-2"><option value="DENY">No Platform Fallback</option><option value="ALLOW_PLATFORM">Allow Platform SMTP</option></select></label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={smtp.enabled} onChange={(e) => updateSmtp({ enabled: e.target.checked })} />Enabled</label>
+            <label className="flex items-center gap-2"><input type="checkbox" checked={smtp.secure} onChange={(e) => updateSmtp({ secure: e.target.checked })} />Implicit TLS</label>
+            <div className="sm:col-span-2 flex items-center justify-between gap-2"><span className={smtp.lastVerificationOk ? "text-emerald-700" : "text-amber-700"}>{smtp.lastVerificationOk ? `Verified ${smtp.verifiedAt ? new Date(smtp.verifiedAt).toLocaleString() : ""}` : "Not Verified"}</span><div className="flex gap-2"><button disabled={smtpBusy} onClick={() => void saveSmtp()} className="rounded-md border px-3 py-1.5 font-semibold">Save SMTP</button><button disabled={smtpBusy || !smtp.configured} onClick={() => void verifySmtp()} className="rounded-md bg-blue-600 px-3 py-1.5 font-semibold text-white disabled:opacity-50">Verify &amp; Send Test</button></div></div>
+          </div> : <p className="text-[10.5px] text-slate-500">SMTP settings are unavailable or you do not have permission to manage integrations.</p>}
         </div>
       </div>
 

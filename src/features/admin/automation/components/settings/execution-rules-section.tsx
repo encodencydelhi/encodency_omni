@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- settings form paths are validated before persistence */
 "use client";
 
 import { Play, Gauge, Layers, Clock, ShieldCheck } from "lucide-react";

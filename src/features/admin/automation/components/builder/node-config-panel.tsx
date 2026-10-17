@@ -12,6 +12,8 @@ export interface BuilderResources {
   templates: Array<{ id: string; name: string; language: string; variables: string[]; status: string; providerStatus: string | null }>;
   templatesError: string | null;
   members: Array<{ id: string; name: string }>;
+  websites: Array<{ id: string; name: string; url: string }>;
+  owner: { available: boolean; count: number; maskedEmail: string | null };
 }
 
 const VARIABLES = [
@@ -24,6 +26,14 @@ const VARIABLES = [
   { token: "{{lead.stage}}", label: "Lead stage" },
   { token: "{{lead.ownerName}}", label: "Owner name" },
   { token: "{{trigger.message}}", label: "Any field from the trigger payload, e.g. message" },
+  { token: "{{website.url}}", label: "Monitored website URL" },
+  { token: "{{website.name}}", label: "Monitored website name" },
+  { token: "{{website.httpStatus}}", label: "Observed HTTP status" },
+  { token: "{{website.errorMessage}}", label: "Monitoring error" },
+  { token: "{{website.detectedAt}}", label: "Incident detection time" },
+  { token: "{{website.region}}", label: "Monitoring region" },
+  { token: "{{company.name}}", label: "Owning company name" },
+  { token: "{{recipient.email}}", label: "Resolved notification recipient" },
 ];
 
 const CONDITION_FIELDS = [
@@ -55,8 +65,9 @@ const CONTACT_STATUSES = ["active", "inactive", "lead", "customer", "prospect"];
 export function nodeProblem(node: AutomationNode): string | null {
   const c = node.config ?? {};
   switch (node.actionId) {
+    case "website_down": return c.websiteId ? null : "Choose a monitored website";
     case "send_whatsapp": return c.templateId ? null : "Choose a WhatsApp template";
-    case "send_email": return c.subject ? null : "Add a subject";
+    case "send_email": return c.subject ? (c.recipientMode === "company_owner" && !c.ownerPolicy ? "Choose an owner policy" : null) : "Add a subject";
     case "assign_user": return c.userId ? null : "Choose a team member";
     case "update_record": return c.field ? (c.value ? null : "Set the new value") : "Choose a field to update";
     case "create_task": return c.title ? null : "Add a task title";
@@ -209,7 +220,20 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
               </>
             ) : null}
 
-            {node.type === "trigger" && !["inbound_webhook", "form_submission"].includes(node.actionId ?? "") ? (
+            {node.actionId === "website_down" ? (
+              <>
+                <Field title="Infrastructure Website" hint="Stable website IDs are stored; choices are limited to this company and client.">
+                  <select className={`${input} bg-white`} value={config.websiteId ?? ""} onChange={(e) => setConfig({ websiteId: e.target.value })}>
+                    <option value="">Select a monitored website…</option>
+                    <option value="*">All Authorized Monitored Websites</option>
+                    {resources.websites.map((website) => <option key={website.id} value={website.id}>{website.name} · {website.url}</option>)}
+                  </select>
+                </Field>
+                {!resources.websites.length ? <p className="rounded-md bg-amber-50 px-2.5 py-2 text-[10.5px] text-amber-800">No enabled website monitoring configuration exists for this client.</p> : null}
+              </>
+            ) : null}
+
+            {node.type === "trigger" && node.actionId !== "website_down" && !["inbound_webhook", "form_submission"].includes(node.actionId ?? "") ? (
               <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[11px] text-[#475569]">{item?.description ?? "Choose a trigger from the left panel."} No extra settings are needed.</p>
             ) : null}
 
@@ -244,9 +268,28 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
 
             {node.actionId === "send_email" ? (
               <>
-                <Field title="To" hint="An email address or {{lead.email}}. Left empty, the record’s own email is used.">
-                  <input className={input} placeholder="{{lead.email}} or team@company.com" value={config.to ?? ""} onChange={(e) => setConfig({ to: e.target.value })} />
+                <Field title="Recipient">
+                  <select className={`${input} bg-white`} value={config.recipientMode ?? "custom"} onChange={(e) => setConfig({ recipientMode: e.target.value, ...(e.target.value === "company_owner" ? { ownerPolicy: config.ownerPolicy ?? "oldest_active" } : {}) })}>
+                    <option value="custom">Custom Authorized Address</option>
+                    <option value="record">Record Email</option>
+                    <option value="company_owner">Company Owner (Automatic)</option>
+                  </select>
                 </Field>
+                {config.recipientMode === "company_owner" ? (
+                  <Field title="Multiple Owner Policy" hint={resources.owner.available ? `Resolved preview: ${resources.owner.maskedEmail}${resources.owner.count > 1 ? ` (${resources.owner.count} eligible owners)` : ""}` : "No active, verified company owner email is available."}>
+                    <select className={`${input} bg-white`} value={config.ownerPolicy ?? ""} onChange={(e) => setConfig({ ownerPolicy: e.target.value })}>
+                      <option value="">Select policy…</option>
+                      <option value="require_single">Require Exactly One Owner</option>
+                      <option value="oldest_active">Oldest Active Owner</option>
+                    </select>
+                  </Field>
+                ) : config.recipientMode === "record" ? (
+                  <p className="rounded-md bg-slate-50 px-3 py-2 text-[11px] text-slate-600">Uses the email on the CRM record that started the workflow.</p>
+                ) : (
+                  <Field title="To" hint="Only addresses authorized for this workflow should be entered.">
+                    <input className={input} placeholder="team@company.com" value={config.to ?? ""} onChange={(e) => setConfig({ to: e.target.value })} />
+                  </Field>
+                )}
                 <Field title="Subject">
                   <input className={input} maxLength={200} value={config.subject ?? ""} onChange={(e) => setConfig({ subject: e.target.value })} />
                 </Field>

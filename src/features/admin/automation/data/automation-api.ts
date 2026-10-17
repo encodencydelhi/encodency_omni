@@ -92,6 +92,17 @@ export interface RunNowInput {
   test?: boolean;
 }
 
+export interface AutomationWebsiteResources {
+  websites: Array<{ id: string; name: string; url: string }>;
+  owner: { available: boolean; count: number; maskedEmail: string | null };
+}
+
+export interface CompanySmtpSettings {
+  configured: boolean; enabled: boolean; host: string; port: number; secure: boolean; usernameConfigured: boolean;
+  credentialHint: string | null; fromEmail: string; fromName: string; fallbackPolicy: "DENY" | "ALLOW_PLATFORM";
+  verifiedAt: string | null; lastVerificationAt: string | null; lastVerificationOk: boolean | null; revision: number;
+}
+
 function query(values: Record<string, string | number | undefined>): Record<string, string> {
   return Object.fromEntries(Object.entries(values).filter(([, v]) => v !== undefined && v !== "").map(([k, v]) => [k, String(v)]));
 }
@@ -109,6 +120,7 @@ export const automationApi = {
   duplicateWorkflow: (clientId: string, id: string) => req<AutomationWorkflow>("POST", `/automation/workflows/${encodeURIComponent(id)}/duplicate`, clientId),
   deleteWorkflow: (clientId: string, id: string) => req<void>("DELETE", `/automation/workflows/${encodeURIComponent(id)}`, clientId),
   runWorkflow: (clientId: string, id: string, input: RunNowInput) => req<AutomationRun>("POST", `/automation/workflows/${encodeURIComponent(id)}/run`, clientId, input),
+  websiteResources: (clientId: string) => req<AutomationWebsiteResources>("GET", "/automation/resources/websites", clientId),
 
   /* Runs */
   listRuns: (clientId: ClientScope, filters: RunFilters = {}) => req<AutomationRun[]>("GET", "/automation/runs", clientId, undefined, query({ ...filters })),
@@ -143,6 +155,9 @@ export const automationApi = {
   updateSettings: (settings: Partial<AutomationSettingsState>) => req<AutomationSettingsState>("PUT", "/automation/settings", null, { settings }),
   resetSettings: () => req<AutomationSettingsState>("POST", "/automation/settings/reset", null),
   testAlert: () => req<Array<{ channel: string; ok: boolean; detail: string }>>("POST", "/automation/settings/test-alert", null),
+  smtpSettings: () => req<CompanySmtpSettings>("GET", "/automation/settings/smtp", null),
+  saveSmtpSettings: (input: { enabled: boolean; host: string; port: number; secure: boolean; username?: string; password?: string; fromEmail: string; fromName?: string; fallbackPolicy: "DENY" | "ALLOW_PLATFORM"; expectedRevision: number }) => req<CompanySmtpSettings>("PUT", "/automation/settings/smtp", null, input),
+  verifySmtpSettings: () => req<CompanySmtpSettings>("POST", "/automation/settings/smtp/verify", null),
   purgeRuns: (olderThanDays: number) => req<{ deleted: number }>("POST", "/automation/runs/purge", null, { olderThanDays }),
 };
 

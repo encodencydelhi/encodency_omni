@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- user-authored webhook JSON is intentionally schema-agnostic */
 "use client";
 
 import { useState } from "react";
