@@ -24,6 +24,8 @@ export function IntegrationsSection({ settings, onChange }: IntegrationsSectionP
   const [copied, setCopied] = useState<string | null>(null);
   const [ipInput, setIpInput] = useState(settings.ipWhitelist.join(", "));
   const [smtp, setSmtp] = useState<CompanySmtpSettings | null>(null);
+  const [smtpError, setSmtpError] = useState<{ denied: boolean; detail: string } | null>(null);
+  const [smtpReload, setSmtpReload] = useState(0);
   const [smtpUsername, setSmtpUsername] = useState("");
   const [smtpPassword, setSmtpPassword] = useState("");
   const [smtpBusy, setSmtpBusy] = useState(false);
@@ -31,9 +33,14 @@ export function IntegrationsSection({ settings, onChange }: IntegrationsSectionP
   useEffect(() => {
     let cancelled = false;
     whatsappApi.getConfig(getStoredCompanyId()).then((c) => { if (!cancelled) setWhatsapp(c); }).catch(() => { if (!cancelled) setWhatsapp("error"); });
-    automationApi.smtpSettings().then((value) => { if (!cancelled) setSmtp(value); }).catch(() => { if (!cancelled) setSmtp(null); });
+    automationApi.smtpSettings().then((value) => { if (!cancelled) { setSmtp(value); setSmtpError(null); } }).catch((error: unknown) => {
+      if (cancelled) return;
+      const status = (error as { status?: number })?.status;
+      setSmtp(null);
+      setSmtpError({ denied: status === 401 || status === 403, detail: error instanceof Error ? error.message : "The server did not answer." });
+    });
     return () => { cancelled = true; };
-  }, []);
+  }, [smtpReload]);
 
   const hooks = workflows.flatMap((wf) => {
     const trigger = wf.nodes.find((n) => n.type === "trigger");
@@ -59,6 +66,11 @@ export function IntegrationsSection({ settings, onChange }: IntegrationsSectionP
       const next = await automationApi.saveSmtpSettings({ enabled: smtp.enabled, host: smtp.host, port: smtp.port, secure: smtp.secure, fromEmail: smtp.fromEmail, fromName: smtp.fromName, fallbackPolicy: smtp.fallbackPolicy, expectedRevision: smtp.revision, ...(smtpUsername ? { username: smtpUsername } : {}), ...(smtpPassword ? { password: smtpPassword } : {}) });
       setSmtp(next); setSmtpUsername(""); setSmtpPassword(""); toast.success("Company SMTP settings saved");
     } catch (error) { toast.error(error instanceof Error ? error.message : "SMTP settings could not be saved."); } finally { setSmtpBusy(false); }
+  };
+  const checkSmtp = async () => {
+    setSmtpBusy(true);
+    try { const r = await automationApi.checkSmtpConnection(); toast.success(`${r.message} (${r.host}:${r.port})`); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "The SMTP connection check failed."); } finally { setSmtpBusy(false); }
   };
   const verifySmtp = async () => {
     setSmtpBusy(true);
@@ -110,8 +122,10 @@ export function IntegrationsSection({ settings, onChange }: IntegrationsSectionP
             <label className="text-[10.5px] font-semibold">Fallback Policy<select value={smtp.fallbackPolicy} onChange={(e) => updateSmtp({ fallbackPolicy: e.target.value as CompanySmtpSettings["fallbackPolicy"] })} className="mt-1 h-8 w-full rounded-md border border-slate-200 bg-white px-2"><option value="DENY">No Platform Fallback</option><option value="ALLOW_PLATFORM">Allow Platform SMTP</option></select></label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={smtp.enabled} onChange={(e) => updateSmtp({ enabled: e.target.checked })} />Enabled</label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={smtp.secure} onChange={(e) => updateSmtp({ secure: e.target.checked })} />Implicit TLS</label>
-            <div className="sm:col-span-2 flex items-center justify-between gap-2"><span className={smtp.lastVerificationOk ? "text-emerald-700" : "text-amber-700"}>{smtp.lastVerificationOk ? `Verified ${smtp.verifiedAt ? new Date(smtp.verifiedAt).toLocaleString() : ""}` : "Not Verified"}</span><div className="flex gap-2"><button disabled={smtpBusy} onClick={() => void saveSmtp()} className="rounded-md border px-3 py-1.5 font-semibold">Save SMTP</button><button disabled={smtpBusy || !smtp.configured} onClick={() => void verifySmtp()} className="rounded-md bg-blue-600 px-3 py-1.5 font-semibold text-white disabled:opacity-50">Verify &amp; Send Test</button></div></div>
-          </div> : <p className="text-[10.5px] text-slate-500">SMTP settings are unavailable or you do not have permission to manage integrations.</p>}
+            {[25, 587, 2525].includes(smtp.port) && smtp.secure ? <p className="sm:col-span-2 rounded-md bg-amber-50 px-2.5 py-2 text-[10.5px] text-amber-800" role="status">Port {smtp.port} uses STARTTLS: turn <strong>Implicit TLS off</strong>. Implicit TLS is for port 465.</p> : null}
+            {smtp.port === 465 && !smtp.secure ? <p className="sm:col-span-2 rounded-md bg-amber-50 px-2.5 py-2 text-[10.5px] text-amber-800" role="status">Port 465 uses Implicit TLS: turn <strong>Implicit TLS on</strong>.</p> : null}
+            <div className="sm:col-span-2 flex items-center justify-between gap-2"><span className={smtp.lastVerificationOk ? "text-emerald-700" : "text-amber-700"}>{smtp.lastVerificationOk ? `Verified ${smtp.verifiedAt ? new Date(smtp.verifiedAt).toLocaleString() : ""}` : "Not Verified"}</span><div className="flex gap-2"><button disabled={smtpBusy} onClick={() => void saveSmtp()} className="rounded-md border px-3 py-1.5 font-semibold">Save SMTP</button><button disabled={smtpBusy || !smtp.configured} onClick={() => void checkSmtp()} title="Connects and logs in with the saved settings. Sends no email." className="rounded-md border px-3 py-1.5 font-semibold disabled:opacity-50">Check Connection</button><button disabled={smtpBusy || !smtp.configured} onClick={() => void verifySmtp()} className="rounded-md bg-blue-600 px-3 py-1.5 font-semibold text-white disabled:opacity-50">Verify &amp; Send Test</button></div></div>
+          </div> : smtpError?.denied ? <p className="text-[10.5px] text-slate-500">You do not have permission to manage integrations (Owner or Admin required).</p> : <p className="flex items-center gap-2 text-[10.5px] text-slate-500">{smtpError ? `SMTP settings could not be loaded (${smtpError.detail}). This is often a brief server restart.` : "Loading SMTP settings..."}{smtpError ? <button type="button" onClick={() => setSmtpReload((n) => n + 1)} className="rounded-md border px-2 py-1 font-semibold text-slate-700">Retry</button> : null}</p>}
         </div>
       </div>
 

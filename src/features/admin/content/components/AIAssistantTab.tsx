@@ -232,7 +232,7 @@ export function AIAssistantTab({
         const queryLabel = targetPrompt.trim() || prompt.slice(0, 30);
         toast.success(`✨ AI visual generated for "${queryLabel.slice(0, 35)}..." in ${style} style!`);
       } else {
-        toast.error("Could not generate image. Please verify your OPENAI_API_KEY.");
+        toast.error("Could not generate image. Please try again.");
       }
     } catch (err: any) {
       toast.error(`Image generation failed: ${err?.message || "Unknown error"}`);

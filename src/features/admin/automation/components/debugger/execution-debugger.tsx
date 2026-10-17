@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionPreviewCard, previewOf } from "../action-preview-card";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -209,6 +210,7 @@ export function ExecutionDebugger({ clientId, runId: initialRunId, onClose }: { 
                       </dl>
                       {selectedNode.error ? <div className="rounded border border-red-200 bg-red-50 p-2"><p className="text-[10px] font-semibold text-red-800">Error</p><p className="mt-0.5 break-words text-[11px] text-red-900">{selectedNode.error}</p>{selectedNode.recommendation ? <p className="mt-1 text-[11px] text-red-900/80">Recommendation: {selectedNode.recommendation}</p> : null}</div> : null}
                       <div><p className="mb-1 text-[10px] font-semibold text-slate-500">Input (Redacted)</p><Json value={selectedNode.input} /></div>
+                      {previewOf(selectedNode.output) ? <ActionPreviewCard preview={previewOf(selectedNode.output)!} /> : null}
                       <div><p className="mb-1 text-[10px] font-semibold text-slate-500">Output (Redacted)</p><Json value={selectedNode.output} /></div>
                     </> : <p className="rounded border border-slate-200 bg-slate-50 p-2 text-[11px] text-slate-600">This node has no recorded execution in this run.</p>}
                     <div><p className="mb-1 text-[10px] font-semibold text-slate-500">Configuration In This Snapshot (Redacted)</p><Json value={selectedMeta.config} /></div>

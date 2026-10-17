@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionPreviewCard } from "../action-preview-card";
 import { useMemo, useState } from "react";
 import { AlertTriangle, FlaskConical, Info, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -128,7 +129,8 @@ export function SimulatorDialog({ open, onClose, clientId, workflow, nodes, edge
                     <div className="flex items-center gap-1.5 text-[11px]"><span className="w-6 shrink-0 font-mono text-[10px] text-slate-400">{step.seq}</span><span className="font-medium text-slate-900">{step.label}</span><span className={`rounded px-1 text-[9px] font-semibold ${SIM_STATE_STYLE[step.status === "planned" || step.status === "skipped" ? "planned" : step.status].text}`}>{step.status === "planned" ? "Planned" : step.status === "blocked" ? "Needs Outcome" : step.status === "failed" ? "Simulated Failure" : "Skipped"}</span>{step.scope ? <span className="truncate text-[10px] text-slate-400">{step.scope}</span> : null}</div>
                     {step.note ? <p className="ml-7 text-[10px] text-slate-500">{step.note}</p> : null}
                     {step.resumeAt ? <p className="ml-7 text-[10px] text-slate-500">Would resume at {new Date(step.resumeAt).toLocaleString()}</p> : null}
-                    {step.wouldExecute && step.rendered ? <pre className="ml-7 mt-1 max-h-28 overflow-auto rounded border border-slate-200 bg-slate-50 p-1.5 font-mono text-[10px] text-slate-700">{JSON.stringify(step.rendered, null, 2)}</pre> : null}
+                    {step.preview ? <div className="ml-7 mt-1"><ActionPreviewCard preview={step.preview} /></div> : null}
+                    {step.wouldExecute && step.rendered && !step.preview ? <pre className="ml-7 mt-1 max-h-28 overflow-auto rounded border border-slate-200 bg-slate-50 p-1.5 font-mono text-[10px] text-slate-700">{JSON.stringify(step.rendered, null, 2)}</pre> : null}
                   </li>))}</ol>}
               </div>
               <details className="rounded border border-slate-200 p-2 text-[11px] text-slate-600"><summary className="cursor-pointer font-semibold text-slate-800">What This Simulation Cannot Tell You</summary><ul className="mt-1 list-disc space-y-0.5 pl-4">{result.limitations.map((line) => <li key={line}>{line}</li>)}</ul></details>

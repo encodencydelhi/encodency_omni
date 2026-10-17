@@ -13,7 +13,7 @@ import type { AutomationPageActions } from "../../automation-page";
 import { automationApi } from "../../data/automation-api";
 import { errorMessage, useAutomationScope, useAutomationTemplates, useInvalidateAutomation, useWorkflows } from "../../data/hooks";
 import type { AutomationWorkflow, AutomationWorkflowStatus } from "../../data/types";
-import { EmptyPanel, KpiTile, TRIGGER_OPTIONS, WorkflowStatusChip, channelLabel, timeAgo } from "../shared";
+import { EmptyPanel, KpiTile, PANEL, PanelHeader, TRIGGER_OPTIONS, WorkflowStatusChip, channelLabel, timeAgo } from "../shared";
 import { WorkflowActions } from "../workflow-actions";
 
 const SORTS = [
@@ -87,8 +87,8 @@ export function WorkflowsPage({ days, onEdit, onCreate, onTest, onUseTemplate }:
   const clientNameOf = (id: string) => Clients.find((c) => c.id === id)?.name ?? "";
 
   return (
-    <div className="space-y-2 pb-12">
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-6">
+    <div className="space-y-1 pb-12">
+      <div className="grid grid-cols-2 gap-1 lg:grid-cols-6">
         <KpiTile icon={<div className="rounded-lg bg-[#EBF5FF] p-1.5 text-[#3B82F6]"><GitMerge className="size-4" /></div>} title="Total Workflows" value={String(workflows.length)} hint="all statuses" />
         <KpiTile icon={<div className="rounded-full bg-[#ECFDF5] p-1.5 text-[#10B981]"><Play className="size-4" /></div>} title="Active" value={String(count("Active"))} hint="running on live events" />
         <KpiTile icon={<div className="rounded-lg bg-[#F0F9FF] p-1.5 text-[#0EA5E9]"><FileText className="size-4" /></div>} title="Drafts" value={String(count("Draft"))} hint="not published yet" />
@@ -97,12 +97,8 @@ export function WorkflowsPage({ days, onEdit, onCreate, onTest, onUseTemplate }:
         <KpiTile icon={<div className="rounded-full bg-[#F5F3FF] p-1.5 text-[#8B5CF6]"><Activity className="size-4" /></div>} title="Runs" value={runsInPeriod.toLocaleString()} hint={`last ${days} days`} />
       </div>
 
-      <div className="flex flex-col rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
-        <div className="mb-3 flex flex-col justify-between gap-3 md:flex-row md:items-center">
-          <div>
-            <h3 className="text-[14px] font-bold text-[#111C3A]">Workflows ({filtered.length})</h3>
-            <p className="mt-0.5 text-[11px] text-[#64748B]">Create, manage and monitor your automation workflows.</p>
-          </div>
+      <div className={`flex flex-col overflow-hidden p-4 ${PANEL}`}>
+        <PanelHeader title={`Workflows (${filtered.length})`} sub="Create, manage and monitor your automation workflows." action={
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[#94A3B8]" />
@@ -125,7 +121,7 @@ export function WorkflowsPage({ days, onEdit, onCreate, onTest, onUseTemplate }:
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
+        } />
 
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <select aria-label="Status" className={select} value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
@@ -211,29 +207,29 @@ export function WorkflowsPage({ days, onEdit, onCreate, onTest, onUseTemplate }:
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
-        <div className="flex flex-col rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
-          <h3 className="mb-3 text-[13px] font-bold text-[#111C3A]">Workflows by trigger</h3>
+      <div className="grid grid-cols-1 gap-1 lg:grid-cols-2">
+        <div className={`flex flex-col overflow-hidden p-4 ${PANEL}`}>
+          <PanelHeader title="Workflows by trigger" sub="Click a trigger to filter the table above." />
           {triggerCounts.length === 0 ? <p className="text-[11.5px] text-[#64748B]">No workflows yet.</p> : (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {triggerCounts.map((t) => (
-                <button key={t.id} type="button" onClick={() => { setTrigger(t.id); setPage(1); }} className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left hover:bg-slate-50">
+                <button key={t.id} type="button" onClick={() => { setTrigger(t.id); setPage(1); }} className="flex w-full items-center gap-2 rounded-md px-1 py-1 text-left transition-colors hover:bg-[#F8FAFC]">
                   <span className="w-32 truncate text-[11.5px] text-[#334155]">{t.label}</span>
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#F1F5F9]"><div className="h-full rounded-full bg-[#2563EB]" style={{ width: `${(t.count / workflows.length) * 100}%` }} /></div>
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#F1F5F9]"><div className="h-full rounded-full bg-gradient-to-r from-[#3B82F6] to-[#2563EB]" style={{ width: `${(t.count / workflows.length) * 100}%` }} /></div>
                   <span className="w-6 text-right text-[11px] font-bold text-[#111C3A]">{t.count}</span>
                 </button>
               ))}
             </div>
           )}
         </div>
-        <div className="flex flex-col rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
-          <h3 className="mb-3 text-[13px] font-bold text-[#111C3A]">Quick templates</h3>
-          <div className="grid grid-cols-2 gap-2">
+        <div className={`flex flex-col overflow-hidden p-4 ${PANEL}`}>
+          <PanelHeader title="Quick templates" sub="Start from a proven workflow." />
+          <div className="grid grid-cols-2 gap-1">
             {templates.slice(0, 4).map((tpl) => (
-              <div key={tpl.id} className="flex flex-col rounded-lg border border-[#E2E8F0] p-2.5">
-                <div className="text-[11px] font-bold leading-tight text-[#111C3A]">{tpl.name}</div>
+              <div key={tpl.id} className="group/tpl flex flex-col rounded-lg border border-[#E6EBF4] bg-gradient-to-b from-white to-[#FAFBFD] p-2.5 transition-all duration-200 hover:-translate-y-px hover:border-[#C9D6EA] hover:bg-white hover:shadow-[0_1px_2px_rgba(16,24,40,0.05),0_12px_24px_-18px_rgba(16,24,40,0.4)]">
+                <div className="text-[11px] font-bold leading-tight text-[#111C3A] group-hover/tpl:text-[#1D4ED8]">{tpl.name}</div>
                 <div className="mb-2 mt-1 line-clamp-2 text-[10px] leading-tight text-[#64748B]">{tpl.description}</div>
-                <button type="button" onClick={() => void onUseTemplate(tpl.id)} className="mt-auto inline-flex items-center justify-center gap-1 rounded border border-[#BFDBFE] py-1 text-[10.5px] font-semibold text-[#2563EB] hover:bg-blue-50">Use template <ArrowRight className="size-3" /></button>
+                <button type="button" onClick={() => void onUseTemplate(tpl.id)} className="mt-auto inline-flex cursor-pointer items-center justify-center gap-1 rounded-md border border-[#BFDBFE] bg-blue-50/60 py-1 text-[10.5px] font-semibold text-[#2563EB] transition-colors hover:border-[#2563EB] hover:bg-[#2563EB] hover:text-white">Use template <ArrowRight className="size-3" /></button>
               </div>
             ))}
           </div>

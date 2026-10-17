@@ -119,24 +119,27 @@ export function RunStatusChip({ status }: { status: AutomationRunStatus }) {
 /* KPI card                                                             */
 /* ------------------------------------------------------------------ */
 
-export function KpiTile({ icon, title, value, trend, hint, invertTrend = false }: { icon: ReactNode; title: string; value: string; trend?: number | null; hint?: string; invertTrend?: boolean }) {
+export function KpiTile({ icon, title, value, trend, hint, badge, invertTrend = false }: { icon: ReactNode; title: string; value: string; trend?: number | null; hint?: string; badge?: ReactNode; invertTrend?: boolean }) {
   const showTrend = typeof trend === "number" && trend !== 0;
   const good = showTrend && (invertTrend ? trend! < 0 : trend! > 0);
   return (
-    <div className="flex items-center gap-2.5 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 shadow-sm">
-      <div className="shrink-0">{icon}</div>
+    <div className="group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-[#E6EBF4] bg-gradient-to-b from-white via-white to-[#F9FBFE] px-3 py-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_28px_-18px_rgba(16,24,40,0.28)] transition-all duration-200 hover:-translate-y-px hover:border-[#C9D6EA] hover:shadow-[0_1px_2px_rgba(16,24,40,0.06),0_16px_32px_-20px_rgba(16,24,40,0.45)]">
+      {/* Soft top accent keeps the tile readable at a glance without colouring text. */}
+      <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#2563EB]/35 to-transparent" aria-hidden />
+      <div className="shrink-0 rounded-[10px] ring-1 ring-inset ring-[#0F172A]/5 transition-transform duration-200 group-hover:scale-105">{icon}</div>
       <div className="min-w-0 flex-1">
-      <h4 className="truncate text-[11px] font-medium text-[#64748B]">{title}</h4>
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-[19px] font-bold leading-tight text-[#111C3A]">{value}</span>
+      <h4 className="truncate text-[11px] font-semibold leading-tight text-[#64748B]">{title}</h4>
+      <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+        <span className="text-[19px] font-bold leading-tight tracking-[-0.02em] text-[#111C3A] tabular-nums">{value}</span>
         {showTrend ? (
-          <span className={`flex items-center text-[10.5px] font-bold ${good ? "text-[#10B981]" : "text-[#EF4444]"}`}>
-            {trend! > 0 ? <TrendingUp className="mr-0.5 size-3" /> : <TrendingDown className="mr-0.5 size-3" />}
+          <span className={`inline-flex items-center gap-0.5 rounded-md border px-1 py-px text-[10px] font-bold leading-none ${good ? "border-[#A7F3D0] bg-[#ECFDF5] text-[#047857]" : "border-[#FECACA] bg-[#FEF2F2] text-[#B91C1C]"}`}>
+            {trend! > 0 ? <TrendingUp className="size-2.5" /> : <TrendingDown className="size-2.5" />}
             {Math.abs(trend!)}%
           </span>
         ) : null}
+        {badge ? <span className="inline-flex items-center rounded-md border border-[#A7F3D0] bg-[#ECFDF5] px-1.5 py-px text-[10px] font-bold leading-none text-[#047857]">{badge}</span> : null}
       </div>
-      <p className="truncate text-[10px] leading-tight text-[#94A3B8]">{hint ?? (showTrend ? "vs previous period" : " ")}</p>
+      <p className="truncate text-[10px] font-medium leading-tight text-[#94A3B8]">{hint ?? (showTrend ? "vs previous period" : " ")}</p>
       </div>
     </div>
   );
@@ -165,4 +168,31 @@ export const TRIGGER_OPTIONS = [
 export function channelLabel(channel: string): string {
   const map: Record<string, string> = { whatsapp: "WhatsApp", email: "Email", meta: "Meta", system: "System" };
   return map[channel] ?? channel;
+}
+
+/* ------------------------------------------------------------------ */
+/* Surfaces                                                            */
+/* ------------------------------------------------------------------ */
+
+/** Elevated white panel used by every automation card (mirrors the website UI kit CARD). */
+export const PANEL =
+  "rounded-xl border border-[#E6EBF4] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_28px_-18px_rgba(16,24,40,0.28)] transition-shadow duration-200 hover:border-[#D5DDEA] hover:shadow-[0_1px_2px_rgba(16,24,40,0.06),0_16px_32px_-20px_rgba(16,24,40,0.45)]";
+
+/**
+ * Full-bleed header band for a `PANEL` card. The parent card must use
+ * `p-4 overflow-hidden` so the band's `-mx-4 -mt-4` aligns with its edges.
+ */
+export function PanelHeader({ title, sub, action }: { title: string; sub?: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="-mx-4 -mt-4 mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-[#EEF2F8] bg-gradient-to-b from-[#FBFCFE] to-white px-4 py-2.5">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="h-3.5 w-1 shrink-0 rounded-full bg-gradient-to-b from-[#3B82F6] to-[#2563EB]" aria-hidden />
+        <div className="min-w-0">
+          <h3 className="text-[12.5px] font-semibold tracking-[-0.01em] text-[#111C3A]">{title}</h3>
+          {sub ? <p className="text-[10.5px] leading-snug text-[#6B7A94]">{sub}</p> : null}
+        </div>
+      </div>
+      {action ? <div className="flex flex-wrap shrink-0 items-center gap-1.5">{action}</div> : null}
+    </div>
+  );
 }

@@ -10,22 +10,25 @@ import { libraryItem } from "../builder/node-library";
 import { EmptyPanel, KpiTile, RunStatusChip, WorkflowStatusChip, channelLabel, formatDuration, timeAgo } from "../shared";
 import { WorkflowActions } from "../workflow-actions";
 
-const card = "rounded-lg border border-[#E2E8F0] bg-white p-3 shadow-sm";
+const card = "group/card flex flex-col overflow-hidden rounded-xl border border-[#E6EBF4] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_28px_-18px_rgba(16,24,40,0.28)] transition-shadow duration-200 hover:border-[#D5DDEA] hover:shadow-[0_1px_2px_rgba(16,24,40,0.06),0_16px_32px_-20px_rgba(16,24,40,0.45)]";
 
 function SectionHeader({ title, sub, action }: { title: string; sub?: string; action?: React.ReactNode }) {
   return (
-    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-      <div>
-        <h3 className="text-[13px] font-semibold text-[#111C3A]">{title}</h3>
-        {sub ? <p className="text-[11px] text-[#6B7A94]">{sub}</p> : null}
+    <div className="-mx-4 -mt-4 mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-[#EEF2F8] bg-gradient-to-b from-[#FBFCFE] to-white px-4 py-2.5">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="h-3.5 w-1 shrink-0 rounded-full bg-gradient-to-b from-[#3B82F6] to-[#2563EB]" aria-hidden />
+        <div className="min-w-0">
+          <h3 className="text-[12.5px] font-semibold tracking-[-0.01em] text-[#111C3A]">{title}</h3>
+          {sub ? <p className="text-[10.5px] leading-snug text-[#6B7A94]">{sub}</p> : null}
+        </div>
       </div>
-      {action}
+      {action ? <div className="flex shrink-0 items-center gap-1.5">{action}</div> : null}
     </div>
   );
 }
 
 function LinkButton({ label, onClick }: { label: string; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="flex items-center gap-1 text-[11.5px] font-medium text-[#2563EB] hover:underline">{label} <ChevronRight className="size-3" /></button>;
+  return <button type="button" onClick={onClick} className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-[11.5px] font-semibold text-[#2563EB] transition-colors hover:bg-[#EFF6FF] hover:text-[#1D4ED8]">{label} <ChevronRight className="size-3 transition-transform group-hover/card:translate-x-0.5" /></button>;
 }
 
 export function AutomationOverview({ days, onEdit, onTest, onUseTemplate, onOpenRun, onNavigate }: AutomationPageActions) {
@@ -222,13 +225,13 @@ export function AutomationOverview({ days, onEdit, onTest, onUseTemplate, onOpen
           <SectionHeader title="Popular Templates" action={<LinkButton label="All Templates" onClick={() => onNavigate("templates")} />} />
           <div className="grid grid-cols-2 gap-1">
             {popular.map((tpl) => (
-              <div key={tpl.id} className="flex flex-col justify-between rounded-md border border-[#E2E8F0] bg-[#FAFBFD] p-2 hover:bg-white">
+              <div key={tpl.id} className="group/tpl flex flex-col justify-between rounded-lg border border-[#E6EBF4] bg-gradient-to-b from-white to-[#FAFBFD] p-2.5 transition-all duration-200 hover:-translate-y-px hover:border-[#C9D6EA] hover:bg-white hover:shadow-[0_1px_2px_rgba(16,24,40,0.05),0_12px_24px_-18px_rgba(16,24,40,0.4)]">
                 <div>
-                  <div className="mb-0.5 truncate text-[11px] font-bold leading-tight">{tpl.name}</div>
+                  <div className="mb-0.5 truncate text-[11px] font-bold leading-tight text-[#111C3A] group-hover/tpl:text-[#1D4ED8]">{tpl.name}</div>
                   <div className="line-clamp-2 text-[9.5px] leading-tight text-[#64748B]">{tpl.description}</div>
                   {tpl.useCount ? <span className="mt-1 inline-block rounded border border-blue-100 bg-blue-50 px-1.5 py-0.5 text-[9px] font-semibold text-blue-600">Used {tpl.useCount}×</span> : null}
                 </div>
-                <button type="button" onClick={() => void onUseTemplate(tpl.id)} className="mt-1.5 w-full rounded-md border border-blue-200 bg-blue-50 py-1 text-center text-[10.5px] font-bold text-[#2563EB] hover:bg-blue-600 hover:text-white">Use Template</button>
+                <button type="button" onClick={() => void onUseTemplate(tpl.id)} className="mt-1.5 w-full cursor-pointer rounded-md border border-[#BFDBFE] bg-blue-50/60 py-1 text-center text-[10.5px] font-bold text-[#2563EB] transition-colors hover:border-[#2563EB] hover:bg-[#2563EB] hover:text-white">Use Template</button>
               </div>
             ))}
           </div>

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AutomationRun, AutomationWorkflow } from "../../data/types";
+import { PANEL } from "../shared";
 
 interface ExecutionTracesTableProps {
   runs: AutomationRun[];
@@ -171,7 +172,7 @@ export function ExecutionTracesTable({
     <div className="space-y-1">
       
       {/* Top Filter Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 bg-white px-3 py-2 rounded-lg border border-[#E2E8F0] shadow-sm">
+      <div className="flex flex-col rounded-xl border border-[#E6EBF4] bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_28px_-18px_rgba(16,24,40,0.28)] transition-shadow duration-200 hover:shadow-[0_1px_2px_rgba(16,24,40,0.06),0_16px_32px_-20px_rgba(16,24,40,0.45)] lg:flex-row lg:items-center lg:justify-between lg:gap-2">
         
         {/* Dropdown Filters Group */}
         <div className="flex flex-wrap items-center gap-2">
@@ -292,7 +293,7 @@ export function ExecutionTracesTable({
       )}
 
       {/* Main Table Shell */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+      <div className={`${PANEL} overflow-hidden`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[11.5px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] text-[#64748B] border-b border-[#E2E8F0] font-semibold text-[10.5px]">

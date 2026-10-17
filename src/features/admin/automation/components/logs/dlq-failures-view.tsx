@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ShieldAlert, RotateCcw, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { AutomationRun } from "../../data/types";
+import { PANEL } from "../shared";
 
 interface DlqFailuresViewProps {
   failedRuns: AutomationRun[];
@@ -143,7 +144,7 @@ export function DlqFailuresView({
       </div>
 
       {/* Table of Failed Runs */}
-      <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+      <div className={`${PANEL} overflow-hidden`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[11.5px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] text-[#64748B] border-b border-[#E2E8F0] font-semibold text-[10.5px]">

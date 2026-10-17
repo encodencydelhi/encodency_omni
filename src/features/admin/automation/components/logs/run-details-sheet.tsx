@@ -1,5 +1,6 @@
 "use client";
 
+import { ActionPreviewCard, previewOf } from "../action-preview-card";
 import { useState } from "react";
 import {
   CheckCircle2, XCircle, Copy, Check, Download, RotateCcw, ShieldAlert, Lightbulb, Activity,
@@ -195,6 +196,7 @@ export function RunDetailsSheet({ run, open, onOpenChange, onRetry, onCancel }: 
                                 <pre className="max-h-[160px] overflow-auto rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-2 font-mono text-[10px] text-[#334155]">{JSON.stringify(step.input, null, 2)}</pre>
                               </div>
                             ) : null}
+                            {previewOf(step.output) ? <ActionPreviewCard preview={previewOf(step.output)!} /> : null}
                             {step.output && Object.keys(step.output).length ? (
                               <div>
                                 <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#64748B]">Output</span>

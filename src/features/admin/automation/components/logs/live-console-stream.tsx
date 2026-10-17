@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AutomationConsoleLog, AutomationLogLevel } from "../../data/types";
+import { PANEL } from "../shared";
 
 interface LiveConsoleStreamProps {
   logs: AutomationConsoleLog[];
@@ -85,7 +86,7 @@ export function LiveConsoleStream({
   };
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white shadow-sm overflow-hidden flex flex-col">
+    <div className={`${PANEL} flex flex-col overflow-hidden`}>
       
       {/* Top Console Controls Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#F8FAFC] border-b border-[#E2E8F0]">

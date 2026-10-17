@@ -84,6 +84,17 @@ export interface RunFilters {
   correlationId?: string;
 }
 
+export interface LiveTestInput {
+  payload?: Record<string, unknown>;
+  recordKind?: "lead" | "contact";
+  recordId?: string;
+  recipient: string;
+  createTestTask: boolean;
+  confirm: true;
+  requestKey: string;
+}
+export interface LiveTestTask { id: string; title: string; createdAt: string; createdById: string | null }
+
 export interface RunNowInput {
   payload?: Record<string, unknown>;
   recordKind?: "lead" | "contact";
@@ -120,6 +131,9 @@ export const automationApi = {
   duplicateWorkflow: (clientId: string, id: string) => req<AutomationWorkflow>("POST", `/automation/workflows/${encodeURIComponent(id)}/duplicate`, clientId),
   deleteWorkflow: (clientId: string, id: string) => req<void>("DELETE", `/automation/workflows/${encodeURIComponent(id)}`, clientId),
   runWorkflow: (clientId: string, id: string, input: RunNowInput) => req<AutomationRun>("POST", `/automation/workflows/${encodeURIComponent(id)}/run`, clientId, input),
+  liveTestWorkflow: (clientId: string, id: string, input: LiveTestInput) => req<AutomationRun>("POST", `/automation/workflows/${encodeURIComponent(id)}/live-test`, clientId, input),
+  liveTestTasks: (clientId: string, runId: string) => req<LiveTestTask[]>("GET", `/automation/runs/${encodeURIComponent(runId)}/test-tasks`, clientId),
+  deleteLiveTestTask: (clientId: string, taskId: string) => req<{ deleted: boolean }>("DELETE", `/automation/test-tasks/${encodeURIComponent(taskId)}`, clientId),
   websiteResources: (clientId: string) => req<AutomationWebsiteResources>("GET", "/automation/resources/websites", clientId),
 
   /* Runs */
@@ -158,6 +172,8 @@ export const automationApi = {
   smtpSettings: () => req<CompanySmtpSettings>("GET", "/automation/settings/smtp", null),
   saveSmtpSettings: (input: { enabled: boolean; host: string; port: number; secure: boolean; username?: string; password?: string; fromEmail: string; fromName?: string; fallbackPolicy: "DENY" | "ALLOW_PLATFORM"; expectedRevision: number }) => req<CompanySmtpSettings>("PUT", "/automation/settings/smtp", null, input),
   verifySmtpSettings: () => req<CompanySmtpSettings>("POST", "/automation/settings/smtp/verify", null),
+  /** Connection + TLS + login against the saved settings. Sends no email. */
+  checkSmtpConnection: () => req<{ ok: true; host: string; port: number; secure: boolean; checkedAt: string; message: string }>("POST", "/automation/settings/smtp/check", null),
   purgeRuns: (olderThanDays: number) => req<{ deleted: number }>("POST", "/automation/runs/purge", null, { olderThanDays }),
 };
 

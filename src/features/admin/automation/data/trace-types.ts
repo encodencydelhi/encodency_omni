@@ -41,7 +41,7 @@ export interface RunTrace {
 export interface PlanStep {
   seq: number; nodeId: string; actionId: string; label: string; kind: "trigger" | "decision" | "action" | "wait" | "approval" | "child" | "orchestration";
   status: "planned" | "skipped" | "blocked" | "failed"; simulated: true; scope: string | null; note: string | null; route?: string | null;
-  wouldExecute?: boolean; rendered?: unknown; mock?: unknown; resumeAt?: string | null;
+  wouldExecute?: boolean; preview?: import("../components/action-preview-card").ActionPreviewData; rendered?: unknown; mock?: unknown; resumeAt?: string | null;
 }
 export interface GraphIssue { kind: "graph" | "node" | "edge"; id?: string; code: string; message: string }
 export interface SimulationResult {

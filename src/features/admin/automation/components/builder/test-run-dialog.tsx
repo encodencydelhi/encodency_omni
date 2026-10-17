@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Play } from "lucide-react";
+import { FlaskConical, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useAuth } from "@/features/auth/components/auth-provider";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { crmApi } from "@/features/admin/crm/data/crm-api";
-import { automationApi } from "../../data/automation-api";
+import { automationApi, type LiveTestTask } from "../../data/automation-api";
 import { errorMessage } from "../../data/hooks";
 import type { AutomationRun, AutomationWorkflow } from "../../data/types";
 import { RunStatusChip } from "../shared";
+import { ActionPreviewCard, previewOf } from "../action-preview-card";
 
 interface CrmRow { id: string; firstName?: string; lastName?: string; name?: string; email?: string; phone?: string }
 
@@ -38,6 +40,13 @@ export function TestRunDialog({ open, onClose, workflow, clientId, onRan }: {
   const [payload, setPayload] = useState(() => samplePayload(triggerType));
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<AutomationRun | null>(null);
+  const { user } = useAuth();
+  const [live, setLive] = useState(false);
+  const [recipient, setRecipient] = useState(user?.email ?? "");
+  const [createTask, setCreateTask] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [testTasks, setTestTasks] = useState<LiveTestTask[]>([]);
+  const [requestKey, setRequestKey] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
     if (kind === "none") return;
@@ -62,14 +71,21 @@ export function TestRunDialog({ open, onClose, workflow, clientId, onRan }: {
     setRunning(true);
     setResult(null);
     try {
-      const res = await automationApi.runWorkflow(clientId, workflow.id, {
-        payload: parsed.value, eventType: triggerType === "noop" ? "manual" : triggerType, test: true,
-        ...(kind !== "none" && recordId ? { recordKind: kind, recordId } : {}),
-      });
+      const res = live
+        ? await automationApi.liveTestWorkflow(clientId, workflow.id, { payload: parsed.value, recipient: recipient.trim(), createTestTask: createTask, confirm: true, requestKey, ...(kind !== "none" && recordId ? { recordKind: kind, recordId } : {}) })
+        : await automationApi.runWorkflow(clientId, workflow.id, {
+          payload: parsed.value, eventType: triggerType === "noop" ? "manual" : triggerType, test: true,
+          ...(kind !== "none" && recordId ? { recordKind: kind, recordId } : {}),
+        });
       setResult(res);
       onRan(res);
-      if (res.status === "Failed") toast.error("Test run failed — see the steps for the reason");
-      else toast.success(`Test run ${res.status.toLowerCase()}`);
+      if (live) {
+        setRequestKey(crypto.randomUUID());
+        setConfirmed(false);
+        setTestTasks(await automationApi.liveTestTasks(clientId, res.id).catch(() => []));
+      }
+      if (res.status === "Failed") toast.error(`${live ? "Live test" : "Test run"} failed — see the steps for the reason`);
+      else toast.success(`${live ? "Live test" : "Test run"} ${res.status.toLowerCase()}`);
     } catch (error) {
       toast.error(errorMessage(error));
     } finally {
@@ -77,17 +93,42 @@ export function TestRunDialog({ open, onClose, workflow, clientId, onRan }: {
     }
   };
 
+  const removeTestTask = async (task: LiveTestTask) => {
+    try {
+      await automationApi.deleteLiveTestTask(clientId, task.id);
+      setTestTasks((list) => list.filter((t) => t.id !== task.id));
+      toast.success("Test task deleted");
+    } catch (error) {
+      toast.error(errorMessage(error));
+    }
+  };
+
   const rowName = (r: CrmRow) => `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim() || r.name || r.email || r.id;
 
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Test “{workflow.name}”</DialogTitle>
-          <DialogDescription>Runs the saved version once. Real actions happen (messages are sent, records change) unless Sandbox dry-run is on in Settings → Safety.</DialogDescription>
+          <DialogDescription>{live
+            ? "Live Test: sends ONE real email to the test recipient below and, if you ask, creates a clearly marked test task. WhatsApp, assignment and record updates stay blocked. Nothing reaches the real lead."
+            : "Safe test: runs the saved version once, but nothing is sent and no record, lead or task is created or changed. Email, WhatsApp, task and record steps show as “Skipped”, each with a preview of exactly what a live run would use."}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-1 rounded-lg bg-[#F1F5F9] p-1 text-[12px] font-semibold" role="tablist" aria-label="Test mode">
+            <button type="button" role="tab" aria-selected={!live} onClick={() => { setLive(false); setConfirmed(false); }} className={`rounded-md py-1.5 ${!live ? "bg-white shadow-sm" : "text-[#64748B]"}`}>Safe test</button>
+            <button type="button" role="tab" aria-selected={live} onClick={() => setLive(true)} className={`flex items-center justify-center gap-1 rounded-md py-1.5 ${live ? "bg-white text-amber-800 shadow-sm" : "text-[#64748B]"}`}><FlaskConical className="size-3.5" /> Live Test</button>
+          </div>
+          {live ? (
+            <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[12px]" data-testid="live-test-options">
+              <label className="block"><span className="mb-1 block text-[11.5px] font-semibold text-[#111C3A]">Test recipient (verified team member)</span>
+                <input type="email" value={recipient} onChange={(e) => setRecipient(e.target.value)} className="h-9 w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 text-[12px]" aria-label="Test recipient" />
+              </label>
+              <label className="flex items-center gap-2"><input type="checkbox" checked={createTask} onChange={(e) => setCreateTask(e.target.checked)} /> Also create a marked test task (assigned to me, deletable below)</label>
+              <label className="flex items-start gap-2 font-medium text-amber-900"><input type="checkbox" className="mt-0.5" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} /> I understand this sends a real email to {recipient || "the recipient"}{createTask ? " and creates a real test task" : ""}.</label>
+            </div>
+          ) : null}
           <div className="grid grid-cols-[8rem_1fr] gap-2">
             <select className="h-9 rounded-lg border border-[#E2E8F0] bg-white px-2 text-[12px]" value={kind} onChange={(e) => { setKind(e.target.value as typeof kind); setRecordId(""); setRecords([]); }} aria-label="Record type">
               <option value="none">No record</option>
@@ -109,16 +150,37 @@ export function TestRunDialog({ open, onClose, workflow, clientId, onRan }: {
             {!parsed.ok ? <p className="mt-1 text-[11px] text-red-600">Payload must be a JSON object.</p> : null}
           </div>
           {result ? (
-            <div className="flex items-center justify-between rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[12px]">
-              <span className="flex items-center gap-2"><RunStatusChip status={result.status} /> {result.steps.filter((s) => s.status === "Successful").length}/{result.steps.length} steps completed</span>
-              <span className="font-mono text-[11px] text-[#64748B]">{result.id.slice(0, 8)}</span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[12px]">
+                <span className="flex items-center gap-2"><RunStatusChip status={result.status} /> {result.steps.filter((s) => s.status === "Successful").length} executed · {result.steps.filter((s) => s.status === "Skipped").length} skipped (not executed)</span>
+                <span className="font-mono text-[11px] text-[#64748B]">{result.id.slice(0, 8)}</span>
+              </div>
+              {testTasks.length ? (
+                <ul className="space-y-1" data-testid="live-test-tasks">
+                  {testTasks.map((task) => (
+                    <li key={task.id} className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11.5px]"><span className="truncate">Test task: {task.title}</span><Button size="sm" variant="outline" onClick={() => void removeTestTask(task)}><Trash2 className="size-3" /> Delete Test Task</Button></li>
+                  ))}
+                </ul>
+              ) : null}
+              <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+                {result.steps.map((s) => {
+                  const preview = previewOf(s.output);
+                  return (
+                    <div key={s.id} className="space-y-1.5">
+                      <p className="flex items-center justify-between text-[11.5px] font-semibold text-[#111C3A]"><span>{s.label ?? s.actionId ?? s.nodeId}</span><span className="text-[10.5px] font-medium text-[#64748B]">{s.status}</span></p>
+                      {s.error ? <p className="rounded border border-red-200 bg-red-50 px-2 py-1 text-[11px] text-red-800">{s.error}</p> : null}
+                      {preview ? <ActionPreviewCard preview={preview} /> : null}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           ) : null}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Close</Button>
-          <Button disabled={!parsed.ok || running || (kind !== "none" && !recordId)} onClick={() => void run()}><Play className="size-3.5" /> {running ? "Running..." : "Run test"}</Button>
+          <Button disabled={!parsed.ok || running || (kind !== "none" && !recordId) || (live && (!confirmed || !recipient.trim()))} onClick={() => void run()}><Play className="size-3.5" /> {running ? "Running..." : live ? "Run Live Test" : "Run test"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

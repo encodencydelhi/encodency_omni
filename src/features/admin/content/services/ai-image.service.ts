@@ -38,13 +38,17 @@ export async function fetchDynamicAiVisual(
   if (!query) return null;
 
   try {
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
     if (companyId) {
       headers["x-company-id"] = companyId;
     }
 
     const res = await fetch("/api/v1/ai/generate-image", {
       method: "POST",
+      credentials: "include",
       headers,
       body: JSON.stringify({ prompt: query, style }),
     });
@@ -64,11 +68,20 @@ export async function fetchDynamicAiVisual(
         };
       }
     } else {
-      const err = await res.json().catch(() => ({}));
-      console.error("Backend image generation error:", err);
+      const errText = await res.text().catch(() => "");
+      let parsedErr: any = null;
+      try {
+        parsedErr = JSON.parse(errText);
+      } catch {
+        parsedErr = { message: errText || `HTTP ${res.status}` };
+      }
+      console.error("Backend image generation error:", parsedErr);
+      const message = parsedErr?.message || parsedErr?.error || `Image generation failed (HTTP ${res.status})`;
+      throw new Error(message);
     }
-  } catch (err) {
-    console.error("fetchDynamicAiVisual network error:", err);
+  } catch (err: any) {
+    console.error("fetchDynamicAiVisual error:", err);
+    throw err;
   }
   return null;
 }

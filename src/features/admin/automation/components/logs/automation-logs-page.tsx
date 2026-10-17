@@ -2,9 +2,9 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { 
-  Play, CheckCircle2, XCircle, Clock, 
-  Download, Sparkles, Zap, Radio, TrendingUp, TrendingDown
+import {
+  Play, CheckCircle2, XCircle, Clock,
+  Download, Sparkles, Zap, Radio
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminPageTitle } from "../../../shared/admin-page-title";
@@ -20,6 +20,7 @@ import { DlqFailuresView } from "./dlq-failures-view";
 import { RunDetailsSheet } from "./run-details-sheet";
 import { TestWebhookModal } from "./test-webhook-modal";
 import { DuplicateRiskDialog } from "./duplicate-risk-dialog";
+import { KpiTile } from "../shared";
 import { useAdminContext } from "@/features/admin/shell/admin-context";
 import { getStoredClientId } from "@/lib/api/tenancy-storage";
 
@@ -347,118 +348,59 @@ export function AutomationLogsPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-1">
           
           {/* 1. Total Executions */}
-          <div className="bg-white rounded-lg border border-[#E2E8F0] px-3 py-2 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="size-7 rounded-lg bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0">
-                <Play className="size-3.5" fill="currentColor" />
-              </div>
-              <h4 className="text-[12px] font-medium text-[#64748B] truncate">Total Runs</h4>
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-bold leading-tight text-[#111C3A] tracking-tight">
-                {healthMetrics.totalExecutions.value.toLocaleString()}
-              </span>
-              <span className="text-[11px] font-bold text-[#10B981] flex items-center gap-0.5">
-                <TrendingUp className="size-3" /> {healthMetrics.totalExecutions.trend}%
-              </span>
-            </div>
-            <p className="text-[10px] leading-tight text-[#94A3B8] mt-0.5 truncate">vs last 30 days</p>
-          </div>
+          <KpiTile
+            icon={<div className="rounded-lg bg-[#EFF6FF] p-1.5 text-[#2563EB]"><Play className="size-4" fill="currentColor" /></div>}
+            title="Total Runs"
+            value={healthMetrics.totalExecutions.value.toLocaleString()}
+            trend={healthMetrics.totalExecutions.trend}
+            hint="vs last 30 days"
+          />
 
           {/* 2. Success Rate */}
-          <div className="bg-white rounded-lg border border-[#E2E8F0] px-3 py-2 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="size-7 rounded-lg bg-[#ECFDF5] text-[#10B981] flex items-center justify-center shrink-0">
-                <CheckCircle2 className="size-3.5" />
-              </div>
-              <h4 className="text-[12px] font-medium text-[#64748B] truncate">Success Rate</h4>
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-bold leading-tight text-[#111C3A] tracking-tight">
-                {healthMetrics.successRate.value === null ? "—" : `${Number(healthMetrics.successRate.value).toFixed(1).replace(/\.0$/, "")}%`}
-              </span>
-              <span className="text-[11px] font-bold text-[#10B981] flex items-center gap-0.5">
-                <TrendingUp className="size-3" /> {healthMetrics.successRate.trend}%
-              </span>
-            </div>
-            <p className="text-[10px] leading-tight text-[#94A3B8] mt-0.5 truncate">Reliable</p>
-          </div>
+          <KpiTile
+            icon={<div className="rounded-lg bg-[#ECFDF5] p-1.5 text-[#10B981]"><CheckCircle2 className="size-4" /></div>}
+            title="Success Rate"
+            value={healthMetrics.successRate.value === null ? "—" : `${Number(healthMetrics.successRate.value).toFixed(1).replace(/\.0$/, "")}%`}
+            trend={healthMetrics.successRate.trend}
+            hint="Reliable"
+          />
 
           {/* 3. Failed & DLQ */}
-          <div className="bg-white rounded-lg border border-[#E2E8F0] px-3 py-2 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="size-7 rounded-lg bg-[#FEF2F2] text-[#EF4444] flex items-center justify-center shrink-0">
-                <XCircle className="size-3.5" />
-              </div>
-              <h4 className="text-[12px] font-medium text-[#64748B] truncate">Failed Runs</h4>
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-bold leading-tight text-[#111C3A] tracking-tight">
-                {failedRuns.length}
-              </span>
-              <span className="text-[11px] font-bold text-[#EF4444] flex items-center gap-0.5">
-                <TrendingDown className="size-3" /> {Math.abs(healthMetrics.failedRuns.trend)}%
-              </span>
-            </div>
-            <p className="text-[10px] leading-tight text-[#94A3B8] mt-0.5 truncate">requires review</p>
-          </div>
+          <KpiTile
+            icon={<div className="rounded-lg bg-[#FEF2F2] p-1.5 text-[#EF4444]"><XCircle className="size-4" /></div>}
+            title="Failed Runs"
+            value={String(failedRuns.length)}
+            trend={healthMetrics.failedRuns.trend}
+            invertTrend
+            hint="requires review"
+          />
 
           {/* 4. Active Queue */}
-          <div className="bg-white rounded-lg border border-[#E2E8F0] px-3 py-2 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="size-7 rounded-lg bg-[#F5F3FF] text-[#8B5CF6] flex items-center justify-center shrink-0">
-                <Clock className="size-3.5" />
-              </div>
-              <h4 className="text-[12px] font-medium text-[#64748B] truncate">Queue In-Flight</h4>
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-bold leading-tight text-[#111C3A] tracking-tight">
-                {healthMetrics.activeQueue.count}
-              </span>
-              <span className="text-[11px] font-bold text-[#10B981] flex items-center gap-0.5">
-                ~{healthMetrics.activeQueue.avgWaitTime}
-              </span>
-            </div>
-            <p className="text-[10px] leading-tight text-[#94A3B8] mt-0.5 truncate">avg processing wait</p>
-          </div>
+          <KpiTile
+            icon={<div className="rounded-lg bg-[#F5F3FF] p-1.5 text-[#8B5CF6]"><Clock className="size-4" /></div>}
+            title="Queue In-Flight"
+            value={String(healthMetrics.activeQueue.count)}
+            badge={`~${healthMetrics.activeQueue.avgWaitTime}`}
+            hint="avg processing wait"
+          />
 
           {/* 5. API Rate Limits */}
-          <div className="bg-white rounded-lg border border-[#E2E8F0] px-3 py-2 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="size-7 rounded-lg bg-[#FFFBEB] text-[#F59E0B] flex items-center justify-center shrink-0">
-                <Zap className="size-3.5" />
-              </div>
-              <h4 className="text-[12px] font-medium text-[#64748B] truncate">API Quota</h4>
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-bold leading-tight text-[#111C3A] tracking-tight">
-                {healthMetrics.rateLimits?.meta?.percentage != null ? `${healthMetrics.rateLimits.meta.percentage}%` : "100%"}
-              </span>
-              <span className="text-[11px] font-bold text-[#10B981] flex items-center gap-0.5">
-                Healthy
-              </span>
-            </div>
-            <p className="text-[10px] leading-tight text-[#94A3B8] mt-0.5 truncate">remaining quota</p>
-          </div>
+          <KpiTile
+            icon={<div className="rounded-lg bg-[#FFFBEB] p-1.5 text-[#F59E0B]"><Zap className="size-4" /></div>}
+            title="API Quota"
+            value={healthMetrics.rateLimits?.meta?.percentage != null ? `${healthMetrics.rateLimits.meta.percentage}%` : "100%"}
+            badge="Healthy"
+            hint="remaining quota"
+          />
 
           {/* 6. Webhook Ingestion */}
-          <div className="bg-white rounded-lg border border-[#E2E8F0] px-3 py-2 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="size-7 rounded-lg bg-[#EBF5FF] text-[#2563EB] flex items-center justify-center shrink-0">
-                <Radio className="size-3.5" />
-              </div>
-              <h4 className="text-[12px] font-medium text-[#64748B] truncate">Ingestion Stream</h4>
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] font-bold leading-tight text-[#111C3A] tracking-tight">
-                {healthMetrics.webhookIngestion.eventsPerMin}
-              </span>
-              <span className="text-[11px] font-bold text-[#10B981] flex items-center gap-0.5">
-                ev/m
-              </span>
-            </div>
-            <p className="text-[10px] leading-tight text-[#94A3B8] mt-0.5 truncate">{healthMetrics.webhookIngestion.uptime === null ? "Uptime unavailable" : `${Number(healthMetrics.webhookIngestion.uptime).toFixed(1)}% uptime`}</p>
-          </div>
+          <KpiTile
+            icon={<div className="rounded-lg bg-[#EBF5FF] p-1.5 text-[#2563EB]"><Radio className="size-4" /></div>}
+            title="Ingestion Stream"
+            value={String(healthMetrics.webhookIngestion.eventsPerMin)}
+            badge="ev/m"
+            hint={healthMetrics.webhookIngestion.uptime === null ? "Uptime unavailable" : `${Number(healthMetrics.webhookIngestion.uptime).toFixed(1)}% uptime`}
+          />
 
         </div>
       )}

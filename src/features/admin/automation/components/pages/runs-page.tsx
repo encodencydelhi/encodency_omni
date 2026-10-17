@@ -9,7 +9,7 @@ import type { AutomationPageActions } from "../../automation-page";
 import { automationApi } from "../../data/automation-api";
 import { errorMessage, useAutomationScope, useInvalidateAutomation, useRuns, useWorkflows } from "../../data/hooks";
 import type { AutomationRunStatus } from "../../data/types";
-import { EmptyPanel, KpiTile, RunStatusChip, downloadCsv, formatDateTime, formatDuration } from "../shared";
+import { EmptyPanel, KpiTile, PANEL, PanelHeader, RunStatusChip, downloadCsv, formatDateTime, formatDuration } from "../shared";
 
 const STATUSES: AutomationRunStatus[] = ["Successful", "Failed", "Waiting", "Running", "Cancelled"];
 
@@ -77,8 +77,8 @@ export function RunsPage({ days, onOpenRun }: AutomationPageActions) {
   };
 
   return (
-    <div className="space-y-2 pb-12">
-      <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center">
+    <div className="space-y-1 pb-12">
+      <div className="flex flex-col justify-between gap-2 rounded-xl border border-[#E6EBF4] bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_28px_-18px_rgba(16,24,40,0.28)] md:flex-row md:items-center">
         <div className="flex flex-wrap items-center gap-2">
           <select aria-label="Status" value={status} onChange={(e) => { setStatus(e.target.value as typeof status); setPage(1); }} className="h-9 rounded-md border border-[#E2E8F0] bg-white px-3 text-[12px] font-medium text-[#334155]">
             <option value="all">All statuses</option>
@@ -105,7 +105,7 @@ export function RunsPage({ days, onOpenRun }: AutomationPageActions) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-1 lg:grid-cols-6">
         <KpiTile icon={<div className="rounded-lg bg-[#EBF5FF] p-1.5 text-[#3B82F6]"><Activity className="size-4" /></div>} title="Runs" value={runs.length.toLocaleString()} hint={`last ${days} days`} />
         <KpiTile icon={<div className="rounded-lg bg-[#ECFDF5] p-1.5 text-[#10B981]"><CheckCircle2 className="size-4" /></div>} title="Successful" value={String(count("Successful"))} hint={finished ? `${Math.round((count("Successful") / finished) * 100)}% of finished` : "no finished runs"} />
         <KpiTile icon={<div className="rounded-lg bg-[#FEF2F2] p-1.5 text-[#EF4444]"><XCircle className="size-4" /></div>} title="Failed" value={String(count("Failed"))} hint="can be retried" />
@@ -114,11 +114,10 @@ export function RunsPage({ days, onOpenRun }: AutomationPageActions) {
         <KpiTile icon={<div className="rounded-lg bg-[#FFFBEB] p-1.5 text-[#F59E0B]"><Activity className="size-4" /></div>} title="Avg. Duration" value={formatDuration(avgDuration)} hint="successful runs" />
       </div>
 
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-[14px] font-bold text-[#111C3A]">Run history ({filtered.length})</h3>
+      <div className={`flex flex-col overflow-hidden p-4 ${PANEL}`}>
+        <PanelHeader title={`Run history (${filtered.length})`} action={
           <span className="text-[10.5px] text-[#94A3B8]">{isFetching ? "Refreshing…" : "Auto-refreshes every 30s"}</span>
-        </div>
+        } />
         {error ? (
           <EmptyPanel title="Runs could not be loaded" body={errorMessage(error)} action={<button type="button" onClick={() => void refetch()} className="text-[12px] font-semibold text-[#2563EB] hover:underline">Retry</button>} />
         ) : isLoading ? (
