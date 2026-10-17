@@ -6,7 +6,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import { toast } from "sonner";
 import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { whatsappApi, type WhatsAppConfigState } from "@/features/admin/channels/live/whatsapp-api";
-import { IntegrationsSettings } from "../../data/settings-types";
+import type { IntegrationsSettings } from "../../data/settings-types";
 import { automationApi, type CompanySmtpSettings, webhookEndpoint } from "../../data/automation-api";
 import { useAutomationScope, useWorkflows } from "../../data/hooks";
 

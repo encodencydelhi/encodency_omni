@@ -45,6 +45,7 @@ export class HttpTransport implements Transport {
       response = await fetch(url, {
         method: spec.method,
         credentials: "include",
+        cache: spec.cache,
         signal: spec.signal,
         headers: {
           Accept: "application/json",

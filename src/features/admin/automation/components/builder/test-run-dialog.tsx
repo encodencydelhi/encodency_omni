@@ -71,13 +71,19 @@ export function TestRunDialog({ open, onClose, workflow, clientId, onRan }: {
     setRunning(true);
     setResult(null);
     try {
-      const res = live
+      const accepted = live
         ? await automationApi.liveTestWorkflow(clientId, workflow.id, { payload: parsed.value, recipient: recipient.trim(), createTestTask: createTask, confirm: true, requestKey, ...(kind !== "none" && recordId ? { recordKind: kind, recordId } : {}) })
         : await automationApi.runWorkflow(clientId, workflow.id, {
           payload: parsed.value, eventType: triggerType === "noop" ? "manual" : triggerType, test: true,
           ...(kind !== "none" && recordId ? { recordKind: kind, recordId } : {}),
         });
-      setResult(res);
+      setResult(accepted);
+      let res = accepted;
+      for (let attempt = 0; attempt < 60 && ["Waiting", "Running"].includes(res.status); attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 500));
+        res = await automationApi.getRun(clientId, accepted.id);
+        setResult(res);
+      }
       onRan(res);
       if (live) {
         setRequestKey(crypto.randomUUID());
@@ -85,6 +91,7 @@ export function TestRunDialog({ open, onClose, workflow, clientId, onRan }: {
         setTestTasks(await automationApi.liveTestTasks(clientId, res.id).catch(() => []));
       }
       if (res.status === "Failed") toast.error(`${live ? "Live test" : "Test run"} failed — see the steps for the reason`);
+      else if (["Waiting", "Running"].includes(res.status)) toast.info(`${live ? "Live test" : "Test run"} is still queued. You can inspect it in execution logs.`);
       else toast.success(`${live ? "Live test" : "Test run"} ${res.status.toLowerCase()}`);
     } catch (error) {
       toast.error(errorMessage(error));
@@ -107,7 +114,7 @@ export function TestRunDialog({ open, onClose, workflow, clientId, onRan }: {
 
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+      <DialogContent overlayClassName="z-[110]" className="z-[120] max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Test “{workflow.name}”</DialogTitle>
           <DialogDescription>{live
@@ -155,6 +162,12 @@ export function TestRunDialog({ open, onClose, workflow, clientId, onRan }: {
                 <span className="flex items-center gap-2"><RunStatusChip status={result.status} /> {result.steps.filter((s) => s.status === "Successful").length} executed · {result.steps.filter((s) => s.status === "Skipped").length} skipped (not executed)</span>
                 <span className="font-mono text-[11px] text-[#64748B]">{result.id.slice(0, 8)}</span>
               </div>
+              {["Waiting", "Running"].includes(result.status) ? <p className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[11.5px] text-blue-900">The run is queued or being processed. Email has not been skipped; this view refreshes until the worker records a final delivery result.</p> : null}
+              {!live && result.steps.some((s) => s.status === "Skipped") ? (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11.5px] text-amber-900" data-testid="safe-test-hint">
+                  Safe test: <b>no email was sent</b> and nothing was created. To receive a real test email, <button type="button" className="font-semibold underline" onClick={() => { setLive(true); setResult(null); }}>switch to Live Test</button>.
+                </p>
+              ) : null}
               {testTasks.length ? (
                 <ul className="space-y-1" data-testid="live-test-tasks">
                   {testTasks.map((task) => (

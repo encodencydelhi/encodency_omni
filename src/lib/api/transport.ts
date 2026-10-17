@@ -12,6 +12,7 @@ export interface RequestSpec {
   headers?: Record<string, string>;
   body?: unknown;
   signal?: AbortSignal;
+  cache?: RequestCache;
   skipSessionExpiry?: boolean;
 }
 export interface Transport {

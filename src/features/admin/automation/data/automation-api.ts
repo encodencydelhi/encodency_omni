@@ -27,8 +27,8 @@ function headers(clientId: ClientScope): Record<string, string> {
   return companyScopeHeaders(getStoredCompanyId(), clientId && UUID_PATTERN.test(clientId) ? { "x-client-id": clientId } : {});
 }
 
-function req<T>(method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE", path: string, clientId: ClientScope, body?: unknown, query?: Record<string, string>) {
-  return apiClient.request<T>({ method, path, headers: headers(clientId), body, query });
+function req<T>(method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE", path: string, clientId: ClientScope, body?: unknown, query?: Record<string, string>, cache?: RequestCache) {
+  return apiClient.request<T>({ method, path, headers: headers(clientId), body, query, cache });
 }
 
 export interface WorkflowInput {
@@ -138,7 +138,7 @@ export const automationApi = {
 
   /* Runs */
   listRuns: (clientId: ClientScope, filters: RunFilters = {}) => req<AutomationRun[]>("GET", "/automation/runs", clientId, undefined, query({ ...filters })),
-  getRun: (clientId: string, id: string) => req<AutomationRun>("GET", `/automation/runs/${encodeURIComponent(id)}`, clientId),
+  getRun: (clientId: string, id: string) => req<AutomationRun>("GET", `/automation/runs/${encodeURIComponent(id)}`, clientId, undefined, undefined, "no-store"),
   /** `acknowledgeDuplicateRisk` is required to retry a run whose outcome was unknown (it may already have been delivered). */
   retryRun: (clientId: string, id: string, options: { acknowledgeDuplicateRisk?: boolean } = {}) => req<AutomationRun>("POST", `/automation/runs/${encodeURIComponent(id)}/retry`, clientId, options),
   /** Issues a new webhook token. The plaintext is returned only here; read endpoints never include it. */
