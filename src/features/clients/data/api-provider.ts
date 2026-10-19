@@ -268,7 +268,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     
     async listClients(query: ClientListQuery): Promise<ClientListResult> {
       // In Super Admin cross-company view, fetch from GET /super-admin/clients
-      if (isSuperAdminRoute() || fallback === unavailableClientsProvider) {
+      if (isSuperAdminRoute()) {
         try {
           const directory = await superAdminCompaniesApi.listClients({
             page: query.page ?? 1,
@@ -628,7 +628,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async getPortfolio() {
-      if (isSuperAdminRoute() || fallback === unavailableClientsProvider) {
+      if (isSuperAdminRoute()) {
         try {
           return await superAdminCompaniesApi.getClientPortfolio();
         } catch {
@@ -637,17 +637,13 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
       }
       const companyId = getCompanyIdHeader();
       if (companyId && UUID_PATTERN.test(companyId)) {
-        try {
-          return await clientsApi.getPortfolio<ClientPortfolio>(companyId);
-        } catch {
-          return await superAdminCompaniesApi.getClientPortfolio().catch(() => fallback.getPortfolio());
-        }
+        return clientsApi.getPortfolio<ClientPortfolio>(companyId);
       }
-      return await superAdminCompaniesApi.getClientPortfolio().catch(() => fallback.getPortfolio());
+      return fallback.getPortfolio();
     },
 
     async getFacets() {
-      if (isSuperAdminRoute() || fallback === unavailableClientsProvider) {
+      if (isSuperAdminRoute()) {
         try {
           return await superAdminCompaniesApi.getClientFacets();
         } catch {
@@ -656,13 +652,9 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
       }
       const companyId = getCompanyIdHeader();
       if (companyId && UUID_PATTERN.test(companyId)) {
-        try {
-          return await clientsApi.getFacets<ClientFacets>(companyId);
-        } catch {
-          return await superAdminCompaniesApi.getClientFacets().catch(() => fallback.getFacets());
-        }
+        return clientsApi.getFacets<ClientFacets>(companyId);
       }
-      return await superAdminCompaniesApi.getClientFacets().catch(() => fallback.getFacets());
+      return fallback.getFacets();
     },
 
     async getOverview(id: string): Promise<ClientOverviewData> {

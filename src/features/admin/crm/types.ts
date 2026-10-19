@@ -79,6 +79,12 @@ export interface Company {
   industry: string;
   website: string;
   location: string;
+  ownerId?: string;
+  ownerName?: string;
+  status?: "prospect" | "customer" | "inactive";
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Tag {

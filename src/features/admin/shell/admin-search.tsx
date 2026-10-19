@@ -129,6 +129,7 @@ const PAGE_RESULTS: AdminSearchResult[] = [
   { id: "page-seo-keywords", kind: "seo", group: "SEO", title: "Keywords Tracker", subtitle: "Target keyword rankings, search intent & opportunity discovery", href: "/admin/seo/keywords", preview: [{ label: "Section", value: "SEO" }, { label: "Route", value: "/admin/seo/keywords" }], score: 0 },
 
   // CRM
+  { id: "page-crm-companies", kind: "crm", group: "CRM", title: "Accounts", subtitle: "Company accounts with linked contacts, deals and revenue", href: "/admin/crm/companies", preview: [{ label: "Section", value: "CRM" }, { label: "Route", value: "/admin/crm/companies" }], score: 0 },
   { id: "page-crm-leads", kind: "crm", group: "CRM", title: "Leads", subtitle: "Track inbound inquiries, lead status, sources & contact details", href: "/admin/crm/leads", preview: [{ label: "Section", value: "CRM" }, { label: "Route", value: "/admin/crm/leads" }], score: 0 },
   { id: "page-crm-contacts", kind: "crm", group: "CRM", title: "Contacts", subtitle: "Client & prospect contact directory with activity history", href: "/admin/crm/contacts", preview: [{ label: "Section", value: "CRM" }, { label: "Route", value: "/admin/crm/contacts" }], score: 0 },
   { id: "page-crm-pipeline", kind: "crm", group: "CRM", title: "Sales Pipeline", subtitle: "Visual Kanban deal stages, estimated revenue & conversions", href: "/admin/crm/pipeline", preview: [{ label: "Section", value: "CRM" }, { label: "Route", value: "/admin/crm/pipeline" }], score: 0 },

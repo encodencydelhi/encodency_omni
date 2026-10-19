@@ -1,6 +1,6 @@
 import {
   BarChart3, Blocks, Bot, BriefcaseBusiness, CalendarDays, ContactRound, FileChartColumn,
-  FolderKanban, Gauge, Globe2, Hash, Image, Landmark, ListChecks, Network,
+  Building2, FolderKanban, Gauge, Globe2, Hash, Image, Landmark, ListChecks, Network,
   Megaphone, MessageCircle, PanelsTopLeft, Settings, ShieldCheck, Target,
   Server, Share2, UsersRound, Video, WalletCards, type LucideIcon,
 } from "lucide-react";
@@ -51,6 +51,7 @@ export const adminNavigation: AdminNavSection[] = [
       { label: "Contacts", href: "/admin/crm/contacts", icon: ContactRound },
       { label: "Pipeline", href: "/admin/crm/pipeline", icon: BriefcaseBusiness },
       { label: "Tasks", href: "/admin/crm/tasks", icon: ListChecks },
+      { label: "Accounts", href: "/admin/crm/companies", icon: Building2 },
     ]
   },
   {

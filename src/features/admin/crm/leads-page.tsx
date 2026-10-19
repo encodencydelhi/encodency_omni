@@ -42,6 +42,10 @@ import { crmApi, type CrmScope } from "./data/crm-api";
 import Link from "next/link";
 import { ConvertLeadDialog, type ConvertLeadValues } from "./components/convert-lead-dialog";
 import { CrmAiInsights } from "./components/crm-ai-insights";
+import { CrmRecordHistoryPanel } from "./components/crm-record-history";
+import { CrmRecycleDialog } from "./components/crm-recycle-dialog";
+import { CrmSavedViews } from "./components/crm-saved-views";
+import { LeadSlaBadge } from "./components/crm-sla-badge";
 import { newId, resolvePipelines, normalizeContact, normalizeDeal, normalizePipeline } from "./lib/crm-records";
 import { crmLink, useOpenParam } from "./lib/use-open-param";
 import { PHONE_ERROR, isValidOptionalPhone, parsePhone, phoneInputProps, sanitizePhone } from "@/lib/utils/phone";
@@ -330,6 +334,10 @@ export default function LeadsPage() {
     });
     setIsSaving(true);
     try {
+      if (!isMockMode) {
+        const duplicates = await crmApi.duplicates<Lead>("lead", { email: newLead.email, phone: newLead.phone }, scope ?? undefined);
+        if (duplicates.length) throw new Error(`Possible duplicate: ${duplicates[0]!.firstName} ${duplicates[0]!.lastName} already uses this email or phone.`);
+      }
       const saved = isMockMode ? newLead : normalizeLead(await crmApi.create("lead", newLead, scope ?? undefined));
       setLeads((rows) => [saved, ...rows]);
       void addActivity("lead_created", `Created lead ${saved.firstName} ${saved.lastName}`, saved.id);
@@ -595,7 +603,7 @@ export default function LeadsPage() {
     { id: "stage", header: "Stage", cell: (row) => (<span className={`inline-block w-[90px] text-center rounded-lg px-2 py-0.5 text-[12px] font-medium tracking-wide ${STAGE_BADGE[row.stage]}`}>{STAGE_LABELS[row.stage]}</span>), sortField: "stage" },
     { id: "score", header: "Score", cell: (row) => <span className={`text-[12px] font-semibold ${row.leadScore >= 70 ? "text-[#078359]" : row.leadScore >= 40 ? "text-[#92700C]" : "text-[#75829D]"}`}>{row.leadScore}</span>, sortField: "leadScore", hideBelow: "md" },
     { id: "assignee", header: "Assignee", cell: (row) => <span className="text-[12px] text-[#354568]">{row.ownerName}</span>, sortField: "ownerName", hideBelow: "lg" },
-    { id: "lastContacted", header: "Last Contact", cell: (row) => <span className="text-[12px] text-[#75829D]">{row.lastContacted ? new Date(row.lastContacted).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}</span>, sortField: "lastContacted", hideBelow: "xl" },
+    { id: "lastContacted", header: "Response SLA", cell: (row) => <div><span className="block text-[12px] text-[#75829D]">{row.lastContacted ? new Date(row.lastContacted).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Not contacted"}</span><LeadSlaBadge lead={row} /></div>, sortField: "lastContacted", hideBelow: "xl" },
     { id: "actions", header: "", cell: (row) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon-sm"><MoreHorizontal className="size-4" /></Button></DropdownMenuTrigger>
@@ -622,6 +630,7 @@ export default function LeadsPage() {
         title="Leads"
         description="Manage, Qualify, Assign And Convert Your Sales Leads."
         action={<div className="flex items-center gap-2">
+          <CrmRecycleDialog kind="lead" scope={scope} onRestored={() => void loadLeads()} />
           <Button variant="outline" size="sm" onClick={() => setShowImport(true)}><Upload className="size-3.5" /> Import</Button>
           <Button variant="outline" size="sm" onClick={handleExport}><Download className="size-3.5" /> Export</Button>
           <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="size-3.5" /> Create Lead</Button>
@@ -646,7 +655,7 @@ export default function LeadsPage() {
           <span className="text-[12px] text-[#75829D] font-medium">{selected.length} Selected</span>
           <Button variant="outline" size="sm" onClick={() => setShowBulkStage(true)}>Change Stage</Button>
           <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>Delete</Button>
-        </div>) : undefined}
+        </div>) : <CrmSavedViews namespace="leads" state={{ search, stageFilter, sourceFilter }} onApply={(view) => { setSearch(String(view.search ?? "")); setStageFilter(view.stageFilter ? String(view.stageFilter) : null); setSourceFilter(view.sourceFilter ? String(view.sourceFilter) : null); setPage(1); }} />}
         activeFilterCount={(stageFilter ? 1 : 0) + (sourceFilter ? 1 : 0)}
         onClearFilters={() => { setStageFilter(null); setSourceFilter(null); setSearch(""); setPage(1); }}
       />
@@ -733,6 +742,7 @@ export default function LeadsPage() {
               )}
               <div className="flex flex-wrap gap-2">
                 <CrmAiInsights kind="lead" recordId={detailLead.id} label={`${detailLead.firstName} ${detailLead.lastName}`.trim()} scope={scope} />
+                <CrmRecordHistoryPanel kind="lead" recordId={detailLead.id} scope={scope} />
                 <Button size="sm" variant="outline" onClick={() => { setShowEdit(detailLead); setDetailLead(null); }}>Edit</Button>
                 <Button size="sm" variant="outline" disabled={isSaving} onClick={() => openConvert(detailLead)}><Link2 className="size-3.5" /> {detailLead.convertedContactId ? "Convert again" : "Convert"}</Button>
                 <Button size="sm" variant="outline" disabled={isSaving} onClick={() => void handleStageChange(detailLead.id, detailLead.stage === "new" ? "contacted" : detailLead.stage === "contacted" ? "qualified" : detailLead.stage === "qualified" ? "proposal" : "won")}>Advance Stage</Button>

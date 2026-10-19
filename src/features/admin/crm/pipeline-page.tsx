@@ -25,6 +25,10 @@ import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
 import { CrmAiInsights } from "./components/crm-ai-insights";
+import { CrmRecordHistoryPanel } from "./components/crm-record-history";
+import { CrmRecycleDialog } from "./components/crm-recycle-dialog";
+import { CrmSavedViews } from "./components/crm-saved-views";
+import { CrmForecastPanel } from "./components/crm-forecast-panel";
 import { isMockMode } from "@/config/env";
 import { PipelineMetricCards } from "./components/crm-metric-cards";
 import { FunnelChart } from "./components/crm-funnel-chart";
@@ -533,6 +537,7 @@ export default function PipelinePage() {
         description={`Track And Manage Deals Through Every Stage${pipelines.length > 1 ? ` · ${pipelines.length} Pipelines` : ""}.`}
         action={
           <div className="flex flex-wrap items-center gap-2">
+            <CrmRecycleDialog kind="deal" scope={scope} onRestored={() => void load()} />
             <Select value={pipeline.id} onValueChange={setPipelineId}>
               <SelectTrigger className="w-auto min-w-[140px]" aria-label="Pipeline"><SelectValue /></SelectTrigger>
               <SelectContent>{pipelines.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
@@ -544,6 +549,7 @@ export default function PipelinePage() {
       />
 
       <PipelineMetricCards deals={pipelineDeals} />
+      <CrmForecastPanel deals={pipelineDeals} />
 
       <FilterBar
         search={<SearchInput value={search} onChange={setSearch} placeholder="Search deal, company, contact..." />}
@@ -573,6 +579,7 @@ export default function PipelinePage() {
             </Select>
           </div>
         }
+        actions={<CrmSavedViews namespace="pipeline" state={{ search, ownerFilter, priorityFilter, closeFilter, pipelineId }} onApply={(view) => { setSearch(String(view.search ?? "")); setOwnerFilter(view.ownerFilter ? String(view.ownerFilter) : null); setPriorityFilter(view.priorityFilter ? String(view.priorityFilter) : null); setCloseFilter(view.closeFilter ? String(view.closeFilter) : null); if (view.pipelineId) setPipelineId(String(view.pipelineId)); }} />}
         activeFilterCount={activeFilterCount}
         onClearFilters={() => { setSearch(""); setOwnerFilter(null); setPriorityFilter(null); setCloseFilter(null); }}
       />
@@ -833,6 +840,7 @@ export default function PipelinePage() {
 
                   <div className="flex flex-wrap gap-2">
                     <CrmAiInsights kind="deal" recordId={detail.id} label={detail.name} scope={scope} />
+                    <CrmRecordHistoryPanel kind="deal" recordId={detail.id} scope={scope} />
                     <Button size="sm" variant="outline" onClick={() => { const d = detail; setDetailId(null); openEdit(d); }}><Pencil className="size-3.5" /> Edit</Button>
                     {isOpen(detail) ? (
                       <>

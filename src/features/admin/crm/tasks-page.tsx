@@ -24,6 +24,10 @@ import { TrendAreaChart, ChartLegend } from "@/components/shared/charts/trend-ar
 import { MonthlyBarChart } from "@/components/shared/charts/monthly-bar-chart";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
 import { CrmAiInsights } from "./components/crm-ai-insights";
+import { CrmRecordHistoryPanel } from "./components/crm-record-history";
+import { CrmRecycleDialog } from "./components/crm-recycle-dialog";
+import { CrmSavedViews } from "./components/crm-saved-views";
+import { TaskSlaBadge } from "./components/crm-sla-badge";
 import { teamApi } from "@/features/admin/team/live/team-api";
 import { isMockMode } from "@/config/env";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
@@ -509,7 +513,7 @@ export default function TasksPage() {
         const isOverdue = new Date(row.dueDate) < new Date() && row.status !== "completed" && row.status !== "cancelled";
         return (
           <span className={`text-[12px] ${isOverdue ? "text-[#DC2626] font-semibold" : "text-[#354568]"}`}>
-            {formatDate(row.dueDate)} {row.dueTime}
+            {formatDate(row.dueDate)} {row.dueTime}<TaskSlaBadge task={row} />
           </span>
         );
       },
@@ -565,6 +569,7 @@ export default function TasksPage() {
         description="Manage Sales Activities, Follow-Ups And Team Productivity."
         action={
           <div className="flex items-center gap-2">
+            <CrmRecycleDialog kind="task" scope={scope} onRestored={() => void loadTasks()} />
             <Button asChild variant="outline" size="sm"><Link href="/admin/calendar"><CalendarDays className="size-3.5" /> Calendar</Link></Button>
             <Button size="sm" onClick={openCreate}><Plus className="size-3.5" /> Create Task</Button>
           </div>
@@ -595,6 +600,7 @@ export default function TasksPage() {
         }
         actions={
           <div className="flex items-center gap-2">
+            <CrmSavedViews namespace="tasks" state={{ search, statusFilter, priorityFilter, viewMode }} onApply={(view) => { setSearch(String(view.search ?? "")); setStatusFilter(view.statusFilter ? String(view.statusFilter) : null); setPriorityFilter(view.priorityFilter ? String(view.priorityFilter) : null); if (view.viewMode === "list" || view.viewMode === "board") setViewMode(view.viewMode); setPage(1); }} />
             <Button variant={viewMode === "list" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("list")}><ListTodo className="size-3.5" /></Button>
             <Button variant={viewMode === "board" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("board")}><Columns3 className="size-3.5" /></Button>
           </div>
@@ -778,6 +784,7 @@ export default function TasksPage() {
                 )}
                 <div className="flex gap-2">
                   <CrmAiInsights kind="task" recordId={detailTask.id} label={detailTask.title} scope={scope} />
+                  <CrmRecordHistoryPanel kind="task" recordId={detailTask.id} scope={scope} />
                   <Button size="sm" variant="outline" onClick={() => handleToggleComplete(detailTask.id)}>
                     <CheckCircle2 className="size-3.5" /> {detailTask.status === "completed" ? "Reopen" : "Complete"}
                   </Button>

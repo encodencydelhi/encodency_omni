@@ -27,6 +27,10 @@ import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
 import { CrmAiInsights } from "./components/crm-ai-insights";
+import { CrmRecordHistoryPanel } from "./components/crm-record-history";
+import { CrmRecycleDialog } from "./components/crm-recycle-dialog";
+import { CrmSavedViews } from "./components/crm-saved-views";
+import { ContactFollowUpBadge } from "./components/crm-sla-badge";
 import { isMockMode } from "@/config/env";
 import type { DataTableColumn, DataTableSelection } from "@/components/shared/data-table/types";
 import type { PaginationMeta, SortSpec } from "@/types/api";
@@ -302,6 +306,10 @@ export default function ContactsPage() {
     const draft = buildContact(form, null);
     setIsSaving(true);
     try {
+      if (!isMockMode) {
+        const duplicates = await crmApi.duplicates<Contact>("contact", { email: draft.email, phone: draft.phone }, scope ?? undefined);
+        if (duplicates.length) throw new Error(`Possible duplicate: ${fullName(duplicates[0]!)} already uses this email or phone.`);
+      }
       const saved = isMockMode ? draft : normalizeContact(await crmApi.create("contact", draft, scope ?? undefined));
       setContacts((rows) => [saved, ...rows]);
       void logActivity("contact_created", `Created contact ${fullName(saved)}`, saved.id);
@@ -443,23 +451,29 @@ export default function ContactsPage() {
     if (isSaving) return;
     setIsSaving(true);
     try {
-      const { saved, failed } = await persistContacts([merged]);
-      if (failed || !saved[0]) throw new Error("The merged contact could not be saved.");
-      if (!isMockMode) await crmApi.remove("contact", secondaryId, scope ?? undefined);
+      const result = isMockMode
+        ? { contact: merged, relinked: 0 }
+        : await crmApi.mergeContacts<Contact>({ primaryId: merged.id, secondaryId, merged }, scope ?? undefined);
+      const savedContact = normalizeContact(result.contact);
       setContacts((rows) => rows.filter((c) => c.id !== secondaryId));
       // Keep deals attached to the surviving contact.
       const orphaned = deals.filter((d) => d.primaryContactId === secondaryId)
         .map((d) => ({ ...d, primaryContactId: merged.id, primaryContactName: fullName(merged) }));
-      if (orphaned.length) {
+      if (orphaned.length && isMockMode) {
         const results = await Promise.allSettled(orphaned.map((d) => (isMockMode ? Promise.resolve(d) : crmApi.update<Deal>("deal", d.id, d, scope ?? undefined).then(normalizeDeal))));
         const ok = new Map(results.flatMap((r) => (r.status === "fulfilled" ? [[r.value.id, r.value] as const] : [])));
         setDeals((rows) => rows.map((d) => ok.get(d.id) ?? d));
       }
+      if (!isMockMode) {
+        setDeals((rows) => rows.map((deal) => deal.primaryContactId === secondaryId ? { ...deal, primaryContactId: savedContact.id, primaryContactName: fullName(savedContact) } : deal));
+        setTasks((rows) => rows.map((task) => task.relatedContactId === secondaryId ? { ...task, relatedContactId: savedContact.id, relatedContactName: fullName(savedContact) } : task));
+      }
+      setContacts((rows) => rows.map((contact) => contact.id === savedContact.id ? savedContact : contact));
       void logActivity("contact_created", `Merged duplicate contact into ${fullName(merged)}`, merged.id);
       setSelected([]);
       setMergePair(null);
       setDetailId(null);
-      toast.success(`Merged into ${fullName(merged)}`);
+      toast.success(`Merged into ${fullName(savedContact)}${result.relinked ? ` · ${result.relinked} linked records updated` : ""}`);
     } catch (error) { toast.error(errorMessage(error)); }
     finally { setIsSaving(false); }
   };
@@ -612,7 +626,7 @@ export default function ContactsPage() {
     },
     {
       id: "lastContacted", header: "Last Contact", hideBelow: "xl", sortField: "lastContacted",
-      cell: (row) => <span className="text-[12px] text-[#75829D]">{row.lastContacted ? shortDate(row.lastContacted) : "—"}</span>,
+      cell: (row) => <div><span className="block text-[12px] text-[#75829D]">{row.lastContacted ? shortDate(row.lastContacted) : "Never"}</span><ContactFollowUpBadge contact={row} /></div>,
     },
     {
       id: "actions", header: "", width: "w-10",
@@ -662,6 +676,7 @@ export default function ContactsPage() {
         description="Manage Customer Relationships, Communication History And Contact Segments."
         action={
           <div className="flex flex-wrap items-center gap-2">
+            <CrmRecycleDialog kind="contact" scope={scope} onRestored={() => void load()} />
             <Button variant="outline" size="sm" onClick={() => setShowImport(true)}><Upload className="size-3.5" /> Import</Button>
             <Button variant="outline" size="sm" onClick={handleExport}><Download className="size-3.5" /> Export</Button>
             <Button variant="outline" size="sm" onClick={() => setShowGroups(true)}><FolderCog className="size-3.5" /> Groups</Button>
@@ -714,6 +729,7 @@ export default function ContactsPage() {
         }
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <CrmSavedViews namespace="contacts" state={{ search, statusFilter, groupFilter, ownerFilter, tagFilter }} onApply={(view) => { setSearch(String(view.search ?? "")); setStatusFilter(view.statusFilter ? String(view.statusFilter) : null); setGroupFilter(view.groupFilter ? String(view.groupFilter) : null); setOwnerFilter(view.ownerFilter ? String(view.ownerFilter) : null); setTagFilter(view.tagFilter ? String(view.tagFilter) : null); setPage(1); }} />
             {selected.length > 0 ? (
               <>
                 <span className="text-[12px] text-[#75829D] font-medium">{selected.length} Selected</span>
@@ -875,6 +891,7 @@ export default function ContactsPage() {
                   ) : null}
                   <div className="flex flex-wrap gap-2">
                     <CrmAiInsights kind="contact" recordId={detail.id} label={fullName(detail)} scope={scope} />
+                    <CrmRecordHistoryPanel kind="contact" recordId={detail.id} scope={scope} />
                     <Button size="sm" variant="outline" onClick={() => { const c = detail; setDetailId(null); openEdit(c); }}><Pencil className="size-3.5" /> Edit</Button>
                     <Button size="sm" variant="outline" onClick={() => openTask(detail)}><Calendar className="size-3.5" /> Add Task</Button>
                     <Button size="sm" variant="outline" onClick={() => openGroupAssign([detail.id])}><Tag className="size-3.5" /> Group</Button>

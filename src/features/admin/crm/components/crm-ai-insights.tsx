@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { CheckSquare2, Copy, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -18,6 +18,7 @@ export function CrmAiInsights({ kind, recordId, label, scope }: CrmAiInsightsPro
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [insight, setInsight] = useState<CrmAiInsight | null>(null);
+  const [creatingTask, setCreatingTask] = useState(false);
 
   const analyze = async () => {
     if (!scope || loading) return;
@@ -32,6 +33,26 @@ export function CrmAiInsights({ kind, recordId, label, scope }: CrmAiInsightsPro
     } finally {
       setLoading(false);
     }
+  };
+
+  const createSuggestedTask = async () => {
+    if (!scope || !insight?.suggestedTaskTitle || creatingTask) return;
+    setCreatingTask(true);
+    const dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const relation = kind === "lead" ? { relatedLeadId: recordId, relatedLeadName: label } : kind === "contact" ? { relatedContactId: recordId, relatedContactName: label } : kind === "deal" ? { relatedDealId: recordId, relatedDealName: label } : {};
+    try {
+      await crmApi.create("task", { title: insight.suggestedTaskTitle, description: `AI suggested next step: ${insight.nextBestAction || insight.summary}`, type: "follow_up", priority: "medium", status: "pending", dueDate, reminder: "none", tags: ["ai-suggested"], ...relation }, scope);
+      toast.success("Suggested task created. Review ownership and due time in Tasks.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Suggested task could not be created.");
+    } finally {
+      setCreatingTask(false);
+    }
+  };
+
+  const copyDraft = async (value: string, name: string) => {
+    await navigator.clipboard.writeText(value);
+    toast.success(`${name} copied for review.`);
   };
 
   return (
@@ -54,12 +75,20 @@ export function CrmAiInsights({ kind, recordId, label, scope }: CrmAiInsightsPro
               {insight.risks?.length ? <div><p className="mb-1 font-semibold text-slate-800">Risks</p><ul className="space-y-1 text-slate-600">{insight.risks.map((risk) => <li key={risk}>• {risk}</li>)}</ul></div> : null}
               <InsightBlock title="Next best action" text={insight.nextBestAction} />
               <InsightBlock title="Suggested task" text={insight.suggestedTaskTitle} />
+              {insight.suggestedTaskTitle ? <Button size="sm" onClick={() => void createSuggestedTask()} disabled={creatingTask}><CheckSquare2 className="size-3.5" /> {creatingTask ? "Creating..." : "Create suggested task"}</Button> : null}
+              {insight.emailDraft ? <DraftBlock title="Email draft" text={insight.emailDraft} onCopy={() => void copyDraft(insight.emailDraft!, "Email draft")} /> : null}
+              {insight.whatsappDraft ? <DraftBlock title="WhatsApp draft" text={insight.whatsappDraft} onCopy={() => void copyDraft(insight.whatsappDraft!, "WhatsApp draft")} /> : null}
+              <p className="text-[11px] text-amber-700">AI can be inaccurate. Drafts are never sent automatically; review before using them.</p>
             </div>
           ) : null}
         </DialogContent>
       </Dialog>
     </>
   );
+}
+
+function DraftBlock({ title, text, onCopy }: { title: string; text: string; onCopy: () => void }) {
+  return <div className="rounded-lg border bg-slate-50 p-3"><div className="mb-1 flex items-center justify-between"><p className="font-semibold text-slate-800">{title}</p><Button size="sm" variant="ghost" onClick={onCopy}><Copy className="size-3.5" /> Copy</Button></div><p className="whitespace-pre-wrap text-slate-600">{text}</p></div>;
 }
 
 function InsightBlock({ title, text }: { title: string; text?: string }) {
