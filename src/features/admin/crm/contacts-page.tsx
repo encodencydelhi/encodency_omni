@@ -658,7 +658,7 @@ export default function ContactsPage() {
       <AdminPageTitle
         eyebrow="CRM / Contacts"
         title="Contacts"
-        description="Manage customer relationships, communication history and contact segments."
+        description="Manage Customer Relationships, Communication History And Contact Segments."
         action={
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowImport(true)}><Upload className="size-3.5" /> Import</Button>
@@ -681,7 +681,7 @@ export default function ContactsPage() {
             <Select value={statusFilter ?? ALL} onValueChange={(v) => { setStatusFilter(v === ALL ? null : v); setPage(1); }}>
               <SelectTrigger size="sm" className="w-auto min-w-[8rem]"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>All Status</SelectItem>
+                <SelectItem value={ALL}>All Statuses</SelectItem>
                 {CONTACT_STATUSES.map((s) => <SelectItem key={s} value={s}>{CONTACT_STATUS_LABELS[s]}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -715,7 +715,7 @@ export default function ContactsPage() {
           <div className="flex flex-wrap items-center gap-2">
             {selected.length > 0 ? (
               <>
-                <span className="text-[12px] text-[#75829D]">{selected.length} selected</span>
+                <span className="text-[12px] text-[#75829D] font-medium">{selected.length} Selected</span>
                 <Button variant="outline" size="sm" onClick={() => { setFormKey((k) => k + 1); setBulkStatusOpen(true); }}><UserCheck className="size-3.5" /> Status</Button>
                 <Button variant="outline" size="sm" onClick={() => openGroupAssign(selected)}><FolderPlus className="size-3.5" /> Group</Button>
                 <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}><Trash2 className="size-3.5" /> Delete</Button>

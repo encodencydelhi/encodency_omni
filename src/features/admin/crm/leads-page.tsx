@@ -585,7 +585,7 @@ export default function LeadsPage() {
       <AdminPageTitle
         eyebrow="CRM / Leads"
         title="Leads"
-        description="Manage, qualify, assign and convert your sales leads."
+        description="Manage, Qualify, Assign And Convert Your Sales Leads."
         action={<div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowImport(true)}><Upload className="size-3.5" /> Import</Button>
           <Button variant="outline" size="sm" onClick={handleExport}><Download className="size-3.5" /> Export</Button>
@@ -608,7 +608,7 @@ export default function LeadsPage() {
           </Select>
         </div>}
         actions={selected.length > 0 ? (<div className="flex items-center gap-2">
-          <span className="text-[12px] text-[#75829D]">{selected.length} selected</span>
+          <span className="text-[12px] text-[#75829D] font-medium">{selected.length} Selected</span>
           <Button variant="outline" size="sm" onClick={() => setShowBulkStage(true)}>Change Stage</Button>
           <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>Delete</Button>
         </div>) : undefined}
@@ -661,30 +661,30 @@ export default function LeadsPage() {
               <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
                 <h3 className="text-[14px] font-semibold text-slate-800 mb-3 flex items-center gap-2"><UserPlus className="size-4 text-indigo-500" /> Contact Information</h3>
                 <div className="grid grid-cols-2 gap-4 text-[13px]">
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Email</span> <span className="text-slate-800 font-medium">{detailLead.email}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Phone</span> <span className="text-slate-800 font-medium">{detailLead.phone}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Alternate Phone</span> <span className="text-slate-800 font-medium">{detailLead.alternatePhone || "-"}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Company</span> <span className="text-slate-800 font-medium">{detailLead.company}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Title</span> <span className="text-slate-800 font-medium">{detailLead.jobTitle}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Industry</span> <span className="text-slate-800 font-medium">{detailLead.industry || "-"}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Website</span> <span className="break-all text-slate-800 font-medium">{detailLead.website || "-"}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Location</span> <span className="text-slate-800 font-medium">{detailLead.location || [detailLead.city, detailLead.state, detailLead.country].filter(Boolean).join(", ") || "-"}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Source</span> <span className="text-slate-800 font-medium">{SOURCE_LABELS[detailLead.source]}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Email</span> <span className="text-slate-800 font-medium">{detailLead.email}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Phone</span> <span className="text-slate-800 font-medium">{detailLead.phone}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Alternate Phone</span> <span className="text-slate-800 font-medium">{detailLead.alternatePhone || "-"}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Company</span> <span className="text-slate-800 font-medium">{detailLead.company}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Title</span> <span className="text-slate-800 font-medium">{detailLead.jobTitle}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Industry</span> <span className="text-slate-800 font-medium">{detailLead.industry || "-"}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Website</span> <span className="break-all text-slate-800 font-medium">{detailLead.website || "-"}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Location</span> <span className="text-slate-800 font-medium">{detailLead.location || [detailLead.city, detailLead.state, detailLead.country].filter(Boolean).join(", ") || "-"}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Source</span> <span className="text-slate-800 font-medium">{SOURCE_LABELS[detailLead.source]}</span></div>
                 </div>
               </div>
               <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
                 <h3 className="text-[14px] font-semibold text-slate-800 mb-3 flex items-center gap-2"><Target className="size-4 text-emerald-500" /> Lead Details</h3>
                 <div className="grid grid-cols-2 gap-4 text-[13px]">
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Owner</span> <span className="text-slate-800 font-medium">{detailLead.ownerName}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Priority</span> <span className="text-slate-800 font-medium">{detailLead.priority}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Classification</span> <span className="text-slate-800 font-medium">{detailLead.scoreClassification}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Campaign</span> <span className="text-slate-800 font-medium">{detailLead.campaign || "-"}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Deal Value</span> <span className="text-emerald-600 font-bold">₹{detailLead.estimatedDealValue.toLocaleString()}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Probability</span> <span className="text-slate-800 font-medium">{detailLead.probability}%</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Expected Close</span> <span className="text-slate-800 font-medium">{detailLead.expectedCloseDate || "-"}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Next Follow-up</span> <span className="text-slate-800 font-medium">{detailLead.nextFollowUp || "—"}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Created</span> <span className="text-slate-800 font-medium">{new Date(detailLead.createdAt).toLocaleDateString()}</span></div>
-                  <div><span className="block text-slate-500 text-[11px] uppercase tracking-wider mb-0.5">Last Contacted</span> <span className="text-slate-800 font-medium">{detailLead.lastContacted || "-"}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Owner</span> <span className="text-slate-800 font-medium">{detailLead.ownerName}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Priority</span> <span className="text-slate-800 font-medium">{detailLead.priority}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Classification</span> <span className="text-slate-800 font-medium">{detailLead.scoreClassification}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Campaign</span> <span className="text-slate-800 font-medium">{detailLead.campaign || "-"}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Deal Value</span> <span className="text-emerald-600 font-bold">₹{detailLead.estimatedDealValue.toLocaleString()}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Probability</span> <span className="text-slate-800 font-medium">{detailLead.probability}%</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Expected Close</span> <span className="text-slate-800 font-medium">{detailLead.expectedCloseDate || "-"}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Next Follow-up</span> <span className="text-slate-800 font-medium">{detailLead.nextFollowUp || "—"}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Created</span> <span className="text-slate-800 font-medium">{new Date(detailLead.createdAt).toLocaleDateString()}</span></div>
+                  <div><span className="block text-slate-500 text-[11px] font-medium capitalize mb-0.5">Last Contacted</span> <span className="text-slate-800 font-medium">{detailLead.lastContacted || "-"}</span></div>
                 </div>
               </div>
               {detailLead.tags.length > 0 && <div className="flex flex-wrap gap-2 pt-1">{detailLead.tags.map((t) => <Badge key={t} tone="info" className="rounded-md font-medium">{t}</Badge>)}</div>}
@@ -939,7 +939,7 @@ function LeadFormModal({
             {/* Address fields: PIN Code FIRST as requested */}
             <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <span className="text-[12px] font-semibold capitalize text-slate-600 flex items-center gap-1.5">
                   <MapPin className="size-3.5 text-indigo-500" /> Postal Address
                 </span>
                 <span className="text-[11px] text-slate-400">Enter PIN Code to auto-fill location</span>

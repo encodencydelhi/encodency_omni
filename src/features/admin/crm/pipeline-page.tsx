@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   Plus, MoreHorizontal, Eye, Pencil, Trash2, CheckCircle2, XCircle, GripVertical, Settings, RotateCcw,
-  ArrowRightLeft, Calendar, History, Target,
+  ArrowRightLeft, Calendar, History, Target, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -78,9 +78,9 @@ const PRIORITY_BADGE: Record<string, string> = {
 
 const CLOSE_FILTERS = [
   { value: "overdue", label: "Overdue" },
-  { value: "month", label: "Closing this month" },
-  { value: "30", label: "Next 30 days" },
-  { value: "none", label: "No close date" },
+  { value: "month", label: "Closing This Month" },
+  { value: "30", label: "Next 30 Days" },
+  { value: "none", label: "No Close Date" },
 ] as const;
 
 function dealFormValues(deal: Deal): DealFormValues {
@@ -259,6 +259,16 @@ export default function PipelinePage() {
   }, [deals]));
   const detailActivity = detail ? activities.filter((a) => a.entityId === detail.id) : [];
   const activeFilterCount = [ownerFilter, priorityFilter, closeFilter].filter(Boolean).length + (search.trim() ? 1 : 0);
+
+  const boardRef = useRef<HTMLDivElement>(null);
+  const scrollBoard = useCallback((direction: "left" | "right") => {
+    if (!boardRef.current) return;
+    const distance = 320;
+    boardRef.current.scrollBy({
+      left: direction === "left" ? -distance : distance,
+      behavior: "smooth",
+    });
+  }, []);
 
   /* ---- Persistence ---- */
   const saveDeal = useCallback(async (next: Deal): Promise<Deal> => {
@@ -519,7 +529,7 @@ export default function PipelinePage() {
       <AdminPageTitle
         eyebrow="CRM / Pipeline"
         title={pipeline.name}
-        description={`Track and manage deals through every stage${pipelines.length > 1 ? ` · ${pipelines.length} pipelines` : ""}.`}
+        description={`Track And Manage Deals Through Every Stage${pipelines.length > 1 ? ` · ${pipelines.length} Pipelines` : ""}.`}
         action={
           <div className="flex flex-wrap items-center gap-2">
             <Select value={pipeline.id} onValueChange={setPipelineId}>
@@ -554,9 +564,9 @@ export default function PipelinePage() {
               </SelectContent>
             </Select>
             <Select value={closeFilter ?? ALL} onValueChange={(v) => setCloseFilter(v === ALL ? null : v)}>
-              <SelectTrigger size="sm" className="w-auto min-w-[9rem]"><SelectValue placeholder="Close date" /></SelectTrigger>
+              <SelectTrigger size="sm" className="w-auto min-w-[9rem]"><SelectValue placeholder="Close Date" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>Any close date</SelectItem>
+                <SelectItem value={ALL}>Any Close Date</SelectItem>
                 {CLOSE_FILTERS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -584,9 +594,49 @@ export default function PipelinePage() {
         />
       ) : (
         <>
-          {/* ---- Kanban Board ---- */}
-          <div className="scrollbar-thin overflow-x-auto pb-1">
-            <div className="flex gap-2" style={{ minWidth: `${displayStages.length * 288}px` }}>
+          {/* ---- Kanban Board Controls & Header ---- */}
+          <div className="flex items-center justify-between gap-2 px-1 mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] font-semibold text-slate-700">
+                Pipeline Stages ({displayStages.length})
+              </span>
+              <span className="hidden sm:inline text-[11px] text-slate-400">
+                • Scroll Horizontally To View All Stages
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                className="size-7.5 p-0 rounded-lg text-slate-600 hover:text-slate-900 border-slate-200 shadow-2xs"
+                onClick={() => scrollBoard("left")}
+                title="Scroll Left"
+                aria-label="Scroll pipeline left"
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="size-7.5 p-0 rounded-lg text-slate-600 hover:text-slate-900 border-slate-200 shadow-2xs"
+                onClick={() => scrollBoard("right")}
+                title="Scroll Right"
+                aria-label="Scroll pipeline right"
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* ---- Kanban Board with Horizontal Scroller ---- */}
+          <div
+            ref={boardRef}
+            className="overflow-x-auto pb-4 pt-1 scroll-smooth"
+            style={{
+              scrollbarWidth: "thin",
+            }}
+          >
+            <div className="flex gap-3 items-stretch" style={{ width: "max-content", minWidth: "100%" }}>
               {displayStages.map((stage) => {
                 const stageDeals = dealsByStage[stage] ?? [];
                 const totalValue = stageDeals.reduce((sum, d) => sum + d.value, 0);
@@ -594,27 +644,31 @@ export default function PipelinePage() {
                 return (
                   <div
                     key={stage}
-                    className={`min-w-[280px] flex-1 rounded-2xl border border-t-[3px] bg-slate-50/80 shadow-sm backdrop-blur-sm transition-colors ${STAGE_COLORS[stage]} ${isTarget ? "border-indigo-300 bg-indigo-50/60" : "border-slate-200"}`}
+                    className={`w-[295px] sm:w-[305px] shrink-0 flex flex-col h-[480px] rounded-2xl border border-t-[3px] bg-slate-50/80 shadow-xs backdrop-blur-sm transition-colors ${STAGE_COLORS[stage]} ${isTarget ? "border-indigo-400 bg-indigo-50/70 ring-2 ring-indigo-400/30" : "border-slate-200"}`}
                     onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (dragOverStage !== stage) setDragOverStage(stage); }}
                     onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOverStage(null); }}
                     onDrop={(e) => { e.preventDefault(); handleDrop(stage, e.dataTransfer.getData("text/plain")); }}
                   >
-                    <div className="flex items-center justify-between rounded-t-xl border-b border-slate-200 bg-white/50 px-4 py-3">
+                    {/* Stage Header */}
+                    <div className="flex shrink-0 items-center justify-between rounded-t-xl border-b border-slate-200/80 bg-white/70 px-3.5 py-2.5">
                       <div>
-                        <h3 className="text-[13px] font-bold text-slate-800">{DEAL_STAGE_LABELS[stage]}</h3>
-                        <p className="text-[12px] font-medium text-slate-500">{stageDeals.length} deal{stageDeals.length === 1 ? "" : "s"} · {formatInr(totalValue)}</p>
+                        <h3 className="text-[13px] font-bold text-slate-800 leading-tight">{DEAL_STAGE_LABELS[stage]}</h3>
+                        <p className="text-[11.5px] font-medium text-slate-500 mt-0.5">{stageDeals.length} deal{stageDeals.length === 1 ? "" : "s"} · {formatInr(totalValue)}</p>
                       </div>
                       <Button
-                        variant="ghost" size="icon-sm" className="size-7" aria-label={`Add deal to ${DEAL_STAGE_LABELS[stage]}`}
+                        variant="ghost" size="icon-sm" className="size-7 rounded-lg hover:bg-slate-100 text-slate-500" aria-label={`Add deal to ${DEAL_STAGE_LABELS[stage]}`}
                         disabled={stage === "lost"} onClick={() => openCreate(stage)}
                       >
                         <Plus className="size-4" />
                       </Button>
                     </div>
 
-                    <div className="scrollbar-thin max-h-[520px] min-h-[200px] space-y-2 overflow-y-auto p-2">
+                    {/* Column List with Vertical Scroller (equal height across all columns) */}
+                    <div className="scrollbar-thin flex-1 min-h-0 space-y-2 overflow-y-auto p-2">
                       {stageDeals.length === 0 ? (
-                        <div className="flex h-20 items-center justify-center text-[12px] text-[#75829D]">{isTarget ? "Drop here" : "No deals"}</div>
+                        <div className="flex h-full min-h-[140px] items-center justify-center text-[12px] font-medium text-slate-400">
+                          {isTarget ? "Drop Deal Here" : "No Deals"}
+                        </div>
                       ) : stageDeals.map((deal) => (
                         <div
                           key={deal.id}
@@ -622,27 +676,42 @@ export default function PipelinePage() {
                           onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", deal.id); setDraggedId(deal.id); }}
                           onDragEnd={() => { setDraggedId(null); setDragOverStage(null); }}
                           onClick={() => setDetailId(deal.id)}
-                          className={`cursor-grab rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing ${draggedId === deal.id ? "opacity-50" : ""}`}
+                          className={`group cursor-grab rounded-xl border border-slate-200/90 bg-white p-2.5 sm:p-3 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-slate-300 active:cursor-grabbing ${draggedId === deal.id ? "opacity-40" : ""}`}
                         >
-                          <div className="mb-2 flex items-start justify-between gap-1">
-                            <p className="text-[14px] font-semibold leading-tight text-slate-800">{deal.name}</p>
-                            <div className="flex shrink-0 items-center">
-                              <GripVertical className="size-4 text-slate-300" aria-hidden />
+                          {/* Title & Grip / Actions */}
+                          <div className="flex items-start justify-between gap-1 mb-1">
+                            <p className="text-[13px] font-bold leading-snug text-slate-800 line-clamp-1">{deal.name}</p>
+                            <div className="flex shrink-0 items-center -mr-1">
+                              <GripVertical className="size-3.5 text-slate-300 group-hover:text-slate-500 transition-colors" aria-hidden />
                               {renderDealMenu(deal)}
                             </div>
                           </div>
-                          <p className="mb-3 text-[12px] font-medium text-slate-500">{deal.companyName || deal.primaryContactName || "No company"}</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[14px] font-bold text-emerald-600">{formatInr(deal.value)}</span>
-                            <span className="text-[12px] font-medium text-slate-600">{deal.probability}%</span>
+
+                          {/* Company & Deal Value */}
+                          <div className="flex items-baseline justify-between gap-2 mb-2">
+                            <p className="text-[11.5px] font-medium text-slate-500 truncate max-w-[170px]">
+                              {deal.companyName || deal.primaryContactName || "No Company"}
+                            </p>
+                            <span className="text-[13px] font-extrabold text-emerald-600 shrink-0">
+                              {formatInr(deal.value)}
+                            </span>
                           </div>
-                          <div className="mt-2.5 flex items-center gap-1.5">
-                            <span className={`inline-block rounded-md px-2 py-0.5 text-[11px] font-medium tracking-wide ${PRIORITY_BADGE[deal.priority]}`}>{deal.priority.toUpperCase()}</span>
-                            {isOverdue(deal) ? <span className="inline-block rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700">OVERDUE</span> : null}
-                          </div>
-                          <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-                            <span className="truncate text-[12px] font-medium text-slate-600">{deal.ownerName.split(" ")[0]}</span>
-                            <span className="shrink-0 text-[11px] text-slate-500">Close: {shortDate(deal.expectedCloseDate)}</span>
+
+                          {/* Priority, Overdue & Close date */}
+                          <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-[11px]">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className={`inline-block rounded px-1.5 py-0.2 text-[10px] font-bold tracking-wide capitalize ${PRIORITY_BADGE[deal.priority]}`}>
+                                {deal.priority.charAt(0).toUpperCase() + deal.priority.slice(1)}
+                              </span>
+                              {isOverdue(deal) && (
+                                <span className="inline-block rounded border border-red-200 bg-red-50 px-1.5 py-0.2 text-[10px] font-bold text-red-700">
+                                  Overdue
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] font-medium text-slate-400 shrink-0">
+                              Close: {shortDate(deal.expectedCloseDate)}
+                            </span>
                           </div>
                         </div>
                       ))}
@@ -731,16 +800,16 @@ export default function PipelinePage() {
                       <div><span className="text-[#75829D]">Company:</span> <span className="text-[#354568]">{detail.companyName || "—"}</span></div>
                       <div><span className="text-[#75829D]">Contact:</span>{" "}
                         {detail.primaryContactId && contacts.some((c) => c.id === detail.primaryContactId)
-                          ? <Link href={crmLink("contacts", detail.primaryContactId)} className="font-medium text-indigo-700 hover:underline">{detail.primaryContactName || "View contact"}</Link>
+                          ? <Link href={crmLink("contacts", detail.primaryContactId)} className="font-medium text-indigo-700 hover:underline">{detail.primaryContactName || "View Contact"}</Link>
                           : <span className="text-[#354568]">{detail.primaryContactName || "—"}</span>}
                       </div>
                       <div><span className="text-[#75829D]">Owner:</span> <span className="text-[#354568]">{detail.ownerName}</span></div>
-                      <div><span className="text-[#75829D]">Close date:</span> <span className="text-[#354568]">{shortDate(detail.expectedCloseDate)}</span></div>
+                      <div><span className="text-[#75829D]">Close Date:</span> <span className="text-[#354568]">{shortDate(detail.expectedCloseDate)}</span></div>
                       <div><span className="text-[#75829D]">Source:</span> <span className="text-[#354568]">{detail.source}</span></div>
                       <div><span className="text-[#75829D]">Campaign:</span> <span className="text-[#354568]">{detail.campaign || "—"}</span></div>
                       <div className="col-span-2"><span className="text-[#75829D]">Products:</span> <span className="text-[#354568]">{detail.products || "—"}</span></div>
                       {detail.stage === "lost" && detail.lostReason ? (
-                        <div className="col-span-2"><span className="text-[#75829D]">Lost reason:</span> <span className="text-[#354568]">{detail.lostReason}</span></div>
+                        <div className="col-span-2"><span className="text-[#75829D]">Lost Reason:</span> <span className="text-[#354568]">{detail.lostReason}</span></div>
                       ) : null}
                     </div>
                   </div>

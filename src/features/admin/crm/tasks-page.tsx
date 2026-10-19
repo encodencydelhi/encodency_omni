@@ -75,7 +75,7 @@ const TYPE_ICON: Record<TaskType, typeof Phone> = {
 
 const BOARD_COLUMNS: { status: TaskStatus; label: string }[] = [
   { status: "pending", label: "To Do" },
-  { status: "in_progress", label: "In-progress" },
+  { status: "in_progress", label: "In-Progress" },
   { status: "completed", label: "Completed" },
 ];
 
@@ -480,7 +480,7 @@ export default function TasksPage() {
     {
       id: "priority",
       header: "Priority",
-      cell: (row) => <span className={`inline-block rounded-md px-2 py-0.5 text-[11px] font-medium tracking-wide ${PRIORITY_BADGE[row.priority]}`}>{row.priority.toUpperCase()}</span>,
+      cell: (row) => <span className={`inline-block rounded-md px-2 py-0.5 text-[11px] font-medium tracking-wide capitalize ${PRIORITY_BADGE[row.priority]}`}>{PRIORITY_LABELS[row.priority]}</span>,
       sortField: "priority",
       hideBelow: "md",
     },
@@ -561,7 +561,7 @@ export default function TasksPage() {
       <AdminPageTitle
         eyebrow="CRM / Tasks"
         title="Tasks"
-        description="Manage sales activities, follow-ups and team productivity."
+        description="Manage Sales Activities, Follow-Ups And Team Productivity."
         action={
           <div className="flex items-center gap-2">
             <Button asChild variant="outline" size="sm"><Link href="/admin/calendar"><CalendarDays className="size-3.5" /> Calendar</Link></Button>
@@ -579,14 +579,14 @@ export default function TasksPage() {
             <Select value={statusFilter ?? "__all__"} onValueChange={(v) => { setStatusFilter(v === "__all__" ? null : v); setPage(1); }}>
               <SelectTrigger size="sm" className="w-auto min-w-[8rem]"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">All Status</SelectItem>
+                <SelectItem value="__all__">All Statuses</SelectItem>
                 {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={priorityFilter ?? "__all__"} onValueChange={(v) => { setPriorityFilter(v === "__all__" ? null : v); setPage(1); }}>
               <SelectTrigger size="sm" className="w-auto min-w-[8rem]"><SelectValue placeholder="Priority" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">All Priority</SelectItem>
+                <SelectItem value="__all__">All Priorities</SelectItem>
                 {PRIORITY_OPTIONS.map((p) => <SelectItem key={p} value={p}>{PRIORITY_LABELS[p]}</SelectItem>)}
               </SelectContent>
             </Select>
