@@ -24,6 +24,7 @@ import { SearchInput } from "@/components/shared/search-input";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
+import { CrmAiInsights } from "./components/crm-ai-insights";
 import { isMockMode } from "@/config/env";
 import { PipelineMetricCards } from "./components/crm-metric-cards";
 import { FunnelChart } from "./components/crm-funnel-chart";
@@ -831,6 +832,7 @@ export default function PipelinePage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
+                    <CrmAiInsights kind="deal" recordId={detail.id} label={detail.name} scope={scope} />
                     <Button size="sm" variant="outline" onClick={() => { const d = detail; setDetailId(null); openEdit(d); }}><Pencil className="size-3.5" /> Edit</Button>
                     {isOpen(detail) ? (
                       <>

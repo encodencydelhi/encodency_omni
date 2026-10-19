@@ -23,6 +23,7 @@ import { DonutChart } from "@/components/shared/charts/donut-chart";
 import { TrendAreaChart, ChartLegend } from "@/components/shared/charts/trend-area-chart";
 import { MonthlyBarChart } from "@/components/shared/charts/monthly-bar-chart";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
+import { CrmAiInsights } from "./components/crm-ai-insights";
 import { teamApi } from "@/features/admin/team/live/team-api";
 import { isMockMode } from "@/config/env";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
@@ -776,6 +777,7 @@ export default function TasksPage() {
                   </div>
                 )}
                 <div className="flex gap-2">
+                  <CrmAiInsights kind="task" recordId={detailTask.id} label={detailTask.title} scope={scope} />
                   <Button size="sm" variant="outline" onClick={() => handleToggleComplete(detailTask.id)}>
                     <CheckCircle2 className="size-3.5" /> {detailTask.status === "completed" ? "Reopen" : "Complete"}
                   </Button>

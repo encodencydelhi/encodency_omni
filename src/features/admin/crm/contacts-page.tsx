@@ -26,6 +26,7 @@ import { SearchInput } from "@/components/shared/search-input";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
+import { CrmAiInsights } from "./components/crm-ai-insights";
 import { isMockMode } from "@/config/env";
 import type { DataTableColumn, DataTableSelection } from "@/components/shared/data-table/types";
 import type { PaginationMeta, SortSpec } from "@/types/api";
@@ -873,6 +874,7 @@ export default function ContactsPage() {
                     <p className="text-[12px] text-[#75829D]">Converted from a lead · <Link href={crmLink("leads", detail.sourceLeadId)} className="font-medium text-indigo-700 hover:underline">View lead</Link></p>
                   ) : null}
                   <div className="flex flex-wrap gap-2">
+                    <CrmAiInsights kind="contact" recordId={detail.id} label={fullName(detail)} scope={scope} />
                     <Button size="sm" variant="outline" onClick={() => { const c = detail; setDetailId(null); openEdit(c); }}><Pencil className="size-3.5" /> Edit</Button>
                     <Button size="sm" variant="outline" onClick={() => openTask(detail)}><Calendar className="size-3.5" /> Add Task</Button>
                     <Button size="sm" variant="outline" onClick={() => openGroupAssign([detail.id])}><Tag className="size-3.5" /> Group</Button>

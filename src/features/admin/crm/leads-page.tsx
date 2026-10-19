@@ -41,6 +41,7 @@ import type { Lead, LeadStage, LeadSource, CrmActivity, CrmTask, TaskPriority, C
 import { crmApi, type CrmScope } from "./data/crm-api";
 import Link from "next/link";
 import { ConvertLeadDialog, type ConvertLeadValues } from "./components/convert-lead-dialog";
+import { CrmAiInsights } from "./components/crm-ai-insights";
 import { newId, resolvePipelines, normalizeContact, normalizeDeal, normalizePipeline } from "./lib/crm-records";
 import { crmLink, useOpenParam } from "./lib/use-open-param";
 import { PHONE_ERROR, isValidOptionalPhone, parsePhone, phoneInputProps, sanitizePhone } from "@/lib/utils/phone";
@@ -462,6 +463,40 @@ export default function LeadsPage() {
     setIsSaving(true);
     try {
       const now = new Date().toISOString();
+      if (!isMockMode) {
+        const contactDraft = existingContact ?? normalizeContact({
+          id: newId("c"), firstName: lead.firstName, lastName: lead.lastName, email: lead.email, phone: lead.phone,
+          alternatePhone: lead.alternatePhone, company: lead.company, companyId: lead.company ? `co_${lead.company.toLowerCase().replace(/[^a-z0-9]+/g, "_")}` : "",
+          role: lead.jobTitle, website: lead.website, location: lead.location, streetAddress: lead.streetAddress, city: lead.city,
+          state: lead.state, zipCode: lead.zipCode, country: lead.country, ownerId: lead.ownerId, ownerName: lead.ownerName,
+          tags: lead.tags, status: "prospect", notes: lead.notes, sourceLeadId: lead.id, lastContacted: lead.lastContacted,
+          nextFollowUp: lead.nextFollowUp, createdAt: now, updatedAt: now,
+        });
+        const dealDraft = values.createDeal ? normalizeDeal({
+          id: newId("d"), name: values.dealName, companyName: lead.company, companyId: contactDraft.companyId,
+          primaryContactId: contactDraft.id, primaryContactName: `${contactDraft.firstName} ${contactDraft.lastName}`.trim(),
+          pipelineId: values.pipelineId, stage: values.stage, value: values.dealValue, probability: lead.probability,
+          expectedCloseDate: lead.expectedCloseDate, ownerId: lead.ownerId, ownerName: lead.ownerName, source: lead.source,
+          campaign: lead.campaign, tags: lead.tags, notes: lead.notes, priority: lead.priority, createdAt: now, updatedAt: now,
+        }) : null;
+        const result = await crmApi.convertLead<{ lead: Lead; contact: Contact; deal: Deal | null }>(lead.id, {
+          existingContactId: existingContact?.id,
+          contact: contactDraft,
+          ...(dealDraft ? { deal: dealDraft } : {}),
+        }, scope ?? undefined);
+        const savedLead = normalizeLead(result.lead);
+        const savedContact = normalizeContact(result.contact);
+        const savedDeal = result.deal ? normalizeDeal(result.deal) : null;
+        if (!existingContact) setContacts((rows) => [savedContact, ...rows]);
+        setLeads((rows) => rows.map((row) => row.id === savedLead.id ? savedLead : row));
+        setDetailLead((current) => current?.id === savedLead.id ? savedLead : current);
+        if (!existingContact) void logFor("contact", savedContact.id, "contact_created", `Created from lead ${fullName}`);
+        if (savedDeal) void logFor("deal", savedDeal.id, "deal_created", `Created from lead ${fullName}`);
+        void addActivity("lead_converted", savedDeal ? `Converted to contact and deal ${savedDeal.name}` : "Converted to contact", lead.id);
+        toast.success(savedDeal ? "Lead converted — contact and deal created" : "Lead converted to a contact");
+        setConvertTarget(null);
+        return;
+      }
       let contact = existingContact;
       if (!contact) {
         const draft = normalizeContact({
@@ -697,6 +732,7 @@ export default function LeadsPage() {
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
+                <CrmAiInsights kind="lead" recordId={detailLead.id} label={`${detailLead.firstName} ${detailLead.lastName}`.trim()} scope={scope} />
                 <Button size="sm" variant="outline" onClick={() => { setShowEdit(detailLead); setDetailLead(null); }}>Edit</Button>
                 <Button size="sm" variant="outline" disabled={isSaving} onClick={() => openConvert(detailLead)}><Link2 className="size-3.5" /> {detailLead.convertedContactId ? "Convert again" : "Convert"}</Button>
                 <Button size="sm" variant="outline" disabled={isSaving} onClick={() => void handleStageChange(detailLead.id, detailLead.stage === "new" ? "contacted" : detailLead.stage === "contacted" ? "qualified" : detailLead.stage === "qualified" ? "proposal" : "won")}>Advance Stage</Button>
@@ -862,7 +898,7 @@ function LeadFormModal({
         }
       }
       setPincodeSuccess(false);
-    } catch (_err) {
+    } catch {
       setPincodeSuccess(false);
     } finally {
       setIsFetchingPincode(false);
