@@ -4,10 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useMemo, useState, useEffect } from "react";
-import { ChevronRight, ChevronsLeft, Headphones, X } from "lucide-react";
+import { ChevronRight, ChevronsLeft, X } from "lucide-react";
 import { adminNavigation } from "@/config/admin-navigation";
 import { cn } from "@/lib/utils/cn";
-import { useAssistant } from "@/features/assistant/assistant-provider";
 import { useAdminContext } from "./admin-context";
 import { ChannelLogo } from "../shared/channel-logo";
 import { Clientswitcher } from "./project-switcher";
@@ -106,7 +105,6 @@ function useActiveHref(pathname: string) {
 export function AdminSidebar() {
   const pathname = usePathname();
   const activeHref = useActiveHref(pathname);
-  const { open: openAssistant } = useAssistant();
   const { organization, isSidebarCollapsed, toggleSidebar, isMobileNavOpen, setMobileNavOpen } =
     useAdminContext();
 
@@ -258,47 +256,6 @@ export function AdminSidebar() {
             ))}
           </nav>
 
-          {/* Support: opens the in-app assistant, which can hand the problem to the support team */}
-          {!isSidebarCollapsed ? (
-            <button
-              type="button"
-              onClick={() => {
-                setMobileNavOpen(false);
-                openAssistant();
-              }}
-              aria-haspopup="dialog"
-              className="mx-3 mb-3 mt-1 flex min-h-[48px] shrink-0 items-center gap-3 rounded-sm border border-[#D946EF]/30 bg-[#D946EF]/10 px-3 py-1.5 text-left transition-all hover:border-[#D946EF]/60 shadow-[0_0_15px_rgba(217,70,239,0.1)] group"
-            >
-              <span className="grid size-8 shrink-0 place-items-center">
-                <Headphones className="size-4 text-[#D946EF]" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <b className="block truncate text-[12px] font-semibold leading-tight text-white">
-                  AI Assistant
-                </b>
-                <small className="block truncate text-[12px] leading-tight text-[#94A3B8] mt-0.5">
-                  Ask questions or get guidance.
-                </small>
-              </span>
-              <ChevronRight className="size-3.5 text-[#D946EF]/50 group-hover:text-[#D946EF] transition-colors" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              title="AI Assistant"
-              aria-label="AI Assistant"
-              aria-haspopup="dialog"
-              onClick={() => {
-                setMobileNavOpen(false);
-                openAssistant();
-              }}
-              className="mx-auto mb-3 flex shrink-0 justify-center"
-            >
-              <span className="grid size-[36px] place-items-center rounded-sm border border-[#D946EF]/30 bg-[#D946EF]/10 shadow-[0_0_15px_rgba(217,70,239,0.1)]">
-                <Headphones className="size-4 text-[#D946EF]" />
-              </span>
-            </button>
-          )}
 
           <button
             onClick={toggleSidebar}

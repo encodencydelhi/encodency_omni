@@ -11,6 +11,7 @@ import { RichText } from "./rich-text";
 import { isRtl, MAX_INPUT_CHARS } from "./text";
 import type { AssistantBootstrap, ChatMessage } from "./types";
 import type { useAssistantChat } from "./use-assistant-chat";
+import { AiAssistantRobotLottie } from "./ai-assistant-floating-bot";
 
 type Chat = ReturnType<typeof useAssistantChat>;
 
@@ -107,14 +108,14 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
             input.current?.focus();
           }}
           className={cn(
-            "fixed z-50 flex flex-col overflow-hidden border border-slate-200 bg-white shadow-2xl outline-none",
-            "inset-0 sm:inset-auto sm:bottom-4 sm:left-4 sm:h-[min(700px,calc(100dvh-2rem))] sm:w-[440px] sm:rounded-sm lg:left-[236px]",
-            "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-4 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
+            "fixed z-50 flex flex-col overflow-hidden border border-slate-200 bg-white shadow-[0_20px_60px_-15px_rgba(15,23,42,0.3)] outline-none",
+            "inset-0 sm:inset-auto sm:bottom-5 sm:right-5 sm:h-[min(700px,calc(100dvh-3rem))] sm:w-[440px] sm:rounded-2xl",
+            "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-4 sm:data-[state=open]:slide-in-from-right-6 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 sm:data-[state=closed]:slide-out-to-right-6 duration-300",
           )}
         >
           <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-red-50 text-red-600 ring-1 ring-red-100">
-              <BotMessageSquare className="size-4.5" />
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-50/80 p-0.5 border border-blue-100 shadow-sm">
+              <AiAssistantRobotLottie className="size-7" />
             </span>
             <div className="min-w-0 flex-1">
               <DialogTitle className="text-[14px] font-semibold leading-tight text-slate-900">OmniPlatform Assistant</DialogTitle>
@@ -122,10 +123,10 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
                 {bootstrap?.page ? `You are on ${bootstrap.page.title}` : "Ask me how to use the platform"} · any language
               </DialogDescription>
             </div>
-            <button type="button" onClick={chat.reset} disabled={empty} aria-label="Start a new chat" title="New Chat" className="grid size-8 place-items-center rounded-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40">
+            <button type="button" onClick={chat.reset} disabled={empty} aria-label="Start a new chat" title="New Chat" className="grid size-8 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40">
               <RotateCcw className="size-4" />
             </button>
-            <DialogPrimitive.Close aria-label="Close assistant" className="grid size-8 place-items-center rounded-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">
+            <DialogPrimitive.Close aria-label="Close assistant" className="grid size-8 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">
               <X className="size-4" />
             </DialogPrimitive.Close>
           </header>

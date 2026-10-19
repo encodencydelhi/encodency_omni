@@ -79,6 +79,7 @@ export function AutomationPage() {
         const workflow = await automationApi.useTemplate(id, templateId);
         invalidate();
         toast.success(`Created “${workflow.name}” as a draft — finish setting it up, then publish`);
+        if (workflow.setupNotes?.length) toast.info(workflow.setupNotes.slice(0, 3).join(" "), { duration: 15000 });
         setEditing({ workflow, clientId: id });
       } catch (error) {
         toast.error(errorMessage(error));

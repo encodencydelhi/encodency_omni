@@ -80,7 +80,7 @@ export function TemplatesPage({ onUseTemplate }: AutomationPageActions) {
                   {(tpl.channels ?? []).filter((c) => c !== "system").map((c) => <span key={c} className="rounded bg-[#F1F5F9] px-1.5 py-0.5 font-semibold text-[#475569]">{channelLabel(c)}</span>)}
                   {tpl.useCount ? <span className="rounded bg-blue-50 px-1.5 py-0.5 font-semibold text-blue-700">Used {tpl.useCount}×</span> : null}
                 </div>
-                {tpl.requiredIntegrations.length ? <p className="mt-2 text-[10.5px] text-[#B45309]">Needs: {tpl.requiredIntegrations.map((r) => INTEGRATION_LABEL[r] ?? r).join(", ")}</p> : null}
+                {tpl.missingIntegrations?.length ? <p className="mt-2 text-[10.5px] text-[#B45309]">Connect first: {tpl.missingIntegrations.map((r) => INTEGRATION_LABEL[r] ?? r).join(", ")}. You can still create it as a draft; it will not run until then.</p> : tpl.requiredIntegrations.length ? <p className="mt-2 text-[10.5px] text-[#047857]">Uses: {tpl.requiredIntegrations.map((r) => INTEGRATION_LABEL[r] ?? r).join(", ")} (connected)</p> : null}
                 <div className="mt-auto flex gap-2 pt-3">
                   <button type="button" onClick={() => setPreview(tpl)} className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[11.5px] font-semibold text-[#334155] hover:bg-slate-50"><Eye className="size-3.5" /> Preview</button>
                   <button type="button" disabled={using !== null} onClick={() => void use(tpl.id)} className="flex-1 rounded-lg bg-[#2563EB] py-1.5 text-[11.5px] font-semibold text-white hover:bg-[#1D4ED8] disabled:opacity-60">{using === tpl.id ? "Creating..." : "Use template"}</button>

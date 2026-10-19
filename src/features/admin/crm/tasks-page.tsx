@@ -764,7 +764,7 @@ export default function TasksPage() {
                 {detailTask.description && (
                   <div className="rounded-sm border border-[#DDE4ED] p-3">
                     <h3 className="text-[12px] font-semibold text-[#27375D] mb-1">Description</h3>
-                    <p className="text-[12px] text-[#354568]">{detailTask.description}</p>
+                    <p className="whitespace-pre-wrap break-words text-[12px] text-[#354568]">{detailTask.description}</p>
                   </div>
                 )}
                 {(detailTask.relatedLeadName || detailTask.relatedContactName || detailTask.relatedDealName) && (

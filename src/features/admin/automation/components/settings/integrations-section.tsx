@@ -9,6 +9,8 @@ import { whatsappApi, type WhatsAppConfigState } from "@/features/admin/channels
 import type { IntegrationsSettings } from "../../data/settings-types";
 import { automationApi, type CompanySmtpSettings, webhookEndpoint } from "../../data/automation-api";
 import { useAutomationScope, useWorkflows } from "../../data/hooks";
+import { SecretsCard } from "./secrets-card";
+import { WhatsAppCatalogCard } from "./whatsapp-catalog-card";
 
 interface IntegrationsSectionProps {
   settings: IntegrationsSettings;
@@ -128,6 +130,10 @@ export function IntegrationsSection({ settings, onChange }: IntegrationsSectionP
           </div> : smtpError?.denied ? <p className="text-[10.5px] text-slate-500">You do not have permission to manage integrations (Owner or Admin required).</p> : <p className="flex items-center gap-2 text-[10.5px] text-slate-500">{smtpError ? `SMTP settings could not be loaded (${smtpError.detail}). This is often a brief server restart.` : "Loading SMTP settings..."}{smtpError ? <button type="button" onClick={() => setSmtpReload((n) => n + 1)} className="rounded-md border px-2 py-1 font-semibold text-slate-700">Retry</button> : null}</p>}
         </div>
       </div>
+
+      <WhatsAppCatalogCard clientId={clientId} />
+
+      <SecretsCard />
 
       <div className="space-y-3 rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-xs">
         <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2"><Webhook className="size-4 text-[#7C3AED]" /><h4 className="text-[12.5px] font-bold text-[#111C3A]">Workflow webhook URLs</h4></div>

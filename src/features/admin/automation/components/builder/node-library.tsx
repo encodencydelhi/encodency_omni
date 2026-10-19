@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   Clock3, Users, Activity, FileText, UserPlus, Mail, CheckSquare, Filter, GitBranch, Database, Webhook, UserCheck, Hand, Split, Merge, Repeat2, BadgeCheck, Workflow,
+  CalendarClock, ArrowRightLeft, ShieldAlert, Globe, Bell, MessageSquare, AlarmClock, UserX, CreditCard, Receipt, MessageSquareWarning, Handshake, TrendingUp, CheckCheck, Sparkles,
 } from "lucide-react";
 import { FaFacebookF, FaWhatsapp } from "react-icons/fa";
 import type { AutomationNodeType } from "../../data/types";
@@ -26,12 +27,27 @@ export const LIBRARY: LibraryItem[] = [
   { id: "form_submission", type: "trigger", label: "Form Submission", description: "Your website form posts to this workflow’s URL; a CRM lead is created.", icon: FileText, category: "Triggers", iconBg: "bg-[#3B82F6]", hexColor: "#3B82F6" },
   { id: "inbound_webhook", type: "trigger", label: "Inbound Webhook", description: "Any system can POST JSON to this workflow’s secret URL.", icon: Webhook, category: "Triggers", iconBg: "bg-[#7C3AED]", hexColor: "#7C3AED" },
   { id: "website_down", type: "trigger", label: "Website Down", description: "Runs when a website check finds the client’s site down.", icon: Activity, category: "Triggers", iconBg: "bg-[#DC2626]", hexColor: "#DC2626" },
+  { id: "schedule", type: "trigger", label: "Schedule", description: "Runs on a timetable: every few minutes, daily, on chosen weekdays or monthly.", icon: CalendarClock, category: "Triggers", iconBg: "bg-[#0D9488]", hexColor: "#0D9488" },
+  { id: "lead_stage_changed", type: "trigger", label: "Lead Stage Changed", description: "Runs when a lead moves to another pipeline stage (optionally only to a chosen stage).", icon: ArrowRightLeft, category: "Triggers", iconBg: "bg-[#9333EA]", hexColor: "#9333EA" },
+  { id: "website_ssl_expiring", type: "trigger", label: "SSL Expiring", description: "Runs when a monitored website's SSL certificate is close to expiring.", icon: ShieldAlert, category: "Triggers", iconBg: "bg-[#D97706]", hexColor: "#D97706" },
+  { id: "task_overdue", type: "trigger", label: "Task Overdue", description: "Runs once when a CRM task passes its due date without being completed.", icon: AlarmClock, category: "Triggers", iconBg: "bg-[#E11D48]", hexColor: "#E11D48" },
+  { id: "lead_inactive", type: "trigger", label: "Lead Inactive", description: "Runs once when a lead has had no activity for a number of days.", icon: UserX, category: "Triggers", iconBg: "bg-[#475569]", hexColor: "#475569" },
+  { id: "new_deal", type: "trigger", label: "New Deal", description: "Runs when a deal is created in the CRM pipeline.", icon: Handshake, category: "Triggers", iconBg: "bg-[#0E7490]", hexColor: "#0E7490" },
+  { id: "deal_stage_changed", type: "trigger", label: "Deal Stage Changed", description: "Runs when a deal moves to another pipeline stage (optionally only to a chosen stage).", icon: TrendingUp, category: "Triggers", iconBg: "bg-[#7C2D12]", hexColor: "#7C2D12" },
+  { id: "task_completed", type: "trigger", label: "Task Completed", description: "Runs when a CRM task is marked completed.", icon: CheckCheck, category: "Triggers", iconBg: "bg-[#15803D]", hexColor: "#15803D" },
+  { id: "payment_failed", type: "trigger", label: "Payment Failed", description: "Runs when an online payment for your subscription invoice fails.", icon: CreditCard, category: "Triggers", iconBg: "bg-[#B91C1C]", hexColor: "#B91C1C" },
+  { id: "invoice_paid", type: "trigger", label: "Invoice Paid", description: "Runs when an online payment settles a subscription invoice.", icon: Receipt, category: "Triggers", iconBg: "bg-[#15803D]", hexColor: "#15803D" },
+  { id: "whatsapp_failed", type: "trigger", label: "WhatsApp Failed", description: "Runs when a WhatsApp message could not be delivered.", icon: MessageSquareWarning, category: "Triggers", iconBg: "bg-[#EA580C]", hexColor: "#EA580C" },
   { id: "manual", type: "trigger", label: "Manual Trigger", description: "Runs only when someone presses “Run” / “Test”.", icon: Hand, category: "Triggers", iconBg: "bg-[#64748B]", hexColor: "#64748B" },
 
   { id: "send_whatsapp", type: "action", label: "Send WhatsApp", description: "Send an approved WhatsApp template via AiSensy.", icon: FaWhatsapp, category: "Actions", iconBg: "bg-[#25D366]", hexColor: "#16A34A" },
   { id: "send_email", type: "action", label: "Send Email", description: "Send an email to the record or your team.", icon: Mail, category: "Actions", iconBg: "bg-[#F97316]", hexColor: "#F97316" },
   { id: "assign_user", type: "action", label: "Assign User", description: "Make a team member the owner of the lead/contact.", icon: UserPlus, category: "Actions", iconBg: "bg-[#3B82F6]", hexColor: "#3B82F6" },
   { id: "update_record", type: "action", label: "Update Record", description: "Change the stage/status, add tags or append a note.", icon: Database, category: "Actions", iconBg: "bg-[#7C3AED]", hexColor: "#7C3AED" },
+  { id: "http_request", type: "action", label: "HTTP Request", description: "Call any public URL (your CRM, Slack, Zapier, Make, a Google Sheets script) with a custom body.", icon: Globe, category: "Actions", iconBg: "bg-[#0F172A]", hexColor: "#0F172A" },
+  { id: "ai_generate", type: "action", label: "AI Step", description: "Ask AI to write a brief, a task description, a reminder or to score a lead. Its answer is available to the next steps.", icon: Sparkles, category: "Actions", iconBg: "bg-[#6D28D9]", hexColor: "#6D28D9" },
+  { id: "slack_message", type: "action", label: "Slack Message", description: "Post a message to a Slack channel through an incoming webhook.", icon: MessageSquare, category: "Actions", iconBg: "bg-[#4A154B]", hexColor: "#4A154B" },
+  { id: "notify_user", type: "action", label: "Notify Team", description: "Send an in-app notification to the owner, chosen members or the whole client team.", icon: Bell, category: "Actions", iconBg: "bg-[#DB2777]", hexColor: "#DB2777" },
   { id: "create_task", type: "action", label: "Create Task", description: "Create a CRM follow-up task.", icon: CheckSquare, category: "Actions", iconBg: "bg-[#0891B2]", hexColor: "#0891B2" },
 
   { id: "filter_condition", type: "condition", label: "Filter Condition", description: "Stop the run unless the condition is true.", icon: Filter, category: "Conditions", iconBg: "bg-[#EF4444]", hexColor: "#EF4444" },

@@ -16,6 +16,17 @@ type Source = "editor" | "draft" | "published";
 
 function samplePayload(trigger: string | undefined): string {
   if (trigger === "form_submission" || trigger === "inbound_webhook") return JSON.stringify({ name: "Sample Visitor", email: "sample@example.com", phone: "9876543210", message: "Sample message" }, null, 2);
+  if (trigger === "new_deal") return JSON.stringify({ event: "deal.created", dealId: "sample-deal", name: "Website redesign", stage: "new", value: 250000, companyName: "Acme", contactName: "Asha Rao", ownerId: "sample-user", ownerName: "Sample User" }, null, 2);
+  if (trigger === "deal_stage_changed") return JSON.stringify({ event: "deal.stage_changed", dealId: "sample-deal", name: "Website redesign", from: "proposal", to: "won", stage: "won", value: 250000, companyName: "Acme", ownerId: "sample-user", ownerName: "Sample User" }, null, 2);
+  if (trigger === "task_completed") return JSON.stringify({ event: "task.completed", taskId: "sample-task", title: "Send proposal", assigneeName: "Sample User", ownerId: "sample-user" }, null, 2);
+  if (trigger === "payment_failed") return JSON.stringify({ event: "payment.failed", invoiceId: "sample-invoice", invoiceNumber: "INV-0042", amount: 12500, currency: "INR", reason: "The payment was declined by the bank." }, null, 2);
+  if (trigger === "invoice_paid") return JSON.stringify({ event: "invoice.paid", invoiceId: "sample-invoice", invoiceNumber: "INV-0042", amount: 12500, currency: "INR" }, null, 2);
+  if (trigger === "whatsapp_failed") return JSON.stringify({ event: "whatsapp.failed", messageId: "sample-message", phone: "+919876543210", templateName: "omni_lead_welcome", reason: "provider_webhook_failure", source: "delivery_report" }, null, 2);
+  if (trigger === "task_overdue") return JSON.stringify({ event: "task.overdue", taskId: "sample-task", title: "Send proposal", dueDate: new Date().toISOString().slice(0, 10), priority: "high", assigneeId: "sample-user", assigneeName: "Sample User" }, null, 2);
+  if (trigger === "lead_inactive") return JSON.stringify({ event: "lead.inactive", recordId: "sample-lead", name: "Test Lead", stage: "qualified", inactiveDays: 3, lastUpdatedAt: new Date(Date.now() - 3 * 86_400_000).toISOString() }, null, 2);
+  if (trigger === "schedule") return JSON.stringify({ event: "schedule", scheduledFor: new Date().toISOString(), schedule: "Test schedule" }, null, 2);
+  if (trigger === "lead_stage_changed") return JSON.stringify({ event: "lead.stage_changed", recordId: "sample-lead", name: "Test Lead", from: "qualified", to: "won" }, null, 2);
+  if (trigger === "website_ssl_expiring") return JSON.stringify({ website: { id: "sample-website-id", url: "https://example.com", name: "Example Site" }, ssl: { host: "example.com", daysLeft: 10, validTo: new Date(Date.now() + 10 * 86_400_000).toISOString(), issuer: "Example CA" }, company: { name: "Example Co" } }, null, 2);
   if (trigger === "website_down") return JSON.stringify({ website: { id: "sample-website-id", url: "https://example.com", name: "Example Site", httpStatus: 503, errorMessage: "Service unavailable", detectedAt: new Date().toISOString(), region: "Primary", incidentId: "sample-incident" }, company: { id: "sample-company-id", name: "Example Company" }, recipient: { email: null } }, null, 2);
   return JSON.stringify({ name: "Sample Contact", score: 80 }, null, 2);
 }

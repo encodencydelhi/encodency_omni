@@ -190,6 +190,8 @@ export interface AutomationTemplate {
   trigger: string;
   stepCount: number;
   requiredIntegrations: string[];
+  /** Required integrations that are not connected for this company yet (for example meta). */
+  missingIntegrations?: string[];
   channels?: string[];
   useCount: number;
   complexity: "Basic" | "Intermediate" | "Advanced";

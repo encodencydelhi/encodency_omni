@@ -127,6 +127,8 @@ export interface WhatsAppConfigTestResult {
   code: string | null;
   upstreamStatus: number | null;
   templateCount: number;
+  /** False when the AiSensy account does not expose its template list; templates are then added by hand. */
+  templateListAvailable?: boolean;
   message: string;
 }
 

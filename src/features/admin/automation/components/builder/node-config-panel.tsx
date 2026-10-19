@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bot, Check, Copy, Settings, Braces } from "lucide-react";
 import { toast } from "sonner";
 import type { AutomationNode } from "../../data/types";
 import { automationApi, webhookEndpoint, webhookUrl } from "../../data/automation-api";
 import { getStoredClientId } from "@/lib/api/tenancy-storage";
 import { libraryItem } from "./node-library";
+import { nodeProblem } from "./node-problems";
+
+export { nodeProblem };
 
 export interface BuilderResources {
   templates: Array<{ id: string; name: string; language: string; variables: string[]; status: string; providerStatus: string | null }>;
@@ -33,6 +36,30 @@ const VARIABLES = [
   { token: "{{website.detectedAt}}", label: "Incident detection time" },
   { token: "{{website.region}}", label: "Monitoring region" },
   { token: "{{company.name}}", label: "Owning company name" },
+  { token: "{{client.name}}", label: "The client (business) this workflow belongs to" },
+  { token: "{{client.website}}", label: "The client's website" },
+  { token: "{{trigger.name}}", label: "Deal events: deal name" },
+  { token: "{{trigger.value}}", label: "Deal events: deal value" },
+  { token: "{{trigger.companyName}}", label: "Deal events: company name" },
+  { token: "{{trigger.ownerName}}", label: "Deal / task events: owner" },
+  { token: "{{ai.text}}", label: "AI step (result name ai): the text AI wrote" },
+  { token: "{{ai.json.score}}", label: "AI step in JSON mode: a field of the answer" },
+  { token: "{{variables.wa.state}}", label: "A step saved as wa: success, skipped or failed" },
+  { token: "{{trigger.invoiceNumber}}", label: "Payment events: invoice number" },
+  { token: "{{trigger.amount}}", label: "Payment events: amount in rupees" },
+  { token: "{{trigger.reason}}", label: "Payment / WhatsApp failures: reason" },
+  { token: "{{trigger.phone}}", label: "WhatsApp Failed: the phone number" },
+  { token: "{{trigger.templateName}}", label: "WhatsApp Failed: the template name" },
+  { token: "{{ssl.host}}", label: "SSL Expiring: website host" },
+  { token: "{{ssl.daysLeft}}", label: "SSL Expiring: days until expiry" },
+  { token: "{{ssl.validTo}}", label: "SSL Expiring: expiry date" },
+  { token: "{{trigger.from}}", label: "Lead Stage Changed: previous stage" },
+  { token: "{{trigger.to}}", label: "Lead Stage Changed: new stage" },
+  { token: "{{trigger.scheduledFor}}", label: "Schedule: the planned run time" },
+  { token: "{{trigger.title}}", label: "Task Overdue: task title" },
+  { token: "{{trigger.dueDate}}", label: "Task Overdue: due date" },
+  { token: "{{trigger.assigneeName}}", label: "Task Overdue: assignee" },
+  { token: "{{secret.name}}", label: "A stored secret (Settings → Integrations → Secrets). Only for HTTP Request and Slack steps" },
   { token: "{{recipient.email}}", label: "Resolved notification recipient" },
 ];
 
@@ -59,34 +86,36 @@ const OPERATORS = [
 ];
 
 const LEAD_STAGES = ["new", "contacted", "qualified", "proposal", "won", "lost"];
+const DEAL_STAGES = ["new", "qualified", "discovery", "proposal", "negotiation", "won", "lost"];
 const CONTACT_STATUSES = ["active", "inactive", "lead", "customer", "prospect"];
 
-/** Returns why a step can't run as configured, or null when it is ready. */
-export function nodeProblem(node: AutomationNode): string | null {
-  const c = node.config ?? {};
-  switch (node.actionId) {
-    case "website_down": return c.websiteId ? null : "Choose a monitored website";
-    case "send_whatsapp": return c.templateId ? null : "Choose a WhatsApp template";
-    case "send_email": return c.subject ? (c.recipientMode === "company_owner" && !c.ownerPolicy ? "Choose an owner policy" : null) : "Add a subject";
-    case "assign_user": return c.userId ? null : "Choose a team member";
-    case "update_record": return c.field ? (c.value ? null : "Set the new value") : "Choose a field to update";
-    case "create_task": return c.title ? null : "Add a task title";
-    case "filter_condition":
-    case "if_else": return c.field ? (c.operator ? null : "Choose an operator") : "Choose a field to check";
-    case "switch": return c.field ? (Array.isArray(c.cases) && c.cases.length ? null : "Add at least one switch case") : "Choose a field to switch on";
-    case "delay": return Number(c.duration) > 0 ? null : "Set how long to wait";
-    case "wait_until": return c.mode === "absolute" ? (c.until ? null : "Choose a future date and time") : Number(c.duration) > 0 ? null : "Set how long to wait";
-    case "approval": return Array.isArray(c.approverUserIds) && c.approverUserIds.length ? (Number(c.expiryMinutes) >= 1 && Number(c.expiryMinutes) <= 43200 ? null : "Expiry must be 1 to 43,200 minutes") : "Select at least one approver";
-    case "sub_workflow": return c.workflowId ? (Number(c.timeoutSeconds) >= 1 && Number(c.timeoutSeconds) <= 86400 ? null : "Timeout must be 1 to 86,400 seconds") : "Enter a published workflow ID";
-    case "parallel": return Array.isArray(c.branches) && c.branches.length >= 2 && c.branches.length <= 10 ? (c.joinNodeId ? null : "Add a Merge node after this split") : "Add 2 to 10 unique branches";
-    case "merge": return ["all", "any"].includes(c.mode) ? null : "Choose a join mode";
-    case "for_each": return c.arraySource ? (Number(c.concurrency) >= 1 && Number(c.concurrency) <= 10 ? (Number(c.maxItems) >= 1 && Number(c.maxItems) <= 100 ? null : "Maximum items must be 1 to 100") : "Concurrency must be 1 to 10") : "Add an array source";
-    case "loop": return Number(c.maxIterations) >= 1 && Number(c.maxIterations) <= 100 ? (c.stopCondition?.field && c.stopCondition?.operator ? null : "Add a stop condition") : "Maximum iterations must be 1 to 100";
-    default:
-      if (node.type === "trigger") return node.actionId ? null : "Pick a trigger type";
-      return node.actionId ? null : "Pick an action type for this step";
-  }
+const WEEKDAY_OPTIONS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
+const TIMEZONES = ["Asia/Kolkata", "Asia/Dubai", "Asia/Singapore", "Europe/London", "Europe/Berlin", "America/New_York", "America/Chicago", "America/Los_Angeles", "Australia/Sydney", "UTC"];
+
+/** Names of the stored secrets (values are never readable). Empty for people without permission to manage automation. */
+function useSecretNames(): string[] {
+  const [names, setNames] = useState<string[]>([]);
+  useEffect(() => {
+    let off = false;
+    automationApi.listSecrets().then((rows) => { if (!off) setNames(rows.map((row) => row.name)); }).catch(() => undefined);
+    return () => { off = true; };
+  }, []);
+  return names;
 }
+
+function SecretChips({ names, onCopy }: { names: string[]; onCopy: (text: string) => void }) {
+  return (
+    <div className="rounded-lg border border-dashed border-[#CBD5E1] px-3 py-2 text-[10.5px] text-[#475569]">
+      <p>Keep credentials out of the workflow: store them under <strong>Settings → Integrations → Secrets</strong> and reference them as <code>{"{{secret.name}}"}</code> in the URL, a header value or the body.</p>
+      {names.length ? (
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {names.map((name) => <button key={name} type="button" onClick={() => onCopy(`{{secret.${name}}}`)} className="rounded-md border border-[#E2E8F0] bg-white px-1.5 py-0.5 font-mono text-[10px] text-[#1D4ED8] hover:bg-[#F8FAFC]">{`{{secret.${name}}}`}</button>)}
+        </div>
+      ) : <p className="mt-1 text-[#94A3B8]">No secrets stored yet.</p>}
+    </div>
+  );
+}
+
 
 const input = "h-9 w-full rounded-lg border border-[#E2E8F0] px-3 text-[11.5px] focus:border-[#2563EB] focus:outline-none focus:ring-1 focus:ring-[#2563EB]/20";
 const label = "text-[11.5px] font-semibold text-[#111C3A]";
@@ -110,6 +139,7 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
 }) {
   const [tab, setTab] = useState<"configure" | "variables">("configure");
   const [copied, setCopied] = useState(false);
+  const secretNames = useSecretNames();
   const item = libraryItem(node.actionId, node.label);
   const Icon = item?.icon ?? Bot;
   const config = node.config ?? {};
@@ -220,7 +250,7 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
               </>
             ) : null}
 
-            {node.actionId === "website_down" ? (
+            {node.actionId === "website_down" || node.actionId === "website_ssl_expiring" ? (
               <>
                 <Field title="Infrastructure Website" hint="Stable website IDs are stored; choices are limited to this company and client.">
                   <select className={`${input} bg-white`} value={config.websiteId ?? ""} onChange={(e) => setConfig({ websiteId: e.target.value })}>
@@ -229,11 +259,108 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
                     {resources.websites.map((website) => <option key={website.id} value={website.id}>{website.name} · {website.url}</option>)}
                   </select>
                 </Field>
+                {node.actionId === "website_ssl_expiring" ? (
+                  <Field title="Only when this close to expiry (days)" hint="Leave empty to run at every warning level the monitor raises (30, 14, 7, 3, 1 days and expired alerts follow the website's warning settings).">
+                    <input type="number" min={1} max={90} className={input} value={config.daysBefore ?? ""} onChange={(e) => setConfig({ daysBefore: e.target.value === "" ? "" : Math.max(1, Math.min(90, Number(e.target.value))) })} />
+                  </Field>
+                ) : null}
                 {!resources.websites.length ? <p className="rounded-md bg-amber-50 px-2.5 py-2 text-[10.5px] text-amber-800">No enabled website monitoring configuration exists for this client.</p> : null}
               </>
             ) : null}
 
-            {node.type === "trigger" && node.actionId !== "website_down" && !["inbound_webhook", "form_submission"].includes(node.actionId ?? "") ? (
+            {node.actionId === "lead_stage_changed" || node.actionId === "deal_stage_changed" ? (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field title="From stage" hint="Any stage when empty.">
+                    <select className={`${input} bg-white`} value={config.fromStage ?? ""} onChange={(e) => setConfig({ fromStage: e.target.value })}>
+                      <option value="">Any</option>
+                      {(node.actionId === "deal_stage_changed" ? DEAL_STAGES : LEAD_STAGES).map((stage) => <option key={stage} value={stage}>{stage}</option>)}
+                    </select>
+                  </Field>
+                  <Field title="To stage" hint="Any stage when empty.">
+                    <select className={`${input} bg-white`} value={config.toStage ?? ""} onChange={(e) => setConfig({ toStage: e.target.value })}>
+                      <option value="">Any</option>
+                      {(node.actionId === "deal_stage_changed" ? DEAL_STAGES : LEAD_STAGES).map((stage) => <option key={stage} value={stage}>{stage}</option>)}
+                    </select>
+                  </Field>
+                </div>
+                <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[10.5px] text-[#475569]">Fires when a person changes a lead&apos;s stage in the CRM. Stage changes made by an automation step do not trigger workflows again, so loops cannot form.</p>
+              </>
+            ) : null}
+
+            {node.actionId === "task_overdue" ? (
+              <>
+                <Field title="Grace period (minutes)" hint="Wait this long after the due time before firing. 0 fires as soon as the task is overdue.">
+                  <input type="number" min={0} max={10080} className={input} value={config.graceMinutes ?? 0} onChange={(e) => setConfig({ graceMinutes: e.target.value === "" ? "" : Math.max(0, Math.min(10080, Number(e.target.value))) })} />
+                </Field>
+                <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[10.5px] text-[#475569]">Fires once per task for tasks that become overdue <strong>after</strong> the workflow goes live (publishing never floods you with old tasks). Completed or cancelled tasks are ignored. Use <code>{"{{trigger.title}}"}</code>, <code>{"{{trigger.dueDate}}"}</code> and <code>{"{{trigger.assigneeName}}"}</code>.</p>
+              </>
+            ) : null}
+
+            {node.actionId === "lead_inactive" ? (
+              <>
+                <Field title="No activity for (days)">
+                  <input type="number" min={1} max={365} className={input} value={config.inactiveDays ?? 3} onChange={(e) => setConfig({ inactiveDays: Math.max(1, Math.min(365, Number(e.target.value) || 1)) })} />
+                </Field>
+                <Field title="Ignore leads in these stages">
+                  <div className="flex flex-wrap gap-1.5">
+                    {LEAD_STAGES.map((stage) => {
+                      const skipped: string[] = Array.isArray(config.excludeStages) ? config.excludeStages : ["won", "lost"];
+                      const on = skipped.includes(stage);
+                      return <button key={stage} type="button" onClick={() => setConfig({ excludeStages: on ? skipped.filter((s) => s !== stage) : [...skipped, stage] })} className={`rounded-md border px-2 py-1 text-[10.5px] font-semibold ${on ? "border-[#2563EB] bg-[#EFF6FF] text-[#1D4ED8]" : "border-[#E2E8F0] text-[#475569]"}`}>{stage}</button>;
+                    })}
+                  </div>
+                </Field>
+                <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[10.5px] text-[#475569]">&ldquo;Activity&rdquo; means the lead was last edited. Fires once per quiet period, for leads that go quiet <strong>after</strong> the workflow goes live. Editing the lead (including by an automation step) starts a new period.</p>
+              </>
+            ) : null}
+
+            {node.actionId === "schedule" ? (
+              <>
+                <Field title="Repeat">
+                  <select className={`${input} bg-white`} value={config.frequency ?? "daily"} onChange={(e) => setConfig({ frequency: e.target.value })}>
+                    <option value="interval">Every few minutes</option>
+                    <option value="daily">Every day</option>
+                    <option value="weekly">On selected weekdays</option>
+                    <option value="monthly">Once a month</option>
+                  </select>
+                </Field>
+                {(config.frequency ?? "daily") === "interval" ? (
+                  <Field title="Every (minutes)" hint="Between 5 and 1440 (24 hours).">
+                    <input type="number" min={5} max={1440} className={input} value={config.everyMinutes ?? 60} onChange={(e) => setConfig({ everyMinutes: Number(e.target.value) })} />
+                  </Field>
+                ) : (
+                  <>
+                    <Field title="Time of day">
+                      <input type="time" className={input} value={config.time ?? ""} onChange={(e) => setConfig({ time: e.target.value })} />
+                    </Field>
+                    {config.frequency === "weekly" ? (
+                      <Field title="Weekdays">
+                        <div className="flex flex-wrap gap-1.5">
+                          {WEEKDAY_OPTIONS.map((day) => {
+                            const on = Array.isArray(config.weekdays) && config.weekdays.includes(day);
+                            return <button key={day} type="button" onClick={() => setConfig({ weekdays: on ? config.weekdays.filter((d: string) => d !== day) : [...(config.weekdays ?? []), day] })} className={`rounded-md border px-2 py-1 text-[10.5px] font-semibold capitalize ${on ? "border-[#2563EB] bg-[#EFF6FF] text-[#1D4ED8]" : "border-[#E2E8F0] text-[#475569]"}`}>{day.slice(0, 3)}</button>;
+                          })}
+                        </div>
+                      </Field>
+                    ) : null}
+                    {config.frequency === "monthly" ? (
+                      <Field title="Day of month" hint="A month without that day runs on its last day.">
+                        <input type="number" min={1} max={31} className={input} value={config.dayOfMonth ?? 1} onChange={(e) => setConfig({ dayOfMonth: Number(e.target.value) })} />
+                      </Field>
+                    ) : null}
+                    <Field title="Time zone">
+                      <select className={`${input} bg-white`} value={config.timezone ?? "Asia/Kolkata"} onChange={(e) => setConfig({ timezone: e.target.value })}>
+                        {(TIMEZONES.includes(config.timezone ?? "Asia/Kolkata") ? TIMEZONES : [config.timezone, ...TIMEZONES]).map((zone: string) => <option key={zone} value={zone}>{zone}</option>)}
+                      </select>
+                    </Field>
+                  </>
+                )}
+                <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[10.5px] text-[#475569]">The workflow must be <strong>Active</strong>. If the platform was down at the planned time, a run missed by more than 15 minutes is skipped (never replayed in bulk). Each planned time runs once, even with several servers.</p>
+              </>
+            ) : null}
+
+            {node.type === "trigger" && !["website_down", "website_ssl_expiring", "lead_stage_changed", "deal_stage_changed", "schedule", "task_overdue", "lead_inactive", "inbound_webhook", "form_submission"].includes(node.actionId ?? "") ? (
               <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[11px] text-[#475569]">{item?.description ?? "Choose a trigger from the left panel."} No extra settings are needed.</p>
             ) : null}
 
@@ -249,6 +376,7 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
                     {resources.templates.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.language}){t.providerStatus ? ` · ${t.providerStatus}` : ""}</option>)}
                   </select>
                 </Field>
+                {config.templateName && !config.templateId ? <p className="rounded-lg bg-[#F0FDF4] px-3 py-2 text-[10.5px] text-[#166534]">Automatic: this step uses the WhatsApp template named <code>{String(config.templateName)}</code> as soon as it exists for this client. Until then it is skipped (not failed) and any email fallback runs. You can also pick a template above.</p> : null}
                 <Field title="Recipient phone" hint="Leave as {{lead.phone}} to message the lead/contact. 10-digit numbers get +91 added.">
                   <input className={input} value={config.phone ?? "{{lead.phone}}"} onChange={(e) => setConfig({ phone: e.target.value })} />
                 </Field>
@@ -296,6 +424,113 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
                 <Field title="Message">
                   <textarea rows={6} className="w-full resize-none rounded-lg border border-[#E2E8F0] px-3 py-2 text-[11.5px] focus:border-[#2563EB] focus:outline-none" value={config.body ?? ""} onChange={(e) => setConfig({ body: e.target.value })} />
                 </Field>
+              </>
+            ) : null}
+
+            {node.actionId === "http_request" ? (
+              <>
+                <div className="grid grid-cols-[96px_1fr] gap-2">
+                  <Field title="Method">
+                    <select className={`${input} bg-white`} value={config.method ?? "POST"} onChange={(e) => setConfig({ method: e.target.value })}>
+                      {["GET", "POST", "PUT", "PATCH", "DELETE"].map((m) => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </Field>
+                  <Field title="URL" hint="Public http(s) address only. Private, local and cloud-metadata hosts are refused.">
+                    <input className={input} placeholder="https://hooks.example.com/..." value={config.url ?? ""} onChange={(e) => setConfig({ url: e.target.value })} />
+                  </Field>
+                </div>
+                <Field title="Headers" hint="Values are saved with the workflow and are hidden in run logs. Do not share the workflow with people who should not see them.">
+                  <div className="space-y-1.5">
+                    {Object.entries((config.headers ?? {}) as Record<string, string>).map(([name, value], index) => (
+                      <div key={index} className="grid grid-cols-[1fr_1fr_28px] gap-1.5">
+                        <input className={input} aria-label="Header name" placeholder="Authorization" value={name} onChange={(e) => setConfig({ headers: Object.fromEntries(Object.entries(config.headers ?? {}).map(([k, v], i) => [i === index ? e.target.value : k, v])) })} />
+                        <input className={input} type="password" autoComplete="off" aria-label="Header value" placeholder="value" value={value} onChange={(e) => setConfig({ headers: { ...(config.headers ?? {}), [name]: e.target.value } })} />
+                        <button type="button" aria-label="Remove header" className="grid place-items-center rounded-lg border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]" onClick={() => setConfig({ headers: Object.fromEntries(Object.entries(config.headers ?? {}).filter((_, i) => i !== index)) })}>×</button>
+                      </div>
+                    ))}
+                    <button type="button" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#334155] hover:bg-[#F8FAFC]" onClick={() => setConfig({ headers: { ...(config.headers ?? {}), [`X-Header-${Object.keys(config.headers ?? {}).length + 1}`]: "" } })}>Add header</button>
+                  </div>
+                </Field>
+                {(config.method ?? "POST") !== "GET" ? (
+                  <Field title="Body" hint="JSON by default. Variables like {{lead.email}} are filled in. Max 256 KB.">
+                    <textarea rows={6} className="w-full resize-none rounded-lg border border-[#E2E8F0] px-3 py-2 font-mono text-[11px] focus:border-[#2563EB] focus:outline-none" value={typeof config.body === "string" ? config.body : ""} onChange={(e) => setConfig({ body: e.target.value })} />
+                  </Field>
+                ) : null}
+                <div className="grid grid-cols-2 gap-2">
+                  <Field title="Timeout (seconds)"><input type="number" min={1} max={30} className={input} value={config.timeoutSeconds ?? 15} onChange={(e) => setConfig({ timeoutSeconds: Math.max(1, Math.min(30, Number(e.target.value) || 15)) })} /></Field>
+                </div>
+                {["POST", "PATCH"].includes(config.method ?? "POST") ? (
+                  <label className="flex items-start gap-2 text-[11px] text-[#334155]">
+                    <input type="checkbox" className="mt-0.5" checked={config.retrySafe === true} onChange={(e) => setConfig({ retrySafe: e.target.checked })} />
+                    <span>This endpoint is safe to call twice (it honours the <code>Idempotency-Key</code> header we send). Lets the platform retry after a timeout; otherwise an unclear failure stops the run for a human to check.</span>
+                  </label>
+                ) : null}
+                <SecretChips names={secretNames} onCopy={(text) => void copy(text)} />
+                <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[10.5px] text-[#475569]">A 2xx answer succeeds; any other status fails the step (5xx and 429 are retried when safe). Later steps can read the answer as <code>{`{{variables.${node.id}Output.json.field}}`}</code>. Test runs and the simulator never call the URL.</p>
+              </>
+            ) : null}
+
+            {node.actionId === "ai_generate" ? (
+              <>
+                <Field title="What should the AI do?" hint="Write it like an instruction. Put the facts it needs in the prompt with variables, e.g. {{lead.firstName}}, {{lead.notes}}. AI only sees what you put here.">
+                  <textarea rows={9} maxLength={4000} className="w-full resize-y rounded-lg border border-[#E2E8F0] px-3 py-2 font-mono text-[11px] focus:border-[#2563EB] focus:outline-none" value={config.prompt ?? ""} onChange={(e) => setConfig({ prompt: e.target.value })} />
+                </Field>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field title="Answer as">
+                    <select className={`${input} bg-white`} value={config.format ?? "text"} onChange={(e) => setConfig({ format: e.target.value })}>
+                      <option value="text">Text</option>
+                      <option value="json">Structured JSON (fields)</option>
+                    </select>
+                  </Field>
+                  <Field title="Max length (tokens)"><input type="number" min={50} max={800} className={input} value={config.maxTokens ?? 300} onChange={(e) => setConfig({ maxTokens: Math.max(50, Math.min(800, Number(e.target.value) || 300)) })} /></Field>
+                </div>
+                <p className="rounded-lg bg-[#F5F3FF] px-3 py-2 text-[10.5px] text-[#5B21B6]">Use the answer in later steps as <code>{"{{" + (config.saveAs || "ai") + ".text}}"}</code>{(config.format ?? "text") === "json" ? <> or a field such as <code>{"{{" + (config.saveAs || "ai") + ".json.score}}"}</code></> : null}. AI writes text only; it never sends or changes anything by itself. The lead details you put in the prompt are sent to OpenAI.</p>
+              </>
+            ) : null}
+
+            {node.actionId === "slack_message" ? (
+              <>
+                <Field title="Webhook URL" hint="Slack: Apps → Incoming Webhooks. The URL is a credential, so store it as a secret and reference it.">
+                  <input className={input} placeholder="{{secret.slack_webhook}}" value={config.webhookUrl ?? ""} onChange={(e) => setConfig({ webhookUrl: e.target.value })} />
+                </Field>
+                <Field title="Message" hint="Variables like {{lead.firstName}} are filled in. Slack formatting (*bold*, :emoji:) works.">
+                  <textarea rows={4} maxLength={3000} className="w-full resize-none rounded-lg border border-[#E2E8F0] px-3 py-2 text-[11.5px] focus:border-[#2563EB] focus:outline-none" value={config.text ?? ""} onChange={(e) => setConfig({ text: e.target.value })} />
+                </Field>
+                <Field title="Sender name (optional)"><input className={input} maxLength={80} value={config.username ?? ""} onChange={(e) => setConfig({ username: e.target.value })} /></Field>
+                <SecretChips names={secretNames} onCopy={(text) => void copy(text)} />
+                <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[10.5px] text-[#475569]">Test runs and the simulator never post to Slack. A post that times out is not repeated automatically, so Slack never gets a duplicate.</p>
+              </>
+            ) : null}
+
+            {node.actionId === "notify_user" ? (
+              <>
+                <Field title="Notify">
+                  <select className={`${input} bg-white`} value={config.audience ?? "owner"} onChange={(e) => setConfig({ audience: e.target.value })}>
+                    <option value="owner">The workflow owner</option>
+                    <option value="record_owner">The owner of the lead/contact (or the task assignee)</option>
+                    <option value="client_team">Everyone with access to this client</option>
+                    <option value="users">Selected team members</option>
+                  </select>
+                </Field>
+                {config.audience === "users" ? (
+                  <Field title="Team members">
+                    <div className="space-y-1.5 rounded-lg border border-[#E2E8F0] p-2">
+                      {resources.members.map((member) => {
+                        const ids: string[] = Array.isArray(config.userIds) ? config.userIds : [];
+                        return (
+                          <label key={member.id} className="flex items-center gap-2 text-[11.5px] text-[#334155]">
+                            <input type="checkbox" checked={ids.includes(member.id)} onChange={(e) => setConfig({ userIds: e.target.checked ? [...ids, member.id] : ids.filter((id) => id !== member.id) })} />
+                            {member.name}
+                          </label>
+                        );
+                      })}
+                      {!resources.members.length ? <p className="text-[10.5px] text-[#6B7A94]">No team members could be loaded.</p> : null}
+                    </div>
+                  </Field>
+                ) : null}
+                <Field title="Title"><input className={input} maxLength={200} value={config.title ?? ""} onChange={(e) => setConfig({ title: e.target.value })} /></Field>
+                <Field title="Message"><textarea rows={3} maxLength={1000} className="w-full resize-none rounded-lg border border-[#E2E8F0] px-3 py-2 text-[11.5px] focus:border-[#2563EB] focus:outline-none" value={config.message ?? ""} onChange={(e) => setConfig({ message: e.target.value })} /></Field>
+                <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[10.5px] text-[#475569]">Appears in the notification bell of each person. Only current members of this company are notified, and a re-delivered step never notifies twice.</p>
               </>
             ) : null}
 
@@ -356,7 +591,48 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
               </>
             ) : null}
 
-            {node.actionId === "filter_condition" || node.actionId === "if_else" ? (
+            {(node.actionId === "filter_condition" || node.actionId === "if_else") ? (
+              <button type="button" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#334155] hover:bg-[#F8FAFC]" onClick={() => Array.isArray(config.conditions)
+                ? setConfig({ field: config.conditions[0]?.field ?? "", operator: config.conditions[0]?.operator ?? "", value: config.conditions[0]?.value ?? "", conditions: undefined, combinator: undefined })
+                : setConfig({ conditions: [{ field: config.field ?? "", operator: config.operator || "equals", value: config.value ?? "" }], combinator: "all", field: undefined, operator: undefined, value: undefined })}>
+                {Array.isArray(config.conditions) ? "Use a single condition" : "Match several conditions (AND / OR)"}
+              </button>
+            ) : null}
+
+            {(node.actionId === "filter_condition" || node.actionId === "if_else") && Array.isArray(config.conditions) ? (
+              <>
+                <Field title="Pass when">
+                  <select className={`${input} bg-white`} value={config.combinator ?? "all"} onChange={(e) => setConfig({ combinator: e.target.value })}>
+                    <option value="all">ALL of the conditions are true (AND)</option>
+                    <option value="any">ANY of the conditions is true (OR)</option>
+                    <option value="none">NONE of the conditions is true (NOT)</option>
+                  </select>
+                </Field>
+                <datalist id="condition-fields">{CONDITION_FIELDS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}</datalist>
+                {(config.conditions as Array<Record<string, any>>).map((row, index) => {
+                  const update = (patch: Record<string, unknown>) => setConfig({ conditions: (config.conditions as Array<Record<string, any>>).map((r, i) => (i === index ? { ...r, ...patch } : r)) });
+                  return (
+                    <div key={index} className="space-y-1.5 rounded-lg border border-[#E2E8F0] p-2">
+                      <div className="flex gap-1.5">
+                        <input className={input} list="condition-fields" aria-label={`Condition ${index + 1} field`} placeholder="lead.source" value={row.field ?? ""} onChange={(e) => update({ field: e.target.value })} />
+                        <button type="button" aria-label={`Remove condition ${index + 1}`} className="grid size-9 shrink-0 place-items-center rounded-lg border border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]" onClick={() => setConfig({ conditions: (config.conditions as unknown[]).filter((_, i) => i !== index) })}>×</button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <select className={`${input} bg-white`} aria-label={`Condition ${index + 1} operator`} value={row.operator ?? ""} onChange={(e) => update({ operator: e.target.value })}>
+                          <option value="">Operator…</option>
+                          {OPERATORS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                        {row.operator && !["is_empty", "is_not_empty"].includes(row.operator) ? <input className={input} aria-label={`Condition ${index + 1} value`} placeholder="value" value={row.value ?? ""} onChange={(e) => update({ value: e.target.value })} /> : <span />}
+                      </div>
+                    </div>
+                  );
+                })}
+                <button type="button" disabled={config.conditions.length >= 10} className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-50" onClick={() => setConfig({ conditions: [...config.conditions, { field: "", operator: "equals", value: "" }] })}>Add condition</button>
+                <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[10.5px] text-[#475569]">{node.actionId === "filter_condition" ? "If the combined result is false the run stops here (still recorded as successful)." : "If the combined result is false the next step is skipped and the flow continues."}</p>
+              </>
+            ) : null}
+
+            {(node.actionId === "filter_condition" || node.actionId === "if_else") && !Array.isArray(config.conditions) ? (
               <>
                 <Field title="Field to check">
                   <select className={`${input} bg-white`} value={CONDITION_FIELDS.some((f) => f.value === config.field) || !config.field ? config.field ?? "" : "__custom"} onChange={(e) => setConfig({ field: e.target.value === "__custom" ? "trigger." : e.target.value })}>
@@ -440,6 +716,21 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
               <Field title="Stop operator"><select className={`${input} bg-white`} value={config.stopCondition?.operator ?? "equals"} onChange={(e) => setConfig({ stopCondition: { ...(config.stopCondition ?? {}), operator: e.target.value } })}>{OPERATORS.map((operator) => <option key={operator.value} value={operator.value}>{operator.label}</option>)}</select></Field>
               <Field title="Stop value"><input className={input} value={config.stopCondition?.value ?? ""} onChange={(e) => setConfig({ stopCondition: { ...(config.stopCondition ?? {}), value: e.target.value } })} /></Field>
             </> : null}
+
+            {node.type === "action" ? (
+              <details className="rounded-lg border border-[#E2E8F0] px-3 py-2">
+                <summary className="cursor-pointer text-[11.5px] font-semibold text-[#111C3A]">Advanced: what happens after this step</summary>
+                <div className="mt-2 space-y-3">
+                  <label className="flex items-start gap-2 text-[11px] text-[#334155]">
+                    <input type="checkbox" className="mt-0.5" checked={config.continueOnError === true} onChange={(e) => setConfig({ continueOnError: e.target.checked })} />
+                    <span>If this step fails, carry on with the next step. The failure still shows in the run. (A step whose outcome is unknown, such as a timed-out email, always stops for a person to check.)</span>
+                  </label>
+                  <Field title="Save the result as (optional)" hint="Later steps and If / Else conditions can read it: {{variables.NAME.state}} is success, skipped or failed.">
+                    <input className={input} maxLength={30} placeholder="e.g. wa" value={config.saveAs ?? ""} onChange={(e) => setConfig({ saveAs: e.target.value.replace(/[^A-Za-z0-9_]/g, "") })} />
+                  </Field>
+                </div>
+              </details>
+            ) : null}
           </div>
         </div>
       )}

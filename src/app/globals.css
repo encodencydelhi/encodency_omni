@@ -466,6 +466,146 @@
     }
   }
 
+  /* AI Assistant Robot Lottie-style Animations */
+  .ai-bot-lottie-float {
+    animation: ai-bot-float 3s ease-in-out infinite;
+  }
+
+  .ai-bot-lottie-head {
+    transform-origin: 105px 148px;
+    animation: ai-bot-head-tilt 3.2s ease-in-out infinite;
+  }
+
+  .ai-bot-lottie-antenna {
+    transform-origin: 105px 52px;
+    animation: ai-bot-antenna-sway 2.4s ease-in-out infinite;
+  }
+
+  .ai-bot-lottie-antenna-glow {
+    transform-origin: 105px 20px;
+    animation: ai-bot-antenna-pulse 1.8s ease-in-out infinite;
+  }
+
+  .ai-bot-lottie-arm-wave {
+    transform-origin: 146px 175px;
+    animation: ai-bot-arm-wave 1.6s ease-in-out infinite;
+  }
+
+  .ai-bot-lottie-hand-wave {
+    transform-origin: 193px 132px;
+    animation: ai-bot-hand-wave 0.8s ease-in-out infinite;
+  }
+
+  .ai-bot-lottie-eyes {
+    transform-origin: 105px 108px;
+    animation: ai-bot-eye-blink 4.2s ease-in-out infinite;
+  }
+
+  .ai-bot-lottie-badge {
+    transform-origin: 105px 185px;
+    animation: ai-bot-badge-pulse 2.6s ease-in-out infinite;
+  }
+
+  .group:hover .ai-bot-lottie-arm-wave {
+    animation-duration: 0.95s;
+  }
+
+  .group:hover .ai-bot-lottie-hand-wave {
+    animation-duration: 0.48s;
+  }
+
+  @keyframes ai-bot-float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+
+  @keyframes ai-bot-head-tilt {
+    0%,
+    100% {
+      transform: rotate(-2deg) translateY(0px);
+    }
+    50% {
+      transform: rotate(2.5deg) translateY(-2px);
+    }
+  }
+
+  @keyframes ai-bot-antenna-sway {
+    0%,
+    100% {
+      transform: rotate(-5deg);
+    }
+    50% {
+      transform: rotate(6deg);
+    }
+  }
+
+  @keyframes ai-bot-antenna-pulse {
+    0%,
+    100% {
+      transform: scale(0.9);
+      opacity: 0.35;
+    }
+    50% {
+      transform: scale(1.45);
+      opacity: 0.85;
+    }
+  }
+
+  @keyframes ai-bot-arm-wave {
+    0%,
+    100% {
+      transform: rotate(-6deg);
+    }
+    50% {
+      transform: rotate(12deg);
+    }
+  }
+
+  @keyframes ai-bot-hand-wave {
+    0%,
+    100% {
+      transform: rotate(-8deg);
+    }
+    50% {
+      transform: rotate(14deg);
+    }
+  }
+
+  @keyframes ai-bot-eye-blink {
+    0%,
+    44%,
+    50%,
+    94%,
+    100% {
+      transform: scaleY(1) translateX(0px);
+    }
+    47%,
+    97% {
+      transform: scaleY(0.12) translateX(0px);
+    }
+    20% {
+      transform: scaleY(1) translateX(1.5px);
+    }
+    70% {
+      transform: scaleY(1) translateX(-1.5px);
+    }
+  }
+
+  @keyframes ai-bot-badge-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
   /* Enforce minimum 12px font size in admin shell */
   .admin-shell [class*="text-[6"],
   .admin-shell [class*="text-[7"],

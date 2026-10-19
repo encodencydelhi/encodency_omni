@@ -162,11 +162,22 @@ export const TRIGGER_OPTIONS = [
   { id: "form_submission", label: "Form Submission" },
   { id: "inbound_webhook", label: "Inbound Webhook" },
   { id: "website_down", label: "Website Down" },
+  { id: "website_ssl_expiring", label: "SSL Expiring" },
+  { id: "lead_stage_changed", label: "Lead Stage Changed" },
+  { id: "schedule", label: "Schedule" },
+  { id: "task_overdue", label: "Task Overdue" },
+  { id: "lead_inactive", label: "Lead Inactive" },
+  { id: "new_deal", label: "New Deal" },
+  { id: "deal_stage_changed", label: "Deal Stage Changed" },
+  { id: "task_completed", label: "Task Completed" },
+  { id: "payment_failed", label: "Payment Failed" },
+  { id: "invoice_paid", label: "Invoice Paid" },
+  { id: "whatsapp_failed", label: "WhatsApp Failed" },
   { id: "manual", label: "Manual Trigger" },
 ] as const;
 
 export function channelLabel(channel: string): string {
-  const map: Record<string, string> = { whatsapp: "WhatsApp", email: "Email", meta: "Meta", system: "System" };
+  const map: Record<string, string> = { whatsapp: "WhatsApp", email: "Email", meta: "Meta", system: "System", slack: "Slack", webhook: "Webhook" };
   return map[channel] ?? channel;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowRight, CheckCircle2, ChevronLeft, ChevronRight, FileText, GitMerge, PauseCircle, Play, Search, Activity } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -29,6 +29,7 @@ export function WorkflowsPage({ days, onEdit, onCreate, onTest, onUseTemplate }:
   const { clientId } = useAutomationScope();
   const { Clients } = useAdminContext();
   const invalidate = useInvalidateAutomation();
+  const importRef = useRef<HTMLInputElement>(null);
   const { data: workflows = [], isLoading, error, refetch } = useWorkflows(clientId, days);
   const { data: templates = [] } = useAutomationTemplates(clientId);
 
@@ -84,6 +85,38 @@ export function WorkflowsPage({ days, onEdit, onCreate, onTest, onUseTemplate }:
     setSelected([]);
   };
 
+  /** One click: creates and publishes every recommended automation this client does not have yet. */
+  const activateRecommended = async () => {
+    if (!clientId) return;
+    setBulkBusy(true);
+    try {
+      const result = await automationApi.provisionRecommended(clientId);
+      invalidate();
+      if (result.created.length) toast.success(`${result.created.length} automation${result.created.length === 1 ? "" : "s"} switched on. ${result.skipped.length} you already had.`);
+      else toast.info("Everything recommended is already switched on.");
+      if (result.failed.length) toast.error(`${result.failed.length} could not be created: ${result.failed[0]!.reason}`);
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  /** Reads an exported workflow file and creates it as a DRAFT in the selected client. */
+  const importFile = async (file: File) => {
+    if (!clientId) return;
+    try {
+      if (file.size > 512_000) throw new Error("The file is larger than 512 KB.");
+      const document = JSON.parse(await file.text()) as Record<string, unknown>;
+      const result = await automationApi.importWorkflow(clientId, document);
+      invalidate();
+      toast.success(`Imported “${result.workflow.name}” as a draft. Review it before publishing.`);
+      if (result.warnings.length) toast.info(`${result.warnings.length} thing(s) to fix first: ${result.warnings.slice(0, 2).join(" ")}${result.warnings.length > 2 ? " …" : ""}`, { duration: 12000 });
+    } catch (error) {
+      toast.error(error instanceof SyntaxError ? "That file is not valid JSON." : errorMessage(error));
+    }
+  };
+
   const clientNameOf = (id: string) => Clients.find((c) => c.id === id)?.name ?? "";
 
   return (
@@ -107,6 +140,9 @@ export function WorkflowsPage({ days, onEdit, onCreate, onTest, onUseTemplate }:
             <select aria-label="Sort by" className={select} value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}>
               {SORTS.map((s) => <option key={s.value} value={s.value}>Sort: {s.label}</option>)}
             </select>
+            <input ref={importRef} type="file" accept="application/json,.json" className="hidden" aria-label="Import workflow file" onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void importFile(file); }} />
+            <button type="button" disabled={!clientId || bulkBusy} onClick={() => void activateRecommended()} className="flex h-8 items-center gap-1 rounded-md border border-[#BBF7D0] bg-emerald-50/60 px-3 text-[12px] font-medium text-[#047857] hover:bg-emerald-50 disabled:opacity-50">Activate recommended</button>
+            <button type="button" disabled={!clientId} onClick={() => importRef.current?.click()} className="flex h-8 items-center gap-1 rounded-md border border-[#E2E8F0] bg-white px-3 text-[12px] font-medium text-[#334155] hover:bg-[#F8FAFC] disabled:opacity-50">Import</button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button type="button" disabled={!selected.length || bulkBusy} className="flex h-8 items-center gap-1 rounded-md border border-[#BFDBFE] bg-blue-50/50 px-3 text-[12px] font-medium text-[#2563EB] hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50">

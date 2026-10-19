@@ -1,5 +1,5 @@
 import React from "react";
-import { Globe2 } from "lucide-react";
+import { Cog, Globe2, Mail, Webhook } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 export type ChannelLogoName =
@@ -16,6 +16,10 @@ export type ChannelLogoName =
   | "X"
   | "Website"
   | "Search Console"
+  | "Email"
+  | "Slack"
+  | "Webhook"
+  | "System"
   | string;
 
 function GoogleIcon() {
@@ -142,6 +146,17 @@ function FacebookIcon() {
   );
 }
 
+function SlackIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-full">
+      <path fill="#E01E5A" d="M5.04 15.16a2.52 2.52 0 1 1-2.52-2.52h2.52v2.52zm1.27 0a2.52 2.52 0 0 1 5.04 0v6.32a2.52 2.52 0 1 1-5.04 0v-6.32z" />
+      <path fill="#36C5F0" d="M8.83 5.04a2.52 2.52 0 1 1 2.52-2.52v2.52H8.83zm0 1.27a2.52 2.52 0 0 1 0 5.04H2.52a2.52 2.52 0 1 1 0-5.04h6.31z" />
+      <path fill="#2EB67D" d="M18.96 8.83a2.52 2.52 0 1 1 2.52 2.52h-2.52V8.83zm-1.27 0a2.52 2.52 0 0 1-5.04 0V2.52a2.52 2.52 0 1 1 5.04 0v6.31z" />
+      <path fill="#ECB22E" d="M15.17 18.96a2.52 2.52 0 1 1-2.52 2.52v-2.52h2.52zm0-1.27a2.52 2.52 0 0 1 0-5.04h6.31a2.52 2.52 0 1 1 0 5.04h-6.31z" />
+    </svg>
+  );
+}
+
 function SearchConsoleIcon() {
   return (
     <svg viewBox="0 0 24 24" className="size-full">
@@ -180,6 +195,14 @@ export function ChannelLogo({
     IconContent = <MetaIcon />;
   } else if (norm.includes("search console") || norm.includes("searchconsole")) {
     IconContent = <SearchConsoleIcon />;
+  } else if (norm.includes("slack")) {
+    IconContent = <SlackIcon />;
+  } else if (norm.includes("email") || norm.includes("mail") || norm.includes("smtp")) {
+    IconContent = <Mail className="size-full text-[#2563EB]" />;
+  } else if (norm.includes("webhook")) {
+    IconContent = <Webhook className="size-full text-[#7C3AED]" />;
+  } else if (norm === "system" || norm.includes("crm") || norm.includes("automation")) {
+    IconContent = <Cog className="size-full text-[#475569]" />;
   } else if (norm.includes("website") || norm.includes("web") || norm.includes("site")) {
     IconContent = <Globe2 className="size-full text-[#2563EB]" />;
   }

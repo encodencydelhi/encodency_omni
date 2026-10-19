@@ -12,6 +12,7 @@ import { AdminSidebar } from "./admin-sidebar";
 import { AdminTopbar } from "./admin-topbar";
 
 import { AdminBreadcrumb } from "./admin-breadcrumb";
+import { AiAssistantFloatingBot } from "@/features/assistant/ai-assistant-floating-bot";
 
 /**
  * Routes that take over the whole viewport: no admin sidebar, topbar or footer.
@@ -51,6 +52,7 @@ function Shell({ children }: { children: ReactNode }) {
         <main className="w-full flex-1 min-w-0 max-w-full px-4 py-5 sm:px-5 xl:px-6 pb-16">{children}</main>
         <AdminFooter />
       </div>
+      <AiAssistantFloatingBot />
     </div>
   );
 }

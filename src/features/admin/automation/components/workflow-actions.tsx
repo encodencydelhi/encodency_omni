@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, MoreHorizontal, Pause, Pencil, Play, Rocket, Trash2 } from "lucide-react";
+import { Copy, Download, MoreHorizontal, Pause, Pencil, Play, Rocket, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
@@ -10,6 +10,16 @@ import {
 import { automationApi } from "../data/automation-api";
 import { errorMessage, useInvalidateAutomation } from "../data/hooks";
 import type { AutomationWorkflow } from "../data/types";
+
+/** Saves a JSON document through the browser (no server round trip). */
+export function downloadJson(filename: string, value: unknown) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 /** Row menu used by the overview and workflows tables. */
 export function WorkflowActions({ workflow, onEdit, onTest }: { workflow: AutomationWorkflow; onEdit: (wf: AutomationWorkflow) => void; onTest: (wf: AutomationWorkflow) => void }) {
@@ -47,6 +57,11 @@ export function WorkflowActions({ workflow, onEdit, onTest }: { workflow: Automa
             <DropdownMenuItem onClick={() => void run(`“${workflow.name}” is now active`, () => automationApi.setWorkflowStatus(workflow.clientId, workflow.id, "Active"))}><Rocket /> Activate</DropdownMenuItem>
           )}
           <DropdownMenuItem onClick={() => void run(`Duplicated “${workflow.name}”`, () => automationApi.duplicateWorkflow(workflow.clientId, workflow.id))}><Copy /> Duplicate</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => void run(`Exported “${workflow.name}”`, async () => {
+            const document = await automationApi.exportWorkflow(workflow.clientId, workflow.id);
+            downloadJson(`${workflow.name.replace(/[^\w-]+/g, "-").toLowerCase() || "workflow"}.workflow.json`, document);
+            if (document.warnings.length) toast.info(`${document.warnings.length} item(s) need attention after importing — see the “warnings” list in the file.`);
+          })}><Download /> Export JSON</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={() => setConfirmDelete(true)}><Trash2 /> Delete</DropdownMenuItem>
         </DropdownMenuContent>

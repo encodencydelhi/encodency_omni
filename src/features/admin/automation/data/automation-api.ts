@@ -118,7 +118,28 @@ function query(values: Record<string, string | number | undefined>): Record<stri
   return Object.fromEntries(Object.entries(values).filter(([, v]) => v !== undefined && v !== "").map(([k, v]) => [k, String(v)]));
 }
 
+export interface WhatsAppCatalogItem {
+  name: string; category: "UTILITY" | "MARKETING"; language: string; purpose: string; header?: string; body: string; footer?: string;
+  buttons?: Array<{ type: "QUICK_REPLY" | "URL"; text: string; url?: string }>; samples: string[]; fills: string[]; usedBy: string[];
+  state: "missing" | "approved" | "registered" | "pending" | "rejected" | "other"; providerStatus: string | null; campaignName: string; copyText: string;
+}
+
+export interface AutomationSecretInfo { name: string; hint: string; updatedAt: string; createdAt: string }
+export interface WorkflowExportDocument { kind: string; schemaVersion: number; name: string; warnings: string[]; [key: string]: unknown }
+
 export const automationApi = {
+  /** Switches on every recommended automation this client does not have yet. */
+  provisionRecommended: (clientId: string) => req<{ created: string[]; skipped: string[]; failed: Array<{ id: string; reason: string }> }>("POST", "/automation/provision", clientId),
+
+  /* Secrets (write-only values; names and hints are readable) */
+  listSecrets: () => req<AutomationSecretInfo[]>("GET", "/automation/secrets", null),
+  putSecret: (name: string, value: string) => req<{ name: string; hint: string }>("PUT", `/automation/secrets/${encodeURIComponent(name)}`, null, { value }),
+  deleteSecret: (name: string) => req<void>("DELETE", `/automation/secrets/${encodeURIComponent(name)}`, null),
+
+  /* Import / export */
+  exportWorkflow: (clientId: string, id: string) => req<WorkflowExportDocument>("GET", `/automation/workflows/${encodeURIComponent(id)}/export`, clientId),
+  importWorkflow: (clientId: string, document: Record<string, unknown>) => req<{ workflow: AutomationWorkflow; warnings: string[] }>("POST", "/automation/workflows/import", clientId, { document }),
+
   /* Workflows */
   listWorkflows: (clientId: ClientScope, days = 30) => req<AutomationWorkflow[]>("GET", "/automation/workflows", clientId, undefined, query({ days })),
   getWorkflow: (clientId: string, id: string) => req<AutomationWorkflow>("GET", `/automation/workflows/${encodeURIComponent(id)}`, clientId),
@@ -162,7 +183,8 @@ export const automationApi = {
 
   /* Templates */
   templates: (clientId: ClientScope) => req<AutomationTemplate[]>("GET", "/automation/templates", clientId),
-  useTemplate: (clientId: string, templateId: string) => req<AutomationWorkflow>("POST", `/automation/templates/${encodeURIComponent(templateId)}/use`, clientId),
+  whatsappCatalog: (clientId: string) => req<{ items: WhatsAppCatalogItem[] }>("GET", "/automation/whatsapp-templates/catalog", clientId),
+  useTemplate: (clientId: string, templateId: string) => req<AutomationWorkflow & { setupNotes?: string[] }>("POST", `/automation/templates/${encodeURIComponent(templateId)}/use`, clientId),
 
   /* Settings (company-wide) */
   getSettings: () => req<AutomationSettingsState>("GET", "/automation/settings", null),
