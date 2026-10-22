@@ -22,6 +22,8 @@ import { useWebsiteWorkspace } from "../website-workspace";
 import { useKeywordResearch, useRankTracking } from "../../data/hooks";
 import { downloadFile, toCsv } from "../../data/selectors";
 import type { KeywordResearchData, RankTrackingData } from "../../data/types";
+import { PeriodPicker, QueryInsight, periodLabel, useSearchPeriod } from "../search-console-shared";
+import { SheetsExportButton } from "../google-sheets-export";
 import {
   DetailMetric,
   MetricGrid,
@@ -40,7 +42,7 @@ type MovementFilter = "all" | "improved" | "declined" | "unchanged" | "missing";
 type PositionFilter = "all" | "top3" | "top10" | "top20" | "beyond20";
 type SortKey = "current" | "previous" | "movement" | "clicks" | "impressions" | "ctr";
 
-type RankRow = RankTrackingData & {
+type RankRow = Omit<RankTrackingData, "clicks" | "impressions" | "ctr"> & {
   clicks: number | null;
   impressions: number | null;
   ctr: number | null;
@@ -70,9 +72,9 @@ function joinMetrics(rankData: RankTrackingData[], keywordData: KeywordResearchD
     const metric = metrics.get(row.keyword.toLowerCase());
     return {
       ...row,
-      clicks: metric?.clicks ?? null,
-      impressions: metric?.impressions ?? null,
-      ctr: metric?.ctr ?? null,
+      clicks: row.clicks ?? metric?.clicks ?? null,
+      impressions: row.impressions ?? metric?.impressions ?? null,
+      ctr: row.ctr ?? metric?.ctr ?? null,
       lastDataDate: row.history.at(-1)?.date ?? null,
     };
   });
@@ -80,8 +82,9 @@ function joinMetrics(rankData: RankTrackingData[], keywordData: KeywordResearchD
 
 export function WebsiteRankTrackingPage() {
   const { clientId } = useWebsiteWorkspace();
-  const rankQuery = useRankTracking(clientId);
-  const keywordQuery = useKeywordResearch(clientId);
+  const [period, setPeriod] = useSearchPeriod();
+  const rankQuery = useRankTracking(clientId, true, period);
+  const keywordQuery = useKeywordResearch(clientId, true, period);
   const rowsAll = useMemo(() => joinMetrics(rankQuery.data ?? [], keywordQuery.data ?? []), [rankQuery.data, keywordQuery.data]);
 
   const [search, setSearch] = useState("");
@@ -114,8 +117,7 @@ export function WebsiteRankTrackingPage() {
       { key: "clicks", header: "Clicks", align: "right", sortValue: (row) => row.clicks ?? -1, cell: (row) => formatNumber(row.clicks) },
       { key: "impressions", header: "Impressions", align: "right", sortValue: (row) => row.impressions ?? -1, cell: (row) => formatNumber(row.impressions) },
       { key: "ctr", header: "CTR", align: "right", sortValue: (row) => row.ctr ?? -1, cell: (row) => formatPct(row.ctr) },
-      { key: "page", header: "Associated page", hideOnMobile: true, cell: (row) => (row.url ? <PathLabel url={row.url} /> : <UnavailableText>Not available</UnavailableText>) },
-      { key: "last", header: "Last data date", hideOnMobile: true, cell: (row) => row.lastDataDate ?? <UnavailableText>Not available</UnavailableText> },
+      { key: "page", header: "Landing page", hideOnMobile: true, cell: (row) => (row.url ? <PathLabel url={row.url} /> : <UnavailableText>Not measured</UnavailableText>) },
     ],
     [],
   );
@@ -132,9 +134,9 @@ export function WebsiteRankTrackingPage() {
 
   const handleExport = () => {
     downloadFile(
-      `rank-tracking-${new Date().toISOString().split("T")[0]}.csv`,
+      `rank-tracking-${period}-${new Date().toISOString().split("T")[0]}.csv`,
       toCsv(
-        ["Keyword", "Current position", "Previous position", "Movement", "Clicks", "Impressions", "CTR", "Associated page", "Last data date"],
+        ["Keyword", "Current position", "Previous position", "Movement", "Clicks", "Impressions", "CTR", "Landing page"],
         filtered.map((row) => [
           row.keyword,
           row.currentPosition,
@@ -144,7 +146,6 @@ export function WebsiteRankTrackingPage() {
           row.impressions ?? "",
           row.ctr ?? "",
           row.url ?? "",
-          row.lastDataDate ?? "",
         ]),
       ),
     );
@@ -177,15 +178,17 @@ export function WebsiteRankTrackingPage() {
         subtitle="Monitor Google Search Console query positions and period-over-period changes."
         actions={
           <>
+            <PeriodPicker value={period} onChange={setPeriod} />
             <WButton size="sm" icon={RefreshCw} onClick={() => void rankQuery.refetch()}>
               Refresh
             </WButton>
             <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
               Export
             </WButton>
+            <SheetsExportButton clientId={clientId} dataset="search" period={period} />
           </>
         }
-        note="Ranking movement uses the correct direction: lower numerical position is better. Movement is counted only when both current and previous positions exist."
+        note={`Positions are Google Search Console averages for the last ${periodLabel(period)}, compared with the same length of time just before it (no comparison for 12 and 16 months: Google keeps 16 months). Lower is better; movement is counted only when both positions exist.`}
       />
 
       <MetricGrid
@@ -262,12 +265,12 @@ export function WebsiteRankTrackingPage() {
         <Pagination page={pagination.page} pageSize={pagination.pageSize} total={sorted.length} onPageChange={pagination.setPage} onPageSizeChange={pagination.setPageSize} />
       </Card>
 
-      <RankDrawer row={selected} onClose={() => setSelected(null)} />
+      <RankDrawer clientId={clientId} period={period} row={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
 
-function RankDrawer({ row, onClose }: { row: RankRow | null; onClose: () => void }) {
+function RankDrawer({ clientId, period, row, onClose }: { clientId: string; period: ReturnType<typeof useSearchPeriod>[0]; row: RankRow | null; onClose: () => void }) {
   const movement = row ? getMovement(row.currentPosition, row.previousPosition) : null;
   return (
     <Sheet open={Boolean(row)} onOpenChange={(open) => (open ? undefined : onClose())}>
@@ -288,26 +291,9 @@ function RankDrawer({ row, onClose }: { row: RankRow | null; onClose: () => void
                 <DetailMetric label="CTR" value={formatPct(row.ctr)} />
               </div>
               <dl className="divide-y divide-[#F2F5FA] rounded-lg border border-[#E6EBF4] px-3">
-                <KeyValue label="Associated page">{row.url ? <PathLabel url={row.url} /> : "Not available"}</KeyValue>
-                <KeyValue label="Last data date">{row.lastDataDate ?? "Not available"}</KeyValue>
-                <KeyValue label="Click/impression change">Not available in current response</KeyValue>
+                <KeyValue label="Landing page">{row.url ? <PathLabel url={row.url} /> : "Not measured"}</KeyValue>
               </dl>
-              <div className="rounded-lg border border-[#E6EBF4] p-3">
-                <p className="text-[11px] font-semibold capitalize text-[#6B7A94]">Historical data</p>
-                {row.history.length ? (
-                  <p className="mt-1 text-[12px] text-[#4A5A73]">
-                    {row.history.length} historical position snapshot{row.history.length === 1 ? "" : "s"} are available for this keyword.
-                  </p>
-                ) : (
-                  <p className="mt-1 text-[12px] text-[#4A5A73]">No comparable historical rank snapshots are available for this keyword.</p>
-                )}
-              </div>
-              <div className="rounded-lg bg-[#F7F9FC] p-3">
-                <p className="text-[11px] font-semibold capitalize text-[#6B7A94]">Optimization opportunities</p>
-                <p className="mt-1 text-[12px] text-[#4A5A73]">
-                  Prioritize queries with high impressions, weak CTR, or positions outside the top 10. AI insights appear here once integrated.
-                </p>
-              </div>
+              <QueryInsight clientId={clientId} query={row.keyword} period={period} />
             </div>
           ) : null}
         </SheetBody>

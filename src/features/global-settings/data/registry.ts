@@ -268,7 +268,7 @@ const COMMUNICATIONS: GlobalSettingDefinition[] = [
     build("communications", { key: `communications.legal.${id}`, name: LEGAL_DOCUMENTS[id].label, description: LEGAL_DOCUMENTS[id].description, group: "legal", valueType: "legal_document", defaultValue: defaultLegal(id), sensitivity: "moderate", keywords: ["legal", "policy", "terms"] }),
   ),
   // AI provider configuration
-  build("communications", { key: "ai.provider", name: "AI provider", description: "The AI provider used for generating recommendations and summaries. Supported: OpenAI, Anthropic, Gemini.", group: "platform_information", valueType: "select", options: opts(["none", "No AI provider"], ["openai", "OpenAI GPT-4"], ["anthropic", "Anthropic Claude"], ["gemini", "Google Gemini"]), defaultValue: "none", sensitivity: "high" }),
+  build("communications", { key: "ai.provider", name: "AI provider", description: "The AI provider used for generating recommendations and summaries. Supported: OpenAI, Anthropic, Gemini.", group: "ai", valueType: "select", options: opts(["none", "No AI provider"], ["openai", "OpenAI GPT-4"], ["anthropic", "Anthropic Claude"], ["gemini", "Google Gemini"]), defaultValue: "none", sensitivity: "high" }),
 ];
 
 const M = (key: string) => `maintenance.${key}`;

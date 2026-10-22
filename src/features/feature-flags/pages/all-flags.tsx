@@ -15,7 +15,7 @@ import { useDebouncedText, useUrlParams } from "@/features/companies/hooks/use-u
 import { MiniTable } from "@/features/plans-subscriptions/components/mini-table";
 import { cn } from "@/lib/utils/cn";
 import { CreateFlagWizard } from "../components/create-flag-wizard";
-import { DemoTag, LifecycleBadge, ProtectionBadge, RolloutCell, StateBadge } from "../components/badges";
+import { DemoTag, EnforcementBadge, LifecycleBadge, ProtectionBadge, RolloutCell, StateBadge } from "../components/badges";
 import { EnvironmentSwitch, useEnvironment } from "../components/environment";
 import { FlagPreviewDrawer } from "../components/flag-preview-drawer";
 import { FlagsError } from "../components/states";
@@ -138,7 +138,7 @@ export function AllFlagsPage() {
               />
             }
             columns={[
-              { id: "flag", header: "Feature", cell: (row) => <div className="min-w-0"><Link href={flagRoutes.flag(row.flag.key, environment)} onClick={(event) => event.stopPropagation()} className="block truncate font-medium text-foreground hover:text-primary hover:underline">{row.flag.name}</Link><p className="truncate font-mono text-2xs text-muted-foreground">{row.flag.key}</p></div> },
+              { id: "flag", header: "Feature", cell: (row) => <div className="min-w-0"><Link href={flagRoutes.flag(row.flag.key, environment)} onClick={(event) => event.stopPropagation()} className="block truncate font-medium text-foreground hover:text-primary hover:underline">{row.flag.name}</Link><p className="flex items-center gap-1.5 truncate font-mono text-2xs text-muted-foreground">{row.flag.key}<EnforcementBadge enforcement={row.enforcement} /></p></div> },
               { id: "category", header: "Category", hideBelow: "lg", cell: (row) => <span className="whitespace-nowrap">{row.flag.category}</span> },
               { id: "type", header: "Type", hideBelow: "lg", cell: (row) => <span className="whitespace-nowrap">{FLAG_TYPE[row.flag.type].label.replace(" Flag", "")}</span> },
               { id: "lifecycle", header: "Lifecycle", hideBelow: "md", cell: (row) => <div className="flex flex-wrap items-center gap-1"><LifecycleBadge status={row.flag.lifecycle} />{row.flag.protection !== "standard" ? <ProtectionBadge level={row.flag.protection} /> : null}</div> },

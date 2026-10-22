@@ -11,13 +11,14 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { ErrorState } from "@/components/shared/error-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { PreviewBanner } from "@/components/shared/preview-banner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
-import { DEMO_DATA_LABEL, DEMO_DATA_NOTICE, ENVIRONMENT_OPTIONS, RANGE_OPTIONS, WEBHOOK_ROUTES, WEBHOOK_TABS } from "../data/config";
+import { DEMO_DATA_NOTICE, ENVIRONMENT_OPTIONS, RANGE_OPTIONS, WEBHOOK_ROUTES, WEBHOOK_TABS } from "../data/config";
 import { freshness } from "../data/selectors";
 import type { WebhookEnvironment, WebhookTimeRange } from "../data/types";
 import { PageSkeleton, Timestamp } from "./kit";
@@ -58,12 +59,8 @@ function ContextBar() {
     <div className="rounded-sm border border-border bg-card px-3.5 py-2.5 shadow-xs">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <Badge tone="brand">
-            {snapshot?.evidence === "backend_record" ? "Live Webhook Data" : DEMO_DATA_LABEL}
-          </Badge>
-          <Badge tone={snapshot?.evidence === "backend_record" ? "success" : "neutral"}>
-            {snapshot?.evidence === "backend_record" ? "Real Ingestion & Delivery Connected" : DEMO_DATA_NOTICE}
-          </Badge>
+          <Badge tone="warning">Preview</Badge>
+          <Badge tone="neutral">{DEMO_DATA_NOTICE}</Badge>
           {fresh ? (
             <span className="inline-flex flex-wrap items-center gap-1.5 text-2xs text-muted-foreground">
               Last recorded event
@@ -112,7 +109,7 @@ function ContextBar() {
               />
             </label>
           ) : null}
-          <Button variant="ghost" size="icon-sm" aria-label="Refresh demo data" onClick={refetch}>
+          <Button variant="ghost" size="icon-sm" aria-label="Refresh" onClick={refetch}>
             <RefreshCwIcon className={cn(isFetching && "animate-spin")} />
           </Button>
         </div>
@@ -178,6 +175,11 @@ export function WebhooksShell({ children }: { children: ReactNode }) {
     <WebhooksProvider>
       <div className="space-y-1">
         <ModuleHeader />
+        <PreviewBanner module="Webhooks">
+          Endpoints, subscriptions and settings you change here are saved, but nothing is sent or received. Incoming
+          webhooks are not accepted, outgoing events are not delivered, and retries do not run. The deliveries, attempts
+          and incoming events listed are sample records.
+        </PreviewBanner>
         <ContextBar />
         <ModuleTabs />
         <Gate>{children}</Gate>

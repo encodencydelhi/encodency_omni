@@ -45,12 +45,12 @@ export const MEDIA_LIMITS = {
     maxDimension: 4096,
   },
   video: {
-    maxBytes: 50 * 1024 * 1024, // 50 MB
+    maxBytes: 100 * 1024 * 1024, // Cloudinary regular signed-upload ceiling
     mimeTypes: ["video/mp4", "video/quicktime"],
     minDimension: 128,
     maxDimension: 4096,
     minDurationMs: 1000,
-    maxDurationMs: 120000,
+    maxDurationMs: 180000,
   },
 } as const;
 

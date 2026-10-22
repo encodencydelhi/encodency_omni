@@ -136,6 +136,41 @@ describe("videos, uploads, publishing", () => {
   });
 });
 
+describe("captions and channel branding", () => {
+  it("lists, uploads, updates and deletes caption tracks through the video routes", async () => {
+    const file = new Blob(["1\n00:00:00,000 --> 00:00:01,000\nHello"], { type: "application/x-subrip" }) as File;
+    await youtubeApi.captions(SCOPE, "abcdefghijk");
+    await youtubeApi.uploadCaption(SCOPE, "abcdefghijk", file, { language: "en", name: "English", isDraft: true });
+    await youtubeApi.replaceCaption(SCOPE, "abcdefghijk", "caption.1", file, false);
+    await youtubeApi.deleteCaption(SCOPE, "abcdefghijk", "caption.1");
+
+    assert.deepEqual(stub.calls.map((call) => `${call.method} ${call.url.replace(BASE, "")}`), [
+      "GET /videos/abcdefghijk/captions",
+      "POST /videos/abcdefghijk/captions",
+      "PATCH /videos/abcdefghijk/captions/caption.1",
+      "DELETE /videos/abcdefghijk/captions/caption.1",
+    ]);
+    const upload = stub.calls[1]!.body as FormData;
+    assert.equal(upload.get("language"), "en");
+    assert.equal(upload.get("name"), "English");
+    assert.equal(upload.get("isDraft"), "true");
+    assert.ok(upload.get("file") instanceof Blob);
+    const replacement = stub.calls[2]!.body as FormData;
+    assert.equal(replacement.get("isDraft"), "false");
+    assert.ok(replacement.get("file") instanceof Blob);
+  });
+
+  it("updates channel fields and sets a banner from a media asset", async () => {
+    await youtubeApi.updateBranding(SCOPE, { description: "About", country: "IN", defaultLanguage: "hi", keywords: "agency marketing" });
+    await youtubeApi.setBanner(SCOPE, "55555555-5555-4555-8555-555555555555");
+    assert.equal(stub.calls[0]!.url, `${BASE}/channel/branding`);
+    assert.equal(stub.calls[0]!.method, "PATCH");
+    assert.deepEqual(stub.calls[0]!.body, { description: "About", country: "IN", defaultLanguage: "hi", keywords: "agency marketing" });
+    assert.equal(stub.calls[1]!.url, `${BASE}/channel/banner`);
+    assert.deepEqual(stub.calls[1]!.body, { assetId: "55555555-5555-4555-8555-555555555555" });
+  });
+});
+
 describe("playlists", () => {
   it("creates, updates, deletes, adds, moves and removes with the backend routes", async () => {
     await youtubeApi.createPlaylist(SCOPE, { title: "P", privacyStatus: "private" });

@@ -91,7 +91,7 @@ export function AutomationTab({ data }: { data: AnalyticsDashboardData["automati
 
         <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
           <h2 className="border-b border-[#E8EDF3] px-3 py-2.5 text-[12px] font-semibold">
-            Queue Health
+            Runs by State
           </h2>
           <div className="grid grid-cols-2 gap-2 p-4">
             {data.queues.map((q) => (

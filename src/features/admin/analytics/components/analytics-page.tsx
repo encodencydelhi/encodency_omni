@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BarChart3, Radio, Megaphone, Search, Target, Bot } from "lucide-react";
+import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils/cn";
 import type { AnalyticsDashboardData } from "../data/analytics-data";
 import { useAnalyticsDashboard } from "../hooks/use-analytics";
@@ -71,7 +72,11 @@ const emptyAnalyticsData: AnalyticsDashboardData = {
 
 export function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
-  const { data: liveData, isLoading } = useAnalyticsDashboard();
+  const { data: liveData, isLoading, error, refetch } = useAnalyticsDashboard();
+
+  if (error) {
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
+  }
 
   if (isLoading || !liveData) {
     return (

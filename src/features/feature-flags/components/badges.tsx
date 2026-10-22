@@ -12,6 +12,16 @@ export function DemoTag({ children = "Demo Data" }: { children?: ReactNode }) {
   return <span className="inline-flex items-center gap-1 rounded-sm border border-border-strong bg-neutral-subtle px-1.5 py-px text-[11px] font-medium text-neutral">{children}</span>;
 }
 
+/** Operational flags are read by the product at a backend boundary; the rest are stored and audited but not read by anything. */
+export function EnforcementBadge({ enforcement }: { enforcement?: { enforced: boolean; capability: string | null; enforcedAt: string[] } }) {
+  if (!enforcement) return null;
+  return enforcement.enforced ? (
+    <Badge tone="success" title={`Enforced for ${enforcement.capability ?? "this capability"} at: ${enforcement.enforcedAt.join("; ")}`}>Enforced</Badge>
+  ) : (
+    <Badge tone="neutral" title="Saved, versioned and audited, but nothing in the product reads this flag yet.">Configuration only</Badge>
+  );
+}
+
 export const StateBadge = ({ state }: { state: OperationalState }) => (
   <Badge tone={OPERATIONAL_STATE[state].tone}>
     {state === "emergency_off" ? <SnowflakeIcon className="size-3" aria-hidden /> : null}

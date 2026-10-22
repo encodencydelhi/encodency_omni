@@ -79,7 +79,7 @@ export const MODULE_META: Record<ModuleKey, { label: string; href: string }> = {
   lead_capture: { label: "Lead Capture", href: "/admin/crm/leads" },
   reviews: { label: "Reviews", href: "/admin/google-business/reviews" },
   inbox: { label: "Inbox", href: "/admin/whatsapp" },
-  seo: { label: "SEO", href: "/admin/seo" },
+  seo: { label: "SEO", href: "/admin/website/seo" },
   website: { label: "Website", href: "/admin/website" },
   email: { label: "Email", href: "/admin/automation" },
 };

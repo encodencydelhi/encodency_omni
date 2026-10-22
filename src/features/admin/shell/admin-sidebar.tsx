@@ -162,7 +162,7 @@ export function AdminSidebar() {
                   ) : (
                     <Image
                       src={logo}
-                      alt={organization.name || "Namo Gange Trust"}
+                      alt={organization.name || "Company logo"}
                       width={140}
                       height={56}
                       priority

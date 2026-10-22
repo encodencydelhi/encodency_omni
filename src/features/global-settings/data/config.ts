@@ -163,6 +163,7 @@ export const SECTION_LAYOUT: Record<Exclude<SectionKey, "history">, readonly Gro
   ],
   communications: [
     { id: "contacts", title: "Official Contacts", description: "Platform-owned contact details. Support email and website come from General & Identity." },
+    { id: "ai", title: "AI Provider", description: "Which AI provider generates recommendations and summaries." },
   ],
   maintenance: [
     { id: "announcement", title: "Maintenance Announcement", description: "Information shown to the selected audience. It never marks the platform as unavailable." },

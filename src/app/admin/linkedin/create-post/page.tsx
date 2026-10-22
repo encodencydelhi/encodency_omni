@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, ArrowLeft, CalendarClock, CheckCircle2, FileText, ImageIcon, Loader2, Send, Video } from "lucide-react";
 import { toast } from "sonner";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
+import { FeatureGate } from "@/lib/feature-flags/feature-gate";
 import { draftsApi, type DraftRecord } from "@/features/admin/content/live/drafts-api";
 import { schedulingApi, describeScheduleError, describeScheduleWarning, type PublishTarget } from "@/features/admin/content/live/scheduling-api";
 import { useLinkedInOverview, linkedinProvider } from "@/features/admin/channels/live/linkedin-hooks";
@@ -36,7 +37,7 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "LinkedIn action failed.";
 }
 
-export default function LinkedInCreatePostPage() {
+function LinkedInCreatePost() {
   const router = useRouter();
   const { companyId, clientId, isReady } = useTenancyContext();
   const overviewQuery = useLinkedInOverview(companyId || "", clientId || "", isReady && Boolean(companyId) && Boolean(clientId));
@@ -244,4 +245,12 @@ function Row({ label, value }: { label: string; value: string }) {
 function StatusBox({ title, body, tone }: { title: string; body: string; tone: "amber" | "red" }) {
   const classes = tone === "red" ? "border-red-200 bg-red-50 text-red-800" : "border-amber-200 bg-amber-50 text-amber-800";
   return <div className={`rounded-sm border p-3 ${classes}`}><p className="text-xs font-bold">{title}</p><p className="mt-1 text-[11px] leading-5">{body}</p></div>;
+}
+
+export default function LinkedInCreatePostPage() {
+  return (
+    <FeatureGate flag="channels.linkedin_publishing">
+      <LinkedInCreatePost />
+    </FeatureGate>
+  );
 }

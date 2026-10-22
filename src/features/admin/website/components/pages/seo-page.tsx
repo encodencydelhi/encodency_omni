@@ -53,7 +53,7 @@ import {
   YAxis,
 } from "recharts";
 import { cn } from "@/lib/utils/cn";
-import { useWebsiteCapabilities, useWebsiteIssues, useWebsitePages, useWebsiteSeo } from "../../data/hooks";
+import { useSearchConsoleReport, useWebsiteCapabilities, useWebsiteIssues, useWebsitePages, useWebsiteSeo } from "../../data/hooks";
 import { evaluateFeature } from "../../data/capability-provider";
 import {
   categoryLabel,
@@ -70,7 +70,11 @@ import {
   sortIssues,
   toCsv,
 } from "../../data/selectors";
-import type { IssueRecord, PageRecord, SearchQueryRow, SitemapEntry } from "../../data/types";
+import type { IssueRecord, PageRecord, SearchConsoleData, SearchPeriod, SearchQueryRow, SitemapEntry } from "../../data/types";
+import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ApiError } from "@/types/api";
+import { PeriodPicker, QueryInsight, periodLabel, rangeText, useSearchPeriod } from "../search-console-shared";
+import { SheetsExportButton } from "../google-sheets-export";
 import {
   Card,
   Chip,
@@ -91,6 +95,7 @@ import { EmptyState, LockedState, QueryErrorState, SkeletonBlock, SkeletonStats,
 import { ScoreCell } from "./overview-page";
 import { useUrlState } from "../use-url-state";
 import { useWebsiteWorkspace } from "../website-workspace";
+import { BrandPresenceCard } from "../brand-presence-card";
 
 type SeoTab = "overview" | "issues" | "pages" | "links" | "duplicates" | "sitemap" | "robots" | "schema" | "search";
 
@@ -339,6 +344,7 @@ export function WebsiteSeoPage() {
                   onClick={() => setTab("issues")}
                 />
               </div>
+              <BrandPresenceCard clientId={clientId} />
             </div>
           ) : null}
 
@@ -377,10 +383,7 @@ export function WebsiteSeoPage() {
 
           {tab === "search" ? (
             searchFeature.available && seo.data.searchConsole ? (
-              <SearchConsoleTab
-                data={seo.data.searchConsole}
-                integration={capabilities.data?.integrations.searchConsole}
-              />
+              <SearchConsoleLive clientId={clientId} saved={seo.data.searchConsole} integration={capabilities.data?.integrations.searchConsole} />
             ) : (
               <Card title="Search performance" icon={Search}>
                 <LockedState
@@ -945,12 +948,67 @@ function QueryCopyButton({ text, label = "Copy" }: { text: string; label?: strin
   );
 }
 
-function SearchConsoleTab({
-  data,
+/**
+ * Live Search Console report for the chosen period. The copy saved with the last scan is shown only while the
+ * default 28-day report loads; another period is never filled with 28-day numbers.
+ */
+function SearchConsoleLive({
+  clientId,
+  saved,
   integration,
 }: {
-  data: NonNullable<NonNullable<ReturnType<typeof useWebsiteSeo>["data"]>["searchConsole"]>;
+  clientId: string;
+  saved: SearchConsoleData;
   integration?: { property: string | null; status: string; detail: string; lastSyncAt: string | null };
+}) {
+  const [period, setPeriod] = useSearchPeriod();
+  const report = useSearchConsoleReport(clientId, period);
+  const data = report.data?.period === period || (report.data && !report.data.period) ? report.data : period === "28d" ? saved : undefined;
+  if (report.error && !report.isFetching) {
+    return (
+      <Card title="Search performance" icon={Search} action={<PeriodPicker value={period} onChange={setPeriod} />}>
+        <QueryErrorState error={report.error} onRetry={() => void report.refetch()} />
+      </Card>
+    );
+  }
+  if (!data) return <SkeletonBlock lines={10} />;
+  return (
+    <SearchConsoleTab
+      clientId={clientId}
+      data={data}
+      integration={integration}
+      period={period}
+      onPeriodChange={setPeriod}
+      loading={report.isFetching || data !== report.data}
+      onRefresh={() =>
+        report.refresh.mutate(undefined, {
+          onSuccess: () => toast.success("Search Console data refreshed"),
+          onError: (err) => toast.error(ApiError.isApiError(err) ? err.message : "Could not refresh Search Console data"),
+        })
+      }
+      refreshing={report.refresh.isPending}
+    />
+  );
+}
+
+function SearchConsoleTab({
+  clientId,
+  data,
+  integration,
+  period,
+  onPeriodChange,
+  loading,
+  onRefresh,
+  refreshing,
+}: {
+  clientId: string;
+  data: SearchConsoleData;
+  integration?: { property: string | null; status: string; detail: string; lastSyncAt: string | null };
+  period: SearchPeriod;
+  onPeriodChange: (period: SearchPeriod) => void;
+  loading: boolean;
+  onRefresh: () => void;
+  refreshing: boolean;
 }) {
   const runtime = data as typeof data & { topQueries?: SearchQueryRow[]; topPages?: typeof data.pages };
   const totals = data.totals ?? { clicks: 0, impressions: 0, ctr: 0, position: 0 };
@@ -978,6 +1036,9 @@ function SearchConsoleTab({
   const [oppFilter, setOppFilter] = useState(false);
   const [sortField, setSortField] = useState<SortField>("clicks");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const [openQuery, setOpenQuery] = useState<string | null>(null);
+  const [allCountries, setAllCountries] = useState(false);
 
   // Devices & Countries metric switcher
   const [deviceMetric, setDeviceMetric] = useState<"clicks" | "impressions">("clicks");
@@ -1038,10 +1099,10 @@ function SearchConsoleTab({
 
   const handleExportCsv = () => {
     const csvContent = toCsv(
-      ["Search Query", "Clicks", "Impressions", "CTR (%)", "Average Position"],
-      queries.map((row) => [row.query, row.clicks, row.impressions, row.ctr, row.position]),
+      ["Search Query", "Clicks", "Impressions", "CTR (%)", "Average Position", "Previous Position", "Landing Page"],
+      queries.map((row) => [row.query, row.clicks, row.impressions, row.ctr, row.position, row.previousPosition ?? "", row.page ?? ""]),
     );
-    downloadFile("gsc-search-queries.csv", csvContent);
+    downloadFile(`gsc-search-queries-${period}.csv`, csvContent);
     toast.success("Queries exported to CSV");
   };
 
@@ -1068,9 +1129,9 @@ function SearchConsoleTab({
     );
   };
 
-  const lastSyncText = integration?.lastSyncAt
-    ? `Synced ${formatRelative(integration.lastSyncAt)}`
-    : "Verified GSC API data";
+  const lastSyncText = rangeText(data.range, data.fetchedAt) || (integration?.lastSyncAt ? `Synced ${formatRelative(integration.lastSyncAt)}` : "Verified GSC API data");
+  const compareSub = (fallback: string) =>
+    !data.period ? fallback : data.previous ? `vs previous ${periodLabel(period)}` : data.previousRange ? `No data in the previous ${periodLabel(period)}` : "No earlier period (Google keeps 16 months)";
 
   return (
     <div className="space-y-2">
@@ -1082,9 +1143,7 @@ function SearchConsoleTab({
           </Chip>
           <div className="flex items-center gap-1.5 text-[11.5px] text-[#6B7A94]">
             <span className="inline-block size-1 rounded-full bg-[#CBD5E1]" aria-hidden />
-            <span>Last 28 days</span>
-            <span className="inline-block size-1 rounded-full bg-[#CBD5E1]" aria-hidden />
-            <span className="font-medium text-[#4A5A73]">{lastSyncText}</span>
+            <span className="font-medium text-[#4A5A73]">{loading ? `Loading ${periodLabel(period)}…` : lastSyncText}</span>
             {integration?.property ? (
               <>
                 <span className="inline-block size-1 rounded-full bg-[#CBD5E1]" aria-hidden />
@@ -1094,10 +1153,15 @@ function SearchConsoleTab({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <PeriodPicker value={period} onChange={onPeriodChange} />
+          <WButton size="sm" icon={RefreshCw} onClick={onRefresh} disabled={refreshing}>
+            {refreshing ? "Refreshing…" : "Refresh"}
+          </WButton>
           <WButton size="sm" icon={Download} onClick={handleExportCsv}>
             Export CSV
           </WButton>
+          <SheetsExportButton clientId={clientId} dataset="search" period={period} />
         </div>
       </div>
 
@@ -1106,37 +1170,37 @@ function SearchConsoleTab({
         <StatTile
           label="Total Clicks"
           value={formatNumber(totals.clicks)}
-          delta={deltas.clicks !== undefined ? deltas.clicks : undefined}
+          delta={deltas.clicks ?? undefined}
           tone="info"
           icon={MousePointerClick}
-          sub={deltas.clicks !== undefined ? "vs previous 28 days" : "Organic search clicks"}
+          sub={compareSub("Organic search clicks")}
         />
         <StatTile
           label="Total Impressions"
           value={formatNumber(totals.impressions)}
-          delta={deltas.impressions !== undefined ? deltas.impressions : undefined}
+          delta={deltas.impressions ?? undefined}
           tone="violet"
           icon={Eye}
-          sub={deltas.impressions !== undefined ? "vs previous 28 days" : "Search result impressions"}
+          sub={compareSub("Search result impressions")}
         />
         <StatTile
           label="Average CTR"
           value={`${ctrPercent.toFixed(2)}%`}
-          delta={deltas.ctr !== undefined ? deltas.ctr : undefined}
+          delta={deltas.ctr ?? undefined}
           deltaSuffix="pp"
           tone="good"
           icon={Target}
-          sub={deltas.ctr !== undefined ? "vs previous 28 days" : "Clicks / impressions"}
+          sub={compareSub("Clicks / impressions")}
         />
         <StatTile
           label="Average Position"
           value={totals.position.toFixed(1)}
-          delta={deltas.position !== undefined ? deltas.position : undefined}
+          delta={deltas.position ?? undefined}
           inverseDelta
           deltaSuffix=""
           tone="warn"
           icon={TrendingUp}
-          sub={deltas.position !== undefined ? "vs previous 28 days" : "GSC mean rank (lower is better)"}
+          sub={compareSub("GSC mean rank (lower is better)")}
         />
       </div>
 
@@ -1144,7 +1208,7 @@ function SearchConsoleTab({
       <Card
         title="Search Performance Trends"
         icon={Search}
-        subtitle="Daily organic clicks and impressions over the last 28 days"
+        subtitle={`Daily organic clicks and impressions over the last ${periodLabel(period)}`}
         bodyClassName="p-3.5 pt-2"
         action={
           <div className="flex flex-wrap items-center gap-1.5" role="toolbar" aria-label="Chart metric views">
@@ -1438,12 +1502,13 @@ function SearchConsoleTab({
                 </tr>
               ) : (
                 paginatedQueries.map((row) => (
-                  <tr key={row.query} className="transition-colors hover:bg-[#F8FAFC]">
+                  <tr key={row.query} className="cursor-pointer transition-colors hover:bg-[#F8FAFC]" onClick={() => setOpenQuery(row.query)}>
                     <td className="px-3.5 py-2.5">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <span className="truncate font-medium text-[#111C3A]">{row.query}</span>
                         <QueryCopyButton text={row.query} label="Copy query" />
                       </div>
+                      {row.page ? <p className="mt-0.5 truncate font-mono text-[10px] text-[#94A3B8]" title={row.page}>{shortPath(row.page)}</p> : null}
                     </td>
                     <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-[#111C3A]">
                       {formatNumber(row.clicks)}
@@ -1588,14 +1653,14 @@ function SearchConsoleTab({
             const total = countries.reduce((sum, c) => sum + (c[countryMetric] || 0), 0) || 1;
             return (
               <div className="space-y-2">
-                {countries.map((c) => {
+                {[...countries].sort((a, b) => (b[countryMetric] || 0) - (a[countryMetric] || 0)).slice(0, allCountries ? undefined : 10).map((c) => {
                   const val = c[countryMetric] || 0;
                   const share = Math.round((val / total) * 100);
 
                   return (
                     <div key={c.country} className="flex items-center gap-3">
-                      <span className="w-28 shrink-0 truncate text-[11.5px] font-medium text-[#28354C]" title={c.country}>
-                        {c.country}
+                      <span className="w-28 shrink-0 truncate text-[11.5px] font-medium normal-case text-[#28354C]" title={c.countryName ?? c.country}>
+                        {c.countryName ?? c.country.toUpperCase()}
                       </span>
                       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#EDF1F7]">
                         <div
@@ -1610,13 +1675,40 @@ function SearchConsoleTab({
                     </div>
                   );
                 })}
+                {countries.length > 10 ? (
+                  <button type="button" onClick={() => setAllCountries((v) => !v)} className="text-[11px] font-medium text-[#2563EB] hover:underline">
+                    {allCountries ? "Show top 10" : `Show all ${countries.length} countries`}
+                  </button>
+                ) : null}
               </div>
             );
           })()}
         </Card>
       </div>
+
+      <Sheet open={Boolean(openQuery)} onOpenChange={(open) => (open ? undefined : setOpenQuery(null))}>
+        <SheetContent className="w-full max-w-xl border-[#E6EBF4] bg-white p-0 sm:max-w-xl">
+          <SheetHeader className="border-[#EEF2F8] px-5 py-4 pr-12">
+            <span className="text-[11px] font-semibold text-[#6B7A94]">Keyword · last {periodLabel(period)}</span>
+            <SheetTitle className="text-[15px] font-semibold text-[#111C3A]">{openQuery ?? "Keyword"}</SheetTitle>
+          </SheetHeader>
+          <SheetBody className="px-5 py-4">{openQuery ? <QueryInsight clientId={clientId} query={openQuery} period={period} /> : null}</SheetBody>
+          <SheetFooter className="border-t border-[#EEF2F8] px-5 py-3">
+            <WButton onClick={() => setOpenQuery(null)}>Close</WButton>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
+}
+
+function shortPath(url: string) {
+  try {
+    const u = new URL(url);
+    return u.pathname === "/" ? `${u.hostname.replace(/^www\./, "")} (home)` : u.pathname;
+  } catch {
+    return url;
+  }
 }
 
 

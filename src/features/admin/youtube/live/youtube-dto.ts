@@ -174,6 +174,32 @@ export interface YouTubeVideoUpdateInput {
   madeForKids?: boolean;
 }
 
+/* ------------------------------ captions ------------------------------ */
+
+export interface YouTubeCaptionDto {
+  id: string;
+  videoId: string;
+  language: string;
+  name: string | null;
+  trackKind: string | null;
+  audioTrackType: string | null;
+  isCc: boolean;
+  isDraft: boolean;
+  isAutoSynced: boolean;
+  status: string | null;
+  failureReason: string | null;
+  lastUpdated: string | null;
+}
+
+export interface YouTubeCaptionListResponse extends Envelope {
+  videoId: string;
+  items: YouTubeCaptionDto[];
+}
+
+export interface YouTubeCaptionResponse extends Envelope {
+  caption: YouTubeCaptionDto;
+}
+
 /* ------------------------------ uploads / thumbnail ------------------------------ */
 
 export type YouTubeUploadStatus = "QUEUED" | "UPLOADING" | "INTERRUPTED" | "UPLOADED" | "FAILED";

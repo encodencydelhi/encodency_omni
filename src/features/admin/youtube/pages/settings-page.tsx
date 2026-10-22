@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   CheckCircle2,
   Check,
   KeyRound,
   Link2,
+  ImageIcon,
   Minus,
   PlugZap,
   RefreshCw,
@@ -18,17 +20,22 @@ import { cn } from "@/lib/utils/cn";
 import { PageSkeleton } from "../components/states";
 import { LinkChannelDialog } from "../components/link-channel-dialog";
 import { SyncStatus } from "../components/workspace";
-import { Avatar, Badge, Button, Card, CardHeader, ConfirmDialog, DefinitionRow, InternalBadge, Notice, PageTitle, tdClass, thClass, yt } from "../components/ui";
+import { Avatar, Badge, Button, Card, CardHeader, ConfirmDialog, DefinitionRow, InternalBadge, Notice, PageTitle, Thumb, tdClass, thClass, yt } from "../components/ui";
 import { ROLE_CAPABILITIES, hasRbac, type RbacCapability } from "../lib/capabilities";
 import { GRANTED_INFO, GRANTED_KEYS, ytRoutes } from "../lib/constants";
 import { dateTime, relative } from "../lib/format";
 import { useYouTube } from "../store/youtube-store";
 import type { CompanySystemRole } from "@/types/domain/auth";
 import type { GrantedKey } from "../types";
+import { mediaApi } from "@/features/admin/content/live/media-api";
+import { youtubeApi } from "../live/youtube-api";
+import { youtubeKeys } from "@/lib/query/keys";
+import { describeYouTubeError } from "../live/youtube-errors";
 
 const SECTIONS: { id: string; label: string; icon: ComponentType<{ className?: string }> }[] = [
   { id: "connection", label: "Connected Channel", icon: PlugZap },
   { id: "permissions", label: "Permissions", icon: KeyRound },
+  { id: "branding", label: "Channel Branding", icon: ImageIcon },
   { id: "sync", label: "Sync", icon: RefreshCw },
   { id: "team", label: "Team Access", icon: UsersRound },
   { id: "danger", label: "Danger Zone", icon: AlertTriangle },
@@ -106,6 +113,8 @@ function Settings() {
           <ConnectionSection />
           <PermissionsSection />
 
+          <BrandingSection />
+
           <SyncSection />
           <TeamSection />
 
@@ -113,6 +122,105 @@ function Settings() {
         </div>
       </div>
     </div>
+  );
+}
+
+function BrandingSection() {
+  const { scope, channel, can } = useYouTube();
+  const queryClient = useQueryClient();
+  const [description, setDescription] = useState(channel.description);
+  const [country, setCountry] = useState(channel.country ?? "");
+  const [defaultLanguage, setDefaultLanguage] = useState(channel.defaultLanguage ?? "");
+  const [keywords, setKeywords] = useState(channel.keywords.join(" "));
+  const [bannerAssetId, setBannerAssetId] = useState("");
+  const [busy, setBusy] = useState<"details" | "banner" | null>(null);
+  const [message, setMessage] = useState<{ tone: "blue" | "red"; text: string } | null>(null);
+  const images = useQuery({
+    queryKey: scope ? ["youtube", scope.companyId, scope.clientId, "branding-images"] : ["youtube", "branding-images", "none"],
+    queryFn: () => mediaApi.list(scope!.companyId, scope!.clientId, { kind: "IMAGE", limit: 50 }),
+    enabled: scope !== null,
+    staleTime: 60_000,
+  });
+  const banners = (images.data?.items ?? []).filter((asset) => asset.bytes <= 6 * 1024 * 1024 && asset.width !== null && asset.height !== null && asset.width >= 2048 && asset.height >= 1152 && asset.width * 9 === asset.height * 16 && ["image/jpeg", "image/png"].includes(asset.mimeType));
+
+  useEffect(() => {
+    setDescription(channel.description);
+    setCountry(channel.country ?? "");
+    setDefaultLanguage(channel.defaultLanguage ?? "");
+    setKeywords(channel.keywords.join(" "));
+  }, [channel.description, channel.country, channel.defaultLanguage, channel.keywords]);
+
+  const refresh = async () => {
+    if (scope) await queryClient.invalidateQueries({ queryKey: youtubeKeys.channel(scope) });
+  };
+  const saveDetails = async () => {
+    if (!scope || busy) return;
+    setBusy("details");
+    setMessage(null);
+    try {
+      await youtubeApi.updateBranding(scope, { description, country: country || undefined, defaultLanguage: defaultLanguage || undefined, keywords });
+      await refresh();
+      setMessage({ tone: "blue", text: "Channel branding updated on YouTube." });
+    } catch (cause) {
+      setMessage({ tone: "red", text: describeYouTubeError(cause).message });
+    } finally {
+      setBusy(null);
+    }
+  };
+  const saveBanner = async () => {
+    if (!scope || !bannerAssetId || busy) return;
+    setBusy("banner");
+    setMessage(null);
+    try {
+      await youtubeApi.setBanner(scope, bannerAssetId);
+      await refresh();
+      setMessage({ tone: "blue", text: "Channel banner updated on YouTube." });
+    } catch (cause) {
+      setMessage({ tone: "red", text: describeYouTubeError(cause).message });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <Section id="branding" title="Channel Branding" icon={ImageIcon} description="Edit the branding fields that YouTube exposes through its public API.">
+      <div className="space-y-4">
+        {message && <Notice tone={message.tone} title={message.tone === "blue" ? "Saved" : "Update failed"}>{message.text}</Notice>}
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="md:col-span-2">
+            <span className="mb-1 block text-[12.5px] font-semibold text-[#24324F]">Description</span>
+            <textarea className={yt.textarea} rows={5} maxLength={1000} value={description} onChange={(event) => setDescription(event.target.value)} />
+          </label>
+          <label>
+            <span className="mb-1 block text-[12.5px] font-semibold text-[#24324F]">Country code</span>
+            <input className={yt.input} maxLength={2} value={country} onChange={(event) => setCountry(event.target.value.toUpperCase())} placeholder="IN" />
+          </label>
+          <label>
+            <span className="mb-1 block text-[12.5px] font-semibold text-[#24324F]">Default language</span>
+            <input className={yt.input} maxLength={35} value={defaultLanguage} onChange={(event) => setDefaultLanguage(event.target.value)} placeholder="en or hi" />
+          </label>
+          <label>
+            <span className="mb-1 block text-[12.5px] font-semibold text-[#24324F]">Keywords</span>
+            <input className={yt.input} maxLength={500} value={keywords} onChange={(event) => setKeywords(event.target.value)} placeholder={'marketing "digital agency"'} />
+          </label>
+        </div>
+        <Button size="sm" variant="primary" loading={busy === "details"} gate={can.canEditVideo} onClick={() => void saveDetails()}>Save Branding</Button>
+
+        <div className="border-t border-[#EEF1F5] pt-4">
+          <p className="text-[13px] font-semibold text-[#0F1B3D]">Channel banner</p>
+          <p className="mt-0.5 text-[12px] text-[#6B7890]">Choose a 16:9 PNG/JPEG from Media Library, at least 2048×1152 and at most 6 MB.</p>
+          {channel.bannerUrl && <Thumb src={channel.bannerUrl} className="mt-3 max-h-48 rounded-sm border border-[#E4E9F0]" sizes="720px" />}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <select className={cn(yt.input, "max-w-md")} value={bannerAssetId} onChange={(event) => setBannerAssetId(event.target.value)}>
+              <option value="">Select an eligible media image</option>
+              {banners.map((asset) => <option key={asset.id} value={asset.id}>{asset.format.toUpperCase()} · {asset.width}×{asset.height} · {(asset.bytes / 1024 / 1024).toFixed(1)} MB</option>)}
+            </select>
+            <Button size="sm" variant="secondary" loading={busy === "banner"} gate={can.canEditVideo} disabled={!bannerAssetId} disabledReason="Choose an eligible banner image" onClick={() => void saveBanner()}>Update Banner</Button>
+          </div>
+          {!images.isPending && banners.length === 0 && <p className="mt-2 text-[12px] text-[#B54708]">No eligible banner image is currently available in this Client&apos;s Media Library.</p>}
+        </div>
+      </div>
+    </Section>
   );
 }
 

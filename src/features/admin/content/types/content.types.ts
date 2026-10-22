@@ -318,29 +318,6 @@ export type ContentDraft = {
   createdBy: string;
 };
 
-/* ── Template ── */
-export type Template = {
-  id: string;
-  title: string;
-  category: string;
-  image: string;
-  platform: Platform;
-  ratio: MediaRatio;
-  isPro: boolean;
-};
-
-/* ── Idea ── */
-export type ContentIdea = {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  tag: string;
-  channels: Platform[];
-  contentType: ContentType;
-  suggestedCTA: string;
-};
-
 /* ── Approval Entry ── */
 export type ApprovalEntry = {
   id: string;

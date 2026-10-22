@@ -16,7 +16,7 @@ import { OverviewTab } from "../components/flag-tabs/overview-tab";
 import { RulesTab } from "../components/flag-tabs/rules-tab";
 import { SettingsTab } from "../components/flag-tabs/settings-tab";
 import { TargetingTab } from "../components/flag-tabs/targeting-tab";
-import { DemoTag, ImplementationBadge, LifecycleBadge, ProtectionBadge, StateBadge } from "../components/badges";
+import { DemoTag, EnforcementBadge, ImplementationBadge, LifecycleBadge, ProtectionBadge, StateBadge } from "../components/badges";
 import { EnvironmentSwitch, useEnvironment } from "../components/environment";
 import { FlagsError } from "../components/states";
 import { useFlagActions } from "../components/use-flag-actions";
@@ -59,6 +59,7 @@ export function FlagDetailPage({ flagKey }: { flagKey: string }) {
           meta={
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-2xs text-foreground">{flag.key}</span>
+              <EnforcementBadge enforcement={row.enforcement} />
               <StateBadge state={row.state} />
               <LifecycleBadge status={flag.lifecycle} />
               <ProtectionBadge level={flag.protection} />

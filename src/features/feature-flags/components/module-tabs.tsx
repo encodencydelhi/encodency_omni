@@ -44,6 +44,11 @@ export function ModuleFrame({ children }: { children: ReactNode }) {
           &ldquo;{invalid}&rdquo; is not an environment. Showing Production instead.
         </AlertBanner>
       ) : null}
+      <AlertBanner tone="info" title="Enforced flags and configuration-only flags">
+        A flag marked <strong>Enforced</strong> is checked by the backend before the feature runs, in the environment the backend is running in, so
+        changing it changes what companies can do. A flag marked <strong>Configuration only</strong> is saved, versioned and audited, but nothing in the
+        product reads it yet. Plan and subscription limits are enforced by billing, not by these flags.
+      </AlertBanner>
       {children}
     </div>
   );

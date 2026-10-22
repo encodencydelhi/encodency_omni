@@ -7,7 +7,6 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
-import { SelectField } from "./ui-fields";
 import { PlatformBadge } from "./ui-platform";
 import { draftsApi } from "../live/drafts-api";
 import { mediaApi } from "../live/media-api";
@@ -30,12 +29,14 @@ import {
 } from "../config/platform-config";
 import { clientsApi } from "@/features/clients/data/clients-api";
 import { ContentPreviewPanel } from "./ContentPreview";
+import { htmlToPlainText, plainTextToHtml } from "../lib/rich-text";
 import { ContentChecklist } from "./ContentChecklist";
 import { MasterContentEditor } from "./MasterContentEditor";
 import { ContentTypeSelectorInline } from "./ContentTypeSelector";
 import { PlatformOverrideEditor } from "./PlatformOverrideEditor";
 import { RatioSelector } from "./RatioSelector";
 import { ScheduleBuilder } from "./ScheduleBuilder";
+import { useFeature } from "@/lib/feature-flags/use-feature";
 import { ScheduledPostsPanel } from "./ScheduledPostsPanel";
 import { UTMBuilder } from "./UTMBuilder";
 import { PlatformValidationPanel } from "./PlatformValidation";
@@ -66,7 +67,14 @@ function variantsToPlatformMap(
   return map;
 }
 
-export function CreateContentTab() {
+/** Wording the Create tab starts with, e.g. from a template or an idea. */
+export interface CreateSeed {
+  caption: string;
+  hashtags: string[];
+  cta?: string;
+}
+
+export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
   /* ── State ── */
   const [channels, setChannels] = useState<Platform[]>(["instagram", "facebook", "linkedin"]);
   /* Default channels start selected, so their content types must exist too —
@@ -80,18 +88,18 @@ export function CreateContentTab() {
     return initial;
   });
   const [masterContent, setMasterContent] = useState<MasterContent>({
-    caption: "Small actions create a cleaner tomorrow.\n\nLet's work together for a healthier, greener and cleaner India.\n\n#CleanGanga #HealthyIndia #Sustainability #MokshaSewa",
-    headline: "CLEAN RIVERS BRIGHTER TOMORROW",
+    caption: seed?.caption ? plainTextToHtml(seed.caption) : "",
+    headline: "",
     description: "",
-    cta: "Learn More",
-    ctaUrl: "https://mokshasewa.org",
-    hashtags: ["#CleanGanga", "#HealthyIndia", "#Sustainability", "#MokshaSewa"],
-    mentions: ["@mokshasewa"],
+    cta: seed?.cta ?? "Learn More",
+    ctaUrl: "",
+    hashtags: seed?.hashtags ?? [],
+    mentions: [],
     media: [],
-    link: "https://mokshasewa.org",
-    location: "Varanasi, India",
+    link: "",
+    location: "",
     altText: "",
-    firstComment: "What small action will you take today?",
+    firstComment: "",
     language: "English",
     tone: "Positive",
   });
@@ -189,7 +197,7 @@ export function CreateContentTab() {
     async (file: File) => {
       if (!companyId || !clientId) return toast.error("Verified Company and Client context are required.");
       const isVideo = file.type.startsWith("video/");
-      const maxBytes = isVideo ? 50 * 1024 * 1024 : 8 * 1024 * 1024;
+      const maxBytes = isVideo ? 100 * 1024 * 1024 : 8 * 1024 * 1024;
       if (file.size > maxBytes) {
         return toast.error(`${file.name} is too large`, { description: isVideo ? "Videos must be 50 MB or less." : "Images must be 8 MB or less." });
       }
@@ -349,10 +357,27 @@ export function CreateContentTab() {
     return result;
   }, [companyId, clientId, masterContent, channels, platformOverrides, savedDraftId, currentRevision, savedAssetIds]);
 
+  /** Saves the draft, then asks an owner or admin to review it (the draft review flow; an approver is decided by role, not chosen here). */
+  const handleSendForReview = useCallback(async () => {
+    const saved = await handleSaveDraft();
+    if (!saved || !companyId || !clientId) return;
+    try {
+      await draftsApi.submitReview(companyId, clientId, saved.draftId, saved.revision);
+      toast.success("Sent for review", { description: "An owner or admin can approve it under Approvals." });
+    } catch (err) {
+      toast.error(ApiError.isApiError(err) ? err.message : "The draft could not be sent for review.");
+    }
+  }, [handleSaveDraft, companyId, clientId]);
+
   /* ── Derived ── */
-  const connectedPlatforms = useMemo(() => env.dataSource === "api"
-    ? getPublishablePlatforms(overviewQuery.data)
-    : ALL_PLATFORMS.filter(p => MOCK_CONNECTIONS[p].status === "connected"), [overviewQuery.data]);
+  const linkedinFeature = useFeature("channels.linkedin_publishing");
+  const linkedinOff = linkedinFeature.status === "disabled";
+  const connectedPlatforms = useMemo(() => {
+    const platforms = env.dataSource === "api"
+      ? getPublishablePlatforms(overviewQuery.data)
+      : ALL_PLATFORMS.filter(p => MOCK_CONNECTIONS[p].status === "connected");
+    return linkedinOff ? platforms.filter((platform) => platform !== "linkedin") : platforms;
+  }, [overviewQuery.data, linkedinOff]);
 
   useEffect(() => {
     if (channelAvailabilityLoading) return;
@@ -784,7 +809,6 @@ export function CreateContentTab() {
 
         {/* Approval */}
         <Card>
-          <SelectField label="Approver" value="Content Team" />
           <div className="mt-1.5 flex gap-1">
             <button
               onClick={handleSaveDraft}
@@ -794,7 +818,11 @@ export function CreateContentTab() {
               {isSavingDraft ? <Loader2 className="size-3 animate-spin" /> : null}
               {savedDraftId && currentRevision !== null ? `Save Draft (r${currentRevision})` : "Save Draft"}
             </button>
-            <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm bg-[#1769DF] text-[10.5px] font-semibold text-white hover:bg-[#1259BD]">
+            <button
+              onClick={() => void handleSendForReview()}
+              disabled={isSavingDraft}
+              className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm bg-[#1769DF] text-[10.5px] font-semibold text-white hover:bg-[#1259BD] disabled:opacity-60"
+            >
               Send for Review
             </button>
           </div>
@@ -803,7 +831,15 @@ export function CreateContentTab() {
 
       {/* ─── RIGHT: Preview + Validation + Checklist ─── */}
       <div className="space-y-2.5 xl:sticky xl:top-4">
-        <ContentPreviewPanel platform={previewPlatform} setPlatform={setPreviewPlatform} channels={channels} />
+        <ContentPreviewPanel
+          platform={previewPlatform}
+          setPlatform={setPreviewPlatform}
+          channels={channels}
+          caption={htmlToPlainText(platformOverrides[previewPlatform]?.caption || masterContent.caption || "")}
+          hashtags={masterContent.hashtags}
+          image={(masterContent.media ?? []).find((asset) => asset.type === "image")?.url ?? null}
+          accountName={clientOptions.find((client) => client.id === clientId)?.name}
+        />
 
         {/* Validation */}
         <PlatformValidationPanel
@@ -813,7 +849,7 @@ export function CreateContentTab() {
 
         <ContentChecklist
           checks={[
-            { label: "Client selected", done: true },
+            { label: "Client selected", done: Boolean(clientId) },
             { label: "Standalone Post (No Campaign)", done: true },
             { label: "Platforms selected", done: channels.length > 0 },
             { label: "Content types set", done: channels.every(p => !!contentTypes[p]) },

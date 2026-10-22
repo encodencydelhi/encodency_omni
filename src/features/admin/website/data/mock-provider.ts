@@ -22,6 +22,10 @@ import {
   ServiceUnavailableError,
   type AnalyticsData,
   type BacklinkData,
+  type CompetitorAiRun,
+  type SearchConsoleData,
+  type SearchQueryDetail,
+  type SheetsStatus,
   type CompetitorData,
   type CrawlLimits,
   type PageHistoryEntry,
@@ -189,6 +193,17 @@ export class MockWebsiteProvider implements WebsiteDataProvider {
     return this.dataset(clientId).seo;
   }
 
+  async getSearchConsole(clientId: string): Promise<SearchConsoleData> {
+    const seo = await this.getSeo(clientId);
+    if (!seo.searchConsole) throw new ServiceUnavailableError("Search Console", "Search Console is not connected in the sample data.");
+    return seo.searchConsole;
+  }
+  async getSearchQueryDetail(): Promise<SearchQueryDetail> { throw new ServiceUnavailableError("Search Console", "Use live API mode for per-keyword history."); }
+  async getSheets(): Promise<SheetsStatus> { return { serviceAccountEmail: null, connected: false, spreadsheetId: null, url: null, title: null, connectedAt: null, lastExport: null }; }
+  async connectSheets(): Promise<SheetsStatus> { throw new ServiceUnavailableError("Google Sheets", "Use live API mode to export to Google Sheets."); }
+  async disconnectSheets(): Promise<SheetsStatus> { throw new ServiceUnavailableError("Google Sheets", "Use live API mode to export to Google Sheets."); }
+  async exportToSheets(): Promise<SheetsStatus> { throw new ServiceUnavailableError("Google Sheets", "Use live API mode to export to Google Sheets."); }
+
   async getPerformance(clientId: string) {
     await delay();
     return this.dataset(clientId).performance;
@@ -228,6 +243,7 @@ export class MockWebsiteProvider implements WebsiteDataProvider {
   }
   async addCompetitor(): Promise<CompetitorData> { throw new ServiceUnavailableError("Competitors", "Use live API mode to manage competitors."); }
   async analyzeCompetitor(): Promise<CompetitorData> { throw new ServiceUnavailableError("Competitors", "Use live API mode to analyze competitors."); }
+  async analyzeCompetitorWithAi(): Promise<CompetitorAiRun> { throw new ServiceUnavailableError("Competitors", "Use live API mode for AI competitor analysis."); }
   async deleteCompetitor(): Promise<{ deleted: boolean }> { throw new ServiceUnavailableError("Competitors", "Use live API mode to archive competitors."); }
   async getTracking(): Promise<AnalyticsData & any> { throw new ServiceUnavailableError("Tracking", "Use live API mode to read persisted tracking events."); }
   async getTrackingSnippet(): Promise<any> { throw new ServiceUnavailableError("Tracking", "Use live API mode to manage tracking."); }
@@ -603,6 +619,24 @@ export class UnavailableWebsiteProvider implements WebsiteDataProvider {
     if (!guide) throw new Error(`No fix guide published for "${guideId}".`);
     return guide;
   }
+  async getSearchConsole(): Promise<SearchConsoleData> {
+    return this.fail("Search Console service");
+  }
+  async getSearchQueryDetail(): Promise<SearchQueryDetail> {
+    return this.fail("Search Console service");
+  }
+  async getSheets(): Promise<SheetsStatus> {
+    return this.fail("Google Sheets export");
+  }
+  async connectSheets(): Promise<SheetsStatus> {
+    return this.fail("Google Sheets export");
+  }
+  async disconnectSheets(): Promise<SheetsStatus> {
+    return this.fail("Google Sheets export");
+  }
+  async exportToSheets(): Promise<SheetsStatus> {
+    return this.fail("Google Sheets export");
+  }
   async getSeo(): Promise<SeoData> {
     return this.fail("SEO audit service");
   }
@@ -631,6 +665,9 @@ export class UnavailableWebsiteProvider implements WebsiteDataProvider {
     return this.fail("Competitor analysis service");
   }
   async analyzeCompetitor(): Promise<CompetitorData> {
+    return this.fail("Competitor analysis service");
+  }
+  async analyzeCompetitorWithAi(): Promise<CompetitorAiRun> {
     return this.fail("Competitor analysis service");
   }
   async deleteCompetitor(): Promise<{ deleted: boolean }> {

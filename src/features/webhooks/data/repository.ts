@@ -2,10 +2,11 @@
  * EnCodency OmniPlatform - Super Admin Webhooks Module
  * Repository seam.
  *
- * Connected to live backend authenticated webhook service (/api/v1/super-admin/webhooks)
- * with graceful in-memory fallback for offline test suites.
+ * Live mode reads and writes /api/v1/super-admin/webhooks and surfaces failures. The in-memory
+ * demo store is used only when the app runs in mock mode.
  */
 
+import { isMockMode } from "@/config/env";
 import * as store from "./mock/store";
 import { superAdminWebhooksApi } from "../live/super-admin-webhooks-api";
 import type {
@@ -44,17 +45,6 @@ export interface WebhooksRepository {
   resetDemo(environment: WebhookEnvironment): Promise<void>;
 }
 
-/**
- * The in-memory store stays as an offline/test-suite fallback, but a silent one
- * hides real backend failures from the operator (the UI then shows demo data
- * while the network tab shows a red request nobody noticed). Every fallback now
- * announces itself, including which operation fell back and why.
- */
-function fallback<T>(operation: string, error: unknown, run: () => T): T {
-  const reason = error instanceof Error ? error.message : String(error);
-  console.warn(`[webhooks] ${operation} failed, using local demo store instead: ${reason}`);
-  return run();
-}
 
 function toMutationResult<T>(res: unknown): MutationResult<T> {
   if (res && typeof res === "object" && "ok" in res) {
@@ -63,132 +53,58 @@ function toMutationResult<T>(res: unknown): MutationResult<T> {
   return { ok: true, data: res as T };
 }
 
-export const webhooksRepository: WebhooksRepository = {
-  getSnapshot: async (environment) => {
-    try {
-      return await superAdminWebhooksApi.getSnapshot(environment);
-    } catch (error) {
-      return fallback("getSnapshot", error, () => store.getSnapshot(environment));
-    }
-  },
-  getEndpoints: async (environment) => {
-    try {
-      return await superAdminWebhooksApi.getEndpoints(environment);
-    } catch (error) {
-      return fallback("getEndpoints", error, () => store.getSnapshot(environment).endpoints);
-    }
-  },
-  getDeliveries: async (environment) => {
-    try {
-      return await superAdminWebhooksApi.getDeliveries(environment);
-    } catch (error) {
-      return fallback("getDeliveries", error, () => store.getSnapshot(environment).deliveries);
-    }
-  },
-  getSubscriptions: async (environment) => {
-    try {
-      return await superAdminWebhooksApi.getSubscriptions(environment);
-    } catch (error) {
-      return fallback("getSubscriptions", error, () => store.getSnapshot(environment).subscriptions);
-    }
-  },
-  getIncomingEvents: async (environment) => {
-    try {
-      return await superAdminWebhooksApi.getIncomingEvents(environment);
-    } catch (error) {
-      return fallback("getIncomingEvents", error, () => store.getSnapshot(environment).incomingEvents);
-    }
-  },
-  getRecoveryRequests: async (environment) => {
-    try {
-      return await superAdminWebhooksApi.getRecoveryRequests(environment);
-    } catch (error) {
-      return fallback("getRecoveryRequests", error, () => store.getSnapshot(environment).recoveryRequests);
-    }
-  },
-  getActivity: async (environment) => {
-    try {
-      return await superAdminWebhooksApi.getActivity(environment);
-    } catch (error) {
-      return fallback("getActivity", error, () => store.getSnapshot(environment).activity);
-    }
-  },
-  getSettings: async (environment) => {
-    try {
-      return await superAdminWebhooksApi.getSettings(environment);
-    } catch (error) {
-      return fallback("getSettings", error, () => store.getSnapshot(environment).settings);
-    }
-  },
-  createEndpoint: async (environment, input) => {
-    try {
-      const res = await superAdminWebhooksApi.createEndpoint(environment, input);
-      return toMutationResult(res);
-    } catch (error) {
-      return fallback("createEndpoint", error, () => store.createEndpoint(environment, input));
-    }
-  },
-  updateEndpoint: async (environment, input) => {
-    try {
-      const res = await superAdminWebhooksApi.updateEndpoint(environment, input);
-      return toMutationResult(res);
-    } catch (error) {
-      return fallback("updateEndpoint", error, () => store.updateEndpoint(environment, input));
-    }
-  },
-  setEndpointState: async (environment, id, state, reason) => {
-    try {
-      const res = await superAdminWebhooksApi.setEndpointState(environment, id, state, reason);
-      return toMutationResult(res);
-    } catch (error) {
-      return fallback("setEndpointState", error, () => store.setEndpointState(environment, id, state, reason));
-    }
-  },
-  saveSubscriptions: async (environment, id, keys, reason) => {
-    try {
-      const res = await superAdminWebhooksApi.saveSubscriptions(environment, id, keys, reason);
-      return toMutationResult(res);
-    } catch (error) {
-      return fallback("saveSubscriptions", error, () => store.saveSubscriptions(environment, id, keys, reason));
-    }
-  },
-  requestSecretRotationReview: async (environment, id) => {
-    try {
-      const res = await superAdminWebhooksApi.requestSecretRotationReview(environment, id);
-      return toMutationResult(res);
-    } catch (error) {
-      return fallback("requestSecretRotationReview", error, () => store.requestSecretRotationReview(environment, id));
-    }
-  },
-  createRecoveryRequest: async (environment, input) => {
-    try {
-      const res = await superAdminWebhooksApi.createRecoveryRequest(environment, input);
-      return toMutationResult(res);
-    } catch (error) {
-      return fallback("createRecoveryRequest", error, () => store.createRecoveryRequest(environment, input));
-    }
-  },
-  updateRecoveryRequest: async (environment, id, state) => {
-    try {
-      const res = await superAdminWebhooksApi.updateRecoveryRequest(environment, id, state);
-      return toMutationResult(res);
-    } catch (error) {
-      return fallback("updateRecoveryRequest", error, () => store.updateRecoveryRequest(environment, id, state));
-    }
-  },
-  updateSettings: async (environment, settings) => {
-    try {
-      const res = await superAdminWebhooksApi.updateSettings(environment, settings);
-      return toMutationResult(res);
-    } catch (error) {
-      return fallback("updateSettings", error, () => store.updateSettings(environment, settings));
-    }
-  },
+/**
+ * Live mode talks to the backend and nothing else. A failed request surfaces as an error in the UI;
+ * it is never replaced with the bundled demo records.
+ */
+const liveWebhooksRepository: WebhooksRepository = {
+  getSnapshot: (environment) => superAdminWebhooksApi.getSnapshot(environment),
+  getEndpoints: (environment) => superAdminWebhooksApi.getEndpoints(environment),
+  getDeliveries: (environment) => superAdminWebhooksApi.getDeliveries(environment),
+  getSubscriptions: (environment) => superAdminWebhooksApi.getSubscriptions(environment),
+  getIncomingEvents: (environment) => superAdminWebhooksApi.getIncomingEvents(environment),
+  getRecoveryRequests: (environment) => superAdminWebhooksApi.getRecoveryRequests(environment),
+  getActivity: (environment) => superAdminWebhooksApi.getActivity(environment),
+  getSettings: (environment) => superAdminWebhooksApi.getSettings(environment),
+  createEndpoint: async (environment, input) => toMutationResult(await superAdminWebhooksApi.createEndpoint(environment, input)),
+  updateEndpoint: async (environment, input) => toMutationResult(await superAdminWebhooksApi.updateEndpoint(environment, input)),
+  setEndpointState: async (environment, id, state, reason) =>
+    toMutationResult(await superAdminWebhooksApi.setEndpointState(environment, id, state, reason)),
+  saveSubscriptions: async (environment, id, keys, reason) =>
+    toMutationResult(await superAdminWebhooksApi.saveSubscriptions(environment, id, keys, reason)),
+  requestSecretRotationReview: async (environment, id) =>
+    toMutationResult(await superAdminWebhooksApi.requestSecretRotationReview(environment, id)),
+  createRecoveryRequest: async (environment, input) =>
+    toMutationResult(await superAdminWebhooksApi.createRecoveryRequest(environment, input)),
+  updateRecoveryRequest: async (environment, id, state) =>
+    toMutationResult(await superAdminWebhooksApi.updateRecoveryRequest(environment, id, state)),
+  updateSettings: async (environment, settings) => toMutationResult(await superAdminWebhooksApi.updateSettings(environment, settings)),
   resetDemo: async (environment) => {
-    try {
-      await superAdminWebhooksApi.resetDemo(environment);
-    } catch (error) {
-      fallback("resetDemo", error, () => store.resetDemo(environment));
-    }
+    await superAdminWebhooksApi.resetDemo(environment);
   },
 };
+
+/** Mock mode (NEXT_PUBLIC_DATA_SOURCE != "api") only: the in-memory demo store. */
+const mockWebhooksRepository: WebhooksRepository = {
+  getSnapshot: async (environment) => store.getSnapshot(environment),
+  getEndpoints: async (environment) => store.getSnapshot(environment).endpoints,
+  getDeliveries: async (environment) => store.getSnapshot(environment).deliveries,
+  getSubscriptions: async (environment) => store.getSnapshot(environment).subscriptions,
+  getIncomingEvents: async (environment) => store.getSnapshot(environment).incomingEvents,
+  getRecoveryRequests: async (environment) => store.getSnapshot(environment).recoveryRequests,
+  getActivity: async (environment) => store.getSnapshot(environment).activity,
+  getSettings: async (environment) => store.getSnapshot(environment).settings,
+  createEndpoint: async (environment, input) => store.createEndpoint(environment, input),
+  updateEndpoint: async (environment, input) => store.updateEndpoint(environment, input),
+  setEndpointState: async (environment, id, state, reason) => store.setEndpointState(environment, id, state, reason),
+  saveSubscriptions: async (environment, id, keys, reason) => store.saveSubscriptions(environment, id, keys, reason),
+  requestSecretRotationReview: async (environment, id) => store.requestSecretRotationReview(environment, id),
+  createRecoveryRequest: async (environment, input) => store.createRecoveryRequest(environment, input),
+  updateRecoveryRequest: async (environment, id, state) => store.updateRecoveryRequest(environment, id, state),
+  updateSettings: async (environment, settings) => store.updateSettings(environment, settings),
+  resetDemo: async (environment) => {
+    store.resetDemo(environment);
+  },
+};
+
+export const webhooksRepository: WebhooksRepository = isMockMode ? mockWebhooksRepository : liveWebhooksRepository;

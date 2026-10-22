@@ -1,0 +1,372 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { toast } from "sonner";
+import {
+  ArrowLeft, BarChart3, Check, FileDown, CircleAlert, Crown, Gauge, History as HistoryIcon, Info, LayoutDashboard, Lightbulb, ListChecks, Loader2,
+  Map as MapIcon, Pencil, RefreshCw, Sparkles, Swords, Target, TrendingUp, X,
+} from "lucide-react";
+import { ApiError } from "@/types/api";
+import { cn } from "@/lib/utils/cn";
+import { Chip, WButton } from "@/features/admin/website/components/ui/kit";
+import { EmptyState, QueryErrorState, SkeletonBlock } from "@/features/admin/website/components/ui/states";
+import { formatDateTime, formatRelative } from "@/features/admin/website/data/selectors";
+import type { StudyDetail } from "./api";
+import { useStudy, useStudyMutations } from "./hooks";
+import {
+  ActionBoard, AreaGuide, Changes, ContentIdeas, Gaps, HeadToHead, Heatmap, Hero, History, Opportunities, Panel, PositioningMap, Profiles, ScoreRadar,
+  SpeedBoard, Swot, TechTable, TopicMatrix, WinLose,
+} from "./report-sections";
+import { SITE_COLORS, SiteLabel, SourceLink } from "./ui";
+
+const errorText = (err: unknown, fallback: string) => (ApiError.isApiError(err) ? err.message : fallback);
+
+const TABS = [
+  { key: "overview", label: "Overview", icon: LayoutDashboard },
+  { key: "scorecard", label: "Scorecard", icon: BarChart3 },
+  { key: "versus", label: "Head to head", icon: Swords },
+  { key: "content", label: "Content & topics", icon: Lightbulb },
+  { key: "tech", label: "Speed & tech", icon: Gauge },
+  { key: "plan", label: "Action plan", icon: ListChecks },
+  { key: "history", label: "History", icon: HistoryIcon },
+] as const;
+type TabKey = (typeof TABS)[number]["key"];
+
+function EditSites({ study, onClose }: { study: StudyDetail; onClose: () => void }) {
+  const { update } = useStudyMutations();
+  const [name, setName] = useState(study.name);
+  const [own, setOwn] = useState(study.sites[0]?.url ?? "");
+  const [competitors, setCompetitors] = useState(study.sites.slice(1).map((s) => s.url));
+  const save = () =>
+    update.mutate(
+      { id: study.id, body: { name, own, competitors: competitors.map((c) => c.trim()).filter(Boolean) } },
+      { onSuccess: () => { toast.success("Saved. Re-check to compare the new list."); onClose(); }, onError: (e) => toast.error(errorText(e, "Could not save")) },
+    );
+  const input = "h-8 min-w-0 flex-1 normal-case rounded-md border border-[#DAE1EC] px-2.5 text-[12px] outline-none focus:border-[#2563EB]";
+  return (
+    <div className="rounded-xl border border-[#DCE6FB] bg-[#F7F9FF] p-3">
+      <div className="grid gap-2 md:grid-cols-2">
+        <label className="text-[11px] font-semibold text-[#6B7A94]">Name<input className={cn(input, "mt-1 w-full")} value={name} onChange={(e) => setName(e.target.value)} /></label>
+        <label className="text-[11px] font-semibold text-[#6B7A94]">Your website<input className={cn(input, "mt-1 w-full")} value={own} onChange={(e) => setOwn(e.target.value)} /></label>
+      </div>
+      <p className="mt-2 text-[11px] font-semibold text-[#6B7A94]">Competitors (max 4)</p>
+      <div className="mt-1 grid gap-1.5 md:grid-cols-2">
+        {competitors.map((c, i) => (
+          <div key={i} className="flex gap-1.5">
+            <input className={input} value={c} onChange={(e) => setCompetitors((l) => l.map((x, j) => (j === i ? e.target.value : x)))} />
+            <button type="button" className="grid size-8 place-items-center rounded-md text-[#94A3B8] hover:text-[#C0261F]" aria-label="Remove" onClick={() => setCompetitors((l) => l.filter((_, j) => j !== i))}><X className="size-4" /></button>
+          </div>
+        ))}
+        {competitors.length < 4 ? <button type="button" className="text-left text-[12px] font-medium text-[#2563EB]" onClick={() => setCompetitors((l) => [...l, ""])}>+ Add competitor</button> : null}
+      </div>
+      <div className="mt-3 flex gap-2">
+        <WButton tone="primary" onClick={save} disabled={update.isPending}>Save</WButton>
+        <WButton onClick={onClose}>Cancel</WButton>
+      </div>
+    </div>
+  );
+}
+
+const STAGES = [
+  { key: "reading", label: "Reading key pages, sitemaps, Google speed tests and brand checks of every site" },
+  { key: "analysing", label: "AI is comparing the sites, profiling each one and writing your plan" },
+];
+
+function Running({ stage, startedAt, count }: { stage: string | null; startedAt: string; count: number }) {
+  const current = STAGES.findIndex((s) => s.key === stage);
+  return (
+    <div className="rounded-2xl bg-gradient-to-br from-[#0F1A38] via-[#1E2F6B] to-[#4C1D95] p-5 text-white">
+      <p className="flex items-center gap-2 text-[14px] font-semibold"><Loader2 className="size-5 animate-spin" /> Checking {count} websites… started {formatRelative(startedAt)}</p>
+      <ol className="mt-4 space-y-2.5">
+        {STAGES.map((s, i) => (
+          <li key={s.key} className={cn("flex items-center gap-2.5 text-[12.5px]", i < current ? "text-[#86EFAC]" : i === current ? "font-semibold text-white" : "text-white/50")}>
+            {i < current ? <Check className="size-4" /> : i === current ? <Loader2 className="size-4 animate-spin" /> : <span className="size-4 rounded-full border border-white/40" />}
+            {s.label}
+          </li>
+        ))}
+      </ol>
+      <p className="mt-4 text-[11px] text-white/60">Usually 1–3 minutes. You can leave this page; the result is saved.</p>
+    </div>
+  );
+}
+
+export function CompetitorStudyPage({ id }: { id: string }) {
+  const study = useStudy(id);
+  const { run, download } = useStudyMutations();
+  const [editing, setEditing] = useState(false);
+  const [tab, setTab] = useState<TabKey>("overview");
+  // Ticks every 30 s so the re-check button counts down to the end of the 10-minute gap.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
+  const data = study.data;
+  const colorOf = useMemo(() => {
+    const map = new Map((data?.sites ?? []).map((s, i) => [s.domain, SITE_COLORS[i % SITE_COLORS.length]!]));
+    return (d: string) => map.get(d) ?? "#94A3B8";
+  }, [data?.sites]);
+
+  if (study.isLoading) return <div className="p-4"><SkeletonBlock lines={10} /></div>;
+  if (study.error || !data) return <div className="p-4"><QueryErrorState error={study.error} onRetry={() => void study.refetch()} /></div>;
+
+  const report = data.report;
+  const latest = data.latestRun;
+  const running = latest?.status === "running";
+  // Same 10-minute gap the server enforces between paid checks.
+  const waitMs = latest?.status === "completed" ? new Date(latest.startedAt).getTime() + 10 * 60 * 1000 - now : 0;
+  const waitMin = waitMs > 0 ? Math.ceil(waitMs / 60_000) : 0;
+  const ai = report?.ai?.status === "completed" ? report.ai.result : null;
+  const own = data.sites[0]!;
+  const deep = Boolean(ai?.topics?.length || ai?.swot);
+
+  const recheck = () =>
+    run.mutate(id, {
+      onSuccess: (res) => toast.success(res.reused ? "A check is already running." : "Check started. This takes 1–3 minutes."),
+      onError: (e) => toast.error(errorText(e, "Could not start the check")),
+    });
+
+  return (
+    <div className="w-full min-w-0 space-y-1 capitalize">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <Link href="/admin/competitor-analyzer" className="inline-flex items-center gap-1 text-[12px] text-[#6B7A94] hover:text-[#2563EB]"><ArrowLeft className="size-3.5" /> All analyses</Link>
+          <h1 className="mt-1 flex min-w-0 items-center gap-2 text-[18px] font-semibold tracking-[-0.01em] text-[#111C3A]">
+            <Swords className="size-5 shrink-0 text-[#7C3AED]" />
+            <span className="truncate normal-case" title={data.name}>{data.name.length <= 48 ? data.name : `${own.domain} vs ${data.sites.length - 1} competitors`}</span>
+          </h1>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <WButton
+            icon={download.isPending ? Loader2 : FileDown}
+            disabled={!data.report || download.isPending}
+            disabledReason="Run the analysis once to get a report"
+            onClick={() =>
+              download.mutate(id, {
+                onSuccess: ({ blob, fileName }) => {
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = fileName;
+                  a.click();
+                  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+                  toast.success("PDF report downloaded");
+                },
+                onError: (e) => toast.error(e instanceof Error ? e.message : "The report could not be downloaded"),
+              })
+            }
+          >
+            {download.isPending ? "Preparing PDF…" : "Download PDF report"}
+          </WButton>
+          <WButton icon={Pencil} onClick={() => setEditing((v) => !v)} disabled={running}>Edit sites</WButton>
+          <WButton tone="primary" icon={running || run.isPending ? Loader2 : RefreshCw} onClick={recheck} disabled={running || run.isPending || waitMin > 0} title={waitMin > 0 ? "Checks can run once every 10 minutes, so the same analysis is not paid for twice." : undefined}>{waitMin > 0 ? `Re-check in ${waitMin} min` : report ? "Re-check now" : "Run analysis"}</WButton>
+        </div>
+      </div>
+
+      {/* All compared websites on one line, full width; a very long list scrolls sideways instead of wrapping. */}
+      <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
+        {data.sites.map((s) => (
+          <span key={s.domain} className={cn("inline-flex shrink-0 items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] shadow-[0_1px_2px_rgba(16,24,40,0.04)]", s.role === "own" ? "border-[#2563EB] bg-[#EFF4FC]" : "border-[#E6EBF4] bg-white")}>
+            <SiteLabel domain={s.domain} color={colorOf(s.domain)} own={s.role === "own"} />
+          </span>
+        ))}
+      </div>
+
+      {editing ? <EditSites study={data} onClose={() => setEditing(false)} /> : null}
+      {running && latest ? <Running stage={latest.stage} startedAt={latest.startedAt} count={data.sites.length} /> : null}
+      {latest?.status === "failed" ? (
+        <p role="alert" className="flex items-start gap-2 rounded-lg border border-[#F0C9C6] bg-[#FDF4F3] p-3 text-[12px] text-[#C0261F]"><CircleAlert className="mt-0.5 size-4 shrink-0" />{latest.errorMessage ?? "The last check failed."}{report ? " Showing the previous result." : ""}</p>
+      ) : null}
+      {!report && !running ? <EmptyState icon={Swords} title="No result yet" body="Run the analysis to compare these websites." /> : null}
+
+      {report ? (
+        <>
+          <Hero study={data} report={report} ai={ai} colorOf={colorOf} />
+          {!ai && report.ai && report.ai.status !== "completed" ? (
+            <p className="flex items-start gap-2 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] p-3 text-[12px] text-[#92400E]"><Info className="mt-0.5 size-4 shrink-0" />{report.ai.reason}</p>
+          ) : null}
+          {ai && !deep ? (
+            <p className="flex items-start gap-2 rounded-lg border border-[#DCE6FB] bg-[#F7F9FF] p-2.5 text-[11.5px] text-[#28354C]"><Sparkles className="mt-0.5 size-4 shrink-0 text-[#7C3AED]" />This result was made before the deeper analysis. Re-check to add SWOT, topic map, content ideas, threat levels and phone screenshots.</p>
+          ) : null}
+
+          <nav className="sticky top-0 z-20 -mx-1 flex gap-1 overflow-x-auto rounded-xl border border-[#E6EBF4] bg-white/95 p-1 shadow-[0_1px_2px_rgba(16,24,40,0.04)] backdrop-blur" role="tablist" aria-label="Report sections">
+            {TABS.map(({ key, label, icon: Icon }) => (
+              <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => setTab(key)} className={cn("flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors", tab === key ? "bg-[#111C3A] text-white" : "text-[#4B5872] hover:bg-[#F1F4F9]")}>
+                <Icon className="size-3.5" /> {label}
+              </button>
+            ))}
+          </nav>
+
+          {tab === "overview" ? (
+            <div className="space-y-1">
+              {ai ? (
+                <div className="grid gap-1 lg:grid-cols-2">
+                  <Panel
+                    title="Where you win and lose"
+                    icon={Target}
+                    subtitle="Your score vs the best competitor in each area"
+                    explain={<><p>Each row is one area websites are judged on. The <b>blue bar</b> is your score, the <b>grey bar</b> is the best competitor’s score (out of 10).</p><p><b className="text-[#0B845C]">Green “ahead”</b> = you beat everyone there. <b className="text-[#C0261F]">Red “behind”</b> = at least one competitor is better; the action plan tells you how to close the gap.</p></>}
+                  >
+                    <WinLose ai={ai} own={own.domain} />
+                  </Panel>
+                  <Panel
+                    title="Positioning map"
+                    icon={MapIcon}
+                    subtitle="Content depth vs trust — bigger bubble = higher overall score"
+                    explain={<><p>Every website is a bubble. <b>Further right</b> = more useful content. <b>Higher up</b> = more proof and trust (testimonials, numbers, partners).</p><p>The <b>top-right corner</b> is where the strongest sites sit. Your goal is to move your bubble up and to the right.</p></>}
+                  >
+                    <PositioningMap ai={ai} sites={data.sites} colorOf={colorOf} />
+                  </Panel>
+                </div>
+              ) : null}
+              {ai?.swot ? (
+                <Panel
+                  title={`SWOT for ${own.domain}`}
+                  icon={Crown}
+                  subtitle="Compared with these competitors"
+                  explain={<p><b>Strengths</b> and <b>weaknesses</b> are about your website today. <b>Opportunities</b> are things you could add to win. <b>Threats</b> are what competitors do that could pull your visitors away.</p>}
+                >
+                  <Swot swot={ai.swot} />
+                </Panel>
+              ) : null}
+              <Panel
+                title="What changed since the last check"
+                icon={TrendingUp}
+                aside={report.changes?.items.length ? <Chip tone="info">{report.changes.items.length}</Chip> : null}
+                explain={<p>Each re-check is compared with the previous one: new pages, rewritten titles, more content, speed changes and score moves on every site. <b className="text-[#0B845C]">Green arrow</b> = that site got stronger, <b className="text-[#C0261F]">red arrow</b> = weaker. Re-check every week or two to keep watch.</p>}
+              >
+                <Changes report={report} colorOf={colorOf} own={own.domain} />
+              </Panel>
+            </div>
+          ) : null}
+
+          {tab === "scorecard" ? (
+            ai?.scores.length ? (
+              <div className="space-y-1">
+                <Panel
+                  title="Who is best at what"
+                  icon={Crown}
+                  subtitle="Score out of 10 in each area · darker blue = stronger · crown = leader"
+                  explain={<><p>Read across a row to see who is best in that area. The <b>crown</b> marks the single leader (no crown = tie). The last row is the <b>overall score out of 100</b>.</p><p>Scores are given by AI from the pages it read and Google’s measurements — not from traffic or sales, which are not public.</p></>}
+                >
+                  <Heatmap ai={ai} sites={data.sites} colorOf={colorOf} />
+                </Panel>
+                <div className="grid gap-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                  <Panel title="Scorecard shape" icon={BarChart3} subtitle="Bigger shape = stronger site" explain={<p>Each corner is one area. A site that is strong everywhere makes a big, round shape. <b>Your site is the filled shape</b>; dents show where you fall behind.</p>}>
+                    <ScoreRadar ai={ai} sites={data.sites} colorOf={colorOf} />
+                  </Panel>
+                  <Panel title="What each area means" icon={Info}>
+                    <AreaGuide ai={ai} />
+                  </Panel>
+                </div>
+              </div>
+            ) : <EmptyState icon={BarChart3} title="No scores yet" body="Scores appear when the AI comparison completes." />
+          ) : null}
+
+          {tab === "versus" ? (
+            ai?.headToHead.length ? (
+              <Panel
+                title="You vs each competitor"
+                icon={Swords}
+                explain={<p>One card per competitor. <b>Threat</b> says how much that site competes for your audience. <b>Promise</b> is the main message each home page gives. <b className="text-[#0B845C]">You lead</b> / <b className="text-[#C0261F]">They lead</b> list concrete differences, each with a link to the page it was seen on.</p>}
+              >
+                <HeadToHead ai={ai} report={report} own={own.domain} colorOf={colorOf} />
+              </Panel>
+            ) : <EmptyState icon={Swords} title="No head-to-head yet" body="Appears when the AI comparison completes." />
+          ) : null}
+
+          {tab === "content" ? (
+            ai ? (
+              <div className="space-y-1">
+                <Panel
+                  title="Topic map"
+                  icon={MapIcon}
+                  subtitle="Which site talks about what"
+                  explain={<p>Each row is a subject found on the websites; a <b>coloured dot</b> means that site covers it. <b className="text-[#92400E]">Yellow rows</b> are subjects competitors cover and you don’t — each is a chance for a new page or post.</p>}
+                >
+                  <TopicMatrix ai={ai} sites={data.sites} colorOf={colorOf} />
+                </Panel>
+                <div className="grid gap-1 lg:grid-cols-2">
+                  <Panel
+                    title="Content ideas for you"
+                    icon={Lightbulb}
+                    aside={ai.contentIdeas?.length ? <Chip tone="violet">{ai.contentIdeas.length}</Chip> : null}
+                    explain={<p>Ready-to-use titles for pages, blog posts, FAQs or videos, based on the gaps above. “Inspired by” shows which competitor already does something similar.</p>}
+                  >
+                    <ContentIdeas ai={ai} colorOf={colorOf} />
+                  </Panel>
+                  <div className="space-y-1">
+                    <Panel title="What they have that you don't" icon={Target} aside={<Chip tone="muted">{ai.gaps.length}</Chip>} explain={<p>Things at least one competitor shows on its website that yours doesn’t, with a link to their page so you can see it yourself.</p>}>
+                      <Gaps ai={ai} colorOf={colorOf} />
+                    </Panel>
+                    {ai.opportunities.length ? <Panel title="Nobody does this well yet" icon={Sparkles} explain={<p>Weak spots shared by every site in this comparison. Doing these first can make you stand out from all of them at once.</p>}><Opportunities ai={ai} /></Panel> : null}
+                  </div>
+                </div>
+                <Panel title="Each website up close" icon={LayoutDashboard} explain={<p>Pick a website to see its main promise, tone, what it offers, who it speaks to, and its strengths and weak spots (each linked to the page it comes from).</p>}>
+                  <Profiles ai={ai} report={report} sites={data.sites} colorOf={colorOf} />
+                </Panel>
+              </div>
+            ) : <EmptyState icon={Lightbulb} title="No content analysis yet" body="Appears when the AI comparison completes." />
+          ) : null}
+
+          {tab === "tech" ? (
+            <div className="space-y-1">
+              <Panel
+                title="Google speed test"
+                icon={Gauge}
+                subtitle="Google PageSpeed scores for each home page (phone)"
+                explain={<><p><b>Speed</b>: how fast the page loads on a phone. <b>SEO</b>: basic search-engine readiness. <b>Access.</b>: how usable it is for everyone, including people with poor eyesight. All out of 100 — <b className="text-[#0B845C]">70+ is good</b>, <b className="text-[#92400E]">45–69 needs work</b>, <b className="text-[#C0261F]">below 45 is poor</b>.</p><p>The bar chart shows seconds until the main content appears. Under 2.5 s is what Google calls good.</p></>}
+              >
+                <SpeedBoard report={report} sites={data.sites} colorOf={colorOf} />
+              </Panel>
+              <Panel
+                title="Technical & content checklist"
+                icon={ListChecks}
+                explain={<p>Facts measured directly on each website. <span className="rounded bg-[#E7F6EF] px-1 font-semibold text-[#0B845C]">Green</span> = best of the group or within the recommended range, <span className="rounded bg-[#FEF2F2] px-1 font-semibold text-[#B91C1C]">red</span> = outside it, ✓ / ✗ = has it or not, “—” = could not be measured. The grey line under each item explains why it matters.</p>}
+              >
+                <TechTable report={report} sites={data.sites} colorOf={colorOf} />
+              </Panel>
+            </div>
+          ) : null}
+
+          {tab === "plan" ? (
+            ai ? (
+              <Panel
+                title="Your action plan"
+                icon={ListChecks}
+                subtitle="What to do, when, and who to learn from"
+                explain={<p>Steps for your website, grouped by when to do them. <b>Impact</b> = how much it should help, <b>effort</b> = how much work it is. <b className="text-[#0B845C]">Quick win</b> = high impact and low effort: start there. “Learn from” names the competitor that already does it well.</p>}
+              >
+                <ActionBoard ai={ai} colorOf={colorOf} />
+              </Panel>
+            ) : <EmptyState icon={ListChecks} title="No plan yet" body="Appears when the AI comparison completes." />
+          ) : null}
+
+          {tab === "history" ? (
+            <div className="space-y-1">
+              <Panel title="Overall score over time" icon={HistoryIcon} explain={<p>Each point is one check. A rising line means that site is improving; compare your line with the others to see if you are pulling ahead or falling behind.</p>}>
+                <History study={data} colorOf={colorOf} />
+              </Panel>
+              <Panel title="What changed since the last check" icon={TrendingUp}><Changes report={report} colorOf={colorOf} own={own.domain} /></Panel>
+            </div>
+          ) : null}
+
+          <details className="rounded-xl border border-[#E6EBF4] bg-white p-3 text-[11.5px] text-[#4B5872]">
+            <summary className="cursor-pointer font-semibold text-[#111C3A]">Pages read in this check ({report.sites.reduce((n, e) => n + e.pages.length, 0)})</summary>
+            <div className="mt-2 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {report.sites.map((e) => (
+                <div key={e.domain} className={cn("rounded-lg p-2", e.role === "own" && "bg-[#EFF4FC] ring-1 ring-inset ring-[#BFD3F7]")}>
+                  <SiteLabel domain={e.domain} color={colorOf(e.domain)} own={e.role === "own"} />
+                  {e.reachable ? <ul className="mt-1 space-y-0.5">{e.pages.map((p) => <li key={p.url}><SourceLink url={p.url} /> <span className="text-[10px] text-[#94A3B8]">{p.words.toLocaleString("en-IN")} words</span></li>)}</ul> : <p className="mt-1 text-[#C0261F]">{e.error}</p>}
+                  {e.speedError && e.reachable ? <p className="mt-1 text-[10px] text-[#94A3B8]">Speed: {e.speedError}</p> : null}
+                </div>
+              ))}
+            </div>
+          </details>
+          <p className="flex gap-1.5 text-[10.5px] text-[#94A3B8]"><Info className="mt-0.5 size-3 shrink-0" />Based only on public pages and Google measurements taken on {formatDateTime(report.finishedAt ?? report.startedAt)}. Every AI point links to the page it came from{report.ai?.status === "completed" && report.ai.dropped ? `; ${report.ai.dropped} unsupported point(s) were removed` : ""}.</p>
+        </>
+      ) : null}
+    </div>
+  );
+}

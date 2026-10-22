@@ -109,6 +109,12 @@ const TABLE: Record<string, Entry> = {
   youtube_comment_invalid: E("Check the comment", "The comment is empty or too long.", "none"),
   youtube_comment_reply_disabled: E("Replies are off", "Replies aren't allowed on this comment.", "none"),
   youtube_comment_moderation_invalid: E("Invalid moderation action", "That moderation action isn't supported.", "none"),
+  // captions and channel branding
+  youtube_caption_not_found: E("Caption track not found", "That caption track was removed or no longer belongs to this video.", "none"),
+  youtube_caption_invalid: E("Invalid caption track", "Use a valid timed-caption file such as SRT, VTT, SBV, SCC or TTML.", "none"),
+  youtube_branding_invalid: E("Invalid channel branding", "Check the description, country and keywords, then try again.", "none"),
+  youtube_banner_not_found: E("Banner image not found", "The selected banner is no longer in this Client's Media Library.", "none"),
+  youtube_banner_invalid: E("Invalid channel banner", "Use a 16:9 PNG or JPEG of at least 2048×1152 and at most 6 MB.", "none"),
   // analytics
   youtube_analytics_permission_required: E("Analytics permission required", "Viewing analytics needs the analytics permission. Grant it to continue.", "grant"),
   youtube_monetary_analytics_permission_required: E("Revenue permission required", "Viewing revenue needs the separate revenue permission. Grant it to continue.", "grant"),

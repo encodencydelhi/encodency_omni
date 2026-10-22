@@ -284,8 +284,17 @@ export interface FlagListQuery {
   includeArchived?: boolean;
 }
 
+/** Whether the product reads this flag. Only enforced flags change behaviour; every other flag is configuration only. */
+export interface FlagEnforcement {
+  enforced: boolean;
+  capability: string | null;
+  enforcedAt: string[];
+}
+
 export interface FlagRow {
   flag: FeatureFlag;
+  /** Present when the backend answered; the offline demo data does not enforce anything. */
+  enforcement?: FlagEnforcement;
   environment: Environment;
   config: EnvironmentConfig;
   state: OperationalState;

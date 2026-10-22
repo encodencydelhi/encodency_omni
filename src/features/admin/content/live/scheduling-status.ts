@@ -60,6 +60,8 @@ export function describeScheduleErrorCode(code: string | null): string | null {
       return "The network rejected it as a duplicate post.";
     case "rate_limited":
       return "The network rate-limited us; it will be retried.";
+    case "feature_disabled":
+      return "LinkedIn publishing was switched off for your workspace before this was due, so it was not sent.";
     case "token_expires_before_publish":
       return "The connection token expires before the scheduled time.";
     default:

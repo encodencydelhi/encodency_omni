@@ -229,7 +229,8 @@ describe("PATCH /settings/organization (Settings → Organization)", () => {
     assert.equal(sent.industry, "Fintech");
     assert.equal(sent.website, "https://technova.dev");
     assert.equal(sent.contactEmail, "support@technova.dev");
-    assert.equal(sent.contactPhone, "+919876543210");
+    // The form works in 10-digit national numbers; the backend (NormalizedPhone) stores it as +919876543210.
+    assert.equal(sent.contactPhone, "9876543210");
     assert.equal(sent.description, "Edited by the operator");
     assert.deepEqual(
       sent.address,

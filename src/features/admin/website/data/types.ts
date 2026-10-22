@@ -504,6 +504,25 @@ export interface SearchQueryRow {
   impressions: number;
   ctr: number;
   position: number;
+  /** Same query in the window just before the period; null when it had no impressions then (or no comparison exists). */
+  previousPosition?: number | null;
+  /** The landing page this query sends the most clicks (then impressions) to. */
+  page?: string | null;
+}
+
+/** Search Console periods; 12 and 16 months have no previous window inside Google's 16-month retention. */
+export type SearchPeriod = "7d" | "28d" | "3m" | "6m" | "12m" | "16m";
+
+export interface SearchQueryDetail {
+  query: string;
+  period: SearchPeriod;
+  range: { start: string; end: string };
+  totals: { clicks: number; impressions: number; ctr: number; position: number } | null;
+  previous: { clicks: number; impressions: number; ctr: number; position: number } | null;
+  daily: { date: IsoDate; clicks: number; impressions: number; ctr: number; position: number }[];
+  pages: SearchPageRow[];
+  devices: { device: string; clicks: number; impressions: number; ctr: number; position: number }[];
+  countries: { country: string; countryName: string; clicks: number; impressions: number; ctr: number; position: number }[];
 }
 
 export interface SearchPageRow {
@@ -515,12 +534,22 @@ export interface SearchPageRow {
 }
 
 export interface SearchConsoleData {
+  period?: SearchPeriod;
+  range?: { start: string; end: string };
+  previousRange?: { start: string; end: string } | null;
+  /** When this report was read from Google. */
+  fetchedAt?: IsoDate;
+  /** Sections that failed while the totals succeeded; they are empty, not zero. */
+  partial?: string[] | null;
   totals: { clicks: number; impressions: number; ctr: number; position: number };
-  deltas: { clicks: number; impressions: number; ctr: number; position: number };
+  /** Previous window of the same length; null when it is outside retention or Google has no data for it. */
+  previous?: { clicks: number; impressions: number; ctr: number; position: number } | null;
+  /** Null when the period has no comparable previous window. */
+  deltas: { clicks: number | null; impressions: number | null; ctr: number | null; position: number | null };
   trend: { date: IsoDate; clicks: number; impressions: number; position: number }[];
   queries: SearchQueryRow[];
   pages: SearchPageRow[];
-  countries: { country: string; clicks: number; impressions: number }[];
+  countries: { country: string; countryName?: string; clicks: number; impressions: number }[];
   devices: { device: string; clicks: number; impressions: number }[];
   /** Index coverage report from Google Search Console */
   indexCoverage: null | {
@@ -532,14 +561,15 @@ export interface SearchConsoleData {
     warning: number;
     excluded: number;
   };
-  /** Sitemaps submitted and their status */
+  /** Sitemaps submitted and their status; null when Search Console did not return the list. */
   sitemaps: {
     submitted: number;
     indexed: number;
     pending: number;
     error: number;
     warning: number;
-  };
+    items?: { path: string; lastDownloaded: string | null; isPending: boolean; errors: number; warnings: number; submittedUrls: number | null }[];
+  } | null;
 }
 
 export interface KeywordResearchData {
@@ -551,6 +581,12 @@ export interface KeywordResearchData {
   difficulty: number;
   intent: "informational" | "transactional" | "navigational" | "commercial";
   searchVolume?: number;
+  /** Same query, previous window of the same length; null when it had no impressions then. */
+  previousPosition?: number | null;
+  /** Positive = moved up (a lower position number is better). */
+  positionChange?: number | null;
+  /** The landing page this query sends the most clicks (then impressions) to. */
+  page?: string | null;
 }
 
 export interface CompetitorData {
@@ -571,7 +607,87 @@ export interface CompetitorData {
   suggestions?: { title: string; evidence: string }[];
   evidence?: Record<string, unknown> | null;
   note?: string;
+  ai?: CompetitorAiAnalysis | null;
   error?: string | null;
+}
+
+export interface CompetitorAiPoint {
+  point: string;
+  evidence: string;
+  url: string;
+}
+
+export interface CompetitorAiAction {
+  priority: "high" | "medium" | "low";
+  action: string;
+  reason: string;
+  effort: "low" | "medium" | "high";
+}
+
+/** Measured from the pages that were read (counts, not estimates). */
+export interface CompetitorSiteMetrics {
+  pages: number;
+  words: number;
+  headings: number;
+  ctas: number;
+  images: number;
+  contact: { phone: boolean; email: boolean; whatsapp: boolean; form: boolean };
+  social: string[];
+  schemaTypes: string[];
+  image: string | null;
+}
+
+export interface CompetitorScore {
+  area: string;
+  you: number;
+  them: number;
+  note: string;
+}
+
+/** Generated reading of public pages of both sites; every cited point links to a page that was actually read. */
+export interface CompetitorAiAnalysis {
+  status: "completed";
+  provider: string;
+  model: string;
+  generatedAt: IsoDate;
+  promptVersion: string;
+  pagesRead: { own: string[]; competitor: string[] };
+  /** Absent on analyses saved before 2026-10-22.2. */
+  metrics?: { own: CompetitorSiteMetrics; competitor: CompetitorSiteMetrics };
+  dropped: number;
+  costUsd: number;
+  result: {
+    summary: string;
+    scores?: CompetitorScore[];
+    audience: string;
+    offerings: string[];
+    positioning: string;
+    theyDoBetter: CompetitorAiPoint[];
+    youDoBetter: CompetitorAiPoint[];
+    contentGaps: { topic: string; why: string; url: string }[];
+    keywordThemes: string[];
+    conversion: { ctas: string[]; trustSignals: string[] };
+    actions: CompetitorAiAction[];
+  };
+}
+
+export type SheetsDataset = "search" | "competitors" | "all";
+
+/** The customer's own Google Sheet, shared with the platform service account; exports replace fixed tabs in it. */
+export interface SheetsStatus {
+  serviceAccountEmail: string | null;
+  connected: boolean;
+  spreadsheetId: string | null;
+  url: string | null;
+  title: string | null;
+  connectedAt: IsoDate | null;
+  lastExport: { at: IsoDate; dataset: SheetsDataset; period: SearchPeriod; tabs: { title: string; gid: number; rows: number; url: string }[] } | null;
+}
+
+export interface CompetitorAiRun {
+  competitorId: string;
+  ai: CompetitorAiAnalysis;
+  reused: boolean;
 }
 
 export interface TrackingSettings {
@@ -622,6 +738,9 @@ export interface RankTrackingData {
   history: { date: IsoDate; position: number }[];
   serpFeatures: string[];
   url: string | null;
+  clicks?: number;
+  impressions?: number;
+  ctr?: number;
 }
 
 export interface SeoData {
@@ -1246,17 +1365,24 @@ export interface WebsiteDataProvider {
   getForms(clientId: string): Promise<FormsData>;
   getMonitoring(clientId: string): Promise<MonitoringData>;
   getSettings(clientId: string): Promise<WebsiteSettings>;
-  getKeywordResearch(clientId: string): Promise<KeywordResearchData[]>;
+  getKeywordResearch(clientId: string, period?: SearchPeriod): Promise<KeywordResearchData[]>;
+  getSearchConsole(clientId: string, period: SearchPeriod, refresh?: boolean): Promise<SearchConsoleData>;
+  getSearchQueryDetail(clientId: string, query: string, period: SearchPeriod): Promise<SearchQueryDetail>;
   getCompetitorAnalysis(clientId: string): Promise<CompetitorData[]>;
   addCompetitor(clientId: string, url: string): Promise<CompetitorData>;
   analyzeCompetitor(clientId: string, id: string): Promise<CompetitorData>;
+  analyzeCompetitorWithAi(clientId: string, id: string): Promise<CompetitorAiRun>;
   deleteCompetitor(clientId: string, id: string): Promise<{ deleted: boolean }>;
   getTracking(clientId: string, period: string): Promise<AnalyticsData & { settings?: TrackingSettings; quotas?: Record<string, unknown>; disclosure?: string }>;
   getTrackingSnippet(clientId: string): Promise<TrackingSnippetView>;
   verifyTracking(clientId: string): Promise<{ siteKey: string; status: string; found: boolean; note: string; checkedAt: IsoDate | null }>;
   updateTrackingSettings(clientId: string, settings: Partial<TrackingSettings>): Promise<{ siteKey: string; settings: TrackingSettings; disclosure: string }>;
   getBacklinkAnalysis(clientId: string): Promise<BacklinkData[]>;
-  getRankTracking(clientId: string): Promise<RankTrackingData[]>;
+  getRankTracking(clientId: string, period?: SearchPeriod): Promise<RankTrackingData[]>;
+  getSheets(clientId: string): Promise<SheetsStatus>;
+  connectSheets(clientId: string, url: string): Promise<SheetsStatus>;
+  disconnectSheets(clientId: string): Promise<SheetsStatus>;
+  exportToSheets(clientId: string, dataset: SheetsDataset, period: SearchPeriod): Promise<SheetsStatus>;
   getCrawlLimits(clientId: string): Promise<CrawlLimits>;
   getPagePerformance(clientId: string, pageId: string): Promise<PagePerformanceData>;
   getPageSearch(clientId: string, pageId: string, refresh?: boolean): Promise<PageSearchData>;

@@ -1,5 +1,6 @@
-import { SeoPagesPage } from "@/features/admin/seo/components/seo-pages-page";
+import { redirect } from "next/navigation";
 
+/** The old static SEO pages are gone; the real SEO tools live in the Website module. Kept so bookmarks keep working. */
 export default function Page() {
-  return <SeoPagesPage />;
+  redirect("/admin/website/pages");
 }

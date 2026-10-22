@@ -5,7 +5,6 @@ import { Sparkles, Camera, Grid2X2, Video, BookOpen, Zap, Tag, AlignLeft, Loader
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
 import { SelectField } from "./ui-fields";
-import { MOCK_AI_CONTENT, IMG } from "../mocks/content.mock";
 import { ContentPreviewPanel } from "./ContentPreview";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { aiApi, type GeneratedAiResult, type AiProvider } from "../live/ai-api";
@@ -80,12 +79,7 @@ export function AIAssistantTab({
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const [result, setResult] = useState<GeneratedAiResult>({
-    caption: MOCK_AI_CONTENT.caption,
-    hashtags: MOCK_AI_CONTENT.hashtags,
-    headline: "Clean Ganga Awareness Drive",
-    callToAction: "Join the movement today!",
-  });
+  const [result, setResult] = useState<GeneratedAiResult>({ caption: "", hashtags: [], headline: "", callToAction: "" });
 
   const [tokensUsed, setTokensUsed] = useState<number | null>(null);
   const [remainingTokens, setRemainingTokens] = useState<number | null>(null);

@@ -5,26 +5,30 @@ import { Sparkles, Loader2, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
 import { PlatformBadge } from "./ui-platform";
-import { MOCK_IDEAS } from "../mocks/content.mock";
+import { STARTER_IDEAS, type StarterIdea } from "../config/starter-ideas";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { aiApi, type GeneratedAiResult } from "../live/ai-api";
 import { toast } from "sonner";
+import { useFeature } from "@/lib/feature-flags/use-feature";
+import { FeatureCheckFailed, FeatureUnavailable } from "@/lib/feature-flags/feature-gate";
 
 interface IdeasTabProps {
-  onCustomizeWithAi?: (idea: (typeof MOCK_IDEAS)[0]) => void;
-  onUseIdea?: (idea: (typeof MOCK_IDEAS)[0]) => void;
+  onCustomizeWithAi?: (idea: StarterIdea) => void;
+  onUseIdea?: (idea: StarterIdea) => void;
 }
 
 export function IdeasTab({ onCustomizeWithAi, onUseIdea }: IdeasTabProps = {}) {
   const { companyId } = useTenancyContext();
+  const ai = useFeature("content.ai_generator");
   const [selected, setSelected] = useState(0);
-  const active = MOCK_IDEAS[selected]!;
+  const active = STARTER_IDEAS[selected]!;
 
   const [inlineResult, setInlineResult] = useState<GeneratedAiResult | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const handleCustomizeClick = () => {
+    if (!ai.canUse) return;
     if (onCustomizeWithAi) {
       onCustomizeWithAi(active);
     } else {
@@ -71,21 +75,25 @@ export function IdeasTab({ onCustomizeWithAi, onUseIdea }: IdeasTabProps = {}) {
   };
 
   return (
+    <div className="space-y-3">
+    {ai.status === "disabled" ? <FeatureUnavailable feature={ai} /> : <FeatureCheckFailed feature={ai} />}
     <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
       <Card
-        title="Content ideas"
-        subtitle="Curated prompts for your next post"
+        title="Starter ideas"
+        subtitle="The same prompts for every workspace. Use one as it is, or let the AI adapt it to your topic."
         action={
           <button
             onClick={handleCustomizeClick}
-            className="flex h-8 items-center gap-1.5 rounded-sm bg-purple-50 px-3 text-[11.5px] font-semibold text-purple-700 ring-1 ring-purple-200 hover:bg-purple-100 transition"
+            disabled={!ai.canUse}
+            title={ai.status === "disabled" ? ai.explanation : undefined}
+            className="flex h-8 items-center gap-1.5 rounded-sm bg-purple-50 px-3 text-[11.5px] font-semibold text-purple-700 ring-1 ring-purple-200 hover:bg-purple-100 transition disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Sparkles className="size-3.5" /> Generate with AI
           </button>
         }
       >
         <div className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-3">
-          {MOCK_IDEAS.map((idea, i) => (
+          {STARTER_IDEAS.map((idea, i) => (
             <button
               key={idea.id}
               onClick={() => {
@@ -97,7 +105,6 @@ export function IdeasTab({ onCustomizeWithAi, onUseIdea }: IdeasTabProps = {}) {
                 selected === i ? "border-[#1769DF] shadow-md ring-1 ring-blue-100" : "border-[#E2E8F0] hover:shadow-md"
               )}
             >
-              <img src={idea.image} alt="" className="aspect-[16/9] w-full object-cover" />
               <div className="p-2">
                 <span className="rounded bg-[#F0F6FF] px-1.5 py-px text-[9.5px] font-semibold text-[#1769DF]">#{idea.tag}</span>
                 <p className="mt-1 text-[12px] font-semibold text-[#24365A]">{idea.title}</p>
@@ -109,14 +116,13 @@ export function IdeasTab({ onCustomizeWithAi, onUseIdea }: IdeasTabProps = {}) {
       </Card>
 
       <Card title="Idea details" className="xl:sticky xl:top-4">
-        <img src={active.image} alt="" className="aspect-video w-full rounded-sm object-cover" />
-        <p className="mt-2 text-[13px] font-semibold text-[#172044]">{active.title}</p>
+        <p className="text-[13px] font-semibold text-[#172044]">{active.title}</p>
         <p className="mt-0.5 text-[11.5px] leading-4 text-[#7A87A0]">{active.description}</p>
         <div className="mt-1.5 flex flex-wrap gap-1">
           {active.channels.map((c) => <PlatformBadge key={c} platform={c} size="sm" />)}
         </div>
         <div className="mt-2 space-y-1 text-[10.5px]">
-          {[["Content Type", active.contentType], ["Suggested CTA", active.suggestedCTA], ["Best Time", "9–11 AM"]].map(([k, v]) => (
+          {[["Content Type", active.contentType], ["Suggested CTA", active.suggestedCTA]].map(([k, v]) => (
             <div key={k} className="flex justify-between"><dt className="text-[#7A87A0]">{k}</dt><dd className="font-semibold text-[#33445F]">{v}</dd></div>
           ))}
         </div>
@@ -131,7 +137,8 @@ export function IdeasTab({ onCustomizeWithAi, onUseIdea }: IdeasTabProps = {}) {
         </button>
         <button
           onClick={handleCustomizeClick}
-          disabled={isGenerating}
+          disabled={isGenerating || !ai.canUse}
+          title={ai.status === "disabled" ? ai.explanation : undefined}
           className="mt-1.5 flex h-8 w-full items-center justify-center gap-1.5 rounded-sm border border-purple-200 bg-purple-50/70 text-[11.5px] font-semibold text-[#7C3AED] hover:bg-purple-100 disabled:opacity-60 transition"
         >
           {isGenerating ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
@@ -154,6 +161,7 @@ export function IdeasTab({ onCustomizeWithAi, onUseIdea }: IdeasTabProps = {}) {
           </div>
         )}
       </Card>
+    </div>
     </div>
   );
 }

@@ -119,6 +119,7 @@ export function emptyChannel(c?: YouTubeConnectionResponse): Channel {
     videoCount: null,
     viewCount: null,
     country: null,
+    defaultLanguage: null,
     createdAt: null,
     keywords: [],
     googleAccount: c?.googleAccountName ?? null,
@@ -139,6 +140,7 @@ export function toChannel(dto: YouTubeChannelDto, googleAccount: Maybe<string>):
     videoCount: countOf(dto.statistics.videos),
     viewCount: countOf(dto.statistics.views),
     country: dto.country,
+    defaultLanguage: dto.defaultLanguage,
     createdAt: dto.publishedAt,
     keywords: parseKeywords(dto.branding.keywords),
     googleAccount,
@@ -157,10 +159,10 @@ export function parseKeywords(raw: string | null): string[] {
 /* ----------------------------- videos ----------------------------- */
 
 /**
- * Shorts are not flagged by the Data API; a video of at most 60 seconds is shown as a Short (documented heuristic).
+ * Shorts are not flagged by the Data API; a video of at most three minutes is shown as a Short (documented heuristic).
  * Broadcasts (live or upcoming) and finished streams are "live".
  */
-export const SHORT_MAX_SECONDS = 60;
+export const SHORT_MAX_SECONDS = 180;
 
 export function contentTypeOf(dto: YouTubeVideoDto, isReplay = false): ContentType {
   if (isReplay || (dto.live.liveBroadcastContent && dto.live.liveBroadcastContent !== "none")) return "live";

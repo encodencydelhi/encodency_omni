@@ -148,11 +148,6 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
         })}
       </div>
 
-      {/* Best time suggestion */}
-      <div className="mt-2 flex items-start gap-1.5 rounded-sm bg-amber-50 p-2 ring-1 ring-amber-100">
-        <Clock3 className="mt-px size-3 shrink-0 text-amber-600" />
-        <p className="text-[10.5px] leading-4 text-amber-900"><b>Best time:</b> Today 11 AM – 1 PM (based on audience analytics)</p>
-      </div>
     </Card>
   );
 }

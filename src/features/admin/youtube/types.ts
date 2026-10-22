@@ -36,6 +36,7 @@ export interface Channel {
   videoCount: Maybe<number>;
   viewCount: Maybe<number>;
   country: Maybe<string>;
+  defaultLanguage: Maybe<string>;
   createdAt: Maybe<ISODate>;
   keywords: string[];
   googleAccount: Maybe<string>;

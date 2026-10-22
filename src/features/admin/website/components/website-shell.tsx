@@ -50,6 +50,7 @@ const TABS: { label: string; href: string; simulated?: boolean; description?: st
   { label: "Keyword Research", href: "/admin/website/keyword-research" },
   { label: "Organic Landing Pages", href: "/admin/website/backlink-analysis", simulated: true, description: "Shows Google Search Console organic landing pages - backlink data not yet available" },
   { label: "Rank Tracking", href: "/admin/website/rank-tracking" },
+  { label: "Competitors", href: "/admin/website/competitors" },
   { label: "Settings", href: "/admin/website/settings" },
 ];
 

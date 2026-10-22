@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
 import { PlatformBadge } from "./ui-platform";
 import { StatusBadge } from "./ui-badge";
-import { MOCK_DRAFTS } from "../mocks/content.mock";
 import { ContentPreviewPanel } from "./ContentPreview";
 import { draftsApi, type DraftSummaryRecord, isRevisionConflict } from "../live/drafts-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";

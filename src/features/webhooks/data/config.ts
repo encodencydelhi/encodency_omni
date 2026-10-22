@@ -98,8 +98,7 @@ export const DEMO_CLOCK_ANCHOR = "2026-09-21T07:30:00.000Z";
 export const DEMO_TIMEZONE = "Asia/Kolkata";
 export const DEMO_ACTOR = { id: "stf_001", name: "Super Admin (Demo)" } as const;
 
-export const DEMO_DATA_LABEL = "Demo Webhook Data";
-export const DEMO_DATA_NOTICE = "Real Ingestion & Delivery Not Connected";
+export const DEMO_DATA_NOTICE = "Real ingestion & delivery not connected";
 
 export const ENVIRONMENT_OPTIONS: Array<{ value: WebhookEnvironment; label: string }> = [
   { value: "development", label: "Development" },

@@ -103,7 +103,7 @@ const defaultClientsRepository: ClientsRepository = CLIENTS_MOCK_MODE
 const superAdminClientsRepository = createApiClientsProvider(unavailableClientsProvider);
 
 function isSuperAdminClientRoute(): boolean {
-  return typeof window !== "undefined" && (window.location.pathname.startsWith("/super-admin/clients") || window.location.pathname.startsWith("/super-admin/projects"));
+  return typeof window !== "undefined" && (window.location.pathname.startsWith("/super-admin/clients"));
 }
 
 export const clientsRepository: ClientsRepository = new Proxy(defaultClientsRepository, {

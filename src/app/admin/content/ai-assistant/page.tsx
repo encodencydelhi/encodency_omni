@@ -1,5 +1,5 @@
-import { ContentLibraryPage } from "@/features/admin/content/components/content-library-page";
+import ContentStudio from "@/features/admin/content/components/ContentStudioShell";
 
 export default function Page() {
-  return <ContentLibraryPage view="ai-assistant" />;
+  return <ContentStudio initialTab="AI Assistant" />;
 }

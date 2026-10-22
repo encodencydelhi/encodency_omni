@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   BarChart3,
   CalendarClock,
   Clock,
   Copy,
+  Download,
   ExternalLink,
   Eye,
   ImageIcon,
@@ -21,6 +23,8 @@ import {
   Timer,
   Trash2,
   Upload,
+  FileUp,
+  Subtitles,
   UserPlus,
   VideoOff,
   Percent,
@@ -39,6 +43,7 @@ import {
   ConfirmDialog,
   DefinitionRow,
   EmptyState,
+  FormField,
   InternalBadge,
   Notice,
   Segmented,
@@ -62,10 +67,11 @@ import { date, dateTime, duration, full, hours, percent } from "../lib/format";
 import { videoOptimization } from "../lib/insights";
 import { periodRange } from "../lib/period";
 import { useYouTube } from "../store/youtube-store";
+import { youtubeApi } from "../live/youtube-api";
 import { CommentInbox } from "./comments-page";
 import type { MetricKey, Video } from "../types";
 
-type DetailTab = "overview" | "analytics" | "comments" | "seo" | "details";
+type DetailTab = "overview" | "analytics" | "comments" | "captions" | "seo" | "details";
 
 const DEFAULTS = { tab: "overview", confirm: "" };
 
@@ -196,6 +202,7 @@ function VideoDetail({ video }: { video: Video }) {
             { value: "overview", label: "Overview" },
             { value: "analytics", label: "Analytics" },
             { value: "comments", label: "Comments", count: video.stats.comments ?? undefined },
+            { value: "captions", label: "Captions" },
             { value: "seo", label: "SEO & Optimization" },
             { value: "details", label: "Details" },
           ]}
@@ -214,6 +221,7 @@ function VideoDetail({ video }: { video: Video }) {
         ) : (
           <Card><EmptyState icon={MessageSquare} title="No Comments Yet" description="Comments will appear here once the video is published and viewers engage." /></Card>
         ))}
+      {tab === "captions" && <CaptionsTab videoId={video.id} />}
       {tab === "seo" && <SeoTab video={video} onEdit={() => setEditOpen(true)} onThumb={() => setThumbOpen(true)} />}
       {tab === "details" && <DetailsTab video={video} onEdit={() => setEditOpen(true)} />}
 
@@ -232,6 +240,143 @@ function VideoDetail({ video }: { video: Video }) {
         confirmLabel="Publish Now"
         onConfirm={() => publishNow(video.id, "public")}
       />
+    </div>
+  );
+}
+
+function CaptionsTab({ videoId }: { videoId: string }) {
+  const { scope, can } = useYouTube();
+  const fileInput = useRef<HTMLInputElement>(null);
+  const replacementInput = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [replacementCaptionId, setReplacementCaptionId] = useState<string | null>(null);
+  const [language, setLanguage] = useState("en");
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const query = useQuery({
+    queryKey: scope ? ["youtube", scope.companyId, scope.clientId, "captions", videoId] : ["youtube", "captions", "none"],
+    queryFn: ({ signal }) => youtubeApi.captions(scope!, videoId, signal),
+    enabled: scope !== null,
+    staleTime: 60_000,
+  });
+
+  const upload = async () => {
+    if (!scope || !file || !language.trim() || busy) return;
+    setBusy("upload");
+    setError(null);
+    try {
+      await youtubeApi.uploadCaption(scope, videoId, file, { language: language.trim(), name: name.trim() || undefined, isDraft: false });
+      setFile(null);
+      setName("");
+      if (fileInput.current) fileInput.current.value = "";
+      await query.refetch();
+    } catch (cause) {
+      setError(describeYouTubeError(cause).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const remove = async (captionId: string) => {
+    if (!scope || busy || !window.confirm("Delete this caption track from YouTube?")) return;
+    setBusy(captionId);
+    setError(null);
+    try {
+      await youtubeApi.deleteCaption(scope, videoId, captionId);
+      await query.refetch();
+    } catch (cause) {
+      setError(describeYouTubeError(cause).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const updateTrack = async (captionId: string, replacement?: File, isDraft?: boolean) => {
+    if (!scope || busy) return;
+    setBusy(`update-${captionId}`);
+    setError(null);
+    try {
+      await youtubeApi.replaceCaption(scope, videoId, captionId, replacement, isDraft);
+      await query.refetch();
+    } catch (cause) {
+      setError(describeYouTubeError(cause).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const chooseReplacement = (captionId: string) => {
+    setReplacementCaptionId(captionId);
+    replacementInput.current?.click();
+  };
+
+  const replaceSelected = async (replacement: File | undefined) => {
+    const captionId = replacementCaptionId;
+    setReplacementCaptionId(null);
+    if (replacementInput.current) replacementInput.current.value = "";
+    if (captionId && replacement) await updateTrack(captionId, replacement);
+  };
+
+  const download = async (captionId: string, captionLanguage: string) => {
+    if (!scope || busy) return;
+    setBusy(`download-${captionId}`);
+    setError(null);
+    try {
+      const blob = await youtubeApi.downloadCaption(scope, videoId, captionId, "srt");
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${videoId}-${captionLanguage}.srt`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (cause) {
+      setError(describeYouTubeError(cause).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="grid gap-1 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <Card>
+        <CardHeader title="Caption Tracks" description="Tracks stored on YouTube for this video. Downloads use SRT." icon={Subtitles} />
+        <div className="px-4 pb-4">
+          <input ref={replacementInput} type="file" accept=".srt,.vtt,.sbv,.scc,.ttml,text/vtt,application/x-subrip" className="hidden" onChange={(event) => void replaceSelected(event.target.files?.[0])} />
+          {query.isPending ? <Skeleton className="h-24 w-full" /> : query.error ? <ErrorState error={describeYouTubeError(query.error)} onRetry={() => void query.refetch()} /> : !query.data?.items.length ? (
+            <EmptyState compact icon={Subtitles} title="No Caption Tracks" description="Upload an SRT, VTT, SBV, SCC or TTML file." />
+          ) : (
+            <ul className="divide-y divide-[#EEF1F5] rounded-sm border border-[#E4E9F0]">
+              {query.data.items.map((caption) => (
+                <li key={caption.id} className="flex flex-wrap items-center gap-3 px-3 py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold text-[#0F1B3D]">{caption.name || caption.language.toUpperCase()}</p>
+                    <p className="text-[12px] text-[#6B7890]">{caption.language} · {caption.isDraft ? "Draft" : caption.status || "Published"}{caption.isAutoSynced ? " · Auto-synced" : ""}</p>
+                  </div>
+                  <Button size="xs" variant="secondary" icon={Download} loading={busy === `download-${caption.id}`} gate={can.canEditVideo} onClick={() => void download(caption.id, caption.language)}>Download</Button>
+                  <Button size="xs" variant="secondary" icon={FileUp} loading={busy === `update-${caption.id}`} gate={can.canEditVideo} onClick={() => chooseReplacement(caption.id)}>Replace</Button>
+                  <Button size="xs" variant="secondary" loading={busy === `update-${caption.id}`} gate={can.canEditVideo} onClick={() => void updateTrack(caption.id, undefined, !caption.isDraft)}>{caption.isDraft ? "Publish" : "Make Draft"}</Button>
+                  <Button size="xs" variant="danger" icon={Trash2} loading={busy === caption.id} gate={can.canDeleteVideo} onClick={() => void remove(caption.id)}>Delete</Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </Card>
+      <Card>
+        <CardHeader title="Upload Captions" description="YouTube no longer supports API auto-sync; include timing in the file." icon={FileUp} />
+        <div className="space-y-3 px-4 pb-4">
+          {error && <Notice tone="red" title="Caption action failed">{error}</Notice>}
+          <FormField label="Language code" required htmlFor="caption-language" hint="Examples: en, hi, en-US">
+            <input id="caption-language" className={yt.input} value={language} onChange={(event) => setLanguage(event.target.value)} />
+          </FormField>
+          <FormField label="Track name" htmlFor="caption-name">
+            <input id="caption-name" className={yt.input} value={name} onChange={(event) => setName(event.target.value)} placeholder="English" />
+          </FormField>
+          <input ref={fileInput} type="file" accept=".srt,.vtt,.sbv,.scc,.ttml,text/vtt,application/x-subrip" className="block w-full text-[12px] text-[#6B7890]" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+          <Button size="sm" variant="primary" icon={Upload} loading={busy === "upload"} gate={can.canEditVideo} disabled={!file || !language.trim()} disabledReason="Choose a caption file and language" onClick={() => void upload()}>Upload Track</Button>
+        </div>
+      </Card>
     </div>
   );
 }

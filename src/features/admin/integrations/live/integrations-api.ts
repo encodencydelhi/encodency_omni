@@ -149,6 +149,14 @@ export interface LinkedInDashboardResponse {
   campaigns: LinkedInDataset<Record<string, unknown>[]>;
   leads: LinkedInDataset<Record<string, unknown>[]>;
   inbox: LinkedInDataset<Record<string, unknown>[]>;
+  connection: {
+    integrationId: string;
+    provider: "LINKEDIN";
+    status: string;
+    accountName: string | null;
+    accountEmail: string | null;
+    grantedScopes: string[];
+  };
 }
 
 export const integrationsApi = {

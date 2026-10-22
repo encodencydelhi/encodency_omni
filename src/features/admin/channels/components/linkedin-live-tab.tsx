@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import {
   AlertTriangle, ArrowUpRight, BarChart3, Building2, CheckCircle2, ExternalLink, Eye,
   FileText, Loader2, MessageSquare, RefreshCcw, ShieldCheck, TrendingUp, Users,
@@ -14,6 +13,7 @@ import {
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { integrationsApi, type LinkedInDashboardResponse, type LinkedInDataset } from "../../integrations/live/integrations-api";
 import { useScrollLock } from "@/lib/utils/scroll-lock";
+import { LinkedInRemoteImage } from "./linkedin-remote-image";
 
 type LinkedInTab = "Overview" | "Posts" | "Analytics" | "Audience" | "Campaigns" | "Leads" | "Inbox" | "Settings";
 type Metric = { key: string; label: string; value: number };
@@ -114,7 +114,7 @@ function Overview({ dashboard }: { dashboard: LinkedInDashboardResponse }) {
   ] as Array<[string, LinkedInDataset<unknown>]>;
   return <>
     <div className="flex flex-col justify-between gap-4 bg-white px-5 py-5 md:flex-row md:items-center">
-      <div className="flex items-start gap-4">{logoUrl ? <Image src={logoUrl} alt={`${name} logo`} width={56} height={56} className="size-14 shrink-0 border border-[#DDE4ED] bg-white object-contain p-1" /> : <div className="grid size-14 shrink-0 place-items-center bg-[#0A66C2] text-white"><Building2 className="size-5" /></div>}<div><h3 className="text-[18px] font-bold text-[#111B43]">{name}</h3><p className="mt-1 text-[11px] text-[#687797]">{organizationType ? title(organizationType) : "LinkedIn organization"} · {dashboard.organizationUrn}</p>{description && <p className="mt-2 max-w-3xl text-[11px] leading-5 text-[#52617D]">{description}</p>}<div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">{website && <a href={website} target="_blank" rel="noreferrer" className="text-[10.5px] font-semibold text-[#0A66C2]">Company website <ExternalLink className="ml-1 inline size-3" /></a>}{specialties.slice(0, 4).map((specialty) => <span key={specialty} className="text-[10px] text-[#71809B]">{specialty}</span>)}</div></div></div>
+      <div className="flex items-start gap-4">{logoUrl ? <LinkedInRemoteImage src={logoUrl} alt={`${name} logo`} width={56} height={56} className="size-14 shrink-0 border border-[#DDE4ED] bg-white object-contain p-1" fallback={<div className="grid size-14 shrink-0 place-items-center bg-[#0A66C2] text-white"><Building2 className="size-5" /></div>} /> : <div className="grid size-14 shrink-0 place-items-center bg-[#0A66C2] text-white"><Building2 className="size-5" /></div>}<div><h3 className="text-[18px] font-bold text-[#111B43]">{name}</h3><p className="mt-1 text-[11px] text-[#687797]">{organizationType ? title(organizationType) : "LinkedIn organization"} · {dashboard.organizationUrn}</p>{description && <p className="mt-2 max-w-3xl text-[11px] leading-5 text-[#52617D]">{description}</p>}<div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">{website && <a href={website} target="_blank" rel="noreferrer" className="text-[10.5px] font-semibold text-[#0A66C2]">Company website <ExternalLink className="ml-1 inline size-3" /></a>}{specialties.slice(0, 4).map((specialty) => <span key={specialty} className="text-[10px] text-[#71809B]">{specialty}</span>)}</div></div></div>
       {vanity && <a href={`https://www.linkedin.com/company/${vanity}`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center justify-center gap-2 border border-[#B8D5F0] bg-[#F2F8FD] px-3 text-[11px] font-semibold text-[#0A66C2]">View on LinkedIn <ExternalLink className="size-3" /></a>}
     </div>
     <DatasetNotice dataset={dashboard.organization} />
@@ -226,7 +226,17 @@ function Inbox({ dataset }: { dataset: LinkedInDashboardResponse["inbox"] }) {
 function Settings({ dashboard }: { dashboard: LinkedInDashboardResponse }) {
   const org = dashboard.organization.data;
   const rows = [["Organization name", toText(org.localizedName)], ["Vanity name", toText(org.vanityName)], ["Organization URN", dashboard.organizationUrn], ["Mapping ID", dashboard.mappingId], ["Last synced", new Date(dashboard.syncedAt).toLocaleString()]];
-  return <div className="bg-white"><div className="border-b border-[#DDE4ED] px-5 py-4"><div className="flex items-center gap-2"><ShieldCheck className="size-4 text-[#0A66C2]" /><h3 className="text-[13px] font-bold text-[#172044]">Mapped page configuration</h3></div><p className="mt-1 text-[10.5px] text-[#7B89A4]">Verified LinkedIn resource currently assigned to this client</p></div><dl className="divide-y divide-[#EDF1F5]">{rows.map(([label, value]) => <div key={label} className="grid gap-1 px-5 py-3 sm:grid-cols-[190px_1fr]"><dt className="text-[10.5px] font-semibold text-[#7B89A4]">{label}</dt><dd className="break-all text-[11.5px] font-medium text-[#253352]">{value || "Not returned"}</dd></div>)}</dl></div>;
+  const grantedScopes = dashboard.connection?.grantedScopes ?? [];
+  const checks = [
+    ["Company page profile", dashboard.organization.state, "r_organization_admin / rw_organization_admin"],
+    ["Published posts", dashboard.posts.state, "r_organization_social"],
+    ["Page analytics", dashboard.pageStatistics.state, "r_organization_admin / rw_organization_admin"],
+    ["Follower insights", dashboard.followers.state, "rw_organization_admin"],
+    ["Comments & reactions", dashboard.social.state, "r_organization_social_feed"],
+    ["Campaign management", dashboard.campaigns.state, "r_ads + r_ads_reporting; implementation required"],
+    ["Lead Sync", dashboard.leads.state, "r_marketing_leadgen_automation; implementation required"],
+  ] as const;
+  return <div className="bg-white"><div className="border-b border-[#DDE4ED] px-5 py-4"><div className="flex items-center gap-2"><ShieldCheck className="size-4 text-[#0A66C2]" /><h3 className="text-[13px] font-bold text-[#172044]">Mapped page configuration</h3></div><p className="mt-1 text-[10.5px] text-[#7B89A4]">Verified LinkedIn resource, OAuth permissions and feature readiness</p></div><dl className="divide-y divide-[#EDF1F5]">{rows.map(([label, value]) => <div key={label} className="grid gap-1 px-5 py-3 sm:grid-cols-[190px_1fr]"><dt className="text-[10.5px] font-semibold text-[#7B89A4]">{label}</dt><dd className="break-all text-[11.5px] font-medium text-[#253352]">{value || "Not returned"}</dd></div>)}</dl><div className="border-t border-[#DDE4ED] px-5 py-4"><h4 className="text-[12px] font-bold text-[#172044]">Granted OAuth permissions</h4><p className="mt-1 text-[10px] text-[#7B89A4]">Permissions recorded when the current access token was issued</p><div className="mt-3 flex flex-wrap gap-2">{grantedScopes.length > 0 ? grantedScopes.map((scope) => <span key={scope} className="border border-[#C8DDF0] bg-[#F1F7FC] px-2 py-1 text-[9.5px] font-semibold text-[#0A66C2]">{scope}</span>) : <span className="text-[10.5px] font-medium text-amber-700">This token predates scope tracking. Reconnect LinkedIn to request and record the current permissions.</span>}</div></div><div className="overflow-x-auto border-t border-[#DDE4ED]"><table className="w-full min-w-180 text-left"><thead><tr className="bg-[#F8FAFC] text-[10px] uppercase text-[#7B89A4]"><th className="px-5 py-3">Feature</th><th className="px-4 py-3">Status</th><th className="px-5 py-3">Required access</th></tr></thead><tbody className="divide-y divide-[#EDF1F5]">{checks.map(([label, state, required]) => <tr key={label}><td className="px-5 py-3 text-[11px] font-semibold text-[#253352]">{label}</td><td className={`px-4 py-3 text-[10.5px] font-semibold ${state === "live" ? "text-emerald-700" : state === "permission_required" ? "text-amber-700" : "text-[#64748B]"}`}>{title(state)}</td><td className="px-5 py-3 text-[10.5px] text-[#687797]">{required}</td></tr>)}</tbody></table></div></div>;
 }
 
 export function LinkedInLiveTab({ tab }: { tab: LinkedInTab }) {

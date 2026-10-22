@@ -9,7 +9,7 @@ import { FLAG_TYPE, IMPLEMENTATION, STRATEGY, flagRoutes } from "../data/config"
 import { useFlag } from "../data/hooks";
 import type { Environment } from "../data/types";
 import { ago, rolloutText } from "../lib/format";
-import { ImplementationBadge, LifecycleBadge, ProtectionBadge, StateBadge } from "./badges";
+import { EnforcementBadge, ImplementationBadge, LifecycleBadge, ProtectionBadge, StateBadge } from "./badges";
 import { FlagsError } from "./states";
 
 /** A read-only look at one flag: enough to decide whether to open it. */
@@ -35,6 +35,7 @@ export function FlagPreviewDrawer({ flagKey, environment, onClose }: { flagKey: 
             <>
               <p className="text-[0.8125rem] text-muted-foreground">{flag.description}</p>
               <div className="flex flex-wrap items-center gap-1.5">
+                <EnforcementBadge enforcement={row.enforcement} />
                 <StateBadge state={row.state} />
                 <LifecycleBadge status={flag.lifecycle} />
                 <ProtectionBadge level={flag.protection} />

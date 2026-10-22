@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api/client";
+import { env } from "@/config/env";
 import { companyScopeHeaders } from "@/lib/api/company-scope";
 import { getStoredClientId, getStoredCompanyId } from "@/lib/api/tenancy-storage";
 import { ApiError } from "@/types/api";
@@ -20,6 +21,8 @@ import type {
   YouTubeAnalyticsVideoResponse,
   YouTubeChannelMappingDto,
   YouTubeChannelResponse,
+  YouTubeCaptionListResponse,
+  YouTubeCaptionResponse,
   YouTubeClientOverviewDto,
   YouTubeDiscoveredChannelDto,
   YouTubeCommentDeleteResponse,
@@ -192,6 +195,38 @@ export const youtubeApi = {
   video: (scope: YouTubeScope, videoId: string, signal?: AbortSignal) => get<YouTubeVideoResponse>(scope, `/videos/${seg(videoId)}`, undefined, signal),
   updateVideo: (scope: YouTubeScope, videoId: string, input: YouTubeVideoUpdateInput) => send<YouTubeVideoResponse>(scope, "PATCH", `/videos/${seg(videoId)}`, input),
   deleteVideo: (scope: YouTubeScope, videoId: string) => send<YouTubeVideoDeleteResponse>(scope, "DELETE", `/videos/${seg(videoId)}`),
+
+  /* ---- caption tracks ---- */
+
+  captions: (scope: YouTubeScope, videoId: string, signal?: AbortSignal) => get<YouTubeCaptionListResponse>(scope, `/videos/${seg(videoId)}/captions`, undefined, signal),
+  uploadCaption: (scope: YouTubeScope, videoId: string, file: File, input: { language: string; name?: string; isDraft?: boolean }) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("language", input.language);
+    if (input.name) form.append("name", input.name);
+    if (input.isDraft !== undefined) form.append("isDraft", String(input.isDraft));
+    return apiClient.request<YouTubeCaptionResponse>({ method: "POST", path: `${BASE}/videos/${seg(videoId)}/captions`, headers: headers(scope), body: form });
+  },
+  replaceCaption: (scope: YouTubeScope, videoId: string, captionId: string, file?: File, isDraft?: boolean) => {
+    const form = new FormData();
+    if (file) form.append("file", file);
+    if (isDraft !== undefined) form.append("isDraft", String(isDraft));
+    return apiClient.request<YouTubeCaptionResponse>({ method: "PATCH", path: `${BASE}/videos/${seg(videoId)}/captions/${seg(captionId)}`, headers: headers(scope), body: form });
+  },
+  deleteCaption: (scope: YouTubeScope, videoId: string, captionId: string) => send<{ captionId: string; deleted: true }>(scope, "DELETE", `/videos/${seg(videoId)}/captions/${seg(captionId)}`),
+  async downloadCaption(scope: YouTubeScope, videoId: string, captionId: string, format: "srt" | "vtt" | "sbv" | "scc" | "ttml" = "srt"): Promise<Blob> {
+    const response = await fetch(`${env.apiBaseUrl}${BASE}/videos/${seg(videoId)}/captions/${seg(captionId)}/download?format=${format}`, {
+      credentials: "include",
+      headers: { ...headers(scope), "ngrok-skip-browser-warning": "true" },
+    });
+    if (!response.ok) throw new ApiError({ code: response.status === 404 ? "NOT_FOUND" : "UNKNOWN", message: "Caption download failed.", status: response.status });
+    return response.blob();
+  },
+
+  /* ---- channel branding ---- */
+
+  updateBranding: (scope: YouTubeScope, input: { description?: string; country?: string; defaultLanguage?: string; keywords?: string }) => send<YouTubeChannelResponse>(scope, "PATCH", "/channel/branding", input),
+  setBanner: (scope: YouTubeScope, assetId: string) => send<YouTubeChannelResponse>(scope, "POST", "/channel/banner", { assetId }),
 
   /* ---- uploads / thumbnail ---- */
 

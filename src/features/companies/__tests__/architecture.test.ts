@@ -51,7 +51,9 @@ describe("data seam", () => {
       assert.ok(!/\bfetch\(/.test(text), `${rel(file)} calls fetch`);
       assert.ok(!/\bXMLHttpRequest\b|axios/.test(text), `${rel(file)} uses a network client`);
     }
-    assert.equal(existsSync(resolve(SRC, "app", "api")), false, "no route handlers may be added in this phase");
+    // Route handlers are an explicit, reviewed list: the AI image proxy is the only one.
+    const handlers = existsSync(resolve(SRC, "app", "api")) ? (readdirSync(resolve(SRC, "app", "api"), { recursive: true }) as string[]).map((p) => String(p).replace(/\\/g, "/")).filter((p) => /(^|\/)route\.tsx?$/.test(p)) : [];
+    assert.deepEqual(handlers, ["v1/ai/generate-image/route.ts"], "no route handlers may be added without review");
   });
 
   it("builds the demo dataset without randomness or the wall clock", () => {

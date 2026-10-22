@@ -1,29 +1,30 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Send, Bookmark, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { Tab } from "../types/content.types";
-import { CreateContentTab } from "./CreateContentTab";
+import { CreateContentTab, type CreateSeed } from "./CreateContentTab";
 import { AIAssistantTab } from "./AIAssistantTab";
-import { TemplatesTab } from "./TemplatesTab";
+import { TemplatesTab, type TemplateSeed } from "./TemplatesTab";
 import { DraftsTab } from "./DraftsTab";
 import { IdeasTab } from "./IdeasTab";
 import { ApprovalsTab } from "./ApprovalsTab";
+import { FeatureGate } from "@/lib/feature-flags/feature-gate";
 
 const TABS: Array<{ id: Tab; hint: string }> = [
   { id: "Create", hint: "Compose post" },
   { id: "AI Assistant", hint: "Generate with AI" },
-  { id: "Templates", hint: "Sample library" },
+  { id: "Templates", hint: "Starter and saved" },
   { id: "Saved Drafts", hint: "From workspace" },
-  { id: "Content Ideas", hint: "Sample prompts" },
+  { id: "Content Ideas", hint: "Starter prompts" },
   { id: "Approvals", hint: "From workspace" },
 ];
 
-export default function ContentStudioShell() {
-  const [activeTab, setActiveTab] = useState<Tab>("Create");
+export default function ContentStudioShell({ initialTab = "Create" }: { initialTab?: Tab } = {}) {
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [aiPrompt, setAiPrompt] = useState<string | undefined>(undefined);
   const [aiType, setAiType] = useState<string | undefined>(undefined);
+  const [createSeed, setCreateSeed] = useState<{ seed: CreateSeed; key: number } | undefined>(undefined);
 
   const handleCustomizeWithAi = (idea: { title: string; description: string; contentType?: string }) => {
     const type = idea.contentType === "carousel" ? "Carousel" : idea.contentType === "video" ? "Reel Script" : "Social Post";
@@ -32,21 +33,26 @@ export default function ContentStudioShell() {
     setActiveTab("AI Assistant");
   };
 
-  const handleUseIdea = () => {
+  const startFromSeed = (seed: CreateSeed) => {
+    setCreateSeed((prev) => ({ seed, key: (prev?.key ?? 0) + 1 }));
     setActiveTab("Create");
   };
 
+  const handleUseTemplate = (template: TemplateSeed) => startFromSeed(template);
+
+  const handleUseIdea = (idea: { suggestedCTA: string }) => startFromSeed({ caption: "", hashtags: [], cta: idea.suggestedCTA });
+
   const content = useMemo(() => {
     switch (activeTab) {
-      case "Create": return <CreateContentTab />;
+      case "Create": return <CreateContentTab key={createSeed?.key ?? 0} seed={createSeed?.seed} />;
       // key: remount when a fresh prompt/type arrives so the tab resets cleanly
-      case "AI Assistant": return <AIAssistantTab key={`${aiType}|${aiPrompt}`} initialPrompt={aiPrompt} initialType={aiType} />;
-      case "Templates": return <TemplatesTab />;
+      case "AI Assistant": return <FeatureGate flag="content.ai_generator"><AIAssistantTab key={`${aiType}|${aiPrompt}`} initialPrompt={aiPrompt} initialType={aiType} /></FeatureGate>;
+      case "Templates": return <TemplatesTab onUseTemplate={handleUseTemplate} />;
       case "Saved Drafts": return <DraftsTab />;
       case "Content Ideas": return <IdeasTab onCustomizeWithAi={handleCustomizeWithAi} onUseIdea={handleUseIdea} />;
       case "Approvals": return <ApprovalsTab />;
     }
-  }, [activeTab, aiPrompt, aiType]);
+  }, [activeTab, aiPrompt, aiType, createSeed]);
 
   return (
     <div className="w-full min-w-0 space-y-3 text-[#172044]">
@@ -57,14 +63,6 @@ export default function ContentStudioShell() {
             Content Studio
           </h1>
           <p className="mt-0.5 text-[11.5px] text-[#687797]">Create, customize and publish content across all your channels.</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <button className="flex h-9 items-center gap-1.5 rounded-sm border border-[#D7E0EB] bg-white px-3.5 text-[12.5px] font-semibold text-[#33445F] shadow-[0_1px_3px_rgb(31_50_81/0.06)] transition hover:bg-[#F8FAFD]">
-            <Bookmark className="size-3.5 text-[#71809D]" /> Save draft
-          </button>
-          <button className="flex h-9 items-center gap-1.5 rounded-sm bg-[#EB0711] px-4 text-[12.5px] font-semibold text-white shadow-[0_1px_3px_rgb(235_7_17/0.25)] transition hover:bg-[#D60811]">
-            <Send className="size-3.5" /> Publish <ChevronDown className="size-3.5 opacity-80" />
-          </button>
         </div>
       </div>
 

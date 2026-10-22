@@ -54,6 +54,7 @@ import { WEBSITE_PERMISSIONS } from "../../data/types";
 import { Card, Chip, FilterSelect, KeyValue, SubTabs, WButton } from "../ui/kit";
 import { QueryErrorState, SkeletonBlock } from "../ui/states";
 import { useUrlState } from "../use-url-state";
+import { GoogleSheetsCard } from "../google-sheets-export";
 import { ReportSchedulesPanel } from "../dialogs/reports-panel";
 import { useWebsiteWorkspace } from "../website-workspace";
 import { useAdminContext } from "@/features/admin/shell/admin-context";
@@ -392,6 +393,7 @@ export function WebsiteSettingsPage() {
               </Card>
             );
           })}
+          <GoogleSheetsCard clientId={clientId} />
         </div>
       ) : null}
 

@@ -9,7 +9,6 @@ import {
   Chip,
   DataTable,
   FilterSelect,
-  KeyValue,
   Pagination,
   SearchInput,
   WButton,
@@ -20,9 +19,11 @@ import {
 } from "../ui/kit";
 import { EmptyState, QueryErrorState, SkeletonStats, SkeletonTable } from "../ui/states";
 import { useWebsiteWorkspace } from "../website-workspace";
-import { useKeywordResearch, useWebsiteSeo } from "../../data/hooks";
+import { useKeywordResearch } from "../../data/hooks";
 import { downloadFile, toCsv } from "../../data/selectors";
-import type { KeywordResearchData, SearchPageRow } from "../../data/types";
+import type { KeywordResearchData } from "../../data/types";
+import { PeriodPicker, QueryInsight, periodLabel, useSearchPeriod } from "../search-console-shared";
+import { SheetsExportButton } from "../google-sheets-export";
 import {
   DetailMetric,
   MetricGrid,
@@ -52,20 +53,11 @@ function intentTone(intent: KeywordResearchData["intent"]) {
   return intent === "transactional" ? "warn" : intent === "commercial" ? "info" : intent === "navigational" ? "violet" : "good";
 }
 
-function associatedPages(query: string, pages: SearchPageRow[]) {
-  const terms = query.toLowerCase().split(/\s+/).filter((part) => part.length > 2);
-  return pages
-    .filter((page) => terms.some((term) => page.page.toLowerCase().includes(term)))
-    .sort((a, b) => b.clicks - a.clicks)
-    .slice(0, 5);
-}
-
 export function WebsiteKeywordResearchPage() {
   const { clientId } = useWebsiteWorkspace();
-  const keywords = useKeywordResearch(clientId);
-  const seo = useWebsiteSeo(clientId);
+  const [period, setPeriod] = useSearchPeriod();
+  const keywords = useKeywordResearch(clientId, true, period);
   const keywordData = keywords.data ?? [];
-  const searchPages = seo.data?.searchConsole?.pages ?? [];
 
   const [query, setQuery] = useState("");
   const [intent, setIntent] = useState<IntentFilter>("all");
@@ -111,19 +103,22 @@ export function WebsiteKeywordResearchPage() {
       { key: "impressions", header: "Impressions", align: "right", sortValue: (row) => row.impressions, cell: (row) => formatNumber(row.impressions) },
       { key: "ctr", header: "CTR", align: "right", sortValue: (row) => row.ctr, cell: (row) => formatPct(row.ctr) },
       { key: "position", header: "Avg position", align: "right", sortValue: (row) => row.position, cell: (row) => formatPosition(row.position) },
-      { key: "previous", header: "Previous", align: "right", cell: () => <UnavailableText>No previous-period data</UnavailableText> },
-      { key: "change", header: "Change", cell: () => <UnavailableText>Not available</UnavailableText> },
+      {
+        key: "previous",
+        header: "Previous",
+        align: "right",
+        sortValue: (row) => row.previousPosition ?? 999,
+        cell: (row) => (row.previousPosition == null ? <UnavailableText>No data</UnavailableText> : formatPosition(row.previousPosition)),
+      },
+      { key: "change", header: "Change", sortValue: (row) => row.positionChange ?? -999, cell: (row) => <MovementChip current={row.position} previous={row.previousPosition} /> },
       {
         key: "pages",
-        header: "Associated pages",
+        header: "Landing page",
         hideOnMobile: true,
-        cell: (row) => {
-          const pages = associatedPages(row.query, searchPages);
-          return pages.length ? <PathLabel url={pages[0]!.page} /> : <UnavailableText>Not measured</UnavailableText>;
-        },
+        cell: (row) => (row.page ? <PathLabel url={row.page} /> : <UnavailableText>Not measured</UnavailableText>),
       },
     ],
-    [searchPages],
+    [],
   );
 
   const sorted = useSortedRows(filtered, columns, sort);
@@ -136,9 +131,9 @@ export function WebsiteKeywordResearchPage() {
 
   const handleExport = () => {
     downloadFile(
-      "keyword-research.csv",
+      `keyword-research-${period}.csv`,
       toCsv(
-        ["Keyword", "Intent", "Clicks", "Impressions", "CTR", "Average position", "Search volume"],
+        ["Keyword", "Intent", "Clicks", "Impressions", "CTR", "Average position", "Previous position", "Landing page", "Search volume"],
         filtered.map((item) => [
           item.query,
           item.intent,
@@ -146,6 +141,8 @@ export function WebsiteKeywordResearchPage() {
           item.impressions,
           item.ctr,
           item.position,
+          item.previousPosition ?? "",
+          item.page ?? "",
           hasSearchVolume ? item.searchVolume ?? "" : "Not available",
         ]),
       ),
@@ -179,23 +176,25 @@ export function WebsiteKeywordResearchPage() {
         subtitle="Discover search queries, analyze visibility and identify optimization opportunities."
         actions={
           <>
+            <PeriodPicker value={period} onChange={setPeriod} />
             <WButton size="sm" icon={RefreshCw} onClick={() => void keywords.refetch()}>
               Refresh
             </WButton>
             <WButton size="sm" icon={Download} onClick={handleExport} disabled={filtered.length === 0}>
               Export
             </WButton>
+            <SheetsExportButton clientId={clientId} dataset="search" period={period} />
           </>
         }
-        note="Clicks, impressions, CTR and average position come from Google Search Console. Search Console does not provide monthly keyword search volume, so volume is shown only when a genuine provider supplies it."
+        note="Clicks, impressions, CTR and average position come from Google Search Console. Google leaves rare (anonymised) queries out of the list, so these totals are lower than the site totals on SEO → Search performance. Monthly search volume is not part of Search Console, so it is shown only when a genuine provider supplies it."
       />
 
       <MetricGrid
         metrics={[
           { label: "Total queries", value: formatNumber(filtered.length), sub: "Visible in current result set", icon: Search },
           { label: "Avg position", value: formatPosition(average(filtered.map((item) => item.position))), sub: "Lower is better", icon: TrendingUp },
-          { label: "Total impressions", value: formatNumber(filtered.reduce((sum, item) => sum + item.impressions, 0)), icon: Target },
-          { label: "Total clicks", value: formatNumber(filtered.reduce((sum, item) => sum + item.clicks, 0)), tone: "good", icon: Target },
+          { label: "Total impressions", value: formatNumber(filtered.reduce((sum, item) => sum + item.impressions, 0)), sub: "Listed queries only", icon: Target },
+          { label: "Total clicks", value: formatNumber(filtered.reduce((sum, item) => sum + item.clicks, 0)), sub: `Listed queries, last ${periodLabel(period)}`, tone: "good", icon: Target },
           {
             label: "Average CTR",
             value: avgCtr == null ? "Not available" : formatPct(avgCtr),
@@ -266,21 +265,22 @@ export function WebsiteKeywordResearchPage() {
         <Pagination page={pagination.page} pageSize={pagination.pageSize} total={sorted.length} onPageChange={pagination.setPage} onPageSizeChange={pagination.setPageSize} />
       </Card>
 
-      <KeywordDrawer keyword={selected} pages={searchPages} onClose={() => setSelected(null)} />
+      <KeywordDrawer clientId={clientId} period={period} keyword={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
 
 function KeywordDrawer({
+  clientId,
+  period,
   keyword,
-  pages,
   onClose,
 }: {
+  clientId: string;
+  period: ReturnType<typeof useSearchPeriod>[0];
   keyword: KeywordResearchData | null;
-  pages: SearchPageRow[];
   onClose: () => void;
 }) {
-  const pageMatches = keyword ? associatedPages(keyword.query, pages) : [];
   return (
     <Sheet open={Boolean(keyword)} onOpenChange={(open) => (open ? undefined : onClose())}>
       <SheetContent className="w-full max-w-xl border-[#E6EBF4] bg-white p-0 sm:max-w-xl">
@@ -292,39 +292,18 @@ function KeywordDrawer({
           {keyword ? (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-2">
-                <DetailMetric label="Current position" value={formatPosition(keyword.position)} />
-                <DetailMetric label="Previous position" value="No previous-period data" tone="muted" />
-                <DetailMetric label="Clicks" value={formatNumber(keyword.clicks)} tone="good" />
-                <DetailMetric label="Impressions" value={formatNumber(keyword.impressions)} />
                 <DetailMetric label="CTR" value={formatPct(keyword.ctr)} />
                 <DetailMetric label="Search volume" value="Not available" tone="muted" />
               </div>
-              <div className="rounded-lg border border-[#E6EBF4] p-3">
-                <p className="text-[11px] font-semibold capitalize text-[#6B7A94]">Historical trend</p>
-                <p className="mt-1 text-[12px] leading-relaxed text-[#4A5A73]">
-                  Per-keyword historical snapshots are not available in the current API response. The table uses the current Search Console period only.
-                </p>
-              </div>
-              <div>
-                <p className="mb-2 text-[11px] font-semibold capitalize text-[#6B7A94]">Associated landing pages</p>
-                {pageMatches.length ? (
-                  <dl className="divide-y divide-[#F2F5FA] rounded-lg border border-[#E6EBF4] px-3">
-                    {pageMatches.map((page) => (
-                      <KeyValue key={page.page} label={`${formatNumber(page.clicks)} clicks`}>
-                        <PathLabel url={page.page} />
-                      </KeyValue>
-                    ))}
-                  </dl>
-                ) : (
-                  <p className="rounded-lg border border-dashed border-[#DAE1EC] p-3 text-[12px] text-[#6B7A94]">
-                    No associated page is independently measured for this query in the current response.
-                  </p>
-                )}
-              </div>
+              <QueryInsight clientId={clientId} query={keyword.query} period={period} />
               <div className="rounded-lg bg-[#F7F9FC] p-3">
-                <p className="text-[11px] font-semibold text-[#6B7A94]">SEO Opportunities</p>
+                <p className="text-[11px] font-semibold text-[#6B7A94]">What to do</p>
                 <p className="mt-1 text-[12px] text-[#4A5A73]">
-                  Improve pages where this query has high impressions and low CTR, or where average position is outside the top 10. AI recommendations appear here once integrated.
+                  {keyword.position > 10
+                    ? "This keyword is on page 2 or later. Strengthen the landing page above for it (title, H1, content depth, internal links) to reach page 1."
+                    : keyword.ctr < 2 && keyword.impressions >= 20
+                      ? "People see this result but rarely click. Rewrite the page title and meta description to match what searchers want."
+                      : "This keyword already performs. Keep the landing page fresh and link to it from related pages."}
                 </p>
               </div>
             </div>

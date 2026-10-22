@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import {
   Area,
@@ -23,15 +24,13 @@ import {
   FileText,
   Globe2,
   Megaphone,
-  Plus,
-  Search,
   Sparkles,
   Target,
   TrendingUp,
-  Trash2,
   Users,
 } from "lucide-react";
 import { ChannelLogo } from "../../shared/channel-logo";
+import { ErrorState } from "@/components/shared/error-state";
 import { useReportsDashboard } from "../hooks/use-reports";
 import { useAdminContext } from "../../shell/admin-context";
 import { cn } from "@/lib/utils/cn";
@@ -76,7 +75,7 @@ const tabs: { id: Tab; label: string; icon: typeof TrendingUp }[] = [
 ];
 
 export function ReportsPage() {
-  const { data, isLoading } = useReportsDashboard();
+  const { data, isLoading, error, refetch } = useReportsDashboard();
   const { Clients, selectedProjectId } = useAdminContext();
   const [dateRange] = useState("Last 30 days");
   const [activeTab, setActiveTab] = useState<Tab>("overview");
@@ -84,7 +83,7 @@ export function ReportsPage() {
   const activeClientName =
     Clients?.find((c: any) => c.id === selectedProjectId)?.name ||
     Clients?.[0]?.name ||
-    "Namo Gange Trust";
+    "All clients";
 
   const dateSubtext = (() => {
     const end = new Date();
@@ -93,6 +92,10 @@ export function ReportsPage() {
       d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
     return `${fmt(start)} – ${fmt(end)}`;
   })();
+
+  if (error) {
+    return <ErrorState error={error} onRetry={() => void refetch()} />;
+  }
 
   if (isLoading || !data) {
     return (
@@ -183,7 +186,7 @@ export function ReportsPage() {
       {activeTab === "channels" && <ChannelsTab data={data} />}
       {activeTab === "campaigns" && <CampaignsTab data={data} />}
       {activeTab === "leads" && <LeadsTab data={data} />}
-      {activeTab === "reports" && <ReportsTab data={data} />}
+      {activeTab === "reports" && <ReportsTab />}
     </div>
   );
 }
@@ -658,241 +661,23 @@ function LeadsTab({ data }: { data: NonNullable<ReturnType<typeof useReportsDash
 
 /* ──────────────────── REPORTS TAB ──────────────────── */
 
-function ReportsTab({ data }: { data: NonNullable<ReturnType<typeof useReportsDashboard>["data"]> }) {
+function ReportsTab() {
   return (
-    <>
-      <div className="grid items-stretch gap-2 lg:grid-cols-[1.5fr_1fr]">
-        <Panel
-          title="Report Templates"
-
-          action={
-            <button className="flex items-center gap-1 text-[12px] font-semibold text-[#EB0711]">
-              <Plus className="size-3.5" />
-              Create
-            </button>
-          }
-        >
-          <div className="grid grid-cols-2 gap-2 p-2 xl:grid-cols-3">
-            {data.templates.map((t) => (
-              <article
-                key={t.id}
-                className="group rounded-sm border border-[#E4EAF2] bg-[#FBFCFE] p-2.5 transition-colors hover:border-[#C9D6E8] hover:bg-white"
-              >
-                <span className="grid size-8 place-items-center rounded-sm bg-[#EAF2FF] text-[#3186F3]">
-                  <FileText className="size-4" />
-                </span>
-                <b className="mt-1.5 block truncate text-[12px] font-semibold text-[#172044]">{t.name}</b>
-                <p className="mt-0.5 line-clamp-2 text-[12px] leading-4 text-[#172044]">{t.detail}</p>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-[12px] text-[#172044]">{t.sections.length} sections</span>
-                  <button className="rounded border border-[#DDE4ED] bg-white px-2 py-0.5 text-[12px] font-semibold text-[#EB0711]">
-                    Use
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        </Panel>
-
-        <div className="space-y-2">
-          <Panel title="Quick Export">
-            <div className="grid grid-cols-1 gap-1 p-2">
-              {[
-                { label: "Full marketing report", format: "PDF" },
-                { label: "Campaign performance", format: "CSV" },
-                { label: "Lead attribution data", format: "CSV" },
-                { label: "Revenue breakdown", format: "Excel" },
-                { label: "Channel comparison", format: "PDF" },
-              ].map((row) => (
-                <button
-                  key={row.label}
-                  className="flex items-center gap-2 rounded border border-[#E4EAF2] px-2 py-1.5 text-left text-[12px] font-semibold text-[#425273] transition-colors hover:bg-[#F8FAFD]"
-                >
-                  <Download className="size-3.5 shrink-0 text-[#172044]" />
-                  <span className="min-w-0 flex-1 truncate">{row.label}</span>
-                  <span className="w-fit rounded bg-[#EEF1F6] px-1.5 py-0.5 text-[12px] font-semibold text-[#172044]">
-                    {row.format}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </Panel>
-
-          <Panel title="Report Usage">
-            <div className="space-y-2 p-3">
-              {[
-                { label: "Reports generated", current: String(data.reportHistory?.length || 1), max: "25", percent: Math.round(((data.reportHistory?.length || 1) / 25) * 100) },
-                { label: "PDF exports", current: String(data.reportHistory?.filter((r) => r.format === "pdf").length || 1), max: "20", percent: Math.round(((data.reportHistory?.filter((r) => r.format === "pdf").length || 1) / 20) * 100) },
-                { label: "Scheduled reports", current: String(data.scheduledReports?.length || 1), max: "6", percent: Math.round(((data.scheduledReports?.length || 1) / 6) * 100) },
-              ].map((item) => (
-                <div key={item.label}>
-                  <div className="flex justify-between text-[12px]">
-                    <span className="font-semibold text-[#172044]">{item.label}</span>
-                    <span className="font-bold text-[#172044]">
-                      {item.current} <span className="font-normal text-[#172044]">/ {item.max}</span>
-                    </span>
-                  </div>
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-sm bg-[#EDF1F7]">
-                    <div
-                      className="h-full rounded-sm bg-[#EB0711]"
-                      style={{ width: `${item.percent}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Panel>
-        </div>
-      </div>
-
-      <div className="grid items-stretch gap-2 xl:grid-cols-[2fr_1fr]">
-        <Panel
-          title="Scheduled Reports"
-          action={
-            <div className="flex items-center gap-1.5">
-              <FilterButton label="All types" />
-              <FilterButton label="All statuses" />
-            </div>
-          }
-        >
-          <div className="overflow-x-auto px-2">
-            <div className="sticky top-0 z-10 grid grid-cols-[1.5fr_0.7fr_1.3fr_0.66fr_0.8fr_0.5fr_0.7fr] gap-2 bg-white py-2 text-[12px] font-semibold text-[#172044]">
-              <span>Report</span>
-              <span>Type</span>
-              <span>Frequency</span>
-              <span className="text-right">Recipients</span>
-              <span>Next Run</span>
-              <span>Format</span>
-              <span className="text-right">Status</span>
-            </div>
-            {data.scheduledReports.map((row) => (
-              <div
-                key={row.id}
-                className="grid grid-cols-[1.5fr_0.7fr_1.3fr_0.66fr_0.8fr_0.5fr_0.7fr] items-center gap-2 border-t border-[#EDF1F5] py-2 text-[12px] text-[#172044]"
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <FileText className="size-3.5 shrink-0 text-[#172044]" />
-                  <b className="truncate text-[12px] text-[#172044]">{row.name}</b>
-                </span>
-                <span className="truncate">{row.type}</span>
-                <span className="truncate capitalize">{row.frequency}</span>
-                <span className="text-right">
-                  <b className="text-[#172044]">{row.recipients}</b>
-                </span>
-                <span className="whitespace-nowrap">{row.nextRun}</span>
-                <span className="w-fit rounded bg-[#EEF1F6] px-1.5 py-0.5 text-[12px] font-semibold text-[#172044] uppercase">
-                  {row.format}
-                </span>
-                <span className="flex items-center justify-end gap-2">
-                  <span
-                    className={cn(
-                      "w-fit rounded px-1.5 py-0.5 text-[12px] font-bold",
-                      row.active ? "bg-[#E5F7EF] text-[#078359]" : "bg-[#EEF1F6] text-[#172044]",
-                    )}
-                  >
-                    {row.active ? "Active" : "Paused"}
-                  </span>
-                  <Toggle on={row.active} />
-                </span>
-              </div>
-            ))}
-          </div>
-        </Panel>
-
-        <Panel
-          title="Report History"
-          className="h-[400px]"
-          action={
-            <span className="flex h-7 w-[160px] items-center gap-1.5 rounded border border-[#E4E8ED] bg-[#FAFBFC] px-2">
-              <Search className="size-3.5 text-[#172044]" />
-              <input
-                className="w-full bg-transparent text-[12px] outline-none placeholder:text-[#172044]"
-                placeholder="Search history..."
-              />
-            </span>
-          }
-        >
-          <div className="max-h-[350px] overflow-y-auto px-2">
-            <div className="sticky top-0 z-10 grid grid-cols-[1.5fr_0.9fr_1.2fr_0.56fr_0.5fr_0.6fr_0.4fr] gap-2 bg-white py-2 text-[12px] font-semibold text-[#172044]">
-              <span>Report</span>
-              <span>Period</span>
-              <span>Generated</span>
-              <span className="text-right">Size</span>
-              <span>Format</span>
-              <span>Status</span>
-              <span className="text-right">Get</span>
-            </div>
-            {data.reportHistory.map((row) => (
-              <div
-                key={row.id}
-                className="grid grid-cols-[1.5fr_0.9fr_1.2fr_0.56fr_0.5fr_0.6fr_0.4fr] items-center gap-2 border-t border-[#EDF1F5] py-2 text-[12px] text-[#172044]"
-              >
-                <b className="truncate text-[12px] text-[#172044]">{row.name}</b>
-                <span className="truncate">{row.period}</span>
-                <span className="truncate">{row.generatedAt}</span>
-                <span className="text-right">{row.size}</span>
-                <span className="w-fit rounded bg-[#EEF1F6] px-1.5 py-0.5 text-[12px] font-semibold text-[#172044] uppercase">
-                  {row.format}
-                </span>
-                <span
-                  className={cn(
-                    "w-fit rounded px-1.5 py-0.5 text-[12px] font-bold",
-                    row.status === "sent" ? "bg-[#E5F7EF] text-[#078359]" : "bg-[#FFE8EA] text-[#D91521]",
-                  )}
-                >
-                  {row.status === "sent" ? "Sent" : "Failed"}
-                </span>
-                <span className="flex items-center justify-end gap-1">
-                  <button className="rounded p-0.5 text-[#3186F3] hover:bg-[#EAF2FF]">
-                    <Download className="size-4" />
-                  </button>
-                  <button className="rounded p-0.5 text-[#EF4444] hover:bg-[#FFEAEC]">
-                    <Trash2 className="size-4" />
-                  </button>
-                </span>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      </div>
-
-      <Panel
-        title="Recipients"
-        action={
-          <button className="flex items-center gap-1 text-[12px] font-semibold text-[#EB0711]">
-            <Plus className="size-3.5" />
-            Add
-          </button>
-        }
-      >
-        <div className="grid grid-cols-1 gap-0 sm:grid-cols-2 lg:grid-cols-3">
-          {data.recipients.map((row) => (
-            <div
-              key={row.id}
-              className="flex items-center gap-2 border-b border-[#EDF1F5] p-3 sm:border-r lg:last:border-r-0"
-            >
-              <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-[#EAF2FF] text-[12px] font-bold text-[#1A6BC4]">
-                {row.name
-                  .split(" ")
-                  .map((p) => p[0])
-                  .join("")
-                  .slice(0, 2)}
-              </span>
-              <span className="min-w-0 flex-1">
-                <b className="block truncate text-[12px] font-semibold text-[#172044]">{row.name}</b>
-                <small className="block truncate text-[12px] text-[#172044]">{row.email}</small>
-              </span>
-              <span className="shrink-0 text-right">
-                <span className="w-fit rounded bg-[#EEF1F6] px-1.5 py-0.5 text-[12px] font-semibold text-[#172044]">
-                  {row.role}
-                </span>
-                <small className="mt-0.5 block text-[12px] text-[#172044]">{row.reportCount} reports</small>
-              </span>
-            </div>
-          ))}
+      <Panel title="Reports">
+        <div className="space-y-2 px-4 py-10 text-center">
+          <span className="mx-auto grid size-10 place-items-center rounded-sm bg-[#EAF2FF] text-[#3186F3]">
+            <FileText className="size-5" />
+          </span>
+          <p className="text-[13px] font-semibold text-[#172044]">Cross-channel reports are not available yet</p>
+          <p className="mx-auto max-w-md text-[12px] leading-5 text-[#5E6D89]">
+            Generating, scheduling and emailing PDF or CSV reports for the numbers on this page is not built. The Overview, Channels,
+            Campaigns and Leads tabs show live figures from your workspace. Website audits and their exports are in Website Intelligence.
+          </p>
+          <Link href="/admin/website" className="inline-block text-[12px] font-semibold text-[#EB0711] hover:underline">
+            Open Website Intelligence
+          </Link>
         </div>
       </Panel>
-    </>
   );
 }
 
@@ -961,32 +746,5 @@ function Panel({
       </header>
       <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">{children}</div>
     </section>
-  );
-}
-
-function FilterButton({ label }: { label: string }) {
-  return (
-    <button className="flex h-7 items-center gap-1 rounded border border-[#E4E8ED] bg-[#FAFBFC] px-2 text-[12px] font-semibold text-[#172044]">
-      {label}
-      <ChevronDown className="size-3" />
-    </button>
-  );
-}
-
-function Toggle({ on }: { on: boolean }) {
-  return (
-    <span
-      className={cn(
-        "relative block h-4 w-7 shrink-0 rounded-sm transition-colors",
-        on ? "bg-[#10B981]" : "bg-[#CBD5E1]",
-      )}
-    >
-      <i
-        className={cn(
-          "absolute top-0.5 block size-3 rounded-sm bg-white shadow-sm transition-all",
-          on ? "left-[14px]" : "left-0.5",
-        )}
-      />
-    </span>
   );
 }

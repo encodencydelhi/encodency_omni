@@ -6,114 +6,15 @@ import Image from "next/image";
 import {
   Megaphone, Play, CalendarDays, CheckCircle2, Users, Database,
   Search, SlidersHorizontal, ArrowDownUp, Plus, MoreVertical,
-  ArrowUpRight, Copy, Link2, BarChart3, ChevronDown,
-  ChevronLeft, ChevronRight, Target, AlertCircle, RefreshCw, Loader2
+  Copy, Link2, BarChart3, ChevronDown,
+  ChevronRight, Target, AlertCircle, RefreshCw, Loader2
 } from "lucide-react";
 import { ChannelLogo } from "@/features/admin/shared/channel-logo";
-import { IntegrationPendingBadge, IntegrationPendingBanner } from "@/features/admin/shared/integration-pending-banner";
-import { campaignsApi, type CampaignRecord, isRevisionConflict } from "./live/campaigns-api";
+import { campaignsApi, type CampaignRecord } from "./live/campaigns-api";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";
-const stats = [
-  { icon: Megaphone, title: "Total Campaigns", value: "24", trend: "33%", note: "+6 new this month", tone: "red" },
-  { icon: Play, title: "Active Campaigns", value: "8", trend: "14%", note: "33% of total", tone: "green" },
-  { icon: CalendarDays, title: "Scheduled", value: "6", trend: "20%", note: "25% of total", tone: "purple" },
-  { icon: CheckCircle2, title: "Completed", value: "7", trend: "40%", note: "29% of total", tone: "green" },
-  { icon: Users, title: "Total Leads", value: "1,248", trend: "18%", note: "+186 this month", tone: "blue" },
-  { icon: Database, title: "Total Spend", value: "₹48,250", trend: "8%", note: "−8% vs last month", tone: "orange", down: true },
-];
-
-const campaigns = [
-  {
-    id: "moksha-awareness",
-    title: "Clean Ganga Awareness", desc: "A cleaner Ganga for a healthier India",
-    project: "Moksha Sewa", channels: ["Facebook", "Instagram", "LinkedIn"], extra: "+2",
-    image: "/campaigns/clean-river.jpg",
-    status: "Active", statusTone: "active", dates: ["Mar 15, 2025", "Apr 30, 2025"],
-    leads: "248", leadGrowth: "24%", spend: "₹12,400", conversions: "42", conversionGrowth: "18%",
-    score: "78", scoreTone: "green", updated: ["2 hours ago", "by Ankit Verma"]
-  },
-  {
-    id: "volunteer-drive",
-    title: "Volunteer Drive", desc: "Be the change. Join the movement.",
-    project: "Namo Gange Trust", channels: ["Instagram", "YouTube"], extra: "+1",
-    image: "/campaigns/river-cleanup.jpg",
-    status: "Scheduled", statusTone: "scheduled", dates: ["Apr 20, 2025", "May 10, 2025"],
-    leads: "186", leadGrowth: "12%", spend: "₹8,600", conversions: "28", conversionGrowth: "8%",
-    score: "65", scoreTone: "yellow", updated: ["5 hours ago", "by Priya Sharma"]
-  },
-  {
-    id: "community-impact",
-    title: "Save Rivers Save Lives", desc: "Healthy rivers. Brighter tomorrow.",
-    project: "Ganga Clean Drive", channels: ["Facebook", "Instagram", "Google Business", "YouTube"], extra: "",
-    image: "/campaigns/save-rivers/banner.png",
-    status: "Active", statusTone: "active", dates: ["Mar 1, 2025", "Apr 25, 2025"],
-    leads: "320", leadGrowth: "36%", spend: "₹15,200", conversions: "56", conversionGrowth: "28%",
-    score: "82", scoreTone: "green", updated: ["1 day ago", "by Neha Verma"]
-  },
-  {
-    id: "donate-for-change",
-    title: "Earth Day Sustainability", desc: "Small actions. A cleaner tomorrow.",
-    project: "Bharat Organic", channels: ["LinkedIn", "Instagram", "Google Business"], extra: "+1",
-    image: "/campaigns/tree-planting.jpg",
-    status: "Completed", statusTone: "completed", dates: ["Apr 1, 2025", "Apr 22, 2025"],
-    leads: "275", leadGrowth: "48%", spend: "₹6,800", conversions: "62", conversionGrowth: "42%",
-    score: "88", scoreTone: "green", updated: ["2 days ago", "by Rohan Mehta"]
-  },
-  {
-    id: "donation-for-change",
-    title: "Donation for Change", desc: "Support a Cleaner, Greener India.",
-    project: "Namo Gange Trust", channels: ["Facebook", "YouTube"], extra: "",
-    image: "/campaigns/water-conservation.jpg",
-    status: "Draft", statusTone: "draft", dates: ["Apr 25, 2025", "May 15, 2025"],
-    leads: "—", leadGrowth: "", spend: "—", conversions: "—", conversionGrowth: "",
-    score: "—", scoreTone: "empty", updated: ["3 days ago", "by Ankit Verma"]
-  }
-];
-
-const topCampaigns = [
-  ["Save Rivers Save Lives", "320 leads | 56 conversions", "82", "green"],
-  ["Earth Day Sustainability", "275 leads | 62 conversions", "88", "green"],
-  ["Clean Ganga Awareness", "248 leads | 42 conversions", "78", "green"],
-  ["Volunteer Drive", "186 leads | 28 conversions", "65", "yellow"],
-  ["Donation for Change", "48 leads | 12 conversions", "45", "red"]
-];
-
-const milestones = [
-  ["Volunteer Drive Launch", "Apr 20, 2025 · 3 days left", "red"],
-  ["Donation for Change", "Apr 25, 2025 · 8 days left", "red"],
-  ["World Environment Day", "Jun 5, 2025 · 49 days left", "green"],
-  ["Monsoon Clean-Up Drive", "Jun 15, 2025 · 59 days left", "green"]
-];
-
-const channelNames = [
-  ["Facebook", 32, "bg-[#398be8]"],
-  ["Instagram", 24, "bg-[#e983b0]"],
-  ["LinkedIn", 16, "bg-[#547fe8]"],
-  ["Google Business", 12, "bg-[#64a7dd]"],
-  ["WhatsApp", 10, "bg-[#1cb17c]"],
-  ["YouTube", 6, "bg-[#e3262e]"],
-] as const;
-
 function ChannelIcon({ channel, size = 18 }: { channel: string; size?: number }) {
   return <ChannelLogo channel={channel} className={`h-[${size}px] w-[${size}px]`} />;
-}
-
-function SectionHeader({ title, action = "View all", sample = false }: { title: string; action?: string; sample?: boolean }) {
-  return (
-    <div className="flex h-10 items-start justify-between px-3 pt-2.5">
-      <h2 className="m-0 text-[11px] font-[750] leading-[1.2] text-[#17223d]">{title}</h2>
-      {sample ? (
-        <span className="rounded-full border border-[#e5e9ef] bg-[#f6f8fb] px-2 py-0.5 text-[9.5px] font-semibold text-[#7a8497]">
-          Sample data
-        </span>
-      ) : (
-        <button className="flex items-center gap-[3px] border-0 bg-transparent p-0 text-[12px] font-semibold text-[#df2832]">
-          {action}<ArrowUpRight size={11} />
-        </button>
-      )}
-    </div>
-  );
 }
 
 function StatCard({ item }: { item: { icon: React.ComponentType<{ size?: number }>; title: string; value: string; trend: string; note: string; tone: string; down?: boolean } }) {
@@ -140,28 +41,6 @@ function StatCard({ item }: { item: { icon: React.ComponentType<{ size?: number 
           </em>
         </div>
         <small className="mt-1 whitespace-nowrap text-[12px] text-[#8b95a6]">{item.note}</small>
-      </div>
-    </div>
-  );
-}
-
-function PerformanceChart() {
-  const redPoints = [[0, 92], [36, 68], [72, 80], [108, 49], [144, 59], [180, 43], [216, 52], [252, 46], [288, 27], [324, 33], [360, 36], [396, 23], [432, 15], [468, 19], [504, 8], [540, 14], [578, 5], [620, 1]];
-  return (
-    <div className="relative h-[136px] px-3 pb-0 pl-[34px]">
-      <div className="absolute left-[11px] top-0.5 flex h-[105px] flex-col justify-between text-[12px] text-[#8a94a5]">
-        <span>400</span><span>300</span><span>200</span><span>100</span><span>0</span>
-      </div>
-      <svg viewBox="0 0 620 155" preserveAspectRatio="none" className="block h-[111px] w-full">
-        {[14, 49, 84, 119, 154].map(y => <line key={y} x1="0" y1={y} x2="620" y2={y} stroke="#eef1f5" strokeWidth="1" />)}
-        {[0, 104, 208, 312, 416, 520, 620].map(x => <line key={x} x1={x} y1="0" x2={x} y2="154" stroke="#f3f5f8" strokeWidth="1" />)}
-        <polyline fill="none" stroke="#e4252e" strokeWidth="2.1" points="0,92 36,68 72,80 108,49 144,59 180,43 216,52 252,46 288,27 324,33 360,36 396,23 432,15 468,19 504,8 540,14 578,5 620,1" />
-        <polyline fill="none" stroke="#3389e7" strokeWidth="2" points="0,118 36,108 72,111 108,103 144,108 180,96 216,99 252,94 288,87 324,79 360,91 396,82 432,76 468,83 504,71 540,66 578,58 620,51" />
-        <polyline fill="none" stroke="#e887ae" strokeWidth="2" points="0,105 36,96 72,100 108,89 144,94 180,82 216,86 252,77 288,68 324,71 360,67 396,62 432,55 468,59 504,47 540,45 578,35 620,28" />
-        {redPoints.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.5" fill="#e4252e" />)}
-      </svg>
-      <div className="flex justify-between px-0.5 text-[12px] text-[#8a94a5]">
-        <span>Mar 15</span><span>Mar 22</span><span>Mar 29</span><span>Apr 5</span><span>Apr 12</span><span>Apr 19</span>
       </div>
     </div>
   );
@@ -359,7 +238,7 @@ export function CampaignsPage() {
               <span>Dashboard</span><ChevronRight size={10} /><b className="text-[#26314a]">Campaigns</b>
             </div>
             <h1 className="m-0 text-[24px] font-[780] leading-[1.05] tracking-[-.7px]">
-              Campaigns <IntegrationPendingBadge label="Insights Sample Data" />
+              Campaigns
             </h1>
             <p className="mt-[5px] text-[11px] text-[#718097]">Plan, manage and track multi-channel marketing campaigns.</p>
           </div>
@@ -367,20 +246,13 @@ export function CampaignsPage() {
           <div className="relative flex h-16 items-center justify-between overflow-hidden rounded-[7px] border border-[#e8ebf1] bg-gradient-to-r from-white via-white to-[#fff7f7] px-[18px] lg:block lg:flex">
             <div className="relative z-10 flex h-full flex-col justify-center">
               <b className="block text-[11px]">Turn Campaign Ideas Into Impact</b>
-              <span className="text-[12px] text-[#7b8598]">Reach more people. Drive action. Create a cleaner, greener tomorrow.</span>
+              <span className="text-[12px] text-[#7b8598]">Reach more people and drive action across your channels.</span>
               <div className="mt-[7px] h-[3px] w-12 rounded bg-[#df2029]" />
             </div>
             <Target className="relative z-10 text-[#e42b34]" size={62} strokeWidth={1.3} />
             <div className="absolute inset-y-0 right-0 w-[55%] bg-[radial-gradient(circle_at_78%_38%,rgba(227,30,39,.13)_0_17px,transparent_18px),radial-gradient(circle_at_89%_58%,rgba(227,30,39,.08)_0_28px,transparent_29px)]" />
           </div>
         </header>
-
-        <div className="mb-2.5">
-          <IntegrationPendingBanner
-            moduleName="Campaigns"
-            description="Campaign rows and the KPI cards are loaded from the backend; the performance chart, top-performing list, channel split and milestone widgets below are sample data kept in local state until campaign analytics are exposed by the API."
-          />
-        </div>
 
         {/* Stats */}
         <section className="mb-2.5 grid grid-cols-2 gap-[9px] lg:grid-cols-6">
@@ -542,149 +414,9 @@ export function CampaignsPage() {
               </tbody>
             </table>
           </div>
-          <div className="flex h-8 items-center justify-between px-3.5 text-[12px] text-[#69758b]">
-            <span>Showing {filteredCampaigns.length} of {filteredCampaigns.length} campaigns</span>
-            <div className="hidden items-center gap-1 sm:flex">
-              <button className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e1e6ed] bg-white"><ChevronLeft size={11} /></button>
-              {[2, 3, 4].map(n => <button key={n} className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e1e6ed] bg-white text-[12px]">{n}</button>)}
-              <button className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e5252e] bg-[#e5252e] text-[12px] text-white">5</button>
-              <button className="grid h-[25px] w-[25px] place-items-center rounded-[5px] border border-[#e1e6ed] bg-white"><ChevronRight size={11} /></button>
-              <button className="flex h-[25px] w-[100px] items-center justify-center gap-1 rounded-[5px] border border-[#e1e6ed] bg-white text-[12px]">10 per page<ChevronDown size={10} /></button>
-            </div>
+          <div className="flex h-8 items-center px-3.5 text-[12px] text-[#69758b]">
+            <span>Showing {filteredCampaigns.length} campaign{filteredCampaigns.length === 1 ? "" : "s"}</span>
           </div>
-        </section>
-
-        {/* Bottom panels */}
-        <section className="mt-2.5 grid grid-cols-1 gap-[9px] md:grid-cols-2 xl:grid-cols-[1.1fr_1.25fr_.92fr_1fr]">
-          <article className="h-[280px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
-            <SectionHeader title="Campaign Performance Overview" sample />
-            <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-0.5 text-[11px] text-[#657189]">
-              <div className="flex gap-3">
-                <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-sm bg-[#e4252e]" />Leads</span>
-                <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-sm bg-[#3389e7]" />Conversions</span>
-                <span className="flex items-center gap-1"><i className="h-[7px] w-[7px] rounded-sm bg-[#e887ae]" />Spend</span>
-              </div>
-              <button className="flex h-6 items-center gap-1 rounded border border-[#dfe4eb] bg-white px-[7px] text-[11px]">Last 30 days<ChevronDown size={9} /></button>
-            </div>
-            <PerformanceChart />
-          </article>
-
-          <article className="h-[280px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
-            <SectionHeader title="Top Performing Campaigns" sample />
-            <div className="px-3 pt-1">
-              {topCampaigns.map(([name, meta, score, tone], i) => (
-                <div className="grid min-h-10 grid-cols-[22px_1fr_32px] items-center gap-2 border-b border-[#f0f2f5] py-2 last:border-0" key={name}>
-                  <span className="grid h-[21px] w-[21px] place-items-center rounded-sm bg-[#f0f3f7] text-[11px] font-[750] text-[#5d6a80]">{i + 1}</span>
-                  <div className="min-w-0"><b className="block overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-[#35415a]">{name}</b><small className="text-[10px] text-[#8993a5]">{meta}</small></div>
-                  <div className="relative grid h-[30px] w-[30px] place-items-center text-[11px] font-semibold">
-                    <svg className="h-[30px] w-[30px] -rotate-90" viewBox="0 0 30 30">
-                      <circle cx="15" cy="15" r="12" fill="none" stroke="#edf1f5" strokeWidth="3" />
-                      <circle cx="15" cy="15" r="12" fill="none"
-                        stroke={tone === "yellow" ? "#efbd25" : tone === "red" ? "#ed3742" : "#21b47b"}
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeDasharray={`${(Number(score) / 100) * 75.4} 75.4`}
-                      />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold text-[#27354d]">{score}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="h-[280px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
-            <SectionHeader title="Channel Contribution" sample />
-            <div className="flex items-center justify-center gap-[20px] px-2 py-2">
-              <div className="relative h-[118px] w-[118px] shrink-0">
-                <svg
-                  className="h-full w-full -rotate-90"
-                  viewBox="0 0 118 118"
-                  aria-label="Channel contribution"
-                >
-                  <circle
-                    cx="59"
-                    cy="59"
-                    r="46"
-                    fill="none"
-                    stroke="#edf1f5"
-                    strokeWidth="13"
-                  />
-
-                  {(() => {
-                    const radius = 46;
-                    const circumference = 2 * Math.PI * radius;
-                    let offset = 0;
-
-                    const colors = [
-                      "#398be8",
-                      "#e983b0",
-                      "#547fe8",
-                      "#64a7dd",
-                      "#1cb17c",
-                      "#e3262e",
-                    ];
-
-                    return channelNames.map(([name, percentage], index) => {
-                      const dash = (percentage / 100) * circumference;
-                      const gap = 2;
-                      const visibleDash = Math.max(dash - gap, 0);
-                      const currentOffset = offset;
-
-                      offset += dash;
-
-                      return (
-                        <circle
-                          key={name}
-                          cx="59"
-                          cy="59"
-                          r={radius}
-                          fill="none"
-                          stroke={colors[index]}
-                          strokeWidth="13"
-                          strokeLinecap="butt"
-                          strokeDasharray={`${visibleDash} ${circumference - visibleDash}`}
-                          strokeDashoffset={-currentOffset}
-                        />
-                      );
-                    });
-                  })()}
-                </svg>
-
-                <div className="absolute inset-[25px] flex flex-col items-center justify-center rounded-sm bg-white text-center">
-                  <strong className="text-[16px] leading-none">1,248</strong>
-                  <span className="mt-0.5 text-[11px] text-[#8a94a6]">
-                    Total Leads
-                  </span>
-                </div>
-              </div>
-
-              <div className="w-[140px]">
-                {channelNames.map(([name, value, color]) => (
-                  <div
-                    key={name}
-                    className="grid h-[20px] grid-cols-[8px_1fr_auto] items-center text-[11px]"
-                  >
-                    <i className={`h-[7px] w-[7px] rounded-[2px] ${color}`} />
-                    <span className="truncate">{name}</span>
-                    <b className="ml-1">{value}%</b>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </article>
-
-          <article className="h-[280px] overflow-y-auto rounded-[7px] border border-[#e5e9ef] bg-white">
-            <SectionHeader title="Upcoming Campaign Milestones" sample />
-            <div className="px-3">
-              {milestones.map(([title, meta, tone]) => (
-                <div key={title} className="grid min-h-[34px] grid-cols-[23px_1fr] items-center gap-[7px] border-b border-[#f0f2f5] last:border-0">
-                  <span className={`grid h-[21px] w-[21px] place-items-center rounded-sm border-2 ${tone === "green" ? "border-[#18a773] text-[#18a773]" : "border-[#e6303a] text-[#e6303a]"}`}><CalendarDays size={11} /></span>
-                  <div><b className="block text-[12px]">{title}</b><small className="mt-0.5 block text-[12px] text-[#8b95a6]">{meta}</small></div>
-                </div>
-              ))}
-            </div>
-          </article>
         </section>
 
         {/* Quick actions */}

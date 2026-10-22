@@ -2,7 +2,7 @@ import { apiClient } from '@/lib/api/client';
 import { companyScopeHeaders } from '@/lib/api/company-scope';
 import { getStoredClientId, getStoredCompanyId } from '@/lib/api/tenancy-storage';
 import { env } from '@/config/env';
-import type { GenerateReportInput, IntegrationKey, IssueStatus, ReportScheduleInput, ScanStartOptions, ScanType, TrackingSettings, WebsiteDataProvider, WebsiteSettings } from './types';
+import type { GenerateReportInput, IntegrationKey, IssueStatus, ReportScheduleInput, ScanStartOptions, ScanType, SearchPeriod, SheetsDataset, TrackingSettings, WebsiteDataProvider, WebsiteSettings } from './types';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -22,6 +22,51 @@ function headers(clientId: string) {
     h['x-client-id'] = targetId;
   }
   return h;
+}
+
+export interface BrandEntity {
+  id: string;
+  name: string;
+  types: string[];
+  description: string | null;
+  url: string | null;
+  wikipediaUrl: string | null;
+  summary: string | null;
+  imageUrl: string | null;
+  score: number;
+}
+
+export interface BrandPresence {
+  status: 'matched' | 'possible' | 'not_found' | 'unavailable';
+  query: string;
+  websiteHost: string | null;
+  checkedAt: string;
+  entity: BrandEntity | null;
+  others: BrandEntity[];
+  failure: { code: string; message: string } | null;
+  cached: boolean;
+}
+
+/** GET /website/brand-presence: does Google's Knowledge Graph know the client as a business? `refresh` re-checks now. */
+export function fetchBrandPresence(clientId: string, refresh = false): Promise<BrandPresence> {
+  return apiClient.request<BrandPresence>({
+    method: 'GET',
+    path: '/website/brand-presence',
+    headers: headers(clientId),
+    query: refresh ? { refresh: '1' } : undefined,
+  });
+}
+
+export interface BusinessResearch {
+  query: string;
+  checkedAt: string;
+  cached: boolean;
+  brands: { status: 'ok' | 'unavailable'; items: BrandEntity[]; failure: { code: string; message: string } | null };
+}
+
+/** GET /website/research: any brand or company name, from Google's Knowledge Graph. */
+export function fetchBusinessResearch(clientId: string, q: string): Promise<BusinessResearch> {
+  return apiClient.request<BusinessResearch>({ method: 'GET', path: '/website/research', headers: headers(clientId), query: { q } });
 }
 
 function get<T>(clientId: string, section: string, query?: Record<string, string>) {
@@ -65,10 +110,13 @@ export class LiveWebsiteProvider implements WebsiteDataProvider {
   getForms = (id: string) => get<any>(id, 'forms');
   getMonitoring = (id: string) => get<any>(id, 'monitoring');
   getSettings = (id: string) => get<any>(id, 'settings');
-  getKeywordResearch = (id: string) => get<any>(id, 'keyword-research');
+  getKeywordResearch = (id: string, period: SearchPeriod = '28d') => get<any>(id, 'keyword-research', { period });
+  getSearchConsole = (id: string, period: SearchPeriod, refresh = false) => get<any>(id, 'search-console', refresh ? { period, refresh: '1' } : { period });
+  getSearchQueryDetail = (id: string, query: string, period: SearchPeriod) => get<any>(id, 'search-console/query', { q: query, period });
   getCompetitorAnalysis = (id: string) => get<any>(id, 'competitor-analysis');
   addCompetitor = (id: string, url: string) => apiClient.request<any>({ method: 'POST', path: '/website/competitors', headers: headers(id), body: { url } });
   analyzeCompetitor = (id: string, competitorId: string) => apiClient.request<any>({ method: 'POST', path: `/website/competitors/${encodeURIComponent(competitorId)}/analyze`, headers: headers(id), body: {} });
+  analyzeCompetitorWithAi = (id: string, competitorId: string) => apiClient.request<any>({ method: 'POST', path: `/website/competitors/${encodeURIComponent(competitorId)}/ai`, headers: headers(id), body: {} });
   deleteCompetitor = (id: string, competitorId: string) => apiClient.request<any>({ method: 'DELETE', path: `/website/competitors/${encodeURIComponent(competitorId)}`, headers: headers(id) });
   getTracking = (id: string, period: string) => get<any>(id, 'tracking', { period });
   getTrackingSnippet = (id: string) => get<any>(id, 'tracking/snippet');
@@ -76,7 +124,11 @@ export class LiveWebsiteProvider implements WebsiteDataProvider {
   updateTrackingSettings = (id: string, settings: Partial<TrackingSettings>) =>
     apiClient.request<any>({ method: 'PATCH', path: '/website/tracking/settings', headers: headers(id), body: settings });
   getBacklinkAnalysis = (id: string) => get<any>(id, 'backlink-analysis');
-  getRankTracking = (id: string) => get<any>(id, 'rank-tracking');
+  getRankTracking = (id: string, period: SearchPeriod = '28d') => get<any>(id, 'rank-tracking', { period });
+  getSheets = (id: string) => get<any>(id, 'sheets');
+  connectSheets = (id: string, url: string) => apiClient.request<any>({ method: 'PUT', path: '/website/sheets', headers: headers(id), body: { url } });
+  disconnectSheets = (id: string) => apiClient.request<any>({ method: 'DELETE', path: '/website/sheets', headers: headers(id) });
+  exportToSheets = (id: string, dataset: SheetsDataset, period: SearchPeriod) => apiClient.request<any>({ method: 'POST', path: '/website/sheets/export', headers: headers(id), body: { dataset, period } });
   getCrawlLimits = (id: string) => get<any>(id, 'crawl-limits');
   getPagePerformance = (id: string, pageId: string) => get<any>(id, `pages/${encodeURIComponent(pageId)}/performance`);
   getPageSearch = (id: string, pageId: string, refresh = false) =>

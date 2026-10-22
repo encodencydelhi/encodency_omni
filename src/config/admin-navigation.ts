@@ -2,7 +2,7 @@ import {
   BarChart3, Blocks, Bot, BriefcaseBusiness, CalendarDays, ContactRound, FileChartColumn,
   Building2, FolderKanban, Gauge, Globe2, Hash, Image, Landmark, ListChecks, Network,
   Megaphone, MessageCircle, PanelsTopLeft, Settings, ShieldCheck, Target,
-  Server, Share2, UsersRound, Video, WalletCards, type LucideIcon,
+  Server, Share2, Swords, UsersRound, Video, WalletCards, type LucideIcon,
 } from "lucide-react";
 
 export interface AdminNavItem { label: string; href: string; icon: LucideIcon; }
@@ -21,6 +21,7 @@ export const adminNavigation: AdminNavSection[] = [
       { label: "Calendar", href: "/admin/calendar", icon: CalendarDays },
       { label: "Campaigns", href: "/admin/campaigns", icon: Megaphone },
       { label: "Media Library", href: "/admin/media", icon: Image },
+      { label: "Competitor Analyzer", href: "/admin/competitor-analyzer", icon: Swords },
     ]
   },
   {
@@ -35,16 +36,6 @@ export const adminNavigation: AdminNavSection[] = [
       { label: "Infrastructure", href: "/admin/infrastructure", icon: Server },
     ]
   },
-  // Temporarily hidden from the sidebar. Routes remain available directly.
-  // {
-  //   label: "SEO", items: [
-  //     { label: "SEO Overview", href: "/admin/seo", icon: SearchCheck },
-  //     { label: "Site Audit", href: "/admin/seo/audit", icon: ListChecks },
-  //     { label: "Pages", href: "/admin/seo/pages", icon: PanelsTopLeft },
-  //     { label: "Issues", href: "/admin/seo/issues", icon: ShieldCheck },
-  //     { label: "Keywords", href: "/admin/seo/keywords", icon: Tags },
-  //   ]
-  // },
   {
     label: "CRM", items: [
       { label: "Leads", href: "/admin/crm/leads", icon: Target },

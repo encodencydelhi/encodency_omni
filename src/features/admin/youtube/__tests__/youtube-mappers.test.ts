@@ -69,9 +69,10 @@ describe("video status and type", () => {
     assert.equal(v.scheduleId, "pub-1");
   });
 
-  it("calls a video of at most 60 seconds a Short and a broadcast Live", () => {
+  it("uses YouTube's current three-minute Short ceiling and keeps broadcasts Live", () => {
     assert.equal(m.contentTypeOf(video({ content: { ...video().content, durationSeconds: 45 } })), "short");
-    assert.equal(m.contentTypeOf(video({ content: { ...video().content, durationSeconds: 61 } })), "video");
+    assert.equal(m.contentTypeOf(video({ content: { ...video().content, durationSeconds: 180 } })), "short");
+    assert.equal(m.contentTypeOf(video({ content: { ...video().content, durationSeconds: 181 } })), "video");
     assert.equal(m.contentTypeOf(video({ live: { liveBroadcastContent: "upcoming" } })), "live");
   });
 });

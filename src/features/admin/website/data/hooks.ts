@@ -23,6 +23,9 @@ import type {
   ScanProgress,
   ScanType,
   ScanStartOptions,
+  SearchPeriod,
+  SheetsDataset,
+  SheetsStatus,
   GenerateReportInput,
   ReportScheduleInput,
   AiRecommendationStatus,
@@ -419,10 +422,10 @@ export function useScanRunner(clientId: string, onComplete?: (progress: ScanProg
   );
 }
 
-export function useKeywordResearch(clientId: string, enabled = true) {
+export function useKeywordResearch(clientId: string, enabled = true, period: SearchPeriod = "28d") {
   return useQuery({
-    queryKey: websiteKeys.keywordResearch(clientId),
-    queryFn: () => websiteRepository.getKeywordResearch(clientId),
+    queryKey: websiteKeys.keywordResearch(clientId, period),
+    queryFn: () => websiteRepository.getKeywordResearch(clientId, period),
     enabled: enabled && Boolean(clientId),
     ...SHARED,
   });
@@ -443,6 +446,7 @@ export function useCompetitorMutations(clientId: string) {
   return {
     add: useMutation({ mutationFn: (url: string) => websiteRepository.addCompetitor(clientId, url), onSuccess: invalidate }),
     analyze: useMutation({ mutationFn: (id: string) => websiteRepository.analyzeCompetitor(clientId, id), onSuccess: invalidate }),
+    analyzeWithAi: useMutation({ mutationFn: (id: string) => websiteRepository.analyzeCompetitorWithAi(clientId, id), onSuccess: invalidate }),
     archive: useMutation({ mutationFn: (id: string) => websiteRepository.deleteCompetitor(clientId, id), onSuccess: invalidate }),
   };
 }
@@ -487,10 +491,54 @@ export function useBacklinkAnalysis(clientId: string, enabled = true) {
   });
 }
 
-export function useRankTracking(clientId: string, enabled = true) {
+/** Live Search Console report for a period. `refresh` asks the server to skip its hour-long cache. */
+export function useSearchConsoleReport(clientId: string, period: SearchPeriod, enabled = true) {
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: websiteKeys.searchConsole(clientId, period),
+    queryFn: () => websiteRepository.getSearchConsole(clientId, period),
+    enabled: enabled && Boolean(clientId),
+    ...SHARED,
+    placeholderData: (previous) => previous,
+  });
+  const refresh = useMutation({
+    mutationFn: () => websiteRepository.getSearchConsole(clientId, period, true),
+    onSuccess: (data) => {
+      qc.setQueryData(websiteKeys.searchConsole(clientId, period), data);
+      void qc.invalidateQueries({ queryKey: websiteKeys.keywordResearch(clientId, period) });
+      void qc.invalidateQueries({ queryKey: websiteKeys.rankTracking(clientId, period) });
+    },
+  });
+  return { ...query, refresh };
+}
+
+/** The client's export sheet and its last export. */
+export function useSheets(clientId: string) {
+  const qc = useQueryClient();
+  const status = useQuery({ queryKey: websiteKeys.sheets(clientId), queryFn: () => websiteRepository.getSheets(clientId), enabled: Boolean(clientId), ...SHARED });
+  const save = (data: SheetsStatus) => qc.setQueryData(websiteKeys.sheets(clientId), data);
+  return {
+    status,
+    connect: useMutation({ mutationFn: (url: string) => websiteRepository.connectSheets(clientId, url), onSuccess: save }),
+    disconnect: useMutation({ mutationFn: () => websiteRepository.disconnectSheets(clientId), onSuccess: save }),
+    exportTo: useMutation({ mutationFn: (args: { dataset: SheetsDataset; period: SearchPeriod }) => websiteRepository.exportToSheets(clientId, args.dataset, args.period), onSuccess: save }),
+  };
+}
+
+/** One keyword's daily clicks / position and the pages ranking for it; loaded only when a keyword is opened. */
+export function useSearchQueryDetail(clientId: string, query: string | null, period: SearchPeriod) {
   return useQuery({
-    queryKey: websiteKeys.rankTracking(clientId),
-    queryFn: () => websiteRepository.getRankTracking(clientId),
+    queryKey: websiteKeys.searchQuery(clientId, query ?? "", period),
+    queryFn: () => websiteRepository.getSearchQueryDetail(clientId, query!, period),
+    enabled: Boolean(clientId && query),
+    ...SHARED,
+  });
+}
+
+export function useRankTracking(clientId: string, enabled = true, period: SearchPeriod = "28d") {
+  return useQuery({
+    queryKey: websiteKeys.rankTracking(clientId, period),
+    queryFn: () => websiteRepository.getRankTracking(clientId, period),
     enabled: enabled && Boolean(clientId),
     ...SHARED,
   });

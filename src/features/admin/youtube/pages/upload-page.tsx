@@ -51,6 +51,8 @@ interface FileInfo {
   name: string;
   size: number;
   durationSec: number | null;
+  width: number | null;
+  height: number | null;
   state: LibraryState;
   assetId: string | null;
   message?: string;
@@ -192,7 +194,7 @@ function UploadFlow() {
 
   const chooseFile = async (f: File | undefined) => {
     if (!f) return;
-    const info: FileInfo = { name: f.name, size: f.size, durationSec: null, state: "library", assetId: null };
+    const info: FileInfo = { name: f.name, size: f.size, durationSec: null, width: null, height: null, state: "library", assetId: null };
     if (!(MEDIA_LIMITS.video.mimeTypes as readonly string[]).includes(f.type)) {
       setFile({ ...info, state: "error", message: "Use an MP4 or MOV (H.264) file." });
       return;
@@ -207,7 +209,7 @@ function UploadFlow() {
     const probe = document.createElement("video");
     probe.preload = "metadata";
     probe.onloadedmetadata = () => {
-      setFile((cur) => (cur && cur.name === f.name ? { ...cur, durationSec: Number.isFinite(probe.duration) ? Math.round(probe.duration) : null } : cur));
+      setFile((cur) => (cur && cur.name === f.name ? { ...cur, durationSec: Number.isFinite(probe.duration) ? Math.round(probe.duration) : null, width: probe.videoWidth || null, height: probe.videoHeight || null } : cur));
       URL.revokeObjectURL(url);
     };
     probe.src = url;
@@ -557,7 +559,7 @@ function UploadStep({ file, onChoose, onRemove, type, setType }: { file: FileInf
     <div className="space-y-4">
       <div className="grid gap-2 sm:grid-cols-2">
         <ChoiceCard name="upload-type" checked={type === "video"} onSelect={() => setType("video")} icon={FileVideo} title="Video" description="Standard horizontal upload." />
-        <ChoiceCard name="upload-type" checked={type === "short"} onSelect={() => setType("short")} icon={FileVideo} title="Short" description="Vertical, up to 60 seconds. YouTube decides from the file." />
+        <ChoiceCard name="upload-type" checked={type === "short"} onSelect={() => setType("short")} icon={FileVideo} title="Short" description="Square or vertical, up to 3 minutes. YouTube decides from the file." />
       </div>
 
       {!file ? (
@@ -617,8 +619,8 @@ function UploadStep({ file, onChoose, onRemove, type, setType }: { file: FileInf
               {file.message ?? "The file couldn't be added to the media library."} {limitText}
             </Notice>
           )}
-          {file.state === "ready" && type === "short" && file.durationSec !== null && file.durationSec > 60 && (
-            <Notice tone="amber" className="mt-3" title="This Is Longer Than A Short">YouTube treats vertical videos of up to 60 seconds as Shorts. Switch to Video or upload a shorter file.</Notice>
+          {file.state === "ready" && type === "short" && file.durationSec !== null && (file.durationSec > 180 || (file.width !== null && file.height !== null && file.width > file.height)) && (
+            <Notice tone="amber" className="mt-3" title="This File Is Not Short-Shaped">YouTube classifies square or vertical videos up to 3 minutes as Shorts. Use a square/vertical file no longer than 3 minutes, or switch to Video.</Notice>
           )}
         </div>
       )}

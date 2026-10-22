@@ -28,6 +28,7 @@ export function ContentPreviewPanel({
   hashtags,
   image,
   isLoadingImage,
+  accountName,
 }: {
   platform: Platform;
   setPlatform: (p: Platform) => void;
@@ -36,6 +37,8 @@ export function ContentPreviewPanel({
   hashtags?: string[];
   image?: string | null;
   isLoadingImage?: boolean;
+  /** The Client the post is for. */
+  accountName?: string;
 }) {
   const meta = getPlatformMeta(platform);
   const resolvedImage = image || null;
@@ -72,10 +75,9 @@ export function ContentPreviewPanel({
           <MoreHorizontal className="size-3 text-[#94A3B8]" />
         </div>
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <span className="grid size-6 place-items-center rounded-sm bg-green-100 text-[11px]">🌿</span>
+          <span className="grid size-6 place-items-center rounded-sm bg-slate-100 text-[11px] font-semibold text-slate-600">{(accountName ?? "?").slice(0, 1).toUpperCase()}</span>
           <div>
-            <p className="text-[10.5px] font-semibold text-[#172044]">Moksha Sewa</p>
-            <p className="text-[8.5px] text-[#94A3B8]">Sponsored</p>
+            <p className="text-[10.5px] font-semibold text-[#172044]">{accountName || "Select a client"}</p>
           </div>
         </div>
         <div className="relative">
@@ -107,15 +109,13 @@ export function ContentPreviewPanel({
             </div>
             <Bookmark className="size-3.5" />
           </div>
-          <p className="mt-0.5 text-[10.5px] font-semibold text-[#172044]">1,246 likes</p>
-          <p className="mt-0.5 text-[10.5px] leading-3.5 text-[#64748B]">
-            <b className="text-[#172044]">Moksha Sewa</b>{" "}
-            {caption ? (caption.length > 130 ? caption.slice(0, 130) + "…" : caption) : "Small actions create a cleaner tomorrow…"}
-            <span className="text-[#94A3B8]"> more</span>
+          <p className="mt-0.5 whitespace-pre-line text-[10.5px] leading-3.5 text-[#64748B]">
+            {accountName ? <b className="text-[#172044]">{accountName}{" "}</b> : null}
+            {caption ? (caption.length > 130 ? caption.slice(0, 130) + "…" : caption) : <span className="text-[#94A3B8]">Your caption will appear here.</span>}
           </p>
-          <p className="mt-0.5 text-[10px] font-medium text-[#1769DF]">
-            {hashtags && hashtags.length > 0 ? hashtags.slice(0, 5).join(" ") : "#BharatOrganicExpo #OrganicIndia #NaturalFarming"}
-          </p>
+          {hashtags && hashtags.length > 0 ? (
+            <p className="mt-0.5 text-[10px] font-medium text-[#1769DF]">{hashtags.slice(0, 5).join(" ")}</p>
+          ) : null}
         </div>
       </div>
     </Card>
