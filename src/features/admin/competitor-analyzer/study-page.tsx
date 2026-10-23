@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
-  ArrowLeft, BellRing, Check, FileDown, CircleAlert, Languages, Link2, Loader2, Pencil, RefreshCw, Swords, X,
+  ArrowLeft, BellRing, Check, FileDown, CircleAlert, Info, Languages, Link2, Loader2, Pencil, RefreshCw, Square, Swords, X,
 } from "lucide-react";
 import { ApiError } from "@/types/api";
 import { cn } from "@/lib/utils/cn";
@@ -61,11 +61,22 @@ const STAGES = [
   { key: "analysing", label: "AI is comparing the sites, profiling each one and writing your plan" },
 ];
 
-function Running({ stage, startedAt, count }: { stage: string | null; startedAt: string; count: number }) {
+function Running({ stage, startedAt, count, onStop, stopping }: { stage: string | null; startedAt: string; count: number; onStop: () => void; stopping: boolean }) {
   const current = STAGES.findIndex((s) => s.key === stage);
   return (
     <div className="rounded-2xl bg-gradient-to-br from-[#0F1A38] via-[#1E2F6B] to-[#4C1D95] p-5 text-white">
-      <p className="flex items-center gap-2 text-[14px] font-semibold"><Loader2 className="size-5 animate-spin" /> Checking {count} websites… started {formatRelative(startedAt)}</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="flex items-center gap-2 text-[14px] font-semibold"><Loader2 className="size-5 animate-spin" /> Checking {count} websites… started {formatRelative(startedAt)}</p>
+        <button
+          type="button"
+          onClick={onStop}
+          disabled={stopping}
+          title={stage === "analysing" ? "The AI is already answering: stopping now throws its answer away, but what it cost still counts." : "Stopped now, no AI is used."}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-white/30 bg-white/10 px-3 py-1.5 text-[12px] font-medium hover:bg-white/20 disabled:opacity-60"
+        >
+          {stopping ? <Loader2 className="size-3.5 animate-spin" /> : <Square className="size-3.5" />} {stopping ? "Stopping…" : "Stop"}
+        </button>
+      </div>
       <ol className="mt-4 space-y-2.5">
         {STAGES.map((s, i) => (
           <li key={s.key} className={cn("flex items-center gap-2.5 text-[12.5px]", i < current ? "text-[#86EFAC]" : i === current ? "font-semibold text-white" : "text-white/50")}>
@@ -81,7 +92,7 @@ function Running({ stage, startedAt, count }: { stage: string | null; startedAt:
 
 export function CompetitorStudyPage({ id }: { id: string }) {
   const study = useStudy(id);
-  const { run, download, actionStatus, actionTask } = useStudyMutations();
+  const { run, stop, download, actionStatus, actionTask } = useStudyMutations();
   const [editing, setEditing] = useState(false);
   const [watching, setWatching] = useState(false);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
@@ -215,9 +226,25 @@ export function CompetitorStudyPage({ id }: { id: string }) {
       {editing ? <EditSites study={data} onClose={() => setEditing(false)} /> : null}
       {watching ? <WatchPanel study={data} onClose={() => setWatching(false)} /> : null}
       {sharing ? <SharePanel study={data} onClose={() => setSharing(false)} /> : null}
-      {running && latest ? <Running stage={latest.stage} startedAt={latest.startedAt} count={data.sites.length} /> : null}
+      {running && latest ? (
+        <Running
+          stage={latest.stage}
+          startedAt={latest.startedAt}
+          count={data.sites.length}
+          stopping={stop.isPending}
+          onStop={() =>
+            stop.mutate(
+              { id, runId: latest.id },
+              { onSuccess: (r) => toast.success(r.status === "cancelled" ? "Check stopped. You can run it again now." : "The check had already finished."), onError: (e) => toast.error(errorText(e, "Could not stop the check")) },
+            )
+          }
+        />
+      ) : null}
       {latest?.status === "failed" ? (
         <p role="alert" className="flex items-start gap-2 rounded-lg border border-[#F0C9C6] bg-[#FDF4F3] p-3 text-[12px] text-[#C0261F]"><CircleAlert className="mt-0.5 size-4 shrink-0" />{latest.errorMessage ?? "The last check failed."}{report ? " Showing the previous result." : ""}</p>
+      ) : null}
+      {latest?.status === "cancelled" ? (
+        <p className="flex items-start gap-2 rounded-lg border border-[#E6EBF4] bg-white p-3 text-[12px] text-[#4B5872]"><Info className="mt-0.5 size-4 shrink-0 text-[#6B7A94]" />The last check was stopped.{report ? " Showing the previous result." : ""} Run it again when you are ready.</p>
       ) : null}
       {!report && !running ? <EmptyState icon={Swords} title="No result yet" body="Run the analysis to compare these websites." /> : null}
 

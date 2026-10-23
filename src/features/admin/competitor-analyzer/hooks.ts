@@ -88,6 +88,7 @@ export function useStudyMutations() {
     update: useMutation({ mutationFn: (args: { id: string; body: Parameters<typeof analyzerApi.update>[2] }) => analyzerApi.update(companyId, args.id, args.body), onSuccess: refresh }),
     archive: useMutation({ mutationFn: (id: string) => analyzerApi.archive(companyId, id), onSuccess: refresh }),
     run: useMutation({ mutationFn: (id: string) => analyzerApi.run(companyId, id), onSuccess: refresh }),
+    stop: useMutation({ mutationFn: (args: { id: string; runId: string }) => analyzerApi.stopRun(companyId, args.id, args.runId), onSuccess: refresh }),
     lookup: useMutation({ mutationFn: (q: string) => analyzerApi.lookup(companyId, q) }),
     suggest: useMutation({ mutationFn: (url: string) => analyzerApi.suggest(companyId, url) }),
     download: useMutation({ mutationFn: (args: { id: string; lang?: "en" | "hi" }) => analyzerApi.downloadReport(companyId, args.id, args.lang) }),

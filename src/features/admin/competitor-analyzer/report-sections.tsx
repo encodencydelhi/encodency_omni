@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils/cn";
 import { Chip, ScoreDial } from "@/features/admin/website/components/ui/kit";
 import { AXIS_PROPS, ChartLegend, ChartTooltip, GRID_PROPS } from "@/features/admin/website/components/ui/charts";
 import { formatDateTime } from "@/features/admin/website/data/selectors";
-import type { ActionState, ActionStatus, AnalyzerResult, FeatureState, OwnSearch, RunReport, SiteEvidence, SiteFeatures, StudyDetail, StudySite } from "./api";
+import type { ActionState, ActionStatus, AnalyzerResult, FeatureState, OwnSearch, RealUserSpeed, RunReport, SiteEvidence, SiteFeatures, SpeedCategory, StudyDetail, StudySite } from "./api";
 import { topicImpressions } from "./watch-sections";
 import { SiteFavicon, SiteLabel, SourceLink, useSiteLabelOf } from "./ui";
 
@@ -618,6 +618,29 @@ export function Profiles({ ai, report, sites, colorOf }: { ai: AnalyzerResult; r
 /* Speed & tech                                                        */
 /* ------------------------------------------------------------------ */
 
+const SPEED_TONE: Record<SpeedCategory, string> = { good: "text-[#0B845C]", "needs-improvement": "text-[#B45309]", poor: "text-[#C0261F]" };
+
+/** Real visitors' speed (Chrome UX Report): what people actually experienced on phones, not a one-off lab test. */
+function RealUsers({ field }: { field: RealUserSpeed | null }) {
+  if (!field) return <p className="mt-2 border-t border-[#EEF2F8] pt-1.5 text-[10px] leading-snug text-[#94A3B8]">Real visitors: too few for Google to report.</p>;
+  const rows = [
+    ["Main content shows", field.lcpMs ? `${(field.lcpMs.p75 / 1000).toFixed(1)}s` : null, field.lcpMs?.category],
+    ["Reacts to a tap", field.inpMs ? `${Math.round(field.inpMs.p75)} ms` : null, field.inpMs?.category],
+    ["Layout stays still", field.cls ? field.cls.p75.toFixed(2) : null, field.cls?.category],
+  ] as const;
+  return (
+    <div className="mt-2 border-t border-[#EEF2F8] pt-1.5 text-[10.5px]">
+      <p className="font-semibold text-[#4B5872]">Real visitors{field.scope === "origin" ? " (whole site)" : ""}</p>
+      {rows.map(([label, value, category]) => (
+        <p key={label} className="flex justify-between gap-2 text-[#6B7A94]">
+          <span>{label}</span>
+          <span className={cn("font-semibold", category ? SPEED_TONE[category] : "text-[#94A3B8]")}>{value ?? "—"}</span>
+        </p>
+      ))}
+    </div>
+  );
+}
+
 export function SpeedBoard({ report, sites, colorOf }: { report: RunReport; sites: StudySite[]; colorOf: ColorOf }) {
   const labelOf = useSiteLabelOf();
   const rows = sites.map((s) => ({ site: s, ev: report.sites.find((e) => e.domain === s.domain) }));
@@ -635,6 +658,7 @@ export function SpeedBoard({ report, sites, colorOf }: { report: RunReport; site
                 ))}
               </div>
             ) : <p className="mt-2 text-[10.5px] text-[#94A3B8]">{ev?.speedError ?? "Not measured."}</p>}
+            {ev?.speed && ev.speed.field !== undefined ? <RealUsers field={ev.speed.field} /> : null}
           </div>
         ))}
       </div>

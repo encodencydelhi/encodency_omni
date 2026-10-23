@@ -197,7 +197,7 @@ export function ReportBody({ data, colorOf, tracking, shared = false }: { data: 
             title="Google speed test"
             icon={Gauge}
             subtitle="Google PageSpeed scores for each home page (phone)"
-            explain={<><p><b>Speed</b>: how fast the page loads on a phone. <b>SEO</b>: basic search-engine readiness. <b>Access.</b>: how usable it is for everyone, including people with poor eyesight. All out of 100 — <b className="text-[#0B845C]">70+ is good</b>, <b className="text-[#92400E]">45–69 needs work</b>, <b className="text-[#C0261F]">below 45 is poor</b>.</p><p>The bar chart shows seconds until the main content appears. Under 2.5 s is what Google calls good.</p></>}
+            explain={<><p><b>Speed</b>: how fast the page loads on a phone. <b>SEO</b>: basic search-engine readiness. <b>Access.</b>: how usable it is for everyone, including people with poor eyesight. All out of 100 — <b className="text-[#0B845C]">70+ is good</b>, <b className="text-[#92400E]">45–69 needs work</b>, <b className="text-[#C0261F]">below 45 is poor</b>.</p><p>The bar chart shows seconds until the main content appears. Under 2.5 s is what Google calls good.</p><p><b>Real visitors</b> is different: it comes from real Chrome users on phones over the last 28 days (75% of visits were this fast or faster), so it shows what people actually experience. <b className="text-[#0B845C]">Green</b> = good, <b className="text-[#B45309]">amber</b> = needs work, <b className="text-[#C0261F]">red</b> = poor. Small sites often have too few visitors for Google to report.</p></>}
           >
             <SpeedBoard report={report} sites={data.sites} colorOf={colorOf} />
           </Panel>

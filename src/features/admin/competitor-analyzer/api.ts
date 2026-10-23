@@ -65,12 +65,22 @@ export interface SiteEvidence {
   tech?: TechSignals | null;
   features?: SiteFeatures;
   coverage?: CrawlCoverage;
-  speed: { performance: number | null; seo: number | null; accessibility: number | null; bestPractices: number | null; lcpMs: number | null; cls: number | null; tbtMs: number | null } | null;
+  speed: { performance: number | null; seo: number | null; accessibility: number | null; bestPractices: number | null; lcpMs: number | null; cls: number | null; tbtMs: number | null; field?: RealUserSpeed | null } | null;
   speedError: string | null;
   search?: OwnSearch | null;
   /** Social profiles the site links to; numbers only where an official API gives them (checks from 2026-10-23 on). */
   socials?: SiteSocials;
   brand: { status: "matched" | "possible" | "not_found" | "unavailable"; name: string | null; description: string | null; wikipediaUrl: string | null } | null;
+}
+
+export type SpeedCategory = "good" | "needs-improvement" | "poor";
+/** Real visitors' speed from Google's Chrome UX Report (last 28 days, phones). null = too few visitors; absent = older check. */
+export interface RealUserSpeed {
+  scope: "url" | "origin";
+  overall: SpeedCategory | null;
+  lcpMs: { p75: number; category: SpeedCategory | null } | null;
+  inpMs: { p75: number; category: SpeedCategory | null } | null;
+  cls: { p75: number; category: SpeedCategory | null } | null;
 }
 
 export type SocialPlatform = "youtube" | "instagram" | "facebook" | "linkedin" | "x" | "pinterest" | "threads" | "tiktok" | "whatsapp" | "telegram";
@@ -250,6 +260,8 @@ export const analyzerApi = {
   update: (companyId: string, id: string, body: { name?: string; own?: string; competitors?: string[]; names?: Record<string, string> }) =>
     apiClient.request<StudyDetail>({ method: "PATCH", path: `/competitor-analyzer/studies/${encodeURIComponent(id)}`, headers: companyScopeHeaders(companyId), body }),
   archive: (companyId: string, id: string) => apiClient.request<void>({ method: "DELETE", path: `/competitor-analyzer/studies/${encodeURIComponent(id)}`, headers: companyScopeHeaders(companyId) }),
+  stopRun: (companyId: string, id: string, runId: string) =>
+    apiClient.request<RunSummary>({ method: "POST", path: `/competitor-analyzer/studies/${encodeURIComponent(id)}/runs/${encodeURIComponent(runId)}/stop`, headers: companyScopeHeaders(companyId), body: {} }),
   run: (companyId: string, id: string) => apiClient.request<{ run: RunSummary; reused: boolean }>({ method: "POST", path: `/competitor-analyzer/studies/${encodeURIComponent(id)}/runs`, headers: companyScopeHeaders(companyId), body: {} }),
   /** The PDF is private: fetched with the session cookie and handed to the browser as a blob, never as a public URL. */
   async downloadReport(companyId: string, id: string, lang: "en" | "hi" = "en"): Promise<{ blob: Blob; fileName: string }> {
