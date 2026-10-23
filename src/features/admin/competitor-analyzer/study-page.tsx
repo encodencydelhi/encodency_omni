@@ -159,7 +159,7 @@ export function CompetitorStudyPage({ id }: { id: string }) {
             <span className="truncate normal-case" title={data.name}>{data.name.startsWith(`${own.domain} vs`) || data.name.length > 48 ? `${ownLabel} vs ${data.sites.length - 1} competitors` : data.name}</span>
           </h1>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-1">
           {report?.model?.quality && report.model.quality.status !== "verified" ? (
             <WButton icon={CircleAlert} onClick={() => setEvidenceOpen(true)}>
               Evidence {report.model.quality.score}%
