@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Archive, ArrowRight, CalendarClock, CheckCircle2, Clock, Info, ListChecks, Loader2, Plus, RefreshCw, Search, SearchX, Sparkles, Swords, Trash2, Trophy } from "lucide-react";
+import { Archive, ArrowRight, CalendarClock, Check, CheckCircle2, Clock, Info, ListChecks, Loader2, Plus, RefreshCw, Search, SearchX, Sparkles, Swords, Trash2, Trophy } from "lucide-react";
 import { ApiError } from "@/types/api";
 import { cn } from "@/lib/utils/cn";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,7 +12,7 @@ import { Chip, WButton } from "@/features/admin/website/components/ui/kit";
 import { EmptyState, QueryErrorState, SkeletonBlock } from "@/features/admin/website/components/ui/states";
 import { formatRelative } from "@/features/admin/website/data/selectors";
 import type { LookupResult, StudyListItem } from "./api";
-import { domainOf, useCompanyClients, useKnownSiteNames, useSiteName, useStudies, useStudyMutations } from "./hooks";
+import { domainOf, useCompanyClients, useCompetitorSuggestions, useKnownSiteNames, useSiteName, useStudies, useStudyMutations } from "./hooks";
 import { SITE_COLORS, SiteFavicon } from "./ui";
 
 const MAX_COMPETITORS = 4;
@@ -107,24 +107,36 @@ function CompetitorRow({ value, onChange, onRemove, index }: { value: string; on
   );
 }
 
-/** AI names likely competitors from your home page; each one shown was checked to open. One click adds it to the list. */
-function SuggestCompetitors({ own, picked, full, onPick }: { own: string; picked: string[]; full: boolean; onPick: (domain: string) => void }) {
-  const { suggest } = useStudyMutations();
-  const ready = looksLikeDomain(own);
-  const data = suggest.data && domainOf(own) && suggest.variables && domainOf(suggest.variables) === domainOf(own) ? suggest.data : null;
-  const ask = () => suggest.mutate(own.trim(), { onError: (e) => toast.error(errorText(e, "Could not suggest competitors"), { duration: 8000 }) });
+/**
+ * Competitors of the website typed above, listed automatically once it answers. Tick the ones to compare (tick again
+ * to remove them); the fields above stay open for typing any other competitor by hand.
+ */
+function SuggestCompetitors({ own, picked, full, onToggle }: { own: string; picked: string[]; full: boolean; onToggle: (domain: string) => void }) {
+  const found = useCompetitorSuggestions(own);
+  const data = found.data;
+  const head = (
+    <p className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[#5B21B6]">
+      {found.isFetching ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+      {found.domain ? <span>Competitors found for <span className="normal-case">{found.domain}</span></span> : "Competitors found for your website"}
+      {data?.suggestions.length ? <span className="font-normal text-[#6B7A94]">· {picked.filter((d) => data.suggestions.some((s) => s.domain === d)).length} selected</span> : null}
+    </p>
+  );
   return (
     <div className="rounded-lg border border-dashed border-[#D8CCF8] bg-[#FBF9FF] p-2.5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[#5B21B6]"><Sparkles className="size-3.5" /> Not sure who your competitors are?</p>
-        <WButton size="sm" icon={suggest.isPending ? Loader2 : Sparkles} onClick={ask} disabled={!ready || suggest.isPending} disabledReason="Enter your website first">
-          {suggest.isPending ? "Finding competitors…" : data ? "Ask again" : "Suggest competitors"}
-        </WButton>
-      </div>
-      {suggest.isPending ? <p className="mt-1.5 text-[11px] text-[#6B7A94]">Reading your home page, then checking that every suggested website opens. About 20–40 seconds.</p> : null}
-      {!data && !suggest.isPending ? <p className="mt-1 text-[11px] text-[#6B7A94]">AI reads your home page and names businesses that sell the same thing to the same customers. Every suggestion is checked to open; marketplaces and directories are left out.</p> : null}
-      {data ? (
-        <div className="mt-2 space-y-1.5">
+      {head}
+      {!found.domain ? (
+        <p className="mt-1 text-[11px] text-[#6B7A94]">Enter your website (or pick a client) and its competitors are listed here automatically. Tick the ones to compare, or type competitors yourself above.</p>
+      ) : found.unreachable ? (
+        <p className="mt-1 text-[11px] text-[#6B7A94]">Your website did not answer, so competitors cannot be found. Check the address, or type competitors yourself above.</p>
+      ) : found.checking || (found.reachable && found.isFetching) ? (
+        <p className="mt-1 text-[11px] text-[#6B7A94]">{found.checking ? "Opening your website…" : "Reading your home page and checking that every competitor’s website opens. About 20–40 seconds; you can type competitors meanwhile."}</p>
+      ) : found.error ? (
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-[#92400E]">
+          {errorText(found.error, "Competitors could not be found right now.")}
+          <button type="button" onClick={() => void found.refetch()} className="font-medium text-[#2563EB] hover:underline">Try again</button>
+        </p>
+      ) : data ? (
+        <div className="mt-1.5 space-y-1.5">
           {data.business.what ? (
             <p className="text-[11px] normal-case text-[#4B5872]"><span className="font-semibold">Your business, as read from your site:</span> {data.business.what}{data.business.where ? ` (${data.business.where})` : ""}</p>
           ) : null}
@@ -132,26 +144,35 @@ function SuggestCompetitors({ own, picked, full, onPick }: { own: string; picked
             <ul className="grid gap-1 md:grid-cols-2">
               {data.suggestions.map((s) => {
                 const added = picked.includes(s.domain);
+                const blocked = !added && full;
                 return (
-                  <li key={s.domain} className={cn("flex items-start gap-2.5 rounded-md border bg-white px-2.5 py-2", added ? "border-[#BBF7D0]" : "border-[#E6DEFB]")}>
-                    <SiteFavicon domain={s.domain} size={20} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-semibold normal-case text-[#111C3A] [overflow-wrap:anywhere]">{s.siteName || s.name}{(s.siteName || s.name) !== s.domain ? <span className="font-normal text-[#6B7A94]"> · {s.domain}</span> : null}</p>
-                      {s.why ? <p className="text-[11px] normal-case text-[#6B7A94]">{s.why}</p> : null}
-                      <p className="text-[10px] text-[#94A3B8]">{s.source === "ai" ? "Website named by AI, checked to open" : "Website found on Google for this name, checked to open"}</p>
-                    </div>
-                    <WButton size="sm" icon={added ? CheckCircle2 : Plus} onClick={() => onPick(s.domain)} disabled={added || full} disabledReason={added ? "Already in the list" : "The list already has 4 competitors"}>
-                      {added ? "Added" : "Add"}
-                    </WButton>
+                  <li key={s.domain}>
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={added}
+                      onClick={() => onToggle(s.domain)}
+                      disabled={blocked}
+                      title={blocked ? "Up to 4 competitors: untick one first" : added ? "Click to remove from the comparison" : "Click to compare with this website"}
+                      className={cn("flex w-full items-start gap-2.5 rounded-md border px-2.5 py-2 text-left transition-colors", added ? "border-[#86EFAC] bg-[#F0FDF4]" : "border-[#E6DEFB] bg-white hover:border-[#C4B5FD]", blocked && "cursor-not-allowed opacity-60")}
+                    >
+                      <span className={cn("mt-0.5 grid size-4 shrink-0 place-items-center rounded border", added ? "border-[#16A34A] bg-[#16A34A] text-white" : "border-[#CBD5E1] bg-white")}>{added ? <Check className="size-3" /> : null}</span>
+                      <SiteFavicon domain={s.domain} size={20} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[12px] font-semibold normal-case text-[#111C3A] [overflow-wrap:anywhere]">{s.siteName || s.name}{(s.siteName || s.name) !== s.domain ? <span className="font-normal text-[#6B7A94]"> · {s.domain}</span> : null}</span>
+                        {s.why ? <span className="block text-[11px] normal-case text-[#6B7A94]">{s.why}</span> : null}
+                        <span className="block text-[10px] text-[#94A3B8]">{s.source === "ai" ? "Website named by AI, checked to open" : "Website found on Google for this name, checked to open"}</span>
+                      </span>
+                    </button>
                   </li>
                 );
               })}
             </ul>
           ) : (
-            <p className="text-[11px] text-[#6B7A94]">No suggested competitor could be checked to have a working website. Type names or websites yourself.</p>
+            <p className="text-[11px] text-[#6B7A94]">No competitor with a working website could be found. Type names or websites yourself above.</p>
           )}
           <p className="text-[10px] text-[#94A3B8]">
-            AI suggestions: review them before comparing.{data.dropped ? ` ${data.dropped} name${data.dropped === 1 ? "" : "s"} left out because no working website was found.` : ""}{data.cached ? " Saved suggestion for this website (free for 7 days)." : ""}
+            AI suggestions: review them before comparing. Up to 4 can be compared.{data.dropped ? ` ${data.dropped} name${data.dropped === 1 ? "" : "s"} left out because no working website was found.` : ""}
           </p>
         </div>
       ) : null}
@@ -267,8 +288,10 @@ function NewStudyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
             own={own}
             picked={filled.map(domainOf).filter((d): d is string => Boolean(d))}
             full={filled.length >= MAX_COMPETITORS}
-            onPick={(domain) =>
+            onToggle={(domain) =>
               setCompetitors((list) => {
+                // Ticked again: take it out of the list (the row stays, empty, for typing another one).
+                if (list.some((c) => domainOf(c) === domain)) return list.map((c) => (domainOf(c) === domain ? "" : c));
                 const empty = list.findIndex((c) => !c.trim());
                 if (empty >= 0) return list.map((c, i) => (i === empty ? domain : c));
                 return list.length < MAX_COMPETITORS ? [...list, domain] : list;

@@ -111,3 +111,22 @@ export function useStudyShares(id: string) {
     revoke: useMutation({ mutationFn: (shareId: string) => analyzerApi.revokeShare(companyId, id, shareId), onSuccess: refresh }),
   };
 }
+
+/**
+ * Competitors suggested for the site typed in `value`: asked for automatically once the address answers (so a
+ * half-typed address never costs an AI call). The server keeps the answer 7 days per website, so asking again is free.
+ */
+export function useCompetitorSuggestions(value: string) {
+  const { companyId, ready } = useAnalyzerCompany();
+  const site = useSiteName(value);
+  const domain = site.domain;
+  const reachable = Boolean(domain && site.data?.reachable);
+  const query = useQuery({
+    queryKey: ["competitor-analyzer", companyId, "suggest", domain ?? ""],
+    queryFn: () => analyzerApi.suggest(companyId, domain!),
+    enabled: ready && reachable,
+    staleTime: Infinity,
+    retry: false,
+  });
+  return { domain, checking: site.loading, reachable, unreachable: Boolean(domain && site.data && !site.data.reachable), ...query };
+}
