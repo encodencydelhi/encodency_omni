@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 
 import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
-import { ReadOnlyNotice } from "@/features/admin/meta-ads/components/read-only-notice";
+import { LiveMetaAdsWriteEditor } from "@/features/admin/meta-ads/components/live-write-editor";
 
 type Step = "campaign" | "adset" | "ad" | "form" | "review";
 
@@ -327,7 +327,7 @@ function CreateAdsManagerInner() {
 }
 
 export default function CreateAdsManager() {
-  if (LIVE) return <ReadOnlyNotice what="Creating a campaign" />;
+  if (LIVE) return <LiveMetaAdsWriteEditor />;
   return (
     <Suspense fallback={<div className="h-dvh w-full bg-[#f6f8fb]" />}>
       <CreateAdsManagerInner />
@@ -1164,7 +1164,7 @@ function FormPreview() {
             Renovation Quote
           </h3>
           <p className="mt-2 text-center text-[9px] text-[#66758f]">
-            Tell us about your project and we'll get back to you.
+            Tell us about your project and we&apos;ll get back to you.
           </p>
           <div className="mt-4 space-y-2">
             {[

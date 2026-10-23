@@ -7,6 +7,7 @@ import { Download, FileImage, Plus } from "lucide-react";
 import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
 import { useAdsData } from "@/features/admin/meta-ads/data-source";
+import { useMetaAdsWrites } from "@/features/admin/meta-ads/live/meta-ads-writes";
 import {
   cpl,
   ctr,
@@ -62,7 +63,8 @@ function platformsOfAd(set: AdSet | undefined): Platform[] {
 }
 
 function AdsView() {
-  const { adSets, ads, campaigns, getAdSet, getCampaign, getCreative } = useAdsData();
+  const { adSets, ads, campaigns, getAdSet, getCampaign, getCreative, accountId } = useAdsData();
+  const { busyId, setStatus } = useMetaAdsWrites();
   const { values, setFilter, setFilters, reset, isFiltered } = useFilters(DEFAULTS, {
     // Cross-page links carry ids; the selects list names.
     campaign: (v) => getCampaign(v)?.name ?? v,
@@ -298,11 +300,12 @@ function AdsView() {
                               onSelect: () => toast.success(`Duplicating “${a.name}”…`),
                             },
                             {
-                              label: a.status === "paused" ? "Resume" : "Pause",
-                              onSelect: () =>
-                                toast.success(
-                                  `${a.status === "paused" ? "Resumed" : "Paused"} “${a.name}”`,
-                                ),
+                              label: busyId === a.id ? "Updating…" : a.status === "paused" ? "Resume" : "Pause",
+                              onSelect: () => {
+                                const adSet = adSets.find((item) => item.id === a.adSetId);
+                                const dailyBudget = adSet?.budget || campaigns.find((campaign) => campaign.id === a.campaignId)?.budget || null;
+                                if (accountId) void setStatus("ad", a.id, a.name, a.status, dailyBudget, accountId);
+                              },
                             },
                           ],
                           [

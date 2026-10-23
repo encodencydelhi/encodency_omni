@@ -73,6 +73,7 @@ import {
   DetailBar,
 } from "@/features/admin/meta-ads/components/workspace";
 import type { Ranking } from "@/features/admin/meta-ads/types";
+import { useMetaAdsWrites } from "@/features/admin/meta-ads/live/meta-ads-writes";
 
 const TABS = ["overview", "creative", "placements", "performance", "leads", "activity"] as const;
 type Tab = (typeof TABS)[number];
@@ -84,7 +85,8 @@ const RANKING_TONE: Record<Ranking, "green" | "slate" | "red"> = {
 };
 
 function AdDetail({ adId }: { adId: string }) {
-  const { activityLog, getAd, getAdSet, getCampaign, getCreative, getForm, leadsOf } = useAdsData();
+  const { activityLog, getAd, getAdSet, getCampaign, getCreative, getForm, leadsOf, accountId } = useAdsData();
+  const { busyId, setStatus } = useMetaAdsWrites();
   const params = useSearchParams();
   const requested = params?.get("tab");
   const tab: Tab = TABS.includes(requested as Tab) ? (requested as Tab) : "overview";
@@ -165,11 +167,12 @@ function AdDetail({ adId }: { adId: string }) {
             </button>
             <button
               type="button"
-              onClick={() => toast.success(`${paused ? "Resumed" : "Paused"} “${ad.name}”`)}
+              onClick={() => accountId ? void setStatus("ad", ad.id, ad.name, ad.status, adSet?.budget || campaign?.budget || null, accountId) : undefined}
+              disabled={busyId === ad.id}
               className={btn}
             >
               {paused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
-              {paused ? "Resume" : "Pause"}
+              {busyId === ad.id ? "Updating…" : paused ? "Resume" : "Pause"}
             </button>
             <RowMenu
               label="More ad actions"

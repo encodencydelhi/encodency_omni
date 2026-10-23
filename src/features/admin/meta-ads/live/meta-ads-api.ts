@@ -245,6 +245,8 @@ export interface ApiAdsOverview {
 }
 
 export type ApiPeriod = "7d" | "30d" | "90d";
+export type MetaAdsEntityKind = "campaign" | "adset" | "ad";
+export type MetaAdsWriteResult = { id: string; status?: "PAUSED" | "ACTIVE"; deduplicated?: boolean; updated?: boolean };
 
 const BASE = "/integrations/meta-ads";
 
@@ -260,5 +262,24 @@ export const metaAdsApi = {
   },
   leads(companyId: string, signal?: AbortSignal, refresh = false): Promise<{ items: ApiLead[]; partial: boolean }> {
     return apiClient.request<{ items: ApiLead[]; partial: boolean }>({ method: "GET", path: `${BASE}/leads`, query: { limit: 100, ...(refresh ? { refresh: "true" } : {}) }, headers: companyScopeHeaders(companyId), signal });
+  },
+  createCampaign(companyId: string, idempotencyKey: string, body: { adAccountId: string; name: string; objective: string; dailyBudgetMinor: number; specialAdCategories: string[] }): Promise<MetaAdsWriteResult> {
+    return apiClient.request({ method: "POST", path: `${BASE}/campaigns`, headers: { ...companyScopeHeaders(companyId), "Idempotency-Key": idempotencyKey }, body });
+  },
+  createAdSet(companyId: string, idempotencyKey: string, body: { adAccountId: string; campaignId: string; name: string; dailyBudgetMinor: number; billingEvent: string; optimizationGoal: string; targeting: Record<string, unknown> }): Promise<MetaAdsWriteResult> {
+    return apiClient.request({ method: "POST", path: `${BASE}/adsets`, headers: { ...companyScopeHeaders(companyId), "Idempotency-Key": idempotencyKey }, body });
+  },
+  createAd(companyId: string, idempotencyKey: string, body: { adAccountId: string; adSetId: string; creativeId: string; name: string }): Promise<MetaAdsWriteResult> {
+    return apiClient.request({ method: "POST", path: `${BASE}/ads`, headers: { ...companyScopeHeaders(companyId), "Idempotency-Key": idempotencyKey }, body });
+  },
+  updateNamedBudget(companyId: string, kind: "campaign" | "adset", id: string, body: { adAccountId: string; name?: string; dailyBudgetMinor?: number }): Promise<MetaAdsWriteResult> {
+    return apiClient.request({ method: "PATCH", path: `${BASE}/${kind === "campaign" ? "campaigns" : "adsets"}/${encodeURIComponent(id)}`, headers: companyScopeHeaders(companyId), body });
+  },
+  updateAd(companyId: string, id: string, body: { adAccountId: string; name: string }): Promise<MetaAdsWriteResult> {
+    return apiClient.request({ method: "PATCH", path: `${BASE}/ads/${encodeURIComponent(id)}`, headers: companyScopeHeaders(companyId), body });
+  },
+  updateStatus(companyId: string, kind: MetaAdsEntityKind, id: string, body: { adAccountId: string; status: "ACTIVE" | "PAUSED"; confirmedDailyBudgetMinor?: number }): Promise<MetaAdsWriteResult> {
+    const plural = kind === "campaign" ? "campaigns" : kind === "adset" ? "adsets" : "ads";
+    return apiClient.request({ method: "PATCH", path: `${BASE}/${plural}/${encodeURIComponent(id)}/status`, headers: companyScopeHeaders(companyId), body });
   },
 };

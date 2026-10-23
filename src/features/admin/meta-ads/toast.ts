@@ -7,7 +7,7 @@ import { LIVE } from "./data-source";
  * success would be a lie: those calls become one honest notice instead.
  * Warnings/errors/info pass through untouched.
  */
-const NOT_AVAILABLE = "Not available yet — Meta Ads is read-only here. Manage this in Meta Ads Manager.";
+const NOT_AVAILABLE = "This action is not connected to Meta. No change was made.";
 
 type ToastApi = typeof sonner;
 

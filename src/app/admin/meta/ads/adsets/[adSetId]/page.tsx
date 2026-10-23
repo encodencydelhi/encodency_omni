@@ -24,6 +24,7 @@ import {
 import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
 import { useAdsData } from "@/features/admin/meta-ads/data-source";
+import { useMetaAdsWrites } from "@/features/admin/meta-ads/live/meta-ads-writes";
 import {
   conversionRate,
   cpl,
@@ -73,7 +74,8 @@ const TABS = ["overview", "audience", "placements", "ads", "performance", "activ
 type Tab = (typeof TABS)[number];
 
 function AdSetDetail({ adSetId }: { adSetId: string }) {
-  const { activityLog, adsOfAdSet, getAdSet, getCampaign, getCreative } = useAdsData();
+  const { activityLog, adsOfAdSet, getAdSet, getCampaign, getCreative, accountId } = useAdsData();
+  const { busyId, setStatus } = useMetaAdsWrites();
   const params = useSearchParams();
   const requested = params?.get("tab");
   const tab: Tab = TABS.includes(requested as Tab) ? (requested as Tab) : "overview";
@@ -164,11 +166,12 @@ function AdSetDetail({ adSetId }: { adSetId: string }) {
             </button>
             <button
               type="button"
-              onClick={() => toast.success(`${paused ? "Resumed" : "Paused"} “${adSet.name}”`)}
+              onClick={() => accountId ? void setStatus("adset", adSet.id, adSet.name, adSet.status, adSet.budget || campaign?.budget || null, accountId) : undefined}
+              disabled={busyId === adSet.id}
               className={btn}
             >
               {paused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}
-              {paused ? "Resume" : "Pause"}
+              {busyId === adSet.id ? "Updating…" : paused ? "Resume" : "Pause"}
             </button>
             <Link href={`${ADS_ROOT}/create?adset=${adSet.id}&step=ad`} className={btnPrimary}>
               <Plus className="size-3.5" />

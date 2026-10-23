@@ -78,12 +78,14 @@ import {
   DetailBar,
 } from "@/features/admin/meta-ads/components/workspace";
 import type { Ad, AdSet, Campaign, Issue, Platform } from "@/features/admin/meta-ads/types";
+import { useMetaAdsWrites } from "@/features/admin/meta-ads/live/meta-ads-writes";
 
 const TABS = ["overview", "adsets", "ads", "leads", "performance", "activity"] as const;
 type Tab = (typeof TABS)[number];
 
 function CampaignDetail({ campaignId }: { campaignId: string }) {
-  const { adSetsOfCampaign, adsOfCampaign, getCampaign, issues, leadsOf } = useAdsData();
+  const { adSetsOfCampaign, adsOfCampaign, getCampaign, issues, leadsOf, accountId } = useAdsData();
+  const { busyId, setStatus } = useMetaAdsWrites();
   const params = useSearchParams();
   const requested = params?.get("tab");
   const tab: Tab = TABS.includes(requested as Tab) ? (requested as Tab) : "overview";
@@ -200,13 +202,15 @@ function CampaignDetail({ campaignId }: { campaignId: string }) {
             </Link>
             <button
               type="button"
-              onClick={() =>
-                toast.success(`${pausable ? "Paused" : "Resumed"} “${campaign.name}”`)
-              }
+              onClick={() => {
+                const dailyBudget = campaign.budget || sets.reduce((sum, adSet) => sum + (adSet.budget || 0), 0) || null;
+                if (accountId) void setStatus("campaign", campaign.id, campaign.name, pausable ? "active" : "paused", dailyBudget, accountId);
+              }}
+              disabled={busyId === campaign.id}
               className={btn}
             >
               <Pause className="size-3.5" />
-              {pausable ? "Pause" : "Resume"}
+              {busyId === campaign.id ? "Updating…" : pausable ? "Pause" : "Resume"}
             </button>
             <button
               type="button"

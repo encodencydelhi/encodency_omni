@@ -6,6 +6,7 @@ import { Download, Grid2X2, Plus } from "lucide-react";
 import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
 import { useAdsData } from "@/features/admin/meta-ads/data-source";
+import { useMetaAdsWrites } from "@/features/admin/meta-ads/live/meta-ads-writes";
 import {
   cpl,
   money,
@@ -50,7 +51,8 @@ const DEFAULTS = {
 };
 
 function AdSetsView() {
-  const { adSets, campaigns, getCampaign } = useAdsData();
+  const { adSets, campaigns, getCampaign, accountId } = useAdsData();
+  const { busyId, setStatus } = useMetaAdsWrites();
   /** Links such as "View Ad Sets" from a campaign arrive as ?campaign=<id>. */
   const { values, setFilter, reset, isFiltered } = useFilters(DEFAULTS, {
     campaign: (v) => getCampaign(v)?.name ?? v,
@@ -292,11 +294,8 @@ function AdSetsView() {
                               onSelect: () => toast.success(`Duplicating “${s.name}”…`),
                             },
                             {
-                              label: s.status === "paused" ? "Resume" : "Pause",
-                              onSelect: () =>
-                                toast.success(
-                                  `${s.status === "paused" ? "Resumed" : "Paused"} “${s.name}”`,
-                                ),
+                              label: busyId === s.id ? "Updating…" : s.status === "paused" ? "Resume" : "Pause",
+                              onSelect: () => accountId ? void setStatus("adset", s.id, s.name, s.status, s.budget || campaigns.find((campaign) => campaign.id === s.campaignId)?.budget || null, accountId) : undefined,
                             },
                           ],
                           [

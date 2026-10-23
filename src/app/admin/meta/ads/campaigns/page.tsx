@@ -54,6 +54,7 @@ import {
   AdsWorkspace,
 } from "@/features/admin/meta-ads/components/workspace";
 import type { EntityStatus } from "@/features/admin/meta-ads/types";
+import { useMetaAdsWrites } from "@/features/admin/meta-ads/live/meta-ads-writes";
 
 const DEFAULTS = {
   q: "",
@@ -88,7 +89,8 @@ const COLUMNS = [
 const PAUSABLE: EntityStatus[] = ["active", "learning", "scheduled"];
 
 function CampaignsView() {
-  const { campaigns, connectedAssets } = useAdsData();
+  const { campaigns, adSets, connectedAssets, accountId } = useAdsData();
+  const { busyId, setStatus } = useMetaAdsWrites();
   const assetNames = (group: string, field: "name" | "handle" = "name") => connectedAssets.filter((a) => a.group === group).map((a) => (field === "handle" ? a.handle || a.name : a.name));
   const { values, setFilter, reset, isFiltered } = useFilters(DEFAULTS);
   const [selected, setSelected] = useState<string[]>([]);
@@ -408,11 +410,11 @@ function CampaignsView() {
                               onSelect: () => toast.success(`Duplicating “${c.name}”…`),
                             },
                             {
-                              label: PAUSABLE.includes(c.status) ? "Pause" : "Resume",
-                              onSelect: () =>
-                                toast.success(
-                                  `${PAUSABLE.includes(c.status) ? "Paused" : "Resumed"} “${c.name}”`,
-                                ),
+                              label: busyId === c.id ? "Updating…" : PAUSABLE.includes(c.status) ? "Pause" : "Resume",
+                              onSelect: () => {
+                                const dailyBudget = c.budget || adSets.filter((adSet) => adSet.campaignId === c.id).reduce((sum, adSet) => sum + (adSet.budget || 0), 0) || null;
+                                if (accountId) void setStatus("campaign", c.id, c.name, PAUSABLE.includes(c.status) ? "active" : "paused", dailyBudget, accountId);
+                              },
                             },
                           ],
                           [

@@ -17,6 +17,7 @@ export interface ScopeInfo {
 
 export const SCOPE_CATALOGUE: ScopeInfo[] = [
   { scope: "ads_read", label: "Read ads", products: ["ads"], unlocks: "Ad accounts, campaigns, ad sets, ads and their performance.", essential: true },
+  { scope: "ads_management", label: "Manage ads", products: ["ads"], unlocks: "Create, edit, pause and activate campaigns, ad sets and ads.", essential: false },
   { scope: "leads_retrieval", label: "Read leads", products: ["ads"], unlocks: "Leads submitted through instant forms.", essential: false },
   { scope: "pages_manage_ads", label: "Page ads access", products: ["ads"], unlocks: "Lets Meta list the lead forms that belong to a Page.", essential: false },
   { scope: "pages_show_list", label: "List Pages", products: ["facebook", "instagram"], unlocks: "Finds the Facebook Pages (and linked Instagram accounts) this login manages.", essential: true },
