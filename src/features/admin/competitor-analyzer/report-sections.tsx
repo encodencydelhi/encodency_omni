@@ -2,18 +2,19 @@
 
 import { useState, type ElementType, type ReactNode } from "react";
 import {
-  AlertTriangle, Gauge, ArrowDownRight, ArrowUpRight, BookOpen, Calendar, CalendarClock, CalendarDays, Check, CircleHelp, Crown, FileText, Flame,
+  AlertTriangle, Gauge, ArrowDownRight, ArrowUpRight, BookOpen, Calendar, CalendarClock, CalendarDays, Check, CircleHelp, Copy, Crown, FileText, Flame,
   Info, Lightbulb, PlayCircle, ShieldAlert, ShieldCheck, Sparkles, Target, ThumbsDown, ThumbsUp, TrendingUp, X, Zap,
 } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Line, LineChart, PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ReferenceLine,
   ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis,
 } from "recharts";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
 import { Chip, ScoreDial } from "@/features/admin/website/components/ui/kit";
 import { AXIS_PROPS, ChartLegend, ChartTooltip, GRID_PROPS } from "@/features/admin/website/components/ui/charts";
 import { formatDateTime } from "@/features/admin/website/data/selectors";
-import type { ActionState, ActionStatus, AnalyzerResult, OwnSearch, RunReport, SiteEvidence, StudyDetail, StudySite } from "./api";
+import type { ActionState, ActionStatus, AnalyzerResult, FeatureState, OwnSearch, RunReport, SiteEvidence, SiteFeatures, StudyDetail, StudySite } from "./api";
 import { topicImpressions } from "./watch-sections";
 import { SiteFavicon, SiteLabel, SourceLink, useSiteLabelOf } from "./ui";
 
@@ -168,7 +169,7 @@ export function Hero({ study, report, ai, colorOf }: { study: StudyDetail; repor
           <div className="hidden w-px self-stretch bg-[#E6EBF4] md:block" aria-hidden />
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[#7C3AED]"><Sparkles className="size-3.5" /> The big picture</p>
-            <p className="mt-1 text-[13px] leading-relaxed text-[#28354C]">{ai ? ai.overview : "The AI summary appears when the comparison completes."}</p>
+            <p className="mt-1 text-[13px] leading-relaxed text-[#28354C]">{report.model?.summary ?? (ai ? ai.overview : "The comparison summary appears when enough evidence is available.")}</p>
             <p className="mt-1.5 text-[10.5px] text-[#94A3B8]">Checked {formatDateTime(report.finishedAt ?? report.startedAt)} · {pages} pages read across {study.sites.length} websites</p>
           </div>
         </div>
@@ -178,7 +179,7 @@ export function Hero({ study, report, ai, colorOf }: { study: StudyDetail; repor
       <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Your score" icon={Gauge} accent="#2563EB" value={ownScore ?? "—"} sub={best != null && ownScore != null ? (ownScore >= best ? "Highest in this comparison" : `${best - ownScore} points behind the leader`) : "Out of 100"} />
         <KpiCard label="Areas you lead" icon={Crown} accent="#12A06D" value={ai ? `${leads} of ${ai.scores.length}` : "—"} sub={leads ? "Areas where you score highest" : "No area where you lead yet"} />
-        <KpiCard stacked label="Biggest threat" icon={Flame} accent="#DC3A32" value={<span className="block text-[14px] normal-case leading-tight [overflow-wrap:anywhere]">{threat ? labelOf(threat.competitor) : "None"}</span>} sub={threat?.threatReason || "No strong threat found"} />
+        <KpiCard stacked label="Website pressure" icon={Flame} accent="#DC3A32" value={<span className="block text-[14px] normal-case leading-tight [overflow-wrap:anywhere]">{threat ? labelOf(threat.competitor) : "None"}</span>} sub={threat?.threatReason || "Business threat is not inferred from website quality"} />
         <KpiCard label="Quick wins" icon={Zap} accent="#7C3AED" value={ai ? quickWins : "—"} sub="High impact, low effort — see Action plan" />
       </div>
 
@@ -403,7 +404,7 @@ export function Heatmap({ ai, sites, colorOf, previous }: { ai: AnalyzerResult; 
 /* Head to head                                                        */
 /* ------------------------------------------------------------------ */
 
-const THREAT = { high: { label: "High threat", cls: "bg-[#FEF2F2] text-[#B91C1C] ring-[#FECACA]" }, medium: { label: "Medium threat", cls: "bg-[#FFFBEB] text-[#92400E] ring-[#FDE68A]" }, low: { label: "Low threat", cls: "bg-[#F1F5F9] text-[#475569] ring-[#E2E8F0]" } } as const;
+const THREAT = { high: { label: "High website pressure", cls: "bg-[#FEF2F2] text-[#B91C1C] ring-[#FECACA]" }, medium: { label: "Medium website pressure", cls: "bg-[#FFFBEB] text-[#92400E] ring-[#FDE68A]" }, low: { label: "Low website pressure", cls: "bg-[#F1F5F9] text-[#475569] ring-[#E2E8F0]" } } as const;
 
 export function HeadToHead({ ai, own, colorOf }: { ai: AnalyzerResult; report: RunReport; own: string; colorOf: ColorOf }) {
   const labelOf = useSiteLabelOf();
@@ -498,6 +499,26 @@ export function TopicMatrix({ ai, sites, colorOf, search }: { ai: AnalyzerResult
 
 const FORMAT_ICON = { page: FileText, blog: BookOpen, faq: CircleHelp, video: PlayCircle, guide: Lightbulb } as const;
 
+type ContentIdea = NonNullable<AnalyzerResult["contentIdeas"]>[number];
+
+/** Copies one idea as plain text, ready to paste into a brief or a document. */
+async function copyIdea(idea: ContentIdea) {
+  const lines = [
+    idea.title,
+    `Format: ${idea.format}`,
+    idea.why ? `Why: ${idea.why}` : "",
+    idea.outline?.length ? `Outline:\n${idea.outline.map((h, i) => `${i + 1}. ${h}`).join("\n")}` : "",
+    idea.keywords?.length ? `Search phrases: ${idea.keywords.join(", ")}` : "",
+    idea.inspiredBy ? `Inspired by: ${idea.inspiredBy}` : "",
+  ].filter(Boolean);
+  try {
+    await navigator.clipboard.writeText(lines.join("\n"));
+    toast.success("Idea copied");
+  } catch {
+    toast.error("Could not copy. Select the text and copy it instead.");
+  }
+}
+
 export function ContentIdeas({ ai, colorOf }: { ai: AnalyzerResult; colorOf: ColorOf }) {
   const ideas = ai.contentIdeas ?? [];
   if (!ideas.length) return <p className="text-[11.5px] text-[#6B7A94]">Re-check to get content ideas.</p>;
@@ -508,9 +529,25 @@ export function ContentIdeas({ ai, colorOf }: { ai: AnalyzerResult; colorOf: Col
         return (
           <div key={idea.title} className="flex gap-2.5 rounded-lg border border-[#E6EBF4] bg-gradient-to-br from-white to-[#F8FAFD] p-2.5">
             <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#F1ECFE] text-[#7C3AED]"><Icon className="size-4" /></span>
-            <div className="min-w-0">
-              <p className="text-[12px] font-semibold leading-snug text-[#111C3A]">{idea.title}</p>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start gap-2">
+                <p className="flex-1 text-[12px] font-semibold leading-snug text-[#111C3A]">{idea.title}</p>
+                <button type="button" onClick={() => copyIdea(idea)} title="Copy this idea (title, why, outline and search phrases)" className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#E6EBF4] bg-white px-1.5 py-0.5 text-[10px] font-medium text-[#4B5872] hover:bg-[#F1F4F9]">
+                  <Copy className="size-3" /> Copy
+                </button>
+              </div>
               <p className="mt-0.5 text-[10.5px] text-[#6B7A94]">{idea.why}</p>
+              {idea.outline?.length ? (
+                <ol className="mt-1.5 list-decimal space-y-0.5 pl-4 text-[11px] leading-snug text-[#28354C]">
+                  {idea.outline.map((h) => <li key={h}>{h}</li>)}
+                </ol>
+              ) : null}
+              {idea.keywords?.length ? (
+                <p className="mt-1.5 flex flex-wrap items-center gap-1 text-[10px] text-[#6B7A94]">
+                  <span className="font-medium">Search phrases:</span>
+                  {idea.keywords.map((k) => <span key={k} className="rounded bg-[#F1F4F9] px-1.5 py-0.5 normal-case text-[#28354C]">{k}</span>)}
+                </p>
+              ) : null}
               <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]"><Chip>{idea.format}</Chip>{idea.inspiredBy ? <span className="text-[#6B7A94]">inspired by <SiteLabel domain={idea.inspiredBy} color={colorOf(idea.inspiredBy)} /></span> : null}</p>
             </div>
           </div>
@@ -622,7 +659,12 @@ export function SpeedBoard({ report, sites, colorOf }: { report: RunReport; site
   );
 }
 
-type Check = { label: string; value: (e: SiteEvidence) => boolean | number | string | null; good?: (v: never) => boolean; better?: "high" | "low"; hint?: string };
+type Check = { label: string; value: (e: SiteEvidence) => boolean | number | string | FeatureState | null; good?: (v: never) => boolean; better?: "high" | "low"; hint?: string };
+const featureState = (e: SiteEvidence, key: keyof SiteFeatures, legacy: boolean): FeatureState => e.features?.[key]?.state ?? (legacy ? "present" : "not_observed");
+const newFeature = (e: SiteEvidence, key: keyof SiteFeatures): FeatureState => e.features?.[key]?.state ?? "not_observed";
+const FEATURE_LABEL: Record<FeatureState, string> = { present: "Present", absent_confirmed: "Absent", not_observed: "Not verified", render_failed: "Render failed" };
+const featureTone = (value: FeatureState) => value === "present" ? "bg-[#E7F6EF] text-[#0B845C]" : value === "absent_confirmed" ? "bg-[#FEF2F2] text-[#B91C1C]" : "bg-[#FFFBEB] text-[#92400E]";
+const isFeatureState = (value: unknown): value is FeatureState => typeof value === "string" && value in FEATURE_LABEL;
 const CHECKS: { group: string; rows: Check[] }[] = [
   {
     group: "Search basics",
@@ -648,19 +690,31 @@ const CHECKS: { group: string; rows: Check[] }[] = [
       { label: "Pages updated in 30 days", value: (e) => e.tech?.sitemapRecent30 ?? null, better: "high", hint: "From the sitemap dates: how actively the site adds or updates pages right now." },
       { label: "Pages updated in 90 days", value: (e) => e.tech?.sitemapRecent90 ?? null, better: "high", hint: "The same over three months. “—” means the sitemap has no dates." },
       { label: "Last sitemap update", value: (e) => e.tech?.sitemapLatest ?? null, hint: "The newest date in the sitemap." },
-      { label: "Blog / news section", value: (e) => e.tech?.hasBlog ?? null, hint: "Regular articles bring new search traffic and show the business is active." },
+      { label: "Blog / news section", value: (e) => featureState(e, "blog", e.tech?.hasBlog === true), hint: "Present only when an article section or article evidence was actually observed." },
       { label: "Newest dated content", value: (e) => e.tech?.latestDate ?? null, hint: "Latest publish date found. Empty = no dated content, so freshness is unknown." },
       { label: "Different calls to action", value: (e) => e.metrics.ctas, better: "high", hint: "Buttons like Register, Book, Donate, Contact that ask the visitor to act." },
       { label: "Images", value: (e) => e.metrics.images, better: "high", hint: "Pictures in the main content of the pages read." },
     ],
   },
   {
+    group: "What they offer",
+    rows: [
+      { label: "Products / catalogue", value: (e) => newFeature(e, "products"), hint: "A product range, catalogue or shop page was seen." },
+      { label: "Buy online", value: (e) => newFeature(e, "onlineStore"), hint: "Cart, checkout or “buy now” on the site." },
+      { label: "Prices on the website", value: (e) => newFeature(e, "prices"), hint: "At least one price is written on a page (₹, Rs, INR, $…)." },
+      { label: "Events / registration", value: (e) => newFeature(e, "events"), hint: "Events, exhibitions, stall booking or visitor registration." },
+      { label: "Portfolio / projects", value: (e) => newFeature(e, "portfolio"), hint: "Past work, case studies or a project gallery." },
+      { label: "Client names or logos", value: (e) => newFeature(e, "clients"), hint: "Clients, partners or brands shown as proof." },
+      { label: "Testimonials / reviews", value: (e) => newFeature(e, "testimonials"), hint: "What customers say, on the site itself." },
+    ],
+  },
+  {
     group: "Reach & trust",
     rows: [
-      { label: "Phone link", value: (e) => e.metrics.contact.phone, hint: "A number visitors can tap to call." },
-      { label: "WhatsApp", value: (e) => e.metrics.contact.whatsapp, hint: "A WhatsApp chat link or button." },
-      { label: "Email link", value: (e) => e.metrics.contact.email, hint: "A clickable email address." },
-      { label: "Contact form", value: (e) => e.metrics.contact.form, hint: "A form to send an enquiry or register." },
+      { label: "Phone", value: (e) => featureState(e, "phone", e.metrics.contact.phone), hint: "A phone number observed in static or rendered content." },
+      { label: "WhatsApp", value: (e) => featureState(e, "whatsapp", e.metrics.contact.whatsapp), hint: "A WhatsApp chat link or button observed during the check." },
+      { label: "Email", value: (e) => featureState(e, "email", e.metrics.contact.email), hint: "An email address observed in static or rendered content." },
+      { label: "Contact form", value: (e) => featureState(e, "contactForm", e.metrics.contact.form), hint: "A rendered form to send an enquiry or register." },
       { label: "Social profiles linked", value: (e) => e.metrics.social.length, better: "high", hint: "Facebook, Instagram, LinkedIn, YouTube… linked from the site." },
       { label: "HTTPS", value: (e) => e.https, hint: "The padlock in the browser. Google and visitors expect it." },
     ],
@@ -695,7 +749,9 @@ export function TechTable({ report, sites, colorOf }: { report: RunReport; sites
                     const ok = typeof v === "number" && row.good ? (row.good as (n: number) => boolean)(v) : null;
                     return (
                       <td key={cols[i]!.site.domain} className={cn("px-2 py-1.5", cols[i]!.site.role === "own" && "bg-[#EFF4FC]")}>
-                        {typeof v === "boolean" ? (
+                        {isFeatureState(v) ? (
+                          <span className={cn("inline-flex rounded px-1.5 py-0.5 text-[10px] font-semibold", featureTone(v))}>{FEATURE_LABEL[v]}</span>
+                        ) : typeof v === "boolean" ? (
                           v ? <span className="grid size-5 place-items-center rounded-full bg-[#E7F6EF] text-[#0F9D6E]"><Check className="size-3" aria-label="yes" /></span> : <span className="grid size-5 place-items-center rounded-full bg-[#FEF2F2] text-[#DC3A32]"><X className="size-3" aria-label="no" /></span>
                         ) : v == null ? (
                           <span className="text-[#A3B0C2]">—</span>
@@ -762,65 +818,61 @@ export function ActionBoard({ ai, colorOf, tracking }: { ai: AnalyzerResult; col
           </span>
         </div>
       ) : null}
-    <div className="grid gap-1 lg:grid-cols-3">
-      {COLUMNS.map((col) => {
-        const items = actions.filter((a) => a.when === col.when);
-        const Icon = col.icon;
-        return (
-          <div key={col.when} className="rounded-xl bg-[#F8FAFD] p-2.5 ring-1 ring-inset ring-[#E6EBF4]">
-            <p className="mb-2 flex items-center justify-between text-[12px] font-bold text-[#111C3A]">
-              <span className="flex items-center gap-1.5"><span className="grid size-6 place-items-center rounded-md text-white" style={{ background: col.accent }}><Icon className="size-3.5" /></span>{col.title}</span>
-              <Chip tone="muted">{items.length}</Chip>
-            </p>
-            <ul className="space-y-2">
-              {items.map((a) => {
-                const quick = a.effort === "low" && (a.impact ?? a.priority) === "high";
-                return (
-                  <li key={a.n} className={cn("rounded-lg border bg-white p-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]", stateOf(a.action)?.status === "done" ? "border-[#A7F3D0] bg-[#F0FDF4]" : "border-[#E6EBF4]")}>
-                    <p className={cn("text-[12px] font-semibold leading-snug text-[#111C3A]", stateOf(a.action)?.status === "done" && "line-through decoration-[#12A06D]/60")}>{a.action}</p>
-                    {a.reason ? <p className="mt-1 text-[10.5px] text-[#6B7A94]">{a.reason}</p> : null}
-                    <p className="mt-1.5 flex flex-wrap items-center gap-1">
-                      {quick ? <Chip tone="good"><Zap className="mr-0.5 inline size-2.5" />Quick win</Chip> : null}
-                      <Chip tone={(a.impact ?? a.priority) === "high" ? "bad" : (a.impact ?? a.priority) === "medium" ? "warn" : "muted"}>{a.impact ?? a.priority} impact</Chip>
-                      <Chip>{a.effort} effort</Chip>
-                    </p>
-                    {a.learnFrom ? <p className="mt-1 text-[10.5px] text-[#4B5872]">Learn from <SiteLabel domain={a.learnFrom} color={colorOf(a.learnFrom)} /></p> : null}
-                    {tracking ? (
-                      <div className="mt-2 flex flex-wrap items-center justify-between gap-1.5 border-t border-[#EEF2F8] pt-2">
-                        <div className="inline-flex rounded-md border border-[#DAE1EC] bg-[#F5F7FB] p-0.5" role="radiogroup" aria-label="Progress">
-                          {STATUS.map((st) => {
-                            const active = (stateOf(a.action)?.status ?? "todo") === st.value;
-                            return (
-                              <button key={st.value} type="button" role="radio" aria-checked={active} disabled={tracking.busy === a.action} onClick={() => tracking.onStatus(a.action, st.value)} className={cn("rounded px-2 py-0.5 text-[10.5px] font-semibold", active ? (st.value === "done" ? "bg-[#12A06D] text-white" : st.value === "doing" ? "bg-[#F59E0B] text-white" : "bg-white text-[#111C3A] shadow-sm") : "text-[#6B7A94] hover:text-[#111C3A]")}>
-                                {st.label}
-                              </button>
-                            );
-                          })}
+      <div className="grid gap-1 lg:grid-cols-3">
+        {COLUMNS.map((col) => {
+          const items = actions.filter((a) => a.when === col.when);
+          const Icon = col.icon;
+          return (
+            <div key={col.when} className="rounded-xl bg-[#F8FAFD] p-2.5 ring-1 ring-inset ring-[#E6EBF4]">
+              <p className="mb-2 flex items-center justify-between text-[12px] font-bold text-[#111C3A]">
+                <span className="flex items-center gap-1.5"><span className="grid size-6 place-items-center rounded-md text-white" style={{ background: col.accent }}><Icon className="size-3.5" /></span>{col.title}</span>
+                <Chip tone="muted">{items.length}</Chip>
+              </p>
+              <ul className="space-y-2">
+                {items.map((a) => {
+                  const quick = a.effort === "low" && (a.impact ?? a.priority) === "high";
+                  return (
+                    <li key={a.n} className={cn("rounded-lg border bg-white p-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]", stateOf(a.action)?.status === "done" ? "border-[#A7F3D0] bg-[#F0FDF4]" : "border-[#E6EBF4]")}>
+                      <p className={cn("text-[12px] font-semibold leading-snug text-[#111C3A]", stateOf(a.action)?.status === "done" && "line-through decoration-[#12A06D]/60")}>{a.action}</p>
+                      {a.reason ? <p className="mt-1 text-[10.5px] text-[#6B7A94]">{a.reason}</p> : null}
+                      <p className="mt-1.5 flex flex-wrap items-center gap-1">
+                        {quick ? <Chip tone="good"><Zap className="mr-0.5 inline size-2.5" />Quick win</Chip> : null}
+                        <Chip tone={(a.impact ?? a.priority) === "high" ? "bad" : (a.impact ?? a.priority) === "medium" ? "warn" : "muted"}>{a.impact ?? a.priority} impact</Chip>
+                        <Chip>{a.effort} effort</Chip>
+                      </p>
+                      {a.learnFrom ? <p className="mt-1 text-[10.5px] text-[#4B5872]">Learn from <SiteLabel domain={a.learnFrom} color={colorOf(a.learnFrom)} /></p> : null}
+                      {a.evidenceUrls?.length ? <p className="mt-1 flex flex-wrap gap-1.5 text-[10px] text-[#6B7A94]">Evidence {a.evidenceUrls.map((url) => <SourceLink key={url} url={url} />)}</p> : null}
+                      {tracking ? (
+                        <div className="mt-2 flex flex-wrap items-center justify-between gap-1.5 border-t border-[#EEF2F8] pt-2">
+                          <div className="inline-flex rounded-md border border-[#DAE1EC] bg-[#F5F7FB] p-0.5" role="radiogroup" aria-label="Progress">
+                            {STATUS.map((st) => {
+                              const active = (stateOf(a.action)?.status ?? "todo") === st.value;
+                              return (
+                                <button key={st.value} type="button" role="radio" aria-checked={active} disabled={tracking.busy === a.action} onClick={() => tracking.onStatus(a.action, st.value)} className={cn("rounded px-2 py-0.5 text-[10.5px] font-semibold", active ? (st.value === "done" ? "bg-[#12A06D] text-white" : st.value === "doing" ? "bg-[#F59E0B] text-white" : "bg-white text-[#111C3A] shadow-sm") : "text-[#6B7A94] hover:text-[#111C3A]")}>
+                                  {st.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {stateOf(a.action)?.taskId ? (
+                            <a href="/admin/crm/tasks" className="text-[10.5px] font-semibold text-[#0B845C] hover:underline">✓ Task created</a>
+                          ) : tracking.canTask ? (
+                            <button type="button" disabled={tracking.busy === a.action} onClick={() => tracking.onTask(a.action, a.reason, a.impact ?? a.priority)} className="text-[10.5px] font-semibold text-[#2563EB] hover:underline disabled:opacity-50">+ Create CRM task</button>
+                          ) : null}
                         </div>
-                        {stateOf(a.action)?.taskId ? (
-                          <a href="/admin/crm/tasks" className="text-[10.5px] font-semibold text-[#0B845C] hover:underline">✓ Task created</a>
-                        ) : tracking.canTask ? (
-                          <button type="button" disabled={tracking.busy === a.action} onClick={() => tracking.onTask(a.action, a.reason, a.impact ?? a.priority)} className="text-[10.5px] font-semibold text-[#2563EB] hover:underline disabled:opacity-50">+ Create CRM task</button>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </li>
-                );
-              })}
-              {!items.length ? <li className="text-[11px] text-[#94A3B8]">Nothing here.</li> : null}
-            </ul>
-          </div>
-        );
-      })}
-    </div>
+                      ) : null}
+                    </li>
+                  );
+                })}
+                {!items.length ? <li className="text-[11px] text-[#94A3B8]">Nothing here.</li> : null}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/* History                                                             */
-/* ------------------------------------------------------------------ */
-
 export function History({ study, colorOf }: { study: StudyDetail; colorOf: ColorOf }) {
   const labelOf = useSiteLabelOf();
   const points = study.history.filter((h) => h.overall);

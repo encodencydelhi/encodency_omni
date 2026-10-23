@@ -89,10 +89,24 @@ export function useStudyMutations() {
     archive: useMutation({ mutationFn: (id: string) => analyzerApi.archive(companyId, id), onSuccess: refresh }),
     run: useMutation({ mutationFn: (id: string) => analyzerApi.run(companyId, id), onSuccess: refresh }),
     lookup: useMutation({ mutationFn: (q: string) => analyzerApi.lookup(companyId, q) }),
+    suggest: useMutation({ mutationFn: (url: string) => analyzerApi.suggest(companyId, url) }),
     download: useMutation({ mutationFn: (args: { id: string; lang?: "en" | "hi" }) => analyzerApi.downloadReport(companyId, args.id, args.lang) }),
     settings: useMutation({ mutationFn: (args: { id: string; body: Parameters<typeof analyzerApi.updateSettings>[2] }) => analyzerApi.updateSettings(companyId, args.id, args.body), onSuccess: refresh }),
     actionStatus: useMutation({ mutationFn: (args: { id: string; body: Parameters<typeof analyzerApi.setActionStatus>[2] }) => analyzerApi.setActionStatus(companyId, args.id, args.body), onSuccess: refresh }),
     actionTask: useMutation({ mutationFn: (args: { id: string; body: Parameters<typeof analyzerApi.createActionTask>[2] }) => analyzerApi.createActionTask(companyId, args.id, args.body), onSuccess: refresh }),
     emailReport: useMutation({ mutationFn: (args: { id: string; to: string[] }) => analyzerApi.emailReport(companyId, args.id, args.to) }),
+  };
+}
+
+/** Share links of one study (the client opens the report without login). */
+export function useStudyShares(id: string) {
+  const { companyId, ready } = useAnalyzerCompany();
+  const qc = useQueryClient();
+  const key = ["competitor-analyzer", companyId, "shares", id];
+  const refresh = () => qc.invalidateQueries({ queryKey: key });
+  return {
+    list: useQuery({ queryKey: key, queryFn: () => analyzerApi.shares(companyId, id), enabled: ready && Boolean(id), retry: false }),
+    create: useMutation({ mutationFn: (body: Parameters<typeof analyzerApi.createShare>[2]) => analyzerApi.createShare(companyId, id, body), onSuccess: refresh }),
+    revoke: useMutation({ mutationFn: (shareId: string) => analyzerApi.revokeShare(companyId, id, shareId), onSuccess: refresh }),
   };
 }

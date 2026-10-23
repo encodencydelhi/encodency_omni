@@ -29,7 +29,7 @@ export interface TechSignals {
   imagesTotal: number;
   imagesWithAlt: number;
   internalLinks: number;
-  hasBlog: boolean;
+  hasBlog: boolean | null;
   latestDate: string | null;
   robotsTxt: boolean | null;
   sitemapUrls: number | null;
@@ -60,13 +60,63 @@ export interface SiteEvidence {
   /** Mobile screenshot of the home page from Google PageSpeed (data URL). */
   screenshot?: string | null;
   https: boolean;
-  pages: { url: string; title: string; description: string; words: number; headings: number; ctas: string[] }[];
+  pages: { url: string; title: string; description: string; words: number; headings: number; ctas: string[]; kind?: PageKind; method?: "static" | "rendered" }[];
   metrics: SiteMetrics;
   tech?: TechSignals | null;
+  features?: SiteFeatures;
+  coverage?: CrawlCoverage;
   speed: { performance: number | null; seo: number | null; accessibility: number | null; bestPractices: number | null; lcpMs: number | null; cls: number | null; tbtMs: number | null } | null;
   speedError: string | null;
   search?: OwnSearch | null;
+  /** Social profiles the site links to; numbers only where an official API gives them (checks from 2026-10-23 on). */
+  socials?: SiteSocials;
   brand: { status: "matched" | "possible" | "not_found" | "unavailable"; name: string | null; description: string | null; wikipediaUrl: string | null } | null;
+}
+
+export type SocialPlatform = "youtube" | "instagram" | "facebook" | "linkedin" | "x" | "pinterest" | "threads" | "tiktok" | "whatsapp" | "telegram";
+export interface SocialProfile { platform: SocialPlatform; url: string; handle: string | null }
+export type YouTubeStats =
+  | { status: "ok"; channelId: string; title: string; subscribers: number | null; videos: number; views: number; lastUploadAt: string | null; url: string }
+  | { status: "unresolved" | "not_found" | "unavailable" | "error"; message: string; url: string };
+export type InstagramStats =
+  | { status: "ok"; username: string; name: string | null; followers: number; posts: number; lastPostAt: string | null; url: string }
+  | { status: "unavailable" | "not_found" | "error"; message: string; url: string };
+export interface SiteSocials { profiles: SocialProfile[]; youtube: YouTubeStats | null; instagram: InstagramStats | null; checkedAt: string }
+
+export type FeatureState = "present" | "absent_confirmed" | "not_observed" | "render_failed";
+export type PageKind = "home" | "about" | "contact" | "services" | "products" | "pricing" | "events" | "projects" | "gallery" | "blog" | "team" | "faq" | "locations" | "clients" | "testimonials" | "other";
+export interface FeatureAssertion { state: FeatureState; evidence: { url: string; snippet: string; method: "static" | "rendered" }[] }
+export interface SiteFeatures {
+  blog: FeatureAssertion;
+  contactForm: FeatureAssertion;
+  phone: FeatureAssertion;
+  email: FeatureAssertion;
+  whatsapp: FeatureAssertion;
+  portfolio: FeatureAssertion;
+  clients: FeatureAssertion;
+  testimonials: FeatureAssertion;
+  /** Added 2026-10-23; absent on older checks. */
+  products?: FeatureAssertion;
+  onlineStore?: FeatureAssertion;
+  prices?: FeatureAssertion;
+  events?: FeatureAssertion;
+}
+export interface CrawlCoverage {
+  discovered: number;
+  selected: number;
+  read: number;
+  rendered: number;
+  failed: number;
+  score: number;
+  status: "complete" | "partial" | "insufficient";
+  pageTypes: PageKind[];
+  warnings: string[];
+}
+export interface AnalysisQuality {
+  status: "verified" | "partial" | "needs_review";
+  score: number;
+  issues: { severity: "warning" | "error"; domain: string | null; code: string; message: string }[];
+  rule: "No evidence = not verified";
 }
 
 export interface CitedPoint { point: string; evidence: string; url: string }
@@ -78,21 +128,39 @@ export interface AnalyzerResult {
   headToHead: { competitor: string; threat?: "high" | "medium" | "low"; threatReason?: string; theyLead: { point: string; url: string }[]; youLead: { point: string; url: string }[]; verdict: string }[];
   gaps: { topic: string; competitors: string[]; why: string; url: string }[];
   opportunities: string[];
-  actions: { priority: "high" | "medium" | "low"; action: string; reason: string; effort: "low" | "medium" | "high"; impact?: "high" | "medium" | "low"; when?: "this week" | "this month" | "this quarter"; learnFrom: string | null }[];
+  actions: { priority: "high" | "medium" | "low"; action: string; reason: string; effort: "low" | "medium" | "high"; impact?: "high" | "medium" | "low"; when?: "this week" | "this month" | "this quarter"; learnFrom: string | null; evidenceUrls?: string[] }[];
   /** Absent on reports made before the deeper analysis (2026-10-22.2). */
   swot?: { strengths: string[]; weaknesses: string[]; opportunities: string[]; threats: string[] };
   topics?: { topic: string; sites: string[] }[];
-  contentIdeas?: { title: string; format: "page" | "blog" | "faq" | "video" | "guide"; why: string; inspiredBy: string | null }[];
+  contentIdeas?: { title: string; format: "page" | "blog" | "faq" | "video" | "guide"; why: string; inspiredBy: string | null; outline?: string[]; keywords?: string[] }[];
 }
 
+/** A fact a website states about itself, with the page and the exact words it came from. */
+export interface OfferFact { value: string; url: string; quote: string }
+export interface LabeledFact extends OfferFact { label: string }
+export const OFFER_FIELDS = ["eventName", "dates", "location", "exhibitors", "visitors", "stallPrice", "ticketPrice", "deadline"] as const;
+export type OfferField = (typeof OFFER_FIELDS)[number];
+export type SiteOffers = { domain: string; prices: LabeledFact[]; claims: LabeledFact[] } & Record<OfferField, OfferFact | null>;
+export interface OffersBlock { status: "completed" | "failed"; generatedAt: string; sites: SiteOffers[]; dropped: number; reason?: string }
+
 export type AiBlock =
-  | { status: "completed"; generatedAt: string; dropped: number; result: AnalyzerResult }
-  | { status: "unavailable" | "failed"; reason: string };
+  | { status: "completed"; generatedAt: string; dropped: number; result: AnalyzerResult; quality?: AnalysisQuality; offers?: OffersBlock }
+  | { status: "unavailable" | "failed"; reason: string; quality?: AnalysisQuality; offers?: OffersBlock };
 
 export interface SiteChange { domain: string; kind: string; direction: "up" | "down" | "neutral"; text: string }
 
 export interface RunSummary { id: string; status: "running" | "completed" | "failed" | "cancelled"; stage: string | null; startedAt: string; finishedAt: string | null; errorMessage: string | null }
-export interface RunReport extends RunSummary { sites: SiteEvidence[]; ai: AiBlock | null; changes: { since: string; items: SiteChange[] } | null; costUsd: number | null }
+export interface CanonicalReportModel {
+  version: "competitor-report-2";
+  checkedAt: string;
+  sites: SiteEvidence[];
+  analysis: AnalyzerResult | null;
+  summary: string;
+  quality: AnalysisQuality;
+  businessThreat: { status: "not_assessed"; message: string };
+  methodology: { rule: "No evidence = not verified"; browserFallback: boolean; deterministicScores: true };
+}
+export interface RunReport extends RunSummary { sites: SiteEvidence[]; ai: AiBlock | null; model?: CanonicalReportModel; changes: { since: string; items: SiteChange[] } | null; costUsd: number | null }
 
 export type Schedule = "off" | "weekly" | "monthly";
 export interface StudySettings { schedule: Schedule; alerts: boolean; reportEmails: string[]; reportMonthly: boolean }
@@ -134,6 +202,43 @@ export interface StudyDetail {
   history: { id: string; at: string; overall: Record<string, number> | null; speed: Record<string, number | null> }[];
 }
 
+export interface CompetitorSuggestion { name: string; domain: string; url: string; siteName: string | null; why: string; source: "ai" | "knowledge_graph" }
+export interface SuggestionResult { business: { what: string; where: string | null }; suggestions: CompetitorSuggestion[]; dropped: number; cached: boolean; at: string }
+
+export interface StudyShare {
+  id: string;
+  token: string;
+  label: string | null;
+  lang: "en" | "hi";
+  status: "active" | "expired" | "revoked";
+  expiresAt: string;
+  revokedAt: string | null;
+  viewCount: number;
+  lastViewedAt: string | null;
+  createdAt: string;
+}
+/** What a share link returns: the report without anything internal to the company. */
+export interface SharedReport { share: { preparedBy: string | null; expiresAt: string; lang: "en" | "hi" }; study: StudyDetail }
+
+async function publicFetch(path: string): Promise<Response> {
+  const response = await fetch(`${env.apiBaseUrl}${path}`, { credentials: "omit", headers: { "ngrok-skip-browser-warning": "true" } });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as { message?: string | string[] };
+    throw Object.assign(new Error(Array.isArray(body.message) ? body.message.join(" ") : body.message ?? "This link could not be opened."), { status: response.status });
+  }
+  return response;
+}
+
+/** Share links are opened without login, so these calls send no cookie and no company header. */
+export const sharedApi = {
+  get: async (token: string) => (await publicFetch(`/public/competitor-reports/${encodeURIComponent(token)}`)).json() as Promise<SharedReport>,
+  async pdf(token: string, lang: "en" | "hi"): Promise<{ blob: Blob; fileName: string }> {
+    const response = await publicFetch(`/public/competitor-reports/${encodeURIComponent(token)}/pdf${lang === "hi" ? "?lang=hi" : ""}`);
+    const fileName = /filename="([^"]+)"/.exec(response.headers.get("content-disposition") ?? "")?.[1] ?? "competitor-report.pdf";
+    return { blob: await response.blob(), fileName };
+  },
+};
+
 export interface LookupResult { name: string; description: string | null; url: string; domain: string | null; imageUrl: string | null }
 
 /** Competitor Analyzer. Company-wide: no Client header. Read = clients:read, change/run = clients:write. */
@@ -167,8 +272,15 @@ export const analyzerApi = {
     apiClient.request<{ key: string; state: ActionState; taskId: string; created: boolean }>({ method: "POST", path: `/competitor-analyzer/studies/${encodeURIComponent(id)}/actions/task`, headers: companyScopeHeaders(companyId), body }),
   emailReport: (companyId: string, id: string, to: string[]) =>
     apiClient.request<{ sent: number; to: string[] }>({ method: "POST", path: `/competitor-analyzer/studies/${encodeURIComponent(id)}/report/email`, headers: companyScopeHeaders(companyId), body: { to } }),
+  shares: (companyId: string, id: string) => apiClient.request<StudyShare[]>({ method: "GET", path: `/competitor-analyzer/studies/${encodeURIComponent(id)}/shares`, headers: companyScopeHeaders(companyId) }),
+  createShare: (companyId: string, id: string, body: { days: 7 | 30 | 90; lang?: "en" | "hi"; label?: string }) =>
+    apiClient.request<StudyShare>({ method: "POST", path: `/competitor-analyzer/studies/${encodeURIComponent(id)}/shares`, headers: companyScopeHeaders(companyId), body }),
+  revokeShare: (companyId: string, id: string, shareId: string) =>
+    apiClient.request<StudyShare>({ method: "DELETE", path: `/competitor-analyzer/studies/${encodeURIComponent(id)}/shares/${encodeURIComponent(shareId)}`, headers: companyScopeHeaders(companyId) }),
   /** Reads only the site's home page to show its name while the address is typed. */
   siteName: (companyId: string, url: string) =>
     apiClient.request<{ domain: string; url: string; name: string | null; reachable: boolean }>({ method: "GET", path: "/competitor-analyzer/site-name", headers: companyScopeHeaders(companyId), query: { url } }),
+  /** Competitor websites for a site, each checked to open (uses a little of today's AI limit; cached 7 days per website). */
+  suggest: (companyId: string, url: string) => apiClient.request<SuggestionResult>({ method: "GET", path: "/competitor-analyzer/suggest", headers: companyScopeHeaders(companyId), query: { url } }),
   lookup: (companyId: string, q: string) => apiClient.request<{ results: LookupResult[]; message: string | null }>({ method: "GET", path: "/competitor-analyzer/lookup", headers: companyScopeHeaders(companyId), query: { q } }),
 };

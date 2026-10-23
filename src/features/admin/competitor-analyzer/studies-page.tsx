@@ -107,6 +107,58 @@ function CompetitorRow({ value, onChange, onRemove, index }: { value: string; on
   );
 }
 
+/** AI names likely competitors from your home page; each one shown was checked to open. One click adds it to the list. */
+function SuggestCompetitors({ own, picked, full, onPick }: { own: string; picked: string[]; full: boolean; onPick: (domain: string) => void }) {
+  const { suggest } = useStudyMutations();
+  const ready = looksLikeDomain(own);
+  const data = suggest.data && domainOf(own) && suggest.variables && domainOf(suggest.variables) === domainOf(own) ? suggest.data : null;
+  const ask = () => suggest.mutate(own.trim(), { onError: (e) => toast.error(errorText(e, "Could not suggest competitors"), { duration: 8000 }) });
+  return (
+    <div className="rounded-lg border border-dashed border-[#D8CCF8] bg-[#FBF9FF] p-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[#5B21B6]"><Sparkles className="size-3.5" /> Not sure who your competitors are?</p>
+        <WButton size="sm" icon={suggest.isPending ? Loader2 : Sparkles} onClick={ask} disabled={!ready || suggest.isPending} disabledReason="Enter your website first">
+          {suggest.isPending ? "Finding competitors…" : data ? "Ask again" : "Suggest competitors"}
+        </WButton>
+      </div>
+      {suggest.isPending ? <p className="mt-1.5 text-[11px] text-[#6B7A94]">Reading your home page, then checking that every suggested website opens. About 20–40 seconds.</p> : null}
+      {!data && !suggest.isPending ? <p className="mt-1 text-[11px] text-[#6B7A94]">AI reads your home page and names businesses that sell the same thing to the same customers. Every suggestion is checked to open; marketplaces and directories are left out.</p> : null}
+      {data ? (
+        <div className="mt-2 space-y-1.5">
+          {data.business.what ? (
+            <p className="text-[11px] normal-case text-[#4B5872]"><span className="font-semibold">Your business, as read from your site:</span> {data.business.what}{data.business.where ? ` (${data.business.where})` : ""}</p>
+          ) : null}
+          {data.suggestions.length ? (
+            <ul className="grid gap-1 md:grid-cols-2">
+              {data.suggestions.map((s) => {
+                const added = picked.includes(s.domain);
+                return (
+                  <li key={s.domain} className={cn("flex items-start gap-2.5 rounded-md border bg-white px-2.5 py-2", added ? "border-[#BBF7D0]" : "border-[#E6DEFB]")}>
+                    <SiteFavicon domain={s.domain} size={20} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12px] font-semibold normal-case text-[#111C3A] [overflow-wrap:anywhere]">{s.siteName || s.name}{(s.siteName || s.name) !== s.domain ? <span className="font-normal text-[#6B7A94]"> · {s.domain}</span> : null}</p>
+                      {s.why ? <p className="text-[11px] normal-case text-[#6B7A94]">{s.why}</p> : null}
+                      <p className="text-[10px] text-[#94A3B8]">{s.source === "ai" ? "Website named by AI, checked to open" : "Website found on Google for this name, checked to open"}</p>
+                    </div>
+                    <WButton size="sm" icon={added ? CheckCircle2 : Plus} onClick={() => onPick(s.domain)} disabled={added || full} disabledReason={added ? "Already in the list" : "The list already has 4 competitors"}>
+                      {added ? "Added" : "Add"}
+                    </WButton>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="text-[11px] text-[#6B7A94]">No suggested competitor could be checked to have a working website. Type names or websites yourself.</p>
+          )}
+          <p className="text-[10px] text-[#94A3B8]">
+            AI suggestions: review them before comparing.{data.dropped ? ` ${data.dropped} name${data.dropped === 1 ? "" : "s"} left out because no working website was found.` : ""}{data.cached ? " Saved suggestion for this website (free for 7 days)." : ""}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function NewStudyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const router = useRouter();
   const clients = useCompanyClients();
@@ -209,6 +261,20 @@ function NewStudyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
               <Plus className="size-3.5" /> Add competitor
             </button>
           ) : null}
+        </div>
+        <div className="md:col-span-2">
+          <SuggestCompetitors
+            own={own}
+            picked={filled.map(domainOf).filter((d): d is string => Boolean(d))}
+            full={filled.length >= MAX_COMPETITORS}
+            onPick={(domain) =>
+              setCompetitors((list) => {
+                const empty = list.findIndex((c) => !c.trim());
+                if (empty >= 0) return list.map((c, i) => (i === empty ? domain : c));
+                return list.length < MAX_COMPETITORS ? [...list, domain] : list;
+              })
+            }
+          />
         </div>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#EEF2F8] bg-[#FAFBFD] px-5 py-3">
@@ -395,7 +461,7 @@ function StudyCard({ study }: { study: StudyListItem }) {
 
         <section className="space-y-2.5 border-t border-[#EEF2F8] px-4 py-2.5 xl:border-t-0">
           <div>
-            <SectionLabel title="AI summary" hint="Where you stand, in short. The full reasoning and the pages it is based on are in the report." />
+            <SectionLabel title="Measured summary" hint="Where the website stands from the saved evidence. Business threat requires separate market data." />
             <p className="mt-1 text-[12px] leading-relaxed text-[#28354C]">
               <Sparkles className="mr-1.5 inline size-3.5 align-[-2px] text-[#7C3AED]" />
               {summary?.overview || (running ? "The summary appears when the running check finishes." : "The summary appears after the first check finishes.")}

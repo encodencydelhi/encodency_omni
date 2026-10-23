@@ -94,7 +94,7 @@ export function PreferencesSection() {
           )
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               <div>
                 <label className="block text-[11px] font-semibold text-[#334155] mb-1">Time Zone</label>
                 <select value={current.timezone} onChange={(e) => set({ timezone: e.target.value })} className={SELECT}>
