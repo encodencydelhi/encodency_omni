@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { AdminRouteGuard } from "@/features/auth/components/admin-route-guard";
+import { useAuth } from "@/features/auth/components/auth-provider";
+import { useDisplayPreferencesVersion } from "@/lib/api/display-preferences";
 import { SuspendedAccessGate } from "@/features/auth/components/suspended-access-gate";
 import { AssistantProvider } from "@/features/assistant/assistant-provider";
 import { AdminProvider, useAdminContext } from "./admin-context";
@@ -34,6 +36,9 @@ function isFullscreenRoute(pathname: string | null) {
 function Shell({ children }: { children: ReactNode }) {
   const { isSidebarCollapsed } = useAdminContext();
   const pathname = usePathname();
+  const { status } = useAuth();
+  // Redraws the page when the user's date / number preferences change.
+  const preferencesVersion = useDisplayPreferencesVersion(status === "authenticated");
 
   if (isFullscreenRoute(pathname)) {
     return (
@@ -49,7 +54,7 @@ function Shell({ children }: { children: ReactNode }) {
       <div className={cn("flex min-h-dvh flex-col transition-[padding] duration-200 min-w-0 max-w-full overflow-x-hidden pt-[92px]", isSidebarCollapsed ? "lg:pl-[64px]" : "lg:pl-[220px]")}>
         <AdminTopbar />
         <AdminBreadcrumb />
-        <main className="w-full flex-1 min-w-0 max-w-full px-4 py-5 sm:px-5 xl:px-6 pb-16">{children}</main>
+        <main key={preferencesVersion} className="w-full flex-1 min-w-0 max-w-full px-4 py-5 sm:px-5 xl:px-6 pb-16">{children}</main>
         <AdminFooter />
       </div>
       <AiAssistantFloatingBot />

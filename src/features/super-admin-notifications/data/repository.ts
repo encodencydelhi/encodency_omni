@@ -1,39 +1,37 @@
 import { apiClient } from "@/lib/api/client";
 import { buildNotificationsSnapshot } from "./provider";
-import type { NotificationEnvironment, NotificationSnapshot } from "./types";
+import type { AnnouncementInput, NotificationSnapshot } from "./types";
 
 export interface NotificationsRepository {
-  loadSnapshot(environment: NotificationEnvironment): Promise<NotificationSnapshot>;
-  replaceSection<K extends keyof NotificationSnapshot>(environment: NotificationEnvironment, section: K, value: NotificationSnapshot[K]): Promise<NotificationSnapshot>;
-  requestRecovery(environment: NotificationEnvironment, deliveryId: string): Promise<NotificationSnapshot>;
+  loadSnapshot(): Promise<NotificationSnapshot>;
+  /** Puts a failed or not-sent e-mail / WhatsApp delivery back in the queue. */
+  retry(deliveryId: string): Promise<NotificationSnapshot>;
+  /** Sends a platform announcement now; returns how many people it went to. */
+  announce(input: AnnouncementInput): Promise<{ sent: number }>;
 }
 
+/** Sample data for NEXT_PUBLIC_NOTIFICATIONS_MOCK_MODE=true only; nothing is sent. */
 class MockNotificationsRepository implements NotificationsRepository {
-  async loadSnapshot(environment: NotificationEnvironment) {
-    return buildNotificationsSnapshot(environment);
+  async loadSnapshot() {
+    return buildNotificationsSnapshot("production");
   }
-  async replaceSection<K extends keyof NotificationSnapshot>(environment: NotificationEnvironment, section: K, value: NotificationSnapshot[K]) {
-    return { ...buildNotificationsSnapshot(environment), [section]: value };
+  async retry() {
+    return buildNotificationsSnapshot("production");
   }
-  async requestRecovery(environment: NotificationEnvironment, deliveryId: string) {
-    const snapshot = buildNotificationsSnapshot(environment);
-    return {
-      ...snapshot,
-      deliveries: snapshot.deliveries.map((delivery) => delivery.id === deliveryId ? { ...delivery, recoveryRequested: true } : delivery),
-      recoveryRequests: [{ id: `rec_${Date.now()}`, deliveryId, requestedAt: new Date().toISOString(), requestedBy: "Super Admin", reason: "Manual delivery outcome review" }, ...snapshot.recoveryRequests],
-    };
+  async announce() {
+    return { sent: 0 };
   }
 }
 
 class LiveNotificationsRepository implements NotificationsRepository {
-  async loadSnapshot(environment: NotificationEnvironment) {
-    return apiClient.request<NotificationSnapshot>({ method: "GET", path: "/super-admin/notifications/snapshot", query: { environment } });
+  async loadSnapshot() {
+    return apiClient.request<NotificationSnapshot>({ method: "GET", path: "/super-admin/notifications/snapshot" });
   }
-  async replaceSection<K extends keyof NotificationSnapshot>(environment: NotificationEnvironment, section: K, value: NotificationSnapshot[K]) {
-    return apiClient.request<NotificationSnapshot>({ method: "PUT", path: `/super-admin/notifications/sections/${String(section)}`, query: { environment }, body: { value } });
+  async retry(deliveryId: string) {
+    return apiClient.request<NotificationSnapshot>({ method: "POST", path: `/super-admin/notifications/deliveries/${encodeURIComponent(deliveryId)}/retry` });
   }
-  async requestRecovery(environment: NotificationEnvironment, deliveryId: string) {
-    return apiClient.request<NotificationSnapshot>({ method: "POST", path: `/super-admin/notifications/deliveries/${deliveryId}/recovery`, query: { environment } });
+  async announce(input: AnnouncementInput) {
+    return apiClient.request<{ sent: number }>({ method: "POST", path: "/super-admin/notifications/announcements", body: input });
   }
 }
 

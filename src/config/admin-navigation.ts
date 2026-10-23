@@ -2,7 +2,7 @@ import {
   BarChart3, Blocks, Bot, BriefcaseBusiness, CalendarDays, ContactRound, FileChartColumn,
   Building2, FolderKanban, Gauge, Globe2, Hash, Image, Landmark, ListChecks, Network,
   Megaphone, MessageCircle, PanelsTopLeft, Settings, ShieldCheck, Target,
-  Server, Share2, Swords, UsersRound, Video, WalletCards, type LucideIcon,
+  Server, Share2, Swords, UsersRound, Video, WalletCards, Webhook, type LucideIcon,
 } from "lucide-react";
 
 export interface AdminNavItem { label: string; href: string; icon: LucideIcon; }
@@ -59,6 +59,7 @@ export const adminNavigation: AdminNavSection[] = [
       { label: "Team", href: "/admin/team", icon: UsersRound },
       { label: "Roles & Permissions", href: "/admin/roles", icon: ShieldCheck },
       { label: "Integrations", href: "/admin/integrations", icon: Blocks },
+      { label: "Webhooks", href: "/admin/settings/integrations/webhooks", icon: Webhook },
       { label: "Billing", href: "/admin/billing", icon: WalletCards },
       { label: "Settings", href: "/admin/settings", icon: Settings },
     ]

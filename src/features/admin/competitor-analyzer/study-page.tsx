@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
-  ArrowLeft, BarChart3, Check, FileDown, CircleAlert, Crown, Gauge, History as HistoryIcon, Info, LayoutDashboard, Lightbulb, ListChecks, Loader2,
+  ArrowLeft, BarChart3, BellRing, Check, FileDown, Search, CircleAlert, Crown, Gauge, History as HistoryIcon, Info, Languages, LayoutDashboard, Lightbulb, ListChecks, Loader2,
   Map as MapIcon, Pencil, RefreshCw, Sparkles, Swords, Target, TrendingUp, X,
 } from "lucide-react";
 import { ApiError } from "@/types/api";
@@ -18,17 +18,18 @@ import {
   ActionBoard, AreaGuide, Changes, ContentIdeas, Gaps, HeadToHead, Heatmap, Hero, History, Opportunities, Panel, PositioningMap, Profiles, ScoreRadar,
   SpeedBoard, Swot, TechTable, TopicMatrix, WinLose,
 } from "./report-sections";
-import { SITE_COLORS, SiteLabel, SourceLink } from "./ui";
+import { SITE_COLORS, SiteLabel, SiteNamesProvider, SourceLink } from "./ui";
+import { SearchPanel, WatchPanel } from "./watch-sections";
 
 const errorText = (err: unknown, fallback: string) => (ApiError.isApiError(err) ? err.message : fallback);
 
 const TABS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
   { key: "scorecard", label: "Scorecard", icon: BarChart3 },
-  { key: "versus", label: "Head to head", icon: Swords },
-  { key: "content", label: "Content & topics", icon: Lightbulb },
-  { key: "tech", label: "Speed & tech", icon: Gauge },
-  { key: "plan", label: "Action plan", icon: ListChecks },
+  { key: "versus", label: "Head To Head", icon: Swords },
+  { key: "content", label: "Content & Topics", icon: Lightbulb },
+  { key: "tech", label: "Speed & Tech", icon: Gauge },
+  { key: "plan", label: "Action Plan", icon: ListChecks },
   { key: "history", label: "History", icon: HistoryIcon },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
@@ -93,8 +94,10 @@ function Running({ stage, startedAt, count }: { stage: string | null; startedAt:
 
 export function CompetitorStudyPage({ id }: { id: string }) {
   const study = useStudy(id);
-  const { run, download } = useStudyMutations();
+  const { run, download, actionStatus, actionTask } = useStudyMutations();
   const [editing, setEditing] = useState(false);
+  const [watching, setWatching] = useState(false);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("overview");
   // Ticks every 30 s so the re-check button counts down to the end of the 10-minute gap.
   const [now, setNow] = useState(() => Date.now());
@@ -119,7 +122,29 @@ export function CompetitorStudyPage({ id }: { id: string }) {
   const waitMin = waitMs > 0 ? Math.ceil(waitMs / 60_000) : 0;
   const ai = report?.ai?.status === "completed" ? report.ai.result : null;
   const own = data.sites[0]!;
+  const ownLabel = own.name || own.domain;
+  const ownSearch = report?.sites.find((e) => e.role === "own")?.search ?? null;
   const deep = Boolean(ai?.topics?.length || ai?.swot);
+
+  const pdfLang = download.variables?.lang ?? "en";
+  const savePdf = (lang: "en" | "hi") => {
+    if (lang === "hi") toast.info("Preparing the Hindi report. The first time takes about a minute.");
+    download.mutate(
+      { id, lang },
+      {
+        onSuccess: ({ blob, fileName }) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 10_000);
+          toast.success(lang === "hi" ? "Hindi PDF report downloaded" : "PDF report downloaded");
+        },
+        onError: (e) => toast.error(e instanceof Error ? e.message : "The report could not be downloaded"),
+      },
+    );
+  };
 
   const recheck = () =>
     run.mutate(id, {
@@ -128,37 +153,35 @@ export function CompetitorStudyPage({ id }: { id: string }) {
     });
 
   return (
+    <SiteNamesProvider sites={data.sites}>
     <div className="w-full min-w-0 space-y-1 capitalize">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <Link href="/admin/competitor-analyzer" className="inline-flex items-center gap-1 text-[12px] text-[#6B7A94] hover:text-[#2563EB]"><ArrowLeft className="size-3.5" /> All analyses</Link>
           <h1 className="mt-1 flex min-w-0 items-center gap-2 text-[18px] font-semibold tracking-[-0.01em] text-[#111C3A]">
             <Swords className="size-5 shrink-0 text-[#7C3AED]" />
-            <span className="truncate normal-case" title={data.name}>{data.name.length <= 48 ? data.name : `${own.domain} vs ${data.sites.length - 1} competitors`}</span>
+            <span className="truncate normal-case" title={data.name}>{data.name.startsWith(`${own.domain} vs`) || data.name.length > 48 ? `${ownLabel} vs ${data.sites.length - 1} competitors` : data.name}</span>
           </h1>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <WButton
-            icon={download.isPending ? Loader2 : FileDown}
+            icon={download.isPending && pdfLang === "en" ? Loader2 : FileDown}
             disabled={!data.report || download.isPending}
             disabledReason="Run the analysis once to get a report"
-            onClick={() =>
-              download.mutate(id, {
-                onSuccess: ({ blob, fileName }) => {
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = fileName;
-                  a.click();
-                  setTimeout(() => URL.revokeObjectURL(url), 10_000);
-                  toast.success("PDF report downloaded");
-                },
-                onError: (e) => toast.error(e instanceof Error ? e.message : "The report could not be downloaded"),
-              })
-            }
+            onClick={() => savePdf("en")}
           >
-            {download.isPending ? "Preparing PDF…" : "Download PDF report"}
+            {download.isPending && pdfLang === "en" ? "Preparing PDF…" : "Download PDF report"}
           </WButton>
+          <WButton
+            icon={download.isPending && pdfLang === "hi" ? Loader2 : Languages}
+            disabled={!data.report || download.isPending}
+            disabledReason="Run the analysis once to get a report"
+            title="The same report in Hindi. The first download of each check is translated once (about a minute); later downloads are instant."
+            onClick={() => savePdf("hi")}
+          >
+            {download.isPending && pdfLang === "hi" ? "हिंदी PDF बन रही है…" : "हिंदी PDF"}
+          </WButton>
+          <WButton icon={BellRing} onClick={() => setWatching((v) => !v)}>{data.settings?.schedule && data.settings.schedule !== "off" ? `Auto-check ${data.settings.schedule === "weekly" ? "weekly" : "monthly"}` : "Watch & share"}</WButton>
           <WButton icon={Pencil} onClick={() => setEditing((v) => !v)} disabled={running}>Edit sites</WButton>
           <WButton tone="primary" icon={running || run.isPending ? Loader2 : RefreshCw} onClick={recheck} disabled={running || run.isPending || waitMin > 0} title={waitMin > 0 ? "Checks can run once every 10 minutes, so the same analysis is not paid for twice." : undefined}>{waitMin > 0 ? `Re-check in ${waitMin} min` : report ? "Re-check now" : "Run analysis"}</WButton>
         </div>
@@ -174,6 +197,7 @@ export function CompetitorStudyPage({ id }: { id: string }) {
       </div>
 
       {editing ? <EditSites study={data} onClose={() => setEditing(false)} /> : null}
+      {watching ? <WatchPanel study={data} onClose={() => setWatching(false)} /> : null}
       {running && latest ? <Running stage={latest.stage} startedAt={latest.startedAt} count={data.sites.length} /> : null}
       {latest?.status === "failed" ? (
         <p role="alert" className="flex items-start gap-2 rounded-lg border border-[#F0C9C6] bg-[#FDF4F3] p-3 text-[12px] text-[#C0261F]"><CircleAlert className="mt-0.5 size-4 shrink-0" />{latest.errorMessage ?? "The last check failed."}{report ? " Showing the previous result." : ""}</p>
@@ -208,7 +232,7 @@ export function CompetitorStudyPage({ id }: { id: string }) {
                     subtitle="Your score vs the best competitor in each area"
                     explain={<><p>Each row is one area websites are judged on. The <b>blue bar</b> is your score, the <b>grey bar</b> is the best competitor’s score (out of 10).</p><p><b className="text-[#0B845C]">Green “ahead”</b> = you beat everyone there. <b className="text-[#C0261F]">Red “behind”</b> = at least one competitor is better; the action plan tells you how to close the gap.</p></>}
                   >
-                    <WinLose ai={ai} own={own.domain} />
+                    <WinLose ai={ai} own={own.domain} previous={report.previous?.scores} />
                   </Panel>
                   <Panel
                     title="Positioning map"
@@ -222,7 +246,7 @@ export function CompetitorStudyPage({ id }: { id: string }) {
               ) : null}
               {ai?.swot ? (
                 <Panel
-                  title={`SWOT for ${own.domain}`}
+                  title={`SWOT for ${ownLabel}`}
                   icon={Crown}
                   subtitle="Compared with these competitors"
                   explain={<p><b>Strengths</b> and <b>weaknesses</b> are about your website today. <b>Opportunities</b> are things you could add to win. <b>Threats</b> are what competitors do that could pull your visitors away.</p>}
@@ -250,7 +274,7 @@ export function CompetitorStudyPage({ id }: { id: string }) {
                   subtitle="Score out of 10 in each area · darker blue = stronger · crown = leader"
                   explain={<><p>Read across a row to see who is best in that area. The <b>crown</b> marks the single leader (no crown = tie). The last row is the <b>overall score out of 100</b>.</p><p>Scores are given by AI from the pages it read and Google’s measurements — not from traffic or sales, which are not public.</p></>}
                 >
-                  <Heatmap ai={ai} sites={data.sites} colorOf={colorOf} />
+                  <Heatmap ai={ai} sites={data.sites} colorOf={colorOf} previous={report.previous?.scores} />
                 </Panel>
                 <div className="grid gap-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                   <Panel title="Scorecard shape" icon={BarChart3} subtitle="Bigger shape = stronger site" explain={<p>Each corner is one area. A site that is strong everywhere makes a big, round shape. <b>Your site is the filled shape</b>; dents show where you fall behind.</p>}>
@@ -279,13 +303,25 @@ export function CompetitorStudyPage({ id }: { id: string }) {
           {tab === "content" ? (
             ai ? (
               <div className="space-y-1">
+                {ownSearch ? (
+                  <Panel
+                    title="Your Google search (last 28 days)"
+                    icon={Search}
+                    subtitle="Real data from your Google Search Console"
+                    explain={<p>What people actually searched before your site appeared in Google, how often you were shown (impressions), clicked, and your average position (1 = top). Compare it with the topic map below: topics competitors cover where you get no impressions are the clearest content opportunities.</p>}
+                  >
+                    <SearchPanel search={ownSearch} />
+                  </Panel>
+                ) : (
+                  <p className="flex items-start gap-2 rounded-lg border border-dashed border-[#DCE6FB] bg-white p-2.5 text-[11.5px] text-[#6B7A94]"><Search className="mt-0.5 size-4 shrink-0" />Connect Google Search Console for the client whose website is {own.domain} (Website → Settings → Integrations) and re-check to see your real Google searches here and in the topic map.</p>
+                )}
                 <Panel
                   title="Topic map"
                   icon={MapIcon}
                   subtitle="Which site talks about what"
                   explain={<p>Each row is a subject found on the websites; a <b>coloured dot</b> means that site covers it. <b className="text-[#92400E]">Yellow rows</b> are subjects competitors cover and you don’t — each is a chance for a new page or post.</p>}
                 >
-                  <TopicMatrix ai={ai} sites={data.sites} colorOf={colorOf} />
+                  <TopicMatrix ai={ai} sites={data.sites} colorOf={colorOf} search={ownSearch} />
                 </Panel>
                 <div className="grid gap-1 lg:grid-cols-2">
                   <Panel
@@ -338,7 +374,27 @@ export function CompetitorStudyPage({ id }: { id: string }) {
                 subtitle="What to do, when, and who to learn from"
                 explain={<p>Steps for your website, grouped by when to do them. <b>Impact</b> = how much it should help, <b>effort</b> = how much work it is. <b className="text-[#0B845C]">Quick win</b> = high impact and low effort: start there. “Learn from” names the competitor that already does it well.</p>}
               >
-                <ActionBoard ai={ai} colorOf={colorOf} />
+                <ActionBoard
+                  ai={ai}
+                  colorOf={colorOf}
+                  tracking={{
+                    states: data.actions ?? {},
+                    busy: busyAction,
+                    canTask: Boolean(data.linkedClient),
+                    onStatus: (action, status) => {
+                      setBusyAction(action);
+                      actionStatus.mutate({ id, body: { action, status } }, { onSettled: () => setBusyAction(null), onError: (e) => toast.error(errorText(e, "Could not save")) });
+                    },
+                    onTask: (action, reason, priority) => {
+                      setBusyAction(action);
+                      actionTask.mutate(
+                        { id, body: { action, reason, priority } },
+                        { onSuccess: (r) => toast.success(r.created ? "CRM task created" : "A task already exists for this action"), onSettled: () => setBusyAction(null), onError: (e) => toast.error(errorText(e, "Could not create the task"), { duration: 8000 }) },
+                      );
+                    },
+                  }}
+                />
+                {!data.linkedClient ? <p className="mt-2 text-[11px] text-[#6B7A94]">To turn actions into CRM tasks, add {own.domain} as the website of one of your clients.</p> : null}
               </Panel>
             ) : <EmptyState icon={ListChecks} title="No plan yet" body="Appears when the AI comparison completes." />
           ) : null}
@@ -368,5 +424,6 @@ export function CompetitorStudyPage({ id }: { id: string }) {
         </>
       ) : null}
     </div>
+    </SiteNamesProvider>
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { OutgoingEndpointsPage } from "@/features/webhooks/components/outgoing-lists";
+import { LiveWebhookConsole } from "@/features/webhooks/components/live-console";
 
 export const metadata: Metadata = {
   title: "Outgoing Endpoints | Webhooks | EnCodency OmniPlatform Super Admin",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <OutgoingEndpointsPage />;
+  return <LiveWebhookConsole view="endpoints" />;
 }

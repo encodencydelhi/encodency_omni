@@ -35,16 +35,6 @@ import { DataPrivacySection } from "./components/data-privacy-section";
 import { AuditActivitySection } from "./components/audit-activity-section";
 import { DangerZoneSection } from "./components/danger-zone-section";
 
-/** Sections with no backend route (Organization, Branding and Security save to the server). */
-const LOCAL_ONLY_SECTIONS = new Set([
-  "workspace",
-  "notifications",
-  "preferences",
-  "data-privacy",
-  "audit",
-  "danger",
-]);
-
 export function CompanySettingsPage() {
   return (
     <Suspense
@@ -81,19 +71,11 @@ function CompanySettingsInner() {
     cancelNavigation,
     // updaters
     updateOrganization,
-    updateWorkspace,
     updateBranding,
-    updateNotificationItem,
     updateSecurity,
-    updatePreferences,
-    updateDataPrivacy,
-    handleResetPreferences,
-    handleTransferOwnership,
-    handleDeactivate,
-    handleDeleteOrganization,
     refetch,
   } = useSettings();
-  const { names: clientNames, current: currentClient } = useSettingsClients();
+  const { current: currentClient } = useSettingsClients();
   const { currentRole } = useSettingsCapability();
 
   if (loading) {
@@ -208,12 +190,6 @@ function CompanySettingsInner() {
 
         {/* Center: Main Settings Content */}
         <main className="flex-1 min-w-0 w-full space-y-2">
-          {LOCAL_ONLY_SECTIONS.has(activeSection) && (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-5 text-amber-800">
-              This section has no backend API yet — changes are kept on this device only and are not
-              synced to your account. Only <strong>Organization</strong>, <strong>Branding</strong> and <strong>Security</strong> save to the server.
-            </p>
-          )}
           {activeSection === "organization" && (
             <OrganizationSection
               data={draftState.organization}
@@ -221,13 +197,7 @@ function CompanySettingsInner() {
             />
           )}
 
-          {activeSection === "workspace" && (
-            <WorkspaceSection
-              data={draftState.workspace}
-              clients={clientNames}
-              onChange={updateWorkspace}
-            />
-          )}
+          {activeSection === "workspace" && <WorkspaceSection />}
 
           {activeSection === "branding" && (
             <BrandingSection
@@ -236,12 +206,7 @@ function CompanySettingsInner() {
             />
           )}
 
-          {activeSection === "notifications" && (
-            <NotificationsSection
-              items={draftState.notifications}
-              onToggle={updateNotificationItem}
-            />
-          )}
+          {activeSection === "notifications" && <NotificationsSection />}
 
           {activeSection === "security" && (
             <SecuritySection
@@ -251,19 +216,10 @@ function CompanySettingsInner() {
             />
           )}
 
-          {activeSection === "preferences" && (
-            <PreferencesSection
-              data={draftState.preferences}
-              onChange={updatePreferences}
-            />
-          )}
+          {activeSection === "preferences" && <PreferencesSection />}
 
           {activeSection === "data-privacy" && (
-            <DataPrivacySection
-              data={draftState.dataPrivacy}
-              onChange={updateDataPrivacy}
-              organizationName={draftState.organization.displayName || draftState.organization.name}
-            />
+            <DataPrivacySection organizationName={draftState.organization.displayName || draftState.organization.name} />
           )}
 
           {activeSection === "audit" && (
@@ -271,14 +227,7 @@ function CompanySettingsInner() {
           )}
 
           {activeSection === "danger" && (
-            <DangerZoneSection
-              currentOwner={draftState.organization.metadata.owner}
-              orgName={draftState.organization.name}
-              onResetPreferences={handleResetPreferences}
-              onTransferOwnership={handleTransferOwnership}
-              onDeactivate={handleDeactivate}
-              onDelete={handleDeleteOrganization}
-            />
+            <DangerZoneSection currentOwner={draftState.organization.metadata.owner} orgName={draftState.organization.name} />
           )}
         </main>
 

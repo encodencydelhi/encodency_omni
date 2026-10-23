@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { FailuresPage } from "@/features/webhooks/components/failures-page";
+import { LiveWebhookConsole } from "@/features/webhooks/components/live-console";
 
 export const metadata: Metadata = {
   title: "Failures & Retries | Webhooks | EnCodency OmniPlatform Super Admin",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <FailuresPage />;
+  return <LiveWebhookConsole view="failures" />;
 }

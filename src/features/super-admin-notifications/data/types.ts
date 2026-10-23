@@ -35,6 +35,9 @@ export interface NotificationIntent {
   relatedHref: string | null;
   createdBy: string;
   message: string;
+  /** Live data: the person this notification is for, and its notification type. */
+  recipientId?: string;
+  type?: string;
 }
 
 export interface NotificationDelivery {
@@ -47,6 +50,9 @@ export interface NotificationDelivery {
   lastActivityAt: string;
   failureReason: string | null;
   recoveryRequested: boolean;
+  /** Live data: send attempts so far, and whether a Super Admin can put it back in the queue. */
+  attempts?: number;
+  retryable?: boolean;
 }
 
 export interface DeliveryAttempt {
@@ -93,6 +99,7 @@ export interface Template {
   state: TemplateState;
   variables: string[];
   versions: TemplateVersion[];
+  description?: string;
 }
 
 export interface Audience {
@@ -101,6 +108,8 @@ export interface Audience {
   companyId: string | null;
   description: string;
   recipientIds: string[];
+  /** Live data: how many people the audience reaches right now. */
+  size?: number;
 }
 
 export interface Preference {
@@ -119,6 +128,9 @@ export interface NotificationRule {
   templateId: string;
   channels: NotificationChannel[];
   readiness: "ready" | "missing_event" | "template_review";
+  /** Live data: companies that changed this event's channels, and why a channel is off by default. */
+  customizedBy?: number;
+  note?: string | null;
 }
 
 export interface NotificationActivity {
@@ -152,4 +164,32 @@ export interface NotificationSnapshot {
   rules: NotificationRule[];
   activity: NotificationActivity[];
   recoveryRequests: RecoveryRequest[];
+  /** Live engine fields (absent in mock mode). */
+  live?: boolean;
+  windowDays?: number;
+  emailReady?: boolean;
+  whatsappReady?: boolean;
+  companyRoutes?: CompanyRoute[];
+  companies?: { id: string; name: string }[];
+}
+
+/** One Company's saved channel choice for one event (Settings → Notifications). */
+export interface CompanyRoute {
+  companyId: string;
+  companyName: string;
+  event: string;
+  eventTitle: string;
+  email: boolean;
+  whatsapp: boolean;
+  updatedAt: string;
+}
+
+export type AnnouncementAudience = "company_admins" | "company" | "platform_staff";
+
+export interface AnnouncementInput {
+  title: string;
+  message: string;
+  audience: AnnouncementAudience;
+  companyId?: string;
+  href?: string;
 }

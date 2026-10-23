@@ -194,7 +194,7 @@ export class SettingsRepository {
             organizationApi.get(activeCompanyId),
             apiClient.request<BackendBillingSummary>({ method: "GET", path: "/billing/summary", headers: scope }),
             clientsApi.list(activeCompanyId),
-            teamApi.listActivity(activeCompanyId, { limit: 50 }),
+            teamApi.listActivity(activeCompanyId, { limit: 200 }),
             apiClient.request<TeamSecurityResponse>({ method: "GET", path: "/team/members/security-summary", headers: scope }),
             apiClient.request<SecurityPolicy>({ method: "GET", path: "/settings/security", headers: scope }),
           ]);

@@ -2,41 +2,64 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Bell, CheckCheck, Download, Eye, MoreHorizontal, Plus, X } from "lucide-react";
-import { PreviewBanner } from "@/components/shared/preview-banner";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { ArrowLeft, Bell, Download, Eye, Loader2, Megaphone, RefreshCw, RotateCcw, Send, X } from "lucide-react";
 import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils/cn";
-import { notificationsRepository } from "../data/repository";
-import { campaignIntentCount, deliveryByChannel, kpis, scopedIntents } from "../data/selectors";
-import type { Campaign, NotificationDelivery, NotificationEnvironment, NotificationIntent, NotificationRange, NotificationSnapshot, Preference, RecoveryRequest, Template } from "../data/types";
+import { ApiError } from "@/types/api";
 import { useScrollLock } from "@/lib/utils/scroll-lock";
+import { notificationsRepository } from "../data/repository";
+import { rangeMinutes, scopedIntents } from "../data/selectors";
+import type { AnnouncementAudience, NotificationDelivery, NotificationIntent, NotificationRange, NotificationSnapshot } from "../data/types";
 
 const BASE = ROUTES.superAdmin.notifications;
+const QUERY_KEY = ["super-admin-notifications", "snapshot"] as const;
 const tabs = [
   ["Overview", BASE],
   ["Notification Center", `${BASE}/center`],
-  ["Compose & Campaigns", `${BASE}/compose`],
+  ["Announcements", `${BASE}/compose`],
   ["Templates", `${BASE}/templates`],
   ["Delivery & Failures", `${BASE}/deliveries`],
-  ["Audience & Preferences", `${BASE}/audience-preferences`],
-  ["Rules & Automation", `${BASE}/rules-automation`],
+  ["Audience & Routing", `${BASE}/audience-preferences`],
+  ["Rules", `${BASE}/rules-automation`],
   ["Activity & Settings", `${BASE}/activity-settings`],
 ] as const;
 
 const tone: Record<string, string> = {
-  draft: "border-slate-200 bg-slate-50 text-slate-700",
-  scheduled: "border-sky-200 bg-sky-50 text-sky-700",
-  dispatch_requested: "border-indigo-200 bg-indigo-50 text-indigo-700",
   completed: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  dispatch_requested: "border-indigo-200 bg-indigo-50 text-indigo-700",
   delivered: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  provider_accepted: "border-cyan-200 bg-cyan-50 text-cyan-700",
+  provider_accepted: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  queued: "border-sky-200 bg-sky-50 text-sky-700",
+  attempting: "border-sky-200 bg-sky-50 text-sky-700",
   failed: "border-rose-200 bg-rose-50 text-rose-700",
-  undeliverable: "border-rose-200 bg-rose-50 text-rose-700",
+  not_created: "border-slate-200 bg-slate-50 text-slate-700",
   unknown: "border-amber-200 bg-amber-50 text-amber-800",
   unread: "border-indigo-200 bg-indigo-50 text-indigo-700",
   read: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  active: "border-emerald-200 bg-emerald-50 text-emerald-700",
 };
+
+/** Plain words for engine states. "Sent" means the mail server accepted it; inbox delivery is never claimed. */
+const STATE_LABEL: Record<string, string> = {
+  completed: "Done",
+  dispatch_requested: "Sending",
+  delivered: "In bell",
+  provider_accepted: "Sent",
+  queued: "Waiting",
+  attempting: "Sending",
+  failed: "Failed",
+  not_created: "Not sent",
+  unknown: "Unknown",
+  unread: "Unread",
+  read: "Read",
+};
+
+const CHANNEL_LABEL: Record<string, string> = { in_app: "Bell", email: "E-mail", whatsapp: "WhatsApp", push: "Push" };
+
+const errorText = (e: unknown, fallback: string) => (ApiError.isApiError(e) ? e.message : e instanceof Error ? e.message : fallback);
 
 function Card({ children, className }: { children?: React.ReactNode; className?: string }) {
   return <section className={cn("rounded-lg border border-slate-200 bg-white shadow-sm", className)}>{children}</section>;
@@ -46,8 +69,20 @@ function Badge({ children, className }: { children: React.ReactNode; className?:
   return <span className={cn("inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold", className)}>{children}</span>;
 }
 
+function StateBadge({ state }: { state: string }) {
+  return <Badge className={tone[state] ?? tone.unknown}>{STATE_LABEL[state] ?? label(state)}</Badge>;
+}
+
 function Title({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
-  return <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 px-4 py-3"><div><h2 className="text-sm font-bold text-[#111C3A]">{title}</h2>{subtitle ? <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p> : null}</div>{action}</div>;
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 px-4 py-3">
+      <div>
+        <h2 className="text-sm font-bold text-[#111C3A]">{title}</h2>
+        {subtitle ? <p className="mt-0.5 text-xs normal-case text-slate-500">{subtitle}</p> : null}
+      </div>
+      {action}
+    </div>
+  );
 }
 
 function ButtonLink({ href, children }: { href: string; children: React.ReactNode }) {
@@ -58,7 +93,7 @@ function label(value: string) {
   return value.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function fmtDate(value: string | null) {
+function fmtDate(value: string | null | undefined) {
   if (!value) return "Not recorded";
   return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Calcutta" }).format(new Date(value));
 }
@@ -78,241 +113,862 @@ function download(name: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
+function Mini({ label: name, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-2">
+      <p className="text-[11px] text-slate-500">{name}</p>
+      <p className="truncate text-xs font-bold text-[#111C3A]">{value}</p>
+      {hint ? <p className="mt-0.5 text-[10.5px] normal-case leading-snug text-slate-500">{hint}</p> : null}
+    </div>
+  );
+}
+
+function Empty({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="m-4 rounded-lg border border-dashed border-slate-200 p-6 text-center">
+      <p className="text-sm font-bold text-[#111C3A]">{title}</p>
+      <p className="mt-1 text-xs normal-case text-slate-500">{body}</p>
+    </div>
+  );
+}
+
+function Back({ href, label: text }: { href: string; label: string }) {
+  return <Link href={href} className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-[#111C3A]"><ArrowLeft className="size-4" />{text}</Link>;
+}
+
+function NotFound({ title, href, body }: { title: string; href: string; body?: string }) {
+  return (
+    <Card className="p-8 text-center">
+      <h2 className="text-lg font-bold text-[#111C3A]">{title}</h2>
+      <p className="mt-1 text-sm normal-case text-slate-600">{body ?? "This record is not in the last 30 days of notifications."}</p>
+      <div className="mt-3"><ButtonLink href={href}>Return</ButtonLink></div>
+    </Card>
+  );
+}
+
 function Drawer({ title, open, onClose, children }: { title: string; open: boolean; onClose: () => void; children: React.ReactNode }) {
   useScrollLock(open);
   const ref = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!open) return undefined;
     ref.current?.focus();
-    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
   if (!open) return null;
-  return <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/30" role="dialog" aria-modal="true" onClick={onClose}><div className="h-full w-full max-w-2xl overflow-y-auto bg-white shadow-xl" onClick={(event) => event.stopPropagation()}><div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3"><h2 className="text-sm font-bold text-[#111C3A]">{title}</h2><button ref={ref} onClick={onClose} className="rounded-md p-2 text-slate-500 hover:bg-slate-100" aria-label="Close"><X className="size-4" /></button></div><div className="p-4">{children}</div></div></div>;
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/30" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="h-full w-full max-w-2xl overflow-y-auto bg-white shadow-xl" onClick={(event) => event.stopPropagation()}>
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
+          <h2 className="text-sm font-bold text-[#111C3A]">{title}</h2>
+          <button ref={ref} onClick={onClose} className="rounded-md p-2 text-slate-500 hover:bg-slate-100" aria-label="Close"><X className="size-4" /></button>
+        </div>
+        <div className="p-4">{children}</div>
+      </div>
+    </div>
+  );
 }
 
-function Header({ snapshot, range, setRange, hours, setHours, companyScope, setCompanyScope, setEnvironment }: { snapshot: NotificationSnapshot; range: NotificationRange; setRange: (range: NotificationRange) => void; hours: number; setHours: (hours: number) => void; companyScope: string; setCompanyScope: (scope: string) => void; setEnvironment: (env: NotificationEnvironment) => void }) {
-  return <div className="space-y-1"><div className="flex flex-wrap items-start justify-between gap-2"><div><h1 className="text-2xl font-bold text-[#111C3A]">Notifications</h1><p className="mt-1 text-sm text-slate-600">Manage platform notifications, recipient targeting, message templates and delivery operations.</p></div><div className="flex flex-wrap gap-2"><ButtonLink href={`${BASE}/compose`}><Plus className="size-4" />Compose Notification</ButtonLink><ButtonLink href={`${BASE}/center`}><Bell className="size-4" />Open Notification Center</ButtonLink><div className="group relative"><button className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-semibold"><MoreHorizontal className="size-4" />More</button><div className="invisible absolute right-0 top-full z-20 mt-1 w-56 rounded-md border border-slate-200 bg-white p-1 text-xs shadow-lg group-hover:visible"><Link className="block rounded px-3 py-2 hover:bg-slate-50" href={`${BASE}/compose`}>View Campaigns</Link><Link className="block rounded px-3 py-2 hover:bg-slate-50" href={`${BASE}/deliveries?state=failed`}>Review Delivery Failures</Link><Link className="block rounded px-3 py-2 hover:bg-slate-50" href={`${BASE}/templates`}>Manage Templates</Link><Link className="block rounded px-3 py-2 hover:bg-slate-50" href={`${BASE}/rules-automation`}>Review Notification Rules</Link><Link className="block rounded px-3 py-2 hover:bg-slate-50" href={`${BASE}/activity-settings`}>Open Notification Settings</Link></div></div></div></div><Card className="p-3"><div className="flex flex-wrap items-center justify-between gap-2"><div className="flex flex-wrap items-center gap-2"><Badge className="border-indigo-200 bg-indigo-50 text-indigo-700">Preview</Badge><Badge className="border-slate-200 bg-slate-50 text-slate-700">Delivery not connected</Badge><span className="text-xs text-slate-500">Last updated: {fmtDate(snapshot.generatedAt)}</span></div><div className="flex flex-wrap gap-2"><select value={snapshot.environment} onChange={(e) => setEnvironment(e.target.value as NotificationEnvironment)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs"><option value="development">Development</option><option value="staging">Staging</option><option value="production">Production</option></select><select value={range} onChange={(e) => setRange(e.target.value as NotificationRange)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs"><option value="today">Today</option><option value="7d">Last 7 Days</option><option value="30d">Last 30 Days</option><option value="custom">Custom</option></select>{range === "custom" ? <label className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs">Hours<input type="number" min={1} max={720} value={hours} onChange={(e) => setHours(Math.max(1, Number(e.target.value) || 1))} className="w-16 border-0 bg-transparent p-0 outline-none" /></label> : null}<select value={companyScope} onChange={(e) => setCompanyScope(e.target.value)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs"><option value="all">All companies</option><option value="platform">Platform scope</option>{Array.from(new Map(snapshot.recipients.filter((r) => r.companyId).map((r) => [r.companyId!, r.companyName!]))).map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></div></div></Card></div>;
+/* ------------------------------------------------------------------ */
+/* Data helpers                                                        */
+/* ------------------------------------------------------------------ */
+
+function recipientName(snapshot: NotificationSnapshot, id: string) {
+  return snapshot.recipients.find((r) => r.id === id)?.name ?? "Unknown";
+}
+
+function scopedDeliveries(snapshot: NotificationSnapshot, intents: NotificationIntent[]) {
+  const ids = new Set(intents.map((i) => i.id));
+  return snapshot.deliveries.filter((d) => ids.has(d.intentId));
+}
+
+function useRetry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => notificationsRepository.retry(id),
+    onSuccess: (next) => {
+      qc.setQueryData(QUERY_KEY, next);
+      toast.success("Put back in the queue. It is sent within a minute.");
+    },
+    onError: (e) => toast.error(errorText(e, "Could not retry this delivery")),
+  });
+}
+
+function RetryButton({ delivery }: { delivery: NotificationDelivery }) {
+  const retry = useRetry();
+  if (!delivery.retryable) return null;
+  return (
+    <button type="button" onClick={() => retry.mutate(delivery.id)} disabled={retry.isPending} className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+      {retry.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <RotateCcw className="size-3.5" />} Retry
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Header, tabs, KPIs                                                  */
+/* ------------------------------------------------------------------ */
+
+function Header({ snapshot, range, setRange, companyScope, setCompanyScope, refreshing, onRefresh }: { snapshot: NotificationSnapshot; range: NotificationRange; setRange: (range: NotificationRange) => void; companyScope: string; setCompanyScope: (scope: string) => void; refreshing: boolean; onRefresh: () => void }) {
+  return (
+    <div className="space-y-1">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold text-[#111C3A]">Notifications</h1>
+          <p className="mt-1 text-sm normal-case text-slate-600">Every notification the platform sent in the last {snapshot.windowDays ?? 30} days: who got it, on which channel, and whether it went out.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <ButtonLink href={`${BASE}/compose`}><Megaphone className="size-4" />Send Announcement</ButtonLink>
+          <ButtonLink href={`${BASE}/center`}><Bell className="size-4" />Notification Center</ButtonLink>
+        </div>
+      </div>
+      <Card className="p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className={snapshot.live ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-800"}>{snapshot.live ? "Live" : "Sample data"}</Badge>
+            <Badge className={snapshot.emailReady ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-800"}>E-mail {snapshot.emailReady ? "connected" : "not set up"}</Badge>
+            <Badge className="border-slate-200 bg-slate-50 text-slate-700">WhatsApp {snapshot.whatsappReady ? "connected" : "not set up"}</Badge>
+            <span className="text-xs text-slate-500">Updated {fmtDate(snapshot.generatedAt)}</span>
+            <button type="button" onClick={onRefresh} className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50">
+              <RefreshCw className={cn("size-3.5", refreshing && "animate-spin")} /> Refresh
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <select value={range} onChange={(e) => setRange(e.target.value as NotificationRange)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs">
+              <option value="today">Today</option>
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+            </select>
+            <select value={companyScope} onChange={(e) => setCompanyScope(e.target.value)} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs">
+              <option value="all">All companies</option>
+              <option value="platform">Platform (no company)</option>
+              {(snapshot.companies ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
 }
 
 function Tabs() {
   const pathname = usePathname();
-  return <nav className="overflow-x-auto overflow-y-hidden border-b border-slate-200 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><ul className="flex min-w-max gap-0.5">{tabs.map(([name, href]) => { const active = href === BASE ? pathname === BASE : pathname.startsWith(href); return <li key={href}><Link href={href} className={cn("relative inline-flex px-3 py-2 text-[13px] font-medium", active ? "text-[#111C3A]" : "text-slate-500 hover:text-[#111C3A]")}>{name}{active ? <span className="absolute inset-x-2 bottom-0 h-0.5 bg-[#111C3A]" /> : null}</Link></li>; })}</ul></nav>;
+  return (
+    <nav className="overflow-x-auto overflow-y-hidden border-b border-slate-200 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <ul className="flex min-w-max gap-0.5">
+        {tabs.map(([name, href]) => {
+          const active = href === BASE ? pathname === BASE : pathname.startsWith(href);
+          return (
+            <li key={href}>
+              <Link href={href} className={cn("relative inline-flex px-3 py-2 text-[13px] font-medium", active ? "text-[#111C3A]" : "text-slate-500 hover:text-[#111C3A]")}>
+                {name}
+                {active ? <span className="absolute inset-x-2 bottom-0 h-0.5 bg-[#111C3A]" /> : null}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
 }
 
-function KpiGrid({ snapshot, range, companyScope, hours }: { snapshot: NotificationSnapshot; range: NotificationRange; companyScope: string; hours: number }) {
-  const m = kpis(snapshot, range, companyScope, hours);
-  const rows = [["Notifications Created", m.created, "Unique notification intents"], ["In-App Unread", m.unread, "Receipt read state"], ["Scheduled Notifications", m.scheduled, "Persisted schedule records"], ["Dispatch Requested", m.dispatchRequested, "Dispatch intent state"], ["Provider Accepted", m.providerAccepted, "Provider accepted state"], ["Confirmed Delivered", m.delivered, "Delivery records"], ["Failed Deliveries", m.failed, "Needs review"], ["Active Campaigns", m.activeCampaigns, "Scheduled or in progress"]];
-  return <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-4">{rows.map(([title, value, hint]) => <Card key={title} className="p-3"><p className="text-[11px] font-semibold uppercase text-slate-500">{title}</p><p className="mt-1 text-xl font-bold text-[#111C3A]">{value}</p><p className="mt-1 text-xs text-slate-500">{hint}</p></Card>)}</div>;
+function KpiGrid({ snapshot, intents }: { snapshot: NotificationSnapshot; intents: NotificationIntent[] }) {
+  const deliveries = scopedDeliveries(snapshot, intents);
+  const ids = new Set(intents.map((i) => i.id));
+  const external = deliveries.filter((d) => d.channel !== "in_app");
+  const rows: [string, number, string][] = [
+    ["Notifications", intents.length, "Bell notifications created"],
+    ["Unread in bell", snapshot.receipts.filter((r) => r.state === "unread" && ids.has(r.intentId)).length, "Not opened yet"],
+    ["E-mails / WhatsApp sent", external.filter((d) => d.state === "provider_accepted").length, "Accepted by the provider"],
+    ["Waiting to send", external.filter((d) => d.state === "queued" || d.state === "attempting").length, "Sent within a minute"],
+    ["Failed", external.filter((d) => d.state === "failed").length, "Can be retried"],
+    ["Not sent", external.filter((d) => d.state === "not_created").length, "Skipped, see reason"],
+    ["People reached", new Set(intents.map((i) => i.recipientId)).size, "Distinct recipients"],
+    ["Companies customized", new Set((snapshot.companyRoutes ?? []).map((r) => r.companyId)).size, "Changed default channels"],
+  ];
+  return (
+    <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-4">
+      {rows.map(([title, value, hint]) => (
+        <Card key={title} className="p-3">
+          <p className="text-[11px] font-semibold uppercase text-slate-500">{title}</p>
+          <p className="mt-1 text-xl font-bold text-[#111C3A]">{value}</p>
+          <p className="mt-1 text-xs normal-case text-slate-500">{hint}</p>
+        </Card>
+      ))}
+    </div>
+  );
 }
 
-function ActivityTrend({ snapshot }: { snapshot: NotificationSnapshot }) {
-  const buckets = Array.from({ length: 10 }, (_, index) => snapshot.intents.filter((_, row) => row % 10 === index));
-  const max = Math.max(...buckets.map((bucket) => bucket.length), 1);
-  return <Card className="flex h-full flex-col"><Title title="Notification Activity Trend" subtitle="Counts notification intent and delivery records." /><div className="flex min-h-36 flex-1 items-end gap-1 px-4 pt-3">{buckets.map((bucket, index) => <div key={index} className="flex h-full flex-1 flex-col justify-end gap-0.5"><div className="w-full rounded-t bg-rose-400" style={{ height: `${Math.max(4, (bucket.filter((intent) => intent.state === "dispatch_requested").length / max) * 100)}%` }} /><div className="w-full rounded-t bg-emerald-500" style={{ height: `${Math.max(14, (bucket.length / max) * 100)}%` }} /></div>)}</div><p className="px-4 pb-3 pt-2 text-[11px] text-slate-500">Green = intents created. Red = dispatch-requested subset.</p></Card>;
+/** Notifications per day across the selected range, with failed e-mail / WhatsApp deliveries on top. */
+function ActivityTrend({ snapshot, intents, range }: { snapshot: NotificationSnapshot; intents: NotificationIntent[]; range: NotificationRange }) {
+  const days = Math.max(1, Math.round(rangeMinutes(range) / 1440));
+  const end = new Date(snapshot.generatedAt);
+  const buckets = Array.from({ length: days }, (_, i) => {
+    const day = new Date(end.getTime() - (days - 1 - i) * 86_400_000);
+    const key = day.toISOString().slice(0, 10);
+    const dayIntents = intents.filter((n) => n.createdAt.slice(0, 10) === key);
+    const ids = new Set(dayIntents.map((n) => n.id));
+    const failed = snapshot.deliveries.filter((d) => ids.has(d.intentId) && d.state === "failed").length;
+    return { key, total: dayIntents.length, failed };
+  });
+  const max = Math.max(...buckets.map((b) => b.total), 1);
+  return (
+    <Card className="flex h-full flex-col">
+      <Title title="Notifications Per Day" subtitle="Blue = notifications created. Red = e-mail or WhatsApp deliveries that failed that day." />
+      <div className="flex min-h-36 flex-1 items-end gap-1 px-4 pt-3">
+        {buckets.map((b) => (
+          <div key={b.key} className="flex h-full flex-1 flex-col justify-end gap-0.5" title={`${b.key}: ${b.total} notification(s), ${b.failed} failed`}>
+            {b.failed ? <div className="w-full rounded-t bg-rose-400" style={{ height: `${(b.failed / max) * 100}%` }} /> : null}
+            <div className="w-full rounded-t bg-[#2563EB]" style={{ height: `${Math.max(b.total ? 6 : 2, (b.total / max) * 100)}%`, opacity: b.total ? 1 : 0.15 }} />
+          </div>
+        ))}
+      </div>
+      <p className="px-4 pb-3 pt-2 text-[11px] text-slate-500">{buckets[0]?.key} → {buckets.at(-1)?.key}</p>
+    </Card>
+  );
 }
 
-function DeliveryChannelTable({ snapshot }: { snapshot: NotificationSnapshot }) {
-  return <Card><Title title="Delivery By Channel" /><table className="w-full table-fixed text-left"><thead className="bg-slate-50 text-[11px] uppercase text-slate-500"><tr><th className="w-[24%] px-3 py-2">Channel</th><th className="px-2 py-2 text-right">Eligible</th><th className="px-2 py-2 text-right">Accepted</th><th className="px-2 py-2 text-right">Delivered</th><th className="px-2 py-2 text-right">Failed</th><th className="px-2 py-2 text-right">Unknown</th></tr></thead><tbody>{deliveryByChannel(snapshot).map((row) => <tr key={row.channel} className="border-b border-slate-100"><td className="px-3 py-2 text-xs font-bold text-[#111C3A]">{label(row.channel)}</td><td className="px-2 py-2 text-right text-xs">{row.eligible}</td><td className="px-2 py-2 text-right text-xs">{row.accepted}</td><td className="px-2 py-2 text-right text-xs">{row.delivered}</td><td className="px-2 py-2 text-right text-xs">{row.failed}</td><td className="px-2 py-2 text-right text-xs">{row.unknown}</td></tr>)}</tbody></table></Card>;
+function DeliveryChannelTable({ snapshot, intents }: { snapshot: NotificationSnapshot; intents: NotificationIntent[] }) {
+  const deliveries = scopedDeliveries(snapshot, intents);
+  const rows = (["in_app", "email", "whatsapp"] as const).map((channel) => {
+    const r = deliveries.filter((d) => d.channel === channel);
+    return { channel, total: r.length, sent: r.filter((d) => d.state === "provider_accepted" || d.state === "delivered").length, waiting: r.filter((d) => d.state === "queued" || d.state === "attempting").length, failed: r.filter((d) => d.state === "failed").length, skipped: r.filter((d) => d.state === "not_created").length };
+  });
+  return (
+    <Card>
+      <Title title="Delivery By Channel" subtitle="Bell notifications are always delivered; e-mail and WhatsApp go out per company settings." />
+      <table className="w-full table-fixed text-left">
+        <thead className="bg-slate-50 text-[11px] uppercase text-slate-500">
+          <tr><th className="w-[24%] px-3 py-2">Channel</th><th className="px-2 py-2 text-right">Total</th><th className="px-2 py-2 text-right">Sent</th><th className="px-2 py-2 text-right">Waiting</th><th className="px-2 py-2 text-right">Failed</th><th className="px-2 py-2 text-right">Not sent</th></tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.channel} className="border-b border-slate-100">
+              <td className="px-3 py-2 text-xs font-bold text-[#111C3A]">{CHANNEL_LABEL[row.channel]}</td>
+              <td className="px-2 py-2 text-right text-xs">{row.total}</td>
+              <td className="px-2 py-2 text-right text-xs">{row.sent}</td>
+              <td className="px-2 py-2 text-right text-xs">{row.waiting}</td>
+              <td className="px-2 py-2 text-right text-xs">{row.failed}</td>
+              <td className="px-2 py-2 text-right text-xs">{row.skipped}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
 }
 
-function IntentTable({ rows, onPreview, compact = false }: { rows: NotificationIntent[]; onPreview: (intent: NotificationIntent) => void; compact?: boolean }) {
-  if (compact) return <table className="w-full table-fixed text-left"><thead className="bg-slate-50 text-[11px] uppercase text-slate-500"><tr><th className="w-[44%] px-3 py-2">Notification</th><th className="w-[22%] px-3 py-2">Scope</th><th className="w-[24%] px-3 py-2">Intent State</th><th className="w-[10%] px-3 py-2 text-right">Open</th></tr></thead><tbody>{rows.map((intent) => <tr key={intent.id} className="border-b border-slate-100 hover:bg-slate-50"><td className="px-3 py-2"><button onClick={() => onPreview(intent)} className="w-full text-left"><span className="line-clamp-2 text-xs font-bold text-[#111C3A]">{intent.title}</span><span className="block truncate text-[11px] text-slate-500">{intent.id} - {label(intent.category)}</span></button></td><td className="px-3 py-2 text-xs"><span className="line-clamp-2">{intent.companyName ?? "Platform"}</span></td><td className="px-3 py-2"><Badge className={tone[intent.state] ?? tone.draft}>{label(intent.state)}</Badge></td><td className="px-3 py-2 text-right"><Link href={`${BASE}/center/${intent.id}`} className="rounded-md border border-slate-200 px-2 py-1.5 text-[11px] font-semibold">Open</Link></td></tr>)}</tbody></table>;
-  return <div className="overflow-x-auto"><table className="w-full min-w-[860px] text-left"><thead className="bg-slate-50 text-[11px] uppercase text-slate-500"><tr><th className="px-3 py-2">Notification</th><th className="px-3 py-2">Scope</th><th className="px-3 py-2">Intent State</th><th className="px-3 py-2">Channels</th><th className="px-3 py-2">Created</th><th className="px-3 py-2 text-right">Actions</th></tr></thead><tbody>{rows.map((intent) => <tr key={intent.id} className="border-b border-slate-100 hover:bg-slate-50"><td className="px-3 py-2"><button onClick={() => onPreview(intent)} className="text-left"><span className="block text-xs font-bold text-[#111C3A]">{intent.title}</span><span className="text-[11px] text-slate-500">{intent.id} - {label(intent.category)} - {intent.source}</span></button></td><td className="px-3 py-2 text-xs">{intent.companyName ?? "Platform"}</td><td className="px-3 py-2"><Badge className={tone[intent.state] ?? tone.draft}>{label(intent.state)}</Badge></td><td className="px-3 py-2 text-xs">{intent.channels.map(label).join(", ")}</td><td className="px-3 py-2 text-xs">{fmtDate(intent.createdAt)}</td><td className="px-3 py-2 text-right"><button onClick={() => onPreview(intent)} className="rounded-md border border-slate-200 p-1.5"><Eye className="size-3.5" /></button><Link href={`${BASE}/center/${intent.id}`} className="ml-1 rounded-md border border-slate-200 px-2 py-1.5 text-[11px] font-semibold">Open</Link></td></tr>)}</tbody></table></div>;
+/* ------------------------------------------------------------------ */
+/* Tables                                                              */
+/* ------------------------------------------------------------------ */
+
+function IntentTable({ snapshot, rows, onPreview, compact = false }: { snapshot: NotificationSnapshot; rows: NotificationIntent[]; onPreview: (intent: NotificationIntent) => void; compact?: boolean }) {
+  if (!rows.length) return <Empty title="No Notifications" body="Nothing was sent in this period and scope." />;
+  return (
+    <div className="overflow-x-auto">
+      <table className={cn("w-full text-left", compact ? "table-fixed" : "min-w-[860px]")}>
+        <thead className="bg-slate-50 text-[11px] uppercase text-slate-500">
+          <tr>
+            <th className={cn("px-3 py-2", compact && "w-[46%]")}>Notification</th>
+            <th className="px-3 py-2">To</th>
+            {!compact ? <th className="px-3 py-2">Company</th> : null}
+            <th className="px-3 py-2">State</th>
+            {!compact ? <th className="px-3 py-2">Channels</th> : null}
+            {!compact ? <th className="px-3 py-2">Created</th> : null}
+            <th className="px-3 py-2 text-right">Open</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((intent) => (
+            <tr key={intent.id} className="border-b border-slate-100 hover:bg-slate-50">
+              <td className="px-3 py-2">
+                <button onClick={() => onPreview(intent)} className="w-full text-left">
+                  <span className="line-clamp-2 text-xs font-bold normal-case text-[#111C3A]">{intent.title}</span>
+                  <span className="block truncate text-[11px] text-slate-500">{intent.createdBy}</span>
+                </button>
+              </td>
+              <td className="px-3 py-2 text-xs normal-case">{intent.recipientId ? recipientName(snapshot, intent.recipientId) : "-"}</td>
+              {!compact ? <td className="px-3 py-2 text-xs">{intent.companyName ?? "Platform"}</td> : null}
+              <td className="px-3 py-2"><StateBadge state={intent.state} /></td>
+              {!compact ? <td className="px-3 py-2 text-xs">{intent.channels.map((c) => CHANNEL_LABEL[c] ?? c).join(", ")}</td> : null}
+              {!compact ? <td className="px-3 py-2 text-xs">{fmtDate(intent.createdAt)}</td> : null}
+              <td className="px-3 py-2 text-right">
+                {!compact ? <button onClick={() => onPreview(intent)} className="rounded-md border border-slate-200 p-1.5" aria-label="Preview"><Eye className="size-3.5" /></button> : null}
+                <Link href={`${BASE}/center/${intent.id}`} className="ml-1 rounded-md border border-slate-200 px-2 py-1.5 text-[11px] font-semibold">Open</Link>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function DeliveryTable({ snapshot, rows, onPreview }: { snapshot: NotificationSnapshot; rows: NotificationDelivery[]; onPreview: (delivery: NotificationDelivery) => void }) {
-  return <div className="overflow-x-auto"><table className="w-full min-w-[860px] text-left"><thead className="bg-slate-50 text-[11px] uppercase text-slate-500"><tr><th className="px-3 py-2">Delivery</th><th className="px-3 py-2">Notification</th><th className="px-3 py-2">Recipient</th><th className="px-3 py-2">Channel</th><th className="px-3 py-2">State</th><th className="px-3 py-2">Last Activity</th><th className="px-3 py-2 text-right">Actions</th></tr></thead><tbody>{rows.map((delivery) => { const intent = snapshot.intents.find((item) => item.id === delivery.intentId); const recipient = snapshot.recipients.find((item) => item.id === delivery.recipientId); return <tr key={delivery.id} className="border-b border-slate-100 hover:bg-slate-50"><td className="px-3 py-2 font-mono text-xs font-bold text-[#111C3A]">{delivery.id}</td><td className="px-3 py-2 text-xs">{intent?.title ?? "Unknown"}</td><td className="px-3 py-2 text-xs">{recipient?.name ?? "Unknown"}</td><td className="px-3 py-2 text-xs">{label(delivery.channel)}</td><td className="px-3 py-2"><Badge className={tone[delivery.state] ?? tone.unknown}>{label(delivery.state)}</Badge></td><td className="px-3 py-2 text-xs">{fmtDate(delivery.lastActivityAt)}</td><td className="px-3 py-2 text-right"><button onClick={() => onPreview(delivery)} className="rounded-md border border-slate-200 p-1.5"><Eye className="size-3.5" /></button><Link href={`${BASE}/deliveries/${delivery.id}`} className="ml-1 rounded-md border border-slate-200 px-2 py-1.5 text-[11px] font-semibold">Open</Link></td></tr>; })}</tbody></table></div>;
+  if (!rows.length) return <Empty title="No Deliveries" body="Nothing matches this filter." />;
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[860px] text-left">
+        <thead className="bg-slate-50 text-[11px] uppercase text-slate-500">
+          <tr><th className="px-3 py-2">Notification</th><th className="px-3 py-2">To</th><th className="px-3 py-2">Channel</th><th className="px-3 py-2">State</th><th className="px-3 py-2">Last Activity</th><th className="px-3 py-2 text-right">Actions</th></tr>
+        </thead>
+        <tbody>
+          {rows.map((delivery) => {
+            const intent = snapshot.intents.find((item) => item.id === delivery.intentId);
+            return (
+              <tr key={delivery.id} className="border-b border-slate-100 align-top hover:bg-slate-50">
+                <td className="px-3 py-2 text-xs normal-case">
+                  <span className="font-semibold text-[#111C3A]">{intent?.title ?? "Unknown"}</span>
+                  {delivery.failureReason ? <span className="mt-0.5 block text-[11px] text-slate-500">{delivery.failureReason}</span> : null}
+                </td>
+                <td className="px-3 py-2 text-xs normal-case">{recipientName(snapshot, delivery.recipientId)}</td>
+                <td className="px-3 py-2 text-xs">{CHANNEL_LABEL[delivery.channel] ?? delivery.channel}</td>
+                <td className="px-3 py-2"><StateBadge state={delivery.state} /></td>
+                <td className="px-3 py-2 text-xs">{fmtDate(delivery.lastActivityAt)}</td>
+                <td className="whitespace-nowrap px-3 py-2 text-right">
+                  <RetryButton delivery={delivery} />
+                  <button onClick={() => onPreview(delivery)} className="ml-1 rounded-md border border-slate-200 p-1.5" aria-label="Preview"><Eye className="size-3.5" /></button>
+                  {delivery.channel !== "in_app" ? <Link href={`${BASE}/deliveries/${delivery.id}`} className="ml-1 rounded-md border border-slate-200 px-2 py-1.5 text-[11px] font-semibold">Open</Link> : null}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
-function Overview({ snapshot, range, companyScope, hours, onPreviewIntent, onPreviewDelivery }: { snapshot: NotificationSnapshot; range: NotificationRange; companyScope: string; hours: number; onPreviewIntent: (intent: NotificationIntent) => void; onPreviewDelivery: (delivery: NotificationDelivery) => void }) {
-  const intents = scopedIntents(snapshot, range, companyScope, hours);
-  const failures = snapshot.deliveries.filter((delivery) => delivery.state === "failed" || delivery.state === "unknown").slice(0, 5);
-  return <div className="space-y-1"><KpiGrid snapshot={snapshot} range={range} companyScope={companyScope} hours={hours} /><div className="grid items-stretch gap-1 xl:grid-cols-[1.2fr_0.8fr]"><ActivityTrend snapshot={snapshot} /><Card><Title title="Needs Attention" subtitle="Failures, unknown outcomes and unapproved templates." />{failures.map((delivery) => { const intent = snapshot.intents.find((item) => item.id === delivery.intentId); return <button key={delivery.id} onClick={() => onPreviewDelivery(delivery)} className="block w-full border-b border-slate-100 px-4 py-3 text-left text-xs hover:bg-slate-50"><p className="font-bold text-[#111C3A]">{intent?.title ?? delivery.id}</p><p className="text-slate-500">{label(delivery.channel)} - {label(delivery.state)} - {delivery.failureReason ?? "Review provider outcome"}</p></button>; })}</Card></div><div className="grid items-stretch gap-1 xl:grid-cols-2"><DeliveryChannelTable snapshot={snapshot} /><Card><Title title="Recent Notifications" /><IntentTable rows={intents.slice(0, 6)} onPreview={onPreviewIntent} compact /></Card></div><div className="grid gap-1 xl:grid-cols-2"><Campaigns snapshot={snapshot} compact /><ActivitySettings snapshot={snapshot} compact /></div></div>;
+/* ------------------------------------------------------------------ */
+/* Pages                                                               */
+/* ------------------------------------------------------------------ */
+
+function Overview({ snapshot, intents, range, onPreviewIntent, onPreviewDelivery }: { snapshot: NotificationSnapshot; intents: NotificationIntent[]; range: NotificationRange; onPreviewIntent: (intent: NotificationIntent) => void; onPreviewDelivery: (delivery: NotificationDelivery) => void }) {
+  const problems = scopedDeliveries(snapshot, intents).filter((d) => d.state === "failed" || d.state === "not_created").slice(0, 6);
+  return (
+    <div className="space-y-1">
+      <KpiGrid snapshot={snapshot} intents={intents} />
+      <div className="grid items-stretch gap-1 xl:grid-cols-[1.2fr_0.8fr]">
+        <ActivityTrend snapshot={snapshot} intents={intents} range={range} />
+        <Card>
+          <Title title="Needs Attention" subtitle="E-mail or WhatsApp deliveries that failed or were not sent." />
+          {problems.length ? (
+            problems.map((d) => {
+              const intent = snapshot.intents.find((item) => item.id === d.intentId);
+              return (
+                <div key={d.id} className="flex items-start justify-between gap-2 border-b border-slate-100 px-4 py-3 text-xs">
+                  <button onClick={() => onPreviewDelivery(d)} className="min-w-0 text-left">
+                    <p className="font-bold normal-case text-[#111C3A]">{intent?.title ?? d.id}</p>
+                    <p className="normal-case text-slate-500">{CHANNEL_LABEL[d.channel]} · {STATE_LABEL[d.state]} · {d.failureReason ?? "No reason recorded"}</p>
+                  </button>
+                  <RetryButton delivery={d} />
+                </div>
+              );
+            })
+          ) : (
+            <Empty title="All Clear" body="No failed or skipped deliveries in this period." />
+          )}
+        </Card>
+      </div>
+      <div className="grid items-start gap-1 xl:grid-cols-2">
+        <DeliveryChannelTable snapshot={snapshot} intents={intents} />
+        <Card>
+          <Title title="Recent Notifications" />
+          <IntentTable snapshot={snapshot} rows={intents.slice(0, 6)} onPreview={onPreviewIntent} compact />
+        </Card>
+      </div>
+      <ActivitySettings snapshot={snapshot} compact />
+    </div>
+  );
 }
 
-function NotificationCenter({ snapshot, rows, setRows, onPreview }: { snapshot: NotificationSnapshot; rows: NotificationIntent[]; setRows: (rows: NotificationIntent[]) => void; onPreview: (intent: NotificationIntent) => void }) {
+function NotificationCenter({ snapshot, rows, onPreview }: { snapshot: NotificationSnapshot; rows: NotificationIntent[]; onPreview: (intent: NotificationIntent) => void }) {
   const [query, setQuery] = useState("");
   const [state, setState] = useState("all");
-  const filtered = rows.filter((intent) => (state === "all" || intent.state === state) && `${intent.id} ${intent.title} ${intent.companyName ?? ""}`.toLowerCase().includes(query.toLowerCase()));
-  return <div className="space-y-1"><Card><Title title="Notification Center" subtitle="Notification intent directory separate from per-recipient delivery records." action={<button onClick={() => download("notifications.csv", csv(filtered.map((n) => ({ id: n.id, title: n.title, state: n.state, company: n.companyName, channels: n.channels.join("|") }))))} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold"><Download className="size-4" />Export</button>} /><div className="flex flex-wrap gap-2 border-b border-slate-100 p-3"><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search notification ID, title or company" className="min-w-64 flex-1 rounded-md border border-slate-200 px-3 py-2 text-xs" /><select value={state} onChange={(e) => setState(e.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-xs"><option value="all">All states</option><option value="draft">Draft</option><option value="scheduled">Scheduled</option><option value="dispatch_requested">Dispatch requested</option><option value="completed">Completed</option></select></div>{filtered.length ? <IntentTable rows={filtered} onPreview={onPreview} /> : <Empty title="No Matching Notifications" body="Adjust search or intent state filters." />}</Card><InAppInbox snapshot={snapshot} setRows={setRows} /></div>;
+  const filtered = rows.filter((intent) => (state === "all" || intent.state === state) && `${intent.title} ${intent.companyName ?? ""} ${intent.recipientId ? recipientName(snapshot, intent.recipientId) : ""}`.toLowerCase().includes(query.toLowerCase()));
+  const ids = new Set(rows.map((r) => r.id));
+  const receipts = snapshot.receipts.filter((r) => ids.has(r.intentId));
+  const read = receipts.filter((r) => r.state === "read").length;
+  return (
+    <div className="space-y-1">
+      <Card>
+        <Title
+          title="Notification Center"
+          subtitle="Every bell notification, one row per person."
+          action={
+            <button onClick={() => download("notifications.csv", csv(filtered.map((n) => ({ id: n.id, title: n.title, to: n.recipientId ? recipientName(snapshot, n.recipientId) : "", company: n.companyName, state: n.state, channels: n.channels.join("|"), created: n.createdAt }))))} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold">
+              <Download className="size-4" />Export
+            </button>
+          }
+        />
+        <div className="flex flex-wrap gap-2 border-b border-slate-100 p-3">
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search title, person or company" className="min-w-64 flex-1 rounded-md border border-slate-200 px-3 py-2 text-xs normal-case" />
+          <select value={state} onChange={(e) => setState(e.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-xs">
+            <option value="all">All states</option>
+            <option value="dispatch_requested">Sending</option>
+            <option value="completed">Done</option>
+          </select>
+        </div>
+        <IntentTable snapshot={snapshot} rows={filtered} onPreview={onPreview} />
+      </Card>
+      <Card>
+        <Title title="Read In The Bell" subtitle="Read state belongs to each person; it is shown here, never changed from this page." />
+        <div className="grid gap-1 p-4 sm:grid-cols-3">
+          <Mini label="Read" value={String(read)} />
+          <Mini label="Unread" value={String(receipts.length - read)} />
+          <Mini label="Read rate" value={receipts.length ? `${Math.round((read / receipts.length) * 100)}%` : "-"} />
+        </div>
+      </Card>
+    </div>
+  );
 }
 
-function InAppInbox({ snapshot, setRows }: { snapshot: NotificationSnapshot; setRows: (rows: NotificationIntent[]) => void }) {
-  const [receipts, setReceipts] = useState(snapshot.receipts);
-  const markAll = () => setReceipts((prev) => prev.map((receipt) => ({ ...receipt, state: "read", readAt: snapshot.generatedAt })));
-  return <Card><Title title="In-App Inbox" subtitle="Read state updates are persisted with the notification operations snapshot." action={<button onClick={markAll} disabled={!receipts.some((receipt) => receipt.state === "unread")} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold disabled:opacity-50"><CheckCheck className="size-4" />Mark All Read</button>} />{receipts.length ? <div className="divide-y divide-slate-100">{receipts.map((receipt) => { const intent = snapshot.intents.find((item) => item.id === receipt.intentId); return <div key={receipt.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3"><div><p className="text-xs font-bold text-[#111C3A]">{intent?.title}</p><p className="text-xs text-slate-500">{receipt.id} - {fmtDate(receipt.createdAt)}</p></div><div className="flex items-center gap-2"><Badge className={tone[receipt.state]}>{label(receipt.state)}</Badge><button onClick={() => { setReceipts((prev) => prev.map((item) => item.id === receipt.id ? { ...item, state: "read", readAt: snapshot.generatedAt } : item)); setRows(snapshot.intents); }} disabled={receipt.state === "read"} className="rounded-md border border-slate-200 px-2 py-1.5 text-[11px] font-semibold disabled:opacity-50">Mark Read</button></div></div>; })}</div> : <Empty title="No In-App Receipts" body="Receipts will appear here when an in-app notification exists." />}</Card>;
-}
-
-function Compose({ snapshot, intents, setIntents, campaigns, setCampaigns }: { snapshot: NotificationSnapshot; intents: NotificationIntent[]; setIntents: (rows: NotificationIntent[]) => void; campaigns: Campaign[]; setCampaigns: (rows: Campaign[]) => void }) {
-  const [audienceId, setAudienceId] = useState(snapshot.audiences[0]?.id ?? "");
-  const [templateId, setTemplateId] = useState(snapshot.templates[0]?.id ?? "");
-  const [title, setTitle] = useState("Notification draft");
-  const [channels, setChannels] = useState(["in_app"]);
-  const [subject, setSubject] = useState(snapshot.templates[0]?.versions.at(-1)?.subject ?? "");
-  const [body, setBody] = useState(snapshot.templates[0]?.versions.at(-1)?.body ?? "");
-  const [scheduleAt, setScheduleAt] = useState("2026-09-22T10:00");
-  const [saved, setSaved] = useState(false);
-  const audience = snapshot.audiences.find((item) => item.id === audienceId);
-  const template = snapshot.templates.find((item) => item.id === templateId);
-  const dirty = !saved && Boolean(title || subject || body);
-  useEffect(() => {
-    if (!dirty) return undefined;
-    const onBeforeUnload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [dirty]);
-  useEffect(() => {
-    const latest = template?.versions.at(-1);
-    setSubject(latest?.subject ?? "");
-    setBody(latest?.body ?? "");
-  }, [templateId, template]);
-  const eligible = (audience?.recipientIds ?? []).filter((id) => snapshot.recipients.find((r) => r.id === id && channels.every((channel) => Boolean(r.verified[channel as keyof typeof r.verified]))));
-  const excluded = (audience?.recipientIds.length ?? 0) - eligible.length;
-  const channelReady = channels.map((channel) => ({ channel, eligible: (audience?.recipientIds ?? []).filter((id) => Boolean(snapshot.recipients.find((r) => r.id === id)?.verified[channel as keyof typeof snapshot.recipients[number]["verified"]])).length }));
-  const makeIntent = (state: NotificationIntent["state"], scheduledFor: string | null): NotificationIntent => ({ id: `ntf_${Date.now()}`, title, category: template?.category ?? "announcement", state, source: "manual", companyId: audience?.companyId ?? null, companyName: snapshot.recipients.find((r) => r.companyId === audience?.companyId)?.companyName ?? null, campaignId: null, templateId, audienceId, channels: channels as NotificationIntent["channels"], createdAt: snapshot.generatedAt, scheduledFor, relatedHref: null, createdBy: "Super Admin", message: body });
-  const saveDraft = () => { setIntents([makeIntent("draft", null), ...intents]); setSaved(true); };
-  const saveSchedule = () => { setIntents([makeIntent("scheduled", new Date(scheduleAt).toISOString()), ...intents]); setSaved(true); };
-  const createCampaign = () => { const next: Campaign = { id: `cmpgn-${Date.now()}`, name: title, state: scheduleAt ? "scheduled" : "draft", audienceId, companyId: audience?.companyId ?? null, channels: channels as Campaign["channels"], createdAt: snapshot.generatedAt, scheduledFor: scheduleAt ? new Date(scheduleAt).toISOString() : null, owner: "Super Admin" }; setCampaigns([next, ...campaigns]); setSaved(true); };
-  return <div className="grid gap-1 xl:grid-cols-[1fr_0.8fr]"><Card><Title title="Compose Notification" subtitle="Creates persisted draft or schedule records." /><div className="space-y-3 p-4">{dirty ? <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">Unsaved compose changes are protected by the browser leave warning.</div> : null}<input value={title} onChange={(e) => { setSaved(false); setTitle(e.target.value); }} className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><div className="grid gap-1 md:grid-cols-2"><select value={audienceId} onChange={(e) => { setSaved(false); setAudienceId(e.target.value); }} className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm">{snapshot.audiences.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select><select value={templateId} onChange={(e) => { setSaved(false); setTemplateId(e.target.value); }} className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm">{snapshot.templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div><div className="grid gap-1 sm:grid-cols-4">{(["in_app", "email", "whatsapp", "push"] as const).map((channel) => <label key={channel} className="rounded-md border border-slate-200 p-2 text-xs font-semibold"><input type="checkbox" className="mr-2" checked={channels.includes(channel)} onChange={(e) => { setSaved(false); setChannels((prev) => e.target.checked ? [...prev, channel] : prev.filter((item) => item !== channel)); }} />{label(channel)}</label>)}</div><div className="grid gap-1 sm:grid-cols-3"><Mini label="Audience" value={audience?.name ?? "-"} /><Mini label="Eligible recipients" value={String(eligible.length)} /><Mini label="Excluded" value={String(excluded)} /></div><div className="grid gap-1 sm:grid-cols-4">{channelReady.map((row) => <Mini key={row.channel} label={`${label(row.channel)} ready`} value={String(row.eligible)} />)}</div><input value={subject} onChange={(e) => { setSaved(false); setSubject(e.target.value); }} placeholder="Subject / headline" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><textarea value={body} onChange={(e) => { setSaved(false); setBody(e.target.value); }} placeholder="Channel content" className="min-h-24 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><label className="block text-xs font-semibold text-slate-600">Schedule time<input type="datetime-local" value={scheduleAt} onChange={(e) => { setSaved(false); setScheduleAt(e.target.value); }} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /></label>{excluded > 0 ? <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">{excluded} recipient(s) excluded because one or more selected channels are unavailable.</div> : null}{saved ? <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2 text-xs text-emerald-700">Record saved to backend notification operations.</div> : null}<div className="flex flex-wrap gap-2"><button onClick={saveDraft} disabled={!title || !channels.length} className="rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">Save Draft</button><button onClick={saveSchedule} disabled={!scheduleAt || !channels.length} className="rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold disabled:opacity-50">Save Schedule</button><button onClick={createCampaign} className="rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold">Create Campaign</button></div></div></Card><Card><Title title="Live Preview" subtitle="Preview uses the edited content and selected channels." /><div className="p-4"><p className="text-xs font-bold text-[#111C3A]">{subject}</p><p className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">{body}</p><p className="mt-2 text-[11px] text-slate-500">Channels: {channels.map(label).join(", ")}.</p></div></Card><Campaigns snapshot={{ ...snapshot, campaigns }} compact={false} /></div>;
-}
-
-function Campaigns({ snapshot, compact = false }: { snapshot: NotificationSnapshot; compact?: boolean }) {
-  return <Card><Title title={compact ? "Recent Campaigns" : "Campaigns"} /><div className="divide-y divide-slate-100">{snapshot.campaigns.slice(0, compact ? 4 : undefined).map((campaign) => <Link key={campaign.id} href={`${BASE}/campaigns/${campaign.id}`} className="block px-4 py-3 hover:bg-slate-50"><div className="flex flex-wrap justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{campaign.name}</p><Badge className={tone[campaign.state] ?? tone.draft}>{label(campaign.state)}</Badge></div><p className="mt-1 text-xs text-slate-500">{campaign.channels.map(label).join(", ")} - intents {campaignIntentCount(snapshot, campaign)} - {fmtDate(campaign.createdAt)}</p></Link>)}</div></Card>;
-}
-
-function Templates({ templates, setTemplates }: { templates: Template[]; setTemplates: (templates: Template[]) => void }) {
-  return <Card><Title title="Templates" subtitle="Versions are appended; historical notification content is not rewritten." action={<button onClick={() => setTemplates([{ ...templates[0]!, id: `tpl-${Date.now()}`, name: "New Template", state: "draft" }, ...templates])} className="rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">New Draft</button>} /><div className="divide-y divide-slate-100">{templates.map((template) => <Link key={template.id} href={`${BASE}/templates/${template.id}`} className="block px-4 py-3 hover:bg-slate-50"><div className="flex flex-wrap justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{template.name}</p><Badge className={tone[template.state] ?? tone.unknown}>{label(template.state)}</Badge></div><p className="mt-1 text-xs text-slate-500">{template.channels.map(label).join(", ")} - variables {template.variables.join(", ")} - v{template.versions.at(-1)?.version}</p></Link>)}</div></Card>;
-}
-
-function TemplateEditor({ template, templates, setTemplates }: { template: Template; templates: Template[]; setTemplates: (templates: Template[]) => void }) {
-  const latest = template.versions.at(-1);
-  const [subject, setSubject] = useState(latest?.subject ?? "");
-  const [body, setBody] = useState(latest?.body ?? "");
-  const [saved, setSaved] = useState(false);
-  const dirty = !saved && (subject !== (latest?.subject ?? "") || body !== (latest?.body ?? ""));
-  useEffect(() => {
-    if (!dirty) return undefined;
-    const onBeforeUnload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [dirty]);
-  const invalidVariables = Array.from(`${subject} ${body}`.matchAll(/\{\{([^}]+)\}\}/g)).map((match) => match[1]?.trim() ?? "").filter((variable) => !template.variables.includes(variable));
-  const saveVersion = () => {
-    const nextVersion = { version: (latest?.version ?? 0) + 1, createdAt: new Date().toISOString(), subject, body };
-    setTemplates(templates.map((item) => item.id === template.id ? { ...item, state: "draft", versions: [...item.versions, nextVersion] } : item));
-    setSaved(true);
+function Announcements({ snapshot }: { snapshot: NotificationSnapshot }) {
+  const qc = useQueryClient();
+  const [audience, setAudience] = useState<AnnouncementAudience>("company_admins");
+  const [companyId, setCompanyId] = useState("");
+  const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
+  const [href, setHref] = useState("");
+  const send = useMutation({
+    mutationFn: () => notificationsRepository.announce({ title: title.trim(), message: message.trim(), audience, ...(audience === "company" ? { companyId } : {}), ...(href.trim() ? { href: href.trim() } : {}) }),
+    onSuccess: (res) => {
+      toast.success(`Announcement sent to ${res.sent} ${res.sent === 1 ? "person" : "people"}.`);
+      setTitle("");
+      setMessage("");
+      setHref("");
+      void qc.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+    onError: (e) => toast.error(errorText(e, "The announcement could not be sent")),
+  });
+  const size = audience === "company" ? null : snapshot.audiences.find((a) => a.id === audience)?.size ?? null;
+  const ready = title.trim().length >= 3 && message.trim().length >= 3 && (audience !== "company" || companyId);
+  const sent = useMemo(() => {
+    const groups = new Map<string, { title: string; at: string; count: number; read: number }>();
+    for (const n of snapshot.intents.filter((i) => i.source === "manual")) {
+      const key = `${n.title}|${n.createdAt.slice(0, 16)}`;
+      const g = groups.get(key) ?? { title: n.title, at: n.createdAt, count: 0, read: 0 };
+      g.count += 1;
+      if (snapshot.receipts.find((r) => r.intentId === n.id)?.state === "read") g.read += 1;
+      groups.set(key, g);
+    }
+    return [...groups.values()];
+  }, [snapshot]);
+  const submit = () => {
+    const who = audience === "company" ? (snapshot.companies ?? []).find((c) => c.id === companyId)?.name ?? "this company" : snapshot.audiences.find((a) => a.id === audience)?.name;
+    if (window.confirm(`Send “${title.trim()}” now to ${who}${size != null ? ` (${size} people)` : ""}? It cannot be unsent.`)) send.mutate();
   };
-  return <Card><Title title="Template Editor" subtitle="Adds a new draft version; old versions remain unchanged." action={<button onClick={saveVersion} disabled={!subject || !body || invalidVariables.length > 0} className="rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">Save Template Version</button>} /><div className="grid gap-1 p-4 xl:grid-cols-[1fr_0.8fr]"><div className="space-y-3">{dirty ? <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">Unsaved template edits are protected by the browser leave warning.</div> : null}<input value={subject} onChange={(e) => { setSaved(false); setSubject(e.target.value); }} className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><textarea value={body} onChange={(e) => { setSaved(false); setBody(e.target.value); }} className="min-h-28 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" /><div className="rounded-md border border-slate-200 bg-slate-50 p-2 text-xs text-slate-600">Allowed variables: {template.variables.join(", ") || "None"}</div>{invalidVariables.length ? <div className="rounded-md border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700">Invalid variables: {invalidVariables.join(", ")}</div> : null}{saved ? <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2 text-xs text-emerald-700">New template version saved.</div> : null}</div><div className="rounded-md border border-slate-200 bg-slate-50 p-3"><p className="text-xs font-bold text-[#111C3A]">{subject}</p><p className="mt-2 text-sm text-slate-600">{body}</p><p className="mt-3 text-[11px] text-slate-500">Preview only. It does not mutate historic notifications.</p></div></div></Card>;
+  return (
+    <div className="grid gap-1 xl:grid-cols-[1fr_0.8fr]">
+      <Card>
+        <Title title="Send Announcement" subtitle="Goes out immediately: a bell notification for everyone, and an e-mail where the company's Platform announcements setting allows it (on by default)." />
+        <div className="space-y-3 p-4">
+          <div className="grid gap-1 md:grid-cols-2">
+            <label className="block text-xs font-semibold text-slate-600">
+              Audience
+              <select value={audience} onChange={(e) => setAudience(e.target.value as AnnouncementAudience)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+                {snapshot.audiences.map((a) => <option key={a.id} value={a.id}>{a.name}{a.size != null ? ` (${a.size})` : ""}</option>)}
+                <option value="company">Owners & admins of one company</option>
+              </select>
+            </label>
+            {audience === "company" ? (
+              <label className="block text-xs font-semibold text-slate-600">
+                Company
+                <select value={companyId} onChange={(e) => setCompanyId(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+                  <option value="">Choose a company…</option>
+                  {(snapshot.companies ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </label>
+            ) : null}
+          </div>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={160} placeholder="Title, e.g. Planned maintenance on Sunday" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm normal-case" />
+          <textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={1000} placeholder="Message" className="min-h-28 w-full rounded-md border border-slate-200 px-3 py-2 text-sm normal-case" />
+          <input value={href} onChange={(e) => setHref(e.target.value)} maxLength={200} placeholder="Optional page to open, e.g. /admin/billing" className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm normal-case" />
+          <button type="button" onClick={submit} disabled={!ready || send.isPending} className="inline-flex items-center gap-1.5 rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">
+            {send.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />} Send Now
+          </button>
+        </div>
+      </Card>
+      <Card>
+        <Title title="Preview" subtitle="How it looks in the bell and in the e-mail." />
+        <div className="p-4">
+          <p className="text-xs font-bold normal-case text-[#111C3A]">{title || "Title"}</p>
+          <p className="mt-2 whitespace-pre-line rounded-md border border-slate-200 bg-slate-50 p-3 text-sm normal-case text-slate-600">{message || "Message"}</p>
+          <p className="mt-2 text-[11px] normal-case text-slate-500">Opens {href.trim() || "the dashboard"} when clicked.</p>
+        </div>
+      </Card>
+      <Card className="xl:col-span-2">
+        <Title title="Sent Announcements" subtitle="Last 30 days. Scheduling and campaigns are not available; announcements go out the moment they are sent." />
+        {sent.length ? (
+          <div className="divide-y divide-slate-100">
+            {sent.map((s) => (
+              <div key={`${s.title}-${s.at}`} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+                <div>
+                  <p className="text-xs font-bold normal-case text-[#111C3A]">{s.title}</p>
+                  <p className="text-xs text-slate-500">{fmtDate(s.at)}</p>
+                </div>
+                <p className="text-xs text-slate-600">{s.count} people · {s.read} read</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Empty title="No Announcements Yet" body="Announcements you send appear here with how many people read them." />
+        )}
+      </Card>
+    </div>
+  );
 }
 
-function Deliveries({ snapshot, onPreview }: { snapshot: NotificationSnapshot; onPreview: (delivery: NotificationDelivery) => void }) {
+function Templates({ snapshot }: { snapshot: NotificationSnapshot }) {
+  return (
+    <Card>
+      <Title title="Templates" subtitle="Every notification uses one branded layout: its own title and message, and a button to the page it is about. One row per notification event." />
+      <div className="divide-y divide-slate-100">
+        {snapshot.templates.map((t) => (
+          <Link key={t.id} href={`${BASE}/templates/${t.id}`} className="block px-4 py-3 hover:bg-slate-50">
+            <div className="flex flex-wrap justify-between gap-2">
+              <p className="text-xs font-bold text-[#111C3A]">{t.name}</p>
+              <StateBadge state={t.state} />
+            </div>
+            <p className="mt-1 text-xs normal-case text-slate-500">{t.description ?? ""} · {t.channels.map((c) => CHANNEL_LABEL[c] ?? c).join(", ")}</p>
+          </Link>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function TemplateDetail({ snapshot, id }: { snapshot: NotificationSnapshot; id?: string }) {
+  const t = snapshot.templates.find((item) => item.id === id);
+  if (!t) return <NotFound title="Template Not Found" href={`${BASE}/templates`} body="This template does not exist." />;
+  const v = t.versions.at(-1);
+  return (
+    <div className="space-y-1">
+      <Back href={`${BASE}/templates`} label="Back to Templates" />
+      <Card className="p-4">
+        <h2 className="text-xl font-bold text-[#111C3A]">{t.name}</h2>
+        <p className="mt-1 text-sm normal-case text-slate-600">{t.description}</p>
+        <div className="mt-4 grid gap-1 sm:grid-cols-3">
+          <Mini label="Channels" value={t.channels.map((c) => CHANNEL_LABEL[c] ?? c).join(", ")} />
+          <Mini label="Filled in with" value={t.variables.join(", ")} />
+          <Mini label="Editable" value="No" hint="Text comes from the event itself, so it always matches what happened." />
+        </div>
+      </Card>
+      <Card>
+        <Title title="E-mail Layout" />
+        <div className="p-4">
+          <div className="max-w-lg rounded-lg border border-slate-200 bg-white p-4">
+            <p className="text-[10px] font-bold tracking-wider text-[#2563EB]">ENCODENCY OMNIPLATFORM</p>
+            <p className="mt-1 text-base font-bold normal-case text-[#111C3A]">{v?.subject}</p>
+            <p className="mt-2 whitespace-pre-line text-sm normal-case text-slate-600">{v?.body}</p>
+            <span className="mt-3 inline-block rounded-md bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white">Open in OmniPlatform</span>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function Deliveries({ snapshot, intents, onPreview }: { snapshot: NotificationSnapshot; intents: NotificationIntent[]; onPreview: (delivery: NotificationDelivery) => void }) {
   const params = useSearchParams();
-  const initialState = params.get("state") ?? "all";
-  const [state, setState] = useState(initialState);
-  const rows = snapshot.deliveries.filter((delivery) => state === "all" || delivery.state === state);
-  return <Card><Title title="Delivery & Failures" subtitle="Delivery records are distinct from attempts and notification intents." action={<button onClick={() => download("notification-deliveries.csv", csv(rows.map((d) => ({ id: d.id, intentId: d.intentId, channel: d.channel, state: d.state, recoveryRequested: d.recoveryRequested }))))} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold"><Download className="size-4" />Export</button>} /><div className="border-b border-slate-100 p-3"><select value={state} onChange={(e) => setState(e.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-xs"><option value="all">All delivery states</option><option value="provider_accepted">Provider accepted</option><option value="delivered">Delivered</option><option value="failed">Failed</option><option value="unknown">Unknown</option></select></div><DeliveryTable snapshot={snapshot} rows={rows} onPreview={onPreview} /></Card>;
+  const [state, setState] = useState(params.get("state") ?? "external");
+  const all = scopedDeliveries(snapshot, intents);
+  const rows = all.filter((d) => (state === "all" ? true : state === "external" ? d.channel !== "in_app" : d.state === state));
+  return (
+    <Card>
+      <Title
+        title="Delivery & Failures"
+        subtitle="One row per person per channel. Failed and skipped e-mail / WhatsApp deliveries can be retried."
+        action={
+          <button onClick={() => download("notification-deliveries.csv", csv(rows.map((d) => ({ id: d.id, notification: snapshot.intents.find((i) => i.id === d.intentId)?.title ?? "", to: recipientName(snapshot, d.recipientId), channel: d.channel, state: STATE_LABEL[d.state] ?? d.state, reason: d.failureReason, at: d.lastActivityAt }))))} className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold">
+            <Download className="size-4" />Export
+          </button>
+        }
+      />
+      <div className="border-b border-slate-100 p-3">
+        <select value={state} onChange={(e) => setState(e.target.value)} className="rounded-md border border-slate-200 px-2 py-2 text-xs">
+          <option value="external">E-mail & WhatsApp</option>
+          <option value="all">Everything (incl. bell)</option>
+          <option value="provider_accepted">Sent</option>
+          <option value="queued">Waiting</option>
+          <option value="failed">Failed</option>
+          <option value="not_created">Not sent</option>
+        </select>
+      </div>
+      <DeliveryTable snapshot={snapshot} rows={rows} onPreview={onPreview} />
+    </Card>
+  );
 }
 
-function AudiencePreferences({ snapshot, preferences, setPreferences }: { snapshot: NotificationSnapshot; preferences: Preference[]; setPreferences: (preferences: Preference[]) => void }) {
-  return <div className="grid gap-1 xl:grid-cols-[0.9fr_1.1fr]"><Card><Title title="Audience Directory" /><div className="divide-y divide-slate-100">{snapshot.audiences.map((audience) => <div key={audience.id} className="px-4 py-3"><p className="text-xs font-bold text-[#111C3A]">{audience.name}</p><p className="text-xs text-slate-500">{audience.description} - recipients {audience.recipientIds.length}</p></div>)}</div></Card><Card><Title title="Preference Matrix" subtitle="Required policy rows cannot be bypassed by optional opt-out." /><div className="divide-y divide-slate-100">{preferences.map((pref) => { const recipient = snapshot.recipients.find((item) => item.id === pref.recipientId); return <div key={pref.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3"><div><p className="text-xs font-bold text-[#111C3A]">{recipient?.name}</p><p className="text-xs text-slate-500">{label(pref.category)} - {label(pref.channel)}</p></div><select value={pref.state} disabled={pref.state === "required"} onChange={(e) => setPreferences(preferences.map((item) => item.id === pref.id ? { ...item, state: e.target.value as Preference["state"] } : item))} className="rounded-md border border-slate-200 px-2 py-1.5 text-xs"><option value="allowed">Allowed</option><option value="opted_out">Opted Out</option><option value="unavailable">Unavailable</option><option value="required">Required</option></select></div>; })}</div></Card></div>;
+function AudienceRouting({ snapshot }: { snapshot: NotificationSnapshot }) {
+  const routes = snapshot.companyRoutes ?? [];
+  return (
+    <div className="grid gap-1 xl:grid-cols-[0.8fr_1.2fr]">
+      <Card>
+        <Title title="Audiences" subtitle="Who an announcement can reach right now." />
+        <div className="divide-y divide-slate-100">
+          {snapshot.audiences.map((a) => (
+            <div key={a.id} className="flex items-start justify-between gap-2 px-4 py-3">
+              <div>
+                <p className="text-xs font-bold text-[#111C3A]">{a.name}</p>
+                <p className="text-xs normal-case text-slate-500">{a.description}</p>
+              </div>
+              <Badge className="border-slate-200 bg-slate-50 text-slate-700">{a.size ?? a.recipientIds.length} people</Badge>
+            </div>
+          ))}
+        </div>
+      </Card>
+      <Card>
+        <Title title="Company Routing" subtitle="Changes companies made in Settings → Notifications. Companies not listed use the defaults on the Rules tab." />
+        {routes.length ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] text-left text-xs">
+              <thead className="bg-slate-50 text-[11px] uppercase text-slate-500">
+                <tr><th className="px-3 py-2">Company</th><th className="px-3 py-2">Event</th><th className="px-3 py-2">E-mail</th><th className="px-3 py-2">WhatsApp</th><th className="px-3 py-2">Changed</th></tr>
+              </thead>
+              <tbody>
+                {routes.map((r) => (
+                  <tr key={`${r.companyId}-${r.event}`} className="border-b border-slate-100">
+                    <td className="px-3 py-2 font-semibold text-[#111C3A]">{r.companyName}</td>
+                    <td className="px-3 py-2">{r.eventTitle}</td>
+                    <td className="px-3 py-2">{r.email ? "On" : "Off"}</td>
+                    <td className="px-3 py-2">{r.whatsapp ? "On" : "Off"}</td>
+                    <td className="px-3 py-2">{fmtDate(r.updatedAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <Empty title="All Companies Use The Defaults" body="No company has changed its notification channels yet." />
+        )}
+      </Card>
+    </div>
+  );
 }
 
-function RulesAutomation({ snapshot }: { snapshot: NotificationSnapshot }) {
-  const [rules, setRules] = useState(snapshot.rules);
-  return <Card><Title title="Rules & Automation" subtitle="Rule drafts are saved in the backend notification operations snapshot." action={<button onClick={() => setRules([{ id: `rule_${Date.now()}`, name: "Event Rule", eventType: "system.maintenance_scheduled", enabled: false, templateId: snapshot.templates[0]?.id ?? "", channels: ["in_app"], readiness: "ready" }, ...rules])} className="rounded-md bg-[#111C3A] px-3 py-2 text-xs font-semibold text-white">Save Notification Rule</button>} /><div className="divide-y divide-slate-100">{rules.map((rule) => <div key={rule.id} className="px-4 py-3"><div className="flex flex-wrap justify-between gap-2"><p className="text-xs font-bold text-[#111C3A]">{rule.name}</p><Badge className={rule.readiness === "ready" ? tone.completed : tone.unknown}>{label(rule.readiness)}</Badge></div><p className="mt-1 text-xs text-slate-500">{rule.eventType} - {rule.channels.map(label).join(", ")} - {rule.enabled ? "Enabled" : "Draft/disabled"}</p></div>)}</div></Card>;
+function Rules({ snapshot }: { snapshot: NotificationSnapshot }) {
+  return (
+    <Card>
+      <Title title="Rules" subtitle="Which events send which channels by default. Each company can change e-mail and WhatsApp for its own people in Settings → Notifications; the bell is always on." />
+      <div className="divide-y divide-slate-100">
+        {snapshot.rules.map((rule) => (
+          <div key={rule.id} className="px-4 py-3">
+            <div className="flex flex-wrap justify-between gap-2">
+              <p className="text-xs font-bold text-[#111C3A]">{rule.name}</p>
+              <div className="flex gap-1">
+                {rule.channels.map((c) => <Badge key={c} className="border-slate-200 bg-slate-50 text-slate-700">{CHANNEL_LABEL[c] ?? c}</Badge>)}
+              </div>
+            </div>
+            <p className="mt-1 font-mono text-[11px] normal-case text-slate-500">{rule.eventType}</p>
+            <p className="mt-0.5 text-xs normal-case text-slate-500">
+              {rule.customizedBy ? `${rule.customizedBy} compan${rule.customizedBy === 1 ? "y" : "ies"} changed this. ` : ""}
+              {rule.note ?? ""}
+            </p>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
 }
 
 function ActivitySettings({ snapshot, compact = false }: { snapshot: NotificationSnapshot; compact?: boolean }) {
-  return <Card><Title title={compact ? "Recent Activity" : "Activity & Settings"} subtitle={compact ? undefined : "Configuration shown here is persisted backend policy state."} /><div className="divide-y divide-slate-100">{snapshot.activity.slice(0, compact ? 4 : undefined).map((item) => <div key={item.id} className="px-4 py-3"><p className="text-xs font-bold text-[#111C3A]">{item.action}</p><p className="text-xs text-slate-500">{item.actor} - {item.target} - {fmtDate(item.at)}</p></div>)}</div>{!compact ? <div className="grid gap-1 p-4 sm:grid-cols-3"><Mini label="Email provider" value="Configured" /><Mini label="WhatsApp" value="Provider Review" /><Mini label="Push" value="Policy Controlled" /></div> : null}</Card>;
+  return (
+    <Card>
+      <Title title={compact ? "Recent Routing Changes" : "Activity & Settings"} subtitle={compact ? undefined : "Channel changes companies made, and the state of each delivery channel."} />
+      {snapshot.activity.length ? (
+        <div className="divide-y divide-slate-100">
+          {snapshot.activity.slice(0, compact ? 4 : undefined).map((item) => (
+            <div key={item.id} className="px-4 py-3">
+              <p className="text-xs font-bold normal-case text-[#111C3A]">{item.action}</p>
+              <p className="text-xs text-slate-500">{item.actor} · {fmtDate(item.at)}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <Empty title="No Changes Yet" body="Companies have not changed their notification channels." />
+      )}
+      {!compact ? (
+        <div className="grid gap-1 p-4 sm:grid-cols-3">
+          <Mini label="E-mail" value={snapshot.emailReady ? "Connected" : "Not set up"} hint="Sent through the company's own SMTP when it has one, else the platform's." />
+          <Mini label="WhatsApp" value={snapshot.whatsappReady ? "Connected" : "Not set up"} hint="Sent as plain text through Opus to the number in each person’s profile; people without a number are skipped." />
+          <Mini label="Push" value="Not available" hint="Browser and mobile push are not built yet." />
+        </div>
+      ) : null}
+    </Card>
+  );
 }
 
-function Detail({ snapshot, id, type, templates, setTemplates, setDeliveries, recoveryRequests, setRecoveryRequests }: { snapshot: NotificationSnapshot; id?: string; type: "notification" | "campaign" | "template" | "delivery"; templates: Template[]; setTemplates: (templates: Template[]) => void; setDeliveries: (rows: NotificationDelivery[]) => void; recoveryRequests: RecoveryRequest[]; setRecoveryRequests: (rows: RecoveryRequest[]) => void }) {
-  if (type === "notification") { const intent = snapshot.intents.find((item) => item.id === id); if (!intent) return <NotFound title="Notification Not Found" href={`${BASE}/center`} />; const rows = snapshot.deliveries.filter((delivery) => delivery.intentId === intent.id); return <div className="space-y-1"><Back href={`${BASE}/center`} label="Back to Notification Center" /><Card className="p-4"><h2 className="text-xl font-bold text-[#111C3A]">{intent.title}</h2><p className="mt-1 text-sm text-slate-600">{intent.message}</p><div className="mt-4 grid gap-1 sm:grid-cols-4"><Mini label="Intent State" value={label(intent.state)} /><Mini label="Scope" value={intent.companyName ?? "Platform"} /><Mini label="Channels" value={intent.channels.map(label).join(", ")} /><Mini label="Source" value={label(intent.source)} /></div></Card><Card><Title title="Delivery Summary" /><DeliveryTable snapshot={snapshot} rows={rows} onPreview={() => undefined} /></Card></div>; }
-  if (type === "campaign") { const campaign = snapshot.campaigns.find((item) => item.id === id); if (!campaign) return <NotFound title="Campaign Not Found" href={`${BASE}/compose`} />; return <div className="space-y-1"><Back href={`${BASE}/compose`} label="Back to Campaigns" /><Card className="p-4"><h2 className="text-xl font-bold text-[#111C3A]">{campaign.name}</h2><div className="mt-4 grid gap-1 sm:grid-cols-4"><Mini label="State" value={label(campaign.state)} /><Mini label="Owner" value={campaign.owner} /><Mini label="Scheduled" value={fmtDate(campaign.scheduledFor)} /><Mini label="Intents" value={String(campaignIntentCount(snapshot, campaign))} /></div></Card></div>; }
-  if (type === "template") { const template = templates.find((item) => item.id === id); if (!template) return <NotFound title="Template Not Found" href={`${BASE}/templates`} />; return <div className="space-y-1"><Back href={`${BASE}/templates`} label="Back to Templates" /><Card className="p-4"><h2 className="text-xl font-bold text-[#111C3A]">{template.name}</h2><div className="mt-4 grid gap-1 sm:grid-cols-4"><Mini label="State" value={label(template.state)} /><Mini label="Channels" value={template.channels.map(label).join(", ")} /><Mini label="Variables" value={String(template.variables.length)} /><Mini label="Latest Version" value={`v${template.versions.at(-1)?.version}`} /></div></Card><TemplateEditor template={template} templates={templates} setTemplates={setTemplates} /><Card><Title title="Version History" /><div className="divide-y divide-slate-100">{template.versions.map((version) => <div key={version.version} className="px-4 py-3"><p className="text-xs font-bold">v{version.version} - {version.subject}</p><p className="text-xs text-slate-500">{version.body}</p></div>)}</div></Card></div>; }
-  const delivery = snapshot.deliveries.find((item) => item.id === id); if (!delivery) return <NotFound title="Delivery Not Found" href={`${BASE}/deliveries`} />; const intent = snapshot.intents.find((item) => item.id === delivery.intentId); const attempts = snapshot.attempts.filter((attempt) => attempt.deliveryId === delivery.id); const requestRecovery = () => { setDeliveries(snapshot.deliveries.map((row) => row.id === delivery.id ? { ...row, recoveryRequested: true } : row)); setRecoveryRequests([{ id: `rec_${recoveryRequests.length + 1}`, deliveryId: delivery.id, requestedAt: new Date().toISOString(), requestedBy: "Super Admin", reason: delivery.failureReason ?? "Manual delivery outcome review" }, ...recoveryRequests]); }; return <div className="space-y-1"><Back href={`${BASE}/deliveries`} label="Back to Deliveries" /><Card className="p-4"><h2 className="text-xl font-bold text-[#111C3A]">{delivery.id}</h2><p className="mt-1 text-sm text-slate-600">{intent?.title}</p><div className="mt-4 grid gap-1 sm:grid-cols-4"><Mini label="Channel" value={label(delivery.channel)} /><Mini label="State" value={label(delivery.state)} /><Mini label="Provider Ref" value={delivery.providerReference ?? "Unavailable"} /><Mini label="Recovery" value={delivery.recoveryRequested ? "Requested" : "Not requested"} /></div><button onClick={requestRecovery} disabled={delivery.recoveryRequested} className="mt-3 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold disabled:opacity-50">Request Manual Recovery</button></Card><Card><Title title="Attempt History" subtitle="Attempt count remains separate from delivery count." />{attempts.length ? <div className="divide-y divide-slate-100">{attempts.map((attempt) => <div key={attempt.id} className="px-4 py-3"><p className="text-xs font-bold text-[#111C3A]">{label(attempt.state)}</p><p className="text-xs text-slate-500">{attempt.summary} - {fmtDate(attempt.at)}</p></div>)}</div> : <Empty title="No Attempts" body="No provider attempt exists for this delivery record." />}</Card><Card><Title title="Recovery Requests" subtitle="Requests do not create synthetic successful provider attempts." />{recoveryRequests.filter((request) => request.deliveryId === delivery.id).length ? <div className="divide-y divide-slate-100">{recoveryRequests.filter((request) => request.deliveryId === delivery.id).map((request) => <div key={request.id} className="px-4 py-3"><p className="text-xs font-bold text-[#111C3A]">{request.id}</p><p className="text-xs text-slate-500">{request.reason} - {fmtDate(request.requestedAt)}</p></div>)}</div> : <Empty title="No Recovery Requests" body="Use request manual recovery to create a review record." />}</Card></div>;
+function NotificationDetail({ snapshot, id }: { snapshot: NotificationSnapshot; id?: string }) {
+  const intent = snapshot.intents.find((item) => item.id === id);
+  if (!intent) return <NotFound title="Notification Not Found" href={`${BASE}/center`} />;
+  const rows = snapshot.deliveries.filter((d) => d.intentId === intent.id);
+  const receipt = snapshot.receipts.find((r) => r.intentId === intent.id);
+  return (
+    <div className="space-y-1">
+      <Back href={`${BASE}/center`} label="Back to Notification Center" />
+      <Card className="p-4">
+        <h2 className="text-xl font-bold normal-case text-[#111C3A]">{intent.title}</h2>
+        <p className="mt-1 text-sm normal-case text-slate-600">{intent.message}</p>
+        <div className="mt-4 grid gap-1 sm:grid-cols-4">
+          <Mini label="To" value={intent.recipientId ? recipientName(snapshot, intent.recipientId) : "-"} />
+          <Mini label="Company" value={intent.companyName ?? "Platform"} />
+          <Mini label="Read" value={receipt?.state === "read" ? `Yes, ${fmtDate(receipt.readAt)}` : "Not yet"} />
+          <Mini label="Event" value={intent.createdBy} />
+        </div>
+        {intent.relatedHref ? <p className="mt-2 text-xs text-slate-500">Opens <span className="font-mono normal-case">{intent.relatedHref}</span></p> : null}
+      </Card>
+      <Card>
+        <Title title="Deliveries" />
+        <DeliveryTable snapshot={snapshot} rows={rows} onPreview={() => undefined} />
+      </Card>
+    </div>
+  );
+}
+
+function DeliveryDetail({ snapshot, id }: { snapshot: NotificationSnapshot; id?: string }) {
+  const delivery = snapshot.deliveries.find((item) => item.id === id);
+  if (!delivery) return <NotFound title="Delivery Not Found" href={`${BASE}/deliveries`} />;
+  const intent = snapshot.intents.find((item) => item.id === delivery.intentId);
+  const attempts = snapshot.attempts.filter((a) => a.deliveryId === delivery.id);
+  return (
+    <div className="space-y-1">
+      <Back href={`${BASE}/deliveries`} label="Back to Deliveries" />
+      <Card className="p-4">
+        <h2 className="text-xl font-bold normal-case text-[#111C3A]">{intent?.title ?? "Delivery"}</h2>
+        <div className="mt-4 grid gap-1 sm:grid-cols-4">
+          <Mini label="To" value={recipientName(snapshot, delivery.recipientId)} />
+          <Mini label="Channel" value={CHANNEL_LABEL[delivery.channel] ?? delivery.channel} />
+          <Mini label="State" value={STATE_LABEL[delivery.state] ?? delivery.state} />
+          <Mini label="Attempts" value={String(delivery.attempts ?? 0)} />
+        </div>
+        {delivery.failureReason ? <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs normal-case text-amber-800">{delivery.failureReason}</div> : null}
+        <div className="mt-3"><RetryButton delivery={delivery} /></div>
+      </Card>
+      <Card>
+        <Title title="Attempt History" />
+        {attempts.length ? (
+          <div className="divide-y divide-slate-100">
+            {attempts.map((a) => (
+              <div key={a.id} className="px-4 py-3">
+                <p className="text-xs font-bold text-[#111C3A]">{STATE_LABEL[a.state] ?? a.state}</p>
+                <p className="text-xs normal-case text-slate-500">{a.summary} · {fmtDate(a.at)}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Empty title="No Attempts Yet" body="It is waiting in the queue and is sent within a minute." />
+        )}
+      </Card>
+    </div>
+  );
 }
 
 function IntentPreview({ intent, snapshot, onClose }: { intent: NotificationIntent | null; snapshot: NotificationSnapshot; onClose: () => void }) {
   if (!intent) return null;
-  const deliveries = snapshot.deliveries.filter((delivery) => delivery.intentId === intent.id);
-  return <Drawer title={intent.title} open={Boolean(intent)} onClose={onClose}><div className="space-y-1"><p className="text-sm text-slate-600">{intent.message}</p><div className="grid gap-1 sm:grid-cols-3"><Mini label="Intent" value={label(intent.state)} /><Mini label="Deliveries" value={String(deliveries.length)} /><Mini label="Scope" value={intent.companyName ?? "Platform"} /></div><ButtonLink href={`${BASE}/center/${intent.id}`}>Open Notification</ButtonLink></div></Drawer>;
+  const deliveries = snapshot.deliveries.filter((d) => d.intentId === intent.id);
+  return (
+    <Drawer title={intent.title} open={Boolean(intent)} onClose={onClose}>
+      <div className="space-y-2">
+        <p className="text-sm normal-case text-slate-600">{intent.message}</p>
+        <div className="grid gap-1 sm:grid-cols-3">
+          <Mini label="To" value={intent.recipientId ? recipientName(snapshot, intent.recipientId) : "-"} />
+          <Mini label="Channels" value={deliveries.map((d) => `${CHANNEL_LABEL[d.channel]}: ${STATE_LABEL[d.state] ?? d.state}`).join(", ")} />
+          <Mini label="Company" value={intent.companyName ?? "Platform"} />
+        </div>
+        <ButtonLink href={`${BASE}/center/${intent.id}`}>Open Notification</ButtonLink>
+      </div>
+    </Drawer>
+  );
 }
 
-function DeliveryPreview({ delivery, snapshot, setDeliveries, recoveryRequests, setRecoveryRequests, onClose }: { delivery: NotificationDelivery | null; snapshot: NotificationSnapshot; setDeliveries: (rows: NotificationDelivery[]) => void; recoveryRequests: RecoveryRequest[]; setRecoveryRequests: (rows: RecoveryRequest[]) => void; onClose: () => void }) {
+function DeliveryPreview({ delivery, snapshot, onClose }: { delivery: NotificationDelivery | null; snapshot: NotificationSnapshot; onClose: () => void }) {
   if (!delivery) return null;
   const intent = snapshot.intents.find((item) => item.id === delivery.intentId);
-  const requestRecovery = () => { setDeliveries(snapshot.deliveries.map((row) => row.id === delivery.id ? { ...row, recoveryRequested: true } : row)); setRecoveryRequests([{ id: `rec_${recoveryRequests.length + 1}`, deliveryId: delivery.id, requestedAt: new Date().toISOString(), requestedBy: "Super Admin", reason: delivery.failureReason ?? "Manual delivery outcome review" }, ...recoveryRequests]); };
-  return <Drawer title={delivery.id} open={Boolean(delivery)} onClose={onClose}><div className="space-y-1"><p className="text-sm text-slate-600">{intent?.title}</p><div className="grid gap-1 sm:grid-cols-3"><Mini label="Channel" value={label(delivery.channel)} /><Mini label="State" value={label(delivery.state)} /><Mini label="Provider Ref" value={delivery.providerReference ?? "Unavailable"} /></div>{delivery.failureReason ? <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">{delivery.failureReason}</div> : null}<div className="flex flex-wrap gap-2"><ButtonLink href={`${BASE}/deliveries/${delivery.id}`}>Open Delivery</ButtonLink><button onClick={requestRecovery} disabled={delivery.recoveryRequested} className="rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold disabled:opacity-50">Request Recovery</button></div></div></Drawer>;
+  return (
+    <Drawer title={intent?.title ?? "Delivery"} open={Boolean(delivery)} onClose={onClose}>
+      <div className="space-y-2">
+        <div className="grid gap-1 sm:grid-cols-3">
+          <Mini label="To" value={recipientName(snapshot, delivery.recipientId)} />
+          <Mini label="Channel" value={CHANNEL_LABEL[delivery.channel] ?? delivery.channel} />
+          <Mini label="State" value={STATE_LABEL[delivery.state] ?? delivery.state} />
+        </div>
+        {delivery.failureReason ? <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs normal-case text-amber-800">{delivery.failureReason}</div> : null}
+        <div className="flex flex-wrap gap-2">
+          {delivery.channel !== "in_app" ? <ButtonLink href={`${BASE}/deliveries/${delivery.id}`}>Open Delivery</ButtonLink> : null}
+          <RetryButton delivery={delivery} />
+        </div>
+      </div>
+    </Drawer>
+  );
 }
 
-function Mini({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-md border border-slate-200 bg-slate-50 p-2"><p className="text-[11px] text-slate-500">{label}</p><p className="truncate text-xs font-bold text-[#111C3A]">{value}</p></div>;
-}
-
-function Empty({ title, body }: { title: string; body: string }) {
-  return <div className="m-4 rounded-lg border border-dashed border-slate-200 p-6 text-center"><p className="text-sm font-bold text-[#111C3A]">{title}</p><p className="mt-1 text-xs text-slate-500">{body}</p></div>;
-}
-
-function Back({ href, label }: { href: string; label: string }) {
-  return <Link href={href} className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-[#111C3A]"><ArrowLeft className="size-4" />{label}</Link>;
-}
-
-function NotFound({ title, href }: { title: string; href: string }) {
-  return <Card className="p-8 text-center"><h2 className="text-lg font-bold text-[#111C3A]">{title}</h2><p className="mt-1 text-sm text-slate-600">This record is not available in the current notification dataset.</p><div className="mt-3"><ButtonLink href={href}>Return</ButtonLink></div></Card>;
-}
-
-export function NotificationsOperationsCenter({ page = "overview", notificationId, campaignId, templateId, deliveryId }: { page?: "overview" | "center" | "notification" | "compose" | "campaign" | "templates" | "template" | "deliveries" | "delivery" | "audience" | "rules" | "activity"; notificationId?: string; campaignId?: string; templateId?: string; deliveryId?: string }) {
+export function NotificationsOperationsCenter({ page = "overview", notificationId, templateId, deliveryId }: { page?: "overview" | "center" | "notification" | "compose" | "campaign" | "templates" | "template" | "deliveries" | "delivery" | "audience" | "rules" | "activity"; notificationId?: string; campaignId?: string; templateId?: string; deliveryId?: string }) {
   const router = useRouter();
   const search = useSearchParams();
-  const [environment, setEnvironment] = useState<NotificationEnvironment>((search.get("env") as NotificationEnvironment) || "production");
-  const [range, setRange] = useState<NotificationRange>((search.get("range") as NotificationRange) || "7d");
-  const [hours, setHours] = useState(Number(search.get("hours")) || 24);
+  const initialRange = search.get("range");
+  const [range, setRange] = useState<NotificationRange>(initialRange === "today" || initialRange === "30d" ? initialRange : "7d");
   const [companyScope, setCompanyScope] = useState(search.get("company") || "all");
-  const [baseSnapshot, setBaseSnapshot] = useState<NotificationSnapshot | null>(null);
-  const [intents, setIntentsState] = useState<NotificationIntent[]>([]);
-  const [deliveries, setDeliveriesState] = useState<NotificationDelivery[]>([]);
-  const [campaigns, setCampaignsState] = useState<Campaign[]>([]);
-  const [templates, setTemplatesState] = useState<Template[]>([]);
-  const [preferences, setPreferencesState] = useState<Preference[]>([]);
-  const [recoveryRequests, setRecoveryRequestsState] = useState<RecoveryRequest[]>([]);
   const [intentPreview, setIntentPreview] = useState<NotificationIntent | null>(null);
   const [deliveryPreview, setDeliveryPreview] = useState<NotificationDelivery | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    notificationsRepository.loadSnapshot(environment).then((next) => {
-      if (cancelled) return;
-      setBaseSnapshot(next);
-      setIntentsState(next.intents);
-      setDeliveriesState(next.deliveries);
-      setCampaignsState(next.campaigns);
-      setTemplatesState(next.templates);
-      setPreferencesState(next.preferences);
-      setRecoveryRequestsState(next.recoveryRequests);
-    });
-    return () => { cancelled = true; };
-  }, [environment]);
-  if (!baseSnapshot) return <div className="space-y-1 capitalize"><Card className="p-8 text-center"><h2 className="text-lg font-bold text-[#111C3A]">Loading Notifications</h2><p className="mt-1 text-sm text-slate-600">Preparing notification operations.</p></Card></div>;
-  const persist = async <K extends keyof NotificationSnapshot>(section: K, value: NotificationSnapshot[K]) => {
-    const next = await notificationsRepository.replaceSection(environment, section, value);
-    setBaseSnapshot(next);
-    setIntentsState(next.intents);
-    setDeliveriesState(next.deliveries);
-    setCampaignsState(next.campaigns);
-    setTemplatesState(next.templates);
-    setPreferencesState(next.preferences);
-    setRecoveryRequestsState(next.recoveryRequests);
+  const query = useQuery({ queryKey: QUERY_KEY, queryFn: () => notificationsRepository.loadSnapshot(), refetchInterval: 30_000, retry: false });
+
+  if (query.isLoading) {
+    return <Card className="p-8 text-center"><h2 className="text-lg font-bold text-[#111C3A]">Loading Notifications</h2></Card>;
+  }
+  if (query.error || !query.data) {
+    return (
+      <Card className="p-8 text-center">
+        <h2 className="text-lg font-bold text-[#111C3A]">Notifications Could Not Be Loaded</h2>
+        <p className="mt-1 text-sm normal-case text-slate-600">{errorText(query.error, "Try again in a moment.")}</p>
+        <button onClick={() => void query.refetch()} className="mt-3 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold">Retry</button>
+      </Card>
+    );
+  }
+  const snapshot = query.data;
+  const intents = scopedIntents(snapshot, range, companyScope);
+  const replaceParam = (key: string, value: string) => {
+    const p = new URLSearchParams(search.toString());
+    p.set(key, value);
+    router.replace(`${window.location.pathname}?${p.toString()}`);
   };
-  const setIntents = (value: NotificationIntent[]) => { setIntentsState(value); void persist("intents", value); };
-  const setDeliveries = (value: NotificationDelivery[]) => { setDeliveriesState(value); void persist("deliveries", value); };
-  const setCampaigns = (value: Campaign[]) => { setCampaignsState(value); void persist("campaigns", value); };
-  const setTemplates = (value: Template[]) => { setTemplatesState(value); void persist("templates", value); };
-  const setPreferences = (value: Preference[]) => { setPreferencesState(value); void persist("preferences", value); };
-  const setRecoveryRequests = (value: RecoveryRequest[]) => { setRecoveryRequestsState(value); void persist("recoveryRequests", value); };
-  const snapshot = { ...baseSnapshot, intents, deliveries, campaigns, templates, preferences, recoveryRequests };
-  const rows = scopedIntents(snapshot, range, companyScope, hours);
-  const replaceParam = (key: string, value: string) => { const p = new URLSearchParams(search.toString()); p.set(key, value); router.replace(`${window.location.pathname}?${p.toString()}`); };
-  return <div className="space-y-1 capitalize"><PreviewBanner module="Notifications" className="normal-case">Drafts, schedules, templates, campaigns and settings are saved, but no notification is sent. Email, WhatsApp, push and in-app delivery are not connected, and the deliveries and recipients shown are sample records.</PreviewBanner><Header snapshot={snapshot} range={range} setRange={(next) => { setRange(next); replaceParam("range", next); }} hours={hours} setHours={(next) => { setHours(next); replaceParam("hours", String(next)); }} companyScope={companyScope} setCompanyScope={(next) => { setCompanyScope(next); replaceParam("company", next); }} setEnvironment={(next) => { setEnvironment(next); replaceParam("env", next); }} /><Tabs />{page === "overview" ? <Overview snapshot={snapshot} range={range} companyScope={companyScope} hours={hours} onPreviewIntent={setIntentPreview} onPreviewDelivery={setDeliveryPreview} /> : null}{page === "center" ? <NotificationCenter snapshot={snapshot} rows={rows} setRows={setIntents} onPreview={setIntentPreview} /> : null}{page === "notification" ? <Detail snapshot={snapshot} id={notificationId} type="notification" templates={templates} setTemplates={setTemplates} setDeliveries={setDeliveries} recoveryRequests={recoveryRequests} setRecoveryRequests={setRecoveryRequests} /> : null}{page === "compose" ? <Compose snapshot={snapshot} intents={intents} setIntents={setIntents} campaigns={campaigns} setCampaigns={setCampaigns} /> : null}{page === "campaign" ? <Detail snapshot={snapshot} id={campaignId} type="campaign" templates={templates} setTemplates={setTemplates} setDeliveries={setDeliveries} recoveryRequests={recoveryRequests} setRecoveryRequests={setRecoveryRequests} /> : null}{page === "templates" ? <Templates templates={templates} setTemplates={setTemplates} /> : null}{page === "template" ? <Detail snapshot={snapshot} id={templateId} type="template" templates={templates} setTemplates={setTemplates} setDeliveries={setDeliveries} recoveryRequests={recoveryRequests} setRecoveryRequests={setRecoveryRequests} /> : null}{page === "deliveries" ? <Deliveries snapshot={snapshot} onPreview={setDeliveryPreview} /> : null}{page === "delivery" ? <Detail snapshot={snapshot} id={deliveryId} type="delivery" templates={templates} setTemplates={setTemplates} setDeliveries={setDeliveries} recoveryRequests={recoveryRequests} setRecoveryRequests={setRecoveryRequests} /> : null}{page === "audience" ? <AudiencePreferences snapshot={snapshot} preferences={preferences} setPreferences={setPreferences} /> : null}{page === "rules" ? <RulesAutomation snapshot={snapshot} /> : null}{page === "activity" ? <ActivitySettings snapshot={snapshot} /> : null}<IntentPreview intent={intentPreview} snapshot={snapshot} onClose={() => setIntentPreview(null)} /><DeliveryPreview delivery={deliveryPreview} snapshot={snapshot} setDeliveries={setDeliveries} recoveryRequests={recoveryRequests} setRecoveryRequests={setRecoveryRequests} onClose={() => setDeliveryPreview(null)} /></div>;
+  // Live data: the delivery the drawer shows is re-read from the latest snapshot after a retry.
+  const liveDelivery = deliveryPreview ? snapshot.deliveries.find((d) => d.id === deliveryPreview.id) ?? deliveryPreview : null;
+
+  return (
+    <div className="space-y-1 capitalize">
+      <Header
+        snapshot={snapshot}
+        range={range}
+        setRange={(next) => {
+          setRange(next);
+          replaceParam("range", next);
+        }}
+        companyScope={companyScope}
+        setCompanyScope={(next) => {
+          setCompanyScope(next);
+          replaceParam("company", next);
+        }}
+        refreshing={query.isFetching}
+        onRefresh={() => void query.refetch()}
+      />
+      <Tabs />
+      {page === "overview" ? <Overview snapshot={snapshot} intents={intents} range={range} onPreviewIntent={setIntentPreview} onPreviewDelivery={setDeliveryPreview} /> : null}
+      {page === "center" ? <NotificationCenter snapshot={snapshot} rows={intents} onPreview={setIntentPreview} /> : null}
+      {page === "notification" ? <NotificationDetail snapshot={snapshot} id={notificationId} /> : null}
+      {page === "compose" ? <Announcements snapshot={snapshot} /> : null}
+      {page === "campaign" ? <NotFound title="Campaigns Are Not Available" href={`${BASE}/compose`} body="Announcements are sent immediately; there are no scheduled campaigns." /> : null}
+      {page === "templates" ? <Templates snapshot={snapshot} /> : null}
+      {page === "template" ? <TemplateDetail snapshot={snapshot} id={templateId} /> : null}
+      {page === "deliveries" ? <Deliveries snapshot={snapshot} intents={intents} onPreview={setDeliveryPreview} /> : null}
+      {page === "delivery" ? <DeliveryDetail snapshot={snapshot} id={deliveryId} /> : null}
+      {page === "audience" ? <AudienceRouting snapshot={snapshot} /> : null}
+      {page === "rules" ? <Rules snapshot={snapshot} /> : null}
+      {page === "activity" ? <ActivitySettings snapshot={snapshot} /> : null}
+      <IntentPreview intent={intentPreview} snapshot={snapshot} onClose={() => setIntentPreview(null)} />
+      <DeliveryPreview delivery={liveDelivery} snapshot={snapshot} onClose={() => setDeliveryPreview(null)} />
+    </div>
+  );
 }

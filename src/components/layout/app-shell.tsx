@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { RouteGuard } from "@/features/auth/components/route-guard";
+import { useAuth } from "@/features/auth/components/auth-provider";
+import { useDisplayPreferencesVersion } from "@/lib/api/display-preferences";
 import { cn } from "@/lib/utils/cn";
 import { AppSidebar } from "./app-sidebar";
 import { AppFooter } from "./app-footer";
@@ -14,6 +16,9 @@ import { MaintenanceBannerHost } from "@/features/global-settings/components/mai
 
 function ShellFrame({ children }: { children: ReactNode }) {
   const { isCollapsed } = useSidebar();
+  const { status } = useAuth();
+  // Redraws the page when the user's date / number preferences change.
+  const preferencesVersion = useDisplayPreferencesVersion(status === "authenticated");
 
   return (
     <div className="min-h-dvh bg-[#F5F8FC] text-[#172044] overflow-x-hidden max-w-full">
@@ -28,7 +33,7 @@ function ShellFrame({ children }: { children: ReactNode }) {
         <AppBreadcrumb />
         <MaintenanceBannerHost />
 
-        <main className="w-full flex-1 min-w-0 max-w-full px-4 py-4 sm:px-5 xl:px-6 pb-16">
+        <main key={preferencesVersion} className="w-full flex-1 min-w-0 max-w-full px-4 py-4 sm:px-5 xl:px-6 pb-16">
           {children}
         </main>
 

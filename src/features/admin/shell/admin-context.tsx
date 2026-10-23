@@ -5,6 +5,8 @@ import { adminOrganization, adminClients } from "@/mocks/admin/admin-dashboard.m
 import { clientsApi, type ClientRecord } from "@/features/clients/data/clients-api";
 import { organizationApi, type OrganizationRecord } from "@/features/admin/settings/live/organization-api";
 import { brandingApi } from "@/features/admin/settings/live/branding-api";
+import { LANDING_PAGES, takeFreshLogin, workspaceApi } from "@/features/admin/settings/live/workspace-api";
+import { usePathname, useRouter } from "next/navigation";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { TENANCY_CHANGE_EVENT, getStoredClientId } from "@/lib/api/tenancy-storage";
 import type { AdminClientscope, Organization, Project } from "@/types/admin";
@@ -43,6 +45,12 @@ const AdminContext = createContext<AdminContextValue | null>(null);
 
 export function AdminProvider({ children }: { children: ReactNode }) {
   const { companyId, isReady, setClientId } = useTenancyContext();
+  const router = useRouter();
+  const pathname = usePathname();
+  const pathRef = useRef(pathname);
+  useEffect(() => {
+    pathRef.current = pathname;
+  }, [pathname]);
   const [organization, setOrganization] = useState<Organization>(() =>
     isMockMode ? adminOrganization : { id: "", name: "", timezone: "Asia/Kolkata", logo: null }
   );
@@ -65,27 +73,37 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       clientsApi.list(companyId),
       organizationApi.get(companyId),
       brandingApi.get(companyId),
-    ]).then(([clientsResult, orgResult, brandingResult]) => {
+      workspaceApi.get(companyId),
+    ]).then(([clientsResult, orgResult, brandingResult, workspaceResult]) => {
       if (cancelled) return;
+      const workspace = workspaceResult.status === "fulfilled" ? workspaceResult.value.settings : null;
+      // Settings → Workspace applies once, right after signing in.
+      const freshLogin = takeFreshLogin();
 
       if (clientsResult.status === "fulfilled") {
         const liveClients = clientsResult.value.map(toProject);
         const storedClientId = getStoredClientId();
+        const has = (id: string | null | undefined): id is string => Boolean(id) && liveClients.some((client) => client.id === id);
+        const primary = has(workspace?.primaryClientId) ? workspace!.primaryClientId! : null;
         setClients(liveClients);
         setHasLiveClients(true);
-        // Keep the switcher on the Client the shared scope already resolved to,
-        // falling back to the first live Client — never to the bundled placeholder.
+        // Keep the switcher on the Client the shared scope already resolved to, falling back to the Company's primary
+        // Client, then the first live Client — never to the bundled placeholder. "Always the primary client" wins at sign-in.
         if (liveClients.length > 0) {
-          setSelectedProjectId((current) =>
-            liveClients.some((client) => client.id === current)
-              ? current
-              : storedClientId && liveClients.some((client) => client.id === storedClientId)
-                ? storedClientId
-                : liveClients[0]!.id,
-          );
+          const forcePrimary = freshLogin && workspace?.clientOnLogin === "primary" && primary;
+          const pick = (current: AdminClientscope) =>
+            forcePrimary ? primary : has(current) ? current : has(storedClientId) ? storedClientId : primary ?? liveClients[0]!.id;
+          setSelectedProjectId((current) => pick(current));
+          const chosen = forcePrimary ? primary : has(storedClientId) ? null : primary;
+          if (chosen && chosen !== storedClientId) setClientId(chosen);
         } else {
           setSelectedProjectId("all");
         }
+      }
+
+      if (freshLogin && workspace && workspace.landingPage !== "dashboard" && pathRef.current === "/admin") {
+        const target = LANDING_PAGES.find((page) => page.value === workspace.landingPage)?.path;
+        if (target) router.replace(target);
       }
 
       const logoUrl =
@@ -112,7 +130,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [isReady, companyId]);
+  }, [isReady, companyId, router, setClientId]);
 
   // Real-time synchronization when branding/logo is uploaded or removed in Settings
   useEffect(() => {

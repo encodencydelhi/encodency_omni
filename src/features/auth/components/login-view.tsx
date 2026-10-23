@@ -12,6 +12,7 @@ import { RecoveryCodesStep } from "./recovery-codes-step";
 import { SessionBootScreen } from "./session-boot-screen";
 import { TotpStep } from "./totp-step";
 import { TotpSetupStep } from "./totp-setup-step";
+import { markFreshLogin } from "@/features/admin/settings/live/workspace-api";
 
 /**
  * Decides where a completed sign-in lands.
@@ -67,6 +68,7 @@ export function LoginView() {
           setEnrollment(null);
           setChallenge(null);
           acceptSession(enrolledUser);
+          markFreshLogin();
           router.replace(landingFor(enrolledUser));
         }}
       />
@@ -77,7 +79,10 @@ export function LoginView() {
     step = (
       <TotpStep
         challenge={challenge}
-        onVerified={(signedIn) => router.replace(landingFor(signedIn))}
+        onVerified={(signedIn) => {
+          markFreshLogin();
+          router.replace(landingFor(signedIn));
+        }}
         onBack={() => setChallenge(null)}
       />
     );

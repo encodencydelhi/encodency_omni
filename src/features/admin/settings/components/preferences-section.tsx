@@ -1,455 +1,141 @@
 "use client";
 
-import { Globe2, Table2, FileSpreadsheet, User, Upload, Trash2, Loader2 } from "lucide-react";
-import Image from "next/image";
-import { useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { useAuth } from "@/features/auth/components/auth-provider";
-import { getUserDisplay } from "@/lib/utils/user-display";
-import {
-  userAvatarApi,
-  USER_AVATAR_LIMITS,
-  isAvatarAssetConflict,
-  isAvatarFileTooLarge,
-  isAvatarStorageUnavailable,
-} from "@/features/auth/services/user-avatar-api";
-import { UserPreferences } from "../settings-data/types";
-import { useSettingsCapability } from "../settings-data/capability-provider";
+import { Globe, Loader2, RotateCcw } from "lucide-react";
+import { ApiError } from "@/types/api";
+import { applyPreferences, preferencesApi } from "@/lib/api/display-preferences";
+import type { DisplayPreferences } from "@/lib/utils/format";
 
-interface PreferencesSectionProps {
-  data: UserPreferences;
-  onChange: (partial: Partial<UserPreferences>) => void;
+const SELECT = "w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer shadow-2xs";
+const QUERY_KEY = ["my-preferences"] as const;
+const COMMON_ZONES = ["Asia/Kolkata", "Asia/Dubai", "Asia/Singapore", "Europe/London", "Europe/Berlin", "America/New_York", "America/Los_Angeles", "Australia/Sydney", "UTC"];
+const errorText = (e: unknown, fallback: string) => (ApiError.isApiError(e) ? e.message : fallback);
+
+function allTimeZones(): string[] {
+  const supported = (Intl as unknown as { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf;
+  try {
+    return supported ? supported("timeZone") : COMMON_ZONES;
+  } catch {
+    return COMMON_ZONES;
+  }
 }
 
-export function PreferencesSection({ data, onChange }: PreferencesSectionProps) {
-  const { capabilities } = useSettingsCapability();
-  const { user, refreshUser } = useAuth();
-  const { fullName, initials } = getUserDisplay(user);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
+/** The same rules the app's formatters use, for the preview before saving. */
+function preview(p: DisplayPreferences, at: Date) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: p.timezone, day: "2-digit", month: "2-digit", year: "numeric" }).formatToParts(at).map((x) => [x.type, x.value]));
+  const date =
+    p.dateFormat === "D MMM YYYY"
+      ? at.toLocaleDateString("en-GB", { timeZone: p.timezone, day: "numeric", month: "short", year: "numeric" })
+      : p.dateFormat === "MM/DD/YYYY"
+        ? `${parts.month}/${parts.day}/${parts.year}`
+        : p.dateFormat === "YYYY-MM-DD"
+          ? `${parts.year}-${parts.month}-${parts.day}`
+          : `${parts.day}/${parts.month}/${parts.year}`;
+  const time = at.toLocaleTimeString("en-US", { timeZone: p.timezone, hour: "2-digit", minute: "2-digit", hour12: p.timeFormat === "12-hour" });
+  const number = new Intl.NumberFormat(p.numberFormat === "indian" ? "en-IN" : "en-US").format(1234567.5);
+  const money = new Intl.NumberFormat(p.numberFormat === "indian" ? "en-IN" : "en-US", { style: "currency", currency: "INR" }).format(1234567.5);
+  return { date, time, number, money };
+}
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > USER_AVATAR_LIMITS.maxBytes) {
-      toast.error("Avatar file exceeds 2MB limit.");
-      return;
-    }
-
-    if (!USER_AVATAR_LIMITS.mimeTypes.includes(file.type)) {
-      toast.error("Unsupported format. Allowed: PNG, JPEG, WebP.");
-      return;
-    }
-
-    setUploading(true);
-    const toastId = toast.loading("Uploading avatar...");
-    try {
-      await userAvatarApi.upload(file);
-      await refreshUser();
-      toast.success("Avatar updated successfully.", { id: toastId });
-    } catch (err) {
-      if (isAvatarAssetConflict(err)) {
-        toast.error("Avatar was modified in another session. Please reload.", { id: toastId });
-      } else if (isAvatarFileTooLarge(err)) {
-        toast.error("Avatar exceeds 2MB limit.", { id: toastId });
-      } else if (isAvatarStorageUnavailable(err)) {
-        toast.error("Storage service unavailable. Please try again.", { id: toastId });
-      } else {
-        toast.error("Failed to upload avatar.", { id: toastId });
-      }
-    } finally {
-      setUploading(false);
-      if (e.target) e.target.value = "";
-    }
-  };
-
-  const handleRemoveAvatar = async () => {
-    setUploading(true);
-    const toastId = toast.loading("Removing avatar...");
-    try {
-      await userAvatarApi.remove();
-      await refreshUser();
-      toast.success("Avatar removed.", { id: toastId });
-    } catch {
-      toast.error("Failed to remove avatar.", { id: toastId });
-    } finally {
-      setUploading(false);
-    }
-  };
+export function PreferencesSection() {
+  const qc = useQueryClient();
+  const query = useQuery({ queryKey: QUERY_KEY, queryFn: () => preferencesApi.get(), retry: false });
+  const [draft, setDraft] = useState<Partial<DisplayPreferences>>({});
+  const zones = useMemo(() => allTimeZones(), []);
+  const [now] = useState(() => new Date());
+  const saved = query.data?.preferences;
+  const current = saved ? { ...saved, ...draft } : null;
+  const dirty = Boolean(saved) && (Object.keys(draft) as (keyof DisplayPreferences)[]).some((k) => draft[k] !== saved![k]);
+  const save = useMutation({
+    mutationFn: () => preferencesApi.save(current!),
+    onSuccess: (res) => {
+      qc.setQueryData(QUERY_KEY, res);
+      setDraft({});
+      applyPreferences(res);
+      toast.success("Preferences saved. Dates and numbers now use your format.");
+    },
+    onError: (e) => toast.error(errorText(e, "Could not save your preferences")),
+  });
+  const set = (partial: Partial<DisplayPreferences>) => setDraft((d) => ({ ...d, ...partial }));
+  const sample = current ? preview(current, now) : null;
 
   return (
     <div className="space-y-2">
-      {/* SECTION 0: USER PROFILE & AVATAR */}
       <section className="bg-white rounded-xl border border-[#DDE4ED] shadow-xs p-3 space-y-2 hover:border-[#CBD5E1] transition-all">
-        <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2">
-          <div className="size-6 rounded-lg bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white flex items-center justify-center shadow-xs shrink-0">
-            <User className="size-3.5" />
-          </div>
-          <div>
-            <h3 className="text-[13px] font-bold text-[#0F172A]">User Profile & Avatar</h3>
-            <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">
-              Personalize your account appearance across the platform and team activity logs.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-4 py-1">
-          <div className="relative group shrink-0">
-            {user?.avatarUrl ? (
-              <Image
-                src={user.avatarUrl}
-                alt={fullName}
-                width={64}
-                height={64}
-                className="size-16 rounded-xl object-cover border-2 border-slate-200 shadow-xs"
-              />
-            ) : (
-              <div className="size-16 rounded-xl bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white flex items-center justify-center font-bold text-[18px] shadow-xs border border-blue-600">
-                {initials}
-              </div>
-            )}
-            {uploading && (
-              <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center text-white">
-                <Loader2 className="size-5 animate-spin" />
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-1.5 flex-1 text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-              <span className="text-[14px] font-bold text-[#0F172A]">{fullName}</span>
-              <span className="text-[11px] text-[#64748B] bg-slate-100 px-2 py-0.5 rounded-md font-medium w-fit mx-auto sm:mx-0">
-                {user?.email}
-              </span>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#F1F5F9] pb-2">
+          <div className="flex items-center gap-2">
+            <div className="size-6 rounded-lg bg-gradient-to-br from-[#0EA5E9] to-[#2563EB] text-white flex items-center justify-center shadow-xs shrink-0">
+              <Globe className="size-3.5" />
             </div>
-            <p className="text-[10.5px] text-[#64748B]">
-              Supports PNG, JPEG, WebP. Maximum file size: 2MB.
-            </p>
-
-            <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={handleAvatarUpload}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 text-[11px] gap-1.5 px-3 rounded-lg border-slate-300 font-medium"
-                disabled={uploading}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="size-3" />
-                {user?.avatarUrl ? "Change Avatar" : "Upload Avatar"}
-              </Button>
-              {user?.avatarUrl && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-[11px] gap-1 px-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg font-medium"
-                  disabled={uploading}
-                  onClick={handleRemoveAvatar}
-                >
-                  <Trash2 className="size-3" />
-                  Remove
-                </Button>
-              )}
+            <div>
+              <h3 className="text-[13px] font-bold text-[#0F172A]">My Date, Time & Number Format</h3>
+              <p className="text-[10.5px] text-[#64748B] font-normal">Only for you, on every device you sign in on. Applies to dates, times and numbers across the app.</p>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* SECTION 1: LOCALE & REGIONAL FORMATS */}
-      <section className="bg-white rounded-xl border border-[#DDE4ED] shadow-xs p-3 space-y-2 hover:border-[#CBD5E1] transition-all">
-        <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2">
-          <div className="size-6 rounded-lg bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white flex items-center justify-center shadow-xs shrink-0">
-            <Globe2 className="size-3.5" />
-          </div>
-          <div>
-            <h3 className="text-[13px] font-bold text-[#0F172A]">Locale & Regional Formatting</h3>
-            <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">
-              Standardize dates, currencies, time offsets, and numerical grouping across all client reporting.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <div>
-            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Organization Default Timezone
-            </label>
-            <select
-              value={data.locale.timezone}
-              onChange={(e) =>
-                onChange({ locale: { ...data.locale, timezone: e.target.value } })
-              }
-              disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
-            >
-              <option value="Asia/Kolkata (IST +5:30)">Asia/Kolkata (IST +5:30) - Indian Standard</option>
-              <option value="UTC (GMT +0:00)">UTC (GMT +0:00) - Coordinated Universal</option>
-              <option value="Asia/Dubai (GST +4:00)">Asia/Dubai (GST +4:00)</option>
-              <option value="Europe/London (BST/GMT)">Europe/London (GMT / BST)</option>
-              <option value="America/New_York (EST -5:00)">America/New_York (EST -5:00)</option>
-              <option value="America/Los_Angeles (PST -8:00)">America/Los_Angeles (PST -8:00)</option>
-              <option value="Asia/Singapore (SGT +8:00)">Asia/Singapore (SGT +8:00)</option>
-            </select>
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">
-              Automations, scheduled campaigns, and logs synchronize to this timezone.
-            </span>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Default System Language
-            </label>
-            <select
-              value={data.locale.language}
-              onChange={(e) =>
-                onChange({ locale: { ...data.locale, language: e.target.value } })
-              }
-              disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
-            >
-              <option value="English (United States)">English (United States)</option>
-              <option value="English (India)">English (India)</option>
-              <option value="English (United Kingdom)">English (United Kingdom)</option>
-              <option value="Hindi (हिंदी)">Hindi (हिंदी)</option>
-            </select>
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Primary language for standard email templates and system alerts.</span>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Currency Representation
-            </label>
-            <select
-              value={data.locale.currency}
-              onChange={(e) =>
-                onChange({ locale: { ...data.locale, currency: e.target.value } })
-              }
-              disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
-            >
-              <option value="INR (₹) - Indian Rupee">INR (₹) - Indian Rupee</option>
-              <option value="USD ($) - US Dollar">USD ($) - US Dollar</option>
-              <option value="EUR (€) - Euro">EUR (€) - Euro</option>
-              <option value="AED (د.إ) - UAE Dirham">AED (د.إ) - UAE Dirham</option>
-              <option value="GBP (£) - British Pound">GBP (£) - British Pound</option>
-            </select>
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Display currency for billing, budget metrics, and invoice summaries.</span>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Date Format
-            </label>
-            <select
-              value={data.locale.dateFormat}
-              onChange={(e) =>
-                onChange({ locale: { ...data.locale, dateFormat: e.target.value as any } })
-              }
-              disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
-            >
-              <option value="DD/MM/YYYY">DD/MM/YYYY (19/09/2026)</option>
-              <option value="MM/DD/YYYY">MM/DD/YYYY (09/19/2026)</option>
-              <option value="YYYY-MM-DD">YYYY-MM-DD (2026-09-19)</option>
-            </select>
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Calendar presentation across filters, tables, and reports.</span>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Clock Time Display
-            </label>
-            <select
-              value={data.locale.timeFormat}
-              onChange={(e) =>
-                onChange({ locale: { ...data.locale, timeFormat: e.target.value as any } })
-              }
-              disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
-            >
-              <option value="12-hour">12-hour clock (04:15 PM)</option>
-              <option value="24-hour">24-hour military clock (16:15)</option>
-            </select>
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Standard time format for publish schedules and logs.</span>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Number & Lakhs Formatting
-            </label>
-            <select
-              value={data.locale.numberFormat}
-              onChange={(e) =>
-                onChange({ locale: { ...data.locale, numberFormat: e.target.value as any } })
-              }
-              disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
-            >
-              <option value="Indian (1,00,000)">Indian Lacs/Crores (1,50,000)</option>
-              <option value="International (100,000)">International Thousands/Millions (150,000)</option>
-            </select>
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Digit grouping standard across analytics counters.</span>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 2: TABLE & LIST PRESENTATION */}
-      <section className="bg-white rounded-xl border border-[#DDE4ED] shadow-xs p-3 space-y-2 hover:border-[#CBD5E1] transition-all">
-        <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2">
-          <div className="size-6 rounded-lg bg-gradient-to-br from-[#10B981] to-[#059669] text-white flex items-center justify-center shadow-xs shrink-0">
-            <Table2 className="size-3.5" />
-          </div>
-          <div>
-            <h3 className="text-[13px] font-bold text-[#0F172A]">Data Grid & Table Presentation</h3>
-            <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">
-              Configure default row pagination densities, sticky headers, and compact layout styles.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-          <div>
-            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Default Rows Per Page
-            </label>
-            <select
-              value={data.tables.defaultRowsPerPage}
-              onChange={(e) =>
-                onChange({
-                  tables: { ...data.tables, defaultRowsPerPage: Number(e.target.value) as any },
-                })
-              }
-              disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
-            >
-              <option value={10}>10 items per page</option>
-              <option value={25}>25 items per page (Recommended)</option>
-              <option value={50}>50 items per page</option>
-              <option value={100}>100 items per page</option>
-            </select>
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Standard page slice across all admin data tables.</span>
-          </div>
-
-          <div className="md:col-span-2 flex flex-col sm:flex-row items-center gap-2 pt-1 sm:pt-4">
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#F8FAFD] border border-[#DDE4ED] shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all w-full">
-              <div className="space-y-0.5">
-                <span className="text-[11.5px] font-bold text-[#1E293B]">Compact Row Density</span>
-                <p className="text-[9.5px] text-[#64748B] font-normal">Tighter line spacing for higher information density.</p>
-              </div>
-              <Switch
-                checked={data.tables.compactDensity}
-                onCheckedChange={(val) =>
-                  onChange({ tables: { ...data.tables, compactDensity: val } })
-                }
-                disabled={!capabilities.canManagePreferences}
-              />
+          {dirty || (saved && !query.data?.stored) ? (
+            <div className="flex items-center gap-2">
+              {dirty ? <button type="button" onClick={() => setDraft({})} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-[#64748B] hover:bg-[#F1F5F9]">
+                <RotateCcw className="size-3.5" /> Undo
+              </button> : null}
+              <button type="button" onClick={() => save.mutate()} disabled={save.isPending} className="inline-flex items-center gap-1 rounded-md bg-[#2563EB] px-3 py-1.5 text-[11.5px] font-semibold text-white hover:bg-[#1D4ED8] disabled:opacity-60">
+                {save.isPending ? <Loader2 className="size-3.5 animate-spin" /> : null} Save changes
+              </button>
             </div>
+          ) : null}
+        </div>
 
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#F8FAFD] border border-[#DDE4ED] shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all w-full">
-              <div className="space-y-0.5">
-                <span className="text-[11.5px] font-bold text-[#1E293B]">Sticky Table Headers</span>
-                <p className="text-[9.5px] text-[#64748B] font-normal">Freeze column headers when scrolling long tables.</p>
+        {query.isLoading || !current ? (
+          query.error ? (
+            <p className="px-1 py-3 text-[11.5px] text-[#B91C1C]">{errorText(query.error, "Your preferences could not be loaded.")}</p>
+          ) : (
+            <p className="flex items-center gap-2 px-1 py-3 text-[11.5px] text-[#64748B]"><Loader2 className="size-4 animate-spin" /> Loading your preferences…</p>
+          )
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <label className="block text-[11px] font-semibold text-[#334155] mb-1">Time Zone</label>
+                <select value={current.timezone} onChange={(e) => set({ timezone: e.target.value })} className={SELECT}>
+                  {[...new Set([current.timezone, ...zones])].map((z) => <option key={z} value={z}>{z.replaceAll("_", " ")}</option>)}
+                </select>
               </div>
-              <Switch
-                checked={data.tables.stickyHeaders}
-                onCheckedChange={(val) =>
-                  onChange({ tables: { ...data.tables, stickyHeaders: val } })
-                }
-                disabled={!capabilities.canManagePreferences}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 3: EXPORT PREFERENCES */}
-      <section className="bg-white rounded-xl border border-[#DDE4ED] shadow-xs p-3 space-y-2 hover:border-[#CBD5E1] transition-all">
-        <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2">
-          <div className="size-6 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
-            <FileSpreadsheet className="size-3.5" />
-          </div>
-          <div>
-            <h3 className="text-[13px] font-bold text-[#0F172A]">Export & Delimiter Standards</h3>
-            <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">Configure formatting for generated CSV and Excel downloads.</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <div>
-            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              CSV Field Separator
-            </label>
-            <select
-              value={data.exports.csvSeparator}
-              onChange={(e) =>
-                onChange({
-                  exports: { ...data.exports, csvSeparator: e.target.value as any },
-                })
-              }
-              disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
-            >
-              <option value=",">Comma (,) - Standard</option>
-              <option value=";">Semicolon (;) - European Excel Standard</option>
-              <option value="\t">Tab (\t) - TSV</option>
-            </select>
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Delimiter used when parsing tabular spreadsheet data.</span>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Export Timestamp Representation
-            </label>
-            <select
-              value={data.exports.exportDateFormat}
-              onChange={(e) =>
-                onChange({
-                  exports: { ...data.exports, exportDateFormat: e.target.value as any },
-                })
-              }
-              disabled={!capabilities.canManagePreferences}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
-            >
-              <option value="ISO 8601">ISO 8601 (2026-09-19T10:00:00Z)</option>
-              <option value="Locale Format">Locale Date String (19/09/2026 10:00 AM)</option>
-              <option value="Timestamp">Unix Epoch Milliseconds</option>
-            </select>
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Date/time format for exported cell values.</span>
-          </div>
-
-          <div className="md:col-span-2">
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#F8FAFD] border border-[#DDE4ED] shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
-              <div className="space-y-0.5 pr-4">
-                <div className="text-[11.5px] font-bold text-[#1E293B]">
-                  Include Organization & Plan Metadata in File Header
-                </div>
-                <p className="text-[9.5px] text-[#64748B] font-normal">
-                  Prepends first 2 rows of CSV exports with Organization Title, Generated By user, and Date.
-                </p>
+              <div>
+                <label className="block text-[11px] font-semibold text-[#334155] mb-1">Date Format</label>
+                <select value={current.dateFormat} onChange={(e) => set({ dateFormat: e.target.value as DisplayPreferences["dateFormat"] })} className={SELECT}>
+                  <option value="D MMM YYYY">23 Oct 2026</option>
+                  <option value="DD/MM/YYYY">23/10/2026</option>
+                  <option value="MM/DD/YYYY">10/23/2026</option>
+                  <option value="YYYY-MM-DD">2026-10-23</option>
+                </select>
               </div>
-              <Switch
-                checked={data.exports.includeOrganizationMetadata}
-                onCheckedChange={(val) =>
-                  onChange({
-                    exports: { ...data.exports, includeOrganizationMetadata: val },
-                  })
-                }
-                disabled={!capabilities.canManagePreferences}
-              />
+              <div>
+                <label className="block text-[11px] font-semibold text-[#334155] mb-1">Time Format</label>
+                <select value={current.timeFormat} onChange={(e) => set({ timeFormat: e.target.value as DisplayPreferences["timeFormat"] })} className={SELECT}>
+                  <option value="12-hour">12-hour (2:30 PM)</option>
+                  <option value="24-hour">24-hour (14:30)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-[#334155] mb-1">Number Format</label>
+                <select value={current.numberFormat} onChange={(e) => set({ numberFormat: e.target.value as DisplayPreferences["numberFormat"] })} className={SELECT}>
+                  <option value="indian">Indian (12,34,567)</option>
+                  <option value="international">International (1,234,567)</option>
+                </select>
+              </div>
             </div>
-          </div>
-        </div>
+            {sample ? (
+              <div className="grid gap-1.5 rounded-lg border border-[#E2E8F0] bg-[#F8FAFD] p-2.5 text-[11px] sm:grid-cols-4">
+                <p><span className="block text-[9.5px] font-bold uppercase tracking-wide text-[#94A3B8]">Date</span><span className="font-semibold text-[#0F172A]">{sample.date}</span></p>
+                <p><span className="block text-[9.5px] font-bold uppercase tracking-wide text-[#94A3B8]">Time now</span><span className="font-semibold text-[#0F172A]">{sample.time}</span></p>
+                <p><span className="block text-[9.5px] font-bold uppercase tracking-wide text-[#94A3B8]">Number</span><span className="font-semibold text-[#0F172A]">{sample.number}</span></p>
+                <p><span className="block text-[9.5px] font-bold uppercase tracking-wide text-[#94A3B8]">Amount</span><span className="font-semibold text-[#0F172A]">{sample.money}</span></p>
+              </div>
+            ) : null}
+            {!query.data?.stored ? <p className="px-1 text-[10.5px] text-[#94A3B8]">You have not saved preferences yet, so the app shows its standard formats. Save once to switch to yours.</p> : null}
+          </>
+        )}
       </section>
     </div>
   );

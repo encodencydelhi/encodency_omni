@@ -1,122 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { Download, ShieldCheck, Clock, FileArchive } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { DataPrivacySettings } from "../settings-data/types";
+import { Download, FileArchive, ShieldCheck } from "lucide-react";
 import { useSettingsCapability } from "../settings-data/capability-provider";
 import { ExportDataModal } from "./export-data-modal";
 
 interface DataPrivacySectionProps {
-  data: DataPrivacySettings;
-  onChange: (partial: Partial<DataPrivacySettings>) => void;
   organizationName: string;
 }
 
-export function DataPrivacySection({ data, onChange, organizationName }: DataPrivacySectionProps) {
+const FACTS = [
+  { title: "Audit history", body: "Kept permanently. Audit records cannot be edited or deleted, by anyone." },
+  { title: "Your content and data", body: "Kept for as long as the organization exists. Nothing is deleted on a schedule." },
+  { title: "Exports", body: "Built in your browser when you ask; never stored on a server." },
+  { title: "Closing the organization", body: "Ask from Danger Zone. The platform team archives it; it is never deleted from inside the app." },
+];
+
+export function DataPrivacySection({ organizationName }: DataPrivacySectionProps) {
   const { capabilities } = useSettingsCapability();
   const [exportModalOpen, setExportModalOpen] = useState(false);
 
   return (
     <div className="space-y-2">
-      {/* SECTION 1: DATA RETENTION POLICIES */}
-      <section className="bg-white rounded-xl border border-[#DDE4ED] shadow-xs p-3 space-y-2 hover:border-[#CBD5E1] transition-all">
-        <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2">
-          <div className="size-6 rounded-lg bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white flex items-center justify-center shadow-xs shrink-0">
-            <Clock className="size-3.5" />
-          </div>
-          <div>
-            <h3 className="text-[13px] font-bold text-[#0F172A]">Data Lifecycle & Retention Policies</h3>
-            <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">
-              Define automated pruning schedules for logs, historical analytics, and generated exports.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-          <div>
-            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Activity & Audit History
-            </label>
-            <select
-              value={data.retention.activityHistoryRetentionDays}
-              onChange={(e) =>
-                onChange({
-                  retention: {
-                    ...data.retention,
-                    activityHistoryRetentionDays: Number(e.target.value),
-                  },
-                })
-              }
-              disabled={!capabilities.canManagePrivacy}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
-            >
-              <option value={90}>90 days</option>
-              <option value={180}>180 days</option>
-              <option value={365}>1 year (Recommended)</option>
-              <option value={1095}>3 years</option>
-              <option value={0}>Unlimited / Indefinite</option>
-            </select>
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Audit trails older than this are archived to cold storage.</span>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Raw Analytics Timeseries
-            </label>
-            <select
-              value={data.retention.analyticsRetentionYears}
-              onChange={(e) =>
-                onChange({
-                  retention: {
-                    ...data.retention,
-                    analyticsRetentionYears: Number(e.target.value),
-                  },
-                })
-              }
-              disabled={!capabilities.canManagePrivacy}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
-            >
-              <option value={1}>1 year</option>
-              <option value={2}>2 years (Default)</option>
-              <option value={5}>5 years</option>
-              <option value={0}>Indefinite</option>
-            </select>
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Cross-channel reach and follower historical data points.</span>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold text-[#334155] mb-1">
-              Export File Auto-Purge
-            </label>
-            <select
-              value={data.retention.exportRetentionDays}
-              onChange={(e) =>
-                onChange({
-                  retention: {
-                    ...data.retention,
-                    exportRetentionDays: Number(e.target.value),
-                  },
-                })
-              }
-              disabled={!capabilities.canManagePrivacy}
-              className="w-full h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 cursor-pointer shadow-2xs"
-            >
-              <option value={7}>7 days</option>
-              <option value={14}>14 days (Recommended)</option>
-              <option value={30}>30 days</option>
-            </select>
-            <span className="text-[9.5px] text-[#64748B] font-normal mt-0.5 block">Generated CSV/PDF exports expire after this window.</span>
-          </div>
-        </div>
-
-        <div className="bg-[#F8FAFD] border border-[#DDE4ED] rounded-xl p-2.5 text-[10.5px] text-[#64748B] font-normal shadow-2xs">
-          <span className="font-bold text-[#0F172A]">Saved On This Device: </span>
-          These retention and privacy choices are kept in this browser only. The platform does not delete your data on a schedule yet, and audit records are permanent.
-        </div>
-      </section>
-
-      {/* SECTION 2: ORGANIZATION DATA EXPORT */}
       <section className="bg-white rounded-xl border border-[#DDE4ED] shadow-xs p-3 space-y-2 hover:border-[#CBD5E1] transition-all">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-[#F1F5F9] pb-2">
           <div className="flex items-center gap-2">
@@ -144,81 +49,27 @@ export function DataPrivacySection({ data, onChange, organizationName }: DataPri
         </p>
       </section>
 
-      {/* SECTION 3: PRIVACY & TELEMETRY */}
       <section className="bg-white rounded-xl border border-[#DDE4ED] shadow-xs p-3 space-y-2 hover:border-[#CBD5E1] transition-all">
         <div className="flex items-center gap-2 border-b border-[#F1F5F9] pb-2">
           <div className="size-6 rounded-lg bg-gradient-to-br from-[#10B981] to-[#059669] text-white flex items-center justify-center shadow-xs shrink-0">
             <ShieldCheck className="size-3.5" />
           </div>
           <div>
-            <h3 className="text-[13px] font-bold text-[#0F172A]">Privacy, Cookies & Telemetry</h3>
-            <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">Client privacy defaults, telemetry preferences, and tracking transparency.</p>
+            <h3 className="text-[13px] font-bold text-[#0F172A]">How Your Data Is Kept</h3>
+            <p className="text-[10.5px] text-[#64748B] font-normal">What the platform does with your organization&apos;s data today.</p>
           </div>
         </div>
-
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#F8FAFD] border border-[#DDE4ED] shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
-            <div className="space-y-0.5 pr-4">
-              <div className="text-[11.5px] font-bold text-[#1E293B]">Anonymize Client IP Addresses in Analytics</div>
-              <p className="text-[9.5px] text-[#64748B] font-normal">
-                Masks the last octet of visitor IP addresses before logging click tracking or form attribution.
-              </p>
+        <div className="grid gap-1.5 sm:grid-cols-2">
+          {FACTS.map((fact) => (
+            <div key={fact.title} className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFD] p-2.5">
+              <p className="text-[11.5px] font-bold text-[#1E293B]">{fact.title}</p>
+              <p className="mt-0.5 text-[10.5px] leading-snug text-[#64748B]">{fact.body}</p>
             </div>
-            <Switch
-              checked={data.privacy.anonymizeClientIpAddresses}
-              onCheckedChange={(val) =>
-                onChange({
-                  privacy: { ...data.privacy, anonymizeClientIpAddresses: val },
-                })
-              }
-              disabled={!capabilities.canManagePrivacy}
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#F8FAFD] border border-[#DDE4ED] shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
-            <div className="space-y-0.5 pr-4">
-              <div className="text-[11.5px] font-bold text-[#1E293B]">Explicit Consent Cookie Banner Default</div>
-              <p className="text-[9.5px] text-[#64748B] font-normal">
-                Enforces opt-in consent prompts on connected landing pages and website forms.
-              </p>
-            </div>
-            <Switch
-              checked={data.privacy.consentCookieBannerEnabled}
-              onCheckedChange={(val) =>
-                onChange({
-                  privacy: { ...data.privacy, consentCookieBannerEnabled: val },
-                })
-              }
-              disabled={!capabilities.canManagePrivacy}
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#F8FAFD] border border-[#DDE4ED] shadow-2xs hover:bg-white hover:border-[#CBD5E1] transition-all">
-            <div className="space-y-0.5 pr-4">
-              <div className="text-[11.5px] font-bold text-[#1E293B]">Share Anonymized Diagnostic Crash Reports</div>
-              <p className="text-[9.5px] text-[#64748B] font-normal">
-                Help EnCodency improve platform reliability by automatically transmitting non-identifiable client logs.
-              </p>
-            </div>
-            <Switch
-              checked={data.privacy.shareCrashReports}
-              onCheckedChange={(val) =>
-                onChange({
-                  privacy: { ...data.privacy, shareCrashReports: val },
-                })
-              }
-              disabled={!capabilities.canManagePrivacy}
-            />
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* Export Modal */}
-      <ExportDataModal
-        open={exportModalOpen}
-        onClose={() => setExportModalOpen(false)}
-        organizationName={organizationName}
-      />
+      <ExportDataModal open={exportModalOpen} onClose={() => setExportModalOpen(false)} organizationName={organizationName} />
     </div>
   );
 }

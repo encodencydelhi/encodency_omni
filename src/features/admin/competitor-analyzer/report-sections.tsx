@@ -13,10 +13,23 @@ import { cn } from "@/lib/utils/cn";
 import { Chip, ScoreDial } from "@/features/admin/website/components/ui/kit";
 import { AXIS_PROPS, ChartLegend, ChartTooltip, GRID_PROPS } from "@/features/admin/website/components/ui/charts";
 import { formatDateTime } from "@/features/admin/website/data/selectors";
-import type { AnalyzerResult, RunReport, SiteEvidence, StudyDetail, StudySite } from "./api";
-import { SiteFavicon, SiteLabel, SourceLink } from "./ui";
+import type { ActionState, ActionStatus, AnalyzerResult, OwnSearch, RunReport, SiteEvidence, StudyDetail, StudySite } from "./api";
+import { topicImpressions } from "./watch-sections";
+import { SiteFavicon, SiteLabel, SourceLink, useSiteLabelOf } from "./ui";
 
 export type ColorOf = (domain: string) => string;
+export type PreviousScores = Record<string, Record<string, number>> | null | undefined;
+
+/** "+2" / "-1" against the previous check, or nothing when there is no previous score. */
+function Trend({ now, before, className }: { now: number | undefined; before: number | undefined; className?: string }) {
+  if (now === undefined || before === undefined || now === before) return null;
+  const up = now > before;
+  return (
+    <span className={cn("ml-1 inline-flex items-center text-[9.5px] font-bold", up ? "text-[#0B845C]" : "text-[#C0261F]", className)} title={`${before} at the previous check`}>
+      {up ? "▲" : "▼"}{Math.abs(now - before)}
+    </span>
+  );
+}
 const fmt = (n: number | null | undefined) => (n == null ? "—" : n.toLocaleString("en-IN"));
 const tone = (score: number | null | undefined) => (score == null ? "muted" : score >= 70 ? "good" : score >= 45 ? "warn" : "bad");
 
@@ -88,15 +101,17 @@ export function SiteImage({ ev, domain, className }: { ev?: SiteEvidence; domain
   );
 }
 
-function KpiCard({ label, icon: Icon, accent, value, sub }: { label: string; icon: ElementType; accent: string; value: ReactNode; sub: ReactNode }) {
+/** `stacked` puts a long text value (e.g. a domain) on its own line under the label instead of beside it. */
+function KpiCard({ label, icon: Icon, accent, value, sub, stacked }: { label: string; icon: ElementType; accent: string; value: ReactNode; sub: ReactNode; stacked?: boolean }) {
   return (
-    <div className="flex min-w-0 gap-3 rounded-xl border border-[#E6EBF4] bg-white p-3 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-      <span className="grid size-9 shrink-0 place-items-center rounded-lg" style={{ background: `${accent}14`, color: accent }}><Icon className="size-4" aria-hidden /></span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10.5px] font-semibold uppercase tracking-wide text-[#6B7A94]">{label}</p>
-        <div className="mt-0.5 text-[22px] font-bold leading-tight" style={{ color: accent }}>{value}</div>
-        <p className="mt-1 text-[11px] leading-snug text-[#6B7A94]">{sub}</p>
+    <div className="min-w-0 rounded-xl border px-3 py-2 shadow-[0_1px_2px_rgba(16,24,40,0.04)]" style={{ background: `linear-gradient(135deg, ${accent}1F, ${accent}08)`, borderColor: `${accent}40` }}>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="grid size-6 shrink-0 place-items-center rounded-md text-white" style={{ background: accent }}><Icon className="size-3.5" aria-hidden /></span>
+        <p className="min-w-0 flex-1 text-[10.5px] font-semibold uppercase tracking-wide text-[#4B5872]">{label}</p>
+        {stacked ? null : <div className="min-w-0 text-right text-[20px] font-bold leading-none" style={{ color: accent }}>{value}</div>}
       </div>
+      {stacked ? <div className="mt-1.5 min-w-0 font-bold" style={{ color: accent }}>{value}</div> : null}
+      <p className="mt-1 text-[11px] leading-snug text-[#4B5872]">{sub}</p>
     </div>
   );
 }
@@ -115,6 +130,7 @@ export function rankOf(ai: AnalyzerResult, domain: string) {
 /* ------------------------------------------------------------------ */
 
 export function Hero({ study, report, ai, colorOf }: { study: StudyDetail; report: RunReport; ai: AnalyzerResult | null; colorOf: ColorOf }) {
+  const labelOf = useSiteLabelOf();
   const own = study.sites[0]!;
   const ranked = ai ? [...study.sites].sort((a, b) => (ai.overall[b.domain] ?? -1) - (ai.overall[a.domain] ?? -1)) : study.sites;
   const position = ai ? rankOf(ai, own.domain) : null;
@@ -142,7 +158,7 @@ export function Hero({ study, report, ai, colorOf }: { study: StudyDetail; repor
             </div>
             <div className="min-w-0">
               <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[#6B7A94]">Your website</p>
-              <p className="flex min-w-0 items-center gap-1.5 text-[15px] font-semibold text-[#111C3A]"><SiteFavicon domain={own.domain} size={16} /><span className="truncate normal-case">{own.domain}</span></p>
+              <p className="flex min-w-0 items-center gap-1.5 text-[15px] font-semibold text-[#111C3A]"><SiteFavicon domain={own.domain} size={16} /><span className="truncate normal-case" title={own.domain}>{labelOf(own.domain)}</span></p>
               <p className="mt-0.5 text-[12px] text-[#4B5872]">
                 {position ? <>#{position.rank} of {study.sites.length} websites</> : "Not scored yet"}
                 {position?.tied.length ? <span className="block text-[11px] font-medium text-[#B45309]">Tied with <span className="normal-case">{position.tied.join(", ")}</span></span> : null}
@@ -162,7 +178,7 @@ export function Hero({ study, report, ai, colorOf }: { study: StudyDetail; repor
       <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Your score" icon={Gauge} accent="#2563EB" value={ownScore ?? "—"} sub={best != null && ownScore != null ? (ownScore >= best ? "Highest in this comparison" : `${best - ownScore} points behind the leader`) : "Out of 100"} />
         <KpiCard label="Areas you lead" icon={Crown} accent="#12A06D" value={ai ? `${leads} of ${ai.scores.length}` : "—"} sub={leads ? "Areas where you score highest" : "No area where you lead yet"} />
-        <KpiCard label="Biggest threat" icon={Flame} accent="#DC3A32" value={<span className="block break-all text-[15px] normal-case leading-snug">{threat?.competitor ?? "None"}</span>} sub={threat?.threatReason || "No strong threat found"} />
+        <KpiCard stacked label="Biggest threat" icon={Flame} accent="#DC3A32" value={<span className="block text-[14px] normal-case leading-tight [overflow-wrap:anywhere]">{threat ? labelOf(threat.competitor) : "None"}</span>} sub={threat?.threatReason || "No strong threat found"} />
         <KpiCard label="Quick wins" icon={Zap} accent="#7C3AED" value={ai ? quickWins : "—"} sub="High impact, low effort — see Action plan" />
       </div>
 
@@ -186,7 +202,7 @@ export function Hero({ study, report, ai, colorOf }: { study: StudyDetail; repor
                 <span className={cn("grid size-7 place-items-center rounded-full text-[12px] font-bold", place === 1 ? "bg-[#F59E0B] text-white" : "bg-[#F1F4F9] text-[#28354C]")}>{place === 1 ? <Crown className="size-3.5" /> : place ?? "–"}</span>
                 <div className="flex min-w-0 items-center gap-2">
                   <SiteFavicon domain={s.domain} size={20} />
-                  <span className={cn("truncate text-[12.5px] normal-case", s.role === "own" ? "font-semibold text-[#111C3A]" : "text-[#28354C]")} title={s.domain}>{s.domain}</span>
+                  <span className={cn("truncate text-[12.5px] normal-case", s.role === "own" ? "font-semibold text-[#111C3A]" : "text-[#28354C]")} title={s.domain}>{labelOf(s.domain)}</span>
                   {s.role === "own" ? <span className="shrink-0 rounded bg-[#2563EB] px-1.5 text-[9.5px] font-semibold uppercase text-white">You</span> : null}
                 </div>
                 <div className="col-span-3 min-w-0 md:col-span-1">
@@ -234,6 +250,7 @@ export function Swot({ swot }: { swot: NonNullable<AnalyzerResult["swot"]> }) {
 
 /** Each site placed by its Content depth (x) and Trust & proof (y) scores: top right is strongest. */
 export function PositioningMap({ ai, sites, colorOf }: { ai: AnalyzerResult; sites: StudySite[]; colorOf: ColorOf }) {
+  const labelOf = useSiteLabelOf();
   const x = ai.scores.find((s) => s.area === "Content depth");
   const y = ai.scores.find((s) => s.area === "Trust & proof");
   if (!x || !y) return <p className="text-[11.5px] text-[#6B7A94]">Not enough scores to place the sites.</p>;
@@ -253,7 +270,7 @@ export function PositioningMap({ ai, sites, colorOf }: { ai: AnalyzerResult; sit
             <ReferenceLine y={5} stroke="#CBD5E1" />
             <Tooltip content={({ active, payload }) => {
               const p = active ? (payload?.[0]?.payload as (typeof points)[number] | undefined) : undefined;
-              return p ? <ChartTooltip title={p.domain} rows={[{ name: "Content depth", value: `${p.x}/10`, color: colorOf(p.domain) }, { name: "Trust & proof", value: `${p.y}/10`, color: colorOf(p.domain) }, { name: "Overall", value: `${p.z}/100` }]} /> : null;
+              return p ? <ChartTooltip title={labelOf(p.domain)} rows={[{ name: "Content depth", value: `${p.x}/10`, color: colorOf(p.domain) }, { name: "Trust & proof", value: `${p.y}/10`, color: colorOf(p.domain) }, { name: "Overall", value: `${p.z}/100` }]} /> : null;
             }} />
             <Scatter data={points}>
               {points.map((p) => <Cell key={p.domain} fill={colorOf(p.domain)} fillOpacity={p.own ? 1 : 0.7} stroke={p.own ? "#111C3A" : "#fff"} strokeWidth={p.own ? 3 : 2} />)}
@@ -261,25 +278,25 @@ export function PositioningMap({ ai, sites, colorOf }: { ai: AnalyzerResult; sit
           </ScatterChart>
         </ResponsiveContainer>
       </div>
-      <ChartLegend className="justify-center normal-case" items={points.map((p) => ({ key: p.domain, label: p.own ? `${p.domain} (you)` : p.domain, color: colorOf(p.domain) }))} />
+      <ChartLegend className="justify-center normal-case" items={points.map((p) => ({ key: p.domain, label: p.own ? `${labelOf(p.domain)} (you)` : labelOf(p.domain), color: colorOf(p.domain) }))} />
     </div>
   );
 }
 
 /** Where the client wins and loses, read straight from the scores. */
-export function WinLose({ ai, own }: { ai: AnalyzerResult; own: string }) {
+export function WinLose({ ai, own, previous }: { ai: AnalyzerResult; own: string; previous?: PreviousScores }) {
   const rows = ai.scores.map((s) => {
     const mine = s.scores[own] ?? 0;
     const others = Object.entries(s.scores).filter(([d]) => d !== own).map(([, v]) => v);
     const best = Math.max(...others, 0);
-    return { area: s.area, mine, best, diff: mine - best, note: s.note };
+    return { area: s.area, mine, best, diff: mine - best, note: s.note, before: previous?.[s.area]?.[own] };
   }).sort((a, b) => b.diff - a.diff);
   return (
     <ul className="space-y-1.5">
       {rows.map((r) => (
         <li key={r.area} className="text-[11.5px]" title={r.note}>
           <div className="flex items-center justify-between gap-2">
-            <span className="font-medium text-[#28354C]">{r.area}</span>
+            <span className="font-medium text-[#28354C]">{r.area}<Trend now={r.mine} before={r.before} /></span>
             <span className={cn("flex items-center gap-0.5 font-semibold tabular-nums", r.diff > 0 ? "text-[#0B845C]" : r.diff < 0 ? "text-[#C0261F]" : "text-[#6B7A94]")}>
               {r.diff > 0 ? <ArrowUpRight className="size-3.5" /> : r.diff < 0 ? <ArrowDownRight className="size-3.5" /> : null}
               {r.diff > 0 ? `+${r.diff} ahead` : r.diff < 0 ? `${r.diff} behind` : "level"}
@@ -316,6 +333,7 @@ export function Changes({ report, colorOf, own }: { report: RunReport; colorOf: 
 /* ------------------------------------------------------------------ */
 
 export function ScoreRadar({ ai, sites, colorOf }: { ai: AnalyzerResult; sites: StudySite[]; colorOf: ColorOf }) {
+  const labelOf = useSiteLabelOf();
   const domains = sites.map((s) => s.domain).filter((d) => ai.overall[d] !== undefined);
   const data = ai.scores.map((s) => ({ area: s.area, note: s.note, ...Object.fromEntries(domains.map((d) => [d, s.scores[d] ?? 0])) }));
   return (
@@ -331,18 +349,18 @@ export function ScoreRadar({ ai, sites, colorOf }: { ai: AnalyzerResult; sites: 
             ))}
             <Tooltip content={({ active, payload }) => {
               const row = active ? (payload?.[0]?.payload as Record<string, unknown> | undefined) : undefined;
-              return row ? <ChartTooltip title={String(row.area)} rows={domains.map((d) => ({ name: d, value: `${row[d]}/10`, color: colorOf(d) }))} footer={row.note ? String(row.note) : undefined} /> : null;
+              return row ? <ChartTooltip title={String(row.area)} rows={domains.map((d) => ({ name: labelOf(d), value: `${row[d]}/10`, color: colorOf(d) }))} footer={row.note ? String(row.note) : undefined} /> : null;
             }} />
           </RadarChart>
         </ResponsiveContainer>
       </div>
-      <ChartLegend className="justify-center normal-case" items={domains.map((d) => ({ key: d, label: sites.find((s) => s.domain === d)?.role === "own" ? `${d} (you)` : d, color: colorOf(d) }))} />
+      <ChartLegend className="justify-center normal-case" items={domains.map((d) => ({ key: d, label: sites.find((s) => s.domain === d)?.role === "own" ? `${labelOf(d)} (you)` : labelOf(d), color: colorOf(d) }))} />
     </div>
   );
 }
 
 /** Area × site heatmap: darker blue = higher score, crown = the single leader. */
-export function Heatmap({ ai, sites, colorOf }: { ai: AnalyzerResult; sites: StudySite[]; colorOf: ColorOf }) {
+export function Heatmap({ ai, sites, colorOf, previous }: { ai: AnalyzerResult; sites: StudySite[]; colorOf: ColorOf; previous?: PreviousScores }) {
   const domains = sites.map((s) => s.domain).filter((d) => ai.overall[d] !== undefined);
   const cell = (v: number | undefined) => {
     if (v === undefined) return { background: "#F4F6FA", color: "#A3B0C2" };
@@ -365,6 +383,7 @@ export function Heatmap({ ai, sites, colorOf }: { ai: AnalyzerResult; sites: Stu
               {domains.map((d) => (
                 <td key={d} className={cn("h-9 rounded-md text-center font-bold tabular-nums", sites.find((x) => x.domain === d)?.role === "own" && "outline outline-2 -outline-offset-2 outline-[#2563EB]")} style={cell(s.scores[d])} title={s.note}>
                   {s.leader === d ? <Crown className="mr-0.5 inline size-3" /> : null}{s.scores[d] ?? "—"}
+                  <Trend now={s.scores[d]} before={previous?.[s.area]?.[d]} className="rounded bg-white/90 px-0.5" />
                 </td>
               ))}
             </tr>
@@ -375,7 +394,7 @@ export function Heatmap({ ai, sites, colorOf }: { ai: AnalyzerResult; sites: Stu
           </tr>
         </tbody>
       </table>
-      <p className="mt-1 text-[10.5px] text-[#94A3B8]">Scores out of 10, judged only from the pages read and Google measurements. Hover a row for the reason.</p>
+      <p className="mt-1 text-[10.5px] text-[#94A3B8]">Scores out of 10, judged only from the pages read and Google measurements. Hover a row for the reason.{previous ? " ▲▼ = change since the previous check." : ""}</p>
     </div>
   );
 }
@@ -387,6 +406,7 @@ export function Heatmap({ ai, sites, colorOf }: { ai: AnalyzerResult; sites: Stu
 const THREAT = { high: { label: "High threat", cls: "bg-[#FEF2F2] text-[#B91C1C] ring-[#FECACA]" }, medium: { label: "Medium threat", cls: "bg-[#FFFBEB] text-[#92400E] ring-[#FDE68A]" }, low: { label: "Low threat", cls: "bg-[#F1F5F9] text-[#475569] ring-[#E2E8F0]" } } as const;
 
 export function HeadToHead({ ai, own, colorOf }: { ai: AnalyzerResult; report: RunReport; own: string; colorOf: ColorOf }) {
+  const labelOf = useSiteLabelOf();
   const promiseOf = (d: string) => ai.sites.find((s) => s.domain === d)?.promise;
   return (
     <div className="grid gap-1 xl:grid-cols-2">
@@ -397,7 +417,7 @@ export function HeadToHead({ ai, own, colorOf }: { ai: AnalyzerResult; report: R
             <header className="flex items-start gap-3 border-b border-[#EEF2F8] bg-gradient-to-r from-[#F8FAFD] to-white p-3">
               <SiteFavicon domain={h.competitor} size={32} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-semibold normal-case text-[#111C3A]" title={h.competitor}>{h.competitor}</p>
+                <p className="truncate text-[13px] font-semibold normal-case text-[#111C3A]" title={h.competitor}>{labelOf(h.competitor)}</p>
                 <p className="mt-1"><span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset", t.cls)}><AlertTriangle className="mr-0.5 inline size-3" />{t.label}</span></p>
                 {h.threatReason ? <p className="mt-1 text-[11px] leading-snug text-[#6B7A94]">{h.threatReason}</p> : null}
               </div>
@@ -437,19 +457,21 @@ export function HeadToHead({ ai, own, colorOf }: { ai: AnalyzerResult; report: R
 /* Content & topics                                                    */
 /* ------------------------------------------------------------------ */
 
-export function TopicMatrix({ ai, sites, colorOf }: { ai: AnalyzerResult; sites: StudySite[]; colorOf: ColorOf }) {
+export function TopicMatrix({ ai, sites, colorOf, search }: { ai: AnalyzerResult; sites: StudySite[]; colorOf: ColorOf; search?: OwnSearch | null }) {
+  const labelOf = useSiteLabelOf();
   const topics = ai.topics ?? [];
   if (!topics.length) return <p className="text-[11.5px] text-[#6B7A94]">Re-check to see the topic map.</p>;
   const own = sites[0]!.domain;
   const sorted = [...topics].sort((a, b) => Number(a.sites.includes(own)) - Number(b.sites.includes(own)) || b.sites.length - a.sites.length);
   return (
     <div className="overflow-x-auto">
-      <ChartLegend className="mb-2 normal-case" items={sites.map((s) => ({ key: s.domain, label: s.role === "own" ? `${s.domain} (you)` : s.domain, color: colorOf(s.domain) }))} />
+      <ChartLegend className="mb-2 normal-case" items={sites.map((s) => ({ key: s.domain, label: s.role === "own" ? `${labelOf(s.domain)} (you)` : labelOf(s.domain), color: colorOf(s.domain) }))} />
       <table className="w-full min-w-[520px] text-[11.5px]">
         <thead>
           <tr className="border-b border-[#EEF2F8]">
             <th className="py-1.5 text-left text-[10px] font-semibold uppercase text-[#6B7A94]">Topic</th>
             {sites.map((s) => <th key={s.domain} className={cn("px-1 py-1.5 text-center", s.role === "own" && "rounded-t-md bg-[#EFF4FC]")}><span className="inline-flex flex-col items-center gap-0.5"><SiteFavicon domain={s.domain} size={16} />{s.role === "own" ? <span className="rounded bg-[#2563EB] px-1 text-[8.5px] font-semibold uppercase text-white">You</span> : null}</span><span className="sr-only">{s.domain}</span></th>)}
+            {search ? <th className="px-2 py-1.5 text-right text-[10px] font-semibold uppercase text-[#2563EB]" title="Impressions of your Google searches (last 28 days) that mention this topic">Your Google<br />impressions</th> : null}
           </tr>
         </thead>
         <tbody className="divide-y divide-[#F2F5FA]">
@@ -460,15 +482,16 @@ export function TopicMatrix({ ai, sites, colorOf }: { ai: AnalyzerResult; sites:
                 <td className="py-1.5 pr-2 text-[#28354C]">{t.topic}{missing ? <span className="ml-1.5 rounded bg-[#FDE68A] px-1 text-[9.5px] font-semibold text-[#92400E]">you don’t cover</span> : null}</td>
                 {sites.map((s) => (
                   <td key={s.domain} className={cn("px-1 py-1.5 text-center", s.role === "own" && "bg-[#EFF4FC]")}>
-                    {t.sites.includes(s.domain) ? <span className="mx-auto block size-3.5 rounded-full" style={{ background: colorOf(s.domain) }} title={`${s.domain} covers this`} /> : <span className="mx-auto block size-3.5 rounded-full border border-dashed border-[#CBD5E1]" title={`${s.domain} does not`} />}
+                    {t.sites.includes(s.domain) ? <span className="mx-auto block size-3.5 rounded-full" style={{ background: colorOf(s.domain) }} title={`${labelOf(s.domain)} covers this`} /> : <span className="mx-auto block size-3.5 rounded-full border border-dashed border-[#CBD5E1]" title={`${labelOf(s.domain)} does not`} />}
                   </td>
                 ))}
+                {search ? <td className="px-2 py-1.5 text-right font-semibold tabular-nums text-[#28354C]">{(() => { const v = topicImpressions(t.topic, search); return v ? v.toLocaleString("en-IN") : <span className="text-[#C0261F]">0</span>; })()}</td> : null}
               </tr>
             );
           })}
         </tbody>
       </table>
-      <p className="mt-1 text-[10.5px] text-[#94A3B8]">Themes found on the pages read. Highlighted rows are topics competitors cover and you don’t.</p>
+      <p className="mt-1 text-[10.5px] text-[#94A3B8]">Themes found on the pages read. Highlighted rows are topics competitors cover and you don’t.{search ? " “Your Google impressions” counts your real searches (last 28 days) that mention the topic: 0 means Google rarely shows you for it yet." : ""}</p>
     </div>
   );
 }
@@ -559,18 +582,19 @@ export function Profiles({ ai, report, sites, colorOf }: { ai: AnalyzerResult; r
 /* ------------------------------------------------------------------ */
 
 export function SpeedBoard({ report, sites, colorOf }: { report: RunReport; sites: StudySite[]; colorOf: ColorOf }) {
+  const labelOf = useSiteLabelOf();
   const rows = sites.map((s) => ({ site: s, ev: report.sites.find((e) => e.domain === s.domain) }));
-  const lcp = rows.filter((r) => r.ev?.speed?.lcpMs != null).map((r) => ({ domain: r.site.domain, label: r.site.role === "own" ? `${r.site.domain} (you)` : r.site.domain, seconds: Number((r.ev!.speed!.lcpMs! / 1000).toFixed(1)) }));
+  const lcp = rows.filter((r) => r.ev?.speed?.lcpMs != null).map((r) => ({ domain: r.site.domain, label: r.site.role === "own" ? `${labelOf(r.site.domain)} (you)` : labelOf(r.site.domain), seconds: Number((r.ev!.speed!.lcpMs! / 1000).toFixed(1)) }));
   return (
     <div className="space-y-4">
       <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))" }}>
         {rows.map(({ site, ev }) => (
           <div key={site.domain} className={cn("min-w-0 overflow-hidden rounded-lg border p-2.5", site.role === "own" ? "border-[#2563EB] bg-[#F5F8FF] ring-1 ring-[#2563EB]/20" : "border-[#E6EBF4]")}>
-            <SiteLabel domain={site.domain} color={colorOf(site.domain)} own={site.role === "own"} />
+            <SiteLabel domain={site.domain} color={colorOf(site.domain)} own={site.role === "own"} wrap />
             {ev?.speed ? (
               <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[9.5px] text-[#6B7A94]">
                 {([["Speed", ev.speed.performance], ["SEO", ev.speed.seo], ["Access.", ev.speed.accessibility]] as const).map(([label, v]) => (
-                  <div key={label} className="flex flex-col items-center gap-0.5"><ScoreDial value={v} tone={tone(v)} size={42} label={`${label} ${v ?? "n/a"}`} />{label}</div>
+                  <div key={label} className="flex flex-col items-center gap-0.5"><ScoreDial value={v} tone={tone(v)} size={50} label={`${label} ${v ?? "n/a"}`} />{label}</div>
                 ))}
               </div>
             ) : <p className="mt-2 text-[10.5px] text-[#94A3B8]">{ev?.speedError ?? "Not measured."}</p>}
@@ -621,6 +645,9 @@ const CHECKS: { group: string; rows: Check[] }[] = [
     rows: [
       { label: "Key pages read", value: (e) => e.metrics.pages, better: "high", hint: "Home plus the main About / Services / Contact-type pages we could open." },
       { label: "Words on those pages", value: (e) => e.metrics.words, better: "high", hint: "Visible text. More useful text usually means more search topics covered." },
+      { label: "Pages updated in 30 days", value: (e) => e.tech?.sitemapRecent30 ?? null, better: "high", hint: "From the sitemap dates: how actively the site adds or updates pages right now." },
+      { label: "Pages updated in 90 days", value: (e) => e.tech?.sitemapRecent90 ?? null, better: "high", hint: "The same over three months. “—” means the sitemap has no dates." },
+      { label: "Last sitemap update", value: (e) => e.tech?.sitemapLatest ?? null, hint: "The newest date in the sitemap." },
       { label: "Blog / news section", value: (e) => e.tech?.hasBlog ?? null, hint: "Regular articles bring new search traffic and show the business is active." },
       { label: "Newest dated content", value: (e) => e.tech?.latestDate ?? null, hint: "Latest publish date found. Empty = no dated content, so freshness is unknown." },
       { label: "Different calls to action", value: (e) => e.metrics.ctas, better: "high", hint: "Buttons like Register, Book, Donate, Contact that ask the visitor to act." },
@@ -701,9 +728,40 @@ const COLUMNS = [
   { when: "this quarter", title: "This quarter", icon: CalendarClock, accent: "#2563EB" },
 ] as const;
 
-export function ActionBoard({ ai, colorOf }: { ai: AnalyzerResult; colorOf: ColorOf }) {
+const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+const STATUS: { value: ActionStatus; label: string }[] = [
+  { value: "todo", label: "To do" },
+  { value: "doing", label: "Doing" },
+  { value: "done", label: "Done" },
+];
+
+export interface ActionTracking {
+  states: Record<string, ActionState>;
+  onStatus: (action: string, status: ActionStatus) => void;
+  onTask: (action: string, reason: string, priority: "high" | "medium" | "low") => void;
+  busy: string | null;
+  canTask: boolean;
+}
+
+export function ActionBoard({ ai, colorOf, tracking }: { ai: AnalyzerResult; colorOf: ColorOf; tracking?: ActionTracking }) {
   const actions = ai.actions.map((a, i) => ({ ...a, n: i + 1, when: a.when ?? (a.priority === "high" ? "this week" : a.priority === "medium" ? "this month" : "this quarter") }));
+  const stateOf = (action: string) => (tracking ? Object.values(tracking.states).find((st) => norm(st.action) === norm(action)) : undefined);
+  const done = actions.filter((a) => stateOf(a.action)?.status === "done").length;
+  const doing = actions.filter((a) => stateOf(a.action)?.status === "doing").length;
   return (
+    <div className="space-y-2">
+      {tracking ? (
+        <div className="rounded-lg border border-[#E6EBF4] bg-white p-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[12px]">
+            <span className="font-semibold text-[#111C3A]">{done} of {actions.length} done{doing ? ` · ${doing} in progress` : ""}</span>
+            <span className="text-[11px] text-[#6B7A94]">Mark progress here; the next check shows if your scores moved.</span>
+          </div>
+          <span className="mt-1.5 flex h-2 overflow-hidden rounded-full bg-[#EEF2F8]">
+            <span className="h-full bg-[#12A06D]" style={{ width: `${(done / Math.max(1, actions.length)) * 100}%` }} />
+            <span className="h-full bg-[#F59E0B]" style={{ width: `${(doing / Math.max(1, actions.length)) * 100}%` }} />
+          </span>
+        </div>
+      ) : null}
     <div className="grid gap-1 lg:grid-cols-3">
       {COLUMNS.map((col) => {
         const items = actions.filter((a) => a.when === col.when);
@@ -718,8 +776,8 @@ export function ActionBoard({ ai, colorOf }: { ai: AnalyzerResult; colorOf: Colo
               {items.map((a) => {
                 const quick = a.effort === "low" && (a.impact ?? a.priority) === "high";
                 return (
-                  <li key={a.n} className="rounded-lg border border-[#E6EBF4] bg-white p-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-                    <p className="text-[12px] font-semibold leading-snug text-[#111C3A]">{a.action}</p>
+                  <li key={a.n} className={cn("rounded-lg border bg-white p-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]", stateOf(a.action)?.status === "done" ? "border-[#A7F3D0] bg-[#F0FDF4]" : "border-[#E6EBF4]")}>
+                    <p className={cn("text-[12px] font-semibold leading-snug text-[#111C3A]", stateOf(a.action)?.status === "done" && "line-through decoration-[#12A06D]/60")}>{a.action}</p>
                     {a.reason ? <p className="mt-1 text-[10.5px] text-[#6B7A94]">{a.reason}</p> : null}
                     <p className="mt-1.5 flex flex-wrap items-center gap-1">
                       {quick ? <Chip tone="good"><Zap className="mr-0.5 inline size-2.5" />Quick win</Chip> : null}
@@ -727,6 +785,25 @@ export function ActionBoard({ ai, colorOf }: { ai: AnalyzerResult; colorOf: Colo
                       <Chip>{a.effort} effort</Chip>
                     </p>
                     {a.learnFrom ? <p className="mt-1 text-[10.5px] text-[#4B5872]">Learn from <SiteLabel domain={a.learnFrom} color={colorOf(a.learnFrom)} /></p> : null}
+                    {tracking ? (
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-1.5 border-t border-[#EEF2F8] pt-2">
+                        <div className="inline-flex rounded-md border border-[#DAE1EC] bg-[#F5F7FB] p-0.5" role="radiogroup" aria-label="Progress">
+                          {STATUS.map((st) => {
+                            const active = (stateOf(a.action)?.status ?? "todo") === st.value;
+                            return (
+                              <button key={st.value} type="button" role="radio" aria-checked={active} disabled={tracking.busy === a.action} onClick={() => tracking.onStatus(a.action, st.value)} className={cn("rounded px-2 py-0.5 text-[10.5px] font-semibold", active ? (st.value === "done" ? "bg-[#12A06D] text-white" : st.value === "doing" ? "bg-[#F59E0B] text-white" : "bg-white text-[#111C3A] shadow-sm") : "text-[#6B7A94] hover:text-[#111C3A]")}>
+                                {st.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {stateOf(a.action)?.taskId ? (
+                          <a href="/admin/crm/tasks" className="text-[10.5px] font-semibold text-[#0B845C] hover:underline">✓ Task created</a>
+                        ) : tracking.canTask ? (
+                          <button type="button" disabled={tracking.busy === a.action} onClick={() => tracking.onTask(a.action, a.reason, a.impact ?? a.priority)} className="text-[10.5px] font-semibold text-[#2563EB] hover:underline disabled:opacity-50">+ Create CRM task</button>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </li>
                 );
               })}
@@ -736,6 +813,7 @@ export function ActionBoard({ ai, colorOf }: { ai: AnalyzerResult; colorOf: Colo
         );
       })}
     </div>
+    </div>
   );
 }
 
@@ -744,6 +822,7 @@ export function ActionBoard({ ai, colorOf }: { ai: AnalyzerResult; colorOf: Colo
 /* ------------------------------------------------------------------ */
 
 export function History({ study, colorOf }: { study: StudyDetail; colorOf: ColorOf }) {
+  const labelOf = useSiteLabelOf();
   const points = study.history.filter((h) => h.overall);
   if (points.length < 2) {
     return <p className="flex items-center gap-2 text-[11.5px] text-[#6B7A94]"><Calendar className="size-4" />Every re-check adds a point here, so you see who is improving and who is slipping. Re-check in a week or two.</p>;
@@ -763,7 +842,7 @@ export function History({ study, colorOf }: { study: StudyDetail; colorOf: Color
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <ChartLegend className="justify-center normal-case" items={domains.map((d) => ({ key: d, label: d === study.sites[0]?.domain ? `${d} (you)` : d, color: colorOf(d) }))} />
+      <ChartLegend className="justify-center normal-case" items={domains.map((d) => ({ key: d, label: d === study.sites[0]?.domain ? `${labelOf(d)} (you)` : labelOf(d), color: colorOf(d) }))} />
     </div>
   );
 }

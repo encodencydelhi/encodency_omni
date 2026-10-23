@@ -3,6 +3,8 @@ import type {
   CreateEndpointInput,
   CreateRecoveryInput,
   EndpointState,
+  Delivery,
+  IncomingEvent,
   EventSubscription,
   MutationResult,
   OutgoingEndpoint,
@@ -35,7 +37,7 @@ export const superAdminWebhooksApi = {
     }),
 
   getDeliveries: (environment: WebhookEnvironment = "production", signal?: AbortSignal) =>
-    apiClient.request<any[]>({
+    apiClient.request<Delivery[]>({
       method: "GET",
       path: `${BASE}/deliveries`,
       query: { environment },
@@ -51,7 +53,7 @@ export const superAdminWebhooksApi = {
     }),
 
   getIncomingEvents: (environment: WebhookEnvironment = "production", signal?: AbortSignal) =>
-    apiClient.request<any[]>({
+    apiClient.request<IncomingEvent[]>({
       method: "GET",
       path: `${BASE}/incoming-events`,
       query: { environment },
@@ -103,12 +105,21 @@ export const superAdminWebhooksApi = {
     endpointId: string,
     state: Extract<EndpointState, "enabled" | "disabled">,
     reason: string,
-  ) =>
-    apiClient.request<MutationResult<OutgoingEndpoint>>({
+  ) => {
+    void reason;
+    return apiClient.request<MutationResult<OutgoingEndpoint>>({
       method: "PATCH",
       path: `${BASE}/endpoints/${encodeURIComponent(endpointId)}/state`,
       query: { environment },
-      body: { state, reason },
+      body: { enabled: state === "enabled" },
+    });
+  },
+
+  retryDelivery: (deliveryId: string) =>
+    apiClient.request<MutationResult<unknown>>({
+      method: "POST",
+      path: `${BASE}/deliveries/${encodeURIComponent(deliveryId)}/retry`,
+      body: {},
     }),
 
   saveSubscriptions: (

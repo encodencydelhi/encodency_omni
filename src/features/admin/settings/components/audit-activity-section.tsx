@@ -1,10 +1,22 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { History, Search, Eye } from "lucide-react";
-import { SettingsActivityItem, SettingsSectionId } from "../settings-data/types";
+import { ChevronLeft, ChevronRight, History, Search, Eye } from "lucide-react";
+import type { SettingsActivityItem, SettingsSectionId } from "../settings-data/types";
 import { filterActivityLogs } from "../settings-data/selectors";
 import { ActivityDetailDrawer } from "./activity-detail-drawer";
+
+const PAGE_SIZE = 15;
+
+/** Page numbers to show: first, last, and two either side of the current page, with gaps as null. */
+function pageList(current: number, total: number): (number | null)[] {
+  const out: (number | null)[] = [];
+  for (let p = 1; p <= total; p += 1) {
+    if (p === 1 || p === total || Math.abs(p - current) <= 1) out.push(p);
+    else if (out[out.length - 1] !== null) out.push(null);
+  }
+  return out;
+}
 
 interface AuditActivitySectionProps {
   activities: SettingsActivityItem[];
@@ -15,6 +27,7 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
   const [selectedSection, setSelectedSection] = useState<SettingsSectionId | "all">("all");
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [activeItem, setActiveItem] = useState<SettingsActivityItem | null>(null);
+  const [page, setPage] = useState(1);
 
   const people = useMemo(() => Array.from(new Set(activities.map((item) => item.user.name))).sort((a, b) => a.localeCompare(b)), [activities]);
 
@@ -25,6 +38,10 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
       user: selectedUser,
     });
   }, [activities, searchQuery, selectedSection, selectedUser]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / PAGE_SIZE));
+  const current = Math.min(page, totalPages);
+  const pageRows = filteredLogs.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
   return (
     <div className="space-y-2">
@@ -54,7 +71,10 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
               type="text"
               placeholder="Search action, user, or setting..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
               className="w-full h-8 pl-8 pr-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[12px] text-[#0F172A] font-normal outline-none focus:border-[#2563EB] shadow-2xs placeholder:text-[#94A3B8] transition-all"
             />
           </div>
@@ -63,7 +83,10 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
             {/* Section Filter */}
             <select
               value={selectedSection}
-              onChange={(e) => setSelectedSection(e.target.value as any)}
+              onChange={(e) => {
+                setSelectedSection(e.target.value as SettingsSectionId | "all");
+                setPage(1);
+              }}
               className="h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[11.5px] font-normal text-[#0F172A] focus:outline-none focus:border-[#2563EB] cursor-pointer shadow-2xs"
             >
               <option value="all">All Activity</option>
@@ -74,7 +97,10 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
             {/* User Filter */}
             <select
               value={selectedUser}
-              onChange={(e) => setSelectedUser(e.target.value)}
+              onChange={(e) => {
+                setSelectedUser(e.target.value);
+                setPage(1);
+              }}
               className="h-8 px-2.5 rounded-lg border border-[#CBD5E1] bg-white text-[11.5px] font-normal text-[#0F172A] focus:outline-none focus:border-[#2563EB] cursor-pointer shadow-2xs"
             >
               <option value="all">Everyone</option>
@@ -108,7 +134,7 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
                   </td>
                 </tr>
               ) : (
-                filteredLogs.map((log) => (
+                pageRows.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-2.5 px-3 font-semibold text-[#0F172A] whitespace-nowrap w-[160px] min-w-[150px]">
                       <div className="flex items-center gap-1.5">
@@ -147,6 +173,48 @@ export function AuditActivitySection({ activities }: AuditActivitySectionProps) 
             </tbody>
           </table>
         </div>
+
+        {filteredLogs.length > PAGE_SIZE ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+            <p className="text-[10.5px] text-[#64748B]">
+              Showing {(current - 1) * PAGE_SIZE + 1}–{Math.min(current * PAGE_SIZE, filteredLogs.length)} of {filteredLogs.length}
+            </p>
+            <nav className="flex items-center gap-1" aria-label="Activity pages">
+              <button
+                type="button"
+                onClick={() => setPage(current - 1)}
+                disabled={current === 1}
+                className="inline-flex h-7 items-center gap-0.5 rounded-md border border-[#CBD5E1] bg-white px-2 text-[11px] font-medium text-[#334155] disabled:opacity-40"
+              >
+                <ChevronLeft className="size-3.5" /> Prev
+              </button>
+              {pageList(current, totalPages).map((p, i) =>
+                p === null ? (
+                  <span key={`gap-${i}`} className="px-1 text-[11px] text-[#94A3B8]">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPage(p)}
+                    aria-current={p === current ? "page" : undefined}
+                    className={`h-7 min-w-7 rounded-md border px-2 text-[11px] font-semibold ${p === current ? "border-[#2563EB] bg-[#2563EB] text-white" : "border-[#CBD5E1] bg-white text-[#334155] hover:bg-[#F8FAFD]"}`}
+                  >
+                    {p}
+                  </button>
+                ),
+              )}
+              <button
+                type="button"
+                onClick={() => setPage(current + 1)}
+                disabled={current === totalPages}
+                className="inline-flex h-7 items-center gap-0.5 rounded-md border border-[#CBD5E1] bg-white px-2 text-[11px] font-medium text-[#334155] disabled:opacity-40"
+              >
+                Next <ChevronRight className="size-3.5" />
+              </button>
+            </nav>
+          </div>
+        ) : null}
+        <p className="px-1 text-[10px] text-[#94A3B8]">The latest 200 entries are shown here; the full history stays in the audit log.</p>
       </section>
 
       {/* Drawer */}

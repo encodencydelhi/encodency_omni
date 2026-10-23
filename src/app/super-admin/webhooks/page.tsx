@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { OverviewPage } from "@/features/webhooks/components/overview-page";
+import { LiveWebhookConsole } from "@/features/webhooks/components/live-console";
 
 export const metadata: Metadata = {
   title: "Overview | Webhooks | EnCodency OmniPlatform Super Admin",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <OverviewPage />;
+  return <LiveWebhookConsole view="overview" />;
 }

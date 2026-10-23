@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DeliveriesPage } from "@/features/webhooks/components/deliveries-list";
+import { LiveWebhookConsole } from "@/features/webhooks/components/live-console";
 
 export const metadata: Metadata = {
   title: "Deliveries & Attempts | Webhooks | EnCodency OmniPlatform Super Admin",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <DeliveriesPage />;
+  return <LiveWebhookConsole view="deliveries" />;
 }
