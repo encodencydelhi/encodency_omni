@@ -141,7 +141,7 @@ export function ReportBody({ data, colorOf, tracking, shared = false }: { data: 
         ) : <EmptyState icon={Swords} title="No head-to-head yet" body="Appears when the AI comparison completes." />
       ) : null}
 
-      {tab === "offers" ? <OffersPanel offers={report.ai?.offers} sites={data.sites} colorOf={colorOf} /> : null}
+      {tab === "offers" ? <OffersPanel offers={report.ai?.offers} sites={data.sites} colorOf={colorOf} evidence={report.sites} /> : null}
 
       {tab === "social" ? <SocialPanel evidence={report.sites} sites={data.sites} colorOf={colorOf} /> : null}
 

@@ -47,6 +47,7 @@ export interface OwnSearch {
 }
 
 /** Measured for one site in one run; nothing here is estimated. */
+export interface StatedRating { value: number; best: number; ratings: number | null; reviews: number | null; about: string | null; url: string }
 export interface SiteEvidence {
   url: string;
   domain: string;
@@ -55,6 +56,8 @@ export interface SiteEvidence {
   error: string | null;
   /** The other website this address sends visitors to; then nothing was read or scored (runs from 2026-10-26 on). */
   movedTo?: string | null;
+  /** Star rating the site states in its own structured data (not verified on Google). Runs from 2026-10-26 on. */
+  statedRating?: StatedRating | null;
   name: string | null;
   title: string | null;
   description: string | null;

@@ -1,9 +1,9 @@
 "use client";
 
 import { Fragment } from "react";
-import { Package, Quote, Store, Tags } from "lucide-react";
+import { Package, Quote, Star, Store, Tags } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { OFFER_FIELDS, type OfferFact, type OfferField, type OffersBlock, type SiteOffers, type StudySite } from "./api";
+import { OFFER_FIELDS, type OfferFact, type OfferField, type OffersBlock, type SiteEvidence, type SiteOffers, type StudySite } from "./api";
 import { Panel } from "./report-sections";
 import { SiteLabel, SourceLink, useSiteLabelOf } from "./ui";
 
@@ -36,7 +36,58 @@ function Fact({ fact }: { fact: OfferFact }) {
 
 const NotMentioned = () => <span className="text-[11px] text-[#94A3B8]">Not mentioned</span>;
 
-export function OffersPanel({ offers, sites, colorOf }: { offers: OffersBlock | undefined; sites: StudySite[]; colorOf: ColorOf }) {
+/**
+ * Star ratings each website states about itself in its structured data (what Google may show as stars). Kept apart
+ * from the scores and the claims: it is the site's own statement, not a rating read from Google.
+ */
+function StatedRatingsPanel({ evidence, sites, colorOf }: { evidence: SiteEvidence[]; sites: StudySite[]; colorOf: ColorOf }) {
+  // Runs before 2026-10-26 did not read ratings at all (the field is missing): the panel is not shown for them.
+  if (!evidence.some((e) => e.statedRating !== undefined)) return null;
+  const ratingOf = (domain: string) => evidence.find((e) => e.domain === domain)?.statedRating ?? null;
+  const count = (n: number | null) => (n == null ? null : n.toLocaleString("en-IN"));
+  return (
+    <Panel
+      title="Star Ratings The Websites State"
+      icon={Star}
+      subtitle="Ratings written into each site's own data for Google · not checked on Google"
+      explain={
+        <>
+          <p>Websites can add a star rating to their own page data so Google may show stars in search results. This is what each site <b>says about itself</b>; it is not read from Google Reviews and is not checked, so it is shown separately and never counted in any score.</p>
+          <p><b>Not stated</b> means the site&apos;s pages carry no such rating.</p>
+        </>
+      }
+    >
+      <div className="grid gap-1 sm:grid-cols-2 xl:grid-cols-4">
+        {sites.map((s) => {
+          const r = ratingOf(s.domain);
+          return (
+            <div key={s.domain} className={cn("rounded-lg border p-2.5", s.role === "own" ? "border-[#BFD3F7] bg-[#F5F8FF]" : "border-[#E6EBF4]")}>
+              <SiteLabel domain={s.domain} color={colorOf(s.domain)} own={s.role === "own"} wrap />
+              {r ? (
+                <>
+                  <p className="mt-1.5 flex items-baseline gap-1">
+                    <Star className="size-3.5 translate-y-0.5 fill-[#F59E0B] text-[#F59E0B]" aria-hidden />
+                    <span className="text-[16px] font-bold text-[#111C3A]">{r.value}</span>
+                    <span className="text-[11px] text-[#6B7A94]">/ {r.best}</span>
+                  </p>
+                  <p className="text-[11px] text-[#4B5872]">
+                    {[r.ratings != null ? `${count(r.ratings)} ratings` : null, r.reviews != null ? `${count(r.reviews)} reviews` : null].filter(Boolean).join(" · ")}
+                    {r.about ? <span className="normal-case text-[#94A3B8]"> · for “{r.about}”</span> : null}
+                  </p>
+                  <SourceLink url={r.url} />
+                </>
+              ) : (
+                <p className="mt-1.5 text-[11px] text-[#94A3B8]">Not stated</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </Panel>
+  );
+}
+
+export function OffersPanel({ offers, sites, colorOf, evidence = [] }: { offers: OffersBlock | undefined; sites: StudySite[]; colorOf: ColorOf; evidence?: SiteEvidence[] }) {
   const labelOf = useSiteLabelOf();
   const explain = (
     <>
@@ -214,6 +265,8 @@ export function OffersPanel({ offers, sites, colorOf }: { offers: OffersBlock | 
         {offers.dropped ? <p className="mt-2 text-[10.5px] text-[#94A3B8]">{offers.dropped} fact{offers.dropped === 1 ? "" : "s"} the AI suggested were left out because the exact words could not be found on the page.</p> : null}
         <p className="mt-1 text-[10.5px] text-[#94A3B8]">Sites compared: {columns.map((s) => labelOf(s.domain)).join(", ")}.</p>
       </Panel>
+
+      <StatedRatingsPanel evidence={evidence} sites={sites} colorOf={colorOf} />
     </div>
   );
 }
