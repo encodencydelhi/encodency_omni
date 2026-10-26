@@ -8,21 +8,37 @@ import { Archive, ArrowRight, CalendarClock, Check, CheckCircle2, Clock, Info, L
 import { ApiError } from "@/types/api";
 import { cn } from "@/lib/utils/cn";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Chip, WButton } from "@/features/admin/website/components/ui/kit";
 import { EmptyState, QueryErrorState, SkeletonBlock } from "@/features/admin/website/components/ui/states";
 import { formatRelative } from "@/features/admin/website/data/selectors";
-import type { LookupResult, StudyListItem } from "./api";
-import { domainOf, useCompanyClients, useCompetitorSuggestions, useKnownSiteNames, useSiteName, useStudies, useStudyMutations } from "./hooks";
+import type { LookupResult, StudyListItem, SuggestScope } from "./api";
+import { domainOf, useCompanyClients, useCompetitorSuggestions, useKnownSiteNames, useSiteLocation, useSiteName, useStudies, useStudyMutations } from "./hooks";
 import { SITE_COLORS, SiteFavicon } from "./ui";
 
 const MAX_COMPETITORS = 4;
 const errorText = (err: unknown, fallback: string) => (ApiError.isApiError(err) ? err.message : fallback);
 const looksLikeDomain = (v: string) => /\.[a-z]{2,}(\/|$)/i.test(v.trim());
 
-/** Under an address input: the name the website gives itself, fetched as soon as the address looks complete. */
-function SiteNameHint({ value }: { value: string }) {
+/**
+ * Under an address input: the name the website gives itself, fetched as soon as the address looks complete. An address
+ * that sends visitors to another website says so, with a button to use that website instead (`onUse`).
+ */
+function SiteNameHint({ value, onUse }: { value: string; onUse?: (domain: string) => void }) {
   const { domain, loading, data, error } = useSiteName(value);
   if (!domain) return null;
+  if (!loading && data?.movedTo) {
+    return (
+      <p className="ml-[18px] mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[#B45309]">
+        <span className="normal-case">This address sends visitors to <b>{data.movedTo}</b>, a different website. It cannot be compared as it is.</span>
+        {onUse ? (
+          <button type="button" onClick={() => onUse(data.movedTo!)} className="font-medium normal-case text-[#2563EB] hover:underline">
+            Use {data.movedTo}
+          </button>
+        ) : null}
+      </p>
+    );
+  }
   return (
     <p className="ml-[18px] mt-1 flex min-h-4 items-center gap-1.5 text-[11px]">
       {loading ? (
@@ -79,7 +95,7 @@ function CompetitorRow({ value, onChange, onRemove, index }: { value: string; on
           </button>
         ) : null}
       </div>
-      {looksLikeDomain(value) ? <SiteNameHint value={value} /> : null}
+      {looksLikeDomain(value) ? <SiteNameHint value={value} onUse={onChange} /> : null}
       {results?.length ? (
         <ul className="ml-[18px] mt-1.5 divide-y divide-[#EEF2F8] overflow-hidden rounded-md border border-[#E6EBF4] bg-white">
           {results.map((r) => (
@@ -107,13 +123,38 @@ function CompetitorRow({ value, onChange, onRemove, index }: { value: string; on
   );
 }
 
+type Place = Record<SuggestScope, string>;
+const SCOPES: { value: SuggestScope; label: string; field: string; hint: string }[] = [
+  { value: "city", label: "My city", field: "City", hint: "Businesses in your own city, the ones local customers compare you with" },
+  { value: "state", label: "My state", field: "State", hint: "Businesses anywhere in your state, not only your city" },
+  { value: "country", label: "Whole country", field: "Country", hint: "The strongest businesses anywhere in your country" },
+];
+/** The place sent with each area: the city with its state and country, the state with its country, or the country. */
+const placeFor = (scope: SuggestScope, p: Place) =>
+  (scope === "city" ? [p.city, p.state, p.country] : scope === "state" ? [p.state, p.country] : [p.country]).map((v) => v.trim()).filter(Boolean).join(", ");
+
 /**
- * Competitors of the website typed above, listed automatically once it answers. Tick the ones to compare (tick again
- * to remove them); the fields above stay open for typing any other competitor by hand.
+ * Competitors of the website typed above. Once the website answers, every location written on it is read (main one
+ * first, others in a dropdown; all can be corrected); the user then picks the area (own city, state or whole country) and competitors from there
+ * are listed. Tick the ones to compare (tick again to remove them); the fields above stay open for typing any other
+ * competitor by hand.
  */
 function SuggestCompetitors({ own, picked, full, onToggle }: { own: string; picked: string[]; full: boolean; onToggle: (domain: string) => void }) {
-  const found = useCompetitorSuggestions(own);
+  const [scope, setScope] = useState<SuggestScope | null>(null);
+  const domain = domainOf(own) ?? "";
+  const location = useSiteLocation(own);
+  const read: Place = { city: location.data?.city ?? "", state: location.data?.state ?? "", country: location.data?.country ?? "" };
+  // Corrections typed by the user, for this website only: `draft` follows the inputs, `applied` is what is searched.
+  const [typed, setTyped] = useState<{ domain: string; draft: Place; applied: Place } | null>(null);
+  const mine = typed?.domain === domain ? typed : null;
+  const draft = mine?.draft ?? read;
+  const applied = mine?.applied ?? read;
+  const apply = () => setTyped({ domain, draft, applied: draft });
+  // Nothing is asked while the location is still being read, so one area costs one AI call.
+  const found = useCompetitorSuggestions(own, location.isFetching ? null : scope, scope ? placeFor(scope, applied) : "");
   const data = found.data;
+  const locationKnown = Boolean(location.data || location.error || mine);
+  const places = location.data?.places ?? [];
   const head = (
     <p className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[#5B21B6]">
       {found.isFetching ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
@@ -121,11 +162,99 @@ function SuggestCompetitors({ own, picked, full, onToggle }: { own: string; pick
       {data?.suggestions.length ? <span className="font-normal text-[#6B7A94]">· {picked.filter((d) => data.suggestions.some((s) => s.domain === d)).length} selected</span> : null}
     </p>
   );
+  const place = domain && found.reachable ? (
+    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
+      <span className="font-medium text-[#4B5872]">Your location:</span>
+      {location.isFetching ? (
+        <span className="flex items-center gap-1.5 text-[#6B7A94]">
+          <Loader2 className="size-3 animate-spin" /> Reading the addresses on your website (home, contact and about pages)…
+        </span>
+      ) : (
+        <>
+          {places.length > 1 ? (
+            <select
+              value={places.findIndex((p) => SCOPES.every((s) => (p[s.value] ?? "") === applied[s.value]))}
+              onChange={(e) => {
+                const p = places[Number(e.target.value)];
+                if (!p) return;
+                const next = { city: p.city ?? "", state: p.state ?? "", country: p.country ?? "" };
+                setTyped({ domain, draft: next, applied: next });
+              }}
+              title="Every location written on your website: pick the one to search around"
+              className="h-7 max-w-full rounded-md border border-[#D8CCF8] bg-white px-1.5 text-[11.5px] normal-case text-[#111C3A] outline-none focus:border-[#7C3AED]"
+            >
+              <option value={-1} disabled>Typed by you</option>
+              {places.map((p, i) => (
+                <option key={i} value={i}>
+                  {p.label}: {[p.city, p.state, p.country].filter(Boolean).join(", ")}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          {SCOPES.map((s) => (
+            <input
+              key={s.value}
+              value={draft[s.value]}
+              aria-label={s.field}
+              onChange={(e) => setTyped({ domain, draft: { ...draft, [s.value]: e.target.value }, applied })}
+              onBlur={apply}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  apply();
+                }
+              }}
+              placeholder={s.field}
+              title={`${s.field}: fix it if it is wrong, then press Enter`}
+              className="h-7 w-32 min-w-0 rounded-md border border-[#D8CCF8] bg-white px-2 text-[11.5px] normal-case text-[#111C3A] outline-none focus:border-[#7C3AED]"
+            />
+          ))}
+          <span className="normal-case text-[#94A3B8]">
+            {location.error
+              ? "Could not be read from your website: type it."
+              : !places.length
+                ? "No address found on your website: type it."
+                : `${places.length > 1 ? `${places.length} locations found on your website (${location.data?.pages?.length ?? 1} pages read). ` : ""}${location.data?.basis ?? ""} Fix it if wrong.`}
+          </span>
+        </>
+      )}
+    </div>
+  ) : null;
+  const area = (
+    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+      <span className="text-[11px] font-medium text-[#4B5872]">Where should competitors come from?</span>
+      {SCOPES.map((s) => {
+        const name = applied[s.value].trim();
+        const missing = locationKnown && !name;
+        return (
+          <button
+            key={s.value}
+            type="button"
+            aria-pressed={scope === s.value}
+            disabled={missing}
+            title={missing ? `${s.field} not found on your website: type it above first` : s.hint}
+            onClick={() => setScope(s.value)}
+            className={cn(
+              "h-7 rounded-md border px-2.5 text-[11.5px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+              scope === s.value ? "border-[#7C3AED] bg-[#7C3AED] text-white" : "border-[#D8CCF8] bg-white text-[#5B21B6] hover:border-[#A78BFA]",
+            )}
+          >
+            {s.label}
+            {name ? <span className="font-normal normal-case"> · {name}</span> : missing ? <span className="font-normal"> · not found</span> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
   return (
     <div className="rounded-lg border border-dashed border-[#D8CCF8] bg-[#FBF9FF] p-2.5">
       {head}
+      {place}
+      {area}
       {!found.domain ? (
-        <p className="mt-1 text-[11px] text-[#6B7A94]">Enter your website (or pick a client) and its competitors are listed here automatically. Tick the ones to compare, or type competitors yourself above.</p>
+        <p className="mt-1 text-[11px] text-[#6B7A94]">Enter your website (or pick a client): its city, state and country are read from it, then pick the area and competitors from there are listed here. Tick the ones to compare, or type competitors yourself above.</p>
+      ) : !scope && !found.unreachable ? (
+        <p className="mt-1 text-[11px] text-[#6B7A94]">Pick an area above (your city, your state or the whole country) and competitors from there are listed here.</p>
       ) : found.unreachable ? (
         <p className="mt-1 text-[11px] text-[#6B7A94]">Your website did not answer, so competitors cannot be found. Check the address, or type competitors yourself above.</p>
       ) : found.checking || (found.reachable && found.isFetching) ? (
@@ -139,6 +268,9 @@ function SuggestCompetitors({ own, picked, full, onToggle }: { own: string; pick
         <div className="mt-1.5 space-y-1.5">
           {data.business.what ? (
             <p className="text-[11px] normal-case text-[#4B5872]"><span className="font-semibold">Your business, as read from your site:</span> {data.business.what}{data.business.where ? ` (${data.business.where})` : ""}</p>
+          ) : null}
+          {data.area ? (
+            <p className="text-[11px] text-[#4B5872]"><span className="font-semibold">Competitors searched in:</span> <span className="normal-case">{data.area}</span> ({SCOPES.find((s) => s.value === data.scope)?.label.toLowerCase() ?? scope})</p>
           ) : null}
           {data.suggestions.length ? (
             <ul className="grid gap-1 md:grid-cols-2">
@@ -262,7 +394,7 @@ function NewStudyDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (
               className="h-9 min-w-0 flex-1 rounded-md border border-[#DAE1EC] px-3 text-[12.5px] normal-case outline-none focus:border-[#2563EB]"
             />
           </div>
-          {looksLikeDomain(own) ? <SiteNameHint value={own} /> : null}
+          {looksLikeDomain(own) ? <SiteNameHint value={own} onUse={(d) => { setOwn(d); setClientId(""); }} /> : null}
           <p className="pt-2 text-[11px] font-semibold uppercase tracking-wide text-[#6B7A94]">Name (optional)</p>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Organic expos 2026" className="h-9 w-full rounded-md border border-[#DAE1EC] px-3 text-[12.5px] normal-case outline-none focus:border-[#2563EB]" />
         </div>
@@ -394,6 +526,7 @@ function StudyListEntry({ study, active, onSelect }: { study: StudyListItem; act
 
 function StudyCard({ study }: { study: StudyListItem }) {
   const { archive, run } = useStudyMutations();
+  const [confirmArchive, setConfirmArchive] = useState(false);
   const { ranked, ownRank, ownScore, status, running, checkedAt } = rankStudy(study);
   const { own, title, sub } = studyTitle(study);
   const summary = study.summary ?? null;
@@ -436,9 +569,7 @@ function StudyCard({ study }: { study: StudyListItem }) {
             type="button"
             title="Archive: hides it from this list, history is kept"
             aria-label="Archive analysis"
-            onClick={() => {
-              if (window.confirm(`Archive “${study.name}”? Its history is kept but it leaves this list.`)) archive.mutate(study.id, { onSuccess: () => toast.success("Analysis archived") });
-            }}
+            onClick={() => setConfirmArchive(true)}
             className="grid size-8 place-items-center rounded-md border border-[#E6EBF4] text-[#94A3B8] hover:border-[#F5C2BE] hover:bg-[#FDF4F3] hover:text-[#C0261F]"
           >
             <Archive className="size-3.5" />
@@ -526,6 +657,24 @@ function StudyCard({ study }: { study: StudyListItem }) {
           </span>
         </div>
       ) : null}
+      <ConfirmDialog
+        open={confirmArchive}
+        onOpenChange={(next) => (archive.isPending ? undefined : setConfirmArchive(next))}
+        title="Archive this analysis?"
+        description={`“${study.name}” leaves this list. Its history and reports are kept.`}
+        confirmLabel="Archive"
+        variant="destructive"
+        isPending={archive.isPending}
+        onConfirm={() =>
+          archive.mutate(study.id, {
+            onSuccess: () => {
+              setConfirmArchive(false);
+              toast.success("Analysis archived");
+            },
+            onError: (e) => toast.error(errorText(e, "The analysis could not be archived")),
+          })
+        }
+      />
     </div>
   );
 }

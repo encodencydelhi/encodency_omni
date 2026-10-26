@@ -53,6 +53,8 @@ export interface SiteEvidence {
   role: "own" | "competitor";
   reachable: boolean;
   error: string | null;
+  /** The other website this address sends visitors to; then nothing was read or scored (runs from 2026-10-26 on). */
+  movedTo?: string | null;
   name: string | null;
   title: string | null;
   description: string | null;
@@ -60,7 +62,7 @@ export interface SiteEvidence {
   /** Mobile screenshot of the home page from Google PageSpeed (data URL). */
   screenshot?: string | null;
   https: boolean;
-  pages: { url: string; title: string; description: string; words: number; headings: number; ctas: string[]; kind?: PageKind; method?: "static" | "rendered" }[];
+  pages: { url: string; title: string; description: string; words: number; headings: number; ctas: string[]; kind?: PageKind; method?: "static" | "rendered"; h1?: string | null }[];
   metrics: SiteMetrics;
   tech?: TechSignals | null;
   features?: SiteFeatures;
@@ -150,7 +152,8 @@ export interface OfferFact { value: string; url: string; quote: string }
 export interface LabeledFact extends OfferFact { label: string }
 export const OFFER_FIELDS = ["eventName", "dates", "location", "exhibitors", "visitors", "stallPrice", "ticketPrice", "deadline"] as const;
 export type OfferField = (typeof OFFER_FIELDS)[number];
-export type SiteOffers = { domain: string; prices: LabeledFact[]; claims: LabeledFact[] } & Record<OfferField, OfferFact | null>;
+/** `products` / `services` (value = the name as written) exist only on runs from 2026-10-26 on. */
+export type SiteOffers = { domain: string; products?: OfferFact[]; services?: OfferFact[]; prices: LabeledFact[]; claims: LabeledFact[] } & Record<OfferField, OfferFact | null>;
 export interface OffersBlock { status: "completed" | "failed"; generatedAt: string; sites: SiteOffers[]; dropped: number; reason?: string }
 
 export type AiBlock =
@@ -213,7 +216,10 @@ export interface StudyDetail {
 }
 
 export interface CompetitorSuggestion { name: string; domain: string; url: string; siteName: string | null; why: string; source: "ai" | "knowledge_graph" }
-export interface SuggestionResult { business: { what: string; where: string | null }; suggestions: CompetitorSuggestion[]; dropped: number; cached: boolean; at: string }
+export type SuggestScope = "city" | "state" | "country";
+export interface SitePlace { label: string; city: string | null; state: string | null; country: string | null; quote: string }
+export interface SiteLocation { city: string | null; state: string | null; country: string | null; basis: string; places?: SitePlace[]; pages?: string[]; cached: boolean }
+export interface SuggestionResult { business: { what: string; where: string | null }; scope?: SuggestScope; place?: string; area?: string | null; suggestions: CompetitorSuggestion[]; dropped: number; cached: boolean; at: string }
 
 export interface StudyShare {
   id: string;
@@ -291,8 +297,10 @@ export const analyzerApi = {
     apiClient.request<StudyShare>({ method: "DELETE", path: `/competitor-analyzer/studies/${encodeURIComponent(id)}/shares/${encodeURIComponent(shareId)}`, headers: companyScopeHeaders(companyId) }),
   /** Reads only the site's home page to show its name while the address is typed. */
   siteName: (companyId: string, url: string) =>
-    apiClient.request<{ domain: string; url: string; name: string | null; reachable: boolean }>({ method: "GET", path: "/competitor-analyzer/site-name", headers: companyScopeHeaders(companyId), query: { url } }),
+    apiClient.request<{ domain: string; url: string; name: string | null; reachable: boolean; movedTo?: string | null }>({ method: "GET", path: "/competitor-analyzer/site-name", headers: companyScopeHeaders(companyId), query: { url } }),
   /** Competitor websites for a site, each checked to open (uses a little of today's AI limit; cached 7 days per website). */
-  suggest: (companyId: string, url: string) => apiClient.request<SuggestionResult>({ method: "GET", path: "/competitor-analyzer/suggest", headers: companyScopeHeaders(companyId), query: { url } }),
+  location: (companyId: string, url: string) => apiClient.request<SiteLocation>({ method: "GET", path: "/competitor-analyzer/location", headers: companyScopeHeaders(companyId), query: { url } }),
+  suggest: (companyId: string, url: string, scope: SuggestScope, place: string) =>
+    apiClient.request<SuggestionResult>({ method: "GET", path: "/competitor-analyzer/suggest", headers: companyScopeHeaders(companyId), query: { url, scope, ...(place ? { place } : {}) } }),
   lookup: (companyId: string, q: string) => apiClient.request<{ results: LookupResult[]; message: string | null }>({ method: "GET", path: "/competitor-analyzer/lookup", headers: companyScopeHeaders(companyId), query: { q } }),
 };

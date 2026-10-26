@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { clientsApi } from "@/features/clients/data/clients-api";
-import { analyzerApi } from "./api";
+import { analyzerApi, type SuggestScope } from "./api";
 
 const keys = {
   all: (companyId: string) => ["competitor-analyzer", companyId] as const,
@@ -90,7 +90,7 @@ export function useStudyMutations() {
     run: useMutation({ mutationFn: (id: string) => analyzerApi.run(companyId, id), onSuccess: refresh }),
     stop: useMutation({ mutationFn: (args: { id: string; runId: string }) => analyzerApi.stopRun(companyId, args.id, args.runId), onSuccess: refresh }),
     lookup: useMutation({ mutationFn: (q: string) => analyzerApi.lookup(companyId, q) }),
-    suggest: useMutation({ mutationFn: (url: string) => analyzerApi.suggest(companyId, url) }),
+    suggest: useMutation({ mutationFn: ({ url, scope, place }: { url: string; scope: SuggestScope; place: string }) => analyzerApi.suggest(companyId, url, scope, place) }),
     download: useMutation({ mutationFn: (args: { id: string; lang?: "en" | "hi" }) => analyzerApi.downloadReport(companyId, args.id, args.lang) }),
     settings: useMutation({ mutationFn: (args: { id: string; body: Parameters<typeof analyzerApi.updateSettings>[2] }) => analyzerApi.updateSettings(companyId, args.id, args.body), onSuccess: refresh }),
     actionStatus: useMutation({ mutationFn: (args: { id: string; body: Parameters<typeof analyzerApi.setActionStatus>[2] }) => analyzerApi.setActionStatus(companyId, args.id, args.body), onSuccess: refresh }),
@@ -112,19 +112,34 @@ export function useStudyShares(id: string) {
   };
 }
 
+/** City, state and country of the business behind the site typed in `value`, read once its address answers (cached 7 days). */
+export function useSiteLocation(value: string) {
+  const { companyId, ready } = useAnalyzerCompany();
+  const site = useSiteName(value);
+  const domain = site.domain;
+  return useQuery({
+    queryKey: ["competitor-analyzer", companyId, "location", domain ?? ""],
+    queryFn: () => analyzerApi.location(companyId, domain!),
+    enabled: ready && Boolean(domain && site.data?.reachable),
+    staleTime: Infinity,
+    retry: false,
+  });
+}
+
 /**
- * Competitors suggested for the site typed in `value`: asked for automatically once the address answers (so a
- * half-typed address never costs an AI call). The server keeps the answer 7 days per website, so asking again is free.
+ * Competitors suggested for the site typed in `value`, from the area picked in `scope` (null = not picked yet, nothing
+ * is asked): asked for once the address answers (so a half-typed address never costs an AI call). The server keeps the
+ * answer 7 days per website, area and place, so asking again is free.
  */
-export function useCompetitorSuggestions(value: string) {
+export function useCompetitorSuggestions(value: string, scope: SuggestScope | null, place: string) {
   const { companyId, ready } = useAnalyzerCompany();
   const site = useSiteName(value);
   const domain = site.domain;
   const reachable = Boolean(domain && site.data?.reachable);
   const query = useQuery({
-    queryKey: ["competitor-analyzer", companyId, "suggest", domain ?? ""],
-    queryFn: () => analyzerApi.suggest(companyId, domain!),
-    enabled: ready && reachable,
+    queryKey: ["competitor-analyzer", companyId, "suggest", domain ?? "", scope ?? "", place.trim().toLowerCase()],
+    queryFn: () => analyzerApi.suggest(companyId, domain!, scope!, place.trim()),
+    enabled: ready && reachable && Boolean(scope),
     staleTime: Infinity,
     retry: false,
   });

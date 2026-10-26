@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import { Quote, Store, Tags } from "lucide-react";
+import { Package, Quote, Store, Tags } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { OFFER_FIELDS, type OfferFact, type OfferField, type OffersBlock, type SiteOffers, type StudySite } from "./api";
 import { Panel } from "./report-sections";
@@ -65,8 +65,64 @@ export function OffersPanel({ offers, sites, colorOf }: { offers: OffersBlock | 
   const hidden = OFFER_FIELDS.length - rows.length;
   const anyLists = columns.some((s) => (bySite(s.domain)?.prices.length ?? 0) + (bySite(s.domain)?.claims.length ?? 0) > 0);
 
+  // Runs before 2026-10-26 did not read products and services at all (the fields are missing, not empty).
+  const catalogueRead = columns.some((s) => bySite(s.domain)?.products !== undefined);
+  const anyCatalogue = columns.some((s) => (bySite(s.domain)?.products?.length ?? 0) + (bySite(s.domain)?.services?.length ?? 0) > 0);
+
   return (
     <div className="space-y-1">
+      <Panel
+        title="Products & Services"
+        icon={Package}
+        subtitle="What each website names as the things it sells and the work it does"
+        explain={
+          <>
+            <p>Each card is one website. Products are the goods it names (machines, equipment, food items…); services are the work it offers (setups, treatments, courses, packages…). Names come from the site&apos;s own product and service links, headings and text, exactly as written.</p>
+            <p>Hover a name to see the words on the page, and open the link to see that page. A site with nothing listed does not name its products or services on the pages we read; it may still sell them.</p>
+          </>
+        }
+      >
+        {!catalogueRead ? (
+          <p className="text-[12px] text-[#6B7A94]">This check was made before products and services were read. Re-check to see what each website sells.</p>
+        ) : anyCatalogue ? (
+          <div className="grid gap-1 md:grid-cols-2 xl:grid-cols-3">
+            {columns.map((s) => {
+              const o = bySite(s.domain)!;
+              const lists = [
+                ["Products", o.products ?? []],
+                ["Services", o.services ?? []],
+              ] as const;
+              return (
+                <div key={s.domain} className={cn("rounded-lg border p-2.5", s.role === "own" ? "border-[#BFD3F7] bg-[#F5F8FF]" : "border-[#E6EBF4]")}>
+                  <SiteLabel domain={s.domain} color={colorOf(s.domain)} own={s.role === "own"} wrap />
+                  {lists.every(([, items]) => !items.length) ? <p className="mt-1.5 text-[11px] text-[#94A3B8]">No products or services named on the pages read.</p> : null}
+                  {lists.map(([title, items]) =>
+                    items.length ? (
+                      <Fragment key={title}>
+                        <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-[#6B7A94]">{title} ({items.length})</p>
+                        <ul className="mt-1 space-y-1">
+                          {items.map((item) => (
+                            <li key={item.value} className="flex items-start gap-1.5 text-[11.5px]">
+                              <span className="mt-[7px] size-1 shrink-0 rounded-full bg-[#94A3B8]" aria-hidden />
+                              <span className="min-w-0">
+                                <span className="font-medium normal-case text-[#111C3A] [overflow-wrap:anywhere]" title={`“${item.quote}”`}>{item.value}</span>
+                                <SourceLink url={item.url} />
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </Fragment>
+                    ) : null,
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-[12px] text-[#6B7A94]">None of the websites names its products or services on the pages we read.</p>
+        )}
+      </Panel>
+
       <Panel
         title="What They Sell & At What Price"
         icon={Store}

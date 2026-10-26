@@ -16,7 +16,7 @@ import { AXIS_PROPS, ChartLegend, ChartTooltip, GRID_PROPS } from "@/features/ad
 import { formatDateTime } from "@/features/admin/website/data/selectors";
 import type { ActionState, ActionStatus, AnalyzerResult, FeatureState, OwnSearch, RealUserSpeed, RunReport, SiteEvidence, SiteFeatures, SpeedCategory, StudyDetail, StudySite } from "./api";
 import { topicImpressions } from "./watch-sections";
-import { SiteFavicon, SiteLabel, SourceLink, useSiteLabelOf } from "./ui";
+import { SiteFavicon, SiteLabel, SourceLink, siteNotice, useSiteLabelOf } from "./ui";
 
 export type ColorOf = (domain: string) => string;
 export type PreviousScores = Record<string, Record<string, number>> | null | undefined;
@@ -198,6 +198,7 @@ export function Hero({ study, report, ai, colorOf }: { study: StudyDetail; repor
             const score = ai?.overall[s.domain] ?? null;
             const place = ai ? rankOf(ai, s.domain)?.rank ?? null : null;
             const wins = winsOf(s.domain);
+            const notice = siteNotice(ev);
             return (
               <li key={s.domain} className={cn("grid grid-cols-[28px_minmax(0,1fr)_44px] items-center gap-3 rounded-lg px-2.5 py-2 md:grid-cols-[28px_minmax(0,240px)_minmax(0,1fr)_44px]", s.role === "own" ? "bg-[#EFF4FC] ring-1 ring-inset ring-[#DCE6FB]" : "hover:bg-[#F8FAFD]")}>
                 <span className={cn("grid size-7 place-items-center rounded-full text-[12px] font-bold", place === 1 ? "bg-[#F59E0B] text-white" : "bg-[#F1F4F9] text-[#28354C]")}>{place === 1 ? <Crown className="size-3.5" /> : place ?? "–"}</span>
@@ -207,12 +208,12 @@ export function Hero({ study, report, ai, colorOf }: { study: StudyDetail; repor
                   {s.role === "own" ? <span className="shrink-0 rounded bg-[#2563EB] px-1.5 text-[9.5px] font-semibold uppercase text-white">You</span> : null}
                 </div>
                 <div className="col-span-3 min-w-0 md:col-span-1">
-                  {ev?.reachable === false ? (
-                    <p className="truncate text-[11px] text-[#C0261F]">{ev.error}</p>
+                  {score == null && notice ? (
+                    <p className={cn("text-[11px] leading-snug", ev?.reachable === false ? "text-[#C0261F]" : "text-[#B45309]")}>{notice.text}</p>
                   ) : (
                     <>
                       <span className="block h-2 overflow-hidden rounded-full bg-[#EEF2F8]"><span className="block h-full rounded-full" style={{ width: `${score ?? 0}%`, background: colorOf(s.domain) }} /></span>
-                      {wins.length ? <p className="mt-1 truncate text-[10.5px] text-[#6B7A94]" title={wins.join(", ")}><Crown className="mr-0.5 inline size-3 text-[#F59E0B]" />Best at {wins.join(", ")}</p> : null}
+                      {notice?.wrongSite ? <p className="mt-1 text-[10.5px] leading-snug text-[#C0261F]">{notice.text}</p> : wins.length ? <p className="mt-1 truncate text-[10.5px] text-[#6B7A94]" title={wins.join(", ")}><Crown className="mr-0.5 inline size-3 text-[#F59E0B]" />Best at {wins.join(", ")}</p> : null}
                     </>
                   )}
                 </div>
