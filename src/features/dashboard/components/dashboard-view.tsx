@@ -81,7 +81,7 @@ export function DashboardView() {
 
   return (
     <div className="-mx-4 -my-5 min-h-[calc(100dvh-60px)] px-4 py-4 sm:-mx-5 sm:px-5 xl:-mx-6 xl:px-6">
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-1">
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-1 capitalize">
         <DashboardHeader
           generatedAt={snapshot.generatedAt || data?.generatedAt}
           range={range}

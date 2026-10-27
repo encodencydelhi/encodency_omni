@@ -262,7 +262,7 @@ export function ApiUsagePanel({
               </div>
               <div className="flex flex-col">
                 <span className="text-[11px] text-slate-400 font-medium mb-0.5 whitespace-nowrap">Avg Resp</span>
-                <span className="text-base font-semibold text-slate-800">{usage.avgResponseMs === null ? "—" : `${usage.avgResponseMs} ms`}</span>
+                <span className="text-base font-semibold normal-case text-slate-800">{usage.avgResponseMs === null ? "—" : `${usage.avgResponseMs} ms`}</span>
               </div>
             </div>
           </>

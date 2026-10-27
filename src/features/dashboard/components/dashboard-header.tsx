@@ -85,7 +85,7 @@ export function DashboardHeader({
             <CalendarIcon className="size-4 text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="capitalize">
             {RANGE_KEYS.map((key) => (
               <SelectItem key={key} value={key}>
                 {DASHBOARD_RANGES[key].label}
