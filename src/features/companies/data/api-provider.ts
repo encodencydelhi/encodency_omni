@@ -57,6 +57,7 @@ import type {
   ChangePlanInput,
   CompanyAccountStatus,
   CompanyActivity,
+  CompanyAttentionItem,
   CompanyClient,
   CompanyIntegration,
   CompanyInternalOwner,
@@ -812,12 +813,11 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
 
     /**
      * No stats endpoint: page the list endpoint to the end and derive the KPIs
-     * from the real rows, so the strip matches the table below it. Unreachable
-     * or empty backend → demo portfolio (the documented fallback policy).
+     * from the real rows, so the strip matches the table below it. An empty
+     * database gives zeros, never the demo portfolio.
      */
     async getPortfolio(): Promise<PortfolioSummary> {
       const apiSummaries = await fetchAllSummaries();
-      if (apiSummaries.length === 0) return fallback.getPortfolio();
 
       let demoCreated: CompanySummary[] = [];
       try {
@@ -831,8 +831,8 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
 
     /**
      * Export = exactly what the list endpoint serves for the same query (or the
-     * given ids), paged at the API maximum. Unreachable backend -> demo export,
-     * per the fallback policy.
+     * given ids), paged at the API maximum. Nothing to export gives an empty
+     * file; an unreachable backend is an error, never a demo export.
      */
     async exportCompanies({ query, ids }): Promise<CompanySummary[]> {
       if (ids && ids.length > 0) {
@@ -849,17 +849,14 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
           totalPages = result.pagination.totalPages;
           page += 1;
         } while (page <= totalPages && page <= MAX_PORTFOLIO_PAGES);
-        if (collected.size === 0) return fallback.exportCompanies({ query, ids });
         return [...collected.values()];
       } catch (error) {
-        if (shouldFallBack(error)) return fallback.exportCompanies({ query, ids });
         throw error;
       }
     },
 
     async getDirectory(): Promise<CompanyDirectoryEntry[]> {
       const summaries = await fetchAllSummaries();
-      if (summaries.length === 0) return fallback.getDirectory();
       return summaries.map((summary) => ({
         id: summary.company.id,
         name: summary.company.name,
@@ -1329,7 +1326,8 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       try {
         const apiPlans = await superAdminPlansApi.listPlans();
         if (apiPlans && apiPlans.length > 0) {
-          const fallbackPlans = await fallback.listPlans();
+          // In API mode the fallback only reports "not connected": no demo plan details are mixed in.
+          const fallbackPlans = await fallback.listPlans().catch((): Plan[] => []);
           return apiPlans.map((p) => {
             const fb = fallbackPlans.find((f) => f.name.toLowerCase() === p.name.toLowerCase());
             return {
@@ -1364,8 +1362,18 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
             };
           });
         }
-      } catch {}
-      return fallback.listPlans();
+        // No plans created yet on this platform: an empty list (Plans & Subscriptions is where they are made).
+        return [];
+      } catch (error) {
+        if (shouldFallBack(error)) return fallback.listPlans();
+        throw error;
+      }
+    },
+
+    /** The attention items of one company, derived from its real summary (same rules as the portfolio). */
+    async getAttention(id: string): Promise<CompanyAttentionItem[]> {
+      if (!UUID_PATTERN.test(id)) return fallback.getAttention(id);
+      return (await this.getCompany(id)).attention;
     },
 
     async getUsers(id: string): Promise<CompanyUsersData> {

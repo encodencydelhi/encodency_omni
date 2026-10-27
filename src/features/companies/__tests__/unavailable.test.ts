@@ -31,14 +31,18 @@ describe("api mode", () => {
     );
   });
 
-  it("routes non-UUID demo ids straight to the fallback detail reader", async () => {
-    const company = await companiesRepository.getCompany("cmp_namo-gange-trust");
-    assert.equal(company.company.id, "cmp_namo-gange-trust");
-    assert.equal(company.company.name, "Namo Gange Trust");
+  it("never serves a demo company: a demo id is 'not connected' (503), not sample data", async () => {
+    await assert.rejects(companiesRepository.getCompany("cmp_namo-gange-trust"), (err: any) => err.status === 503);
   });
 
-  it("still delegates methods the backend does not serve to the fallback", async () => {
+  it("shows an empty portfolio, not the demo one, when the backend has no companies", async () => {
     const portfolio = await companiesRepository.getPortfolio();
-    assert.ok(portfolio.total > 0, "portfolio KPIs come from the demo fallback");
+    assert.equal(portfolio.total, 0);
+    assert.equal(portfolio.attentionItems.length, 0);
+  });
+
+  it("has no demo reset and reports 'not connected' for what the backend does not serve yet", async () => {
+    assert.equal(companiesRepository.resetDemoData, undefined);
+    await assert.rejects(companiesRepository.addNote("00000000-0000-4000-8000-000000000001", { body: "x" } as never, {} as never), (err: any) => err.status === 503);
   });
 });

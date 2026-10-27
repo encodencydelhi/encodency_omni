@@ -3,8 +3,9 @@
  *
  *   Mock mode:   UI -> hooks -> companiesRepository -> mock provider (in-memory, demo)
  *   API mode:    UI -> hooks -> companiesRepository -> api provider (GET /super-admin/companies[/:id])
- *                ... with an injected demo fallback for everything the backend
- *                does not serve yet (portfolio, overview, mutations, ...)
+ *                ... never demo data: anything the backend does not serve
+ *                reports "not connected" (503), and an empty database shows
+ *                zeros and empty lists.
  *
  * Components never import a provider. Connecting more backend endpoints means
  * implementing them once inside `api-provider.ts`; no page, hook or component
@@ -16,6 +17,7 @@ import type { IntegrationCounts } from "./selectors";
 import { createApiCompaniesProvider } from "./api-provider";
 import { COMPANIES_MOCK_MODE } from "./config";
 import { mockCompaniesProvider } from "./mock-provider";
+import { unavailableCompaniesProvider } from "./unavailable-provider";
 import type {
   ActivityFilter,
   ChangePlanInput,
@@ -221,6 +223,17 @@ export interface CompaniesRepository {
   resetDemoData?(): Promise<void>;
 }
 
+/**
+ * The API provider's fallback in API mode: every method rejects with "not connected" (one real function per method,
+ * so the provider's object spread stays complete), and there is no `resetDemoData`. Live data is never mixed with
+ * the demo workspace (owner rule: an empty production database showed 28 sample companies).
+ */
+const notConnectedCompaniesProvider = Object.fromEntries(
+  Object.keys(mockCompaniesProvider)
+    .filter((key) => key !== "mode" && key !== "resetDemoData")
+    .map((key) => [key, (unavailableCompaniesProvider as unknown as Record<string, () => Promise<never>>)[key]]),
+) as unknown as CompaniesRepository;
+
 export const companiesRepository: CompaniesRepository = COMPANIES_MOCK_MODE
   ? mockCompaniesProvider
-  : createApiCompaniesProvider(mockCompaniesProvider);
+  : createApiCompaniesProvider(notConnectedCompaniesProvider);
