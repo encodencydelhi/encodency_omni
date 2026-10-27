@@ -246,6 +246,28 @@ export const integrationsApi = {
     });
   },
 
+  async initLinkedInCommunityOAuth(companyId: string, signal?: AbortSignal): Promise<OAuthInitResponse> {
+    return apiClient.request<OAuthInitResponse>({
+      method: "POST",
+      path: "/integrations/oauth/init",
+      headers: companyScopeHeaders(companyId),
+      body: { provider: "LINKEDIN", app: "community" },
+      signal,
+      skipSessionExpiry: false,
+    });
+  },
+
+  /** DELETE /integrations/LINKEDIN?app=community: removes only the Community Management connection; its pages move back to the member login. */
+  async disconnectLinkedInCommunity(companyId: string, signal?: AbortSignal): Promise<{ disconnected: number }> {
+    return apiClient.request<{ disconnected: number }>({
+      method: "DELETE",
+      path: "/integrations/LINKEDIN",
+      query: { app: "community" },
+      headers: companyScopeHeaders(companyId),
+      signal,
+    });
+  },
+
   async disconnectProvider(
     companyId: string,
     provider: BackendOAuthProvider,

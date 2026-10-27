@@ -102,6 +102,78 @@ function Tabs({
     </nav>
   );
 }
+/**
+ * The second LinkedIn connection: the Community Management API app (company-page posts, comments & reactions, page and
+ * follower analytics, page publishing). It sits next to the member login, which keeps working as before.
+ */
+function LinkedInCommunityCard({ connection, resources, onRefetch }: { connection: any; resources: any[]; onRefetch?: () => void }) {
+  const { companyId } = useTenancyContext();
+  const [busy, setBusy] = useState<"connect" | "disconnect" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const pagesOnIt = connection ? resources.filter((resource: any) => resource.integrationId === connection.integrationId).length : 0;
+  const adminPages = Number(connection?.accountProfile?.adminPages ?? 0);
+
+  const connect = async () => {
+    try {
+      setError(null);
+      setBusy("connect");
+      if (!companyId) throw new Error("Active Company ID is required to connect LinkedIn.");
+      const { authUrl } = await integrationsApi.initLinkedInCommunityOAuth(companyId);
+      window.location.href = authUrl;
+    } catch (err: any) {
+      setBusy(null);
+      setError(err?.message || "Could not start the LinkedIn Community Management connection.");
+    }
+  };
+
+  const disconnect = async () => {
+    try {
+      setError(null);
+      setBusy("disconnect");
+      if (!companyId) throw new Error("Active Company ID is required to disconnect LinkedIn.");
+      await integrationsApi.disconnectLinkedInCommunity(companyId);
+      onRefetch?.();
+    } catch (err: any) {
+      setError(err?.message || "Could not disconnect the Community Management connection.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <section className="flex flex-col gap-3 border border-[#DDE4ED] bg-white px-5 py-3.5 shadow-[0_1px_3px_rgb(31_50_81/0.05)] lg:flex-row lg:items-center lg:justify-between">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <Building2 className="size-4 text-[#0A66C2]" />
+          <p className="text-[12.5px] font-bold text-[#172044]">Company page data · Community Management API</p>
+          {connection ? (
+            <span className="inline-flex h-5 items-center gap-1.5 border border-emerald-200 bg-emerald-50 px-2 text-[9.5px] font-bold text-emerald-700"><span className="size-1.5 rounded-full bg-emerald-500" />Connected</span>
+          ) : (
+            <span className="inline-flex h-5 items-center border border-amber-200 bg-amber-50 px-2 text-[9.5px] font-bold text-amber-700">Not connected</span>
+          )}
+        </div>
+        <p className="mt-1 max-w-3xl text-[11px] leading-5 text-[#52617D]">
+          {connection
+            ? `Posts, comments & reactions, page analytics and followers are read with this connection. Admin of ${adminPages} company ${adminPages === 1 ? "page" : "pages"} · ${pagesOnIt} mapped ${pagesOnIt === 1 ? "page uses" : "pages use"} it. The LinkedIn login above stays as it is.`
+            : "Posts, comments & reactions and page analytics need LinkedIn's Community Management API, which runs on its own LinkedIn app. Connect it with the LinkedIn account that is an admin of the company page; mapped pages switch to it automatically. The LinkedIn login above stays as it is."}
+        </p>
+        {error && <p className="mt-1.5 border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-600">{error}</p>}
+      </div>
+      <div className="flex shrink-0 flex-wrap gap-2">
+        {connection ? (
+          <button type="button" onClick={disconnect} disabled={busy !== null} className="h-8 border border-rose-200 bg-white px-3 text-[11px] font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-70">
+            {busy === "disconnect" ? "Disconnecting..." : "Disconnect"}
+          </button>
+        ) : null}
+        <button type="button" onClick={connect} disabled={busy !== null} className="inline-flex h-8 items-center gap-1.5 bg-[#0A66C2] px-3 text-[11px] font-bold text-white hover:bg-[#084e96] disabled:opacity-70">
+          <LinkIcon className="size-3.5" />
+          {busy === "connect" ? "Redirecting..." : connection ? "Reconnect" : "Connect Community API"}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function LinkedInPersonalOnlyState({
   status,
   onRefetch,
@@ -119,7 +191,11 @@ function LinkedInPersonalOnlyState({
   const [discoveredPages, setDiscoveredPages] = useState<any[]>([]);
   const [connectError, setConnectError] = useState<string | null>(null);
   const connectedAt = status?.lastUpdatedAt ? new Date(status.lastUpdatedAt).toLocaleString() : null;
-  const memberConnection = status?.connections?.find((connection: any) => connection.accountType === "LINKEDIN_MEMBER");
+  const isCommunity = (connection: any) => connection?.accountProfile?.linkedinApp === "community";
+  const memberConnection = status?.connections?.find((connection: any) => connection.accountType === "LINKEDIN_MEMBER" && !isCommunity(connection));
+  const communityConnection = status?.connections?.find((connection: any) => connection.accountType === "LINKEDIN_MEMBER" && isCommunity(connection));
+  // Company pages are found and mapped through the Community Management connection when there is one (it has the page permissions).
+  const pageConnection = communityConnection ?? memberConnection;
   const mappedResources = Array.isArray(status?.resources) ? status.resources : [];
   const hasMappedPage = mappedResources.length > 0;
   const accountName = memberConnection?.accountName || "LinkedIn Personal Account";
@@ -167,7 +243,7 @@ function LinkedInPersonalOnlyState({
     try {
       setConnectError(null);
       setIsDiscovering(true);
-      const integrationId = memberConnection?.integrationId;
+      const integrationId = pageConnection?.integrationId;
       if (!companyId || !integrationId) throw new Error("LinkedIn connection is required before discovering pages.");
       const pages = await integrationsApi.discoverResources(companyId, integrationId);
       setDiscoveredPages(pages.filter((page) => page.resourceType === "LINKEDIN_ORGANIZATION"));
@@ -182,7 +258,7 @@ function LinkedInPersonalOnlyState({
     try {
       setConnectError(null);
       setMappingResourceId(page.externalResourceId);
-      const integrationId = memberConnection?.integrationId;
+      const integrationId = pageConnection?.integrationId;
       if (!companyId || !clientId || !integrationId) throw new Error("Company, client and LinkedIn connection are required before mapping.");
       await integrationsApi.mapResource(companyId, integrationId, {
         clientId,
@@ -199,6 +275,7 @@ function LinkedInPersonalOnlyState({
 
   if (compact && hasMappedPage) {
     return (
+      <div className="space-y-2">
       <section className="relative flex min-h-23 flex-col gap-4 overflow-hidden border border-[#D8E1EC] bg-white px-5 py-3.5 shadow-[0_2px_8px_rgb(31_50_81/0.05)] lg:flex-row lg:items-center lg:justify-between">
         <span className="absolute inset-y-0 left-0 w-0.5 bg-[#0A66C2]" />
         <div className="flex min-w-0 items-center gap-5">
@@ -220,6 +297,8 @@ function LinkedInPersonalOnlyState({
         </div>
         {connectError && <p className="text-[10px] font-semibold text-rose-600">{connectError}</p>}
       </section>
+      <LinkedInCommunityCard connection={communityConnection} resources={mappedResources} onRefetch={onRefetch} />
+      </div>
     );
   }
 
@@ -301,6 +380,8 @@ function LinkedInPersonalOnlyState({
         {profileRows.length > 0 && <div className="grid border-b border-[#E4EAF2] bg-[#F8FAFC] sm:grid-cols-2 lg:grid-cols-4">{profileRows.slice(0, 4).map(([label, value], index) => <div key={label} className={`px-5 py-3 ${index ? "border-t border-[#E4EAF2] sm:border-l sm:border-t-0" : ""}`}><p className="text-[9px] font-semibold uppercase text-[#8A97AF]">{label}</p><p className="mt-1 truncate text-[11px] font-semibold text-[#172044]" title={value}>{value}</p></div>)}</div>}
         {mappedResources.length > 0 && <div className="px-5 py-4"><div className="mb-3 flex items-center justify-between"><div><h3 className="text-[12px] font-bold text-[#172044]">Mapped company pages</h3><p className="mt-0.5 text-[10px] text-[#7B89A4]">LinkedIn organizations assigned to this client</p></div><span className="text-[10px] font-semibold text-[#0A66C2]">{mappedResources.length} connected</span></div><div className="grid gap-2 md:grid-cols-2">{mappedResources.map((resource: any, index: number) => { const organizationId = String(resource.externalResourceId || "").split(":").at(-1); return <div key={resource.mappingId} className="flex min-w-0 items-center gap-3 border border-[#DDE4ED] bg-white px-3 py-3"><div className="grid size-9 shrink-0 place-items-center bg-[#EAF3FB] text-[11px] font-bold text-[#0A66C2]">in</div><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><p className="truncate text-[11px] font-semibold text-[#172044]">Company page {index + 1}</p><span className="size-1.5 shrink-0 rounded-full bg-emerald-500" /></div><p className="mt-0.5 truncate text-[9.5px] text-[#7B89A4]">Organization ID: {organizationId}</p></div><a href={`https://www.linkedin.com/company/${organizationId}`} target="_blank" rel="noreferrer" title="Open on LinkedIn" className="grid size-8 shrink-0 place-items-center border border-[#DDE4ED] text-[#0A66C2] hover:bg-[#F2F8FD]"><ExternalLink className="size-3.5" /></a></div>; })}</div></div>}
       </section>
+
+      <LinkedInCommunityCard connection={communityConnection} resources={mappedResources} onRefetch={onRefetch} />
 
       {discoveredPages.length > 0 && (
         <section className="rounded-sm border border-[#DDE4ED] bg-white p-4 shadow-sm">
