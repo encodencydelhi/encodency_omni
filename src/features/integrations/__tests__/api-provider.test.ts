@@ -1,10 +1,9 @@
 /**
  * With mock mode off the repository resolves to the real API provider
- * (`GET /integrations/registry`) with the demo provider injected as the
- * fallback the owner approved on 2026-09-24: unreachable backend or empty
- * registry → show the full demo catalogue instead of an empty panel.
- * 401/403 still propagate (they cannot be exercised here without a live
- * server; covered by the live API contract suite when the backend is up).
+ * (`GET /super-admin/integrations/summary` + audit logs). The demo workspace
+ * is never shown in API mode (owner rule, 2026-10-27): an unreachable backend
+ * is an error, and what the backend does not serve yet reports "not
+ * connected" (503) instead of sample data.
  *
  * `node --test` runs each file in its own process, so the environment set
  * here cannot leak into the other suites.
@@ -28,31 +27,27 @@ describe("api mode", () => {
     assert.equal(integrationsRepository.mode, "api");
   });
 
-  it("falls back to the demo catalogue when the backend is unreachable", async () => {
-    const providers = await integrationsRepository.getProviders();
-    assert.ok(Array.isArray(providers));
-    assert.ok(providers.length > 0, "expected the mock fallback to supply providers");
+  it("does not show the demo catalogue when the backend is unreachable", async () => {
+    await assert.rejects(integrationsRepository.getProviders(), (err: any) => err.status === 0 || err.code === "NETWORK_ERROR");
+    await assert.rejects(integrationsRepository.getOverviewKpis(), (err: any) => err.status === 0 || err.code === "NETWORK_ERROR");
   });
 
-  it("still delegates methods the backend does not serve to the fallback", async () => {
-    const issues = await integrationsRepository.getIssues();
-    assert.ok(Array.isArray(issues));
-    const settings = await integrationsRepository.getSettings();
-    assert.ok(settings.newConnectionApprovalPolicy);
-    const activities = await integrationsRepository.getActivities();
-    assert.ok(activities.length > 0, "activities come from the demo fallback");
+  it("reports 'not connected' for what the backend does not serve, never sample data", async () => {
+    for (const read of [() => integrationsRepository.getIssues(), () => integrationsRepository.getSettings(), () => integrationsRepository.getAuthorizations(), () => integrationsRepository.resetDemo()]) {
+      await assert.rejects(read(), (err: any) => err.status === 503);
+    }
   });
 });
 
-describe("fallback policy", () => {
-  it("falls back for network, 404 and 5xx errors", () => {
+describe("error classification", () => {
+  it("treats network, 404 and 5xx errors as an unreachable backend", () => {
     assert.equal(shouldFallBack(new ApiError({ code: "NETWORK_ERROR", message: "down", status: 0 })), true);
     assert.equal(shouldFallBack(new ApiError({ code: "NOT_FOUND", message: "missing", status: 404 })), true);
     assert.equal(shouldFallBack(new ApiError({ code: "UNKNOWN", message: "boom", status: 503 })), true);
     assert.equal(shouldFallBack(new Error("not an ApiError")), true);
   });
 
-  it("propagates auth and validation errors instead of falling back", () => {
+  it("keeps auth and validation errors as they are", () => {
     assert.equal(shouldFallBack(new ApiError({ code: "UNAUTHORIZED", message: "no", status: 401 })), false);
     assert.equal(shouldFallBack(new ApiError({ code: "FORBIDDEN", message: "no", status: 403 })), false);
     assert.equal(shouldFallBack(new ApiError({ code: "BAD_REQUEST", message: "bad", status: 400 })), false);
@@ -60,19 +55,21 @@ describe("fallback policy", () => {
   });
 });
 
-describe("backend registry mapping", () => {
-  it("maps every supported backend enum onto a catalogue id", () => {
+describe("backend provider mapping", () => {
+  it("maps every backend provider onto a catalogue id", () => {
     assert.equal(fromBackendProvider("META"), "meta");
     assert.equal(fromBackendProvider("GOOGLE_BUSINESS"), "google_business");
     assert.equal(fromBackendProvider("LINKEDIN"), "linkedin");
+    assert.equal(fromBackendProvider("YOUTUBE"), "youtube");
+    assert.equal(fromBackendProvider("X"), "x_twitter");
   });
 
-  it("maps catalogue ids back to backend enums only for OAuth-managed providers", () => {
+  it("maps catalogue ids back to backend providers only where the backend stores connections", () => {
     assert.equal(toBackendProvider("meta"), "META");
     assert.equal(toBackendProvider("google_business"), "GOOGLE_BUSINESS");
     assert.equal(toBackendProvider("linkedin"), "LINKEDIN");
-    assert.equal(toBackendProvider("whatsapp"), null, "api-key connectors are not registry-managed");
-    assert.equal(toBackendProvider("youtube"), null, "roadmap OAuth providers are not registry-managed yet");
+    assert.equal(toBackendProvider("youtube"), "YOUTUBE");
+    assert.equal(toBackendProvider("whatsapp"), null, "api-key connectors are not stored as OAuth connections");
     assert.equal(toBackendProvider("ga4"), null);
   });
 });

@@ -36,6 +36,7 @@ import {
   useResetIntegrationsDemo,
 } from "../data/hooks";
 import type { IntegrationProvider } from "../data/types";
+import { integrationsRepository } from "../data/repository";
 import {
   IntegrationsKpiCards,
   IntegrationsNav,
@@ -163,14 +164,19 @@ export function IntegrationsOverviewPage() {
                   <span>Open API Monitoring</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => resetDemo.mutate()}
-                className="cursor-pointer text-slate-600 focus:text-slate-900"
-              >
-                <RotateCcwIcon className="size-3.5 mr-2" />
-                <span>Reset Demo Workspace Data</span>
-              </DropdownMenuItem>
+              {/* Demo workspace only: live data has nothing to reset. */}
+              {integrationsRepository.mode === "mock" ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => resetDemo.mutate()}
+                    className="cursor-pointer text-slate-600 focus:text-slate-900"
+                  >
+                    <RotateCcwIcon className="size-3.5 mr-2" />
+                    <span>Reset Demo Workspace Data</span>
+                  </DropdownMenuItem>
+                </>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -1,43 +1,52 @@
 /**
  * Real HTTP provider for the Super Admin Integrations workspace.
  *
- * Wired in `repository.ts` when `NEXT_PUBLIC_DATA_SOURCE=api`. Reads the one
- * endpoint the backend actually serves today:
+ * Wired in `repository.ts` when `NEXT_PUBLIC_DATA_SOURCE=api`. Reads:
  *
- *   GET /api/v1/integrations/registry
- *     → SupportedOAuthProvider[] (e.g. ["META", "GOOGLE_BUSINESS", "LINKEDIN"])
+ *   GET /api/v1/super-admin/integrations/summary
+ *     → which OAuth providers this server can connect, and live connection
+ *       counts per provider (active, reconnect required, companies, mapped
+ *       resources, last active) computed from the real database.
+ *   GET /api/v1/super-admin/audit-logs
+ *     → integration events for the activity feed.
  *
- * The backend returns only providers whose OAuth adapter has every server-side
- * credential configured (`ProviderRegistryService.configuredProviders()`). This
- * provider maps those enums onto the Super Admin catalogue ids and keeps only
- * the providers this deployment can actually connect. Catalogue entries the
- * backend does not manage (api-key connectors, providers still on the roadmap)
- * come from the injected demo fallback so the Super Admin still sees the full
- * platform surface while the registry answers for OAuth availability.
- *
- * Fallback policy (owner decision, 2026-09-24): network / 404 / 5xx / empty
- * registry → the injected `fallback` (demo dataset) answers with the full
- * catalogue. 401/403/400/429 still propagate: an authorization or contract
- * problem must surface, not quietly swap in demo rows.
- *
- * Every method the backend does not serve (configs, capabilities, connections,
- * issues, mutations, ...) delegates straight to the same fallback.
+ * The provider catalogue (names, categories, descriptions, docs links, auth
+ * method) is static product information and comes from the injected
+ * `catalogue`; every number and health state on it is replaced with live
+ * values. Nothing else from the demo workspace is ever shown: what the backend
+ * does not serve yet (connections list, resources, issues, settings, config
+ * edits…) reports "not connected" (503), so the UI says so instead of showing
+ * sample data (owner rule, 2026-10-27: an empty production database showed a
+ * full demo workspace).
  */
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/types/api";
 import type { IntegrationsRepository } from "./repository";
-import type {
-  IntegrationActivity,
-  IntegrationProvider,
-  IntegrationsKpis,
-  ProviderConfiguration,
-} from "./types";
+import type { IntegrationActivity, IntegrationProvider, IntegrationsKpis, OperationalHealth } from "./types";
 
 /* ------------------------------------------------------------------ */
-/* Backend DTO (mirrors providers/provider.types.ts)                  */
+/* Backend DTOs                                                        */
 /* ------------------------------------------------------------------ */
 
-export type BackendOAuthProvider = "META" | "GOOGLE_BUSINESS" | "LINKEDIN";
+export type BackendOAuthProvider = "META" | "GOOGLE_BUSINESS" | "LINKEDIN" | "YOUTUBE" | "X";
+
+interface ProviderConnectionSummary {
+  provider: BackendOAuthProvider;
+  connections: number;
+  active: number;
+  reconnectRequired: number;
+  companies: number;
+  companiesNeedingReconnect: number;
+  mappedResources: number;
+  lastActiveAt: string | null;
+}
+
+interface IntegrationsSummaryResponse {
+  generatedAt: string;
+  configuredProviders: BackendOAuthProvider[];
+  providers: ProviderConnectionSummary[];
+  totals: { connections: number; active: number; reconnectRequired: number; companies: number; companiesNeedingReconnect: number };
+}
 
 /** Backend enum → Super Admin catalogue id (mock/dataset.ts). */
 export function fromBackendProvider(provider: BackendOAuthProvider): string {
@@ -48,10 +57,14 @@ export function fromBackendProvider(provider: BackendOAuthProvider): string {
       return "google_business";
     case "LINKEDIN":
       return "linkedin";
+    case "YOUTUBE":
+      return "youtube";
+    case "X":
+      return "x_twitter";
   }
 }
 
-/** Super Admin catalogue id → backend enum, when the id is OAuth-managed. */
+/** Super Admin catalogue id → backend enum, when the backend stores connections for it. */
 export function toBackendProvider(providerId: string): BackendOAuthProvider | null {
   switch (providerId) {
     case "meta":
@@ -60,177 +73,133 @@ export function toBackendProvider(providerId: string): BackendOAuthProvider | nu
       return "GOOGLE_BUSINESS";
     case "linkedin":
       return "LINKEDIN";
+    case "youtube":
+      return "YOUTUBE";
+    case "x_twitter":
+      return "X";
     default:
       return null;
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Fallback policy                                                     */
-/* ------------------------------------------------------------------ */
-
-/** Unreachable (0), missing (404) or broken (5xx) backend → show demo data. */
+/** Unreachable (0), missing (404) or broken (5xx) backend. */
 export function shouldFallBack(error: unknown): boolean {
   if (!ApiError.isApiError(error)) return true;
   return error.status === 0 || error.status === 404 || error.status >= 500;
 }
 
-async function fetchRegistry(): Promise<BackendOAuthProvider[]> {
-  const response = await apiClient.request<BackendOAuthProvider[]>({
-    method: "GET",
-    path: "/integrations/registry",
-  });
-  return Array.isArray(response) ? response : [];
+function notConnected(): Promise<never> {
+  return Promise.reject(
+    new ApiError({
+      code: "SERVICE_UNAVAILABLE",
+      status: 503,
+      message: "This part of Integrations is not connected to the backend yet. No data is shown instead of sample data.",
+    }),
+  );
 }
 
-/**
- * Providers this deployment can OAuth-connect, as catalogue ids. Returns
- * `null` when the registry is unusable (fallback-worthy error or empty list)
- * so callers show the full demo catalogue rather than an empty panel.
- */
-async function fetchConfiguredIds(): Promise<Set<string> | null> {
-  let registry: BackendOAuthProvider[];
-  try {
-    registry = await fetchRegistry();
-  } catch (error) {
-    if (shouldFallBack(error)) return null;
-    throw error;
-  }
-  if (registry.length === 0) return null;
-  return new Set(registry.map(fromBackendProvider));
+function fetchSummary(): Promise<IntegrationsSummaryResponse> {
+  return apiClient.request<IntegrationsSummaryResponse>({ method: "GET", path: "/super-admin/integrations/summary" });
 }
 
-/**
- * Keep OAuth-managed providers that the registry confirms, plus every
- * catalogue entry the backend does not manage (api-key / roadmap providers)
- * so Super Admin never loses sight of the full platform surface.
- */
-function isCatalogueVisible(providerId: string, configured: Set<string>): boolean {
-  const backendProvider = toBackendProvider(providerId);
-  if (backendProvider === null) return true;
-  return configured.has(providerId);
+/** One catalogue entry with every count and health state taken from the live summary. */
+function withLiveCounts(provider: IntegrationProvider, summary: IntegrationsSummaryResponse): IntegrationProvider {
+  const backend = toBackendProvider(provider.id);
+  const live = backend ? summary.providers.find((row) => row.provider === backend) : undefined;
+  const health: OperationalHealth = !live || live.connections === 0 ? "unknown" : live.reconnectRequired > 0 ? "degraded" : "operational";
+  return {
+    ...provider,
+    // An OAuth provider whose credentials are not set on this server cannot be connected.
+    platformAvailability: backend && !summary.configuredProviders.includes(backend) ? "disabled" : provider.platformAvailability,
+    operationalHealth: health,
+    activeConnectionsCount: live?.active ?? 0,
+    connectedResourcesCount: live?.mappedResources ?? 0,
+    affectedCompaniesCount: live?.companiesNeedingReconnect ?? 0,
+    healthyConnectionsCount: live?.active ?? 0,
+    reconnectRequiredCount: live?.reconnectRequired ?? 0,
+    recentFailuresCount: 0,
+    lastSuccessfulOperationAt: live?.lastActiveAt ?? null,
+  };
 }
 
 /* ------------------------------------------------------------------ */
 /* Provider                                                            */
 /* ------------------------------------------------------------------ */
 
-export function createApiIntegrationsProvider(fallback: IntegrationsRepository): IntegrationsRepository {
+/** `catalogue` supplies only the static provider descriptions; its counters, states and other records are never used. */
+export function createApiIntegrationsProvider(catalogue: IntegrationsRepository): IntegrationsRepository {
+  const providers = async (): Promise<IntegrationProvider[]> => {
+    const [summary, entries] = await Promise.all([fetchSummary(), catalogue.getProviders()]);
+    return entries.map((entry) => withLiveCounts(entry, summary));
+  };
+
   return {
-    ...fallback,
     mode: "api",
 
-    async getProviders(): Promise<IntegrationProvider[]> {
-      try {
-        const configured = await fetchConfiguredIds();
-        if (configured === null) return fallback.getProviders();
-        const providers = await fallback.getProviders();
-        const visible = providers.filter((provider) => isCatalogueVisible(provider.id, configured));
-        // Owner decision: no matching rows → show the demo catalogue, not an empty panel.
-        if (visible.length === 0) return fallback.getProviders();
-        return visible;
-      } catch (error) {
-        if (shouldFallBack(error)) return fallback.getProviders();
-        throw error;
-      }
-    },
+    getProviders: providers,
 
     async getProviderById(id: string): Promise<IntegrationProvider | null> {
-      try {
-        const configured = await fetchConfiguredIds();
-        if (configured === null) return fallback.getProviderById(id);
-        if (!isCatalogueVisible(id, configured)) return null;
-        return fallback.getProviderById(id);
-      } catch (error) {
-        if (shouldFallBack(error)) return fallback.getProviderById(id);
-        throw error;
-      }
+      return (await providers()).find((provider) => provider.id === id) ?? null;
     },
 
     async getOverviewKpis(): Promise<IntegrationsKpis> {
-      try {
-        const [registry, superAdminSummary] = await Promise.all([
-          fetchRegistry().catch(() => [] as BackendOAuthProvider[]),
-          apiClient
-            .request<{ metrics?: { integrations?: { value: number; state: string } } }>({
-              method: "GET",
-              path: "/super-admin/dashboard/summary",
-            })
-            .catch(() => null),
-        ]);
-
-        const baseKpis = await fallback.getOverviewKpis();
-        const liveCount = registry.length > 0 ? registry.length : baseKpis.liveProviders;
-        const activeConn =
-          superAdminSummary?.metrics?.integrations?.state === "live"
-            ? superAdminSummary.metrics.integrations.value
-            : baseKpis.activeConnections;
-
-        return {
-          ...baseKpis,
-          liveProviders: liveCount,
-          activeConnections: activeConn,
-          healthyConnections: activeConn,
-        };
-      } catch (error) {
-        if (shouldFallBack(error)) return fallback.getOverviewKpis();
-        throw error;
-      }
+      const [summary, list] = await Promise.all([fetchSummary(), providers()]);
+      return {
+        totalProviders: list.length,
+        liveProviders: list.filter((p) => p.platformAvailability === "live").length,
+        approvalPendingProviders: list.filter((p) => p.externalApiAccess === "requested" || p.externalApiAccess === "pending_approval").length,
+        activeConnections: summary.totals.active,
+        healthyConnections: summary.totals.active,
+        reconnectRequiredConnections: summary.totals.reconnectRequired,
+        degradedProviders: list.filter((p) => p.operationalHealth !== "operational" && p.operationalHealth !== "unknown").length,
+        affectedCompanies: summary.totals.companiesNeedingReconnect,
+      };
     },
 
+    /** Integration events from the platform audit log (connected logins, mapped resources); empty when there are none. */
     async getActivities(): Promise<IntegrationActivity[]> {
-      try {
-        const logsRes = await apiClient
-          .request<{
-            items: Array<{
-              id: string;
-              action: string;
-              resourceType: string;
-              resourceId?: string;
-              outcome: string;
-              createdAt: string;
-              userEmail?: string;
-              userName?: string;
-            }>;
-          }>({
-            method: "GET",
-            path: "/super-admin/audit-logs",
-          })
-          .catch(() => null);
-
-        if (logsRes && Array.isArray(logsRes.items) && logsRes.items.length > 0) {
-          return logsRes.items.slice(0, 8).map((log) => ({
+      const logs = await apiClient.request<{
+        items: Array<{ id: string; action: string; resourceType: string; outcome: string; createdAt: string; userEmail?: string; userName?: string; metadata?: Record<string, unknown> | null }>;
+      }>({ method: "GET", path: "/super-admin/audit-logs" });
+      const items = Array.isArray(logs?.items) ? logs.items : [];
+      return items
+        .filter((log) => log.resourceType === "INTEGRATION" || log.action.startsWith("integration."))
+        .slice(0, 50)
+        .map((log) => {
+          const provider = typeof log.metadata?.provider === "string" ? fromBackendProvider(log.metadata.provider as BackendOAuthProvider) ?? "system" : "system";
+          const disconnected = log.metadata?.disconnected === true;
+          return {
             id: log.id,
             timestamp: log.createdAt,
-            actor: {
-              id: log.id,
-              name: log.userName ?? log.userEmail ?? "Platform Admin",
-              email: log.userEmail ?? "admin@encodency.com",
-              type: "super_admin",
-            },
-            eventType: "provider_config_updated",
-            providerId: "system",
-            description: `${log.action} on ${log.resourceType}`,
-            result: log.outcome === "SUCCESS" ? "success" : "warning",
-          }));
-        }
-        return fallback.getActivities();
-      } catch (error) {
-        if (shouldFallBack(error)) return fallback.getActivities();
-        throw error;
-      }
+            actor: { id: log.id, name: log.userName ?? log.userEmail ?? "Platform user", email: log.userEmail ?? "", type: "super_admin" },
+            eventType: log.action === "integration.resource.mapped" ? "resource_mapped" : disconnected ? "connection_disconnected" : "connection_authorized",
+            providerId: provider,
+            description: log.action === "integration.resource.mapped" ? "Resource mapped to a client" : disconnected ? "Connection removed" : "Account connected",
+            result: log.outcome === "SUCCESS" || !log.outcome ? "success" : "warning",
+          } as IntegrationActivity;
+        });
     },
 
-    async getProviderConfig(providerId: string): Promise<ProviderConfiguration | null> {
-      try {
-        const configured = await fetchConfiguredIds();
-        if (configured === null) return fallback.getProviderConfig(providerId);
-        if (!isCatalogueVisible(providerId, configured)) return null;
-        return fallback.getProviderConfig(providerId);
-      } catch (error) {
-        if (shouldFallBack(error)) return fallback.getProviderConfig(providerId);
-        throw error;
-      }
-    },
+    // Not served by the backend yet: reported as "not connected", never answered with sample data.
+    getProviderConfig: notConnected,
+    getProviderCapabilities: notConnected,
+    getAuthorizations: notConnected,
+    getAuthorizationById: notConnected,
+    getResources: notConnected,
+    getMappings: notConnected,
+    getIssues: notConnected,
+    getIssueById: notConnected,
+    getReauthorizationRequests: notConnected,
+    getSettings: notConnected,
+    updateProviderAvailability: notConnected,
+    updateProviderOperationalControls: notConnected,
+    updateProviderConfig: notConnected,
+    toggleCapability: notConnected,
+    createReauthorizationRequest: notConnected,
+    updateIssueStatus: notConnected,
+    assignIssueOwner: notConnected,
+    addIssueNote: notConnected,
+    updateSettings: notConnected,
+    resetDemo: notConnected,
   };
 }
