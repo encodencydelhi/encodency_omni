@@ -74,7 +74,7 @@ function TeamBody({ data }: { data: ClientTeamData }) {
           </Avatar>
           <div className="min-w-0">
             <p className="truncate text-[0.8125rem] font-medium text-foreground">{member.name}</p>
-            <p className="truncate text-2xs text-muted-foreground">{member.email}</p>
+            <p className="truncate text-2xs normal-case text-muted-foreground">{member.email}</p>
           </div>
         </div>
       ),

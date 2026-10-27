@@ -67,7 +67,7 @@ export function UserIdentityCell({
         </div>
 
         <div className="flex items-center gap-1 text-xs text-slate-500 truncate">
-          <span className="truncate select-all">{user.email}</span>
+          <span className="truncate select-all normal-case">{user.email}</span>
           <Tooltip>
             <TooltipTrigger asChild>
               <button

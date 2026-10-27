@@ -143,7 +143,7 @@ function UsersBody({ companyId, data }: { companyId: string; data: CompanyUsersD
           </Avatar>
           <div className="min-w-0">
             <p className="truncate text-[0.8125rem] font-medium text-foreground">{user.name}</p>
-            <p className="truncate text-2xs text-muted-foreground">{user.email}</p>
+            <p className="truncate text-2xs normal-case text-muted-foreground">{user.email}</p>
           </div>
           {isProtected(user) ? (
             <WithTooltip content="The only active organisation owner. Transfer ownership before suspending or removing them.">

@@ -33,7 +33,7 @@ function ShellFrame({ children }: { children: ReactNode }) {
         <AppBreadcrumb />
         <MaintenanceBannerHost />
 
-        <main key={preferencesVersion} className="w-full flex-1 min-w-0 max-w-full px-4 py-4 sm:px-5 xl:px-6 pb-16">
+        <main key={preferencesVersion} className="title-case w-full flex-1 min-w-0 max-w-full px-4 py-4 sm:px-5 xl:px-6 pb-16">
           {children}
         </main>
 

@@ -15,8 +15,10 @@
 
 :root {
   /* --- Surfaces ------------------------------------------------------- */
-  --background: #fbfaf8; /* warm off-white app ground */
-  --foreground: #1e2a38; /* deep blue-grey — replaces black */
+  --background: #fbfaf8;
+  /* warm off-white app ground */
+  --foreground: #1e2a38;
+  /* deep blue-grey — replaces black */
   --card: #ffffff;
   --card-foreground: #1e2a38;
   --popover: #ffffff;
@@ -28,10 +30,12 @@
   /* --- Brand ---------------------------------------------------------- */
   /* EnCodency red, taken from the corporate mark. Used as an accent on a
      warm neutral ground — never as a large surface outside the auth screen. */
-  --primary: #e20611; /* sampled from public/brand/encodency-logo.jpg */
+  --primary: #e20611;
+  /* sampled from public/brand/encodency-logo.jpg */
   --primary-foreground: #ffffff;
   --primary-hover: #c3050f;
-  --primary-subtle: #fdecec; /* tinted background for selected/active */
+  --primary-subtle: #fdecec;
+  /* tinted background for selected/active */
 
   /* The brand gradient, reserved for the sign-in panel and the mark. */
   --brand-gradient-from: #e20611;
@@ -41,16 +45,20 @@
   --brand-cta-from: #e20611;
   --brand-cta-to: #c3050f;
 
-  --secondary: #f2efec; /* warm neutral */
+  --secondary: #f2efec;
+  /* warm neutral */
   --secondary-foreground: #4a5560;
 
   /* --- Neutrals ------------------------------------------------------- */
   --muted: #f3f1ef;
-  --muted-foreground: #667585; /* cool grey */
-  --accent: #f5f2f0; /* hover wash */
+  --muted-foreground: #667585;
+  /* cool grey */
+  --accent: #f5f2f0;
+  /* hover wash */
   --accent-foreground: #1e2a38;
 
-  --border: #ece9e6; /* warm hairline, matching the sign-in card */
+  --border: #ece9e6;
+  /* warm hairline, matching the sign-in card */
   --border-strong: #ddd8d3;
   --input: #e3ddd8;
   --ring: #dc1820;
@@ -81,14 +89,16 @@
   --sidebar-accent-foreground: #1e2a38;
 
   /* --- Charts (muted, harmonious, distinguishable) -------------------- */
-  --chart-1: #e20611; /* brand */
+  --chart-1: #e20611;
+  /* brand */
   --chart-2: #4f7ca3;
   --chart-3: #2a6f6b;
   --chart-4: #b58a3e;
   --chart-5: #7a6f93;
 
   /* --- Radius --------------------------------------------------------- */
-  --radius: 0.5rem; /* 8px base — restrained, not pill-shaped */
+  --radius: 0.5rem;
+  /* 8px base — restrained, not pill-shaped */
 
   /* --- Elevation (soft, low-contrast; never a "random shadow") -------- */
   --shadow-xs: 0 1px 2px 0 rgb(30 42 50 / 0.04);
@@ -97,10 +107,14 @@
   --shadow-lg: 0 12px 32px -8px rgb(30 42 50 / 0.14);
 
   /* --- Layout --------------------------------------------------------- */
-  --sidebar-width: 16rem; /* 256px */
-  --sidebar-width-collapsed: 4rem; /* 64px */
-  --topbar-height: 3.5rem; /* 56px */
-  --content-max-width: 90rem; /* 1440px */
+  --sidebar-width: 16rem;
+  /* 256px */
+  --sidebar-width-collapsed: 4rem;
+  /* 64px */
+  --topbar-height: 3.5rem;
+  /* 56px */
+  --content-max-width: 90rem;
+  /* 1440px */
 }
 
 /* Recharts adds a browser focus outline around SVG containers after chart interaction. */
@@ -182,7 +196,8 @@
     Menlo, Consolas, monospace;
 
   /* Type scale — tight, information-dense, no giant display numbers */
-  --text-2xs: 0.75rem; /* 12px minimum */
+  --text-2xs: 0.75rem;
+  /* 12px minimum */
   --text-2xs--line-height: 1rem;
 }
 
@@ -195,6 +210,7 @@
   * {
     scrollbar-width: thin;
   }
+
   *::-webkit-scrollbar {
     width: 5px;
     height: 5px;
@@ -204,6 +220,7 @@
     background: var(--border-strong);
     border-radius: 9999px;
   }
+
   *::-webkit-scrollbar-button {
     display: none;
     width: 0;
@@ -263,10 +280,12 @@
 }
 
 @layer utilities {
+
   /* Consistent page gutter used by every route's shell. */
   .page-gutter {
     padding-inline: 1.5rem;
   }
+
   @media (min-width: 1280px) {
     .page-gutter {
       padding-inline: 2rem;
@@ -281,18 +300,22 @@
     scrollbar-width: thin;
     scrollbar-color: var(--border-strong) transparent;
   }
+
   .scrollbar-thin::-webkit-scrollbar {
     width: 4px;
     height: 4px;
   }
+
   .scrollbar-thin::-webkit-scrollbar-track,
   .scrollbar-thin::-webkit-scrollbar-corner {
     background: transparent;
   }
+
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: var(--border-strong);
     border-radius: 9999px;
   }
+
   /* Removes the up/down stepper buttons at each end of the track. */
   .scrollbar-thin::-webkit-scrollbar-button {
     display: none;
@@ -304,9 +327,11 @@
   .scrollbar-dark {
     scrollbar-color: #33415580 transparent;
   }
+
   .scrollbar-dark::-webkit-scrollbar-thumb {
     background: #33415580;
   }
+
   .scrollbar-dark:hover::-webkit-scrollbar-thumb {
     background: #475569;
   }
@@ -415,11 +440,13 @@
   }
 
   @keyframes profile-lottie-breathe {
+
     0%,
     100% {
       transform: scale(0.94);
       opacity: 0.62;
     }
+
     50% {
       transform: scale(1.04);
       opacity: 0.95;
@@ -427,40 +454,48 @@
   }
 
   @keyframes profile-lottie-tilt-one {
+
     0%,
     100% {
       transform: rotate(-24deg) scaleX(1);
     }
+
     50% {
       transform: rotate(18deg) scaleX(0.88);
     }
   }
 
   @keyframes profile-lottie-tilt-two {
+
     0%,
     100% {
       transform: rotate(28deg) scaleY(1);
     }
+
     50% {
       transform: rotate(-18deg) scaleY(0.88);
     }
   }
 
   @keyframes profile-lottie-float-one {
+
     0%,
     100% {
       transform: translate3d(0, 0, 0) scale(1);
     }
+
     50% {
       transform: translate3d(-5px, 4px, 0) scale(0.72);
     }
   }
 
   @keyframes profile-lottie-float-two {
+
     0%,
     100% {
       transform: translate3d(0, 0, 0) scale(0.75);
     }
+
     50% {
       transform: translate3d(5px, -4px, 0) scale(1.08);
     }
@@ -515,41 +550,49 @@
   }
 
   @keyframes ai-bot-float {
+
     0%,
     100% {
       transform: translateY(0px);
     }
+
     50% {
       transform: translateY(-4px);
     }
   }
 
   @keyframes ai-bot-head-tilt {
+
     0%,
     100% {
       transform: rotate(-2deg) translateY(0px);
     }
+
     50% {
       transform: rotate(2.5deg) translateY(-2px);
     }
   }
 
   @keyframes ai-bot-antenna-sway {
+
     0%,
     100% {
       transform: rotate(-5deg);
     }
+
     50% {
       transform: rotate(6deg);
     }
   }
 
   @keyframes ai-bot-antenna-pulse {
+
     0%,
     100% {
       transform: scale(0.9);
       opacity: 0.35;
     }
+
     50% {
       transform: scale(1.45);
       opacity: 0.85;
@@ -557,26 +600,31 @@
   }
 
   @keyframes ai-bot-arm-wave {
+
     0%,
     100% {
       transform: rotate(-6deg);
     }
+
     50% {
       transform: rotate(12deg);
     }
   }
 
   @keyframes ai-bot-hand-wave {
+
     0%,
     100% {
       transform: rotate(-8deg);
     }
+
     50% {
       transform: rotate(14deg);
     }
   }
 
   @keyframes ai-bot-eye-blink {
+
     0%,
     44%,
     50%,
@@ -584,23 +632,28 @@
     100% {
       transform: scaleY(1) translateX(0px);
     }
+
     47%,
     97% {
       transform: scaleY(0.12) translateX(0px);
     }
+
     20% {
       transform: scaleY(1) translateX(1.5px);
     }
+
     70% {
       transform: scaleY(1) translateX(-1.5px);
     }
   }
 
   @keyframes ai-bot-badge-pulse {
+
     0%,
     100% {
       transform: scale(1);
     }
+
     50% {
       transform: scale(1.05);
     }
@@ -623,35 +676,42 @@
 .rich-editor:focus {
   outline: none;
 }
+
 .rich-editor:empty::before {
   content: attr(data-placeholder);
   color: #9ca3af;
   pointer-events: none;
 }
+
 .rich-editor a {
   color: #2563eb;
   text-decoration: underline;
 }
+
 .rich-editor ul {
   list-style-type: disc;
   padding-left: 1.25rem;
   margin: 0.25rem 0;
 }
+
 .rich-editor ol {
   list-style-type: decimal;
   padding-left: 1.25rem;
   margin: 0.25rem 0;
 }
+
 .rich-editor h1 {
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0.5rem 0;
 }
+
 .rich-editor h2 {
   font-size: 1.25rem;
   font-weight: 700;
   margin: 0.5rem 0;
 }
+
 .rich-editor h3 {
   font-size: 1.1rem;
   font-weight: 600;
@@ -689,15 +749,18 @@ mark[data-spell-typo]:hover {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track,
 *::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb,
 *::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover,
 *::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.6);
@@ -707,18 +770,33 @@ mark[data-spell-typo]:hover {
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.6);
 }
 
+.title-case {
+  text-transform: capitalize;
+}
+
+.title-case button {
+  text-transform: inherit;
+}
+
+.title-case :is(code, pre, kbd, samp, [data-keep-case]) {
+  text-transform: none;
+}

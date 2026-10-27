@@ -29,7 +29,7 @@ export function buildUserColumns({
         <EntityCell
           name={user.name}
           meta={
-            <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1.5 normal-case">
               {user.email}
               {user.mfaEnabled ? (
                 <Tooltip>
