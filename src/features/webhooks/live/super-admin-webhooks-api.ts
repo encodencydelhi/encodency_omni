@@ -15,6 +15,7 @@ import type {
   WebhookEnvironment,
   WebhookSettings,
   WebhooksSnapshot,
+  IncomingSource,
 } from "../data/types";
 
 const BASE = "/super-admin/webhooks";
@@ -84,6 +85,36 @@ export const superAdminWebhooksApi = {
       signal,
     }),
 
+  getSources: (environment: WebhookEnvironment = "production", signal?: AbortSignal) =>
+    apiClient.request<IncomingSource[]>({
+      method: "GET",
+      path: `${BASE}/sources`,
+      query: { environment },
+      signal,
+    }),
+
+  createSource: (input: { name: string; providerId: string; environment: WebhookEnvironment; companyId?: string | null; supportedEventTypes?: string[] }) =>
+    apiClient.request<{ source: IncomingSource; secret: string }>({
+      method: "POST",
+      path: `${BASE}/sources`,
+      body: input,
+    }),
+
+  setSourceState: (environment: WebhookEnvironment, sourceId: string, enabled: boolean, reason: string) =>
+    apiClient.request<MutationResult<IncomingSource>>({
+      method: "PATCH",
+      path: `${BASE}/sources/${encodeURIComponent(sourceId)}/state`,
+      query: { environment },
+      body: { enabled, reason },
+    }),
+
+  rotateSourceSecret: (environment: WebhookEnvironment, sourceId: string) =>
+    apiClient.request<MutationResult<{ source: IncomingSource; secret: string }>>({
+      method: "POST",
+      path: `${BASE}/sources/${encodeURIComponent(sourceId)}/rotate-secret`,
+      query: { environment },
+    }),
+
   createEndpoint: (environment: WebhookEnvironment, input: CreateEndpointInput) =>
     apiClient.request<MutationResult<OutgoingEndpoint>>({
       method: "POST",
@@ -97,7 +128,7 @@ export const superAdminWebhooksApi = {
       method: "PATCH",
       path: `${BASE}/endpoints/${encodeURIComponent(input.endpointId)}`,
       query: { environment },
-      body: input,
+      body: Object.fromEntries(Object.entries(input).filter(([key]) => key !== "endpointId")),
     }),
 
   setEndpointState: (
@@ -106,19 +137,19 @@ export const superAdminWebhooksApi = {
     state: Extract<EndpointState, "enabled" | "disabled">,
     reason: string,
   ) => {
-    void reason;
     return apiClient.request<MutationResult<OutgoingEndpoint>>({
       method: "PATCH",
       path: `${BASE}/endpoints/${encodeURIComponent(endpointId)}/state`,
       query: { environment },
-      body: { enabled: state === "enabled" },
+      body: { enabled: state === "enabled", reason },
     });
   },
 
-  retryDelivery: (deliveryId: string) =>
+  retryDelivery: (environment: WebhookEnvironment, deliveryId: string) =>
     apiClient.request<MutationResult<unknown>>({
       method: "POST",
       path: `${BASE}/deliveries/${encodeURIComponent(deliveryId)}/retry`,
+      query: { environment },
       body: {},
     }),
 
@@ -170,7 +201,7 @@ export const superAdminWebhooksApi = {
   updateRecoveryRequest: (
     environment: WebhookEnvironment,
     requestId: string,
-    state: Extract<RecoveryState, "cancelled" | "pending_review">,
+    state: RecoveryState,
   ) =>
     apiClient.request<MutationResult<RecoveryRequest>>({
       method: "PATCH",

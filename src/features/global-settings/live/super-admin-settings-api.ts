@@ -1,3 +1,4 @@
+import { env } from "@/config/env";
 import { apiClient } from "@/lib/api/client";
 import type {
   ChangeListResult,
@@ -9,6 +10,7 @@ import type {
   EditableSectionKey,
   NewCompanyDefaults,
   SaveResult,
+  PrivacyRequestSummary,
   SaveSectionInput,
   SecurityReviewData,
   SettingValues,
@@ -72,6 +74,23 @@ export const superAdminSettingsApi = {
       body: { reason },
       signal,
     });
+  },
+
+  decidePending(id: string, decision: "approve" | "reject", reason: string): Promise<ConfigurationChange> {
+    return apiClient.request({ method: "POST", path: `${BASE}/pending/${encodeURIComponent(id)}/decision`, body: { decision, reason } });
+  },
+
+  listPrivacyRequests(): Promise<PrivacyRequestSummary[]> {
+    return apiClient.request({ method: "GET", path: `${BASE}/privacy/operations` });
+  },
+  requestCompanyExport(companyId: string, reason: string): Promise<PrivacyRequestSummary> {
+    return apiClient.request({ method: "POST", path: `${BASE}/privacy/operations`, body: { companyId, kind: "export", reason } });
+  },
+  reviewPrivacyRequest(id: string, decision: "approve" | "reject", reason: string): Promise<PrivacyRequestSummary> {
+    return apiClient.request({ method: "POST", path: `${BASE}/privacy/operations/${encodeURIComponent(id)}/decision`, body: { decision, reason } });
+  },
+  privacyDownloadPath(id: string): string {
+    return `${env.apiBaseUrl}${BASE}/privacy/operations/${encodeURIComponent(id)}/download`;
   },
 
   listVersions(signal?: AbortSignal): Promise<ConfigurationVersion[]> {

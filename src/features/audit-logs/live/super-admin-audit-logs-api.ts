@@ -160,7 +160,7 @@ export interface LiveAuditCoverage {
   totalRecorded: number;
   firstRecordedAt: string | null;
   lastRecordedAt: string | null;
-  retention: { deletion: "never"; note: string };
+  retention: { deletion: "after_retention"; retentionDays: number; note: string };
   maxRangeDays: number;
   maxExportRows: number;
 }

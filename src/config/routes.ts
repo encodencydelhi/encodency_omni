@@ -50,6 +50,7 @@ export const ROUTES = {
     featureFlags: "/super-admin/feature-flags",
     auditLogs: "/super-admin/audit-logs",
     support: "/super-admin/support",
+    supportHelp: "/super-admin/support/help",
     assistant: "/super-admin/assistant",
     notifications: "/super-admin/notifications",
 
@@ -66,6 +67,7 @@ export const ROUTES = {
     team: "/admin/team",
     billing: "/admin/billing",
     support: "/admin/support",
+    supportHelp: "/admin/support/help",
   },
 } as const;
 

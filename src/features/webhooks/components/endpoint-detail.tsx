@@ -1,8 +1,3 @@
-/**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
- * Endpoint detail: Overview, Subscriptions, Deliveries, Security, Activity, Settings & Lifecycle.
- */
-
 "use client";
 
 import { MoreHorizontalIcon } from "lucide-react";
@@ -10,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { isMockMode } from "@/config/env";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import type { DataTableColumn } from "@/components/shared/data-table/types";
 import { Button } from "@/components/ui/button";
@@ -22,6 +18,7 @@ import {
   CATEGORY_LABEL, DELIVERY_STATE, ENDPOINT_STATE, ENVIRONMENT_LABEL, MODULE_LINKS, PRIVACY_LABEL, RETRY_POLICIES, SECURITY_REFERENCES,
   SECURITY_REVIEW, SIGNING_STATE, SUBSCRIPTION_STATE, URL_VALIDATION, WEBHOOK_ROUTES,
 } from "../data/config";
+import { copyOneTimeSecret } from "../data/copy-secret";
 import { useWebhookMutation } from "../data/hooks";
 import { webhooksRepository } from "../data/repository";
 import { deliveriesInWindow, endpointSecurityWarnings, subscriptionsFor } from "../data/selectors";
@@ -98,17 +95,17 @@ export function EndpointDetailPage({ endpointId }: { endpointId: string }) {
         open={stateDialog}
         onOpenChange={setStateDialog}
         title={`${nextState === "enabled" ? "Enable" : "Disable"} endpoint`}
-        description="This changes the demo configuration only. No delivery is sent or stopped by this frontend."
+        description={isMockMode ? "This changes the demo configuration only." : "This changes whether matching events are queued for this endpoint."}
         rows={[{ label: "Endpoint state", current: ENDPOINT_STATE[endpoint.state].label, proposed: ENDPOINT_STATE[nextState].label }]}
         affectedEvents={subs.map((sub) => sub.eventKey)}
         affectedCompanies={affectedCompanies}
-        impact={nextState === "disabled" ? "Future matching events would be cancelled instead of delivered once a delivery worker exists." : "Future matching events would become eligible for delivery once a delivery worker exists."}
+        impact={nextState === "disabled" ? "Future matching events will no longer be queued for this endpoint." : "Future matching events will be queued for delivery to this endpoint."}
         confirmLabel={nextState === "enabled" ? "Enable endpoint" : "Disable endpoint"}
         pending={setState.isPending}
         onConfirm={async (reason) => {
           try {
             await setState.mutateAsync({ state: nextState, reason });
-            toast.success(`Endpoint ${nextState} in demo configuration`, { description: "Delivery history is unchanged. Nothing was sent." });
+            toast.success(isMockMode ? `Endpoint ${nextState} in demo configuration` : `Endpoint ${nextState}`);
             setStateDialog(false);
           } catch (error) {
             toast.error(error instanceof Error ? error.message : "The change could not be saved.");
@@ -280,23 +277,23 @@ function SubscriptionsTab({ endpointId }: { endpointId: string }) {
           </ul>
         </SectionCard>
       </div>
-      <div className="flex justify-end"><Button disabled={!dirty} onClick={() => setReview(true)}>Save Demo Configuration</Button></div>
+      <div className="flex justify-end"><Button disabled={!dirty} onClick={() => setReview(true)}>{isMockMode ? "Save Demo Configuration" : "Save Subscriptions"}</Button></div>
 
       <ChangeReviewDialog
         open={review}
         onOpenChange={setReview}
         title="Review subscription changes"
-        description="Saves a demo subscription configuration. Nothing is sent to a backend."
+        description={isMockMode ? "Saves a demo subscription configuration." : "Persists the event subscriptions for this endpoint."}
         rows={rows}
         affectedEvents={[...added, ...removed]}
         affectedCompanies={endpoint.companyName ? [endpoint.companyName] : ["All companies (platform endpoint)"]}
         impact={removed.length ? "Removed event types stop being eligible for this endpoint. Deliveries already created are not deleted." : "Added event types become eligible for this endpoint from now on."}
-        confirmLabel="Save demo configuration"
+        confirmLabel={isMockMode ? "Save demo configuration" : "Save subscriptions"}
         pending={save.isPending}
         onConfirm={async (reason) => {
           try {
             await save.mutateAsync({ keys: selected, reason });
-            toast.success("Demo subscriptions saved", { description: "Existing delivery history is unchanged." });
+            toast.success(isMockMode ? "Demo subscriptions saved" : "Subscriptions saved", { description: "Existing delivery history is unchanged." });
             setReview(false);
           } catch (error) {
             toast.error(error instanceof Error ? error.message : "The subscriptions could not be saved.");
@@ -351,8 +348,16 @@ function SecurityTab({ endpointId }: { endpointId: string }) {
       </div>
       <SectionCard title="Security Warnings" action={
         <Button variant="outline" size="sm" disabled={rotate.isPending} onClick={async () => {
-          try { await rotate.mutateAsync(undefined); toast.success("Rotation review requested (demo)", { description: "No secret was generated or changed. Key management is not connected." }); } catch (error) { toast.error(error instanceof Error ? error.message : "Request failed"); }
-        }}>Request Secret Rotation Review</Button>
+          try {
+            const result = await rotate.mutateAsync(undefined);
+            if (result.oneTimeSecret) {
+              await copyOneTimeSecret(result.oneTimeSecret);
+              toast.success("Signing secret rotated", { description: "The new one-time secret was copied to your clipboard. Save it now; it will not be shown again." });
+            } else {
+              toast.success("Rotation review requested (demo)", { description: "No live signing key was changed." });
+            }
+          } catch (error) { toast.error(error instanceof Error ? error.message : "Secret rotation or clipboard copy failed"); }
+        }}>Rotate Signing Secret</Button>
       }>
         {warnings.length === 0 ? <p className="text-[0.8125rem] text-muted-foreground">No frontend-detectable warnings. Backend SSRF, DNS and egress enforcement is still required.</p> : <ul className="list-disc space-y-1 pl-4 text-[0.8125rem]">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>}
       </SectionCard>
@@ -364,7 +369,7 @@ function ActivityTab({ endpointId }: { endpointId: string }) {
   const { snapshot } = useWebhookData();
   const entries = snapshot.activity.filter((entry) => entry.endpointId === endpointId);
   return (
-    <SectionCard title="Endpoint Activity" description="Demo activity records. Sensitive administrative actions are recorded centrally in Audit Logs once a backend exists." action={<Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.auditSensitive}>Open Audit Logs</Link></Button>}>
+    <SectionCard title="Endpoint Activity" description={isMockMode ? "Demo activity records." : "Persisted administrative changes from the audit log."} action={<Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.auditSensitive}>Open Audit Logs</Link></Button>}>
       {entries.length === 0 ? <EmptyRows title="No activity recorded" /> : (
         <ul className="divide-y divide-border">
           {entries.map((entry) => (
@@ -414,7 +419,7 @@ function SettingsTab({ endpointId, onToggle }: { endpointId: string; onToggle: (
   const persist = async (reason?: string) => {
     try {
       await update.mutateAsync(payload(reason));
-      toast.success("Demo endpoint configuration saved", { description: "Historical deliveries are unchanged. No request was sent." });
+      toast.success(isMockMode ? "Demo endpoint configuration saved" : "Endpoint configuration saved", { description: "Historical deliveries are unchanged." });
       setForm((f) => ({ ...f, destinationUrl: "" }));
       setReview(false);
       setError(null);
@@ -447,7 +452,7 @@ function SettingsTab({ endpointId, onToggle }: { endpointId: string; onToggle: (
         {error ? <p className="mt-3 text-2xs text-danger" role="alert">{error}</p> : null}
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" disabled={!dirty} onClick={() => { setForm({ name: endpoint.name, description: endpoint.description, destinationUrl: "", allowedAudience: endpoint.allowedAudience, contactRef: endpoint.contactRef ?? "", timeoutMs: endpoint.policy.timeoutMs, retryPolicyRef: endpoint.policy.retryPolicyRef }); setError(null); }}>Reset</Button>
-          <Button disabled={!dirty || update.isPending || Boolean(urlCheck && !urlCheck.ok)} onClick={() => (highImpact ? setReview(true) : void persist())}>{highImpact ? "Review changes" : "Save demo configuration"}</Button>
+          <Button disabled={!dirty || update.isPending || Boolean(urlCheck && !urlCheck.ok)} onClick={() => (highImpact ? setReview(true) : void persist())}>{highImpact ? "Review changes" : isMockMode ? "Save demo configuration" : "Save changes"}</Button>
         </div>
       </SectionCard>
 
@@ -462,12 +467,12 @@ function SettingsTab({ endpointId, onToggle }: { endpointId: string; onToggle: (
         open={review}
         onOpenChange={setReview}
         title="Review configuration changes"
-        description="High-impact change. Saves a demo configuration only."
+        description={isMockMode ? "High-impact change. Saves a demo configuration only." : "High-impact change. A reason is recorded in the audit log."}
         rows={rows}
         affectedEvents={subs.map((s) => s.eventKey)}
         affectedCompanies={endpoint.companyName ? [endpoint.companyName] : ["All companies (platform endpoint)"]}
         impact={form.destinationUrl.trim() ? "Future deliveries would go to the new destination. Any recipient state at the old destination is unaffected." : "Future deliveries would follow the new policy."}
-        confirmLabel="Save demo configuration"
+        confirmLabel={isMockMode ? "Save demo configuration" : "Save changes"}
         pending={update.isPending}
         onConfirm={(reason) => void persist(reason)}
       />

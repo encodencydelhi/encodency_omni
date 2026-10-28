@@ -51,7 +51,7 @@ function RowCard({ row }: { row: ReviewRow }) {
         </div>
         <div>
           <dt className="font-medium text-muted-foreground">Enforced by</dt>
-          <dd className="text-foreground">{ENFORCEMENT_LABEL[row.enforcement].label}</dd>
+          <dd className="text-foreground">{ENFORCEMENT_LABEL[row.enforcement].backend && row.enforced === false ? "Recorded only - nothing reads it yet" : ENFORCEMENT_LABEL[row.enforcement].label}</dd>
         </div>
       </dl>
       {row.warning ? <p className="text-2xs text-warning">{row.warning}</p> : null}
@@ -62,6 +62,7 @@ function RowCard({ row }: { row: ReviewRow }) {
 const CHECK_STYLE: Record<RequiredCheck["state"], { label: string; tone: "success" | "warning" | "neutral"; icon: typeof CheckCircle2Icon }> = {
   recorded: { label: "Recorded", tone: "success", icon: CheckCircle2Icon },
   backend_required: { label: "Backend Required", tone: "warning", icon: ServerCogIcon },
+  enforced: { label: "Enforced", tone: "success", icon: CheckCircle2Icon },
   not_required: { label: "Not Required", tone: "neutral", icon: CheckCircle2Icon },
 };
 

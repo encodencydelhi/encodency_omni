@@ -293,6 +293,8 @@ export const CATEGORY_LABEL: Record<EventCategory, string> = {
   reports: "Reports",
   billing: "Billing",
   integrations: "Integrations",
+  support: "Support",
+  crm: "CRM",
 };
 
 export const AUDIENCE_LABEL: Record<EventAudience, string> = {

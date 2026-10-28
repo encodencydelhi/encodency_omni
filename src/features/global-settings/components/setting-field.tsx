@@ -13,18 +13,20 @@ import { cn } from "@/lib/utils/cn";
 import { APPROVAL_LABEL, ENFORCEMENT_LABEL, OVERRIDE_LABEL, POLICY_KIND_LABEL, SCOPE_LABEL, TIMING_LABEL, UNIT_LABEL } from "../data/config";
 import { formatInZone, formatSettingValue, LOCALE_OPTIONS, TIMEZONE_OPTIONS, type RegionalSample } from "../data/formatting";
 import type { ConfigurationChange, GlobalSettingDefinition, SettingOption, SettingValue, SettingValues } from "../data/types";
+import { useEnforcementState } from "../data/hooks";
 import { isVisible } from "../data/validators";
 import { SettingBadges } from "./badges";
 
 /** What the setting controls, who it affects and how it is enforced, kept out of the way until asked for. */
 export function SettingDetails({ definition }: { definition: GlobalSettingDefinition }) {
+  const enforcement = useEnforcementState()(definition);
   const rows: Array<[string, string]> = [
     ["What It Controls", definition.description],
     ["Who It Affects", SCOPE_LABEL[definition.scope].who],
     ["Default or Mandatory", `${POLICY_KIND_LABEL[definition.policyKind].label} - ${POLICY_KIND_LABEL[definition.policyKind].description}`],
     ["Company Override", `${OVERRIDE_LABEL[definition.override].label} - ${OVERRIDE_LABEL[definition.override].description}`],
     ["When It Takes Effect", `${TIMING_LABEL[definition.timing].label} - ${TIMING_LABEL[definition.timing].description}`],
-    ["Enforced by", ENFORCEMENT_LABEL[definition.enforcement].label + (ENFORCEMENT_LABEL[definition.enforcement].backend ? " (not enforced by this frontend)" : "")],
+    ["Enforced by", enforcement === "recorded" ? "Recorded only - no platform service reads this setting yet" : ENFORCEMENT_LABEL[definition.enforcement].label],
     ["Change Needs", APPROVAL_LABEL[definition.approval]],
     ["Edit Capability", definition.editCapability],
   ];

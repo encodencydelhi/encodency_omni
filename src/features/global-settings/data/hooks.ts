@@ -7,7 +7,9 @@
  * Companies caches, because new-company defaults feed the Create Company flow.
  */
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { superAdminSettingsApi } from "../live/super-admin-settings-api";
+import { ENFORCEMENT_LABEL, SETTINGS_MOCK_MODE } from "./config";
 import { APP } from "@/config/app";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { useCurrentStaff } from "@/features/companies/data/capability-provider";
@@ -20,6 +22,7 @@ import { bannerFor, type BannerState } from "./selectors";
 import type {
   ChangeQuery,
   EditableSectionKey,
+  GlobalSettingDefinition,
   GlobalSettingsCapabilities,
   SaveSectionInput,
   SettingValues,
@@ -76,6 +79,9 @@ export const useVersionComparison = (from: string | null, to: string | null) =>
     retry: false,
   });
 
+export const usePrivacyRequests = () => useQuery({ queryKey: [...ROOT, "privacy-requests"], queryFn: () => superAdminSettingsApi.listPrivacyRequests(), enabled: !SETTINGS_MOCK_MODE, refetchInterval: 30_000 });
+export const privacyDownloadPath = (id: string) => superAdminSettingsApi.privacyDownloadPath(id);
+
 export const useSecurityReview = () => useQuery({ queryKey: settingsKeys.security, queryFn: () => settingsRepository.getSecurityReview() });
 
 /**
@@ -95,10 +101,32 @@ export function usePlatformIdentity() {
   );
 }
 
+/**
+ * "enforced": a platform service reads this setting. "recorded": it is saved, versioned and audited but nothing acts on it
+ * yet. "none": not a security/backend setting at all. The demo workspace has no list, so it keeps the kind of the setting.
+ */
+export type EnforcementState = "enforced" | "recorded" | "none";
+
+export function useEnforcementState(): (definition: GlobalSettingDefinition) => EnforcementState {
+  const { data } = useConfiguration();
+  return useMemo(() => {
+    const enforced = data?.enforcedKeys ? new Set(data.enforcedKeys) : null;
+    return (definition) => {
+      if (!ENFORCEMENT_LABEL[definition.enforcement].backend) return "none";
+      return enforced === null || enforced.has(definition.key) ? "enforced" : "recorded";
+    };
+  }, [data]);
+}
+
 /** The maintenance banner for one audience, evaluated against the demo clock. */
 export function useMaintenanceBanner(audience: "platform_staff" | "all_companies" | "public_visitors"): BannerState | null {
   const { data } = useConfiguration();
-  return useMemo(() => (data ? bannerFor(data.values, platformNow(), audience) : null), [data, audience]);
+  const [now, setNow] = useState(platformNow);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(platformNow()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  return useMemo(() => (data ? bannerFor(data.values, now, audience) : null), [data, audience, now]);
 }
 
 export function describeError(error: unknown, fallback = "Something went wrong. Nothing was changed."): { message: string; fieldErrors: Record<string, string> } {
@@ -121,6 +149,9 @@ export function useSettingsMutations() {
     return {
       saveSection: (input: SaveSectionInput) => done(repo.saveSection(input, actor)),
       withdrawPending: (id: string, reason: string) => done(repo.withdrawPending(id, reason, actor)),
+      decidePending: (id: string, decision: "approve" | "reject", reason: string) => done(superAdminSettingsApi.decidePending(id, decision, reason)),
+      requestCompanyExport: (companyId: string, reason: string) => done(superAdminSettingsApi.requestCompanyExport(companyId, reason)),
+      reviewPrivacyRequest: (id: string, decision: "approve" | "reject", reason: string) => done(superAdminSettingsApi.reviewPrivacyRequest(id, decision, reason)),
       resetDemoData: async () => {
         await repo.resetDemoData?.();
         queryClient.removeQueries({ queryKey: ROOT });

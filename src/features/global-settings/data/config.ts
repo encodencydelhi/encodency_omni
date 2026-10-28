@@ -163,7 +163,6 @@ export const SECTION_LAYOUT: Record<Exclude<SectionKey, "history">, readonly Gro
   ],
   communications: [
     { id: "contacts", title: "Official Contacts", description: "Platform-owned contact details. Support email and website come from General & Identity." },
-    { id: "ai", title: "AI Provider", description: "Which AI provider generates recommendations and summaries." },
   ],
   maintenance: [
     { id: "announcement", title: "Maintenance Announcement", description: "Information shown to the selected audience. It never marks the platform as unavailable." },
@@ -259,7 +258,7 @@ export const SECTION_ACCESS: Record<SectionKey, SectionAccess> = {
   identity: { view: "canViewGlobalSettings", edit: "canManageIdentity", viewPermissions: ["platform:read"], editPermissions: ["settings:write"], approval: "reason", note: "Branding and platform contact changes are recorded with a reason." },
   localization: { view: "canViewGlobalSettings", edit: "canManageLocalization", viewPermissions: ["platform:read"], editPermissions: ["settings:write"], approval: "none", note: "Defaults only; company values are never rewritten." },
   onboarding: { view: "canViewGlobalSettings", edit: "canManageOnboardingDefaults", viewPermissions: ["platform:read"], editPermissions: ["settings:write", "companies:write"], approval: "reason", note: "Affects every company created from now on." },
-  security: { view: "canViewGlobalSettings", edit: "canManageGlobalSecurityPolicies", viewPermissions: ["platform:read"], editPermissions: ["settings:write", "platform:write"], approval: "sensitive_review", note: "Security-critical values are held for review; nothing is enforced by this frontend." },
+  security: { view: "canViewGlobalSettings", edit: "canManageGlobalSecurityPolicies", viewPermissions: ["platform:read"], editPermissions: ["settings:write", "platform:write"], approval: "sensitive_review", note: "Security-critical values are held until a different Super Admin approves them; each setting is marked as enforced or recorded only." },
   governance: { view: "canViewGlobalSettings", edit: "canManageGovernance", viewPermissions: ["platform:read"], editPermissions: ["settings:write", "platform:write"], approval: "sensitive_review", note: "Changes who may customise platform policy." },
   privacy: { view: "canViewGlobalSettings", edit: "canManageDataPolicies", viewPermissions: ["platform:read"], editPermissions: ["settings:write", "platform:write"], approval: "sensitive_review", note: "Retention and deletion policy changes need an impact review." },
   communications: { view: "canViewGlobalSettings", edit: "canManageCommunications", viewPermissions: ["platform:read"], editPermissions: ["settings:write"], approval: "reason", note: "Legal references are recorded, not approved, here." },

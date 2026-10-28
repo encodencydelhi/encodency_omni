@@ -1,17 +1,10 @@
-/**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
- * Add Endpoint wizard: identity, destination & ownership, subscriptions, delivery & security, review.
- *
- * Saves a demo configuration only. The endpoint does not receive real platform deliveries, and no
- * signing secret is generated or stored.
- */
-
 "use client";
 
 import { CheckIcon, Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { isMockMode } from "@/config/env";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -22,6 +15,7 @@ import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHea
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils/cn";
 import { CATEGORY_LABEL, ENVIRONMENT_OPTIONS, PRIVACY_LABEL, RETRY_POLICIES, SIGNING_STATE, WEBHOOK_ROUTES } from "../data/config";
+import { copyOneTimeSecret } from "../data/copy-secret";
 import { useWebhookMutation } from "../data/hooks";
 import { webhooksRepository } from "../data/repository";
 import { endpointSecurityWarnings } from "../data/selectors";
@@ -55,8 +49,8 @@ export function EndpointWizard({ open, onOpenChange }: { open: boolean; onOpenCh
 
   const blank = (): CreateEndpointInput => ({
     name: "", description: "", environment, ownerScope: "company", companyId: null, destinationUrl: "",
-    allowedAudience: "", contactRef: null, eventKeys: [], timeoutMs: 10_000,
-    retryPolicyRef: "retry-policy/standard-v1", payloadPrivacy: "operational", state: "draft",
+    allowedAudience: "", contactRef: null, eventKeys: [], timeoutMs: snapshot.settings.defaultTimeoutMs,
+    retryPolicyRef: snapshot.settings.defaultRetryPolicyRef, payloadPrivacy: "operational", state: "draft",
   });
 
   const [draft, setDraft] = useState<CreateEndpointInput>(blank);
@@ -88,7 +82,16 @@ export function EndpointWizard({ open, onOpenChange }: { open: boolean; onOpenCh
     }
     try {
       const saved = await create.mutateAsync(draft);
-      toast.success("Demo endpoint saved", { description: "It is a demo configuration only. It is not receiving real platform deliveries." });
+      if (saved.oneTimeSecret) {
+        try {
+          await copyOneTimeSecret(saved.oneTimeSecret);
+          toast.success("Webhook endpoint saved", { description: "Its one-time signing secret was copied to your clipboard. Save it now; it will not be shown again." });
+        } catch {
+          toast.error("Endpoint saved, but the one-time secret could not be copied. Rotate the secret from Security and try again.");
+        }
+      } else {
+        toast.success("Demo endpoint saved", { description: "This mock endpoint is available only in this browser session." });
+      }
       if (saved.environment !== environment) setEnvironment(saved.environment);
       close(false);
       router.push(WEBHOOK_ROUTES.endpoint(saved.id));
@@ -117,7 +120,7 @@ export function EndpointWizard({ open, onOpenChange }: { open: boolean; onOpenCh
       <SheetContent className="max-w-none sm:max-w-3xl">
         <SheetHeader>
           <SheetTitle>Add Outgoing Endpoint</SheetTitle>
-          <SheetDescription>Configure a destination and event subscriptions. This saves a demo configuration only.</SheetDescription>
+          <SheetDescription>Configure a destination and event subscriptions for the selected environment.</SheetDescription>
           <ol className="mt-3 flex flex-wrap gap-1.5" aria-label="Wizard steps">
             {STEPS.map((item, index) => (
               <li key={item.id} aria-current={index === step ? "step" : undefined}>
@@ -138,6 +141,34 @@ export function EndpointWizard({ open, onOpenChange }: { open: boolean; onOpenCh
         <SheetBody className="space-y-4">
           {step === 0 ? (
             <div className="space-y-4">
+              {eligibleTypes.length > 0 ? (
+                <Notice tone="info" title={`Start with ${eligibleTypes.find((type) => type.key === "support.ticket.created")?.name ?? eligibleTypes[0]?.name}`}>
+                  Prefills a Development endpoint and one event subscription. Select your test company, then add a real HTTPS receiver URL in the next step.
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => {
+                      const event = eligibleTypes.find((type) => type.key === "support.ticket.created") ?? eligibleTypes[0];
+                      if (!event) return;
+                      setDraft((current) => ({
+                        ...current,
+                        name: "Support Ticket Test Endpoint",
+                        description: "Development test: send new support tickets to my webhook receiver.",
+                        environment: "development",
+                        ownerScope: "company",
+                        companyId: null,
+                        eventKeys: [event.key],
+                        state: "enabled",
+                      }));
+                      setErrors({});
+                    }}
+                  >
+                    Use test endpoint example
+                  </Button>
+                </Notice>
+              ) : null}
               <Field label="Endpoint name" htmlFor="ep-name" required error={errors.name} hint={`${draft.name.length}/${ENDPOINT_NAME_MAX}`}>
                 <Input id="ep-name" value={draft.name} onChange={(e) => patch({ name: e.target.value })} aria-invalid={Boolean(errors.name)} placeholder="e.g. Acme - Publishing Sync" autoFocus />
               </Field>
@@ -218,18 +249,18 @@ export function EndpointWizard({ open, onOpenChange }: { open: boolean; onOpenCh
                   })}
                 </fieldset>
               ))}
-              <p className="text-2xs text-muted-foreground">Only event types the platform defines are listed. This is a demo catalogue: the producers are not connected.</p>
+              <p className="text-2xs text-muted-foreground">Only platform event types available to company endpoints are listed. Live events are queued with the business change.</p>
             </div>
           ) : null}
 
           {step === 3 ? (
             <div className="space-y-4">
-              <Notice tone="warning" title="Signing Not Configured / Demo Reference">
-                No signing implementation exists yet. A signing secret is not generated, shown or stored in the browser. Recipients cannot verify events until backend key management exists.
+              <Notice tone={isMockMode ? "warning" : "info"} title={isMockMode ? "Signing Not Configured / Demo Reference" : "HMAC Signing Managed by Backend"}>
+                {isMockMode ? "No live signing secret is generated in mock mode." : "The backend generates and encrypts the signing secret. The one-time secret is copied to your clipboard after creation."}
               </Notice>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Signing method reference"><Input value="HMAC-SHA256 (reference)" readOnly disabled /></Field>
-                <Field label="Signing configuration state"><div className="pt-1.5"><State registry={SIGNING_STATE} status="demo_reference" /></div></Field>
+                <Field label="Signing configuration state"><div className="pt-1.5"><State registry={SIGNING_STATE} status={isMockMode ? "demo_reference" : "configured_reference"} /></div></Field>
                 <Field label="Delivery timeout (ms)" htmlFor="ep-timeout" error={errors.timeoutMs} hint="1,000 to 30,000 ms.">
                   <Input id="ep-timeout" type="number" min={1000} max={30000} step={500} value={draft.timeoutMs} onChange={(e) => patch({ timeoutMs: Number(e.target.value) })} aria-invalid={Boolean(errors.timeoutMs)} />
                 </Field>
@@ -247,7 +278,7 @@ export function EndpointWizard({ open, onOpenChange }: { open: boolean; onOpenCh
                   </Select>
                 </Field>
               </div>
-              <Field label="Initial endpoint state" hint="Enabled marks the demo configuration as eligible. It does not start real deliveries.">
+              <Field label="Initial endpoint state" hint={isMockMode ? "Enabled marks this mock configuration as eligible." : "Enabled endpoints receive matching events from this environment."}>
                 <RadioGroup value={draft.state} onValueChange={(value) => patch({ state: value as "draft" | "enabled" })} className="flex gap-4">
                   {[{ v: "draft", t: "Draft" }, { v: "enabled", t: "Enabled" }].map((o) => (
                     <label key={o.v} className="flex cursor-pointer items-center gap-2 text-[0.8125rem]"><RadioGroupItem value={o.v} />{o.t}</label>
@@ -281,11 +312,11 @@ export function EndpointWizard({ open, onOpenChange }: { open: boolean; onOpenCh
                 <p className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">Known security warnings</p>
                 <ul className="list-disc space-y-1 pl-4 text-[0.8125rem]">
                   {reviewWarnings.map((w) => <li key={w}>{w}</li>)}
-                  <li>Backend SSRF, DNS, redirect and egress enforcement is not implemented. Frontend validation is not a safety guarantee.</li>
+                  <li>Backend DNS and private-network checks block unsafe destinations; redirects are disabled for deliveries.</li>
                 </ul>
               </div>
               {hasErrors(errors) ? <Notice tone="danger">{Object.values(errors).find(Boolean)}</Notice> : null}
-              <Notice tone="brand">Saving creates a demo configuration in this browser session. It will not receive real platform webhook deliveries.</Notice>
+              <Notice tone={isMockMode ? "brand" : "info"}>{isMockMode ? "Saving creates a demo configuration in this browser session." : "Saving creates a persistent endpoint. Its signing secret is returned once and copied to your clipboard."}</Notice>
             </div>
           ) : null}
         </SheetBody>
@@ -297,7 +328,7 @@ export function EndpointWizard({ open, onOpenChange }: { open: boolean; onOpenCh
             {step < STEPS.length - 1 ? <Button onClick={next}>Continue</Button> : (
               <Button onClick={() => void save()} disabled={create.isPending}>
                 {create.isPending ? <Loader2Icon className="animate-spin" /> : null}
-                Save Demo Endpoint
+                {isMockMode ? "Save Demo Endpoint" : "Save Endpoint"}
               </Button>
             )}
           </div>

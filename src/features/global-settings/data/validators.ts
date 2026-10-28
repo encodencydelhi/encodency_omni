@@ -1,9 +1,3 @@
-/**
- * Registry-driven validation. One implementation checks a single value against
- * its definition; a second pass checks rules that span several settings.
- * The same functions run in the form (instant feedback) and in the provider
- * (the authoritative check a backend would repeat).
- */
 import { formatDuration, isValidLocale, isValidTimezone } from "./formatting";
 import { ASSET_KEYS, ASSET_SPECS, LEGAL_DOCUMENT_IDS, SETTING_BY_KEY, SETTING_DEFINITIONS, sameValue } from "./registry";
 import type { AssetKind, AssetValue, GlobalSettingDefinition, LegalDocValue, SettingValue, SettingValues } from "./types";
@@ -27,7 +21,8 @@ export function isValidHttpUrl(value: string): boolean {
 }
 
 function isValidDateOnly(value: string): boolean {
-  return DATE_ONLY.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return DATE_ONLY.test(value) && !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
 export function isVisible(definition: GlobalSettingDefinition, values: SettingValues): boolean {
@@ -42,6 +37,12 @@ const isEmpty = (value: SettingValue | undefined) => value === undefined || valu
 /** The first problem with one value, or `null`. */
 export function validateSetting(definition: GlobalSettingDefinition, value: SettingValue | undefined): string | null {
   const name = definition.name;
+  if (definition.valueType === 'boolean' && typeof value !== 'boolean') return `${name} must be on or off.`;
+  const stringTypes = ['text', 'textarea', 'email', 'url', 'timezone', 'locale', 'datetime', 'select'];
+  if (value !== undefined && value !== null && stringTypes.includes(definition.valueType) && typeof value !== 'string') return `${name} must be text.`;
+  if (definition.valueType === 'number' && typeof value !== 'number') return `${name} must be a number.`;
+  if (definition.valueType === 'multiselect' && (!Array.isArray(value) || !value.every((item) => typeof item === 'string'))) return `Choose valid options for ${name.toLowerCase()}.`;
+
 
   if (definition.valueType === "readonly" || definition.locked) {
     return sameValue(value, definition.defaultValue) ? null : `${name} cannot be changed here.`;
@@ -96,8 +97,10 @@ function assetKindOf(key: string): AssetKind | null {
 }
 
 function validateAsset(definition: GlobalSettingDefinition, value: AssetValue): string | null {
-  if (!value || typeof value !== "object") return `${definition.name} is invalid.`;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return `${definition.name} is invalid.`;
+  if (!["default", "uploaded", "removed"].includes(value.source)) return `${definition.name} is invalid.`;
   if (value.source !== "uploaded") return null;
+  if (typeof value.mimeType !== "string" || !Number.isFinite(value.sizeBytes) || value.sizeBytes <= 0 || (value.width !== null && (!Number.isFinite(value.width) || value.width <= 0))) return `${definition.name} is invalid.`;
   const kind = assetKindOf(definition.key);
   if (!kind) return null;
   const spec = ASSET_SPECS[kind];
@@ -108,6 +111,9 @@ function validateAsset(definition: GlobalSettingDefinition, value: AssetValue): 
 }
 
 function validateLegal(definition: GlobalSettingDefinition, value: LegalDocValue): string | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value) ||
+    !['title', 'url', 'version', 'effectiveDate', 'lastReviewed', 'owner'].every((key) => typeof (value as unknown as Record<string, unknown>)[key] === 'string') ||
+    !['published', 'under_review', 'draft', 'not_published'].includes(value.status)) return `${definition.name} is invalid.`;
   const errors = legalErrors(definition.key, value);
   return Object.values(errors)[0] ?? null;
 }
@@ -118,7 +124,8 @@ export function legalErrors(key: string, value: LegalDocValue): Record<string, s
   const id = key.split(".").pop() ?? "";
   const required = id === "terms" || id === "privacy";
   const touched = value.url || value.version || value.effectiveDate || value.status !== "not_published";
-  if (!required && !touched) return errors;
+  // A document nobody has started is fine, even a required one; once started it must be complete.
+  if (!touched) return errors;
   if (!value.title.trim()) errors.title = "Document title is required.";
   if (value.url && !isValidHttpUrl(value.url)) errors.url = "Enter a valid URL starting with https://";
   if ((required || value.status === "published") && !value.url) errors.url = "A published document needs a URL.";
@@ -195,7 +202,8 @@ export function validateCrossField(values: SettingValues, scope: ReadonlySet<str
 /** Validates the given keys (or every setting) and returns messages keyed by setting key. */
 export function validateValues(values: SettingValues, keys?: readonly string[]): FieldErrors {
   const targets = keys ? keys.map((key) => SETTING_BY_KEY.get(key)).filter((item): item is GlobalSettingDefinition => Boolean(item)) : SETTING_DEFINITIONS;
-  const scope = new Set(targets.map((item) => item.key));
+  const sections = new Set(targets.map((item) => item.section));
+  const scope = new Set(SETTING_DEFINITIONS.filter((item) => sections.has(item.section)).map((item) => item.key));
   const errors: FieldErrors = {};
   for (const definition of targets) {
     if (!isVisible(definition, values)) continue;

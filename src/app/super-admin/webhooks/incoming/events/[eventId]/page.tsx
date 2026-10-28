@@ -1,2 +1,6 @@
-import { redirect } from "next/navigation";
-export default function Page() { redirect("/super-admin/webhooks"); }
+import { IncomingEventDetailPage } from "@/features/webhooks/components/incoming-detail";
+
+export default async function Page({ params }: { params: Promise<{ eventId: string }> }) {
+  const { eventId } = await params;
+  return <IncomingEventDetailPage eventId={eventId} />;
+}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AnnouncementBanner } from "@/components/shared/announcement-banner";
 import { formatUtc } from "../data/formatting";
 import { useMaintenanceBanner } from "../data/hooks";
+import type { BannerState } from "../data/selectors";
 import { AUDIENCE_OPTIONS } from "../data/registry";
 
 const STORAGE_KEY = "omni.global-settings.dismissed-announcement.v1";
@@ -19,6 +20,11 @@ export function audienceLabels(audience: readonly string[]): string {
  */
 export function MaintenanceBannerHost() {
   const banner = useMaintenanceBanner("platform_staff");
+  return banner ? <BannerView banner={banner} /> : null;
+}
+
+/** One banner, dismissed for the browser session when the announcement allows it. */
+export function BannerView({ banner, className = "px-4 pt-3 sm:px-5 xl:px-6" }: { banner: BannerState; className?: string }) {
   const [dismissed, setDismissed] = useState<string | null>(() => {
     try {
       return typeof window === "undefined" ? null : window.sessionStorage.getItem(STORAGE_KEY);
@@ -26,12 +32,11 @@ export function MaintenanceBannerHost() {
       return null;
     }
   });
-  if (!banner) return null;
-  const id = `${banner.title}|${banner.startsAt}|${banner.endsAt}`;
-  if (dismissed === id) return null;
+  const id = `${banner.title}|${banner.message}|${banner.startsAt}|${banner.endsAt}`;
+  if (banner.dismissible && dismissed === id) return null;
 
   return (
-    <div className="px-4 pt-3 sm:px-5 xl:px-6" data-testid="maintenance-banner">
+    <div className={className} data-testid="maintenance-banner">
       <AnnouncementBanner
         title={banner.title}
         message={banner.message}

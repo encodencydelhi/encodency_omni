@@ -24,6 +24,7 @@ import { describeScheduleError } from "@/features/admin/content/live/scheduling-
 import { describeScheduleErrorCode, SCHEDULED_POST_STATUS_META } from "@/features/admin/content/live/scheduling-status";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { cn } from "@/lib/utils/cn";
+import { getFirstDayIndex } from "@/lib/utils/format";
 import { crmApi } from "@/features/admin/crm/data/crm-api";
 import type { CrmTask, TaskStatus } from "@/features/admin/crm/types";
 import { ChannelLogo } from "../shared/channel-logo";
@@ -183,8 +184,10 @@ export function LiveContentCalendar() {
 
   const first = startOfMonth(cursor);
   const daysInMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
-  const weeks = Math.ceil((first.getDay() + daysInMonth) / 7);
-  const gridStart = addDays(first, -first.getDay());
+  const firstDay = getFirstDayIndex();
+  const lead = (first.getDay() - firstDay + 7) % 7;
+  const weeks = Math.ceil((lead + daysInMonth) / 7);
+  const gridStart = addDays(first, -lead);
   const gridEnd = addDays(gridStart, weeks * 7);
   const cells = Array.from({ length: weeks * 7 }, (_, i) => addDays(gridStart, i));
 
@@ -276,7 +279,7 @@ export function LiveContentCalendar() {
     return map;
   }, [visibleCalendarTasks]);
 
-  const weekStart = addDays(startOfDay(selected), -selected.getDay());
+  const weekStart = addDays(startOfDay(selected), -((selected.getDay() - firstDay + 7) % 7));
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const selectedPosts = byDay.get(dayKey(selected)) ?? [];
   const selectedTasks = tasksByDay.get(dayKey(selected)) ?? [];
@@ -496,7 +499,7 @@ export function LiveContentCalendar() {
                 {view === "Month" && (
                   <>
                     <div className="grid grid-cols-7 border-b bg-[#FDFDFD]">
-                      {WEEKDAYS.map((day) => (
+                      {[...WEEKDAYS.slice(firstDay), ...WEEKDAYS.slice(0, firstDay)].map((day) => (
                         <div key={day} className="px-2 py-2.5 text-center text-[11px] font-semibold text-gray-500">{day}</div>
                       ))}
                     </div>

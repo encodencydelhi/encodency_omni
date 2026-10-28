@@ -1,2 +1,5 @@
-import { redirect } from "next/navigation";
-export default function Page() { redirect("/super-admin/webhooks"); }
+import { EventCataloguePage } from "@/features/webhooks/components/events-pages";
+
+export default function Page() {
+  return <EventCataloguePage />;
+}

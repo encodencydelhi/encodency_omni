@@ -13,6 +13,7 @@ import { CHART_AXIS_PROPS, CHART_GRID_PROPS, CHART_TOOLTIP_LABEL_STYLE, CHART_TO
 import { DataTable } from "@/components/shared/data-table/data-table";
 import type { DataTableColumn } from "@/components/shared/data-table/types";
 import { Button } from "@/components/ui/button";
+import { isMockMode } from "@/config/env";
 import { formatNumber } from "@/lib/utils/format";
 import {
   ATTEMPT_RESULT, DELIVERY_STATE, ENDPOINT_STATE, ENVIRONMENT_LABEL, VERIFICATION_STATE, WEBHOOK_ROUTES,
@@ -38,7 +39,7 @@ function TrendPanel() {
   const { buckets, grouping } = useMemo(() => activityTrend(snapshot, window), [snapshot, window]);
   const total = buckets.reduce((sum, bucket) => sum + bucket.incoming + bucket.outgoing, 0);
   return (
-    <SectionCard title="Incoming & Outgoing Activity" description={`Recorded demo events, grouped ${grouping}. Failed attempts count attempts, not deliveries.`} contentClassName="max-h-none overflow-visible">
+    <SectionCard title="Incoming & Outgoing Activity" description={`Recorded webhook activity, grouped ${grouping}. Failed attempts count attempts, not deliveries.`} contentClassName="max-h-none overflow-visible">
       {total === 0 ? (
         <EmptyRows title="No activity in this period" description="Widen the time range. Missing data is not shown as healthy." />
       ) : (
@@ -73,7 +74,7 @@ const sourceColumns: Array<DataTableColumn<SourceStat>> = [
 
 export function MonitoringChip({ state }: { state: SourceStat["monitoring"] }) {
   const map = {
-    observed: { tone: "info", label: "Observed (demo)" },
+    observed: { tone: "info", label: isMockMode ? "Observed (demo)" : "Observed" },
     stale: { tone: "warning", label: "Stale" },
     no_observations: { tone: "warning", label: "No observations" },
     receiver_not_connected: { tone: "neutral", label: "Receiver not connected" },
@@ -116,8 +117,8 @@ export function OverviewPage() {
   return (
     <div className="space-y-1">
       <CardGrid cols={4}>
-        <Kpi label="Incoming Events" value={formatNumber(kpi.incomingEvents)} hint="Period. Received demo records" href={WEBHOOK_ROUTES.incomingEvents} />
-        <Kpi label="Verified Incoming" value={formatNumber(kpi.verifiedIncoming)} hint={`${pct(kpi.verifiedIncoming, kpi.incomingEvents)}. Demo verification records`} />
+        <Kpi label="Incoming Events" value={formatNumber(kpi.incomingEvents)} hint={`Received in selected period${isMockMode ? ". Demo records" : ""}`} href={WEBHOOK_ROUTES.incomingEvents} />
+        <Kpi label="Verified Incoming" value={formatNumber(kpi.verifiedIncoming)} hint={`${pct(kpi.verifiedIncoming, kpi.incomingEvents)}${isMockMode ? ". Demo verification records" : ""}`} />
         <Kpi label="Incoming Processing Failures" value={formatNumber(kpi.incomingProcessingFailures)} hint="Verified events whose processing failed" tone={kpi.incomingProcessingFailures ? "danger" : "default"} href={`${WEBHOOK_ROUTES.failures}?section=incoming`} />
         <Kpi label="Outgoing Deliveries" value={formatNumber(kpi.outgoingDeliveries)} hint={`Period. ${attempts} attempts across them`} href={WEBHOOK_ROUTES.deliveries} />
         <Kpi label="Delivered / Accepted" value={formatNumber(kpi.delivered)} hint={`${pct(kpi.delivered, kpi.outgoingDeliveries)}. Endpoint accepted; downstream unconfirmed`} tone="success" href={`${WEBHOOK_ROUTES.deliveries}?state=delivered`} />
@@ -129,10 +130,10 @@ export function OverviewPage() {
       <TrendPanel />
 
       <div className="grid items-stretch gap-1 xl:grid-cols-2">
-        <TablePanel title="Incoming Source Summary" description={`${ENVIRONMENT_LABEL[snapshot.environment]}. Sources come from Integrations provider configuration.`} action={<Button asChild variant="outline" size="sm"><Link href={WEBHOOK_ROUTES.incoming}>All sources</Link></Button>}>
+        <TablePanel title="Incoming Source Summary" description={`${ENVIRONMENT_LABEL[snapshot.environment]}. ${isMockMode ? "Demo source records." : "Registered sources and receiver configuration."}`} action={<Button asChild variant="outline" size="sm"><Link href={WEBHOOK_ROUTES.incoming}>All sources</Link></Button>}>
           <DataTable columns={sourceColumns} rows={sources} getRowId={(row) => row.source.id} isLoading={false} caption="Incoming sources" emptyState={<EmptyRows title="No incoming sources registered" />} />
         </TablePanel>
-        <TablePanel title="Outgoing Endpoint Summary" description="Configured demo endpoints. Enabled does not mean healthy." action={<Button asChild variant="outline" size="sm"><Link href={WEBHOOK_ROUTES.outgoing}>All endpoints</Link></Button>}>
+        <TablePanel title="Outgoing Endpoint Summary" description={`${isMockMode ? "Demo endpoint records. " : "Persistent endpoint configuration. "}Enabled does not mean healthy.`} action={<Button asChild variant="outline" size="sm"><Link href={WEBHOOK_ROUTES.outgoing}>All endpoints</Link></Button>}>
           <DataTable columns={endpointColumns} rows={endpoints.slice(0, 7)} getRowId={(row) => row.endpoint.id} isLoading={false} caption="Outgoing endpoints" emptyState={<EmptyRows title="No endpoints configured" />} />
         </TablePanel>
       </div>
@@ -147,7 +148,7 @@ export function OverviewPage() {
       </div>
 
       <div className="grid items-stretch gap-1 xl:grid-cols-2">
-        <SectionCard title="Verification Activity" description="Demo verification records. No cryptographic check ran in this frontend." action={<Button asChild variant="outline" size="sm"><Link href={WEBHOOK_ROUTES.security}>Security</Link></Button>}>
+        <SectionCard title="Verification Activity" description={isMockMode ? "Demo verification records. No cryptographic check ran." : "Recorded signature verification outcomes from registered sources."} action={<Button asChild variant="outline" size="sm"><Link href={WEBHOOK_ROUTES.security}>Security</Link></Button>}>
           {verificationRows.length === 0 ? <EmptyRows title="No verification problems" description="No rejected or unverified events in this period." /> : (
             <ul className="divide-y divide-border">
               {verificationRows.map((event) => <VerificationRow key={event.id} event={event} />)}

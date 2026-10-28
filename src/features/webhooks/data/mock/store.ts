@@ -337,10 +337,11 @@ export function createRecoveryRequest(environment: WebhookEnvironment, input: Cr
   return { ok: true, data: request };
 }
 
-export function updateRecoveryRequest(environment: WebhookEnvironment, requestId: string, state: Extract<RecoveryState, "cancelled" | "pending_review">): MutationResult<RecoveryRequest> {
+export function updateRecoveryRequest(environment: WebhookEnvironment, requestId: string, state: RecoveryState): MutationResult<RecoveryRequest> {
   const snapshot = current(environment);
   const existing = snapshot.recoveryRequests.find((item) => item.id === requestId);
   if (!existing) return fail("Recovery request not found.");
+  if (state === "approved" || state === "rejected" || state === "executed" || state === "accepted_by_backend") return fail("Recovery approval and execution are available only in live API mode.");
   if (["executed", "rejected", "accepted_by_backend", "approved", "cancelled"].includes(existing.state)) return fail(`A ${existing.state.replaceAll("_", " ")} request cannot be changed here.`);
   if (state === "pending_review" && existing.state !== "draft") return fail("Only drafts can be submitted.");
   const next: RecoveryRequest = { ...existing, state, updatedAt: nowIso() };

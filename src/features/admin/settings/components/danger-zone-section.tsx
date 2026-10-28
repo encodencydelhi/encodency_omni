@@ -4,20 +4,21 @@ import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRightLeft, Loader2, PauseCircle, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowRightLeft, Download, Loader2, PauseCircle, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";
 import { teamApi } from "@/features/admin/team/live/team-api";
 import { useSettingsCapability } from "../settings-data/capability-provider";
-import { dangerZoneApi } from "../live/workspace-api";
+import { useAuth } from "@/features/auth/components/auth-provider";
+import { dangerZoneApi, companyPrivacyApi } from "../live/workspace-api";
 
 interface DangerZoneSectionProps {
   currentOwner: string;
   orgName: string;
 }
 
-type Action = "transfer" | "deactivate" | "delete" | null;
+type Action = "transfer" | "deactivate" | "delete" | "export" | null;
 
 const errorText = (e: unknown, fallback: string) => (ApiError.isApiError(e) ? e.message : fallback);
 const INPUT = "w-full rounded-lg border border-[#CBD5E1] px-2.5 py-2 text-[12px] outline-none focus:border-[#2563EB]";
@@ -41,7 +42,8 @@ function Row({ icon: Icon, title, body, button, tone, onClick, disabled, note }:
 }
 
 export function DangerZoneSection({ currentOwner, orgName }: DangerZoneSectionProps) {
-  const { capabilities } = useSettingsCapability();
+  const { capabilities, currentRole } = useSettingsCapability();
+  const { user } = useAuth();
   const { companyId, isReady } = useTenancyContext();
   const [action, setAction] = useState<Action>(null);
   const [memberId, setMemberId] = useState("");
@@ -49,6 +51,9 @@ export function DangerZoneSection({ currentOwner, orgName }: DangerZoneSectionPr
   const [confirmName, setConfirmName] = useState("");
   const isOwner = capabilities.canTransferOwnership;
   const members = useQuery({ queryKey: ["danger-zone-members", companyId], queryFn: () => teamApi.listMembers(companyId), enabled: isReady && Boolean(companyId) && action === "transfer", retry: false });
+  const exports = useQuery({ queryKey: ["privacy-exports", companyId], queryFn: () => companyPrivacyApi.list(companyId), enabled: isReady && Boolean(companyId) && (currentRole === "Organization Owner" || currentRole === "Organization Admin"), refetchInterval: 30_000, retry: false });
+  const createExport = useMutation({ mutationFn: () => companyPrivacyApi.requestExport(companyId, reason.trim()), onSuccess: async () => { await exports.refetch(); toast.success("Export requested. Check its status here."); close(); }, onError: (e) => toast.error(errorText(e, "Export could not be requested")) });
+  const downloadExport = useMutation({ mutationFn: (id: string) => companyPrivacyApi.download(companyId, id), onError: (e) => toast.error(errorText(e, "Export could not be downloaded")) });
   const candidates = (members.data ?? []).filter((m) => m.systemRole !== "OWNER" && !m.suspendedAt);
 
   const close = () => {
@@ -68,7 +73,7 @@ export function DangerZoneSection({ currentOwner, orgName }: DangerZoneSectionPr
     onError: (e) => toast.error(errorText(e, "Ownership could not be transferred")),
   });
   const request = useMutation({
-    mutationFn: (kind: "deactivate" | "delete") => dangerZoneApi.request(companyId, kind, reason.trim() || undefined),
+    mutationFn: (kind: "deactivate" | "delete") => dangerZoneApi.request(companyId, kind, reason.trim() || undefined, kind === "delete" ? confirmName.trim() : undefined),
     onSuccess: (res, kind) => {
       toast.success(`Your ${kind === "delete" ? "deletion" : "deactivation"} request went to the platform team${res.ticket.number ? ` as ticket #${res.ticket.number}` : ""}. They will contact you before anything changes.`);
       close();
@@ -92,6 +97,8 @@ export function DangerZoneSection({ currentOwner, orgName }: DangerZoneSectionPr
         <Row icon={ArrowRightLeft} tone="amber" title="Transfer Organization Ownership" body="Make another member the Owner. It happens in one step; you stay in the organization as an Admin." button="Transfer Ownership…" onClick={() => setAction("transfer")} disabled={!isOwner} />
         <Row icon={PauseCircle} tone="amber" title="Deactivate Organization" body="Ask the platform team to suspend this organization. Nothing changes until they confirm with you." button="Request Deactivation…" onClick={() => setAction("deactivate")} disabled={!capabilities.canDeactivateOrganization} note="Sent as a high-priority support ticket you can follow in Support." />
         <Row icon={Trash2} tone="red" title="Delete Organization" body="Ask the platform team to close this organization. It is archived by them, never deleted from inside the app." button="Request Deletion…" onClick={() => setAction("delete")} disabled={!capabilities.canDeleteOrganization} note="Export your data first from Data & Privacy if you need a copy." />
+        <Row icon={Download} tone="amber" title="Export Organization Data" body="Request a company-scoped export. Sensitive credentials are excluded." button="Request Export?" onClick={() => setAction("export")} disabled={currentRole !== "Organization Owner" && currentRole !== "Organization Admin"} />
+        {(exports.data ?? []).filter((item) => item.kind === "export" && item.requestedBy === user?.id).map((item) => <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-[#FDE2E2] bg-white p-3 text-[11px]"><span>Export: {item.state.replaceAll("_", " ")}{item.error ? ` ? ${item.error}` : ""}</span>{item.state === "completed" ? <button type="button" disabled={downloadExport.isPending} onClick={() => downloadExport.mutate(item.id)} className="font-semibold text-[#2563EB]">Download</button> : null}</div>)}
         {!isOwner ? <p className="px-1 text-[10.5px] text-[#94A3B8]">You are not the Owner, so these actions are disabled.</p> : null}
       </section>
 
@@ -124,6 +131,8 @@ export function DangerZoneSection({ currentOwner, orgName }: DangerZoneSectionPr
                 </div>
               </div>
             </>
+          ) : action === "export" ? (
+            <><DialogHeader><DialogTitle>Request company export</DialogTitle><DialogDescription>Your export contains your company?s supported profile, client, membership and campaign data. Credentials and tokens are excluded.</DialogDescription></DialogHeader><textarea maxLength={300} value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Reason for the export" className={`${INPUT} min-h-20`} /><div className="flex justify-end gap-2"><button type="button" onClick={close} className="rounded-lg border border-[#CBD5E1] px-3 py-1.5 text-[11.5px] font-semibold">Cancel</button><button type="button" disabled={!reason.trim() || createExport.isPending} onClick={() => createExport.mutate()} className="rounded-lg bg-[#D97706] px-3 py-1.5 text-[11.5px] font-semibold text-white disabled:opacity-50">Request Export</button></div></>
           ) : action === "deactivate" || action === "delete" ? (
             <>
               <DialogHeader>
@@ -135,7 +144,7 @@ export function DangerZoneSection({ currentOwner, orgName }: DangerZoneSectionPr
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-2">
-                <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={1000} placeholder="Why? (helps the platform team)" className={`${INPUT} min-h-20`} />
+                <textarea maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why? (helps the platform team)" className={`${INPUT} min-h-20`} />
                 {action === "delete" ? (
                   <>
                     <label className="block text-[11px] font-semibold text-[#334155]">Type <span className="font-mono">{orgName}</span> to confirm</label>

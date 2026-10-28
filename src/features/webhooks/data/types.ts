@@ -1,20 +1,6 @@
-/**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
- * Backend-ready data contracts.
- *
- * Incoming events, incoming processing records, outgoing events, deliveries and
- * delivery attempts are deliberately separate entities with separate state
- * vocabularies. There is no generic "webhookStatus".
- */
-
 export type WebhookEnvironment = "development" | "staging" | "production";
 export type WebhookTimeRange = "1h" | "24h" | "7d" | "30d" | "custom";
 export type WebhookDirection = "incoming" | "outgoing";
-
-/* ------------------------------------------------------------------ */
-/* Shared                                                              */
-/* ------------------------------------------------------------------ */
-
 export interface ResourceRef {
   type: string;
   id: string;
@@ -26,12 +12,7 @@ export interface CompanyOption {
   name: string;
 }
 
-/** Every record in this module carries its evidence class. Fixtures are never "live". */
 export type DataEvidence = "demo_fixture" | "backend_record";
-
-/* ------------------------------------------------------------------ */
-/* Incoming                                                            */
-/* ------------------------------------------------------------------ */
 
 export type VerificationMethod =
   | "hmac_signature"
@@ -47,11 +28,11 @@ export type AccountMappingState = "mapped" | "unmapped" | "ambiguous" | "not_app
 export interface IncomingSource {
   id: string;
   name: string;
-  /** Integrations provider id — the single provider registry. */
   providerId: string;
   providerName: string;
   environment: WebhookEnvironment;
   receiverId: string;
+  receiverPath?: string;
   receiverName: string;
   receiverStatus: ReceiverStatus;
   readiness: ImplementationReadiness;
@@ -105,7 +86,6 @@ export interface IncomingProcessing {
   errorCode: string | null;
   errorSummary: string | null;
   resourceUpdate: ResourceUpdateResult;
-  /** The receiver's HTTP response is recorded separately: it never proves downstream success. */
   receiptHttpStatus: number;
 }
 
@@ -159,7 +139,9 @@ export type EventCategory =
   | "seo_audits"
   | "reports"
   | "billing"
-  | "integrations";
+  | "integrations"
+  | "support"
+  | "crm";
 
 export type EventAvailability = "available" | "deprecated";
 export type EventAudience = "company" | "platform";
@@ -193,11 +175,6 @@ export interface OutgoingEventType {
   sensitiveFields: Array<{ field: string; classification: PayloadClassification; handling: string }>;
   lastProducedAt: string | null;
 }
-
-/* ------------------------------------------------------------------ */
-/* Outgoing endpoints & subscriptions                                  */
-/* ------------------------------------------------------------------ */
-
 export type EndpointOwnerScope = "platform" | "company";
 export type EndpointState = "draft" | "enabled" | "disabled" | "suspended";
 export type SigningMethod = "hmac_sha256" | "none";
@@ -247,6 +224,8 @@ export interface OutgoingEndpoint {
   createdAt: string;
   updatedAt: string;
   demoCreated: boolean;
+  /** Returned only by create/rotation mutation, never by snapshot or list APIs. */
+  oneTimeSecret?: string;
 }
 
 export type SubscriptionState = "active" | "paused" | "pending_review";
@@ -374,9 +353,9 @@ export interface RecoveryRequest {
   createdAt: string;
   updatedAt: string;
   createdBy: string;
-  /** Present only when a backend reports actual execution. Always null in frontend-only mode. */
-  executionEvidence: null;
-  demo: true;
+  /** Present after an approved recovery has actually requeued its target. */
+  executionEvidence: { executedAt: string; targetId: string; state: "queued" } | null;
+  demo: boolean;
 }
 
 /* ------------------------------------------------------------------ */
@@ -413,6 +392,8 @@ export interface WebhookActivity {
   /** Sensitive administrative changes are recorded centrally in Audit Logs once a backend exists. */
   auditReferenced: boolean;
   evidence: DataEvidence;
+  /** Returned only once by secret rotation. */
+  oneTimeSecret?: string;
 }
 
 export interface MonitoringSource {

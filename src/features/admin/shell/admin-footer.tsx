@@ -2,9 +2,14 @@
 
 import { useAdminContext } from "./admin-context";
 import { cn } from "@/lib/utils/cn";
+import { FooterLinks } from "@/components/layout/footer-links";
+import { usePublicIdentity } from "@/features/global-settings/live/public-identity";
+import { APP } from "@/config/app";
 
 export function AdminFooter() {
   const { isSidebarCollapsed } = useAdminContext();
+  const { data } = usePublicIdentity();
+  const shortName = typeof data?.["identity.platform_short_name"] === "string" ? data["identity.platform_short_name"] as string : APP.shortName;
   // Wraps below ~500px so the footer never forces the page to scroll sideways.
   return (
     <footer className={cn(
@@ -14,7 +19,7 @@ export function AdminFooter() {
       <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
         <span className="flex items-center gap-1.5">
           <span className="bg-gradient-to-r from-red-500 to-rose-400 bg-clip-text font-bold tracking-wide text-transparent">
-            OmniPlatform
+            {shortName}
           </span>
         </span>
         <span className="h-3 w-px bg-slate-700" />
@@ -30,11 +35,7 @@ export function AdminFooter() {
           All systems operational
         </span>
         <span className="h-3 w-px bg-slate-700" />
-        <span className="flex gap-3">
-          <a href="#" className="transition-colors hover:text-white">Support</a>
-          <a href="#" className="transition-colors hover:text-white">Documentation</a>
-          <a href="#" className="transition-colors hover:text-white">Terms</a>
-        </span>
+        <FooterLinks surface="admin" />
       </div>
     </footer>
   );

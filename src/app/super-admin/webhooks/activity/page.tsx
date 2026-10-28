@@ -1,2 +1,5 @@
-import { redirect } from "next/navigation";
-export default function Page() { redirect("/super-admin/webhooks"); }
+import { ActivitySettingsPage } from "@/features/webhooks/components/activity-settings-page";
+
+export default function Page() {
+  return <ActivitySettingsPage />;
+}

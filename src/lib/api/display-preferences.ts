@@ -7,9 +7,12 @@ import { setDisplayPreferences, type DisplayPreferences } from "@/lib/utils/form
 export const DISPLAY_PREFERENCES_EVENT = "omni:display-preferences-changed";
 
 export interface PreferencesResponse {
+  /** What this person sees: their own choices where they made one, the platform's regional defaults for the rest. */
   preferences: DisplayPreferences;
-  /** False until the user saved preferences once; then the app keeps its standard formats. */
+  /** False until the person chose something themselves. */
   stored: boolean;
+  /** Display settings that come straight from Global Settings > Localization. */
+  display?: Pick<DisplayPreferences, "numberLocale" | "currencyDisplay" | "firstDayOfWeek">;
 }
 
 export const preferencesApi = {
@@ -19,7 +22,9 @@ export const preferencesApi = {
 
 /** Applies saved preferences to the formatters and tells the shells to re-render their page. */
 export function applyPreferences(res: PreferencesResponse) {
-  const changed = setDisplayPreferences(res.stored ? res.preferences : null);
+  // An older backend sends no platform defaults: then only a person's own saved choices apply, as before.
+  const next = res.display ? { ...res.preferences, ...res.display } : res.stored ? res.preferences : null;
+  const changed = setDisplayPreferences(next);
   if (changed && typeof window !== "undefined") window.dispatchEvent(new Event(DISPLAY_PREFERENCES_EVENT));
 }
 

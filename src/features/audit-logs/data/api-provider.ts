@@ -231,7 +231,7 @@ export const apiAuditProvider: AuditRepository = {
         knownGaps: KNOWN_GAPS.length,
         storageVerification: "Append-only: the database refuses edits and deletes",
         integrity: "Enforced by the database",
-        retentionExecution: "Nothing is deleted automatically",
+        retentionExecution: "Runs hourly. Removes records older than the retention period that no investigation or settings change refers to.",
         productionCoverage: "Covers Companies, Users, Team, Clients, Content, Integrations, Plans, Billing and Internal Team",
       },
     };
@@ -310,12 +310,12 @@ export const apiAuditProvider: AuditRepository = {
       coverage: rows,
       gaps: KNOWN_GAPS.map((gap) => ({ ...gap, since: coverage.firstRecordedAt ?? new Date().toISOString() })),
       retention: {
-        retentionDays: 0,
+        retentionDays: coverage.retention.retentionDays,
         effectiveSince: coverage.firstRecordedAt,
         owner: "Platform",
-        archiveBehavior: "Records stay in the database.",
+        archiveBehavior: "Records stay in the database until the retention period ends.",
         expiryPolicy: coverage.retention.note,
-        legalHold: "Not applicable: nothing is deleted.",
+        legalHold: "Not supported: no legal hold can be placed. Expired records are removed unless an investigation or a settings change refers to them.",
         policyHref: "/super-admin/settings",
       },
       exportGovernance: {
@@ -336,7 +336,7 @@ export const apiAuditProvider: AuditRepository = {
         knownGaps: KNOWN_GAPS.length,
         storageVerification: "Append-only: the database refuses edits and deletes",
         integrity: "Enforced by the database",
-        retentionExecution: "Nothing is deleted automatically",
+        retentionExecution: "Runs hourly. Removes records older than the retention period that no investigation or settings change refers to.",
         productionCoverage: "Covers Companies, Users, Team, Clients, Content, Integrations, Plans, Billing and Internal Team",
       },
     };

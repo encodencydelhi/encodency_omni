@@ -102,11 +102,12 @@ export const RETENTION_CATEGORIES = [
   { id: "closed_companies", label: "Closed Company Data", days: 90, min: 30, max: 1095, owner: "Companies", scope: "Closed companies" },
 ] as const;
 
-const RETENTION_KEY = (id: string) => `privacy.retention.${id}`;
+const RETENTION_NOTES: Record<string, string> = {
+  archived_clients: " Not applied: a company removes a client immediately and permanently, so there is no archive stage to keep or purge.",
+  closed_companies: " Not applied: a closed company is archived and kept. The database refuses to delete a company that holds data (owner decision T02-F005), so no purge runs.",
+};;
 
-/* ------------------------------------------------------------------ */
-/* Builder                                                             */
-/* ------------------------------------------------------------------ */
+const RETENTION_KEY = (id: string) => `privacy.retention.${id}`;
 
 type Input = Omit<
   GlobalSettingDefinition,
@@ -164,7 +165,7 @@ const IDENTITY: GlobalSettingDefinition[] = [
 
 const LOCALIZATION: GlobalSettingDefinition[] = [
   build("localization", { key: "localization.default_timezone", name: "Default timezone", description: "The IANA timezone used when a company has not chosen its own.", group: "regional", valueType: "timezone", defaultValue: "Asia/Kolkata", required: true, scope: "existing_and_new", override: "allowed", overrideGate: "governance.company_override.timezone", timing: "fallback", keywords: ["time zone", "tz", "iana"] }),
-  build("localization", { key: "localization.default_locale", name: "Default language / locale", description: "The locale used for language and formatting by default.", group: "regional", valueType: "locale", defaultValue: "en-IN", required: true, scope: "existing_and_new", override: "allowed", overrideGate: "governance.company_override.language", timing: "fallback", keywords: ["language", "locale"] }),
+  build("localization", { key: "localization.default_locale", name: "Default language / locale", description: "The language a new company starts with. The product interface itself is English only for now; date, time and number formats follow their own settings.", group: "regional", valueType: "locale", defaultValue: "en-IN", required: true, scope: "existing_and_new", override: "allowed", overrideGate: "governance.company_override.language", timing: "fallback", keywords: ["language", "locale"] }),
   build("localization", { key: "localization.date_format", name: "Date format", description: "How dates are written by default.", group: "regional", valueType: "select", options: DATE_FORMATS, defaultValue: "DD MMM YYYY", scope: "existing_and_new", override: "allowed", overrideGate: "governance.company_override.regional_formats", timing: "fallback" }),
   build("localization", { key: "localization.time_format", name: "Time format", description: "12-hour or 24-hour clock.", group: "regional", valueType: "select", options: opts(["12h", "12-hour (05:30 PM)"], ["24h", "24-hour (17:30)"]), defaultValue: "12h", scope: "existing_and_new", override: "allowed", overrideGate: "governance.company_override.regional_formats", timing: "fallback" }),
   build("localization", { key: "localization.first_day_of_week", name: "First day of week", description: "The first column of calendars and weekly reports.", group: "regional", valueType: "select", options: opts(["monday", "Monday"], ["sunday", "Sunday"], ["saturday", "Saturday"]), defaultValue: "monday", scope: "existing_and_new", override: "allowed", overrideGate: "governance.company_override.regional_formats", timing: "fallback" }),
@@ -185,6 +186,7 @@ const ONBOARDING: GlobalSettingDefinition[] = [
   build("onboarding", { key: "onboarding.default_workspace_region", name: "Default workspace region", description: "The hosting region new workspaces are placed in.", group: "new_company", valueType: "select", options: REGIONS.map((region) => ({ value: region, label: region })), defaultValue: "India (Mumbai)", scope: "new_companies", timing: "new_companies_only", sensitivity: "moderate" }),
   build("onboarding", { key: "onboarding.company_configuration_version", name: "Default company configuration version", description: "The configuration version stamped on a new company. Follows the current platform configuration.", group: "new_company", valueType: "readonly", defaultValue: "current", locked: "Read only. Always the current configuration version.", scope: "new_companies", policyKind: "fixed", override: "not_applicable", timing: "new_companies_only" }),
   build("onboarding", { key: "onboarding.owner_invite_expiry_days", name: "Owner invitation expiry", description: "How long a company owner has to accept the first invitation.", group: "invitations", valueType: "number", unit: "days", min: 1, max: 30, defaultValue: 7, required: true, scope: "new_companies", timing: "new_companies_only", keywords: ["invite"] }),
+  build("onboarding", { key: "onboarding.staff_invite_expiry_days", name: "Staff invitation expiry", description: "How long an invited Super Admin or Support member has to accept. Invitations already sent keep the expiry they were sent with.", group: "invitations", valueType: "number", unit: "days", min: 1, max: 30, defaultValue: 2, required: true, scope: "platform_staff", timing: "immediate", keywords: ["invite", "staff"] }),
   build("onboarding", { key: "onboarding.member_invite_expiry_days", name: "Member invitation expiry", description: "How long an invited member has to accept.", group: "invitations", valueType: "number", unit: "days", min: 1, max: 60, defaultValue: 14, required: true, scope: "new_companies", timing: "new_companies_only", keywords: ["invite"] }),
   build("onboarding", { key: "onboarding.invitation_acceptance", name: "Invitation acceptance requirements", description: "What an invitee must complete to activate an account.", group: "invitations", valueType: "select", options: opts(["verified_email", "Verified email"], ["verified_email_and_mfa", "Verified email + MFA enrolment"]), defaultValue: "verified_email", scope: "new_companies", timing: "new_companies_only", sensitivity: "moderate", enforcement: "authentication_backend", strictness: "option_order" }),
   build("onboarding", { key: "onboarding.invite_reminder_days", name: "Invitation reminder", description: "Send a reminder this many days before an invitation expires. 0 turns reminders off. Delivery is managed in Notifications.", group: "invitations", valueType: "number", unit: "days", min: 0, max: 14, defaultValue: 2, scope: "new_companies", timing: "new_companies_only" }),
@@ -200,9 +202,9 @@ const SECURITY: GlobalSettingDefinition[] = [
   build("security", { key: "security.login.suspicious_review", name: "Suspicious login review", description: "What happens when a sign-in looks unusual.", group: "login", valueType: "select", options: opts(["notify_only", "Notify only"], ["require_step_up", "Require step-up verification"], ["block_until_review", "Block until reviewed"]), defaultValue: "require_step_up", scope: "staff_and_company_users", sensitivity: "high", strictness: "option_order", ...auth }),
   build("security", { key: "security.login.notification_policy", name: "Login notification policy", description: "Which sign-ins notify the account owner. Templates and delivery are managed in Notifications.", group: "login", valueType: "select", options: opts(["never", "Never"], ["new_device", "New device or location"], ["every_login", "Every sign-in"]), defaultValue: "new_device", scope: "staff_and_company_users", sensitivity: "moderate", ...auth }),
   // MFA
-  build("security", { key: "security.platform_staff.mfa_required", name: "Staff MFA requirement", description: "Require multi-factor authentication for platform staff accounts.", group: "mfa", valueType: "boolean", booleanLabels: ["Not required", "Required"], defaultValue: true, policyKind: "mandatory_minimum", strictness: "higher_is_stricter", sensitivity: "critical", ...staff, keywords: ["mfa", "2fa", "totp", "authenticator"] }),
+  build("security", { key: "security.platform_staff.mfa_required", name: "Staff MFA requirement", description: "Require multi-factor authentication for platform staff accounts. Today every staff sign-in already needs an authenticator code, and turning this off does not loosen that.", group: "mfa", valueType: "boolean", booleanLabels: ["Not required", "Required"], defaultValue: true, policyKind: "mandatory_minimum", strictness: "higher_is_stricter", sensitivity: "critical", ...staff, keywords: ["mfa", "2fa", "totp", "authenticator"] }),
   build("security", { key: "security.mfa.sensitive_ops_required", name: "MFA for sensitive operations", description: "Ask for a fresh MFA check before a sensitive operation.", group: "mfa", valueType: "boolean", defaultValue: true, policyKind: "mandatory_minimum", strictness: "higher_is_stricter", sensitivity: "high", scope: "staff_and_company_users", ...auth }),
-  build("security", { key: "security.mfa.allowed_methods", name: "Allowed MFA methods", description: "Methods accounts may enrol. At least one is required.", group: "mfa", valueType: "multiselect", options: opts(["totp", "Authenticator app (TOTP)"], ["webauthn", "Security key / passkey"], ["email_otp", "Email one-time code"]), defaultValue: ["totp", "webauthn"], required: true, sensitivity: "critical", scope: "staff_and_company_users", ...auth }),
+  build("security", { key: "security.mfa.allowed_methods", name: "Allowed MFA methods", description: "Methods accounts may enrol. At least one is required. Only the authenticator app (TOTP) exists today; passkeys and email codes are not built.", group: "mfa", valueType: "multiselect", options: opts(["totp", "Authenticator app (TOTP)"], ["webauthn", "Security key / passkey"], ["email_otp", "Email one-time code"]), defaultValue: ["totp", "webauthn"], required: true, sensitivity: "critical", scope: "staff_and_company_users", ...auth }),
   build("security", { key: "security.mfa.totp_enrollment", name: "TOTP enrolment requirement", description: "When an account must enrol an authenticator.", group: "mfa", valueType: "select", options: opts(["at_first_sign_in", "At first sign-in"], ["within_grace", "Within the grace period"], ["optional", "Optional"]), defaultValue: "within_grace", sensitivity: "high", scope: "staff_and_company_users", strictness: "option_order", ...auth }),
   build("security", { key: "security.mfa.enrollment_grace_days", name: "Enrolment grace period", description: "Days an account may sign in before enrolment is enforced.", group: "mfa", valueType: "number", unit: "days", min: 0, max: 30, defaultValue: 7, sensitivity: "high", scope: "staff_and_company_users", strictness: "lower_is_stricter", visibleWhen: { key: "security.mfa.totp_enrollment", equals: "within_grace" }, ...auth }),
   build("security", { key: "security.mfa.recovery_codes", name: "Recovery code policy", description: "Whether accounts may hold recovery codes. Codes themselves are never shown or stored in this frontend.", group: "mfa", valueType: "select", options: opts(["allowed", "Allowed"], ["admin_reset_only", "Admin Reset Only"]), defaultValue: "allowed", sensitivity: "high", scope: "staff_and_company_users", ...auth }),
@@ -241,7 +243,7 @@ const GOVERNANCE: GlobalSettingDefinition[] = [
 
 const PRIVACY: GlobalSettingDefinition[] = [
   ...RETENTION_CATEGORIES.map((category) =>
-    build("privacy", { key: RETENTION_KEY(category.id), name: `${category.label} retention`, description: `How long ${category.label.toLowerCase()} are kept. This is a configured policy, not a verified legal or compliance requirement.`, group: "retention", valueType: "number", unit: "days", min: category.min, max: category.max, defaultValue: category.days, required: true, sensitivity: "high", scope: "platform_wide", ...lifecycle, strictness: "lower_is_stricter", keywords: ["retention", category.owner.toLowerCase()] }),
+    build("privacy", { key: RETENTION_KEY(category.id), name: `${category.label} retention`, description: `How long ${category.label.toLowerCase()} are kept. This is a configured policy, not a verified legal or compliance requirement.${RETENTION_NOTES[category.id] ?? ""}`, group: "retention", valueType: "number", unit: "days", min: category.min, max: category.max, defaultValue: category.days, required: true, sensitivity: "high", scope: "platform_wide", ...lifecycle, strictness: "lower_is_stricter", keywords: ["retention", category.owner.toLowerCase()] }),
   ),
   build("privacy", { key: "privacy.export.requesters", name: "Who may request a company data export", description: "The role allowed to start an export for a company.", group: "export", valueType: "select", options: opts(["company_owner", "Company owner only"], ["company_admins", "Company owners and admins"], ["staff_on_request", "Platform Staff On Request"]), defaultValue: "company_owner", sensitivity: "high", scope: "existing_and_new", ...platform }),
   build("privacy", { key: "privacy.export.scope", name: "Authorised export scope", description: "An export contains only the requesting company's own data. This cannot be widened.", group: "export", valueType: "readonly", defaultValue: "Own company data only", locked: "Tenant isolation is mandatory. Other companies' data is never included.", policyKind: "fixed", scope: "existing_and_new", override: "not_applicable" }),
@@ -250,13 +252,13 @@ const PRIVACY: GlobalSettingDefinition[] = [
   build("privacy", { key: "privacy.export.exclusions", name: "Sensitive data exclusions", description: "Always excluded from every export.", group: "export", valueType: "readonly", defaultValue: "Credentials, secrets, password hashes and session tokens", locked: "Mandatory exclusions cannot be removed.", policyKind: "fixed", override: "not_applicable" }),
   build("privacy", { key: "privacy.export.log_activity", name: "Export activity logging", description: "Every export request and download is written to the audit trail.", group: "export", valueType: "boolean", defaultValue: true, locked: "Mandatory under the application's security design.", policyKind: "fixed", sensitivity: "high", ...platform }),
   build("privacy", { key: "privacy.deletion.closure_request", name: "Company closure request requirements", description: "What a request to close a company must include.", group: "deletion", valueType: "select", options: opts(["owner_confirmation", "Owner confirmation"], ["owner_confirmation_and_staff_review", "Owner confirmation + staff review"]), defaultValue: "owner_confirmation_and_staff_review", sensitivity: "high", scope: "existing_and_new", ...platform, strictness: "option_order" }),
-  build("privacy", { key: "privacy.deletion.client_policy", name: "Client archival / deletion policy", description: "What happens to a client removed from a company.", group: "deletion", valueType: "select", options: opts(["archive_only", "Archive only"], ["archive_then_delete", "Archive, Then Delete"]), defaultValue: "archive_then_delete", sensitivity: "high", scope: "existing_and_new", ...lifecycle }),
+  build("privacy", { key: "privacy.deletion.client_policy", name: "Client archival / deletion policy", description: "What happens to a client removed from a company. Not applied: a company removes a client immediately and permanently.", group: "deletion", valueType: "select", options: opts(["archive_only", "Archive only"], ["archive_then_delete", "Archive, Then Delete"]), defaultValue: "archive_then_delete", sensitivity: "high", scope: "existing_and_new", ...lifecycle }),
   build("privacy", { key: "privacy.deletion.approval_required", name: "Deletion approval requirement", description: "Require staff approval before any data removal is executed.", group: "deletion", valueType: "boolean", defaultValue: true, sensitivity: "high", ...lifecycle, strictness: "higher_is_stricter" }),
   build("privacy", { key: "privacy.deletion.dependency_review", name: "Dependency review", description: "Review linked subscriptions, integrations and clients before removal.", group: "deletion", valueType: "boolean", defaultValue: true, sensitivity: "high", ...lifecycle, strictness: "higher_is_stricter" }),
   build("privacy", { key: "privacy.deletion.active_subscription_check", name: "Active subscription check", description: "Block closure while a paid subscription is active.", group: "deletion", valueType: "boolean", defaultValue: true, sensitivity: "high", ...lifecycle, strictness: "higher_is_stricter" }),
   build("privacy", { key: "privacy.deletion.legal_hold", name: "Legal hold handling", description: "Not supported yet. Nothing in this frontend can place or lift a legal hold.", group: "deletion", valueType: "readonly", defaultValue: "Not supported", locked: "Requires a backend legal-hold workflow.", policyKind: "fixed", override: "not_applicable" }),
   build("privacy", { key: "privacy.deletion.backup_retention_days", name: "Backup retention reference", description: "How long backups are kept after a removal. A reference for support answers, not a verified backup setting.", group: "deletion", valueType: "number", unit: "days", min: 7, max: 365, defaultValue: 35, sensitivity: "high", ...lifecycle }),
-  build("privacy", { key: "privacy.deletion.execution_status", name: "Data removal execution status", description: "Whether a removal workflow is connected.", group: "deletion", valueType: "readonly", defaultValue: "Not connected. No data is removed by this configuration.", locked: "Removal is a separate, audited backend workflow.", policyKind: "fixed", override: "not_applicable" }),
+  build("privacy", { key: "privacy.deletion.execution_status", name: "Data removal execution status", description: "Whether a removal workflow is connected.", group: "deletion", valueType: "readonly", defaultValue: "Company archival connected; permanent deletion not connected.", locked: "Removal is a separate, audited backend workflow.", policyKind: "fixed", override: "not_applicable" }),
 ];
 
 const COMMUNICATIONS: GlobalSettingDefinition[] = [
@@ -268,7 +270,6 @@ const COMMUNICATIONS: GlobalSettingDefinition[] = [
     build("communications", { key: `communications.legal.${id}`, name: LEGAL_DOCUMENTS[id].label, description: LEGAL_DOCUMENTS[id].description, group: "legal", valueType: "legal_document", defaultValue: defaultLegal(id), sensitivity: "moderate", keywords: ["legal", "policy", "terms"] }),
   ),
   // AI provider configuration
-  build("communications", { key: "ai.provider", name: "AI provider", description: "The AI provider used for generating recommendations and summaries. Supported: OpenAI, Anthropic, Gemini.", group: "ai", valueType: "select", options: opts(["none", "No AI provider"], ["openai", "OpenAI GPT-4"], ["anthropic", "Anthropic Claude"], ["gemini", "Google Gemini"]), defaultValue: "none", sensitivity: "high" }),
 ];
 
 const M = (key: string) => `maintenance.${key}`;
@@ -295,15 +296,14 @@ const MAINTENANCE: GlobalSettingDefinition[] = [
 ];
 
 function defaultLegal(id: LegalDocumentId): LegalDocValue {
-  const paths: Record<LegalDocumentId, string> = { terms: "terms", privacy: "privacy", cookies: "cookies", acceptable_use: "acceptable-use", dpa: "dpa", billing: "billing-policy" };
-  const published = id === "terms" || id === "privacy" || id === "cookies";
+  // Nothing is published until someone enters a real address: a seeded "published v3.1" would claim documents nobody wrote.
   return {
     title: LEGAL_DOCUMENTS[id].label,
-    url: published || id === "dpa" ? `https://encodency.com/legal/${paths[id]}` : "",
-    version: published ? (id === "terms" ? "3.1" : id === "privacy" ? "2.4" : "1.2") : id === "dpa" ? "1.0" : "",
-    effectiveDate: published ? (id === "terms" ? "2026-04-01" : id === "privacy" ? "2026-02-15" : "2025-11-01") : "",
-    lastReviewed: published ? "2026-07-20" : "",
-    status: published ? "published" : id === "dpa" ? "under_review" : "not_published",
+    url: "",
+    version: "",
+    effectiveDate: "",
+    lastReviewed: "",
+    status: "not_published",
     owner: id === "billing" ? "Finance" : "Legal & Compliance",
   };
 }

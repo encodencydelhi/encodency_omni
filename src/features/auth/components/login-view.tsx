@@ -13,6 +13,7 @@ import { SessionBootScreen } from "./session-boot-screen";
 import { TotpStep } from "./totp-step";
 import { TotpSetupStep } from "./totp-setup-step";
 import { markFreshLogin } from "@/features/admin/settings/live/workspace-api";
+import { PublicAnnouncementBanner } from "@/features/global-settings/components/public-announcement-banner";
 
 /**
  * Decides where a completed sign-in lands.
@@ -92,6 +93,7 @@ export function LoginView() {
 
   return (
     <>
+      <PublicAnnouncementBanner audience="public_visitors" className="mb-4" />
       <AuthCard>
         {step}
 

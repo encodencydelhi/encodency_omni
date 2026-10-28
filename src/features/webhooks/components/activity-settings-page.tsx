@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { isMockMode } from "@/config/env";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,7 +59,7 @@ export function ActivitySettingsPage() {
       <div className="grid gap-1 xl:grid-cols-[1.3fr_1fr]">
         <SectionCard
           title="Webhook Operational Activity"
-          description="Demo activity records. Sensitive administrative changes are recorded centrally in Audit Logs once a backend exists."
+          description={isMockMode ? "Demo activity records." : "Persistent administrative changes recorded in the central Audit Log."}
           action={<div className="flex gap-2"><ExportButton filename="webhook-activity.csv" rows={entries.map((e) => ({ at: e.at, type: e.type, actor: e.actorName, message: e.message, endpointId: e.endpointId }))} /><Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.auditSensitive}>Audit Logs</Link></Button></div>}
         >
           <div className="-mx-5 -mt-1 mb-2 border-b border-border">
@@ -103,7 +104,7 @@ export function ActivitySettingsPage() {
                   <SelectContent>{policies.map((p) => <SelectItem key={p.ref} value={p.ref}>{p.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <label className="flex items-center justify-between gap-3 text-[0.8125rem]"><span><span className="block font-medium">Require HTTPS outside development</span><span className="text-2xs text-muted-foreground">Preliminary frontend check only.</span></span><Switch checked={draft.requireHttpsOutsideDevelopment} onCheckedChange={(value) => setDraft({ ...draft, requireHttpsOutsideDevelopment: value })} /></label>
+              <label className="flex items-center justify-between gap-3 text-[0.8125rem]"><span><span className="block font-medium">Require HTTPS outside development</span><span className="text-2xs text-muted-foreground">Unsafe HTTP destinations are rejected by backend validation.</span></span><Switch checked={draft.requireHttpsOutsideDevelopment} onCheckedChange={(value) => setDraft({ ...draft, requireHttpsOutsideDevelopment: value })} /></label>
               <label className="flex items-center justify-between gap-3 text-[0.8125rem]"><span><span className="block font-medium">Sanitized payload preview</span><span className="text-2xs text-muted-foreground">Show the collapsed JSON preview in delivery detail.</span></span><Switch checked={draft.payloadPreviewEnabled} onCheckedChange={(value) => setDraft({ ...draft, payloadPreviewEnabled: value })} /></label>
               {errors.map((message) => <p key={message} className="text-2xs text-danger" role="alert">{message}</p>)}
               {dirty ? <p className="text-2xs text-warning">You have unsaved changes.</p> : null}
@@ -121,12 +122,12 @@ export function ActivitySettingsPage() {
             </div>
           </SectionCard>
 
-          <SectionCard title="Monitoring Coverage" description="Demo sources. No production instrumentation is connected.">
+          <SectionCard title="Monitoring Coverage" description="Current sender and incoming receiver health from persisted webhook records.">
             <ul className="divide-y divide-border">
               {snapshot.monitoring.map((source) => (
                 <li key={source.id} className="flex items-start justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
                   <div><p className="text-[0.8125rem] font-medium">{source.name}</p><p className="text-2xs text-muted-foreground">Freshness threshold {source.freshnessThresholdMinutes} min</p></div>
-                  <div className="space-y-1 text-right"><Chip tone={source.backendConnected ? "success" : "brand"}>{source.backendConnected ? "Backend connected" : "Demo only"}</Chip><Timestamp iso={source.lastObservedAt} /></div>
+                  <div className="space-y-1 text-right"><Chip tone={source.backendConnected ? "success" : "brand"}>{source.backendConnected ? "Backend connected" : "Unavailable"}</Chip><Timestamp iso={source.lastObservedAt} /></div>
                 </li>
               ))}
             </ul>
@@ -144,9 +145,9 @@ export function ActivitySettingsPage() {
           </div>
           <p className="mt-3 text-2xs text-muted-foreground">Jobs & Queues: <JobReference jobId={null} /> The route is not built yet.</p>
         </SectionCard>
-        <SectionCard title="Demo Data" description="Resets configuration changes made in this browser session for this environment.">
-          <Notice tone="info">Endpoints, subscriptions, recovery drafts and settings you created are kept only in memory and are lost on refresh.</Notice>
-          <Button variant="outline" size="sm" className="mt-3" onClick={() => setResetOpen(true)}>Reset Demo Configuration</Button>
+        <SectionCard title={isMockMode ? "Demo Data" : "Live Configuration"} description={isMockMode ? "Resets configuration changes made in this browser session for this environment." : "Live endpoint and delivery history is retained; demo reset is disabled in API mode."}>
+          <Notice tone="info">{isMockMode ? "Mock endpoints, subscriptions, recovery drafts and settings are kept only in memory." : "Persistent endpoint, delivery, attempt and audit records are kept in the backend database."}</Notice>
+          <Button variant="outline" size="sm" className="mt-3" disabled={!isMockMode} onClick={() => setResetOpen(true)}>{isMockMode ? "Reset Demo Configuration" : "Live Data Is Protected"}</Button>
         </SectionCard>
       </div>
 

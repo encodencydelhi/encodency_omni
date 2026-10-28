@@ -49,7 +49,8 @@ export function PreferencesSection() {
   const current = saved ? { ...saved, ...draft } : null;
   const dirty = Boolean(saved) && (Object.keys(draft) as (keyof DisplayPreferences)[]).some((k) => draft[k] !== saved![k]);
   const save = useMutation({
-    mutationFn: () => preferencesApi.save(current!),
+    // Only what was changed: the rest keeps following the platform defaults.
+    mutationFn: () => preferencesApi.save(draft),
     onSuccess: (res) => {
       qc.setQueryData(QUERY_KEY, res);
       setDraft({});
@@ -133,7 +134,7 @@ export function PreferencesSection() {
                 <p><span className="block text-[9.5px] font-bold uppercase tracking-wide text-[#94A3B8]">Amount</span><span className="font-semibold text-[#0F172A]">{sample.money}</span></p>
               </div>
             ) : null}
-            {!query.data?.stored ? <p className="px-1 text-[10.5px] text-[#94A3B8]">You have not saved preferences yet, so the app shows its standard formats. Save once to switch to yours.</p> : null}
+            {!query.data?.stored ? <p className="px-1 text-[10.5px] text-[#94A3B8]">You have not chosen your own formats, so the app uses the platform defaults. Change any field and save to use yours.</p> : null}
           </>
         )}
       </section>

@@ -1,5 +1,6 @@
 "use client";
 
+import { IdentityDocument } from "@/features/global-settings/components/identity-document";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
@@ -12,6 +13,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <IdentityDocument />
         <TooltipProvider delayDuration={200}>
           {children}
           <Toaster

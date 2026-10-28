@@ -1,0 +1,17 @@
+export async function copyOneTimeSecret(secret: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(secret);
+    return;
+  }
+
+  const field = document.createElement("textarea");
+  field.value = secret;
+  field.setAttribute("readonly", "");
+  field.style.position = "fixed";
+  field.style.opacity = "0";
+  document.body.appendChild(field);
+  field.select();
+  const copied = document.execCommand("copy");
+  field.remove();
+  if (!copied) throw new Error("Clipboard access is unavailable.");
+}

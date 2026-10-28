@@ -40,7 +40,7 @@ export interface WebhooksRepository {
   saveSubscriptions(environment: WebhookEnvironment, endpointId: string, eventKeys: string[], reason: string): Promise<MutationResult<EventSubscription[]>>;
   requestSecretRotationReview(environment: WebhookEnvironment, endpointId: string): Promise<MutationResult<WebhookActivity>>;
   createRecoveryRequest(environment: WebhookEnvironment, input: CreateRecoveryInput): Promise<MutationResult<RecoveryRequest>>;
-  updateRecoveryRequest(environment: WebhookEnvironment, requestId: string, state: Extract<RecoveryState, "cancelled" | "pending_review">): Promise<MutationResult<RecoveryRequest>>;
+  updateRecoveryRequest(environment: WebhookEnvironment, requestId: string, state: RecoveryState): Promise<MutationResult<RecoveryRequest>>;
   updateSettings(environment: WebhookEnvironment, settings: WebhookSettings): Promise<MutationResult<WebhookSettings>>;
   resetDemo(environment: WebhookEnvironment): Promise<void>;
 }

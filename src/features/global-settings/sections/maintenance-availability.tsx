@@ -78,7 +78,7 @@ function ImpactPreview({ values, active }: { values: SettingValues; active: bool
           </div>
         ))}
       </dl>
-      <p className="mt-2 text-2xs text-muted-foreground">No API, worker or sign-in is stopped by this frontend. Real restriction needs backend enforcement.</p>
+      <p className="mt-2 text-2xs text-muted-foreground">The platform backend applies this restriction to the chosen audience and area during the window; staff can be excepted so settings stay reachable.</p>
     </Panel>
   );
 }

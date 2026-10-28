@@ -1,3 +1,6 @@
+"use client";
+
+import { usePublicIdentity, publicAsset } from "@/features/global-settings/live/public-identity";
 import Image from "next/image";
 import { APP } from "@/config/app";
 import { cn } from "@/lib/utils/cn";
@@ -34,6 +37,9 @@ interface LogoProps {
 
 /** The full lockup, red block included. Use on light surfaces. */
 export function EnCodencyLogo({ height = 44, className, priority = false, fill = false }: LogoProps) {
+  const { data } = usePublicIdentity();
+  const asset = publicAsset(data, "primary_logo");
+  if (asset?.source === "uploaded" && asset.url) return <Image unoptimized src={asset.url} alt={String(data?.["identity.platform_name"] ?? APP.name)} width={fill ? undefined : Math.round(height * (asset.width && asset.height ? asset.width / asset.height : LOGO_ASPECT))} height={fill ? undefined : height} fill={fill || undefined} priority={priority} className={cn("select-none", fill && "object-cover", className)} />;
   if (fill) {
     return (
       <Image
@@ -59,6 +65,9 @@ export function EnCodencyLogo({ height = 44, className, priority = false, fill =
 
 /** The lettering alone, in white. Use on the brand red. */
 export function EnCodencyWordmark({ height = 46, className, priority = false }: LogoProps) {
+  const { data } = usePublicIdentity();
+  const asset = publicAsset(data, "primary_logo");
+  if (asset?.source === "uploaded" && asset.url) return <Image unoptimized src={asset.url} alt={String(data?.["identity.platform_name"] ?? APP.name)} width={Math.round(height * (asset.width && asset.height ? asset.width / asset.height : LOGO_ASPECT))} height={height} priority={priority} className={cn("select-none object-contain", className)} />;
   return (
     <Image
       src={BRAND_ASSETS.wordmarkWhite}
@@ -88,6 +97,9 @@ export function BrandGlyph({
   size?: keyof typeof GLYPH_SIZES;
   className?: string;
 }) {
+  const { data } = usePublicIdentity();
+  const asset = publicAsset(data, "compact_logo");
+  if (asset?.source === "uploaded" && asset.url) return <Image unoptimized src={asset.url} alt={String(data?.["identity.platform_short_name"] ?? APP.shortName)} width={size === "lg" ? 40 : size === "md" ? 32 : 28} height={size === "lg" ? 40 : size === "md" ? 32 : 28} className={cn("shrink-0 object-contain", GLYPH_SIZES[size], className)} />;
   return (
     <span
       className={cn(

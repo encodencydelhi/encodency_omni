@@ -18,6 +18,8 @@ export type AssetKind = "primary_logo" | "compact_logo" | "app_icon" | "favicon"
 
 /** A branding asset. In the demo it is only ever held in memory / session storage; nothing is uploaded. */
 export interface AssetValue {
+  assetId?: string;
+  url?: string;
   source: "default" | "uploaded" | "removed";
   fileName: string;
   mimeType: string;
@@ -175,7 +177,7 @@ export type GlobalSettingsCapabilities = Record<GlobalSettingsCapabilityKey, boo
 /* Records                                                             */
 /* ------------------------------------------------------------------ */
 
-export type ChangeResult = "applied" | "pending_approval" | "scheduled" | "withdrawn";
+export type ChangeResult = "applied" | "pending_approval" | "scheduled" | "withdrawn" | "rejected";
 export type ChangeType = "update" | "reset" | "asset" | "reference";
 
 export interface ConfigurationChange {
@@ -246,6 +248,8 @@ export interface ConfigurationSnapshot {
   pendingCount: number;
   pendingSensitiveCount: number;
   maintenance: MaintenanceEntry[];
+  /** Settings a platform service really reads; absent in the demo workspace. Every other setting is recorded only. */
+  enforcedKeys?: string[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -269,6 +273,8 @@ export interface ReviewRow {
   direction: ChangeDirection;
   existingImpact: string;
   newImpact: string;
+  /** True when a platform service really reads this setting (absent in the demo workspace). */
+  enforced?: boolean;
   /** True when this row is held as a pending change instead of being applied. */
   pending: boolean;
   warning?: string;
@@ -278,7 +284,7 @@ export interface RequiredCheck {
   id: string;
   label: string;
   /** What this frontend actually does about the check. */
-  state: "recorded" | "backend_required" | "not_required";
+  state: "recorded" | "backend_required" | "enforced" | "not_required";
   note: string;
 }
 
@@ -383,5 +389,16 @@ export interface NewCompanyDefaults {
   accountStatus: "active";
   ownerInviteExpiryDays: number;
   memberInviteExpiryDays: number;
+  staffInviteExpiryDays?: number;
   configurationVersion: string;
+}
+
+export interface PrivacyRequestSummary {
+  id: string;
+  companyId: string;
+  kind: string;
+  state: string;
+  requestedBy: string;
+  reason: string;
+  error: string | null;
 }

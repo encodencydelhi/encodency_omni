@@ -6,7 +6,7 @@ import { AlertBanner } from "@/components/shared/alert-banner";
 import { Badge } from "@/components/ui/badge";
 import { Panel } from "@/features/companies/components/primitives";
 import { PanelSkeleton } from "@/features/companies/components/states";
-import { SECURITY_TABS, routes, type SecurityTab } from "../data/config";
+import { SECURITY_TABS, SETTINGS_MOCK_MODE, routes, type SecurityTab } from "../data/config";
 import { useSecurityReview } from "../data/hooks";
 import type { ConfigurationChange, ConfigurationSnapshot, SettingValues } from "../data/types";
 import { SectionData, SettingGroup, SubTabs, useTab, ViewOnlyNotice } from "../components/section-parts";
@@ -23,8 +23,8 @@ const SENSITIVE_ACTIONS = ["Changing Mandatory MFA Requirements",
 
 function ScopeNote() {
   return (
-    <AlertBanner tone="info" title="Policy, Not Enforcement">
-      These values define the platform policy. The frontend records them; it does not lock accounts, challenge MFA or end sessions. Enforcement belongs to the authentication backend.
+    <AlertBanner tone="info" title="Enforced Or Recorded">
+      Settings marked Backend-Enforced are read by the sign-in and session code and apply as soon as they are saved (sign-in policy within about 30 seconds). Settings marked Recorded Only are kept in history but no service acts on them yet.
     </AlertBanner>
   );
 }
@@ -33,7 +33,7 @@ function TripleNote() {
   const cards = [
     { title: "Policy Requirement", body: "What is required of accounts. Set here, and recorded as configuration." },
     { title: "Individual Enrolment", body: "Whether each person has enrolled. Managed per account in Internal Team / Users." },
-    { title: "Backend Enforcement", body: "Whether sign-in is actually refused without MFA. Not connected in this phase." },
+    { title: "Backend Enforcement", body: "Today every account must enrol an authenticator app at sign-in; no setting here can loosen that." },
   ];
   return (
     <div className="grid grid-cols-1 gap-1 sm:grid-cols-3">
@@ -186,7 +186,7 @@ function TabBody({ tab, editor, config }: { tab: SecurityTab; editor: SectionEdi
       return (
         <>
           <SettingGroup editor={editor} group="sensitive" />
-          <Panel title="Actions Classed As Sensitive" description="These changes always need the checks above. The frontend lists the checks; it cannot perform genuine verification.">
+          <Panel title="Actions Classed As Sensitive" description={SETTINGS_MOCK_MODE ? "These changes always need the checks above. The frontend lists the checks; it cannot perform genuine verification." : "These changes always need the checks above. The backend performs them when you save: a recent sign-in, a fresh authenticator check and, for security-critical changes, approval by a different Super Admin."}>
             <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
               {SENSITIVE_ACTIONS.map((action) => (
                 <li key={action} className="rounded-sm border border-border px-3 py-2 text-[0.8125rem] text-foreground">{action}</li>

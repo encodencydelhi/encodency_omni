@@ -1,2 +1,5 @@
-import { redirect } from "next/navigation";
-export default function Page() { redirect("/super-admin/webhooks"); }
+import { SecurityPage } from "@/features/webhooks/components/security-page";
+
+export default function Page() {
+  return <SecurityPage />;
+}

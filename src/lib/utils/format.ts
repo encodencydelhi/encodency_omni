@@ -9,6 +9,10 @@ export interface DisplayPreferences {
   dateFormat: "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD" | "D MMM YYYY";
   timeFormat: "12-hour" | "24-hour";
   numberFormat: "indian" | "international";
+  /** The next three come from Global Settings > Localization; nobody chooses them individually. */
+  numberLocale?: string;
+  currencyDisplay?: "symbol" | "code" | "name";
+  firstDayOfWeek?: "monday" | "sunday" | "saturday";
 }
 
 export const DISPLAY_PREFERENCES_KEY = "omni:display-preferences";
@@ -42,7 +46,12 @@ export function setDisplayPreferences(next: DisplayPreferences | null): boolean 
   return changed;
 }
 
-const numberLocale = () => (preferences?.numberFormat === "indian" ? "en-IN" : LOCALE);
+const numberLocale = () => preferences?.numberLocale ?? (preferences?.numberFormat === "indian" ? "en-IN" : LOCALE);
+
+/** The weekday a calendar starts on (0 = Sunday ... 6 = Saturday): the platform default, Monday, until preferences load. */
+export function getFirstDayIndex(): 0 | 1 | 6 {
+  return preferences?.firstDayOfWeek === "sunday" ? 0 : preferences?.firstDayOfWeek === "saturday" ? 6 : 1;
+}
 
 const compactNumber = new Intl.NumberFormat(LOCALE, {
   notation: "compact",
@@ -69,6 +78,7 @@ export function formatCurrency(
   return new Intl.NumberFormat(preferences ? numberLocale() : LOCALE, {
     style: "currency",
     currency,
+    currencyDisplay: preferences?.currencyDisplay ?? "symbol",
     notation: options.compact ? "compact" : "standard",
     maximumFractionDigits: options.compact ? 1 : 2,
     minimumFractionDigits: options.compact ? 0 : 2,

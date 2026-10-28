@@ -1,2 +1,6 @@
-import { redirect } from "next/navigation";
-export default function Page() { redirect("/super-admin/webhooks"); }
+import { IncomingSourceDetailPage } from "@/features/webhooks/components/incoming-detail";
+
+export default async function Page({ params }: { params: Promise<{ sourceId: string }> }) {
+  const { sourceId } = await params;
+  return <IncomingSourceDetailPage sourceId={sourceId} />;
+}

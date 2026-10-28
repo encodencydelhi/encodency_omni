@@ -1,13 +1,9 @@
-/**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
- * Incoming workspace: Sources & Receivers directory and Incoming Events directory.
- */
 
 "use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import type { DataTableColumn } from "@/components/shared/data-table/types";
 import { DefinitionList } from "@/components/shared/definition-list";
@@ -16,9 +12,9 @@ import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHea
 import { PROCESSING_STATE, RECEIVER_STATUS, SOURCE_CONFIGURATION_STATE, VERIFICATION_METHOD_LABEL, VERIFICATION_STATE, WEBHOOK_ROUTES, ENVIRONMENT_LABEL } from "../data/config";
 import { incomingInWindow, sourceStats, type SourceStat } from "../data/selectors";
 import type { IncomingEvent } from "../data/types";
-import { CompanyCell, OpenLink, TablePanel } from "./cells";
+import { CompanyCell, OpenLink, SectionCard, TablePanel } from "./cells";
 import { EnvironmentFilter, FilterControls, optionsFrom, useFilterState, DATE_FILTER_OPTIONS } from "./filters";
-import { CardGrid, Chip, EmptyRows, ExportButton, FilterBar, IdCell, JobReference, Kpi, Mono, Notice, State, SubNav, Timestamp, humanize, usePaged } from "./kit";
+import { CardGrid, Chip, CopyButton, EmptyRows, ExportButton, FilterBar, IdCell, JobReference, Kpi, Mono, Notice, State, SubNav, Timestamp, humanize, usePaged } from "./kit";
 import { MonitoringChip } from "./overview-page";
 import { useWebhookData, useWebhooks } from "./webhooks-context";
 import { useWebhooksIncomingEvents } from "../data/hooks";
@@ -54,10 +50,35 @@ function IncomingSummary() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Sources directory                                                   */
-/* ------------------------------------------------------------------ */
+function ProviderCallbackUrls() {
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
 
+  const callbacks = [
+    { name: "Razorpay", purpose: "Payment and billing event receiver", path: "/api/v1/webhooks/billing" },
+    { name: "LinkedIn Community", purpose: "LinkedIn community app webhook", path: "/api/v1/webhooks/linkedin/community" },
+    { name: "LinkedIn Default", purpose: "LinkedIn default app webhook", path: "/api/v1/webhooks/linkedin/default" },
+  ];
+
+  return (
+    <SectionCard title="Provider Callback URLs" description="Copy the matching URL into that provider's webhook settings. These receive events in OmniPlatform; they are different from outgoing endpoint URLs.">
+      <Notice tone="warning" title="Running locally">
+        These localhost URLs work only from your computer. Razorpay and LinkedIn need a public HTTPS URL; during local development, expose this app through a secure tunnel and replace localhost with that tunnel's domain.
+      </Notice>
+      <div className="mt-3 divide-y divide-border">
+        {callbacks.map((callback) => {
+          const url = origin ? new URL(callback.path, origin).toString() : callback.path;
+          return (
+            <div key={callback.path} className="flex flex-wrap items-center justify-between gap-2 py-2.5 first:pt-0 last:pb-0">
+              <div className="min-w-0"><p className="text-[0.8125rem] font-medium">{callback.name}</p><p className="text-2xs text-muted-foreground">{callback.purpose}</p><Mono className="block break-all text-muted-foreground">{url}</Mono></div>
+              <CopyButton value={url} label={`Copy ${callback.name} callback URL`} />
+            </div>
+          );
+        })}
+      </div>
+    </SectionCard>
+  );
+}
 export function IncomingSourcesPage() {
   const { snapshot, window, environment } = useWebhookData();
   useWebhooksIncomingEvents(environment);
@@ -101,9 +122,10 @@ export function IncomingSourcesPage() {
     <div className="space-y-1">
       <IncomingNav view="sources" />
       <IncomingSummary />
+      <ProviderCallbackUrls />
       <TablePanel
         title="Sources & Receivers"
-        description="Providers that may send events to OmniPlatform. Receiver URLs are not shown because no receiver is connected."
+        description="Provider callback URLs are listed above. Registered generic sources have a separate source-specific receiver URL in their details."
         action={<ExportButton filename="webhook-incoming-sources.csv" rows={rows.map((r) => ({ id: r.source.id, provider: r.source.providerName, receiverId: r.source.receiverId, configuration: r.source.configurationState, verificationMethod: r.source.verificationMethod, events: r.events, verificationFailures: r.verificationFailures }))} />}
         filters={
           <FilterBar>

@@ -13,6 +13,7 @@ import { ActionMenu } from "@/components/shared/action-menu";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import type { DataTableColumn } from "@/components/shared/data-table/types";
 import { Button } from "@/components/ui/button";
+import { isMockMode } from "@/config/env";
 import { DELIVERY_STATE, FAILURE_CLASS, MODULE_LINKS, PROCESSING_STATE, RECOVERY_KIND, RECOVERY_STATE, VERIFICATION_STATE, WEBHOOK_ROUTES } from "../data/config";
 import { useWebhookMutation, useWebhooksRecoveryRequests } from "../data/hooks";
 import { webhooksRepository } from "../data/repository";
@@ -49,7 +50,7 @@ export function FailuresPage() {
     [...failedDeliveries, ...retryScheduled].filter((d) => d.unknownOutcome || assessDelivery(snapshot, d).level !== "eligible").length +
     processingFailures.filter((e) => evaluateIncomingReprocess(e, snapshot.sources.find((s) => s.id === e.sourceId)).level !== "eligible").length;
 
-  const updateRequest = useWebhookMutation(environment, (input: { id: string; state: "cancelled" | "pending_review" }) => webhooksRepository.updateRecoveryRequest(environment, input.id, input.state));
+  const updateRequest = useWebhookMutation(environment, (input: { id: string; state: "cancelled" | "pending_review" | "approved" | "rejected" }) => webhooksRepository.updateRecoveryRequest(environment, input.id, input.state));
 
   const go = (next: Section) => {
     setSection(next);
@@ -99,22 +100,23 @@ export function FailuresPage() {
     { id: "kind", header: "Type", cell: (row) => <span className="text-[0.8125rem]">{RECOVERY_KIND[row.kind].label}</span> },
     { id: "target", header: "Target", cell: (row) => (<div className="min-w-0"><Mono className="block">{row.targetLabel}</Mono><span className="block max-w-[14rem] truncate text-2xs text-muted-foreground">{row.counterpartLabel}</span></div>) },
     { id: "company", header: "Company", hideBelow: "lg", cell: (row) => <span className="text-[0.8125rem]">{row.companyName ?? "Platform"}</span> },
-    { id: "state", header: "State", cell: (row) => (<div className="space-y-1"><State registry={RECOVERY_STATE} status={row.state} /><Chip tone="brand">Demo request</Chip></div>) },
+    { id: "state", header: "State", cell: (row) => (<div className="space-y-1"><State registry={RECOVERY_STATE} status={row.state} />{row.demo ? <Chip tone="brand">Demo request</Chip> : <Chip tone="success">Recorded</Chip>}</div>) },
     { id: "reason", header: "Reason", hideBelow: "xl", cell: (row) => <span className="block max-w-[20rem] whitespace-normal text-2xs">{row.reason}</span> },
     { id: "updated", header: "Updated", hideBelow: "md", cell: (row) => <Timestamp iso={row.updatedAt} /> },
     { id: "act", header: "Actions", align: "right", cell: (row) => (
       <div className="flex justify-end gap-1">
         <OpenLink href={row.direction === "outgoing" ? WEBHOOK_ROUTES.delivery(row.targetId) : WEBHOOK_ROUTES.incomingEvent(row.targetId)} label="Target" />
         {row.state === "draft" ? <Button variant="outline" size="sm" onClick={() => void act(row.id, "pending_review")}>Submit</Button> : null}
+        {row.state === "pending_review" && !isMockMode ? <><Button variant="outline" size="sm" onClick={() => void act(row.id, "approved")}>Approve & Replay</Button><Button variant="ghost" size="sm" onClick={() => void act(row.id, "rejected")}>Reject</Button></> : null}
         {row.state === "draft" || row.state === "pending_review" ? <Button variant="ghost" size="sm" onClick={() => void act(row.id, "cancelled")}>Cancel</Button> : null}
       </div>
     ) },
   ];
 
-  async function act(id: string, state: "cancelled" | "pending_review") {
+  async function act(id: string, state: "cancelled" | "pending_review" | "approved" | "rejected") {
     try {
       await updateRequest.mutateAsync({ id, state });
-      toast.success(state === "cancelled" ? "Demo recovery request cancelled" : "Demo recovery request submitted for review", { description: "Nothing was sent to a backend." });
+      toast.success(state === "cancelled" ? "Recovery request cancelled" : state === "pending_review" ? "Recovery request submitted for review" : state === "approved" ? "Recovery approved and replay queued" : "Recovery request rejected");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The request could not be updated.");
     }
@@ -135,7 +137,7 @@ export function FailuresPage() {
         <Kpi label="Retry Scheduled" value={retryScheduled.length} tone={retryScheduled.length ? "warning" : "default"} hint="Automatic retry pending" />
         <Kpi label="Attempts Exhausted" value={exhausted.length} tone={exhausted.length ? "danger" : "default"} hint="No attempts remain" />
         <Kpi label="Manual Review Required" value={manualReview} tone={manualReview ? "warning" : "default"} hint="Uncertain, non-retryable or blocked" />
-        <Kpi label="Recovery Requests Pending" value={pendingRequests.length} hint="Demo drafts and pending reviews" />
+        <Kpi label="Recovery Requests Pending" value={pendingRequests.length} hint={isMockMode ? "Demo drafts and pending reviews" : "Persisted requests awaiting review"} />
       </CardGrid>
 
       <Notice tone="warning" title="No bulk replay">
@@ -175,7 +177,7 @@ export function FailuresPage() {
       {section === "outgoing" ? table("Outgoing Delivery Failures", "Terminal failures. Not every non-2xx response is safe to retry.", failedDeliveries, deliveryColumns("failed"), (r) => r.id, "No failed deliveries") : null}
       {section === "retry" ? table("Retry-Scheduled Deliveries", "Automatic retries pending under the endpoint's retry policy.", retryScheduled, deliveryColumns("retry"), (r) => r.id, "No retries scheduled") : null}
       {section === "exhausted" ? table("Attempts Exhausted", "Only a governed redelivery can add another attempt.", exhausted, deliveryColumns("exhausted"), (r) => r.id, "No exhausted deliveries") : null}
-      {section === "requests" ? table("Recovery Requests", "Demo requests. None has been sent to or executed by a backend, and none changes delivery history.", snapshot.recoveryRequests, requestColumns, (r) => r.id, "No recovery requests") : null}
+      {section === "requests" ? table("Recovery Requests", isMockMode ? "Demo requests stay in this browser session and do not change delivery history." : "Persisted requests are reviewed here. Approval records the decision and queues eligible outgoing deliveries for replay.", snapshot.recoveryRequests, requestColumns, (r) => r.id, "No recovery requests") : null}
 
       <RecoverySheet open={Boolean(recovery)} onOpenChange={(open) => { if (!open) setRecovery(null); }} direction={recovery?.direction ?? "outgoing"} targetId={recovery?.id ?? null} />
     </div>

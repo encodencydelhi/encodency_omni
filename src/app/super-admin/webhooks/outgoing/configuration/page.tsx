@@ -1,2 +1,5 @@
-import { redirect } from "next/navigation";
-export default function Page() { redirect("/super-admin/webhooks/outgoing"); }
+import { EndpointConfigurationPage } from "@/features/webhooks/components/outgoing-lists";
+
+export default function Page() {
+  return <EndpointConfigurationPage />;
+}

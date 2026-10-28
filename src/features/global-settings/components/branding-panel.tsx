@@ -20,7 +20,7 @@ const REMOVABLE: Record<AssetKind, boolean> = { primary_logo: false, compact_log
 
 export function assetSrc(kind: AssetKind, value: AssetValue | undefined): string | null {
   if (!value || value.source === "removed") return null;
-  if (value.source === "uploaded") return value.dataUrl;
+  if (value.source === "uploaded") return value.dataUrl ?? value.url ?? null;
   return ASSET_SPECS[kind].defaultSrc;
 }
 
@@ -101,7 +101,7 @@ function AssetCard({ kind, editor }: { kind: AssetKind; editor: SectionEditor })
         )}
       </div>
       <p className="truncate text-2xs text-muted-foreground" title={describeAsset(value)}>
-        {value.source === "uploaded" ? `${describeAsset(value)}${value.width ? ` - ${value.width}x${value.height}` : ""} - local preview only` : describeAsset(value)}
+        {value.source === "uploaded" ? `${describeAsset(value)}${value.width ? ` - ${value.width}x${value.height}` : ""}` : describeAsset(value)}
       </p>
       {error ? <p role="alert" className="text-2xs text-danger">{error}</p> : null}
       <div className="flex flex-wrap items-center gap-1.5">
@@ -143,7 +143,7 @@ export function BrandingPanel({ editor }: { editor: SectionEditor }) {
   return (
     <Panel title="Branding" description="The platform's own logos and icons. Company and client branding is never changed here.">
       <p className="mb-2 rounded-sm bg-muted/60 px-2.5 py-1.5 text-2xs text-muted-foreground">
-        Files are read in your browser for a local preview only. They are not uploaded, stored or used anywhere else in the platform yet.
+        Files are previewed locally, then securely uploaded and applied when you save this section.
       </p>
       <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
         {KINDS.map((kind) => <AssetCard key={kind} kind={kind} editor={editor} />)}

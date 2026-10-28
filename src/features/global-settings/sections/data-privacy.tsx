@@ -1,5 +1,7 @@
 "use client";
 
+import { PrivacyRequests } from "../components/privacy-requests";
+
 import { EyeIcon, PencilIcon } from "lucide-react";
 import { useState } from "react";
 import { AlertBanner } from "@/components/shared/alert-banner";
@@ -180,13 +182,14 @@ function Editor({ config, pending }: { config: ConfigurationSnapshot; pending: C
       <SubTabs tabs={PRIVACY_TABS} current={tab} label="Data and privacy" />
       {!editor.canEdit ? <ViewOnlyNotice section="privacy" /> : null}
       {editor.banner}
-      <AlertBanner tone="info" title="Policy Only">
-        This records policy and its history. It does not delete, export or purge any data; those need audited backend services.
+      <AlertBanner tone="info" title="Policy and Execution">
+        Retention cleanup runs for supported log, usage and notification records. Exports and company closure use audited requests and required approvals; saving policy alone does not run a deletion.
       </AlertBanner>
       {tab === "retention" ? <RetentionTable editor={editor} changedAt={config.changedAt} /> : null}
       {tab === "export" ? <SettingGroup editor={editor} group="export" /> : null}
       {tab === "deletion" ? <SettingGroup editor={editor} group="deletion" /> : null}
       {tab === "handling" ? <HandlingReferences /> : null}
+      {tab === "export" || tab === "deletion" ? <PrivacyRequests /> : null}
       {editor.bar}
       {editor.dialog}
     </div>

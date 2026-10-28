@@ -1,8 +1,3 @@
-/**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
- * Events & Subscriptions: catalogue, subscriptions directory and event type detail.
- */
-
 "use client";
 
 import Link from "next/link";
@@ -11,6 +6,7 @@ import { useMemo } from "react";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import type { DataTableColumn } from "@/components/shared/data-table/types";
 import { Button } from "@/components/ui/button";
+import { isMockMode } from "@/config/env";
 import { AUDIENCE_LABEL, CATEGORY_LABEL, EVENT_AVAILABILITY, ENVIRONMENT_LABEL, PRIVACY_LABEL, SCHEMA_LIFECYCLE, SUBSCRIPTION_STATE, WEBHOOK_ROUTES } from "../data/config";
 import { subscribersOf } from "../data/selectors";
 import type { EventSubscription, OutgoingEventType } from "../data/types";
@@ -60,7 +56,7 @@ export function EventCataloguePage() {
     const q = filters.query.trim().toLowerCase();
     return snapshot.eventTypes.filter((type) => {
       const count = subscribersOf(snapshot, type.key).length;
-      if (q && !`${type.name} ${type.key} ${CATEGORY_LABEL[type.category]}`.toLowerCase().includes(q)) return false;
+      if (q && !`${type.name} ${type.key} ${type.description} ${CATEGORY_LABEL[type.category]}`.toLowerCase().includes(q)) return false;
       if (filters.values.category && type.category !== filters.values.category) return false;
       if (filters.values.audience && type.audience !== filters.values.audience) return false;
       if (filters.values.schema && type.schemaVersion !== filters.values.schema) return false;
@@ -76,6 +72,7 @@ export function EventCataloguePage() {
   const columns: Array<DataTableColumn<OutgoingEventType>> = [
     { id: "name", header: "Event Name", cell: (row) => <span className="text-[0.8125rem] font-medium">{row.name}</span> },
     { id: "key", header: "Stable Event Key", cell: (row) => <Mono>{row.key}</Mono> },
+    { id: "purpose", header: "When it fires / how to use it", hideBelow: "md", cell: (row) => <span className="block max-w-[30rem] whitespace-normal text-[0.75rem] leading-relaxed text-muted-foreground">{row.description}</span> },
     { id: "category", header: "Category", hideBelow: "md", cell: (row) => <Chip>{CATEGORY_LABEL[row.category]}</Chip> },
     { id: "schema", header: "Schema", cell: (row) => <span className="tabular text-[0.8125rem]">{row.schemaVersion}</span> },
     { id: "audience", header: "Audience Scope", hideBelow: "lg", cell: (row) => <Chip tone={row.audience === "platform" ? "warning" : "info"}>{AUDIENCE_LABEL[row.audience]}</Chip> },
@@ -89,7 +86,7 @@ export function EventCataloguePage() {
     <div className="space-y-1">
       <EventsNav view="catalogue" />
       <EventsSummary />
-      <Notice tone="info">This is a demo event catalogue. Producers are not connected, so &ldquo;Last produced&rdquo; reflects demo records only. It is separate from Feature Flags and the plan catalogue.</Notice>
+      <Notice tone="info">{isMockMode ? "Demo event examples only; no business event is sent from mock mode." : "Choose an event to decide which real OmniPlatform action should notify this endpoint. Last produced is based on persisted delivery records."} This catalogue is separate from Feature Flags and the plan catalogue.</Notice>
       <TablePanel
         title="Event Catalogue"
         description="Outgoing platform event types, their schema versions and who subscribes."

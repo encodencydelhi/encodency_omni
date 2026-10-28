@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/features/auth/components/auth-provider";
+import { SETTINGS_MOCK_MODE } from "../data/config";
 import { ROUTES } from "@/config/routes";
 import { AlertBanner } from "@/components/shared/alert-banner";
 import { KeyValue, Panel } from "@/features/companies/components/primitives";
@@ -55,6 +57,7 @@ const RESULTS = [
   { value: "pending_approval", label: "Pending Approval" },
   { value: "scheduled", label: "Planned" },
   { value: "withdrawn", label: "Withdrawn" },
+  { value: "rejected", label: "Rejected" },
 ];
 
 const truncated = (text: string, max = 34) => (text.length > max ? `${text.slice(0, max - 1)}...` : text);
@@ -65,6 +68,12 @@ const truncated = (text: string, max = 34) => (text.length > max ? `${text.slice
 
 function ChangeDrawer({ id, onClose }: { id: string | null; onClose: () => void }) {
   const query = useChange(id);
+  const { user } = useAuth();
+  const capabilities = useGlobalSettingsCapabilities();
+  const mutations = useSettingsMutations();
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const change = query.data;
   const definition = change ? getDefinition(change.key) : undefined;
   return (
@@ -102,6 +111,21 @@ function ChangeDrawer({ id, onClose }: { id: string | null; onClose: () => void 
                   {change.auditRef ? <Link href={ROUTES.superAdmin.auditLogs} className="font-medium text-primary hover:underline">{change.auditRef}</Link> : <span className="text-muted-foreground">Written by the backend once connected</span>}
                 </KeyValue>
               </dl>
+              {!SETTINGS_MOCK_MODE && change.result === "pending_approval" && change.actorId !== user?.id && capabilities.canWithdrawPendingChanges ? (
+                <div className="space-y-2">
+                  <Label htmlFor="decision-reason">Review reason</Label>
+                  <Textarea id="decision-reason" maxLength={300} value={reason} onChange={(event) => setReason(event.target.value)} />
+                  {error ? <p role="alert" className="text-2xs text-danger">{error}</p> : null}
+                  <div className="flex gap-2">
+                    {(["approve", "reject"] as const).map((decision) => <Button key={decision} variant={decision === "approve" ? "default" : "destructive"} disabled={busy || !reason.trim()} onClick={async () => {
+                      setBusy(true); setError(null);
+                      try { await mutations.decidePending(change.id, decision, reason); setReason(""); }
+                      catch (failure) { setError(describeError(failure).message); }
+                      finally { setBusy(false); }
+                    }}>{decision === "approve" ? "Approve Change" : "Reject Change"}</Button>)}
+                  </div>
+                </div>
+              ) : null}
               <p className="text-2xs text-muted-foreground">{change.demo ? "Recorded in the demo configuration only. No real account or service was changed. " : ""}Secrets, keys and image data are never stored in history.</p>
             </div>
           )}
@@ -237,8 +261,8 @@ function PendingChanges() {
 
   return (
     <div className="space-y-2">
-      <AlertBanner tone="info" title="Demo Drafts and Planned Records">
-        Nothing here is part of the effective configuration. No approval workflow or scheduler runs in this frontend phase, so these stay pending until they are withdrawn.
+      <AlertBanner tone="info" title={SETTINGS_MOCK_MODE ? "Demo Drafts and Planned Records" : "Pending Review"}>
+        Pending requests do not affect the effective configuration. A different Super Admin can approve or reject a request from Details after a recent MFA sign-in.
       </AlertBanner>
       <Panel flush>
         <MiniTable

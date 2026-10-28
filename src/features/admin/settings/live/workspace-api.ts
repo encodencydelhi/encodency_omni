@@ -1,3 +1,5 @@
+import { env } from "@/config/env";
+import { ApiError } from "@/types/api";
 import { apiClient } from "@/lib/api/client";
 import { companyScopeHeaders } from "@/lib/api/company-scope";
 
@@ -54,6 +56,18 @@ export const dangerZoneApi = {
   transferOwnership: (companyId: string, toMembershipId: string) =>
     apiClient.request<{ newOwnerMembershipId: string }>({ method: "POST", path: "/settings/danger/transfer-ownership", headers: companyScopeHeaders(companyId), body: { toMembershipId } }),
   /** Owner only: asks the platform team, through a support ticket, to deactivate or delete the organization. */
-  request: (companyId: string, kind: "deactivate" | "delete", reason?: string) =>
-    apiClient.request<{ ticket: { id: string; number?: number } }>({ method: "POST", path: "/settings/danger/request", headers: companyScopeHeaders(companyId), body: { kind, ...(reason ? { reason } : {}) } }),
+  request: (companyId: string, kind: "deactivate" | "delete", reason?: string, ownerConfirmation?: string) =>
+    apiClient.request<{ ticket: { id: string; number?: number } }>({ method: "POST", path: "/settings/danger/request", headers: companyScopeHeaders(companyId), body: { kind, ...(reason ? { reason } : {}), ...(ownerConfirmation ? { ownerConfirmation } : {}) } }),
+};
+
+export const companyPrivacyApi = {
+  list: (companyId: string | null) => apiClient.request<Array<{ id: string; kind: string; state: string; requestedBy: string; error: string | null }>>({ method: "GET", path: "/privacy/operations", headers: companyScopeHeaders(companyId) }),
+  requestExport: (companyId: string | null, reason: string) => apiClient.request({ method: "POST", path: "/privacy/operations", headers: companyScopeHeaders(companyId), body: { kind: "export", reason } }),
+  download: async (companyId: string | null, id: string) => {
+    const response = await fetch(`${env.apiBaseUrl}/privacy/operations/${encodeURIComponent(id)}/download`, { credentials: "include", headers: companyScopeHeaders(companyId) });
+    if (!response.ok) { const body = await response.json().catch(() => ({})); throw new ApiError({ status: response.status, code: "UNKNOWN", message: body.message ?? "Export is unavailable." }); }
+    const objectUrl = URL.createObjectURL(await response.blob());
+    const link = document.createElement("a"); link.href = objectUrl; link.download = "company-data-export.json"; document.body.appendChild(link); link.click(); link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  },
 };

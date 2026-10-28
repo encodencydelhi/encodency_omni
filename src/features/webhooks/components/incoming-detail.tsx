@@ -1,12 +1,8 @@
-/**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
- * Incoming Source Detail and Incoming Event Detail routes.
- */
 
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/shared/data-table/data-table";
 import type { DataTableColumn } from "@/components/shared/data-table/types";
 import { Button } from "@/components/ui/button";
@@ -18,7 +14,7 @@ import { evaluateIncomingReprocess, recoveryRequestsFor } from "../data/selector
 import type { IncomingEvent } from "../data/types";
 import { OpenLink, TablePanel, CompanyCell, SectionCard } from "./cells";
 import { DetailHeader, InfoCard, TabBar, TechnicalContext, useUrlTab, type TabItem } from "./detail";
-import { CardGrid, Chip, EmptyRows, IdCell, JobReference, Kpi, Mono, NotFoundPanel, Notice, State, Timestamp, humanize } from "./kit";
+import { CardGrid, Chip, CopyButton, EmptyRows, IdCell, JobReference, Kpi, Mono, NotFoundPanel, Notice, State, Timestamp, humanize } from "./kit";
 import { EligibilityBadge, EligibilityFactors, RecoverySheet } from "./recovery-sheet";
 import { useWebhookData } from "./webhooks-context";
 
@@ -29,6 +25,9 @@ import { useWebhookData } from "./webhooks-context";
 export function IncomingSourceDetailPage({ sourceId }: { sourceId: string }) {
   const { snapshot } = useWebhookData();
   const source = snapshot.sources.find((item) => item.id === sourceId);
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
+  const callbackUrl = source?.receiverPath && origin ? new URL(source.receiverPath, origin).toString() : "";
 
   const events = useMemo(() => snapshot.incomingEvents.filter((event) => event.sourceId === sourceId), [snapshot, sourceId]);
   if (!source) return <NotFoundPanel title="Source not found" description="No incoming source with this ID exists in the selected environment." href={WEBHOOK_ROUTES.incoming} action="Back to sources" />;
@@ -53,7 +52,7 @@ export function IncomingSourceDetailPage({ sourceId }: { sourceId: string }) {
         actions={
           <>
             <Button asChild variant="outline" size="sm"><Link href={`${WEBHOOK_ROUTES.incomingEvents}?source=${source.id}`}>View Incoming Events</Link></Button>
-            <Button asChild variant="outline" size="sm"><Link href={source.integrationHref}>Open Integration</Link></Button>
+            <Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.provider(source.providerId)}>Open Integration</Link></Button>
             <Button asChild variant="outline" size="sm"><Link href={`${WEBHOOK_ROUTES.security}#incoming-verification`}>View Verification Policy</Link></Button>
             <Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.apiRequests}>Open API Monitoring</Link></Button>
           </>
@@ -70,16 +69,20 @@ export function IncomingSourceDetailPage({ sourceId }: { sourceId: string }) {
       {!source.verificationConfigured ? <Notice tone="warning" title="No verification policy defined">Events from this source cannot be treated as authentic and are never processed.</Notice> : null}
 
       <div className="grid gap-1 lg:grid-cols-2">
-        <InfoCard title="Source & Receiver" description="Configuration references. No public callback URL is shown." items={[
+        <InfoCard title="Source & Receiver" description="Use this source-specific callback for a provider that can sign requests using OmniPlatform's HMAC header contract." items={[
           { label: "Source name", value: source.name },
           { label: "Source ID", value: <Mono>{source.id}</Mono> },
           { label: "Provider", value: source.providerName },
           { label: "Environment", value: ENVIRONMENT_LABEL[source.environment] },
+          { label: "Callback URL", value: callbackUrl ? <div className="flex min-w-0 items-center gap-1"><Mono className="break-all">{callbackUrl}</Mono><CopyButton value={callbackUrl} label="Copy incoming callback URL" /></div> : "No live source callback is available for this demo record." },
           { label: "Receiver name", value: source.receiverName },
           { label: "Receiver ID", value: <Mono>{source.receiverId}</Mono> },
           { label: "Receiver status", value: <State registry={RECEIVER_STATUS} status={source.receiverStatus} /> },
           { label: "Implementation readiness", value: <State registry={READINESS} status={source.readiness} /> },
         ]} />
+        {callbackUrl ? <Notice tone="info" title="Signature format matters">
+          This source-specific receiver expects a POST signed with the `X-Omni-Signature` HMAC header. For Razorpay or LinkedIn, use the provider-specific callback URL shown under Incoming Sources; those routes validate each provider's own signature format.
+        </Notice> : null}
         <InfoCard title="Verification, Mapping & Processing" description={source.notes} columns={1} items={[
           { label: "Verification method", value: VERIFICATION_METHOD_LABEL[source.verificationMethod] },
           { label: "Verification policy reference", value: <Mono>{source.verificationPolicyRef}</Mono> },
@@ -112,7 +115,7 @@ export function IncomingSourceDetailPage({ sourceId }: { sourceId: string }) {
       </div>
 
       <SectionCard title="Related Integration" description="Provider authorization, connected accounts and approval state are owned by Integrations.">
-        <Button asChild variant="outline" size="sm"><Link href={source.integrationHref}>Open {source.providerName} in Integrations</Link></Button>
+        <Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.provider(source.providerId)}>Open {source.providerName} in Integrations</Link></Button>
       </SectionCard>
     </div>
   );
@@ -241,7 +244,7 @@ export function IncomingEventDetailPage({ eventId }: { eventId: string }) {
           ]} />
           <SectionCard title="Related Modules" description="Owned by other modules. Opened here for context only.">
             <div className="flex flex-col items-start gap-2">
-              {source ? <Button asChild variant="outline" size="sm"><Link href={source.integrationHref}>Open {source.providerName} in Integrations</Link></Button> : null}
+              {source ? <Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.provider(source.providerId)}>Open {source.providerName} in Integrations</Link></Button> : null}
               {source ? <Button asChild variant="outline" size="sm"><Link href={WEBHOOK_ROUTES.incomingSource(source.id)}>Open source: {source.name}</Link></Button> : null}
               <Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.apiRequests}>Open API Monitoring requests</Link></Button>
               {event.companyId ? <Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.company(event.companyId)}>Open company</Link></Button> : null}
