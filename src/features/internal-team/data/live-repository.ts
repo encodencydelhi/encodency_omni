@@ -322,6 +322,14 @@ export const liveInternalTeamRepository: InternalTeamRepository = {
     return toStaffMember(await staffApi.updateProfile(staffId, body));
   },
 
+  async uploadStaffAvatar(staffId, file) {
+    return toStaffMember(await staffApi.uploadAvatar(staffId, file));
+  },
+
+  async removeStaffAvatar(staffId) {
+    return toStaffMember(await staffApi.removeAvatar(staffId));
+  },
+
   async assignCompany(input) {
     await staffApi.assign(input.staffId, { companyId: input.companyId, responsibility: RESPONSIBILITY_TO_API[input.responsibility] });
     return loadMember(input.staffId);

@@ -19,7 +19,7 @@ import { BillingStatusBadge, InvoiceStatusBadge, PaymentStateBadge } from "../co
 import { useCompanyCapabilities } from "../data/capability-provider";
 import { resolveModuleLink } from "../data/config";
 import { describeError, useCompanyBilling, useCompanyMutations } from "../data/hooks";
-import type { CompanyBillingData } from "../data/repository";
+import { companiesRepository, type CompanyBillingData } from "../data/repository";
 import type { CompanyInvoice, CompanyPayment } from "../data/types";
 import { downloadCsv } from "../lib/csv";
 import { formatMrr } from "../lib/format";
@@ -40,6 +40,11 @@ export function CompanyBillingPage() {
     );
   }
   return <BillingBody companyId={companyId} data={query.data} />;
+}
+
+/** An invoice whose period starts and ends on the same day has no recorded service period. */
+function periodLabel(invoice: { periodStart: string; periodEnd: string }): string {
+  return invoice.periodStart === invoice.periodEnd ? "Not recorded" : `${formatDate(invoice.periodStart)} - ${formatDate(invoice.periodEnd)}`;
 }
 
 function BillingBody({ companyId, data }: { companyId: string; data: CompanyBillingData }) {
@@ -63,7 +68,7 @@ function BillingBody({ companyId, data }: { companyId: string; data: CompanyBill
             ["Invoice", item.number],
             ["Status", item.status],
             ["Description", item.description],
-            ["Billing period", `${formatDate(item.periodStart)} - ${formatDate(item.periodEnd)}`],
+            ["Billing period", periodLabel(item)],
             ["Issued", formatDate(item.issuedAt)],
             ["Due", formatDate(item.dueAt)],
             ["Amount", formatCurrency(item.amountMinor, item.currency)],
@@ -80,7 +85,7 @@ function BillingBody({ companyId, data }: { companyId: string; data: CompanyBill
 
   const invoiceColumns: Array<DataTableColumn<CompanyInvoice>> = [
     { id: "number", header: "Invoice", hideable: false, cell: (item) => <span className="font-mono text-[0.8125rem] font-medium text-foreground">{item.number}</span> },
-    { id: "period", header: "Billing period", cell: (item) => <span className="whitespace-nowrap text-2xs text-muted-foreground">{formatDate(item.periodStart)} - {formatDate(item.periodEnd)}</span> },
+    { id: "period", header: "Billing period", cell: (item) => <span className="whitespace-nowrap text-2xs text-muted-foreground">{periodLabel(item)}</span> },
     { id: "issued", header: "Issued", cell: (item) => <span className="whitespace-nowrap text-2xs text-muted-foreground">{formatDate(item.issuedAt)}</span> },
     { id: "due", header: "Due", cell: (item) => <span className="whitespace-nowrap text-2xs text-muted-foreground">{formatDate(item.dueAt)}</span> },
     { id: "amount", header: "Amount", align: "right", cell: (item) => <span className="tabular text-foreground">{formatCurrency(item.amountMinor, item.currency)}</span> },
@@ -109,7 +114,7 @@ function BillingBody({ companyId, data }: { companyId: string; data: CompanyBill
   return (
     <div className="space-y-1">
       <StatGrid className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-7">
-        <StatCard label="MRR" value={formatMrr(summary.mrrMinor, summary.currency)} hint={summary.mrrMinor === 0 ? "Not generating revenue" : `${plan.name} plan`} />
+        <StatCard label="MRR" value={formatMrr(summary.mrrMinor, summary.currency)} hint={summary.mrrMinor === 0 ? "Not generating revenue" : `${plan?.name ?? "Current"} plan`} />
         <StatCard label="Outstanding" value={summary.outstandingMinor === 0 ? "-" : formatCurrency(summary.outstandingMinor, summary.currency)} tone={summary.outstandingMinor > 0 ? "danger" : "neutral"} hint={summary.outstandingMinor > 0 ? "Open or overdue invoices" : "Nothing owed"} />
         <StatCard label="Last payment" value={summary.lastPayment ? formatCurrency(summary.lastPayment.amountMinor, summary.lastPayment.currency) : "-"} hint={summary.lastPayment ? formatDate(summary.lastPayment.createdAt) : "No payment yet"} />
         <StatCard label="Next invoice" value={summary.nextInvoice ? formatDate(summary.nextInvoice.date) : "-"} hint={summary.nextInvoice ? `${formatCurrency(summary.nextInvoice.amountMinor, summary.currency)} · ${summary.nextInvoice.note}` : "None scheduled"} />
@@ -124,14 +129,16 @@ function BillingBody({ companyId, data }: { companyId: string; data: CompanyBill
 
       <AlertBanner
         tone="info"
-        title="Billing actions are not available in demo mode"
+        title={companiesRepository.mode === "api" ? "Billing actions live in Billing & Payments" : "Billing actions are not available in demo mode"}
         action={
           <ModuleLinkButton module="billing" query={{ companyId }}>
             Open Billing &amp; Payments
           </ModuleLinkButton>
         }
       >
-        Refunds, account credits, manual payments and payment retries need server-side authorisation and a payment provider. Nothing on this page moves money.
+        {companiesRepository.mode === "api"
+          ? "Invoices and payments here are read from the platform billing records. Refunds, account credits and manual payments are made in Billing & Payments; nothing on this page moves money."
+          : "Refunds, account credits, manual payments and payment retries need server-side authorisation and a payment provider. Nothing on this page moves money."}
         {globalBilling.available ? "" : " The global Billing & Payments module is not available in this build yet."}
       </AlertBanner>
 
@@ -209,7 +216,7 @@ function InvoiceDialog({ invoice, payment, onClose }: { invoice: CompanyInvoice 
           <dl className="divide-y divide-border rounded-sm border border-border px-3">
             <KeyValue label="Status"><InvoiceStatusBadge status={invoice.status} /></KeyValue>
             <KeyValue label="Description">{invoice.description}</KeyValue>
-            <KeyValue label="Billing period">{formatDate(invoice.periodStart)} - {formatDate(invoice.periodEnd)}</KeyValue>
+            <KeyValue label="Billing period">{periodLabel(invoice)}</KeyValue>
             <KeyValue label="Issued">{formatDate(invoice.issuedAt)}</KeyValue>
             <KeyValue label="Due">{formatDate(invoice.dueAt)}</KeyValue>
             <KeyValue label="Amount"><span className="font-semibold">{formatCurrency(invoice.amountMinor, invoice.currency)}</span></KeyValue>

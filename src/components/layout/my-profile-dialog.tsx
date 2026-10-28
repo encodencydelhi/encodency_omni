@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { userProfileApi } from "@/features/auth/services/user-profile-api";
 import { userAvatarApi, USER_AVATAR_LIMITS } from "@/features/auth/services/user-avatar-api";
+import { teamKeys } from "@/features/internal-team/data/hooks";
 import { ApiError } from "@/types/api";
 import { getInitials } from "@/lib/utils/format";
 import { PHONE_ERROR, isValidOptionalPhone, sanitizePhone } from "@/lib/utils/phone";
@@ -26,6 +28,12 @@ export function MyProfileDialog({ open, onOpenChange }: { open: boolean; onOpenC
 
 function Body({ onClose }: { onClose: () => void }) {
   const { user, refreshUser } = useAuth();
+  const queryClient = useQueryClient();
+  // My own record is also the Internal Team record of this staff member: its page must show the new photo and name.
+  const refreshAll = async () => {
+    await refreshUser();
+    void queryClient.invalidateQueries({ queryKey: teamKeys.all });
+  };
   const [name, setName] = useState(user && user.name !== user.email ? user.name : "");
   const [phone, setPhone] = useState(sanitizePhone((user as { phone?: string | null } | null)?.phone));
   const [saving, setSaving] = useState(false);
@@ -50,7 +58,7 @@ function Body({ onClose }: { onClose: () => void }) {
     setAvatarLoading(true);
     try {
       await userAvatarApi.upload(file);
-      await refreshUser();
+      await refreshAll();
       toast.success("Profile photo updated.");
     } catch (err) {
       toast.error(ApiError.isApiError(err) ? err.message : "Failed to upload avatar.");
@@ -64,7 +72,7 @@ function Body({ onClose }: { onClose: () => void }) {
     setAvatarLoading(true);
     try {
       await userAvatarApi.remove();
-      await refreshUser();
+      await refreshAll();
       toast.success("Profile photo removed.");
     } catch (err) {
       toast.error(ApiError.isApiError(err) ? err.message : "Failed to remove avatar.");
@@ -78,7 +86,7 @@ function Body({ onClose }: { onClose: () => void }) {
     setSaving(true);
     try {
       await userProfileApi.updateMe({ name: name.trim(), phone: phone.trim() || null });
-      await refreshUser();
+      await refreshAll();
       toast.success("Profile updated.");
       onClose();
     } catch (err) {

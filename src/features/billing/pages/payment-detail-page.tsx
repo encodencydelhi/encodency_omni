@@ -134,7 +134,7 @@ export function PaymentDetailPage({ paymentId: propPaymentId }: PaymentDetailPag
       </div>
 
       {/* Financial KPIs (gap-2, rounded-sm, equal-height) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-stretch">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 items-stretch">
         <BillingKpiCard
           label="GROSS"
           value={formatMoney(payment.grossAmountMinor, payment.currency)}
@@ -181,7 +181,7 @@ export function PaymentDetailPage({ paymentId: propPaymentId }: PaymentDetailPag
       </div>
 
       {/* Main Details Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-1 items-stretch">
         {/* Applied Invoice Allocations Table */}
         <div className="lg:col-span-2 bg-card rounded-sm border border-border p-3 shadow-2xs flex flex-col justify-between">
           <div>

@@ -114,7 +114,7 @@ export function BillingAccountDetailPage({ accountId: propAccountId }: BillingAc
       </div>
 
       {/* Financial KPIs (gap-2, rounded-sm, equal height) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-stretch">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 items-stretch">
         <BillingKpiCard
           label="OUTSTANDING"
           value={formatMoney(account.currentOutstandingMinor, account.currency)}
@@ -164,7 +164,7 @@ export function BillingAccountDetailPage({ accountId: propAccountId }: BillingAc
       </div>
 
       {/* Identity & Preferences Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-1 items-stretch">
         {/* Billing Identity Card */}
         <div className="bg-card rounded-sm border border-border p-3 shadow-2xs space-y-2">
           <div className="pb-1.5 border-b border-border/60">

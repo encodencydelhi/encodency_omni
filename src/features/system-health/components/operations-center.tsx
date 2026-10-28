@@ -52,6 +52,8 @@ import type {
   SystemHealthSnapshotV2,
 } from "../data/types";
 import { useScrollLock } from "@/lib/utils/scroll-lock";
+import { STAT_COLORS, type StatColor } from "@/components/shared/stat-color";
+import type { ReactNode } from "react";
 
 const BASE = ROUTES.superAdmin.systemHealth;
 const TABS = [
@@ -284,24 +286,25 @@ function Tabs() {
 
 function Kpis({ snapshot }: { snapshot: SystemHealthSnapshotV2 }) {
   const kpis = summaryKpis(snapshot);
-  const items = [
-    ["Monitored Services", kpis.monitoredServices, "Registered in selected environment"],
-    ["Healthy Services", kpis.healthy, "Fresh healthy observations"],
-    ["Degraded Services", kpis.degraded, "Reduced capability"],
-    ["Unavailable Services", kpis.unavailable, "Unavailable observed state"],
-    ["Unknown Services", kpis.unknown, "No reliable current state"],
-    ["Active Incidents", kpis.activeIncidents, "Not resolved"],
-    ["Affected Companies", kpis.affectedCompanies || "Impact Unknown", "Distinct confirmed or potential IDs"],
-    ["Stale Monitoring Sources", kpis.staleMonitors, "Stale or never reported"],
+  // One colour per meaning, chosen here because the names ("Unavailable") say the opposite of what a word match would pick.
+  const items: Array<[string, ReactNode, string, StatColor]> = [
+    ["Monitored Services", kpis.monitoredServices, "Registered in selected environment", "blue"],
+    ["Healthy Services", kpis.healthy, "Fresh healthy observations", "green"],
+    ["Degraded Services", kpis.degraded, "Reduced capability", "amber"],
+    ["Unavailable Services", kpis.unavailable, "Unavailable observed state", "danger"],
+    ["Unknown Services", kpis.unknown, "No reliable current state", "grey"],
+    ["Active Incidents", kpis.activeIncidents, "Not resolved", "red"],
+    ["Affected Companies", kpis.affectedCompanies || "Impact Unknown", "Distinct confirmed or potential IDs", "violet"],
+    ["Stale Monitoring Sources", kpis.staleMonitors, "Stale or never reported", "amber"],
   ];
   return (
     <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-4">
-      {items.map(([title, value, hint]) => (
-        <Card key={title} className="p-3">
-          <p className="text-[11px] font-semibold uppercase text-slate-500">{title}</p>
-          <p className="mt-1 text-xl font-bold text-[#111C3A]">{value}</p>
-          <p className="mt-1 text-xs text-slate-500">{hint}</p>
-        </Card>
+      {items.map(([title, value, hint, color]) => (
+        <div key={title} className={cn("rounded-sm border px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)]", STAT_COLORS[color].card)}>
+          <p className="text-[11px] font-semibold uppercase text-slate-600">{title}</p>
+          <p className="mt-0.5 text-xl font-bold text-[#111C3A]">{value}</p>
+          <p className="mt-0.5 text-xs text-slate-600">{hint}</p>
+        </div>
       ))}
     </div>
   );

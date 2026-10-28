@@ -5,9 +5,10 @@ import { ArrowLeftIcon, BanIcon, CheckCircle2Icon, Building2Icon, ClockIcon, Tra
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ROUTES } from "@/config/routes";
+import { useAuth } from "@/features/auth/components/auth-provider";
 import { INTERNAL_ROLE } from "@/types/domain/team";
 import { cn } from "@/lib/utils/cn";
 import { formatDate, formatRelativeTime, getInitials } from "@/lib/utils/format";
@@ -31,6 +32,11 @@ function StaffDetailContent() {
   const staffId = (params?.staffId as string) || "";
   const caps = useStaffCapabilities();
   const mutations = useTeamMutations();
+  // Editing your own record (name, photo) must update the navbar too: it shows the signed-in account.
+  const { user: signedIn, refreshUser } = useAuth();
+  const syncNavbar = () => {
+    if (signedIn?.id === staffId) void refreshUser();
+  };
 
   const { data: member, isLoading, error } = useStaff(staffId);
   const { data: activities = [] } = useStaffActivity(staffId);
@@ -90,6 +96,7 @@ function StaffDetailContent() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/80 pb-3">
         <div className="flex items-center gap-3">
           <Avatar className="size-12 shrink-0">
+            {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt={member.name} /> : null}
             <AvatarFallback className={cn("text-sm font-bold", getStaffAvatarColor(member.name))}>{getInitials(member.name)}</AvatarFallback>
           </Avatar>
           <div>
@@ -457,7 +464,16 @@ function StaffDetailContent() {
       <SuspendStaffDialog member={member} open={suspendOpen} onOpenChange={setSuspendOpen} onConfirm={(id, reason) => { mutations.suspendStaff.mutate({ staffId: id, reason }); setSuspendOpen(false); }} isPending={mutations.suspendStaff.isPending} />
       <ReactivateStaffDialog member={member} open={reactivateOpen} onOpenChange={setReactivateOpen} onConfirm={(id, reason) => { mutations.reactivateStaff.mutate({ staffId: id, reason }); setReactivateOpen(false); }} isPending={mutations.reactivateStaff.isPending} />
       <DeactivateStaffDialog member={member} open={deactivateOpen} onOpenChange={setDeactivateOpen} onConfirm={(id, reason, reassignments) => mutations.deactivateStaff.mutate({ staffId: id, reason, reassignmentPlan: [], reassignments })} isPending={mutations.deactivateStaff.isPending} />
-      <EditStaffProfileDialog member={member} open={editProfileOpen} onOpenChange={setEditProfileOpen} onConfirm={(input) => mutations.updateProfile.mutate({ staffId: member.id, ...input })} isPending={mutations.updateProfile.isPending} />
+      <EditStaffProfileDialog
+        member={member}
+        open={editProfileOpen}
+        onOpenChange={setEditProfileOpen}
+        onConfirm={(input) => mutations.updateProfile.mutate({ staffId: member.id, ...input }, { onSuccess: () => { setEditProfileOpen(false); syncNavbar(); } })}
+        isPending={mutations.updateProfile.isPending}
+        onUploadAvatar={TEAM_MOCK_MODE ? undefined : (file) => mutations.uploadAvatar.mutate({ staffId: member.id, file }, { onSuccess: syncNavbar })}
+        onRemoveAvatar={TEAM_MOCK_MODE ? undefined : () => mutations.removeAvatar.mutate(member.id, { onSuccess: syncNavbar })}
+        avatarBusy={mutations.uploadAvatar.isPending || mutations.removeAvatar.isPending}
+      />
       <ReassignAssignmentDialog assignment={reassignTarget} open={reassignTarget !== null} onOpenChange={(o) => !o && setReassignTarget(null)} onConfirm={(assignmentId, newStaffId, reason) => mutations.reassignCompany.mutate({ assignmentId, newStaffId, reason })} isPending={mutations.reassignCompany.isPending} />
       <ScheduleReviewDialog member={{ id: member.id, name: member.name }} open={scheduleOpen} onOpenChange={setScheduleOpen} onConfirm={(staffId, dueAt) => mutations.scheduleReview.mutate({ staffId, dueAt })} isPending={mutations.scheduleReview.isPending} />
       <AccessReviewCompleteDialog review={reviewForDialog} open={completeOpen} onOpenChange={setCompleteOpen} onConfirm={(input) => { mutations.completeAccessReview.mutate(input); setCompleteOpen(false); }} isPending={mutations.completeAccessReview.isPending} />

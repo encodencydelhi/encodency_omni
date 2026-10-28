@@ -105,8 +105,8 @@ function SecurityBody({ companyId, data }: { companyId: string; data: CompanySec
       <StatGrid className="grid-cols-2 sm:grid-cols-4 xl:grid-cols-7">
         <StatCard label="2FA adoption" value={`${adoption.percent}%`} hint={`${adoption.withTwoFactor} of ${adoption.totalUsers} users`} tone={adoption.percent >= 80 ? "success" : adoption.percent >= 50 ? "warning" : "danger"} />
         <StatCard label="Admins without 2FA" value={adoption.adminsWithout2fa.length} tone={adoption.adminsWithout2fa.length > 0 ? "warning" : "success"} />
-        <StatCard label="Active sessions" value={security.activeSessions} hint={security.sessionRevocationRequestedAt ? (companiesRepository.mode === "api" ? "Revocation requested" : "Revocation requested (demo)") : undefined} />
-        <StatCard label="Account lockouts" value={security.accountLockouts} tone={security.accountLockouts > 0 ? "warning" : "neutral"} />
+        <StatCard label="Active sessions" value={security.activeSessions ?? "-"} hint={security.activeSessions === null ? "Not recorded" : security.sessionRevocationRequestedAt ? (companiesRepository.mode === "api" ? "Revocation requested" : "Revocation requested (demo)") : undefined} />
+        <StatCard label="Account lockouts" value={security.accountLockouts ?? "-"} hint={security.accountLockouts === null ? "Not recorded" : undefined} tone={(security.accountLockouts ?? 0) > 0 ? "warning" : "neutral"} />
         <StatCard label="Owner" value={<span className="text-[0.8125rem]">{OWNER_STATE_LABEL[owner.state]}</span>} hint={owner.name} href={companySectionHref(companyId, "users", owner.email ? { q: owner.email } : undefined)} />
         <StatCard label="Security events" value={security.events.length} hint="Recorded" />
         <StatCard label="Allowed domains" value={security.allowedEmailDomains.length} hint={security.allowedEmailDomains.join(", ") || "None restricted"} />

@@ -75,9 +75,11 @@ export interface PlatformUserMatch {
 
 export interface CompanyOverviewData {
   summary: CompanySummary;
-  subscription: CompanySubscription;
+  /** Null when the company has no subscription yet. */
+  subscription: CompanySubscription | null;
   usage: CompanyUsageSummary;
-  support: CompanySupportSnapshot;
+  /** Null when the support desk could not be read. */
+  support: CompanySupportSnapshot | null;
   recentActivity: CompanyActivity[];
   notes: CompanyInternalNote[];
 }
@@ -110,7 +112,8 @@ export interface CompanyBillingData {
   invoices: CompanyInvoice[];
   payments: CompanyPayment[];
   billingNotes: CompanyInternalNote[];
-  plan: Plan;
+  /** Null when the company has no subscription (and so no plan). */
+  plan: Plan | null;
 }
 
 export interface CompanyIntegrationsData {

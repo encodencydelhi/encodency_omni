@@ -2,10 +2,11 @@
 
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Children, cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils/cn";
+import { cycleStatColor, STAT_COLORS, statColorForLabel, statColorForTone, type StatColor } from "@/components/shared/stat-color";
 import type { Tone } from "@/types/common";
 
 /**
@@ -50,15 +51,6 @@ export function Panel({
   );
 }
 
-const STAT_ICON_TONES: Record<Tone, string> = {
-  brand: "bg-primary-subtle text-primary",
-  success: "bg-success-subtle text-success",
-  warning: "bg-warning-subtle text-warning",
-  danger: "bg-danger-subtle text-danger",
-  info: "bg-info-subtle text-info",
-  neutral: "bg-muted text-muted-foreground",
-};
-
 /** One measurement with a supporting line. Optionally a link to where it can be acted on. */
 export function StatCard({
   label,
@@ -69,6 +61,8 @@ export function StatCard({
   href,
   title,
   compact = false,
+  color,
+  colorIndex,
   className,
 }: {
   label: string;
@@ -80,8 +74,12 @@ export function StatCard({
   title?: string;
   /** Drops the icon and tightens the label, for rows of eight cards on laptop widths. */
   compact?: boolean;
+  /** The card colour. Without it: the one the tone stands for, else the next in the grid's order (see StatGrid). */
+  color?: StatColor;
+  colorIndex?: number;
   className?: string;
 }) {
+  const palette = STAT_COLORS[color ?? statColorForTone(tone) ?? (colorIndex === undefined ? statColorForLabel(label) : cycleStatColor(colorIndex))];
   const body = (
     <>
       <div className="flex items-start justify-between gap-1.5">
@@ -94,22 +92,23 @@ export function StatCard({
           {label}
         </p>
         {Icon && !compact ? (
-          <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-sm", STAT_ICON_TONES[tone])}>
+          <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-sm", palette.chip)}>
             <Icon className="size-3" aria-hidden />
           </span>
         ) : null}
       </div>
-      <div className="mt-1.5 min-w-0 truncate text-lg font-semibold leading-none tabular-nums text-foreground">{value}</div>
-      {hint ? <div className="mt-1 truncate text-2xs text-muted-foreground">{hint}</div> : null}
+      <div className="mt-1 min-w-0 truncate text-lg font-semibold leading-none tabular-nums text-foreground">{value}</div>
+      {hint ? <div className="mt-0.5 truncate text-2xs text-muted-foreground">{hint}</div> : null}
     </>
   );
 
   const cardTitle = title ?? label;
 
   const shell = cn(
-    "block min-w-0 rounded-sm border border-border bg-card px-3 py-2.5 shadow-xs",
-    compact && "px-2.5 py-2",
-    href && "transition-colors hover:border-border-strong hover:bg-accent/40 focus-visible:outline-2 focus-visible:outline-ring/40",
+    "block min-w-0 rounded-sm border px-3 py-2 shadow-xs",
+    palette.card,
+    compact && "px-2.5 py-1.5",
+    href && "transition-colors hover:brightness-[0.98] focus-visible:outline-2 focus-visible:outline-ring/40",
     className,
   );
 
@@ -126,7 +125,12 @@ export function StatCard({
 
 /** Tightly spaced grid for related cards (gap-1 by design). */
 export function StatGrid({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("grid gap-1", className)}>{children}</div>;
+  // Cards that do not choose a colour get the next one in turn, so neighbours differ.
+  let next = 0;
+  const cards = Children.map(children, (child) =>
+    isValidElement(child) && child.type === StatCard ? cloneElement(child as ReactElement<{ colorIndex?: number }>, { colorIndex: next++ }) : child,
+  );
+  return <div className={cn("grid gap-1", className)}>{cards}</div>;
 }
 
 /** A form field with its label, hint and error kept together and announced. */

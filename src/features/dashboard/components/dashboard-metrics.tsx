@@ -18,21 +18,25 @@ import { cn } from "@/lib/utils/cn";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/utils/format";
 import type { DashboardMetric, DashboardMetricKey } from "@/types/domain/dashboard";
 import { TrendIndicator } from "@/components/shared/trend-indicator";
+import { STAT_COLORS, type StatColor } from "@/components/shared/stat-color";
 
-/** Icon and accent per measurement, so the grid stays scannable by colour. */
+const TONES = STAT_COLORS;
+type Tone = StatColor;
+
+/** Icon and colour per measurement. */
 const METRIC_PRESENTATION: Record<
   DashboardMetricKey,
-  { label: string; icon: LucideIcon; accent: string }
+  { label: string; icon: LucideIcon; tone: Tone }
 > = {
-  totalCompanies: { label: "Total Companies", icon: Building2Icon, accent: "bg-primary-subtle text-primary" },
-  totalUsers: { label: "Total Users", icon: UsersIcon, accent: "bg-info-subtle text-info" },
-  totalClients: { label: "Total Clients", icon: LayersIcon, accent: "bg-violet-subtle text-violet" },
-  activeSubscriptions: { label: "Active Subscriptions", icon: CreditCardIcon, accent: "bg-info-subtle text-info" },
-  monthlyRevenue: { label: "Monthly Revenue", icon: IndianRupeeIcon, accent: "bg-success-subtle text-success" },
-  connectedIntegrations: { label: "Connected Integrations", icon: PlugIcon, accent: "bg-neutral-subtle text-neutral" },
-  runningJobs: { label: "Running Jobs", icon: ClockIcon, accent: "bg-primary-subtle text-primary" },
-  systemUptime: { label: "System Uptime", icon: ShieldCheckIcon, accent: "bg-success-subtle text-success" },
-  openIncidents: { label: "Open Incidents", icon: ShieldAlertIcon, accent: "bg-danger-subtle text-danger" },
+  totalCompanies: { label: "Total Companies", icon: Building2Icon, tone: "blue" },
+  totalUsers: { label: "Total Users", icon: UsersIcon, tone: "violet" },
+  totalClients: { label: "Total Clients", icon: LayersIcon, tone: "red" },
+  activeSubscriptions: { label: "Active Subscriptions", icon: CreditCardIcon, tone: "green" },
+  monthlyRevenue: { label: "Monthly Revenue", icon: IndianRupeeIcon, tone: "amber" },
+  connectedIntegrations: { label: "Connected Integrations", icon: PlugIcon, tone: "blue" },
+  runningJobs: { label: "Running Jobs", icon: ClockIcon, tone: "violet" },
+  systemUptime: { label: "System Uptime", icon: ShieldCheckIcon, tone: "green" },
+  openIncidents: { label: "Open Incidents", icon: ShieldAlertIcon, tone: "danger" },
 };
 
 /** Display order. The first row is scale, the second is operations. */
@@ -59,11 +63,14 @@ function formatValue(metric: DashboardMetric): string {
 }
 
 function MetricTile({ metric }: { metric: DashboardMetric }) {
-  const { label, icon: Icon, accent } = METRIC_PRESENTATION[metric.key];
+  const { label, icon: Icon, tone: presetTone } = METRIC_PRESENTATION[metric.key];
+  // Open incidents: red only while something is open; a quiet platform shows green.
+  const tone: Tone = metric.key === "openIncidents" && metric.value === 0 ? "green" : presetTone;
+  const { card, chip, ink } = TONES[tone];
 
   return (
-    <div className="flex items-start gap-3 rounded-sm border border-border bg-card px-4 py-3.5 shadow-xs">
-      <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-sm", accent)}>
+    <div className={cn("flex items-start gap-3 rounded-sm border px-4 py-3.5 shadow-xs", card)}>
+      <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-sm", chip)}>
         <Icon className="size-[1.125rem]" />
       </span>
 
@@ -71,7 +78,7 @@ function MetricTile({ metric }: { metric: DashboardMetric }) {
         <div className="mb-1.5 flex items-center justify-between gap-1">
           <p className="truncate text-[0.8125rem] font-medium leading-none text-muted-foreground">{label}</p>
           {metric.isLive ? (
-            <span className="inline-flex items-center gap-1 rounded-[3px] bg-success-subtle px-1.5 py-0.5 text-[10px] font-semibold leading-none text-success">
+            <span className="inline-flex items-center gap-1 rounded-[3px] bg-white/70 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-success">
               <span className="size-1.5 rounded-full bg-success animate-pulse" />
               Live
             </span>
@@ -91,7 +98,7 @@ function MetricTile({ metric }: { metric: DashboardMetric }) {
           </div>
 
           {metric.series ? (
-            <div className="flex items-end gap-[1px] h-6 w-[60px] shrink-0 text-primary opacity-25 hover:opacity-100 transition-opacity">
+            <div className={cn("flex items-end gap-[1px] h-6 w-[60px] shrink-0 opacity-40 transition-opacity hover:opacity-100", ink)}>
               {metric.series.map((val, i) => (
                 <div key={i} className="flex-1 bg-current rounded-[1px]" style={{ height: `${Math.max((val / Math.max(...(metric.series || [1]))) * 100, 15)}%` }} />
               ))}
@@ -107,7 +114,7 @@ function MetricTile({ metric }: { metric: DashboardMetric }) {
 
 function MetricTileSkeleton() {
   return (
-    <div className="flex items-start gap-3 rounded-sm border border-border bg-card px-4 py-3.5">
+    <div className="flex items-start gap-3 rounded-sm border border-border bg-muted/40 px-4 py-3.5">
       <Skeleton className="size-10 shrink-0 rounded-sm" />
       <div className="w-full space-y-2">
         <Skeleton className="h-3 w-28" />
@@ -126,7 +133,7 @@ interface DashboardMetricsProps {
 export function DashboardMetrics({ metrics, isLoading }: DashboardMetricsProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-1 sm:grid-cols-2 xl:grid-cols-4">
         {METRIC_ORDER.map((key) => (
           <MetricTileSkeleton key={key} />
         ))}
@@ -137,7 +144,7 @@ export function DashboardMetrics({ metrics, isLoading }: DashboardMetricsProps) 
   const byKey = new Map(metrics.map((metric) => [metric.key, metric]));
 
   return (
-    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-1 sm:grid-cols-2 xl:grid-cols-4">
       {METRIC_ORDER.map((key) => {
         const metric = byKey.get(key);
         return metric ? <MetricTile key={key} metric={metric} /> : null;

@@ -213,9 +213,9 @@ export function companySectionHref(companyId: string, section: CompanySection, q
 }
 
 /**
- * Other Super Admin modules this workspace links to. Only modules that have a
- * real route are marked available; the rest render as an honest "not available
- * yet" state rather than a link that would 404.
+ * Other Super Admin modules this workspace links to. A module is marked available
+ * only while it has a real route; one that does not renders as an honest "not
+ * available yet" state rather than a link that would 404.
  */
 export type GlobalModule =
   | "users"
@@ -240,16 +240,16 @@ interface ModuleDef {
 const MODULES: Record<GlobalModule, ModuleDef> = {
   users: { label: "Users", path: ROUTES.superAdmin.users, available: true },
   clients: { label: "Clients", path: ROUTES.superAdmin.Clients, available: true },
-  plans: { label: "Plans & Subscriptions", path: ROUTES.superAdmin.plans, available: false },
-  billing: { label: "Billing & Payments", path: ROUTES.superAdmin.billing, available: false },
-  usage: { label: "Usage & Limits", path: ROUTES.superAdmin.usage, available: false },
-  integrations: { label: "Integrations", path: ROUTES.superAdmin.integrations, available: false },
-  systemHealth: { label: "System Health", path: ROUTES.superAdmin.systemHealth, available: false },
-  jobs: { label: "Jobs & Queues", path: ROUTES.superAdmin.jobs, available: false },
-  auditLogs: { label: "Audit Logs", path: ROUTES.superAdmin.auditLogs, available: false },
-  support: { label: "Support & Tickets", path: ROUTES.superAdmin.support, available: false },
-  team: { label: "Internal Team", path: ROUTES.superAdmin.team, available: false },
-  notifications: { label: "Notifications", path: ROUTES.superAdmin.notifications, available: false },
+  plans: { label: "Plans & Subscriptions", path: ROUTES.superAdmin.plans, available: true },
+  billing: { label: "Billing & Payments", path: ROUTES.superAdmin.billing, available: true },
+  usage: { label: "Usage & Limits", path: ROUTES.superAdmin.usage, available: true },
+  integrations: { label: "Integrations", path: ROUTES.superAdmin.integrations, available: true },
+  systemHealth: { label: "System Health", path: ROUTES.superAdmin.systemHealth, available: true },
+  jobs: { label: "Jobs & Queues", path: ROUTES.superAdmin.jobs, available: true },
+  auditLogs: { label: "Audit Logs", path: ROUTES.superAdmin.auditLogs, available: true },
+  support: { label: "Support & Tickets", path: ROUTES.superAdmin.support, available: true },
+  team: { label: "Internal Team", path: ROUTES.superAdmin.team, available: true },
+  notifications: { label: "Notifications", path: ROUTES.superAdmin.notifications, available: true },
 };
 
 export interface ModuleLink {

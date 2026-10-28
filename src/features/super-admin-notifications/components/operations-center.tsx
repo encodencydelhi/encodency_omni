@@ -13,6 +13,7 @@ import { useScrollLock } from "@/lib/utils/scroll-lock";
 import { notificationsRepository } from "../data/repository";
 import { rangeMinutes, scopedIntents } from "../data/selectors";
 import type { AnnouncementAudience, NotificationDelivery, NotificationIntent, NotificationRange, NotificationSnapshot } from "../data/types";
+import { STAT_COLORS, type StatColor } from "@/components/shared/stat-color";
 
 const BASE = ROUTES.superAdmin.notifications;
 const QUERY_KEY = ["super-admin-notifications", "snapshot"] as const;
@@ -278,24 +279,24 @@ function KpiGrid({ snapshot, intents }: { snapshot: NotificationSnapshot; intent
   const deliveries = scopedDeliveries(snapshot, intents);
   const ids = new Set(intents.map((i) => i.id));
   const external = deliveries.filter((d) => d.channel !== "in_app");
-  const rows: [string, number, string][] = [
-    ["Notifications", intents.length, "Bell notifications created"],
-    ["Unread in bell", snapshot.receipts.filter((r) => r.state === "unread" && ids.has(r.intentId)).length, "Not opened yet"],
-    ["E-mails / WhatsApp sent", external.filter((d) => d.state === "provider_accepted").length, "Accepted by the provider"],
-    ["Waiting to send", external.filter((d) => d.state === "queued" || d.state === "attempting").length, "Sent within a minute"],
-    ["Failed", external.filter((d) => d.state === "failed").length, "Can be retried"],
-    ["Not sent", external.filter((d) => d.state === "not_created").length, "Skipped, see reason"],
-    ["People reached", new Set(intents.map((i) => i.recipientId)).size, "Distinct recipients"],
-    ["Companies customized", new Set((snapshot.companyRoutes ?? []).map((r) => r.companyId)).size, "Changed default channels"],
+  const rows: [string, number, string, StatColor][] = [
+    ["Notifications", intents.length, "Bell notifications created", "blue"],
+    ["Unread in bell", snapshot.receipts.filter((r) => r.state === "unread" && ids.has(r.intentId)).length, "Not opened yet", "violet"],
+    ["E-mails / WhatsApp sent", external.filter((d) => d.state === "provider_accepted").length, "Accepted by the provider", "green"],
+    ["Waiting to send", external.filter((d) => d.state === "queued" || d.state === "attempting").length, "Sent within a minute", "amber"],
+    ["Failed", external.filter((d) => d.state === "failed").length, "Can be retried", "danger"],
+    ["Not sent", external.filter((d) => d.state === "not_created").length, "Skipped, see reason", "grey"],
+    ["People reached", new Set(intents.map((i) => i.recipientId)).size, "Distinct recipients", "blue"],
+    ["Companies customized", new Set((snapshot.companyRoutes ?? []).map((r) => r.companyId)).size, "Changed default channels", "violet"],
   ];
   return (
     <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-4">
-      {rows.map(([title, value, hint]) => (
-        <Card key={title} className="p-3">
-          <p className="text-[11px] font-semibold uppercase text-slate-500">{title}</p>
-          <p className="mt-1 text-xl font-bold text-[#111C3A]">{value}</p>
-          <p className="mt-1 text-xs normal-case text-slate-500">{hint}</p>
-        </Card>
+      {rows.map(([title, value, hint, color]) => (
+        <div key={title} className={cn("rounded-sm border px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)]", STAT_COLORS[color].card)}>
+          <p className="text-[11px] font-semibold uppercase text-slate-600">{title}</p>
+          <p className="mt-0.5 text-xl font-bold text-[#111C3A]">{value}</p>
+          <p className="mt-0.5 text-xs normal-case text-slate-600">{hint}</p>
+        </div>
       ))}
     </div>
   );

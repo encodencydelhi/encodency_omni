@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, type ComponentType, type ReactNode } from "react";
 import { AlertTriangle, ChevronLeft, ChevronRight, Inbox, Loader2, Search, Star } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { STAT_COLORS, statColorForLabel, statColorForTone } from "@/components/shared/stat-color";
 import { CATEGORY_LABEL, CUSTOMER_STATUS_LABEL, PRIORITY_LABEL, PRIORITY_TONE, SLA_LABEL, SLA_TONE, STATUS_LABEL, STATUS_TONE, TONE_CLASS, type Tone } from "./labels";
 import { dueText } from "./time";
 import type { Sla, TicketCategory, TicketPriority, TicketStatus } from "./types";
@@ -109,18 +111,21 @@ export function Stars({ value, size = 14 }: { value: number | null; size?: numbe
 /* ------------------------------------------------------------------- stats */
 
 export function StatTile({ label, value, sub, icon: Icon, tone, href }: { label: string; value: ReactNode; sub?: ReactNode; icon?: ComponentType<{ className?: string }>; tone?: Tone; href?: string }) {
+  // Super Admin tiles are coloured (the tone's colour, else by what the tile measures); the company side keeps white tiles.
+  const colored = (usePathname() ?? "").startsWith("/super-admin");
+  const palette = STAT_COLORS[statColorForTone(tone) ?? statColorForLabel(label)];
   const body = (
-    <div className={cn("flex h-full flex-col rounded-sm border border-slate-200 bg-white p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition", href && "hover:border-slate-300 hover:shadow-md")}>
+    <div className={cn("flex h-full flex-col rounded-sm border px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition", colored ? palette.card : "border-slate-200 bg-white", href && "hover:shadow-md")}>
       <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-[11px] font-semibold text-slate-500">{label}</span>
+        <span className="truncate text-[11px] font-semibold text-slate-600">{label}</span>
         {Icon && (
-          <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-sm", tone ? `${TONE_CLASS[tone].soft} ${TONE_CLASS[tone].text}` : "bg-slate-100 text-slate-500")}>
+          <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-sm", (colored ? palette.chip : tone ? `${TONE_CLASS[tone].soft} ${TONE_CLASS[tone].text}` : "bg-slate-100 text-slate-500"))}>
             <Icon className="size-3.5" />
           </span>
         )}
       </div>
-      <div className={cn("mt-2 text-2xl font-semibold leading-none tracking-tight", tone ? TONE_CLASS[tone].text : "text-slate-900")}>{value}</div>
-      {sub && <p className="mt-1.5 truncate text-[11px] font-medium text-slate-500">{sub}</p>}
+      <div className={cn("mt-1.5 text-2xl font-semibold leading-none tracking-tight", tone ? TONE_CLASS[tone].text : "text-slate-900")}>{value}</div>
+      {sub && <p className="mt-1 truncate text-[11px] font-medium text-slate-600">{sub}</p>}
     </div>
   );
   return href ? (

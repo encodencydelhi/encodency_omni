@@ -53,6 +53,9 @@ export interface InternalTeamRepository {
   getStaffLifecycleEvents(staffId: string): Promise<StaffLifecycleEvent[]>;
   resendInvitation(id: string): Promise<StaffInvitation>;
   updateStaffProfile(input: UpdateStaffProfileInput): Promise<StaffMember>;
+  /** Photo of a staff member; the demo workspace keeps it for the session only. */
+  uploadStaffAvatar(staffId: string, file: Blob): Promise<StaffMember>;
+  removeStaffAvatar(staffId: string): Promise<StaffMember>;
   scheduleAccessReview(input: ScheduleAccessReviewInput): Promise<void>;
   endAssignment(assignmentId: string): Promise<void>;
   listCoverage(): Promise<CoverageResult>;
@@ -355,6 +358,22 @@ const mockInternalTeamRepository: InternalTeamRepository = {
     const renewed: StaffInvitation = { ...invitationStore[idx]!, status: "pending", expiresAt: new Date(Date.now() + 14 * 86400000).toISOString() };
     invitationStore[idx] = renewed;
     return renewed;
+  },
+
+  async uploadStaffAvatar(staffId, file) {
+    await sleep(150);
+    const idx = staffStore.findIndex((s) => s.id === staffId);
+    if (idx === -1) throw new Error("Staff member not found");
+    staffStore[idx] = cloneStaffMember(staffStore[idx]!, { avatarUrl: URL.createObjectURL(file) });
+    return cloneStaffMember(staffStore[idx]!);
+  },
+
+  async removeStaffAvatar(staffId) {
+    await sleep(150);
+    const idx = staffStore.findIndex((s) => s.id === staffId);
+    if (idx === -1) throw new Error("Staff member not found");
+    staffStore[idx] = cloneStaffMember(staffStore[idx]!, { avatarUrl: null });
+    return cloneStaffMember(staffStore[idx]!);
   },
 
   async updateStaffProfile(input) {

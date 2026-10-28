@@ -16,7 +16,7 @@ import { UsageBar } from "../components/usage-bar";
 import { relativeTime } from "../data/clock";
 import { OWNER_STATE_LABEL, USAGE_RESOURCES, companySectionHref } from "../data/config";
 import { useCompanyOverview } from "../data/hooks";
-import type { CompanyOverviewData } from "../data/repository";
+import { companiesRepository, type CompanyOverviewData } from "../data/repository";
 import { formatLimit, formatMrr, formatUsed } from "../lib/format";
 import { useCompanyId } from "./company-shell";
 
@@ -104,18 +104,22 @@ function OverviewBody({ data }: { data: CompanyOverviewData }) {
             </Button>
           }
         >
-          <dl className="divide-y divide-border">
-            <KeyValue label="Plan">{summary.plan.name}</KeyValue>
-            <KeyValue label="Billing cycle"><span className="capitalize">{subscription.billingCycle}</span></KeyValue>
-            <KeyValue label="Status"><SubscriptionStatusBadge status={subscription.status} /></KeyValue>
-            <KeyValue label="Start date">{formatDate(subscription.startedAt)}</KeyValue>
-            {subscription.status === "trialing" && subscription.trialEndsAt ? (
-              <KeyValue label="Trial ends">{formatDate(subscription.trialEndsAt)}</KeyValue>
-            ) : null}
-            <KeyValue label={subscription.status === "scheduled_cancellation" ? "Ends" : "Renewal date"}>{formatDate(subscription.renewsAt)}</KeyValue>
-            <KeyValue label="MRR contribution">{formatMrr(summary.mrrMinor, summary.currency)}</KeyValue>
-            {subscription.scheduledChange ? <KeyValue label="Scheduled change">To {subscription.scheduledChange.planTier} on {formatDate(subscription.scheduledChange.effectiveAt)}</KeyValue> : null}
-          </dl>
+          {subscription ? (
+            <dl className="divide-y divide-border">
+              <KeyValue label="Plan">{summary.plan.name}</KeyValue>
+              <KeyValue label="Billing cycle"><span className="capitalize">{subscription.billingCycle}</span></KeyValue>
+              <KeyValue label="Status"><SubscriptionStatusBadge status={subscription.status} /></KeyValue>
+              <KeyValue label="Start date">{formatDate(subscription.startedAt)}</KeyValue>
+              {subscription.status === "trialing" && subscription.trialEndsAt ? (
+                <KeyValue label="Trial ends">{formatDate(subscription.trialEndsAt)}</KeyValue>
+              ) : null}
+              <KeyValue label={subscription.status === "scheduled_cancellation" ? "Ends" : "Renewal date"}>{formatDate(subscription.renewsAt)}</KeyValue>
+              <KeyValue label="MRR contribution">{formatMrr(summary.mrrMinor, summary.currency)}</KeyValue>
+              {subscription.scheduledChange ? <KeyValue label="Scheduled change">To {subscription.scheduledChange.planTier} on {formatDate(subscription.scheduledChange.effectiveAt)}</KeyValue> : null}
+            </dl>
+          ) : (
+            <p className="text-[0.8125rem] text-muted-foreground">No subscription yet. Assign a plan from Plans &amp; Subscriptions.</p>
+          )}
         </Panel>
 
         <Panel title="Internal account ownership" description="Platform staff only - never visible to the company.">
@@ -225,10 +229,18 @@ function OverviewBody({ data }: { data: CompanyOverviewData }) {
 
       <div className="grid grid-cols-1 gap-1 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <CompanyNotesPanel companyId={id} notes={notes} canManage={capabilities.canManageInternalNotes} />
+          {companiesRepository.mode === "api" ? (
+            <Panel title="Internal notes" description="Never shown to the company.">
+              <p className="text-[0.8125rem] text-muted-foreground">Internal notes are not available yet: the backend has nowhere to store them.</p>
+            </Panel>
+          ) : (
+            <CompanyNotesPanel companyId={id} notes={notes} canManage={capabilities.canManageInternalNotes} />
+          )}
         </div>
         <div className="space-y-1">
           <Panel title="Support snapshot">
+            {support ? (
+            <>
             <dl className="grid grid-cols-3 gap-1 text-center">
               {[
                 { label: "Open", value: support.openTickets },
@@ -248,6 +260,10 @@ function OverviewBody({ data }: { data: CompanyOverviewData }) {
                 "No support tickets."
               )}
             </p>
+            </>
+            ) : (
+              <p className="text-[0.8125rem] text-muted-foreground">The support desk could not be read right now.</p>
+            )}
             <div className="mt-2">
               <ModuleLinkButton module="support" query={{ companyId: id }}>
                 <HeadsetIcon />

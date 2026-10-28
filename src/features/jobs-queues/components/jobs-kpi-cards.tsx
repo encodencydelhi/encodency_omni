@@ -20,6 +20,19 @@ import { formatNumber } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import type { JobsKpis } from "../data/types";
 
+const TINT: Record<string, string> = {
+  amber: "border-amber-200 bg-amber-50",
+  blue: "border-blue-200 bg-blue-50",
+  emerald: "border-emerald-200 bg-emerald-50",
+  orange: "border-orange-200 bg-orange-50",
+  green: "border-green-200 bg-green-50",
+  red: "border-red-200 bg-red-50",
+  rose: "border-rose-200 bg-rose-50",
+  violet: "border-violet-200 bg-violet-50",
+  cyan: "border-cyan-200 bg-cyan-50",
+  slate: "border-slate-200 bg-slate-100",
+};
+
 interface JobsKpiCardsProps {
   kpis: JobsKpis;
 }
@@ -101,13 +114,13 @@ export function JobsKpiCards({ kpis }: JobsKpiCardsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 items-stretch">
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1 items-stretch">
       {cards.map((card) => {
         const Icon = card.icon;
         return (
           <div
             key={card.label}
-            className="group relative flex flex-col justify-between rounded-sm border border-slate-200/90 bg-white p-3 shadow-2xs hover:shadow-xs transition-all duration-150 overflow-hidden h-full min-h-[105px]"
+            className={cn("group relative flex flex-col justify-between rounded-sm border px-3 py-2 shadow-2xs hover:shadow-xs transition-all duration-150 overflow-hidden h-full min-h-[82px]", TINT[card.tone] ?? "border-slate-200 bg-slate-50")}
           >
             {/* Top Accent Line */}
             <div
@@ -118,7 +131,7 @@ export function JobsKpiCards({ kpis }: JobsKpiCardsProps) {
             />
 
             <div className="flex items-start justify-between gap-1 mb-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 leading-tight">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 leading-tight">
                 {card.label}
               </span>
               <Tooltip>
@@ -145,13 +158,13 @@ export function JobsKpiCards({ kpis }: JobsKpiCardsProps) {
               </Tooltip>
             </div>
 
-            <div className="my-1">
+            <div className="my-0.5">
               <span className="text-xl font-extrabold tracking-tight tabular-nums block text-slate-900">
                 {card.value}
               </span>
             </div>
 
-            <div className="text-xs text-slate-400 font-medium truncate">
+            <div className="text-xs text-slate-600 font-medium truncate">
               {card.hint}
             </div>
           </div>

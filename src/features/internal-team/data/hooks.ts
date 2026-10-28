@@ -161,6 +161,18 @@ export function useTeamMutations() {
     onError: (err: Error) => { toast.error(err.message || "Failed to update profile."); },
   });
 
+  const uploadAvatar = useMutation({
+    mutationFn: ({ staffId, file }: { staffId: string; file: Blob }) => internalTeamRepository.uploadStaffAvatar(staffId, file),
+    onSuccess: () => { invalidate(); toast.success("Photo updated."); },
+    onError: (err: Error) => { toast.error(err.message || "Could not upload the photo."); },
+  });
+
+  const removeAvatar = useMutation({
+    mutationFn: (staffId: string) => internalTeamRepository.removeStaffAvatar(staffId),
+    onSuccess: () => { invalidate(); toast.success("Photo removed."); },
+    onError: (err: Error) => { toast.error(err.message || "Could not remove the photo."); },
+  });
+
   const scheduleReview = useMutation({
     mutationFn: (input: ScheduleAccessReviewInput) => internalTeamRepository.scheduleAccessReview(input),
     onSuccess: () => { invalidate(); toast.success("Access review scheduled."); },
@@ -192,7 +204,7 @@ export function useTeamMutations() {
   });
 
   return {
-    createInvitation, revokeInvitation, resendInvitation, changeRole, assignCompany, updateProfile, scheduleReview, endAssignment,
+    createInvitation, revokeInvitation, resendInvitation, changeRole, assignCompany, updateProfile, uploadAvatar, removeAvatar, scheduleReview, endAssignment,
     reassignCompany, completeAccessReview, suspendStaff, reactivateStaff, deactivateStaff,
   };
 }

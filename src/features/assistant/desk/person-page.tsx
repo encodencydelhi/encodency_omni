@@ -60,7 +60,7 @@ export function AssistantPersonPage({ userId }: { userId: string }) {
             </div>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
+          <div className="grid gap-1 sm:grid-cols-2 xl:grid-cols-6">
             <StatTile label="Conversations" value={full(data.stats.conversations)} icon={MessagesSquare} tone="blue" />
             <StatTile label="Questions" value={full(data.stats.questions)} icon={MessageCircleQuestion} tone="violet" />
             <StatTile label="Tokens Used" value={compact(data.stats.tokens)} icon={Coins} tone="orange" sub={`↑ ${compact(data.stats.promptTokens)} · ↓ ${compact(data.stats.completionTokens)}`} />

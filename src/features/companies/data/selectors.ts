@@ -776,14 +776,15 @@ export function computeSecurityWarnings(bundle: CompanyBundle, owner: CompanyOwn
   }
 
   const failedLogins = bundle.security.events.filter((event) => event.type === "failed_logins").length;
-  if (failedLogins >= 2 || bundle.security.accountLockouts > 0) {
+  const lockouts = bundle.security.accountLockouts ?? 0;
+  if (failedLogins >= 2 || lockouts > 0) {
     warnings.push({
       id: "failed-logins",
       severity: "warning",
       title: "Multiple failed login attempts detected",
       description:
-        bundle.security.accountLockouts > 0
-          ? `${bundle.security.accountLockouts} account ${bundle.security.accountLockouts === 1 ? "lockout" : "lockouts"} recorded.`
+        lockouts > 0
+          ? `${lockouts} account ${lockouts === 1 ? "lockout" : "lockouts"} recorded.`
           : `${failedLogins} failed sign-in attempts recorded recently.`,
       action: { kind: "review_events", label: "Review security events" },
     });

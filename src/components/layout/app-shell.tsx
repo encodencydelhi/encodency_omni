@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { RouteGuard } from "@/features/auth/components/route-guard";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { useDisplayPreferencesVersion } from "@/lib/api/display-preferences";
@@ -11,6 +11,7 @@ import { AppFooter } from "./app-footer";
 import { AppBreadcrumb } from "./app-breadcrumb";
 import { SidebarProvider, useSidebar } from "./sidebar-context";
 import { Topbar } from "./topbar";
+import { useKeepCaseForEmailsAndUrls } from "./keep-case";
 import { HealthProvider } from "@/features/system-health/context/health-provider";
 import { MaintenanceBannerHost } from "@/features/global-settings/components/maintenance-banner-host";
 
@@ -19,6 +20,9 @@ function ShellFrame({ children }: { children: ReactNode }) {
   const { status } = useAuth();
   // Redraws the page when the user's date / number preferences change.
   const preferencesVersion = useDisplayPreferencesVersion(status === "authenticated");
+  // Emails and website addresses keep their own case inside the Title Case pages.
+  const mainRef = useRef<HTMLElement>(null);
+  useKeepCaseForEmailsAndUrls(mainRef, preferencesVersion);
 
   return (
     <div className="min-h-dvh bg-[#F5F8FC] text-[#172044] overflow-x-hidden max-w-full">
@@ -33,7 +37,7 @@ function ShellFrame({ children }: { children: ReactNode }) {
         <AppBreadcrumb />
         <MaintenanceBannerHost />
 
-        <main key={preferencesVersion} className="title-case w-full flex-1 min-w-0 max-w-full px-4 py-4 sm:px-5 xl:px-6 pb-16">
+        <main ref={mainRef} key={preferencesVersion} className="title-case w-full flex-1 min-w-0 max-w-full px-4 py-4 sm:px-5 xl:px-6 pb-16">
           {children}
         </main>
 

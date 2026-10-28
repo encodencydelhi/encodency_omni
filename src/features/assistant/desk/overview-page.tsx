@@ -8,6 +8,7 @@ import { errorMessage } from "@/features/support/hooks";
 import { timeAgo } from "@/features/support/time";
 import { Avatar, btn, CountTabs, EmptyState, ListSkeleton, Notice, Section, Skeleton, StatTile } from "@/features/support/ui";
 import { useUrlState } from "@/features/support/url-state";
+import { STAT_COLORS, statColorForLabel, statColorForTone } from "@/components/shared/stat-color";
 import { DonutMeter, KeywordCloud, MiniBarSpark, UsageChart } from "./charts";
 import { ConversationRow } from "./conversation-row";
 import { cardLabel, compact, Delta, full, RANGE_NOUN, RANGE_TABS, seconds, toolLabel } from "./format";
@@ -16,27 +17,23 @@ import type { DeskRange } from "./types";
 
 const DEFAULTS = { range: "30d" };
 const usd = (micros: number) => `$${(micros / 1_000_000).toFixed(micros > 0 && micros < 10_000 ? 4 : 2)}`;
-const toneClass = {
-  blue: "bg-blue-50 text-blue-700 ring-blue-100",
-  violet: "bg-violet-50 text-violet-700 ring-violet-100",
-  green: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-  orange: "bg-amber-50 text-amber-700 ring-amber-100",
-};
+const toneColor = { blue: "blue", violet: "violet", green: "green", orange: "amber" } as const;
 
-function MetricCard({ label, value, sub, icon: Icon, tone, spark }: { label: string; value: ReactNode; sub?: ReactNode; icon: LucideIcon; tone: keyof typeof toneClass; spark: ReactNode }) {
+function MetricCard({ label, value, sub, icon: Icon, tone, spark }: { label: string; value: ReactNode; sub?: ReactNode; icon: LucideIcon; tone: keyof typeof toneColor; spark: ReactNode }) {
+  const palette = STAT_COLORS[toneColor[tone]];
   return (
-    <div className="overflow-hidden rounded-sm border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-      <div className="flex items-start justify-between gap-2 p-3">
+    <div className={`overflow-hidden rounded-sm border shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${palette.card}`}>
+      <div className="flex items-start justify-between gap-2 px-3 py-2">
         <div className="min-w-0">
           <p className="truncate text-[11px] font-semibold text-slate-500">{label}</p>
           <div className="mt-1 text-2xl font-semibold leading-none tracking-tight text-slate-900">{value}</div>
           {sub && <p className="mt-1 truncate text-[11px] font-medium text-slate-500">{sub}</p>}
         </div>
-        <span className={`flex size-7 shrink-0 items-center justify-center rounded-sm ring-1 ${toneClass[tone]}`}>
+        <span className={`flex size-7 shrink-0 items-center justify-center rounded-sm ${palette.chip}`}>
           <Icon className="size-3.5" />
         </span>
       </div>
-      <div className="border-t border-slate-100 bg-slate-50/50 px-3 py-2">{spark}</div>
+      <div className="border-t border-black/5 bg-white/50 px-3 py-1.5">{spark}</div>
     </div>
   );
 }

@@ -212,7 +212,7 @@ export function CreditsRefundsPage() {
       </div>
 
       {/* KPI Cards Grid (gap-2, rounded-sm, equal height) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 items-stretch">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1 items-stretch">
         <BillingKpiCard
           label="ISSUED"
           value={kpis.issuedCnCount}

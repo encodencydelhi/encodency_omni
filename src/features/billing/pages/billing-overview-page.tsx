@@ -48,7 +48,7 @@ export function BillingOverviewPage() {
       />
 
       {/* KPI Cards Grid - Row 1 (Money metrics) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 items-stretch">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1 items-stretch">
         <BillingKpiCard
           label="GROSS"
           value={formatMoney(kpis.issuedInvoiceMinor, kpis.currency)}
@@ -88,7 +88,7 @@ export function BillingOverviewPage() {
       </div>
 
       {/* KPI Cards Grid - Row 2 (Counts & Operational metrics) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 items-stretch">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1 items-stretch">
         <BillingKpiCard
           label="UNPAID"
           value={kpis.unpaidInvoicesCount}
@@ -128,7 +128,7 @@ export function BillingOverviewPage() {
       </div>
 
       {/* Charts & Distribution Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-1 items-stretch">
         <div className="lg:col-span-2 h-full">
           <BillingTrendChart
             invoices={invoices}
@@ -143,7 +143,7 @@ export function BillingOverviewPage() {
       </div>
 
       {/* Actionable Operations Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-1 items-stretch">
         <AttentionQueue
           invoices={invoices}
           payments={payments}

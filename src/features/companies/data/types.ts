@@ -410,8 +410,9 @@ export interface CompanySecurity {
   companyId: string;
   policies: CompanySecurityPolicies;
   allowedEmailDomains: string[];
-  activeSessions: number;
-  accountLockouts: number;
+  /** Null where the backend keeps no per-company counter. */
+  activeSessions: number | null;
+  accountLockouts: number | null;
   accessLock: { lockedAt: string; lockedBy: string; reason: string } | null;
   passwordResetRequestedAt: string | null;
   sessionRevocationRequestedAt: string | null;

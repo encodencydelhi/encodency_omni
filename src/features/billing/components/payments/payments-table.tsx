@@ -205,7 +205,7 @@ export function PaymentsTable({ initialQuickFilter }: PaymentsTableProps) {
       </div>
 
       {/* KPI Cards Grid (gap-2, rounded-sm, equal height) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 items-stretch">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1 items-stretch">
         <BillingKpiCard
           label="SUCCESS"
           value={kpis.succeededCount}

@@ -50,14 +50,18 @@ import type {
 import { commercialContext } from "@/features/plans-subscriptions/data/mock/plan-store";
 import { nowIso, platformNow } from "./clock";
 import { STAFF } from "./mock/dataset";
-import { countIntegrations, computePortfolio, filterSummaries, resolveStaff, computeSecurityWarnings, type DerivationContext } from "./selectors";
+import { countIntegrations, computePortfolio, computeTwoFactorAdoption, filterSummaries, resolveStaff, computeSecurityWarnings, type DerivationContext } from "./selectors";
 import { USAGE_RESOURCE_BY_KEY } from "./config";
 import type {
   ActivityFilter,
+  ActivityModule,
+  ActivityResult,
   ChangePlanInput,
   CompanyAccountStatus,
   CompanyActivity,
   CompanyAttentionItem,
+  CompanyBillingStatus,
+  CompanyBundle,
   CompanyClient,
   CompanyIntegration,
   CompanyInternalOwner,
@@ -66,7 +70,11 @@ import type {
   CompanyListResult,
   CompanyNotificationInput,
   CompanyOwner,
+  CompanyPayment,
+  CompanySecurityEvent,
   CompanySummary,
+  CompanySupportSnapshot,
+  CompanyTicket,
   CompanySubscription,
   CompanySubscriptionStatus,
   CompanyUsageOverride,
@@ -74,8 +82,10 @@ import type {
   CompanyUsageSummary,
   CompanyUser,
   CreateCompanyInput,
+  InvoiceStatus,
   MutationActor,
   PortfolioSummary,
+  SecurityEventType,
   StaffRef,
   SuspensionReason,
   UpdateCompanyInput,
@@ -203,6 +213,8 @@ interface SuperAdminSubscriptionRow {
   status: string;
   billingCycle: string;
   currentPeriodEnd: string;
+  createdAt?: string;
+  updatedAt?: string;
   plan?: { id: string; name: string; monthlyPrice?: number | null } | null;
 }
 
@@ -430,11 +442,7 @@ function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
       isDemoCreated: false,
     },
     plan: { tier: planTier, name: planName, billingCycle },
-    subscriptionStatus: (row.subscription?.status?.toLowerCase() === "canceled"
-      ? "canceled"
-      : row.subscription?.status?.toLowerCase() === "past_due"
-      ? "past_due"
-      : "active") as CompanySubscriptionStatus,
+    subscriptionStatus: toSubscriptionStatus(row.subscription?.status),
     billingStatus: "no_payment_method",
     mrrMinor: 0,
     currency: "INR",
@@ -694,6 +702,299 @@ function toUsageSummary(companyId: string, detail: BackendUsageDetail): CompanyU
 }
 
 /* ------------------------------------------------------------------ */
+/* Company detail tabs (real data only)                                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The detail tabs read only what the backend serves. Where it has no source (internal notes, payment methods, session
+ * counts, ...) the tab says "not recorded" or shows an empty state; no tab borrows demo records.
+ */
+
+function planTierOf(name: string | null | undefined): PlanTier {
+  const lower = (name ?? "").toLowerCase();
+  if (lower.includes("agency")) return "agency";
+  if (lower.includes("growth")) return "growth";
+  if (lower.includes("enterprise")) return "enterprise";
+  return "starter";
+}
+
+/** Backend SubStatus -> the UI's subscription status. */
+function toSubscriptionStatus(status: string | null | undefined): CompanySubscriptionStatus {
+  switch ((status ?? "").toUpperCase()) {
+    case "PAST_DUE":
+    case "INCOMPLETE":
+      return "past_due";
+    case "SUSPENDED":
+      return "paused";
+    case "CANCELED":
+      return "cancelled";
+    default:
+      return "active";
+  }
+}
+
+/** MRR a subscription contributes: the plan's monthly price (annual price / 12 when billed yearly); nothing while paused or ended. */
+function monthlyRecurringMinor(plan: Plan | undefined, cycle: "monthly" | "annual", status: CompanySubscriptionStatus): number {
+  if (!plan || status === "cancelled" || status === "paused" || status === "expired") return 0;
+  return cycle === "annual" ? Math.round(plan.annualPriceMinor / 12) : plan.monthlyPriceMinor;
+}
+
+function toCompanySubscription(companyId: string, row: SuperAdminSubscriptionRow): CompanySubscription {
+  const billingCycle = row.billingCycle?.toLowerCase() === "annual" ? "annual" : "monthly";
+  const status = toSubscriptionStatus(row.status);
+  const periodStart = new Date(row.currentPeriodEnd);
+  periodStart.setUTCMonth(periodStart.getUTCMonth() - (billingCycle === "annual" ? 12 : 1));
+  return {
+    id: row.id,
+    companyId,
+    planTier: planTierOf(row.plan?.name),
+    billingCycle,
+    status,
+    startedAt: row.createdAt ?? row.currentPeriodEnd,
+    currentPeriodStart: Number.isNaN(periodStart.getTime()) ? row.currentPeriodEnd : periodStart.toISOString(),
+    renewsAt: row.currentPeriodEnd,
+    trialEndsAt: null,
+    scheduledCancellationAt: null,
+    cancelledAt: status === "cancelled" ? (row.updatedAt ?? null) : null,
+    scheduledChange: null,
+    paymentMethod: null,
+  };
+}
+
+function planOfSubscription(plans: Plan[], row: SuperAdminSubscriptionRow): Plan | undefined {
+  return plans.find((plan) => plan.id === row.planId) ?? plans.find((plan) => plan.tier === planTierOf(row.plan?.name));
+}
+
+/* Activity */
+
+interface BackendActivityItem {
+  id: string;
+  at: string;
+  actor: { userId: string; name: string | null; email: string | null } | null;
+  action: string;
+  label?: string;
+  module?: string;
+  resourceType?: string;
+  resourceLabel?: string;
+  resourceId?: string | null;
+  outcome?: string;
+}
+
+/** The feed names modules for people ("Team", "Billing"); the tab filters by the UI's module keys. */
+function toActivityModule(label: string | undefined, action: string): ActivityModule {
+  const head = action.split(".")[0] ?? "";
+  if (head === "subscription" || head === "plan") return "subscription";
+  switch (label) {
+    case "Team":
+      return "users";
+    case "Clients":
+      return "clients";
+    case "Billing":
+      return "billing";
+    case "Integrations":
+    case "Google Business":
+    case "YouTube":
+    case "WhatsApp":
+      return "integrations";
+    default:
+      return "company";
+  }
+}
+
+function toCompanyActivity(companyId: string, item: BackendActivityItem): CompanyActivity {
+  const result: ActivityResult = (item.outcome ?? "SUCCESS").toUpperCase() === "SUCCESS" ? "success" : "failure";
+  return {
+    id: item.id,
+    companyId,
+    at: item.at,
+    actor: {
+      id: item.actor?.userId ?? "system",
+      name: item.actor?.name || item.actor?.email || "Platform",
+      type: item.actor ? "staff" : "system",
+    },
+    action: item.action,
+    summary: item.label ?? item.action,
+    module: toActivityModule(item.module, item.action),
+    entity: { type: item.resourceType ?? "company", id: item.resourceId ?? companyId, label: item.resourceLabel ?? "Company" },
+    severity: result === "success" ? "info" : "warning",
+    result,
+    previousValue: null,
+    newValue: null,
+    reason: null,
+    correlationId: null,
+  };
+}
+
+function filterActivity(entries: CompanyActivity[], filter: ActivityFilter): CompanyActivity[] {
+  const term = filter.search?.trim().toLowerCase();
+  const from = filter.from ? Date.parse(filter.from) : null;
+  const to = filter.to ? Date.parse(filter.to) + 86_400_000 : null;
+  return entries.filter((entry) => {
+    if (filter.actor && entry.actor.name !== filter.actor) return false;
+    if (filter.module && entry.module !== filter.module) return false;
+    if (filter.event && entry.action !== filter.event) return false;
+    if (filter.severity && entry.severity !== filter.severity) return false;
+    if (filter.result && entry.result !== filter.result) return false;
+    if (from !== null && Date.parse(entry.at) < from) return false;
+    if (to !== null && Date.parse(entry.at) >= to) return false;
+    if (term && ![entry.summary, entry.action, entry.actor.name, entry.entity.label].some((field) => field.toLowerCase().includes(term))) return false;
+    return true;
+  });
+}
+
+async function fetchCompanyActivity(companyId: string): Promise<CompanyActivity[]> {
+  const res = await apiClient.request<{ items?: BackendActivityItem[] }>({
+    method: "GET",
+    path: "/super-admin/user-insights/activity",
+    query: { companyId, limit: 100 },
+  });
+  return (res.items ?? []).map((item) => toCompanyActivity(companyId, item));
+}
+
+/* Security */
+
+/** Audit rows that are about the company's security posture, in the tab's event vocabulary. */
+function securityEventOf(entry: CompanyActivity): CompanySecurityEvent | null {
+  const type: SecurityEventType | null = entry.action.startsWith("company.security")
+    ? "policy_changed"
+    : entry.action.startsWith("user.sessions")
+      ? "session_revocation"
+      : null;
+  if (!type) return null;
+  return { id: entry.id, companyId: entry.companyId, at: entry.at, type, severity: entry.severity, summary: entry.summary, actorLabel: entry.actor.name };
+}
+
+/** The slice of `Company.securitySettings` the tab shows (written by Admin > Settings > Security). */
+interface BackendSecuritySettings {
+  authentication?: { require2FAForAllMembers?: boolean };
+  sessionPolicy?: { idleSessionTimeoutMinutes?: number };
+  accessPolicy?: { allowedEmailDomains?: string[] };
+}
+
+/* Billing */
+
+/** The company's slice of GET /super-admin/billing/snapshot. */
+interface BackendBillingSnapshot {
+  invoices?: Array<{
+    id: string;
+    number: string;
+    companyId: string;
+    documentState: "draft" | "issued" | "void";
+    collectionState: "unpaid" | "partially_paid" | "paid";
+    timingState: "not_due" | "due_soon" | "overdue";
+    issuedAt: string;
+    dueAt: string;
+    currency: string;
+    totalMinor: number;
+    outstandingBalanceMinor: number;
+    lineItems?: Array<{ description: string }>;
+  }>;
+  payments?: Array<{
+    id: string;
+    reference: string;
+    companyId: string;
+    method: string;
+    currency: string;
+    grossAmountMinor: number;
+    attemptStatus: "initiated" | "pending" | "succeeded" | "failed" | "cancelled";
+    failureReason: string | null;
+    createdAt: string;
+    allocations?: Array<{ invoiceId: string; invoiceNumber: string }>;
+  }>;
+}
+
+function toCompanyPayment(payment: NonNullable<BackendBillingSnapshot["payments"]>[number]): CompanyPayment {
+  const allocation = payment.allocations?.[0];
+  return {
+    id: payment.id,
+    companyId: payment.companyId,
+    reference: payment.reference,
+    invoiceId: allocation?.invoiceId ?? null,
+    invoiceNumber: allocation?.invoiceNumber ?? null,
+    amountMinor: payment.grossAmountMinor,
+    currency: payment.currency,
+    method: payment.method,
+    status: payment.attemptStatus === "succeeded" ? "paid" : payment.attemptStatus === "failed" || payment.attemptStatus === "cancelled" ? "failed" : "pending",
+    failureReason: payment.failureReason,
+    createdAt: payment.createdAt,
+  };
+}
+
+function toCompanyInvoice(
+  invoice: NonNullable<BackendBillingSnapshot["invoices"]>[number],
+  payments: CompanyPayment[],
+): CompanyInvoice {
+  const status: InvoiceStatus =
+    invoice.documentState === "void" ? "void" : invoice.collectionState === "paid" ? "paid" : invoice.timingState === "overdue" ? "overdue" : "open";
+  return {
+    id: invoice.id,
+    companyId: invoice.companyId,
+    number: invoice.number,
+    // The backend does not record the service period an invoice covers; equal dates render as "not recorded".
+    periodStart: invoice.issuedAt,
+    periodEnd: invoice.issuedAt,
+    issuedAt: invoice.issuedAt,
+    dueAt: invoice.dueAt,
+    amountMinor: invoice.totalMinor,
+    currency: invoice.currency,
+    status,
+    paymentStatus: invoice.collectionState === "paid" ? "paid" : "pending",
+    description: invoice.lineItems?.[0]?.description ?? "Subscription invoice",
+    paymentId: payments.find((payment) => payment.invoiceId === invoice.id)?.id ?? null,
+  };
+}
+
+/* Support */
+
+interface BackendDeskTicket {
+  id: string;
+  number: number;
+  subject: string;
+  priority: string;
+  status: string;
+  createdAt: string;
+  lastActivityAt: string;
+  sla?: { resolution?: { dueAt?: string } };
+}
+
+const deskTickets = (query: Record<string, string | number>) =>
+  apiClient.request<{ items?: BackendDeskTicket[]; total: number }>({ method: "GET", path: "/super-admin/support/tickets", query });
+
+function toCompanyTicket(companyId: string, ticket: BackendDeskTicket): CompanyTicket {
+  const open = ticket.status !== "resolved" && ticket.status !== "closed";
+  const dueAt = ticket.sla?.resolution?.dueAt;
+  return {
+    id: ticket.id,
+    companyId,
+    reference: `#${ticket.number}`,
+    subject: ticket.subject,
+    priority: (["urgent", "high", "low"].includes(ticket.priority) ? ticket.priority : "normal") as CompanyTicket["priority"],
+    status: (ticket.status === "waiting_on_customer" ? "waiting" : ["in_progress", "resolved", "closed"].includes(ticket.status) ? ticket.status : "open") as CompanyTicket["status"],
+    slaMinutesRemaining: open && dueAt ? Math.round((Date.parse(dueAt) - Date.now()) / 60_000) : null,
+    createdAt: ticket.createdAt,
+    updatedAt: ticket.lastActivityAt,
+  };
+}
+
+/** Counts come from the desk's own totals, so they stay exact however many tickets the company has. */
+async function fetchSupportSnapshot(companyId: string): Promise<CompanySupportSnapshot> {
+  const [active, high, urgent, breached, latest] = await Promise.all([
+    deskTickets({ companyId, group: "active", limit: 1 }),
+    deskTickets({ companyId, group: "active", priority: "high", limit: 1 }),
+    deskTickets({ companyId, group: "active", priority: "urgent", limit: 1 }),
+    deskTickets({ companyId, sla: "breached", limit: 1 }),
+    deskTickets({ companyId, limit: 1 }),
+  ]);
+  const ticket = latest.items?.[0];
+  return {
+    openTickets: active.total,
+    highPriorityTickets: high.total + urgent.total,
+    slaBreaches: breached.total,
+    latest: ticket ? toCompanyTicket(companyId, ticket) : null,
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /* Fallback policy                                                     */
 /* ------------------------------------------------------------------ */
 
@@ -923,7 +1224,13 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         method: "GET",
         path: `/super-admin/companies/${encodeURIComponent(id)}`,
       });
-      return mapApiRow(detail);
+      const summary = mapApiRow(detail);
+      if (detail.subscription) {
+        // MRR is the subscribed plan's price; a plans lookup that fails leaves it at 0 ("not recorded") rather than failing the page.
+        const plans = await this.listPlans().catch((): Plan[] => []);
+        summary.mrrMinor = monthlyRecurringMinor(plans.find((plan) => plan.id === detail.subscription?.planId), summary.plan.billingCycle, summary.subscriptionStatus);
+      }
+      return summary;
     },
 
     async createCompany(input: CreateCompanyInput, actor, options?): Promise<CompanySummary> {
@@ -1337,8 +1644,9 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
               description: fb?.description ?? `${p.name} tier plan`,
               isPublic: true,
               isArchived: !p.isActive,
-              monthlyPriceMinor: (p.monthlyPrice ?? 0) * 100,
-              annualPriceMinor: (p.annualPrice ?? p.monthlyPrice * 12 * 0.8) * 100,
+              // The backend stores prices in paise already. A plan with no annual price is not sold yearly: twelve months is the yearly equivalent.
+              monthlyPriceMinor: p.monthlyPrice ?? 0,
+              annualPriceMinor: p.annualPrice ?? (p.monthlyPrice ?? 0) * 12,
               currency: "INR",
               trialDays: fb?.trialDays ?? 14,
               limits: fb?.limits ?? {
@@ -1536,45 +1844,25 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         return fallback.getSubscription(id);
       }
 
-      try {
-        const [subs, fallbackSub] = await Promise.all([
-          apiClient.request<any[]>({
-            method: "GET",
-            path: "/super-admin/subscriptions",
-            query: { companyId: id },
-          }).catch(() => []),
-          fallback.getSubscription(id),
-        ]);
-
-        const sub = subs?.[0];
-        if (!sub) return fallbackSub;
-
-        const tierName = (sub.plan?.name?.toLowerCase() as PlanTier) || "starter";
-        const cycle = (sub.billingCycle?.toLowerCase() as any) || "monthly";
-
-        const updatedSub: CompanySubscription = {
-          ...fallbackSub.subscription,
-          id: sub.id,
-          companyId: id,
-          planTier: tierName,
-          billingCycle: cycle,
-          status: (sub.status?.toLowerCase() as any) ?? "active",
-          currentPeriodStart: sub.currentPeriodStart ?? fallbackSub.subscription.currentPeriodStart,
-          renewsAt: sub.currentPeriodEnd ?? fallbackSub.subscription.renewsAt,
-        };
-
-        const plan = fallbackSub.plans.find((p) => p.tier === tierName || p.id === sub.planId) || fallbackSub.plan;
-
-        return {
-          ...fallbackSub,
-          subscription: updatedSub,
-          plan,
-          mrrMinor: (sub.plan?.monthlyPrice ?? 1900) * 100,
-        };
-      } catch (err) {
-        if (shouldFallBack(err)) return fallback.getSubscription(id);
-        throw err;
+      const [summary, row, plans, usage] = await Promise.all([this.getCompany(id), fetchCompanySubscription(id), this.listPlans(), this.getUsage(id)]);
+      if (!row) {
+        throw new ApiError({ code: "UNKNOWN", status: 404, message: "This company has no subscription yet. Assign a plan from Plans & Subscriptions." });
       }
+      const plan = planOfSubscription(plans, row);
+      if (!plan) {
+        throw new ApiError({ code: "UNKNOWN", status: 404, message: "The plan on this subscription could not be loaded. Check Plans & Subscriptions." });
+      }
+      const subscription = toCompanySubscription(id, row);
+      return {
+        subscription,
+        plan,
+        plans,
+        usage,
+        billingStatus: summary.billingStatus,
+        mrrMinor: monthlyRecurringMinor(plan, subscription.billingCycle, subscription.status),
+        companyName: summary.company.name,
+        accountStatus: summary.company.accountStatus,
+      };
     },
 
     async getBilling(id: string): Promise<CompanyBillingData> {
@@ -1582,48 +1870,51 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         return fallback.getBilling(id);
       }
 
-      try {
-        const [invRes, fallbackBilling] = await Promise.all([
-          apiClient.request<{ items?: any[] } | any[]>({
-            method: "GET",
-            path: "/super-admin/subscriptions/invoices",
-            query: { companyId: id },
-          }).catch(() => ({ items: [] })),
-          fallback.getBilling(id),
-        ]);
+      const [summary, snapshot, plans, row] = await Promise.all([
+        this.getCompany(id),
+        apiClient.request<BackendBillingSnapshot>({ method: "GET", path: "/super-admin/billing/snapshot" }),
+        this.listPlans(),
+        fetchCompanySubscription(id),
+      ]);
+      const payments = (snapshot.payments ?? []).filter((payment) => payment.companyId === id).map(toCompanyPayment);
+      const rawInvoices = (snapshot.invoices ?? []).filter((invoice) => invoice.companyId === id);
+      const invoices = rawInvoices.map((invoice) => toCompanyInvoice(invoice, payments));
+      const subscription = row ? toCompanySubscription(id, row) : null;
+      const plan = row ? (planOfSubscription(plans, row) ?? null) : null;
+      const cycle = subscription?.billingCycle ?? summary.plan.billingCycle;
+      const outstandingMinor = rawInvoices.filter((invoice) => invoice.documentState === "issued").reduce((sum, invoice) => sum + invoice.outstandingBalanceMinor, 0);
+      const lastPayment = payments.find((payment) => payment.status === "paid") ?? null;
+      const status: CompanyBillingStatus = rawInvoices.some((invoice) => invoice.documentState === "issued" && invoice.outstandingBalanceMinor > 0)
+        ? "payment_due"
+        : payments[0]?.status === "failed"
+          ? "payment_failed"
+          : lastPayment
+            ? "paid"
+            : "no_payment_method";
+      const mrrMinor = subscription ? monthlyRecurringMinor(plan ?? undefined, subscription.billingCycle, subscription.status) : 0;
 
-        const rawInvoices = Array.isArray(invRes) ? invRes : invRes.items || [];
-        if (rawInvoices.length === 0) return fallbackBilling;
-
-        const invoices: CompanyInvoice[] = rawInvoices.map((inv) => ({
-          id: inv.id,
+      return {
+        summary: {
           companyId: id,
-          number: inv.invoiceNumber ?? inv.id.slice(0, 8).toUpperCase(),
-          periodStart: inv.periodStart ?? inv.createdAt,
-          periodEnd: inv.periodEnd ?? inv.createdAt,
-          issuedAt: inv.createdAt,
-          dueAt: inv.dueAt ?? inv.createdAt,
-          amountMinor: inv.totalMinor ?? (inv.amount ? inv.amount * 100 : fallbackBilling.summary.mrrMinor),
-          currency: "INR",
-          status: (inv.status?.toLowerCase() as any) ?? "paid",
-          paymentStatus: (inv.status?.toLowerCase() === "paid" ? "paid" : "pending") as any,
-          description: inv.description ?? "Subscription invoice",
-          paymentId: inv.paymentId ?? null,
-        }));
-
-        return {
-          ...fallbackBilling,
-          invoices,
-          summary: {
-            ...fallbackBilling.summary,
-            outstandingMinor: invoices.filter((i) => i.status === "open").reduce((sum, i) => sum + i.amountMinor, 0),
-            invoiceCount: invoices.length,
-          },
-        };
-      } catch (err) {
-        if (shouldFallBack(err)) return fallback.getBilling(id);
-        throw err;
-      }
+          status,
+          mrrMinor,
+          currency: summary.currency,
+          outstandingMinor,
+          lastPayment,
+          nextInvoice:
+            subscription && subscription.status === "active" && plan
+              ? { date: subscription.renewsAt, amountMinor: cycle === "annual" ? plan.annualPriceMinor : plan.monthlyPriceMinor, note: "Next renewal" }
+              : null,
+          billingCycle: cycle,
+          paymentMethod: null,
+          invoiceCount: invoices.length,
+          paymentCount: payments.length,
+        },
+        invoices,
+        payments,
+        billingNotes: [],
+        plan,
+      };
     },
 
     /**
@@ -1728,56 +2019,13 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         return fallback.getActivity(id, filter);
       }
 
-      try {
-        const [res, fallbackActivity] = await Promise.all([
-          apiClient.request<{ items: any[] }>({
-            method: "GET",
-            path: "/super-admin/user-insights/activity",
-            query: { companyId: id, limit: 50 },
-          }).catch(() => ({ items: [] })),
-          fallback.getActivity(id, filter),
-        ]);
-
-        if (!res.items || res.items.length === 0) return fallbackActivity;
-
-        const entries: CompanyActivity[] = res.items.map((item) => ({
-          id: item.id,
-          companyId: id,
-          at: item.at,
-          actor: {
-            id: item.actor?.userId ?? "system",
-            name: item.actor?.name || item.actor?.email || "Platform Admin",
-            type: item.actor ? "staff" : "system",
-          },
-          action: item.action,
-          summary: item.label ?? item.action,
-          module: (item.module as any) ?? "company",
-          entity: {
-            type: item.resourceType ?? "company",
-            id: item.resourceId ?? id,
-            label: item.resourceLabel ?? "Company",
-          },
-          severity: "info",
-          result: "success",
-          previousValue: null,
-          newValue: null,
-          reason: null,
-          correlationId: null,
-        }));
-
-        const actors = [...new Set(entries.map((e) => e.actor.name))];
-        const events = [...new Set(entries.map((e) => e.summary))];
-
-        return {
-          entries,
-          total: entries.length,
-          actors,
-          events,
-        };
-      } catch (err) {
-        if (shouldFallBack(err)) return fallback.getActivity(id, filter);
-        throw err;
-      }
+      const all = await fetchCompanyActivity(id);
+      return {
+        entries: filterActivity(all, filter),
+        total: all.length,
+        actors: [...new Set(all.map((entry) => entry.actor.name))].sort(),
+        events: [...new Set(all.map((entry) => entry.action))].sort(),
+      };
     },
 
     async getSecurity(id: string): Promise<CompanySecurityData> {
@@ -1785,70 +2033,43 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         return fallback.getSecurity(id);
       }
 
-      try {
-        const [usersData, fallbackSecurity, companyDetail] = await Promise.all([
-          this.getUsers(id),
-          fallback.getSecurity(id),
-          apiClient.request<SuperAdminCompanyDetailResponse>({
-            method: "GET",
-            path: `/super-admin/companies/${encodeURIComponent(id)}`,
-          }).catch(() => null),
-        ]);
+      const [usersData, detail, activity] = await Promise.all([
+        this.getUsers(id),
+        apiClient.request<SuperAdminCompanyDetailResponse>({ method: "GET", path: `/super-admin/companies/${encodeURIComponent(id)}` }),
+        fetchCompanyActivity(id).catch((): CompanyActivity[] => []),
+      ]);
 
-        const totalUsers = usersData.users.length;
-        const withTwoFactor = usersData.users.filter((u) => u.mfaEnabled).length;
-        const percent = totalUsers > 0 ? Math.round((withTwoFactor / totalUsers) * 100) : 100;
-        const adminsWithout2fa = usersData.users.filter((u) => (u.role === "owner" || u.role === "admin") && !u.mfaEnabled);
-
-        const secSettings = (companyDetail?.securitySettings ?? null) as Record<string, unknown> | null;
-        const is2faRequired = Boolean(secSettings?.require2FAForAllMembers || secSettings?.require2fa);
-        const isLocked = companyDetail?.status === "ARCHIVED";
-
-        const bundle = findBundle(id);
-        const bundleEvents = bundle?.security?.events ?? [];
-        const allEvents = [...bundleEvents, ...(fallbackSecurity.security.events || [])].slice(0, 50);
-
-        const warnings = computeSecurityWarnings(
-          {
-            ...fallbackSecurity,
-            users: usersData.users,
-          } as any,
-          usersData.owner,
-        );
-
-        return {
-          ...fallbackSecurity,
-          owner: usersData.owner,
-          users: usersData.users,
-          warnings,
-          adoption: {
-            totalUsers,
-            withTwoFactor,
-            percent,
-            adminsWithout2fa,
-          },
-          security: {
-            ...fallbackSecurity.security,
-            policies: {
-              ...fallbackSecurity.security.policies,
-              require2fa: is2faRequired || fallbackSecurity.security.policies.require2fa,
-            },
-            accessLock: isLocked
-              ? bundle?.security?.accessLock ?? {
-                  lockedAt: companyDetail?.createdAt || new Date().toISOString(),
-                  lockedBy: "Super Admin",
-                  reason: "Access locked by administrator",
-                }
-              : null,
-            passwordResetRequestedAt: bundle?.security?.passwordResetRequestedAt ?? null,
-            sessionRevocationRequestedAt: bundle?.security?.sessionRevocationRequestedAt ?? null,
-            events: allEvents,
-          },
-        };
-      } catch (err) {
-        if (shouldFallBack(err)) return fallback.getSecurity(id);
-        throw err;
-      }
+      const settings = (detail.securitySettings ?? {}) as BackendSecuritySettings;
+      const locked = detail.status === "ARCHIVED";
+      const events = activity.map(securityEventOf).filter((event): event is CompanySecurityEvent => event !== null);
+      const security: CompanySecurityData["security"] = {
+        companyId: id,
+        policies: {
+          require2fa: Boolean(settings.authentication?.require2FAForAllMembers),
+          passwordPolicy: "standard",
+          sessionTimeoutMinutes: settings.sessionPolicy?.idleSessionTimeoutMinutes ?? 60,
+          // Single sign-on and IP allowlists do not exist on the platform.
+          ssoEnabled: false,
+          ipAllowlistEnabled: false,
+        },
+        allowedEmailDomains: settings.accessPolicy?.allowedEmailDomains ?? [],
+        // The backend keeps no per-company session or lockout counters.
+        activeSessions: null,
+        accountLockouts: null,
+        accessLock: locked ? { lockedAt: detail.archivedAt ?? detail.createdAt, lockedBy: "Super Admin", reason: "The company is archived" } : null,
+        passwordResetRequestedAt: null,
+        sessionRevocationRequestedAt: null,
+        events,
+      };
+      // The warning rules read only the user list and the security block.
+      const warnings = computeSecurityWarnings({ users: usersData.users, security } as unknown as CompanyBundle, usersData.owner);
+      return {
+        security,
+        owner: usersData.owner,
+        users: usersData.users,
+        adoption: computeTwoFactorAdoption({ users: usersData.users } as unknown as CompanyBundle),
+        warnings,
+      };
     },
 
     async getOverview(id: string): Promise<CompanyOverviewData> {
@@ -1856,26 +2077,23 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         return fallback.getOverview(id);
       }
 
-      try {
-        const [summary, subData, usage, activity, fallbackOverview] = await Promise.all([
-          this.getCompany(id),
-          this.getSubscription(id),
-          this.getUsage(id),
-          this.getActivity(id, {}),
-          fallback.getOverview(id),
-        ]);
-
-        return {
-          ...fallbackOverview,
-          summary,
-          subscription: subData.subscription,
-          usage,
-          recentActivity: activity.entries.slice(0, 10),
-        };
-      } catch (err) {
-        if (shouldFallBack(err)) return fallback.getOverview(id);
-        throw err;
-      }
+      const [summary, row, usage, activity, support] = await Promise.all([
+        this.getCompany(id),
+        fetchCompanySubscription(id),
+        this.getUsage(id),
+        fetchCompanyActivity(id).catch((): CompanyActivity[] => []),
+        // The support snapshot is one panel: if the desk cannot be read the panel says so instead of taking the page down.
+        fetchSupportSnapshot(id).catch((): null => null),
+      ]);
+      return {
+        summary,
+        subscription: row ? toCompanySubscription(id, row) : null,
+        usage,
+        support,
+        recentActivity: activity.slice(0, 10),
+        // The backend has no internal-notes store.
+        notes: [],
+      };
     },
 
     /**

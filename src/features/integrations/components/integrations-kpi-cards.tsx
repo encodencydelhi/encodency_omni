@@ -38,7 +38,7 @@ export function IntegrationsKpiCards({
       icon: PlugIcon,
       valueColor: "text-slate-900",
       iconBg: "bg-blue-50 text-blue-600 border-blue-100",
-      activeRing: "border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/30",
+      activeRing: "border-blue-500 ring-2 ring-blue-500/20", tint: "border-blue-200 bg-blue-50",
       accentBar: "bg-blue-500",
     },
     {
@@ -50,7 +50,7 @@ export function IntegrationsKpiCards({
       icon: CheckCircle2Icon,
       valueColor: "text-emerald-700",
       iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100",
-      activeRing: "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30",
+      activeRing: "border-emerald-500 ring-2 ring-emerald-500/20", tint: "border-emerald-200 bg-emerald-50",
       accentBar: "bg-emerald-500",
     },
     {
@@ -62,7 +62,7 @@ export function IntegrationsKpiCards({
       icon: ClockIcon,
       valueColor: kpis.approvalPendingProviders > 0 ? "text-amber-700" : "text-slate-700",
       iconBg: "bg-amber-50 text-amber-600 border-amber-100",
-      activeRing: "border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/30",
+      activeRing: "border-amber-500 ring-2 ring-amber-500/20", tint: "border-amber-200 bg-amber-50",
       accentBar: "bg-amber-500",
     },
     {
@@ -74,7 +74,7 @@ export function IntegrationsKpiCards({
       icon: LayersIcon,
       valueColor: "text-indigo-700",
       iconBg: "bg-indigo-50 text-indigo-600 border-indigo-100",
-      activeRing: "border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/30",
+      activeRing: "border-indigo-500 ring-2 ring-indigo-500/20", tint: "border-indigo-200 bg-indigo-50",
       accentBar: "bg-indigo-500",
     },
     {
@@ -86,7 +86,7 @@ export function IntegrationsKpiCards({
       icon: CheckCircle2Icon,
       valueColor: "text-emerald-700",
       iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100",
-      activeRing: "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30",
+      activeRing: "border-emerald-500 ring-2 ring-emerald-500/20", tint: "border-emerald-200 bg-emerald-50",
       accentBar: "bg-emerald-500",
     },
     {
@@ -98,7 +98,7 @@ export function IntegrationsKpiCards({
       icon: AlertTriangleIcon,
       valueColor: kpis.reconnectRequiredConnections > 0 ? "text-amber-700" : "text-slate-600",
       iconBg: "bg-amber-50 text-amber-600 border-amber-100",
-      activeRing: "border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/30",
+      activeRing: "border-amber-500 ring-2 ring-amber-500/20", tint: "border-amber-200 bg-amber-50",
       accentBar: "bg-amber-500",
     },
     {
@@ -110,7 +110,7 @@ export function IntegrationsKpiCards({
       icon: ShieldAlertIcon,
       valueColor: kpis.degradedProviders > 0 ? "text-rose-700" : "text-slate-600",
       iconBg: "bg-rose-50 text-rose-600 border-rose-100",
-      activeRing: "border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30",
+      activeRing: "border-rose-500 ring-2 ring-rose-500/20", tint: "border-rose-200 bg-rose-50",
       accentBar: "bg-rose-500",
     },
     {
@@ -122,7 +122,7 @@ export function IntegrationsKpiCards({
       icon: Building2Icon,
       valueColor: kpis.affectedCompanies > 0 ? "text-purple-700" : "text-slate-600",
       iconBg: "bg-purple-50 text-purple-600 border-purple-100",
-      activeRing: "border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/30",
+      activeRing: "border-purple-500 ring-2 ring-purple-500/20", tint: "border-purple-200 bg-purple-50",
       accentBar: "bg-purple-500",
     },
   ];
@@ -143,10 +143,9 @@ export function IntegrationsKpiCards({
             onClick={() => onSelectFilter?.(c.id)}
             title={c.tooltip}
             className={cn(
-              "group relative flex flex-col justify-between p-3 rounded-xl border bg-gradient-to-b from-white to-slate-50/60 text-left transition-all duration-200 cursor-pointer h-full min-h-[104px] min-w-0 shadow-2xs hover:shadow-md hover:border-slate-300 hover:-translate-y-0.5",
-              isSelected
-                ? cn(c.activeRing, "shadow-sm -translate-y-0.5")
-                : "border-slate-200/90"
+              "group relative flex flex-col justify-between px-3 py-2 rounded-xl border text-left transition-all duration-200 cursor-pointer h-full min-h-[82px] min-w-0 shadow-2xs hover:shadow-md hover:-translate-y-0.5",
+              c.tint,
+              isSelected && cn(c.activeRing, "shadow-sm -translate-y-0.5")
             )}
           >
             {/* Top Accent line indicator when active */}
@@ -156,7 +155,7 @@ export function IntegrationsKpiCards({
 
             {/* Header: Label + Stylish Icon Container */}
             <div className="flex items-center justify-between w-full mb-1 min-w-0">
-              <span className="text-xs font-bold uppercase tracking-normal text-slate-500 truncate pr-1">
+              <span className="text-xs font-bold uppercase tracking-normal text-slate-600 truncate pr-1">
                 {c.label}
               </span>
               <div

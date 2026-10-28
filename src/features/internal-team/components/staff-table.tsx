@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ROUTES } from "@/config/routes";
 import { formatRelativeTime, getInitials } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
@@ -83,6 +83,7 @@ export function StaffTable({
                     <TableCell className="py-2">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Avatar className="size-8 shrink-0">
+                          {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt={member.name} /> : null}
                           <AvatarFallback className={cn("text-xs font-semibold", getStaffAvatarColor(member.name))}>
                             {getInitials(member.name)}
                           </AvatarFallback>

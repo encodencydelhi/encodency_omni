@@ -1,13 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ASSIGNMENT_RESPONSIBILITIES, DEPARTMENTS } from "../data/config";
+import { USER_AVATAR_LIMITS } from "@/features/auth/services/user-avatar-api";
+import { getInitials } from "@/lib/utils/format";
+import { ASSIGNMENT_RESPONSIBILITIES, DEPARTMENTS, getStaffAvatarColor } from "../data/config";
 import { useStaffList } from "../data/hooks";
 import type { AssignmentResponsibility, StaffAssignment, StaffMember } from "../data/types";
 import { PHONE_ERROR, isValidOptionalPhone, sanitizePhone } from "@/lib/utils/phone";
@@ -24,34 +28,86 @@ interface EditProfileProps {
   member: StaffMember | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Saves the fields. The dialog stays open until the caller closes it, so a failed save keeps what was typed. */
   onConfirm: (input: { name: string; phone: string; jobTitle: string; department: string }) => void;
   isPending?: boolean;
+  /** Photo: sent as soon as it is chosen (it is stored separately from the text fields). */
+  onUploadAvatar?: (file: File) => void;
+  onRemoveAvatar?: () => void;
+  avatarBusy?: boolean;
 }
 
-export function EditStaffProfileDialog({ member, open, onOpenChange, onConfirm, isPending }: EditProfileProps) {
+export function EditStaffProfileDialog({ member, open, onOpenChange, onConfirm, isPending, onUploadAvatar, onRemoveAvatar, avatarBusy }: EditProfileProps) {
   return (
-    <Dialog open={open && member !== null} onOpenChange={onOpenChange}>
+    <Dialog open={open && member !== null} onOpenChange={(next) => (isPending ? undefined : onOpenChange(next))}>
       <DialogContent className="max-w-md">
-        {open && member && <EditProfileBody member={member} onClose={() => onOpenChange(false)} onConfirm={onConfirm} isPending={isPending} />}
+        {open && member && (
+          <EditProfileBody member={member} onClose={() => onOpenChange(false)} onConfirm={onConfirm} isPending={isPending} onUploadAvatar={onUploadAvatar} onRemoveAvatar={onRemoveAvatar} avatarBusy={avatarBusy} />
+        )}
       </DialogContent>
     </Dialog>
   );
 }
 
-function EditProfileBody({ member, onClose, onConfirm, isPending }: { member: StaffMember; onClose: () => void; onConfirm: EditProfileProps["onConfirm"]; isPending?: boolean }) {
-  const [name, setName] = useState(member.name === member.email ? "" : member.name);
-  const [phone, setPhone] = useState(sanitizePhone(member.phone));
-  const [jobTitle, setJobTitle] = useState(member.jobTitle);
-  const [department, setDepartment] = useState(member.department);
+function EditProfileBody({ member, onClose, onConfirm, isPending, onUploadAvatar, onRemoveAvatar, avatarBusy }: { member: StaffMember; onClose: () => void; onConfirm: EditProfileProps["onConfirm"]; isPending?: boolean; onUploadAvatar?: (file: File) => void; onRemoveAvatar?: () => void; avatarBusy?: boolean }) {
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const pickPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!USER_AVATAR_LIMITS.mimeTypes.includes(file.type)) return void toast.error("Please choose a PNG, JPEG or WebP image.");
+    if (file.size > USER_AVATAR_LIMITS.maxBytes) return void toast.error("The image must be smaller than 2 MB.");
+    onUploadAvatar?.(file);
+  };
+  const [initial] = useState(() => ({ name: member.name === member.email ? "" : member.name, phone: sanitizePhone(member.phone), jobTitle: member.jobTitle, department: member.department }));
+  const [name, setName] = useState(initial.name);
+  const [phone, setPhone] = useState(initial.phone);
+  const [jobTitle, setJobTitle] = useState(initial.jobTitle);
+  const [department, setDepartment] = useState(initial.department);
+  const phoneValid = isValidOptionalPhone(phone);
+  const nameValid = name.trim().length > 0;
+  const dirty = name.trim() !== initial.name.trim() || phone !== initial.phone || jobTitle.trim() !== initial.jobTitle.trim() || department !== initial.department;
+  const canSave = dirty && phoneValid && nameValid && !isPending;
+  const save = () => {
+    if (canSave) onConfirm({ name: name.trim(), phone, jobTitle: jobTitle.trim(), department });
+  };
   return (
-    <>
+    <form onSubmit={(e) => { e.preventDefault(); save(); }}>
       <DialogHeader>
         <DialogTitle>Edit staff profile</DialogTitle>
         <DialogDescription>Name and phone belong to the account; job title and department are internal team details.</DialogDescription>
       </DialogHeader>
       <div className="space-y-3 text-xs">
-        <div className="grid gap-1.5"><Label htmlFor="staff-name">Full name</Label><Input id="staff-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} className="h-8 text-xs" /></div>
-        <div className="grid gap-1.5"><Label htmlFor="staff-phone">Phone</Label><Input id="staff-phone" type="tel" inputMode="numeric" placeholder="10-digit mobile number" value={phone} onChange={(e) => setPhone(sanitizePhone(e.target.value))} maxLength={20} aria-invalid={!isValidOptionalPhone(phone)} className="h-8 text-xs" /></div>
+        {onUploadAvatar ? (
+          <div className="flex items-center gap-3">
+            <Avatar className="size-14 shrink-0">
+              {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt={member.name} /> : null}
+              <AvatarFallback className={`text-sm font-bold ${getStaffAvatarColor(member.name)}`}>{getInitials(member.name)}</AvatarFallback>
+            </Avatar>
+            <div className="space-y-1">
+              <div className="flex flex-wrap gap-2">
+                <input ref={fileRef} type="file" accept={USER_AVATAR_LIMITS.mimeTypes.join(",")} className="hidden" onChange={pickPhoto} />
+                <Button type="button" variant="outline" size="sm" className="h-8 text-xs" disabled={avatarBusy || isPending} onClick={() => fileRef.current?.click()}>
+                  {avatarBusy ? "Working..." : member.avatarUrl ? "Change photo" : "Upload photo"}
+                </Button>
+                {member.avatarUrl && onRemoveAvatar ? (
+                  <Button type="button" variant="outline" size="sm" className="h-8 text-xs" disabled={avatarBusy || isPending} onClick={onRemoveAvatar}>Remove</Button>
+                ) : null}
+              </div>
+              <p className="text-[11px] text-slate-500">PNG, JPEG or WebP, up to 2 MB. It is saved as soon as you choose it.</p>
+            </div>
+          </div>
+        ) : null}
+        <div className="grid gap-1.5">
+          <Label htmlFor="staff-name">Full name</Label>
+          <Input id="staff-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={200} aria-invalid={!nameValid} className="h-8 text-xs" />
+          {!nameValid ? <p className="text-[11px] text-red-600">Name is required.</p> : null}
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="staff-phone">Phone</Label>
+          <Input id="staff-phone" type="tel" inputMode="numeric" placeholder="10-digit mobile number" value={phone} onChange={(e) => setPhone(sanitizePhone(e.target.value))} maxLength={20} aria-invalid={!phoneValid} className="h-8 text-xs" />
+          {!phoneValid ? <p className="text-[11px] text-red-600">{PHONE_ERROR}</p> : null}
+        </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="grid gap-1.5"><Label htmlFor="staff-title">Job title</Label><Input id="staff-title" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} maxLength={100} className="h-8 text-xs" /></div>
           <div className="grid gap-1.5">
@@ -67,10 +123,10 @@ function EditProfileBody({ member, onClose, onConfirm, isPending }: { member: St
         </div>
       </div>
       <DialogFooter>
-        <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onClose}>Cancel</Button>
-        <Button size="sm" className="h-8 text-xs" disabled={isPending || !isValidOptionalPhone(phone)} title={isValidOptionalPhone(phone) ? undefined : PHONE_ERROR} onClick={() => { onConfirm({ name, phone, jobTitle, department }); onClose(); }}>{isPending ? "Saving..." : "Save"}</Button>
+        <Button type="button" variant="outline" size="sm" className="h-8 text-xs" disabled={isPending} onClick={onClose}>Cancel</Button>
+        <Button type="submit" size="sm" className="h-8 text-xs" disabled={!canSave} title={!dirty ? "Nothing has been changed" : undefined}>{isPending ? "Saving..." : "Save"}</Button>
       </DialogFooter>
-    </>
+    </form>
   );
 }
 

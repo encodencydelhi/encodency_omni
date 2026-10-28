@@ -157,6 +157,16 @@ export const staffApi = {
   updateProfile(id: string, body: { name?: string; phone?: string; jobTitle?: string; department?: string }): Promise<LiveStaff> {
     return apiClient.request({ method: "PUT", path: `${base}/${enc(id)}/profile`, body });
   },
+  /** PUT /super-admin/staff/:id/avatar: sets or replaces the profile photo (PNG, JPEG or WebP, up to 2 MB). */
+  uploadAvatar(id: string, file: Blob): Promise<LiveStaff> {
+    const form = new FormData();
+    form.append("file", file);
+    return apiClient.request({ method: "PUT", path: `${base}/${enc(id)}/avatar`, body: form });
+  },
+  /** DELETE /super-admin/staff/:id/avatar: back to the initials. */
+  removeAvatar(id: string): Promise<LiveStaff> {
+    return apiClient.request({ method: "DELETE", path: `${base}/${enc(id)}/avatar` });
+  },
   changeRole(id: string, body: { platformRole: StaffPlatformRole; reason: string }): Promise<LiveStaff> {
     return apiClient.request({ method: "POST", path: `${base}/${enc(id)}/role`, body });
   },

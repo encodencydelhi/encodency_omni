@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils/cn";
+import { STAT_COLORS, statColorForLabel, statColorForTone } from "@/components/shared/stat-color";
 import { formatDateTime, formatRelativeTime } from "@/lib/utils/format";
 import type { PaginationMeta } from "@/types/api";
 import type { StatusRegistry, Tone } from "@/types/common";
@@ -127,20 +128,13 @@ export function Kpi({
   tone?: "default" | "danger" | "warning" | "success";
   href?: string;
 }) {
+  // A tone the caller gave wins; otherwise the card's name decides ("Failed" red, "Delivered" green, ...).
+  const palette = STAT_COLORS[statColorForTone(tone) ?? statColorForLabel(label)];
   const body = (
-    <div
-      className={cn(
-        "h-full rounded-sm border bg-card px-3.5 py-3 shadow-xs transition-colors",
-        tone === "danger" && "border-danger/25 bg-danger-subtle/30",
-        tone === "warning" && "border-warning/25 bg-warning-subtle/30",
-        tone === "success" && "border-success/20",
-        tone === "default" && "border-border",
-        href && "hover:border-border-strong",
-      )}
-    >
+    <div className={cn("h-full rounded-sm border px-3 py-2 shadow-xs transition-colors", palette.card, href && "hover:brightness-[0.98]")}>
       <p className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-1.5 text-xl font-semibold leading-none tracking-tight tabular text-foreground">{value}</p>
-      {hint ? <p className="mt-1.5 text-2xs leading-snug text-muted-foreground">{hint}</p> : null}
+      <p className="mt-1 text-xl font-semibold leading-none tracking-tight tabular text-foreground">{value}</p>
+      {hint ? <p className="mt-1 text-2xs leading-snug text-muted-foreground">{hint}</p> : null}
     </div>
   );
   return href ? (

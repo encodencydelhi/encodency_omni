@@ -156,7 +156,7 @@ export function InvoiceDetailPage({ invoiceId: propInvoiceId }: InvoiceDetailPag
       </div>
 
       {/* Financial Breakdown KPIs (gap-2, rounded-sm, equal height) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 items-stretch">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 items-stretch">
         <BillingKpiCard
           label="GROSS"
           value={formatMoney(invoice.totalMinor, invoice.currency)}
@@ -203,7 +203,7 @@ export function InvoiceDetailPage({ invoiceId: propInvoiceId }: InvoiceDetailPag
       </div>
 
       {/* Main Details Layout: Line Items & Document Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-1 items-stretch">
         {/* Line Items Table */}
         <div className="lg:col-span-2 bg-card rounded-sm border border-border p-3 shadow-2xs flex flex-col justify-between">
           <div>
@@ -322,7 +322,7 @@ export function InvoiceDetailPage({ invoiceId: propInvoiceId }: InvoiceDetailPag
       </div>
 
       {/* Allocations & Adjustments Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-1 items-stretch">
         {/* Payment Allocations */}
         <div className="bg-card rounded-sm border border-border p-3 shadow-2xs">
           <div className="flex items-center justify-between pb-2 border-b border-border/60">

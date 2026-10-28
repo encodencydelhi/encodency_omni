@@ -131,7 +131,7 @@ export function BillingAccountsPage() {
       </div>
 
       {/* KPI Cards (gap-2, rounded-sm, equal height) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 items-stretch">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 items-stretch">
         <BillingKpiCard
           label="ACCOUNTS"
           value={accounts.length}

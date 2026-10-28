@@ -3,7 +3,7 @@
 import { ShieldCheckIcon, Building2Icon, UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ROUTES } from "@/config/routes";
@@ -34,6 +34,7 @@ export function StaffQuickPreview({ member, open, onOpenChange }: StaffQuickPrev
           {/* Identity */}
           <div className="flex items-start gap-3">
             <Avatar className="size-12 shrink-0">
+              {member.avatarUrl ? <AvatarImage src={member.avatarUrl} alt={member.name} /> : null}
               <AvatarFallback className={cn("text-sm font-bold", getStaffAvatarColor(member.name))}>
                 {getInitials(member.name)}
               </AvatarFallback>

@@ -6,6 +6,7 @@
 import React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
+import { STAT_COLORS, statColorForLabel, statColorForTone } from "@/components/shared/stat-color";
 import { ArrowUpRightIcon } from "lucide-react";
 
 interface BillingKpiCardProps {
@@ -39,10 +40,14 @@ export function BillingKpiCard({
     neutral: "bg-slate-100 text-slate-700 border-slate-300",
   };
 
+  // A tone the caller gave wins; otherwise the card's name decides ("Overdue" red, "Collected" green, ...).
+  const palette = STAT_COLORS[statColorForTone(badgeTone) ?? statColorForLabel(label)];
+
   const cardContent = (
     <div
       className={cn(
-        "group relative flex flex-col justify-between h-full bg-card rounded-sm border border-border p-3 shadow-xs hover:border-slate-300 transition-colors",
+        "group relative flex flex-col justify-between h-full rounded-sm border px-3 py-2 shadow-xs hover:brightness-[0.98] transition-colors",
+        palette.card,
         (href || onClick) && "cursor-pointer",
         className,
       )}
@@ -50,7 +55,7 @@ export function BillingKpiCard({
     >
       <div className="flex items-start justify-between gap-1.5 min-w-0">
         <div className="flex items-center gap-1.5 min-w-0" title={label}>
-          {Icon && <Icon className="size-3.5 text-muted-foreground shrink-0" />}
+          {Icon && <Icon className={cn("size-3.5 shrink-0", palette.ink)} />}
           <span className="text-xs font-medium uppercase tracking-tight text-muted-foreground truncate">
             {label}
           </span>
@@ -70,7 +75,7 @@ export function BillingKpiCard({
         ) : null}
       </div>
 
-      <div className="mt-2 space-y-0.5 min-w-0">
+      <div className="mt-1 space-y-0.5 min-w-0">
         <div className="text-lg sm:text-xl font-medium tracking-tight text-foreground truncate" title={String(value)}>
           {value}
         </div>
