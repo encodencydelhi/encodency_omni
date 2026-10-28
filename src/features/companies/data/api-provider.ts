@@ -801,7 +801,8 @@ function toActivityModule(label: string | undefined, action: string): ActivityMo
   }
 }
 
-function toCompanyActivity(companyId: string, item: BackendActivityItem): CompanyActivity {
+/** `staffIds`: who is on the internal team; any other person who acted is a customer user. */
+function toCompanyActivity(companyId: string, item: BackendActivityItem, staffIds: ReadonlySet<string>): CompanyActivity {
   const result: ActivityResult = (item.outcome ?? "SUCCESS").toUpperCase() === "SUCCESS" ? "success" : "failure";
   return {
     id: item.id,
@@ -810,7 +811,7 @@ function toCompanyActivity(companyId: string, item: BackendActivityItem): Compan
     actor: {
       id: item.actor?.userId ?? "system",
       name: item.actor?.name || item.actor?.email || "Platform",
-      type: item.actor ? "staff" : "system",
+      type: item.actor ? (staffIds.has(item.actor.userId) ? "staff" : "customer") : "system",
     },
     action: item.action,
     summary: item.label ?? item.action,
@@ -843,12 +844,14 @@ function filterActivity(entries: CompanyActivity[], filter: ActivityFilter): Com
 }
 
 async function fetchCompanyActivity(companyId: string): Promise<CompanyActivity[]> {
+  await loadLiveStaffIfNeeded();
+  const staffIds = new Set(cachedLiveStaff.map((member) => member.id));
   const res = await apiClient.request<{ items?: BackendActivityItem[] }>({
     method: "GET",
     path: "/super-admin/user-insights/activity",
     query: { companyId, limit: 100 },
   });
-  return (res.items ?? []).map((item) => toCompanyActivity(companyId, item));
+  return (res.items ?? []).map((item) => toCompanyActivity(companyId, item, staffIds));
 }
 
 /* Security */

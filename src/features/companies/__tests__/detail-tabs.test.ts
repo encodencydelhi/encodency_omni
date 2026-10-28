@@ -64,10 +64,10 @@ const invoice = (id: string, companyId: string, paid: boolean) => ({
   lineItems: [{ description: "Growth plan" }],
 });
 
-const activityItem = (id: string, action: string, module: string, outcome = "SUCCESS") => ({
+const activityItem = (id: string, action: string, module: string, outcome = "SUCCESS", actor = { userId: "u1", name: "Owner", email: "Owner@Acme.test" }) => ({
   id,
   at: NOW,
-  actor: { userId: "u1", name: "Owner", email: "Owner@Acme.test" },
+  actor,
   action,
   label: action.replace(/[._]/g, " "),
   module,
@@ -104,6 +104,7 @@ function respond(rawUrl: string): unknown {
         activityItem("a2", "user.sessions.revoked", "Team"),
         activityItem("a3", "invitation.created", "Team"),
         activityItem("a4", "billing.invoice.failed", "Billing", "FAILURE"),
+        activityItem("a5", "company.updated", "Organization", "SUCCESS", { userId: "staff-1", name: "Manish", email: "m@platform.test" }),
       ],
     };
   }
@@ -116,7 +117,10 @@ function respond(rawUrl: string): unknown {
   if (path.endsWith("/super-admin/plans")) {
     return [{ id: "p-growth", name: "Growth", monthlyPrice: 499_900, annualPrice: 4_999_000, maxClients: 10, maxAiTokens: 100_000, isActive: true, updatedAt: NOW }];
   }
-  if (path.endsWith("/super-admin/users") || path.endsWith("/super-admin/invitations") || path.endsWith("/super-admin/staff")) {
+  if (path.endsWith("/super-admin/staff")) {
+    return { items: [{ id: "staff-1", name: "Manish", email: "m@platform.test", platformRole: "SUPER_ADMIN", status: "ACTIVE", department: "" }] };
+  }
+  if (path.endsWith("/super-admin/users") || path.endsWith("/super-admin/invitations")) {
     return { items: [] };
   }
   if (path.includes("/super-admin/companies/")) {
@@ -140,7 +144,7 @@ describe("company detail tabs (api mode)", () => {
     assert.equal(overview.subscription?.status, "active");
     assert.equal(overview.summary.mrrMinor, 499_900, "MRR is the subscribed plan's monthly price");
     assert.deepEqual(overview.notes, [], "the backend has no notes store");
-    assert.equal(overview.recentActivity.length, 4);
+    assert.equal(overview.recentActivity.length, 5);
   });
 
   it("overview's support snapshot comes from the desk's totals", async () => {
@@ -190,13 +194,15 @@ describe("company detail tabs (api mode)", () => {
 
   it("activity maps the feed and honours the filters", async () => {
     const all = await companiesRepository.getActivity(ID, {});
-    assert.equal(all.entries.length, 4);
-    assert.equal(all.total, 4);
+    assert.equal(all.entries.length, 5);
+    assert.equal(all.total, 5);
+    assert.equal(all.entries.find((entry) => entry.id === "a1")?.actor.type, "customer", "a company owner is not staff");
+    assert.equal(all.entries.find((entry) => entry.id === "a5")?.actor.type, "staff");
     assert.ok(all.actors.includes("Owner"));
     const billing = await companiesRepository.getActivity(ID, { module: "billing" });
     assert.deepEqual(billing.entries.map((entry) => entry.action), ["billing.invoice.failed"]);
     assert.equal(billing.entries[0]?.result, "failure");
-    assert.equal(billing.total, 4, "total is the unfiltered count");
+    assert.equal(billing.total, 5, "total is the unfiltered count");
     const searched = await companiesRepository.getActivity(ID, { search: "sessions" });
     assert.equal(searched.entries.length, 1);
   });
