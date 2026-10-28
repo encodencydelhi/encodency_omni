@@ -1,5 +1,6 @@
 "use client";
 
+import { useEnforcementState } from "../data/hooks";
 import { PrivacyRequests } from "../components/privacy-requests";
 
 import { EyeIcon, PencilIcon } from "lucide-react";
@@ -32,6 +33,7 @@ function RetentionDialog({ category, editor, mode, onClose, changedAt }: { categ
   const invalid = !Number.isInteger(proposed) || proposed < category.min || proposed > category.max;
   const shorter = !invalid && proposed < current;
   const definition = getDefinition(key);
+  const enforced = useEnforcementState()(definition!) === "enforced";
 
   const rows: Array<[string, string]> = [
     ["Data Category", category.label],
@@ -41,7 +43,7 @@ function RetentionDialog({ category, editor, mode, onClose, changedAt }: { categ
     ["Affected Records", UNAVAILABLE],
     ["Affected Companies", UNAVAILABLE],
     ["Dependencies", `${category.owner} and any export or support process that reads ${category.label.toLowerCase()}.`],
-    ["Effective Date", "When a lifecycle service enforces the policy. Saving does not purge anything."],
+    ["Effective Date", enforced ? "Within the hour after you save: a job then removes records older than this period." : "Not applied. Saving records the policy; nothing removes these records."],
   ];
 
   return (
@@ -73,7 +75,7 @@ function RetentionDialog({ category, editor, mode, onClose, changedAt }: { categ
               <span className="text-[0.8125rem] text-muted-foreground">days ({category.min}-{category.max})</span>
             </div>
             {invalid ? <p role="alert" className="text-2xs text-danger">Enter a whole number between {category.min} and {category.max} days.</p> : null}
-            {shorter ? <p className="text-2xs text-warning">Shortening retention makes older records eligible for removal once a lifecycle service enforces it. Nothing is deleted by saving this setting.</p> : null}
+            {shorter ? <p className="text-2xs text-warning">{enforced ? "Shortening retention permanently removes records older than the new period at the next hourly run after you save." : "Shortening retention changes the saved policy only. Nothing removes these records."}</p> : null}
             <p className="text-2xs text-muted-foreground">This is a configured policy, not a verified legal or compliance requirement. Applying adds it to your unsaved changes; you review and confirm it when you save the section.</p>
           </div>
         ) : null}
@@ -98,10 +100,11 @@ function RetentionDialog({ category, editor, mode, onClose, changedAt }: { categ
 
 function RetentionTable({ editor, changedAt }: { editor: SectionEditor; changedAt: Record<string, string> }) {
   const focus = useFocusKey();
+  const enforcement = useEnforcementState();
   const [open, setOpen] = useState<{ category: Category; mode: "view" | "edit" } | null>(null);
   return (
     <>
-      <TablePanel title="Retention" description="Configured retention per data category. Enforcement needs a data lifecycle service, which is not connected; nothing is purged.">
+      <TablePanel title="Retention" description="Configured retention per data category. An hourly job permanently removes records older than the period for every category marked Enforced. Categories marked Not Applied are saved as policy only.">
         <MiniTable
           caption="Retention policies"
           rows={RETENTION_CATEGORIES}
@@ -126,7 +129,7 @@ function RetentionTable({ editor, changedAt }: { editor: SectionEditor; changedA
             { id: "scope", header: "Scope", hideBelow: "md", cell: (category) => <span className="text-2xs text-muted-foreground">{category.scope}</span> },
             { id: "owner", header: "Policy Owner", hideBelow: "lg", cell: (category) => <span className="text-2xs text-muted-foreground">{category.owner}</span> },
             { id: "effective", header: "Effective", hideBelow: "lg", cell: (category) => <span className="whitespace-nowrap text-2xs tabular text-muted-foreground">{changedAt[keyOf(category)] ? formatDate(changedAt[keyOf(category)] as string) : "Initial Policy"}</span> },
-            { id: "state", header: "Backend State", hideBelow: "md", cell: () => <Badge tone="warning">Not Enforced</Badge> },
+            { id: "state", header: "Backend State", hideBelow: "md", cell: (category) => (enforcement(getDefinition(keyOf(category))!) === "enforced" ? <Badge tone="success">Enforced</Badge> : <Badge tone="warning">Not Applied</Badge>) },
             {
               id: "actions",
               header: <span className="sr-only">Actions</span>,

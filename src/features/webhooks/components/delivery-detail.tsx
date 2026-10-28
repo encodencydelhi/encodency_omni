@@ -5,6 +5,7 @@
 
 "use client";
 
+import { isMockMode } from "@/config/env";
 import Link from "next/link";
 import { useState } from "react";
 import { DataTable } from "@/components/shared/data-table/data-table";
@@ -171,7 +172,7 @@ export function DeliveryDetailPage({ deliveryId }: { deliveryId: string }) {
               <span className="text-2xs text-muted-foreground">Related job: <JobReference jobId={delivery.relatedJobId} /></span>
             </div>
           </SectionCard>
-          <SectionCard title="Demo Recovery Requests" description="Requests are demo records. History above is unchanged by them.">
+          <SectionCard title={isMockMode ? "Demo Recovery Requests" : "Recovery Requests"} description={isMockMode ? "Requests are demo records. History above is unchanged by them." : "Requests raised for this delivery. The history above is never rewritten by them."}>
             {requests.length === 0 ? <EmptyRows title="No recovery requests" description="None have been created for this delivery." /> : (
               <ul className="divide-y divide-border">
                 {requests.map((request) => (
@@ -187,7 +188,7 @@ export function DeliveryDetailPage({ deliveryId }: { deliveryId: string }) {
       ) : null}
 
       {tab === "timeline" ? (
-        <SectionCard title="Delivery Timeline" description="Derived from recorded events and attempts. A demo recovery request is never shown as a successful delivery.">
+        <SectionCard title="Delivery Timeline" description={`Derived from recorded events and attempts. A ${isMockMode ? "demo " : ""}recovery request is never shown as a successful delivery.`}>
           <ol className="relative space-y-4 border-l border-border pl-5">
             {timeline.map((entry) => (
               <li key={entry.id} className="relative">

@@ -6,6 +6,7 @@
 
 "use client";
 
+import { isMockMode } from "@/config/env";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
@@ -38,14 +39,18 @@ export function SecurityPage() {
     { id: "method", header: "Verification Method", cell: (row) => <span className="text-[0.8125rem]">{VERIFICATION_METHOD_LABEL[row.verificationMethod]}</span> },
     { id: "ready", header: "Configuration Readiness", cell: (row) => (<div className="space-y-1"><State registry={READINESS} status={row.readiness} /><State registry={SOURCE_CONFIGURATION_STATE} status={row.configurationState} /></div>) },
     { id: "fail", header: "Recent Failures", align: "right", cell: (row) => <span className="tabular">{failuresBySource(row.id)}</span> },
-    { id: "last", header: "Last Verified Event", hideBelow: "xl", cell: () => <span className="text-2xs text-muted-foreground">No genuine verification data. Demo records only</span> },
+    { id: "last", header: "Last Verified Event", hideBelow: "xl", cell: (row) => {
+      if (isMockMode) return <span className="text-2xs text-muted-foreground">No genuine verification data. Demo records only</span>;
+      const latest = snapshot.incomingEvents.filter((event) => event.sourceId === row.id && event.verification.state === "verified").sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))[0];
+      return latest ? <Timestamp iso={latest.receivedAt} /> : <span className="text-2xs text-muted-foreground">No verified event yet</span>;
+    } },
     { id: "act", header: "Actions", align: "right", cell: (row) => <OpenLink href={WEBHOOK_ROUTES.incomingSource(row.id)} label="Source" /> },
   ];
 
   const signingColumns: Array<DataTableColumn<OutgoingEndpoint>> = [
     { id: "endpoint", header: "Endpoint", cell: (row) => <EndpointCell endpoint={row} /> },
     { id: "scope", header: "Company / Scope", hideBelow: "lg", cell: (row) => <CompanyCell id={row.companyId} name={row.companyName} /> },
-    { id: "method", header: "Signing Method", hideBelow: "md", cell: (row) => <span className="text-[0.8125rem]">{row.signing.method === "hmac_sha256" ? "HMAC-SHA256 (ref)" : "None"}</span> },
+    { id: "method", header: "Signing Method", hideBelow: "md", cell: (row) => <span className="text-[0.8125rem]">{row.signing.method === "hmac_sha256" ? (isMockMode ? "HMAC-SHA256 (ref)" : "HMAC-SHA256") : "None"}</span> },
     { id: "state", header: "Configuration", cell: (row) => <State registry={SIGNING_STATE} status={row.signing.state} /> },
     { id: "secret", header: "Secret Version Ref", hideBelow: "xl", cell: (row) => (row.signing.secretVersionRef ? <Mono>{row.signing.secretVersionRef}</Mono> : <span className="text-muted-foreground">None</span>) },
     { id: "rot", header: "Last Rotation", hideBelow: "xl", cell: (row) => <Timestamp iso={row.signing.lastRotationAt} /> },
@@ -70,9 +75,15 @@ export function SecurityPage() {
 
   return (
     <div className="space-y-1">
-      <Notice tone="warning" title="Demo records. Nothing here is cryptographically verified">
-        Verification and signing states shown are fixtures or references. No signature was verified by this frontend, and no signing secret exists here. Actual enforcement belongs to the backend.
-      </Notice>
+      {isMockMode ? (
+        <Notice tone="warning" title="Demo records. Nothing here is cryptographically verified">
+          Verification and signing states shown are fixtures or references. No signature was verified by this frontend, and no signing secret exists here. Actual enforcement belongs to the backend.
+        </Notice>
+      ) : (
+        <Notice tone="info" title="Verified by the backend">
+          Incoming signatures are checked by the backend before an event is stored. Every outgoing delivery is signed with its endpoint's secret and sent only to public HTTPS addresses. This page reads the recorded results; secrets are never shown here.
+        </Notice>
+      )}
 
       <CardGrid cols={4}>
         <Kpi label="Registered Incoming Sources" value={summary.registeredSources} hint="From Integrations provider configuration" />
@@ -96,10 +107,10 @@ export function SecurityPage() {
       </TablePanel>
 
       <div className="grid gap-1 xl:grid-cols-[1.4fr_1fr]">
-        <TablePanel title="Endpoint Destination Security" description="Frontend validation is preliminary. It is not SSRF protection.">
+        <TablePanel title="Endpoint Destination Security" description={isMockMode ? "Frontend validation is preliminary. It is not SSRF protection." : "The backend accepts only credential-free HTTPS addresses and checks the address again on every delivery."}>
           <DataTable columns={destinationColumns} rows={snapshot.endpoints} getRowId={(row) => row.id} isLoading={false} caption="Destination security" emptyState={<EmptyRows title="No endpoints configured" />} />
         </TablePanel>
-        <SectionCard title="Destination Policy References" description="Backend and network-layer controls. Not enforced by this frontend.">
+        <SectionCard title="Destination Policy References" description={isMockMode ? "Backend and network-layer controls. Not enforced by this frontend." : "Enforced by the backend whenever a delivery is sent."}>
           <dl className="space-y-3">
             {[["Private-network restriction", SECURITY_REFERENCES.privateNetworkPolicy], ["Redirect policy", SECURITY_REFERENCES.redirectPolicy], ["DNS resolution policy", SECURITY_REFERENCES.dnsPolicy], ["Outbound egress policy", SECURITY_REFERENCES.egressPolicy]].map(([label, value]) => (
               <div key={label}><dt className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">{label}</dt><dd className="mt-0.5 text-2xs">{value}</dd></div>
@@ -109,10 +120,10 @@ export function SecurityPage() {
       </div>
 
       <div className="grid gap-1 lg:grid-cols-2">
-        <SectionCard title="Replay Protection" description="Derived from demo verification and deduplication records.">
+        <SectionCard title="Replay Protection" description={isMockMode ? "Derived from demo verification and deduplication records." : "Counted from the recorded incoming events in this period."}>
           <ul className="space-y-2 text-[0.8125rem]">
-            <li className="flex justify-between gap-3"><span className="text-muted-foreground">Timestamp checks passed (demo)</span><span className="tabular font-medium">{timestampPassed}</span></li>
-            <li className="flex justify-between gap-3"><span className="text-muted-foreground">Replay-window checks passed (demo)</span><span className="tabular font-medium">{replayPassed}</span></li>
+            <li className="flex justify-between gap-3"><span className="text-muted-foreground">Timestamp checks passed{isMockMode ? " (demo)" : ""}</span><span className="tabular font-medium">{timestampPassed}</span></li>
+            <li className="flex justify-between gap-3"><span className="text-muted-foreground">Replay-window checks passed{isMockMode ? " (demo)" : ""}</span><span className="tabular font-medium">{replayPassed}</span></li>
             <li className="flex justify-between gap-3"><span className="text-muted-foreground">Checks not recorded (rejected earlier)</span><span className="tabular font-medium">{notRecorded}</span></li>
             <li className="flex justify-between gap-3"><span className="text-muted-foreground">Duplicate HTTP deliveries ignored</span><span className="tabular font-medium">{duplicates}</span></li>
           </ul>

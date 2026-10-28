@@ -38,7 +38,7 @@ export interface WebhooksRepository {
   updateEndpoint(environment: WebhookEnvironment, input: UpdateEndpointInput): Promise<MutationResult<OutgoingEndpoint>>;
   setEndpointState(environment: WebhookEnvironment, endpointId: string, state: Extract<EndpointState, "enabled" | "disabled">, reason: string): Promise<MutationResult<OutgoingEndpoint>>;
   saveSubscriptions(environment: WebhookEnvironment, endpointId: string, eventKeys: string[], reason: string): Promise<MutationResult<EventSubscription[]>>;
-  requestSecretRotationReview(environment: WebhookEnvironment, endpointId: string): Promise<MutationResult<WebhookActivity>>;
+  requestSecretRotationReview(environment: WebhookEnvironment, endpointId: string, reason?: string): Promise<MutationResult<WebhookActivity>>;
   createRecoveryRequest(environment: WebhookEnvironment, input: CreateRecoveryInput): Promise<MutationResult<RecoveryRequest>>;
   updateRecoveryRequest(environment: WebhookEnvironment, requestId: string, state: RecoveryState): Promise<MutationResult<RecoveryRequest>>;
   updateSettings(environment: WebhookEnvironment, settings: WebhookSettings): Promise<MutationResult<WebhookSettings>>;
@@ -72,8 +72,8 @@ const liveWebhooksRepository: WebhooksRepository = {
     toMutationResult(await superAdminWebhooksApi.setEndpointState(environment, id, state, reason)),
   saveSubscriptions: async (environment, id, keys, reason) =>
     toMutationResult(await superAdminWebhooksApi.saveSubscriptions(environment, id, keys, reason)),
-  requestSecretRotationReview: async (environment, id) =>
-    toMutationResult(await superAdminWebhooksApi.requestSecretRotationReview(environment, id)),
+  requestSecretRotationReview: async (environment, id, reason) =>
+    toMutationResult(await superAdminWebhooksApi.requestSecretRotationReview(environment, id, reason ?? "")),
   createRecoveryRequest: async (environment, input) =>
     toMutationResult(await superAdminWebhooksApi.createRecoveryRequest(environment, input)),
   updateRecoveryRequest: async (environment, id, state) =>

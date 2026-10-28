@@ -297,9 +297,9 @@ export function EndpointWizard({ open, onOpenChange }: { open: boolean; onOpenCh
                   ["Company", company?.name ?? "Platform-wide"],
                   ["Environment", draft.environment],
                   ["Destination", urlCheck.sanitizedUrl ?? "Invalid"],
-                  ["Signing readiness", "Demo reference only. Not configured"],
+                  ["Signing readiness", isMockMode ? "Demo reference only. Not configured" : "HMAC-SHA256. The backend generates the secret and shows it once"],
                   ["Delivery policy", `${draft.timeoutMs} ms timeout, ${policy.name}, ${PRIVACY_LABEL[draft.payloadPrivacy]} payloads`],
-                  ["Initial state", draft.state === "draft" ? "Draft" : "Enabled (demo)"],
+                  ["Initial state", draft.state === "draft" ? "Draft" : isMockMode ? "Enabled (demo)" : "Enabled"],
                 ].map(([label, value]) => (
                   <div key={label} className="min-w-0"><dt className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">{label}</dt><dd className="break-words text-[0.8125rem]">{value}</dd></div>
                 ))}

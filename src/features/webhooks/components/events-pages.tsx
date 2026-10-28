@@ -149,7 +149,7 @@ export function SubscriptionsDirectoryPage() {
     <div className="space-y-1">
       <EventsNav view="subscriptions" />
       <EventsSummary />
-      <Notice tone="info">Company-scoped endpoints cannot subscribe to platform-only events. Enforcement here is demo validation, and the backend must enforce authorization.</Notice>
+      <Notice tone="info">{isMockMode ? "Company-scoped endpoints cannot subscribe to platform-only events. Enforcement here is demo validation, and the backend must enforce authorization." : "A company-scoped endpoint receives only its own company's events. A platform endpoint receives events from every company."}</Notice>
       <TablePanel
         title="Subscriptions"
         description={`Endpoint event subscriptions in ${ENVIRONMENT_LABEL[snapshot.environment]}.`}
@@ -200,7 +200,7 @@ export function EventTypeDetailPage({ eventKey }: { eventKey: string }) {
           { label: "Event producer", value: type.producer },
           { label: "Related business module", value: type.relatedModule },
           { label: "Audience scope", value: AUDIENCE_LABEL[type.audience] },
-          { label: "Last produced", value: type.lastProducedAt ? <Timestamp iso={type.lastProducedAt} /> : "Not produced in demo records" },
+          { label: "Last produced", value: type.lastProducedAt ? <Timestamp iso={type.lastProducedAt} /> : isMockMode ? "Not produced in demo records" : "Not produced yet" },
         ]} />
         <SectionCard title="Payload Field Summary" description="Field names only. No private customer payload is shown as documentation.">
           <div className="space-y-3">

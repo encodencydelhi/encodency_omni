@@ -8,6 +8,7 @@
 
 "use client";
 
+import { isMockMode } from "@/config/env";
 import { AlertTriangleIcon, CheckCircle2Icon, InfoIcon, XCircleIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -124,7 +125,7 @@ export function RecoverySheet({
     if (!reason.trim() || (needsAck && !ack) || notEligible) return;
     try {
       await create.mutateAsync({ direction, kind: chosen, targetId: targetId!, reason, duplicateRiskAcknowledged: ack, submit: send });
-      toast.success(send ? "Demo recovery request submitted for review" : "Recovery draft saved", { description: `${NOT_LIVE_NOTICE} The ${context.kind === "outgoing" ? "delivery" : "event"} history is unchanged.` });
+      toast.success(send ? (isMockMode ? "Demo recovery request submitted for review" : "Recovery request submitted for review") : "Recovery draft saved", { description: `${NOT_LIVE_NOTICE} The ${context.kind === "outgoing" ? "delivery" : "event"} history is unchanged.` });
       close(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The request could not be saved.");

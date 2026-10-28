@@ -5,6 +5,7 @@
 
 "use client";
 
+import { isMockMode } from "@/config/env";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -135,7 +136,7 @@ export function OutgoingEndpointsPage() {
           onPageChange={paged.setPage}
           onPageSizeChange={paged.setPageSize}
           onRowClick={(row) => router.push(WEBHOOK_ROUTES.endpoint(row.id))}
-          emptyState={<EmptyRows title="No endpoints match" description="Adjust the filters, or add a demo endpoint." />}
+          emptyState={<EmptyRows title="No endpoints match" description={isMockMode ? "Adjust the filters, or add a demo endpoint." : "Adjust the filters, or add an endpoint."} />}
         />
       </TablePanel>
       <EndpointWizard open={wizard} onOpenChange={setWizard} />
@@ -164,7 +165,7 @@ export function EndpointConfigurationPage() {
     <PageSection className="space-y-1">
       <OutgoingHeader onAdd={() => setWizard(true)} exportRows={snapshot.endpoints.map((e) => ({ id: e.id, timeoutMs: e.policy.timeoutMs, retryPolicy: e.policy.retryPolicyRef, maxAttempts: e.policy.maxAttempts }))} />
       <OutgoingNav view="configuration" />
-      <Notice tone="info">Delivery configuration is a reference. Timeouts and retries are enforced by a future delivery worker, not by this frontend.</Notice>
+      <Notice tone="info">{isMockMode ? "Delivery configuration is a reference. Timeouts and retries are enforced by a future delivery worker, not by this frontend." : "The delivery worker on the API server applies these timeouts and retry plans, checking for due deliveries every 15 seconds. A change applies from the next attempt."}</Notice>
       <CardGrid cols={4}>
         <Kpi label="Default Timeout" value={`${s.defaultTimeoutMs.toLocaleString()} ms`} hint="Applied to new endpoints" />
         <Kpi label="Default Retry Policy" value={s.defaultRetryPolicyRef.replace("retry-policy/", "")} hint={`${s.defaultMaxAttempts} attempts`} />

@@ -361,6 +361,7 @@ export function updateSettings(environment: WebhookEnvironment, settings: Webhoo
   const snapshot = current(environment);
   if (settings.defaultTimeoutMs < 1_000 || settings.defaultTimeoutMs > 30_000) return fail("Default timeout must be between 1,000 and 30,000 ms.");
   if (settings.stalenessWarningMinutes < 5 || settings.stalenessWarningMinutes > 1_440) return fail("Staleness warning must be between 5 and 1,440 minutes.");
+  if (settings.recordRetentionDays !== undefined && (!Number.isInteger(settings.recordRetentionDays) || settings.recordRetentionDays < 7 || settings.recordRetentionDays > 730)) return fail("Delivery records must be kept for 7 to 730 days.");
   const policy = RETRY_POLICIES.find((item) => item.ref === settings.defaultRetryPolicyRef);
   if (!policy) return fail("Unknown retry policy reference.");
   const next = { ...settings, defaultMaxAttempts: policy.maxAttempts };

@@ -108,11 +108,12 @@ export const superAdminWebhooksApi = {
       body: { enabled, reason },
     }),
 
-  rotateSourceSecret: (environment: WebhookEnvironment, sourceId: string) =>
+  rotateSourceSecret: (environment: WebhookEnvironment, sourceId: string, reason: string) =>
     apiClient.request<MutationResult<{ source: IncomingSource; secret: string }>>({
       method: "POST",
       path: `${BASE}/sources/${encodeURIComponent(sourceId)}/rotate-secret`,
       query: { environment },
+      body: { reason },
     }),
 
   createEndpoint: (environment: WebhookEnvironment, input: CreateEndpointInput) =>
@@ -166,11 +167,12 @@ export const superAdminWebhooksApi = {
       body: { eventKeys, reason },
     }),
 
-  requestSecretRotationReview: (environment: WebhookEnvironment, endpointId: string) =>
+  requestSecretRotationReview: (environment: WebhookEnvironment, endpointId: string, reason: string) =>
     apiClient.request<MutationResult<WebhookActivity>>({
       method: "POST",
       path: `${BASE}/endpoints/${encodeURIComponent(endpointId)}/rotate-secret`,
       query: { environment },
+      body: { reason },
     }),
 
   testPing: (

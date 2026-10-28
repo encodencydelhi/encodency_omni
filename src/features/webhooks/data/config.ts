@@ -5,6 +5,7 @@
  * Each state vocabulary has its own registry. They are intentionally not merged.
  */
 
+import { isMockMode } from "@/config/env";
 import { ROUTES } from "@/config/routes";
 import type { StatusRegistry } from "@/types/common";
 import type {
@@ -221,6 +222,7 @@ export const SIGNING_STATE: StatusRegistry<SigningState> = {
   not_configured: { label: "Signing Not Configured", tone: "warning" },
   demo_reference: { label: "Demo Reference Only", tone: "brand", description: "No real signing implementation exists yet." },
   configured_reference: { label: "Configured (Reference)", tone: "info" },
+  configured: { label: "Signed (HMAC-SHA256)", tone: "success", description: "Every delivery is signed with this endpoint's secret." },
 };
 
 export const SECURITY_REVIEW: StatusRegistry<SecurityReviewStatus> = {
@@ -237,6 +239,7 @@ export const URL_VALIDATION: StatusRegistry<UrlValidationState> = {
     tone: "info",
     description: "Frontend validation is preliminary. Backend SSRF protection is required.",
   },
+  passed: { label: "Passed", tone: "success", description: "HTTPS without credentials was checked when saved. The address is checked again on every delivery." },
   warnings: { label: "Warnings", tone: "warning" },
   failed: { label: "Failed", tone: "danger" },
 };
@@ -366,14 +369,22 @@ export const DEFAULT_SETTINGS: WebhookSettings = {
   stalenessWarningMinutes: 60,
   requireHttpsOutsideDevelopment: true,
   payloadPreviewEnabled: true,
+  recordRetentionDays: 90,
 };
 
-export const SECURITY_REFERENCES = {
-  privateNetworkPolicy: "egress-policy/block-private-ranges (reference, backend enforcement pending)",
-  redirectPolicy: "egress-policy/no-cross-host-redirects (reference, backend enforcement pending)",
-  dnsPolicy: "egress-policy/resolve-and-pin (reference, backend enforcement pending)",
-  egressPolicy: "egress-policy/allowlisted-proxy (reference, backend enforcement pending)",
-} as const;
+export const SECURITY_REFERENCES: Record<"privateNetworkPolicy" | "redirectPolicy" | "dnsPolicy" | "egressPolicy", string> = isMockMode
+  ? {
+      privateNetworkPolicy: "egress-policy/block-private-ranges (reference, backend enforcement pending)",
+      redirectPolicy: "egress-policy/no-cross-host-redirects (reference, backend enforcement pending)",
+      dnsPolicy: "egress-policy/resolve-and-pin (reference, backend enforcement pending)",
+      egressPolicy: "egress-policy/allowlisted-proxy (reference, backend enforcement pending)",
+    }
+  : {
+      privateNetworkPolicy: "Enforced on every delivery: private, loopback, link-local and cloud-metadata addresses are refused.",
+      redirectPolicy: "Enforced: redirects are never followed.",
+      dnsPolicy: "Enforced: the host is resolved when the delivery is sent and the connection is pinned to the checked address, which blocks DNS rebinding.",
+      egressPolicy: "No separate outbound proxy: deliveries leave directly from the API server.",
+    };
 
 export const HTTP_STATUS_FILTER_OPTIONS = [
   { value: "2xx", label: "2xx" },
@@ -383,5 +394,6 @@ export const HTTP_STATUS_FILTER_OPTIONS = [
   { value: "none", label: "No response" },
 ];
 
-export const NOT_LIVE_NOTICE =
-  "Frontend-only demo. No request was sent to a backend, no webhook was delivered, retried or replayed.";
+export const NOT_LIVE_NOTICE = isMockMode
+  ? "Frontend-only demo. No request was sent to a backend, no webhook was delivered, retried or replayed."
+  : "The request is saved for review. Nothing is retried or replayed until a different Super Admin approves it.";

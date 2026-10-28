@@ -178,9 +178,9 @@ export interface OutgoingEventType {
 export type EndpointOwnerScope = "platform" | "company";
 export type EndpointState = "draft" | "enabled" | "disabled" | "suspended";
 export type SigningMethod = "hmac_sha256" | "none";
-export type SigningState = "not_configured" | "demo_reference" | "configured_reference";
+export type SigningState = "not_configured" | "demo_reference" | "configured_reference" | "configured";
 export type SecurityReviewStatus = "not_reviewed" | "review_due" | "reviewed" | "action_required";
-export type UrlValidationState = "not_validated" | "passed_preliminary" | "warnings" | "failed";
+export type UrlValidationState = "not_validated" | "passed_preliminary" | "passed" | "warnings" | "failed";
 
 export interface EndpointSigning {
   method: SigningMethod;
@@ -411,6 +411,8 @@ export interface WebhookSettings {
   stalenessWarningMinutes: number;
   requireHttpsOutsideDevelopment: boolean;
   payloadPreviewEnabled: boolean;
+  /** Days finished deliveries and incoming event records are kept. */
+  recordRetentionDays: number;
 }
 
 export interface RetryPolicyDefinition {
@@ -442,6 +444,8 @@ export interface WebhooksSnapshot {
   monitoring: MonitoringSource[];
   retryPolicies: RetryPolicyDefinition[];
   settings: WebhookSettings;
+  /** Which environment the connected server delivers for, and whether its delivery worker runs. Absent in the demo workspace. */
+  runtime?: { environment: WebhookEnvironment; deliveryWorkerEnabled: boolean };
 }
 
 /* ------------------------------------------------------------------ */

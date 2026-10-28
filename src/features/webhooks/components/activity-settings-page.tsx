@@ -53,6 +53,7 @@ export function ActivitySettingsPage() {
   const errors: string[] = [];
   if (draft.defaultTimeoutMs < 1_000 || draft.defaultTimeoutMs > 30_000) errors.push("Default timeout must be between 1,000 and 30,000 ms.");
   if (draft.stalenessWarningMinutes < 5 || draft.stalenessWarningMinutes > 1_440) errors.push("Staleness warning must be between 5 and 1,440 minutes.");
+  if (!Number.isInteger(draft.recordRetentionDays) || draft.recordRetentionDays < 7 || draft.recordRetentionDays > 730) errors.push("Delivery records must be kept for 7 to 730 days.");
 
   return (
     <div className="space-y-1">
@@ -96,6 +97,11 @@ export function ActivitySettingsPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5"><Label htmlFor="set-timeout">Default timeout (ms)</Label><Input id="set-timeout" type="number" min={1000} max={30000} step={500} value={draft.defaultTimeoutMs} onChange={(e) => setDraft({ ...draft, defaultTimeoutMs: Number(e.target.value) })} /></div>
                 <div className="space-y-1.5"><Label htmlFor="set-stale">Staleness warning (minutes)</Label><Input id="set-stale" type="number" min={5} max={1440} value={draft.stalenessWarningMinutes} onChange={(e) => setDraft({ ...draft, stalenessWarningMinutes: Number(e.target.value) })} /></div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="set-retain">Keep delivery records (days)</Label>
+                <Input id="set-retain" type="number" min={7} max={730} value={draft.recordRetentionDays} onChange={(e) => setDraft({ ...draft, recordRetentionDays: Number(e.target.value) })} />
+                <p className="text-2xs text-muted-foreground">{isMockMode ? "Applied by a retention job once a backend is connected." : "An hourly job permanently removes finished deliveries, their attempts and incoming event records older than this. Queued and in-flight deliveries are never touched."}</p>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="set-retry">Default retry policy</Label>

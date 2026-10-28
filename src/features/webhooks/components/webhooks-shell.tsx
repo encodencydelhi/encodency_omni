@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
-import { ENVIRONMENT_OPTIONS, RANGE_OPTIONS, WEBHOOK_TABS } from "../data/config";
+import { ENVIRONMENT_LABEL, ENVIRONMENT_OPTIONS, RANGE_OPTIONS, WEBHOOK_TABS } from "../data/config";
 import type { WebhookEnvironment, WebhookTimeRange } from "../data/types";
-import { PageSkeleton } from "./kit";
+import { Notice, PageSkeleton } from "./kit";
 import { useWebhooks, WebhooksProvider } from "./webhooks-context";
 
 function Content({ children }: { children: ReactNode }) {
@@ -38,6 +38,16 @@ function Content({ children }: { children: ReactNode }) {
       }
     />
     <nav aria-label="Webhook sections" className="overflow-x-auto border-b border-border"><div className="flex min-w-max gap-1">{WEBHOOK_TABS.map(({ href, label, match }) => { const active = match === "exact" ? pathname === href : pathname.startsWith(href); return <Link key={href} href={href} aria-current={active ? "page" : undefined} className={cn("border-b-2 px-3 py-2 text-[12px] font-medium", active ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>{label}</Link>; })}</div></nav>
+    {snapshot?.runtime && snapshot.runtime.environment !== environment ? (
+      <Notice tone="warning" title={`This server delivers for ${ENVIRONMENT_LABEL[snapshot.runtime.environment]} only`}>
+        You are viewing {ENVIRONMENT_LABEL[environment]}. Endpoints saved here are stored, but this server sends nothing for them and test pings are refused. Switch to {ENVIRONMENT_LABEL[snapshot.runtime.environment]}, or use the {ENVIRONMENT_LABEL[environment]} server.
+      </Notice>
+    ) : null}
+    {snapshot?.runtime && !snapshot.runtime.deliveryWorkerEnabled ? (
+      <Notice tone="danger" title="The delivery worker is switched off on this server">
+        Nothing is sent until WEBHOOKS_DELIVERY_ENABLED is turned back on. Events keep queuing meanwhile.
+      </Notice>
+    ) : null}
     {isLoading || (!snapshot && !error) ? <PageSkeleton /> : error || !snapshot ? <div className="rounded-lg border border-border bg-card"><ErrorState error={error ?? new Error("Webhook data is unavailable")} onRetry={refetch} /></div> : children}
   </div>;
 }

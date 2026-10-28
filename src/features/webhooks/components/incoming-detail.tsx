@@ -1,6 +1,7 @@
 
 "use client";
 
+import { isMockMode } from "@/config/env";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { DataTable } from "@/components/shared/data-table/data-table";
@@ -60,7 +61,7 @@ export function IncomingSourceDetailPage({ sourceId }: { sourceId: string }) {
       />
 
       <CardGrid cols={4}>
-        <Kpi label="Recorded Events" value={events.length} hint="All recorded demo events for this source" />
+        <Kpi label="Recorded Events" value={events.length} hint={isMockMode ? "All recorded demo events for this source" : "All recorded events for this source"} />
         <Kpi label="Verification Problems" value={failures.length} tone={failures.length ? "danger" : "default"} hint="Rejected or not verified" />
         <Kpi label="Supported Event Types" value={source.supportedEventTypes.length} hint="Registered for this source" />
         <Kpi label="Receiver" value="Not connected" hint="No live receiver exists yet" />
@@ -161,7 +162,7 @@ export function IncomingEventDetailPage({ eventId }: { eventId: string }) {
 
       {tab === "overview" ? (
         <div className="space-y-1">
-          <Notice tone="info">Verification and processing states are demo records. Company identity comes from the trusted account mapping, never from an untrusted payload field.</Notice>
+          <Notice tone="info">{isMockMode ? "Verification and processing states are demo records. " : "Verification and processing states come from the recorded receipt. "}Company identity comes from the trusted account mapping, never from an untrusted payload field.</Notice>
           <div className="grid gap-1 lg:grid-cols-2">
             <InfoCard title="Event Identity" items={[
               { label: "Incoming event ID", value: <Mono>{event.id}</Mono> },
@@ -185,7 +186,7 @@ export function IncomingEventDetailPage({ eventId }: { eventId: string }) {
 
       {tab === "verification" ? (
         <div className="space-y-1">
-          <Notice tone="warning" title="Demo verification record">No cryptographic verification occurred in this frontend. Nothing here proves the event came from the provider. Secrets, full signatures and provider credentials are never shown.</Notice>
+          {isMockMode ? <Notice tone="warning" title="Demo verification record">No cryptographic verification occurred in this frontend. Nothing here proves the event came from the provider. Secrets, full signatures and provider credentials are never shown.</Notice> : <Notice tone="info" title="Verified by the backend">The backend checked this event's signature before it was stored. Secrets, full signatures and provider credentials are never shown.</Notice>}
           <InfoCard title="Verification" items={[
             { label: "Verification method", value: VERIFICATION_METHOD_LABEL[v.method] },
             { label: "Verification state", value: <State registry={VERIFICATION_STATE} status={v.state} /> },
@@ -228,7 +229,7 @@ export function IncomingEventDetailPage({ eventId }: { eventId: string }) {
             <EligibilityFactors assessment={assessment} />
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Button size="sm" variant="outline" onClick={() => setRecoveryOpen(true)}>Review Reprocessing Eligibility</Button>
-              {requests.length ? <Chip tone="brand">{requests.length} demo recovery request{requests.length === 1 ? "" : "s"} on this event</Chip> : null}
+              {requests.length ? <Chip tone="brand">{requests.length} {isMockMode ? "demo " : ""}recovery request{requests.length === 1 ? "" : "s"} on this event</Chip> : null}
             </div>
           </SectionCard>
         </div>
