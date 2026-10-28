@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils/cn";
-import { ENFORCEMENT_LABEL, SECTION_BY_KEY, TIMING_LABEL } from "../data/config";
+import { ENFORCEMENT_LABEL, SECTION_BY_KEY, SETTINGS_MOCK_MODE, TIMING_LABEL } from "../data/config";
 import { useReview } from "../data/hooks";
 import type { ChangeReview, EditableSectionKey, RequiredCheck, ReviewRow, SettingValues } from "../data/types";
 import { ScopeBadge, SensitivityBadge } from "./badges";
@@ -184,7 +184,7 @@ function ReviewBody({
           {needsAcknowledgement ? (
             <label className="flex cursor-pointer items-start gap-2 rounded-sm border border-border bg-muted/40 p-2.5 text-[0.8125rem]">
               <Checkbox checked={acknowledged} onCheckedChange={(checked) => setAcknowledged(checked === true)} className="mt-0.5" />
-              <span>I understand this records demo configuration only. No real account, session, service or data is changed.</span>
+              <span>{SETTINGS_MOCK_MODE ? "I understand this records demo configuration only. No real account, session, service or data is changed." : "I understand this is a security-sensitive setting. Whether it takes effect depends on the platform service that enforces it."}</span>
             </label>
           ) : null}
 

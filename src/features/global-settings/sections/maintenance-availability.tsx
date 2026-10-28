@@ -27,7 +27,7 @@ function AnnouncementPreview({ values }: { values: SettingValues }) {
   const status = windowStatus(start, end, platformNow());
   const zone = regionalOf(values);
   return (
-    <Panel title="Announcement Preview" description="The same banner component the shell uses. It shows only to the chosen demo audience, near or during the window, and only while enabled.">
+    <Panel title="Announcement Preview" description="The same banner component the shell uses. Today it is shown in the Super Admin shell to platform staff, near or during the window, and only while enabled.">
       <AnnouncementBanner
         title={String(values["maintenance.announcement.title"] || "Untitled announcement")}
         message={String(values["maintenance.announcement.message"] || "No message yet.")}

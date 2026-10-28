@@ -71,7 +71,7 @@ function RetentionDialog({ category, editor, mode, onClose, changedAt }: { categ
               <span className="text-[0.8125rem] text-muted-foreground">days ({category.min}-{category.max})</span>
             </div>
             {invalid ? <p role="alert" className="text-2xs text-danger">Enter a whole number between {category.min} and {category.max} days.</p> : null}
-            {shorter ? <p className="text-2xs text-warning">Shortening retention makes older records eligible for removal once a lifecycle service enforces it. Nothing is deleted by saving in this demo.</p> : null}
+            {shorter ? <p className="text-2xs text-warning">Shortening retention makes older records eligible for removal once a lifecycle service enforces it. Nothing is deleted by saving this setting.</p> : null}
             <p className="text-2xs text-muted-foreground">This is a configured policy, not a verified legal or compliance requirement. Applying adds it to your unsaved changes; you review and confirm it when you save the section.</p>
           </div>
         ) : null}

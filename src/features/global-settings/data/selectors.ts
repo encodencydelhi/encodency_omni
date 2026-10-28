@@ -155,7 +155,7 @@ export function isHeldForReview(definition: GlobalSettingDefinition): boolean {
 
 function retentionWarning(definition: GlobalSettingDefinition, previous: SettingValue, next: SettingValue): string | undefined {
   if (!definition.key.startsWith("privacy.retention.") || typeof previous !== "number" || typeof next !== "number") return undefined;
-  return next < previous ? "Shortening retention makes older records eligible for removal once a lifecycle service enforces it. Nothing is deleted by saving this in the demo." : undefined;
+  return next < previous ? "Shortening retention makes older records eligible for removal once a lifecycle service enforces it. Nothing is deleted by saving this setting." : undefined;
 }
 
 export function buildReviewRow(definition: GlobalSettingDefinition, previous: SettingValue, next: SettingValue): ReviewRow {

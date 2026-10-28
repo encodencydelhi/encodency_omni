@@ -50,7 +50,7 @@ import type {
 import { commercialContext } from "@/features/plans-subscriptions/data/mock/plan-store";
 import { nowIso, platformNow } from "./clock";
 import { STAFF } from "./mock/dataset";
-import { countIntegrations, computePortfolio, computeTwoFactorAdoption, filterSummaries, resolveStaff, computeSecurityWarnings, type DerivationContext } from "./selectors";
+import { countIntegrations, computePortfolio, computeTwoFactorAdoption, deriveLiveHealth, filterSummaries, resolveStaff, computeSecurityWarnings, type DerivationContext } from "./selectors";
 import { USAGE_RESOURCE_BY_KEY } from "./config";
 import type {
   ActivityFilter,
@@ -125,6 +125,11 @@ interface SuperAdminCompanySummary {
   clientCount: number;
   ownerEmail: string | null;
   ownerOnboarding?: OwnerOnboarding | null;
+  /** Display name of the owner account. */
+  ownerName?: string | null;
+  connections?: { total: number; active: number; needsAttention: number };
+  billing?: { status: "paid" | "payment_due" | "payment_failed" | "none"; openInvoices: number };
+  lastActiveAt?: string | null;
   logo?: { id: string; url: string } | null;
   legalName?: string | null;
   industry?: string | null;
@@ -151,6 +156,9 @@ interface SuperAdminCompanySummary {
     billingCycle: string;
     currentPeriodEnd: string;
     createdAt?: string;
+    /** Plan prices in paise; `annualPrice` is null for a plan not sold yearly. */
+    monthlyPrice?: number;
+    annualPrice?: number | null;
   } | null;
   securitySettings?: unknown;
   /**
@@ -291,13 +299,15 @@ function toOwner(
   ownerEmail: string | null,
   onboarding?: OwnerOnboarding | null,
   invitationUrl?: string | null,
+  ownerName?: string | null,
 ): CompanyOwner {
   const state = onboarding?.state ?? (ownerEmail ? "active" : "none");
   const effectiveEmail = onboarding?.ownerEmail || ownerEmail || "";
   const local = effectiveEmail.split("@")[0] ?? effectiveEmail;
   return {
     userId: null,
-    name: local,
+    // The account's own name; the part before the @ only when it never set one (or the invitation is still pending).
+    name: (state === "active" && ownerName?.trim()) || local,
     email: effectiveEmail,
     phone: null,
     state,
@@ -371,6 +381,28 @@ async function loadLiveStaffIfNeeded(): Promise<void> {
   await staffLoadPromise;
 }
 
+/** MRR of a subscription from the plan prices the backend sends (paise): the monthly price, or a twelfth of the yearly one. */
+function mrrFromRow(row: SuperAdminCompanySummary, status: CompanySubscriptionStatus): number {
+  const sub = row.subscription;
+  if (!sub || status === "cancelled" || status === "paused" || status === "expired") return 0;
+  if (sub.billingCycle?.toLowerCase() === "annual") return Math.round((sub.annualPrice ?? (sub.monthlyPrice ?? 0) * 12) / 12);
+  return sub.monthlyPrice ?? 0;
+}
+
+function billingStatusOf(row: SuperAdminCompanySummary): CompanyBillingStatus {
+  switch (row.billing?.status) {
+    case "paid":
+      return "paid";
+    case "payment_due":
+      return "payment_due";
+    case "payment_failed":
+      return "payment_failed";
+    default:
+      // Nothing invoiced yet (or an older backend): the honest default is "nothing on file".
+      return "no_payment_method";
+  }
+}
+
 function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
   const address = (row.address && typeof row.address === "object" && !Array.isArray(row.address))
     ? (row.address as Record<string, unknown>)
@@ -438,22 +470,22 @@ function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
       internalOwners,
       internalTags,
       createdAt: row.createdAt,
-      lastActiveAt: row.createdAt,
+      lastActiveAt: row.lastActiveAt ?? row.createdAt,
       isDemoCreated: false,
     },
     plan: { tier: planTier, name: planName, billingCycle },
     subscriptionStatus: toSubscriptionStatus(row.subscription?.status),
-    billingStatus: "no_payment_method",
-    mrrMinor: 0,
+    billingStatus: billingStatusOf(row),
+    mrrMinor: mrrFromRow(row, toSubscriptionStatus(row.subscription?.status)),
     currency: "INR",
     trialEndsAt: null,
     counts: {
       users: row.memberCount,
       activeUsers: row.memberCount,
       clients: row.clientCount,
-      connections: 0,
-      healthyConnections: 0,
-      attentionConnections: 0,
+      connections: row.connections?.total ?? 0,
+      healthyConnections: row.connections?.active ?? 0,
+      attentionConnections: row.connections?.needsAttention ?? 0,
     },
     usage: { level: "not_metered", utilization: null, resource: null },
     health: {
@@ -463,7 +495,7 @@ function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
     },
     attention: [],
     onboarding: row.ownerOnboarding?.state === "active" || (!row.ownerOnboarding && row.ownerEmail) ? "completed" : "awaiting_owner",
-    owner: toOwner(row.ownerEmail, row.ownerOnboarding, ownerInviteUrl(row)),
+    owner: toOwner(row.ownerEmail, row.ownerOnboarding, ownerInviteUrl(row), row.ownerName),
     internalOwners: resolvedOwners,
   };
 }
@@ -1015,6 +1047,58 @@ function toBackendStatus(accountStatus: string | undefined): BackendCompanyStatu
 }
 
 /** Every row the backend serves, paged at the API's maximum page size. Empty on a fallback-worthy error. */
+/** Backend utilisation state -> the UI's usage level. */
+function toUsageLevel(state: string | undefined): CompanySummary["usage"]["level"] {
+  if (state === "within" || state === "monitored" || state === "unlimited") return "normal";
+  if (state === "near") return "high";
+  if (state === "at_limit") return "near_limit";
+  if (state === "exceeded") return "exceeded";
+  return "not_metered";
+}
+
+interface BackendUsageListRow {
+  companyId: string;
+  resource: CompanyUsageRecord["resource"];
+  resolved: { state: string; percent: number | null };
+}
+
+/**
+ * Puts each company's busiest metered resource on its summary (one read for the whole list, the usage page's own
+ * numbers). If usage cannot be read the rows keep "not metered" rather than the list failing.
+ */
+async function attachLiveUsage(summaries: CompanySummary[]): Promise<void> {
+  if (summaries.length === 0) return;
+  try {
+    const byCompany = new Map<string, BackendUsageListRow>();
+    let page = 1;
+    let total = 0;
+    do {
+      const response = await apiClient.request<{ items?: BackendUsageListRow[]; total: number }>({
+        method: "GET",
+        path: "/super-admin/usage/companies",
+        query: { page, limit: MAX_LIMIT, sort: "utilization" },
+      });
+      for (const item of response.items ?? []) if (!byCompany.has(item.companyId)) byCompany.set(item.companyId, item);
+      total = response.total;
+      page += 1;
+    } while ((page - 1) * MAX_LIMIT < total && page <= MAX_PORTFOLIO_PAGES);
+    for (const summary of summaries) {
+      const row = byCompany.get(summary.company.id);
+      if (!row) continue;
+      summary.usage = { level: toUsageLevel(row.resolved.state), utilization: row.resolved.percent, resource: row.resource };
+    }
+  } catch {
+    // Usage is one column; the rest of the list stands.
+  }
+  applyLiveHealth(summaries);
+}
+
+/** Health and the needs-attention items from what the row now holds (billing, subscription, usage, connections, owner). */
+function applyLiveHealth(summaries: CompanySummary[]): void {
+  const now = nowIso();
+  for (const summary of summaries) Object.assign(summary, deriveLiveHealth(summary, now));
+}
+
 async function fetchAllSummaries(): Promise<CompanySummary[]> {
   await loadLiveStaffIfNeeded();
   const summaries: CompanySummary[] = [];
@@ -1036,12 +1120,17 @@ async function fetchAllSummaries(): Promise<CompanySummary[]> {
     if (shouldFallBack(error)) return [];
     throw error;
   }
+  await attachLiveUsage(summaries);
   return summaries;
 }
 
 /* ------------------------------------------------------------------ */
 /* Provider                                                            */
 /* ------------------------------------------------------------------ */
+
+/** The page header and the open tab both want the company's usage; one read serves both for a few seconds. */
+const RECENT_USAGE_MS = 4_000;
+const recentUsage = new Map<string, { at: number; promise: Promise<CompanyUsageSummary> }>();
 
 export function createApiCompaniesProvider(fallback: CompaniesRepository): CompaniesRepository {
   return {
@@ -1083,6 +1172,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         };
 
         const apiSummaries = response.items.map(mapApiRow);
+        await attachLiveUsage(apiSummaries);
         let demoCreated: CompanySummary[] = [];
         try {
           const fallbackResult = await fallback.listCompanies(query);
@@ -1228,11 +1318,9 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         path: `/super-admin/companies/${encodeURIComponent(id)}`,
       });
       const summary = mapApiRow(detail);
-      if (detail.subscription) {
-        // MRR is the subscribed plan's price; a plans lookup that fails leaves it at 0 ("not recorded") rather than failing the page.
-        const plans = await this.listPlans().catch((): Plan[] => []);
-        summary.mrrMinor = monthlyRecurringMinor(plans.find((plan) => plan.id === detail.subscription?.planId), summary.plan.billingCycle, summary.subscriptionStatus);
-      }
+      const usage = await this.getUsage(id).catch((): null => null);
+      if (usage) summary.usage = { level: usage.level, utilization: usage.highest?.utilization ?? null, resource: usage.highest?.resource ?? null };
+      applyLiveHealth([summary]);
       return summary;
     },
 
@@ -1788,7 +1876,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         }
 
         const clients = (companyDetail.clients || []).map((c) => ({ id: c.id, name: c.name }));
-        const owner = toOwner(companyDetail.ownerEmail, companyDetail.ownerOnboarding, ownerInviteUrl(companyDetail));
+        const owner = toOwner(companyDetail.ownerEmail, companyDetail.ownerOnboarding, ownerInviteUrl(companyDetail), companyDetail.ownerName);
 
         return { users, clients, owner };
       } catch (err) {
@@ -1931,11 +2019,14 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
       }
 
       try {
-        const detail = await apiClient.request<BackendUsageDetail>({
-          method: "GET",
-          path: `/super-admin/usage/companies/${encodeURIComponent(id)}`,
-        });
-        return toUsageSummary(id, detail);
+        const cached = recentUsage.get(id);
+        if (cached && Date.now() - cached.at < RECENT_USAGE_MS) return await cached.promise;
+        const promise = apiClient
+          .request<BackendUsageDetail>({ method: "GET", path: `/super-admin/usage/companies/${encodeURIComponent(id)}` })
+          .then((detail) => toUsageSummary(id, detail));
+        recentUsage.set(id, { at: Date.now(), promise });
+        promise.catch(() => recentUsage.delete(id));
+        return await promise;
       } catch (err) {
         if (shouldFallBack(err)) return fallback.getUsage(id);
         throw err;

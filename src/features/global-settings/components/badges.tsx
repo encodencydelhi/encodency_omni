@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/cn";
-import { ENFORCEMENT_LABEL, OVERRIDE_LABEL, POLICY_KIND_LABEL, SCOPE_LABEL, SENSITIVITY_LABEL } from "../data/config";
+import { ENFORCEMENT_LABEL, OVERRIDE_LABEL, POLICY_KIND_LABEL, SCOPE_LABEL, SENSITIVITY_LABEL, SETTINGS_MOCK_MODE } from "../data/config";
 import type { ChangeResult, GlobalSettingDefinition, MaintenanceEntryStatus, ScopeKey, Sensitivity, VersionStatus } from "../data/types";
 import type { Tone } from "@/types/common";
 
@@ -46,7 +46,7 @@ export function SettingBadges({ definition, className }: { definition: GlobalSet
 }
 
 const RESULT: Record<ChangeResult, { label: string; tone: Tone }> = {
-  applied: { label: "Applied (Demo)", tone: "success" },
+  applied: { label: SETTINGS_MOCK_MODE ? "Applied (Demo)" : "Applied", tone: "success" },
   pending_approval: { label: "Pending Approval", tone: "warning" },
   scheduled: { label: "Planned", tone: "info" },
   withdrawn: { label: "Withdrawn", tone: "neutral" },

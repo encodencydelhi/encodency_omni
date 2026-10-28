@@ -204,7 +204,7 @@ export function SaveResultBanner({ result, onDismiss }: { result: SaveResult; on
         <p className="text-muted-foreground">
           {result.applied.length > 0 ? `${result.applied.length} setting${result.applied.length === 1 ? "" : "s"} applied and recorded in configuration history. ` : ""}
           {result.pending.length > 0 ? `${result.pending.length} security-critical change${result.pending.length === 1 ? " is" : "s are"} held as a pending draft and not effective. ` : ""}
-          No real account, session or service was changed.
+          {SETTINGS_MOCK_MODE ? "No real account, session or service was changed." : "Settings the platform already enforces apply from now on; the rest are recorded for when they are enforced."}
         </p>
       </div>
       <button type="button" aria-label="Dismiss" onClick={onDismiss} className="rounded-sm p-0.5 text-muted-foreground hover:text-foreground">

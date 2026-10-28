@@ -143,7 +143,7 @@ export function BrandingPanel({ editor }: { editor: SectionEditor }) {
   return (
     <Panel title="Branding" description="The platform's own logos and icons. Company and client branding is never changed here.">
       <p className="mb-2 rounded-sm bg-muted/60 px-2.5 py-1.5 text-2xs text-muted-foreground">
-        Files are read in your browser for a local preview. Nothing is uploaded or stored on a server in this frontend demo.
+        Files are read in your browser for a local preview only. They are not uploaded, stored or used anywhere else in the platform yet.
       </p>
       <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
         {KINDS.map((kind) => <AssetCard key={kind} kind={kind} editor={editor} />)}

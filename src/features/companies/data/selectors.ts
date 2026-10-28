@@ -1078,3 +1078,111 @@ export function computePortfolio(ctx: DerivationContext, summaries: readonly Com
     recentSignups,
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* Health and attention from live summaries                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Health and attention for a company that comes from the real backend. Only the factors the platform can actually
+ * measure per company are assessed (billing, subscription, usage, connected accounts, ownership); background-job
+ * failures and support SLA are not collected per company yet, so they are neither counted as healthy nor as faulty.
+ * Reads nothing but the summary, so the same rules apply to the list, the portfolio and the detail page.
+ */
+export function deriveLiveHealth(summary: CompanySummary, now: string): Pick<CompanySummary, "health" | "attention"> {
+  const { company, owner, counts, usage } = summary;
+  if (company.accountStatus === "suspended") {
+    return { health: { status: "suspended", reason: "Account suspended. Health is not assessed.", factors: [] }, attention: [] };
+  }
+  if (company.accountStatus !== "active") {
+    return { health: { status: "not_assessed", reason: "Account is not operating.", factors: [] }, attention: [] };
+  }
+
+  const factors: HealthFactor[] = [];
+  const attention: CompanyAttentionItem[] = [];
+  const push = (kind: AttentionKind, item: Pick<CompanyAttentionItem, "title" | "description" | "area" | "actionLabel" | "section">) => {
+    attention.push({ id: `${company.id}:${kind}`, companyId: company.id, companyName: company.name, kind, severity: ATTENTION_KIND_META[kind].severity, detectedAt: now, ...item });
+  };
+
+  // Billing: a payment method is not stored on the platform, so "nothing invoiced" is not a fault.
+  if (summary.billingStatus === "payment_failed") {
+    factors.push({ area: "billing", status: "critical", label: "Payment failed", detail: "An invoice was written off as uncollectible.", section: "billing" });
+    push("payment_failed", { title: "Payment failed", description: "An invoice was written off as uncollectible.", area: "billing", actionLabel: "Review Billing", section: "billing" });
+  } else if (summary.billingStatus === "payment_due") {
+    factors.push({ area: "billing", status: "warning", label: "Payment due", detail: "An invoice is awaiting payment.", section: "billing" });
+    push("payment_due", { title: "Payment due", description: "An invoice is awaiting payment.", area: "billing", actionLabel: "Review Billing", section: "billing" });
+  } else {
+    factors.push({ area: "billing", status: "healthy", label: "Billing in order", detail: "No open billing issues.", section: "billing" });
+  }
+
+  // Subscription
+  const sub = summary.subscriptionStatus;
+  factors.push(
+    sub === "expired"
+      ? { area: "subscription", status: "critical", label: "Subscription expired", detail: "The subscription is no longer active.", section: "subscription" }
+      : sub === "past_due"
+        ? { area: "subscription", status: "warning", label: "Subscription past due", detail: "Renewal has not been collected.", section: "subscription" }
+        : sub === "paused" || sub === "cancelled"
+          ? { area: "subscription", status: "warning", label: sub === "paused" ? "Subscription paused" : "Subscription cancelled", detail: sub === "paused" ? "Billing is paused." : "The company has no active plan.", section: "subscription" }
+          : { area: "subscription", status: "healthy", label: "Subscription in good standing", detail: "No lifecycle risk.", section: "subscription" },
+  );
+
+  // Usage
+  const resourceLabel = usage.resource ? USAGE_RESOURCE_BY_KEY[usage.resource].label : "A resource";
+  const percent = Math.round(usage.utilization ?? 0);
+  if (usage.level === "exceeded") {
+    factors.push({ area: "usage", status: "critical", label: "Limit exceeded", detail: `${resourceLabel} is over its effective limit.`, section: "usage" });
+    push("usage_exceeded", { title: `${resourceLabel} limit exceeded`, description: `${percent}% of the effective limit is consumed.`, area: "usage", actionLabel: "Review Usage", section: "usage" });
+  } else if (usage.level === "near_limit") {
+    factors.push({ area: "usage", status: "warning", label: "Near a limit", detail: `${resourceLabel} is at ${percent}%.`, section: "usage" });
+    push("usage_near_limit", { title: `${resourceLabel} near limit`, description: `${percent}% of the effective limit is consumed.`, area: "usage", actionLabel: "Review Usage", section: "usage" });
+  } else {
+    factors.push({ area: "usage", status: "healthy", label: "Usage within limits", detail: usage.level === "not_metered" ? "No metered limits." : `Highest utilisation ${percent}%.`, section: "usage" });
+  }
+
+  // Connected accounts
+  const failing = counts.attentionConnections;
+  factors.push(
+    counts.connections >= 2 && failing / counts.connections >= 0.5
+      ? { area: "integrations", status: "critical", label: "Most connections failing", detail: `${failing} of ${counts.connections} connections need attention.`, section: "integrations" }
+      : failing > 0
+        ? { area: "integrations", status: "warning", label: "Connections need attention", detail: `${failing} of ${counts.connections} connections need attention.`, section: "integrations" }
+        : { area: "integrations", status: "healthy", label: "Connections healthy", detail: counts.connections === 0 ? "No connections yet." : "All connections are healthy.", section: "integrations" },
+  );
+  if (failing > 0) {
+    push("integration_reconnect", {
+      title: `${failing} ${failing === 1 ? "integration needs" : "integrations need"} reconnection`,
+      description: "A provider connection has expired, been revoked or is failing.",
+      area: "integrations",
+      actionLabel: "Review Integrations",
+      section: "integrations",
+    });
+  }
+
+  // Ownership
+  factors.push(
+    owner.state === "none"
+      ? { area: "security", status: "critical", label: "No owner", detail: "Nobody owns or can administer this organisation.", section: "security" }
+      : owner.state === "invitation_expired"
+        ? { area: "security", status: "warning", label: "Owner invitation expired", detail: "The owner has not accepted.", section: "security" }
+        : { area: "security", status: "healthy", label: "No security warnings", detail: "Ownership and access are in order.", section: "security" },
+  );
+  if (owner.state === "none") {
+    push("no_active_admin", { title: "No active organisation admin", description: "Nobody can administer this organisation. Invite an owner.", area: "users", actionLabel: "Review Users", section: "users" });
+  } else if (owner.state === "invitation_expired") {
+    push("owner_invitation_expired", { title: "Owner invitation expired", description: `${owner.name} has not accepted the invitation.`, area: "security", actionLabel: "Review Security", section: "security" });
+  }
+
+  const critical = factors.filter((factor) => factor.status === "critical");
+  const warning = factors.filter((factor) => factor.status === "warning");
+  const leading = [...critical, ...warning].slice(0, 2).map((factor) => factor.label);
+  const rank = { critical: 0, warning: 1, info: 2 } as const;
+  return {
+    health: {
+      status: critical.length > 0 ? "critical" : warning.length > 0 ? "needs_attention" : "healthy",
+      reason: leading.length > 0 ? leading.join(" · ") : `All ${factors.length} assessed factors are healthy.`,
+      factors,
+    },
+    attention: attention.sort((a, b) => rank[a.severity] - rank[b.severity]),
+  };
+}

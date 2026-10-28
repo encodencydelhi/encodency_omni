@@ -157,7 +157,7 @@ export function TenantHealthPanel({ portfolio }: { portfolio: PortfolioSummary |
           </div>
           {health.notAssessed > 0 ? (
             <p className="text-2xs text-muted-foreground">
-              {health.notAssessed} deactivated or archived {health.notAssessed === 1 ? "company is" : "companies are"} not assessed.
+              {health.notAssessed} {health.notAssessed === 1 ? "company is" : "companies are"} not assessed: archived accounts, and companies whose health data is not available yet.
             </p>
           ) : null}
         </div>

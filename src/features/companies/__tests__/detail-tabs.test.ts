@@ -24,11 +24,15 @@ const companyDetail = (id: string, withSubscription: boolean) => ({
   memberCount: 1,
   clientCount: 1,
   ownerEmail: "Owner@Acme.test",
+  ownerName: "Sompal",
+  connections: { total: 5, active: 4, needsAttention: 1 },
+  billing: { status: "paid", openInvoices: 0 },
+  lastActiveAt: "2026-10-26T10:53:00.000Z",
   ownerOnboarding: { state: "active", ownerEmail: "Owner@Acme.test" },
   members: [{ membershipId: "m1", userId: "u1", email: "Owner@Acme.test", name: "Owner", systemRole: "OWNER" }],
   clients: [{ id: "c1", name: "Client One", createdAt: NOW }],
   subscription: withSubscription
-    ? { id: "s1", planId: "p-growth", planName: "Growth", status: "ACTIVE", billingCycle: "MONTHLY", currentPeriodEnd: FUTURE, createdAt: NOW }
+    ? { id: "s1", planId: "p-growth", planName: "Growth", status: "ACTIVE", billingCycle: "MONTHLY", currentPeriodEnd: FUTURE, createdAt: NOW, monthlyPrice: 499_900, annualPrice: 4_999_000 }
     : null,
   securitySettings: {
     authentication: { require2FAForAllMembers: true },
@@ -107,6 +111,13 @@ function respond(rawUrl: string): unknown {
         activityItem("a5", "company.updated", "Organization", "SUCCESS", { userId: "staff-1", name: "Manish", email: "m@platform.test" }),
       ],
     };
+  }
+  if (path.endsWith("/super-admin/usage/companies")) {
+    return { total: 1, items: [{ companyId: ID, resource: "apiRequests", resolved: { state: "near", percent: 82 } }] };
+  }
+  if (path.endsWith("/super-admin/companies")) {
+    const { members: _members, clients: _clients, securitySettings: _security, ...row } = companyDetail(ID, true);
+    return { items: [row], total: 1, page: 1, limit: 100 };
   }
   if (path.includes("/super-admin/usage/companies/")) {
     return { summary: { rows: [], highest: null, attention: "within", updatedAt: NOW }, overrides: [] };
@@ -218,5 +229,25 @@ describe("company detail tabs (api mode)", () => {
     assert.equal(data.security.accessLock, null);
     assert.equal(data.users.length, 1);
     assert.equal(data.adoption.totalUsers, 1);
+  });
+
+  it("the list shows the owner by name and real MRR, billing, connections, usage and last-active", async () => {
+    const { data } = await companiesRepository.listCompanies({});
+    const row = data[0]!;
+    assert.equal(row.owner.name, "Sompal", "the owner column shows the person, not the email");
+    assert.equal(row.owner.email, "Owner@Acme.test", "the email keeps its case");
+    assert.equal(row.mrrMinor, 499_900);
+    assert.equal(row.billingStatus, "paid");
+    assert.deepEqual([row.counts.connections, row.counts.healthyConnections, row.counts.attentionConnections], [5, 4, 1]);
+    assert.equal(row.company.lastActiveAt, "2026-10-26T10:53:00.000Z");
+    assert.deepEqual(row.usage, { level: "high", utilization: 82, resource: "apiRequests" });
+    assert.equal(row.health.status, "needs_attention", "one of five connected accounts was revoked");
+    assert.deepEqual(row.attention.map((item) => item.kind), ["integration_reconnect"]);
+  });
+
+  it("the portfolio counts that company as paying", async () => {
+    const portfolio = await companiesRepository.getPortfolio();
+    assert.equal(portfolio.mrrMinor, 499_900);
+    assert.equal(portfolio.payingCompanies, 1);
   });
 });
